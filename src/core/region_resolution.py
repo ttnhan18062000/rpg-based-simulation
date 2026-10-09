@@ -38,10 +38,8 @@ def resolve_region_among(candidates: Iterable["RegionState"], x: float, y: float
 
 def _remember_extent(state: Any, extent: Any) -> None:
     """Cache the extent on a state that has the slot; a slotted context without it (a reconstruction context) stays uncached."""
-    try:
+    if hasattr(state, "_regions_global_bounds"):
         object.__setattr__(state, "_regions_global_bounds", extent)
-    except AttributeError:
-        pass
 
 
 def world_extent(state: Any) -> Optional[Tuple[float, float, float, float]]:
