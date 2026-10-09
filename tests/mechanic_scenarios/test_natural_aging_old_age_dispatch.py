@@ -164,7 +164,7 @@ def test_starvation_sleep_debt_driven_hp_loss_is_recorded_post_fix():
         .kind("HERO")
         .location(0.0, 0.0)
         .biological(hunger=95.0, sleep_debt=98.0)
-        .combat(hp=1)
+        .combat(hp=1, max_hp=6000)  # loses 1 HP every life-due tick at the starving line (decision 36)
         .lifecycle(active=True, age_ticks=0, max_age_ticks=100_000)
         .build()
     )

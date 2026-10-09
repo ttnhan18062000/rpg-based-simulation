@@ -45,6 +45,7 @@ from src.core.updates import StateUpdate, EntityUpdate, SocialUpdate, StrategicU
 from src.engine.legality import LegalityServiceV2
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.rpg_depth import StaminaService, SkillScalingService
+from src.engine.sleep_debt import recovery_scale as sleep_recovery_scale
 from src.engine.starvation import STARVING_LINE, hp_loss, recovery_scale
 from src.systems.social_memory import SocialMemoryService
 from src.systems.social_systems.relationships import RelationshipService
@@ -101,7 +102,6 @@ class ApplyPath:
                 total_passive_dmg = 0
                 if bio.hunger >= STARVING_LINE:
                     total_passive_dmg += hp_loss(bio.hunger, entity.combat.max_hp, tick, entity.id, cadence.lifecycle)
-                if bio.sleep_debt >= 98.0: total_passive_dmg += 1
                 
                 if total_passive_dmg > 0 or new_age != life.age_ticks:
                     comb = changes.get("combat", entity.combat)
@@ -116,10 +116,7 @@ class ApplyPath:
                     passive_cause_tick = life.passive_death_cause_tick
                     if (comb.hp > 0 and new_hp == 0 and total_passive_dmg > 0
                             and life.death_reason is None and not life.is_permadeath):
-                        passive_cause = (
-                            PassiveDeathCause.STARVATION if bio.hunger >= 95.0
-                            else PassiveDeathCause.SLEEP_DEPRIVATION
-                        )
+                        passive_cause = PassiveDeathCause.STARVATION  # sleep debt costs no health (decision 41): hunger is the only passive drain
                         passive_cause_tick = tick
                     # The passive branch never DEACTIVATES: resolve_lifecycle is the sole declared
                     # authority for HP-death and old-age deactivation (PROG-030). Its one remaining
@@ -139,7 +136,8 @@ class ApplyPath:
                     )
             
             # Weakened by hunger (owner decision 36): slower recovery. One compare per entity; 1.0 off the weakened path.
-            rscale = recovery_scale(changes["biological"].hunger if "biological" in changes else entity.biological.hunger)
+            rbio = changes["biological"] if "biological" in changes else entity.biological
+            rscale = min(recovery_scale(rbio.hunger), sleep_recovery_scale(rbio.sleep_debt))  # the worse of the hunger and sleep stages
 
             # Stamina Regen
             stamina = entity.stamina

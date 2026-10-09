@@ -11,6 +11,7 @@ from src.core.movement_modes import MovementMode
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.hostility import is_engaged
 from src.engine.legality import LegalityServiceV2
+from src.engine.rpg_depth import LeashService
 from src.engine.tactical_destinations import retreat_destination
 
 if TYPE_CHECKING:
@@ -57,6 +58,21 @@ def stalemate_break_update(entity: "EntityState", strat_up: Any, wander_to: Tupl
         strategic=strat_up,
         navigation=NavigationUpdate(target_set=wander_to, movement_mode_set=MovementMode.WANDER),
         task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": wander_to, "reason": "STALEMATE_BREAK"}),
+    )
+
+
+def leash_return_update(entity: "EntityState") -> Optional[EntityUpdate]:
+    """A mob beyond its leash that is not chasing, or past the chase limit, heads home (``LEASH_RETURN``); None otherwise (GAP-T08)."""
+    is_engaged = entity.task.payload.get("target_id") is not None
+    if not ((not is_engaged and LeashService.is_beyond_leash(entity)) or LeashService.should_give_up_chase(entity)):
+        return None
+    home_pos = LeashService.get_return_home_target(entity)
+    if not home_pos:
+        return None
+    return EntityUpdate(
+        entity_id=entity.id,
+        navigation=NavigationUpdate(target_set=home_pos, movement_mode_set=MovementMode.RETREAT),
+        task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": home_pos, "reason": "LEASH_RETURN"}),
     )
 
 

@@ -23,8 +23,9 @@ from src.engine.tactical_destinations import retreat_destination, wander_destina
 from src.engine.tactical_threat import safety_retreat_warranted
 from src.engine.tactical_rest import in_place_survival_update
 from src.engine.building_arrival import building_arrival_update
-from src.engine.tactical_hold import held_swing_update, notice_unengaged_hostile, stalemate_break_update
 from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
+from src.engine.sleep_debt import collapse_update, must_collapse
+from src.engine.tactical_hold import held_swing_update, leash_return_update, notice_unengaged_hostile, stalemate_break_update
 from src.engine.hostility import perceived_hostile, source_identity
 
 if TYPE_CHECKING:
@@ -155,7 +156,10 @@ class TacticalDecisionSystem:
             return EntityUpdate(entity_id=entity.id)
 
         from src.engine.cognition import AppraisalSystem
-        
+
+        if must_collapse(entity.biological.sleep_debt):  # decision 41: a subject past the collapse line falls asleep where it stands
+            return collapse_update(entity)
+
         # 1. Goal Hysteresis (Pillar 3.2)
         current_project = entity.strategic.projects.get(entity.strategic.current_project_id or "")
         if current_project and state.tick < current_project.lock_until_tick:
@@ -207,21 +211,8 @@ class TacticalDecisionSystem:
              )
 
         # Section 8: Mob Leashing (GAP-T08)
-        from src.engine.rpg_depth import LeashService
-        is_engaged = entity.task.payload.get("target_id") is not None
-        
-        # If beyond leash AND not chasing, or beyond chase limit
-        if (not is_engaged and LeashService.is_beyond_leash(entity)) or LeashService.should_give_up_chase(entity):
-             home_pos = LeashService.get_return_home_target(entity)
-             if home_pos:
-                  return EntityUpdate(
-                      entity_id=entity.id,
-                      navigation=NavigationUpdate(target_set=home_pos, movement_mode_set=MovementMode.RETREAT),
-                      task=TaskUpdate(
-                          work_kind_set="ENTITY_MOVE",
-                          payload_set={"target_position": home_pos, "reason": "LEASH_RETURN"}
-                      )
-                  )
+        if (leash_return := leash_return_update(entity)) is not None:
+            return leash_return
 
         from src.engine.behavior_consumers import get_pressure_resolver
         from src.world.motivation.pressure_resolver import MotivationPressureSet
