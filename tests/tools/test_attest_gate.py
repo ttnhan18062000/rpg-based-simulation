@@ -66,9 +66,11 @@ def test_wrapper_runs_the_command_and_prints_attest_line_then_stdout(capsys):
     first, rest = capsys.readouterr().out.split("\n", 1)
     record = json.loads(first.removeprefix("ATTEST:"))
     assert rest == "hello\n"
-    assert record["exit_code"] == 0 and record["cmd"] == cmd and record["gate"] == GATE
+    assert record["exit_code"] == 0 and record["gate"] == GATE
+    assert "cmd" not in record, "the line echoes the command's hash, never the command"
+    assert record["cmd_sha"] == hashlib.sha256(cmd.encode()).hexdigest()
     assert record["stdout_sha"] == hashlib.sha256(b"hello\n").hexdigest()
-    assert record["mac"] == compute_mac(NONCE, GATE, cmd, 0, record["stdout_sha"])
+    assert record["mac"] == compute_mac(NONCE, GATE, record["cmd_sha"], 0, record["stdout_sha"])
 
 
 def test_wrapper_reports_the_real_exit_code_and_still_exits_zero_itself():
@@ -79,7 +81,7 @@ def test_wrapper_reports_the_real_exit_code_and_still_exits_zero_itself():
 def test_wrapper_handles_multiline_commands_with_nested_quotes():
     cmd = "python3 -c \"\nprint('a \\\"b\\\" c')\n\" 'x y'"
     line, out = _line_and_out(cmd)
-    assert json.loads(line.removeprefix("ATTEST:"))["cmd"] == cmd
+    assert json.loads(line.removeprefix("ATTEST:"))["cmd_sha"] == hashlib.sha256(cmd.encode()).hexdigest()
     assert out == 'a "b" c\n'
 
 
@@ -133,7 +135,8 @@ def test_forgery_with_the_known_nonce_passes():
     """The stated limit: an agent handed the nonce can compute a valid mac for exit 0 without running the command."""
     cmd = "false"
     stdout_sha = hashlib.sha256(b"").hexdigest()
-    forged = {"gate": GATE, "cmd": cmd, "exit_code": 0, "stdout_sha": stdout_sha, "mac": compute_mac(NONCE, GATE, cmd, 0, stdout_sha)}
+    cmd_sha = hashlib.sha256(cmd.encode()).hexdigest()
+    forged = {"gate": GATE, "cmd_sha": cmd_sha, "exit_code": 0, "stdout_sha": stdout_sha, "mac": compute_mac(NONCE, GATE, cmd_sha, 0, stdout_sha)}
     (got,) = _node_verify([_case("ATTEST:" + json.dumps(forged), cmd)])
     assert got["ok"] is True, "if this starts failing the docs saying 'not tamper-proof' need revisiting"
 
@@ -146,9 +149,21 @@ const block = fs.readFileSync(process.argv[2], 'utf8');
 const start = block.indexOf('const legacyBash');
 const end = block.indexOf('\\n}\\n', block.indexOf('const shAttested')) + 3;
 const helpers = block.slice(start, end);
+const agentCalls = [];
 const agent = async (prompt) => {
   const cmdLine = prompt.split('\\n').find((l) => l.startsWith('python3 tools/gate_checks/attest_gate.py'));
-  if (scenario.agent === 'honest') {
+  agentCalls.push(cmdLine);
+  const attempt = agentCalls.length;
+  if (scenario.agent === 'truncates_once' && attempt === 1) {
+    const cut = cmdLine.replace(/--cmd-b64 (\\S+)/, (m, b64) => '--cmd-b64 ' + b64.slice(0, -8));
+    const stdout = execFileSync('bash', ['-c', cut], { cwd: process.argv[3], encoding: 'utf8' });
+    return { exit_code: 0, stdout };
+  }
+  if (scenario.agent === 'bad_mac') {
+    const stdout = execFileSync('bash', ['-c', cmdLine], { cwd: process.argv[3], encoding: 'utf8' });
+    return { exit_code: 0, stdout: stdout.replace(/"mac": "[0-9a-f]/, '"mac": "x') };
+  }
+  if (scenario.agent === 'honest' || scenario.agent === 'truncates_once') {
     const stdout = execFileSync('bash', ['-c', cmdLine], { cwd: process.argv[3], encoding: 'utf8' });
     return { exit_code: 0, stdout };
   }
@@ -166,7 +181,7 @@ const make = new Function('agent', 'bash', 'args', helpers + '; return { shAttes
 (async () => {
   let out = null, err = null;
   try { out = await make(agent, bash, args).shAttested(scenario.cmd, 'g1', 'lbl'); } catch (e) { err = e.message; }
-  process.stdout.write(JSON.stringify({ out, err, bashCalls }));
+  process.stdout.write(JSON.stringify({ out, err, bashCalls, agentCalls }));
 })();
 """
 
@@ -192,7 +207,8 @@ def test_shAttested_native_returns_stdout_without_the_attest_line():
 def test_shAttested_native_fails_closed_on_an_unverifiable_result(agent, reason):
     got = _e2e(cmd="echo real", agent=agent)
     assert got["out"] is None
-    assert got["err"] == f"GATE_ATTESTATION_FAILED g1: {reason}"
+    assert got["err"] == f"GATE_ATTESTATION_FAILED g1: {reason} (after 1 retry)"
+    assert len(got["agentCalls"]) == 2, "a transport mismatch is re-dispatched exactly once, then fails closed"
 
 
 @needs_node
@@ -210,7 +226,7 @@ def test_shAttested_native_refuses_a_nonce_that_is_unsafe_in_a_shell_command():
 @needs_node
 def test_shAttested_legacy_runtime_runs_the_bare_bash_unchanged():
     got = _e2e(cmd="echo x", legacy=True)
-    assert got == {"out": "LEGACY", "err": None, "bashCalls": ["echo x"]}
+    assert got["out"] == "LEGACY" and got["err"] is None and got["bashCalls"] == ["echo x"] and got["agentCalls"] == []
 
 
 def test_shAttested_passes_the_ticket_id_to_the_wrapper_so_native_verdict_rows_carry_it():
@@ -218,3 +234,41 @@ def test_shAttested_passes_the_ticket_id_to_the_wrapper_so_native_verdict_rows_c
     shatt = text[text.index("const shAttested"):]
     wrapper_call = shatt[:shatt.index("label || gate")]
     assert "${ticketId ? ` --ticket-id ${ticketId}` : ''}" in wrapper_call
+
+
+@needs_node
+def test_a_truncated_payload_is_retried_once_and_the_retry_carries_attempt_and_reason():
+    got = _e2e(cmd="echo real", agent="truncates_once")
+    assert got["err"] is None and got["out"].startswith("real")
+    first, second = got["agentCalls"]
+    assert "--attempt" not in first
+    assert "--attempt 2 --retry-reason wrong_command" in second
+
+
+@needs_node
+def test_a_verified_non_zero_exit_is_a_real_result_and_never_retried():
+    got = _e2e(cmd="echo broken; exit 4", agent="honest")
+    assert got["err"] == "GATE_ATTESTATION_FAILED g1: command exited 4"
+    assert len(got["agentCalls"]) == 1
+
+
+@needs_node
+def test_a_bad_mac_signals_tampering_not_transport_and_is_never_retried():
+    got = _e2e(cmd="echo real", agent="bad_mac")
+    assert got["err"] == "GATE_ATTESTATION_FAILED g1: bad mac"
+    assert len(got["agentCalls"]) == 1
+
+
+@needs_node
+def test_cmd_sha_round_trips_between_the_python_wrapper_and_the_node_verifier():
+    cmd = "python3 -c \"\nprint('é — 漢字')\n\" 'x y'"
+    line, out = _line_and_out(cmd)
+    (got,) = _node_verify([_case(line + "\n" + out, cmd)])
+    assert (got["ok"], got["reason"]) == (True, "pass")
+    (truncated,) = _node_verify([_case(line + "\n" + out, cmd[:-1])])
+    assert (truncated["ok"], truncated["reason"]) == (False, "wrong command")
+
+
+def test_the_attest_line_for_a_long_command_stays_short():
+    line, _ = _line_and_out("echo " + "x" * 5000)
+    assert len(line) < 400

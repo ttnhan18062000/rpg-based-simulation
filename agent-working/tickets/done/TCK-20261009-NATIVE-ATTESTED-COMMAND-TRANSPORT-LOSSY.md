@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY
-phase: open
+phase: done
 date: 2026-10-09
 tags: [ai, agent-monitoring]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring]
 Attested gate commands survive the agent transport: hash the echo, bound the payload, retry a transport mismatch once
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -83,6 +83,7 @@ cannot finish reliably, so TCK-20260930-NATIVE-PORT-SMALL-TICKET-NATIVE-RUN is b
 
 ## Related Stored Artifacts
 - agent-working/stored_artifacts/TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN/
+- agent-working/stored_artifacts/TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY/ (investigation.md, plan.md, test_plan.md)
 
 ## Related Code Areas
 - .claude/workflows/implement-ticket.js (`runCommand`, `verifyAttestation`, `shAttested`, the 9 call sites)
@@ -97,6 +98,22 @@ cannot finish reliably, so TCK-20260930-NATIVE-PORT-SMALL-TICKET-NATIVE-RUN is b
   and grep. No open ticket covers this.
 
 ## Implementation Notes
+Hand-orchestrated (no Workflow run), on `agent-working-small-fixes-batch`, no push, no PR. plan.md carries the planner's two decisions: the changed-file list is derived from git against the run's start commit (not `origin/main...HEAD`), and the retry is recorded on the re-dispatched site's own row. `parity_touched_ledger` is no longer a separate site: `gate_cli parity_xref` reads `git status --porcelain -- docs/parity_ledger/` itself.
+
 ## Test Summary
+- New: tests/tools/test_gate_cli.py (11: bound for 8 sites, derivation and exclusions, sub-command output), 6 new tests in tests/tools/test_attest_gate.py (retry once with `--attempt 2 --retry-reason`, no retry on a verified non-zero exit or a bad mac, cmd_sha round-trip, truncated payload, short ATTEST line), 1 in tests/tools/test_gate_ledger.py (a retry is one verdict, not two). Updated the doc-staleness and document-update wiring tests.
+- Measured command size (base64 chars, reference ticket): 120-316 per site for any number of changed files; before: 288-1932, growing with file count. Bound recorded and enforced: 400.
+- `tools/workflow_bash_sites.py`: 0 sites. Related subset (workflow, attest, native, gate, docs, registry ...): 1056 passed.
+- Full `tests/tools/`: 4707 passed, 1 failed, 1 error. The failure is `test_entity_lifecycle_score::TestRealIntegration::...800t_end_to_end` (harness TimeoutError at machine load ~10, also failed before this change) and the error is the thread-leak check that follows it in `test_write_path_guard`; neither touches a changed file.
+- Not exercised: a real native Workflow run (needs the owner's opt-in); TCK-20260930-NATIVE-PORT-SMALL-TICKET-NATIVE-RUN stays BLOCKED until a rerun with a new vehicle.
+
 ## Files Changed
+- .claude/workflows/implement-ticket.js
+- tools/gate_checks/attest_gate.py
+- tools/gate_checks/gate_cli.py (new)
+- tools/agent-monitoring/gate_ledger.py
+- tests/tools/test_attest_gate.py, tests/tools/test_gate_cli.py (new), tests/tools/test_gate_ledger.py, tests/tools/test_doc_staleness_gate_wiring.py, tests/tools/test_document_update_phase_wiring.py
+- docs/agent-monitoring/schema.md
+
 ## Completion Summary
+The ATTEST line now carries `cmd_sha`; the verifier compares it and the mac covers it. Every attested gate site is one short `gate_cli.py` call (120-316 base64 chars, bound 400, enforced by test); the changed files are derived from git against the run's start commit, with an advisory when the derived list differs from the implementer's report. A transport mismatch re-dispatches the site once, recorded as `attempt: 2` on the retry's row; a verified non-zero exit and a bad mac never retry; a second mismatch fails closed. The gate ledger treats a superseded first attempt as one verdict, not an orphan. Follow-ups not done here: the Scope-ordering cost observation (tag check after the scoper) and TCK-20261009-GATE-LEDGER-OUTCOME-ON-ORPHAN-ATTESTED-ROW.

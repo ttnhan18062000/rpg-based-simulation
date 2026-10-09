@@ -98,10 +98,17 @@ def attested_without_verdict(rows: list[dict], week: str | None = None) -> list[
     the run died before the pipeline site recorded it, or the gate has no pipeline site. Listed, never dropped."""
     linked = {(r.get("ticket_id"), (r.get("inputs_ref") or {}).get("stdout_sha"))
               for r in rows if "row_kind" not in r and r.get("gate_type") != ATTESTED_GATE_TYPE}
+    # A transport mismatch is re-dispatched once (`inputs_ref.attempt` 2). The first attempt's row stays on disk, but it is
+    # superseded, not a second unrecorded verdict: only the retry's row stands for the (ticket, gate).
+    retried = {(r.get("ticket_id"), r.get("gate_id")) for r in rows
+               if "row_kind" not in r and r.get("gate_type") == ATTESTED_GATE_TYPE
+               and (r.get("inputs_ref") or {}).get("attempt", 1) > 1}
     return [r for r in rows
             if "row_kind" not in r and r.get("gate_type") == ATTESTED_GATE_TYPE
             and (week is None or _week_of(r.get("ts")) == week)
-            and (r.get("ticket_id"), (r.get("inputs_ref") or {}).get("stdout_sha")) not in linked]
+            and (r.get("ticket_id"), (r.get("inputs_ref") or {}).get("stdout_sha")) not in linked
+            and not ((r.get("ticket_id"), r.get("gate_id")) in retried
+                     and (r.get("inputs_ref") or {}).get("attempt", 1) == 1)]
 
 
 def derive_outcomes(verdicts: list[dict]) -> dict[str, dict]:

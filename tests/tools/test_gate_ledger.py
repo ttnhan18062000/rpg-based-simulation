@@ -300,6 +300,20 @@ class TestAttestedRowsAreEvidence:
         section = gate_ledger.render_section(rows, week=WEEK, total_rows=len(rows))
         assert "Attested, no verdict row: 2" in section and "parity_touched_ledger 1" in section
 
+    def test_a_transport_retry_is_one_verdict_not_two(self, tmp_path):
+        """TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY: attempt 1 (command mangled in transport, exit 2) and the
+        retry (attempt 2) are two attested rows for one gate; they must not read as two verdicts or two orphans."""
+        first = _attested("a1", "2026-10-05T10:00:00Z", "test_scope_coverage", "empty", blocking=True)
+        retry = _attested("a2", "2026-10-05T10:00:30Z", "test_scope_coverage", "real")
+        retry["inputs_ref"].update({"attempt": 2, "retry_reason": "wrong_command"})
+        _put(tmp_path, first, retry, _pipeline("p1", "2026-10-05T10:00:31Z", "Test:gate_checks.x.y", False, sha="real"))
+        rows = gate_ledger.load_rows(tmp_path)
+        assert sum(g["verdicts"] for g in gate_ledger.report(rows)) == 1
+        assert gate_ledger.attested_without_verdict(rows) == [], "the superseded first attempt is not an orphan"
+        # control: without the retry marker the same first row IS listed
+        _put(tmp_path / "ctl", first, _pipeline("p1", "2026-10-05T10:00:31Z", "Test:gate_checks.x.y", False, sha="real"))
+        assert [r["gate_verdict_id"] for r in gate_ledger.attested_without_verdict(gate_ledger.load_rows(tmp_path / "ctl"))] == ["a1"]
+
     def test_attested_only_period_still_names_the_orphans(self, tmp_path):
         _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "tag_check", "s"))
         section = gate_ledger.render_section(gate_ledger.load_rows(tmp_path), week=WEEK, total_rows=1)

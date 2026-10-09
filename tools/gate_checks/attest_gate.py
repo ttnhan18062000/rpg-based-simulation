@@ -4,9 +4,11 @@
 The native Workflow runtime has no shell, so a gate command runs inside a dispatched agent and the script has to tell a
 real result from a misreport. This wrapper runs the command itself and prints, first,
 
-    ATTEST:{"gate","cmd","exit_code","stdout_sha","mac"}
+    ATTEST:{"gate","cmd_sha","exit_code","stdout_sha","mac"}
 
-with ``mac = sha256(nonce|gate|cmd|exit_code|stdout_sha)``, then the command's stdout verbatim. The verifier in
+with ``cmd_sha = sha256(cmd)`` and ``mac = sha256(nonce|gate|cmd_sha|exit_code|stdout_sha)``, then the command's stdout
+verbatim. The line carries the command's hash, not the command: echoing a long command back through the dispatched
+agent was a second lossy copy of the payload (TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY). The verifier in
 ``.claude/workflows/implement-ticket.js`` (``verifyAttestation``) recomputes the mac from a nonce, gate id and expected
 command that the script holds, never from the agent's prose.
 
@@ -19,7 +21,10 @@ re-run of ``done_checker_static.py`` before commit, and CI.
 The command is passed base64-encoded (``--cmd-b64``) because gate commands are multi-line shell strings with nested
 quotes that an agent would otherwise have to re-quote; it runs under ``bash -c``.
 
-usage: attest_gate.py --nonce N --gate-id G --cmd-b64 B64
+``--attempt 2 --retry-reason R`` marks the single re-dispatch the workflow makes after a transport mismatch; both go
+on the recorded row's ``inputs_ref`` and nowhere into the mac.
+
+usage: attest_gate.py --nonce N --gate-id G --cmd-b64 B64 [--attempt N --retry-reason R]
 """
 from __future__ import annotations
 
@@ -41,8 +46,8 @@ def sha256_hex(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def compute_mac(nonce: str, gate: str, cmd: str, exit_code: int, stdout_sha: str) -> str:
-    return sha256_hex("|".join([nonce, gate, cmd, str(exit_code), stdout_sha]))
+def compute_mac(nonce: str, gate: str, cmd_sha: str, exit_code: int, stdout_sha: str) -> str:
+    return sha256_hex("|".join([nonce, gate, cmd_sha, str(exit_code), stdout_sha]))
 
 
 def attest(nonce: str, gate_id: str, cmd: str) -> tuple[str, str]:
@@ -51,21 +56,27 @@ def attest(nonce: str, gate_id: str, cmd: str) -> tuple[str, str]:
     env = {**os.environ, "GATE_VERDICT_NO_RECORD": "1"}
     proc = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, env=env)
     stdout_sha = sha256_hex(proc.stdout)
+    cmd_sha = sha256_hex(cmd)
     record = {
         "gate": gate_id,
-        "cmd": cmd,
+        "cmd_sha": cmd_sha,
         "exit_code": proc.returncode,
         "stdout_sha": stdout_sha,
-        "mac": compute_mac(nonce, gate_id, cmd, proc.returncode, stdout_sha),
+        "mac": compute_mac(nonce, gate_id, cmd_sha, proc.returncode, stdout_sha),
     }
     return "ATTEST:" + json.dumps(record), proc.stdout
 
 
-def _record(gate_id: str, cmd: str, line: str, stdout: str, enabled: bool, ticket_id: str | None = None) -> None:
+def _record(gate_id: str, cmd: str, line: str, stdout: str, enabled: bool, ticket_id: str | None = None,
+            attempt: int = 1, retry_reason: str | None = None) -> None:
     """Persist what the ATTEST line already prints (gate, cmd hash, exit code, stdout hash), never the mac."""
     import gate_verdicts  # noqa: PLC0415 - monitoring must never break the wrapper
     attested = json.loads(line[len("ATTEST:"):])
     failed = attested["exit_code"] != 0
+    inputs_ref = {"head_sha": gate_verdicts.head_sha(), "cmd_sha": gate_verdicts.sha256_hex(cmd),
+                  "stdout_sha": attested["stdout_sha"], "exit_code": attested["exit_code"]}
+    if attempt > 1:
+        inputs_ref.update({"attempt": attempt, "retry_reason": retry_reason})
     gate_verdicts.record_gate_verdict(
         enabled=enabled,
         gate_id=gate_id,
@@ -74,8 +85,7 @@ def _record(gate_id: str, cmd: str, line: str, stdout: str, enabled: bool, ticke
         blocking=failed,
         execution_mode="workflow",
         ticket_id=ticket_id,
-        inputs_ref={"head_sha": gate_verdicts.head_sha(), "cmd_sha": gate_verdicts.sha256_hex(cmd),
-                    "stdout_sha": attested["stdout_sha"], "exit_code": attested["exit_code"]},
+        inputs_ref=inputs_ref,
     )
 
 
@@ -85,6 +95,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--gate-id", required=True)
     parser.add_argument("--cmd-b64", required=True)
     parser.add_argument("--ticket-id", default=None, help="The ticket the run is for; recorded on the gate_verdicts row.")
+    parser.add_argument("--attempt", type=int, default=1, help="2 on the single re-dispatch after a transport mismatch.")
+    parser.add_argument("--retry-reason", default=None, help="The verifier reason that caused the re-dispatch.")
     parser.add_argument("--no-record", action="store_true", help="Do not write this verdict to the gate_verdicts shard.")
     args = parser.parse_args(argv)
     cmd = base64.b64decode(args.cmd_b64).decode("utf-8")
@@ -92,7 +104,8 @@ def main(argv: list[str] | None = None) -> int:
     print(line)
     sys.stdout.write(stdout)
     try:
-        _record(args.gate_id, cmd, line, stdout, enabled=not args.no_record, ticket_id=args.ticket_id)
+        _record(args.gate_id, cmd, line, stdout, enabled=not args.no_record, ticket_id=args.ticket_id,
+                attempt=args.attempt, retry_reason=args.retry_reason)
     except Exception as exc:  # noqa: BLE001 - monitoring must never change the wrapper's output or exit code
         print(f"WARNING: gate verdict not recorded: {type(exc).__name__}: {exc}", file=sys.stderr)
     return 0
