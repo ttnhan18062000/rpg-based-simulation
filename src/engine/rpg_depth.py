@@ -204,8 +204,7 @@ class LeashService:
         nav = entity.navigation
         if nav.leash_radius <= 0 or nav.home_position is None or target_pos is None:
             return True
-        from src.engine.legality import LegalityServiceV2
-        return LegalityServiceV2.get_manhattan_dist(target_pos, nav.home_position) <= nav.leash_radius
+        return abs(target_pos[0] - nav.home_position[0]) + abs(target_pos[1] - nav.home_position[1]) <= nav.leash_radius
 
     @staticmethod
     def should_give_up_chase(entity: EntityState) -> bool:
