@@ -1,7 +1,7 @@
-"""Guards against a fifth local copy of the NORMAL-pinned ``ResourceGovernor``.
+"""Guards against a further local copy of the NORMAL-pinned ``ResourceGovernor``.
 
 TCK-20261009-PINNED-NORMAL-GOVERNOR-SHARED-TEST-HELPER: tests that run a real ``Kernel`` pin the governor to ``RuntimeMode.NORMAL`` (with a no-op
-``force_mode``) so the outcome does not depend on host speed. Four files each carried an identical local class; the shared one is
+``force_mode``) so the outcome does not depend on host speed. Several files each carried an identical local class; the shared one is
 ``tests/helpers/kernel_pinning.py::PinnedNormalGovernor``. A subclass is flagged only when it is an exact copy: it subclasses ``ResourceGovernor``,
 its ``_get_indicated_mode`` is a single ``return RuntimeMode.NORMAL`` and its ``force_mode`` is a bare ``return None`` / ``return`` / ``pass``.
 Overrides with another purpose (a different pinned mode, a recording ``force_mode``) are not flagged.
