@@ -3,15 +3,15 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-08
+date: 2026-10-09
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` on 2026-10-08 after PR #418 merged (4a2141df9); on a new machine copy it to `.claude/handover/asset-planner.md`.
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` as of the planner's last update (its own `Updated:` line below: the planner has not refreshed it since child 4, so treat it as stale and refresh it); on a new machine copy it to `.claude/handover/asset-planner.md`.
 
-Updated: 2026-10-08 (PR #418 merged; idle)
+Updated: 2026-10-09 (foundation hardening paused after child 4 by the user)
 
 ## Open
 - Nothing in flight. Last: PR #418 (icon set v2 + owner fixes, 12 tickets) squash-merged as 4a2141df9 on
@@ -23,12 +23,45 @@ Updated: 2026-10-08 (PR #418 merged; idle)
 - Decisions: D20 (style), D21 (theme: medieval fantasy + magic, nothing modern), icon_criteria (I1 3/6/8, I2 6, I3 12),
   6 item families, 3 rarity badges. Process (style guide): spec (+theme fields) -> reference study -> owner-approved
   silhouettes (spec numbers agreed there) -> draw -> sheet rule + measured compliance + blind/era check + look-alikes
-  -> review folder ~/Work/asset-review/<set>/ (python -m visual_assets.review review-sheets --set <id>) -> owner gate.
+  -> review folder ~/Work/asset-review/<set>/ (python -m tests.visual_assets.review_sheets --set <id>) -> owner gate.
   Revisions of adopted icons: per-slot `review` + `adopt --parent rNNNN` (adopt-set cannot revise).
 - 2026-10-08: owner asked for the activation path; gate map done (7-step chain M0->M1->M2->M4->M5->M6 forest pilot->M7
   icons family). Owner chose "Record the map, park it" (resume when RPG core lands). Batch visual-asset-activation-roadmap
   (1 docs ticket, planning commit on that branch) handed to implementer; also refreshes this snapshot in the repo.
-  Known gap: 36 adopted icons lack a declared fallback-safety class (fallback_safety rules 1-3; W02.7 field).
+  Known gap (corrected): icon descriptions state class + fallback in PROSE (35 identifying, 1 decorative); missing is
+  the structured W02.7 registry field and a check reading it. Roadmap merged: PR #450, 48c9785c3. ACTIVATION PARKED
+  until the RPG core lands (owner).
+- 2026-10-08: owner asked what to build next for the foundation; chose ALL of: set-level revisions (+draft drop), M1
+  code gaps (W02.7/W03.1/W06.3), fixture-guard decoupling from current rc, worktree-aware MCP. Owner then asked if we
+  researched what we lack: NOT systematically -> 2 research agents running (internal gap audit; external pipeline
+  practices, report to scratchpad research_asset_pipeline.md). Gap research done (internal 19 gaps; external 15
+  practices; copies in the batch's epic staging folder). Owner chose 7 items -> batch visual-asset-foundation-hardening
+  FILED and handed off (epic TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING): 1 guard decoupling (planner approves
+  design), 2 MCP worktree root, 3 safety/fallback/label fields + verify (owner approves labels), 4 set revisions + draft
+  drop (owner approves D22 design first; security review), 5 review tooling in store CLI + tile_pixels, 6 key-usage
+  report, 7 docs drift. Parked: animation fields, visual evidence capture, decoder, real-Aseprite CI, atlases, LFS.
+  Child 1 design APPROVED (derive manifest from stored rc + artifacts; drift guard vs export_runtime; inventory pins
+  untouched; + artifact PNG decodes to recorded pixel_hash). Child 1 APPROVED (d9d2c1555; follow-up: bare assert -> raise).
+  Child 2 APPROVED (e0f0c3689): VISUAL_ASSETS_CHECKOUT=<abs worktree> selects the store DATA root (code still from the
+  launching checkout); follow-up asked: refuse on STORE_FORMAT version mismatch. Start sessions with
+  `VISUAL_ASSETS_CHECKOUT=/home/vboxuser/Work/rpg-aseprite-mcp claude`. Child 3 APPROVED (a98012d87, follow-up ecf075d20): fields safety_class/fallback/label_key/label, loader rules, W06.3 at
+  release+export, D23, register 58 MET / 4 GAP, M1 still BLOCKED; owner approved 35 labels. Registry realistic max at 90%
+  of MAX_REGISTRY_BYTES -> budget review before next schema growth. Child 4 design APPROVED by planner (draft keep --revises,
+  adopt-set NEW/REVISION listing, ALL-or-NONE, draft drop w/o confirmation); added: tighten per-slot adopt --parent to
+  keep key/detail (found gate weakness). Owner asked 3 questions by implementer (design+D22, tightening, no drop in
+  icons-owner-fixes-v1). Owner approved all 3. Child 4 APPROVED (20445f675): draft keep --revises, adopt-set
+  mixed NEW/REVISION ALL-or-NONE, draft drop, adopt --parent keeps slot; security review clean. PAUSED: user told the implementer "temporary
+  stop" (2026-10-09) before child 5; resume only on the user's word. Branch local, children 1-4 committed (20445f675).
+  Remaining: 5 review tooling in store CLI + tile_pixels + one adopt-set in review README for revision sets; 6 key-usage
+  report; 7 docs drift + close; then PR.
+  RESUMED 2026-10-09 (user: "Resume tickets 5-7"). Child 5 plan approved: new package visual_assets/review/ (own CLI,
+  boundary row), no shims, active docs updated (historical records untouched), TWO commits (pure move + cmp proof, then
+  generic evaluate/sets.py + one-adopt-set + tile_pixels). Before PR: merge main, regen REGISTRY, run tests/unit/tools + tests/tools.
+  Child 5 committed (4a8c0f6d3 move, 5c43b8fbb generic) BUT b02ebb8b3 (child 2 fix) swept in the 18 renames -> rewritten:
+  7a9574fff / 731ff30d5 (18 R) / 628843680; child 5 APPROVED (python -m visual_assets.review evaluate|review-sheets
+  --set <id>; byte-for-byte proof). Child 6 APPROVED (4c872d4a2: python -m visual_assets.review key-usage).
+  FINDING: .gitignore `agent-working/stored_artifacts/**/*.json` hid visual-asset evidence JSON (blind checks, M5
+  captures, ~356 KB) from merged PRs; child 7 commits .json.txt twins + a guard; shared .gitignore untouched. Then PR.
 - Next (not filed; ask the user): rc with icon slots, `icon` fallback
   glyph, isOverviewZoom() in the Live Map art path; optional store ticket: set-level revisions; decouple fixture guards
   from the current-rc pin. Refresh docs/assets/session_handoff/asset-planner.md in the next asset PR (stale in #418).

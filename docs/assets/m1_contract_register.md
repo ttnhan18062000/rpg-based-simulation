@@ -55,9 +55,9 @@ under both, and `PASS` is not reached even on a hypothetical M0 `PASS` (the rema
 
 | Row | Why it is still `GAP` | Keeps "contracts coherent" from holding? |
 |---|---|---|
-| `W02.7` safety-class link | `VisualKeyDefinition` has no class field; the approved framework (`fallback_safety.md`) is policy only | **Yes.** A clause of the minimum registry contract has no field. Immaterial for the one noncritical terrain pilot, material for any later role. |
-| `W03.1` variant axes | frozen empty (`D17`), but nothing rejects a non-empty `variant_axes`, so determinism rests on a rule | **Yes, until `verify` enforces it** (parked code follow-up). |
-| `W06.3` activation policy | requiring an alternative at activation is not built; a policy beyond that needs `AM-M6` | **Yes.** The fallback-safety contract is only half executable. |
+| `W02.7` safety-class link | `VisualKeyDefinition` has no class field; the approved framework (`fallback_safety.md`) is policy only | **Closed 2026-10-09 (`W02.7` is `MET`, see "Update 2026-10-09").** **Yes.** A clause of the minimum registry contract has no field. Immaterial for the one noncritical terrain pilot, material for any later role. |
+| `W03.1` variant axes | frozen empty (`D17`), but nothing rejects a non-empty `variant_axes`, so determinism rests on a rule | **Closed 2026-10-09 (`W03.1` is `MET`).** **Yes, until `verify` enforces it** (parked code follow-up). |
+| `W06.3` activation policy | requiring an alternative at activation is not built; a policy beyond that needs `AM-M6` | **Closed 2026-10-09 (`W06.3` is `MET`).** **Yes.** The fallback-safety contract is only half executable. |
 | `W07.4` capability range | no capability exists to require | **No.** There is nothing to range over; it reopens with the first capability. |
 | `W13.3`, `W13.4`, `W13.6` | distribution stop, stale/offline/cache handling and a tested real rollback need a real deployment | **Not material to M1's coherence by the owner's assignment** (carried to `AM-M6` as its prerequisites, 2026-10-04, not narrowed to the harness drill), but the clauses remain unmet, so `PASS` cannot claim every clause. |
 

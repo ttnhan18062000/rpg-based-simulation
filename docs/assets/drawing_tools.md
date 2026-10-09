@@ -15,7 +15,7 @@ behaviour change by `TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`. Evidence level
 not satisfy the M0 licence/provenance review, produces no production assets and activates nothing at
 runtime. The module layout and layering rules are in `visual_assets/drawing/README.md` and
 `docs/plans/visual-asset-foundation/README.md`; the store the drawings may later be handed to is described in
-`docs/assets/store_contract.md` (designed, not built).
+`docs/assets/store_contract.md` (built: intake, human-gated adoption, build, release candidates, runtime export, verify and gc).
 
 ## Run
 

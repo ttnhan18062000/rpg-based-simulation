@@ -23,4 +23,4 @@ origin/main 48c9785c3, worktree `/home/vboxuser/Work/rpg-aseprite-mcp`), one com
 
 ## Status
 
-OPEN (2026-10-08).
+DONE (2026-10-09): children 1-7 are committed; the PR awaits the user's authorization.

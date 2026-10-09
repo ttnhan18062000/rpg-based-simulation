@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING
-phase: open
+phase: done
 date: 2026-10-08
 tags: [architecture, planning, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning, testing]
 Visual asset foundation hardening: decoupled fixture guards, worktree-aware drawing server, structured safety and label fields, set-level revisions and draft drop, review tooling in the store CLI, a key-usage report, docs drift
 
 ## Status
-OPEN
+EPIC_SCOPED
 
 ## Tier
 epic
@@ -69,4 +69,4 @@ Children in `SEQUENCE.md`, in dependency order (guard decoupling first so the re
 
 
 ## Completion Summary
-
+All seven children are done on branch visual-asset-foundation-hardening (unpushed until the user authorizes): guard decoupling, worktree-aware drawing server, structured safety and label fields (D23), set-level revisions and draft drop (D22), review tooling in visual_assets/review, a key-usage report, docs drift with the evidence repair. No gate moved; activation stays parked; AM-M1 stays BLOCKED by M0.

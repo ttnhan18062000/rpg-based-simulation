@@ -1,0 +1,63 @@
+{
+ "flagged_era": [
+  "icon.item.tool"
+ ],
+ "flagged_free_text": [],
+ "missed_in_choice": [],
+ "results": {
+  "icon.class.rogue": {
+   "choice": null,
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "a hooded figure"
+   },
+   "era_answer": "medieval or fantasy: a hooded figure",
+   "free": null,
+   "free_text": null,
+   "status": "revision"
+  },
+  "icon.item.tool": {
+   "choice": null,
+   "era": {
+    "era": "cannot tell",
+    "flagged": true,
+    "modern_object_named": [
+     "toolbox"
+    ],
+    "object": "a red toolbox"
+   },
+   "era_answer": "cannot tell: a red toolbox",
+   "free": null,
+   "free_text": null,
+   "status": "revision"
+  },
+  "icon.rarity.common": {
+   "choice": null,
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "a grey sphere"
+   },
+   "era_answer": "cannot tell: a grey sphere",
+   "free": null,
+   "free_text": null,
+   "status": "revision"
+  },
+  "icon.status.frame_buff": {
+   "choice": null,
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "an up arrow badge"
+   },
+   "era_answer": "cannot tell: an up arrow badge",
+   "free": null,
+   "free_text": null,
+   "status": "revision"
+  }
+ }
+}
