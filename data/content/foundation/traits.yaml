@@ -15,6 +15,11 @@
   description: "Can use equipment, weapons, buildings, and services."
 
 # STATE: REDESIGNED-CORE
+- id: "keeps_coin_and_trades"
+  display_name: "Keeps Coin and Trades"
+  description: "Holds and spends coin, sells goods and works for a wage (owner decision 43). A place serves or hires such a kind only while its controlling faction is not hostile to the subject."
+
+# STATE: REDESIGNED-CORE
 - id: "pack_hunter"
   display_name: "Pack Hunter"
   description: "Can gain confidence/coordination from nearby pack members."

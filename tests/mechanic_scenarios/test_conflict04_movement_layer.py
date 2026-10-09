@@ -20,7 +20,7 @@ from src.engine.kernel import Kernel
 from src.engine.movement import MovementSystem
 from src.engine.tactical import TacticalDecisionSystem
 from src.platform.rng import DeterministicRNG
-from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world
+from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world, empty_inventories
 from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
 WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
@@ -115,13 +115,13 @@ def test_the_invariant_predicate_exempts_a_held_decided_flight_and_counts_every_
 
 
 def test_an_idle_walker_beside_an_engaged_hostile_does_not_step_and_takes_no_opportunity_attack():
-    out = _walk(_stage(compile_world(WORLD_ID), h_pos=ADJ), 6)  # inside the first brain cadence: only the stored target could move it
+    out = _walk(_stage(empty_inventories(compile_world(WORLD_ID)), h_pos=ADJ), 6)  # inside the first brain cadence: only the stored target could move it
     assert set(out["positions"]) == {W_POS}, "the walker stepped off adjacency without a decision"
     assert out["oa"] == 0
 
 
 def test_control_the_same_walker_without_an_adjacent_hostile_walks_its_stored_target():
-    out = _walk(_stage(compile_world(WORLD_ID), h_pos=FAR), 6)
+    out = _walk(_stage(empty_inventories(compile_world(WORLD_ID)), h_pos=FAR), 6)
     assert out["positions"][-1] != W_POS, "the control walker did not move, so the main arm proves nothing"
 
 

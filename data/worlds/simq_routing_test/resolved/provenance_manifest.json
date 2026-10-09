@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_5c0d7848aea8e6aa",
+  "manifest_id": "prov_2ab3824b5f7d7601",
   "world_id": "simq_routing_test",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
@@ -11,8 +11,8 @@
   },
   "composition_fingerprint": "df9e3f2eeeac0d7f91aecc2d65a8809c8a9a31c37ed44d615c1dbebe5102ba0e",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "5c0d7848aea8e6aaa71549c840828aab953170f524e446a63e93e45dcb786395",
-  "created_at": "2026-10-08T11:03:24.931336Z",
+  "content_fingerprint": "2ab3824b5f7d76018768727055ccd2cb23c9e0ab1bb85946cd07a1fba449bfa7",
+  "created_at": "2026-10-09T03:58:49.074264Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -239,7 +239,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",

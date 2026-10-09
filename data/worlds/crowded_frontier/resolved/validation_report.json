@@ -9,8 +9,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -21,8 +21,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -810,7 +810,8 @@
     "hero_adventurers": [],
     "bandit_road_trade_pressure": [],
     "goblin_camp_conflict": [],
-    "orc_clan_territory": []
+    "orc_clan_territory": [],
+    "wild_edge_forage": []
   },
   "composition_validation": [],
   "world_validation": [

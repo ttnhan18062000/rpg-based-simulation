@@ -6,8 +6,8 @@ from __future__ import annotations
 import json
 
 from tests.visual_assets import adopted_facts as af
-from tests.visual_assets import icon_v2_keys as v2
-from tests.visual_assets.icon_item_families import load_mapping
+from visual_assets.review import icon_v2_keys as v2
+from visual_assets.review.icon_item_families import load_mapping
 from visual_assets.store import config, records
 from visual_assets.store.catalog.registry import load_registry
 

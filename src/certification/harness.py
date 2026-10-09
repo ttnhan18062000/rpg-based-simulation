@@ -150,7 +150,6 @@ class CertificationHarness:
                         memory_trend_mb_per_tick=snapshot.memory_trend_mb_per_tick,
                         tick_compute_ms=snapshot.tick_compute_ms,
                         tick_compute_ms_avg=snapshot.tick_compute_ms_avg,
-                        work_debt=snapshot.work_debt_total,
                         worker_utilization=snapshot.worker_utilization,
                         queue_utilization=snapshot.queue_utilization,
                         replay_pressure=replay_stats["buffer_utilization"],

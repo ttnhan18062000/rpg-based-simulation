@@ -56,7 +56,6 @@ class DummyEngineManager:
             "worker_utilization": 0.12,
             "queue_utilization": 0.05,
             "memory_rss_bytes": 45000000.0,
-            "work_debt_total": 0,
             "dropped_work_delta": 0,
             "errors_total": 0,
             "phase_costs_ms": {"combat": 0.5},

@@ -162,7 +162,7 @@ def test_audit_mode_still_zeroes_the_signals_under_the_canonical_contract():
                     flags={"audit_mode": True, "no_frame_pacing": True, "no_replay": True})
     try:
         kernel.tick_once()
-        assert kernel._current_signals == PressureSignals(work_debt_total=0, metrics=kernel._current_signals.metrics)
+        assert kernel._current_signals == PressureSignals(metrics=kernel._current_signals.metrics)
         assert kernel._status.current_mode is RuntimeMode.NORMAL
     finally:
         kernel.shutdown()

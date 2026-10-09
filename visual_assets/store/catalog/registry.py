@@ -22,6 +22,53 @@ from visual_assets.store.errors import ContractError, RegistryError
 from visual_assets.store.identities import is_fixture_key
 
 
+def safety_problems(definition: VisualKeyDefinition, *, require_class: bool = True) -> list[str]:
+    """Every rule a key breaks (`AM1-W02.7`, `W03.1`; text for the loader's `RegistryError`); empty when it passes.
+
+    `variant_axes` must be empty (D17: the only axis is `detail`, so a non-empty list would promise a precedence nothing implements). The class and the structured fallback are required
+    (`require_class`; synthetic `fixture.*` keys are exempt): `identifying` needs a fallback that is not `none`, `critical` needs one that carries `text`; the parts must fit the kind. An
+    icon key that is not decorative carries `label_key == "label." + key` and a `label`; a decorative one carries neither."""
+    key = definition.key
+    problems: list[str] = []
+    if definition.variant_axes:
+        problems.append(f"{key}: variant_axes must be empty (D17: only the detail axis exists)")
+    cls, fb = definition.safety_class, definition.fallback
+    if cls is None or fb is None:
+        if require_class:
+            problems.append(f"{key}: safety_class and fallback are required (AM1-W02.7)")
+        return problems
+    parts = {"none": (False, False), "flat_fill": (True, False), "text": (True, False), "glyph_and_text": (True, True)}[fb.kind]
+    if (fb.text is not None and fb.text.strip() != "") != parts[0] or (fb.glyph is not None and fb.glyph.strip() != "") != parts[1]:
+        problems.append(f"{key}: fallback kind {fb.kind!r} needs " + {"none": "no text and no glyph", "flat_fill": "text and no glyph", "text": "text and no glyph", "glyph_and_text": "text and a glyph"}[fb.kind])
+    if cls == "identifying" and fb.kind == "none":
+        problems.append(f"{key}: an identifying key needs a fallback that carries its fact, not 'none'")
+    if cls == "critical" and fb.kind not in ("text", "glyph_and_text"):
+        problems.append(f"{key}: a critical key needs a text alternative that works with no image")
+    if definition.family == "icon":
+        if cls == "decorative":
+            if definition.label_key is not None or definition.label is not None:
+                problems.append(f"{key}: a decorative key carries no label (empty alt)")
+        elif definition.label_key != f"label.{key}" or not (definition.label or "").strip():
+            problems.append(f"{key}: an icon that is not decorative needs label_key 'label.{key}' and a label")
+    return problems
+
+
+def fallback_problems(registry: "Registry", present: set[str]) -> list[str]:
+    """`AM1-W06.3`: what would be shown for every registry key that has NO artifact in a release (`present` = keys with one).
+
+    Usable at build, release and activation: an `identifying` or `critical` key without an image must still have an alternative that carries its fact. The loader already refuses a
+    malformed key; this is the explicit check a release or an activation can run on any registry object, however it was built."""
+    out: list[str] = []
+    for key in sorted(registry.keys):
+        definition = registry.keys[key]
+        if key in present or definition.safety_class is None or definition.safety_class == "decorative":
+            continue
+        fb = definition.fallback
+        if fb is None or fb.kind == "none" or not (fb.text or "").strip():
+            out.append(f"{key}: {definition.safety_class} key has no image in this release and no alternative that carries its fact")
+    return out
+
+
 class _StrictLoader(yaml.SafeLoader):
     """`safe_load` that rejects duplicate mapping keys and anchors/aliases (no expansion tricks)."""
 
@@ -112,6 +159,9 @@ def load_registry(path: Path | None = None, *, allow_fixture_namespace: bool = F
             raise RegistryError(f"duplicate key {definition.key!r}")
         if is_fixture_key(definition.key) and not allow_fixture_namespace:
             raise RegistryError(f"fixture key {definition.key!r} is not allowed here")
+        problems = safety_problems(definition, require_class=not is_fixture_key(definition.key))
+        if problems:
+            raise RegistryError("; ".join(problems))
         keys[definition.key] = definition
 
     aliases: dict[str, str] = {}

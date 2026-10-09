@@ -1,12 +1,12 @@
 """The whole-set colour-vision rule (AM5-S in `docs/assets/pilot_terrain_m5_criteria.md`) on synthetic input, plus the structure of the committed inputs.
-The verdict on the real set is recorded by `python -m tests.visual_assets.set_colour_vision`, never asserted here (a test must not decide the result)."""
+The verdict on the real set is recorded by `python -m visual_assets.review.set_colour_vision`, never asserted here (a test must not decide the result)."""
 
 from __future__ import annotations
 
 import pytest
 
-from tests.visual_assets import pilot_colour_vision as pilot
-from tests.visual_assets import set_colour_vision as sv
+from visual_assets.review import pilot_colour_vision as pilot
+from visual_assets.review import set_colour_vision as sv
 
 A, B = "terrain.a", "terrain.b"
 

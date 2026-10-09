@@ -28,9 +28,6 @@ class PressureSignals:
     tick_compute_ms: float = 0.0      # Absolute nanosecond-derived compute time
     tick_compute_ms_avg: float = 0.0  # Rolling 5-tick average
     
-    # 2. Work & Debt
-    work_debt_total: int = 0          # Total unhandled system debt (D1, D2, ...)
-    
     # 3. Utilization (Disaggregated - Law M7.1)
     worker_utilization: float = 0.0   # Current worker usage / Max allowed
     queue_utilization: float = 0.0    # Current queue depth / Max allowed
@@ -42,7 +39,7 @@ class PressureSignals:
     
     # 5. Pipeline & Lifecycle
     replay_backlog_kb: int = 0       # In-memory staging pending persistence
-    dropped_work_delta: int = 0       # Work shed in the current tick
+    dropped_work_delta: int = 0       # Work the scheduler dropped this tick; nothing registers droppable work, so this is 0
     
     # 6. Gameplay Throughput (Milestone 2)
     movement_count: int = 0           # Successfully processed moves in current tick

@@ -228,10 +228,28 @@ decided:
       `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP` is still open. The artifact records the
       exclusion and the RPG base commit. The fit is re-checked after that fix lands.
    4. Lift extended by the owner on 2026-10-08, for TCK-20261006-PERF-GOVERNOR-WALL-CLOCK-INPUTS-DETERMINISTIC-PROXY only: src/observability/reporting/artifact_repository.py and src/engine/replay_manager.py (run-manifest field), plus a typing-only edit to src/config/loader.py.
+   5. **Phase B file list extended by the owner on 2026-10-08** (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`; all
+      dead-path removals). Besides the Phase B list above, Phase B may edit:
+      - the six Phase A files again: `kernel.py`, `governor.py`, `phase_governor.py`, `governance.py`,
+        `config/profiles.py`, `runtime_status.py`, and also `signal_source.py`;
+      - `src/engine/executor.py`, `src/engine/domain_logic.py`, `src/core/worker_protocol.py`,
+        `src/core/protocol_validator.py`, `src/engine/worker_manager.py` and `src/perf/profiles.py`;
+      - the root-cause rules in `src/observability/understanding/rootcause/rules.py` (text only) and a string in
+        `tools/perf/hash_callsite_inventory.py`.
+      `pipeline.py` is not touched. The RPG-core lanes are asked to hold these files during the Phase B slot as well
+      (`rpg_core_handoff.md`, Ask 12). Hash scheme: `flat-sha256-v2` (PERF-D5, update 2026-10-08).
    Measurements stay provisional, and no soft check becomes blocking. The full lift is still an owner
    statement. On 2026-10-07: criterion 1 has no open item perf knows of; criterion 2 has row 7 (b) at 8
    unbound (#393, from 25), 7 of them dead modules filed for deletion; criterion 3 is this phased window, not a
    no-touch window on all four core files.
+   6. **Status 2026-10-09: both phases merged, and the window is closed.** Phase A (#448, `28d0af111`): the opt-in
+      Canonical signal contract (DEV-018) and the kernel double-count fix (DEV-017); the six files were released on
+      #415. Phase B (#455, `77fe33645`): work debt and the unused periodic shedding path removed, proof digest
+      `flat-sha256-v2` (DEV-019); every held file was released on #455. Perf holds no core file now, and the next
+      perf core edit needs a new owner lift or a named window. Full-lift criteria on 2026-10-09:
+      1. no open determinism break on the measured path that perf knows of;
+      2. memo row 7 (b) at 8 unbound (#393), 7 of them dead modules filed for deletion;
+      3. no standing no-touch window on the four core files.
 
 ### Foundation slice that may start now
 
@@ -299,7 +317,7 @@ spine:
 | Milestone | Capability group | Candidate tickets | Entry gate | Exit |
 |---|---|---:|---|---|
 | [M0 — Architecture governance](performance_m0_architecture_governance_epic.md) | Durable sources, owners, PERF-D1..D6, P1 reconciliation | 9 | Planning sources available | Approved decisions or explicit blocked dispositions; one discoverable program authority |
-| [M1 — Correctness prerequisites](performance_m1_correctness_prerequisites_epic.md) | Capacity/debt/hash corrections and ordering verification | 5 | Relevant PERF decisions plus M0 reconciliation | Corrected contracts/tests and baseline invalidation decisions |
+| [M1 — Correctness prerequisites](performance_m1_correctness_prerequisites_epic.md) | Capacity/debt/hash corrections and ordering verification | 5 | Relevant PERF decisions plus M0 reconciliation | Corrected contracts/tests and baseline invalidation decisions. **Done 2026-10-09:** T01 to T05 complete; the invalidation ledger is [`docs/performance/baseline_invalidation_ledger.md`](../../../performance/baseline_invalidation_ledger.md) (classification only, nothing rerun; reruns are M2) |
 | [M2 — Performance contract](performance_m2_performance_contract_epic.md) | One claim model and executable CI/scheduled projections | 6 | PERF-D2/D4 and affected M1 identities | Versioned authoritative contract with no silent missing-evidence pass |
 | [M3 — Phase and observability foundation](performance_m3_phase_observability_foundation_epic.md) | Phase catalog, scheduling funnel, bounded instrumentation | 7 | PERF-D1/D6, M2 metric identity, PA-05A evidence | Catalog conformance and bounded observer overhead |
 | [M4 — Continuous assurance, baselines, and Gate A](performance_m4_baseline_gate_a_epic.md) | Change-aware test routing, E2E/Arena/SimQ gates, audit evidence, baseline matrix, bottleneck decision | 12 | M1–M3 stable | Trustworthy regression-control loop, valid scenario dispositions, and approved Gate A report |

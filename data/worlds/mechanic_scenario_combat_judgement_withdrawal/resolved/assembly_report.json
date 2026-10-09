@@ -26,12 +26,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
     },
@@ -40,6 +34,12 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -852,12 +852,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
     },
@@ -866,6 +860,12 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -1663,7 +1663,7 @@
     }
   ],
   "fingerprints": {
-    "catalog": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
+    "catalog": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
     "modules": {
       "combat_judgement_arena": "0d4f5ef54b7930467913f05203c87f544fbb24067edbf4e54580bb8074c0d8d3"
     }

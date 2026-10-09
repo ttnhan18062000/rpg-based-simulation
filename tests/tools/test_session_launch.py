@@ -137,6 +137,7 @@ def test_the_stub_is_created_at_the_instances_own_path(repo, seat_worktree, monk
     assert execs and third.is_file() and "rpg-implementer-3" in third.read_text()
     assert not (repo / ".claude" / "handover" / "rpg-implementer.md").exists()
 
+
 def test_an_existing_instance_note_is_left_byte_identical_by_a_launch(repo, seat_worktree, monkeypatch):
     note = repo / ".claude" / "handover" / "rpg-implementer-2.md"
     note.parent.mkdir(parents=True)

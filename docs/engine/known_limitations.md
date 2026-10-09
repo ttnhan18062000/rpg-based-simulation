@@ -112,7 +112,7 @@ Source: D09 Finding 5 (Risk 11/15). Ticket: TCK-20260627-P1G-STABILITY-GUARD.
 
 `_phase_persistence()` in `src/engine/kernel.py` records a per-tick digest value under the payload
 key `"hash"` of the `TICK_END` replay event. Whether that value is a real SHA-256 (the proof
-digest, `flat-sha256-v1`; see `docs/engine/deterministic_execution.md`) or not computed (`null` with a
+digest, `flat-sha256-v2`; see `docs/engine/deterministic_execution.md`) or not computed (`null` with a
 `digest_status`) depends on the active `GovernorPolicy`, and on `audit_mode`. Replays recorded before
 `TCK-20261006-PERF-M1-KERNEL-DIGESTS-VIA-SCHEDULER` carry the string `"SKIPPED"` instead; see the `TICK_END` schema note in `deterministic_execution.md`:
 

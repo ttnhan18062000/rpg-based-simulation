@@ -71,3 +71,7 @@ Whether the compile path should fill `building_tiles` (one place, fixes both rea
 
 ## Completion Summary
 (not started)
+
+## Progress 2026-10-08 (batch 2, branch `batch2-earning-chain`)
+- Shop half done: `ShopSystem.enforce` finds the shop through `service_reach`; `ShopService.buy_item` prices a purchase with `MarketSystem.calculate_price` (Bible 03 section 4, rpg-planner ruling); four tests re-pinned to that price; new tests in `tests/unit/world/test_shop_resolves_through_service_reach.py`. With empty shop purses (every building starts with 0 gold and 0 stock) the path runs and rejects: one auto-sell attempt in the three measured worlds (seed 42, 1500 ticks), rejected `LIQUIDITY_EXHAUSTED`. Sell pricing keeps its two documented laws (static 50 percent; `ShopSystem.get_sell_price` with the trauma surcharge) until the earn build needs one.
+- Blacksmith: LEFT UNWIRED ON PURPOSE (ruling 2026-10-08, option b). Wiring the wholesale learning would give every entity standing beside a smithy all 46 recipes for free: 4, 4 and 3 distinct entities per run (crowded_frontier, frontier_living_world, urban_political, seed 42, 1500 ticks), all with 0 gold, so they would meet crafting blockers; one is a `goblin_warband` member. It is a fiction call for the designer and is recorded in the code comment in `src/engine/blacksmith.py`.

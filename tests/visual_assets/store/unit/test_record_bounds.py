@@ -119,13 +119,17 @@ def _maximal_runtime(cls) -> dict:
 
 
 def _maximal_draft_set(cls) -> dict:
-    """MAX_DRAFT_SET_ENTRIES entries of maximum-length keys, detail values and source asset ids (the widest legal DraftSet)."""
+    """MAX_DRAFT_SET_ENTRIES entries of maximum-length keys, detail values and source asset ids, each declaring a revision (ADR D22), plus MAX_DROPPED_DRAFTS drop records with the longest
+    4-byte reason (the widest legal DraftSet)."""
     data = _fixture(cls)
     data["set_id"] = "s" * 64
     data["entries"] = [
         {"visual_key": _wide_key(i), "detail": f"{i % 100:02d}" + "d" * 30, "source_asset_id": "s" * 60 + f"{i:04d}", "draft_id": f"in-{i:016x}",
-         "pixel_hash": "pixels-v1:" + f"{i:064x}", "intake_hash": "sha256:" + f"{i + 1:064x}"}
+         "pixel_hash": "pixels-v1:" + f"{i:064x}", "intake_hash": "sha256:" + f"{i + 1:064x}", "parent_revision": "r9999"}
         for i in range(config.MAX_DRAFT_SET_ENTRIES)
+    ]
+    data["dropped"] = [
+        {"visual_key": _wide_key(1000 + i), "detail": "d" * 32, "draft_id": f"in-{0xf00 + i:016x}", "reason": FOUR_BYTE * 80} for i in range(config.MAX_DROPPED_DRAFTS)
     ]
     return data
 
@@ -203,8 +207,13 @@ def test_every_record_type_has_a_bound_and_the_big_ones_have_their_own():
 
 
 def test_the_maximal_registry_loads_through_the_real_read_path(tmp_path):
+    """The model allows variant axes (the bound tests above use them) but the loader refuses them (D17, AM1-W03.1), so the real read path is measured with the realistic registry a loader accepts:
+    no axes, and every key with a class, a structured fallback and (for icons) a label (`AM1-W02.7`)."""
     data = _maximal_registry(VisualKeyRegistry)
     data.pop("record_type"), data.pop("schema_version")
+    for definition in data["keys"]:
+        definition["variant_axes"] = []
+        definition.update({"safety_class": "identifying", "fallback": {"kind": "glyph_and_text", "glyph": "Lucide Hammer icon (#f59e0b)", "text": "the building name as text"}})
     path = tmp_path / "visual_keys.yaml"
     path.write_text(yaml.safe_dump({"record_type": "visual_key_registry", "schema_version": 1, **data}))
     assert path.stat().st_size <= config.MAX_REGISTRY_BYTES

@@ -4,15 +4,15 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from src.core.enums import ReasonCode
 from src.core.updates import EntityUpdate, NavigationUpdate
-from src.engine.domain.combat_actions import CombatActions
-from src.engine.domain.skill_actions import SkillActions
+from src.engine.building_services import with_service
 from src.engine.domain.aoe_actions import AoeActions
+from src.engine.domain.combat_actions import CombatActions
 from src.engine.domain.core_actions import CoreActions
+from src.engine.domain.skill_actions import SkillActions
+from src.engine.work_shift import work_update
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
-
-
 class ActionRouter:
     """
     Routes action payloads to specific domain handlers.
@@ -32,8 +32,12 @@ class ActionRouter:
         action = payload.get("action") if payload else None
 
         # Survival actions (biological necessities) bypass combat readiness.
-        if action in ("SLEEP", "EAT", "REST"):
-            return CoreActions.execute_survival(entity, action, current_tick)
+        if action in ("SLEEP", "EAT", "REST", "SELL"):
+            # A building service (bed, meal, sale) lands with its action, whichever tick the decision was made on (building_services.py).
+            return with_service(CoreActions.execute_survival(entity, action, current_tick), entity, action, current_tick, context)
+
+        if action == "WORK":
+            return work_update(entity, payload or {}, current_tick, context)
 
         # 0. Readiness Check (combat/skill actions only)
         from src.engine.legality import LegalityServiceV2
@@ -69,7 +73,7 @@ class ActionRouter:
             return CoreActions.execute_leave_clan(entity, payload, current_tick, neighbor_view, context)
 
         if action == "REPAIR":
-            return CoreActions.execute_repair(entity, current_tick)
+            return CoreActions.execute_repair(entity, current_tick, context)
             
         if action == "INTERACT":
             return CoreActions.execute_interact(entity, payload, context)
