@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-PR-RENDER-RAW-PROBE-OUTPUT-ADVISORY
-phase: open
+phase: done
 date: 2026-10-09
 tags: [delivery, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [delivery, data-quality]
 pr_render warns when a PR adds raw probe output under stored_artifacts/**/probes/ above a size threshold
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -80,5 +80,12 @@ Requested by rpg-planner 2026-10-09 in reply to agent-working-planner's probe-pr
 Hand-orchestrated hotfix on `agent-working-small-fixes-batch`, with no PR of its own.
 
 ## Test Summary
+tests/tools/test_delivery_pr_render.py: 67 passed, 5 new (above the 200 KB threshold: one warning with count, size and the 5 largest paths; at the threshold: none; `.py`/`.sh`/`.md`/`.txt` in `probes/`, a raw file outside `probes/`, and a deleted file never count; `render()` adds exactly one warning to the discovery-warnings line and leaves the title unchanged). `test_agent_working_paths_guard.py` passes (11 tests with the others: 78 passed).
+
 ## Files Changed
+- tools/delivery/pr_render.py
+- tests/tools/test_delivery_pr_render.py
+- docs/guides/delivery_process.md
+
 ## Completion Summary
+`pr_render.raw_probe_warning(files)` (threshold `RAW_PROBE_WARN_BYTES` = 200 KB, stated in the code comment) adds one non-blocking warning to the discovery warnings, for both the ticket and the ticketless render, when the PR's changed files include more than that in raw output under `agent-working/stored_artifacts/**/probes/`. It names the count, the total size and up to the 5 largest paths. No exit code, title or lint change. One line in delivery_process.md's PR Lifecycle names the advisory. Citation checking and pruning stay out of scope.

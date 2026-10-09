@@ -364,7 +364,10 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
    `--theme "<one-line batch headline>"` to the render and the same `--theme` to `--check`;
    without it the title names the most recently closed ticket (the renderer prints a stderr
    `HINT:` when it renders more than one ticket with no theme). Hand-write only
-   `## Review notes` (the renderer never generates it — see its own module docstring). PR body: no
+   `## Review notes` (the renderer never generates it — see its own module docstring). The renderer also adds a
+   non-blocking discovery warning when the PR adds more than 200 KB of raw output under
+   `agent-working/stored_artifacts/**/probes/` (anything but `.py`/`.sh`/`.md`/`.txt`): commit probe scripts and summary
+   tables, keep a raw file only when a ticket cites it. PR body: no
    `Co-Authored-By`/session-link trailer, and no "🤖 Generated with [Claude Code](...)" (or
    equivalent tool-attribution) line either — commit message trailers still keep the
    `Co-Authored-By`/session-link trailer, this is a PR-body-only exclusion — this was an explicit
