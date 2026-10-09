@@ -410,7 +410,13 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     this Rule's per-kind ways.
   - **MISSING: hunting.** A kill pays gold and XP only. No meat, carcass or hide item exists in
     the catalog, a corpse holds loot and not food, and there is no eat-corpse action.
-  - **Moot for now: grazers.** The corpus has 13 species and no herbivore.
+  - **MISSING: prey and grazers.** The corpus has 13 species and no herbivore or small game, so
+    a wolf's only possible prey is people, goblins or other predators. **Decided by the owner
+    directly, 2026-10-09 (row 45 of the memo): add a few prey kinds,** small herbivores such as
+    deer and hares. They graze wild land, breed, and flee predators. Wolves then mostly eat game
+    and turn on people mainly when game is scarce, and people gain something to hunt
+    (decision 31). Species, numbers and placement are content; their grazing is SURV-06's
+    "grazing creatures forage", and their numbers follow ECOL's population rules, never a target.
   - **Scenario:** [LB-S20](../scenarios/life-body-batch-05.md#lb-s20) (a predator eats what it
     kills, raw; it does not forage what its diet excludes; no kill means no meat).
   - **Measured preview** (Lane B, `frontier_living_world`, seed 42; five-seed figures per kind

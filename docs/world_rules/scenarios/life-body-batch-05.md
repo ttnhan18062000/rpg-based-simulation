@@ -353,9 +353,9 @@ With no kill there is no meat.
   - **Engineering and content, not observable:** the meat item, yields per kind, raw and cooked
     values, how long a body's meat lasts, and whether scavengers may eat a body they did not kill
     (a later question).
-- **Open content question (not decided):** the corpus has no herbivore or small-game kind (13
-  species, rpg-planner 2026-10-09). Without one, a wolf's only prey is people, goblins or other
-  predators. Whether to add prey kinds (deer, hares) is an owner question, taken separately.
+- **Prey (decided by the owner directly, 2026-10-09; decision 45):** the corpus has no herbivore
+  or small-game kind yet, so a few prey kinds (for example deer or hares) are added. Q is staged
+  as one of them once it exists. Until then a test may stage any kind P's diet allows.
 - **Result (2026-10-09): revealed missing implementation on main.** A kill pays gold and XP only.
   No meat, carcass or hide item exists, a corpse holds loot and not food, and there is no
   eat-corpse action. Carnivores take decision 27's forage step on berry thickets because no diet
