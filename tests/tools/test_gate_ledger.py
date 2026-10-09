@@ -314,6 +314,33 @@ class TestAttestedRowsAreEvidence:
         _put(tmp_path / "ctl", first, _pipeline("p1", "2026-10-05T10:00:31Z", "Test:gate_checks.x.y", False, sha="real"))
         assert [r["gate_verdict_id"] for r in gate_ledger.attested_without_verdict(gate_ledger.load_rows(tmp_path / "ctl"))] == ["a1"]
 
+    def test_an_orphan_attested_row_accepts_an_outcome_and_then_reads_as_resolved(self, tmp_path):
+        """TCK-20261009-GATE-LEDGER-OUTCOME-ON-ORPHAN-ATTESTED-ROW: a run that died before its pipeline site recorded the gate."""
+        _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "test_scope_coverage", "empty", blocking=True))
+        rows = gate_ledger.load_rows(tmp_path)
+        assert [v["gate_verdict_id"] for v in gate_ledger.unresolved(gate_ledger.orphan_view(rows))] == ["a1"]
+        row = gate_ledger.record_outcome("a1", "stopped", note="attested command corrupted in agent transport", data_root=tmp_path)
+        assert row["outcome"] == "stopped" and row["gate_verdict_id"] == "a1"
+        rows = gate_ledger.load_rows(tmp_path)
+        assert gate_ledger.unresolved(gate_ledger.orphan_view(rows)) == []
+        assert [v["outcome"] for v in gate_ledger.orphan_view(rows)] == ["stopped"]
+        assert gate_ledger.report(rows) == [], "an orphan stays out of the verdict totals"
+
+    def test_a_paired_attested_row_refuses_and_names_the_verdict_to_use(self, tmp_path):
+        _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "tag_check", "s1", blocking=True),
+             _pipeline("p1", "2026-10-05T10:00:01Z", "Scope:a.b", True, sha="s1"))
+        with pytest.raises(gate_ledger.PairedAttestedRow) as err:
+            gate_ledger.record_outcome("a1", "stopped", data_root=tmp_path)
+        assert err.value.verdict_id == "p1" and "p1" in str(err.value)
+        assert gate_ledger.record_outcome("p1", "stopped", data_root=tmp_path)["gate_verdict_id"] == "p1"
+
+    def test_the_cli_exits_one_for_a_paired_attested_id_and_two_for_an_unknown_id(self, tmp_path, capsys):
+        _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "tag_check", "s1", blocking=True),
+             _pipeline("p1", "2026-10-05T10:00:01Z", "Scope:a.b", True, sha="s1"))
+        assert gate_ledger.main(["--data-root", str(tmp_path), "outcome", "--gate-verdict-id", "a1", "--outcome", "stopped"]) == 1
+        assert "record the outcome on p1" in capsys.readouterr().err
+        assert gate_ledger.main(["--data-root", str(tmp_path), "outcome", "--gate-verdict-id", "nope", "--outcome", "stopped"]) == 2
+
     def test_attested_only_period_still_names_the_orphans(self, tmp_path):
         _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "tag_check", "s"))
         section = gate_ledger.render_section(gate_ledger.load_rows(tmp_path), week=WEEK, total_rows=1)

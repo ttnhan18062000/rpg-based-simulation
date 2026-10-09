@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-GATE-LEDGER-OUTCOME-ON-ORPHAN-ATTESTED-ROW
-phase: open
+phase: done
 date: 2026-10-09
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 gate_ledger outcome accepts an attested row that has no verdict row, so a run that died at a gate can record "stopped"
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -77,5 +77,12 @@ None (hotfix).
 Hand-orchestrated hotfix on `agent-working-small-fixes-batch`, with no PR of its own.
 
 ## Test Summary
+tests/tools/test_gate_ledger.py: 32 passed, 3 new (an orphan accepts an outcome and then reads as resolved while staying out of the totals; a paired attested row refuses and names the verdict id; CLI exit 1 for paired, 2 for unknown). Recorded for real: `gate_ledger.py outcome --gate-verdict-id gv-e41c39cd23e34df3 --outcome stopped` succeeded and `list --unresolved` no longer shows it.
+
 ## Files Changed
+- tools/agent-monitoring/gate_ledger.py
+- tests/tools/test_gate_ledger.py
+- docs/guides/delivery_process.md
+
 ## Completion Summary
+`record_outcome` and `record_adjudication` accept an orphan attested id (`_known_verdict_ids` adds `attested_without_verdict`), refuse a paired attested id with `PairedAttestedRow` naming the verdict to use, and `list` includes orphans (`orphan_view`) so `--unresolved` shows an open one and drops it once an outcome exists. Verdict totals and pass rates still ignore orphans. The stop for `gv-e41c39cd23e34df3` is recorded.

@@ -158,7 +158,8 @@ override or stop on a blocking verdict instead of fixing and re-running it, reco
 `python3 tools/agent-monitoring/gate_ledger.py outcome --gate-verdict-id <id> --outcome overridden|stopped [--note ...]`;
 `gate_ledger.py list --unresolved` shows the ids still open. A fix and re-run is derived without any entry
 (a later pass on the same ticket and gate is `fixed_and_rerun`; the same block on the same inputs is
-`rerun_no_change`). When someone rules on whether a verdict was right, `gate_ledger.py adjudicate`. When
+`rerun_no_change`). A run that died before its pipeline site recorded the gate leaves only an attested row; `outcome`
+accepts that id too, but an attested row that has a verdict row refuses and names the verdict id to use. When someone rules on whether a verdict was right, `gate_ledger.py adjudicate`. When
 `post_native_run_check.py` fails a gate that the native run attested as PASS, it records the `false_pass`
 itself. Recording an override is bookkeeping, not permission: never edit an artifact to make a gate pass.
 
