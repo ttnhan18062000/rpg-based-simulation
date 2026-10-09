@@ -1684,15 +1684,16 @@
     declared kind keeps the old constants and is listed by undeclared_need_kinds.'
   proof_type: regression
   test_path: tests/unit/engine/test_biological_needs.py::test_apply_path_accumulates_per_kind
-  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.80.
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.80, and Section 2.93 (owner decision 33, light balance pass,
+    `humanoid_survival` hunger is low, 0.05 per tick, for human, orc, elf, dwarf, troll, lizardfolk and species-less persons).
   support_boundary: null
 - id: PROG-129
   text: 'TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02: past the hunger line a person weakens first (hunger 85: recovery at half rate, attack x0.8) and then loses health slowly (hunger 95: 1 HP every round(6000 / max_hp) ticks), dying about 6000 ticks after the line instead of about 50 (SURV-02 amendment, owner decision 36).'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/engine/starvation.py (the table and the pure stage functions), src/engine/apply.py (HP term and recovery scale), src/engine/combat.py (STARVATION_WEAKENED). Pinned 5x3 at 10000 ticks in docs/guidelines/intentional_divergences.md Section 2.9X-D36.'
+  v2_evidence: 'src/engine/starvation.py (the table and the pure stage functions), src/engine/apply.py (HP term and recovery scale), src/engine/combat.py (STARVATION_WEAKENED). Pinned 5x3 at 10000 ticks in docs/guidelines/intentional_divergences.md Section 2.94.'
   proof_type: regression
   test_path: tests/mechanic_scenarios/test_starvation_over_days.py
-  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.9X-D36.
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.94.
   support_boundary: 'Constants in one table, not content. Sleep debt (hunger-like 1 HP per tick at 98) is not staged. Long-run survivors converge because the worlds feed few people.'

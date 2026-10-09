@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple
 
+from src.core.items import food_hunger_recovery
 from src.core.strategic import GoalKind, ProjectStatus
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.biological_needs import need_rates
@@ -73,3 +74,30 @@ def rest_in_place_update(
         navigation=NavigationUpdate(target_clear=True),
         task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "REST", "reason": "REST_IN_PLACE"}),
     )
+
+
+# Hunger at or above which a subject carrying food eats it (SURV-06: carried food is a way to eat that needs no building).
+# One meal removes a food item's `hunger_recovery`, so below this a carried meal would be wasted.
+EAT_CARRIED_MIN_HUNGER = 40.0
+
+
+def eat_carried_update(entity: EntityState, hostiles: Sequence[EntityState]) -> Optional[EntityUpdate]:
+    """An eat-what-you-carry update for a hungry subject holding food, or None. No building is needed; a present threat outranks it."""
+    if entity.biological.hunger < EAT_CARRIED_MIN_HUNGER:
+        return None
+    if not any(food_hunger_recovery(stack.item_id) > 0.0 and stack.quantity > 0 for stack in entity.inventory.items):
+        return None
+    if hostiles and present_threat_terms(entity, list(hostiles)):
+        return None
+    return EntityUpdate(
+        entity_id=entity.id,
+        navigation=NavigationUpdate(target_clear=True),
+        task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "EAT", "reason": "EAT_CARRIED"}),
+    )
+
+
+def in_place_survival_update(
+    state: AuthoritativeState, entity: EntityState, hostiles: Sequence[EntityState]
+) -> Optional[EntityUpdate]:
+    """A survival action that needs no building: rest in place, else eat carried food; None to decide as usual."""
+    return rest_in_place_update(state, entity, hostiles) or eat_carried_update(entity, hostiles)

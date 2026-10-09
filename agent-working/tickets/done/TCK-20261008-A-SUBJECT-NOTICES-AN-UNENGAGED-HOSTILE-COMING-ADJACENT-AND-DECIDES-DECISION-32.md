@@ -30,14 +30,14 @@ P2
 Owner decision 32 (designer commit 6eba4582b): an unengaged perceived hostile coming adjacent prompts a fresh decision then. Release-to-brain alone could not meet it (an idle task runs the brain on its stagger tick, up to 10 ticks later, and 80 percent of episodes end within 3 ticks), so the scheduler wakes the brain (approved by rpg-planner as an exception to the scheduler no-touch rule; perf informed).
 
 ## Scope
-Scheduler wake (`ADJACENCY_WAKE_COOLDOWN` 2, stateless, LOD bypass), the posture-following decision (`notice_unengaged_hostile`), `KEEP_WALKING` released on arrival, `AVOID_HOSTILE` a decided flight; unit tests, kernel scenario with control arm, bounded-decision invariant; divergence 2.9X-D32, parity COMB-343, Bible 02 section 7, tactical contract, mechanism note; pinned 5x3 at 1500 and 5000 ticks.
+Scheduler wake (`ADJACENCY_WAKE_COOLDOWN` 2, stateless, LOD bypass), the posture-following decision (`notice_unengaged_hostile`), `KEEP_WALKING` released on arrival, `AVOID_HOSTILE` a decided flight; unit tests, kernel scenario with control arm, bounded-decision invariant; divergence 2.95, parity COMB-343, Bible 02 section 7, tactical contract, mechanism note; pinned 5x3 at 1500 and 5000 ticks.
 
 ## Out of Scope
 - Any movement-layer freeze (rejected by the decision); a `watch` semantic change (the designer decides); content for `ignore`.
 
 ## Acceptance Criteria
 - [x] Every two-tick adjacency episode with an unengaged perceived hostile is followed by a brain decision within the bound (2 ticks): the pinned-run invariant counts 0 violations.
-- [x] Pinned 5x3 with OA hits by class, deaths, alive, brain decisions, resolve_move, two-run digests (divergence 2.9X-D32).
+- [x] Pinned 5x3 with OA hits by class, deaths, alive, brain decisions, resolve_move, two-run digests (divergence 2.95).
 - [x] cProfile and the LOD-bypass count are stated.
 
 ## Related Tickets

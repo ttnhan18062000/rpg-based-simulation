@@ -29,7 +29,9 @@ regions:
         weight: 3.0
       - terrain: "swamp"
         weight: 1.0
-    hazard_level: 1.0
+    # ENV-08 (decision 30): the near edge of the wild is survivable for the people who live beside it. The integer drain
+    # int(level * 10) has no nonzero step a healthy 110-HP human survives a forage visit through (see the d27 divergence), so 0.
+    hazard_level: 0.0
     hazard_kind: "NATURAL_TERRAIN"
     tags: [forest]
   - id: "wolf_den"
@@ -66,6 +68,8 @@ resources:
   wood_node: 8
   herb_patch: 6
   healing_flower_patch: 3
+  # Wild food (Decision 29, SURV-06): forest land is the high-fertility case, charges anchored to the existing wood_node default (10).
+  berry_thicket: 10
 observability_tags: ["ecology", "wilderness"]
 quest_definitions:
   - id: "wolf_hunt_alpha_pack"

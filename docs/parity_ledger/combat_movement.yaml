@@ -4813,8 +4813,8 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/engine/scheduler.py (_is_woken, _throttled, _critical_item, ADJACENCY_WAKE_COOLDOWN), src/engine/candidate_selector.py (unengaged_adjacent_hostile), src/engine/tactical_hold.py (notice_unengaged_hostile), src/engine/tactical.py. Pinned 5x3 at 1500 and 5000 ticks in docs/guidelines/intentional_divergences.md Section 2.9X-D32: opportunity-attack hits 196.0 to 63.8, 140.2 to 94.6, 77.4 to 40.2 at 1500 ticks.'
+  v2_evidence: 'src/engine/scheduler.py (_is_woken, _throttled, _critical_item, ADJACENCY_WAKE_COOLDOWN), src/engine/candidate_selector.py (unengaged_adjacent_hostile), src/engine/tactical_hold.py (notice_unengaged_hostile), src/engine/tactical.py. Pinned 5x3 at 1500 and 5000 ticks in docs/guidelines/intentional_divergences.md Section 2.95: opportunity-attack hits 196.0 to 63.8, 140.2 to 94.6, 77.4 to 40.2 at 1500 ticks.'
   proof_type: regression
   test_path: tests/mechanic_scenarios/test_decision32_notice_and_decide.py
-  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.9X-D32.
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.95.
   support_boundary: 'IGNORE is unreachable in the corpus (KEEP_WALKING fires 0 times); WATCH is a typed HOLD wait (WATCH_HOSTILE); the wake bypasses the LOD throttle (6 percent of wakes); brain decisions +16 to +17 percent in crowded_frontier; total deaths converge by tick 5000 (a food-supply effect).'

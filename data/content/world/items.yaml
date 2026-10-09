@@ -70,6 +70,14 @@
   base_value: 15
   materials: ["healing_flower", "crystal_shard"]
 
+# STATE: EXISTING-LOGIC
+# SURV-06 forage path (decision 27): wild food a subject can harvest and eat as carried food. Its own item; herb and flowers stay inedible.
+- id: "wild_berries"
+  display_name: "Wild Berries"
+  categories: ["consumable", "food"]
+  rarity: "COMMON"
+  base_value: 2
+
 # STATE: LEGACY-EXPORT
 - id: "travel_ration"
   display_name: "Travel Ration"

@@ -83,7 +83,7 @@ The simulation tracks biological "Pressures" that degrade over time.
 ### Passive Decay Rates
 | Need | Decay (per tick) | Max Value | Penalty Threshold |
 | :--- | :--- | :--- | :--- |
-| **Hunger** | `+0.1` | 100.0 | **85.0**: Weakened (stamina and readiness recover at half rate, attack x0.8). **95.0**: Starving (1 HP lost every `round(6000 / max_hp)` ticks, so a full-health body dies about 6000 ticks, 2.5 days, after the line) |
+| **Hunger** | `+0.1` base per tick, scaled by the kind's need profile (`humanoid_survival` is "low": `+0.05`, owner decision 33) | 100.0 | **85.0**: Weakened (stamina and readiness recover at half rate, attack x0.8). **95.0**: Starving (1 HP lost every `round(6000 / max_hp)` ticks, so a full-health body dies about 6000 ticks, 2.5 days, after the line) |
 | **Sleep Debt** | `+0.05` | 100.0 | **98.0**: Fatigue (+1 HP damage/tick) |
 | **Stamina** | `-1.0` (per move) | `Max_Stamina` | **< Exhaustion Threshold**: Exhausted state |
 

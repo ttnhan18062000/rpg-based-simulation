@@ -1,23 +1,23 @@
 {
-  "manifest_id": "prov_084cf3fd91f820ca",
+  "manifest_id": "prov_25303e4953c6ff14",
   "world_id": "frontier_extended",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
-    "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
+    "trading_company_hub": "154fc6ef87e46522880df12f548520ebc2564b1b6a2d44c14a37284b1a390c8d",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "d80c2b1a161759b7d69273f2ab35d462d6bdda149adb67541212e3592cdf5559",
-    "forest_warden_grove": "1afd9828cbd2087f5cbafffdbd2d3b81c59a32d20fa66debd95249844022e3fe"
+    "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584",
+    "forest_warden_grove": "c41ff99559a8e7f6603051db5d5fff790fd4cbf4b35a3d50a5ff48eccc33c6ea"
   },
-  "composition_fingerprint": "8218c3f899ebb6a37a4892785039858234dea59157550a17d2a1a0357dd59cac",
+  "composition_fingerprint": "cc45793e25c782cad5c8f4fb14f6d31f6684171086586bb5b4419a095812a64a",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "084cf3fd91f820ca632e95b6042f739bfe82fda1c0a30bec1c3007254c066541",
-  "created_at": "2026-09-08T02:50:43.417220Z",
+  "content_fingerprint": "25303e4953c6ff14897616a80539d0c9807d8430cc7b205c6602370d85ea32f9",
+  "created_at": "2026-10-08T11:03:08.956383Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -1187,7 +1187,7 @@
           45
         ],
         "terrain": "plain",
-        "hazard_level": 0.5,
+        "hazard_level": 0.0,
         "ecology_source": [
           "frontier_village_ecology"
         ]
@@ -1462,7 +1462,7 @@
           55
         ],
         "terrain": "forest",
-        "hazard_level": 1.0,
+        "hazard_level": 0.0,
         "ecology_source": [
           "wolf_den_ecology"
         ]
@@ -1578,6 +1578,20 @@
       },
       "details": {
         "count": 3,
+        "region": "near_forest"
+      }
+    },
+    "wolf_den_near_forest__berry_thicket_3": {
+      "element_id": "wolf_den_near_forest__berry_thicket_3",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
         "region": "near_forest"
       }
     },
@@ -1780,6 +1794,20 @@
       },
       "details": {
         "count": 2,
+        "region": "sacred_grove"
+      }
+    },
+    "forest_warden_grove__berry_thicket_2": {
+      "element_id": "forest_warden_grove__berry_thicket_2",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
         "region": "sacred_grove"
       }
     },
