@@ -6,6 +6,10 @@ cross machines, so the handover note is the only continuity that can. `export` c
 the untracked `.claude/handover/drafts/` tree and (by default) the project memory into
 `agent-working/handover-transit/<host>/`; `import <host>` restores them on another machine.
 
+Run `export` only before moving sessions to another machine, in its own commit or PR and never inside a ticket batch:
+the repository is public, so the bundle publishes every handover note, open draft and memory file
+(`docs/guides/agent_session_reset_boundaries.md`, "Moving sessions between machines").
+
 Rolling and temporary: one bundle per source host, each export replaces that host's previous
 bundle, so a tree holds at most one small current bundle per machine (git history keeps old ones).
 Files are stored with a `.txt` suffix appended so the doc registry, frontmatter validators and the
