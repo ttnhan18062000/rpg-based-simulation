@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "rpg-based-simulation"
 version = "0.1.0"
 description = "Deterministic Concurrent RPG Engine"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 # Single source of dependency declarations. uv.lock is resolved from this file and
 # there is no requirements.txt export: every CI job runs `uv sync --locked` (TCK-20261008-DROP-UNUSED-REQUIREMENTS-EXPORT).
 # A consumer that cannot read uv.lock can run `uv export --frozen --no-hashes --no-emit-project` ad hoc.
@@ -157,7 +157,7 @@ markers = [
 ]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = false
 ignore_missing_imports = true
 warn_return_any = true
@@ -171,6 +171,12 @@ exclude = [
 ]
 
 # ── Code health (python_code_craft_roadmap.md section 6; docs/guidelines/python_code_standard.md) ──
+[tool.ruff]
+# Explicit, and moved together with `requires-python` and `[tool.mypy] python_version` above: ruff would otherwise
+# fall back to requires-python, so a floor change would silently retarget it. Floor is 3.12 (owner decision
+# 2026-10-09, amending roadmap decision 12); 3.13 follows once the knowledge-search venv moves.
+target-version = "py312"
+
 # Check only: no formatter is adopted (roadmap decision 8.3), so there is no [tool.ruff.format].
 # Existing violations are held in an external baseline, not fixed or suppressed in src/.
 [tool.ruff.lint]
