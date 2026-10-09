@@ -83,6 +83,7 @@ MAX_MANIFEST_BYTES = 8 * 64 * 1024  # budget: docs/assets/budgets.md; the widest
 MAX_VISUAL_KEYS = 1024  # budget: docs/assets/budgets.md
 MAX_DETAIL_KEYS = 64  # budget: docs/assets/budgets.md; keys declaring a detail axis per registry (the runtime manifest repeats each one's declared values)
 MAX_DRAFT_SET_ENTRIES = 256  # budget: docs/assets/budgets.md; entries (slots) in one draft set and in one set adoption record; there is no limit on the number of sets
+MAX_DROPPED_DRAFTS = 8  # budget: docs/assets/budgets.md; `draft drop` records per set (ADR D22), sized so a set at MAX_DRAFT_SET_ENTRIES revisions plus all of them stays under MAX_RECORD_BYTES
 MAX_ALIASES = 1024  # budget: docs/assets/budgets.md
 MAX_SOURCE_BYTES = 100 * 1024  # budget: docs/assets/budgets.md; the D2 (no Git LFS) reversal trigger
 MAX_DIM = 128  # budget: docs/assets/budgets.md

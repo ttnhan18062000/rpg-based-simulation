@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261008-VISUAL-ASSETS-SET-REVISIONS-AND-DRAFT-DROP
-phase: open
+phase: done
 date: 2026-10-08
 tags: [architecture, testing, security]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, security]
 adopt-set adopts revisions of already-adopted sources in one reviewed command, and a draft drop command removes unwanted draft slots
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -45,7 +45,7 @@ because `adopt-set` only creates new sources; and the declined arch/tent drafts 
 - No `src/`, no app wiring (activation parked, PR #450), no gate result moved, no new art. Any change that lets an agent adopt.
 
 ## Acceptance Criteria
-- [ ] Owner-approved design (D22); one command adopts a mixed set atomically with identical lineage; draft drop works and is recorded; gate properties unchanged; security review clean.
+- [x] Owner-approved design (D22); one command adopts a mixed set atomically with identical lineage; draft drop works and is recorded; gate properties unchanged; security review clean.
 
 ## Related Tickets
 
@@ -54,22 +54,23 @@ because `adopt-set` only creates new sources; and the declined arch/tent drafts 
 
 
 ## Related Stored Artifacts
-
+- agent-working/stored_artifacts/TCK-20261008-VISUAL-ASSETS-SET-REVISIONS-AND-DRAFT-DROP/ (plan with the owner's three answers, investigation, test_plan, mutant_proof, security_review)
 
 ## Related Code Areas
 - visual_assets/store/setadoption.py, adoption.py, drafts.py, cli.py
 
 ## Assumptions / Open Questions
-
+- Owner answers (2026-10-09, verbatim): design D22 "Approve the design"; tightening per-slot adopt --parent "Approve the tightening"; declined drafts "Leave them as history".
+- Follow-up not in this ticket: the review-sheet generator still prints per-slot commands for revisions; it could print one adopt-set when drafts declare parent_revision.
 
 ## Implementation Notes
-
+- `DraftEntry.parent_revision`, `SetAdoptedEntry.parent_revision`, `DraftSet.dropped` (absent when unused, old bytes unchanged); `drafts.keep(parent_revision=)`, `drafts.drop`; `adoption.revision_of` and `check_revision_keeps_slot` (used by adopt --parent, adopt-set and keep via `records.revision_slot`); CLI `draft keep --revises`, `draft drop`; ADR D22; `MAX_DROPPED_DRAFTS` budget row.
 
 ## Test Summary
-
+- 26 new tests; mutants M1-M14 caught; security review clean with one pre-existing gap closed. Scoped suites: see the commit report.
 
 ## Files Changed
-
+- visual_assets/store/{contracts/draft,drafts,adoption,setadoption,records,config,cli}.py, tests (new test_set_revisions, record bounds), docs (store_contract, ADR D22, budgets, style guide), ticket and artifacts.
 
 ## Completion Summary
-
+One reviewed `adopt-set` now adopts new icons and revisions of adopted ones together, with the lineage records of per-slot `adopt --parent`; `draft drop` removes and records an unwanted draft; per-slot `adopt --parent` can no longer move a source to another slot. The human-only gate is unchanged and the security review found no bypass.

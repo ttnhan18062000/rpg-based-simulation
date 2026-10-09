@@ -119,13 +119,17 @@ def _maximal_runtime(cls) -> dict:
 
 
 def _maximal_draft_set(cls) -> dict:
-    """MAX_DRAFT_SET_ENTRIES entries of maximum-length keys, detail values and source asset ids (the widest legal DraftSet)."""
+    """MAX_DRAFT_SET_ENTRIES entries of maximum-length keys, detail values and source asset ids, each declaring a revision (ADR D22), plus MAX_DROPPED_DRAFTS drop records with the longest
+    4-byte reason (the widest legal DraftSet)."""
     data = _fixture(cls)
     data["set_id"] = "s" * 64
     data["entries"] = [
         {"visual_key": _wide_key(i), "detail": f"{i % 100:02d}" + "d" * 30, "source_asset_id": "s" * 60 + f"{i:04d}", "draft_id": f"in-{i:016x}",
-         "pixel_hash": "pixels-v1:" + f"{i:064x}", "intake_hash": "sha256:" + f"{i + 1:064x}"}
+         "pixel_hash": "pixels-v1:" + f"{i:064x}", "intake_hash": "sha256:" + f"{i + 1:064x}", "parent_revision": "r9999"}
         for i in range(config.MAX_DRAFT_SET_ENTRIES)
+    ]
+    data["dropped"] = [
+        {"visual_key": _wide_key(1000 + i), "detail": "d" * 32, "draft_id": f"in-{0xf00 + i:016x}", "reason": FOUR_BYTE * 80} for i in range(config.MAX_DROPPED_DRAFTS)
     ]
     return data
 

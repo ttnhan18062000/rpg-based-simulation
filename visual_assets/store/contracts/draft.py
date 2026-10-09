@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Annotated, ClassVar, Literal
 
-from pydantic import AfterValidator, Field, model_serializer, model_validator
+from pydantic import AfterValidator, Field, StringConstraints, model_serializer, model_validator
 
 from visual_assets.store import config
 from visual_assets.store.contracts.base import BoundedText, PersonText, StoreRecord, drop_absent
@@ -26,6 +26,7 @@ from visual_assets.store.identities import (
     PixelHash,
     SetAdoptionId,
     SourceAssetId,
+    SourceRevision,
     UtcTimestamp,
     VisualKey,
 )
@@ -42,6 +43,25 @@ class DraftEntry(StoreRecord):
     draft_id: DraftId  # the intake the draft was kept from; also the entry's folder name
     pixel_hash: PixelHash  # pixels-v1 of the preview PNG: the image the human reviews
     intake_hash: FileHash  # hash of the exact IntakeResult bytes kept beside the entry
+    # ADR D22: present = the NEXT revision of the existing source asset `source_asset_id`, whose latest unrevoked revision was this one when the draft was kept (`draft keep --revises`).
+    # Absent = a new source asset, as before, so a set without revisions serialises byte-identically to what it always did.
+    parent_revision: SourceRevision | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_absent_detail(self, handler):  # type: ignore[no-untyped-def]
+        return drop_absent(handler(self), "detail", "parent_revision")
+
+
+DropReason = Annotated[BoundedText, StringConstraints(max_length=80)]
+
+
+class DroppedDraft(StoreRecord):
+    """The record that a draft was removed from its set by `draft drop` (ADR D22): the slot, the intake it held and why. The reason is the person's own text, never evidence."""
+
+    visual_key: VisualKey
+    detail: AxisValue | None = None
+    draft_id: DraftId
+    reason: DropReason
 
     @model_serializer(mode="wrap")
     def _omit_absent_detail(self, handler):  # type: ignore[no-untyped-def]
@@ -53,6 +73,14 @@ class DraftSet(StoreRecord):
     schema_version: Literal[1]
     set_id: DraftSetId
     entries: tuple[DraftEntry, ...]
+    dropped: tuple[DroppedDraft, ...] = ()  # drops of this set, oldest first; omitted when empty so a set that never lost a draft keeps its bytes (and its recorded hash)
+
+    @model_serializer(mode="wrap")
+    def _omit_empty_dropped(self, handler):  # type: ignore[no-untyped-def]
+        data = handler(self)
+        if not data.get("dropped"):
+            data.pop("dropped", None)
+        return data
 
     @model_validator(mode="after")
     def _entries(self) -> DraftSet:
@@ -63,6 +91,12 @@ class DraftSet(StoreRecord):
             raise ValueError("a draft set has one entry per slot")
         if slots != sorted(slots):
             raise ValueError("draft entries must be sorted by visual key, then detail")
+        if len(self.dropped) > config.MAX_DROPPED_DRAFTS:
+            raise ValueError(f"more than {config.MAX_DROPPED_DRAFTS} dropped drafts")
+        kept_ids = {e.draft_id for e in self.entries}
+        dropped_ids = [x.draft_id for x in self.dropped]
+        if len(set(dropped_ids)) != len(dropped_ids) or kept_ids & set(dropped_ids):
+            raise ValueError("a dropped draft is listed once and is not also kept")
         for name, values in (("draft id", [e.draft_id for e in self.entries]), ("source asset id", [e.source_asset_id for e in self.entries])):
             if len(set(values)) != len(values):
                 raise ValueError(f"every entry needs its own {name}")
@@ -74,10 +108,11 @@ class SetAdoptedEntry(StoreRecord):
     detail: AxisValue | None = None
     adoption_id: AdoptionId
     intake_id: DraftId
+    parent_revision: SourceRevision | None = None  # ADR D22: present for a revision of an existing source asset (the same value the AdoptionRecord holds), absent for a new one
 
     @model_serializer(mode="wrap")
     def _omit_absent_detail(self, handler):  # type: ignore[no-untyped-def]
-        return drop_absent(handler(self), "detail")
+        return drop_absent(handler(self), "detail", "parent_revision")
 
 
 class SetAdoptionRecord(StoreRecord):

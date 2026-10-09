@@ -1,0 +1,16 @@
+Each mutant applied with one exact-substring replacement (asserted to match once), the new tests plus test_drafts.py and test_adoption.py run, then the three store files restored from backups.
+M1 stale parent accepted (`if parent != live[-1]` -> False): test_a_stale_parent_is_refused... and two older adoption tests fail (caught)
+M2 set path skips check_revision_keeps_slot: test_a_revision_whose_slot_changed_since_keeping_is_refused fails (caught)
+M3 adopt skips the slot check: test_adopt_parent_refuses_a_revision_that_moves_the_source... fails (caught)
+M4 slot check compares only the key (ignores the detail): the same test fails (caught)
+M5 drop ignores an adopted set: test_drop_refuses_an_adopted_set_and_an_adopted_entry fails (caught)
+M6 drop ignores an adopted entry: test_drop_refuses_an_entry_that_was_adopted_slot_by_slot... fails (caught)
+M7 the set record loses parent_revision: test_a_mixed_set_adopts... fails (caught)
+M8 keep skips the latest-unrevoked check: two tests fail (caught)
+M9 keep skips the slot check: test_keep_revises_refuses_... fails (caught)
+M10 a revision entry is adopted as a new asset: three tests fail (caught)
+M11 drop does not record the drop: three tests fail (caught)
+M12 the confirmation does not say REVISION: test_a_mixed_set_adopts... fails (caught)
+M13 drop leaves the entry folder: two tests fail (caught)
+M14 `--revises` ignored by keep (the check never runs): many tests fail (caught; the traceback lines, not a count, were what the filter printed)
+Unmutated: 26 passed.
