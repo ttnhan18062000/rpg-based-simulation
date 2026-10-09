@@ -533,6 +533,7 @@ class WorldCompiler:
                 kind=r_spec.type.upper(),
                 influence=100.0 if r_spec.type == "town" else 0.0,
                 owner_faction_id=owner_faction,
+                tax_share=(float(context.tax_share) if context is not None and owner_faction is not None else 0.0),
                 hazard_level=getattr(r_spec, "hazard_level", 0.0),
                 hazard_kind=getattr(r_spec, "hazard_kind", "PHYSICAL"),
                 population_cohorts=_seed_population_cohorts(region_declared_population.get(r_spec.id, 0)),

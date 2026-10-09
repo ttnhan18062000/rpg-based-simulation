@@ -15,6 +15,7 @@ from typing import Any, Dict, Optional
 
 from src.core.updates import EntityUpdate, InteractionUpdate, ResourceTransferIntent
 from src.engine.building_services import service_building
+from src.engine.place_tax import tax_on
 from src.engine.serves import nearest_serving, serves
 
 SHIFT_TICKS = 200
@@ -41,5 +42,7 @@ def work_update(entity: Any, payload: Dict[str, Any], tick: int, context: Any) -
         return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
     # A held action runs twice a tick (the worker, then the routing phase); one shift is paid once, by its transaction id.
     shift = f"wage:{entity.id}:{inn.id}:{payload.get(SHIFT_START, tick)}"
-    wage = ResourceTransferIntent(source_id=inn.id, source_kind="WAGE", gold_delta=WAGE_GOLD, transfer_kind="WAGE", transaction_id=shift)
+    holder, tax = tax_on(context, inn, WAGE_GOLD)
+    wage = ResourceTransferIntent(source_id=inn.id, source_kind="WAGE", gold_delta=WAGE_GOLD, transfer_kind="WAGE", transaction_id=shift,
+                                  treasury_faction=holder, treasury_gold=tax)
     return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0, resource_transfers=[wage], interaction=InteractionUpdate(reset=True))}

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from src.core.treasury import TreasuryTransfer, can_pay
 from src.core.enums import ReasonCode
 from src.core.inventory import InventoryService
 from src.core.quests import QuestStatus
@@ -53,7 +54,16 @@ class TransactionResult:
     ground_item_remove: Optional[int] = None
     corpse_remove: Optional[int] = None
     source_debit: Optional[SourceDebit] = None
+    treasury_update: Optional[TreasuryTransfer] = None
+    owed: Optional[Any] = None  # an OwedRecord: the coin a short treasury could not pay now and owes instead
     reason: ReasonCode = ReasonCode.UNKNOWN
+
+def _tax_credit(intent: ResourceTransferIntent) -> Optional[TreasuryTransfer]:
+    """The share of a sale's or a wage's proceeds that goes to the treasury of the faction holding the place (the intent names it)."""
+    if intent.treasury_faction is None or intent.treasury_gold <= 0:
+        return None
+    return TreasuryTransfer(faction=intent.treasury_faction, gold_delta=min(intent.treasury_gold, intent.gold_delta))
+
 
 def _wage_result(state: Any, intent: ResourceTransferIntent) -> TransactionResult:
     """EXCH-02: a wage is a transfer from the employer's own purse. A short purse pays nothing (the worker is unpaid, no coin appears)."""
@@ -62,10 +72,12 @@ def _wage_result(state: Any, intent: ResourceTransferIntent) -> TransactionResul
         return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
     if intent.gold_delta <= 0 or employer.inventory.gold < intent.gold_delta:
         return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
+    tax = _tax_credit(intent)
     return TransactionResult(
         accepted=True,
-        inventory_update=InventoryUpdate(gold_delta=intent.gold_delta),
-        building_update=BuildingUpdate(building_id=employer.id, inventory=InventoryUpdate(gold_delta=-intent.gold_delta)))
+        inventory_update=InventoryUpdate(gold_delta=intent.gold_delta - (tax.gold_delta if tax else 0)),
+        building_update=BuildingUpdate(building_id=employer.id, inventory=InventoryUpdate(gold_delta=-intent.gold_delta)),
+        treasury_update=tax)
 
 
 def _service_credit(state: Any, intent: ResourceTransferIntent, price: int) -> Optional[Any]:
@@ -103,20 +115,33 @@ def _carried_food_result(intent: ResourceTransferIntent, inventory: InventoryCom
     return TransactionResult(accepted=True, inventory_update=InventoryUpdate(items_remove=intent.items_remove), biological_update=intent.biological_upd)
 
 
-def _reward_result(intent: ResourceTransferIntent, inventory_full: bool, reservations: Optional[Dict[Any, int]]) -> TransactionResult:
+def _reward_result(intent: ResourceTransferIntent, inventory_full: bool, reservations: Optional[Dict[Any, int]],
+                   state: Any = None, entity: Any = None, treasury_pending: Optional[Dict[str, float]] = None) -> TransactionResult:
     """A COMBAT or QUEST grant. A quest accounts for in-tick reservations first (P0.2); both grant XP/gold only if the items fit
-    (Progression Rule: if it has items, it must fit)."""
+    (Progression Rule: if it has items, it must fit). A reward whose coin is funded by a treasury (EXCH-02, decision 38) is paid from it when
+    it holds the coin; a short treasury grants the rest of the reward and OWES the coin (an OwedRecord, paid oldest first)."""
     is_quest = intent.source_kind == "QUEST"
     if is_quest and reservations and reservations.get(("QUEST", intent.source_id), 0) > 0:
         return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)
     if intent.items_add and inventory_full:
         return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
+    gold, treasury_update, owed = intent.gold_delta, None, None
+    if intent.treasury_pays and intent.treasury_faction is not None and gold > 0:
+        if can_pay(state.global_resources, intent.treasury_faction, gold, treasury_pending):
+            treasury_update = TreasuryTransfer(faction=intent.treasury_faction, gold_delta=-gold)
+        else:
+            from src.core.state import OwedRecord
+            owed = OwedRecord(id=f"owed:{intent.source_id}:{entity.id}", creditor_id=entity.id, debtor_faction=intent.treasury_faction,
+                              amount=int(gold), posted_tick=state.tick, reason=f"{intent.source_kind}_REWARD")
+            gold = 0
     return TransactionResult(
         accepted=True,
-        inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
+        inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=gold),
         identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward),
         reward_update=intent.reward_upd,
         quest_update=QuestUpdate(quest_id=str(intent.source_id), status_set=QuestStatus.REWARDED) if is_quest else None,
+        treasury_update=treasury_update,
+        owed=owed,
     )
 
 
@@ -135,7 +160,8 @@ class ResourceTransactionResolver:
         intent: ResourceTransferIntent,
         inventory_override: Optional[InventoryComponent] = None,
         node_overrides: Optional[Dict[int, ResourceNodeUpdate]] = None,
-        reservations: Optional[Dict[tuple[str, str|int], int]] = None
+        reservations: Optional[Dict[tuple[str, str|int], int]] = None,
+        treasury_pending: Optional[Dict[str, float]] = None
     ) -> TransactionResult:
         """
         Validates an intent and produces the necessary updates.
@@ -294,11 +320,12 @@ class ResourceTransactionResolver:
                     return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
             
             from src.core.updates import BuildingUpdate
+            tax = _tax_credit(intent)  # the place holder's share of the proceeds (decision 51); the shop still pays the full price
             return TransactionResult(
                 accepted=True,
                 inventory_update=InventoryUpdate(
                     items_remove=intent.items_remove,
-                    gold_delta=intent.gold_delta
+                    gold_delta=intent.gold_delta - (tax.gold_delta if tax else 0)
                 ),
                 building_update=BuildingUpdate(
                     building_id=intent.source_id,
@@ -306,7 +333,8 @@ class ResourceTransactionResolver:
                         items_add=intent.items_remove,
                         gold_delta=-intent.gold_delta
                     )
-                )
+                ),
+                treasury_update=tax
             )
 
         elif intent.source_kind == "WAGE":
@@ -316,16 +344,20 @@ class ResourceTransactionResolver:
             return _inherit_result(state, intent, inventory_full)
 
         elif intent.source_kind in ("COMBAT", "QUEST"):
-            return _reward_result(intent, inventory_full, reservations)
+            return _reward_result(intent, inventory_full, reservations, state, entity, treasury_pending)
 
         # VERIFIED v2: authoritative_side_effects
         if intent.source_kind in ("TOWN_SERVICE", "TAX", "REPAIR_FEE", "SERVICE_FEE", "INFORMATION_PURCHASE"):
              if target_inventory.gold < intent.gold_cost:
                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)
                  
+             paid = min(target_inventory.gold, max(0, intent.gold_cost - intent.gold_delta))
+             credit = _service_credit(state, intent, paid)
              return TransactionResult(
                  accepted=True,
-                 building_update=_service_credit(state, intent, min(target_inventory.gold, max(0, intent.gold_cost - intent.gold_delta))),
+                 building_update=credit,
+                 treasury_update=(TreasuryTransfer(faction=intent.treasury_faction, gold_delta=paid)
+                                  if credit is None and intent.treasury_faction is not None and paid > 0 else None),
                  inventory_update=InventoryUpdate(
                       items_add=intent.items_add,
                       gold_delta=intent.gold_delta - intent.gold_cost

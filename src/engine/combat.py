@@ -178,7 +178,6 @@ class CombatResolutionSystem:
         outcome = "SURVIVE"
         alive = True
         xp_gain = 0
-        gold_gain = 0
         
         if new_hp <= 0:
             outcome = "KILL" if is_lethal else "DEFEAT"
@@ -187,7 +186,6 @@ class CombatResolutionSystem:
             from src.engine.combat_rewards import CombatRewardClassificationService
             classification = CombatRewardClassificationService.classify_defeated_target(attacker, defender, state)
             xp_gain = defender.identity.evolution_level * classification.xp_multiplier
-            gold_gain = defender.identity.evolution_level * classification.gold_multiplier
             trace["REWARD_SOURCE"] = classification.source
             trace["REWARD_CATEGORY"] = classification.category.value
 
@@ -218,13 +216,6 @@ class CombatResolutionSystem:
                  transfer_kind="KILL_REWARD",
                  is_group_required=False
              ))
-             if gold_gain > 0:
-                 resource_transfers.append(ResourceTransferIntent(
-                     source_id=defender.id, source_kind="COMBAT",
-                     gold_delta=gold_gain,
-                     transfer_kind="KILL_REWARD",
-                     is_group_required=True
-                 ))
         # Logic ID: COMB-279 (Combat result emits kill/death consequence)
         # Logic ID: COMB-280 (Combat result emits reward/progression consequence)
         # Logic ID: PROG-064 (XP/reward grant is authoritative and traceable)
@@ -277,13 +268,11 @@ class CombatResolutionSystem:
             alive = False
             
         xp_gain = 0
-        gold_gain = 0
         skill_trace: Dict[str, Any] = {}
         if not alive:
             from src.engine.combat_rewards import CombatRewardClassificationService
             classification = CombatRewardClassificationService.classify_defeated_target(attacker, defender, state)
             xp_gain = classification.xp_multiplier * defender.identity.evolution_level
-            gold_gain = classification.gold_multiplier * defender.identity.evolution_level
             skill_trace["REWARD_SOURCE"] = classification.source
             skill_trace["REWARD_CATEGORY"] = classification.category.value
 
@@ -305,13 +294,6 @@ class CombatResolutionSystem:
                   transfer_kind="KILL_REWARD",
                   is_group_required=False
               ))
-              if gold_gain > 0:
-                  resource_transfers.append(ResourceTransferIntent(
-                      source_id=defender.id, source_kind="COMBAT",
-                      gold_delta=gold_gain,
-                      transfer_kind="KILL_REWARD",
-                      is_group_required=True
-                  ))
 
         return CombatUpdate(
             damage_taken=damage,
@@ -387,13 +369,11 @@ class CombatResolutionSystem:
             alive = False
 
         xp_gain = 0
-        gold_gain = 0
         resource_transfers = []
         if not alive and defender.combat.alive:
              from src.engine.combat_rewards import CombatRewardClassificationService
              classification = CombatRewardClassificationService.classify_defeated_target(attacker, defender, state)
              xp_gain = defender.identity.evolution_level * classification.xp_multiplier
-             gold_gain = defender.identity.evolution_level * classification.gold_multiplier
              full_trace["REWARD_SOURCE"] = classification.source
              full_trace["REWARD_CATEGORY"] = classification.category.value
 
@@ -405,13 +385,6 @@ class CombatResolutionSystem:
                  transfer_kind="KILL_REWARD",
                  is_group_required=False
              ))
-             if gold_gain > 0:
-                 resource_transfers.append(ResourceTransferIntent(
-                     source_id=defender.id, source_kind="COMBAT",
-                     gold_delta=gold_gain,
-                     transfer_kind="KILL_REWARD",
-                     is_group_required=True
-                 ))
 
         # Social Consequences (Multi-attacker)
         from src.core.updates import SocialUpdate, SocialBondUpdate

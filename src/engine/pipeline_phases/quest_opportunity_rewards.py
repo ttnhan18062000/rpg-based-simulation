@@ -4,6 +4,7 @@ import logging
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from src.engine.place_tax import reward_payer
 from src.core.updates import EntityUpdate, QuestOpportunityRewardIntent
 from src.core.update_models.resources import ResourceTransferIntent
 from src.core.updates import RewardUpdate
@@ -89,6 +90,8 @@ class QuestOpportunityRewardSystem:
                     transaction_id=f"quest:{intent.quest_id}:reward",
                     group_id=f"quest:{intent.quest_id}:reward",
                     is_group_required=True,
+                    treasury_faction=reward_payer(state, entity),
+                    treasury_pays=True,
                 )
                 ent_upd = update.entity_updates.get(
                     intent.entity_id,

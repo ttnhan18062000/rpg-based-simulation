@@ -13,7 +13,10 @@ coefficient exceeds INFLATION_SPIRAL_GINI_THRESHOLD (0.7):
 Conservation law (Chapter 03): all gold deductions are proposed via
 ResourceTransferIntent and resolved through the authoritative pipeline
 (ResourceTransactionSystem).  No gold is created or destroyed; the resolver
-rejects intents where the entity lacks sufficient gold.
+rejects intents where the entity lacks sufficient gold. EXCH-02: what a fee
+takes is paid to the treasury of the faction that holds the ground the entity
+stands on (the neutral treasury where nobody does), so it was never destroyed
+in fact, only in the books.
 """
 from __future__ import annotations
 
@@ -71,6 +74,13 @@ class GoldSinkSystem:
         if not alive_entities:
             return update
 
+        from src.core.enums import Faction
+        from src.engine.spatial_query import SpatialQueryService
+
+        def payee(entity) -> int:
+            region = SpatialQueryService.get_region_at(state, entity.navigation.position)
+            return int(region.owner_faction_id) if region is not None and region.owner_faction_id is not None else int(Faction.NEUTRAL)
+
         # Pre-compute mean gold for TAX threshold
         gold_values = [float(e.inventory.gold) for e in alive_entities]
         mean_gold = sum(gold_values) / len(gold_values) if gold_values else 0.0
@@ -93,6 +103,7 @@ class GoldSinkSystem:
                     gold_cost=fee,
                     gold_delta=0,
                     transfer_kind="FEE",
+                    treasury_faction=payee(entity),
                 ))
                 total_gold_attempted += fee
 
@@ -104,6 +115,7 @@ class GoldSinkSystem:
                     gold_cost=_SERVICE_FEE_FLAT,
                     gold_delta=0,
                     transfer_kind="FEE",
+                    treasury_faction=payee(entity),
                 ))
                 total_gold_attempted += _SERVICE_FEE_FLAT
 
@@ -117,6 +129,7 @@ class GoldSinkSystem:
                     gold_cost=tax,
                     gold_delta=0,
                     transfer_kind="FEE",
+                    treasury_faction=payee(entity),
                 ))
                 total_gold_attempted += tax
 

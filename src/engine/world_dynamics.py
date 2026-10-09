@@ -300,7 +300,7 @@ class WorldDynamicsSystem:
         corpses_remove = list(update.corpses_remove)
         resource_updates = dict(update.resource_updates)
         for cp_id, corpse in state.corpses.items():
-            if state.tick >= corpse.decay_tick:
+            if state.tick + 1 >= corpse.decay_tick:  # the apply step (next tick) removes a body whose decay tick it has reached
                 corpses_remove.append(cp_id)
                 if corpse.gold > 0:
                     # Coin on a decayed body is not lost (EXCH-02): it escheats to the treasury of the faction that holds the ground it lies on,

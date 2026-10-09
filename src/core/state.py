@@ -299,6 +299,9 @@ class RegionState:
     # decision (see PlaceState.region_id for the back-reference half). A Region can hold
     # zero or many Places.
     places: List[str] = field(default_factory=list)
+    # EXCH-02 (decision 51): the share of a sale or a wage in this region paid to the owner's treasury, rounded down per transaction. Declared
+    # content (`default_tax_share`), set at compile for a region someone holds; 0.0 taxes nothing.
+    tax_share: float = 0.0
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -326,6 +329,8 @@ class RegionState:
             "service_availability": self.service_availability,
             "places": list(self.places),
         }
+        if self.tax_share:
+            res["tax_share"] = self.tax_share
         object.__setattr__(self, "_canonical_cache", res)
         return res
 
@@ -1271,6 +1276,27 @@ class CorpseState:
 
 
 @dataclass(frozen=True, slots=True)
+class OwedRecord:
+    """A coin debt a faction treasury could not pay when it fell due (EXCH-02, decision 58): the creditor was promised `amount` and is owed it
+    until the treasury can pay, oldest first. It lives in `AuthoritativeState.owed` until paid or written off, and is shown by the presenter."""
+    id: str
+    creditor_id: int
+    debtor_faction: int  # the treasury (a Faction value) that owes it
+    amount: int
+    posted_tick: int
+    reason: str = "QUEST_REWARD"
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {"id": self.id, "creditor_id": self.creditor_id, "debtor_faction": self.debtor_faction, "amount": self.amount,
+               "posted_tick": self.posted_tick, "reason": self.reason}
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
+
+@dataclass(frozen=True, slots=True)
 class ChestState:
     """A world object containing loot."""
     id: int
@@ -1385,6 +1411,7 @@ class AuthoritativeState:
     resource_nodes: Dict[int, ResourceNodeState] = field(default_factory=dict)
     ground_items: Dict[int, GroundItemState] = field(default_factory=dict)
     corpses: Dict[int, CorpseState] = field(default_factory=dict)
+    owed: Dict[str, OwedRecord] = field(default_factory=dict)  # debts a treasury could not pay (EXCH-02), keyed by record id
     chests: Dict[int, ChestState] = field(default_factory=dict)
     buildings: Dict[int, BuildingState] = field(default_factory=dict)
     camps: Dict[str, CampState] = field(default_factory=dict)
@@ -1596,6 +1623,7 @@ class AuthoritativeState:
             entities=ro_entities,
             resource_nodes=ReadOnlyDict(self.resource_nodes),
             corpses=ReadOnlyDict(self.corpses),
+            owed=ReadOnlyDict(self.owed),
             chests=ReadOnlyDict(self.chests),
             buildings=ReadOnlyDict(self.buildings),
             camps=ReadOnlyDict(self.camps),

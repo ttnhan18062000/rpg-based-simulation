@@ -32,9 +32,25 @@ class StatePresenter:
             "entities": [StatePresenter.present_entity(e) for e in state.entities.values()],
             "regions": [StatePresenter.present_region(r) for r in state.regions.values()],
             "global_resources": state.global_resources,
+            "corpses": [StatePresenter.present_corpse(c) for c in state.corpses.values()],
+            "owed": [StatePresenter.present_owed(o) for o in sorted(state.owed.values(), key=lambda o: (o.posted_tick, o.id))],
             "transaction_trace": state.transaction_trace,
             "status": "ACTIVE"
         }
+
+    @staticmethod
+    def present_corpse(corpse: Any) -> Dict[str, Any]:
+        """A body: where it lies, what it still holds (items and coin) and when it decays."""
+        return {
+            "id": corpse.id, "original_entity_id": corpse.original_entity_id, "position": corpse.position,
+            "gold": corpse.gold, "items": [{"id": i.item_id, "quantity": i.quantity} for i in corpse.items], "decay_tick": corpse.decay_tick,
+        }
+
+    @staticmethod
+    def present_owed(owed: Any) -> Dict[str, Any]:
+        """A coin debt a treasury has not paid yet: who is owed, by which treasury, how much, since when."""
+        return {"id": owed.id, "creditor_id": owed.creditor_id, "debtor_faction": owed.debtor_faction, "amount": owed.amount,
+                "posted_tick": owed.posted_tick, "reason": owed.reason}
 
     @staticmethod
     def present_entity(entity: EntityState) -> Dict[str, Any]:

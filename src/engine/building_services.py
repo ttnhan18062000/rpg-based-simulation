@@ -37,13 +37,6 @@ def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
     return building if building is not None and building.functional else None
 
 
-def repair_source(context: Any, entity: Any) -> Any:
-    """The payee of a repair: the blacksmith in reach, so the resolver credits its purse with what was actually paid (EXCH-02: no coin
-    vanishes); with none in reach the repair keeps its old unnamed payee, as on main (repair needs no building today)."""
-    smith = service_building(context, entity, "REPAIR") if context is not None else None
-    return "BLACKSMITH" if smith is None else smith.id
-
-
 def service_delta(context: Any, entity: Any, action: str, tick: int) -> Optional[EntityUpdate]:
     """What the building service for `action` adds to the subject's update, or None (no such building in reach, or nothing to deliver).
 

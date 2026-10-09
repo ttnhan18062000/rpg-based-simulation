@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Dict, Any, Optional, TYPE_CHECKING, List, Tuple
 if TYPE_CHECKING:
-    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, WoundState, ScarState, StatusEffectState
+    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, OwedRecord, WoundState, ScarState, StatusEffectState
     from src.core.quests import QuestStatus
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
@@ -1036,6 +1036,8 @@ class StateUpdate:
     item_instance_updates: Dict[int, ItemInstanceUpdate] = field(default_factory=dict)
     corpses_add_or_update: List[CorpseState] = field(default_factory=list)
     corpses_remove: List[int] = field(default_factory=list)
+    owed_add_or_update: List[OwedRecord] = field(default_factory=list)
+    owed_remove: List[str] = field(default_factory=list)
     scars_add_or_update: List[LocalScarState] = field(default_factory=list)
     scars_remove: List[int] = field(default_factory=list)
     chest_updates: Dict[int, ChestUpdate] = field(default_factory=dict)
@@ -1081,7 +1083,7 @@ class StateUpdate:
         return (not self.entity_updates and not self.entities_add and not self.entities_remove and
                 not self.nodes_add and not self.node_updates and not self.ground_items_add_or_update and
                 not self.ground_items_remove and not self.corpses_add_or_update and
-                not self.corpses_remove and not self.scars_add_or_update and
+                not self.corpses_remove and not self.owed_add_or_update and not self.owed_remove and not self.scars_add_or_update and
                 not self.scars_remove and not self.chest_updates and
                 not self.chest_add_or_update and not self.building_updates and
                 not self.camp_updates and not self.world_updates and
@@ -1143,6 +1145,8 @@ class StateUpdate:
         new_item_instances_add_or_update = list(self.item_instances_add_or_update)
         new_corpses_add_or_update = list(self.corpses_add_or_update)
         new_corpses_remove = set(self.corpses_remove)
+        new_owed_add_or_update = list(self.owed_add_or_update)
+        new_owed_remove = set(self.owed_remove)
         new_chest_add_or_update = list(self.chest_add_or_update)
         new_scars_add_or_update = list(self.scars_add_or_update)
         new_scars_remove = set(self.scars_remove)
@@ -1209,6 +1213,8 @@ class StateUpdate:
             new_item_instances_add_or_update.extend(other.item_instances_add_or_update)
             new_corpses_add_or_update.extend(other.corpses_add_or_update)
             new_corpses_remove.update(other.corpses_remove)
+            new_owed_add_or_update.extend(other.owed_add_or_update)
+            new_owed_remove.update(other.owed_remove)
             new_chest_add_or_update.extend(other.chest_add_or_update)
             new_scars_add_or_update.extend(other.scars_add_or_update)
             new_scars_remove.update(other.scars_remove)
@@ -1264,6 +1270,8 @@ class StateUpdate:
             ground_items_remove=list(new_ground_items_remove),
             corpses_add_or_update=new_corpses_add_or_update,
             corpses_remove=list(new_corpses_remove),
+            owed_add_or_update=new_owed_add_or_update,
+            owed_remove=sorted(new_owed_remove),
             chest_add_or_update=new_chest_add_or_update,
             scars_add_or_update=new_scars_add_or_update,
             scars_remove=list(new_scars_remove),

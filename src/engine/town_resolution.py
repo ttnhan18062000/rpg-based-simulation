@@ -9,7 +9,7 @@ from src.core.treasury import treasury_key
 from src.core.updates import (
     CombatUpdate,
     EntityUpdate,
-    ResourceTransferIntent,
+    InventoryUpdate,
 )
 
 if TYPE_CHECKING:
@@ -102,18 +102,6 @@ class TownResolutionSystem:
             if has_regional_effects:
                 region = SpatialQueryService.get_region_at(state, pos)
                 if region:
-                    # Taxation
-                    if is_tax_tick and region.owner_faction_id is not None:
-                        if entity.identity.faction != region.owner_faction_id:
-                            tax_to_pay = min(entity.inventory.gold, 2.0)
-                            if tax_to_pay > 0:
-                                intent = ResourceTransferIntent(source_id=f"tax_{region.id}", source_kind="TAX", gold_delta=-tax_to_pay, transfer_kind="TAX")
-                                ent_upd = replace(ent_upd, resource_transfers=list(ent_upd.resource_transfers) + [intent])
-                                refined_entity_updates[e_id] = ent_upd
-                                
-                                f_key = faction_keys[region.owner_faction_id]
-                                new_resource_updates[f_key] = new_resource_updates.get(f_key, 0.0) + tax_to_pay
-
                     # Suppression
                     if region.suppression_active and entity.identity.faction != region.owner_faction_id:
                         cb_upd = ent_upd.combat or CombatUpdate()
@@ -126,45 +114,53 @@ class TownResolutionSystem:
                         )
                         refined_entity_updates[e_id] = ent_upd
 
-        # 4. Building Taxation & Maintenance
+        # 4. Upkeep (EXCH-02, decisions 51 and 58). There is no periodic levy and no coin is minted here: the treasury of the faction that holds a
+        # building's ground pays the building's maintenance INTO THE BUILDING'S OWN PURSE, and the building pays its workers' wages from that
+        # purse (work_shift.py). A treasury that cannot pay a building leaves it unpaid, and an unpaid building is disabled and offers no work.
+        new_owed_remove = list(update.owed_remove)
         if is_tax_tick:
-            # Building Taxes
-            for building in state.buildings.values():
-                if building.functional:
-                    region = SpatialQueryService.get_building_region(state, building.id)
-                    if region and region.owner_faction_id is not None:
-                        f_key = faction_keys[region.owner_faction_id]
-                        new_resource_updates[f_key] = new_resource_updates.get(f_key, 0.0) + 10.0
-            
-            # Building Maintenance
+            # Debts first (decision 58): a treasury pays what it owes, oldest first, before it spends on upkeep; the queue waits at the first
+            # debt it cannot meet. A creditor that has died is written off (no coin moves: it would have nobody to receive it).
+            for rec in sorted(state.owed.values(), key=lambda o: (o.posted_tick, o.id)):
+                if rec.id in new_owed_remove:
+                    continue
+                creditor = state.entities.get(rec.creditor_id)
+                if creditor is None or not creditor.combat.alive:
+                    new_owed_remove.append(rec.id)
+                    continue
+                key = faction_keys[rec.debtor_faction]
+                if state.global_resources.get(key, 0.0) + new_resource_updates.get(key, 0.0) < rec.amount:
+                    break
+                new_resource_updates[key] = new_resource_updates.get(key, 0.0) - rec.amount
+                held = refined_entity_updates.get(rec.creditor_id, EntityUpdate(entity_id=rec.creditor_id))
+                credit = InventoryUpdate(gold_delta=rec.amount)
+                refined_entity_updates[rec.creditor_id] = replace(held, inventory=held.inventory.merge(credit) if held.inventory else credit)
+                new_owed_remove.append(rec.id)
+
             MAINTENANCE_COST = 5.0
-            faction_maintenance: Dict[int, float] = {}
-            faction_buildings: Dict[int, List[int]] = {}
-            
-            for b_id, building in state.buildings.items():
-                if not building.functional: continue
+            paid_up: Dict[int, List[int]] = {}
+            for b_id in sorted(state.buildings):
+                building = state.buildings[b_id]
+                if not building.functional:
+                    continue
                 region = SpatialQueryService.get_building_region(state, b_id)
-                if region and region.owner_faction_id is not None:
-                    fid = region.owner_faction_id
-                    faction_maintenance[fid] = faction_maintenance.get(fid, 0.0) + MAINTENANCE_COST
-                    faction_buildings.setdefault(fid, []).append(b_id)
-            
-            # Apply Maintenance
-            for fid, total_cost in faction_maintenance.items():
-                f_key = faction_keys[fid]
-                current_vault = state.global_resources.get(f_key, 0.0) + new_resource_updates.get(f_key, 0.0)
-                
-                if current_vault >= total_cost:
-                    new_resource_updates[f_key] = new_resource_updates.get(f_key, 0.0) - total_cost
+                if not (region and region.owner_faction_id is not None):
+                    continue
+                fid = region.owner_faction_id
+                key = faction_keys[fid]
+                if state.global_resources.get(key, 0.0) + new_resource_updates.get(key, 0.0) >= MAINTENANCE_COST:
+                    new_resource_updates[key] = new_resource_updates.get(key, 0.0) - MAINTENANCE_COST
+                    b_upd = refined_building_updates.get(b_id, BuildingUpdate(building_id=b_id))
+                    credit = InventoryUpdate(gold_delta=int(MAINTENANCE_COST))
+                    refined_building_updates[b_id] = replace(b_upd, inventory=b_upd.inventory.merge(credit) if b_upd.inventory else credit)
                 else:
-                    # Insolvency: Disable buildings
-                    for b_id in faction_buildings[fid]:
-                        b_upd = refined_building_updates.get(b_id, BuildingUpdate(building_id=b_id))
-                        refined_building_updates[b_id] = replace(b_upd, functional_set=False)
+                    b_upd = refined_building_updates.get(b_id, BuildingUpdate(building_id=b_id))
+                    refined_building_updates[b_id] = replace(b_upd, functional_set=False)
 
         return replace(update,
             entity_updates=refined_entity_updates,
             resource_updates=new_resource_updates,
             building_updates=refined_building_updates,
             metric_counters=new_metric_counters,
+            owed_remove=new_owed_remove,
         )

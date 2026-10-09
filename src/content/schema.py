@@ -343,6 +343,7 @@ class DefaultCompileProfile(CatalogBaseDefinition):
     default_resource_required_ticks: int = Field(10, gt=0)
     default_building_hp: int = Field(500, gt=0)
     default_faction_starting_gold: float = Field(1000.0, ge=0.0)
+    default_tax_share: float = Field(0.0, ge=0.0, le=1.0, description="Share of a sale or a wage paid to the treasury of the faction holding the place, rounded down per transaction (decision 51)")
 
 
 class ItemDefinition(CatalogBaseDefinition):

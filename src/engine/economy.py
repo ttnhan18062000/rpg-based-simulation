@@ -8,6 +8,7 @@ from src.core.enums import ReasonCode
 from src.core.state import IntentResult, ItemStack
 from src.core.updates import EntityUpdate, StateUpdate, InventoryUpdate, RejectionEvent, ResourceTransferIntent, ChestUpdate
 from src.core.inventory import InventoryService
+from src.core.treasury import apply_transfer
 from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
 
 if TYPE_CHECKING:
@@ -38,6 +39,7 @@ class ResourceTransactionSystem:
         new_rejection_events = list(update.rejection_events)
         processed_ids = set(update.processed_transaction_ids)
         new_resource_updates = dict(update.resource_updates)
+        new_owed = list(update.owed_add_or_update)  # debts a short treasury took on instead of paying a reward
         source_debits: Dict[int, InventoryUpdate] = {}  # what accepted transfers took from another entity's own inventory (an inheritance)
 
         world_events: list[WorldEvent] = []
@@ -98,7 +100,8 @@ class ResourceTransactionSystem:
                             state, entity, intent,
                             inventory_override=current_inventory,
                             node_overrides=new_node_updates,
-                            reservations=reservations
+                            reservations=reservations,
+                            treasury_pending=new_resource_updates
                         )
                         
                         if result.accepted:
@@ -118,6 +121,9 @@ class ResourceTransactionSystem:
                                 new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations
                             )
                             ResourceTransactionSystem._note_source_debit(source_debits, result)
+                            ResourceTransactionSystem._note_treasury(new_resource_updates, result)
+                            if result.owed:
+                                new_owed.append(result.owed)
 
                             if result.node_update:
                                 node_id = result.node_update.node_id
@@ -182,7 +188,8 @@ class ResourceTransactionSystem:
                             state, entity, intent,
                             inventory_override=group_current_inventory,
                             node_overrides=new_node_updates,
-                            reservations=reservations
+                            reservations=reservations,
+                            treasury_pending=new_resource_updates
                         )
                         trial_results.append((intent, res))
                         if not res.accepted:
@@ -206,6 +213,9 @@ class ResourceTransactionSystem:
                                 new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations
                             )
                             ResourceTransactionSystem._note_source_debit(source_debits, res)
+                            ResourceTransactionSystem._note_treasury(new_resource_updates, res)
+                            if res.owed:
+                                new_owed.append(res.owed)
 
                             if res.node_update:
                                 node_id = res.node_update.node_id
@@ -289,6 +299,7 @@ class ResourceTransactionSystem:
             building_updates=new_building_updates,
             home_storage_updates=new_home_storage_updates,
             resource_updates=new_resource_updates,
+            owed_add_or_update=new_owed,
             ground_items_remove=new_ground_items_remove,
             corpses_remove=new_corpses_remove,
             transaction_trace=new_trace,
@@ -296,6 +307,12 @@ class ResourceTransactionSystem:
             processed_transaction_ids=list(processed_ids.union(in_tick_processed_ids)),
             world_events_add=existing_world_events
         )
+
+    @staticmethod
+    def _note_treasury(resource_updates, res):
+        """Fold the treasury change of an accepted transfer into the tick's resource updates (the same dict later accepted transfers read their running balance from)."""
+        if res.treasury_update:
+            resource_updates.update(apply_transfer(resource_updates, res.treasury_update))
 
     @staticmethod
     def _note_source_debit(source_debits, res):

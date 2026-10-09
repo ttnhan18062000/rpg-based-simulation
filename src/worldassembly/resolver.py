@@ -1081,6 +1081,8 @@ class CompileProfileResolver:
         # of this call's spec (TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION).
         claimed_positions: Dict[str, Set[Tuple[int, int]]] = {}
 
+        ctx.tax_share = self.default_semantics.get_tax_share()
+
         # 1. Resolve Factions Treasury
         for f_spec in getattr(spec, "factions", []):
             starting_gold = self.default_semantics.get_faction_vault_defaults()["starting_gold"]
