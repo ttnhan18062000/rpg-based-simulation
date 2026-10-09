@@ -200,12 +200,16 @@ class LegalityServiceV2:
     @staticmethod
     def _attack_permitted(attacker: EntityState, target: EntityState, context: Any) -> bool:
         """Faction permission (CONFLICT-03), or else predation: a hungry attacker whose diet can eat the target and that believes it can
-        overcome it (decisions 44 and 47). The relation is read lazily: ``hostility`` imports this module."""
+        overcome it (decisions 44 and 47); or self-defence: the target is attacking the attacker and holds an attack relation to it
+        (PREDATION or FACTION_HOSTILE), so a creature may fight back against whatever is hunting it."""
         if LegalityServiceV2._faction_attack_permitted(attacker, target, context):
             return True
+        # Lazy imports: they break the hostility -> legality import cycle.
+        from src.engine.hostility import ATTACK_RELATIONS, relation
         from src.engine.appraisal import Relation
-        from src.engine.hostility import relation
-        return relation(attacker, target) is Relation.PREDATION
+        if relation(attacker, target) is Relation.PREDATION:
+            return True
+        return target.task.payload.get("target_id") == attacker.id and relation(target, attacker) in ATTACK_RELATIONS
 
     @staticmethod
     def _faction_attack_permitted(attacker: EntityState, target: EntityState, context: Any) -> bool:

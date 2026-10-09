@@ -69,6 +69,8 @@ def relation(entity: "EntityState", other: "EntityState", source: Optional[Tuple
     "Appraisal for all, faction for people": a faction verdict wins; otherwise PREDATION, THREATENING, WARY or NONE."""
     if faction_hostile(entity, other, source):
         return Relation.FACTION_HOSTILE
+    if get_species_id_str(entity) == get_species_id_str(other):
+        return Relation.NONE  # a kind regards its own as neither prey nor danger (no cannibalism in M0)
     appraised = appraise(entity, other)
     if appraised is Relation.PREDATION and get_faction_id_str(entity) == get_faction_id_str(other):
         return Relation.NONE  # a faction does not hunt its own members

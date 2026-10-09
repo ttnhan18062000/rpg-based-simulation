@@ -140,3 +140,20 @@ def test_a_faction_does_not_hunt_its_own_members():
     other = _entity(2, "plant_eater_small", (10.0, 12.0), faction=Faction.TOWN_COUNCIL)
     assert relation(hungry, kin) is Relation.NONE
     assert relation(hungry, other) is Relation.PREDATION
+
+
+def test_a_kind_never_hunts_its_own_species_whatever_its_faction():
+    hungry = _entity(1, "meat_eater_large", (10.0, 10.0), hunger=HUNGRY, faction=Faction.NEUTRAL)
+    same_kind = _entity(2, "meat_eater_large", (10.0, 12.0), faction=Faction.TOWN_COUNCIL)
+    assert relation(hungry, same_kind) is Relation.NONE
+
+
+def test_prey_may_fight_back_against_what_is_hunting_it_but_not_start_a_fight():
+    from src.content_semantics.relation import RelationContext
+    context = RelationContext(combat_engaged=True)
+    hunter = _entity(1, "meat_eater_medium", (10.0, 10.0), hunger=HUNGRY, payload={"target_id": 2})
+    prey = _entity(2, "plant_eater_small", (10.0, 11.0))
+    assert LegalityServiceV2._attack_permitted(hunter, prey, context) is True
+    assert LegalityServiceV2._attack_permitted(prey, hunter, context) is True  # counter-attack against its hunter
+    idle = replace(hunter, task=TaskComponent(work_kind="ENTITY_ACT", payload={}))
+    assert LegalityServiceV2._attack_permitted(prey, idle, context) is False  # no un-engaged first strike
