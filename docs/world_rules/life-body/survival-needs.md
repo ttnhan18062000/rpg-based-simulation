@@ -713,6 +713,15 @@ the escalation and the present-threat gate shipped in #414 (`c2e18b182`).** Lane
     cooldown. Nothing reads what the subject perceived, remembers or was told (KNOW, PERC, the
     uncertainty rule). **Fixed in milestone 1** (honest perception): food places come from
     perception, memory, leads and common knowledge, with a home range for animals.
+  - **CONFLICTING, the same shape for sleep:** `SleepScorer` also aims at the nearest inn with no
+    distance cap. By this Rule's own text it is read the same way, without a new decision: resting
+    where the subject stands is always open, at distance 0, so the pull escalates against the
+    subject's own line. A bed (home, or an inn bed it can pay for) is chosen only when one is
+    within reach and the better rest is worth the walk. For animals, the rest place is the den or
+    where they stand, inside their home range. **Fixed with sleep collapse** (decision 41,
+    LB-S19), in milestone 0. It does not block the gate's H6.
+  - **Ticket:** `TCK-20261009-THE-HUNGER-PULL-AIMS-AT-THE-NEAREST-OPEN-WAY-NOT-THE-INN-SURV-07`
+    (Lane A, after the hunting batch, before the gate run).
   - **Every kind takes the same path** (decision 42 holds): animals and all seven cognition
     profiles reach `EatScorer` through `GoalRegistry`, with per-kind rates (SURV-05). Two
     override paths skip the pull: an active objective returns before scoring
