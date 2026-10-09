@@ -26,6 +26,7 @@ from src.engine.executor import LocalSequentialExecutor
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world
+from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
 WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
 F, H = 2, 1  # F is the strong orc_warchief: the arena's posture gate would withhold the weak goblin's attack
@@ -92,7 +93,7 @@ def _trace(state: AuthoritativeState, ticks: int) -> Dict[str, Any]:
     TacticalDecisionSystem.evaluate_entity_intent = staticmethod(decide)
     CombatActions.execute_attack = staticmethod(attack)
     kernel = Kernel(profile=PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), state=state, rng=DeterministicRNG(DEFAULT_SEED),
-                    flags={**DEFAULT_FLAGS, "no_replay": True, "audit_mode": True}, executor=LocalSequentialExecutor())
+                    flags={**DEFAULT_FLAGS, "no_replay": True, "audit_mode": True}, executor=LocalSequentialExecutor(), governor=PinnedNormalGovernor())
     rows = []
     try:
         for _ in range(ticks):
