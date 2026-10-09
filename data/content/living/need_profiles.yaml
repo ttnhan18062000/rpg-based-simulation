@@ -1,9 +1,12 @@
 # STATE: REDESIGNED-CORE
 # Need profiles are reasonable vertical data because they explain survival pressure for all living entities.
+# Decision 33 (light balance pass): hunger "low" (0.05 per tick, half the base rate). Ordinary people eat about three times a day and can go most of a
+# day between meals; at 0.05 per tick a person reaches the starvation line about 19 hours (1900 ticks) after a full meal, and three inn meals of 40
+# hunger a day cover the 120 hunger a day that builds. At the base 0.1 a person needed six meals a day.
 - id: "humanoid_survival"
   display_name: "Humanoid Survival"
   needs:
-    hunger: "medium"
+    hunger: "low"
     safety: "high"
     sleep: "medium"
     social_belonging: "medium"

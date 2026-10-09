@@ -176,7 +176,7 @@ regions:
   - 90
   - 55
   terrain: forest
-  hazard_level: 1.0
+  hazard_level: 0.0
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
@@ -458,6 +458,11 @@ resources:
   count: 3
   region: swamp_border_territory
   regen_rate: 1
+- id: sunken_swamp_border__berry_thicket_2
+  resource_type: berry_thicket
+  count: 8
+  region: swamp_border_territory
+  regen_rate: 1
 - id: undead_battlefield__spirit_wisp_0
   resource_type: spirit_wisp
   count: 2
@@ -478,6 +483,11 @@ resources:
   count: 3
   region: near_forest
   regen_rate: 1
+- id: wolf_den_near_forest__berry_thicket_3
+  resource_type: berry_thicket
+  count: 10
+  region: near_forest
+  regen_rate: 1
 - id: forest_warden_grove__healing_flower_patch_0
   resource_type: healing_flower_patch
   count: 5
@@ -486,6 +496,11 @@ resources:
 - id: forest_warden_grove__spirit_wisp_1
   resource_type: spirit_wisp
   count: 2
+  region: sacred_grove
+  regen_rate: 1
+- id: forest_warden_grove__berry_thicket_2
+  resource_type: berry_thicket
+  count: 10
   region: sacred_grove
   regen_rate: 1
 buildings:

@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_d2a0627d5962c82e",
+  "manifest_id": "prov_77f755ba5fdd10ab",
   "world_id": "highland_traverse",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
-    "nomadic_herd": "0279bf89a42df43d79c40a2df72e69bb95dfb15b7716cf79fc34d41191c24b2e",
+    "nomadic_herd": "e0b53d7425fadb99628787a2dd1ff809a8053ad29243fc8c299c5c5de101ddec",
     "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
     "settled_quarter": "c87b7fb79b24eb2fd63d96187d7b8a3dd9d7f68ff7fb08d3da576129fd206a0f"
   },
-  "composition_fingerprint": "855cdede54267267350867d574bf480a3a20535136e0dac630fffd75f8b1c7bf",
+  "composition_fingerprint": "089dca6802681b8f1e10e3d2a64831d5d49327d41d6549f8113c11e18e9aef41",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "d2a0627d5962c82eaf2fc0a5e6e41a79b358e4e17e73c9b2516839a3d7699866",
-  "created_at": "2026-09-08T02:50:51.532696Z",
+  "content_fingerprint": "77f755ba5fdd10abfd929f5571e5b3b8d582e7ddfc70c6367c49b3511d1415e4",
+  "created_at": "2026-10-09T03:58:39.460606Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -497,7 +497,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",

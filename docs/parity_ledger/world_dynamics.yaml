@@ -2311,3 +2311,17 @@
     keep the bucket only, because a wild_beast_pack attacker cannot legally attack a
     hero. World bosses are unchanged. Placement avoids the same-tick spawn/move race;
     it does not reorder movement and spawning.'
+- id: WORLD-129
+  text: 'Settled land, camps and the near edge of the wild carry no standing ambient hazard (ENV-08, owner decision 30):
+    `trading_hometown`, `survivor_outpost` and the `near_forest` of `wolf_den_near_forest` are 0.0; lethal ambient
+    danger belongs to deep or cursed land.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`data/content/world_modules/trading_company_hub.yaml`, `survivor_camp_shelter.yaml`,
+    `wolf_den_near_forest.yaml`; `docs/mechanics/05_world_evolution.md` Hazard Impacts;
+    `docs/guidelines/intentional_divergences.md` section 2.92'
+  proof_type: parity
+  test_path: tests/mechanic_scenarios/test_near_wild_is_survivable_deep_wild_is_not.py
+  divergence_note: 'Intentional divergence 2.92 (Intentional Gameplay Change).'
+  support_boundary: 'Held out: the second `near_forest` region of the `nomadic_herd` module (hazard 1.5, no settlement near) is not a near edge and is unchanged.'

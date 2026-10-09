@@ -45,6 +45,7 @@ from src.core.updates import StateUpdate, EntityUpdate, SocialUpdate, StrategicU
 from src.engine.legality import LegalityServiceV2
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.rpg_depth import StaminaService, SkillScalingService
+from src.engine.starvation import STARVING_LINE, hp_loss, recovery_scale
 from src.systems.social_memory import SocialMemoryService
 from src.systems.social_systems.relationships import RelationshipService
 from src.progression.leveling import LevelingService
@@ -98,7 +99,8 @@ class ApplyPath:
                 new_age = life.age_ticks + 1
                 bio = changes.get("biological", entity.biological)
                 total_passive_dmg = 0
-                if bio.hunger >= 95.0: total_passive_dmg += 2
+                if bio.hunger >= STARVING_LINE:
+                    total_passive_dmg += hp_loss(bio.hunger, entity.combat.max_hp, tick, entity.id, cadence.lifecycle)
                 if bio.sleep_debt >= 98.0: total_passive_dmg += 1
                 
                 if total_passive_dmg > 0 or new_age != life.age_ticks:
@@ -136,11 +138,14 @@ class ApplyPath:
                         passive_death_cause_tick=passive_cause_tick,
                     )
             
+            # Weakened by hunger (owner decision 36): slower recovery. One compare per entity; 1.0 off the weakened path.
+            rscale = recovery_scale(changes["biological"].hunger if "biological" in changes else entity.biological.hunger)
+
             # Stamina Regen
             stamina = entity.stamina
             if stamina.current < stamina.max_stamina:
                 is_resting = (entity.navigation.movement_mode == MovementMode.HOLD)
-                stam_regen = StaminaService.tick_regen(stamina, is_resting=is_resting)
+                stam_regen = StaminaService.tick_regen(stamina, is_resting=is_resting) * rscale
                 if stam_regen > 0:
                     new_stam = min(stamina.max_stamina, stamina.current + stam_regen)
                     if new_stam != stamina.current:
@@ -152,7 +157,7 @@ class ApplyPath:
             # readiness_delta; this is the missing passive counterpart.
             comb = changes.get("combat", entity.combat)
             if comb.readiness < 100.0 and comb.readiness_speed > 0:
-                new_readiness = min(100.0, comb.readiness + comb.readiness_speed)
+                new_readiness = min(100.0, comb.readiness + comb.readiness_speed * rscale)
                 if new_readiness != comb.readiness:
                     changes["combat"] = replace(comb, readiness=new_readiness)
 

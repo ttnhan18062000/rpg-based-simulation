@@ -35,13 +35,20 @@ def base_state():
         buildings={101: shop}
     )
 
+def _market_buy_price(state):
+    """What MarketSystem (the authoritative price law, Bible 03 section 4) charges for one healing potion at the shop."""
+    from src.systems.economy_systems.market import MarketSystem
+    return MarketSystem.calculate_price(state, state.buildings[101], "healing_potion", is_buy=True)
+
+
 def test_normal_pricing(base_state):
     """Test pricing when pressure is zero."""
     res = ShopService.buy_item(base_state.entities[1], "healing_potion", 1, base_state)
     assert res is not None
     intent = res.entity_updates[1].resource_transfers[0]
-    assert intent.gold_cost == 100
-    assert intent.price_multiplier == 1.0
+    expected = _market_buy_price(base_state)
+    assert intent.gold_cost == expected
+    assert intent.price_multiplier == expected / 100
 
 def test_buy_price_ignores_a_stale_salience_entry(base_state):
     """Reversed by TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING. The buy price used to be scaled by
@@ -52,16 +59,16 @@ def test_buy_price_ignores_a_stale_salience_entry(base_state):
         res = ShopService.buy_item(state.entities[1], "healing_potion", 1, state)
         assert res is not None
         intent = res.entity_updates[1].resource_transfers[0]
-        assert intent.gold_cost == 100, salience
-        assert intent.price_multiplier == 1.0, salience
+        assert intent.gold_cost == _market_buy_price(base_state), salience
+        assert intent.price_multiplier == _market_buy_price(base_state) / 100, salience
 
 
 def test_arbitrage_prevention(base_state):
     """Test that selling price remains static (half of base)."""
     state = replace(base_state, pressure_signals={"global_salience": 1.0})
-    # Buy at base value (100); the stale salience entry no longer scales it
+    # Buy at MarketSystem's price (Bible 03 section 4); the stale salience entry no longer scales it
     buy_res = ShopService.buy_item(state.entities[1], "healing_potion", 1, state)
-    assert buy_res.entity_updates[1].resource_transfers[0].gold_cost == 100
+    assert buy_res.entity_updates[1].resource_transfers[0].gold_cost == _market_buy_price(base_state)
     
     # Verify selling price calculation logic doesn't use pressure
     from src.systems.economy import DynamicPriceService

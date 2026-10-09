@@ -49,6 +49,11 @@ def test_long_run_simulation_ph9():
     hero = replace(hero, identity=replace(hero.identity, role=EntityRole.HERO))
     state = replace(state, entities={**state.entities, hero.id: hero})
     
+    # The world boss is a deferred feature (owner decision 14): every boss spawn branch is inert unless ENABLE_WORLD_BOSS_SPAWN is "ON". This
+    # test exists to exercise that feature (idempotent boss spawning, threat escalation), so it declares the flag it needs; its assertions
+    # are unchanged. Without the flag the boss never spawns and the first final assertion fails by design.
+    state = replace(state, feature_flags={"ENABLE_WORLD_BOSS_SPAWN": "ON"})
+
     ticks_to_run = 1000
     max_entities_seen = 0
     boss_spawn_tick = -1

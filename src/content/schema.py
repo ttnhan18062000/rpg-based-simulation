@@ -286,6 +286,14 @@ class ResourceDefinition(CatalogBaseDefinition):
     runtime_kind: Optional[str] = Field(None, description="Explicit runtime resource type")
     legacy_id: Optional[str] = Field(None, description="Explicit legacy ID mapping")
     required_tool: Optional[str] = Field(None, description="Explicit required tool")
+    placement: Optional[str] = Field(
+        None,
+        description=(
+            "Placement rule at compile time. None (the default for every kind): redraw from the node's seeded stream until the tile belongs "
+            "to the declared region by region precedence, so a node declared in wild land never lands on a tile a town or another region owns. "
+            "'uniform': the old rule, any tile of the declared region's bounding box."
+        ),
+    )
 
 
 class BuildingDefinition(CatalogBaseDefinition):
@@ -294,6 +302,8 @@ class BuildingDefinition(CatalogBaseDefinition):
     max_hp: int = Field(500, gt=0, description="Standard max HP")
     service_profile_id: Optional[str] = Field(None, description="Default service profile mapping")
     themes: List[str] = Field(default_factory=list, description="Aesthetic/functional themes of the building")
+    starting_gold: int = Field(0, ge=0, description="The building's till at world creation: coin the place holds (EXCH-02, owner decision 37)")
+    starting_stock: Dict[str, int] = Field(default_factory=dict, description="Items the building holds for sale at world creation (item id to quantity)")
 
 
 class ServiceProfileDefinition(CatalogBaseDefinition):

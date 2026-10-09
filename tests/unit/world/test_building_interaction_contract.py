@@ -1,7 +1,8 @@
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, TaskComponent, BuildingState
-from src.engine.town_resolution import TownResolutionSystem
+from src.engine.service_prices import REST_PRICE_GOLD
+from src.engine.domain.action_router import ActionRouter
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
 
 from src.core.builder import V2EntityBuilder
@@ -13,26 +14,29 @@ def create_mock_entity(eid, pos=(10, 10), hp=50):
         .combat(hp=hp)
         .build())
 
-def test_building_interaction_inn_rest_recovery():
-    # Entity at (5,5), which is an INN
-    entity = create_mock_entity(1, pos=(5.0, 5.0), hp=50)
+def _inn_rest_update(gold):
+    entity = replace(create_mock_entity(1, pos=(5.0, 5.0), hp=50), inventory=replace(create_mock_entity(1).inventory, gold=gold))
     state = AuthoritativeState(
-        tick=1, seed=42, 
+        tick=1, seed=42,
         entities={1: entity},
         town_tiles={(5, 5)},
         building_tiles={(5, 5): "inn"},
         buildings={10: BuildingState(id=10, kind="inn", position=(5.0, 5.0), functional=True)}
     )
-    
-    # Propose REST
-    raw_update = StateUpdate(entity_updates={
-        1: EntityUpdate(entity_id=1, task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "REST"}))
-    })
-    
-    # Resolve
-    update = TownResolutionSystem.resolve(state, raw_update)
-    
-    # Passive heal (1) + REST bonus (5) = 6
-    combat_upd = update.entity_updates[1].combat
-    assert combat_upd.hp_delta == 6
-    assert update.entity_updates[1].readiness_delta == 10.0
+    # The bed lands with the action (building_services.py), not in the cadence-gated town phase.
+    return ActionRouter.execute_action(entity, {"action": "REST", "target_id": 10}, state.tick, None, state)[1]
+
+
+def test_building_interaction_inn_rest_recovery():
+    # Free beds stay as on main (owner decision 44): the recovery is on the update and the 10-gold charge is clamped at what the subject holds.
+    upd = _inn_rest_update(gold=REST_PRICE_GOLD)
+    (bed,) = upd.resource_transfers
+    assert bed.gold_delta == -REST_PRICE_GOLD
+    assert upd.combat.hp_delta == 5
+    assert upd.biological.sleep_debt_delta == -15.0  # the core REST's -10 plus the inn's -5, as on main
+    assert upd.readiness_delta == 10.0
+
+
+def test_inn_rest_without_gold_still_recovers_as_on_main():
+    upd = _inn_rest_update(gold=0)
+    assert upd.readiness_delta == 10.0 and upd.combat.hp_delta == 5  # free beds stay on until the removal lands

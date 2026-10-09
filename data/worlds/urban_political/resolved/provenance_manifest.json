@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_5be75fc5be162f12",
+  "manifest_id": "prov_a66d3af46cda73e2",
   "world_id": "urban_political",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
-    "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6"
+    "trading_company_hub": "154fc6ef87e46522880df12f548520ebc2564b1b6a2d44c14a37284b1a390c8d"
   },
-  "composition_fingerprint": "1dbfa93f7d8d71e1b030979d2732f9460ee8803a70085052c906f13cfdb86e00",
+  "composition_fingerprint": "ced42d55377d4ee33e9cece157899dfd69c04756479299d419cd55b2c57a63b3",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "5be75fc5be162f1224d904fa1d4f65b84edcbd7574eb98da4de8af64b745d088",
-  "created_at": "2026-09-04T08:05:49.168399Z",
+  "content_fingerprint": "a66d3af46cda73e2ffd963e906e3924e07cc1d3ec8037c2986c895c066f8641c",
+  "created_at": "2026-10-09T03:59:01.820501Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -239,7 +239,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",
@@ -744,7 +744,7 @@
           45
         ],
         "terrain": "plain",
-        "hazard_level": 0.5,
+        "hazard_level": 0.0,
         "ecology_source": [
           "frontier_village_ecology"
         ]

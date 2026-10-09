@@ -1570,35 +1570,56 @@ def main(argv=None) -> int:
         else:
             part = "both"
 
-    any_fail = False
+    # TCK-20261009-GATE-LEDGER-SELFCHECK-FALSE-UNRESOLVED-BLOCKS: Part A and Part B are two verdict rows, each under
+    # its own gate_id, so precheck's conditions never ride on the finalize gate_id. Precheck assumes the ticket is
+    # still in inprogress/, so on an already-closed ticket its FAILs are expected: the row is recorded non-blocking
+    # and marked post_close, and the run's exit code ignores them.
+    closed_now = check_ticket_finalized(args.ticket_id)[0] == "PASS"
+    post_close_precheck = part in ("precheck", "both") and closed_now
+    if post_close_precheck:
+        print(
+            f"WARNING: {args.ticket_id} already resolves under agent-working/tickets/done/ — precheck's conditions "
+            "assume agent-working/tickets/inprogress/, so their FAILs are expected here: recorded as a non-blocking "
+            "post-close precheck row and left out of the exit code."
+        )
+    parts: dict[str, dict] = {}
     sub_results: dict[str, str] = {}
     if part in ("precheck", "both"):
         results = run_static_precheck(args.ticket_id, tier, args.start_ts)
+        parts["precheck"] = {"results": results, "fail": _render_results("precheck", results)}
         sub_results.update({f"precheck.{r['condition']}": r["status"] for r in results})
-        any_fail = _render_results("precheck", results) or any_fail
     if part in ("finalize", "both"):
         results = run_finalize_selfcheck(args.ticket_id, tier, regenerate_registry=args.regenerate_registry)
+        parts["finalize"] = {"results": results, "fail": _render_results("finalize", results)}
         sub_results.update({f"finalize.{r['condition']}": r["status"] for r in results})
-        any_fail = _render_results("finalize", results) or any_fail
+    any_fail = any(
+        info["fail"] for name, info in parts.items() if not (name == "precheck" and post_close_precheck)
+    )
 
     # Advisories print but never feed any_fail / the exit code.
     for r in run_advisory_checks(args.ticket_id, tier):
         print(f"[advisory] {r['condition']}: {r['status']} — {r['evidence']}")
 
     print(f"RESULT: {'FAIL' if any_fail else 'PASS'} for {args.ticket_id} (tier={tier})")
-    gate_verdicts.record_gate_verdict(
-        enabled=not args.no_record,
-        gate_id=gate_verdicts.gate_id_for(
-            "done_checker_static", "run_static_precheck" if part == "precheck" else "run_finalize_selfcheck"),
-        gate_type="static_check",
-        phase="Verify" if part == "precheck" else "Finalize",
-        verdict="FAIL" if any_fail else "PASS",
-        blocking=any_fail,
-        ticket_id=args.ticket_id,
-        sub_results=sub_results,
-        inputs_ref={"head_sha": gate_verdicts.head_sha(),
-                    "cmd_sha": gate_verdicts.sha256_hex(f"{args.ticket_id}|{tier}|{part}")},
-    )
+    head = gate_verdicts.head_sha()
+    for name, info in parts.items():
+        post_close = name == "precheck" and post_close_precheck
+        blocking = bool(info["fail"]) and not post_close
+        function = "run_static_precheck" if name == "precheck" else "run_finalize_selfcheck"
+        inputs_ref = {"head_sha": head, "cmd_sha": gate_verdicts.sha256_hex(f"{args.ticket_id}|{tier}|{name}")}
+        if post_close:
+            inputs_ref["post_close"] = True
+        gate_verdicts.record_gate_verdict(
+            enabled=not args.no_record,
+            gate_id=gate_verdicts.gate_id_for("done_checker_static", function),
+            gate_type="static_check",
+            phase="Verify" if name == "precheck" else "Finalize",
+            verdict="FAIL" if info["fail"] else "PASS",
+            blocking=blocking,
+            ticket_id=args.ticket_id,
+            sub_results={k: v for k, v in sub_results.items() if k.startswith(f"{name}.")},
+            inputs_ref=inputs_ref,
+        )
     return 1 if any_fail else 0
 
 

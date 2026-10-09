@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Lineage / Descent
@@ -163,8 +163,9 @@ repository — kinship does not automatically determine, or even factor into, th
 eligibility determination — but it also means this repository's current "default heir" concept
 is not, in fact, a *family*-eligibility mechanism at all; it is a *relationship-bond*
 eligibility mechanism that happens to serve the same downstream slot. The property-transfer
-half remains Batch 08's own confirmed CONFLICTING finding (the `source_kind="CHEST"` resolver
-gap) — cross-referenced, not re-investigated.
+half remains CONFLICTING. Batch 08's "unhandled `CHEST`" reading was corrected on 2026-10-09: the
+resolver accepts the transfer and debits no one, so the goods are likely duplicated (heir copy plus
+corpse loot). See `ownership-possession.md`'s inherited entry.
 
 **Scenarios:** [SL-S13](../scenarios/social-lineage-batch-09.md#sl-s13) (inheritance
 candidate), [SL-S14](../scenarios/social-lineage-batch-09.md#sl-s14) (inheritance blocked).
@@ -230,7 +231,7 @@ they are collected here together, each with its own cross-reference:
    (progression's world-reaction channel is real but narrow) one causal step further.
 
 **Cross-referenced from Batch 08**: the property-transfer resolver gap
-(`source_kind="CHEST"` unhandled by `src/core/conservation.py`) remains CONFLICTING,
+(corrected 2026-10-09: `CHEST` is accepted with no debit, so goods are likely duplicated) remains CONFLICTING,
 unaffected by anything this batch investigated — Lineage's own eligibility-determination half
 is unaffected by that defect and is evaluated separately above.
 

@@ -197,6 +197,7 @@ mechanisms:
       - src/engine/tactical_threat.py::safety_retreat_warranted
       - src/engine/tactical_hold.py::held_swing_update
       - src/engine/tactical_hold.py::stalemate_break_update
+      - src/engine/tactical_hold.py::notice_unengaged_hostile
       - src/engine/hostility.py::perceived_hostile
       - src/world/motivation/pressure_resolver.py::MotivationPressureResolver
     verified:
@@ -258,6 +259,10 @@ mechanisms:
         Decision 32 ("notice and decide"): an unengaged perceived hostile coming adjacent prompts a fresh decision then (fight, step away, wait,
         or keep walking and pay knowingly); open as TCK-20261008-A-SUBJECT-NOTICES-AN-UNENGAGED-HOSTILE-COMING-ADJACENT-AND-DECIDES-DECISION-32.
         The shared hostility test is `src/engine/hostility.py::perceived_hostile` (the tactical pass and the movement rule use it).
+        **Decision 32 implemented (notice and decide), TCK-20261008-A-SUBJECT-NOTICES-AN-UNENGAGED-HOSTILE-COMING-ADJACENT-AND-DECIDES-DECISION-32:**
+        the scheduler wakes the brain of an entity beside a perceived hostile it is not engaged with every 2 ticks (`scheduler.py`, LOD bypass for the wake),
+        and `tactical_hold.notice_unengaged_hostile` follows the entity's own combat-engagement verdict (ignore keeps walking, avoid steps away).
+        `ignore` is unreachable in the corpus today (0 firings); `watch` stands and observes (a typed HOLD wait, WATCH_HOSTILE). Pinned 5x3: opportunity-attack hits down 33 to 67 percent.
   - id: combat_engagement
     layer: entity
     systems: [combat]
@@ -451,6 +456,7 @@ mechanisms:
     implemented_by:
       - src/engine/apply.py::ApplyPath::_compute_entity_changes
       - src/engine/biological_needs.py::need_rates
+      - src/engine/starvation.py::hp_loss
     verified:
       instrument: code_trace
       verdict: observed
@@ -488,6 +494,11 @@ mechanisms:
         proven able to certify a real positive result on `aging_death` (a threshold, not a
         compounding-rate, shape) -- it remains written but unexercised on a genuinely compounding
         mechanism, since none of `progression`'s remaining candidates carry one.
+        **Rule ratified 2026-10-08 (owner decision 31, catalog SURV-06 amendment; designer commit 65d16c225):** people eat by common-sense ways, each with a real cost and none free: gather, hunt or fish (a kill leaves meat), eat raw (fills less, no sickness), cook (raw plus a fire or hearth), buy (earn first), receive. Built so far: eating carried food and gathering wild food (Decision 27 batch); the paid-only inn meal is parked (branch `d27-free-meal-removal`, free meals stay on until a second way to eat works in every measured world). Hunting, raw meat and cooking are MISSING until built; earn-then-buy awaits the designer's earn rule. Decision 33 (a light balance pass is allowed on content values) set `humanoid_survival` hunger to "low" (0.05 per tick) for the same batch.
+        **Rule ratified 2026-10-08 (owner decision 36, designer commit 92f43c41e, SURV-02 amendment):** starvation is staged: weakened at hunger 85
+        (stamina and readiness recover at half rate, attack x0.8), then 1 HP lost every round(6000 / max_hp) ticks at hunger 95, death about
+        6000 ticks (2.5 days) after the line instead of about 50. Implemented by TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02:
+        `src/engine/starvation.py` (the one tuning table), `apply.py` (the HP term and the recovery scale), `combat.py` (the attack scale).
   - id: derived_stats
     layer: entity
     systems: [progression]
@@ -2880,6 +2891,7 @@ mechanisms:
         TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN (batch 3). Formalizes this entry's
         own already-documented zero-caller check above. No contradiction from `mechanism_state_
         caller_check.py`'s own full-registry run.
+        **Rule ratified 2026-10-08 (owner decision 29, catalog SURV-06 amendment; designer commits 6a31a61a2 on main and 3458f17d0):** wild food is part of the land: each biome declares how much wild food its land holds and how fast it regrows, never sized to demand, placed in wild land outside settlements. Landed with the Decision 27 batch as the `berry_thicket` kind (`placement: owned_by_declared_region`) declared per wild module (`near_forest` and `sacred_grove` 10 charges, the swamp border 8, the frontier-village biome none). Harvest itself runs through the live INTERACT path, not the orphan `HarvestSystem` bound above.
   - id: fame
     layer: world
     systems: [world, social]
@@ -3148,6 +3160,7 @@ mechanisms:
       note: >-
         TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `ResourceEcologyService.process_ecology` was called 30 times. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Regional resource-node and chest replenishment with a density modifier. The extraction side is `resource_harvesting` (HarvestSystem), a separate mechanism.
+        **Rule ratified 2026-10-08 (owner decision 29, catalog RES-05 with SURV-06):** wild food regrows by a flat data value per biome and node kind through this ecology process, never by season and never sized to demand. The default regen of 1 charge per ecology cycle applies to the wild-food kind; the density modifier is inert at that rate (`ecology.py` rounds to at least 1).
 
   - id: regional_transformation
     layer: region
@@ -3232,6 +3245,7 @@ mechanisms:
       note: >-
         TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `EnvironmentService.calculate_hazard_drain` was called 42604 times, `get_weather_multipliers` 89941 and `get_aura_multipliers` 20596. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         Drains HP and Readiness by region hazard_level and calamity_intensity. Kept separate from `regional_trauma` (a different cause and lifecycle: trauma_score).
+        **Rule ratified 2026-10-08 (owner decision 30, catalog ENV-08; designer commits b4ead0882, 3458f17d0):** settled land, camps and the near edge of the wild carry no standing ambient hazard, so the drain this entry describes applies in deep or cursed land. Content landed with the Decision 27 batch: `trading_hometown`, `survivor_outpost` and the `near_forest` of `wolf_den_near_forest` go from 0.5, 0.5 and 1.0 to 0. The drain formula (`int(level * 10)` HP per tick, endurance by faction and kind) is unchanged.
 
   - id: humanoid_reproduction
     layer: entity

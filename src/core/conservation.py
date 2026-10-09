@@ -1,13 +1,27 @@
 # Compliance IDs: COMBAT-066, DATA-004, DATA-005, DATA-006, DATA-007, DATA-008, DATA-049, DATA-063, DATA-080, DATA-094, DATA-098, DATA-104, DATA-106, DATA-107, DATA-108, DATA-111, ECON-003, ECON-200, ECON-201, INFRA-052, INFRA-055, INFRA-058, INFRA-072, INFRA-091, INFRA-107, INFRA-114, INFRA-115, INFRA-116, INFRA-120, INFRA-123, PROG-044, PROG-133, RES-001, RES-002, RES-003, RES-004, RES-005, RES-006, RES-008, RES-010, RES-013, RES-019, RES-020, RES-029, RES-036, RES-037, RES-038, RES-039, RES-040, RES-041, RES-042, RES-043, RES-044, RES-047, RES-048, RES-049, RES-050, RES-053, RES-055, RES-056, RES-057, RES-058, RES-059, RES-061, RES-064, RES-068, RES-069, RES-070, RES-071, RES-072, RES-073, RES-074, RES-075, RES-076, RES-077, RES-078, RES-079, RES-080, RES-081, RES-082, RES-083, RES-084, RES-088, RES-089, RES-090, RES-091, RES-092, RES-093, RES-094, RES-095, RES-096, RES-097, RES-098, RES-099, RES-100, RES-101, RES-102, RES-103, RES-104, RES-105, RES-106, RES-107, RES-108, RES-109, RES-110, RES-111, RES-112, RES-113, RES-114, RES-115, RES-116, RES-117, RES-118, RES-119, RES-200, RES-201, SOC-026, STRAT-011, STRAT-104, STRAT-172, STRAT-173, STRAT-174, STRAT-175, WORLD-164
 # Compliance IDs: TOWN-011
 from __future__ import annotations
-from dataclasses import dataclass, field, replace
-from typing import List, Optional, TYPE_CHECKING, Dict, Any
 
-from src.core.inventory import InventoryService
+from dataclasses import dataclass, field, replace
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
 from src.core.enums import ReasonCode
-from src.core.updates import InventoryUpdate, ResourceNodeUpdate, InteractionUpdate, IdentityUpdate, BiologicalUpdate, AttributeUpdate, CombatUpdate, StrategicUpdate, RewardUpdate, EquipmentUpdate, QuestUpdate
+from src.core.inventory import InventoryService
 from src.core.quests import QuestStatus
+from src.core.updates import (
+    AttributeUpdate,
+    BuildingUpdate,
+    BiologicalUpdate,
+    CombatUpdate,
+    EquipmentUpdate,
+    IdentityUpdate,
+    InteractionUpdate,
+    InventoryUpdate,
+    QuestUpdate,
+    ResourceNodeUpdate,
+    RewardUpdate,
+    StrategicUpdate,
+)
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState, InventoryComponent
@@ -32,6 +46,52 @@ class TransactionResult:
     ground_item_remove: Optional[int] = None
     corpse_remove: Optional[int] = None
     reason: ReasonCode = ReasonCode.UNKNOWN
+
+def _wage_result(state: Any, intent: ResourceTransferIntent) -> TransactionResult:
+    """EXCH-02: a wage is a transfer from the employer's own purse. A short purse pays nothing (the worker is unpaid, no coin appears)."""
+    employer = state.buildings.get(intent.source_id)
+    if employer is None or not employer.functional:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
+    if intent.gold_delta <= 0 or employer.inventory.gold < intent.gold_delta:
+        return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
+    return TransactionResult(
+        accepted=True,
+        inventory_update=InventoryUpdate(gold_delta=intent.gold_delta),
+        building_update=BuildingUpdate(building_id=employer.id, inventory=InventoryUpdate(gold_delta=-intent.gold_delta)))
+
+
+def _service_credit(state: Any, intent: ResourceTransferIntent, price: int) -> Optional[Any]:
+    """The building's purse receives what a bought service costs (EXCH-02: every coin is some purse's coin). A service whose source is a
+    building id (a bed, a meal at an inn or home) pays that building; a fee, a tax or a purchase with a named source is a sink as before."""
+    if not isinstance(intent.source_id, int) or price <= 0 or intent.source_id not in state.buildings:
+        return None
+    return BuildingUpdate(building_id=intent.source_id, inventory=InventoryUpdate(gold_delta=price))
+
+
+def _carried_food_result(intent: ResourceTransferIntent, inventory: InventoryComponent) -> TransactionResult:
+    """Eating what the subject carries: the item is consumed together with the meal, or nothing happens."""
+    for item in intent.items_remove:
+        if sum(s.quantity for s in inventory.items if s.item_id == item.item_id) < item.quantity:
+            return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+    return TransactionResult(accepted=True, inventory_update=InventoryUpdate(items_remove=intent.items_remove), biological_update=intent.biological_upd)
+
+
+def _reward_result(intent: ResourceTransferIntent, inventory_full: bool, reservations: Optional[Dict[Any, int]]) -> TransactionResult:
+    """A COMBAT or QUEST grant. A quest accounts for in-tick reservations first (P0.2); both grant XP/gold only if the items fit
+    (Progression Rule: if it has items, it must fit)."""
+    is_quest = intent.source_kind == "QUEST"
+    if is_quest and reservations and reservations.get(("QUEST", intent.source_id), 0) > 0:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)
+    if intent.items_add and inventory_full:
+        return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
+    return TransactionResult(
+        accepted=True,
+        inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
+        identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward),
+        reward_update=intent.reward_upd,
+        quest_update=QuestUpdate(quest_id=str(intent.source_id), status_set=QuestStatus.REWARDED) if is_quest else None,
+    )
+
 
 class ResourceTransactionResolver:
     """
@@ -221,35 +281,11 @@ class ResourceTransactionResolver:
                 )
             )
 
-        elif intent.source_kind == "COMBAT":
-            # Progression Rule: XP/Gold is granted only if items (if any) fit.
-            # Law: If it has items, it must fit.
-            if intent.items_add and inventory_full:
-                 return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
+        elif intent.source_kind == "WAGE":
+            return _wage_result(state, intent)
 
-            return TransactionResult(
-                accepted=True,
-                inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
-                identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward),
-                reward_update=intent.reward_upd
-            )
-
-        elif intent.source_kind == "QUEST":
-            # P0.2 Refinement: Account for in-tick reservations
-            if reservations and reservations.get(("QUEST", intent.source_id), 0) > 0:
-                return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)
-
-            # Law: If it has items, it must fit.
-            if intent.items_add and inventory_full:
-                 return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
-
-            return TransactionResult(
-                accepted=True,
-                inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
-                identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward),
-                reward_update=intent.reward_upd,
-                quest_update=QuestUpdate(quest_id=str(intent.source_id), status_set=QuestStatus.REWARDED)
-            )
+        elif intent.source_kind in ("COMBAT", "QUEST"):
+            return _reward_result(intent, inventory_full, reservations)
 
         # VERIFIED v2: authoritative_side_effects
         if intent.source_kind in ("TOWN_SERVICE", "TAX", "REPAIR_FEE", "SERVICE_FEE", "INFORMATION_PURCHASE"):
@@ -258,6 +294,7 @@ class ResourceTransactionResolver:
                  
              return TransactionResult(
                  accepted=True,
+                 building_update=_service_credit(state, intent, min(target_inventory.gold, max(0, intent.gold_cost - intent.gold_delta))),
                  inventory_update=InventoryUpdate(
                       items_add=intent.items_add,
                       gold_delta=intent.gold_delta - intent.gold_cost
@@ -271,6 +308,9 @@ class ResourceTransactionResolver:
                  reward_update=intent.reward_upd
              )
         
+        elif intent.source_kind == "CARRIED_FOOD":
+             return _carried_food_result(intent, target_inventory)
+
         elif intent.source_kind in ("RECRUIT", "CHEST"):
              # P0.1 Refinement: Source-level locks for world sources
              if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:
