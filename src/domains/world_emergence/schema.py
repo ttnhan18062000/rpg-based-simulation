@@ -18,6 +18,8 @@ class WorldEventCategory(str, Enum):
     RESOURCE_HARVESTED = "RESOURCE_HARVESTED"
     RESOURCE_DEPLETED = "RESOURCE_DEPLETED"
     RESOURCE_RECOVERED = "RESOURCE_RECOVERED"
+    # Decision 44: meat left on a corpse that decayed (the typed sink MEAT_SINK_CORPSE_DECAY; payload["quantity"], subject = corpse id).
+    MEAT_DECAYED = "MEAT_DECAYED"
     QUEST_COMPLETED = "QUEST_COMPLETED"
     QUEST_FAILED = "QUEST_FAILED"
     CAMP_CLEARED = "CAMP_CLEARED"

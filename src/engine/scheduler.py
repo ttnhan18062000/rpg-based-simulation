@@ -4,9 +4,11 @@ from __future__ import annotations
 from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 from src.core.state import AuthoritativeState
 from src.core.work import WorkItem, WorkClass
+from src.engine.appraisal import HUNT_HUNGER, can_eat_item
 from src.engine.candidate_selector import MovementCandidateSelector
 from src.engine.cadence import SystemCadence, should_run
 from src.engine.need_pull import need_is_pressing
+from src.engine.tactical_rest import CARCASS_NEAR
 
 # Ticks between the brain wakes of an entity beside an unengaged hostile (decision 32); the decision comes within this bound.
 ADJACENCY_WAKE_COOLDOWN = 2
@@ -79,8 +81,19 @@ class DeterministicScheduler:
         return (
             (state.tick + ent.id) % ADJACENCY_WAKE_COOLDOWN == 0
             and not (work_kind == "ENTITY_ACT" and ent.task.payload)
-            and MovementCandidateSelector.unengaged_adjacent_hostile(ent, state.entities, wake_index)
+            and (MovementCandidateSelector.unengaged_adjacent_hostile(ent, state.entities, wake_index)
+                 or DeterministicScheduler._hungry_beside_edible_carcass(ent, state))
         )
+
+    @staticmethod
+    def _hungry_beside_edible_carcass(ent: "EntityState", state: AuthoritativeState) -> bool:
+        """Decision 44: a hungry entity that holds no action and stands within CARCASS_NEAR of a carcass its diet can eat is woken for the brain, so
+        a kill leads to the meal (the held swing at a dead target ends several ticks after the kill, and the body may have drifted a tile since)."""
+        if not state.corpses or ent.biological.hunger < HUNT_HUNGER:
+            return False
+        px, py = ent.navigation.position
+        return any(abs(px - c.position[0]) + abs(py - c.position[1]) <= CARCASS_NEAR
+                   and any(i.quantity > 0 and can_eat_item(ent, i.item_id) for i in c.items) for c in state.corpses.values())
 
     @staticmethod
     def _throttled(ent: "EntityState", state: AuthoritativeState, policy: "GovernorPolicy", focus_points: List[Tuple[float, float]], is_brain: bool) -> bool:

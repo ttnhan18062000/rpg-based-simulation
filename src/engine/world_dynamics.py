@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING
 from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
 from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
 from src.core.violent_cause import is_violent_death_cause
+from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
+from src.engine.carcass import RAW_MEAT_ITEM
+from src.engine.hostility import is_feeding_kill
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState, EntityState
@@ -69,7 +72,8 @@ class WorldDynamicsSystem:
         for e_id, ent_upd in update.entity_updates.items():
             if ent_upd.combat and ent_upd.combat.alive_set is False and is_violent_death_cause(ent_upd.combat.outcome_kind):  # ENV-07
                 entity = state.entities.get(e_id)
-                if entity:
+                # Decision 48: a kill to eat is not unrest (derived from the killer's PREDATION relation; the cause stays COMBAT).
+                if entity and not is_feeding_kill(state, ent_upd.combat.attacker_id, entity):
                     region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
                     if region:
                         world_upd = update.world_updates.get(region.id, WorldUpdate(region_id=region.id))
@@ -296,15 +300,22 @@ class WorldDynamicsSystem:
         
         # 5.3 Corpses & Ground Items (Decay)
         corpses_remove = list(update.corpses_remove)
+        decayed_meat_events = []
         for cp_id, corpse in state.corpses.items():
             if state.tick >= corpse.decay_tick:
                 corpses_remove.append(cp_id)
+                # Decision 44: meat still on a decaying corpse leaves the world through a typed sink, so conservation balances from records.
+                meat_left = sum(s.quantity for s in corpse.items if s.item_id == RAW_MEAT_ITEM)
+                if meat_left > 0:
+                    decayed_meat_events.append(WorldEvent(
+                        category=WorldEventCategory.MEAT_DECAYED, tick=state.tick, subject=str(cp_id), payload={"quantity": float(meat_left)}))
 
         return update.replace(
             world_updates=refined_world_updates,
             node_updates=refined_node_updates,
             chest_updates=refined_chest_updates,
-            corpses_remove=corpses_remove
+            corpses_remove=corpses_remove,
+            world_events_add=list(update.world_events_add) + decayed_meat_events,
         )
 
     @staticmethod

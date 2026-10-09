@@ -80,6 +80,15 @@ def test_main_a_hungry_meat_eater_kills_leaves_meat_and_eats_it_at_the_carcass()
     assert min(r["hunger"] for r in rows[eaten:]) <= before - food_hunger_recovery("raw_meat") + 2.0, "eating the meat must lower hunger by what it gives"
 
 
+def test_a_kill_leads_to_the_meal_at_the_same_hunger_the_hunt_starts_at():
+    """One gate for the hunt and the meal: a meat-eater at a moderate hunger that kills eats that same carcass within a bounded number of ticks."""
+    rows, prey_id = _run(_stage(hunger=60.0), ticks=120)
+    killed = next(i for i, r in enumerate(rows) if r["prey_alive"] is False)
+    carcass_id = 1000000 + prey_id
+    eaten = next((i for i, r in enumerate(rows) if i >= killed and "raw_meat" not in dict(r["corpses"].get(carcass_id, ()))), None)
+    assert eaten is not None and eaten - killed <= 40, "a kill must be eaten soon after, at the hunger it was hunted at"
+
+
 def test_control_a_fed_meat_eater_hunts_nothing():
     rows, _ = _run(_stage(hunger=FED))
     assert not any(r["attacked"] for r in rows), "a meat-eater that is not hungry does not go after the creature"

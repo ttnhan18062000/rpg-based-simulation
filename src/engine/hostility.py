@@ -21,7 +21,7 @@ from src.entities.identity_resolver import (
 )
 
 if TYPE_CHECKING:
-    from src.core.state import EntityState
+    from src.core.state import AuthoritativeState, EntityState
 
 
 ATTACK_RELATIONS = frozenset({Relation.FACTION_HOSTILE, Relation.PREDATION})
@@ -81,3 +81,11 @@ def perceived_hostile(entity: "EntityState", other: "EntityState", source: Optio
     """True when ``other`` is an attack target of ``entity``: a faction hostile or prey it hunts. WARY and THREATENING are not (they are
     avoided, never engaged), so they never enter the hostile list."""
     return relation(entity, other, source) in ATTACK_RELATIONS
+
+
+def is_feeding_kill(state: "AuthoritativeState", attacker_id: Optional[int], victim: "EntityState") -> bool:
+    """True when the death of ``victim`` was a kill to eat (decision 48): its killer appraised it as PREDATION, and no faction verdict made it a
+    fight between peoples. Killing a person a faction rates hostile, slaughter beyond need and group fights are not feeding kills and still count
+    toward trauma (ENV-07)."""
+    killer = state.entities.get(attacker_id) if attacker_id is not None else None
+    return killer is not None and relation(killer, victim) is Relation.PREDATION

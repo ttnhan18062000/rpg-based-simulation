@@ -118,3 +118,45 @@ def test_a_death_through_the_apply_path_leaves_the_kinds_meat_on_the_corpse_what
         update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, combat=CombatUpdate(hp_delta=-500, alive_set=False))})
         corpse = ApplyPath.apply_generation(state, update, next_tick=2).corpses[1000001]
         assert any(stack.item_id == RAW_MEAT_ITEM for stack in corpse.items) is expect_meat
+
+
+def test_meat_balances_from_records_alone_through_eating_looting_and_decay():
+    """Body meat at death = meat eaten at the corpse + meat looted + meat decayed, each read from its own typed record."""
+    from src.core.state import AuthoritativeState
+    from src.core.updates import CombatUpdate, EntityUpdate, ResourceTransferIntent, StateUpdate
+    from src.domains.world_emergence.schema import WorldEventCategory
+    from src.engine.apply import ApplyPath
+    from src.engine.world_dynamics import WorldDynamicsSystem
+    from src.systems.world_systems.generator import EntityGenerator
+
+    # Source: three orcs die (large bodies), each leaving the same declared yield.
+    orcs = {i: _creature(i, "orc", (10.0 + 3 * i, 10.0)) for i in (1, 2, 3)}
+    state = AuthoritativeState(tick=1, seed=42, entities=dict(orcs))
+    deaths = StateUpdate(entity_updates={i: EntityUpdate(entity_id=i, combat=CombatUpdate(hp_delta=-500, alive_set=False)) for i in orcs})
+    state = ApplyPath.apply_generation(state, deaths, next_tick=2)
+    meat = {cid: next(s.quantity for s in c.items if s.item_id == RAW_MEAT_ITEM) for cid, c in state.corpses.items()}
+    source = sum(meat.values())
+    assert source == 3 * body_meat(orcs[1])[0].quantity
+
+    # Sink 1: one unit eaten at corpse 1 by a wolf (CORPSE_FOOD transfer keyed by the corpse id).
+    wolf = _creature(9, "wolf", (12.0, 10.0))
+    state = replace(state, entities={**state.entities, 9: wolf})
+    eat = ResourceTransactionResolver.resolve(state, wolf, corpse_meal(wolf, state.corpses[1000001], 2)[0])
+    eaten = sum(1 for _ in [eat] if eat.accepted)  # one unit per meal
+    assert eat.accepted and eat.corpse_update.items[0].quantity == meat[1000001] - 1
+
+    # Sink 2: corpse 2 is looted whole (the existing CORPSE transfer).
+    loot = ResourceTransactionResolver.resolve(state, wolf, ResourceTransferIntent(
+        source_id=1000002, source_kind="CORPSE", items_add=list(state.corpses[1000002].items), transfer_kind="LOOT"))
+    looted = sum(s.quantity for s in loot.inventory_update.items_add if s.item_id == RAW_MEAT_ITEM)
+    assert loot.accepted and loot.corpse_remove == 1000002
+
+    # Sink 3: corpse 3 decays with its meat on it; the typed MEAT_DECAYED record carries the quantity.
+    decay_state = replace(state, tick=state.corpses[1000003].decay_tick)
+    refined = WorldDynamicsSystem.resolve_dynamics(decay_state, StateUpdate(), EntityGenerator(42))
+    decayed = {e.subject: e.payload["quantity"] for e in refined.world_events_add if e.category == WorldEventCategory.MEAT_DECAYED}
+    assert decayed["1000003"] == meat[1000003]
+
+    # Corpse 1 still holds the rest; every unit of the source is accounted for by a record or by what remains.
+    remaining = eat.corpse_update.items[0].quantity
+    assert source == eaten + looted + int(decayed["1000003"]) + remaining
