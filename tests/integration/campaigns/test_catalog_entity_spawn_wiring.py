@@ -18,15 +18,14 @@ from pathlib import Path
 
 import pytest
 
-from src.core.governance import RuntimeMode
 from src.domains.campaigns.orchestrator import CampaignManifest, CampaignOrchestrator
 from src.engine.domain.action_router import ActionRouter
-from src.engine.governor import ResourceGovernor
 from src.engine.kernel import Kernel
 from src.engine.pipeline_phases.actions import ActionRoutingPhase
 from src.engine.scenario_runtime import ScenarioRuntimeService
 from src.engine.tactical import TacticalDecisionSystem
 from src.scenarios.schema import SimulationScenarioDefinition
+from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
 
 class _CollectingRecorder:
@@ -127,16 +126,6 @@ _OFFENSIVE_ACTIONS = ("ATTACK", "AOE_ATTACK", "SKILL")
 # Copied from TacticalDecisionSystem.evaluate_entity_intent's neighbour scan (tactical.py); pinned by test_perception_scan_constants_match_tactical.
 _PERCEPTION_RADIUS = 10.0
 _MAX_SALIENT_TARGETS = 5
-
-
-class _PinnedNormalGovernor(ResourceGovernor):
-    """Pins NORMAL: the test asserts event-stream plausibility, which must not depend on host speed or the #175 coupling."""
-
-    def _get_indicated_mode(self, profile, signals):
-        return RuntimeMode.NORMAL
-
-    def force_mode(self, mode, status, current_tick):
-        return None  # the mid-tick wall-clock throttle must not flip the mode either
 
 
 @dataclass
@@ -255,7 +244,7 @@ def _run_episode(seed):
         spec = orch._manifest.episodes[0]
         svc = ScenarioRuntimeService(
             spec, initial_state=orch._build_initial_state(seed, spec), scenario_event_recorder=None,
-            governor=_PinnedNormalGovernor(),
+            governor=PinnedNormalGovernor(),
         )
         svc._kernel = svc._build_kernel()
         svc._kernel._event_listeners = [lambda events: recorder.events.extend(events)]
