@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-06"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Environment
@@ -342,6 +342,84 @@ trauma, the same number of drain deaths does not, and a wounded-then-drained dea
 
 ---
 
+## ENV-08 — Settled land and the near edge of the wild are survivable for the people who live beside them; lethal ambient danger belongs to deep or cursed land
+
+> A region's standing ambient hazard says how dangerous the land is to be in. Settled land, a
+> town or village, carries no standing ambient hazard to the people who live and walk there.
+> The near edge of the wild, the land a settlement's people forage or cross on an errand, may
+> cost a healthy person something on a visit but does not kill them on it. Lethal ambient
+> danger, land that kills by being in it, belongs to deep, cursed or otherwise forbidding
+> land. Danger grows the further one goes from where people live.
+
+**Disposition: ACCEPT — decided by rpg-designer, direction confirmed by the owner directly,
+2026-10-08** (row 30 of `docs/plans/systemic_world/owner_decision_memo.md`). Passes the admission
+test: ENV-02 says exposure needs declared conditions, and decision 29 says wild food belongs to
+the land, but nothing said where on the land lethal ambient danger may sit. Without this, content
+can make a town or the forest beside it a death zone for its own people, and SURV-06's "a way
+within reach" holds only on paper.
+- **Every living kind (decided by the owner directly, 2026-10-09; row 42 of the memo):** the
+  same holds for animals. A kind's home ground (a wolf pack's den, a herd's grazing land) carries
+  no standing ambient hazard that kills that kind for living there. "People" in the text above
+  is an example, not a limit.
+- **Applies to the standing ambient hazard only.** Calamity's escalation (ENV-06), a declared
+  modifier such as MIASMA, hostile creatures, and the competition for a food patch are separate
+  causes, and this Rule does not cap them.
+- **Endurance is unchanged:** a faction that declares endurance for a hazard kind still takes no
+  drain anywhere (ENV-02). This Rule is about the people who do not.
+- **"Costs something" need not be health** (owner, 2026-10-08, on Lane B's derivation). The near
+  edge's cost may be the walk, the finite charges and the competition for them alone. Drain is
+  whole HP per tick, so the mildest nonzero level (1 HP per tick) kills a broke worker on a
+  two-gather visit (103 ticks, starting HP as low as 31), which breaks "does not kill them on it".
+  `near_forest` is therefore set to 0.
+- **Settled land includes a camp where people shelter** (`survivor_outpost`, module
+  `survivor_camp_shelter`). Settled means where people live and stay, not a town's legal status.
+- **Engineering and content, not this Rule:** the hazard values themselves; what counts as "near"
+  for a given world; and whether subjects know a land is dangerous and avoid it (hazard-aware
+  path and goal scoring is feature work, frozen by memo row 7).
+- **Alternatives not taken:** a new hazard-free field edge beside each town (a bigger content
+  addition, frozen by row 7); fix the town only (forage stays lethal, so decision 29 is a dead
+  letter for townsfolk); town endurance for the forest kind (endurance is declared per faction
+  for its own in-fiction reason); leave the land as it is (townsfolk die on the road).
+
+**Repository evidence: SUPPORTED since #454 (`0b4f12af7`, 2026-10-09).** Implemented by
+`TCK-20261008-ENV-08-SETTLED-LAND-AND-THE-NEAR-WILD-CARRY-NO-STANDING-AMBIENT-HAZARD` (Lane B), as
+content data only.
+- **The change:** `trading_hometown` and `survivor_outpost` go from hazard 0.5 to 0, and
+  `wolf_den_near_forest`'s `near_forest` from 1.0 to 0. Deeper and cursed land is unchanged.
+  Divergence 2.92.
+- **Pinned by** SPC-S16 (`tests/mechanic_scenarios/test_near_wild_is_survivable_deep_wild_is_not.py`,
+  4 passed). It covers the main arm on `frontier_extended`, the deep-wild control at (2,71), and
+  a compile-time assertion over every resolved world.
+- **Effect:** part of #454's combined headline (divergence 2.91). Alive at tick 1000 rises from
+  5.4 / 15.6 / 14.4 to 17.6 / 21.2 / 22.2 (crowded / living / urban, 5 seeds, pinned).
+
+**Previously CONFLICTING, traced by Lane B on frontier_living_world** (seeds 42 and 43,
+read-only, relayed by rpg-planner; kept as found).
+- **A town that kills its passers-by:** `trading_hometown` (x 45-80, y 10-45) has hazard_level 0.5
+  NATURAL_TERRAIN, constant over the run (calamity 0.0, no MIASMA). That is 5 HP per tick for
+  `town_council`, who do not endure it, and no heal applies there. A staged worker dies in 20
+  ticks, and the crossing takes 35. The other towns read 0.0 (`hometown`, `settled_quarter`).
+- **A near forest that kills on a visit:** `near_forest` is hazard_level 1.0 NATURAL_TERRAIN, 10 HP
+  per tick, so a 110-HP human dies in 11 ticks. It is the HIGH forage biome under decision 29.
+- **Outcome:** decision 27's opening step works (broke workers pick forage, utility 48 to 144, and
+  set out at hunger 55 to 85), but they die on the road. The 48 `town_council` HAZARD deaths are
+  foragers and errand-walkers crossing `trading_hometown`, not residents.
+- **Drain path:** `EnvironmentService.calculate_hazard_drain` (`src/world/environment.py`), applied
+  every tick by `WorldDynamicsSystem.resolve_dynamics` (`src/engine/world_dynamics.py`). The only
+  offset is the +1 HP per tick heal on town tiles (`src/engine/town_resolution.py`).
+- **The fix is content data** in Lane B's decision-27 batch: `trading_hometown` and
+  `survivor_outpost` from 0.5 to 0, and `near_forest` from 1.0 to 0, with deeper and cursed land
+  unchanged.
+- **Applies by the land's place, not its id:** a region is the near edge when people live beside
+  it. A region that shares the id `near_forest` but borders no settlement or camp is not covered
+  by the near-edge clause.
+
+**Scenarios:** [SPC-S16](../scenarios/space-environment-batch-04.md#spc-s16) (second town to
+the near forest and back alive; the `deep_forest` control kills). A kernel spec, owed as a test
+with Lane B's content data.
+
+---
+
 ## Cross-domain links recorded here
 
 - ENV-06 → World dynamics / regional trauma (Bible 05 §2: trauma is the acute input calamity
@@ -357,6 +435,8 @@ trauma, the same number of drain deaths does not, and a wounded-then-drained dea
 - ENV-04 → Movement/Navigation (`movement-navigation.md`), Conflict & combat (future terrain-
   affects-combat content)
 - ENV-03 → State Ownership (OWN-02, directly reused)
+- ENV-08 → Life/body/survival (SURV-06's way within reach; decision 29's wild food), ENV-02
+  (endurance unchanged), ENV-06 (calamity is a separate cause)
 
 ## Open questions carried forward
 

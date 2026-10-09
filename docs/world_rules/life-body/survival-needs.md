@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Survival Needs
@@ -77,7 +77,61 @@ Batch 03's LIMIT-02); `hunger > 50/60/80` → real goal-urgency and decision-pri
 `work_queue.py`). Need pressure is one of the most thoroughly-consumed state categories this
 Catalog has found.
 
-**Scenarios:** [LB-S08](../scenarios/life-body-batch-05.md#lb-s08) (survival pressure).
+**Amendment, starvation is staged: weak first, death over days (decided by the owner directly,
+2026-10-08; row 36 of the memo):**
+
+> Past a need's threshold, the consequence comes in stages. A starving creature, person or
+> animal, first weakens: it recovers more slowly and fights worse. Only with continued want does
+> it start losing health slowly, and it dies after about two to three days without food. Crossing the line
+> is a warning the body gives, not a death sentence within the hour.
+
+- **Today:** `hunger >= 95.0` costs 2 HP per tick (`src/engine/apply.py`). That kills a person
+  about 50 ticks (30 minutes, Bible 05 §1: 1 tick is 36 s) after crossing the line, so with
+  hunger at 0.05 per tick (decision 33) a person dies within about 20 hours of their last meal.
+- **Why staged:** common sense (a person survives days without food), and runs last about 0.4
+  to 2 days, so the weakness stays visible within a run instead of every missed meal being
+  fatal. Realistic weeks would make starvation never appear in a run.
+- **Engineering and content, not this Rule:** the stage thresholds, the weakening effects (they
+  may reuse the capacity degradation SURV-02 already cites), the HP-loss rate, and the same
+  staging for other needs where it fits. It is a code ticket after Lane B's batch.
+- **Every living kind (decided by the owner directly, 2026-10-09; row 42 of the memo):** this
+  applies to every living subject that has the need, animals as well as people: a wolf, a deer, a
+  goblin and a townsperson alike. The kind's own need profile sizes it (its rate, its stage
+  lines, its recovery). "Person" in the text above is an example, not a limit.
+  `src/engine/starvation.py` (decision 36's code) is already kind-agnostic: it reads the
+  subject's hunger and max HP, never its kind.
+- **Evidence: CONFLICTING** until that ticket lands.
+
+**Amendment, sleep debt ends in collapse, not in bleeding (decided by the owner directly,
+2026-10-09; row 41 of the memo):**
+
+> A creature, person or animal, that goes far too long without sleep weakens first, then falls
+> asleep where it stands and cannot act until enough of the debt is slept off. Lack of sleep does not wound.
+> The cost is lost time and being helpless in place, which is dangerous away from settled land.
+
+- **Today:** `sleep_debt >= 98.0` costs 1 HP per tick (`docs/mechanics/01_entity_anatomy.md`,
+  the biological pressures table), so a 100 HP body dies about 100 ticks (one hour) after the
+  line. That is the same defect decision 36 fixed for hunger, and it is still in place after
+  decision 36's code landed (rpg-planner, 2026-10-09).
+- **Shape:** a high-debt stage weakens the subject, the same kind of effect as hunger's first
+  stage. At 98 or above the subject collapses into sleep and cannot act until its debt falls
+  below a wake line. There is no HP loss at any stage.
+- **Engineering and content, not this Rule:** the weakening threshold and effects, the wake line,
+  how collapse is represented (a typed involuntary sleep, not a frozen action), and how a
+  sleeping subject is treated by others (perception, attack).
+- **Alternatives not taken:** staged HP loss as for hunger (a sleepless death is less plausible
+  than collapse); collapse plus slow HP loss; keep 1 HP per tick for now.
+- **Every living kind (decided by the owner directly, 2026-10-09; row 42 of the memo):** this
+  applies to every living subject that has the need, animals as well as people: a wolf, a deer, a
+  goblin and a townsperson alike. The kind's own need profile sizes it (its rate, its stage
+  lines, its recovery). "Person" in the text above is an example, not a limit.
+- **Evidence: CONFLICTING** until its code ticket lands.
+- **Scenario:** [LB-S19](../scenarios/life-body-batch-05.md#lb-s19) (weakened, collapse where it
+  stands, no action while asleep, wakes, no HP loss; a rested control).
+
+**Scenarios:** [LB-S08](../scenarios/life-body-batch-05.md#lb-s08) (survival pressure).  Staged starvation:
+[LB-S18](../scenarios/life-body-batch-05.md#lb-s18) (weakened within hours, dies at 2 to 3 days;
+a control that eats), a kernel spec owed with Lane A's decision-36 ticket.
 
 ---
 
@@ -238,6 +292,38 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
   - rest only in buildings (a timer for anyone far from one);
   - the engine quietly feeding subjects that cannot eat (hides a content defect);
   - a guarantee that every individual can eat (removes poverty as an outcome).
+- **Amendment, common-sense ways to eat (decided by the owner directly, 2026-10-08; row 31 of
+  the memo):**
+
+  > A kind meets hunger by any way its members could plausibly use, and each way has its own
+  > real cost; none is free. For people the ways include gathering wild food, hunting or
+  > fishing, eating food raw or cooking it, buying, and receiving. Food enters the world only
+  > from a real source and leaves only by being eaten.
+
+  | Way | Where the food comes from | Its cost |
+  |---|---|---|
+  | Gather | wild plants and fruit (decision 29) | the walk, the finite charges, competition |
+  | Hunt or fish | a wild animal killed leaves meat | the fight's risk, finding prey |
+  | Eat raw | any edible food as it is | it fills less than the same food cooked |
+  | Cook | raw food plus a fire or hearth | time and a place to cook; fills more |
+  | Buy | an inn meal or shop food | money, which needs a way to earn it |
+  | Receive | gift, loot, inheritance, help from kin | depends on others |
+
+  - **Raw versus cooked:** raw food fills less than the same food cooked. That is the whole
+    difference for now. Sickness from raw food needs an illness state that does not exist, and
+    waits for a disease Rule.
+  - **No single way is required.** Earning then buying is one way among several. The ruling that
+    the free-meal fix waits for it is replaced: the fix lands once people who cannot pay have at
+    least one other working way, whichever is cheapest to build first. More ways follow.
+  - **The rule names the ways; planning orders them.** Which ways are built, and when, is the
+    planner's call under memo row 7. Each way's cost and amounts are content and engineering.
+  - **Conservation** (Bible 03): meat enters by a kill and gathered food by harvest, and both
+    leave by eating. Cooking converts raw food into cooked food and keeps the link to its source
+    (RES-06). Nothing is created by the act of eating.
+  - **Evidence: MISSING for hunting, eating raw and cooking.** No meat item, no meat from a kill,
+    and no cooking exist in code or content (searched `src/` and `data/` on `39e65eb5a`).
+    Gathering is decision 29's evidence; buying waits on
+    `TCK-20261007-SHOP-AND-BLACKSMITH-TOWN-PATHS-NEVER-RAN-IN-A-COMPILED-WORLD`.
 - **Amendment, wild food is part of the land (decided by rpg-designer, direction confirmed by
   the owner directly, 2026-10-08; row 29 of the memo):**
 
@@ -256,6 +342,17 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
   - **The cost is the land's own:** the walk from a settlement to wild land, finite charges, and
     competition for them. There is no minimum-walk number. A town's land holds owned food (the
     inn, the shop), and taking owned food is theft, which decision 27 excludes.
+  - **Which worlds have wild land (decided by the owner directly, 2026-10-08; row 35 of the
+    memo):** a frontier world's settlements have wild land within reach. A frontier with none is
+    a content oversight: `crowded_frontier` gets a wild module (content). A city may have no wild
+    land within reach by design: `urban_political` keeps none, and its people eat by earning and
+    buying (EXCH-02).
+  - **Which wild land crowded_frontier gets (decided by the owner directly, 2026-10-09; row 39
+    of the memo):** a new small forest-edge module with forage and no den, no wolves and no
+    hostile faction. The ready-made `wolf_den_near_forest` is not used: it would put a den and
+    five wolves five tiles from the hometown, against decision 30 (land near a settlement is
+    livable; lethal danger sits deeper). The new module's placement must not overlap
+    `bandit_road`.
   - **Unchanged guardrails:** wild food enters by harvest and leaves by eating (Bible 03
     conservation); it is its own declared item and node kind, never herb; and the integrity
     check (`need_paths.py`) counts a wild-food node within reach as a hunger way for the kinds
@@ -270,7 +367,23 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
     never lethal, which contradicts this Rule's "may starve" and makes earning pointless for
     survival); meet a fixed share of that demand (a tuning dial, not a fact about the world);
     gardens and orchards inside settlements (blurs wild food with owned food).
-  - **Evidence: MISSING, measured by Lane B on main `dcfe5de4d`** (relayed by rpg-planner, 5
+  - **Evidence: SUPPORTED for the mechanism since #454 (`0b4f12af7`, 2026-10-09); DORMANT in the
+    three measured worlds.** Implemented by
+    `TCK-20261007-A-NEED-WITH-NO-OPEN-WAY-PULLS-TOWARD-THE-STEP-THAT-OPENS-ONE-SURV-07-AMENDMENT`
+    (Lane B), divergence 2.91.
+    - **Live:** wild food as its own item and node kind, placed by biome. The placement proof
+      covers all 24 resolved worlds at seeds 42 and 43: compiled state with the rule on and off
+      is identical once the food node is removed. Carried food is eaten
+      (`tests/unit/engine/test_eat_carried_before_travel.py`): a subject now eats its own item
+      (30 hunger) instead of the free 40.
+    - **Pinned by** LB-S17 in its no-inn form (`tests/mechanic_scenarios/test_forage_loop_wild_food.py`)
+      and `tests/unit/worldbuilding/test_wild_food_node.py`.
+    - **Dormant:** in `crowded_frontier`, `frontier_living_world` and `urban_political`, charges
+      harvested and carried EATs are 0 per run, because a subject with an inn in reach goes to
+      the free meal. Foraging occurs only where no inn is in reach. This flips once the free
+      meal is removed.
+    - **Still owed:** `crowded_frontier`'s wild module (decision 39).
+  - **Earlier evidence: MISSING, measured by Lane B on main `dcfe5de4d`** (relayed by rpg-planner, 5
     seeds x 3 worlds, after regrowth and the dry-node release landed). Each world has one food
     node of 8 charges. It supplies about 13 charges per run and is dry for 460 to 700 ticks; the
     median walk to it is 80, 72 and 17 ticks. With free meals removed, starvation rises
@@ -285,7 +398,11 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
 - **Eating and resting now complete:** eat events go from 0 to 24 and sleep events from 0 to 17.
   Alive at t=1100 goes from 3 to 10. These figures include the free meals below.
 - **CONFLICTING: the meal is free when the subject cannot pay.** This breaks "for a price" and
-  "no engine charity".
+  "no engine charity". **Still CONFLICTING after #454 (2026-10-09):** the removal is parked on
+  the local branch `d27-free-meal-removal`, and its ticket stays open until earning (EXCH-02,
+  decisions 34 and 37) gives a broke worker a way in all three measured worlds (decision 31's
+  landing bar). Measured with the removal on (Lane B, parked branch), there is a starvation wave
+  from tick 1000 to 2000, and `urban_political` has 0.0 alive at tick 2500.
   - `CoreActions.execute_survival("EAT")` (`src/engine/domain/core_actions.py:41-49`) cuts hunger
     by 40 with no building, no gold and no carried food.
   - The inn's 5-gold charge is a separate resource transfer (`src/engine/town_resolution.py:124-126`),
@@ -293,8 +410,8 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     subject is fed and pays nothing.
   - Lane A's pinned measurement (seed 42): 21 of 21 EATs on `crowded_frontier` and 11 of 11 on
     `urban_political` were by subjects holding under 5 gold, and gold fell in only 1 of them.
-  - The same action also consumes no carried food, so "eat what you carry" is not yet a real
-    path either.
+  - The same action also consumed no carried food. **Fixed by #454:** a subject carrying food
+    now eats its own item first.
   - Tracked: `TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL` (P1). It
     lands together with decision 27 (a need with no open way pulls toward the step that opens
     one), so fixing the free meal does not leave poor subjects with no behaviour at all.
@@ -341,7 +458,7 @@ earlier figures are on base `f8f1b69fd`:
   lands with SURV-05's rates, the inn meal target, the eat-carried-food path, rough sleep and the
   advisory integrity check. It is a row-7 hard bug.
 
-**Scenarios:** none traced yet. Four are owed when implemented:
+**Scenarios:** none traced yet. Five are owed when implemented:
 - a hungry worker with coins walks to the inn and eats;
 - a hungry worker far from town eats the bread it carries;
 - an exhausted guard on a distant road sleeps rough and recovers, more slowly than in an inn bed.
@@ -349,6 +466,8 @@ earlier figures are on base `f8f1b69fd`:
   when hungry; the patch it stripped is dry for a while, then grows back (decision 29). Written as
   a kernel spec with a no-wild-food control arm:
   [LB-S17](../scenarios/life-body-batch-05.md#lb-s17).
+- a broke worker hunts a wild animal, eats its meat raw, and is less sated than a worker who
+  cooks the same meat at a hearth (decision 31).
 
 ---
 
@@ -405,8 +524,8 @@ others, not a reflex.
     behaviour"); a redirect to any means, including crime (it creates ways to get food that no
     Rule declares).
 
-**Repository evidence: CONFLICTING for the amendment; the escalation and the present-threat gate
-shipped in #414 (`c2e18b182`).** Lane A's trace, `crowded_frontier`, seed 42, on #403's tree:
+**Repository evidence: PARTLY SUPPORTED for the amendment since #454 (`0b4f12af7`, 2026-10-09);
+the escalation and the present-threat gate shipped in #414 (`c2e18b182`).** Lane A's trace, `crowded_frontier`, seed 42, on #403's tree:
 - `ResolveBlockerScorer` returns a flat 80.0 whenever an unresolved, unsuppressed blocker exists
   (`src/ai/goals/scorers.py:205-248`), or 95.3 after personality modifiers.
 - `SleepScorer`'s utility is the sleep debt itself (+30 at night), about 50 at t≈450.
@@ -432,12 +551,27 @@ shipped in #414 (`c2e18b182`).** Lane A's trace, `crowded_frontier`, seed 42, on
   - Every remaining starvation death is a subject without gold. The amendment above (decision 27)
     covers them, so that a subject with no open way works toward one rather than being fed for
     free.
-- **The amendment is implemented by the PR this text lands in:**
-  `TCK-20261007-A-NEED-WITH-NO-OPEN-WAY-PULLS-TOWARD-THE-STEP-THAT-OPENS-ONE-SURV-07-AMENDMENT`,
-  paired with `TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL` (Lane B).
-  The two land together, so closing the free meal never leaves a poor subject with no behaviour.
-  - The SUPPORTED flip and the final figures, with their base commit, ride a later batch after
-    the free-meal fix re-measures.
+- **The amendment landed in #454 (`0b4f12af7`)** as
+  `TCK-20261007-A-NEED-WITH-NO-OPEN-WAY-PULLS-TOWARD-THE-STEP-THAT-OPENS-ONE-SURV-07-AMENDMENT`
+  (Lane B), divergence 2.91. The paired free-meal removal
+  (`TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL`) did NOT land with
+  it, and is parked by the owner's earlier ruling until earning works.
+  - **Live:** the forage pull for a subject with no inn within reach (`NO_WAY_WITHIN_REACH`), and
+    eating carried food.
+  - **Parked:** the "only a subject that can pay is offered the inn" gate (`NO_AFFORDABLE_WAY`,
+    defined but not produced), the inn-meal and bed payment, and the no-relief EAT. The earn
+    opening step stays a stub until EXCH-02's selling and wages land.
+  - **Measured** (Lane B, pinned, 5 seeds, 5000 ticks, re-measured on the merged head after #446
+    and #448; base main `ee05ffa98` vs the batch; crowded / living / urban). This includes the
+    decision-33 row-1 rate (below) and ENV-08:
+    - survivors at tick 5000: 2.2 / 10.0 / 3.0 to 4.2 / 10.4 / 2.8;
+    - starvation deaths: 17.2 / 27.4 / 11.0 to 14.2 / 23.6 / 8.2;
+    - alive at tick 1000: 5.4 / 15.6 / 14.4 to 17.6 / 21.2 / 22.2.
+  - **Decision 33, row 1 (light balance pass):** `humanoid_survival` hunger goes from medium to
+    low, 0.1 to 0.05 per tick (divergence 2.93, `tests/unit/engine/test_biological_needs.py`).
+    The fiction reason: at the base rate a person reached the starvation line 9.5 hours after a
+    full meal and needed about six inn meals a day.
+  - **The SUPPORTED flip** waits for the free-meal removal and earning.
 
 **Scenarios:** none traced yet. Four are owed when implemented:
 - a tired worker heading to the inn keeps going when a routine blocker reappears;
