@@ -5,6 +5,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Dict, List
 
 from src.core.enums import Faction
+from src.core.treasury import treasury_key
 from src.core.updates import (
     CombatUpdate,
     EntityUpdate,
@@ -63,7 +64,7 @@ class TownResolutionSystem:
         is_tax_tick = (state.tick % (cadence.town_resolution * 2) == 0)
         
         # Pre-cache faction keys for faster resource lookup
-        faction_keys: Dict[int, str] = {f: f"faction_{f.name.lower()}_gold" for f in Faction}  # RegionState.owner_faction_id is an int
+        faction_keys: Dict[int, str] = {f: treasury_key(f) for f in Faction}  # RegionState.owner_faction_id is an int; one key scheme (src/core/treasury.py)
         
         # Pre-filter regions with effects
         regions_with_effects = [r for r in state.regions.values() if r.owner_faction_id is not None or r.suppression_active]
