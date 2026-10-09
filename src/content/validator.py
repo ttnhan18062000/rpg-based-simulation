@@ -126,6 +126,26 @@ def need_profile_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
     ]
 
 
+def kind_property_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
+    """A kind that omits a coarse property (size, power, wits, diet, edibility) declares nothing: a content gap (decisions 46, 50)."""
+    issues: List[ValidationIssue] = []
+    for species_id, species in repo.species.items():
+        body = repo.body_models.get(species.body_model)
+        missing = [k for k in ("power", "wits") if getattr(species, k) is None]
+        if body is None or body.size is None:
+            missing.append("size")
+        if body is not None and body.diet is None:
+            missing.append("diet")
+        if body is not None and body.edible_as is None:
+            missing.append("edible_as")
+        for key in missing:
+            issues.append(ValidationIssue(
+                severity="WARNING", rule_id="CAT-PROP-001", target_id=species_id, filename="living/species.yaml",
+                message=f"Species '{species_id}' does not declare property '{key}' (declare a band or food-class set)",
+            ))
+    return issues
+
+
 class CatalogValidator:
     """
     Independent validator for the static Content Catalog.
@@ -182,6 +202,7 @@ class CatalogValidator:
         self._validate_region_relations(issues)
         self._validate_species_relations(issues)
         issues.extend(need_profile_gap_issues(self.repo))
+        issues.extend(kind_property_gap_issues(self.repo))
         self._validate_biome_relations(issues)
         self._validate_ecology_relations(issues)
         self._validate_defaults(issues)

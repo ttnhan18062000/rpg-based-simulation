@@ -65,6 +65,11 @@ class ElementDefinition(CatalogBaseDefinition):
 MODELLED_BIOLOGICAL_NEEDS = ("hunger", "sleep")
 # KNOW-04: the levels a species' declared common knowledge may name for how dangerous the kind is.
 COMMON_KNOWLEDGE_DANGER_LEVELS = ("low", "medium", "high", "extreme")
+# Decisions 46 and 50: a kind declares PROPERTIES in coarse bands, never a label (no predator/prey/grazer/hunter flag).
+PROPERTY_BANDS = ("small", "medium", "large")
+# Decision 44: food classes name what a body can eat (diet) and what its own body feeds (edibility). Behaviour derives
+# hunting, grazing and fleeing from these properties; no module may read a role or trait list for it.
+FOOD_CLASSES = ("plant", "meat", "prepared")
 
 
 class NeedProfileDefinition(CatalogBaseDefinition):
@@ -88,6 +93,26 @@ class BodyModelDefinition(CatalogBaseDefinition):
     traits: List[str] = Field(default_factory=list)
     movement_modes: List[str] = Field(default_factory=list)
     equipment_slots: List[str] = Field(default_factory=list)
+    size: Optional[str] = Field(None, description="Coarse body size band: small, medium or large (absent = undeclared)")
+    diet: Optional[List[str]] = Field(None, description="Food classes this body can eat; [] declares none, absent is undeclared (decision 44)")
+    edible_as: Optional[List[str]] = Field(None, description="Food classes this body feeds when eaten; [] declares none, absent is undeclared (decision 44)")
+
+    @field_validator("size")
+    @classmethod
+    def validate_size(cls, v: Optional[str]) -> Optional[str]:
+        """Reject a size outside the coarse band vocabulary."""
+        if v is not None and v not in PROPERTY_BANDS:
+            raise ValueError(f"size must be one of {PROPERTY_BANDS}")
+        return v
+
+    @field_validator("diet", "edible_as")
+    @classmethod
+    def validate_food_classes(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        """Reject a food class outside the declared vocabulary."""
+        bad = [c for c in (v or []) if c not in FOOD_CLASSES]
+        if bad:
+            raise ValueError(f"food classes must be drawn from {FOOD_CLASSES}, got {bad}")
+        return v
 
 
 class DriveProfileDefinition(CatalogBaseDefinition):
@@ -165,8 +190,18 @@ class SpeciesDefinition(CatalogBaseDefinition):
     natural_traits: List[str] = Field(default_factory=list)
     attribute_tendencies: Dict[str, str] = Field(default_factory=dict)
     compatible_roles: List[str] = Field(default_factory=list)
+    power: Optional[str] = Field(None, description="Coarse power band of the kind: small, medium or large (absent = undeclared)")
+    wits: Optional[str] = Field(None, description="Coarse wits band of the kind: small, medium or large (absent = undeclared)")
     common_knowledge: Optional[CommonKnowledgeDefinition] = Field(
         None, description="KNOW-04: declared folk belief about this kind; absent means nothing is commonly believed")
+
+    @field_validator("power", "wits")
+    @classmethod
+    def validate_band(cls, v: Optional[str]) -> Optional[str]:
+        """Reject a power or wits band outside the coarse vocabulary."""
+        if v is not None and v not in PROPERTY_BANDS:
+            raise ValueError(f"band must be one of {PROPERTY_BANDS}")
+        return v
 
     @field_validator("intelligence_tier")
     @classmethod
