@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import shutil
 
+from tests.visual_assets import closed_draft_fixture as cdf
 from visual_assets.review import icon_draft_fixture as fx
 from visual_assets.review import icon_v2_draft_set as d2
 from visual_assets.review import icon_v2_groups as groups
@@ -61,7 +62,7 @@ def test_rarity_badges_keep_their_distance_from_every_tier_silhouette():
 
 
 def test_the_committed_copy_equals_a_fresh_export_modulo_the_registry_hash(tmp_path):
-    assert fx.differences(_fresh(tmp_path), fx.COMMITTED_V2, fx.recorded_result_text_v2) == [], REGENERATE
+    assert cdf.differences(d2.SET_ID, _fresh(tmp_path), fx.COMMITTED_V2, fx.recorded_result_text_v2) == [], REGENERATE
 
 
 def test_the_manifest_holds_the_22_icons_and_only_adopted_terrain_references():
@@ -80,4 +81,4 @@ def test_a_flipped_png_byte_in_the_v2_copy_is_caught(tmp_path):
     data = bytearray((copy / icon_file).read_bytes())
     data[-20] ^= 1
     (copy / icon_file).write_bytes(bytes(data))
-    assert any(icon_file in p for p in fx.differences(_fresh(tmp_path), copy, fx.recorded_result_text_v2))
+    assert any(icon_file in p for p in cdf.differences(d2.SET_ID, _fresh(tmp_path), copy, fx.recorded_result_text_v2))

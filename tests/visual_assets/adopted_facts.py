@@ -6,8 +6,8 @@ used to say "the catalog holds only the pilot forest" compare against them with 
 adoption, a revocation), these facts change in the same commit as that decision, with its own ticket.
 
 Four owner decisions are recorded (the fourth, `icons-owner-fixes-v1`, is seven revisions of adopted icons: 77 adoptions, still 70 sources): `terrain-v1` (2026-10-05T18:17:03Z, 31 sources next to the pilot forest's three), `icons-key-v1` (2026-10-06T15:21:47Z, 14 icon sources) and `icons-v2` (2026-10-08T00:40:15Z, 22 icon sources). `TERRAIN_ERA_SOURCES` is
-the 34 of the first, `ICON_SOURCES` the 14 of the second, `ICON_V2_SOURCES` the 22 of the third and `ADOPTED_SOURCES` everything the catalog holds (70). `build` and `release` have covered only the 34 terrain-era sources: no artifact and no
-release candidate covers an icon slot (rc-0006 and rc-0007 have 34 entries; the icon keys are `optional: true`), the 36 icons included.
+the 34 of the first, `ICON_SOURCES` the 14 of the second, `ICON_V2_SOURCES` the 22 of the third and `ADOPTED_SOURCES` everything the catalog holds (70). `build` covered only the 34 terrain-era sources until `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE` built the 36 icons (one `x1` artifact each, owner-approved candidate `pilot/rc-0008` = rc-0007's 34 entries + the 36 icons).
+rc-0001 to rc-0007 list no icon slot (rc-0006 and rc-0007 have 34 entries; the icon keys are `optional: true`).
 """
 
 from __future__ import annotations
@@ -82,5 +82,20 @@ REVISION_COUNT = 77  # r0001 of each of the 70 sources + r0002 of the 7 revised 
 assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (70, 70 + len(ICON_FIX_SOURCES), 2 * 77)
 # `build` and `release` (TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN, approved by the user on 2026-10-06): one generated artifact directory per adopted source, and the candidate pilot/rc-0005 holds all 34 slots.
 # rc-0004 still holds the forest's three slots only. rc-0006 (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, approved by the user on 2026-10-06) is rc-0005's 34 slots on the registry that added the 14 `icon.*` keys; rc-0007 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`, approved by the user on 2026-10-07) is the same 34 slots on the registry that added the 22 icon set v2 keys.
-GENERATED = sorted(f"{source}--x1" for source in TERRAIN_ERA_SOURCES)  # no icon has been built yet: the 14 key-set icons and the 22 v2 icons are adopted sources without an artifact
-RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json", "rc-0007.json"]
+TERRAIN_GENERATED = sorted(f"{source}--x1" for source in TERRAIN_ERA_SOURCES)  # the 34 built by `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`
+ICON_GENERATED = sorted(f"{source}--x1" for source in ICON_SOURCES + ICON_V2_SOURCES)  # the 36 built by `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE`, each at its newest revision
+GENERATED = sorted(TERRAIN_GENERATED + ICON_GENERATED)  # one x1 artifact directory per adopted source (70)
+assert len(ICON_GENERATED) == 36 and len(GENERATED) == 70
+RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json", "rc-0007.json", "rc-0008.json"]
+# rc-0008 (the owner's answer, 2026-10-09: "Assemble rc-0008"): rc-0007's 34 entries + one entry per icon, 70 in all, on the registry that carries the structured fallbacks.
+RC_0008_ICON_ENTRIES = 36
+
+# The draft sets whose owner decision is recorded are CLOSED gates: their committed preview fixtures are the evidence of what the owner saw, so they are checked against the gate's own record
+# (`tests/visual_assets/closed_draft_fixture.py`), not against the moving store, which grows references whenever art is built after the gate. Set id -> the adoption records that closed it.
+CLOSED_DRAFT_SETS = {
+    SET_ID: {"kind": "set_adoption", "adoption_ids": (SET_ADOPTION_ID,), "draft_set_hash": DRAFT_SET_HASH},
+    ICON_SET_ID: {"kind": "set_adoption", "adoption_ids": (ICON_SET_ADOPTION_ID,), "draft_set_hash": ICON_DRAFT_SET_HASH},
+    ICON_V2_SET_ID: {"kind": "set_adoption", "adoption_ids": (ICON_V2_SET_ADOPTION_ID,), "draft_set_hash": ICON_V2_DRAFT_SET_HASH},
+    # Seven per-slot `adopt --parent` records; they name no set hash, which is pinned by `test_icon_owner_fixes_adoption`.
+    ICON_FIX_SET_ID: {"kind": "slot_adoptions", "adoption_ids": tuple(a for a, _, _ in ICON_FIX_ADOPTIONS.values()), "draft_set_hash": ICON_FIX_DRAFT_SET_HASH},
+}

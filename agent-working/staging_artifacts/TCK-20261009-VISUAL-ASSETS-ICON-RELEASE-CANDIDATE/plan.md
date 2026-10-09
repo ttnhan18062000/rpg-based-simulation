@@ -39,3 +39,7 @@ AC1 -> 1; AC2 -> 2-3; AC3 -> 4-5; AC4 -> 3, 5; AC5 -> 6; AC6 -> 7; AC7 -> 8.
 ## Scope guards
 No registry edit; no export config edit; no `export-runtime` into `frontend/` beyond a fixture its own guard asks for;
 no gate result moved; no assertion removed.
+
+## Amendment (2026-10-09, after the build): closed draft-set fixture guards
+Finding: `draftexport._adopted_references` lists every adopted slot with a built artifact, so building the 36 icons grew a fresh export of `icons-key-v1`, `icons-v2` and `icons-owner-fixes-v1` from 48/56/43 to 70 entries. Three fixture guards failed, and regenerating the fixtures broke 15 frontend tests and the isolation file count (baseline 270/270). Planner ruling, option (c): re-anchor the guard to the gate's own record and keep the export, the fixtures and the page as they are.
+Added to step 6 (commit 3): `adopted_facts.CLOSED_DRAFT_SETS` (set id -> adoption record(s) + draft set hash) and a pin test; `tests/visual_assets/closed_draft_fixture.py` (drafts byte-equal to a fresh export, references byte-equal to the catalog artifact they name, nothing else); an open set keeps the full equality; five mutation proofs, each asserted to apply at one site. This is a re-anchoring, not a relaxation: only "must include art built after the gate" is dropped, only for gate-closed sets. Step 7 adds one line to `docs/assets/store_contract.md` where the draft preview is described. The frontend is not touched.
