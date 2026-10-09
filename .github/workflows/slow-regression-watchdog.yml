@@ -5,6 +5,8 @@ name: Slow regression watchdog
 # late. This hourly job dispatches a Slow regression run on main when none is queued or running and
 # the newest one is 10 h old or more (10 h = 6 h schedule period + 3.5 h observed lateness + 0.5 h
 # grace; a shorter threshold would double the cost when a late scheduled run is still on its way).
+# It also does not dispatch when main's head was actually tested less than 24 h ago (the gate in
+# slow-regression.yml would skip that run anyway; TCK-20261009-SLOW-REGRESSION-OFF-HOUR-AND-SKIP-UNCHANGED-MAIN).
 # The rule lives in tools/test_architecture/slow_regression_watchdog.py. No tests run here.
 
 on:
@@ -34,13 +36,14 @@ jobs:
           sparse-checkout: |
             tools/test_architecture/__init__.py
             tools/test_architecture/slow_regression_watchdog.py
+            tools/test_architecture/slow_regression_gate.py
           sparse-checkout-cone-mode: false
       - name: Decide
         id: decide
         run: |
-          gh run list --workflow slow-regression.yml --branch main --limit 30 \
-            --json databaseId,event,status,createdAt,headBranch > runs.json
-          python3 -m tools.test_architecture.slow_regression_watchdog runs.json | tee decision.txt
+          HEAD_SHA="$(gh api "repos/${GH_REPO}/commits/main" --jq .sha)"
+          python3 -m tools.test_architecture.slow_regression_gate collect --head-sha "$HEAD_SHA" > runs.json
+          python3 -m tools.test_architecture.slow_regression_watchdog runs.json --head-sha "$HEAD_SHA" | tee decision.txt
           cat decision.txt >> "$GITHUB_OUTPUT"
           {
             echo "### Slow regression watchdog"

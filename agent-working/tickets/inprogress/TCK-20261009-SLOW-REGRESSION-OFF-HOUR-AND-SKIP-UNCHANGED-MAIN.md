@@ -84,12 +84,19 @@ None.
 
 ## Implementation Notes
 Scope 1 (testing-planner, 2026-10-09): cron `0 3,9,15,21 * * *` -> `41 2,8,14,20 * * *` in `.github/workflows/slow-regression.yml`, plus the pinned string in `tests/static/test_ci_slow_workflow_shape.py` and the watchdog docstring. `pytest tests/static/test_ci_slow_workflow_shape.py tests/unit/tools -k "slow_regression or watchdog or slow_workflow"`: 84 passed.
+Scope 2 (testing-implementer, 2026-10-09):
+- New `tools/test_architecture/slow_regression_gate.py`: pure `decide(head_sha, runs, now, exclude_run_id)` plus `collect()` (shells out to `gh`) and a CLI (`decide`, `collect`). "Actually tested" = the run is `completed` and its job named `Slow regression` concluded `success` or `failure`; a gate-skipped run has that job `skipped` (run-level conclusion is `success` for both, so it cannot tell them apart), a cancelled run does not count. Recorded in the module docstring. Jobs are fetched only for completed runs at main's head. An in-progress run at head is not a completed test; the caller's own run is excluded by id, and the workflow's non-cancelling concurrency group means no other run is in flight while the gate runs.
+- `slow-regression.yml`: new `gate` job (10 min, `actions: read`, `contents: read`, sparse checkout of the gate module). Its decide step runs only for `schedule` events; the job always exists so `needs: gate` never skips the suite for a dispatch. `slow` gets `needs: gate` and `if: !cancelled() && (dispatch || needs.gate.outputs.decision != 'skip')`, so only an explicit `skip` stops the suite (fail open on a gate error). A skipped run has no report step, so issue #390 is untouched.
+- `slow_regression_watchdog.py`: `decide(runs, now, head_sha=None)`; after the 10 h rule says dispatch, the gate rule can turn it into skip (head tested under 24 h ago). The docstring states that a gate-skipped scheduled run still counts as "the slot fired" (the 10 h rule reads the newest run of any conclusion) while not counting as coverage. The watchdog workflow now resolves main's head, runs `slow_regression_gate collect`, and passes `--head-sha`.
+- Existing shape test that pinned "no `needs`" now pins `needs == "gate"`.
 
 ## Test Summary
-(implementer, Scope 2)
+Scope 2: `pytest tests/unit/tools/test_slow_regression_gate.py tests/unit/tools/test_slow_regression_watchdog.py` 52 passed (the gate: head untested, other commit tested, tested 2 h / 23 h 59 / exactly 24 h / 25 h ago, only gate-skipped runs, a gate-skipped run newer than the tested one, in-progress run at head, own run excluded, other branch, malformed input, per-conclusion `actually_tested`, `collect` job fetching, CLI; the watchdog: stale-but-head-tested skips, tested over a day dispatches, untested head dispatches, gate-skipped newest run counts as the slot firing, no `--head-sha` unchanged, CLI flag). `tests/static/test_ci_slow_workflow_shape.py` plus the gate and watchdog tests: 128 passed. Other readers of the slow workflows (`test_impact_report`, `test_ci_workflow_test_coverage`, `test_ci_split_tools_jobs`, `test_ci_narrow_path_filtered_jobs`, `test_corpus_diversity_ci_isolation`, `test_ci_step_summary_reporting`): 100 passed.
+Live check of the collector against the real repo (before merge): the suite job is named `Slow regression` and reports its conclusion; main head 22a1d1853 (untested) -> `run`; head 42ce987b6 (tested by run 37867736198, 4.5 h earlier) -> `skip`. AC5's scheduled-run evidence is open until the merged workflow produces one `run` and one `skip` decision.
 
 ## Files Changed
 Scope 1: `.github/workflows/slow-regression.yml`, `tests/static/test_ci_slow_workflow_shape.py`, `tools/test_architecture/slow_regression_watchdog.py`, this ticket.
+Scope 2: `tools/test_architecture/slow_regression_gate.py` (new), `tools/test_architecture/slow_regression_watchdog.py`, `.github/workflows/slow-regression.yml`, `.github/workflows/slow-regression-watchdog.yml`, `tests/unit/tools/test_slow_regression_gate.py` (new), `tests/unit/tools/test_slow_regression_watchdog.py`, `tests/static/test_ci_slow_workflow_shape.py`, this ticket.
 
 ## Completion Summary
 (implementer)
