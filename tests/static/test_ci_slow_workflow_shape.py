@@ -135,7 +135,7 @@ def test_concurrency_group_never_cancels_a_running_slow_run() -> None:
 def test_job_has_a_timeout_no_needs_and_least_privilege_permissions() -> None:
     job = _slow_job()
     assert job["timeout-minutes"] == 240
-    assert "needs" not in job, "the slow suite is informational and must not wait on fast jobs"
+    assert job["needs"] == "gate", "the slow suite waits on its own gate only, never on the fast jobs"
     assert job["permissions"] == {"contents": "read", "issues": "write"}
     assert "permissions" not in _workflow(), "permissions are set at job level only"
 
@@ -174,3 +174,53 @@ def test_the_pr_workflow_no_longer_has_a_slow_job() -> None:
     # No job still waits on it.
     for name, job in workflow["jobs"].items():
         assert "slow" not in (job.get("needs") or []), name
+
+
+# --- TCK-20261009-SLOW-REGRESSION-OFF-HOUR-AND-SKIP-UNCHANGED-MAIN: the gate job ---
+
+def _gate_job() -> dict:
+    return _workflow()["jobs"]["gate"]
+
+
+def test_gate_job_is_short_least_privilege_and_exports_its_decision() -> None:
+    job = _gate_job()
+    assert job["runs-on"] == "ubuntu-latest"
+    assert job["timeout-minutes"] <= 15
+    assert job["permissions"] == {"actions": "read", "contents": "read"}
+    assert "needs" not in job
+    assert job["outputs"]["decision"] == "${{ steps.decide.outputs.decision }}"
+
+
+def test_gate_decision_step_runs_for_schedule_events_only() -> None:
+    steps = [s for s in _gate_job()["steps"] if s.get("id") == "decide"]
+    assert len(steps) == 1
+    assert steps[0]["if"] == "${{ github.event_name == 'schedule' }}"
+    assert "slow_regression_gate decide" in steps[0]["run"]
+    assert "--exclude-run-id" in steps[0]["run"], "the gate must not count its own run"
+
+
+def test_slow_job_runs_on_dispatch_or_unless_the_gate_said_skip_and_fails_open() -> None:
+    condition = _slow_job()["if"]
+    assert "github.event_name == 'workflow_dispatch'" in condition, "a dispatched run always tests"
+    assert "needs.gate.outputs.decision != 'skip'" in condition, "only an explicit skip stops the suite (fail open)"
+    assert "!cancelled()" in condition, "a failed gate must not skip the suite"
+
+
+def test_the_suite_job_keeps_the_name_the_gate_reads_a_skip_from() -> None:
+    from tools.test_architecture.slow_regression_gate import SUITE_JOB_NAME
+
+    assert _slow_job()["name"] == SUITE_JOB_NAME
+
+
+def test_report_and_issue_writes_live_only_in_the_gated_slow_job() -> None:
+    gate_text = "\n".join(str(step) for step in _gate_job()["steps"])
+    assert "slow_regression_report" not in gate_text and "issues" not in str(_gate_job()["permissions"])
+    assert "slow_regression_report" in _report_step()["run"]
+
+
+def test_decision_steps_use_pipefail_so_a_crashing_decision_module_is_not_hidden_by_tee() -> None:
+    gate_step = [s for s in _gate_job()["steps"] if s.get("id") == "decide"][0]
+    watchdog = yaml.safe_load((_ROOT / ".github" / "workflows" / "slow-regression-watchdog.yml").read_text(encoding="utf-8"))
+    watchdog_step = [s for s in watchdog["jobs"]["watchdog"]["steps"] if s.get("id") == "decide"][0]
+    for step in (gate_step, watchdog_step):
+        assert "| tee" in step["run"] and "set -o pipefail" in step["run"]
