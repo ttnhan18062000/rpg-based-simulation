@@ -2653,6 +2653,11 @@ mechanisms:
       - src/systems/economy_systems/economy.py::DynamicPriceService
       - src/systems/economy_systems/market.py::MarketSystem
       - src/systems/economy_systems/reputation_discount.py::apply_reputation_discount
+      - src/engine/building_services.py::service_delta
+      - src/engine/building_arrival.py::building_arrival_update
+      - src/engine/shop_sale.py::plan_sale
+      - src/engine/work_shift.py::work_update
+      - src/engine/serves.py::serves
     verified:
       instrument: code_trace
       verdict: observed
@@ -2672,6 +2677,16 @@ mechanisms:
         re-checked this pass and has ZERO references anywhere outside its own file -- the opposite
         of what the prior note says. Not bound here (state stays `done` since Shop/Blacksmith alone
         already justify it); flagged as a real discrepancy in the prior claim, worth its own look.
+        **Re-bound 2026-10-09** (batch 2, #468, 3ffa6b95b; rpg-planner): the services now land when
+        their action executes (`building_services.service_delta`, called from core_actions and
+        action_router: bed, inn meal, sale, repair, credited with what was actually paid), arrival
+        at a building dispatches through `building_arrival.building_arrival_update` (tactical.py; a
+        meal is taken only for a hunger), SELL is a chosen act priced by MarketSystem
+        (`shop_sale.plan_sale`), WORK pays a wage from the employer's own purse
+        (`work_shift.work_update`, routed by actions.py and action_router), and `serves.serves` is
+        the people-only trait plus non-hostile-controller gate (decision 43). Decision 34 removed
+        ShopSystem's auto-sell; `ShopSystem.enforce` stays bound because it still sanitises SHOP_BUY
+        intents. `src/town/inn.py`/`home.py` remain dead (deletion queued in Lane B's batch 4).
   - id: building_sabotage
     layer: world
     systems: [economy]

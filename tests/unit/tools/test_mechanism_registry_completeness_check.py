@@ -255,7 +255,9 @@ def test_wider_scope_numbers_pinned():
     # 232 -> 234 on 2026-10-08 (PERF governor Phase A): src/engine/signal_source.py and src/engine/work_units.py are unbound
     # runtime-governance infrastructure (no gameplay mechanism; the same treatment as governor.py and runtime_status.py).
     # 235 -> 241 on 2026-10-09 (EXCH-02 earning chain): the six helper modules above are unbound.
-    assert wider["unbound_files"] == 241
+    # 241 -> 236 on 2026-10-09 (rpg-planner, after #468): building_services, building_arrival, shop_sale, work_shift and serves
+    # are bound under `town_services`; service_prices.py stays an unbound constants module.
+    assert wider["unbound_files"] == 236
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     assert wider["candidates"] == 72  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
