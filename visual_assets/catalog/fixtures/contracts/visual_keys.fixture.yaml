@@ -1,13 +1,12 @@
-# Synthetic registry for loader tests. Needs load_registry(..., allow_fixture_namespace=True).
+# Synthetic registry for loader tests. Needs load_registry(..., allow_fixture_namespace=True). `variant_axes` stays empty on every loadable key (D17, AM1-W03.1: the loader rejects a non-empty list);
+# the record-level contract fixture `visual_key_registry.json` keeps an axis because it exercises the MODEL, not the loader. Fixture keys need no safety class (`require_class` is off for them).
 record_type: visual_key_registry
 schema_version: 1
 keys:
   - key: fixture.sample.icon
     family: sample
     description: synthetic fixture key
-    variant_axes:
-      - name: scale
-        values: [x1, x2]
+    variant_axes: []
   - key: fixture.sample.tile
     family: sample
     description: synthetic fixture key

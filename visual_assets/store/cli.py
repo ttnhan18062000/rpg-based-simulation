@@ -21,6 +21,7 @@ from visual_assets.store.contracts.base import IntakeVerdict
 from visual_assets.store.contracts.review import RenderVerdict
 from visual_assets.store.contracts.intake import IntakeResult
 from visual_assets.store.errors import GateError, StageError, StoreError
+from visual_assets.store.intake.validator import file_hash
 
 
 def _now() -> str:
@@ -107,6 +108,11 @@ def _parser() -> argparse.ArgumentParser:
     keep.add_argument("--detail", default=None, help="the key's detail value (only for a key that declares a detail axis)")
     keep.add_argument("--source-asset-id", default=None, help="the id it will be adopted under (default: the key with dots as underscores, plus _<detail>)")
     keep.add_argument("--replace", action="store_true", help="replace the set's existing draft for this slot")
+    keep.add_argument("--revises", dest="parent_revision", default=None, metavar="rNNNN", help="the draft is the NEXT revision of the existing source asset named by --source-asset-id; rNNNN must be its latest unrevoked revision")
+    drop = draft_sub.add_parser("drop", help="remove one draft from a set and record it in the set (an agent may run this; it records no approval)")
+    drop.add_argument("set_id")
+    drop.add_argument("--slot", required=True, metavar="KEY[:DETAIL]", help="the draft's slot, for example icon.item.tool or terrain.forest:bush")
+    drop.add_argument("--reason", required=True, help="why (plain text, at most 80 characters); recorded in the set")
     dexport = draft_sub.add_parser("export", help="write a draft preview manifest and its preview PNGs for the isolated preview page into a NEW directory (read-only on the drafts)")
     dexport.add_argument("set_id")
     dexport.add_argument("out_dir", help="a directory that does not exist yet")
@@ -210,9 +216,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "draft":
             if args.draft_command == "keep":
                 entry = drafts.keep(args.intake_id, set_id=args.set_id, visual_key=args.visual_key, detail=args.detail,
-                                    source_asset_id=args.source_asset_id, replace=args.replace)
+                                    source_asset_id=args.source_asset_id, replace=args.replace, parent_revision=args.parent_revision)
+                how = f"as the next revision of {entry.source_asset_id} (parent {entry.parent_revision})" if entry.parent_revision else f"as {entry.source_asset_id}"
                 print(f"kept {entry.draft_id} in {args.set_id} as {entry.visual_key}{'' if entry.detail is None else ' [' + entry.detail + ']'} "
-                      f"(will be adopted as {entry.source_asset_id}); nothing is adopted")
+                      f"(will be adopted {how}); nothing is adopted")
+                return 0
+            if args.draft_command == "drop":
+                key, _, detail = args.slot.partition(":")
+                dropped = drafts.drop(args.set_id, visual_key=key, detail=detail or None, reason=args.reason)
+                _, data = drafts.load_set(args.set_id)
+                print(f"dropped {dropped.draft_id} ({args.slot}) from {args.set_id}: {dropped.reason}; the draft set hash is now {file_hash(data)} "
+                      "(a review of the old hash no longer describes this set); nothing is adopted")
                 return 0
             if args.draft_command == "export":
                 manifest = draftexport.export_draft_preview(args.set_id, args.out_dir)

@@ -68,6 +68,26 @@ def test_a_catalog_id_must_be_valid(tree):
         assert err.value.code == "invalid_catalog_id" and snapshot(tree.catalog) == before
 
 
+def test_a_key_left_without_an_alternative_is_refused_at_release_time(tree, monkeypatch):
+    """`AM1-W06.3`: the loader refuses a malformed key, this is the explicit check on the registry object `assemble_release` actually uses."""
+    from visual_assets.store import release as release_module
+
+    seen = {}
+
+    def problems(registry, present):
+        seen["present"] = set(present)
+        return ["real.x.y: identifying key has no image in this release and no alternative that carries its fact"]
+
+    monkeypatch.setattr(release_module, "fallback_problems", problems)
+    other = s.key_for("other")
+    s.write_registry(tree.catalog, [HERO, ROCK, other], optional=(other,))  # a third, optional key with NO image: it must be absent from `present`
+    before = snapshot(tree.catalog)
+    with pytest.raises(BuildError) as err:
+        release(tree)
+    assert err.value.code == "fallback_missing" and "real.x.y" in str(err.value) and snapshot(tree.catalog) == before  # nothing was written
+    assert seen["present"] == {HERO, ROCK}
+
+
 def test_a_registry_key_with_no_artifact_is_refused_unless_it_is_optional(tree):
     s.write_registry(tree.catalog, [HERO, ROCK, s.key_for("other")])
     refused(tree, "key_without_artifact")

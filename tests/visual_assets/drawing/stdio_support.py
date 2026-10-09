@@ -39,13 +39,13 @@ def isolated_repo(tmp_path: Path) -> Path:
 
 
 @asynccontextmanager
-async def session(workspace: Path, root: Path | None = None):
-    """Spawn `python -m visual_assets.drawing.server` from the repo root with an isolated workspace."""
+async def session(workspace: Path, root: Path | None = None, extra_env: dict[str, str] | None = None):
+    """Spawn `python -m visual_assets.drawing.server` from the repo root with an isolated workspace (`extra_env`: e.g. `VISUAL_ASSETS_CHECKOUT`)."""
     params = StdioServerParameters(
         command=sys.executable,
         args=["-m", "visual_assets.drawing.server"],
         cwd=str(root if root is not None else REPO_ROOT),
-        env={"ASEPRITE_MCP_WORKSPACE": str(workspace), "ASEPRITE_MCP_BINARY": config.ASEPRITE},
+        env={"ASEPRITE_MCP_WORKSPACE": str(workspace), "ASEPRITE_MCP_BINARY": config.ASEPRITE, **(extra_env or {})},
     )
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as s:

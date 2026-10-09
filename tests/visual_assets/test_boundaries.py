@@ -88,6 +88,10 @@ GATE_LAYERS = {"adoption", "setadoption", "revoke", "catalogwrite", "release", "
 # the ONLY store layers the drawing MCP server may import: intake (submit_candidate) and the read-only views, plus the shared leaves.
 # Everything else (adoption, revoke, build, release, gc, cli, verify, review, rendering, records, audit, catalogwrite, pixels) is a violation.
 SERVER_STORE_ALLOWED = {"intake", "readmodel", "contracts", "identities", "errors", "config"}
+# `visual_assets.review` (TCK-20261008-VISUAL-ASSETS-REVIEW-TOOLING-IN-STORE-CLI) is a peer package: read-only on the drafts and the catalog records, it may import ONLY these store layers (never a gate layer, never `build`)
+# and ONLY the pure `technique` layer of drawing (lint, ramps); `store` and `drawing` never import it. Not `src`, like everything under visual_assets (the c14/c15 import contracts).
+REVIEW_STORE_ALLOWED = {"config", "pixels", "records", "draftexport", "catalog"}  # `catalog` = the read-only registry loader (the key-usage report)
+REVIEW_DRAWING_ALLOWED = {"technique"}
 # no I/O, clock or process access in the pure layers; PyYAML only in `catalog`
 PURE_STORE_LAYERS = {"contracts", "identities", "pixels"}
 PURE_FORBIDDEN_IMPORTS = {"os", "pathlib", "io", "time", "datetime", "subprocess", "yaml"}
@@ -205,6 +209,18 @@ def check_source(rel: str, source: str) -> list[str]:
         for module, node in mods:
             if module.startswith("visual_assets.catalog"):
                 problems.append(f"{rel}:{node.lineno}: drawing must not import the catalog ({module})")
+
+    if rel.startswith(("visual_assets/store/", "visual_assets/drawing/")):
+        for module, node in mods:
+            if module == "visual_assets.review" or module.startswith("visual_assets.review."):
+                problems.append(f"{rel}:{node.lineno}: store and drawing must never import the review tooling ({module})")
+
+    if rel.startswith("visual_assets/review/"):
+        for module, node in mods:
+            if module.startswith("visual_assets.store") and module != "visual_assets.store" and store_layer(module) not in REVIEW_STORE_ALLOWED:
+                problems.append(f"{rel}:{node.lineno}: review may import only {sorted(REVIEW_STORE_ALLOWED)} from the store ({module})")
+            if module.startswith("visual_assets.drawing") and module != "visual_assets.drawing" and drawing_layer(module) not in REVIEW_DRAWING_ALLOWED:
+                problems.append(f"{rel}:{node.lineno}: review may import only the {sorted(REVIEW_DRAWING_ALLOWED)} layer of drawing ({module})")
 
     if rel.startswith("visual_assets/store/"):
         parts = rel.split("/")
@@ -460,3 +476,33 @@ def test_the_real_server_imports_only_the_allowlisted_store_layers():
             if layer is not None and module != "visual_assets.store":
                 imported.add(layer)
     assert imported <= SERVER_STORE_ALLOWED and {"intake", "readmodel"} <= imported, imported
+
+
+# ---- the review package ---------------------------------------------------------------------------------------------------------------------
+
+def test_planted_review_violations_are_caught():
+    for source, fragment in (
+        ("from visual_assets.store import adoption\n", "review may import only"),
+        ("from visual_assets.store.setadoption import adopt_set\n", "review may import only"),
+        ("from visual_assets.store import build\n", "review may import only"),
+        ("from visual_assets.drawing import api\n", "review may import only the"),
+        ("from visual_assets.drawing.backend import sandbox\n", "review may import only the"),
+        ("from src.core import state\n", "visual_assets must not import src"),
+    ):
+        assert any(fragment in p for p in check_source("visual_assets/review/x.py", source)), source
+    for ok in ("from visual_assets.store import config, pixels, records, draftexport\n", "from visual_assets.drawing.technique.lint import lint_grid\n", "from visual_assets.review import icon_sheet_rule\n"):
+        assert check_source("visual_assets/review/x.py", ok) == [], ok
+
+
+def test_planted_store_or_drawing_importing_review_is_caught():
+    for rel in ("visual_assets/store/cli.py", "visual_assets/drawing/api.py", "visual_assets/drawing/server/app.py"):
+        problems = check_source(rel, "from visual_assets.review import review_sheets\n")
+        assert any("must never import the review tooling" in p for p in problems), rel
+
+
+def test_the_review_package_exists_and_imports_nothing_it_may_not():
+    files = sorted((PKG / "review").glob("*.py"))
+    assert len(files) >= 18 and (PKG / "review" / "__init__.py").exists()
+    for path in files:
+        rel = str(path.relative_to(REPO))
+        assert check_source(rel, path.read_text()) == [], rel
