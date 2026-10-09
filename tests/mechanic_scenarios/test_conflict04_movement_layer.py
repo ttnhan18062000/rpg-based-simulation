@@ -21,6 +21,7 @@ from src.engine.movement import MovementSystem
 from src.engine.tactical import TacticalDecisionSystem
 from src.platform.rng import DeterministicRNG
 from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world
+from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
 WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
 W, H = 2, 1  # W the walker (the strong orc), H the hostile
@@ -47,7 +48,7 @@ def _stage(state: AuthoritativeState, *, h_pos) -> AuthoritativeState:
 
 def _kernel(state: AuthoritativeState) -> Kernel:
     return Kernel(profile=PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), state=state, rng=DeterministicRNG(DEFAULT_SEED),
-                  flags={**DEFAULT_FLAGS, "no_replay": True, "audit_mode": True}, executor=LocalSequentialExecutor())
+                  flags={**DEFAULT_FLAGS, "no_replay": True, "audit_mode": True}, executor=LocalSequentialExecutor(), governor=PinnedNormalGovernor())
 
 
 def _walk(state: AuthoritativeState, ticks: int) -> Dict[str, Any]:
