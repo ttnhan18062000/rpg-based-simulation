@@ -35,10 +35,14 @@ The owner asked for durable regression control on rpg behaviour (2026-10-09). rp
 ```
 {"schema": "rpg-gate-metrics/v1", "world": "...", "seed": 42, "ticks": 5000, "sha": "<commit>", "harness_hash": "<hash>",
  "metrics": [
-   {"id": "V1", "class": "validity", "group": "*", "violations": 0, "examples": [ ... up to 5 ... ]},
-   {"id": "O1", "class": "outcome",  "group": "people", "value": 0.12}
+   {"id": "V1", "class": "validity", "scope": "run",    "group": "*", "violations": 0, "examples": [ ... up to 5 ... ]},
+   {"id": "V7", "class": "validity", "scope": "pooled", "group": "wolves", "counts": { ... raw, opaque to testing ... }},
+   {"id": "O2.deaths", "class": "outcome", "scope": "run", "group": "guards", "key": "STARVATION", "tick": 5000, "value": 3}
  ]}
 ```
+**Amendment (rpg-planner, 2026-10-09, accepted before child 3):**
+- **`scope`**: every metric is `run` or `pooled`. A pooled validity metric (V7 "no dead way" and its hunt instance) is judged over all seeds of one world, not per run, so one seed without a hunt is not a violation. Per-run documents carry its raw `counts`. rpg's module also exports `pool(docs_for_one_world) -> [metric]`, which returns `{id, class: "validity", scope: "pooled", group, violations, examples}` for the world. The harness calls it after all seeds of a world finish and never interprets `counts`.
+- **Outcome shape**: `value` is a number, with optional `key` (for example a death cause) and `tick` (a checkpoint). Pairing across seeds is by `(id, group, key, tick)`. The config's floor is keyed by `id` and applies to every key and tick of that id.
 `class` is `validity` (exact or logical: `violations` is an integer, and any non-zero value is a FAIL) or `outcome` (`value` is a number; compared paired against the baseline; a crossing is DRIFT, never FAIL). `group` is a kind group or `*`. Metric ids, groups, oracles, k and the per-metric floors belong to rpg (the metric set v1: V1-V7, O1-O7). testing never hard-codes a metric id.
 
 ## Scope

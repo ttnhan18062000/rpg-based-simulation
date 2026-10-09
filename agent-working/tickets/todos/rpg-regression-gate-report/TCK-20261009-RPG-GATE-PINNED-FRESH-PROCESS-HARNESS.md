@@ -34,7 +34,8 @@ Child 3 of TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC. The report is only m
 2. The harness hash: a stable hash of the harness code, the pin settings and the config, recorded in every document (it is what the baseline staleness uses).
 3. Parallelism across processes, with a bounded worker count. Failures in one run do not stop the others; a crashed run yields a `no-data` document with the error.
 4. Run directories go under `data/runs/` with a gate prefix and are cleaned by run id (CLAUDE.md cleanup rule).
-5. Measure and record the wall time and peak memory for the full v1 matrix on CI-class hardware. Child 5 sizes the matrix from it.
+5. Pooling: once every seed of a world has a document, call rpg's `pool(docs_for_one_world)` in a fresh process and write one world-level document of the pooled validity metrics. A world with any `no-data` seed gets `no-data` for its pooled metrics, never a partial pool. The harness never reads `counts`.
+6. Measure and record the wall time and peak memory for the full v1 matrix on CI-class hardware. Child 5 sizes the matrix from it.
 
 ## Out of Scope
 - The metric computation (rpg), evaluation and states (child 4).

@@ -31,8 +31,8 @@ Child 4 of TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC. States (the metric s
 
 ## Scope
 1. Evaluation per metric id and group:
-   - validity: `violations > 0` gives `fail`, with up to 5 examples; otherwise `pass`;
-   - outcome: the paired per-seed difference against the LAST baseline and the milestone-FIRST baseline. `drift` when |mean diff| > k*SE AND > the metric's floor (k and floors from rpg's config); otherwise `pass`. Report both references.
+   - validity: `violations > 0` gives `fail`, with up to 5 examples; otherwise `pass`. `run`-scope metrics are judged per (world, seed); `pooled`-scope metrics are judged per world from the pooled document (harness step 5);
+   - outcome: paired by `(id, group, key, tick)` across seeds; the per-seed difference against the LAST baseline and the milestone-FIRST baseline. `drift` when |mean diff| > k*SE AND > the metric's floor (k and floors from rpg's config; a floor keyed by `id` applies to every key and tick); otherwise `pass`. Report both references.
    - `stale` (child 2) and `no-data` (child 3) pass through; neither ever becomes pass.
 2. Same-SHA rerun: when a report has any `fail` or `drift`, rerun the affected (world, seed) set once at the same SHA (fresh processes). If the rerun disagrees, mark those metrics `unstable` and route them to test infrastructure (roadmap §4.5, nondeterminism), not to the feature team.
 3. Ownership (child 1's metric registry): an unowned `fail` fails the report; an owned one shows as known; an unowned `drift` is listed as "needs a trace ticket" (advisory); expired entries behave like the slow registry.
