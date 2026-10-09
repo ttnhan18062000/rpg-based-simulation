@@ -235,7 +235,9 @@ def test_wider_scope_numbers_pinned():
     # +src/engine/work_units.py (WORK_MODEL_V1 constants and pure functions). Both are runtime-governance infrastructure with no gameplay
     # mechanism of their own, beside the already-unbound governor.py and runtime_status.py, so they stay unbound (see unbound_files below);
     # the classes in signal_source.py add no wired unbound candidate (candidates and wired are unchanged).
-    assert wider["scope_files"] == 316
+    # 316 -> 317 on 2026-10-09 (decision 36): +src/engine/starvation.py (pure stage functions; bound under `attributes_biology`, so it adds no
+    # unbound file or mechanism-shaped class).
+    assert wider["scope_files"] == 317
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).

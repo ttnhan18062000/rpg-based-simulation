@@ -128,6 +128,9 @@ ability, a goal that outranks the fight), and that decision pays the opportunity
 The same holds for every walk, not only the fighter's own: an entity with an engaged, perceived, hostile entity orthogonally
 adjacent takes no step from a stored navigation target (an idle walk toward an objective, a held move); it steps only on a target
 a decision sets that tick (`MovementCandidateSelector.movement_target`).
+A hostile it is not engaged with, coming adjacent, prompts a fresh decision within two ticks (owner decision 32, "notice and decide"): the scheduler wakes the
+subject's brain ahead of its cadence and the decision follows its own combat-engagement verdict toward that hostile (ignore keeps walking, avoid steps away, watch stands and observes as a typed wait, anything else as the
+tactical pass has always chosen).
 
 *   **Consumption**: A successful attack resets readiness by **-100.0** (a full reset). Movement
     does **not** cost readiness (`TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE`) — it

@@ -36,7 +36,7 @@ class MovementCandidateSelector:
     # The payload ``reason`` of a move the tactical pass issues to LEAVE (a panic retreat, a safety retreat, a return to the leash
     # home). Leaving is a decision, so such a held move keeps stepping beside an engaged hostile and pays the opportunity attack
     # knowingly (CONFLICT-04, divergence 2.89). Read from the payload the decision issued, which no later pass rewrites.
-    FLIGHT_REASONS = frozenset({"PANIC_RETREAT", "SAFETY_PRESSURE_RETREAT", "LEASH_RETURN"})
+    FLIGHT_REASONS = frozenset({"PANIC_RETREAT", "SAFETY_PRESSURE_RETREAT", "LEASH_RETURN", "AVOID_HOSTILE"})
 
     @staticmethod
     def resolve_live_tracking_target(
@@ -96,24 +96,44 @@ class MovementCandidateSelector:
         return index
 
     @staticmethod
-    def engaged_adjacent_hostile(
+    def _adjacent_hostile(
         entity: "EntityState",
         entities: Mapping[int, "EntityState"],
-        index: Optional[dict[tuple[int, int], list[int]]] = None,
+        index: Optional[dict[tuple[int, int], list[int]]],
+        engaged: bool,
     ) -> bool:
-        """CONFLICT-04 at the movement layer: True when an orthogonally adjacent entity is engaged with ``entity`` (either names
-        the other as its target) and is a perceived, hostile-compatible entity. It is the predicate the hold between blows uses
-        (``tactical_hold.held_swing_update``), through the same ``hostility.perceived_hostile`` the tactical pass builds its
-        hostiles with, so the two layers cannot disagree."""
+        """True when an orthogonally adjacent entity is a perceived, hostile-compatible entity whose engagement with ``entity`` (either names
+        the other as its target) equals ``engaged``. Uses ``hostility.perceived_hostile``, the test the tactical pass builds its hostiles with,
+        so the movement layer, the scheduler and the decision layer cannot disagree."""
         if index is None:
             index = MovementCandidateSelector.position_index(entities)
         x, y = int(entity.navigation.position[0]), int(entity.navigation.position[1])
         for tile in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
             for other_id in index.get(tile, ()):
                 other = entities.get(other_id)
-                if other is not None and other.id != entity.id and is_engaged(entity, other) and perceived_hostile(entity, other):
+                if other is not None and other.id != entity.id and is_engaged(entity, other) is engaged and perceived_hostile(entity, other):
                     return True
         return False
+
+    @staticmethod
+    def engaged_adjacent_hostile(
+        entity: "EntityState",
+        entities: Mapping[int, "EntityState"],
+        index: Optional[dict[tuple[int, int], list[int]]] = None,
+    ) -> bool:
+        """CONFLICT-04 at the movement layer: an engaged, perceived, hostile entity orthogonally adjacent (the predicate the hold between
+        blows uses). The movement rule takes no stored-target step for such an entity."""
+        return MovementCandidateSelector._adjacent_hostile(entity, entities, index, True)
+
+    @staticmethod
+    def unengaged_adjacent_hostile(
+        entity: "EntityState",
+        entities: Mapping[int, "EntityState"],
+        index: Optional[dict[tuple[int, int], list[int]]] = None,
+    ) -> bool:
+        """Decision 32 ("notice and decide"): a perceived hostile entity orthogonally adjacent that is NOT engaged with ``entity``. The scheduler
+        wakes the brain of such an entity ahead of its cadence."""
+        return MovementCandidateSelector._adjacent_hostile(entity, entities, index, False)
 
     @staticmethod
     def movement_target(
@@ -166,6 +186,8 @@ class MovementCandidateSelector:
             return False
         if MovementCandidateSelector.tracked_move_complete(entity, entities):
             return True
+        if entity.task.payload.get("reason") == "KEEP_WALKING" and entity.navigation.position == entity.task.payload.get("target_position"):
+            return True  # a walk the brain chose to keep (decision 32) ends on arrival: arriving does not end other held moves
         return (not MovementCandidateSelector.is_decided_flight(entity)
                 and MovementCandidateSelector.engaged_adjacent_hostile(entity, entities, index))
 

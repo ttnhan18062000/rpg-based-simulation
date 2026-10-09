@@ -24,12 +24,15 @@ from src.systems.lifecycle_systems.lifecycle import LifecycleSystem
 FAR_MAX_AGE = 100_000
 
 
+# Owner decision 36 (staged starvation): hunger costs 1 HP once every round(6000 / max_hp) ticks. These tests are about the typed cause
+# the passive writer records on the zeroing tick, not about the rate, so the subject has max_hp 6000 (a loss on every tick, the
+# period being 1) and the hunger loss is 1 HP per tick (sleep debt keeps its 1 HP per tick).
 def _starving(hp, hunger=0.0, sleep_debt=0.0, entity_id=1, **life):
     life.setdefault("max_age_ticks", FAR_MAX_AGE)
     return (
         V2EntityBuilder(entity_id).kind("HERO").location(0.0, 0.0)
         .biological(hunger=hunger, sleep_debt=sleep_debt)
-        .combat(hp=hp)
+        .combat(hp=hp, max_hp=6000)
         .lifecycle(active=True, age_ticks=0, **life)
         .build()
     )
@@ -58,7 +61,7 @@ def _step(state, entity_updates=None):
 # --- T1 / T2 / T5: classification from the recorded cause, one tick later -------------------------
 
 def test_hunger_death_records_starvation_with_zeroing_tick_then_classifies_next_tick():
-    n, n1 = _kernel_ticks(_starving(hp=2, hunger=95.0), 2)
+    n, n1 = _kernel_ticks(_starving(hp=1, hunger=95.0), 2)
     assert n.combat.hp == 0 and n.combat.alive is False
     assert n.lifecycle.passive_death_cause is PassiveDeathCause.STARVATION
     assert n.lifecycle.passive_death_cause_tick is not None
@@ -79,14 +82,14 @@ def test_sleep_debt_death_records_sleep_deprivation_distinct_from_starvation():
 
 def test_both_thresholds_breached_record_starvation_by_declared_precedence():
     """Declared rule (lifecycle_systems_contract.md): hunger outranks sleep debt as a recorded cause."""
-    n, n1 = _kernel_ticks(_starving(hp=3, hunger=95.0, sleep_debt=98.0), 2)
+    n, n1 = _kernel_ticks(_starving(hp=2, hunger=95.0, sleep_debt=98.0), 2)
     assert n.combat.hp == 0
     assert n1.lifecycle.death_reason == PassiveDeathCause.STARVATION.value
 
 
 def test_non_fatal_passive_drain_records_nothing():
     (n,) = _kernel_ticks(_starving(hp=10, hunger=95.0), 1)
-    assert n.combat.hp == 8 and n.combat.alive is True
+    assert n.combat.hp == 9 and n.combat.alive is True
     assert n.lifecycle.passive_death_cause is None and n.lifecycle.passive_death_cause_tick is None
 
 
