@@ -108,3 +108,17 @@ def test_a_leashed_animal_hunts_and_scavenges_only_within_its_own_range():
     far_goblin = _goblin(pos=(10.0, 19.0))
     assert all(not s.available or s.kind is not OpeningStepKind.HUNT for s in opening_steps(wolf, _state(wolf, far_goblin)))
     assert first_open_step(wolf, _state(wolf, _goblin(pos=(10.0, 14.0)))).kind is OpeningStepKind.HUNT
+
+
+def test_a_meat_only_body_does_not_harvest_a_berry_thicket_through_the_generic_harvest_goal():
+    """The leak the measurement found: a wolf harvested a berry node (13 berries at once) through the plain HARVESTING goal, not the forage way."""
+    from src.ai.goals.scorers import HarvestScorer
+
+    berries = ResourceNodeState(id=10, kind="berry_thicket", position=(12.0, 10.0), yields_item="wild_berries",
+                                remaining_charges=4, max_charges=8, required_ticks=8, cooldown_remaining=0)
+    wood = ResourceNodeState(id=11, kind="wood_node", position=(12.0, 10.0), yields_item="wood",
+                             remaining_charges=4, max_charges=8, required_ticks=8, cooldown_remaining=0)
+    wolf, person = _wolf(), _kind(4, "human", (10.0, 10.0), Faction.HERO_GUILD, 60.0)
+    assert HarvestScorer().score(wolf, _state(wolf, nodes=[berries])).utility == 0.0
+    assert HarvestScorer().score(person, _state(person, nodes=[berries])).utility > 0.0
+    assert HarvestScorer().score(wolf, _state(wolf, nodes=[wood])).utility > 0.0

@@ -53,13 +53,13 @@ def _retreat(entity: "EntityState", where: Tuple[float, float], reason: str, str
 def avoid_what_can_eat_me(
     state: "AuthoritativeState", entity: "EntityState", hood: Neighbourhood, strat_up: Any
 ) -> Optional[EntityUpdate]:
-    """A creature with no attack target flees what is coming for it (THREATENING: a decided flight, ``AVOID_HOSTILE``) and keeps its distance
+    """A creature with no attack target flees what is coming for it (THREATENING: a decided flight, ``FLEE_THREAT``) and keeps its distance
     from what could eat it and it cannot overcome (WARY within ``WARY_DISTANCE``: ``KEEP_DISTANCE``, not a flight); otherwise None."""
     if hood.hostiles:
         return None
     if hood.threatening:
         away = retreat_destination(state, entity, hood.threatening)
-        return _retreat(entity, away if away is not None else entity.navigation.position, "AVOID_HOSTILE", strat_up)
+        return _retreat(entity, away if away is not None else entity.navigation.position, "FLEE_THREAT", strat_up)
     near = [w for w in hood.wary if manhattan_tile_distance(entity.navigation.position, w.navigation.position) <= WARY_DISTANCE]
     distant = retreat_destination(state, entity, near) if near else None
     return _retreat(entity, distant, "KEEP_DISTANCE", strat_up) if distant is not None else None

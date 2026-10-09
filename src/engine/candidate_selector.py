@@ -9,10 +9,21 @@ from src.engine.hostility import is_engaged, perceived_hostile
 from src.engine.legality import LegalityServiceV2
 from src.engine.phase_governor import ScanPolicy
 from src.engine.sleep_debt import must_collapse
+from src.engine.tile_distance import manhattan_tile_distance
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate
+
+
+def _within_a_tile(position: tuple, target: object) -> bool:
+    """True when ``target`` is a position within one whole tile of ``position``."""
+    return target is not None and manhattan_tile_distance(position, target) <= 1  # type: ignore[arg-type]
+
+
+# Held moves that end when the entity reaches their target and hand it back to the brain; every other held move runs on without one. A creature that
+# fled or kept its distance and then stood frozen in the held move would never forage again (measured: a plant-eater starved 1900 ticks after one flight).
+ARRIVAL_ENDS_MOVE_REASONS = frozenset({"KEEP_DISTANCE", "FLEE_THREAT"})
 
 
 class MovementCandidateSelector:
@@ -37,7 +48,7 @@ class MovementCandidateSelector:
     # The payload ``reason`` of a move the tactical pass issues to LEAVE (a panic retreat, a safety retreat, a return to the leash
     # home). Leaving is a decision, so such a held move keeps stepping beside an engaged hostile and pays the opportunity attack
     # knowingly (CONFLICT-04, divergence 2.89). Read from the payload the decision issued, which no later pass rewrites.
-    FLIGHT_REASONS = frozenset({"PANIC_RETREAT", "SAFETY_PRESSURE_RETREAT", "LEASH_RETURN", "AVOID_HOSTILE"})
+    FLIGHT_REASONS = frozenset({"PANIC_RETREAT", "SAFETY_PRESSURE_RETREAT", "LEASH_RETURN", "AVOID_HOSTILE", "FLEE_THREAT"})
 
     @staticmethod
     def resolve_live_tracking_target(
@@ -189,6 +200,8 @@ class MovementCandidateSelector:
             return True  # (a subject whose sleep debt reached the collapse line stops where it stands, decision 41)
         if entity.task.payload.get("reason") == "KEEP_WALKING" and entity.navigation.position == entity.task.payload.get("target_position"):
             return True  # a walk the brain chose to keep (decision 32) ends on arrival: arriving does not end other held moves
+        if entity.task.payload.get("reason") in ARRIVAL_ENDS_MOVE_REASONS and _within_a_tile(entity.navigation.position, entity.task.payload.get("target_position")):
+            return True  # a step away from a creature (decisions 47 and 49): the point is a clamped coordinate, so arriving means being within a tile of it
         return (not MovementCandidateSelector.is_decided_flight(entity)
                 and MovementCandidateSelector.engaged_adjacent_hostile(entity, entities, index))
 

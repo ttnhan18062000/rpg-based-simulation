@@ -75,13 +75,13 @@ def test_graze_a_hungry_plant_eater_gathers_and_eats_the_land_s_plant_food():
 
 def test_avoid_a_plant_eater_beside_a_hungry_wolf_flees_and_a_sated_wolf_draws_only_distance_keeping():
     hungry = _run(_stage(wolf_gap=3, wolf_hunger=85.0))
-    assert any(r["reason"] in ("AVOID_HOSTILE", "KEEP_DISTANCE") for r in hungry), "the plant-eater must react to a wolf it cannot overcome"
+    assert any(r["reason"] in ("FLEE_THREAT", "KEEP_DISTANCE") for r in hungry), "the plant-eater must react to a wolf it cannot overcome"
     sated = _run(_stage(wolf_gap=3, wolf_hunger=0.0))
     assert any(r["reason"] == "KEEP_DISTANCE" for r in sated), "the same kind of wolf, not hungry, still draws distance-keeping (prey never reads hunger)"
     assert not any(r["wolf_attacked"] for r in sated), "and a sated wolf does not hunt it"
-    assert not any(r["reason"] == "AVOID_HOSTILE" for r in sated), "a wolf that is not coming for it is not a threat to flee"
+    assert not any(r["reason"] == "FLEE_THREAT" for r in sated), "a wolf that is not coming for it is not a threat to flee"
 
 
 def test_control_a_wolf_out_of_perception_draws_no_response():
     rows = _run(_stage(wolf_gap=40, wolf_hunger=85.0), ticks=30)
-    assert not any(r["reason"] in ("AVOID_HOSTILE", "KEEP_DISTANCE") for r in rows)
+    assert not any(r["reason"] in ("FLEE_THREAT", "KEEP_DISTANCE") for r in rows)

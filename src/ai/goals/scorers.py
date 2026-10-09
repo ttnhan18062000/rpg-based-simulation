@@ -2,7 +2,8 @@ from __future__ import annotations
 from typing import Tuple
 from src.ai.goals.base import GoalScorer, GoalScore, NeedAccess
 from src.ai.goals.opening_steps import first_open_step
-from src.engine.appraisal import can_use_inn_meal
+from src.core.items import food_hunger_recovery
+from src.engine.appraisal import can_eat_item, can_use_inn_meal
 from src.engine.need_pull import hunger_pull, sleep_pull
 from src.engine.sleep_debt import SLEEP_DEBT
 from src.engine.way_in_range import way_in_range
@@ -37,12 +38,19 @@ class HarvestScorer(GoalScorer):
 
         from src.engine.spatial_query import SpatialQueryService
         best_node = SpatialQueryService.nearest_resource_node(state, entity.navigation.position)
+        if best_node and not _may_gather(entity, best_node.yields_item):
+            return GoalScore(kind=GoalKind.HARVESTING, utility=0.0)  # decision 44: a diet that cannot eat the food does not gather it
         if best_node:
             dist = max(1.0, abs(best_node.position[0] - entity.navigation.position[0]) + abs(best_node.position[1] - entity.navigation.position[1]))
             best_score = 50.0 / dist
             return GoalScore(kind=GoalKind.HARVESTING, utility=best_score, target_id=str(best_node.id), target_pos=best_node.position)
         
         return GoalScore(kind=GoalKind.HARVESTING, utility=0.0)
+
+def _may_gather(entity: EntityState, item_id: str) -> bool:
+    """False for a food item the subject's diet cannot eat (a meat-only kind does not gather berries); anything that is not food is gathered as before."""
+    return food_hunger_recovery(item_id) <= 0.0 or can_eat_item(entity, item_id)
+
 
 def _travel_tiles(entity: EntityState, target_pos: Tuple[float, float]) -> float:
     """Manhattan walk, in tiles, from the entity to `target_pos` (positions are whole tiles, MOV-07)."""
