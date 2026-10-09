@@ -73,7 +73,9 @@ def test_aseprite_pixel_art_entry_has_the_registered_shape():
     entry = _load_mcp_config()["mcpServers"]["aseprite-pixel-art"]
     assert entry["command"] == "bash"
     assert entry["args"] == ["visual_assets/start_mcp.sh"]
-    assert entry["env"] == {}
+    # TCK-20261008-VISUAL-ASSETS-MCP-WORKTREE-STORE-ROOT: the only env entry is the optional pass-through that lets a session started in the main checkout serve a worktree's store;
+    # empty (the default) means "the checkout the server was launched from", so the registration behaves as before when the variable is unset
+    assert entry["env"] == {"VISUAL_ASSETS_CHECKOUT": "${VISUAL_ASSETS_CHECKOUT:-}"}
     assert entry["description"]
     assert (_REPO_ROOT / entry["args"][0]).is_file()
 

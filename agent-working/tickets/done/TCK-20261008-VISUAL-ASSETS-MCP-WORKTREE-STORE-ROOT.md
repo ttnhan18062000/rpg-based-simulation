@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261008-VISUAL-ASSETS-MCP-WORKTREE-STORE-ROOT
-phase: open
+phase: done
 date: 2026-10-08
 tags: [architecture, mcp, testing]
 ---
