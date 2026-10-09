@@ -184,3 +184,36 @@ def test_the_advisory_leaves_out_the_runs_own_ticket_and_staging_files_but_nothi
         "unreported": ["tools/not_reported.py", "agent-working/tickets/inprogress/TCK-OTHER.md"],
         "unchanged": ["tools/reported_but_unchanged.py"],
     }
+
+
+# --- the three lists that must agree ------------------------------------------------------------------------------------
+
+def _camel_to_snake(name: str) -> str:
+    import re
+    return re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name).lower()
+
+
+def test_gate_cmd_keys_the_extractor_mapping_and_gate_cli_subcommands_are_the_same_set():
+    """A gate site added to one list and not the others would drop out of conformance or fail at run time."""
+    import re
+    from tools.agent_orchestration_claude_adapter.gate_policy_extractor import _GATE_CLI_SITE_CHECKS
+
+    text = SCRIPT.read_text(encoding="utf-8")
+    block = text[text.index("const gateCmd = {"):text.index("// GATE-CMD-END")]
+    block = block[:block.index("\n}\n")]
+    js_keys = set(re.findall(r"^  (\w+): \(", block, re.M))
+    subcommands = set(gate_cli.build_parser()._subparsers._group_actions[0].choices)  # noqa: SLF001
+    assert js_keys == set(_GATE_CLI_SITE_CHECKS), "gateCmd keys vs gate_policy_extractor._GATE_CLI_SITE_CHECKS"
+    assert {_camel_to_snake(key) for key in js_keys} == subcommands, "gateCmd keys vs gate_cli sub-commands"
+    for key in js_keys:  # each builder really calls the sub-command its name says
+        line = re.search(rf"^  {key}: .*$", block, re.M).group(0)
+        assert f"${{GATE_CLI}} {_camel_to_snake(key)}" in line, key
+
+
+def test_an_unmapped_gate_cmd_site_raises_instead_of_vanishing_from_conformance(tmp_path):
+    from tools.agent_orchestration_claude_adapter.gate_policy_extractor import extract_static_check_gates
+
+    js = tmp_path / "implement-ticket.js"
+    js.write_text("const x = await shAttested(gateCmd.brandNewSite(startSha), 'g')\nwriteMonitoring('SOME_STATUS')\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="brandNewSite"):
+        extract_static_check_gates(js)

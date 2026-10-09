@@ -126,3 +126,5 @@ The ATTEST line now carries `cmd_sha`; the verifier compares it and the mac cove
 **Advisory noise (planner review):** the `files_changed_vs_git` advisory now leaves out the run's own ticket file and `agent-working/staging_artifacts/<tid>/` (`advisoryFilesDelta`, tested under node); the gates still see them.
 
 **CI follow-up (PR #459):** `tests/agent_orchestration_claude_adapter/test_gate_policy_conformance.py` failed in CI because moving the inline imports into `gate_cli.py` hid five static_check gates from the extractor (Scope, Plan, Implement, Test, Finalize). It passed in my scoped runs because I did not run `tests/agent_orchestration_claude_adapter/`; the extractor now maps each `gateCmd.<site>(` call to the check it runs, with no change to the contract or the divergence log.
+
+**Planner review nit (PR #459):** an unknown `gateCmd.<site>` in the extractor now raises `ValueError` naming it, instead of being skipped, and `tests/tools/test_gate_cli.py` ties the `gateCmd` keys in implement-ticket.js, `_GATE_CLI_SITE_CHECKS` and the `gate_cli.py` sub-commands together (plus a test that an unmapped site raises).

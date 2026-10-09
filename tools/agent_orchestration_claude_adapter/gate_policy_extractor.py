@@ -268,7 +268,12 @@ def extract_static_check_gates(workflow_js_path: Path) -> list[dict]:
     for match in _GATE_CLI_CALL_RE.finditer(text):
         site_check = _GATE_CLI_SITE_CHECKS.get(match.group(1))
         if site_check is None:
-            continue
+            # Raise, never skip: a gate site added to gateCmd without a mapping would otherwise drop out of conformance
+            # silently, which is the failure this mapping exists to prevent.
+            raise ValueError(
+                f"gateCmd.{match.group(1)}(...) in {workflow_js_path.name} has no entry in _GATE_CLI_SITE_CHECKS; "
+                "add the (module, function) its gate_cli sub-command runs"
+            )
         lines.append({
             "offset": match.start(),
             "invocation": "cli",
