@@ -820,7 +820,7 @@ question above already has a working answer today.
 ## 10. Owner decisions
 
 Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has
-forty-two entries (row 27 lands with the decision-27 PR):
+fifty-one entries (row 27 lands with the decision-27 PR):
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
@@ -862,7 +862,16 @@ forty-two entries (row 27 lands with the decision-27 PR):
 39. crowded_frontier's wild land (decided 2026-10-09: a new wolf-free forest-edge module, SURV-06 amendment);
 40. how a craft is learned (decided 2026-10-09: taught by a smith, for a price, over time, catalog LEARN-03);
 41. what extreme sleep debt does (decided 2026-10-09: weaken, then collapse into sleep, no HP loss, SURV-02 amendment);
-42. who the body, need and decision rules cover (decided 2026-10-09: every living kind by default, sized by the kind; people-only rules say so).
+42. who the body, need and decision rules cover (decided 2026-10-09: every living kind by default, sized by the kind; people-only rules say so);
+43. who counts as a person for money and town services (decided 2026-10-09: an authored species trait, plus the relationship, EXCH-02);
+44. when the free meal may go (decided 2026-10-09: after predators can hunt and diets are gated, for everyone at once, SURV-06);
+45. whether small, edible animals exist (decided 2026-10-09: add a few generic archetypes declared by coarse properties, SURV-06);
+46. whether predator and prey are labels (decided 2026-10-09: no, roles come from declared properties, SURV-06 amendment);
+47. what decides who hunts, flees or fights (decided 2026-10-09: appraisal for every creature, faction for people, CONFLICT-03);
+48. whether predation is trauma (decided 2026-10-09: a kill made to eat is not, ENV-07);
+49. what makes prey afraid (decided 2026-10-09: what the other is and what it is doing, CONFLICT-03);
+50. how detailed foundation content is (decided 2026-10-09: generic archetypes and coarse bands now; named species and exact figures after the foundation is hardened);
+51. how tax is levied (decided 2026-10-09: a share of income or trade when coin changes hands; no levy on the destitute, EXCH-02).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -997,6 +1006,133 @@ Implementation detail is deliberately left out.
    *Owner*: this planning session, subject to the owner's acceptance of the direction.
 
 ---
+
+## 12. Foundation path (confirmed by the owner, 2026-10-09)
+
+The owner confirmed milestones 1 to 3 below as the path for hardening the foundation. Milestones
+for a closed economy and a living society were proposed and judged too abstract for the current
+stage. They are recorded at the end as not planned. The source is rpg-designer's forward design
+(published for the owner as "Living World Foundation"), built from four read-only audits of the
+rule catalog and of species content and behaviour code at `df827d945`.
+
+### 12.1 What the audits found (six patterns)
+
+1. **Kinds are labels, not properties.** A species declares a body name, a need-profile name, a
+   binary `intelligence_tier` and free-text traits; it has no size, power, diet, edibility,
+   speed, activity period, group habit or coin-keeping (`src/content/schema.py:156-178`). About
+   100 sites read the `EntityRole` enum. Hostility comes from faction buckets
+   (`src/content_semantics/faction.py:149-174`). `kind` means a role for compiled entities and a
+   species for spawned ones (`src/worldbuilding/compiler.py:688`). Levelling changes species by a
+   table (`src/engine/evolution.py`).
+2. **Things appear from nothing.**
+   - Creatures: the density refill (`src/world/spawn.py`), camp spawning every 30 ticks
+     (`src/world/camp.py:62-77`), raids, and strongholds (`src/world/influence.py`).
+   - Coin: on spawned bodies (`src/systems/world_systems/generator.py`), kill and quest rewards,
+     and the building tax.
+   - Goods: paid inn meals consume no food, ore and stone regrow and are seeded
+     (`src/world/ecology.py:115-150`), and inheritance may copy goods (`lifecycle.py:277-286`).
+3. **Needs with no way.** There is no HP recovery at all (BODY-05). Cooking has no fuel rule.
+   Rough sleep has no shelter rule.
+4. **Supply chains that don't close.** Shop stock, inn food, treasury income, guard pay and
+   equipment end of life (outside this path, see 12.4).
+5. **Blind spots in noticing and deciding.**
+   - "Can overcome" reads true stats (`src/domains/combat_engagement/power.py:58`).
+   - Perception falls back to human senses (`src/world/perception/gate.py:190`), and every body
+     emits the same signals (`src/engine/behavior_consumers.py:79-97`).
+   - One night window applies to every kind (`src/systems/world_systems/routine.py:35`).
+   - Hazard tolerance is per faction.
+6. **Society runs on labels** (outside this path, see 12.4).
+
+### 12.2 The kind property model (coarse first, decision 50)
+
+Every kind declares properties that behaviour reads instead of names:
+- body size;
+- power and danger, kept separate from folk belief (KNOW-04);
+- wits;
+- diet;
+- edibility and yield;
+- speed;
+- temperament;
+- group habit;
+- home range;
+- activity period;
+- senses and emitted signals;
+- hazard tolerance;
+- reproduction;
+- keeps coin and trades (decision 43).
+
+At this stage each is a band (small / medium / large, low / medium / high) or a short category
+list, and kinds are generic archetypes. Exact figures, individual variation and named species
+come after the foundation is hardened. One appraisal (can I eat it, can it eat me, can I
+overcome it), estimated from senses and wits, serves hunting, fleeing and wariness (decisions
+46-49). Role names stay as display labels only.
+
+### 12.3 Milestones
+
+0. **Finish what is in flight.**
+   - Earning: selling and inn wages (Lane B batch 2).
+   - The treasury batch: wages, payer-funded rewards, the tax share (decisions 37, 38, 51;
+     ME-S21 to ME-S23).
+   - Hunting with diet and generic plant-eaters (decisions 44-50; LB-S20, LB-S21).
+   - Sleep collapse (decision 41; LB-S19).
+
+   Done when broke workers earn and eat in all three measured worlds, meat-eaters eat what they
+   kill, and nobody is fed for free. Then the free meal goes, for every kind at once (decision
+   44).
+1. **Kinds by properties.**
+   - The property model in coarse bands, as schema and content.
+   - The appraisal.
+   - `kind` always means species, and occupation is a separate field.
+   - Honest perception defaults (each kind's own senses; signals follow the body).
+   - An activity period per kind, and hazard tolerance per body.
+   - Retire behaviour that branches on role, kind or faction names, in stages, measured each time.
+
+   Done when no decision reads a role, kind or faction name, a new kind works from content alone,
+   and a probe finds no name switch left in a decision path.
+2. **Nothing from nothing.**
+   - Creatures come only from births or declared world creation, for every kind; a camp is where
+     a kind lives and breeds.
+   - Individual births and deaths drive population figures (ECOL-03).
+   - No coin on spawned bodies, and treasury income only from real purses (decision 51).
+   - Every fee has a payee, and inn meals draw from stock.
+   - Ore and stone do not regrow; new deposits come only by discovery.
+   - Inheritance moves goods instead of copying them.
+
+   Done when a long-run conservation ledger balances for coin, food, goods and creatures, with
+   every change traced to a cause.
+3. **Bodies heal, food ends, fire cooks.**
+   - Ways to recover per kind (rest and time, treatment, potions consumed).
+   - Corpse fate: butchery, scavenging, rot, burial.
+   - Spoilage by food type, with cooking and drying to preserve.
+   - Fire needs fuel and a place.
+   - Water, cold and disease are recorded as explicit "not yet" choices; shelter and cold come
+     first if rough sleep proves too easy.
+
+   Done when a resting wounded creature recovers, a hunt's meat spoils unless used, and a cooked
+   meal fills more than a raw one.
+
+**How the path runs:**
+- Each milestone's rule work (catalog text, kernel specs) is done before its code.
+- Its owner-level choices come to the owner as questions with options and a recommendation when
+  the milestone starts. Proposed recommendations are in the forward design; none is ruled yet.
+- One milestone PR per milestone.
+
+**Standing checks the path adds (proposed):**
+- a long-run conservation ledger (milestone 2's gate);
+- a "no name checks in decision code" probe (milestone 1's gate);
+- survival reported by kind group (town folk, wildlife, raiders) in every lane measurement.
+
+### 12.4 Not planned at this stage
+
+Judged by the owner too abstract for now (2026-10-09). They are listed so the gaps stay visible,
+not as commitments:
+- a closed economy: supply chains for shop and inn stock, hiring as the source of occupation,
+  paid guards, treasury insolvency, equipment end of life, repair with materials;
+- a living society and wild: packs and herds, territory, households, theft, caused war and peace,
+  control by presence, and settlement growth by births and migration.
+
+The rules already decided for these areas (EXCH-02's selling, wages and tax; LEARN-03's taught
+crafts) stay in force. Only further design waits.
 
 ## Appendix: External review response log (historical)
 
