@@ -37,7 +37,7 @@ Behaviour on shipped runs does not change: the governor never saw a non-zero deb
 
 | Class | Files |
 |---|---|
-| **Core (gated)** | `src/core/state.py` (fields at `:1425-1426`, freeze copy `:1613-1614`), `src/engine/apply.py` (`:314-319, 495-496`), `src/engine/kernel.py` (`:611, 623-624, 642`) |
+| **Core (gated)** | `src/core/state.py` (fields at `:1425-1426`, freeze copy `:1613-1614`), `src/engine/apply.py` (`:319-324, 500-501`), `src/engine/kernel.py` (`:611, 623-624, 642`) |
 | **Phase B list** | `src/engine/checkpoint.py` (`:15, 116-117`), `src/core/updates.py` (`:1048-1049, 1091, 1137-1138, 1202-1205, 1267-1268`), `src/engine/scheduler.py`, `src/engine/policy.py`, and the reporting surfaces `src/certification/{scenarios,models,harness}.py`, `src/observability/{prometheus_collector,live/snapshot_provider}.py`, `src/engine/observability.py`, `src/api/engine_manager.py`, `src/perf/long_run_harness.py` |
 | **Outside the list (Q2)** | the Phase A files, `executor.py`, `domain_logic.py`, `worker_protocol.py`, `protocol_validator.py`, `perf/profiles.py`, `worker_manager.py`, `rootcause/rules.py`, `tools/perf/hash_callsite_inventory.py` |
 | **Not touched** | `src/engine/pipeline.py`, `src/domains/cooperation/phase.py`, `src/core/work.py`, `src/core/concurrency_law.py` (see below) |

@@ -11,7 +11,7 @@ tags: [performance, engine, determinism]
 
 # Investigation: TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE (design only)
 
-Tree: `origin/main` `5e0994837` (after Phase A, #448, and the flags batch, #451). Read-only: no `src/` or `tests/` file was edited. Line numbers are from that tree.
+Tree: `origin/main` `5e0994837` (after Phase A, #448, and the flags batch, #451); **re-checked 2026-10-09 against `origin/main` `3ffa6b95b` (after #457, #462, #454 and #468): `work_debt` still has 61 hits in `src/` with the same per-file split, the periodic, DRAIN_DEBT and opportunistic counts are unchanged, and the only moved line numbers are in `apply.py` (+5) and `scheduler.py` (-29); both are updated below.** Line numbers are from the newer tree.
 Method: `search_docs`, `graphify query "work_debt"`, then `grep -rn` over `src/`, `tests/`, `tools/`, `docs/`, `data/`, `config/`.
 
 ## 0. What has already gone
@@ -27,13 +27,13 @@ Method: `search_docs`, `graphify query "work_debt"`, then `grep -rn` over `src/`
 | State field | `src/core/state.py:1426` `work_debt: Dict[str, int]`; `:1614` in the freeze copy (`shallow_freeze(self.work_debt)`) | the only stored copy |
 | Proof-digest input | `src/engine/checkpoint.py:117` `data["work_debt"] = dict(sorted(...))` | **in every state hash** (the key is present even when `{}`) |
 | Update field | `src/core/updates.py:1049` `work_debt_updates`; `:1091` in `is_empty`; `:1138` copy and `:1204-1205` additive merge in `merge`; `:1268` rebuild | typed record |
-| Apply clamp | `src/engine/apply.py:317-319` (`max(0, old + delta)`), `:496` written into the new state | the only writer of `state.work_debt` |
+| Apply clamp | `src/engine/apply.py:322-324` (`max(0, old + delta)`), `:501` written into the new state | the only writer of `state.work_debt` |
 | Kernel merge | `src/engine/kernel.py:611` init, `:623-624` (`res.work_debt_update is not None and res.subsystem_id` -> last-writer-wins by subsystem, `continue`), `:642` into `StateUpdate` | produces `work_debt_updates` from ID-zero system results |
 | Signal | `src/core/governance.py:32` `PressureSignals.work_debt_total`; `src/engine/signal_source.py:64, 88, 114, 169` (`sum(state.work_debt.values())`, four sources); `src/engine/runtime_status.py:64` (copied in `record_signals`); `src/engine/observability.py:25, 120, 128` (snapshot dataclass and `sum(kernel.state.work_debt.values())`) | the always-0 input |
 | Governor | `src/engine/governor.py:78` (`>= max_work_debt` -> SURVIVAL), `:86` (`>= 0.5 * max_work_debt` -> DEGRADED), `:145` (`recovery_limit_debt`), `:154` (recovery check) | can only ever see 0 |
 | Phase governor | `src/engine/phase_governor.py:138-139` (`max_debt`, `work_debt_total > max_debt * 0.7` in the compaction rule) | same |
 | Profiles | `src/config/profiles.py:37` `max_work_debt` (default 1000), `:119, 138, 157, 176` (four production profiles); `src/perf/profiles.py:47` | the threshold |
-| Scheduler | `src/engine/scheduler.py:122-135` the DEFERRED branch (`WorkItem(work_kind="DRAIN_DEBT")` per positive `work_debt` entry) | creates DRAIN_DEBT items |
+| Scheduler | `src/engine/scheduler.py:93-105` the DEFERRED branch (`:94`, `DRAIN_DEBT` at `:100`) (`WorkItem(work_kind="DRAIN_DEBT")` per positive `work_debt` entry) | creates DRAIN_DEBT items |
 | Executor | `src/engine/executor.py:202-221` (sequential) and `:347-365` (concurrent adapter): `DRAIN_DEBT` -> `SimulationDomainLogic.drain_debt` (`src/engine/domain_logic.py:58`) -> `WorkerResult(entity_id=0, work_debt_update=..., subsystem_id=...)` | the only producer of ID-zero system results |
 | Worker protocol | `src/core/worker_protocol.py:107-108` `work_debt_update`, `subsystem_id` | carry the drain |
 | Validator | `src/core/protocol_validator.py:47, 52, 83-85, 88-99` `_check_one_debt_update_per_subsystem` (PERF-M1-T04, the rule from #319) and "System result missing subsystem_id" | guards the merge above |
@@ -51,15 +51,15 @@ Root-cause rule: `src/observability/understanding/rootcause/rules.py:253-285` `G
 | `src/core/state.py:1425` field; `:1613` freeze copy | state |
 | `src/engine/checkpoint.py:116` | **in every state hash** |
 | `src/core/updates.py:1048` `periodic_updates`; `:1091, 1137, 1202-1203, 1267` | no producer anywhere in `src/` |
-| `src/engine/apply.py:314-315, 495` | copies `periodic_due_ticks` and applies `periodic_updates` |
-| `src/engine/scheduler.py:14-22` `PeriodicDefinition`; `:30-31` constructor; `:100-119` the periodic branch (reads `state.periodic_due_ticks`) | **no `src/` path ever registers a definition** (`DeterministicScheduler()` is built with none; only tests pass them) |
-| `src/engine/policy.py:16` `allow_non_authoritative_periodic` (rows `:83, 104, 125, 146`) | read only by the periodic branch (`scheduler.py:103`) |
+| `src/engine/apply.py:319-320, 500` | copies `periodic_due_ticks` and applies `periodic_updates` |
+| `src/engine/scheduler.py:19-27` `PeriodicDefinition`; `:35-36` constructor; `:70-90` the periodic branch (reads `state.periodic_due_ticks`, `:77`) | **no `src/` path ever registers a definition** (`DeterministicScheduler()` is built with none; only tests pass them) |
+| `src/engine/policy.py:16` `allow_non_authoritative_periodic` (rows `:83, 104, 125, 146`) | read only by the periodic branch (`scheduler.py:73`) |
 | **`src/domains/cooperation/phase.py:78-80`** | **a reader the ticket did not list:** `if hasattr(state, "periodic_due_ticks") and "social_cooperation_disabled" in state.periodic_due_ticks: flag = False`. Nothing in `src/` writes that key; only tests set it (`tests/unit/domains/cooperation/test_cooperation_phase.py:90`, `tests/integration/domains/cooperation/test_phase7_cooperation_phase.py:125`). The phase already has the real OFF switch, the feature flag `ENABLE_SOCIAL_COOPERATION` (`src/engine/pipeline.py:218`). The `hasattr` guard means **the phase keeps working when the field is gone**, so `phase.py` needs no edit; its guard becomes dead code (follow-up for rpg-planner). Only the two OFF-path tests must change |
 | `src/core/work.py:14-16, 34` `WorkClass.PERIODIC/OPPORTUNISTIC/DEFERRED`, `WorkItem.due_tick`; `src/core/concurrency_law.py:14-16` | class priorities used by the result sort key and by tests (`test_tied_worker_result_order`, `test_protocol_validator_system_results`). Recommendation: **keep the enum members and the priority table** (smaller blast radius); they become unreachable constants, listed as a follow-up |
 
 ## 3. The opportunistic branch and the unread policy fields
 
-- `src/engine/scheduler.py:137-139` `if policy.allow_opportunistic: pass` (empty); `src/engine/policy.py:15` (rows `:82, 103, 124, 145`).
+- `src/engine/scheduler.py:108` `if policy.allow_opportunistic:` (empty body); `src/engine/policy.py:15` (rows `:82, 103, 124, 145`).
 - `diagnostic_verbosity` (`policy.py:18`, rows `:84, 105, 126, 147`) and `metrics_detail` (`:19`, rows `:85, 106, 127, 148`): read nowhere in `src/` outside `policy.py`.
 
 ## 4. The two misleading comments
