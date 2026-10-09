@@ -2,11 +2,11 @@
 
 | Report | Runs | DONE | Gate failures | Search Calls | Read Calls | Skill Invocations |
 |---|---|---|---|---|---|---|
-| [LAST7D](RETRO-LAST7D.md) | 299 | 289 | 6 | 23 | 58 | 0 |
-| [LAST28D](RETRO-LAST28D.md) | 604 | 582 | 18 | 571 | 1605 | 0 |
-| [LAST14D](RETRO-LAST14D.md) | 408 | 395 | 9 | 191 | 472 | 0 |
-| [ALL](RETRO-ALL.md) | 2047 | 1887 | 108 | 5731 | 44172 | 331 |
-| [2026-W41](RETRO-2026-W41.md) | 125 | 122 | 3 | 3 | 1 | 0 |
+| [LAST7D](RETRO-LAST7D.md) | 335 | 324 | 7 | 17 | 44 | 0 |
+| [LAST28D](RETRO-LAST28D.md) | 659 | 636 | 19 | 503 | 1319 | 0 |
+| [LAST14D](RETRO-LAST14D.md) | 459 | 444 | 11 | 185 | 439 | 0 |
+| [ALL](RETRO-ALL.md) | 2110 | 1948 | 110 | 5754 | 44182 | 332 |
+| [2026-W41](RETRO-2026-W41.md) | 188 | 183 | 5 | 3 | 1 | 0 |
 | [2026-W40](RETRO-2026-W40.md) | 251 | 241 | 6 | 174 | 348 | 0 |
 | [2026-W39](RETRO-2026-W39.md) | 71 | 71 | 0 | 166 | 467 | 0 |
 | [2026-W38](RETRO-2026-W38.md) | 89 | 87 | 2 | 4 | 94 | 0 |
