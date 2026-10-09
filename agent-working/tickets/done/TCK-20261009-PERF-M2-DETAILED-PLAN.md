@@ -84,6 +84,7 @@ Docs only. `validate_frontmatter.py` passes on the three files; `pytest tests/do
 ## Files Changed
 - `docs/plans/design_enhancement/performance_optimization/performance_m2_performance_contract_epic.md`
 - `docs/plans/design_enhancement/performance_optimization/performance_optimization_roadmap.md` (M2 row)
+- `docs/plans/design_enhancement/performance_optimization/rpg_core_handoff.md` (Ask 13)
 - this ticket
 
 ## Completion Summary
