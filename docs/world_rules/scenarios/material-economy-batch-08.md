@@ -9,7 +9,7 @@ last_verified: "2026-10-09"
 
 # Scenario Bank: Objects / Ownership / Resources / Economy (Batch 08)
 
-**Purpose/scope.** Twenty-one scenarios (two added 2026-10-08 and one 2026-10-09 for EXCH-02) used to pressure-test the Objects/Material Culture,
+**Purpose/scope.** Twenty-three scenarios (two added 2026-10-08 and three 2026-10-09 for EXCH-02) used to pressure-test the Objects/Material Culture,
 Ownership/Possession, Resources/Production, and Economy/Exchange rule families in
 `material-economy/objects-material-culture.md`, `ownership-possession.md`,
 `resources-production.md`, and `economy-exchange.md`, per `tmp/world-rule-batch-8-ext-ai.md`
@@ -351,6 +351,69 @@ pays nobody.
   treasury exists, and the treasury (`global_resources`, `faction_<id>_gold`) is held by no
   building or person. Expected to be **covered** with
   `TCK-20261009-THE-FACTION-TREASURY-PAYS-WAGES-FOR-TOWN-WORK-DECISION-37`.
+
+---
+
+## ME-S22 — A sale or a wage pays a share to the place-holder's treasury; a subject who earns nothing pays nothing (EXCH-02, decision 51) (added 2026-10-09)
+
+When coin changes hands in a place, a small share goes to the treasury of the faction that holds
+that place. A subject who earns and trades nothing pays no tax, however long it stays.
+
+- **Rules invoked:** EXCH-02 (every coin moves purse to purse; decision 51: tax is a share of
+  income or trade).
+- **Kernel spec (`mechanic_scenario`).** One town held by faction F, with a shop whose purse can
+  buy and an inn whose purse can pay a wage. Three subjects of the same kind, none hostile:
+  - **Seller S:** holds 0 gold and a sellable non-food good, and sells it at the shop. S's gold
+    rises by the price minus the share. The shop's purse falls by the full price. F's treasury
+    rises by exactly the share.
+  - **Worker W:** holds 0 gold and works one paid shift at the inn. W's gold rises by the wage
+    minus the share. The inn's purse falls by the full wage. F's treasury rises by exactly the
+    share.
+  - **Idler I (the control):** holds a few coins, sells nothing and earns nothing, and stays in
+    the town for the whole window. I's gold never falls by tax at any tick, and F's treasury
+    never rises because of I.
+  - **Conservation over the window:** total coins across every purse and the treasury are
+    unchanged. The treasury's rise equals the sum of the shares, and nothing else credits it.
+- **Engineering and content, not observable:** the share's size (light and plausible, decision
+  33), rounding, which side of a sale pays it, and whether non-members of F pay a different
+  share.
+- **Result (2026-10-09): revealed contradiction on main.** A regional levy takes 2 gold every 20
+  ticks from anyone present (`src/engine/town_resolution.py`), so I is taxed while earning
+  nothing (decision 51's evidence). Expected to be **covered** with
+  `TCK-20261009-TAX-IS-A-SHARE-OF-SALES-AND-WAGES-PAID-TO-THE-PLACE-HOLDERS-TREASURY-DECISION-51`.
+
+---
+
+## ME-S23 — A bounty and a quest reward come out of a payer's purse, and loot is only what the body carried (EXCH-02, decision 38) (added 2026-10-09)
+
+A reward is paid by someone: a bounty from the treasury of the faction that posted it, a quest
+reward from the giver's purse. Killing a creature yields only what it carried. No coin appears
+because a kill or a quest happened.
+
+- **Rules invoked:** EXCH-02 (every coin moves purse to purse; decision 38: rewards need a
+  payer), decision 37 (first coin is declared world content).
+- **Kernel spec (`mechanic_scenario`).** Four arms, on a world where every purse and treasury
+  balance is known at the start:
+  - **Bounty (posted):** faction F posts a bounty on a creature hostile to it. Subject H kills
+    the creature and claims the bounty. H's gold rises by the bounty, and F's treasury falls by
+    the same amount.
+  - **Bounty (unfunded):** the same, but F's treasury cannot cover the bounty. No bounty is
+    posted, or the claim pays nothing. No coin appears.
+  - **Quest reward:** giver G, holding coin, offers a task with a reward and H completes it. H's
+    gold rises by the reward and G's purse falls by the same amount. If G cannot pay, no reward
+    is offered.
+  - **Loot (control):** H kills a creature that no one has posted a bounty on. H gains exactly
+    what the body carried, coin and items, and the body is left without them. A creature that
+    carried nothing yields nothing; an animal never carries coin.
+  - **Conservation:** in every arm, total coins across every purse and treasury are unchanged.
+- **Engineering, not observable:** how bounties are posted and claimed, escrow, how a quest
+  giver is chosen, and reward sizes.
+- **Result (2026-10-09): revealed contradiction on main.** Kill rewards are minted by level
+  (`src/engine/combat.py`, `src/engine/combat_rewards.py`; MONSTER x5, HERO x50), and quest gold is
+  granted with no poster or escrow (`src/engine/quests.py:203-212`), both through
+  `_reward_result` in `src/core/conservation.py`, which credits and never debits. Spawned bodies,
+  wolves included, are given gold at birth (`src/systems/world_systems/generator.py`). Expected to
+  be **covered** with `TCK-20261009-MINTED-KILL-AND-QUEST-COIN-IS-PAID-BY-A-PAYER-EXCH-02-B`.
 
 ---
 

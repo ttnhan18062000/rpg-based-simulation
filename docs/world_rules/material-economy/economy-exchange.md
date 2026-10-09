@@ -119,6 +119,8 @@ wealth, but no Rule said how a person comes to hold money at all.
   - **Today:** `COMBAT`/`KILL_REWARD` and `QUEST_REWARD` grant gold with no payer debited. All
     coin that reached town workers in Lane B's runs was minted kill reward (5 to 35 gold).
   - **Alternative not taken:** accept a bounty paid by "the world" as a lasting exception.
+  - **Scenario:** [ME-S23](../scenarios/material-economy-batch-08.md#me-s23) (bounty from a
+    treasury, quest reward from a giver, loot only what the body carried; unfunded controls).
 
 - **Amendment, tax is a share of income or trade (decided by the owner directly, 2026-10-09; row
   51 of the memo):** a treasury is paid a small share when coin changes hands in its place, from
@@ -134,6 +136,8 @@ wealth, but no Rule said how a person comes to hold money at all.
   - **Alternatives not taken:** a levy with an exemption below a threshold and a lower rate; a
     lower flat rate only; leave as is.
   - **Evidence: CONFLICTING** until the levy is retired (`src/engine/town_resolution.py`).
+  - **Scenario:** [ME-S22](../scenarios/material-economy-batch-08.md#me-s22) (a share of a sale
+    and of a wage reaches the treasury; an idler pays nothing).
 
 **Repository evidence: MISSING for wages; PARTIAL for selling and rewards.** Lane B's
 feasibility read (relayed by rpg-planner, 2026-10-08): every town worker starts with 0 gold, and
