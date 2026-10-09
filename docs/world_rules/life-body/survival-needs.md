@@ -411,6 +411,8 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
   - **MISSING: hunting.** A kill pays gold and XP only. No meat, carcass or hide item exists in
     the catalog, a corpse holds loot and not food, and there is no eat-corpse action.
   - **Moot for now: grazers.** The corpus has 13 species and no herbivore.
+  - **Scenario:** [LB-S20](../scenarios/life-body-batch-05.md#lb-s20) (a predator eats what it
+    kills, raw; it does not forage what its diet excludes; no kill means no meat).
   - **Measured preview** (Lane B, `frontier_living_world`, seed 42; five-seed figures per kind
     group to follow). With free meals removed, wildlife that ever ate goes from 4 to 1, wildlife
     starvation from 2 to 4, and wildlife end hunger from 92 to 100.

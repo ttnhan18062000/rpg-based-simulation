@@ -9,7 +9,7 @@ last_verified: "2026-10-09"
 
 # Scenario Bank: Life / Body / Survival / Ecology (Batch 05)
 
-**Purpose/scope.** Nineteen scenarios (LB-S17 and LB-S18 added 2026-10-08, LB-S19 added 2026-10-09) used to pressure-test the Lifecycle, Body/Condition,
+**Purpose/scope.** Twenty scenarios (LB-S17 and LB-S18 added 2026-10-08, LB-S19 and LB-S20 added 2026-10-09) used to pressure-test the Lifecycle, Body/Condition,
 Survival Needs, and Ecology/Population rule families in `life-body/lifecycle.md`,
 `life-body/body-condition.md`, `life-body/survival-needs.md`, and
 `life-body/ecology-population.md`, per `tmp/world-rule-batch-5-ext-ai.md`. Covers all sixteen
@@ -320,6 +320,47 @@ off. Its health never drops from lack of sleep. A rested one does none of this.
   tick (Bible 01, biological pressures), so S loses HP from the first tick past the line and
   dies about 100 ticks later, still walking. Expected to be **covered** with the decision-41 code
   ticket (`TCK-20261009-SLEEP-DEBT-WEAKENS-THEN-COLLAPSES-THE-SUBJECT-WHERE-IT-STANDS-NO-HP-LOSS`).
+
+---
+
+## LB-S20 — A predator eats what it kills, raw, and does not forage what its diet excludes (SURV-06, decisions 31, 42 and 44) (added 2026-10-09)
+
+A hungry predator kills a creature its diet allows, the body yields meat, and the predator eats
+it raw and is less hungry. Beside a berry thicket, the same predator does not forage the berries.
+With no kill there is no meat.
+
+- **Rules invoked:** SURV-06 (each kind's own ways: predators hunt; decision 31: eaten raw; a kill
+  leaves food), decision 42 (every living kind), decision 44 (hunting and a diet gate come before
+  the free-meal removal), Bible 03 (conservation: meat enters from the body and leaves by eating).
+- **Kernel spec (`mechanic_scenario`).** Three arms on one staging:
+  - **Staging:** a compiled wild region with no settlement and no inn in reach. Predator P is a
+    carnivore kind (for example a wolf) at full HP, hungry enough to act on it, carrying no food.
+    A berry thicket with charges sits within P's reach. There are no other hostiles.
+  - **Main arm (prey present):** a creature Q that P's diet allows and that P can overcome stands
+    within reach.
+    - P hunts and kills Q.
+    - Q's body yields meat. The amount follows Q's kind (its body), not P's hunger.
+    - P eats the meat raw, and its hunger falls by the raw value, which is less than the same
+      meat cooked would give (decision 31).
+    - Conservation: meat appears only from Q's body, at Q's death, and leaves only by eating or
+      remaining on the body. No meat appears anywhere else.
+    - P takes no charge from the berry thicket at any tick.
+  - **Diet arm (no prey):** P stays hungry. It does not forage the berry thicket, because its
+    diet excludes it. It may search or wander, and its need is reported as unmet.
+  - **Control arm (prey present, P sated):** P does not hunt for food, and no meat appears.
+  - **Why the arms:** the diet arm proves the thicket is refused by diet, not by reach. The
+    control proves meat comes from a kill made for hunger, not from staging.
+  - **Engineering and content, not observable:** the meat item, yields per kind, raw and cooked
+    values, how long a body's meat lasts, and whether scavengers may eat a body they did not kill
+    (a later question).
+- **Open content question (not decided):** the corpus has no herbivore or small-game kind (13
+  species, rpg-planner 2026-10-09). Without one, a wolf's only prey is people, goblins or other
+  predators. Whether to add prey kinds (deer, hares) is an owner question, taken separately.
+- **Result (2026-10-09): revealed missing implementation on main.** A kill pays gold and XP only.
+  No meat, carcass or hide item exists, a corpse holds loot and not food, and there is no
+  eat-corpse action. Carnivores take decision 27's forage step on berry thickets because no diet
+  gate exists (SURV-06's decision-44 evidence). Expected to be **covered** with the hunting and
+  diet-gate tickets.
 
 ---
 
