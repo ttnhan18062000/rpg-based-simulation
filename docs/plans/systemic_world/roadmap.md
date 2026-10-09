@@ -820,7 +820,7 @@ question above already has a working answer today.
 ## 10. Owner decisions
 
 Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has
-fifty entries (row 27 lands with the decision-27 PR):
+fifty-one entries (row 27 lands with the decision-27 PR):
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
@@ -870,7 +870,8 @@ fifty entries (row 27 lands with the decision-27 PR):
 47. what decides who hunts, flees or fights (decided 2026-10-09: appraisal for every creature, faction for people, CONFLICT-03);
 48. whether predation is trauma (decided 2026-10-09: a kill made to eat is not, ENV-07);
 49. what makes prey afraid (decided 2026-10-09: what the other is and what it is doing, CONFLICT-03);
-50. how detailed foundation content is (decided 2026-10-09: generic archetypes and coarse bands now; named species and exact figures after the foundation is hardened).
+50. how detailed foundation content is (decided 2026-10-09: generic archetypes and coarse bands now; named species and exact figures after the foundation is hardened);
+51. how tax is levied (decided 2026-10-09: a share of income or trade when coin changes hands; no levy on the destitute, EXCH-02).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,

@@ -120,6 +120,21 @@ wealth, but no Rule said how a person comes to hold money at all.
     coin that reached town workers in Lane B's runs was minted kill reward (5 to 35 gold).
   - **Alternative not taken:** accept a bounty paid by "the world" as a lasting exception.
 
+- **Amendment, tax is a share of income or trade (decided by the owner directly, 2026-10-09; row
+  51 of the memo):** a treasury is paid a small share when coin changes hands in its place, from
+  a sale or a wage. Someone who earns nothing pays nothing, and a busy trader pays more. A
+  periodic levy on everyone present is not a tax this world uses. The share moves from the
+  payer's purse to the treasury, never minted. Its size is content, light and plausible
+  (decision 33).
+  - **Why:** Lane B's four-arm measurement (5000 ticks, three worlds, relayed by rpg-planner):
+    the regional tax took 2 gold every 20 ticks from anyone present, about 144 gold a game-day.
+    Subjects holding under 10 gold paid 50 to 150 gold per run per world. In the city world's
+    wage arm, the poor paid about what they earned (146), and most sales were taxed away before
+    a meal.
+  - **Alternatives not taken:** a levy with an exemption below a threshold and a lower rate; a
+    lower flat rate only; leave as is.
+  - **Evidence: CONFLICTING** until the levy is retired (`src/engine/town_resolution.py`).
+
 **Repository evidence: MISSING for wages; PARTIAL for selling and rewards.** Lane B's
 feasibility read (relayed by rpg-planner, 2026-10-08): every town worker starts with 0 gold, and
 over a run 14 workers together take in 5 to 40 gold, against a 5-gold meal. Selling exists as a
