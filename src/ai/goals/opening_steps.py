@@ -20,6 +20,8 @@ from typing import List, Optional, Tuple
 from src.ai.goals.base import OpeningStepKind
 from src.core.items import food_hunger_recovery
 from src.core.state import AuthoritativeState, EntityState, ResourceNodeState
+from src.engine.shop_sale import nearest_sale
+from src.engine.work_shift import nearest_work
 
 
 @dataclass(frozen=True)
@@ -55,7 +57,17 @@ def _forage_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
 
 
 def _earn_then_buy_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
-    return OpeningStep(OpeningStepKind.EARN_THEN_BUY, False, "no paid-work path compiles in a world yet (shop and blacksmith town paths)")
+    """SELL (EXCH-02): open when the subject can spare goods a functional shop would buy (its purse covers at least one unit); its target is
+    the nearest such shop. The sale happens on arrival (the SELL action), the coin comes out of the shop's own purse, and with the price of a
+    meal the subject's hunger goal then points at the inn. Paid work (a wage) is not a step yet."""
+    found = nearest_sale(state, entity)
+    if found is not None:
+        shop, _sale = found
+        return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(shop.id), target_pos=tuple(shop.position))
+    inn = nearest_work(state, entity)
+    if inn is None:
+        return OpeningStep(OpeningStepKind.EARN_THEN_BUY, False, "nothing to sell that a shop with coin in its purse would buy, and no inn that can pay a wage")
+    return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(inn.id), target_pos=tuple(inn.position))
 
 
 def _ask_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:

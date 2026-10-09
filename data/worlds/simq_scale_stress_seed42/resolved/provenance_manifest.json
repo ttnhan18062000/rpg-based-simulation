@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_956c0c4511a2060e",
+  "manifest_id": "prov_7ce265140bedcfb6",
   "world_id": "simq_scale_stress_seed42",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
@@ -19,8 +19,8 @@
   },
   "composition_fingerprint": "f3b449529b6fd62f108ceb47c6ca3a49e17f086d7b70f92e43fd0ec4a4ad39f9",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "956c0c4511a2060e332ce143252929b0e3ea2d55a3de25f7b9698d215859e4cf",
-  "created_at": "2026-10-08T11:03:26.350009Z",
+  "content_fingerprint": "7ce265140bedcfb6f5d190c102aa1af1e481769683ebdc3bcb9b1fe4e7e0a456",
+  "created_at": "2026-10-09T03:58:50.692604Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -264,7 +264,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",

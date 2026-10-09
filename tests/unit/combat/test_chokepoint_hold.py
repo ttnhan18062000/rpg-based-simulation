@@ -21,7 +21,7 @@ from src.engine.kernel import Kernel
 from src.engine.pipeline_phases.actions import ActionRoutingPhase
 from src.engine.tactical import TacticalDecisionSystem
 from src.platform.rng import DeterministicRNG
-from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world
+from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world, empty_inventories
 
 WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
 F, H = 2, 1
@@ -29,7 +29,7 @@ F_POS, H_POS = (1.0, 1.0), (1.0, 3.0)  # walls at (0, 1) and (2, 1) make (1, 1) 
 
 
 def _staged() -> AuthoritativeState:
-    state = compile_world(WORLD_ID)
+    state = empty_inventories(compile_world(WORLD_ID))  # the scenario is about the hold, not about what the two bodies carry
     entities = dict(state.entities)
     for eid, pos in ((F, F_POS), (H, H_POS)):
         e = entities[eid]

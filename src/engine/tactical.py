@@ -22,6 +22,7 @@ from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
 from src.engine.tactical_threat import safety_retreat_warranted
 from src.engine.tactical_rest import in_place_survival_update
+from src.engine.building_arrival import building_arrival_update
 from src.engine.tactical_hold import held_swing_update, notice_unengaged_hostile, stalemate_break_update
 from src.engine.hostility import perceived_hostile, source_identity
 
@@ -268,26 +269,7 @@ class TacticalDecisionSystem:
                                         interaction=InteractionUpdate(target_node_id=node_id, progress_delta=1)
                                     )
                                 elif building_id is not None:
-                                    # At a building: dispatch survival action by project kind
-                                    proj_kind = getattr(project, "kind", "")
-                                    if proj_kind == "hunger":
-                                        return EntityUpdate(
-                                            entity_id=entity.id,
-                                            task=TaskUpdate(
-                                                work_kind_set="ENTITY_ACT",
-                                                payload_set={"action": "EAT", "target_id": building_id}
-                                            )
-                                        )
-                                    elif proj_kind == "fatigue":
-                                        return EntityUpdate(
-                                            entity_id=entity.id,
-                                            task=TaskUpdate(
-                                                work_kind_set="ENTITY_ACT",
-                                                payload_set={"action": "REST", "target_id": building_id}
-                                            )
-                                        )
-                                    else:
-                                        return EntityUpdate(entity_id=entity.id)
+                                    return building_arrival_update(state, entity, project, building_id)
                                 else:
                                     return EntityUpdate(entity_id=entity.id)
                             else:

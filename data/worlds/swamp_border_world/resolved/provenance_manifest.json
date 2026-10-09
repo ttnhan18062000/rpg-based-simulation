@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_5800f9304cdf1f18",
+  "manifest_id": "prov_9fe6ebb25fcece62",
   "world_id": "swamp_border_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "sunken_swamp_border": "11e37d8a23ded39f278c7bcb0acedc5dcbe626076765d6caa18fcd4b4befb8fd",
@@ -11,8 +11,8 @@
   },
   "composition_fingerprint": "0ae74404991b1d9ed0ed01729d7038455ea3736fca8098435c0245a8bf165950",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "5800f9304cdf1f1825eee857cc386356a186e43adfd6d59a2928cd7434c087a5",
-  "created_at": "2026-10-08T11:03:27.789383Z",
+  "content_fingerprint": "9fe6ebb25fcece627c8db66e278f1fff1671f1db9e40bae3cb2c8caa42435312",
+  "created_at": "2026-10-09T03:58:52.293348Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -239,7 +239,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",

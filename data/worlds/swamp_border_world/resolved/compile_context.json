@@ -9,7 +9,7 @@
       "def": 0,
       "attack_range": 1,
       "readiness": 100.0,
-      "inventory_seed": "hero_pocket",
+      "inventory_seed": "laborer_empty",
       "cognition_seed": "practical_humanoid",
       "spawn_position": [
         25.0,
@@ -58,7 +58,8 @@
       "traits": [
         "humanoid",
         "tool_user",
-        "social_humanoid"
+        "social_humanoid",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "village",
@@ -70,7 +71,7 @@
       "drive_profile_id": "cautious_commoner",
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
-      "inventory_profile_id": "hero_pocket",
+      "inventory_profile_id": "laborer_empty",
       "skill_profile_id": "blacksmith_skills"
     },
     "frontier_village_population_frontier_guard": {
@@ -112,7 +113,8 @@
         "humanoid",
         "tool_user",
         "social_humanoid",
-        "disciplined"
+        "disciplined",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "village",
@@ -125,7 +127,12 @@
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
       "inventory_profile_id": "guard_basic_kit",
-      "skill_profile_id": "guard_skills"
+      "skill_profile_id": "guard_skills",
+      "starting_gold": 20,
+      "starting_items": {
+        "iron_sword": 1,
+        "leather_armor": 1
+      }
     },
     "frontier_village_population_traveling_merchant": {
       "legacy_role": 1,
@@ -158,7 +165,8 @@
         "humanoid",
         "tool_user",
         "merchant_minded",
-        "social_humanoid"
+        "social_humanoid",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "trade",
@@ -171,7 +179,13 @@
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
       "inventory_profile_id": "merchant_trade_pack",
-      "skill_profile_id": "merchant_skills"
+      "skill_profile_id": "merchant_skills",
+      "starting_gold": 250,
+      "starting_items": {
+        "small_potion": 2,
+        "travel_ration": 5,
+        "repair_kit": 1
+      }
     },
     "frontier_village_population_village_blacksmith": {
       "legacy_role": 4,
@@ -204,7 +218,8 @@
         "humanoid",
         "tool_user",
         "craftsman",
-        "social_humanoid"
+        "social_humanoid",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "village",
@@ -217,7 +232,13 @@
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
       "inventory_profile_id": "blacksmith_toolkit",
-      "skill_profile_id": "blacksmith_skills"
+      "skill_profile_id": "blacksmith_skills",
+      "starting_gold": 80,
+      "starting_items": {
+        "repair_kit": 2,
+        "iron_ore": 3,
+        "wood": 2
+      }
     },
     "swamp_tribe_patrol_lizardfolk_scout": {
       "legacy_role": 5,
@@ -258,7 +279,8 @@
         "amphibious",
         "territorial",
         "humanoid",
-        "tool_user"
+        "tool_user",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "swamp"
@@ -304,7 +326,8 @@
         "magic_sensitive",
         "leader",
         "humanoid",
-        "tool_user"
+        "tool_user",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "swamp"
@@ -316,7 +339,12 @@
       "need_profile_id": "humanoid_survival",
       "sense_profile_id": "normal_humanoid_senses",
       "inventory_profile_id": "mage_satchel",
-      "skill_profile_id": null
+      "skill_profile_id": null,
+      "starting_gold": 60,
+      "starting_items": {
+        "wooden_staff": 1,
+        "crystal_shard": 1
+      }
     },
     "swamp_ambush_party_lizardfolk_scout": {
       "legacy_role": 5,
@@ -361,7 +389,8 @@
         "amphibious",
         "territorial",
         "humanoid",
-        "tool_user"
+        "tool_user",
+        "keeps_coin_and_trades"
       ],
       "themes": [
         "swamp"
@@ -538,7 +567,13 @@
       "hp": 500,
       "max_hp": 500,
       "service_profile_id": "general_store_service",
-      "owner_faction": null
+      "owner_faction": null,
+      "starting_gold": 250,
+      "starting_stock": {
+        "travel_ration": 10,
+        "wood": 10,
+        "iron_ore": 5
+      }
     },
     "blacksmith_0": {
       "hp": 700,
@@ -550,7 +585,12 @@
       "hp": 600,
       "max_hp": 600,
       "service_profile_id": "inn_service",
-      "owner_faction": null
+      "owner_faction": null,
+      "starting_gold": 100,
+      "starting_stock": {
+        "travel_ration": 20,
+        "bread": 10
+      }
     },
     "healer_hut_0": {
       "hp": 450,
@@ -562,13 +602,24 @@
       "hp": 500,
       "max_hp": 500,
       "service_profile_id": "general_store_service",
-      "owner_faction": null
+      "owner_faction": null,
+      "starting_gold": 250,
+      "starting_stock": {
+        "travel_ration": 10,
+        "wood": 10,
+        "iron_ore": 5
+      }
     },
     "trading_bld_1": {
       "hp": 600,
       "max_hp": 600,
       "service_profile_id": "inn_service",
-      "owner_faction": null
+      "owner_faction": null,
+      "starting_gold": 100,
+      "starting_stock": {
+        "travel_ration": 20,
+        "bread": 10
+      }
     }
   },
   "resources": {
@@ -600,8 +651,7 @@
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries",
-      "placement": "owned_by_declared_region"
+      "yield_item": "wild_berries"
     },
     "trading_res_0": {
       "required_ticks": 15,
@@ -631,8 +681,7 @@
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries",
-      "placement": "owned_by_declared_region"
+      "yield_item": "wild_berries"
     }
   },
   "factions": {

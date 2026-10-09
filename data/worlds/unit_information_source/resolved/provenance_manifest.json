@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_7444c892e7c40688",
+  "manifest_id": "prov_07c35fe7559a27c6",
   "world_id": "unit_information_source",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837"
   },
   "composition_fingerprint": "789ef3edd7716f87b66ef829d66eab629d57d5f3558c569e10709c4eada65b64",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "7444c892e7c40688fcfa03d405a29d04f6a162c41ef39aa8cb8c25b76d746ba7",
-  "created_at": "2026-10-08T11:03:33.317295Z",
+  "content_fingerprint": "07c35fe7559a27c6eeee145f604e4cbd1498cf47b6ee366f54c976ab55c0f244",
+  "created_at": "2026-10-09T03:58:58.686216Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -237,7 +237,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",

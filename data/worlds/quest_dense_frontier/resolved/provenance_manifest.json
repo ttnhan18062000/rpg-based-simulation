@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_eeb6dfb840c8d534",
+  "manifest_id": "prov_c3be9425677dfcf1",
   "world_id": "quest_dense_frontier",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
@@ -11,8 +11,8 @@
   },
   "composition_fingerprint": "4fb31b9a0c2ac9434f1a592156fb1b4830932512d90580b57ff554ebf4628183",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "eeb6dfb840c8d53488e13e7c8a04da8f2e71fc5a81c5f1c80aa95bc196f2c981",
-  "created_at": "2026-10-08T11:03:20.698296Z",
+  "content_fingerprint": "c3be9425677dfcf1843badc4a6238be57448be347e23317d9015271fa36059d9",
+  "created_at": "2026-10-09T03:58:44.295124Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
