@@ -161,6 +161,8 @@ against a baseline:
 python3 -m src compare-sweep <sweep_id> --baseline docs/observability/baselines/latest.json
 ```
 
+> **Warning (interim).** `latest.json` was captured on 2026-05-26, before DEV-017 (#448). Its tick and phase costs are inflated by the double count, so a tick-cost PASS against it is not evidence. It is incomparable per [`baseline_invalidation_ledger.md`](../performance/baseline_invalidation_ledger.md) until M2 replaces it. Follow-up: `TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE`.
+
 ---
 
 ## Adding a new event type

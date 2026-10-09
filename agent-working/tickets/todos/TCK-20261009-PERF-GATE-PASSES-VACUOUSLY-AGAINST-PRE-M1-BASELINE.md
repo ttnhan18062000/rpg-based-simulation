@@ -83,6 +83,7 @@ to follow the guide. That is why this is P2, not P1.
 - Is the guide edit alone (scope 2) acceptable as an interim measure? It needs no `src/` change.
 
 ## Implementation Notes
+- 2026-10-09: scope 2 (guides) done as an interim, owner decision; scopes 1 and 3 (code) wait for a lift.
 
 ## Test Summary
 
