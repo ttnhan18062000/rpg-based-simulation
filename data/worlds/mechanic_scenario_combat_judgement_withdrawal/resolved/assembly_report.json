@@ -26,8 +26,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -38,14 +38,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -770,6 +770,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Item 'wild_berries' is active but never consumed by any downstream component",
+      "target": "wild_berries"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Item 'stone' is active but never consumed by any downstream component",
       "target": "stone"
     },
@@ -820,24 +826,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Projection 'elite_goblin' is active but never consumed by any downstream component",
       "target": "elite_goblin"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
-      "target": "hero_adventurers"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'camp_maturity_calibration_pilot' is active but never consumed by any downstream component",
-      "target": "camp_maturity_calibration_pilot"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'combat_judgement_arena' is active but never consumed by any downstream component",
-      "target": "combat_judgement_arena"
     }
   ],
   "module_validation": {
@@ -857,15 +845,15 @@
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 137
+    "warnings_count": 135
   },
   "blocking_errors": [],
   "warnings": [
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -876,14 +864,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -1608,6 +1596,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Item 'wild_berries' is active but never consumed by any downstream component",
+      "target": "wild_berries"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Item 'stone' is active but never consumed by any downstream component",
       "target": "stone"
     },
@@ -1661,24 +1655,6 @@
     },
     {
       "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
-      "target": "hero_adventurers"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'camp_maturity_calibration_pilot' is active but never consumed by any downstream component",
-      "target": "camp_maturity_calibration_pilot"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'combat_judgement_arena' is active but never consumed by any downstream component",
-      "target": "combat_judgement_arena"
-    },
-    {
-      "severity": "WARNING",
       "rule_id": "WORLD-WARN-001",
       "message": "World spec defines zero resource nodes.",
       "path": "resources",
@@ -1687,7 +1663,7 @@
     }
   ],
   "fingerprints": {
-    "catalog": "ecc8ccad1b576536f1f6ed32acd81366bb733ca54063de00721f2848081e410a",
+    "catalog": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
     "modules": {
       "combat_judgement_arena": "0d4f5ef54b7930467913f05203c87f544fbb24067edbf4e54580bb8074c0d8d3"
     }

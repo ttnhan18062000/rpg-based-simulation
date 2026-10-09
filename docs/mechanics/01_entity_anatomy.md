@@ -83,7 +83,7 @@ The simulation tracks biological "Pressures" that degrade over time.
 ### Passive Decay Rates
 | Need | Decay (per tick) | Max Value | Penalty Threshold |
 | :--- | :--- | :--- | :--- |
-| **Hunger** | `+0.1` | 100.0 | **95.0**: Starvation (+2 HP damage/tick) |
+| **Hunger** | `+0.1` base per tick, scaled by the kind's need profile (`humanoid_survival` is "low": `+0.05`, owner decision 33) | 100.0 | **95.0**: Starvation (+2 HP damage/tick) |
 | **Sleep Debt** | `+0.05` | 100.0 | **98.0**: Fatigue (+1 HP damage/tick) |
 | **Stamina** | `-1.0` (per move) | `Max_Stamina` | **< Exhaustion Threshold**: Exhausted state |
 

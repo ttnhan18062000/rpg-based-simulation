@@ -361,6 +361,14 @@ earlier figures are on base `f8f1b69fd`:
 > before the line. Only a present threat to the subject's life (danger, flight) outranks a
 > pressing need. A need never wins merely by being the subject's current task; it wins by
 > mattering more as it grows.
+>
+> The pull is toward meeting the need, not toward one building. When none of the subject's ways
+> is open to it now (it cannot pay for the meal, it carries no food), the pull goes to the step
+> that opens one: foraging or harvesting where its kind can, earning where it has paid work and
+> then buying, or asking where a social path exists. Only ways SURV-06 declares for its kind
+> count, and only steps the subject can actually take. A present threat still outranks it.
+> Opening a way is attempted, not guaranteed: a subject with no step it can take stays honestly
+> hungry, which is SURV-06's poverty outcome.
 
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-07**
 (row 24 of `docs/plans/systemic_world/owner_decision_memo.md`). This states in catalog terms the
@@ -377,8 +385,28 @@ others, not a reflex.
   rescaled against needs (it treats an order the Bible already declares as a matter of
   magnitude); a need overriding everything near its line (it would outrank fleeing a present
   threat, against Bible 04 §1).
+- **Amendment, a need with no open way (decided by world-rule-catalog-design under owner
+  delegation, 2026-10-07; row 27 of the memo):** the "toward meeting the need" paragraph.
+  - **Why an amendment, not a new Rule:** SURV-06 already makes getting carried food part of the
+    way (bought, harvested, foraged, received), so "earn, then buy" is a two-step use of a
+    declared way, not a new one. This Rule asks a need to win early enough to reach a way, and
+    when every immediate way is closed, the only reachable way is the one the subject opens.
+  - **It creates no new ways to get food.** Theft, raiding and coerced begging need their own
+    declared Rule. SURV-06's "loot" stays taking from the fallen, not from the living. There is
+    no engine charity.
+  - **Per subject, not per world:** whether a way is open is judged for the subject (a meal it
+    cannot pay for is not open to it; AGENCY-03). SURV-06's world-integrity check stays per kind,
+    and poverty stays a valid outcome.
+  - **Engineering, not this Rule:** how far ahead "in time" allows for a multi-step way, the
+    order among steps, how earning is scored against the escalated need, and when the subject
+    gives up.
+  - **Alternatives not taken:** the need left honestly unmet with no redirect (every poor
+    subject's need becomes a countdown timer again, against SURV-03 and SURV-06's "avoidable by
+    behaviour"); a redirect to any means, including crime (it creates ways to get food that no
+    Rule declares).
 
-**Repository evidence: CONFLICTING.** Lane A's trace, `crowded_frontier`, seed 42, on #403's tree:
+**Repository evidence: CONFLICTING for the amendment; the escalation and the present-threat gate
+shipped in #414 (`c2e18b182`).** Lane A's trace, `crowded_frontier`, seed 42, on #403's tree:
 - `ResolveBlockerScorer` returns a flat 80.0 whenever an unresolved, unsuppressed blocker exists
   (`src/ai/goals/scorers.py:205-248`), or 95.3 after personality modifiers.
 - `SleepScorer`'s utility is the sleep debt itself (+30 at night), about 50 at t≈450.
@@ -389,27 +417,35 @@ others, not a reflex.
 - **The live gap at `0a03c2448`:** with eating and rough rest completing (SURV-06), most people on
   `frontier_living_world` still starve at about t=1000, because the decision pass picks hunger
   late (divergence 2.80).
-- **Implemented by the PR this text lands in:**
+- **Implemented by #414 (`c2e18b182`):**
   `TCK-20261007-BIOLOGICAL-NEEDS-ESCALATE-ABOVE-ORDINARY-GOALS-BEFORE-THE-CONSEQUENCE-LINE-SURV-07`
   (Lane A), under
   `TCK-20261007-EPIC-DECISION-CORE-LIVE-MOTIVATION-AND-HONEST-FIGHT-OR-FLEE-INPUTS`. It ships the
   escalation and the present-threat gate. Rest in place uses REST, not SLEEP, because under
   SURV-06 a bed only improves rest.
-  - Lane A's pinned measurement, relayed by the planner. Base `0a03c2448` against this PR; seeds
+  - Lane A's pinned measurement, relayed by the planner. Base `0a03c2448` against #414; seeds
     42-46; 1,500 ticks; governor pinned NORMAL; determinism checked; means over the five seeds.
     Starvation deaths go from 25.0 to 13.2 on `crowded_frontier`, from 25.8 to 13.0 on
     `frontier_living_world`, and from 16.0 to 10.8 on `urban_political`. Part of that gain comes
     from the free meals (SURV-06's conflicting clause), so it overstates the escalation's own
     effect.
-  - Every remaining starvation death is a subject without gold. Feeding them is not this Rule's
-    job. It needs decision 27 (a need with no open way pulls toward the step that opens one) and
-    the free-meal fix, which land together.
+  - Every remaining starvation death is a subject without gold. The amendment above (decision 27)
+    covers them, so that a subject with no open way works toward one rather than being fed for
+    free.
+- **The amendment is implemented by the PR this text lands in:**
+  `TCK-20261007-A-NEED-WITH-NO-OPEN-WAY-PULLS-TOWARD-THE-STEP-THAT-OPENS-ONE-SURV-07-AMENDMENT`,
+  paired with `TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL` (Lane B).
+  The two land together, so closing the free meal never leaves a poor subject with no behaviour.
   - The SUPPORTED flip and the final figures, with their base commit, ride a later batch after
     the free-meal fix re-measures.
 
-**Scenarios:** none traced yet. Two are owed when implemented:
+**Scenarios:** none traced yet. Four are owed when implemented:
 - a tired worker heading to the inn keeps going when a routine blocker reappears;
-- the same worker, attacked on the way, flees first and sleeps later.
+- the same worker, attacked on the way, flees first and sleeps later;
+- a hungry worker with no gold beside the inn is not fed, goes to its paid work, and eats once
+  it can pay;
+- a hungry subject with no gold, no food and no step it can take stays hungry and is reported as
+  having no open way.
 
 ---
 

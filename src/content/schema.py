@@ -286,6 +286,14 @@ class ResourceDefinition(CatalogBaseDefinition):
     runtime_kind: Optional[str] = Field(None, description="Explicit runtime resource type")
     legacy_id: Optional[str] = Field(None, description="Explicit legacy ID mapping")
     required_tool: Optional[str] = Field(None, description="Explicit required tool")
+    placement: Optional[str] = Field(
+        None,
+        description=(
+            "Placement rule at compile time. None: a uniform draw in the declared region's bounds. "
+            "'owned_by_declared_region': redraw until the tile belongs to the declared region by region precedence, so a node "
+            "declared in wild land never lands on a tile a town owns (wild food, Decision 29)."
+        ),
+    )
 
 
 class BuildingDefinition(CatalogBaseDefinition):

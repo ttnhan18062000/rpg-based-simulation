@@ -3,13 +3,13 @@
   "seed": 42,
   "entity_count": 59,
   "region_count": 11,
-  "resource_node_count": 14,
+  "resource_node_count": 16,
   "building_count": 8,
   "quest_count": 25,
   "distinct_populated_factions": 9,
   "warnings": [],
-  "compile_duration_ms": 274.45166325196624,
-  "state_hash": "3d90e94327b169df0fe26823e9e90cb6",
-  "canonical_state_hash": "782443ea82499d1e028c017196fb91a1751d8bb105dbdd20b8cf9174a45cad2e",
-  "place_count": 3
+  "compile_duration_ms": 423.8697369582951,
+  "state_hash": "7b3650d000861ad46c1853222d5255e2",
+  "canonical_state_hash": "ba6151b8324616614ca8afc6c65704d44a6d9097d708588acbb2fc2468462356",
+  "place_count": 4
 }
