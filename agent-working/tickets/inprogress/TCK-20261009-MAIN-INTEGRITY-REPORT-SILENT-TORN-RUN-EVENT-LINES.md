@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20261009-MAIN-INTEGRITY-REPORT-SILENT-TORN-RUN-EVENT-LINES
 phase: open
 date: 2026-10-09
-tags: [agent-monitoring, data-quality]
+tags: [agent-monitoring, data-quality, native-run-probe]
 ---
 
 # TCK-20261009-MAIN-INTEGRITY-REPORT-SILENT-TORN-RUN-EVENT-LINES
