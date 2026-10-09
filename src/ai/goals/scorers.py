@@ -9,6 +9,7 @@ from src.content_semantics.relation import RelationContext
 from src.core.state import EntityState, AuthoritativeState
 from src.core.strategic import GoalKind, ObjectiveKind, has_project_capacity
 from src.engine.biological_needs import need_rates
+from src.engine.rpg_depth import LeashService
 from src.systems.strategic_systems.entity_target_objective import ENTITY_TARGET_PERCEPTION_RADIUS
 
 class HarvestScorer(GoalScorer):
@@ -69,6 +70,8 @@ class SleepScorer(GoalScorer):
             
         from src.engine.spatial_query import SpatialQueryService
         best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
+        if best_bldg is not None and not LeashService.way_in_range(entity, best_bldg.position):
+            best_bldg = None  # a range-bound subject's ways are inside its range (owner decision D57)
         # SURV-07: the pull grows with the sleep debt the subject will have on arrival at the inn (no inn: no walk).
         rate = need_rates(entity)[1]
         if best_bldg:
@@ -100,6 +103,8 @@ class EatScorer(GoalScorer):
 
         from src.engine.spatial_query import SpatialQueryService
         best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
+        if best_bldg is not None and not LeashService.way_in_range(entity, best_bldg.position):
+            best_bldg = None  # a range-bound subject's ways are inside its range (owner decision D57)
         # Decision 27: with no inn within reach there is nothing for the pull to point at, so it goes to the step that opens a way
         # (forage); with no step the goal keeps the hunger value and says `no_open_step`. (Free meals stay on: an inn within reach is a
         # way to eat whether or not the subject can pay, for every kind, a recorded flaw until the animals' own ways exist: owner decision 44.)
