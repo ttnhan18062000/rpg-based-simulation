@@ -130,6 +130,11 @@ A transcript does not cross machines; the handover note is the only continuity t
 project memory through `agent-working/handover-transit/<host>/` (one rolling bundle per source
 host; files stored with a `.txt` suffix so registry and validators ignore them).
 
+**This is the only place the export is prescribed, and it is for a machine move, not for a ticket batch or a PR.** Run it
+in its own commit or PR, never inside a ticket batch. The repository is public: the bundle publishes every role's
+handover note, all open drafts and the project memory files. (PR #459 once carried 78 such files, +5,099/-1,438 lines,
+unrelated to its tickets, because a PR checklist told it to export.)
+
 **A transit bundle carries only OPEN handover state:** role notes, unmerged drafts and memory. Completed
 work, merged drafts and probe evidence are never exported. `export` skips a draft whose ticket is in
 `agent-working/tickets/done/` or tracked on `origin/main`, anything under an `evidence` directory, a folder
@@ -140,8 +145,8 @@ the work, so the next export has nothing stale to skip. Every manifest row recor
 from the launcher, never guessed: unresolved is listed as `unattributed`).
 
 1. On the machine being left: `python3 tools/handover_transit.py export` (`--roles a,b`,
-   `--no-drafts`, `--no-memory`, `--role <role>` narrow or attribute it), commit and push the branch (a
-   PR's own export step does this already — see `delivery_process.md`). **An export replaces the host's whole
+   `--no-drafts`, `--no-memory`, `--role <role>` narrow or attribute it), then commit and push it in its own
+   commit or PR, apart from any ticket work. **An export replaces the host's whole
    bundle, so it has two guards.** Memory is read from the one candidate `~/.claude/projects/<slug>/memory` that
    holds files (the resolved checkout path, the path a session started through a symlink such as `~/Working`
    would use, and home-symlink aliases); two non-empty candidates refuse with both named, and `--memory-dir <dir>`

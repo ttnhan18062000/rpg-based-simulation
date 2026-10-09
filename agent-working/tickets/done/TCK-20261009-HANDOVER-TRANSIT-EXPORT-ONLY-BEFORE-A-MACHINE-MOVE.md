@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-HANDOVER-TRANSIT-EXPORT-ONLY-BEFORE-A-MACHINE-MOVE
-phase: open
+phase: done
 date: 2026-10-09
 tags: [delivery]
 ---
@@ -15,7 +15,7 @@ tags: [delivery]
 The delivery guide asks for a handover-transit export only before a machine move, not before every PR
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -75,5 +75,13 @@ None (hotfix).
 Lands on PR #459 (agent-working-small-fixes-batch), together with removing the bundle refresh from that PR.
 
 ## Test Summary
+Docs only. `tests/docs/`, `tests/tools/test_handover_transit.py` and `tests/tools/test_session_start_handover_hook.py`: 120 passed, 1 skipped, 1 xfailed; no test cites step 2a or the old "a PR's own export step" wording (grep over tests/ found none). `git diff --stat origin/main...HEAD -- agent-working/handover-transit/` is empty after the restore commit.
+
 ## Files Changed
+- docs/guides/delivery_process.md (step 2a is now one paragraph: not part of a PR, own commit or PR, repo is public)
+- docs/guides/agent_session_reset_boundaries.md (the machine-move section states it is the only place the export is prescribed, warns the repo is public, and drops "a PR's own export step does this already")
+- tools/handover_transit.py (docstring only)
+- agent-working/handover-transit/ (restored to origin/main in its own commit; the PR no longer carries the 78-file export)
+
 ## Completion Summary
+No agent-facing guide tells a PR to refresh the handover-transit bundle any more. The machine-move procedure is unchanged apart from the public-repo warning and "in its own commit or PR". Searched `docs/`, `.claude/agents/`, `docs/guidelines/session_roles/`, `registries/`, `tools/` for the per-PR instruction: the only hits were delivery_process.md step 2a, agent_session_reset_boundaries.md step 1 and the exporter docstring, all fixed. No hit in CLAUDE.md (the owner's) or elsewhere outside agent-working's paths. For later: do not run the export before a batch PR.
