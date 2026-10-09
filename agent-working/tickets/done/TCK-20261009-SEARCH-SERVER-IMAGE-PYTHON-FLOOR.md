@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-SEARCH-SERVER-IMAGE-PYTHON-FLOOR
-phase: open
+phase: done
 date: 2026-10-09
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 The knowledge-search server image runs Python 3.11, below the repo's Python floor; the environment guide names only one machine's knowledge venv
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -89,7 +89,7 @@ None (hotfix).
   was done by grep over `agent-working/tickets/` and `gh pr view 456` only. No duplicate was found.
 
 ## Implementation Notes
-Item 1 done 2026-10-09: `tools/search/Dockerfile` line 1 `python:3.11-slim` -> `python:3.13-slim`, nothing else. Item 2 (environment guide) deferred: PR #456 is still OPEN, so the ticket stays INPROGRESS until it merges.
+Item 1 done 2026-10-09: `tools/search/Dockerfile` line 1 `python:3.11-slim` -> `python:3.13-slim`, nothing else. Item 2 (environment guide) deferred to follow-up `TCK-20261009-ENV-GUIDE-NAME-BOTH-HOSTS` (owner decision 2026-10-09, relayed by agent-working-planner): PR #456 was still open.
 
 ## Test Summary
 AC2 UNVERIFIED on this host. `docker build -f tools/search/Dockerfile -t search-img-test .` (Docker 29.5.3) failed at Dockerfile:7, the CPU torch install `pip install torch --index-url https://download.pytorch.org/whl/cpu`, after about 16 s: `SSLError(SSLCertVerificationError ... certificate verify failed: unable to get local issuer certificate)`, then `ERROR: Could not find a version that satisfies the requirement torch (from versions: none)` / `No matching distribution found for torch`, exit code 1. This is the torch-index TLS block the environment guide describes. The base image pull and the `FROM python:3.13-slim` layer succeeded; no later step ran, so no 3.13 wheel check for sentence-transformers/sqlite-vec was done in the image and `/api/health` was not exercised.
@@ -97,3 +97,4 @@ AC2 UNVERIFIED on this host. `docker build -f tools/search/Dockerfile -t search-
 ## Files Changed
 
 ## Completion Summary
+Item 1 done: `tools/search/Dockerfile` is `FROM python:3.13-slim`. The image build is UNVERIFIED on this host: `docker build` stopped at the CPU torch install (TLS certificate verify failed on download.pytorch.org). It still needs a run on the other host (the one with an unblocked torch index), and sentence-transformers and sqlite-vec on Python 3.13 are untested inside the image. Item 2 (the environment guide naming both hosts, AC3) is NOT done here: it is deferred to `TCK-20261009-ENV-GUIDE-NAME-BOTH-HOSTS`, filed in `todos/`, to start after #456 merges. AC1 and AC4 met; AC2 met by its own unverified clause; AC3 deferred.
