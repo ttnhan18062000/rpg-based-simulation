@@ -32,7 +32,7 @@ def _declared():
 def test_the_catalog_declares_folk_belief_only_for_hostile_species_and_leaves_the_rest_uninformed():
     declared = _declared()
     assert declared == {"goblin": "low", "human": "medium", "lizardfolk": "medium", "orc": "high",
-                        "spider": "medium", "undead": "high", "wolf": "medium"}
+                        "small_plant_eater": "low", "spider": "medium", "undead": "high", "wolf": "medium"}
     assert _catalog().species["dragonkin"].common_knowledge is None
 
 
