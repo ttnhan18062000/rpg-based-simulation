@@ -4,7 +4,7 @@ Six drawings (ruins, common bead, buff frame, rogue, enemy camp, tool) are new r
 adopted icons ("the set as it would stand after the owner adopts them") and runs the sheet rule on both rule families (the key-set groups and the v2 groups, thresholds unchanged), the spec compliance table (`CHECKS_R2`), and the look-alike report. Pure Python,
 read-only; the verdict is recorded by running this module, never asserted by a test.
 
-    python -m tests.visual_assets.icon_owner_fixes_draft_set      # prints the evidence as JSON
+    python -m visual_assets.review.icon_owner_fixes_draft_set      # prints the evidence as JSON
 """
 
 from __future__ import annotations
@@ -14,14 +14,14 @@ import json
 import sys
 from pathlib import Path
 
-from tests.visual_assets import icon_compliance as cp
-from tests.visual_assets import icon_draft_set as keyset
-from tests.visual_assets import icon_lookalikes as la
-from tests.visual_assets import icon_palette
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets import icon_v2_groups as groups
-from tests.visual_assets.icon_sheet_synthetic import real_tiles
-from tests.visual_assets.pilot_colour_vision import mean
+from visual_assets.review import icon_compliance as cp
+from visual_assets.review import icon_draft_set as keyset
+from visual_assets.review import icon_lookalikes as la
+from visual_assets.review import icon_palette
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review import icon_v2_groups as groups
+from visual_assets.review.icon_sheet_synthetic import real_tiles
+from visual_assets.review.pilot_colour_vision import mean
 
 SET_ID = "icons-owner-fixes-v1"
 KEYS = ("icon.marker.ruins", "icon.rarity.common", "icon.status.frame_buff", "icon.class.rogue", "icon.marker.enemy_camp", "icon.item.tool", "icon.building.hero_house", "icon.status.frame_debuff", "icon.building.inn")

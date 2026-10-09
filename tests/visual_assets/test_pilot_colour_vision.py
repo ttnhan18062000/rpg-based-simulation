@@ -1,11 +1,11 @@
 """The arithmetic of the AM5-W05 check (pure Python): the simulation and the rule, on synthetic input. The verdict on the real tile is recorded by
-`python -m tests.visual_assets.pilot_colour_vision`, never asserted here (a test must not decide the result)."""
+`python -m visual_assets.review.pilot_colour_vision`, never asserted here (a test must not decide the result)."""
 
 from __future__ import annotations
 
 import pytest
 
-from tests.visual_assets import pilot_colour_vision as cv
+from visual_assets.review import pilot_colour_vision as cv
 
 
 def test_every_simulation_matrix_keeps_greys_grey():

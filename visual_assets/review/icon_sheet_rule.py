@@ -13,7 +13,7 @@ Three rules over **must-differ groups** (named lists of icon names, each split i
 
 Reported but not ruled: icon pixels outside the palette, and each terrain tile's darkest and lightest pixel L* (the mean is what I3 measures).
 
-    python -m tests.visual_assets.icon_sheet_rule      # prints the measured baselines on the synthetic sprites and on the terrain-v1 tiles
+    python -m visual_assets.review.icon_sheet_rule      # prints the measured baselines on the synthetic sprites and on the terrain-v1 tiles
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from tests.visual_assets.pilot_colour_vision import VISIONS, Rgb, from_hex, mean, simulate, to_lab
+from visual_assets.review.pilot_colour_vision import VISIONS, Rgb, from_hex, mean, simulate, to_lab
 from visual_assets.store import pixels
 
 OPAQUE = 128  # alpha at or above this counts as part of the silhouette

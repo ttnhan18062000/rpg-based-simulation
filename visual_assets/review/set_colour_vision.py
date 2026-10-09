@@ -3,7 +3,7 @@
 Reuses the pilot check's Machado simulation, Lab and CIE76 code (`pilot_colour_vision`); nothing is copied. For every unordered pair of terrain keys and each
 vision it compares the distance between the two tiles' mean colours (`dE_tile`) with the distance between the two flat fills (`dE_fill`). Pure Python, read-only.
 
-    python -m tests.visual_assets.set_colour_vision [set_id]      # prints the evidence as JSON (default set: terrain-v1)
+    python -m visual_assets.review.set_colour_vision [set_id]      # prints the evidence as JSON (default set: terrain-v1)
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import re
 import sys
 from pathlib import Path
 
-from tests.visual_assets.pilot_colour_vision import (
+from visual_assets.review.pilot_colour_vision import (
     EXPORT,
     REPO,
     VISIONS,

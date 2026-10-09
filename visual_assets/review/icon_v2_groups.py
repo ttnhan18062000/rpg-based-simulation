@@ -9,8 +9,8 @@ Group members come from the key set (enemy_camp, blacksmith, warrior, the tiers)
 
 from __future__ import annotations
 
-from tests.visual_assets import icon_v2_keys as v2
-from tests.visual_assets.icon_sheet_synthetic import GRADES, LADDER_CLASSES
+from visual_assets.review import icon_v2_keys as v2
+from visual_assets.review.icon_sheet_synthetic import GRADES, LADDER_CLASSES
 
 SHAPE_ONLY = frozenset({"badges", "locations", "buildings", "classes", "items"})  # I1 alone; `rarity` keeps I1 and I2
 TIER_KEYS = {g: f"icon.tier.{g}" for g in GRADES}

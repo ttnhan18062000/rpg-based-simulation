@@ -5,7 +5,7 @@ drawing; only measuring the drawing against its spec does. Each redrawn or new i
 
 Each measurement reads the sprite only (silhouette, content pixels = opaque pixels that are not the dark outline, and a few named wood or bone colours). Pure Python, read-only.
 
-    python -m tests.visual_assets.icon_compliance      # prints the markdown tables of the redrawn icons
+    python -m visual_assets.review.icon_compliance      # prints the markdown tables of the redrawn icons
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ import sys
 from dataclasses import dataclass
 from typing import Callable
 
-from tests.visual_assets import icon_lookalikes as la
-from tests.visual_assets import icon_sheet_rule as rule
+from visual_assets.review import icon_lookalikes as la
+from visual_assets.review import icon_sheet_rule as rule
 
 OUTLINE = (0x0E, 0x10, 0x18)
 WOOD = {(0x5A, 0x2A, 0x1A), (0x8E, 0x8C, 0x75)}  # the two bow-limb colours (brown and tan)

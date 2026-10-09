@@ -11,10 +11,10 @@ from __future__ import annotations
 import json
 import shutil
 
-from tests.visual_assets import icon_draft_fixture as fx
+from visual_assets.review import icon_draft_fixture as fx
 from visual_assets.store.contracts import DraftPreviewManifest, parse_record
 
-REGENERATE = "regenerate the committed copy: `python -m tests.visual_assets.icon_draft_fixture --write`"
+REGENERATE = "regenerate the committed copy: `python -m visual_assets.review.icon_draft_fixture --write`"
 
 
 def _fresh(tmp_path):

@@ -10,10 +10,10 @@ import struct
 import pytest
 
 from tests.visual_assets import adopted_facts as af
-from tests.visual_assets import icon_owner_fixes_draft_set as fixes
-from tests.visual_assets import icon_specs
-from tests.visual_assets import review_sheets as rs
-from tests.visual_assets.pilot_colour_vision import REPO
+from visual_assets.review import icon_owner_fixes_draft_set as fixes
+from visual_assets.review import icon_specs
+from visual_assets.review import review_sheets as rs
+from visual_assets.review.pilot_colour_vision import REPO
 from visual_assets.store import config
 
 SET = fixes.SET_ID

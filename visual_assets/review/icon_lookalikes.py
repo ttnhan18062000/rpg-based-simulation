@@ -7,7 +7,7 @@ Method (so the numbers can be reproduced): each silhouette (every pixel with alp
 ratio, and centred. The distance of two icons is the number of canvas pixels in exactly one silhouette (XOR) out of 576, so size differences between a 8x8 badge and a 24x24 panel icon do not hide a
 shared shape; the same measure at the icons' own size is I1's. Pairs are listed nearest first.
 
-    python -m tests.visual_assets.icon_lookalikes      # prints the report as JSON for the 14 adopted and the 22 v2 icons
+    python -m visual_assets.review.icon_lookalikes      # prints the report as JSON for the 14 adopted and the 22 v2 icons
 """
 
 from __future__ import annotations
@@ -16,9 +16,9 @@ import itertools
 import json
 import sys
 
-from tests.visual_assets import icon_draft_set as keyset
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets import icon_v2_draft_set as v2set
+from visual_assets.review import icon_draft_set as keyset
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review import icon_v2_draft_set as v2set
 
 CANVAS = 24
 CLOSE = 60  # pairs at or under this many XOR pixels (about a tenth of the canvas) are listed as "close"; a reading aid, not a pass or fail
@@ -76,7 +76,7 @@ def report(sprites: dict[str, rule.Sprite], neighbours: int = 3, close: int = CL
 
 if __name__ == "__main__":
     if "--proposed" in sys.argv:  # the set with the owner-fix revisions (icons-owner-fixes-v1) in place of the adopted r0001 drawings
-        from tests.visual_assets import icon_owner_fixes_draft_set
+        from visual_assets.review import icon_owner_fixes_draft_set
 
         print(json.dumps(report(icon_owner_fixes_draft_set.proposed_sprites()), indent=1))
     else:

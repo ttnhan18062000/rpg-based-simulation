@@ -3,7 +3,7 @@
 These are mock-ups, not icons: no art exists yet. They exist so every threshold of `icon_sheet_rule` comes with a measured baseline instead of a guess, and so the tests can plant
 the failures the rule must catch. Pure Python.
 
-    python -m tests.visual_assets.icon_sheet_synthetic      # prints the baseline measurements as JSON
+    python -m visual_assets.review.icon_sheet_synthetic      # prints the baseline measurements as JSON
 """
 
 from __future__ import annotations
@@ -11,8 +11,8 @@ from __future__ import annotations
 import itertools
 import json
 
-from tests.visual_assets import icon_palette
-from tests.visual_assets.icon_sheet_rule import (
+from visual_assets.review import icon_palette
+from visual_assets.review.icon_sheet_rule import (
     RULE,
     Sprite,
     Thresholds,
@@ -24,7 +24,7 @@ from tests.visual_assets.icon_sheet_rule import (
     tile_context,
     value_distance,
 )
-from tests.visual_assets.pilot_colour_vision import VISIONS, from_hex, mean
+from visual_assets.review.pilot_colour_vision import VISIONS, from_hex, mean
 from visual_assets.store import pixels  # noqa: F401  (kept so a missing store fails here, not in a half-run)
 
 OUTLINE = "#0e1018"

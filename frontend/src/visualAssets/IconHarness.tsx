@@ -1,6 +1,6 @@
 // The isolated icon preview page (TCK-20261006-VISUAL-ASSETS-ICON-KEY-DRAFT-SET): the draft set `icons-key-v1` shown so the owner can judge the style on a few icons before `adopt-set`.
 // Mounted only from tests and from the dev-only page frontend/rehearsal-icons.html. It touches no simulation state, no WebSocket, no network and none of the Live Map code; it imports
-// nothing from outside src/visualAssets. It computes NO pass or fail: the verdict is the recorded result of the Python sheet rule (tests/visual_assets/icon_draft_set.py), printed below.
+// nothing from outside src/visualAssets. It computes NO pass or fail: the verdict is the recorded result of the Python sheet rule (visual_assets/review/icon_draft_set.py), printed below.
 // The colour-vision columns are SVG colour matrices, a visual approximation for the eye only.
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { parseDraftPreview, type DraftEntry, type DraftSnapshot } from './draftManifest'
@@ -395,7 +395,7 @@ export function IconHarness({ manifestText, ruleResultText, urlFor, v2, silhouet
             </tbody>
           </table>
           <h3>Recorded result, as measured</h3>
-          <p>From <code>python -m tests.visual_assets.icon_owner_fixes_draft_set</code> (committed as <code>icondraft_fixes/rule_result.json</code>): the adopted icons with the proposed revisions in place. The page only displays it.</p>
+          <p>From <code>python -m visual_assets.review.icon_owner_fixes_draft_set</code> (committed as <code>icondraft_fixes/rule_result.json</code>): the adopted icons with the proposed revisions in place. The page only displays it.</p>
           <table data-testid="fixes-recorded-result">
             <tbody>
               <tr><th>sheet rule (thresholds unchanged)</th><td><strong>{fixesResult.result}</strong>: key-set groups {fixesResult.key_set_rule.result}, v2 groups {fixesResult.v2_rule.result}</td></tr>
@@ -489,7 +489,7 @@ export function IconHarness({ manifestText, ruleResultText, urlFor, v2, silhouet
 
           <section aria-labelledby="v2-recorded">
             <h2 id="v2-recorded">Icon set v2: recorded result of the sheet rule (I1 to I3), as measured</h2>
-            <p>From <code>python -m tests.visual_assets.icon_v2_draft_set</code> on the set above (committed as <code>icondraft_v2/rule_result.json</code>); the page only displays it. Groups are the owner&apos;s answers of 2026-10-07: I1 only for the subject groups, I1 and I2 for rarity.</p>
+            <p>From <code>python -m visual_assets.review.icon_v2_draft_set</code> on the set above (committed as <code>icondraft_v2/rule_result.json</code>); the page only displays it. Groups are the owner&apos;s answers of 2026-10-07: I1 only for the subject groups, I1 and I2 for rarity.</p>
             <table data-testid="v2-recorded-result">
               <tbody>
                 <tr><th>result</th><td><strong>{v2Result.result}</strong> (I1 {String(v2Result.i1)}, I2 {String(v2Result.i2)}, I3 {String(v2Result.i3)})</td></tr>
@@ -510,7 +510,7 @@ export function IconHarness({ manifestText, ruleResultText, urlFor, v2, silhouet
       {result && (
         <section aria-labelledby="recorded">
           <h2 id="recorded">Recorded result of the sheet rule (I1 to I3), as measured</h2>
-          <p>From <code>python -m tests.visual_assets.icon_draft_set</code> on the set above (committed as <code>rule_result.json</code>); the page only displays it.</p>
+          <p>From <code>python -m visual_assets.review.icon_draft_set</code> on the set above (committed as <code>rule_result.json</code>); the page only displays it.</p>
           <table data-testid="recorded-result">
             <tbody>
               <tr><th>result</th><td><strong>{result.result}</strong> (I1 {String(result.i1)}, I2 {String(result.i2)}, I3 {String(result.i3)})</td></tr>

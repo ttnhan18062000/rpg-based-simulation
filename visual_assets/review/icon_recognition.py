@@ -22,8 +22,8 @@ import struct
 import zlib
 from pathlib import Path
 
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets.icon_specs import MODERN_TERMS, Spec, has_word
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review.icon_specs import MODERN_TERMS, Spec, has_word
 
 PLATE_KEY = "icon.plate.location"
 PANELS = {"dark": (0x11, 0x18, 0x27), "light": (0xE5, 0xE7, 0xEB)}
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     import argparse
     import sys
 
-    from tests.visual_assets import icon_lookalikes, icon_specs
+    from visual_assets.review import icon_lookalikes, icon_specs
 
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -204,7 +204,7 @@ if __name__ == "__main__":
     specs = icon_specs.load()
     if args.cmd == "build":
         if args.proposed:
-            from tests.visual_assets import icon_owner_fixes_draft_set
+            from visual_assets.review import icon_owner_fixes_draft_set
 
             sprites = icon_owner_fixes_draft_set.proposed_sprites()
         else:

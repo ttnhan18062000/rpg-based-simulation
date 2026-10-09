@@ -3,7 +3,7 @@
 Reads `visual_assets/drafts/icons-key-v1/` (the 8x nearest-neighbour previews that `draft keep` hashed) and nothing else; pure Python, read-only. The verdict is recorded by running this module, never asserted by
 a test (a test must not decide the result on art, as with AM5-S):
 
-    python -m tests.visual_assets.icon_draft_set      # prints the evidence as JSON
+    python -m visual_assets.review.icon_draft_set      # prints the evidence as JSON
 """
 
 from __future__ import annotations
@@ -12,10 +12,10 @@ import json
 import sys
 from pathlib import Path
 
-from tests.visual_assets import icon_palette
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets.icon_sheet_synthetic import LADDER_CLASSES, real_tiles
-from tests.visual_assets.pilot_colour_vision import REPO, mean
+from visual_assets.review import icon_palette
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review.icon_sheet_synthetic import LADDER_CLASSES, real_tiles
+from visual_assets.review.pilot_colour_vision import REPO, mean
 from visual_assets.drawing.technique.lint import lint_grid
 from visual_assets.store import config, pixels
 

@@ -4,7 +4,7 @@ Simulates protanopia, deuteranopia and tritanopia (Machado, Oliveira and Fernand
 measures CIE76 `dE`. Pure Python; reads the committed pilot export and the Live Map's tile fills (read-only, by parsing `frontend/src/constants/colors.ts`).
 No assistive-technology claim: this is arithmetic on colours.
 
-    python -m tests.visual_assets.pilot_colour_vision      # prints the evidence as JSON
+    python -m visual_assets.review.pilot_colour_vision      # prints the evidence as JSON
 """
 
 from __future__ import annotations

@@ -30,7 +30,7 @@ worktree CLI (`python -m visual_assets.store intake`), so there are no stray int
 
 ## The sheet rule on this set, as measured
 
-`python -m tests.visual_assets.icon_v2_draft_set` (recorded in the v2 preview fixture as `icondraft_v2/rule_result.json`; draft set hash `sha256:bb41c3eef245f6eab3488d5c7a940e574a463112a0bfba611b0c5cfd012737f4`). Groups and the shape-only rule are the owner's answers (I1 only for the five subject groups, I1 and I2 for rarity; 3 / 6 / 8 px at 8x8 / 16x16 / 24x24):
+`python -m visual_assets.review.icon_v2_draft_set` (recorded in the v2 preview fixture as `icondraft_v2/rule_result.json`; draft set hash `sha256:bb41c3eef245f6eab3488d5c7a940e574a463112a0bfba611b0c5cfd012737f4`). Groups and the shape-only rule are the owner's answers (I1 only for the five subject groups, I1 and I2 for rarity; 3 / 6 / 8 px at 8x8 / 16x16 / 24x24):
 
 | Group | Pairs | Smallest silhouette difference | Needed | I2 (value) |
 |---|---|---|---|---|
@@ -302,7 +302,7 @@ The owner ran all 14 commands in their own terminal: **seven new adoptions, each
 
 ### Review it, and the owner's commands
 
-**The review folder (the primary review surface):** `python -m tests.visual_assets.review_sheets --set icons-owner-fixes-v1` writes `~/Work/asset-review/icons-owner-fixes-v1/` with six large labelled PNG canvases and a `README.txt` that repeats the commands below. The live preview page stays for detail, with each draft beside its adopted drawing (the arch and the tent marked not proposed), the recorded result and the compliance tables:
+**The review folder (the primary review surface):** `python -m visual_assets.review.review_sheets --set icons-owner-fixes-v1` writes `~/Work/asset-review/icons-owner-fixes-v1/` with six large labelled PNG canvases and a `README.txt` that repeats the commands below. The live preview page stays for detail, with each draft beside its adopted drawing (the arch and the tent marked not proposed), the recorded result and the compliance tables:
 
 ```
 # the Vite dev server serves the worktree (http://[::1]:5173/rehearsal-icons.html)

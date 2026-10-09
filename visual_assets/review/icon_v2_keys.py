@@ -5,7 +5,7 @@ One list, used by every guard that describes the registry, so a v2 key cannot be
 
 from __future__ import annotations
 
-from tests.visual_assets.icon_item_families import load_mapping
+from visual_assets.review.icon_item_families import load_mapping
 
 LOCATIONS = ("resource_grove", "ruins", "dungeon_entrance", "shrine", "boss_arena")  # enemy_camp is a key-set key
 BUILDINGS = ("store", "guild", "inn", "hero_house", "class_hall")  # blacksmith is a key-set key

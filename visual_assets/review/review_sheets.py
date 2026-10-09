@@ -2,7 +2,7 @@
 
 The owner finds the live preview page slow (start Vite, scroll a long page) and asked for review material as large images in ONE folder per review, outside every repository:
 
-    python -m tests.visual_assets.review_sheets --set icons-owner-fixes-v1 [--out DIR]       # default DIR = ~/Work/asset-review/<set>/
+    python -m visual_assets.review.review_sheets --set icons-owner-fixes-v1 [--out DIR]       # default DIR = ~/Work/asset-review/<set>/
 
 It writes, deterministically (no timestamps; the same drafts give the same bytes):
   01_overview.png      every proposed draft at its true size and at a whole-number zoom, on a dark and a light panel, beside its fallback
@@ -29,13 +29,13 @@ from pathlib import Path
 
 import yaml
 
-from tests.visual_assets import icon_draft_set as keyset
-from tests.visual_assets import icon_lookalikes as la
-from tests.visual_assets import icon_owner_fixes_draft_set as fixes
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets import icon_silhouette_sheet as silsheet
-from tests.visual_assets import icon_v2_groups as v2groups
-from tests.visual_assets.pilot_colour_vision import REPO, simulate
+from visual_assets.review import icon_draft_set as keyset
+from visual_assets.review import icon_lookalikes as la
+from visual_assets.review import icon_owner_fixes_draft_set as fixes
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review import icon_silhouette_sheet as silsheet
+from visual_assets.review import icon_v2_groups as v2groups
+from visual_assets.review.pilot_colour_vision import REPO, simulate
 from visual_assets.store import pixels
 
 DEFAULT_ROOT = Path.home() / "Work" / "asset-review"

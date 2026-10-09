@@ -43,7 +43,7 @@ def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_ot
     borders = ["border.edge", "border.inner_corner", "border.outer_corner"]
     tiers = [f"icon.tier.{g}" for g in ("e", "d", "c", "b", "a", "s", "ss", "sss")]
     icons = ["icon.plate.location", "icon.marker.enemy_camp", "icon.building.blacksmith", "icon.class.warrior", *tiers, "icon.status.frame_buff", "icon.status.frame_debuff"]
-    from tests.visual_assets import icon_v2_keys as v2
+    from visual_assets.review import icon_v2_keys as v2
 
     assert sorted(registry.keys) == sorted(expected + borders + icons + v2.KEYS) and dict(registry.aliases) == {}
     sizes = {"icon.plate.location": 16, "icon.marker.enemy_camp": 16, "icon.building.blacksmith": 24, "icon.class.warrior": 24, "icon.status.frame_buff": 16, "icon.status.frame_debuff": 16, **dict.fromkeys(tiers, 8)}

@@ -6,8 +6,8 @@ result of child 3's sheet rule on that set (`icon_draft_set.evaluate_draft_set`)
 Freshness is checked against a fresh export of the drafts **modulo the manifest's `registry_hash`**: the page never reads that field for a decision, and pinning it would break the copy at every
 key registration (the tax rc-0006 cost). Everything else must be equal: set id, draft_set_hash, entries, details and every PNG byte.
 
-    python -m tests.visual_assets.icon_draft_fixture --write    # refresh the committed copy (also re-records the rule result)
-    python -m tests.visual_assets.icon_draft_fixture --check    # exit 1 if it differs from a fresh export
+    python -m visual_assets.review.icon_draft_fixture --write    # refresh the committed copy (also re-records the rule result)
+    python -m visual_assets.review.icon_draft_fixture --check    # exit 1 if it differs from a fresh export
     ... --set icons-v2 --write | --check                        # the same for icon set v2 (icondraft_v2/)
     ... --set icons-owner-fixes-v1 --write | --check            # the same for the owner-fix revisions (icondraft_fixes/)
 """
@@ -22,9 +22,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-from tests.visual_assets import icon_owner_fixes_draft_set, icon_v2_draft_set
-from tests.visual_assets.icon_draft_set import SET_ID, evaluate_draft_set
-from tests.visual_assets.pilot_colour_vision import REPO
+from visual_assets.review import icon_owner_fixes_draft_set, icon_v2_draft_set
+from visual_assets.review.icon_draft_set import SET_ID, evaluate_draft_set
+from visual_assets.review.pilot_colour_vision import REPO
 from visual_assets.store import draftexport
 
 COMMITTED = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "icondraft"

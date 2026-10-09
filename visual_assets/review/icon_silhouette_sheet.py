@@ -4,8 +4,8 @@
 read from the kept drafts) and its neighbours, measures how far each option is from its same-size neighbours (the sheet rule's I1 measure, shape only) and from its nearest icon across all families (the
 look-alike report's measure), and writes the committed copy the preview page shows: `frontend/src/visualAssets/__fixtures__/iconsilhouettes/silhouette_sheet.json`. Pure Python, read-only.
 
-    python -m tests.visual_assets.icon_silhouette_sheet --write     # refresh the committed copy
-    python -m tests.visual_assets.icon_silhouette_sheet --check     # exit 1 if it differs from a fresh build
+    python -m visual_assets.review.icon_silhouette_sheet --write     # refresh the committed copy
+    python -m visual_assets.review.icon_silhouette_sheet --check     # exit 1 if it differs from a fresh build
 """
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ from pathlib import Path
 
 import yaml
 
-from tests.visual_assets import icon_lookalikes as la
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets.pilot_colour_vision import REPO
+from visual_assets.review import icon_lookalikes as la
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review.pilot_colour_vision import REPO
 
 PROPOSALS = REPO / "visual_assets" / "icons" / "silhouette_proposals.yaml"
 COMMITTED = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__" / "iconsilhouettes" / "silhouette_sheet.json"

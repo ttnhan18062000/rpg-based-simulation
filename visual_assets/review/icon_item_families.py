@@ -10,7 +10,7 @@ from pathlib import Path
 
 import yaml
 
-from tests.visual_assets.pilot_colour_vision import REPO
+from visual_assets.review.pilot_colour_vision import REPO
 
 FAMILIES_FILE = REPO / "visual_assets" / "icons" / "item_families.yaml"
 

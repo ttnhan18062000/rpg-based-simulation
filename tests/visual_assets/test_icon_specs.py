@@ -7,8 +7,8 @@ import copy
 import pytest
 import yaml
 
-from tests.visual_assets import icon_specs as specs
-from tests.visual_assets.pilot_colour_vision import REPO
+from visual_assets.review import icon_specs as specs
+from visual_assets.review.pilot_colour_vision import REPO
 
 GUIDE = REPO / "docs" / "assets" / "icon_style_guide.md"
 
@@ -22,7 +22,7 @@ def test_there_is_one_complete_consistent_spec_for_every_registered_icon_key():
 
 
 def test_the_style_guide_contains_the_generated_table_verbatim():
-    assert specs.table(specs.load()) in GUIDE.read_text(), "regenerate: python -m tests.visual_assets.icon_specs --table"
+    assert specs.table(specs.load()) in GUIDE.read_text(), "regenerate: python -m visual_assets.review.icon_specs --table"
 
 
 def test_the_style_guide_states_the_process_rule_steps_in_order():

@@ -10,7 +10,7 @@ The committed file `visual_assets/palettes/icons-v1.json` is exactly what `build
 3. **Accents.** Eight hand-picked colours (`ACCENTS`): the outline, the plate rim and six signal colours. They are the only colours not traced to a terrain fill; each has its reason. They are
    proposals for the user's review at the owner gate with the art (`icons-key-v1`), not a decided set.
 
-Pure Python, read-only. `python -m tests.visual_assets.icon_palette` prints the palette (add `--write` to rewrite the committed file).
+Pure Python, read-only. `python -m visual_assets.review.icon_palette` prints the palette (add `--write` to rewrite the committed file).
 """
 
 from __future__ import annotations
@@ -19,8 +19,8 @@ import json
 import sys
 from pathlib import Path
 
-from tests.visual_assets import set_colour_vision as scv
-from tests.visual_assets.pilot_colour_vision import REPO, from_hex, mean, tile_fills
+from visual_assets.review import set_colour_vision as scv
+from visual_assets.review.pilot_colour_vision import REPO, from_hex, mean, tile_fills
 from visual_assets.drawing.technique.ramps import make_ramp
 
 PALETTE_FILE = REPO / "visual_assets" / "palettes" / "icons-v1.json"

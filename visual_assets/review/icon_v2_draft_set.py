@@ -4,7 +4,7 @@ Reads `visual_assets/drafts/icons-v2/` (the 8x nearest-neighbour previews `draft
 kept drafts of `icons-key-v1`, which are the adopted art. The groups, thresholds and the shape-only rule are the user's answers of 2026-10-07 (`icon_v2_groups`, `docs/assets/icon_criteria.md`). Pure Python,
 read-only. The verdict is recorded by running this module, never asserted by a test (a test must not decide the result on art):
 
-    python -m tests.visual_assets.icon_v2_draft_set      # prints the evidence as JSON
+    python -m visual_assets.review.icon_v2_draft_set      # prints the evidence as JSON
 """
 
 from __future__ import annotations
@@ -14,11 +14,11 @@ import json
 import sys
 from pathlib import Path
 
-from tests.visual_assets import icon_draft_set as v1
-from tests.visual_assets import icon_palette
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets import icon_v2_groups as groups
-from tests.visual_assets import icon_v2_keys as v2
+from visual_assets.review import icon_draft_set as v1
+from visual_assets.review import icon_palette
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review import icon_v2_groups as groups
+from visual_assets.review import icon_v2_keys as v2
 
 SET_ID = "icons-v2"
 DRAFTS = v1.DRAFTS
