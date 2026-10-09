@@ -229,6 +229,23 @@ Implemented by `TCK-20261008-A-FIGHTER-HOLDS-BETWEEN-BLOWS-CONFLICT-04` (Lane A)
   deaths after a hold). If that stops holding, the fix is to re-decide a holding fighter when a
   present-threat term changes (AGENCY-07), not to drop the hold.
 
+**At the movement layer, SUPPORTED since #446 (`28e29ed2e`, 2026-10-08):**
+- **The rule:** an entity beside an engaged, perceived hostile takes no step from a stored or
+  reaffirmed navigation target. Only a decision this tick moves it, and a blocked held move is
+  released to the brain. Divergence 2.89 (Bug Fix), parity COMB-342.
+- **Pinned by** `tests/mechanic_scenarios/test_conflict04_movement_layer.py` (with a control arm)
+  and `tests/unit/engine/test_engaged_adjacent_hostile_takes_no_stored_step.py`.
+- **Measured** (pinned, seeds 42 to 46, 1500 ticks, `d671868bb` to the branch; crowded / living
+  / urban):
+  - opportunity-attack hits: 185.2 / 158.0 / 87.4 to 162.0 / 128.4 / 72.0;
+  - held-move hits: 102.4 / 92.6 / 40.6 to 61.2 / 46.8 / 18.2;
+  - total deaths: unchanged within 1 SD.
+- **What remains:** the hits left are against adjacent hostiles that are perceived but not
+  engaged. That is decision 32's case (notice and decide), in Lane A's next batch.
+- **Also in #446:** a chokepoint hold is a typed success that ends its task, not an
+  `UNSUPPORTED_ACTION` (divergence 2.90, parity COMB-015). This is a reporting fix with no
+  change to the trajectory.
+
 **Previously CONFLICTING, traced by Lane A on main `753f98ea9`** (relayed by rpg-planner, seeds
 42 to 46, 3 worlds; kept as found).
 - **Who takes the free hits:** 83 to 98 percent of opportunity-attack swings land on a victim

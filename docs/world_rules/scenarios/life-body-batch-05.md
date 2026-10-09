@@ -231,7 +231,12 @@ land holds no wild food, the same worker cannot forage, and nothing feeds it for
     and not from engine charity or a free meal. It also proves that the biome decides whether
     wild food exists.
   - **Also checked in the main arm:** no wild-food node sits inside the settlement bounds.
-- **Result (2026-10-08): revealed missing rule implementation on main.** No world places wild
+- **Result (2026-10-09): covered in its no-inn form** since #454 (`0b4f12af7`) by
+  `tests/mechanic_scenarios/test_forage_loop_wild_food.py` (5 passed). It is staged with no inn
+  in reach, because free meals stay on until the parked removal
+  (`TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL`) lands. The full
+  form, a broke worker who forages although an inn is in reach, waits for that removal.
+- **Earlier result (2026-10-08): revealed missing rule implementation on main.** No world places wild
   food by biome. The one food node in each of the three measured worlds sits on town land, and
   EAT consumes no carried food (SURV-06's evidence). Expected to be **covered** once decision
   27's PR (Lane B) lands and this spec passes at kernel level.

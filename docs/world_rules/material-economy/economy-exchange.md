@@ -121,7 +121,9 @@ and kill and quest rewards are minted.
 **Scenarios:** [ME-S19](../scenarios/material-economy-batch-08.md#me-s19) (sell gathered
 wood or ore, the shop's purse pays, buy a meal; an empty-purse control) and
 [ME-S20](../scenarios/material-economy-batch-08.md#me-s20) (an inn shift paid from the inn's
-purse, then a meal; an empty-purse control). Kernel specs, owed as tests with Lane B's batch 2.
+purse, then a meal; an empty-purse control) and
+[ME-S21](../scenarios/material-economy-batch-08.md#me-s21) (town work paid from the faction treasury;
+an empty-treasury control; decision 37). Kernel specs, owed as tests with Lane B's batch 2.
 
 ---
 

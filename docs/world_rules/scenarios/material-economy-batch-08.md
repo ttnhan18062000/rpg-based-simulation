@@ -9,7 +9,7 @@ last_verified: "2026-10-09"
 
 # Scenario Bank: Objects / Ownership / Resources / Economy (Batch 08)
 
-**Purpose/scope.** Twenty scenarios (two added 2026-10-08 for EXCH-02) used to pressure-test the Objects/Material Culture,
+**Purpose/scope.** Twenty-one scenarios (two added 2026-10-08 and one 2026-10-09 for EXCH-02) used to pressure-test the Objects/Material Culture,
 Ownership/Possession, Resources/Production, and Economy/Exchange rule families in
 `material-economy/objects-material-culture.md`, `ownership-possession.md`,
 `resources-production.md`, and `economy-exchange.md`, per `tmp/world-rule-batch-8-ext-ai.md`
@@ -306,15 +306,51 @@ inn's purse, then buys a meal.
   - **Main arm (the inn's purse holds at least one wage):** W works a shift. Afterwards W's gold
     has risen by the wage, the inn's purse has fallen by the same amount, and time has passed
     for the shift. W then buys a meal, its hunger falls, and the meal price returns to the inn's
-    purse. Total coins are conserved.
+    purse. Total coins are conserved, and the inn's purse is checked over the whole run: it is
+    credited by every paid meal and bed and debited by every wage, never by anything else.
   - **Control arm (the inn's purse is empty):** no wage is paid. Either W does not work, or it
     works unpaid and no coin appears. W's gold stays 0 and no meal is bought.
   - **Why the control:** it proves a wage is a transfer from a real purse, not a payout that
     appears from nowhere.
   - **Engineering, not observable:** the wage amount, the shift length, and how many people the
-    inn employs.
+    inn employs. Both values follow the fiction (decision 33). A shift is a few hours (roughly 100
+    to 300 ticks at 36 s per tick), paying about a meal or two. It is never sized to make the
+    loop close. If a plausible shift is too long for a broke worker to eat in time, that is a
+    finding for the designer, not a reason to shorten the shift.
 - **Result (2026-10-08): revealed missing implementation on main.** No paid-work concept exists.
-  Expected to be **covered** once Lane B's wage shape lands.
+  Expected to be **covered** once Lane B's wage shape lands (the inn's own purse pays; shape
+  relayed by rpg-planner, 2026-10-09).
+
+---
+
+## ME-S21 — A broke worker does town work paid from the faction treasury, and an empty treasury pays nothing (EXCH-02, decision 37) (added 2026-10-09)
+
+A worker with no money does a stint of town work (for example hauling or keeping the streets for
+the settlement), is paid from its faction's treasury, and buys a meal. A treasury with no coin
+pays nobody.
+
+- **Rules invoked:** EXCH-02 (earn by a wage; every coin comes out of the payer's purse; decision
+  37: a faction treasury pays wages for town work), SURV-06 (buying is a way to eat).
+- **Kernel spec (`mechanic_scenario`).** Two arms, differing only in the treasury's balance:
+  - **Staging:** a compiled town of one faction, with an inn in reach whose purse and stock can
+    serve a meal. Worker W is a people-kind of that faction with 0 gold, nothing to sell and no
+    food, hungry enough that decision 27's pull applies. The inn offers no shift (or its purse
+    is empty), so the treasury is W's only wage. The free meal is removed. There are no hostiles.
+  - **Main arm (the treasury holds at least one wage):** W chooses town work and does it for a
+    stint of plausible length. Afterwards W's gold has risen by the wage, and the faction
+    treasury has fallen by the same amount. W then buys a meal at the inn, its hunger falls, and
+    the inn's purse rises by the price. Over the whole run, total coins are conserved across
+    the treasury, the inn's purse and every person's purse.
+  - **Control arm (the treasury is empty):** no wage is paid. Either W does not take the work, or
+    it works and no coin appears. W's gold stays 0 and no meal is bought.
+  - **Why the control:** it proves the town wage is a transfer out of the treasury, not minted.
+  - **Engineering, not observable:** what counts as town work, the wage and stint length (from the
+    fiction, as in ME-S20), and how a treasury refills (taxes, trade). Its refilling is a later
+    Rule's question.
+- **Result (2026-10-09): revealed missing implementation on main.** No wage path from a faction
+  treasury exists, and the treasury (`global_resources`, `faction_<id>_gold`) is held by no
+  building or person. Expected to be **covered** with
+  `TCK-20261009-THE-FACTION-TREASURY-PAYS-WAGES-FOR-TOWN-WORK-DECISION-37`.
 
 ---
 

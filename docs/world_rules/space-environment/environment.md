@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # World Rule Family: Environment
@@ -377,8 +377,20 @@ within reach" holds only on paper.
   letter for townsfolk); town endurance for the forest kind (endurance is declared per faction
   for its own in-fiction reason); leave the land as it is (townsfolk die on the road).
 
-**Repository evidence: CONFLICTING, traced by Lane B on frontier_living_world** (seeds 42 and 43,
-read-only, relayed by rpg-planner; not re-measured here).
+**Repository evidence: SUPPORTED since #454 (`0b4f12af7`, 2026-10-09).** Implemented by
+`TCK-20261008-ENV-08-SETTLED-LAND-AND-THE-NEAR-WILD-CARRY-NO-STANDING-AMBIENT-HAZARD` (Lane B), as
+content data only.
+- **The change:** `trading_hometown` and `survivor_outpost` go from hazard 0.5 to 0, and
+  `wolf_den_near_forest`'s `near_forest` from 1.0 to 0. Deeper and cursed land is unchanged.
+  Divergence 2.92.
+- **Pinned by** SPC-S16 (`tests/mechanic_scenarios/test_near_wild_is_survivable_deep_wild_is_not.py`,
+  4 passed). It covers the main arm on `frontier_extended`, the deep-wild control at (2,71), and
+  a compile-time assertion over every resolved world.
+- **Effect:** part of #454's combined headline (divergence 2.91). Alive at tick 1000 rises from
+  5.4 / 15.6 / 14.4 to 17.6 / 21.2 / 22.2 (crowded / living / urban, 5 seeds, pinned).
+
+**Previously CONFLICTING, traced by Lane B on frontier_living_world** (seeds 42 and 43,
+read-only, relayed by rpg-planner; kept as found).
 - **A town that kills its passers-by:** `trading_hometown` (x 45-80, y 10-45) has hazard_level 0.5
   NATURAL_TERRAIN, constant over the run (calamity 0.0, no MIASMA). That is 5 HP per tick for
   `town_council`, who do not endure it, and no heal applies there. A staged worker dies in 20

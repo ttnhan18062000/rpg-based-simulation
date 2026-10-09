@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-09"
 ---
 
 # Scenario Bank: Space / Environment / Movement (Batch 04)
@@ -249,7 +249,10 @@ kills it.
     deeper in.
   - **Also checked:** `hometown` and the second town carry hazard 0 at compile, and no settled
     region in the world carries a standing ambient hazard.
-- **Result (2026-10-08): revealed contradiction on main.** The second town (`trading_hometown`,
+- **Result (2026-10-09): covered** since #454 (`0b4f12af7`) by
+  `tests/mechanic_scenarios/test_near_wild_is_survivable_deep_wild_is_not.py` (4 passed: the main
+  arm, the deep-wild control, and a compile assertion over every resolved world).
+- **Earlier result (2026-10-08): revealed contradiction on main.** The second town (`trading_hometown`,
   0.5) drains 5 HP per tick and W dies in about 20 of the 35 crossing ticks. `near_forest` (1.0)
   kills in 11 ticks (ENV-08's evidence). Expected to be **covered** once Lane B's content data
   lands in the decision-27 + earn-then-buy batch and this spec passes.
