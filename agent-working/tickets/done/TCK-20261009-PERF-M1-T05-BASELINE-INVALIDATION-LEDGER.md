@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261009-PERF-M1-T05-BASELINE-INVALIDATION-LEDGER
-phase: inprogress
+phase: done
 date: 2026-10-09
 tags: [performance, determinism, testing]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, testing]
 PERF-M1-T05: one ledger of every committed performance and determinism baseline, marked valid, rerun or incomparable after the M1 correctness changes
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -120,3 +120,4 @@ The changes a ledger must account for, each with where it was recorded:
 - Ticket and staging artifacts: `agent-working/tickets/inprogress/TCK-20261009-PERF-M1-T05-BASELINE-INVALIDATION-LEDGER.md`, `agent-working/staging_artifacts/TCK-20261009-PERF-M1-T05-BASELINE-INVALIDATION-LEDGER/`.
 
 ## Completion Summary
+The ledger `docs/performance/baseline_invalidation_ledger.md` classifies every committed artifact recording a performance number, tick or phase cost, dropped-work count, state digest or certification result as valid, rerun or incomparable, each with the deciding M1 change and its merge commit, plus a rerun plan that names the CANONICAL contract (WORK_MODEL_V1 caveat). M1 epic and roadmap point at it. Nothing was rerun and no `src/` or test file changed. Follow-up filed by perf-planner: `TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE` (the sweep gate against `latest.json`).
