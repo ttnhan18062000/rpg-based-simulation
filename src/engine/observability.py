@@ -116,8 +116,8 @@ class SignalCollector:
         worker_stats = kernel._worker_manager.get_stats()
         replay_stats = kernel._replay.get_stats()
         
-        # 4. Primary Pressure: Authoritative State
-        work_debt_total = sum(kernel.state.work_debt.values())
+        # 4. Primary Pressure: Authoritative State (work debt was retired; the field is removed with the signal)
+        work_debt_total = 0
 
         return RuntimeSnapshot(
             profile_name=self._profile_name,

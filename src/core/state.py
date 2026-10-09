@@ -1422,8 +1422,6 @@ class AuthoritativeState:
     global_resources: Dict[str, float] = field(default_factory=dict)
     home_storage: Dict[int, InventoryComponent] = field(default_factory=dict) # Milestone 5
     town_center: tuple[float, float] = (0.0, 0.0) # Milestone 7
-    periodic_due_ticks: Dict[str, int] = field(default_factory=dict)
-    work_debt: Dict[str, int] = field(default_factory=dict)
     movement_count: int = 0  # Milestone 2: Throughput truth
     maturity: int = 0
     last_calamity_tick: int = 0
@@ -1610,8 +1608,6 @@ class AuthoritativeState:
             groups=shallow_freeze(self.groups),
             terrain=shallow_freeze(self.terrain),
             global_resources=shallow_freeze(self.global_resources),
-            periodic_due_ticks=shallow_freeze(self.periodic_due_ticks),
-            work_debt=shallow_freeze(self.work_debt),
             blocked_tiles=shallow_freeze(self.blocked_tiles),
             town_tiles=shallow_freeze(self.town_tiles),
             building_tiles=shallow_freeze(self.building_tiles),

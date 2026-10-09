@@ -30,6 +30,10 @@ Method: `grep` and an AST scan of `tests/`, `data/`, `config/`, `docs/` against 
 
 Under Option B (keep v1, constant `{}` keys) rows 1, 2 (the digest literal part) and 9 do not move; row 2's key removal still happens.
 
+**Scan scope (added during C2):** the search for pinned values covers the **scheme strings** (`flat-sha256-v1`) as well as hash literals. C2 found a second literal of the scheme name at `tests/unit/engine/test_hash_scheduler.py:117` that the first scan (hash literals only) missed.
+
+**Running list of moved pins for the PR body:** `FIXTURE_DIGEST_V2 = 631feb2b...` (new) and `FIXTURE_DIGEST_V1_ON_MAIN` (history, used only by the migration proof); the `test_hash_scheduler.py:117` scheme literal; the `hash_callsite_inventory` string and its generated docs; in C3 the `live_signals_v1.json` golden's `work_debt_total` keys and the certification result key list (with a schema-version note). The 21 tracked `world_compile_report.json` files keep v1 (documented in C4).
+
 ## 2. Tests that change, by reason
 
 **Delete or replace (they exist only for removed behaviour):**

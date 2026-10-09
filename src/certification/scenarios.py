@@ -29,14 +29,6 @@ class PressureInjector:
         from dataclasses import replace
         return replace(state, entities=new_entities)
 
-    @staticmethod
-    def inject_work_debt(state: AuthoritativeState, system: str, amount: int) -> AuthoritativeState:
-        """Inject work debt to stress the governor."""
-        new_debt = state.work_debt.copy()
-        new_debt[system] = new_debt.get(system, 0) + amount
-        from dataclasses import replace
-        return replace(state, work_debt=new_debt)
-
 
 class ArenaInjector:
     """Helper to inject multi-team combat scenarios into the simulation."""

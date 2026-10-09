@@ -65,10 +65,10 @@ def test_deterministic_tiebreak():
 
 
 def test_the_scheduler_selects_only_entity_work():
-    """Every work item is CRITICAL entity work. Periodic and deferred (DRAIN_DEBT) selection is gone, so a state that still carries the
-    removed fields yields nothing beyond its entities, and the scheduler sheds nothing."""
+    """Every work item is CRITICAL entity work. Periodic and deferred (DRAIN_DEBT) selection is gone with the state fields behind them, so the
+    scheduler yields nothing beyond the entities, and sheds nothing."""
     e1 = V2EntityBuilder(1).combat(readiness=100.0).build()
-    state = AuthoritativeState(tick=10, seed=1, entities={1: e1}, periodic_due_ticks={"weather": 10}, work_debt={"system_x": 1})
+    state = AuthoritativeState(tick=10, seed=1, entities={1: e1})
 
     work, dropped = DeterministicScheduler().select_work(state)
 

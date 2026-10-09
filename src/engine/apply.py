@@ -316,13 +316,6 @@ class ApplyPath:
         for k, v in update.rejections_delta.items():
             new_rejections[k] = new_rejections.get(k, 0) + v
 
-        new_periodic = dict(prior_state.periodic_due_ticks)
-        new_periodic.update(update.periodic_updates)
-
-        new_work_debt = dict(prior_state.work_debt)
-        for k, delta in update.work_debt_updates.items():
-            new_work_debt[k] = max(0, new_work_debt.get(k, 0) + delta)
-
         if audit_mode:
             new_trace = list(prior_state.transaction_trace)
             new_trace.extend(update.transaction_trace)
@@ -497,8 +490,6 @@ class ApplyPath:
             terrain=prior_state.terrain,
             home_storage=new_storage,
             town_center=prior_state.town_center,
-            periodic_due_ticks=new_periodic,
-            work_debt=new_work_debt,
             movement_count=new_movement_count,
             maturity=new_maturity,
             last_calamity_tick=new_last_calamity,

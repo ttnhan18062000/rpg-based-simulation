@@ -53,3 +53,18 @@ def test_a_run_produces_only_critical_entity_work_and_never_drops_work(mode):
         assert kernel.status.total_dropped_work == 0
     finally:
         kernel.shutdown()
+
+
+def test_the_state_and_update_fields_are_gone():
+    """C2: `work_debt` and `periodic_due_ticks` left `AuthoritativeState`, and `work_debt_updates` / `periodic_updates` left `StateUpdate`."""
+    from src.core.state import AuthoritativeState
+    from src.core.updates import StateUpdate
+    from src.engine.checkpoint import CanonicalStateHasher
+
+    assert not {"work_debt", "periodic_due_ticks"} & set(AuthoritativeState.__dataclass_fields__)
+    assert not {"work_debt_updates", "periodic_updates"} & set(StateUpdate.__dataclass_fields__)
+    with pytest.raises(TypeError):
+        AuthoritativeState(tick=0, seed=1, work_debt={})  # type: ignore[call-arg]
+    with pytest.raises(TypeError):
+        StateUpdate(work_debt_updates={})  # type: ignore[call-arg]
+    assert not {"work_debt", "periodic_due_ticks"} & set(CanonicalStateHasher.to_canonical_data(AuthoritativeState(tick=0, seed=1)))

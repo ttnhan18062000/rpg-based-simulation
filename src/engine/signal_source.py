@@ -61,7 +61,6 @@ class LiveSignalSource:
         if state.tick <= 5:
             compute_ms = min(compute_ms, profile.max_tick_budget_ms * 0.5)
         return PressureSignals(
-            work_debt_total=sum(state.work_debt.values()),
             tick_compute_ms=compute_ms,
             worker_utilization=host.worker_stats["worker_utilization"],
             queue_utilization=host.worker_stats["queue_utilization"],
@@ -85,7 +84,6 @@ class LiveSignalSource:
     ) -> PressureSignals:
         """Signals recorded into the status history at the end of a tick: this tick's measured cost and phase costs."""
         return PressureSignals(
-            work_debt_total=sum(state.work_debt.values()),
             tick_compute_ms=measured.final_compute_ms,
             worker_utilization=host.worker_stats["worker_utilization"],
             queue_utilization=host.worker_stats["queue_utilization"],
@@ -111,7 +109,6 @@ class ZeroedSignalSource(LiveSignalSource):
     ) -> PressureSignals:
         """Every timing and resource input at zero; the work-debt total and the dropped-work delta are kept."""
         return PressureSignals(
-            work_debt_total=sum(state.work_debt.values()),
             tick_compute_ms=0.0,
             worker_utilization=0.0,
             queue_utilization=0.0,
@@ -166,7 +163,6 @@ class CanonicalSignalSource(LiveSignalSource):
     ) -> PressureSignals:
         demand = count_demand(state)
         return PressureSignals(
-            work_debt_total=sum(state.work_debt.values()),
             tick_compute_ms=measured.final_compute_ms,
             worker_utilization=worker_utilization_proxy(demand.entities_active, profile.max_worker_count),
             queue_utilization=queue_utilization_proxy(demand.entities_active, profile.max_worker_count, profile.max_queue_depth),

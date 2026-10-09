@@ -81,8 +81,6 @@ class FakeState:
     home_storage: dict = {}
     camps: dict = {}
     global_resources: dict = {}
-    periodic_due_ticks: dict = {}
-    work_debt: dict = {}
     blocked_tiles: list = []
     town_tiles: list = []
     building_tiles: dict = {}
