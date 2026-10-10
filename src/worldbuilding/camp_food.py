@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 from src.core.items import food_hunger_recovery
+from src.core.region_resolution import resolve_region_among
 from src.core.state import AuthoritativeState
 
 # The smallest leash a camp spawn gets (the goblin, ``generator.py``); a node within it is in range of every spawn kind.
@@ -31,8 +32,6 @@ def camp_food_sources(state: AuthoritativeState) -> Dict[str, str]:
 
     The designer's rule: a camp's food is its own land's wild food, the amount from that land's fertility. This names the land, so a
     report can say which region supplied the way."""
-    from src.engine.spatial_query import SpatialQueryService
-
     sources: Dict[str, str] = {}
     for camp_id, camp in state.camps.items():
         cx, cy = camp.position
@@ -42,6 +41,6 @@ def camp_food_sources(state: AuthoritativeState) -> Dict[str, str]:
         if not in_range:
             continue
         nearest = min(in_range, key=lambda n: (abs(n.position[0] - cx) + abs(n.position[1] - cy), n.id))
-        region = SpatialQueryService.get_region_at(state, nearest.position)
+        region = resolve_region_among(state.regions.values(), nearest.position[0], nearest.position[1])
         sources[camp_id] = region.id if region is not None else "unowned"
     return sources
