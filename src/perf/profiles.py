@@ -1,5 +1,11 @@
-from src.config.profiles import RuntimeProfile, HardwareClass
+from src.certification.hardware import HardwareClassifier
+from src.config.profiles import RuntimeProfile, HardwareClass, SignalContract
 from src.engine.cadence import SystemCadence
+
+
+def detected_hardware_class() -> HardwareClass:
+    """The class of this host from cores and RAM (``certification_contract.md`` section 3), as the profile enum (PERF-M2 OD-4)."""
+    return HardwareClass(HardwareClassifier.detect_class().value)
 
 
 def make_perf_profile(
@@ -36,7 +42,7 @@ def make_perf_profile(
     )
     return RuntimeProfile(
         name=name,
-        hardware_class=HardwareClass.CLASS_A,
+        hardware_class=detected_hardware_class(),
         max_ram_mb=ram_mb,
         max_cpu_percent=90.0,
         max_worker_count=workers,
@@ -91,6 +97,22 @@ PERF_PROFILES = {
         workers=4,
     ),
 }
+#: Canonical variants carry this suffix so a result file that records only the profile name still tells the two contracts apart (PERF-M2-T07).
+CANONICAL_SUFFIX = "_CANONICAL"
+
+
+def canonical_variant(profile: RuntimeProfile) -> RuntimeProfile:
+    """The same profile under ``SignalContract.CANONICAL``: the governors read a modelled cost, so the mode sequence is host-independent.
+
+    Only ``signal_contract`` and ``name`` change. ``RuntimeProfile`` is frozen, hence ``model_copy``.
+    """
+    variant: RuntimeProfile = profile.model_copy(update={"name": profile.name + CANONICAL_SUFFIX, "signal_contract": SignalContract.CANONICAL})
+    return variant
+
+
+#: One canonical variant per entry of ``PERF_PROFILES``, keyed by the original name. Kept apart so ``PERF_PROFILES`` and ``PERF_MATRIX``,
+#: which existing consumers iterate, are unchanged. Every timing baseline is to be captured under these (baseline_invalidation_ledger.md section 5).
+PERF_CANONICAL_PROFILES = {name: canonical_variant(profile) for name, profile in PERF_PROFILES.items()}
 PERF_MATRIX = {
     "idle": {
         100: {"local": "PERF_512MB_LOCAL", "concurrent": "PERF_1GB_CONC"},

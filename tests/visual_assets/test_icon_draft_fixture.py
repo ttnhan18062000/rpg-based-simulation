@@ -8,9 +8,11 @@ Adopting `icons-key-v1` does NOT change the export: the adopted references skip 
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 
+from tests.visual_assets import closed_draft_fixture as cdf
 from visual_assets.review import icon_draft_fixture as fx
 from visual_assets.store.contracts import DraftPreviewManifest, parse_record
 
@@ -24,7 +26,7 @@ def _fresh(tmp_path):
 
 
 def test_the_committed_copy_equals_a_fresh_export_modulo_the_registry_hash(tmp_path):
-    assert fx.differences(_fresh(tmp_path)) == [], REGENERATE
+    assert cdf.differences("icons-key-v1", _fresh(tmp_path), fx.COMMITTED) == [], REGENERATE
 
 
 def test_the_manifest_is_a_draft_preview_manifest_with_the_14_icons_and_the_adopted_references():
@@ -48,7 +50,7 @@ def test_a_flipped_png_byte_is_caught(tmp_path):
     data = bytearray(png.read_bytes())
     data[-20] ^= 1
     png.write_bytes(bytes(data))
-    problems = fx.differences(_fresh(tmp_path), copy)
+    problems = cdf.differences("icons-key-v1", _fresh(tmp_path), copy)
     assert any(png.name in p for p in problems)
 
 
@@ -58,7 +60,7 @@ def test_a_changed_entry_is_caught(tmp_path):
     manifest = json.loads((copy / fx.MANIFEST).read_text())
     manifest["entries"][0]["draft_id"] = "in-0000000000000000"
     (copy / fx.MANIFEST).write_text(json.dumps(manifest, sort_keys=True, separators=(",", ":")))
-    assert any(fx.MANIFEST in p for p in fx.differences(_fresh(tmp_path), copy))
+    assert any(fx.MANIFEST in p for p in cdf.differences("icons-key-v1", _fresh(tmp_path), copy))
 
 
 def test_a_changed_registry_hash_alone_is_deliberately_not_caught(tmp_path):
@@ -67,11 +69,16 @@ def test_a_changed_registry_hash_alone_is_deliberately_not_caught(tmp_path):
     manifest = json.loads((copy / fx.MANIFEST).read_text())
     manifest["registry_hash"] = "sha256:" + "1" * 64
     (copy / fx.MANIFEST).write_text(json.dumps(manifest, sort_keys=True, separators=(",", ":")))
-    assert fx.differences(_fresh(tmp_path), copy) == []
+    # the comparison against a fresh export still ignores the registry hash (as the open-set check does) ...
+    fresh = _fresh(tmp_path)
+    own_pin = "sha256:" + hashlib.sha256((copy / fx.MANIFEST).read_bytes()).hexdigest()
+    assert cdf.closed_differences(fresh, copy, pinned_manifest_sha256=own_pin) == []
+    # ... but the committed bytes of a closed gate are pinned, so editing them at all (the registry hash included) is caught
+    assert any("gate evidence was rewritten" in p for p in cdf.differences("icons-key-v1", fresh, copy))
 
 
 def test_a_missing_file_is_caught(tmp_path):
     copy = tmp_path / "copy"
     shutil.copytree(fx.COMMITTED, copy)
     next(copy.glob("*.png")).unlink()
-    assert any("files differ" in p for p in fx.differences(_fresh(tmp_path), copy))
+    assert any("files differ" in p for p in cdf.differences("icons-key-v1", _fresh(tmp_path), copy))

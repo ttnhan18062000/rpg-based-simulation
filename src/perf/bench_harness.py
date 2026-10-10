@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import time
 import logging
+from dataclasses import dataclass
 import statistics
 import os
-from typing import Dict, List, Any
+from pathlib import Path
+from typing import Dict, List, Any, Optional
 
 import psutil
 
@@ -13,6 +15,24 @@ from src.engine.kernel import Kernel
 from src.core.state import AuthoritativeState
 from src.platform.rng import DeterministicRNG
 from src.config.profiles import RuntimeProfile
+from src.perf.benchmark_record import (
+    MAX_EMBEDDED_SAMPLES,
+    BenchmarkRecord,
+    GateTier,
+    Outcome,
+    OutcomeState,
+    PercentileMethod,
+    Protocol,
+    RecordOptions,
+    Result,
+    RunSubject,
+    Samples,
+    collect_identity,
+    compress_modes,
+    nearest_rank,
+    utc_now,
+    write_samples_file,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +42,17 @@ class PerformanceRegressionError(Exception):
     pass
 
 
+@dataclass(frozen=True)
+class _Measured:
+    """The per-tick series and aggregates of one run, as collated for both the result dict and the record."""
+
+    tick_times: List[float]
+    tick_wall_ms: List[float]
+    mode_samples: List[str]
+    phase_stats: Dict[str, Dict[str, float]]
+    metric_stats: Dict[str, float]
+
+
 class BenchHarness:
     """
     Dedicated harness for high-frequency performance measurement.
@@ -29,13 +60,15 @@ class BenchHarness:
     
     Enhanced with:
     - RSS Memory monitoring via psutil
-    - p50/p95/p99 latency percentiles
+    - p50/p95/p99 latency percentiles (nearest-rank, PERF-M2 OD-1)
     - Phase-specific cost distribution
+    - A typed ``BenchmarkRecord`` (schema 1.0) of the last run in ``last_record``; the returned dict is unchanged by it
     """
 
     def __init__(self, profile: RuntimeProfile):
         self._profile = profile
         self._process = psutil.Process(os.getpid())
+        self.last_record: Optional[BenchmarkRecord] = None
 
     def run_benchmark(
         self,
@@ -44,13 +77,17 @@ class BenchHarness:
         warmup_ticks: int = 100,
         sample_ticks: int = 1000,
         phase_budgets: Optional[Dict[str, float]] = None,
-        flags: Optional[Dict[str, bool]] = None
+        flags: Optional[Dict[str, bool]] = None,
+        record_options: Optional[RecordOptions] = None,
     ) -> Dict[str, Any]:
         """
         Execute a stable measurement run: Warmup -> Sample -> Collate.
         
         M1 Law: Benchmarks default to no_replay and no_frame_pacing to measure 
         raw engine compute throughput.
+
+        The returned dict is unchanged by the typed record; the record of this run is left in ``last_record``.
+        ``record_options`` picks the projection the record is for (default: tripwire).
         """
         # Set M1 defaults
         effective_flags = {"no_replay": True, "no_frame_pacing": True}
@@ -59,7 +96,16 @@ class BenchHarness:
             
         logger.info(f"Starting Benchmark: {scenario_id} ({self._profile.name})")
         logger.info(f"Flags: {effective_flags}")
-        
+
+        self.last_record = None
+        subject = RunSubject(
+            scenario_id=scenario_id,
+            entity_count=len(initial_state.entities),
+            seed=initial_state.seed,
+            flags=effective_flags,
+            warmup_ticks=warmup_ticks,
+        )
+
         # Initialize Kernel — always shut down to release EventRecorder thread
         rng = DeterministicRNG(initial_state.seed)
         kernel = Kernel(self._profile, initial_state, rng, flags=effective_flags)
@@ -80,11 +126,14 @@ class BenchHarness:
             # 2. SAMPLING
             rss_samples: List[float] = []
             mode_samples: List[str] = []
+            tick_wall_ms: List[float] = []
             wall_start_ts = time.perf_counter()
 
             try:
                 for i in range(sample_ticks):
+                    tick_start_ts = time.perf_counter()
                     kernel.tick_once()
+                    tick_wall_ms.append((time.perf_counter() - tick_start_ts) * 1000.0)
 
                     # RuntimeMode is a trivial IntEnum read — sample every tick, unlike the
                     # throttled RSS collector below, so a transient CONSTRAINED/DEGRADED/SURVIVAL
@@ -106,33 +155,12 @@ class BenchHarness:
             wall_clock_tps = sample_ticks / wall_clock_s if wall_clock_s > 0 else 0
 
             # 3. COLLATION
-            history = kernel.status.get_recent_history(sample_ticks)
-            tick_times = [s.tick_compute_ms for s in history]
+            measured = self._collate(kernel.status.get_recent_history(sample_ticks), tick_wall_ms, mode_samples)
+            tick_times = measured.tick_times
 
             # Compute TPS: Theoretical throughput if no wall-clock overhead
             total_compute_ms = sum(tick_times)
             compute_tps = (sample_ticks * 1000.0) / total_compute_ms if total_compute_ms > 0 else 0
-
-            phase_aggregates: Dict[str, List[float]] = {}
-            metric_aggregates: Dict[str, List[float]] = {}
-            for signals in history:
-                for phase, cost in signals.phase_costs_ms.items():
-                    if phase not in phase_aggregates:
-                        phase_aggregates[phase] = []
-                    phase_aggregates[phase].append(cost)
-                if hasattr(signals, "metrics") and signals.metrics:
-                    for k, v in signals.metrics.items():
-                        if k not in metric_aggregates:
-                            metric_aggregates[k] = []
-                        metric_aggregates[k].append(float(v))
-
-            phase_stats = {}
-            for phase, costs in phase_aggregates.items():
-                phase_stats[phase] = self._calculate_stats(costs)
-
-            metric_stats = {}
-            for k, vals in metric_aggregates.items():
-                metric_stats[k] = round(sum(vals) / len(vals), 2) if vals else 0.0
 
             cpu_time_user_delta_s = cpu_end.user - cpu_start.user
             cpu_time_system_delta_s = cpu_end.system - cpu_start.system
@@ -152,8 +180,8 @@ class BenchHarness:
                     "max": round(max(rss_samples), 2) if rss_samples else 0.0,
                     "delta": round(max(rss_samples) - min(rss_samples), 2) if rss_samples else 0.0,
                 },
-                "phase_breakdown": phase_stats,
-                "metrics": metric_stats,
+                "phase_breakdown": measured.phase_stats,
+                "metrics": measured.metric_stats,
                 "cpu_time_user_delta_s": round(cpu_time_user_delta_s, 4),
                 "cpu_time_system_delta_s": round(cpu_time_system_delta_s, 4),
                 "cpu_time_total_delta_s": round(cpu_time_total_delta_s, 4),
@@ -172,36 +200,105 @@ class BenchHarness:
             result["peak_rss_mb"] = result["mem_rss_mb"]["max"]
             result["memory_delta_mb"] = result["mem_rss_mb"]["delta"]
 
-            # Law 125: Phase Budget Enforcement
-            if phase_budgets and self._profile.max_tick_budget_ms > 0:
-                for phase, budget_ratio in phase_budgets.items():
-                    if phase in phase_stats:
-                        p95_ms = phase_stats[phase]["p95"]
-                        limit_ms = self._profile.max_tick_budget_ms * budget_ratio
-                        if p95_ms > limit_ms:
-                            raise PerformanceRegressionError(
-                                f"Phase '{phase}' exceeded budget in scenario '{scenario_id}': "
-                                f"p95={p95_ms:.2f}ms, limit={limit_ms:.2f}ms ({budget_ratio*100}% of {self._profile.max_tick_budget_ms}ms)"
-                            )
+            self.last_record = self._build_record(result, measured, subject, record_options or RecordOptions())
+
+            self._enforce_phase_budgets(phase_budgets, measured.phase_stats, scenario_id)
 
             return result
 
         finally:
             kernel.shutdown()
 
+    def _collate(self, history: List[Any], tick_wall_ms: List[float], mode_samples: List[str]) -> _Measured:
+        """Fold the kernel's per-tick signals into the series and aggregates the result dict and the record are both built from."""
+        phase_aggregates: Dict[str, List[float]] = {}
+        metric_aggregates: Dict[str, List[float]] = {}
+        for signals in history:
+            for phase, cost in signals.phase_costs_ms.items():
+                phase_aggregates.setdefault(phase, []).append(cost)
+            if hasattr(signals, "metrics") and signals.metrics:
+                for k, v in signals.metrics.items():
+                    metric_aggregates.setdefault(k, []).append(float(v))
+
+        return _Measured(
+            tick_times=[s.tick_compute_ms for s in history],
+            tick_wall_ms=tick_wall_ms,
+            mode_samples=mode_samples,
+            phase_stats={phase: self._calculate_stats(costs) for phase, costs in phase_aggregates.items()},
+            metric_stats={k: round(sum(vals) / len(vals), 2) if vals else 0.0 for k, vals in metric_aggregates.items()},
+        )
+
+    def _enforce_phase_budgets(self, phase_budgets: Optional[Dict[str, float]], phase_stats: Dict[str, Dict[str, float]], scenario_id: str) -> None:
+        """Law 125: Phase Budget Enforcement."""
+        if not phase_budgets or self._profile.max_tick_budget_ms <= 0:
+            return
+        for phase, budget_ratio in phase_budgets.items():
+            if phase in phase_stats:
+                p95_ms = phase_stats[phase]["p95"]
+                limit_ms = self._profile.max_tick_budget_ms * budget_ratio
+                if p95_ms > limit_ms:
+                    raise PerformanceRegressionError(
+                        f"Phase '{phase}' exceeded budget in scenario '{scenario_id}': "
+                        f"p95={p95_ms:.2f}ms, limit={limit_ms:.2f}ms ({budget_ratio*100}% of {self._profile.max_tick_budget_ms}ms)"
+                    )
+
+    def _build_record(
+        self, result: Dict[str, Any], measured: _Measured, subject: RunSubject, options: RecordOptions
+    ) -> Optional[BenchmarkRecord]:
+        """Assemble the typed record from the numbers already collated. A failure here is logged and never fails the benchmark."""
+        try:
+            wall_ms = [round(v, 4) for v in measured.tick_wall_ms]
+            compute_ms = [round(v, 4) for v in measured.tick_times]
+            if options.gate_tier is GateTier.TRIPWIRE and len(compute_ms) <= MAX_EMBEDDED_SAMPLES:
+                samples = Samples(tick_wall_ms=tuple(wall_ms), tick_compute_ms=tuple(compute_ms))
+            else:
+                stem = f"{subject.scenario_id}_{self._profile.name}_{int(result['timestamp'])}"
+                samples = write_samples_file(options.samples_dir or Path("reports/perf/samples"), stem, wall_ms, compute_ms)
+            return BenchmarkRecord(
+                identity=collect_identity(self._profile, subject, options),
+                result=Result(
+                    protocol=Protocol(
+                        warmup_ticks=subject.warmup_ticks,
+                        measured_ticks=result["sample_ticks"],
+                        percentile_method=PercentileMethod.NEAREST_RANK,
+                    ),
+                    latency_ms=dict(result["tick_ms"]),
+                    throughput={"compute_tps": result["compute_tps"], "wall_tps": result["wall_clock_tps"]},
+                    time_s={
+                        "wall": result["wall_clock_s"],
+                        "cpu_user": result["cpu_time_user_delta_s"],
+                        "cpu_system": result["cpu_time_system_delta_s"],
+                    },
+                    memory_mb={
+                        "rss_high_water": result["mem_rss_mb"]["max"],
+                        "rss_delta": result["mem_rss_mb"]["delta"],
+                        "sample_every_ticks": 10,
+                    },
+                    runtime_mode_sequence=compress_modes(measured.mode_samples),
+                    outcome=Outcome(OutcomeState.NOT_APPLICABLE, "single measurement: no comparison was made"),
+                    recorded_at=utc_now(),
+                    samples=samples,
+                    work=dict(measured.metric_stats),
+                    phases={k: dict(v) for k, v in measured.phase_stats.items()},
+                ),
+            )
+        except Exception:  # noqa: BLE001 - the record is additive; a failure to build it must never fail a benchmark (logged with traceback)
+            logger.warning("BenchmarkRecord could not be built for %s; the result dict is unaffected", subject.scenario_id, exc_info=True)
+            return None
+
     def _calculate_stats(self, values: List[float]) -> Dict[str, float]:
-        """Calculate distribution statistics for a set of values."""
+        """Distribution statistics. Percentiles are nearest-rank, ceil(q * n) (PERF-M2 OD-1), not ``sorted[int(n * q)]``."""
         if not values:
             return {"avg": 0.0, "p50": 0.0, "p95": 0.0, "p99": 0.0, "max": 0.0}
-            
+
         sorted_values = sorted(values)
         count = len(sorted_values)
-        
+
         return {
             "avg": round(sum(values) / count, 3),
-            "p50": round(sorted_values[int(count * 0.5)], 3),
-            "p95": round(sorted_values[int(count * 0.95)], 3),
-            "p99": round(sorted_values[int(count * 0.99)], 3),
+            "p50": round(nearest_rank(sorted_values, 0.5), 3),
+            "p95": round(nearest_rank(sorted_values, 0.95), 3),
+            "p99": round(nearest_rank(sorted_values, 0.99), 3),
             "max": round(sorted_values[-1], 3),
-            "min": round(sorted_values[0], 3)
+            "min": round(sorted_values[0], 3),
         }

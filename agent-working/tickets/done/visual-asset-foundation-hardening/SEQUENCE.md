@@ -23,4 +23,4 @@ origin/main 48c9785c3, worktree `/home/vboxuser/Work/rpg-aseprite-mcp`), one com
 
 ## Status
 
-DONE (2026-10-09): children 1-7 are committed; the PR awaits the user's authorization.
+DONE (2026-10-09): children 1-7 merged as PR #471 (squash `0c3a5654b`, owner `--admin` merge).

@@ -58,7 +58,7 @@ openssl s_client -connect download.pytorch.org:443 | openssl x509 -noout -subjec
 subject=O = Fortinet, CN = Fortiguard SDNS Blocked Page
 ```
 
-So `torch==2.12.1+cpu` cannot be installed for a new Python version from this machine by any tool. The existing `.venv-knowledge` predates the block and **must be preserved** — deleting it permanently breaks `search_docs` for every session here. `tools/start_search_mcp.sh` hardcodes its absolute path for exactly this reason.
+So `torch==2.12.1+cpu` cannot be installed for a new Python version from this machine by any tool. The existing `.venv-knowledge` predates the block and **must be preserved** — deleting it permanently breaks `search_docs` for every session here. `tools/start_search_mcp.sh` hardcodes its absolute path for exactly this reason. On any host it also finds the main checkout's `.venv-knowledge` from a git worktree through `git rev-parse --git-common-dir`, and it only selects an interpreter that has both `mcp` and `sentence_transformers`. A worktree has no knowledge index of its own (`agent-working/.index/` is gitignored), so `search_mcp.py` queries the main checkout's index when the worktree's own is missing (`TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION`).
 
 **Symptoms the block produces, none of which name the real cause:**
 - `pip`: `Could not find a version that satisfies the requirement torch==2.12.1+cpu (from versions: none)` — pip fetched the *block page*, which lists no packages.
