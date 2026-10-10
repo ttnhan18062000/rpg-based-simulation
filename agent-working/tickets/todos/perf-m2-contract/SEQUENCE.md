@@ -10,7 +10,7 @@ RPG-core gate item 8 (six files); every measurement stays provisional, and no ch
 
 1. TCK-20261010-PERF-M2-T02B-RECORD  (no deps; every later ticket consumes it)
 2. TCK-20261010-PERF-M2-T07-CANONICAL-VARIANTS  (same batch as 1; also edits `src/perf/profiles.py`, so it lands after 1 or merged with it)
-3. TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE  (plan X1; depends on: 1, for `cost_accounting_version`)
+3. TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE  (plan X1; depends on: 1, for `cost_accounting_version`)  (DONE 2026-10-10)
 4. TCK-20261010-PERF-M2-T05-BASELINE-LIFECYCLE  (depends on: 1; and on testing's `baseline_change_policy.md` plus `TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE`, or their agreed field names if it starts first)
 5. TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED  (depends on: 1, 2, 4; testing-planner agrees the CI selector change first)
 6. TCK-20261010-PERF-M2-T04-CAPACITY-RUN  (depends on: 1, 4; may run in parallel with 5)

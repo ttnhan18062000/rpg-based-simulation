@@ -8,6 +8,7 @@ from typing import Optional, List, Dict
 from pydantic import BaseModel, Field
 
 from src.observability.reporting.run_set_repository import RunSetArtifactRepository
+from src.perf.benchmark_record import COST_ACCOUNTING_VERSION
 
 
 class DistributionSummary(BaseModel):
@@ -47,6 +48,9 @@ class BaselineConfig(BaseModel):
     metrics: Dict[str, DistributionSummary] = Field(default_factory=dict)
     threshold_recommendations: Dict[str, BaselineThresholdSpec] = Field(default_factory=dict)
     artifact_schema_version: str = "baseline_v1"
+    #: Tick-cost accounting the baseline was measured under; absent on a baseline written before DEV-017,
+    #: which makes its tick costs incomparable (``baseline_comparator.tick_cost_incomparable_reason``).
+    cost_accounting_version: Optional[str] = None
 
 
 def calculate_distribution(vals: List[float]) -> DistributionSummary:
@@ -249,7 +253,6 @@ class BaselineGenerator:
 
         run_count = len(records)
         accepted_run_count = len(accepted_records)
-        is_weak_baseline = accepted_run_count < 5
 
         baseline_id = f"baseline_{sweep_id}"
         created_at = datetime.now(timezone.utc).isoformat()
@@ -264,9 +267,10 @@ class BaselineGenerator:
             accepted_run_count=accepted_run_count,
             excluded_run_ids=excluded_run_ids,
             exclusion_reasons=exclusion_reasons,
-            is_weak_baseline=is_weak_baseline,
+            is_weak_baseline=accepted_run_count < 5,
             metrics=metrics_dist,
-            threshold_recommendations=recommendations
+            threshold_recommendations=recommendations,
+            cost_accounting_version=COST_ACCOUNTING_VERSION,
         )
 
         baseline_path = os.path.join(repo.base_dir, sweep_id, "baseline.json")
