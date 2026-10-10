@@ -93,11 +93,8 @@ the dev group, change `"mypy"` to `"mypy==2.1.0"` (the version `uv.lock` already
 with no diff, and `make typecheck-py` with 0 new errors. If the lock no longer says 2.1.0 on 10-19, pin what the lock
 says and report it. Don't upgrade.
 
-## Ticket 3: `TCK-20261019-PARITY-LEDGER-BASELINE-TIGHTEN` (hotfix, chore, P3)
-`python3 -m codebase.gates.parity_ledger_schema check` on main 312fbd78c reports 2,851 errors against a baseline of
-2,862. Four rules fell, in `combat_movement.yaml` and `social_narrative.yaml`. On the merged head, run
-`tighten --yes`, commit `codebase/baselines/parity_ledger_schema_baseline.json`, and prove that no count rose (a keyed
-before/after, same as the ratchet-tighten recipe). Lowering only. Not a fix to any ledger file.
+## (Moved) Parity-ledger baseline tighten
+Moved out of this batch on 2026-10-10. It ships now, with the closure of `TCK-20261003-PARITY-LEDGER-REMEDIATION-EPIC` (owner decision 2026-10-10).
 
 ## Close-out
 - Hand-orchestrated closure for each ticket: `record_hand_orchestrated_closure.py`, which writes the working_log row,
