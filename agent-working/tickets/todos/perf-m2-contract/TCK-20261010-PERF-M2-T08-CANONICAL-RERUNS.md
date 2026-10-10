@@ -37,6 +37,7 @@ Source concern IDs: C6.
 - Label combat_10_* and fighting corpus-world records WORK_MODEL_V1, and add a pre-hunting label for tactical and combat-heavy records unless the hunting batch merged first
 - Defer the mixed_200_local/mixed_200_concurrent reruns until the spawn-collision ticket is done, marking them pending in the ledger
 - Run the step 5 evaluate_simq grade-anchor check and record the diff result (commit nothing if empty)
+- Note: docs/observability/baselines/latest.json is a perf matrix keyed by profile that `src gate` and `compare-sweep` cannot parse today (pydantic ValidationError, exit 1); the replacement must be a file they can read
 - Replace docs/observability/baselines/latest.json and the matrix files with T03-format records, and point compare-sweep, gate and guide commands at the new path
 - Update the baseline_invalidation_ledger.md §3/§5 status column for steps 1, 2, 3, 5 and 6, and mark step 4 as owned by the behavioural 5k rebaseline ticket
 

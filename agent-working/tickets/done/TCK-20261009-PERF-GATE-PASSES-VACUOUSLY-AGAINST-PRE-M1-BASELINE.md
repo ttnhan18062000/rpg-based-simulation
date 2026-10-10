@@ -90,7 +90,8 @@ to follow the guide. That is why this is P2, not P1.
 - A tick-cost check that would PASS against an incomparable baseline becomes `INCONCLUSIVE` with the named reason; a FAIL or WARNING stays (an inflated baseline only loosens a threshold). The tick-cost drift is not reported. Overall status order: FAIL > WARNING > INCONCLUSIVE > INSUFFICIENT_DATA > PASS. `gate` reports `INCONCLUSIVE` and still exits 0 (OD-8, non-blocking).
 - `SweepComparisonResult`, `ComparisonResult`, `CIGateResult` and `sweep_report.json` carry `tick_cost_incomparable_reason`.
 - Gate-status mapping and the report banner were extracted (`_evaluate_gate`, `_resolve_overall`) to keep the code-health ratchet at 0 worse.
-- Open follow-up: `baseline_generator.py` (outside the lift) does not stamp `cost_accounting_version`, so every freshly generated baseline is INCONCLUSIVE for tick cost until it does. Asked of perf-planner.
+- The ticket's premise was partly wrong: `latest.json` never passed vacuously, it fails to parse. The vacuous pass is reachable only through a sweep-generated `baseline_v1` from before DEV-017; none is committed. The M1 guide warnings were corrected to say so (`docs/guides/simulation.md`, `observability.md`); no workaround command was added. T08's scope notes the file is unparseable today.
+- Owner lift +1 file (2026-10-10): `baseline_generator.py` stamps `cost_accounting_version` from `COST_ACCOUNTING_VERSION` (separate commit); old baselines without the field stay INCONCLUSIVE.
 
 ## Test Summary
 - `tests/unit/observability` + `tests/integration/observability/test_baseline_comparison_flow.py` + `test_balance_envelope_comparison.py`: 1081 passed, 1 skipped. New tests: missing and differing version give INCONCLUSIVE, a real regression stays WARNING, a current baseline compares as before, gate/report INCONCLUSIVE, no tick drift. They fail on main (no `tick_cost_incomparable_reason`).
@@ -99,8 +100,9 @@ to follow the guide. That is why this is P2, not P1.
 - Not run: the full suite; a real sweep through `python3 -m src gate`.
 
 ## Files Changed
-- `src/observability/reporting/baseline_comparator.py`, `src/observability/reporting/sweep_report.py`
+- `src/observability/reporting/baseline_comparator.py`, `src/observability/reporting/sweep_report.py`, `src/observability/reporting/baseline_generator.py` (stamp)
+- `docs/guides/simulation.md`, `docs/guides/observability.md` (warning corrected)
 - `tests/unit/observability/{test_baseline_comparator,test_sweep_report_generator,test_balance_envelope}.py`, `tests/integration/observability/{test_baseline_comparison_flow,test_balance_envelope_comparison}.py`
 
 ## Completion Summary
-`src gate` and `compare-sweep` no longer report a tick-cost PASS against a baseline without the current `cost_accounting_version`; they report INCONCLUSIVE with the reason. Guides were handled earlier. The generator stamp is a follow-up.
+`src gate` and `compare-sweep` no longer report a tick-cost PASS against a baseline without the current `cost_accounting_version`; they report INCONCLUSIVE with the reason. Guides were handled earlier. Premise correction: `latest.json` never passed vacuously (it cannot be parsed); the vacuous pass needed a pre-DEV-017 sweep-generated baseline. The generator now stamps the version (owner lift +1 file).
