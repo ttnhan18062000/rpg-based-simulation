@@ -35,7 +35,7 @@ def test_combat_progression_rewards():
     
     # Verify Hero (ID 1) rewards
     hero = new_state.entities[1]
-    assert hero.inventory.gold > 0
+    assert hero.inventory.gold == 0  # a kill mints no coin (EXCH-02, decision 38)
     # Base rewards: 10 XP. 
     assert hero.identity.evolution_points >= 10
     
@@ -295,5 +295,7 @@ def test_quest_lifecycle():
     assert new_hero.identity.evolution_level == 2
     assert new_hero.identity.evolution_points == 10
 
-    # Quest gold 50 + combat gold 5 = 55.
-    assert new_hero.inventory.gold == 55
+    # A kill mints no coin and the quest's 50 gold comes out of a treasury (EXCH-02, decisions 38 and 58). This world funds none, so the
+    # reward is OWED: the hero holds no coin and a debt of 50 stands in its name.
+    assert new_hero.inventory.gold == 0
+    assert [(o.creditor_id, o.amount) for o in new_state.owed.values()] == [(1, 50)]

@@ -8,6 +8,11 @@ from src.engine.apply import ApplyPath
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole
 
+from src.core.enums import Faction as _F
+from src.core.treasury import treasury_key as _tk
+
+FUNDED = {_tk(_F.NEUTRAL): 10000.0}  # a world whose neutral treasury funds a reward (EXCH-02: a reward is paid by a treasury or owed)
+
 @pytest.fixture
 def base_entity():
     return V2EntityBuilder(entity_id=1).identity(role=EntityRole.HERO).build()
@@ -35,7 +40,7 @@ def test_quest_progress_authoritative(base_entity, active_quest):
     entity = replace(base_entity, strategic=strat)
     
     # Setup state
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity})
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED)
     
     # Apply progress update
     update = EntityUpdate(
@@ -55,7 +60,7 @@ def test_quest_completion_and_reward_emission(base_entity, active_quest):
     # Setup entity with quest
     strat = StrategicComponent(projects={"q1": active_quest})
     entity = replace(base_entity, strategic=strat)
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity})
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED)
     
     # Apply progress update that completes the quest
     update = EntityUpdate(
@@ -85,7 +90,7 @@ def test_no_double_completion(base_entity, active_quest):
     # Setup entity with quest
     strat = StrategicComponent(projects={"q1": active_quest})
     entity = replace(base_entity, strategic=strat)
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity})
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED)
     
     # 1. Complete quest
     update1 = EntityUpdate(
