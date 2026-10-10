@@ -149,5 +149,6 @@
   "legacy_roles": {
     "sentinel": 2
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

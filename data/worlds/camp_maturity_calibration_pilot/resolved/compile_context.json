@@ -361,5 +361,6 @@
     "merchant": 1,
     "blacksmith": 4
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

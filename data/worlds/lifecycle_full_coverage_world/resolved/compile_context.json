@@ -1007,5 +1007,6 @@
     "predator_hunter": 2,
     "alpha": 2
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

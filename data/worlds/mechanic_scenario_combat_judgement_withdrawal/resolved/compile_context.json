@@ -166,5 +166,6 @@
     "scout": 5,
     "leader": 2
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

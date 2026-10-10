@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_7ce265140bedcfb6",
+  "manifest_id": "prov_ec7a3d832ae6536e",
   "world_id": "simq_scale_stress_seed42",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
+  "catalog_fingerprint": "88c23592d51ca91d67a68a2d0932c7426a3fc4cbebc5c5463eb2aacbb71e039c",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
@@ -19,8 +19,8 @@
   },
   "composition_fingerprint": "f3b449529b6fd62f108ceb47c6ca3a49e17f086d7b70f92e43fd0ec4a4ad39f9",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "7ce265140bedcfb6f5d190c102aa1af1e481769683ebdc3bcb9b1fe4e7e0a456",
-  "created_at": "2026-10-09T03:58:50.692604Z",
+  "content_fingerprint": "ec7a3d832ae6536e82946b950a58065082e69bf8457bfd0473aacefd46a3c8b3",
+  "created_at": "2026-10-10T10:51:41.468265Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

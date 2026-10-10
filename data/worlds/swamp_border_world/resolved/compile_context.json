@@ -853,5 +853,6 @@
         "hostile_groups": []
       }
     }
-  }
+  },
+  "tax_share": 0.1
 }
