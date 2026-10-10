@@ -4546,8 +4546,8 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/engine/need_pull.py (need_is_pressing), src/engine/scheduler.py (_is_need_woken, NEED_WAKE_CADENCE).
+  v2_evidence: src/engine/need_pull.py (need_is_pressing), src/engine/scheduler.py (_is_need_woken, NEED_WAKE_CADENCE), src/engine/rpg_depth.py (LeashService.way_in_range), src/ai/goals/scorers.py and opening_steps.py (way_in_range), src/worldbuilding/camp_food.py, data/content/world_modules/goblin_camp_forage.yaml.
   proof_type: regression
   test_path: tests/unit/engine/test_pressing_need_wakes_a_held_move.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.105.
-  support_boundary: Range-bound subjects (leash above 0) are unchanged and stay honestly hungry with no open way inside range. The held-move completion rule is a separate ticket. Measured on urban_political and frontier_living_world, seeds 42 to 46, 5000 ticks.
+  support_boundary: A range-bound subject (leash above 0) targets only ways inside its range (way_in_range) and stays honestly hungry with none; goblin camps have berries in range (goblin_camp_forage), wolf nests are a reported meat-only gap. The held-move completion rule is a separate ticket. Measured on urban_political, frontier_living_world and crowded_frontier, seeds 42 to 46, 5000 ticks.
