@@ -1706,4 +1706,4 @@
   proof_type: regression
   test_path: tests/mechanic_scenarios/test_sleep_debt_collapse.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.105.
-  support_boundary: 'The values are ruled (designer, 2026-10-10): rest at twice the kind\'s accrual rate, wake at SURV-07\'s escalation onset, bed reach 30. A collapse lasts about 408 ticks. The sleep pull is measured only on top of the need-wake that lets a held mover re-decide.'
+  support_boundary: 'The values are ruled (designer, 2026-10-10): rest at twice the kind''s accrual rate, wake at SURV-07''s escalation onset, bed reach 30. A collapse lasts about 408 ticks. The sleep pull is measured only on top of the need-wake that lets a held mover re-decide.'
