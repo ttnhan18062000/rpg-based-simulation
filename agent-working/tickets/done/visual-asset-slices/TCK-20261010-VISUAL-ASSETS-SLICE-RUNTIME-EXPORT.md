@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261010-VISUAL-ASSETS-SLICE-RUNTIME-EXPORT
-phase: implement
+phase: done
 date: 2026-10-10
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Opt-in runtime export of slices (`export-runtime --slices` writes slices.json in artifact pixels)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -40,9 +40,9 @@ Child 2 of `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`. Mirrors `export-runtime --an
 - Git LFS, raising any existing bound, client use of atlases/animation/slices, a self-hosted runner.
 
 ## Acceptance Criteria
-- [ ] A fixture source with two slices (one 9-slice, one pivot) round-trips to `slices.json` with scaled coordinates, checked against hand-computed values.
-- [ ] Export without the flag byte-identical; export twice byte-identical.
-- [ ] Planted: unresolvable scale refused, output left absent.
+- [x] A fixture source with two slices (one 9-slice, one pivot) round-trips to `slices.json` with scaled coordinates, checked against hand-computed values.
+- [x] Export without the flag byte-identical; export twice byte-identical.
+- [x] Planted: unresolvable scale refused, output left absent.
 
 ## Related Tickets
 - Parent: `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`
@@ -72,4 +72,4 @@ Child 2 of `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`. Mirrors `export-runtime --an
 
 
 ## Completion Summary
-
+`export-runtime --slices` writes `slices.json` with the geometry in the exported image's pixels (scale from the export config, cross-checked against the artifact's size; an unresolvable scale refuses and writes nothing). No flag, no file. Commit `76418d7a5`.

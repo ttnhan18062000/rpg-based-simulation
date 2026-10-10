@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261010-VISUAL-ASSETS-SLICES-DOCS-AND-CLOSE
-phase: open
+phase: done
 date: 2026-10-10
 tags: [architecture, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation]
 Slices batch: docs, parked lists, handoff snapshots, proof-record re-run, close
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -41,9 +41,9 @@ Child 4 of `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`.
 - Git LFS, raising any existing bound, client use of atlases/animation/slices, a self-hosted runner.
 
 ## Acceptance Criteria
-- [ ] Docs match the code; parked lists updated in store_contract.md and the snapshots.
-- [ ] Proof record fresh at the PR head (CI staleness test green).
-- [ ] All 5 tickets closed, done_checker PASS.
+- [x] Docs match the code; parked lists updated in store_contract.md and the snapshots.
+- [x] Proof record fresh at the PR head (CI staleness test green).
+- [x] All 5 tickets closed, done_checker PASS.
 
 ## Related Tickets
 - Parent: `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`
@@ -64,13 +64,15 @@ Child 4 of `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`.
 
 
 ## Implementation Notes
-
+Docs commit `5270c653b`; the proof re-run is its own commit `e03f08ded` after the last store/drawing edit (condition from asset-planner: rc-0008 must rebuild 70/70 identical with the new Lua pin: it did). origin/main merged before the final pass.
 
 ## Test Summary
+Final pass on the merged tree (origin/main merged in): `tests/visual_assets` 2439 passed (proof-record tests included); `tests/docs` 69 passed, 2 skipped, 1 xfailed; `tests/static` 83; `tests/architecture` 127; `tests/unit/tools` 674; `tests/tools` 4723 passed, 54 skipped, 1 xfailed, **1 failed: `test_handover_transit.py::test_default_memory_dir_slug_maps_checkout_path`**, environmental (two project memory directories from the `~/Work` move), not caused by this batch, nothing deleted.
 
 
 ## Files Changed
+`docs/assets/{store_contract,budgets,drawing_tools}.md`, `docs/assets/aseprite_local_proof.json`, `docs/assets/session_handoff/*`, ticket and monitoring bookkeeping.
 
 
 ## Completion Summary
-
+Docs and parked lists updated, both session_handoff snapshots refreshed, the local Aseprite proof record re-run once after the last store/drawing edit (215 passed, rc-0008 rebuilt 70/70 byte-identical), all five tickets closed. Commits `5270c653b`, `e03f08ded`.

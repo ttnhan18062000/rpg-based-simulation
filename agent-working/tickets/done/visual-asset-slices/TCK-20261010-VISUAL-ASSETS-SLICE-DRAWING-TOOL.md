@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261010-VISUAL-ASSETS-SLICE-DRAWING-TOOL
-phase: implement
+phase: done
 date: 2026-10-10
 tags: [architecture, testing, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, mcp]
 The drawing tool makes slices (name, rect, optional 9-slice centre and pivot) and the handoff declares them
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -42,10 +42,10 @@ Child 3 of `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`. Owner chose store + drawing 
 - Deleting slices, per-frame slice keys, slice user data.
 
 ## Acceptance Criteria
-- [ ] Op shape approved by the planner before code.
-- [ ] An agent-drawn sprite with one 9-slice and one pivot slice passes `export_handoff` -> intake -> adoption (in a test store) and the stored `SourceRecord.slices` matches what was requested.
-- [ ] Bad requests refused by the tool before Aseprite runs; declared/parsed count mismatch refused at intake.
-- [ ] Real-Aseprite drawing test (`needs_aseprite`) passes locally.
+- [x] Op shape approved by the planner before code.
+- [x] An agent-drawn sprite with one 9-slice and one pivot slice passes `export_handoff` -> intake -> adoption (in a test store) and the stored `SourceRecord.slices` matches what was requested.
+- [x] Bad requests refused by the tool before Aseprite runs; declared/parsed count mismatch refused at intake.
+- [x] Real-Aseprite drawing test (`needs_aseprite`) passes locally.
 
 ## Related Tickets
 - Parent: `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`
@@ -75,4 +75,4 @@ Child 3 of `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`. Owner chose store + drawing 
 
 
 ## Completion Summary
-
+`set_slice` drawing op (single key, replaces by name, every slice checked against the final canvas), slices in `inspect`, handoff `slice_count` always declared when the sprite has slices, `SLICE_COUNT_MISMATCH` at intake, `MAX_SLICES` parity with the store, Lua re-pinned. Commit `b30ae1663`.

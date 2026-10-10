@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261010-EPIC-VISUAL-ASSET-SLICES
-phase: open
+phase: done
 date: 2026-10-10
 tags: [architecture, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning]
 Visual asset slices: named slices with 9-slice centres and pivots, read from sources, exported at runtime, made by the drawing tool
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -41,9 +41,9 @@ Owner, 2026-10-10 (blocking questions, after PR #487 merged): next asset batch =
 - Git LFS, raising any existing bound, client use of atlases/animation/slices, a self-hosted runner.
 
 ## Acceptance Criteria
-- [ ] Children 1-4 DONE, each commit reviewed and approved by `asset-planner`.
-- [ ] Owner approved the D25 text.
-- [ ] One PR, pushed and merged only on the user's own answer (`--admin` merge run by the user).
+- [x] Children 1-4 DONE, each commit reviewed and approved by `asset-planner`.
+- [x] Owner approved the D25 text.
+- [x] One PR, pushed and merged only on the user's own answer (`--admin` merge run by the user).
 
 ## Related Tickets
 - Previous batch: `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING` (PR #487, `231e35f77`; animation metadata child is the pattern)
@@ -71,4 +71,4 @@ Owner, 2026-10-10 (blocking questions, after PR #487 merged): next asset batch =
 
 
 ## Completion Summary
-
+All four children are DONE and committed on `visual-asset-slices`, each approved by `asset-planner`; the owner approved ADR D25 and the bounds. Slices are read from sources, stored per source revision, exported opt-in in exported-image pixels, and made by the drawing tool. Nothing under `src/`, no registry/manifest field, no `.github/` change, no gate result moved. The PR and its merge are the user's decisions, pending at close.

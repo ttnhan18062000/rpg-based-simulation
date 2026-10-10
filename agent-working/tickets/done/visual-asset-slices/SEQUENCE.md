@@ -27,4 +27,4 @@ No `src/`, no `.github/`. One PR when the planner says ready and the user author
 
 ## Status
 
-OPEN (2026-10-10): filed by the planner; not started.
+DONE (2026-10-10): all four children are committed on `visual-asset-slices` and each was approved by `asset-planner`; owner approved D25 and the bounds. The single PR needs the user's authorization and its merge the user's `--admin`: pending at close.
