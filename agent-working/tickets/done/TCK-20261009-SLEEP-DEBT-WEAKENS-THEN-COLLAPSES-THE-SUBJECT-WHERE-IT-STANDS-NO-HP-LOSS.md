@@ -30,10 +30,10 @@ P1
 Before: `apply.py` cost 1 HP per tick at sleep debt 98 or more, the same shape as the starvation defect decision 36 replaced; measured on the hunting batch, nearly every creature died of it around tick 2000 whatever it ate, and the death was labelled STARVATION when hunger was also at 95. The designer's addition: the sleep pull aims at the nearest open way, not always the inn.
 
 ## Scope
-1. `src/engine/sleep_debt.py` (one frozen table, pure stage functions, `collapse_update`, `sleep_done`). 2. Remove the HP drain; keep `PassiveDeathCause.SLEEP_DEPRIVATION` unwritten. 3. Weakened stage (the EXHAUSTION line reads the table; recovery scale is the worse of the hunger and sleep stages). 4. Collapse: a held SLEEP chosen in the tactical pass, held by the actions phase until the debt is below the wake line, a held walk stops (`move_ends_here`). 5. The sleep goal's bed is a way only within `bed_reach` and inside a leashed subject's range (`way_in_range`). 6. LB-S19 scenario with a control arm and a wolf; Bible 01 and 04, parity `PROG-130`, divergence 2.104.
+1. `src/engine/sleep_debt.py` (one frozen table, pure stage functions, `collapse_update`, `sleep_done`). 2. Remove the HP drain; keep `PassiveDeathCause.SLEEP_DEPRIVATION` unwritten. 3. Weakened stage (the EXHAUSTION line reads the table; recovery scale is the worse of the hunger and sleep stages). 4. Collapse: a held SLEEP chosen in the tactical pass, held by the actions phase until the debt is below the wake line, a held walk stops (`move_ends_here`). 5. The sleep goal's bed is a way only within `bed_reach` and inside a leashed subject's range (`way_in_range`). 6. LB-S19 scenario with a control arm and a wolf; Bible 01 and 04, parity `PROG-130`, divergence 2.105.
 
 ## Out of Scope
-- WAKE, the 0.5 scale, the bed reach and the sleep recovery rate are unruled placeholders (the designer); a deep-sleep duration of hundreds of ticks; the need-wake and held-move arrival fixes (Lane C); TownScorer's return to town; the population measurement (waits for the need-wake); shelter and cold (M3).
+- The need-wake and held-move arrival fixes (Lane C); TownScorer's return to town; the population measurement (waits for the need-wake); shelter and cold (M3).
 
 ## Acceptance Criteria
 - [x] No HP loss from sleep debt; a collapsed subject takes no action and does not move until its debt is below the wake line; it then walks on (LB-S19 main, person and wolf); a rested subject does none of it (control).
@@ -44,7 +44,7 @@ Before: `apply.py` cost 1 HP per tick at sleep debt 98 or more, the same shape a
 - TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02 (the pattern); the hunting batch (TCK-20261009-A-KILL-LEAVES-MEAT-AND-A-CARNIVORE-EATS-IT-RAW-WITH-A-DIET-GATE-DECISION-44), which found the drain.
 
 ## Related Docs
-- `docs/mechanics/01_entity_anatomy.md` section 4; `docs/mechanics/04_strategic_cognition.md` section 1; divergence 2.104; parity `PROG-130`; LB-S19 on the designer's branch.
+- `docs/mechanics/01_entity_anatomy.md` section 4; `docs/mechanics/04_strategic_cognition.md` section 1; divergence 2.105; parity `PROG-130`; LB-S19 on the designer's branch.
 
 ## Related Stored Artifacts
 - `agent-working/stored_artifacts/TCK-20261009-SLEEP-DEBT-WEAKENS-THEN-COLLAPSES-THE-SUBJECT-WHERE-IT-STANDS-NO-HP-LOSS/`
@@ -53,7 +53,7 @@ Before: `apply.py` cost 1 HP per tick at sleep debt 98 or more, the same shape a
 - `src/engine/sleep_debt.py`, `apply.py`, `combat.py`, `tactical.py`, `tactical_hold.py`, `candidate_selector.py`, `pipeline_phases/actions.py`, `src/ai/goals/scorers.py`, `src/engine/way_in_range.py`.
 
 ## Assumptions / Open Questions
-- WAKE 60 and the 0.5 scale are rpg-planner's suggestions in LB-S19; the sleep recovery rate is open (a collapse lasts about 11 ticks, ~7 minutes of game time; the SLEEP action relieves 20 per execution and costs 100 readiness at 10 a tick). Sent to the designer by rpg-planner.
+- The designer ruled the values (2026-10-10, D41/LB-S19): recovery at twice the kind's accrual rate per tick while asleep (collapse and voluntary sleep), wake below SURV-07's escalation onset (about 59), weakened x0.5 at 80, bed reach 30. A collapse lasts about 408 ticks. A bed's REST service lands on its first execution only (a held sleep repeats the action every tick).
 - The collapse lags reaching the line by up to a brain cadence (about 11 ticks); accepted.
 - `way_in_range` is a local helper behind the name another lane adds for the hunger ways; whichever lands second converges.
 
