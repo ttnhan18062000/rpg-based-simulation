@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import gc
 import json
 import os
+import weakref
 
 import pytest
 
 from tests.visual_assets.store import runtime_fixture as fx
 from tests.visual_assets.store.unit.conftest import snapshot
-from visual_assets.store import config, runtime_export, verify
+from visual_assets.store import config, pixels, runtime_export, verify
 from visual_assets.store import cli
 from visual_assets.store.contracts import RuntimeManifest, parse_record
 from visual_assets.store.errors import BuildError
@@ -213,3 +215,71 @@ def test_the_cli_exports_and_refuses_with_exit_code_2(released, capsys, monkeypa
     assert "3 entries exported" in capsys.readouterr().out
     assert cli.main(["export-runtime", "--catalog-id", fx.CATALOG_ID, "--release-id", fx.RELEASE_ID, "--out", str(released.out)]) == 2
     assert "out_exists" in capsys.readouterr().err
+
+
+# ---- memory: the default export keeps no decoded image (review of TCK-20261010-VISUAL-ASSETS-RUNTIME-ATLAS-EXPORT) ----
+
+def _watch_decodes(monkeypatch):
+    """Wrap `pixels.decode_png` so each call records how many earlier results are still alive at that moment, and the call count."""
+    real = pixels.decode_png
+    seen = {"calls": 0, "alive_at_call": []}
+    refs: list[weakref.ref] = []
+
+    def watching(*args, **kwargs):
+        real.cache_clear()  # `decode_png` keeps up to 4 images in its own LRU cache (documented bound); clear it so only what the EXPORT retains is counted
+        gc.collect()
+        seen["calls"] += 1
+        seen["alive_at_call"].append(sum(1 for r in refs if r() is not None))
+        image = real(*args, **kwargs)
+        refs.append(weakref.ref(image))
+        return image
+
+    monkeypatch.setattr(pixels, "decode_png", watching)
+    return seen
+
+
+def test_the_default_export_never_holds_more_than_one_decoded_image_and_never_touches_the_atlas_code(released, monkeypatch):
+    seen = _watch_decodes(monkeypatch)
+    monkeypatch.setattr(runtime_export, "build_atlas", lambda *a, **k: pytest.fail("the default export must not build an atlas"))
+    monkeypatch.setattr(runtime_export, "pack_atlas", lambda *a, **k: pytest.fail("the default export must not pack an atlas"))
+    runtime = export(released)
+    assert seen["calls"] >= len(runtime.entries) >= 3
+    assert max(seen["alive_at_call"]) <= 1, f"earlier images were still held: {seen['alive_at_call']}"  # at most the one a loop variable still names
+
+
+def test_an_oversized_family_refuses_before_any_image_is_decoded_again(released, monkeypatch):
+    seen = _watch_decodes(monkeypatch)
+    export(released, released.tmp / "baseline")
+    baseline = seen["calls"]  # `verify` plus one decode per entry: the cost of the default export
+    monkeypatch.setattr(config, "MAX_ATLAS_DIM", 8)  # the 16 px fixture images cannot fit any sheet
+    with pytest.raises(BuildError) as err:
+        export(released, atlases=True)
+    assert err.value.code == "atlas_too_large"
+    assert seen["calls"] - baseline == baseline, "an oversized family may cost the default export's decodes and not one more"
+    assert not released.out.exists()
+
+
+def test_mutant_without_the_early_size_check_the_oversized_family_costs_extra_decodes(released, monkeypatch):
+    """The property the test above asserts is measurable: with the early check disabled (pack reports a size that fits), the refusal only comes from `build_atlas`, after the images are decoded again."""
+    seen = _watch_decodes(monkeypatch)
+    export(released, released.tmp / "baseline")
+    baseline = seen["calls"]
+    monkeypatch.setattr(config, "MAX_ATLAS_DIM", 8)
+    real_pack = runtime_export.pack_atlas
+    monkeypatch.setattr(runtime_export, "pack_atlas", lambda members: (1, 1, real_pack(members)[2]))
+    with pytest.raises(BuildError) as err:
+        export(released, atlases=True)
+    assert err.value.code == "atlas_too_large"  # still refused, but by the late check
+    assert seen["calls"] - baseline > baseline, "the late refusal decodes the family's images again first"
+
+
+def test_with_atlases_one_familys_images_are_held_at_a_time(released, monkeypatch):
+    seen = _watch_decodes(monkeypatch)
+    export(released, released.tmp / "baseline")
+    baseline = seen["calls"]
+    seen["alive_at_call"].clear()
+    runtime = export(released, atlases=True)
+    entries, families = len(runtime.entries), len({e.family for e in runtime.entries})
+    assert entries == families == 3, "the rehearsal fixture has one image per family; the bound below relies on it"
+    assert seen["calls"] - baseline == baseline + entries + families, "each entry is decoded once more to build its sheet, and each finished sheet once to verify it"
+    assert max(seen["alive_at_call"]) <= 2, seen["alive_at_call"]  # one family's images, dropped after its sheet

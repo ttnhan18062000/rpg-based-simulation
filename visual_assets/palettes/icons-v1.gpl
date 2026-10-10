@@ -1,0 +1,56 @@
+GIMP Palette
+Name: icons-v1
+Columns: 8
+#
+ 74  96  80	4a6050 terrain: terrain.bridge
+ 74  45  45	4a2d2d terrain: terrain.camp
+ 58  48  64	3a3040 terrain: terrain.cave
+ 58  52  32	3a3420 terrain: terrain.desert
+106  48  64	6a3040 terrain: terrain.dungeon_entrance
+106 122  64	6a7a40 terrain: terrain.farmland
+ 26  29  39	1a1d27 terrain: terrain.floor
+ 27  58  27	1b3a1b terrain: terrain.forest
+ 74  96  48	4a6030 terrain: terrain.grassland
+ 74  64  80	4a4050 terrain: terrain.graveyard
+ 10  74  10	0a4a0a terrain: terrain.jungle
+138  48   0	8a3000 terrain: terrain.lava
+ 58  58  58	3a3a3a terrain: terrain.mountain
+ 90  80  64	5a5040 terrain: terrain.road
+ 74  64  53	4a4035 terrain: terrain.ruins
+ 45  58  74	2d3a4a terrain: terrain.sanctuary
+ 42  80 112	2a5070 terrain: terrain.shallow_water
+200 216 232	c8d8e8 terrain: terrain.snow
+ 42  42  58	2a2a3a terrain: terrain.swamp
+ 45  74  62	2d4a3e terrain: terrain.town
+ 90  42  26	5a2a1a terrain: terrain.volcanic
+ 85  91 115	555b73 terrain: terrain.wall
+ 30  58  95	1e3a5f terrain: terrain.water
+ 37  37  48	252530 ramp: terrain.wall ramp step 0 of 4 (seed at step 1)
+113 126 143	717e8f ramp: terrain.wall ramp step 2 of 4 (seed at step 1)
+145 162 171	91a2ab ramp: terrain.wall ramp step 3 of 4 (seed at step 1)
+ 40  51  29	28331d ramp: terrain.farmland ramp step 0 of 4 (seed at step 1)
+148 151  93	94975d ramp: terrain.farmland ramp step 2 of 4 (seed at step 1)
+180 175 128	b4af80 ramp: terrain.farmland ramp step 3 of 4 (seed at step 1)
+ 21  29  47	151d2f ramp: terrain.shallow_water ramp step 0 of 4 (seed at step 1)
+ 70 124 140	467c8c ramp: terrain.shallow_water ramp step 2 of 4 (seed at step 1)
+105 168 167	69a8a7 ramp: terrain.shallow_water ramp step 3 of 4 (seed at step 1)
+ 58  12   6	3a0c06 ramp: terrain.lava ramp step 0 of 4 (seed at step 1)
+168 112  34	a87022 ramp: terrain.lava ramp step 2 of 4 (seed at step 1)
+199 176  79	c7b04f ramp: terrain.lava ramp step 3 of 4 (seed at step 1)
+ 45  23  34	2d1722 ramp: terrain.dungeon_entrance ramp step 0 of 4 (seed at step 1)
+133  75  77	854b4d ramp: terrain.dungeon_entrance ramp step 2 of 4 (seed at step 1)
+161 118 108	a1766c ramp: terrain.dungeon_entrance ramp step 3 of 4 (seed at step 1)
+ 38  32  28	26201c ramp: terrain.road ramp step 0 of 4 (seed at step 1)
+116 112  89	747059 ramp: terrain.road ramp step 2 of 4 (seed at step 1)
+142 140 117	8e8c75 ramp: terrain.road ramp step 3 of 4 (seed at step 1)
+ 85  89  97	555961 ramp: terrain.snow ramp step 0 of 4 (seed at step 1)
+217 236 243	d9ecf3 ramp: terrain.snow ramp step 2 of 4 (seed at step 1)
+234 254 255	eafeff ramp: terrain.snow ramp step 3 of 4 (seed at step 1)
+ 14  16  24	0e1018 outline: near-black cool outline for glyphs and badges (L* about 5)
+158 164 182	9ea4b6 plate_rim: mid-light plate rim: about L* 67: the lightness that stays furthest (18 L*) from every terrain-v1 tile mean, which run from L* 11 to 86 (the sheet rule's I3, `tests/visual_assets/icon_sheet_rule.py`)
+232 192  64	e8c040 accent_gold: top tiers (S and above) and the lit edge of stars
+208  64  48	d04030 accent_ember: debuff and hostile signal
+ 72 184  88	48b858 accent_leaf: buff and friendly signal
+ 80 168 224	50a8e0 accent_sky: neutral information signal
+144  96 208	9060d0 accent_violet: magic and effects signal
+240 236 216	f0ecd8 accent_bone: highlights and text-like glyph strokes

@@ -69,6 +69,8 @@ def snapshot(root) -> dict[str, tuple]:
         return out
     for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
         for name in dirnames + filenames:
+            if name == ".store.lock" or name.startswith(".deletions"):
+                continue  # ADR D24: the advisory lock file and the local gc deletion log are gitignored local files, not tracked store state
             path = Path(dirpath) / name
             mode = path.lstat().st_mode
             rel = str(path.relative_to(root))
@@ -79,6 +81,15 @@ def snapshot(root) -> dict[str, tuple]:
             else:
                 out[rel] = ("dir" if st.S_ISDIR(mode) else "special",)
     return out
+
+
+@pytest.fixture(autouse=True)
+def _fresh_decode_memo():
+    """The PNG decode memo is process-global; a test that patches the decoder must never see another test's cached result."""
+    from visual_assets.store import pixels
+
+    pixels.decode_png.cache_clear()
+    yield
 
 
 @pytest.fixture

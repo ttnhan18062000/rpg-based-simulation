@@ -13,10 +13,12 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from visual_assets.store import config, records
+from visual_assets.store import config, deletionlog, records
+from visual_assets.store.contracts.base import canonical_json
 from visual_assets.store.contracts import AdoptionRecord, IntakeResult, RevocationRecord, ReviewRenderCheck, SourceRecord, parse_record, record_bound
 from visual_assets.store.contracts.review import RenderVerdict
 from visual_assets.store.contracts.base import IntakeVerdict
+from visual_assets.store.contracts.deletion import ZERO_HASH, DeletionRecord
 from visual_assets.store.errors import ContractError, StageError
 from visual_assets.store.identities import revision_number
 from visual_assets.store.intake.validator import file_hash
@@ -83,6 +85,7 @@ def audit_chain(catalog_root: Path | str | None = None) -> AuditReport:
 
     _audit_unreferenced(root, report, referenced_adoptions, referenced_intakes)
     _audit_revocations(root, report)
+    _audit_deletion_log(root, report)
     for path in sorted(root.rglob(".tmp-*")) if root.is_dir() else []:
         report.notes.append(f"leftover temporary directory {_rel(root, path)} (safe to delete)")
     return report
@@ -92,6 +95,9 @@ def _audit_source(root: Path, sid: str, report: AuditReport, adoptions: set[str]
     directory = records.sources_dir(root) / sid
     revisions = records.list_revisions(sid, root)
     names = {p.name for p in directory.iterdir() if p.name not in _IGNORED}
+    if not names and not revisions:
+        report.breaks.append(AuditBreak("ORPHAN_FILE", _rel(root, directory), "an empty source directory (an interrupted adoption left it; it blocks adopting this id until removed)"))
+        return
     expected = {name for rev in revisions for name in (f"{rev}.aseprite", f"{rev}.source.json")}
     for stray in sorted(names - expected):
         match = records.REVISION_FILE.fullmatch(stray)
@@ -228,3 +234,51 @@ def _audit_revocations(root: Path, report: AuditReport) -> None:
         target = record.target
         if getattr(target, "kind", "") == "source_revision" and target.source_revision not in records.list_revisions(target.source_asset_id, root):  # type: ignore[union-attr]
             report.breaks.append(AuditBreak("REVOCATION_DANGLING", _rel(root, path), "it revokes a source revision that does not exist"))
+
+
+def _audit_deletion_log(root: Path, report: AuditReport) -> None:
+    """ADR D24: the local deletion log and its archives form one hash chain, oldest archive first. Absent logs are fine (a store that never ran `gc --delete`)."""
+    files = [*deletionlog.archives(root), deletionlog.log_path(root)]
+    expected = ZERO_HASH
+    last: DeletionRecord | None = None
+    for path in files:
+        if path.is_symlink() or (path.exists() and not path.is_file()):
+            report.breaks.append(AuditBreak("DELETION_LOG_UNREADABLE", _rel(root, path), "the deletion log is a symlink or not a regular file"))
+            return
+        if not path.is_file():
+            continue
+        if path.stat().st_size > config.MAX_DELETION_LOG_BYTES:
+            report.breaks.append(AuditBreak("DELETION_LOG_UNREADABLE", _rel(root, path), f"the deletion log is larger than {config.MAX_DELETION_LOG_BYTES} bytes"))
+            return
+        try:
+            data = path.read_bytes()
+        except OSError:
+            report.breaks.append(AuditBreak("DELETION_LOG_UNREADABLE", _rel(root, path), "the deletion log cannot be read"))
+            return
+        raw_lines = data.split(b"\n")
+        if raw_lines and raw_lines[-1] != b"":
+            report.breaks.append(AuditBreak("DELETION_LOG_RECORD", _rel(root, path), "the last line has no newline (a torn append)"))
+        for number, raw in enumerate(raw_lines, 1):
+            if not raw:
+                continue
+            line = raw + b"\n"
+            where = f"{_rel(root, path)}:{number}"
+            try:
+                record = parse_record(DeletionRecord, line)
+            except ContractError as exc:
+                report.breaks.append(AuditBreak("DELETION_LOG_RECORD", where, f"not a valid deletion record ({exc.code})"))
+                return  # nothing after an unreadable line can be chained
+            if canonical_json(record) != line:
+                report.breaks.append(AuditBreak("DELETION_LOG_RECORD", where, "the line is not in canonical form"))
+            if record.prev_hash != expected:
+                code = "DELETION_LOG_ANCHOR" if number == 1 else "DELETION_LOG_CHAIN"
+                report.breaks.append(AuditBreak(code, where, "prev_hash is not the hash of the previous line" if number > 1 else "the log does not start where the previous log ended"))
+            expected = file_hash(line)
+            last = record
+    if last is not None:
+        live = root == config.CATALOG_ROOT  # the quarantine and review roots are configured; for another catalog they sit beside its records
+        base = {"quarantine": config.QUARANTINE_ROOT if live else root / ".quarantine", "review": config.REVIEW_ROOT if live else root / ".review",
+                "generated": records.generated_dir(root)}[last.kind]
+        target = base / last.path.split("/", 1)[1]
+        if target.exists() or target.is_symlink():
+            report.notes.append(f"the newest deletion record names {last.path}, which still exists (a gc was interrupted after logging; run gc --delete again)")
