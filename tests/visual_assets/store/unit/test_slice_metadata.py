@@ -15,7 +15,7 @@ from pydantic import ValidationError
 
 from tests.visual_assets.store import builders as b
 from visual_assets.store import config, slices
-from visual_assets.store.contracts import SourceRecord, canonical_json, parse_record
+from visual_assets.store.contracts import CandidateHandoffPackage, SourceRecord, canonical_json, parse_record
 from visual_assets.store.contracts.base import IntakeVerdict
 from visual_assets.store.contracts.intake import IntakeFindingCode as Code
 from visual_assets.store.contracts.animation import SourceAnimation
@@ -279,3 +279,31 @@ def test_a_finding_names_its_slice_by_chunk_position_even_after_a_rejected_one()
     source = b.aseprite(slice_chunks=[b.slice_chunk("", [(0, 0, 0, 1, 1)]), b.slice_chunk("a", [(0, 0, 0, 1, 1)]), b.slice_chunk("b", [(0, 0, 0, 1, 1)]), b.slice_chunk("c", [(0, 0, 0, 1, 1)] * 0)])
     _, problems = aseprite.read_facts(source)
     assert [m for c, m in problems if c is Code.SLICE_INVALID] == ["the name of slice 1 is empty, over 32 characters, not plain text or not UTF-8", "slice 4 has no keys"]
+
+
+# ---- the handoff's declared slice count (ADR D25; `TCK-20261010-VISUAL-ASSETS-SLICE-DRAWING-TOOL`) ----
+
+def _intake_with(env, number: int, source: bytes, **package):
+    preview = b.png(16 * 8, 16 * 8)
+    directory = b.write_dir(env.tmp / f"count-{number}", b.package_bytes(source, preview, candidate_id=f"cand-0000000000000d{number:02x}", **package), source, preview)
+    return intake(directory, created_at="2026-01-01T00:00:00Z")
+
+
+def test_a_declared_slice_count_that_differs_from_the_file_quarantines_in_both_directions(env):
+    two = b.aseprite(slice_chunks=[PLAIN, NINE])
+    one = b.aseprite(slice_chunks=[PLAIN])
+    for number, (source, declared) in enumerate([(one, 2), (two, 1), (two, 0), (b.aseprite(), 1)]):
+        result = _intake_with(env, number, source, slice_count=declared)
+        assert result.verdict is IntakeVerdict.QUARANTINED and Code.SLICE_COUNT_MISMATCH in {f.code for f in result.findings}, (number, declared)
+    assert _intake_with(env, 9, two, slice_count=2).verdict is IntakeVerdict.PASSED
+
+
+def test_a_package_that_declares_no_slice_count_is_accepted_even_when_the_file_has_slices(env):
+    result = _intake_with(env, 20, b.aseprite(slice_chunks=[PLAIN, NINE]))
+    assert result.verdict is IntakeVerdict.PASSED and not any(f.code is Code.SLICE_COUNT_MISMATCH for f in result.findings)
+
+
+def test_a_package_without_the_field_round_trips_byte_for_byte():
+    preview = b.png(128, 128)
+    data = b.package_bytes(b.aseprite(), preview)
+    assert b"slice_count" not in data and canonical_json(parse_record(CandidateHandoffPackage, data)) == data

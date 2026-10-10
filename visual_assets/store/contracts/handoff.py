@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import Field, model_serializer
 
 from visual_assets.store.contracts.base import (
     BoundedText,
@@ -16,6 +16,7 @@ from visual_assets.store.contracts.base import (
     ProducerClass,
     ProvenanceText,
     StoreRecord,
+    drop_absent,
 )
 from visual_assets.store.identities import CandidateId, FileHash, SourceRevision
 
@@ -66,6 +67,7 @@ class CandidateHandoffPackage(StoreRecord):
     layer_count: PositiveCount
     cel_count: Count
     tag_count: Count
+    slice_count: Count | None = None  # declared by the drawing tool whenever the sprite has slices; absent = not declared (older packages), so intake does not check it
     palette_size: Count
     preview_hash: FileHash
     brief_id: ProvenanceText
@@ -76,3 +78,7 @@ class CandidateHandoffPackage(StoreRecord):
     producer_validation: ProducerValidation
     declared_limitations: Annotated[tuple[BoundedText, ...], Field(max_length=MAX_LIMITATIONS)]
     assertion: Literal["HANDOFF_IS_NOT_ADOPTION_PUBLICATION_OR_ACTIVATION"]
+
+    @model_serializer(mode="wrap")
+    def _omit_absent(self, handler):  # type: ignore[no-untyped-def]
+        return drop_absent(handler(self), "slice_count")

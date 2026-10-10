@@ -115,6 +115,8 @@ def _check_source(
         (Code.TAG_COUNT_MISMATCH, "tag count", package.tag_count, facts.tags),
         (Code.PALETTE_SIZE_MISMATCH, "palette size", package.palette_size, facts.palette_size),
     )
+    if package.slice_count is not None:  # an older package declares none: nothing to check
+        claims += ((Code.SLICE_COUNT_MISMATCH, "slice count", package.slice_count, len(facts.slices)),)
     for code, label, claimed, actual in claims:
         if actual is None:
             continue  # unverifiable; the PALETTE_UNVERIFIABLE finding from the reader already quarantines it

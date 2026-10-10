@@ -18,6 +18,11 @@ bottom layer, and "frame", 1-based, default 1):
   add_layer {name}   rename_layer {layer,name}   set_visible {layer,visible}
   add_frame {copy_from?}  (copy is inserted right after its source; no copy_from = empty, appended)
   set_duration {frame,ms}   add_tag {name,from_frame,to_frame}   set_palette {colors:[...]}
+  set_slice {name,x,y,w,h,center?:{x,y,w,h},pivot?:{x,y}}   (bounds in sprite pixels; center and pivot are
+                          RELATIVE to the slice's top-left corner, pivot edges inclusive; one key that holds for
+                          every frame; REPLACES the whole slice of that name, so a hand-made per-frame slice
+                          becomes single-key, and a name outside [A-Za-z0-9][A-Za-z0-9 _-]{0,31} cannot be
+                          targeted; at most 16 slices; every slice must fit the FINAL canvas or the batch fails)
   delete_layer {layer}   (layer required; the last layer cannot be deleted)
   delete_frame {frame}   (frame required, later frames renumber; the last frame cannot be deleted;
                           tags spanning it shrink, a tag wholly inside it is removed)

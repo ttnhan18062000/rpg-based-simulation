@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261010-VISUAL-ASSETS-SLICE-DRAWING-TOOL
-phase: open
+phase: implement
 date: 2026-10-10
 tags: [architecture, testing, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, mcp]
 The drawing tool makes slices (name, rect, optional 9-slice centre and pivot) and the handoff declares them
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -65,12 +65,13 @@ Child 3 of `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`. Owner chose store + drawing 
 - `drawing/**` is in the proof record's guarded set; child 4 re-runs the record once.
 
 ## Implementation Notes
-
+`set_slice` op (planner-approved shape plus 3 edits), Lua handler, final-canvas check of all slices, slices in `inspect`, handoff `slice_count`, `SLICE_COUNT_MISMATCH`, `MAX_SLICES` with budget row, Lua re-pinned, docs.
 
 ## Test Summary
-
+48 new drawing tests (unit + real Aseprite), 3 store unit tests; 6 mutants, 4 caught, 2 equivalent (documented in investigation.md).
 
 ## Files Changed
+`visual_assets/drawing/{config,api,handoff}.py`, `schema/ops.py`, `backend/lua/ops.lua`, `server/lowlevel_tools.py`, `store/contracts/{handoff,intake}.py`, `store/intake/validator.py`, docs, tests.
 
 
 ## Completion Summary

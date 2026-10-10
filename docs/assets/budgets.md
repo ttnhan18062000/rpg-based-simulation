@@ -72,6 +72,7 @@ harsher than pixel art). Cost per operation means one decode, one render, one lo
 | `visual_assets.drawing.config` | `MAX_OPS` | 256 | apply_ops with 256 rect ops on a 128 px sprite: 0.082 s | `256` | R1 | | APPROVED 2026-10-04 |
 | `visual_assets.drawing.config` | `MAX_REFS` | 8 | stamp sources per batch; no data | `8` | R0, NOT MEASURED | | APPROVED 2026-10-04 |
 | `visual_assets.drawing.config` | `MAX_FRAMES` | 16 | 16 frames of noise at 128 px: 889025 B source (over `MAX_SOURCE_BYTES`) | `16` | R0 | F2 | APPROVED 2026-10-04 |
+| `visual_assets.drawing.config` | `MAX_SLICES` | new (`set_slice`, `TCK-20261010-VISUAL-ASSETS-SLICE-DRAWING-TOOL`) | equal to the store's `MAX_SOURCE_SLICES` (a parity test), so a tool-made source never carries more slices than intake accepts; a slice is about 106 bytes of record JSON (measured with the store rows) | `16` | R3: equal to the store bound (no new capability, only agreement) | | APPROVED 2026-10-10 |
 | `visual_assets.drawing.config` | `MAX_PALETTE` | 64 | set_palette entries; no data | `64` | R0, NOT MEASURED | | APPROVED 2026-10-04 |
 | `visual_assets.drawing.config` | `MAX_REGION` | 32 | no data | `32` | R0, NOT MEASURED | | APPROVED 2026-10-04 |
 | `visual_assets.drawing.config` | `MAX_SCALE` | 16 | the drawing tools' maximum preview scale: render 0.258 s at 128 px | `16` | R1 | F6 | APPROVED 2026-10-04 |

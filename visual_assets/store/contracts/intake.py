@@ -53,6 +53,7 @@ class IntakeFindingCode(str, Enum):
     ANIMATION_TAG_RANGE_INVALID = "ANIMATION_TAG_RANGE_INVALID"  # from > to, or outside the frames
     ANIMATION_TAG_INVALID = "ANIMATION_TAG_INVALID"  # empty, duplicate, over-long or non-text name, or an unknown direction
     # slice metadata (`TCK-20261010-VISUAL-ASSETS-SLICE-SOURCE-FIELDS`): every one quarantines the candidate
+    SLICE_COUNT_MISMATCH = "SLICE_COUNT_MISMATCH"  # the handoff declared a slice count that differs from the slice chunks in the file
     SLICE_OUT_OF_BOUNDS = "SLICE_OUT_OF_BOUNDS"  # more slices than MAX_SOURCE_SLICES, or a slice with more keys than MAX_SLICE_KEYS
     SLICE_INVALID = "SLICE_INVALID"  # empty, duplicate, over-long or non-text name, no keys, unknown flag bits, a key frame out of range or not increasing
     SLICE_GEOMETRY_INVALID = "SLICE_GEOMETRY_INVALID"  # a rectangle outside the canvas or with no area, a centre or pivot outside its slice
