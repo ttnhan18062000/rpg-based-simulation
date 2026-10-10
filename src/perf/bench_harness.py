@@ -127,6 +127,7 @@ class BenchHarness:
             rss_samples: List[float] = []
             mode_samples: List[str] = []
             tick_wall_ms: List[float] = []
+            history: List[Any] = []  # every sampled tick's signals: RuntimeStatus keeps only the last 100
             wall_start_ts = time.perf_counter()
 
             try:
@@ -134,6 +135,7 @@ class BenchHarness:
                     tick_start_ts = time.perf_counter()
                     kernel.tick_once()
                     tick_wall_ms.append((time.perf_counter() - tick_start_ts) * 1000.0)
+                    history.extend(kernel.status.get_recent_history(1))
 
                     # RuntimeMode is a trivial IntEnum read — sample every tick, unlike the
                     # throttled RSS collector below, so a transient CONSTRAINED/DEGRADED/SURVIVAL
@@ -155,7 +157,7 @@ class BenchHarness:
             wall_clock_tps = sample_ticks / wall_clock_s if wall_clock_s > 0 else 0
 
             # 3. COLLATION
-            measured = self._collate(kernel.status.get_recent_history(sample_ticks), tick_wall_ms, mode_samples)
+            measured = self._collate(history, tick_wall_ms, mode_samples)
             tick_times = measured.tick_times
 
             # Compute TPS: Theoretical throughput if no wall-clock overhead
