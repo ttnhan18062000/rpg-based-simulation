@@ -2779,6 +2779,15 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Verification**: `tests/unit/perf/test_bench_harness_record.py::test_stats_cover_every_sampled_tick_not_just_the_last_hundred` (fails on the previous harness: 100 samples against 150); parity entry `INFRA-432`.
 - **Status**: ACTIVE
 
+### DEV-022 — The Perf Tripwire Reports INCONCLUSIVE Instead of Skipping, and Compares Paired Runs Instead of Legacy References (TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED)
+
+- **Situation**: `test_regression_vs_baseline` compared the head's `avg_tick_compute_ms` with `max(5 ms, 1.25 x baseline)` against 15 legacy files that record no identity, and `pytest.skip`-ed a missing file. `tools/perf/check_perf_regression.py` had a second tolerance, `max(1.15 x, +3 ms)`, and no caller.
+- **Change**: the pull-request lane is `tools/perf/tripwire.py` (base and head paired on one runner, each side in a fresh process, through `compare()`, one diagnostic retry); the nightly lane compares the head with a promoted baseline record. A missing or legacy baseline is `INCONCLUSIVE` with a named reason. `check_perf_regression.py` and `perf_ci.py` are removed. Owner decision OD-2.
+- **Rationale**: **Stabilized**. A comparison against evidence of unknown identity, or a skip that reads as success, is not a tripwire.
+- **Consequences recorded**: (1) the nightly lane reports `INCONCLUSIVE` for every scenario until `PERF-M2-T08` promotes records, so for now it detects nothing; the pull-request lane is the working tripwire once a CI step runs it (not wired here). (2) The old `max(5 ms, 1.25 x)` rule is replaced by `TRIPWIRE_THRESHOLDS`. (3) The `RuntimeMode` check in the old test (empty hard set) is replaced by `compare()`'s excursion rule. Nothing is blocking, as before.
+- **Verification**: `tests/unit/perf/test_tripwire.py`; parity entry `INFRA-433`.
+- **Status**: ACTIVE
+
 ### 2.70 An Entity-Tracking Combat Move Ends When Its Target Is Dead, Inactive or Gone, and the In-Reach End Covers Intercept and Bracketing (TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION)
 
 - **Legacy Behavior**: only a `PURSUE` move had a completion condition (2.68), and only for a live target in reach. An `INTERCEPT`, a

@@ -4,7 +4,7 @@ layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED
-phase: open
+phase: inprogress
 date: 2026-10-10
 tags: [performance, benchmarking, testing, regression]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking, testing, regression]
 PERF-M2-T03: Tripwire projection as a paired base/head comparison
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -48,13 +48,13 @@ Source concern IDs: C4.
 - Changing BenchmarkRecord/compare() semantics (PERF-M2-T02b)
 
 ## Acceptance Criteria
-- [ ] test_regression_vs_baseline no longer calls pytest.skip. Unit tests assert that a missing baseline record gives INCONCLUSIVE with a named reason, and that an incompatible identity (mismatched protocol.percentile_method or signal_contract) gives INCONCLUSIVE naming that field.
-- [ ] The tripwire runs base and head each in its own subprocess over a declared scenario list (a module-level constant or YAML) and passes both BenchmarkRecords to compare(base, head, thresholds)
-- [ ] A synthetic head slower than base by more than both the relative threshold and the absolute floor returns REGRESSION, and a delta inside the noise budget returns PASS
-- [ ] When the first comparison is not PASS, at most one diagnostic retry runs, and the emitted report contains both the original and the retry outcome (a test asserts retry count <= 1)
-- [ ] A non-PASS outcome does not fail the CI job: the tripwire test or step exits zero and emits the outcome as a report or annotation
-- [ ] tools/perf/check_perf_regression.py, tools/perf/perf_ci.py and their tests and Makefile targets are deleted or replaced, and no remaining reference exists in the Makefile, tools/gate_checks/test_scope_coverage_static.py, tests/codebase/test_repo_root_allowlist.py or tools/perf_guard.py
-- [ ] docs/engine/performance_contract.md §5 states the concrete threshold values, and §5.2 records the absorb-or-delete disposition of absolute ceilings and perf_baselines.json/PerfBudget
+- [x] test_regression_vs_baseline no longer calls pytest.skip. Unit tests assert that a missing baseline record gives INCONCLUSIVE with a named reason, and that an incompatible identity (mismatched protocol.percentile_method or signal_contract) gives INCONCLUSIVE naming that field.
+- [x] The tripwire runs base and head each in its own subprocess over a declared scenario list (a module-level constant or YAML) and passes both BenchmarkRecords to compare(base, head, thresholds)
+- [x] A synthetic head slower than base by more than both the relative threshold and the absolute floor returns REGRESSION, and a delta inside the noise budget returns PASS
+- [x] When the first comparison is not PASS, at most one diagnostic retry runs, and the emitted report contains both the original and the retry outcome (a test asserts retry count <= 1)
+- [x] A non-PASS outcome does not fail the CI job: the tripwire test or step exits zero and emits the outcome as a report or annotation
+- [x] tools/perf/check_perf_regression.py, tools/perf/perf_ci.py and their tests and Makefile targets are deleted or replaced, and no remaining reference exists in the Makefile, tools/gate_checks/test_scope_coverage_static.py, tests/codebase/test_repo_root_allowlist.py or tools/perf_guard.py
+- [ ] docs/engine/performance_contract.md §5 states the concrete threshold values, and §5.2 records the absorb-or-delete disposition of absolute ceilings and perf_baselines.json/PerfBudget  **NOT DONE here: `performance_contract.md` is rpg-owned P1 and the owner approves the values first. The proposed values and dispositions are in the PR body; the doc edit is the one thing left on this ticket.**
 
 ## Related Tickets
 - TCK-20261003-PERF-M2-CLAUSE-INVENTORY
@@ -98,9 +98,22 @@ None.
 - Nightly or local use of the pre-DEV-017 committed baselines continues until T08
 
 ## Implementation Notes
+- Plan, investigation and test plan: `agent-working/staging_artifacts/TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED/` (moved to `stored_artifacts/` when the ticket closes).
+- **Built:** `tools/perf/tripwire.py` (declared `TRIPWIRE_SCENARIOS`, paired runner, one diagnostic retry, non-blocking report and `::warning` annotations, an A/A `calibrate` command, `load_baseline` / `compare_with_baseline` for the nightly lane); the nightly test now reports `INCONCLUSIVE` with a named reason instead of `pytest.skip`; `check_perf_regression.py`, `perf_ci.py` and the tools' own test are removed with their two scope-map entries.
+- **Measured noise, which sets the threshold:** with identical code on both sides on this 6-vCPU VM, head/base average latency deviated by up to 0.31 (14 A/A pairs per scenario, idle_100_local and movement_100_local); the median was no steadier (up to 0.25 over 8 pairs). The old `1.25x` rule sits inside that noise. `TRIPWIRE_THRESHOLDS` is therefore `relative 0.40`, `absolute 5 ms`, metric `avg`, and a test pins `relative > NOISE_BUDGET (0.31)`. **Consequence stated plainly: on this host the tripwire detects only changes above about 40%.** The number is this VM's; recalibrate on the CI runner.
+- **Held, on purpose:** `.github/workflows/test.yml` is untouched (testing-planner to agree, issue #488; the proposed step is in the PR body); `docs/engine/performance_contract.md` §3.3, §5 and §5.2 are not edited (rpg-owned P1; proposed text in the PR body).
+- The ticket's reference list was partly wrong: the Makefile, `tests/codebase/test_repo_root_allowlist.py` and `tools/perf_guard.py` do not reference the retired tools. The real references were `tools/gate_checks/test_scope_coverage_static.py` and `tests/tools/test_test_scope_coverage_static.py` (owners: agent-working-planner, rpg-planner).
+- The combat scenario and the corpus worlds are not in the declared set (the combat builder takes team sizes, not an entity count); they are PERF-M2-T08's.
 
 ## Test Summary
+- New: `tests/unit/perf/test_tripwire.py` (19: 18 default, 1 real fresh-process run marked `slow`); `tests/perf/test_perf_regression_baseline.py` rewritten (reports INCONCLUSIVE for the legacy references). With `tests/unit/perf`, the scope-map tests, the paths guard and the repo-root allowlist test: passing.
+- Calibration (A/A, this VM): see Implementation Notes and `investigation.md`.
+- Not run: the full suite; the tripwire against a real base branch checkout in CI (test.yml is held).
 
 ## Files Changed
+- New: `tools/perf/tripwire.py`, `tests/unit/perf/test_tripwire.py`.
+- Edited: `tools/perf/capacity_run.py` (RunSpec tier and projection), `tests/perf/test_perf_regression_baseline.py`, `tools/gate_checks/test_scope_coverage_static.py` and `tests/tools/test_test_scope_coverage_static.py` (two stale entries removed), `docs/performance/perf_baseline_policy.md`, `docs/performance/benchmark_identity_schema.md`, `docs/performance/baseline_invalidation_ledger.md`, `docs/guidelines/intentional_divergences.md` (DEV-022), `docs/parity_ledger/infrastructure.yaml` (INFRA-433).
+- Removed: `tools/perf/check_perf_regression.py`, `tools/perf/perf_ci.py`, `tests/tools/test_check_perf_regression.py`.
 
 ## Completion Summary
+NOT COMPLETE: the code, tests and non-held docs are done; one acceptance criterion remains, the `performance_contract.md` §5 and §5.2 edit, which waits for the owner's approval of the thresholds and dispositions (proposal in the PR body). The ticket stays INPROGRESS.

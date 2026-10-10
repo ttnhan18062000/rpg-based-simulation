@@ -81,6 +81,9 @@ class RunSpec:
     ticks: int = DEFAULT_TICKS
     seed: int = 42
     samples_dir: Optional[str] = None
+    #: The projection a record is for. Defaults are the capacity run; ``tools/perf/tripwire.py`` uses ``tripwire`` / ``tripwire_paired``.
+    gate_tier: str = "capacity_run"
+    gate_projection: str = "capacity_run"
 
 
 def _profile(spec: RunSpec) -> Any:
@@ -97,7 +100,10 @@ def run_once(spec: RunSpec) -> BenchmarkRecord:
     state = SCENARIO_BUILDERS[spec.scenario](entity_count=spec.entities, seed=spec.seed)
     harness = BenchHarness(_profile(spec))
     options = RecordOptions(
-        GateTier.CAPACITY_RUN, "capacity_run", Path(spec.samples_dir) if spec.samples_dir else None, Runner(controlled=False, name=platform.node() or "unknown")
+        GateTier(spec.gate_tier),
+        spec.gate_projection,
+        Path(spec.samples_dir) if spec.samples_dir else None,
+        Runner(controlled=False, name=platform.node() or "unknown"),
     )
     harness.run_benchmark(f"{spec.scenario}_{spec.entities}", state, spec.warmup, spec.ticks, record_options=options)
     if harness.last_record is None:

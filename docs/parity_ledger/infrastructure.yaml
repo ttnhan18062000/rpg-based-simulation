@@ -12941,3 +12941,20 @@
   support_boundary: No controlled runner exists, so no result is a capacity claim and no performance target is enforced (OD-5). The tool is not part of default CI.
     The long-run record times the tick plus the read-model update, so it is a different projection from a BenchHarness capacity run. The two extra_slow
     certification tests in tests/certification/test_cert_long_run_stability.py were updated to assert outcome but were not run (5000 ticks on 1000 entities).
+
+- id: INFRA-433
+  text: 'TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED (PERF-M2 OD-2): tools/perf/tripwire.py is the CI-fast tripwire. It runs base and head each in a fresh process on one
+    runner over the declared TRIPWIRE_SCENARIOS (10 warmup, 50 sampled ticks, canonical contract), passes both records to compare(base, head, TRIPWIRE_THRESHOLDS),
+    and runs one diagnostic retry for a scenario that is not PASS; both outcomes are reported and a disagreement is INCONCLUSIVE (not reproducible). It always exits 0
+    when it ran and reports with ::warning annotations: it blocks nothing. The nightly lane (tests/perf/test_perf_regression_baseline.py) compares the head
+    with the latest promoted baseline record and reports a missing or legacy baseline as INCONCLUSIVE with a named reason instead of pytest.skip. tools/perf/check_perf_regression.py and
+    tools/perf/perf_ci.py are removed.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/perf/tripwire.py (run_scenario, load_baseline, compare_with_baseline, calibrate); tests/perf/test_perf_regression_baseline.py
+  proof_type: contract
+  test_path: tests/unit/perf/test_tripwire.py
+  divergence_note: DEV-022 (Stabilized)
+  support_boundary: Nothing is blocking (OD-8). The CI wiring (.github/workflows/test.yml) is not changed here; it waits for testing-planner (issue 488). The threshold values are a proposal for
+    docs/engine/performance_contract.md section 5 (rpg-owned P1) until the owner approves them. The declared set is two synthetic scenarios; combat and the corpus worlds are PERF-M2-T08.
