@@ -2516,3 +2516,43 @@
   test_path: tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py
   divergence_note: 'Intentional divergence 2.102 (Intentional Gameplay Change).'
   support_boundary: 'Dormant in the measured worlds while the free meal stands; ME-S20 is on the parked removal stack. Held out: the treasury wage for public town work (decision 37). People only (decisions 42 and 43): see 2.103.'
+- id: TOWN-205
+  text: 'A sale at a shop and a wage at an inn pay a tenth of the proceeds, rounded down per transaction, to the treasury of the faction holding the building''s region, in the same transaction; there is no periodic levy.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/place_tax.py`, `src/engine/shop_sale.py`, `src/engine/work_shift.py`, `src/core/conservation.py` (`_tax_credit`), `src/engine/town_resolution.py`, `data/content/defaults.yaml` (`default_tax_share`), `RegionState.tax_share`'
+  proof_type: parity
+  test_path: tests/unit/treasury/test_tax_and_upkeep.py
+  divergence_note: 'Intentional divergence 2.105 (Intentional Gameplay Change).'
+  support_boundary: 'Only HERO_GUILD owns regions in the shipped worlds. The account unit is the four-value legacy bucket.'
+- id: TOWN-206
+  text: 'A faction treasury pays each functional building in its regions 5 gold of upkeep into the building''s own purse on the upkeep tick; a building it cannot pay is disabled; no building tax is minted.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/town_resolution.py` (section 4), `src/core/treasury.py`'
+  proof_type: parity
+  test_path: tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py
+  divergence_note: 'Intentional divergence 2.106 (Intentional Gameplay Change, Bug Fix).'
+  support_boundary: 'A disabled building is not re-enabled when the treasury recovers.'
+- id: TOWN-207
+  text: 'A kill grants experience and no coin; a dead entity''s coin and goods move to its body (CorpseState.gold), a looter takes the body''s coin, a decayed body''s coin escheats to the treasury of the ground''s holder; a quest reward is paid by a treasury or recorded as an OwedRecord paid oldest first.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/combat.py`, `src/engine/apply_plan.py`, `src/core/conservation.py` (`_reward_result`, CORPSE), `src/engine/world_dynamics.py`, `src/engine/quests.py`, `src/engine/town_resolution.py`, `src/core/state.py` (`CorpseState.gold`, `OwedRecord`)'
+  proof_type: parity
+  test_path: tests/unit/treasury/test_rewards_repair_and_fees.py
+  divergence_note: 'Intentional divergence 2.107 (Intentional Gameplay Change, Bug Fix).'
+  support_boundary: 'No bounty system exists, so no bounty is posted.'
+- id: TOWN-208
+  text: 'An inheritance moves the dead entity''s items and coin to the heir once, atomically; a repair is charged once to the smith, or uses a carried repair kit away from one; the world has one treasury per region-owner bucket; total coin is conserved over a run.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/core/conservation.py` (`_inherit_result`), `src/systems/lifecycle_systems/lifecycle.py`, `src/engine/pipeline.py`, `src/engine/domain/core_actions.py`, `src/worldbuilding/compiler.py`'
+  proof_type: parity
+  test_path: tests/unit/treasury/test_total_coin_is_conserved.py
+  divergence_note: 'Intentional divergence 2.108 (Bug Fix, Intentional Gameplay Change).'
+  support_boundary: 'Named heirlooms keep their separate CHEST grant.'
