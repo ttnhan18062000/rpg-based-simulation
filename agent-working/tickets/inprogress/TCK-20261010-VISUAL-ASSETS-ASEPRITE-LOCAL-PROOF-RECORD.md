@@ -40,7 +40,7 @@ Child 4 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. ADR D10 keeps real As
 - A self-hosted runner (owner declined, 2026-10-10).
 
 ## Acceptance Criteria
-- [ ] Guarded-path list and record shape approved by the planner; D10 addendum text by the owner.
+- [x] Guarded-path list and record shape approved by the planner; D10 addendum text by the owner.
 - [ ] CI test fails on a changed guarded file and passes after a fresh local run (mutation proof).
 - [ ] First record committed from a real local run.
 
@@ -65,7 +65,7 @@ Child 4 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. ADR D10 keeps real As
 - **Pieces:** `tools/visual_assets_aseprite_proof.py` (pure rules: guarded set, hash, compare, record validation, selection rule), `tools/visual_assets_aseprite_local.py` (writes `docs/assets/aseprite_local_proof.json` after a clean strict complete run), `tests/visual_assets/test_aseprite_local_proof.py` (CI, no Aseprite), `tools/ci_aseprite_skip_line.py` (the summary line also states the record's commit, version, date and match/DIFFER; reporting only, exit 0). Child 3's rebuild test writes its verdict JSON to `VISUAL_ASSETS_REBUILD_VERDICT_OUT` when the runner sets it.
 - **Beyond the plan, same intent:** the runner also refuses to write a record when a guarded file is modified or untracked (the record names the commit the tests ran on, so a dirty tree would make `run_commit` untrue). The proof module builds the marker name from parts so it and its test are not "marked" (and so guarded) merely by naming it.
 - **First record, from a real strict local run:** commit `9a4083372`, Aseprite 1.3.18.6-x64, 204 passed, 0 failed/errors/skipped, `pilot/rc-0008` rebuild 70 of 70 identical (0 bytes-differ), 108 guarded files, `guarded_hash sha256:f652cd57...`.
-- **D10 addendum: NOT written.** The text is in the plan; it waits for the owner (asset-planner is asking). `docs/architecture/visual_asset_foundation_adr.md` D10 is untouched until the owner approves the text.
+- **D10 addendum: written.** Owner decision, 2026-10-10, relayed by asset-planner from its blocking question (the owner's answer, verbatim): "Approve as written". The text of the plan is in `docs/architecture/visual_asset_foundation_adr.md` as "Addendum to D10 (2026-10-10)", exactly as the plan has it; D10's decision is unchanged.
 - **Operational note for the batch:** the guarded set includes `visual_assets/store/**`, so any later store code change in this batch (children 7 and others) makes this record stale and the CI test fails until a fresh local run rewrites it. The record must be refreshed once, after the last store change, before the PR.
 
 ## Test Summary
@@ -77,5 +77,5 @@ Child 4 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. ADR D10 keeps real As
 `tools/visual_assets_aseprite_proof.py` (new), `tools/visual_assets_aseprite_local.py`, `tools/ci_aseprite_skip_line.py`, `tests/visual_assets/{test_aseprite_local_proof (new),test_ci_aseprite_skip_line,test_release_byte_reproducibility}.py`, `docs/assets/aseprite_local_proof.json` (new, written by the runner), `docs/assets/store_contract.md` (one paragraph).
 
 ## Completion Summary
-(open: the D10 addendum text awaits the owner; the record is refreshed again after the batch's last store change)
+(open: the record is refreshed again after the batch's last store change; the D10 addendum is in the ADR, owner-approved)
 
