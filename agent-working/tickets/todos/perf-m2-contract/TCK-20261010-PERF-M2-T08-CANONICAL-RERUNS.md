@@ -32,12 +32,13 @@ Re-run baseline invalidation ledger §5 steps 1, 2, 3 and 5 under the T07 canoni
 Source concern IDs: C6.
 
 ## Scope
-- Recapture the three tests/perf/baselines/simq_corpus_*.json files and the *_local/*_concurrent files as benchmark-identity schema records under the canonical variants (contract.determinism=canonical, provisional label, all-NORMAL mode_sequence), promoted through tools/perf/baseline_lifecycle.py
+- Recapture the three tests/perf/baselines/simq_corpus_*.json files and the *_local/*_concurrent files as benchmark-identity schema records under the canonical variants (identity.contract.signal_contract=canonical, provisional label, all-NORMAL mode_sequence), promoted through tools/perf/baseline_lifecycle.py
 - Before replacing each *_local file, run pytest tests/perf/test_perf_regression_baseline.py -m slow against the old file (perf_baseline_policy.md 2.2 step 4)
 - Label combat_10_* and fighting corpus-world records WORK_MODEL_V1, and add a pre-hunting label for tactical and combat-heavy records unless the hunting batch merged first
 - Defer the mixed_200_local/mixed_200_concurrent reruns until the spawn-collision ticket is done, marking them pending in the ledger
 - Run the step 5 evaluate_simq grade-anchor check and record the diff result (commit nothing if empty)
 - Replace docs/observability/baselines/latest.json and the matrix files with T03-format records, and point compare-sweep, gate and guide commands at the new path
+- Records are nearest-rank (DEV-020): until this rerun, check_perf_regression.py's per-phase p95 against the old-method files is more lenient. Correct DEV-020 consequences (1) and (3) in docs/guidelines/intentional_divergences.md, which name PERF-M2-T05 as the re-recorder: T05 builds the promotion tool and this ticket re-records (perf-planner review of #483)
 - Update the baseline_invalidation_ledger.md §3/§5 status column for steps 1, 2, 3, 5 and 6, and mark step 4 as owned by the behavioural 5k rebaseline ticket
 
 ## Out of Scope
@@ -48,13 +49,14 @@ Source concern IDs: C6.
 - Changing tripwire or capacity semantics (PERF-M2-T03/T04)
 
 ## Acceptance Criteria
-- [ ] The three tests/perf/baselines/simq_corpus_*.json files and the non-mixed *_local/*_concurrent files are benchmark-identity schema records, each with contract.determinism=canonical, a provisional label and an all-NORMAL mode_sequence, and each promotion recorded before and after identities via tools/perf/baseline_lifecycle.py
+- [ ] The three tests/perf/baselines/simq_corpus_*.json files and the non-mixed *_local/*_concurrent files are benchmark-identity schema records, each with identity.contract.signal_contract=canonical, a provisional label and an all-NORMAL mode_sequence, and each promotion recorded before and after identities via tools/perf/baseline_lifecycle.py
 - [ ] Every combat_10_* record and every fighting corpus-world record carries a WORK_MODEL_V1 label. Tactical and combat-heavy records also carry a pre-hunting label unless the hunting batch merged before the capture commit.
 - [ ] mixed_200_local.json and mixed_200_concurrent.json are unchanged unless TCK-20261004-PERF-SCENARIO-MIXED-STATE-SPAWN-COLLISION is in done/, and the ledger status column lists them as pending until then
 - [ ] docs/observability/baselines/latest.json and the matrix files are replaced by T03-format records. Running `python3 -m src compare-sweep` against the replacement gives a tick-cost verdict, not 'baseline incomparable', and tests/integration/observability/test_baseline_comparison_flow.py passes.
 - [ ] baseline_invalidation_ledger.md §3/§5 status is updated for steps 1, 2, 3, 5 and 6, step 4 names its owning ticket, and the step 5 evaluate_simq diff result is recorded
 
 ## Related Tickets
+- TCK-20261010-PERF-M2-T02B-RECORD (done, #483: renamed contract.determinism to identity.contract.signal_contract; DEV-020)
 - TCK-20261009-PERF-M1-T05-BASELINE-INVALIDATION-LEDGER
 - TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE
 - TCK-20261007-BEHAVIORAL-5K-REBASELINE-AFTER-THE-STARVATION-CHAIN-LANDS

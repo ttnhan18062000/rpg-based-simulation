@@ -19,3 +19,4 @@
 {"ts":"2026-10-09T04:17:57.129795Z","category":"handover_recovery","source":"sample","session_id":"6e15c8f0-1b3d-4aff-a568-93c878bf86af","session_role":"agent-working-planner","batch":null,"count":1}
 {"ts":"2026-10-09T07:37:48.116683Z","category":"handover_recovery","source":"sample","session_id":"59a6aadf-78c7-43a4-8361-b98096d60429","session_role":"agent-working-planner","batch":null,"count":1}
 {"ts":"2026-10-10T02:54:53.151007Z","category":"handover_recovery","source":"sample","session_id":"15451802-7579-4691-877d-b16a2704774c","session_role":"perf-implementer","batch":null,"count":1}
+{"ts":"2026-10-10T02:47:27.489903Z","category":"handover_recovery","source":"sample","session_id":"944d2b70-a257-4fea-900c-9d8ccaac4d33","session_role":"perf-planner","batch":null,"count":1}
