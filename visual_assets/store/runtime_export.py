@@ -15,6 +15,7 @@ import shutil
 from pathlib import Path
 
 from visual_assets.store import config, pixels, records, verify
+from visual_assets.store.atlas import build_atlas
 from visual_assets.store.catalog.registry import fallback_problems, load_registry
 from visual_assets.store.contracts import ReleaseCandidateManifest, RuntimeManifest, canonical_json, parse_record, record_bound
 from visual_assets.store.contracts.runtime import RuntimeDetail, RuntimeEntry
@@ -54,8 +55,10 @@ def _write_new(path: Path, data: bytes) -> None:
         os.fsync(handle.fileno())
 
 
-def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, allow_fixture_namespace: bool = False) -> RuntimeManifest:
-    """Write `<out_dir>/runtime_manifest.json` and `<out_dir>/<hex>.png`, or raise `BuildError` leaving no output and the catalog unchanged."""
+def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, allow_fixture_namespace: bool = False, atlases: bool = False) -> RuntimeManifest:
+    """Write `<out_dir>/runtime_manifest.json` and `<out_dir>/<hex>.png`, or raise `BuildError` leaving no output and the catalog unchanged.
+
+    With `atlases=True` it also writes `atlas-<family>.png` and `atlas-<family>.json` per family (`store/atlas.py`); the per-file output and the manifest are byte-identical either way."""
     try:
         check(CatalogId, catalog_id)
     except IdentityError:
@@ -80,6 +83,7 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
             raise BuildError("registry_mismatch", "the registry changed since this candidate was assembled; assemble a new one")
         entries: list[RuntimeEntry] = []
         files: dict[str, bytes] = {}
+        images: dict[str, pixels.DecodedImage] = {}
         for entry in candidate.entries:
             digest = entry.pixel_hash[len(pixels.HASH_PREFIX):]
             png_path = records.generated_dir() / entry.artifact_id / f"{digest}.png"
@@ -91,6 +95,7 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
             if pixels.pixel_hash_of(decoded) != entry.pixel_hash:
                 raise BuildError("artifact_mismatch", f"the artifact PNG for {entry.visual_key} does not match its pixel hash")
             files[f"{digest}.png"] = png
+            images[entry.pixel_hash] = decoded
             entries.append(RuntimeEntry(visual_key=entry.visual_key, family=registry.keys[entry.visual_key].family, pixel_hash=entry.pixel_hash,
                                         file=f"{digest}.png", width=decoded.width, height=decoded.height, detail=entry.detail))
         missing = fallback_problems(registry, {e.visual_key for e in entries})  # AM1-W06.3 again at activation time: the client must be able to show something for every key it has no image for
@@ -108,6 +113,11 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
             details=details,
         )
         data = canonical_json(runtime)
+        if atlases:
+            for family in sorted({e.family for e in runtime.entries}):
+                sheet, sheet_json = build_atlas(family, [e for e in runtime.entries if e.family == family], images, catalog_id=catalog_id, release_id=release_id)
+                files[f"atlas-{family}.png"] = sheet
+                files[f"atlas-{family}.json"] = sheet_json
     except RegistryError as exc:
         raise BuildError("registry_invalid", str(exc)) from None
     except (StageError, ContractError) as exc:

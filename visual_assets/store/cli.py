@@ -83,6 +83,7 @@ def _parser() -> argparse.ArgumentParser:
     exp.add_argument("--catalog-id", required=True)
     exp.add_argument("--release-id", required=True, help="rc-NNNN")
     exp.add_argument("--out", required=True, help="a directory that does not exist yet")
+    exp.add_argument("--atlas", action="store_true", help="also write one atlas PNG and JSON per family next to the per-file export (opt-in; nothing reads them yet)")
     collect = sub.add_parser("gc", help="list files nothing needs; deletes only with --delete")
     collect.add_argument("--delete", action="store_true")
 
@@ -233,7 +234,7 @@ def _run(args: argparse.Namespace) -> int:
         print(f"{manifest.catalog_id}/{manifest.release_id}: {len(manifest.entries)} entries (candidate only, nothing is active)")
         return 0
     if args.command == "export-runtime":
-        runtime = runtime_export.export_runtime(args.catalog_id, args.release_id, args.out)
+        runtime = runtime_export.export_runtime(args.catalog_id, args.release_id, args.out, atlases=args.atlas)
         print(f"{runtime.catalog_id}/{runtime.release_id}: {len(runtime.entries)} entries exported to {args.out}")
         return 0
     if args.command == "gc":

@@ -79,11 +79,13 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "verify": {"verify", "lock", "deletionlog", "records", "audit", "build", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "gc": {"gc", "deletionlog", "records", "intake", "contracts", "identities", "errors", "config"},
     # reads committed candidates, writes a new directory OUTSIDE the catalog; not a gate layer, but the drawing server still may not import it (no MCP export)
-    "runtime_export": {"runtime_export", "records", "verify", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
+    "runtime_export": {"runtime_export", "atlas", "records", "verify", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     # shaped, bounded, read-only views for agents; the drawing server may import it
     # ADR D24: the store write lock (leaf: config, errors, identities) and the local gc deletion log (a writer, so a gate layer)
     "lock": {"lock", "identities", "errors", "config"},
     "deletionlog": {"deletionlog", "intake", "contracts", "identities", "errors", "config"},
+    # opt-in runtime atlases: pure packing and a minimal PNG encoder over decoded pixels
+    "atlas": {"atlas", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "readmodel": {"readmodel", "records", "intake", "pixels", "contracts", "identities", "errors", "config"},
 }
 # store layers that write the tracked catalog (human gates): no drawing module may import them, not even the server

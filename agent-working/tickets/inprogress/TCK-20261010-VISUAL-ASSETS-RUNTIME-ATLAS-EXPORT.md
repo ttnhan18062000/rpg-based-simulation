@@ -15,7 +15,7 @@ tags: [architecture, determinism, testing]
 Optional per-set sprite atlases in the runtime export (deterministic packing, extrude and padding), not wired
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -60,9 +60,11 @@ Child 5 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. store_contract.md:204
 - After child 3 (shares the determinism checks).
 
 ## Implementation Notes
+See staging plan/investigation. `MAX_ATLAS_DIM` 1024 is a new bound: budgets row PROPOSED, the owner decides.
 
 
 ## Test Summary
+17 new tests pass; store, boundaries and budgets parity 1335 passed.
 
 
 ## Files Changed
