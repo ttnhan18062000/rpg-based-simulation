@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Animation metadata in the handoff and artifact records, after a registry budget review
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
