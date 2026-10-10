@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE
-phase: open
+phase: done
 date: 2026-10-09
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Build the 36 adopted icons and assemble the first release candidate that covers icon slots (`pilot/rc-0008`); close the bookkeeping drift left by the hardening and icon-v2 batches
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -68,15 +68,15 @@ nothing is wired into the app.
 - New scale classes (export stays x1), new art, revisions of adopted icons.
 
 ## Acceptance Criteria
-- [ ] Hardening and icon-v2 epics read `DONE`; hardening `SEQUENCE.md` status names PR #471 and `0c3a5654b`.
-- [ ] 36 icon artifacts built at the current revision; the 34 terrain-era artifacts are byte-identical.
-- [ ] `pilot/rc-0008` assembled only after the user's recorded answer (verbatim in Implementation Notes); 70 entries, the
+- [x] Hardening and icon-v2 epics read `DONE`; hardening `SEQUENCE.md` status names PR #471 and `0c3a5654b`.
+- [x] 36 icon artifacts built at the current revision; the 34 terrain-era artifacts are byte-identical.
+- [x] `pilot/rc-0008` assembled only after the user's recorded answer (verbatim in Implementation Notes); 70 entries, the
   34 old ones equal to rc-0007's.
-- [ ] `verify` and `audit` clean; icon artifact size and pixel-hash checks recorded.
-- [ ] Guards re-pointed by equality with the new rc-0008 test; no assertion removed or weakened.
-- [ ] Docs above updated; snapshots refreshed; knowledge index updated.
-- [ ] Tests run: `tests/visual_assets`, `tests/unit/tools`, `tests/tools`, docs/static/architecture lanes, frontend
-  `iconScene.test.ts` if a fixture moved.
+- [x] `verify` and `audit` clean; icon artifact size and pixel-hash checks recorded.
+- [x] Guards re-pointed by equality with the new rc-0008 test; no assertion removed or weakened. (The "no icon artifact / no icon slot" assertions were inverted to the new fact for rc-0008 only and kept for rc-0001..0007; the registry-hash test keeps its claim and gained a stricter one; see Implementation Notes.)
+- [x] Docs above updated; snapshots refreshed; knowledge index updated.
+- [x] Tests run: `tests/visual_assets`, `tests/unit/tools`, `tests/tools`, docs/static/architecture lanes, frontend
+  `iconScene.test.ts` if a fixture moved. (No frontend fixture moved; `vitest run src/visualAssets` 270/270. One environmental failure in `tests/tools`, see Test Summary.)
 
 ## Related Tickets
 - TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC (rc-0007; icon build left out of scope)
@@ -114,7 +114,19 @@ nothing is wired into the app.
 - Frontend untouched; vitest `src/visualAssets` stays 270/270.
 
 ## Test Summary
+- `tests/visual_assets`: 1882 passed (includes the new `test_icon_release_candidate.py` with 4 mutants, `test_closed_draft_fixtures.py` with mutation proofs for each of the 3 closed sets: flipped draft PNG byte, flipped reference PNG byte, reference to a missing artifact, stray entry, set removed from the pin, and a `--write`-style rewrite caught by the manifest pin).
+- Frontend `vitest run src/visualAssets`: 270/270, with fixtures and frontend untouched.
+- `tests/docs` 69 passed, 2 skipped, 1 xfailed; `tests/static` 83 passed; `tests/architecture` 127 passed; `tests/unit/tools` 674 passed.
+- `tests/tools`: 4737 passed, 54 skipped, 1 xfailed, **1 failed: `test_handover_transit.py::test_default_memory_dir_slug_maps_checkout_path`**. Environmental and not caused by this ticket: it fails identically from the main checkout, this branch changes nothing under `tools/` or `tests/tools/`, and the cause is two project memory directories on this machine (`-data-vboxuser-Work-rpg-based-simulation` and `-home-vboxuser-Work-rpg-based-simulation`) from the `~/Work` move. Not fixed here (outside the asset domain, nothing deleted); the planner raises it with the owner.
+- `store verify` ok, `store audit` chain ok; 36 icons: newest revision, decoded size equals the key description, source record and artifact record, `pixel_hash` equals an independent `aseprite` frame-1 render.
 
 ## Files Changed
+- Catalog: `visual_assets/catalog/generated/icon_*--x1/` (36 PNG + 36 artifact records), `visual_assets/catalog/manifests/candidates/pilot/rc-0008.json`.
+- Code/docs strings: `visual_assets/store/draftexport.py` (docstring), `visual_assets/review/icon_draft_fixture.py` (closed-set `--write` warning).
+- Tests: `tests/visual_assets/{adopted_facts,closed_draft_fixture,test_closed_draft_fixtures,test_icon_release_candidate,test_icon_draft_fixture,test_icon_v2_draft_set,test_icon_owner_fixes_draft_set,test_icon_set_adoption,test_icon_v2_keys,test_catalog_integrity}.py`, `tests/visual_assets/drawing/test_store_tools_stdio.py`.
+- Docs: `docs/assets/{store_contract,pilot_terrain_key}.md`, `docs/assets/session_handoff/{asset-implementer,asset-planner}.md`, `docs/REGISTRY.yaml`.
+- Bookkeeping: hardening `SEQUENCE.md` and epic, icon-set-v2 epic, this ticket, its sequence folder and staging artifacts.
+- Not touched: the registry, the export config, the frontend, the draft-set fixtures.
 
 ## Completion Summary
+The 36 adopted icons are built at x1 (the 34 terrain-era artifacts byte-identical), and `pilot/rc-0008` (rc-0007's 34 entries + the 36 icons = 70) was assembled after the owner's recorded answer "Assemble rc-0008". It is a candidate only: nothing is active or wired into the app. Building the icons grew every fresh draft export (adopted references), which broke three guards; on the planner's ruling (option c) the three CLOSED owner-gate draft-set fixtures are now checked against the gate's own record (drafts and references byte-checked, manifests pinned by sha256) and the fixtures, the export and the frontend are unchanged. Guards moved by equality, with mutation proofs. Docs and both handoff snapshots are updated. Known gap: one environmental `tests/tools` failure (two memory directories), unrelated to this change.

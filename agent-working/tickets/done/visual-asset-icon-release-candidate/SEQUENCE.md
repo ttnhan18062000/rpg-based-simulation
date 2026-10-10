@@ -17,4 +17,4 @@ One ticket, built by `asset-implementer` on branch `visual-asset-icon-release-ca
 
 ## Status
 
-OPEN (2026-10-09): filed by the planner; not started.
+DONE (2026-10-10): built by `asset-implementer`; commits `f7d3ffb98` (bookkeeping), `03fba7da3` (36 icons built), `e734ca7c9` (rc-0008 + re-anchored guards), `2eb885539` (manifest pins), `d0ef62c74` (docs), `1e916663d` (planner snapshot); the owner answered "Assemble rc-0008"; planner ruling (c) recorded in the ticket.
