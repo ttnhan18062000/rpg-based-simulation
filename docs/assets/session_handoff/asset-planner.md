@@ -3,18 +3,50 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-09
+date: 2026-10-10
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` as of the planner's last update (its own `Updated:` line below: the planner has not refreshed it since child 4, so treat it as stale and refresh it); on a new machine copy it to `.claude/handover/asset-planner.md`.
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-10 (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed by the implementer at the planner's request in `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE`.
 
-Updated: 2026-10-09 (foundation hardening paused after child 4 by the user)
+Updated: 2026-10-09 (foundation hardening MERGED: PR #471)
 
 ## Open
-- Nothing in flight. Last: PR #418 (icon set v2 + owner fixes, 12 tickets) squash-merged as 4a2141df9 on
+- IN FLIGHT (2026-10-09): owner said "start order as your recommendation" (A bookkeeping -> B icon rc -> C glyph).
+  A folded into B's first commit (EPIC_SCOPED and DONE both legal; cosmetic). C DROPPED for now: store side done in #471,
+  only the client Live Map glyph remains = parked with activation. B filed: batch visual-asset-icon-release-candidate,
+  ticket TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE (standard), branch of the same name in rpg-aseprite-mcp from
+  0c3a5654b, planning commit bc088f6ab, upstream unset. Handed to asset-implementer by message. Build 36 icons (agent
+  may build/release; only adopt/adopt-set/revoke need a TTY), rc-0008 = rc-0007's 34 + 36 icons = 70, ONLY after the
+  owner's blocking answer (rc-0005/0007 precedent). Next for me: review each commit the implementer reports.
+  PROGRESS: f7d3ffb98 (bookkeeping) + 03fba7da3 (36 icons built, terrain byte-identical) APPROVED; owner answered
+  "Assemble rc-0008" (70 entries, uncommitted until commit 3). FINDING: building icons grew fresh draft-preview exports of
+  the 3 CLOSED icon draft sets (48/56/43 -> 70) -> 3 py guards + 15 IconHarness vitest fail if regenerated. RULING (c):
+  keep draftexport + frontend as-is; re-anchor guards for gate-closed sets (pinned set->adoption ids): drafts exact,
+  refs byte-equal to the named catalog artifact, no stray entries, new post-gate refs not required; open sets keep full
+  equality; 4 mutation proofs. Owner informed; may overrule.
+  Commit 3 e734ca7c9 (rc-0008 + re-anchored guards) reviewed: approved EXCEPT gap -> closed check accepted a --write
+  regeneration (new refs are real artifacts); asked to pin each closed fixture's manifest sha256 + a "--write over a
+  copy fails" mutant; nit: narrow `except Exception` in _reference_problems. Fix 2eb885539 APPROVED (pins verified
+  against the files; frontend untouched). Waiting on commit 4 (docs + BOTH snapshots), final test pass, then the
+  implementer asks the owner push/PR.
+- PR 476 (session-role registration, owner's draft): replied for BOTH asset seats 2026-10-09 (issuecomment-6084929712):
+  add frontend/src/visualAssets/** + frontend/rehearsal-capture/** (split rpg/asset) + the asset ADR; planner may_write
+  needs agent-working/staging_artifacts/**; sessions launch in main checkout, implementer writes in rpg-aseprite-mcp;
+  disclosed planner planning commits in the implementer's worktree -> recommended own asset-planner worktree; OWNER
+  DECIDES. Until then: no planner writes in that worktree while an implementer batch is in progress. Implementer told.
+- Foundation hardening batch (TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING, 8 tickets)
+  squash-merged as 0c3a5654b on 2026-10-09T15:53:32Z (PR #471, --admin pinned to head 0302a10f4, owner ran it).
+  Branch visual-asset-foundation-hardening finished, never pushed again. Main checkout fast-forwarded to 0c3a5654b.
+  Child follow-ups checked 2026-10-09: assert -> raise already done (tests/visual_assets/derived_runtime.py:39);
+  registry budget is a standing rule in docs/assets/budgets.md (review MAX_REGISTRY_BYTES BEFORE the next per-key
+  field) -> apply it when scoping any schema growth, no ticket. Bookkeeping drift: epics HARDENING and ICON-SET-V2
+  in tickets/done/ still say EPIC_SCOPED with an unchecked AC; hardening SEQUENCE.md says "PR awaits" (it merged).
+  Still parked: animation fields, visual evidence capture, decoder,
+  real-Aseprite CI, atlases, LFS.
+- Earlier: PR #418 (icon set v2 + owner fixes, 12 tickets) squash-merged as 4a2141df9 on
   2026-10-08T15:14:54Z (--admin, user's answer; head 91a9fcd9c after a main merge; heavy lanes re-sync-skipped, same
   patch as green 328af73db). rpg-aseprite-mcp detached at origin/main. Branch finished, never pushed again.
 - Adopted icons: 36 keys (14 key set + 22 v2), 7 of them at r0002 (hero house cottage, inn tankard, rogue cowl, tool
@@ -61,7 +93,8 @@ Updated: 2026-10-09 (foundation hardening paused after child 4 by the user)
   7a9574fff / 731ff30d5 (18 R) / 628843680; child 5 APPROVED (python -m visual_assets.review evaluate|review-sheets
   --set <id>; byte-for-byte proof). Child 6 APPROVED (4c872d4a2: python -m visual_assets.review key-usage).
   FINDING: .gitignore `agent-working/stored_artifacts/**/*.json` hid visual-asset evidence JSON (blind checks, M5
-  captures, ~356 KB) from merged PRs; child 7 commits .json.txt twins + a guard; shared .gitignore untouched. Then PR.
+  captures, ~356 KB) from merged PRs; child 7 commits .json.txt twins + a guard; shared .gitignore untouched. Child 7 APPROVED (e0443bf0e;
+  47 twins); main merged; BATCH READY (14 ahead) -> implementer asks the user push/PR, then merge (--admin).
 - Next (not filed; ask the user): rc with icon slots, `icon` fallback
   glyph, isOverviewZoom() in the Live Map art path; optional store ticket: set-level revisions; decouple fixture guards
   from the current-rc pin. Refresh docs/assets/session_handoff/asset-planner.md in the next asset PR (stale in #418).

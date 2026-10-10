@@ -49,7 +49,7 @@ def _check_out(out_dir: Path | str, drafts_root: Path) -> Path:
 def _adopted_references(known: Registry, record, files: dict[str, bytes]) -> list[DraftPreviewEntry]:
     """A reference entry for each live ADOPTED slot of a registered key that the set does not hold (a draft for the slot always wins), so the preview map is complete.
 
-    Built from the catalog's 16 x 16 artifact (scale 1), never from a draft: nothing is copied into the drafts and `adopt-set` never sees it (it is not in the DraftSet).
+    Built from the catalog's x1 artifact (scale 1; 16 x 16 for a tile, whatever size the key declares for an icon), never from a draft: nothing is copied into the drafts and `adopt-set` never sees it (it is not in the DraftSet).
     """
     held = {(e.visual_key, known.keys[e.visual_key].effective_detail(e.detail)) for e in record.entries if e.visual_key in known.keys}
     out: list[DraftPreviewEntry] = []
