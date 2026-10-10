@@ -1,4 +1,4 @@
-"""LongRunStabilityHarness reports an outcome, not passed_certification, and maps into a capacity_run record (TCK-20261010-PERF-M2-T04-CAPACITY-RUN)."""
+"""LongRunStabilityHarness reports an outcome, not passed_certification, and maps into a comparative record (TCK-20261010-PERF-M2-T04-CAPACITY-RUN)."""
 from __future__ import annotations
 
 import hashlib
@@ -49,9 +49,9 @@ def test_the_report_keeps_warmup_ticks_samples_and_the_active_mode_per_sample(ru
     assert len(report.tick_wall_ms) == len(report.mode_per_tick) == 40
 
 
-def test_the_record_is_a_capacity_run_on_an_uncontrolled_runner(run) -> None:
+def test_the_record_is_a_comparative_record_on_an_uncontrolled_runner(run) -> None:
     _, report, record, _ = run
-    assert record.identity.gate.tier is GateTier.CAPACITY_RUN and record.identity.gate.projection == "long_run_stability"
+    assert record.identity.gate.tier is GateTier.COMPARATIVE and record.identity.gate.projection == "long_run_stability"
     assert record.identity.runner.controlled is False
     assert record.result.protocol.percentile_method is PercentileMethod.NEAREST_RANK
     assert record.result.protocol.warmup_ticks == 5 and record.result.protocol.measured_ticks == 40

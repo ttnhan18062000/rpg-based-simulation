@@ -341,14 +341,17 @@ class LongRunStabilityHarness:
         return report
 
     def to_record(self, report: LongRunStabilityReport, samples_dir: Optional[Path] = None, runner: Optional[Runner] = None) -> BenchmarkRecord:
-        """Map a report into a schema record: ``gate.tier = capacity_run``, ``gate.projection = long_run_stability``, ``runner.controlled = false``.
+        """Map a report into a schema record: ``gate.tier = comparative``, ``gate.projection = long_run_stability``, ``runner.controlled = false``.
+
+        Comparative, not capacity_run: its checks compare the start and the end of one run (performance_contract.md section 3.3), and a long run
+        on an uncontrolled runner supports no "sustains X on class Y" statement.
 
         ``latency_ms`` is computed from the per-tick wall time (the tick plus the read-model update), the series this harness measures, so the
         projection name keeps it from being compared with a ``BenchHarness`` capacity run. The raw ticks are written to a pointed-to file.
         """
         flags = {"no_frame_pacing": True, "no_replay": report.run_mode == RunMode.PURE, "force_full_scan": False}
         subject = RunSubject(scenario_id=report.scenario_id, entity_count=report.entity_count, seed=report.seed, flags=flags, warmup_ticks=report.warmup_ticks)
-        options = RecordOptions(GateTier.CAPACITY_RUN, "long_run_stability", samples_dir, runner or Runner(controlled=False))
+        options = RecordOptions(GateTier.COMPARATIVE, "long_run_stability", samples_dir, runner or Runner(controlled=False))
         wall = report.tick_wall_ms
         total_s = sum(wall) / 1000.0
         return BenchmarkRecord(

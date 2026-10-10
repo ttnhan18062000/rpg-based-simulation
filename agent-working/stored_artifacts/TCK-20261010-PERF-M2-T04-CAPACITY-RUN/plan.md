@@ -29,6 +29,6 @@ Pre-planned by perf-planner (M2 epic "Delivery plan"; dispatch 2026-10-10, batch
 - **One record per repetition**, plus `summary.json`; each record carries the run's outcome.
 - **Paired mode takes two checkouts** (`--base ROOT --head ROOT`); each repetition is a fresh subprocess with `CAPACITY_RUN_ROOT` and `cwd` set to that checkout, so each side
   measures its own `src/`. A base without `benchmark_record.py` is INCONCLUSIVE.
-- **The long-run record is a different projection** (`gate.projection = long_run_stability`): it times the tick plus the read-model update, so it is never compared with a `BenchHarness` capacity run.
+- **The long-run record is `gate.tier = comparative`** (perf-planner's ruling on #493: the contract §3.3 lists the long-run trend checks as comparative), and a different projection (`gate.projection = long_run_stability`): it times the tick plus the read-model update, so it is never compared with a `BenchHarness` capacity run.
 - **`docs/engine/performance_contract.md` §3.3 is not edited** (rpg-owned P1, my role card routes `docs/engine/**` to rpg-planner): the proposed text is in the PR body.
 - **Samples:** unique name plus exclusive create (so a stale sha256 is impossible); `PERF_SAMPLES_DIR` redirects them, and both perf test directories set it.

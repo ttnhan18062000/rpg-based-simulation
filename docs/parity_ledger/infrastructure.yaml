@@ -12930,7 +12930,7 @@
     the declared limit 0.10, the reason naming variance) or NOT_APPLICABLE; never PASS, and it states no capacity claim. Paired mode (--base, --head) runs
     each side in fresh processes under its own checkout and returns compare() of the median repetition. The samples file of a record is created
     exclusively under a unique name, so two records in the same second never share a file. LongRunStabilityReport has outcome in place of
-    passed_certification, nearest-rank window percentiles, and maps into a capacity_run record (gate.projection=long_run_stability). BenchHarness statistics cover every sampled tick (DEV-021), not the last 100. pyperf is not used.'
+    passed_certification, nearest-rank window percentiles, and maps into a comparative record (gate.tier=comparative, gate.projection=long_run_stability). BenchHarness statistics cover every sampled tick (DEV-021), not the last 100. pyperf is not used.'
   status: verified
   priority: P2
   legacy_evidence: null
