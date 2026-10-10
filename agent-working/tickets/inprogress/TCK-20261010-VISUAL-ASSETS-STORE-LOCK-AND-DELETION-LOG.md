@@ -72,7 +72,30 @@ Design approved by asset-planner and D24 text/budget by the owner (2026-10-10). 
 
 
 ## Files Changed
-
+- `.gitignore`
+- `docs/architecture/visual_asset_foundation_adr.md`
+- `docs/assets/budgets.md`
+- `docs/assets/m1_contract_register.md`
+- `docs/assets/retention_and_rollback.md`
+- `docs/assets/store_contract.md`
+- `tests/visual_assets/store/kill_helper.py`
+- `tests/visual_assets/store/unit/conftest.py`
+- `tests/visual_assets/store/unit/test_deletion_log.py`
+- `tests/visual_assets/store/unit/test_drafts.py`
+- `tests/visual_assets/store/unit/test_gc.py`
+- `tests/visual_assets/store/unit/test_kill_mid_publish.py`
+- `tests/visual_assets/store/unit/test_lock.py`
+- `tests/visual_assets/test_boundaries.py`
+- `tests/visual_assets/test_no_ignored_files.py`
+- `visual_assets/drawing/server/store_readonly_tools.py`
+- `visual_assets/store/audit.py`
+- `visual_assets/store/cli.py`
+- `visual_assets/store/config.py`
+- `visual_assets/store/contracts/deletion.py`
+- `visual_assets/store/deletionlog.py`
+- `visual_assets/store/gc.py`
+- `visual_assets/store/lock.py`
+- `visual_assets/store/verify.py`
 
 ## Completion Summary
-
+A store-wide advisory write lock that refuses a second writer and names the holder, a hash-chained `gc --delete` deletion log with archiving and an `audit` chain check, kill-mid-publish tests at several injection points with the recovery documented in `store_contract.md`, and ADR D24 (the design approved by the planner and the text and budget by the owner, 2026-10-10). The independent security review was APPROVED with hardening applied (recorded in Implementation Notes). Read-only commands are unaffected.

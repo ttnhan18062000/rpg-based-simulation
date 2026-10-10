@@ -70,7 +70,13 @@ Per-channel slice unfilter plus a 4-entry decode memo in `visual_assets/store/pi
 
 
 ## Files Changed
-
+- `docs/architecture/visual_asset_foundation_adr.md`
+- `docs/assets/budgets.md`
+- `tests/visual_assets/store/unit/conftest.py`
+- `tests/visual_assets/store/unit/test_pixels.py`
+- `tests/visual_assets/store/unit/test_pixels_unfilter.py`
+- `tests/visual_assets/test_no_ignored_files.py`
+- `visual_assets/store/pixels.py`
 
 ## Completion Summary
-
+The pure-Python PNG decoder unfilters rows per channel and decodes a preview once (a bounded memo), with every bound unchanged and no new dependency. Pixel hashes are identical to a reference over random rows and every committed PNG; malformed and oversized input is refused as before; `budgets.md` F3 is re-measured. The security review was CLEAN (bytes() coercion, no caching above the decoded-size bound, test-reset of the memo).

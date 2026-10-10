@@ -67,7 +67,9 @@ Test-only: `tests/visual_assets/test_release_byte_reproducibility.py` plus a sto
 
 
 ## Files Changed
-
+- `docs/assets/budgets.md`
+- `docs/assets/store_contract.md`
+- `tests/visual_assets/test_release_byte_reproducibility.py`
 
 ## Completion Summary
-
+Rebuilt release bytes are compared locally (`needs_aseprite`: `pilot/rc-0008` rebuilds 70 of 70 byte-identical, run on Aseprite 1.3.18.6-x64 and recorded in `docs/assets/aseprite_local_proof.json`) and a CI-runnable export-twice and PNG chunk-allowlist test fails on a planted `tIME`, `tEXt`, `iTXt` or `zTXt` chunk. Byte drift with matching pixels is reported, not failed (artifact identity stays the pixel hash).

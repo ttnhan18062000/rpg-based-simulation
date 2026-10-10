@@ -68,7 +68,20 @@ test_palette_data.py passes; drawing unit and boundary tests pass.
 
 
 ## Files Changed
-
+- `docs/assets/drawing_tools.md`
+- `docs/assets/icon_style_guide.md`
+- `tests/visual_assets/test_boundaries.py`
+- `tests/visual_assets/test_palette_data.py`
+- `visual_assets/drawing/compose.py`
+- `visual_assets/drawing/palettes.py`
+- `visual_assets/drawing/server/highlevel_tools.py`
+- `visual_assets/drawing/technique/lint.py`
+- `visual_assets/drawing/technique/style_rules.json`
+- `visual_assets/palettes/icons-v1.gpl`
+- `visual_assets/palettes/terrain-v1.gpl`
+- `visual_assets/palettes/terrain-v1.json`
+- `visual_assets/review/palette_data.py`
 
 ## Completion Summary
+The terrain palette and the GPL exports are committed data, drift-guarded against their generators; the lint reports off-palette pixels (level `info`, never flipping `ok`, coordinates capped and ordered); adopted icons pass the icon palette and a planted pixel is flagged; the colour budgets moved to data with the same values (equality test).
 

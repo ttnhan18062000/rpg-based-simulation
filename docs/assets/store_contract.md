@@ -133,7 +133,7 @@ regeneration. Wiring the export into the real frontend build is `AM-M6` (dormant
 | `verify` | none | nothing | n/a |
 | `build` | none; needs Aseprite and bwrap | `generated/<source_asset_id>--x1/<pixel hash>.png` and `<hash>.<revision>.artifact.json` | yes |
 | `release` | none | `manifests/candidates/<catalog_id>/rc-NNNN.json` (a CANDIDATE, never active) | yes |
-| `export-runtime` | none (reads committed candidates; writes outside the catalog) | a NEW directory given by `--out`: `runtime_manifest.json` and `<64 hex>.png` files (all-or-nothing, never into the catalog); with `--atlas` also `atlas-<family>.png` and `atlas-<family>.json` per family | n/a |
+| `export-runtime` | none (reads committed candidates; writes outside the catalog) | a NEW directory given by `--out`: `runtime_manifest.json` and `<64 hex>.png` files (all-or-nothing, never into the catalog); with `--atlas` also `atlas-<family>.png` and `atlas-<family>.json` per family; with `--animation` also `animation.json` (both opt-in, nothing reads them yet) | n/a |
 | `gc` | none; deletes only with `--delete` | removes only what it lists, under the quarantine, the review area and `generated/`, after appending one record per item to the local deletion log | no (never `sources/`, `provenance/`, `manifests/`) |
 | `deletions` | none; `--archive` moves a full log aside | lists the local deletion log (read-only); `--archive` renames `catalog/.deletions.jsonl` to `.deletions-NNNN.jsonl` | no (gitignored) |
 | `adopt` | **human only**: terminal on stdin and the typed id | `sources/<id>/rNNNN.aseprite` + `.source.json`, `provenance/adoptions/`, `provenance/intake/<in>.json` and `.review.json` | yes |
@@ -198,8 +198,8 @@ There is no MCP tool that adopts, revokes, builds, releases, deletes or activate
 
 ## Not built (outside this foundation's scope)
 
-Runtime activation, a resolver in the real client, Live Map and HUD consumption, client compatibility ranges (register `W03.5`, `W07`), more than one scale class, atlases and animation export
-(`AM-M6`/`M7`; signing was decided against, ADR D9). Built since: the runtime manifest and `export-runtime` (above) and an **isolated** `AM-M5` surface rehearsal on synthetic fixtures in
+Runtime activation, a resolver in the real client, Live Map and HUD consumption, client compatibility ranges (register `W03.5`, `W07`) and more than one scale class
+(`AM-M6`/`M7`; signing was decided against, ADR D9). Atlases and animation metadata are built as opt-in exports that no client reads (sections below). Parked, by the owner: Git LFS, slices, 9-slice and pivots, client use of atlases and animation, raising any bound (a source size or dimension bound reopens only when real art exceeds it), and a self-hosted CI runner (ADR D10 kept). Built since: the runtime manifest and `export-runtime` (above) and an **isolated** `AM-M5` surface rehearsal on synthetic fixtures in
 `frontend/src/visualAssets/` (a strict parser, resolver, typed fallbacks and single-generation loader that nothing in the normal app imports); its per-gate result, overall
 `INCONCLUSIVE`, is `docs/assets/surface_rehearsal_result.md`; the pilot terrain tile's gap results (reviewer criteria, colour-vision check, client matrix) are in `docs/assets/pilot_terrain_m5_results.md`. Open decisions are listed at the end of this page.
 
@@ -249,8 +249,7 @@ Artifact identity is the pixel hash; `png_hash` is informational. Two tests stil
   `undeclared_detail` (the registry no longer declares an adopted value). Total entries across all slots stay at most `MAX_VISUAL_KEYS`. The default is the only declared meaning of "no value": changing a key's
   `default` re-binds every adoption that names none, and the release lists the explicit value on each entry. This replaced the earlier limit "one visual key maps to one artifact"
   (ADR D11); no schema version changed: every new field has a default and is omitted from the bytes when absent, and a strict client rejects the new fields.
-- Animation metadata beyond `frame_count` and `tag_count` (per-frame durations, tag ranges, loop modes) is not part of the handoff package or checked by intake
-  (proposal 9.6 lists "animation metadata"; ticket 3 adds only the producer state).
+- The handoff PACKAGE still declares only `frame_count` and `tag_count`. Animation metadata (per-frame durations, tag ranges, direction, repeat) is not declared by a producer: intake DERIVES it from the source bytes and quarantines an inconsistent one, and adoption carries it on the `SourceRecord` (section "Animation metadata" above). There is no sprite-level loop mode, because Aseprite has none (looping lives in each tag).
 - **Palette size is unverifiable for an all-opaque-black stored palette.** Aseprite 1.3.18.6 rebuilds such a palette from the image when it loads a file
   (size = 1 + distinct opaque colours), which needs pixel decoding. Intake quarantines it with `PALETTE_UNVERIFIABLE`. Only a never-edited first revision
   carries one; any edit re-saves a palette with real entries. Every other palette is checked exactly against what Aseprite reports.
