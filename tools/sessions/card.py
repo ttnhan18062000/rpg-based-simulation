@@ -15,7 +15,7 @@ import math
 import re
 from pathlib import Path
 
-from tools.sessions.roster import REPO_ROOT, Authority, Role, Roster
+from tools.sessions.roster import REPO_ROOT, Authority, Role, Roster, handover_rel
 
 CARD_BUDGET_TOKENS = 400
 CHARS_PER_TOKEN = 3.5
@@ -89,7 +89,8 @@ def _role_line(role: Role, roster: Roster) -> str:
         f"You are `{role.role}`{seat}. Owns: {_compact_globs(role.owns)}.",
         _routes_text(role),
         f"Dispatch from: {', '.join(role.accepts_dispatch_from)}." if role.accepts_dispatch_from else "",
-        f"Worktree {role.worktree}; main-checkout `{role.handover}`.",
+        f"Worktree {role.worktree}; main-checkout `{role.handover}`" + (
+            f" (instance N of `{role.role}` reads `{handover_rel(role, role.role + '-N')}`)." if role.max_sessions > 1 else "."),
     ]
     return " ".join(p for p in parts if p)
 

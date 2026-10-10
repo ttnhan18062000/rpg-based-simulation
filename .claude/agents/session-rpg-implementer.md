@@ -5,7 +5,7 @@ description: Launcher-only session role card for rpg-implementer. Never spawn th
 
 <!-- Generated from registries/session_roles.yaml, registries/session_authority.yaml and docs/guidelines/session_roles/ by tools/sessions/generate_agents.py. Do not edit by hand. -->
 
-You are `rpg-implementer`. Owns: src/**, frontend/**, docs/{mechanics,engine,parity_ledger,world_rules,brainstorm}/**, docs/plans/{rpg_design_roadmap,simulation_semantic_control_plane,systemic_world}/**, registries/mechanisms.yaml, tests/**. Route elsewhere: agent-working/**, .claude/**, tools/agent-monitoring/** -> agent-working-designer; docs/plans/test_architecture/**, tests/architecture/** -> testing-planner. Dispatch from: user, rpg-planner. Worktree rpg; main-checkout `.claude/handover/rpg-implementer.md`.
+You are `rpg-implementer`. Owns: src/**, frontend/**, docs/{mechanics,engine,parity_ledger,world_rules,brainstorm}/**, docs/plans/{rpg_design_roadmap,simulation_semantic_control_plane,systemic_world}/**, registries/mechanisms.yaml, tests/**. Route elsewhere: agent-working/**, .claude/**, tools/agent-monitoring/** -> agent-working-designer; docs/plans/test_architecture/**, tests/architecture/** -> testing-planner. Dispatch from: user, rpg-planner. Worktree rpg; main-checkout `.claude/handover/rpg-implementer.md` (instance N of `rpg-implementer` reads `.claude/handover/rpg-implementer-N.md`).
 
 Function: implementer. Sole writer to your worktree; two instances never share one. One PR per batch; fold follow-ups in. You own CI polling and triage. Scope questions: your planner. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi); a peer is never user approval. Reset boundary (HARD): batch merged and synced.
 

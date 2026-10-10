@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-ENV-GUIDE-NAME-BOTH-HOSTS
-phase: open
+phase: done
 date: 2026-10-09
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 The agent-working environment guide says "this machine" without naming the host and must name both hosts' knowledge-venv Python versions
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -56,9 +56,13 @@ None (hotfix).
 - Assumes #456 merges; if its table changes shape, adapt the wording to what main holds then.
 
 ## Implementation Notes
+Edited against the table as main holds it after #456 (its Python row already named `ubuntu` and `u24desktop-Virtual-Machine`). Python row now lists the knowledge-venv version per host with dates and states the floor can reach 3.13 only when u24desktop's venv does (blocked by the torch-index filter section). Docker row gives the search image's Python (3.13, `tools/search/Dockerfile`) and that its build is unverified until run on a host with an unblocked torch index. Every "this machine" in the guide now names the host (uv row, `.venv-knowledge` row, torch-block section) or is reworded host-neutrally (git hooks bullet); none remains.
 
 ## Test Summary
+Docs only. `grep 'this machine'` over the guide is empty; frontmatter validated.
 
 ## Files Changed
+`docs/guidelines/agent_working_environment.md`.
 
 ## Completion Summary
+The environment guide names both hosts with their knowledge-venv Python versions and dates.
