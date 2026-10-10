@@ -15,7 +15,7 @@ tags: [testing, observability]
 Repeatable visual evidence: capture the harness pages from a built bundle and commit a compact evidence record
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
