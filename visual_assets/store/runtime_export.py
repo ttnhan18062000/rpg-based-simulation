@@ -15,6 +15,7 @@ import shutil
 from pathlib import Path
 
 from visual_assets.store import config, pixels, records, verify
+from visual_assets.store.animation import runtime_animation_bytes
 from visual_assets.store.atlas import build_atlas
 from visual_assets.store.catalog.registry import fallback_problems, load_registry
 from visual_assets.store.contracts import ReleaseCandidateManifest, RuntimeManifest, canonical_json, parse_record, record_bound
@@ -55,10 +56,11 @@ def _write_new(path: Path, data: bytes) -> None:
         os.fsync(handle.fileno())
 
 
-def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, allow_fixture_namespace: bool = False, atlases: bool = False) -> RuntimeManifest:
+def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, allow_fixture_namespace: bool = False, atlases: bool = False, animation: bool = False) -> RuntimeManifest:
     """Write `<out_dir>/runtime_manifest.json` and `<out_dir>/<hex>.png`, or raise `BuildError` leaving no output and the catalog unchanged.
 
-    With `atlases=True` it also writes `atlas-<family>.png` and `atlas-<family>.json` per family (`store/atlas.py`); the per-file output and the manifest are byte-identical either way."""
+    With `atlases=True` it also writes `atlas-<family>.png` and `atlas-<family>.json` per family (`store/atlas.py`); with `animation=True` it also writes `animation.json` (`store/animation.py`: frame durations and tags of the
+    entries whose source has more than one frame). The per-file output and the manifest are byte-identical either way, and no flag means no extra file."""
     try:
         check(CatalogId, catalog_id)
     except IdentityError:
@@ -118,6 +120,8 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
                 sheet, sheet_json = build_atlas(family, [e for e in runtime.entries if e.family == family], images, catalog_id=catalog_id, release_id=release_id)
                 files[f"atlas-{family}.png"] = sheet
                 files[f"atlas-{family}.json"] = sheet_json
+        if animation:
+            files["animation.json"] = runtime_animation_bytes(candidate.entries, catalog_id=catalog_id, release_id=release_id)
     except RegistryError as exc:
         raise BuildError("registry_invalid", str(exc)) from None
     except (StageError, ContractError) as exc:

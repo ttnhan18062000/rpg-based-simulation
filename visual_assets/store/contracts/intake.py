@@ -47,6 +47,11 @@ class IntakeFindingCode(str, Enum):
     TAG_COUNT_MISMATCH = "TAG_COUNT_MISMATCH"
     PALETTE_SIZE_MISMATCH = "PALETTE_SIZE_MISMATCH"
     PALETTE_UNVERIFIABLE = "PALETTE_UNVERIFIABLE"  # all-black stored palette: loaded size depends on decoded pixels
+    # animation metadata (`TCK-20261010-VISUAL-ASSETS-ANIMATION-METADATA-FIELDS`): every one quarantines the candidate
+    ANIMATION_OUT_OF_BOUNDS = "ANIMATION_OUT_OF_BOUNDS"  # more frames or tags than MAX_ANIMATION_FRAMES / MAX_ANIMATION_TAGS
+    ANIMATION_FRAME_DURATION_INVALID = "ANIMATION_FRAME_DURATION_INVALID"  # a frame duration of 0 ms
+    ANIMATION_TAG_RANGE_INVALID = "ANIMATION_TAG_RANGE_INVALID"  # from > to, or outside the frames
+    ANIMATION_TAG_INVALID = "ANIMATION_TAG_INVALID"  # empty, duplicate, over-long or non-text name, or an unknown direction
     # the preview PNG
     PNG_SIGNATURE_INVALID = "PNG_SIGNATURE_INVALID"
     PNG_BAD_CRC = "PNG_BAD_CRC"

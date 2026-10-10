@@ -59,13 +59,23 @@ Child 7 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. store_contract.md:226
 
 
 ## Implementation Notes
-
+- **Planner approval (2026-10-10):** placement APPROVED as designed (derived from the file, carried per SOURCE REVISION, no registry field, no manifest change, so no registry-budget review; per-tag direction and repeat instead of an invented sprite loop mode). Additions: a SECURITY REVIEW (new parser path over untrusted bytes), the corpus byte-identity proof stays mandatory, and the two NEW bounds `MAX_ANIMATION_FRAMES` 16 and `MAX_ANIMATION_TAGS` 16 are PROPOSED until the owner decides (asset-planner asks; the implementer does not).
+- **Parser (`intake/aseprite.py`):** `read_facts` also returns `frame_durations_ms` (the frame header word at offset 8, at most 16 kept) and `animation_tags` (`RawTag`: name, from, to, direction byte, repeat). The tags chunk is walked by `_read_tags`, which (1) refuses a declared total over the tag bound BEFORE reading any entry, (2) checks the whole declared run against the chunk's own bytes with the smallest legal tag size before looping, (3) re-checks each name length against the chunk, and (4) validates names with the SAME contract type the record uses (`TagName`), so parser and contract cannot disagree. Every failure is a quarantine finding (`SOURCE_TRUNCATED_CHUNK` or a new `ANIMATION_*` code), never an exception.
+- **New intake finding codes:** `ANIMATION_OUT_OF_BOUNDS`, `ANIMATION_FRAME_DURATION_INVALID`, `ANIMATION_TAG_RANGE_INVALID`, `ANIMATION_TAG_INVALID`. A duration "over 65535" from the design cannot occur (the header field is a WORD); the contract still bounds it to 1..65535.
+- **Choices beyond the plan (for the planner to confirm):** (a) duration 0 is refused only for a source with MORE THAN ONE frame, so previously accepted one-frame art cannot start failing; tag ranges are checked for every source. (b) Tag names are limited to 32 plain-text characters: a contract-level limit on the new record (not a config bound), needed because the file's name length is a WORD. (c) A source with more than 16 frames is now quarantined (before, accepted); the drawing tools cap at 16, so only hand-made files are affected. (d) `build_entry_records` takes the source bytes and derives the animation itself, so `adopt` and `adopt-set` share one path; an invalid animation refuses with `source_animation_invalid` rather than store a bad record. (e) The export picks the NEWEST source revision whose artifact has the entry's pixel hash (the one `build` takes).
+- **Carry:** `SourceRecord.animation` (optional; omitted for a one-frame source via `drop_absent`, so every committed record is byte-identical: a test round-trips all of them). `ArtifactRecord`, the registry and the runtime manifest are untouched.
+- **Export:** `export-runtime --animation` writes `animation.json` (`runtime_animation`); no flag, no file; the manifest and every PNG are byte-identical either way (tested).
+- **Real-Aseprite oracle:** `test_the_parser_reads_animation_metadata_exactly_as_aseprite_reads_it_back` has real Aseprite write a 4-frame sprite (durations 50/100/150/200 ms, one tag per direction) and compares the parser to what Aseprite reads back.
+- **Budgets and docs:** two PROPOSED rows in `budgets.md`; a section in `store_contract.md`. The record `docs/assets/aseprite_local_proof.json` goes stale with this change (guarded files changed) and is refreshed in its own commit after the last store change.
+- **Security review:** see Test Summary.
 
 ## Test Summary
-
+- `tests/visual_assets/store/unit/test_animation_metadata.py`: 40 passed, no Aseprite: round trips the 4-frame fixture from the file to `animation.json` and equals the values written; 11 planted bad cases each quarantined with its code (zero duration, tag past the last frame, from after to, tag outside a one-frame source, 17 frames, 17 tags, duplicate/empty/over-long/control-character names, unknown direction, non-UTF-8 name); hostile cases (the tags chunk claimed at every shorter length, declared counts of 17/1000/65535 in under 0.5 s each, a name length running past the chunk, 1500 random mutations plus truncations never raise); the contract refuses 9 violations; every committed `SourceRecord` round-trips byte for byte with no `animation`; every committed source reads with no new finding.
+- Real Aseprite oracle: 1 passed in strict mode.
+- `tests/visual_assets/store`: 1196 passed after the change, before the new module.
 
 ## Files Changed
-
+`visual_assets/store/{config,adoption,setadoption,runtime_export,cli,animation (new)}.py`, `visual_assets/store/contracts/{animation (new),source,intake}.py`, `visual_assets/store/intake/aseprite.py`, `tests/visual_assets/store/{builders,adoption_support}.py`, `tests/visual_assets/store/unit/test_animation_metadata.py` (new), `tests/visual_assets/store/integration/test_real_aseprite.py`, `docs/assets/{budgets,store_contract}.md`.
 
 ## Completion Summary
-
+(open: the two bounds await the owner; the security review result is recorded below when it returns; the local proof record is refreshed after the last store change)

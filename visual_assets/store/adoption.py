@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from pydantic import ValidationError
 
+from visual_assets.store import animation as source_animation
 from visual_assets.store import config, pixels, records, rendering
 from visual_assets.store.catalog.registry import Registry, load_registry
 from visual_assets.store.catalogwrite import Confirm, publish
@@ -214,11 +215,15 @@ def check_licence_and_approver(licence_state, licence_evidence_ref, approver: st
 
 
 def build_entry_records(
-    *, intake_id, result, result_bytes, review_bytes, source_hash, package, source_asset_id, revision, parent_revision, visual_key, detail_value,
+    *, intake_id, result, result_bytes, review_bytes, source_hash, source_bytes, package, source_asset_id, revision, parent_revision, visual_key, detail_value,
     licence_evidence_ref, approver, approver_role, decided_at,
 ):
     """The AdoptionRecord and SourceRecord for one adoption: (adoption id, adoption, adoption bytes, source bytes)."""
     ad_id = records.adoption_id_for(intake_id, source_asset_id, revision)
+    try:
+        animation = source_animation.animation_from_source(source_bytes)  # derived from the bytes being adopted, never declared; None for a one-frame source
+    except source_animation.AnimationError:
+        raise _refuse("source_animation_invalid", f"{intake_id}: the source's animation metadata is invalid; it should have been quarantined at intake") from None
     try:
         adoption = AdoptionRecord(
             record_type="adoption_record", schema_version=1, adoption_id=ad_id, intake_id=intake_id,
@@ -234,13 +239,13 @@ def build_entry_records(
             record_type="source_record", schema_version=1, source_asset_id=source_asset_id, source_revision=revision,
             source_hash=source_hash, parent_revision=parent_revision, adoption_id=ad_id,
             adoption_hash=validator.file_hash(adoption_bytes), source_format=SourceFormat.ASEPRITE,
-            width=package.width, height=package.height,
+            width=package.width, height=package.height, animation=animation,
         )
-        source_bytes = canonical_json(source)
+        record_bytes = canonical_json(source)
     except (ValidationError, ContractError) as exc:
         detail = exc.errors()[0]["loc"] if isinstance(exc, ValidationError) else exc.code
         raise _refuse("invalid_argument", f"an argument is not acceptable ({detail})") from None
-    return ad_id, adoption, adoption_bytes, source_bytes
+    return ad_id, adoption, adoption_bytes, record_bytes
 
 
 def adopt(
@@ -317,7 +322,7 @@ def adopt(
         raise _refuse("staged_package_invalid", f"the staged package.json no longer parses ({exc.code})") from None
 
     ad_id, adoption, adoption_bytes, source_bytes = build_entry_records(
-        intake_id=intake_id, result=result, result_bytes=result_bytes, review_bytes=review_bytes, source_hash=staged["source.aseprite"], package=package,
+        intake_id=intake_id, result=result, result_bytes=result_bytes, review_bytes=review_bytes, source_hash=staged["source.aseprite"], source_bytes=files.source, package=package,
         source_asset_id=source_asset_id, revision=revision, parent_revision=parent_revision, visual_key=visual_key, detail_value=detail_value,
         licence_evidence_ref=licence_evidence_ref, approver=approver, approver_role=approver_role, decided_at=decided_at,
     )

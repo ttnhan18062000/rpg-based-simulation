@@ -23,6 +23,10 @@ from __future__ import annotations
 import struct
 from dataclasses import dataclass
 
+from pydantic import TypeAdapter, ValidationError
+
+from visual_assets.store import config
+from visual_assets.store.contracts.animation import TagName
 from visual_assets.store.contracts.intake import IntakeFindingCode as Code
 
 MAGIC_FILE = 0xA5E0
@@ -41,6 +45,17 @@ CHUNK_PALETTE = 0x2019
 
 
 @dataclass(frozen=True)
+class RawTag:
+    """One animation tag as the file stores it (direction is Aseprite's byte 0..3). Validated by `read_facts`, turned into a contract record by `store/animation.py`."""
+
+    name: str
+    from_frame: int
+    to_frame: int
+    direction: int
+    repeat: int
+
+
+@dataclass(frozen=True)
 class AsepriteFacts:
     width: int
     height: int
@@ -50,11 +65,50 @@ class AsepriteFacts:
     cels: int
     tags: int
     palette_size: int | None  # None when it cannot be verified without decoding pixels (see module docstring)
+    frame_durations_ms: tuple[int, ...] = ()  # one per frame, read from the frame headers, at most MAX_ANIMATION_FRAMES entries
+    animation_tags: tuple[RawTag, ...] = ()  # at most MAX_ANIMATION_TAGS entries; never walked past that bound
 
 
 Problem = tuple[Code, str]
 
 MAX_PALETTE_ENTRIES = 65536  # a palette larger than this is refused as malformed (never allocated or iterated)
+TAG_FIXED_BYTES = 19  # from(2) to(2) direction(1) repeat(2) reserved(6) colour(3) extra(1) + the name's length word(2); the smallest legal tag, with an empty name
+TAGS_HEADER_BYTES = 10  # tag count(2) + reserved(8)
+DIRECTIONS = 4  # forward, reverse, ping-pong, ping-pong reverse
+_TAG_NAME = TypeAdapter(TagName)
+
+
+def _read_tags(data: bytes, body: int, end: int, found: list[RawTag]) -> tuple[int, list[Problem]]:
+    """Walk one tags chunk body (declared count first). Returns (declared count, problems). Every size is checked against the chunk's own bytes BEFORE it is used,
+    and the walk stops at MAX_ANIMATION_TAGS entries in total, so a hostile chunk can neither run past its bytes nor make this allocate or loop long."""
+    if end - body < TAGS_HEADER_BYTES:
+        return 0, [(Code.SOURCE_TRUNCATED_CHUNK, "tags chunk is too short for its header")]
+    (declared,) = struct.unpack_from("<H", data, body)
+    if len(found) + declared > config.MAX_ANIMATION_TAGS:
+        return declared, [(Code.ANIMATION_OUT_OF_BOUNDS, f"{len(found) + declared} tags; limit is {config.MAX_ANIMATION_TAGS}")]
+    if body + TAGS_HEADER_BYTES + TAG_FIXED_BYTES * declared > end:
+        return declared, [(Code.SOURCE_TRUNCATED_CHUNK, f"tags chunk declares {declared} tags but is too short to hold them")]
+    problems: list[Problem] = []
+    pos = body + TAGS_HEADER_BYTES
+    for _ in range(declared):
+        if pos + TAG_FIXED_BYTES > end:
+            return declared, [*problems, (Code.SOURCE_TRUNCATED_CHUNK, "a tag runs past the end of the tags chunk")]
+        from_frame, to_frame, direction, repeat = struct.unpack_from("<HHBH", data, pos)
+        (length,) = struct.unpack_from("<H", data, pos + TAG_FIXED_BYTES - 2)
+        name_start = pos + TAG_FIXED_BYTES
+        if name_start + length > end:
+            return declared, [*problems, (Code.SOURCE_TRUNCATED_CHUNK, "a tag name runs past the end of the tags chunk")]
+        pos = name_start + length
+        try:
+            name = _TAG_NAME.validate_python(data[name_start:pos].decode("utf-8"))
+        except (UnicodeDecodeError, ValidationError):
+            problems.append((Code.ANIMATION_TAG_INVALID, "a tag name is empty, over 32 characters, not plain text or not UTF-8"))
+            continue
+        if direction >= DIRECTIONS:
+            problems.append((Code.ANIMATION_TAG_INVALID, f"tag {name!r} has the unknown direction {direction}"))
+            continue
+        found.append(RawTag(name, from_frame, to_frame, direction, repeat))
+    return declared, problems
 
 
 def _old_palette(data: bytes, start: int, end: int, nonblack: set[int]) -> int | None:
@@ -121,6 +175,8 @@ def read_facts(data: bytes) -> tuple[AsepriteFacts | None, list[Problem]]:
     (header_colors,) = struct.unpack_from("<H", data, 32)
 
     layers = cels = tags = 0
+    durations: list[int] = []
+    raw_tags: list[RawTag] = []
     new_palette: int | None = None
     old_palette = 0
     nonblack_new: set[int] = set()
@@ -143,6 +199,8 @@ def read_facts(data: bytes) -> tuple[AsepriteFacts | None, list[Problem]]:
             problems.append((Code.SOURCE_TRUNCATED, f"frame {walked + 1} runs past the end of the file"))
             broken = True
             break
+        if len(durations) < config.MAX_ANIMATION_FRAMES:
+            durations.append(struct.unpack_from("<H", data, offset + 8)[0])  # the frame header's duration word, in ms
         pos = offset + FRAME_HEADER_BYTES
         while pos < end:
             if pos + CHUNK_HEADER_BYTES > end:
@@ -164,7 +222,12 @@ def read_facts(data: bytes) -> tuple[AsepriteFacts | None, list[Problem]]:
                     problems.append((Code.SOURCE_TRUNCATED_CHUNK, f"tags chunk at byte {pos} is too short"))
                     broken = True
                     break
-                tags += struct.unpack_from("<H", data, body)[0]
+                declared, tag_problems = _read_tags(data, body, chunk_end, raw_tags)
+                tags += declared
+                problems += tag_problems
+                if any(code is Code.SOURCE_TRUNCATED_CHUNK for code, _ in tag_problems):
+                    broken = True
+                    break
             elif chunk_type == CHUNK_PALETTE:
                 declared, bad = _new_palette(data, body, chunk_end, nonblack_new)
                 if bad is not None:
@@ -201,5 +264,22 @@ def read_facts(data: bytes) -> tuple[AsepriteFacts | None, list[Problem]]:
     if not nonblack:
         palette_size = None
         problems.append((Code.PALETTE_UNVERIFIABLE, "the stored palette is all opaque black, so its loaded size depends on pixel data"))
-    facts = AsepriteFacts(width, height, frames, depth, layers, cels, tags, palette_size)
+    problems += _animation_problems(frames, durations, raw_tags)
+    facts = AsepriteFacts(width, height, frames, depth, layers, cels, tags, palette_size, tuple(durations), tuple(raw_tags))
     return facts, problems
+
+
+def _animation_problems(frames: int, durations: list[int], tags: list[RawTag]) -> list[Problem]:
+    """Bounds and consistency of the animation metadata. A one-frame source is not animation, so only its tag ranges are checked (a tag outside its one frame is wrong either way)."""
+    out: list[Problem] = []
+    if frames > config.MAX_ANIMATION_FRAMES:
+        out.append((Code.ANIMATION_OUT_OF_BOUNDS, f"{frames} frames; limit is {config.MAX_ANIMATION_FRAMES}"))
+    elif frames > 1 and 0 in durations:
+        out.append((Code.ANIMATION_FRAME_DURATION_INVALID, f"frame {durations.index(0) + 1} has a duration of 0 ms"))
+    for tag in tags:
+        if not 0 <= tag.from_frame <= tag.to_frame < frames:
+            out.append((Code.ANIMATION_TAG_RANGE_INVALID, f"tag {tag.name!r} covers frames {tag.from_frame}..{tag.to_frame} of {frames}"))
+    names = [t.name for t in tags]
+    if len(set(names)) != len(names):
+        out.append((Code.ANIMATION_TAG_INVALID, "two tags share a name"))
+    return out
