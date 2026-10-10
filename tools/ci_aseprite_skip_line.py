@@ -3,7 +3,9 @@
 Real Aseprite runs only on the licence holder's machine (`make visual-assets-aseprite-local`), so every
 `needs_aseprite` test skips on a hosted runner. The skip reason written by `tests/visual_assets/conftest.py` carries
 `SKIP_MARKER`, which is how the skips are counted from the pytest JUnit XML. Never raises; always exits 0 (it is a
-reporting step, not a gate), same as `tools/ci_junit_summary.py`.
+reporting step, not a gate), same as `tools/ci_junit_summary.py`. It also states the committed local proof record
+(`docs/assets/aseprite_local_proof.json`, `tools/visual_assets_aseprite_proof.py`): its commit, Aseprite version, run date and whether the
+guarded files still match. The pass/fail verdict on that match is `tests/visual_assets/test_aseprite_local_proof.py`, not this line.
 """
 
 from __future__ import annotations
@@ -28,15 +30,26 @@ def count_aseprite_skips(path: Path) -> int | None:
     )
 
 
-def render_line(skips: int | None) -> str:
+def render_line(skips: int | None, proof: str | None = None) -> str:
+    extra = f"; {proof}" if proof else ""
     if skips is None:
-        return "Real-Aseprite tests: no JUnit results available (local only, ADR D10)\n"
-    return f"Real-Aseprite tests: {skips} `needs_aseprite` skipped: local only, ADR D10 (`make visual-assets-aseprite-local`)\n"
+        return f"Real-Aseprite tests: no JUnit results available (local only, ADR D10){extra}\n"
+    return f"Real-Aseprite tests: {skips} `needs_aseprite` skipped: local only, ADR D10 (`make visual-assets-aseprite-local`){extra}\n"
+
+
+def proof_sentence() -> str:
+    """The proof record sentence; importable from a script run (`python3 tools/ci_aseprite_skip_line.py`) and from the package."""
+    root = str(Path(__file__).resolve().parents[1])
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from tools import visual_assets_aseprite_proof
+
+    return visual_assets_aseprite_proof.describe()
 
 
 def main(argv: list[str]) -> int:
     try:
-        sys.stdout.write(render_line(count_aseprite_skips(Path(argv[0]))))
+        sys.stdout.write(render_line(count_aseprite_skips(Path(argv[0])), proof_sentence()))
     except Exception as exc:  # a reporting step never becomes a second CI failure
         sys.stdout.write(f"Real-Aseprite tests: summary failed: {exc}\n")
     return 0

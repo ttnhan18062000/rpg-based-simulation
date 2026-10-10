@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import warnings
@@ -141,7 +142,11 @@ def test_the_current_release_candidate_rebuilds_from_its_stored_sources(tmp_path
     if drift:
         version = subprocess.run([str(config_aseprite()), "--version"], capture_output=True, text=True, check=False).stdout.strip()
         warnings.warn(f"{len(drift)} of {len(verdicts)} entries rebuild to the same pixels but different PNG bytes under {version} (identity holds, bytes moved): {drift}")
-    print(json.dumps({"release": f"{CATALOG_ID}/{RELEASE_ID}", "entries": len(verdicts), "identical": sum(v == 'IDENTICAL' for v in verdicts.values()), "bytes_differ_pixels_match": len(drift)}))
+    summary = {"release": f"{CATALOG_ID}/{RELEASE_ID}", "entries": len(verdicts), "identical": sum(v == 'IDENTICAL' for v in verdicts.values()), "bytes_differ_pixels_match": len(drift)}
+    print(json.dumps(summary))
+    out = os.environ.get("VISUAL_ASSETS_REBUILD_VERDICT_OUT")  # `make visual-assets-aseprite-local` collects this for the proof record
+    if out:
+        Path(out).write_text(json.dumps(summary, sort_keys=True))
 
 
 def config_aseprite() -> Path:
