@@ -73,13 +73,11 @@ def file_hash(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
-MAX_FINDING_DETAIL = 256  # IntakeFinding.detail is BoundedText(256)
-
-
 def _finding(code: Code, detail: str) -> IntakeFinding:
-    """A finding whose text can never exceed the record's own bound: text built from untrusted bytes must quarantine the candidate, not raise."""
-    if len(detail) > MAX_FINDING_DETAIL:
-        detail = detail[: MAX_FINDING_DETAIL - 3] + "..."
+    """A finding whose text can never exceed the record's own length (`IntakeFinding.detail` is `BoundedText`, 256 characters; this is that limit, not a new bound): text built
+    from untrusted bytes must quarantine the candidate, not raise."""
+    if len(detail) > 256:
+        detail = detail[:253] + "..."
     return IntakeFinding(code=code, detail=detail)
 
 

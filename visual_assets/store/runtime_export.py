@@ -17,6 +17,7 @@ from pathlib import Path
 from visual_assets.store import config, pixels, records, verify
 from visual_assets.store.animation import runtime_animation_bytes
 from visual_assets.store.atlas import build_atlas
+from visual_assets.store.atlas import pack as pack_atlas
 from visual_assets.store.catalog.registry import fallback_problems, load_registry
 from visual_assets.store.contracts import ReleaseCandidateManifest, RuntimeManifest, canonical_json, parse_record, record_bound
 from visual_assets.store.contracts.runtime import RuntimeDetail, RuntimeEntry
@@ -85,7 +86,6 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
             raise BuildError("registry_mismatch", "the registry changed since this candidate was assembled; assemble a new one")
         entries: list[RuntimeEntry] = []
         files: dict[str, bytes] = {}
-        images: dict[str, pixels.DecodedImage] = {}
         for entry in candidate.entries:
             digest = entry.pixel_hash[len(pixels.HASH_PREFIX):]
             png_path = records.generated_dir() / entry.artifact_id / f"{digest}.png"
@@ -96,8 +96,7 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
                 raise BuildError("artifact_mismatch", f"the artifact PNG for {entry.visual_key} is missing or unreadable") from None
             if pixels.pixel_hash_of(decoded) != entry.pixel_hash:
                 raise BuildError("artifact_mismatch", f"the artifact PNG for {entry.visual_key} does not match its pixel hash")
-            files[f"{digest}.png"] = png
-            images[entry.pixel_hash] = decoded
+            files[f"{digest}.png"] = png  # the decoded image is not kept: only its size is, below, so the default export never holds more than one image
             entries.append(RuntimeEntry(visual_key=entry.visual_key, family=registry.keys[entry.visual_key].family, pixel_hash=entry.pixel_hash,
                                         file=f"{digest}.png", width=decoded.width, height=decoded.height, detail=entry.detail))
         missing = fallback_problems(registry, {e.visual_key for e in entries})  # AM1-W06.3 again at activation time: the client must be able to show something for every key it has no image for
@@ -116,8 +115,14 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
         )
         data = canonical_json(runtime)
         if atlases:
-            for family in sorted({e.family for e in runtime.entries}):
-                sheet, sheet_json = build_atlas(family, [e for e in runtime.entries if e.family == family], images, catalog_id=catalog_id, release_id=release_id)
+            by_family = {family: [e for e in runtime.entries if e.family == family] for family in sorted({e.family for e in runtime.entries})}
+            for family, members in by_family.items():  # every sheet size comes from the entries' own sizes, so an oversized family refuses before any image is decoded again
+                width, height, _ = pack_atlas(members)
+                if width > config.MAX_ATLAS_DIM or height > config.MAX_ATLAS_DIM:
+                    raise BuildError("atlas_too_large", f"the {family} atlas would be {width}x{height}, over the {config.MAX_ATLAS_DIM} px bound")
+            for family, members in by_family.items():  # then one family's images at a time, dropped after its sheet is built
+                images = {e.pixel_hash: pixels.decode_png(files[e.file], max_dim=config.MAX_DIM) for e in members}
+                sheet, sheet_json = build_atlas(family, members, images, catalog_id=catalog_id, release_id=release_id)
                 files[f"atlas-{family}.png"] = sheet
                 files[f"atlas-{family}.json"] = sheet_json
         if animation:

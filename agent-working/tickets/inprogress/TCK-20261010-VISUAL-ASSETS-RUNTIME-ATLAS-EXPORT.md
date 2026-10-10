@@ -60,7 +60,7 @@ Child 5 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. store_contract.md:204
 - After child 3 (shares the determinism checks).
 
 ## Implementation Notes
-See staging plan/investigation. `MAX_ATLAS_DIM` 1024 is a new bound: budgets row PROPOSED, the owner decides.
+See staging plan/investigation. `MAX_ATLAS_DIM` 1024 is a new bound. **Owner decision, 2026-10-10, relayed by asset-planner from its blocking question (the owner's answer, verbatim): "Approve 1024".** The budgets row is now `APPROVED 2026-10-10`.
 
 
 ## Test Summary
@@ -72,3 +72,5 @@ See staging plan/investigation. `MAX_ATLAS_DIM` 1024 is a new bound: budgets row
 
 ## Completion Summary
 
+## Review fix (asset-planner, 2026-10-10): the default export must not hold decoded images
+`export_runtime` kept every decoded artifact image (`images[entry.pixel_hash] = decoded`) on EVERY export, with or without atlases: in the worst case `MAX_VISUAL_KEYS` (1024) x `MAX_DECODED_BYTES` (about 4 MiB) resident, for an opt-in feature. Fixed: the default path keeps no image (only the entry's size is kept). With `--atlas`, every family's sheet size is computed from the entries' own sizes (`atlas.pack`) and an oversized family refuses (`atlas_too_large`) BEFORE any image is decoded again; then one family's images are decoded at a time and dropped after its sheet is built. Proof (`tests/visual_assets/store/unit/test_runtime_export.py`): the default export never has more than one decoded image alive and never calls `build_atlas` or `pack`; the atlas pass holds one family at a time and decodes each entry once more plus each finished sheet once; a mutant with the early check disabled costs extra decodes before refusing. The default-path test, the one-family test and the mutant all fail with the fix reverted; the oversized-family test alone passes on the old code too (the old code never re-decoded before its late check), so the mutant is what proves that property is measurable. `decode_png` keeps its own documented LRU cache of 4 images, which the tests clear on each call so only what the export itself retains is counted.
