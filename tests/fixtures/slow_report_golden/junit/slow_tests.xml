@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="pytest" tests="5">
+    <testcase classname="tests.perf.test_perf_combat" name="test_a" time="0.1"><failure message="boom">trace</failure></testcase>
+    <testcase classname="tests.old.test_expired" name="test_b" time="0.1"><error message="err">trace</error></testcase>
+    <testcase classname="tests.unknown.test_new" name="test_c" time="0.1"><failure message="boom">trace</failure></testcase>
+    <testcase classname="tests.ok.test_fine" name="test_d" time="0.1"></testcase>
+    <testcase classname="tests.ok.test_xfail" name="test_e" time="0.1"><skipped message="xfail"/></testcase>
+  </testsuite>
+</testsuites>

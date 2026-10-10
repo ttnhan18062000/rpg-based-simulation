@@ -1,0 +1,11 @@
+# Known fails and drifts of the rpg regression gate report (TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE, child 1 of
+# TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC). EMPTY on purpose: the gate report that reads it lands in a later child.
+# Schema, matcher and lint: tools/test_architecture/known_reds.py (RPG_GATE_SPEC); tests/unit/tools/test_known_reds.py lints this file.
+#
+# Each entry: `match` (an fnmatch pattern on `<metric_id>[:<group>]`), `ticket`, `owner`, `added_on`, `expires_on` (ISO dates)
+# and `state`, the one state the entry covers:
+#   fail   a VALIDITY fail; `ticket` is the ticket that owns the fix.
+#   drift  a DRIFT against the baseline; `ticket` is a TRACE ticket (the decision that explains the drift).
+# `note` is optional. Unknown fields are rejected. A metric with no entry in its state is UNOWNED; one past `expires_on` is EXPIRED.
+# ORDER MATTERS within a state: the first entry whose pattern matches wins, and the lint rejects a shadowed entry.
+known: []
