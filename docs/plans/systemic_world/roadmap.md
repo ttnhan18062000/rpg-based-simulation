@@ -879,6 +879,8 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 56. which hunger-cognition gaps are fixed before the milestone-0 gate (decided 2026-10-09: the inn-only target before the gate; true-map knowledge in milestone 1, SURV-07).
 57. how people-kind camps eat (decided 2026-10-09: wild food within the camp's range now, hunting once it lands, the fixed tether replaced by a home range in milestone 1, SURV-06);
 58. how the treasury's coin moves (decided 2026-10-09: a tenth of each sale and wage rounded down, upkeep paid into buildings that pay town wages, one-time repair or a used-up kit, unpaid rewards owed, EXCH-02).
+59. what grazing is (decided 2026-10-10: the land's plant cover, declared per biome with its wild food, and read by all forage and camp food, SURV-06);
+60. how much meat a body gives and how often meat-eaters eat (decided 2026-10-10: meat in proportion to size, a meat-eater's full meal lasts at least a day, SURV-06).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,

@@ -139,6 +139,25 @@ Catalog has found.
   applies to every living subject that has the need, animals as well as people: a wolf, a deer, a
   goblin and a townsperson alike. The kind's own need profile sizes it (its rate, its stage
   lines, its recovery). "Person" in the text above is an example, not a limit.
+- **Values from the fiction (rpg-designer under decision 33, 2026-10-10; asked by rpg-planner):**
+  - **Sleeping restores at twice the kind's own waking rate.** A third of the day asleep
+    balances two thirds awake: a person (0.05 per tick awake) sleeps it off at 0.1 per tick,
+    about 16 hours awake to about 80, then about 8 hours of sleep. Animals use their own profile
+    at the same ratio. The same rate applies to a collapse and to sleep by choice, and a bed
+    improves the quality of rest, not its rate. Today's relief of 20 per action is retired: it made
+    a collapse last 11 ticks and a night's sleep about half an hour.
+  - **A collapsed sleeper wakes once the need is no longer pressing,** below SURV-07's onset (0.6
+    of the line, about 59 for a person), and then decides (decision 32). From 98 that is about 390
+    ticks, about 4 hours of helplessness.
+  - **Very tired** (from a debt of 80): recovery at half rate, the same scale as decision 36.
+  - **A bed is sought within about 30 tiles** (half an hour's walk at 36 s per tick); beyond
+    that, the subject rests where it stands. The arrival-adjusted pull already stops a walk to a
+    bed it would collapse before reaching.
+- **The real killer, found 2026-10-10:** every death labelled starvation in Lane A's trace
+  (people, wolves, plant-eaters) was this drain. Each had a sleep debt of 100 and lost 1 HP per
+  tick, against 1-2 HP from hunger in its last 300 ticks. The label was set by hunger at death,
+  not by the source of the HP loss (`src/engine/apply.py`). That is fixed to the typed source,
+  and this collapse now lands first, as its own PR.
 - **Evidence: CONFLICTING** until its code ticket lands.
 - **Scenario:** [LB-S19](../scenarios/life-body-batch-05.md#lb-s19) (weakened, collapse where it
   stands, no action while asleep, wakes, no HP loss; a rested control).
@@ -493,6 +512,21 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     ECOL's population rules, never a target.
     Scenario: [LB-S21](../scenarios/life-body-batch-05.md#lb-s21) (grazes, flees a noticed
     predator, numbers change only by births and deaths).
+  - **Grazing is the land's plant cover (decided by the owner directly, 2026-10-10; row 59 of
+    the memo):** wild land carries plant cover (grass, browse) that a grazing diet can eat and a
+    person's cannot. It regrows by the land's fertility band and runs down when overgrazed. Each
+    biome declares its wild food (forage kinds and a fertility band) and its grazing cover, and
+    camp food (decision 57), wild-edge forage and grazing all read the biome. A module adds
+    specific features on top. This replaces grazers sharing a single berry thicket with people,
+    which starved them (one thicket of 10 charges for six grazers and people on
+    `frontier_living_world`).
+  - **Meat follows body size, and meat-eaters feast and fast (decided by the owner directly,
+    2026-10-10; row 60 of the memo; a decision-33 pass, before and after recorded):** a small
+    body is about one meal for a meat-eater, a medium carcass about a day's food for a
+    meat-eater of its size, a large one several days. A full meal lasts a meat-eater at least a
+    day before its line; a wolf crossed its line about 6 hours after a full meal and needed about
+    9 medium kills a day. People and plant-eaters keep their rates. Until spoilage exists
+    (milestone 3), a large carcass does not rot, which is disclosed.
   - **Scenario:** [LB-S20](../scenarios/life-body-batch-05.md#lb-s20) (a predator eats what it
     kills, raw; it does not forage what its diet excludes; no kill means no meat).
   - **Measured preview** (Lane B, `frontier_living_world`, seed 42; five-seed figures per kind

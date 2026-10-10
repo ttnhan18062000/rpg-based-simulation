@@ -102,6 +102,15 @@ directly, 2026-10-09; rows 47 and 49 of the memo):**
     does it threaten me or mine) plus a reason (defence of self or goods, a duty that is a real
     property of the occupation). It must never come from a list of roles that do not chase
     (decision 46). **Fixed in milestone 1** (the appraisal child). No milestone 0 change.
+  - **CONFLICTING: invaders kill all wildlife on sight (rpg-planner's trace, 2026-10-10).**
+    `bandit_company`, `goblin_warband` and undead are aligned as invaders and so are
+    faction-hostile to every non-invader, including `wild_fauna` and `wild_beast_pack`. The
+    plant-eater herds died mostly to them. By this amendment, faction enmity is a reason for
+    people-kinds to fight people-kinds. Between a people-kind and a wild creature, the appraisal
+    decides, in both directions: hunt when hungry, when the diet can eat the other and it can be
+    overcome; defend or flee when threatened; otherwise ignore it or stay wary. Wolves attack
+    people the same way, not by a faction verdict. **Fixed in the hunting batch** (rpg-designer
+    applying decision 47, no new ruling), which discloses its effect on attacks on people.
 
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-06**
 (row 18 of `docs/plans/systemic_world/owner_decision_memo.md`; the owner confirmed the
