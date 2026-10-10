@@ -1,8 +1,8 @@
 {
   "counts": {
     "combat_movement.yaml": {
-      "allOf/0/then/properties/test_path/type": 241,
-      "allOf/2/else/then/properties/test_path/type": 269,
+      "allOf/0/then/properties/test_path/type": 238,
+      "allOf/2/else/then/properties/test_path/type": 265,
       "properties/proof_type/enum": 4
     },
     "infrastructure.yaml": {
@@ -15,8 +15,8 @@
       "allOf/2/else/then/properties/test_path/type": 99
     },
     "social_narrative.yaml": {
-      "allOf/0/then/properties/test_path/type": 166,
-      "allOf/2/else/then/properties/test_path/type": 210
+      "allOf/0/then/properties/test_path/type": 164,
+      "allOf/2/else/then/properties/test_path/type": 208
     },
     "strategic_cognition.yaml": {
       "allOf/0/then/properties/test_path/type": 142,
