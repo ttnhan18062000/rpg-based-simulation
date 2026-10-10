@@ -7,12 +7,14 @@ producer, and carried per SOURCE REVISION on the `SourceRecord`: no registry fie
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import Field, StringConstraints, model_serializer, model_validator
 
 from visual_assets.store import config
 from visual_assets.store.contracts.base import BoundedText, StoreRecord, drop_absent
+from visual_assets.store.contracts.definitions import AxisValue
+from visual_assets.store.identities import CatalogId, ReleaseId, VisualKey
 
 SliceName = Annotated[BoundedText, StringConstraints(min_length=1, max_length=32)]  # the animation tag rule
 Coordinate = Annotated[int, Field(ge=-(2**31), le=2**31 - 1)]  # Aseprite stores a signed 32-bit LONG
@@ -86,3 +88,44 @@ def check_slices(slices: tuple[SourceSlice, ...], *, width: int, height: int, fr
                 raise ValueError(f"slice {one.name!r} has a key past the {frame_count} frames")
             if not (0 <= b.x and 0 <= b.y and b.x + b.w <= width and b.y + b.h <= height):
                 raise ValueError(f"slice {one.name!r} lies outside the {width}x{height} canvas")
+
+
+class RuntimeSliceKey(StoreRecord):
+    frame: FrameIndex
+    x: Coordinate  # in the EXPORTED image's pixels (source pixels times the build scale), relative to the image, never to an atlas sheet
+    y: Coordinate
+    w: Extent
+    h: Extent
+    center: SliceRect | None = None  # relative to the slice's own corner, scaled the same way
+    pivot: SlicePivot | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_absent(self, handler):  # type: ignore[no-untyped-def]
+        return drop_absent(handler(self), "center", "pivot")
+
+
+class RuntimeSlice(StoreRecord):
+    name: SliceName
+    keys: tuple[RuntimeSliceKey, ...]
+
+
+class RuntimeSliceEntry(StoreRecord):
+    visual_key: VisualKey
+    detail: AxisValue | None = None
+    slices: tuple[RuntimeSlice, ...]
+
+    @model_serializer(mode="wrap")
+    def _omit_absent_detail(self, handler):  # type: ignore[no-untyped-def]
+        return drop_absent(handler(self), "detail")
+
+
+class RuntimeSlices(StoreRecord):
+    """The opt-in `export-runtime --slices` file; no flag, no file."""
+
+    size_bound: ClassVar[str] = "MAX_MANIFEST_BYTES"
+
+    record_type: Literal["runtime_slices"]
+    schema_version: Literal[1]
+    catalog_id: CatalogId
+    release_id: ReleaseId
+    entries: tuple[RuntimeSliceEntry, ...]  # only the keys whose source has slices, sorted by key and detail

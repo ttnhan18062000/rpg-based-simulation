@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261010-VISUAL-ASSETS-SLICE-RUNTIME-EXPORT
-phase: open
+phase: implement
 date: 2026-10-10
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Opt-in runtime export of slices (`export-runtime --slices` writes slices.json in artifact pixels)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -62,12 +62,13 @@ Child 2 of `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`. Mirrors `export-runtime --an
 
 
 ## Implementation Notes
-
+`runtime_slices_bytes` in `store/slices.py` (scale from the export config, cross-checked against the artifact record's size), flat `RuntimeSliceKey` contract, `--slices` flag, `slices_scale_unresolved` refusal, store_contract section.
 
 ## Test Summary
-
+8 unit tests in `test_runtime_slices.py`; 6 mutants all caught (width/height checks needed an extra test).
 
 ## Files Changed
+`visual_assets/store/{slices,runtime_export,cli}.py`, `contracts/slices.py`, `test_boundaries.py`, `store_contract.md`, tests, staging artifacts.
 
 
 ## Completion Summary

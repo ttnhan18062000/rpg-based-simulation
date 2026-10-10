@@ -80,7 +80,7 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "verify": {"verify", "lock", "deletionlog", "records", "audit", "build", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "gc": {"gc", "deletionlog", "records", "intake", "contracts", "identities", "errors", "config"},
     # reads committed candidates, writes a new directory OUTSIDE the catalog; not a gate layer, but the drawing server still may not import it (no MCP export)
-    "runtime_export": {"runtime_export", "atlas", "animation", "records", "verify", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
+    "runtime_export": {"runtime_export", "atlas", "animation", "slices", "build", "records", "verify", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     # shaped, bounded, read-only views for agents; the drawing server may import it
     # ADR D24: the store write lock (leaf: config, errors, identities) and the local gc deletion log (a writer, so a gate layer)
     "lock": {"lock", "identities", "errors", "config"},
@@ -90,7 +90,7 @@ STORE_ALLOWED: dict[str, set[str]] = {
     # animation metadata of a source (derived from its bytes by the intake reader; read back from SourceRecords for the opt-in export): no gate, no write
     "animation": {"animation", "records", "intake", "contracts", "identities", "errors", "config"},
     # slice metadata of a source (derived from its bytes by the intake reader): no gate, no write
-    "slices": {"slices", "intake", "contracts", "identities", "errors", "config"},
+    "slices": {"slices", "records", "intake", "contracts", "identities", "errors", "config"},
     "readmodel": {"readmodel", "records", "intake", "pixels", "contracts", "identities", "errors", "config"},
 }
 # store layers that write the tracked catalog (human gates): no drawing module may import them, not even the server
