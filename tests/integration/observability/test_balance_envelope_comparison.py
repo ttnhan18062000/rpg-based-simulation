@@ -32,6 +32,9 @@ def test_balance_envelope_integration_and_cli_flow(tmp_path):
     # 2. Generate baseline
     baseline = BaselineGenerator.generate_baseline(sweep_id, base_dir=output_dir)
     baseline_path = os.path.join(output_dir, sweep_id, "baseline.json")
+    with open(baseline_path, "r", encoding="utf-8") as f:
+        # the generator itself stamps the cost accounting, nothing patches the file
+        assert json.load(f)["cost_accounting_version"]
 
     # 3. Inject mock run details to simulate a run that degraded slightly but within envelope
     records = RunSetArtifactRepository(base_dir=output_dir).read_run_index(sweep_id)
@@ -132,3 +135,4 @@ def test_balance_envelope_integration_and_cli_flow(tmp_path):
         cli_output = captured_out.getvalue()
         assert "Comparison Result: PASS" in cli_output
         assert "Envelope Name:     SANDBOX_E2E_ENVELOPE" in cli_output
+
