@@ -8,6 +8,7 @@ catalog folders.
 
 from __future__ import annotations
 
+import re
 import subprocess
 from pathlib import Path
 from typing import Iterable, List
@@ -16,14 +17,19 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROOTS = ("visual_assets", "tests/visual_assets")
-ALLOWED_PREFIXES = ("visual_assets/catalog/.quarantine/", "visual_assets/catalog/.review/")
+ALLOWED_PREFIXES = (
+    "visual_assets/catalog/.quarantine/", "visual_assets/catalog/.review/",
+)
+# ADR D24 local state: the store lock and the gc deletion log with its archives (exact names, like .gitignore)
+LOCAL_STATE = {"visual_assets/catalog/.store.lock", "visual_assets/catalog/.deletions.jsonl"}
+ARCHIVE = re.compile(r"visual_assets/catalog/\.deletions-\d{4}\.jsonl")  # the same name pattern as .gitignore and `deletionlog.ARCHIVE`
 
 
 def unexpected_ignored(paths: Iterable[str]) -> List[str]:
     return [
         p
         for p in paths
-        if "__pycache__/" not in p and not p.endswith(".pyc") and not p.startswith(ALLOWED_PREFIXES)
+        if "__pycache__/" not in p and not p.endswith(".pyc") and not p.startswith(ALLOWED_PREFIXES) and p not in LOCAL_STATE and not ARCHIVE.fullmatch(p)
     ]
 
 
@@ -61,3 +67,10 @@ def test_guard_flags_a_planted_ignored_file_and_spares_the_allowed_ones(tmp_path
         "visual_assets/store/build/data.json",
         "visual_assets/store/build/exporter.py",
     ]
+
+
+def test_only_the_exact_local_state_names_are_allowed() -> None:
+    allowed = ["visual_assets/catalog/.store.lock", "visual_assets/catalog/.deletions.jsonl", "visual_assets/catalog/.deletions-0001.jsonl"]
+    assert unexpected_ignored(allowed) == []
+    bad = ["visual_assets/catalog/.deletionsANYTHING", "visual_assets/catalog/.deletions-1.jsonl", "visual_assets/catalog/.store.lockx"]
+    assert unexpected_ignored(bad) == bad

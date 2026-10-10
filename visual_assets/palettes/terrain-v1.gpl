@@ -1,0 +1,27 @@
+GIMP Palette
+Name: terrain-v1
+Columns: 8
+#
+ 74  96  80	4a6050 terrain: terrain.bridge
+ 74  45  45	4a2d2d terrain: terrain.camp
+ 58  48  64	3a3040 terrain: terrain.cave
+ 58  52  32	3a3420 terrain: terrain.desert
+106  48  64	6a3040 terrain: terrain.dungeon_entrance
+106 122  64	6a7a40 terrain: terrain.farmland
+ 26  29  39	1a1d27 terrain: terrain.floor
+ 27  58  27	1b3a1b terrain: terrain.forest
+ 74  96  48	4a6030 terrain: terrain.grassland
+ 74  64  80	4a4050 terrain: terrain.graveyard
+ 10  74  10	0a4a0a terrain: terrain.jungle
+138  48   0	8a3000 terrain: terrain.lava
+ 58  58  58	3a3a3a terrain: terrain.mountain
+ 90  80  64	5a5040 terrain: terrain.road
+ 74  64  53	4a4035 terrain: terrain.ruins
+ 45  58  74	2d3a4a terrain: terrain.sanctuary
+ 42  80 112	2a5070 terrain: terrain.shallow_water
+200 216 232	c8d8e8 terrain: terrain.snow
+ 42  42  58	2a2a3a terrain: terrain.swamp
+ 45  74  62	2d4a3e terrain: terrain.town
+ 90  42  26	5a2a1a terrain: terrain.volcanic
+ 85  91 115	555b73 terrain: terrain.wall
+ 30  58  95	1e3a5f terrain: terrain.water

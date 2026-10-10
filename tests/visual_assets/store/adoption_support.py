@@ -70,9 +70,9 @@ class MismatchRenderer(FakeRenderer):
 DEFAULT = object()
 
 
-def make_intake(tmp: Path, width: int = 16, *, passed: bool = True, reviewed: bool = True, renderer=DEFAULT) -> IntakeResult:
-    """A real intake in the (patched) quarantine, reviewed with a matching store render. Different widths give different bytes and intake ids."""
-    package, source, preview = b.good_files(width=width) if passed else b.bad_files(width=width)
+def make_intake(tmp: Path, width: int = 16, *, passed: bool = True, reviewed: bool = True, renderer=DEFAULT, **source_kw) -> IntakeResult:
+    """A real intake in the (patched) quarantine, reviewed with a matching store render. Different widths give different bytes and intake ids. `source_kw` shapes the sprite (frames, durations, tag_specs)."""
+    package, source, preview = b.good_files(width=width, **source_kw) if passed else b.bad_files(width=width, **source_kw)
     directory = b.write_dir(tmp / f"pkg-{width}-{passed}", package, source, preview)
     result = intake(directory, created_at="2026-01-01T00:00:00Z")
     if passed and reviewed:

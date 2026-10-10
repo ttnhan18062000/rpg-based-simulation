@@ -74,6 +74,10 @@ def file_hash(data: bytes) -> str:
 
 
 def _finding(code: Code, detail: str) -> IntakeFinding:
+    """A finding whose text can never exceed the record's own length (`IntakeFinding.detail` is `BoundedText`, 256 characters; this is that limit, not a new bound): text built
+    from untrusted bytes must quarantine the candidate, not raise."""
+    if len(detail) > 256:
+        detail = detail[:253] + "..."
     return IntakeFinding(code=code, detail=detail)
 
 

@@ -17,6 +17,7 @@ from visual_assets.drawing.server.app import mcp
 from visual_assets.store import config as store_config
 from visual_assets.store import intake as intake_api
 from visual_assets.store import readmodel
+from visual_assets.store import lock as store_lock
 from visual_assets.store.errors import StoreError
 
 
@@ -35,7 +36,9 @@ def _safe(fn, *args, **kwargs):
 
 def _submit(handoff_id: str) -> dict:
     directory = handoff.handoff_directory(handoff_id)
-    result = intake_api.intake(directory, created_at=_now())
+    created_at = _now()
+    with store_lock.store_write_lock("submit candidate", started_at=created_at):  # ADR D24: intake writes the quarantine
+        result = intake_api.intake(directory, created_at=created_at)
     return {
         "handoff_id": handoff_id,
         "intake_id": result.intake_id,
