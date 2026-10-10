@@ -10,7 +10,7 @@ from src.core.state import AuthoritativeState, BuildingState
 from src.core.updates import EntityUpdate, StateUpdate, TaskUpdate
 from src.engine import behavior_consumers
 from src.engine.biological_needs import need_rates, undeclared_need_kinds
-from src.engine.domain.core_actions import CoreActions, ROUGH_REST_SLEEP_DEBT_RECOVERY
+from src.engine.domain.core_actions import CoreActions
 from src.engine.domain.action_router import ActionRouter
 from src.engine.need_paths import need_path_report
 from src.engine.service_reach import service_tile
@@ -114,10 +114,11 @@ def test_eat_is_served_by_the_inn_when_a_home_is_nearer_in_reach():
     assert ent_upd.biological.hunger_delta == -(40.0 + INN_MEAL_HUNGER)  # free meals stay on (owner decision 44): core relief 40 plus the inn's 20, as on main
 
 
-def test_rough_rest_recovers_sleep_debt_without_a_building():
+def test_rough_rest_needs_no_building_and_relieves_rest_pressure_while_the_debt_falls_per_tick_asleep():
+    """Decision 41 (ruled): a rest puts the subject to sleep; the debt falls per tick while asleep (apply.py), no longer by a lump per execution."""
     ent = _entity()
     upd = CoreActions.execute_survival(ent, "REST", 10)[ent.id]
-    assert upd.biological.sleep_debt_delta == -ROUGH_REST_SLEEP_DEBT_RECOVERY
+    assert upd.biological.sleep_debt_delta == 0.0 and upd.biological.rest_pressure_delta < 0
 
 
 def test_inn_meal_is_served_to_a_subject_beside_the_inn():

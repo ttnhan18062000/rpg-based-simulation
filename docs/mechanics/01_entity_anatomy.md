@@ -84,8 +84,13 @@ The simulation tracks biological "Pressures" that degrade over time.
 | Need | Decay (per tick) | Max Value | Penalty Threshold |
 | :--- | :--- | :--- | :--- |
 | **Hunger** | `+0.1` base per tick, scaled by the kind's need profile (`humanoid_survival` is "low": `+0.05`, owner decision 33) | 100.0 | **85.0**: Weakened (stamina and readiness recover at half rate, attack x0.8). **95.0**: Starving (1 HP lost every `round(6000 / max_hp)` ticks, so a full-health body dies about 6000 ticks, 2.5 days, after the line) |
-| **Sleep Debt** | `+0.05` | 100.0 | **98.0**: Fatigue (+1 HP damage/tick) |
+| **Sleep Debt** | `+0.05` (scaled by the kind's need profile) | 100.0 | **80**: Weakened (recovery at half rate, attack x0.8). **98**: Collapse (the subject falls asleep where it stands, takes no action until its debt is below the wake line, and loses no health: owner decision 41) |
 | **Stamina** | `-1.0` (per move) | `Max_Stamina` | **< Exhaustion Threshold**: Exhausted state |
+
+### Staged Sleep Debt (SURV-02, owner decision 41)
+Lack of sleep ends in collapse, never in lost health. The stages derive from `sleep_debt` alone (no extra state) and are tuned in one table, `src/engine/sleep_debt.py::SLEEP_DEBT`:
+- **Weakened** (debt above 80, the pre-existing EXHAUSTION line): stamina and readiness recover at half rate (the worse of the hunger and sleep stages decides, they do not compound) and attack is x0.8.
+- **Collapse** (debt 98 or more, the pre-existing drain line): the subject's decision is a held `SLEEP` where it stands (a walk in progress stops); it takes no other action and can be attacked. **While asleep (a collapse, a rest in place, a rest at a bed) the debt falls per tick at twice the kind's own accrual rate** (people 0.1 against 0.05), and the sleep is held until the debt is below the wake line, SURV-07's escalation onset (`ESCALATION_ONSET` x `SLEEP_LINE`, about 59); then the subject decides (decision 32). A collapse from 98 lasts about 400 ticks (about 4 hours). No health is lost to lack of sleep, so `PassiveDeathCause.SLEEP_DEPRIVATION` is no longer written. A bed still improves quality and has no separate rate; the bed reach is 30 tiles (designer-ruled).
 
 ### Staged Starvation (SURV-02, owner decision 36)
 Past the hunger line a person weakens first and loses health only slowly. The stages derive from `hunger` alone (no extra state) and are tuned in one table, `src/engine/starvation.py::STARVATION`:

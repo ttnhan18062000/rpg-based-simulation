@@ -73,16 +73,17 @@ def test_hunger_death_records_starvation_with_zeroing_tick_then_classifies_next_
     assert n1.lifecycle.passive_death_cause_tick == n.lifecycle.passive_death_cause_tick  # N preserved
 
 
-def test_sleep_debt_death_records_sleep_deprivation_distinct_from_starvation():
+def test_sleep_debt_at_the_collapse_line_costs_no_health_and_records_no_passive_cause():
+    """Decision 41 (replaces the sleep-deprivation drain): lack of sleep ends in collapse, never in lost health or a death. The enum value stays."""
     n, n1 = _kernel_ticks(_starving(hp=1, sleep_debt=98.0), 2)
-    assert n.lifecycle.passive_death_cause is PassiveDeathCause.SLEEP_DEPRIVATION
-    assert n1.lifecycle.death_reason == "SLEEP_DEPRIVATION"
+    assert n.combat.hp == 1 and n.combat.alive is True and n.lifecycle.passive_death_cause is None
+    assert n1.combat.hp == 1 and n1.lifecycle.death_reason is None
     assert PassiveDeathCause.SLEEP_DEPRIVATION.value != PassiveDeathCause.STARVATION.value
 
 
 def test_both_thresholds_breached_record_starvation_by_declared_precedence():
     """Declared rule (lifecycle_systems_contract.md): hunger outranks sleep debt as a recorded cause."""
-    n, n1 = _kernel_ticks(_starving(hp=2, hunger=95.0, sleep_debt=98.0), 2)
+    n, n1 = _kernel_ticks(_starving(hp=1, hunger=95.0, sleep_debt=98.0), 2)
     assert n.combat.hp == 0
     assert n1.lifecycle.death_reason == PassiveDeathCause.STARVATION.value
 

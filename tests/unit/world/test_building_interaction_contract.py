@@ -33,7 +33,7 @@ def test_building_interaction_inn_rest_recovery():
     (bed,) = upd.resource_transfers
     assert bed.gold_delta == -REST_PRICE_GOLD
     assert upd.combat.hp_delta == 5
-    assert upd.biological.sleep_debt_delta == -15.0  # the core REST's -10 plus the inn's -5, as on main
+    assert upd.biological.sleep_debt_delta == 0.0  # decision 41 (ruled): the debt falls per tick while asleep; a bed has no separate rate
     assert upd.readiness_delta == 10.0
 
 
