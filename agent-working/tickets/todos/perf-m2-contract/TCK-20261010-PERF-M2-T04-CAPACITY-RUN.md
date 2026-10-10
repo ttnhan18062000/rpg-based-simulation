@@ -35,6 +35,7 @@ Source concern IDs: C5.
 - Add tools/perf/capacity_run.py using BenchHarness with process-level repetitions (no pyperf): 100 warmup and 1000 sampled ticks, --repetitions N, and optional --base/--head paired mode with a fresh process per side through compare()
 - Emit schema-1.0 BenchmarkRecords with gate.tier=capacity_run, gate.projection=capacity_run, runner.controlled=false, nearest-rank p50/p95/p99/max, memory_mb{rss_high_water, rss_delta, sample_every_ticks}, validity fields, and samples.tick_wall_ms as a {uri, sha256} pointer to an uncommitted file under reports/perf/
 - Declare a variance limit (coefficient of variation across repetitions). Exceeding it gives INCONCLUSIVE naming variance, and dirty_src=true is rejected or INCONCLUSIVE.
+- Harden the samples pointer that #483 added: BenchHarness._build_record names the file f"{scenario}_{profile}_{int(timestamp)}", so two runs in the same second overwrite each other and the earlier record's sha256 goes stale. Make the stem unique (sub-second or a run id). Any tripwire run over MAX_EMBEDDED_SAMPLES (500) also writes to the cwd-relative reports/perf/samples/ by default. tests/perf/test_perf_stress.py (1000 ticks) does this, so pass samples_dir=tmp_path there (perf-planner review of #483)
 - Migrate src/perf/long_run_harness.py to nearest-rank percentiles and map the F22 report into a capacity_run record (scenario_id, entity_count, seed, final_state_hash, memory, warmup_ticks, samples, per-sample active_mode). Replace passed_certification with outcome.
 - Update tests/certification/test_cert_long_run_stability.py to assert outcome instead of passed_certification
 - Update docs/engine/performance_contract.md §3.3, the benchmark_identity_schema gate.projection cell, and the parity ledger (infrastructure.yaml) in the same session
@@ -48,6 +49,7 @@ Source concern IDs: C5.
 
 ## Acceptance Criteria
 - [ ] Running tools/perf/capacity_run.py on a scenario with --repetitions N emits N schema-1.0 BenchmarkRecords (or one aggregated record), each with gate.tier=capacity_run, gate.projection=capacity_run, protocol warmup=100, sampled=1000, and runner.controlled=false
+- [ ] Two records written in the same second for the same scenario and profile point to different files, and each sha256 matches its own file. No test under tests/ writes into reports/perf/samples/.
 - [ ] samples.tick_wall_ms is a {uri, sha256} pointer, and the sha256 matches the written file under reports/perf/
 - [ ] A unit test with a fixed sample list asserts the exact nearest-rank p50/p95/p99/max values, protocol.percentile_method == 'nearest_rank', and the presence of memory_mb.rss_high_water
 - [ ] When the coefficient of variation across repetitions exceeds the declared limit, the outcome is INCONCLUSIVE with a reason naming variance
