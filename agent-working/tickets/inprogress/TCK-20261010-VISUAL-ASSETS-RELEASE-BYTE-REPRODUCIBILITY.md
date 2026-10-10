@@ -15,7 +15,7 @@ tags: [determinism, testing]
 Prove a release candidate rebuilds to identical bytes (local real-Aseprite test + CI export test)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -59,9 +59,11 @@ Child 3 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. Today a rebuild with 
 
 
 ## Implementation Notes
+Test-only: `tests/visual_assets/test_release_byte_reproducibility.py` plus a store_contract.md section. Local run recorded 2026-10-10T05:27Z at 11ace7957, Aseprite 1.3.18.6: rc-0008 70 of 70 IDENTICAL, 10 passed under strict mode. Byte-drift verdict: pass with a warning naming entries and the Aseprite version (planner to confirm).
 
 
 ## Test Summary
+10 passed (2 needs_aseprite, 8 CI-runnable); fails on planted tIME/tEXt/iTXt/zTXt.
 
 
 ## Files Changed
