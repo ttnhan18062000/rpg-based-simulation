@@ -1,0 +1,6 @@
+{
+ "record_type": "style_rules",
+ "color_budgets": [[16, 8], [32, 12], [64, 16]],
+ "color_budget_above": 24,
+ "note": "Colours allowed on a sprite by its longest side: the first row whose max side is not smaller than the sprite, else color_budget_above. Read by technique/lint.py; guidance, not a gate (docs/assets/pixel_art_technique.md)."
+}

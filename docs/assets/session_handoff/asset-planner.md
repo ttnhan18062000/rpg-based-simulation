@@ -9,11 +9,49 @@ tags: [architecture, documentation]
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-10 (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed by the implementer at the planner's request in `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE`.
-
-Updated: 2026-10-09 (foundation hardening MERGED: PR #471)
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-10 at the close of the store-tooling batch (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261010-VISUAL-ASSETS-STORE-TOOLING-DOCS-AND-CLOSE`.
+Updated: 2026-10-10 (store-tooling: owner gates answered, c3-c7+c9 reviewed)
 
 ## Open
+- 2026-10-10 IN FLIGHT: batch visual-asset-store-tooling FILED + DISPATCHED to asset-implementer (msg). Epic
+  TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING + 9 children (todos/visual-asset-store-tooling/SEQUENCE.md), branch
+  visual-asset-store-tooling off 312fbd78c, planning commit 4c4b0b8d5, upstream unset (implementer checks it out in
+  rpg-aseprite-mcp). Owner answers 2026-10-10: store tooling, all 4 groups; reverse D18 -> D24 (lock refuses 2nd writer,
+  append-only gc deletion log, kill tests); keep D10 + committed local proof record + CI staleness test (no self-hosted
+  runner); decoder pure Python, bounds unchanged. MY GATES: child1 design (owner approves D24 text), child4 guarded paths
+  + record shape (owner approves D10 addendum), child7 field placement (default per-artifact; registry 90% full),
+  child8 clear non-asset frontend files with rpg-planner (no rpg-planner session was live). Review each commit.
+  Child 1 design APPROVED (plan.md in implementer staging); OWNER APPROVED D24 text verbatim (lock on catalog/.store.lock,
+  refuse 2nd writer, local gitignored hash-chained deletion log, manual orphans) + MAX_DELETION_LOG_BYTES 1 MiB (full ->
+  archive + re-anchor chain on old last hash). My adds: draft export/export-runtime take lock, non-Linux refuse at acquire,
+  gc never deletes lock/log, drop unverified AM1-W10.4 cite. Child 2 may start in parallel / land first.
+  Child 1 COMMITTED 43ef881db -> APPROVED (245 tests pass in project venv /data/vboxuser/Work/rpg-based-simulation/.venv;
+  system python3 lacks mcp). Nits sent: ADR status-line comma; narrow .deletions prefix in test_no_ignored_files.
+  Child 2 COMMITTED 11ace7957 -> APPROVED (1311 store tests pass; ~2x faster, bounds unchanged, 2048 px still 2.53 s >
+  2 s line so no bound raise; memo lru 4 frozen results). Nit sent: state ~32 MiB resident memo worst case in budgets.md.
+  Next: child 3, then child 4 (my design gate).
+  2026-10-10 (session 3, after restart): implementer had committed c3-c9 meanwhile. OWNER ANSWERS (my blocking Qs):
+  D10 addendum "Approve as written"; MAX_ATLAS_DIM 1024 approved; MAX_ANIMATION_FRAMES/TAGS 16/16 approved; child 8's two
+  new frontend files (vite.rehearsal-bundle.config.ts, playwright.bundle.config.ts) "Clear both" (rpg-planner not live).
+  lead-planner: YES to Makefile `visual-assets-bundle-capture` w/ 4 conditions (aseprite-local shape, adjacent, NO new dep
+  -> ask lead first, output reports/visual_assets/). All relayed. REVIEWED: c3 835db787e, c4 9a4083372+2e608382e (broad
+  guarded set, full-target-only record, dirty-tree refusal), c6 17d43c792, c7 5c4d34ff9+43469ba16 (sec NEEDS_CHANGES fixed:
+  hostile tag name -> raise; choices a-e confirmed), c9 dedb16d9b (research move) APPROVED. c5 de963439e FIX asked:
+  runtime_export keeps all decoded images even without --atlas (~4 GiB worst case) -> only if atlases + fit check first.
+  Next: c5 fix, c8 code, proof-record re-run commit (once, after last store edit), c9 close, PR question (implementer).
+  7dbe534b6 (owner decisions recorded; D10 addendum verbatim in ADR, checked) + f2287f94e (c5 fix: no retained images,
+  fit check before decode; MAX_FINDING_DETAIL dropped for budgets_parity) APPROVED. c8 scope OK: pixel verdicts only for
+  3 rehearsal.html cells, loading-only for other pages (say so per page, gate stays INCONCLUSIVE); TS pixels-v1 hash
+  proven equal to Python on known vectors; DPR pinned 1.
+  c8 507bb4979+dd3e46ac0 APPROVED (footprint = 2 cleared frontend configs + Makefile target only; real run: rehearsal
+  3 cells pixel-verified, 4 pages loading-only, planted 1-px change caught; deviations a bundle.check.ts, b
+  assetsInlineLimit 0 [doc must say real build may inline, untested], c dirty-tree refusal: confirmed). Next: proof-record
+  re-run commit, c9 closure (batch_hand_close), main merge + final pass, then implementer asks owner push/PR.
+- 2026-10-10: PR #480 MERGED cfad712cf at 2026-10-10T02:54:01Z (owner --admin pinned to c3e01d71d). Branch
+  visual-asset-icon-release-candidate finished, never pushed again. rc-0008 (70 entries: 34 terrain + 36 icons) is the
+  current rc. Main checkout NOT fast-forwarded (dirty with other sessions' files) - leave it.
+  Open for owner: own asset-planner worktree (exists now: ~/Work/rpg-asset-planner, confirm); everything else parked
+  (activation incl. Live Map icon glyph until RPG core lands). Superseded detail below is history.
 - IN FLIGHT (2026-10-09): owner said "start order as your recommendation" (A bookkeeping -> B icon rc -> C glyph).
   A folded into B's first commit (EPIC_SCOPED and DONE both legal; cosmetic). C DROPPED for now: store side done in #471,
   only the client Live Map glyph remains = parked with activation. B filed: batch visual-asset-icon-release-candidate,
@@ -32,6 +70,21 @@ Updated: 2026-10-09 (foundation hardening MERGED: PR #471)
   copy fails" mutant; nit: narrow `except Exception` in _reference_problems. Fix 2eb885539 APPROVED (pins verified
   against the files; frontend untouched). Waiting on commit 4 (docs + BOTH snapshots), final test pass, then the
   implementer asks the owner push/PR.
+  2026-10-10: docs d0ef62c74 + main merge + snapshots 1e916663d APPROVED; tests green except one ENVIRONMENTAL failure
+  (test_handover_transit memory-dir slug: two memory dirs -data-... and -home-... after the ~/Work move; agent-working
+  domain, raised to owner, no asset ticket). BLOCKED on ticket closure (still in todos, no working_log row/monitoring):
+  told implementer to close (hand-orchestrated closure tool + done_checker_static) BEFORE any push.
+  Closure e7151e61f APPROVED (done_checker PASS; path_reason "other" kept, use batch_hand_close next time per 25
+  precedents). PR #480 open, head 40e2d3051, CI running; implementer asks owner --admin merge after green.
+  Lesson for my test plans: include a "## Proof Plan" section (test_plan_proof_fields advisory).
+  PR #480 went CONFLICTING after #476/#478: dry merge-tree shows docs/REGISTRY.yaml ONLY (expected GitHub-side);
+  implementer told to merge main locally + push.
+  2026-10-10 (session 2): implementer merged main twice more (65d89be67 + REGISTRY regen c3e01d71d) + gate-verdict
+  records 40e2d3051/1828628a4 (1 jsonl line each) -> REVIEWED OK: PR footprint all asset scope (73 catalog, 11 tests,
+  4 docs/assets, bookkeeping). PR #480 MERGEABLE at head c3e01d71d; CI ALL GREEN (2026-10-10), owner
+  merges (--admin pinned to head). #476 MERGED: asset domain registered with all my corrections
+  (frontend/src/visualAssets, rehearsal-capture, ADR, staging_artifacts in may_write); planner worktree still
+  "proposed ~/Work/rpg-asset-planner (owner decides)" -> still open.
 - PR 476 (session-role registration, owner's draft): replied for BOTH asset seats 2026-10-09 (issuecomment-6084929712):
   add frontend/src/visualAssets/** + frontend/rehearsal-capture/** (split rpg/asset) + the asset ADR; planner may_write
   needs agent-working/staging_artifacts/**; sessions launch in main checkout, implementer writes in rpg-aseprite-mcp;

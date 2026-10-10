@@ -66,7 +66,7 @@ key names are in `visual_assets/catalog/definitions/visual_keys.yaml` (`icon.pla
   The glyph's dark outline separates it from its plate.
 - **View angle, one per family** (`craft §2`, inference): buildings and map markers in 3/4 front view, items in a 3/4
   diagonal inventory pose, tab and class glyphs flat and front-on **(proposal)**.
-- **Colours:** only palette colours; at most 8 at 16 px and ideally 6 or fewer (`craft §1`, Slynyrd; `craft §2`).
+- **Colours:** only palette colours; at most 8 at 16 px and ideally 6 or fewer (`craft §1`, Slynyrd; `craft §2`). The palette is data: `visual_assets/palettes/icons-v1.json` (and `terrain-v1.json`) with `.gpl` exports Aseprite can load; `lint_sprite` with `palette_id: "icons-v1"` reports off-palette pixels as advice (never a ruling, `docs/assets/icon_criteria.md`).
   The `lint_sprite` colour budget is the authority.
 - **Silhouette first:** block the shape in one colour and check it at 1x with the grid off before shading (`craft §2`).
 - **Abstract concepts** (AI, narrative, quest, events, effects) use a concrete fantasy object and always ship a label or

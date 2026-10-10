@@ -321,3 +321,7 @@ website/.docusaurus/
 visual_assets/catalog/.quarantine/
 # candidate previews kept locally for human review; only adopted assets are committed
 visual_assets/catalog/.review/
+# the store write lock and the local gc deletion log with its archives (ADR D24); never committed
+visual_assets/catalog/.store.lock
+visual_assets/catalog/.deletions.jsonl
+visual_assets/catalog/.deletions-*.jsonl

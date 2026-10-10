@@ -2770,6 +2770,15 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Verification**: `tests/unit/perf/test_bench_harness_record.py::test_nearest_rank_replaces_int_n_q`, `tests/unit/perf/test_benchmark_record.py` (nearest-rank, the comparability rule), `tests/unit/perf/test_perf_profiles_canonical.py::test_make_perf_profile_takes_the_detected_hardware_class`; parity entry `INFRA-430`.
 - **Status**: ACTIVE
 
+### DEV-021 — BenchHarness Statistics Cover Every Sampled Tick, Not the Last 100 (TCK-20261010-PERF-M2-T04-CAPACITY-RUN)
+
+- **Situation**: `BenchHarness.run_benchmark` collated `tick_ms`, `phase_breakdown`, `metrics` and `compute_tps` from `kernel.status.get_recent_history(sample_ticks)`, but `RuntimeStatus.signal_history` is a `deque(maxlen=100)`. For any run with more than 100 sampled ticks the statistics covered only the last 100 ticks, and `compute_tps` was `sample_ticks * 1000 / sum(last 100 tick costs)`, overstated by `sample_ticks / 100` (10x at 1000 ticks). Found when a 1000-tick capacity repetition recorded 100 compute samples against 1000 wall samples.
+- **Change**: the harness reads each tick's signals as the sampling loop runs, so every sampled tick is in the statistics. Runs of 100 sampled ticks or fewer are unchanged.
+- **Rationale**: **Bug Fix**. The reported numbers did not describe the protocol that was named.
+- **Consequences recorded**: (1) the three committed `simq_corpus_*` baselines (1000 sampled ticks) carry last-100-tick `tick_ms` and a `compute_tps` / `avg_tps` overstated about 10x; they were already `rerun` in the invalidation ledger and now have a second reason. No test compares those two fields (the live tripwire re-measures at 50 ticks and compares `avg_tick_compute_ms`). (2) A 1000-tick `BenchHarness` run now reports the average and percentiles of 1000 ticks, so it is not comparable with an earlier 1000-tick result. (3) `tests/perf/test_perf_stress.py` and any other caller with `sample_ticks > 100` report different, correct, numbers.
+- **Verification**: `tests/unit/perf/test_bench_harness_record.py::test_stats_cover_every_sampled_tick_not_just_the_last_hundred` (fails on the previous harness: 100 samples against 150); parity entry `INFRA-432`.
+- **Status**: ACTIVE
+
 ### 2.70 An Entity-Tracking Combat Move Ends When Its Target Is Dead, Inactive or Gone, and the In-Reach End Covers Intercept and Bracketing (TCK-20261005-BRACKETING-REPOSITION-MOVES-ARE-EXCLUDED-FROM-THE-PURSUIT-COMPLETION-CONDITION)
 
 - **Legacy Behavior**: only a `PURSUE` move had a completion condition (2.68), and only for a live target in reach. An `INTERCEPT`, a
