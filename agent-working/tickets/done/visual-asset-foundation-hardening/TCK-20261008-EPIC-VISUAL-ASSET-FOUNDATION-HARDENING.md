@@ -51,7 +51,7 @@ Children in `SEQUENCE.md`, in dependency order (guard decoupling first so the re
 - docs/assets/store_contract.md, budgets.md, fallback_safety.md, m1_contract_register.md, ADR visual_asset_foundation_adr.md
 
 ## Related Stored Artifacts
-- agent-working/staging_artifacts/TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING/internal_gap_audit.md, research_asset_pipeline.md
+- agent-working/stored_artifacts/TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING/internal_gap_audit.md, research_asset_pipeline.md
 
 ## Related Code Areas
 

@@ -53,7 +53,7 @@ Child 2 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. budgets.md F3: the pu
 - `docs/assets/store_contract.md`, `docs/assets/budgets.md`, `docs/architecture/visual_asset_foundation_adr.md`
 
 ## Related Stored Artifacts
-- `agent-working/staging_artifacts/TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING/` (`internal_gap_audit.md`, `research_asset_pipeline.md`; moved to stored_artifacts by child 9)
+- `agent-working/stored_artifacts/TCK-20261008-EPIC-VISUAL-ASSET-FOUNDATION-HARDENING/` (`internal_gap_audit.md`, `research_asset_pipeline.md`; moved to stored_artifacts by child 9)
 
 ## Related Code Areas
 
