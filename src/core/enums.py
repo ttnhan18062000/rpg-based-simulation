@@ -85,6 +85,7 @@ class ReasonCode(str, Enum):
     ADVANCING = "advancing"
     OCCUPANCY_VIOLATION = "occupancy_violation"
     PATH_NOT_FOUND = "path_not_found"
+    OUT_OF_BOUNDS = "out_of_bounds"
     BUILDING_OBSTRUCTION = "BUILDING_OBSTRUCTION"
     YIELDING = "yielding"
     SIDESTEPPING = "sidestepping"
