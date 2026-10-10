@@ -66,7 +66,7 @@ def test_median_record_is_the_middle_repetition() -> None:
     assert cap.median_record([rec(10.0), rec(20.0)]).result.latency_ms["avg"] == 10.0
 
 
-# ── real runs in fresh processes ──────────────────────────────────────────────────────────────────────────────────────────────────
+# ── real runs in fresh processes (marked slow: they start subprocesses; not in the default CI selection) ──────────────────────────────────────────────────────────────────────────────────────────────────
 
 
 @pytest.fixture(scope="module")
@@ -77,6 +77,7 @@ def two_repetitions(tmp_path_factory):
     return outcome, records, samples
 
 
+@pytest.mark.slow
 def test_n_repetitions_emit_n_capacity_run_records(two_repetitions) -> None:
     outcome, records, _ = two_repetitions
     assert len(records) == 2 and outcome.state in (OutcomeState.NOT_APPLICABLE, OutcomeState.INCONCLUSIVE)
@@ -89,6 +90,7 @@ def test_n_repetitions_emit_n_capacity_run_records(two_repetitions) -> None:
         assert "rss_high_water" in record.result.memory_mb
 
 
+@pytest.mark.slow
 def test_the_samples_are_a_pointer_with_a_matching_sha_and_distinct_files(two_repetitions) -> None:
     _, records, samples_dir = two_repetitions
     uris = [r.result.samples.uri for r in records]
@@ -99,6 +101,7 @@ def test_the_samples_are_a_pointer_with_a_matching_sha_and_distinct_files(two_re
         assert hashlib.sha256(Path(pointer.uri).read_bytes()).hexdigest() == pointer.sha256
 
 
+@pytest.mark.slow
 def test_the_cli_writes_records_and_a_summary_with_no_claim(tmp_path, capsys) -> None:
     code = cap.main(
         ["--scenario", "movement", "--entities", "15", "--warmup", "2", "--ticks", "10", "--repetitions", "2", "--cv-limit", "100", "--out-dir", str(tmp_path / "out"), "--samples-dir", str(tmp_path / "s")]
@@ -147,6 +150,7 @@ def test_paired_mode_is_inconclusive_when_a_side_cannot_emit_records(monkeypatch
     assert outcome.state is OutcomeState.INCONCLUSIVE and outcome.reason.startswith("base side:")
 
 
+@pytest.mark.slow
 def test_spawn_runs_a_real_worker_process_pointed_at_a_root(monkeypatch) -> None:
     calls = []
     real = cap.subprocess.run
