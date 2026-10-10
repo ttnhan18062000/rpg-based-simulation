@@ -25,7 +25,7 @@ from visual_assets.store.contracts.animation import AnimationTag, RuntimeAnimati
 from visual_assets.store.contracts.base import IntakeVerdict
 from visual_assets.store.contracts.intake import IntakeFindingCode as Code
 from visual_assets.store.errors import ContractError
-from visual_assets.store.intake import aseprite
+from visual_assets.store.intake import aseprite, validator
 from visual_assets.store.intake.service import intake
 from visual_assets.store.release import assemble_release
 from visual_assets.store.runtime_export import export_runtime
@@ -157,6 +157,28 @@ def test_no_single_byte_change_or_truncation_of_an_animated_source_raises():
             mutated[rng.randrange(len(mutated))] = rng.randrange(256)
         aseprite.read_facts(bytes(mutated))
         aseprite.read_facts(bytes(mutated[: rng.randrange(len(mutated) + 1)]))
+
+
+HOSTILE_NAME = "\U000e0080" * 32  # unassigned code points: plain-text valid, and `repr` expands each to a 10-character escape
+
+
+@pytest.mark.parametrize("name, source", [
+    ("a bad range on a hostile name", b.aseprite(frames=2, tag_specs=[(HOSTILE_NAME, 5, 9, 0, 0)])),
+    ("an unknown direction on a hostile name", b.aseprite(frames=2, tag_specs=[(HOSTILE_NAME, 0, 1, 7, 0)])),
+    ("sixteen hostile tags of 17 to 32 characters", b.aseprite(frames=2, tag_specs=[(HOSTILE_NAME[: 17 + i], 5, 9, 9, 0) for i in range(16)])),
+])
+def test_a_hostile_tag_name_quarantines_the_candidate_and_never_raises(name, source):
+    """Security review of the animation parser: a name of unassigned code points made a quoted finding longer than the 256-character limit, so `validate` raised instead of quarantining."""
+    result = validator.validate(b"{}", source, b"")
+    assert any(f.code.value.startswith("ANIMATION_") for f in result.findings), name
+    assert all(len(f.detail) <= 256 for f in result.findings)
+    assert all(HOSTILE_NAME[:3] not in f.detail for f in result.findings), "findings name a tag by its position, never its text"
+
+
+def test_a_finding_longer_than_its_bound_is_clamped_not_raised():
+    clamped = validator._finding(Code.SOURCE_MALFORMED, "x" * 1000)
+    assert len(clamped.detail) == 256 and clamped.detail.endswith("...")
+    assert validator._finding(Code.SOURCE_MALFORMED, "short").detail == "short"
 
 
 def test_the_animation_bounds_are_the_drawing_tools_own_and_a_worst_case_record_fits():

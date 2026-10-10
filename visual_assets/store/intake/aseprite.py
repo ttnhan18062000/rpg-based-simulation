@@ -90,7 +90,7 @@ def _read_tags(data: bytes, body: int, end: int, found: list[RawTag]) -> tuple[i
         return declared, [(Code.SOURCE_TRUNCATED_CHUNK, f"tags chunk declares {declared} tags but is too short to hold them")]
     problems: list[Problem] = []
     pos = body + TAGS_HEADER_BYTES
-    for _ in range(declared):
+    for number in range(1, declared + 1):  # findings name a tag by its position, never by its text: a hostile name can expand past a finding's length limit when quoted
         if pos + TAG_FIXED_BYTES > end:
             return declared, [*problems, (Code.SOURCE_TRUNCATED_CHUNK, "a tag runs past the end of the tags chunk")]
         from_frame, to_frame, direction, repeat = struct.unpack_from("<HHBH", data, pos)
@@ -105,7 +105,7 @@ def _read_tags(data: bytes, body: int, end: int, found: list[RawTag]) -> tuple[i
             problems.append((Code.ANIMATION_TAG_INVALID, "a tag name is empty, over 32 characters, not plain text or not UTF-8"))
             continue
         if direction >= DIRECTIONS:
-            problems.append((Code.ANIMATION_TAG_INVALID, f"tag {name!r} has the unknown direction {direction}"))
+            problems.append((Code.ANIMATION_TAG_INVALID, f"tag {number} has the unknown direction {direction}"))
             continue
         found.append(RawTag(name, from_frame, to_frame, direction, repeat))
     return declared, problems
@@ -276,9 +276,9 @@ def _animation_problems(frames: int, durations: list[int], tags: list[RawTag]) -
         out.append((Code.ANIMATION_OUT_OF_BOUNDS, f"{frames} frames; limit is {config.MAX_ANIMATION_FRAMES}"))
     elif frames > 1 and 0 in durations:
         out.append((Code.ANIMATION_FRAME_DURATION_INVALID, f"frame {durations.index(0) + 1} has a duration of 0 ms"))
-    for tag in tags:
+    for number, tag in enumerate(tags, 1):
         if not 0 <= tag.from_frame <= tag.to_frame < frames:
-            out.append((Code.ANIMATION_TAG_RANGE_INVALID, f"tag {tag.name!r} covers frames {tag.from_frame}..{tag.to_frame} of {frames}"))
+            out.append((Code.ANIMATION_TAG_RANGE_INVALID, f"tag {number} covers frames {tag.from_frame}..{tag.to_frame} of {frames}"))
     names = [t.name for t in tags]
     if len(set(names)) != len(names):
         out.append((Code.ANIMATION_TAG_INVALID, "two tags share a name"))
