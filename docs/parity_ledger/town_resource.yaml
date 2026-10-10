@@ -2535,7 +2535,7 @@
   proof_type: parity
   test_path: tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py
   divergence_note: 'Intentional divergence 2.106 (Intentional Gameplay Change, Bug Fix).'
-  support_boundary: 'A disabled building is not re-enabled when the treasury recovers.'
+  support_boundary: 'A wrecked building (hp 0) is not reopened by upkeep.'
 - id: TOWN-207
   text: 'A kill grants experience and no coin; a dead entity''s coin and goods move to its body (CorpseState.gold), a looter takes the body''s coin, a decayed body''s coin escheats to the treasury of the ground''s holder; a quest reward is paid by a treasury or recorded as an OwedRecord paid oldest first.'
   status: verified

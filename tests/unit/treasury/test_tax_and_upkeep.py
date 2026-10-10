@@ -95,6 +95,24 @@ def test_a_treasury_that_cannot_pay_leaves_the_building_unpaid_and_disabled_and_
     assert out.resource_updates[KEY] == -5.0
 
 
+def test_an_unpaid_building_opens_again_when_upkeep_is_paid_in_full():
+    from dataclasses import replace as rep
+    state = _town(treasury=1000.0, tick=40)
+    closed = rep(state.buildings[1], functional=False)          # closed for want of upkeep: it still stands (hp > 0)
+    state = rep(state, buildings={**state.buildings, 1: closed})
+    out = TownResolutionSystem.resolve(state, StateUpdate(), cadence=SystemCadence())
+    assert out.building_updates[1].functional_set is True and out.building_updates[1].inventory.gold_delta == 5
+
+
+def test_upkeep_does_not_reopen_a_wrecked_building():
+    from dataclasses import replace as rep
+    state = _town(treasury=1000.0, tick=40)
+    wreck = rep(state.buildings[1], functional=False, hp=0)
+    state = rep(state, buildings={**state.buildings, 1: wreck})
+    out = TownResolutionSystem.resolve(state, StateUpdate(), cadence=SystemCadence())
+    assert 1 not in out.building_updates
+
+
 def test_a_building_nobody_holds_is_not_paid_for():
     state = _town(owner=None, tick=40)
     out = TownResolutionSystem.resolve(state, StateUpdate(), cadence=SystemCadence())

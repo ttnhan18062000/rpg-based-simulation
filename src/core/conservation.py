@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from src.core.models.world_records import OwedRecord
 from src.core.treasury import TreasuryTransfer, can_pay
 from src.core.enums import ReasonCode
 from src.core.inventory import InventoryService
@@ -115,34 +116,71 @@ def _carried_food_result(intent: ResourceTransferIntent, inventory: InventoryCom
     return TransactionResult(accepted=True, inventory_update=InventoryUpdate(items_remove=intent.items_remove), biological_update=intent.biological_upd)
 
 
-def _reward_result(intent: ResourceTransferIntent, inventory_full: bool, reservations: Optional[Dict[Any, int]],
-                   state: Any = None, entity: Any = None, treasury_pending: Optional[Dict[str, float]] = None) -> TransactionResult:
+def _reward_result(intent: ResourceTransferIntent, inventory_full: bool, reservations: Optional[Dict[Any, int]]) -> TransactionResult:
     """A COMBAT or QUEST grant. A quest accounts for in-tick reservations first (P0.2); both grant XP/gold only if the items fit
-    (Progression Rule: if it has items, it must fit). A reward whose coin is funded by a treasury (EXCH-02, decision 38) is paid from it when
-    it holds the coin; a short treasury grants the rest of the reward and OWES the coin (an OwedRecord, paid oldest first)."""
+    (Progression Rule: if it has items, it must fit)."""
     is_quest = intent.source_kind == "QUEST"
     if is_quest and reservations and reservations.get(("QUEST", intent.source_id), 0) > 0:
         return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)
     if intent.items_add and inventory_full:
         return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
-    gold, treasury_update, owed = intent.gold_delta, None, None
-    if intent.treasury_pays and intent.treasury_faction is not None and gold > 0:
-        if can_pay(state.global_resources, intent.treasury_faction, gold, treasury_pending):
-            treasury_update = TreasuryTransfer(faction=intent.treasury_faction, gold_delta=-gold)
-        else:
-            from src.core.state import OwedRecord
-            owed = OwedRecord(id=f"owed:{intent.source_id}:{entity.id}", creditor_id=entity.id, debtor_faction=intent.treasury_faction,
-                              amount=int(gold), posted_tick=state.tick, reason=f"{intent.source_kind}_REWARD")
-            gold = 0
     return TransactionResult(
         accepted=True,
-        inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=gold),
+        inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
         identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward),
         reward_update=intent.reward_upd,
         quest_update=QuestUpdate(quest_id=str(intent.source_id), status_set=QuestStatus.REWARDED) if is_quest else None,
-        treasury_update=treasury_update,
-        owed=owed,
     )
+
+
+def _fund_reward(result: TransactionResult, intent: ResourceTransferIntent, state: Any, entity: Any,
+                 treasury_pending: Optional[Dict[str, float]]) -> TransactionResult:
+    """EXCH-02, decision 38: a reward whose coin is funded by a treasury is paid from it when it holds the coin; a short treasury grants the rest of
+    the reward and OWES the coin (an OwedRecord, paid oldest first). A reward with no treasury named is left as it was."""
+    gold = intent.gold_delta
+    if not (result.accepted and intent.treasury_pays and intent.treasury_faction is not None and gold > 0):
+        return result
+    if can_pay(state.global_resources, intent.treasury_faction, gold, treasury_pending):
+        return replace(result, treasury_update=TreasuryTransfer(faction=intent.treasury_faction, gold_delta=-int(gold)))
+    owed = OwedRecord(id=f"owed:{intent.source_id}:{entity.id}", creditor_id=entity.id, debtor_faction=intent.treasury_faction,
+                      amount=int(gold), posted_tick=state.tick, reason=f"{intent.source_kind}_REWARD")
+    unpaid = InventoryUpdate(items_add=intent.items_add)  # the items and experience are granted; only the coin is owed
+    return replace(result, inventory_update=unpaid, owed=owed)
+
+
+def _shop_sell_result(state: Any, intent: ResourceTransferIntent, target_inventory: InventoryComponent) -> TransactionResult:
+    """A sale at a shop (RPG-ECON-201): the shop pays the full price out of its own purse; the seller receives it minus the place holder's share."""
+    building = state.buildings.get(intent.source_id)
+    if not building or not building.functional:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
+    if building.inventory.gold < intent.gold_delta:
+        return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
+    for item in intent.items_remove:
+        if sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id) < item.quantity:
+            return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+    tax = _tax_credit(intent)
+    return TransactionResult(
+        accepted=True,
+        inventory_update=InventoryUpdate(items_remove=intent.items_remove, gold_delta=intent.gold_delta - (tax.gold_delta if tax else 0)),
+        building_update=BuildingUpdate(building_id=intent.source_id, inventory=InventoryUpdate(items_add=intent.items_remove, gold_delta=-intent.gold_delta)),
+        treasury_update=tax)
+
+
+def _service_result(state: Any, intent: ResourceTransferIntent, target_inventory: InventoryComponent) -> TransactionResult:
+    """A paid service or fee. The payee is the service building's purse, else the treasury the intent names, else (an unnamed payee) nobody."""
+    if target_inventory.gold < intent.gold_cost:
+        return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)
+    paid = min(target_inventory.gold, max(0, intent.gold_cost - intent.gold_delta))
+    credit = _service_credit(state, intent, paid)
+    holder = intent.treasury_faction
+    to_treasury = credit is None and holder is not None and paid > 0
+    return TransactionResult(
+        accepted=True,
+        building_update=credit,
+        treasury_update=TreasuryTransfer(faction=holder, gold_delta=int(paid)) if holder is not None and to_treasury else None,
+        inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta - intent.gold_cost),
+        identity_update=intent.identity_upd, biological_update=intent.biological_upd, attributes_update=intent.attributes_upd,
+        combat_update=intent.combat_upd, strategic_update=intent.strategic_upd, equipment_update=intent.equipment_upd, reward_update=intent.reward_upd)
 
 
 class ResourceTransactionResolver:
@@ -304,38 +342,7 @@ class ResourceTransactionResolver:
             )
 
         elif intent.source_kind == "SHOP_SELL":
-            # RPG-ECON-201: Shop liquidity check
-            # Selling doesn't need capacity check for entity (it removes items)
-            # But shop needs enough gold
-            building = state.buildings.get(intent.source_id)
-            if not building or not building.functional:
-                return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
-
-            if building.inventory.gold < intent.gold_delta:
-                return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
-
-            for item in intent.items_remove:
-                have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)
-                if have < item.quantity:
-                    return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
-            
-            from src.core.updates import BuildingUpdate
-            tax = _tax_credit(intent)  # the place holder's share of the proceeds (decision 51); the shop still pays the full price
-            return TransactionResult(
-                accepted=True,
-                inventory_update=InventoryUpdate(
-                    items_remove=intent.items_remove,
-                    gold_delta=intent.gold_delta - (tax.gold_delta if tax else 0)
-                ),
-                building_update=BuildingUpdate(
-                    building_id=intent.source_id,
-                    inventory=InventoryUpdate(
-                        items_add=intent.items_remove,
-                        gold_delta=-intent.gold_delta
-                    )
-                ),
-                treasury_update=tax
-            )
+            return _shop_sell_result(state, intent, target_inventory)
 
         elif intent.source_kind == "WAGE":
             return _wage_result(state, intent)
@@ -344,32 +351,11 @@ class ResourceTransactionResolver:
             return _inherit_result(state, intent, inventory_full)
 
         elif intent.source_kind in ("COMBAT", "QUEST"):
-            return _reward_result(intent, inventory_full, reservations, state, entity, treasury_pending)
+            return _fund_reward(_reward_result(intent, inventory_full, reservations), intent, state, entity, treasury_pending)
 
         # VERIFIED v2: authoritative_side_effects
         if intent.source_kind in ("TOWN_SERVICE", "TAX", "REPAIR_FEE", "SERVICE_FEE", "INFORMATION_PURCHASE"):
-             if target_inventory.gold < intent.gold_cost:
-                 return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)
-                 
-             paid = min(target_inventory.gold, max(0, intent.gold_cost - intent.gold_delta))
-             credit = _service_credit(state, intent, paid)
-             return TransactionResult(
-                 accepted=True,
-                 building_update=credit,
-                 treasury_update=(TreasuryTransfer(faction=intent.treasury_faction, gold_delta=paid)
-                                  if credit is None and intent.treasury_faction is not None and paid > 0 else None),
-                 inventory_update=InventoryUpdate(
-                      items_add=intent.items_add,
-                      gold_delta=intent.gold_delta - intent.gold_cost
-                 ),
-                 identity_update=intent.identity_upd,
-                 biological_update=intent.biological_upd,
-                 attributes_update=intent.attributes_upd,
-                 combat_update=intent.combat_upd,
-                 strategic_update=intent.strategic_upd,
-                 equipment_update=intent.equipment_upd,
-                 reward_update=intent.reward_upd
-             )
+             return _service_result(state, intent, target_inventory)
         
         elif intent.source_kind == "CARRIED_FOOD":
              return _carried_food_result(intent, target_inventory)

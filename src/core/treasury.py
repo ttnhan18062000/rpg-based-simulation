@@ -25,6 +25,11 @@ def treasury_key(faction: int) -> str:
     return f"{_KEY_PREFIX}{Faction(int(faction)).name.lower()}{_KEY_SUFFIX}"
 
 
+def neutral_faction() -> int:
+    """The bucket of the neutral treasury, where coin goes when nobody holds the ground."""
+    return int(Faction.NEUTRAL)
+
+
 def treasury_keys() -> frozenset[str]:
     """Every treasury key there can be: the four buckets."""
     return frozenset(treasury_key(f) for f in Faction)
@@ -35,10 +40,11 @@ class TreasuryTransfer:
     """A signed change to one treasury: positive when it receives, negative when it pays. Never a free-floating number: a transfer is
     always one half of a coin movement whose other half is a purse, a building or a corpse (conservation, `total_coin`)."""
     faction: int
-    gold_delta: float
+    gold_delta: int
 
     @property
     def key(self) -> str:
+        """The `global_resources` key of the treasury this transfer changes."""
         return treasury_key(self.faction)
 
 

@@ -55,6 +55,11 @@ class HashScheduleViolation(RuntimeError):
     """
 
 
+def _canonical_owed(state: AuthoritativeState) -> Dict[str, Any]:
+    """The debts a treasury owes, as sorted plain data (EXCH-02)."""
+    return {k: v.to_canonical_dict() for k, v in sorted(state.owed.items())}
+
+
 class CanonicalStateHasher:
     """
     Deterministic hasher for AuthoritativeState.
@@ -108,8 +113,7 @@ class CanonicalStateHasher:
         data["resource_nodes"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.resource_nodes.items())}
         data["buildings"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.buildings.items())}
         data["corpses"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.corpses.items())}
-        if state.owed:
-            data["owed"] = {k: v.to_canonical_dict() for k, v in sorted(state.owed.items())}
+        data["owed"] = _canonical_owed(state)
         data["ground_items"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.ground_items.items())}
         data["chests"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.chests.items())}
         data["groups"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.groups.items())}

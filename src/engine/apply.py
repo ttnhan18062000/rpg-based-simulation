@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 # from dataclasses import replace
 from typing import Dict, Any, List, Optional
+from src.core.models.world_records import fold_owed
 
 def replace(obj: Any, **changes: Any) -> Any:
     """Fast dataclass replacement bypassing inspect/__init__ overhead."""
@@ -337,13 +338,7 @@ class ApplyPath:
         for k, v in update.resource_updates.items():
             new_global_resources[k] = new_global_resources.get(k, 0.0) + v
 
-        new_owed = prior_state.owed
-        if update.owed_remove or update.owed_add_or_update:
-            new_owed = dict(prior_state.owed)
-            for o_id in update.owed_remove:
-                new_owed.pop(o_id, None)
-            for rec in update.owed_add_or_update:
-                new_owed[rec.id] = rec
+        new_owed = fold_owed(prior_state.owed, update.owed_remove, update.owed_add_or_update)
 
         grid_invalidated = plan.grid_invalidated
         if grid_invalidated:

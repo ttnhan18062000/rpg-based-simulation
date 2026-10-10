@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict
 
 from src.core.enums import Faction
 from src.core.treasury import treasury_key
@@ -116,7 +116,8 @@ class TownResolutionSystem:
 
         # 4. Upkeep (EXCH-02, decisions 51 and 58). There is no periodic levy and no coin is minted here: the treasury of the faction that holds a
         # building's ground pays the building's maintenance INTO THE BUILDING'S OWN PURSE, and the building pays its workers' wages from that
-        # purse (work_shift.py). A treasury that cannot pay a building leaves it unpaid, and an unpaid building is disabled and offers no work.
+        # purse (work_shift.py). A treasury that cannot pay a building leaves it unpaid, and an unpaid building is disabled and offers no work;
+        # paid in full on a later upkeep tick it opens again.
         new_owed_remove = list(update.owed_remove)
         if is_tax_tick:
             # Debts first (decision 58): a treasury pays what it owes, oldest first, before it spends on upkeep; the queue waits at the first
@@ -138,11 +139,10 @@ class TownResolutionSystem:
                 new_owed_remove.append(rec.id)
 
             MAINTENANCE_COST = 5.0
-            paid_up: Dict[int, List[int]] = {}
             for b_id in sorted(state.buildings):
                 building = state.buildings[b_id]
-                if not building.functional:
-                    continue
+                if not building.functional and building.hp <= 0:
+                    continue  # wrecked (sabotage), not merely unpaid: upkeep does not reopen a ruin
                 region = SpatialQueryService.get_building_region(state, b_id)
                 if not (region and region.owner_faction_id is not None):
                     continue
@@ -152,7 +152,9 @@ class TownResolutionSystem:
                     new_resource_updates[key] = new_resource_updates.get(key, 0.0) - MAINTENANCE_COST
                     b_upd = refined_building_updates.get(b_id, BuildingUpdate(building_id=b_id))
                     credit = InventoryUpdate(gold_delta=int(MAINTENANCE_COST))
-                    refined_building_updates[b_id] = replace(b_upd, inventory=b_upd.inventory.merge(credit) if b_upd.inventory else credit)
+                    # Paid in full: an unpaid (closed but standing) building opens again, so a missed payment is not a ratchet (decision 58).
+                    refined_building_updates[b_id] = replace(b_upd, inventory=b_upd.inventory.merge(credit) if b_upd.inventory else credit,
+                                                             functional_set=True if not building.functional else b_upd.functional_set)
                 else:
                     b_upd = refined_building_updates.get(b_id, BuildingUpdate(building_id=b_id))
                     refined_building_updates[b_id] = replace(b_upd, functional_set=False)

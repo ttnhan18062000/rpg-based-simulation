@@ -18,6 +18,7 @@ from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
 from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent, ItemInstance, AcquiredMethod
 from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
+from src.core.models.world_records import CorpseState, OwedRecord  # noqa: F401  (re-exported: state.py is where callers import them from)
 from src.core.immutability import shallow_freeze
 from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
@@ -1248,53 +1249,6 @@ class GroundItemState:
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
-
-@dataclass(frozen=True, slots=True)
-class CorpseState:
-    """A dead entity that can be looted."""
-    id: int
-    original_entity_id: int
-    position: tuple[float, float]
-    items: List[ItemStack]
-    decay_tick: int
-    gold: int = 0  # the dead entity's coin, moved here at death (EXCH-02): taken by a looter, or paid to the place holder's treasury at decay
-    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
-
-    def to_canonical_dict(self) -> Dict[str, Any]:
-        if self._canonical_cache is not None:
-            return self._canonical_cache
-        res = {
-            "id": self.id,
-            "original_entity_id": self.original_entity_id,
-            "position": self.position,
-            "items": [i.to_canonical_dict() for i in sorted(self.items, key=lambda x: x.item_id)],
-            "decay_tick": self.decay_tick,
-            "gold": self.gold,
-        }
-        object.__setattr__(self, "_canonical_cache", res)
-        return res
-
-
-@dataclass(frozen=True, slots=True)
-class OwedRecord:
-    """A coin debt a faction treasury could not pay when it fell due (EXCH-02, decision 58): the creditor was promised `amount` and is owed it
-    until the treasury can pay, oldest first. It lives in `AuthoritativeState.owed` until paid or written off, and is shown by the presenter."""
-    id: str
-    creditor_id: int
-    debtor_faction: int  # the treasury (a Faction value) that owes it
-    amount: int
-    posted_tick: int
-    reason: str = "QUEST_REWARD"
-    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
-
-    def to_canonical_dict(self) -> Dict[str, Any]:
-        if self._canonical_cache is not None:
-            return self._canonical_cache
-        res = {"id": self.id, "creditor_id": self.creditor_id, "debtor_faction": self.debtor_faction, "amount": self.amount,
-               "posted_tick": self.posted_tick, "reason": self.reason}
-        object.__setattr__(self, "_canonical_cache", res)
-        return res
-
 
 @dataclass(frozen=True, slots=True)
 class ChestState:

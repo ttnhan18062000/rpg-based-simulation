@@ -411,11 +411,7 @@ class AuthoritativeApplyPipeline:
         t3 = time.perf_counter_ns()
         update = run_phase("occupancy_resolution", update, lambda u: AuthoritativeApplyPipeline._resolve_occupancy_conflicts(state, u))
         t4 = time.perf_counter_ns()
-        # A death's transfers (an heir's INHERIT, the heirloom grant) are emitted by the lifecycle phase, after resource_transactions has run, so
-        # without a second resolution they were applied unresolved (no capacity check, no source debit; EXCH-02). Resolving them inside this phase,
-        # before the apply step builds the corpse, makes an inheritance a move: the corpse holds only what no heir took. (Not a phase of its own:
-        # the golden live-signal fixture counts the clock reads of every run_phase.)
-        update = run_phase("lifecycle", update, lambda u: AuthoritativeApplyPipeline._resolve_death_transfers(state, LifecycleSystem.resolve_lifecycle(state, u)))
+        update = run_phase("lifecycle", update, lambda u: _resolve_death_transfers(state, LifecycleSystem.resolve_lifecycle(state, u)))  # see _resolve_death_transfers
         t5 = time.perf_counter_ns()
         update = run_phase("groups", update, lambda u: AuthoritativeApplyPipeline._resolve_groups(state, u))
         t6 = time.perf_counter_ns()
@@ -550,13 +546,6 @@ class AuthoritativeApplyPipeline:
         return QuestRewardPhase.resolve(state, update)
 
     @staticmethod
-    def _resolve_death_transfers(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
-        """Resolve the transfers the lifecycle phase just emitted (none, almost always: the check is the whole cost)."""
-        if not any(e.resource_transfers for e in update.entity_updates.values()):
-            return update
-        return AuthoritativeApplyPipeline._resolve_resource_transactions(state, update)
-
-    @staticmethod
     def _resolve_resource_transactions(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         from src.engine.pipeline_phases.resources import ResourceTransactionPhase
         return ResourceTransactionPhase.resolve(state, update)
@@ -581,3 +570,14 @@ class AuthoritativeApplyPipeline:
     ) -> StateUpdate:
         from src.engine.pipeline_phases.occupancy import OccupancyPhase
         return OccupancyPhase.resolve(state, update)
+
+
+def _resolve_death_transfers(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
+    """Resolve the transfers the lifecycle phase just emitted (an heir's INHERIT, the heirloom grant; none, almost always, so the check is the whole cost).
+
+    The lifecycle phase runs after resource_transactions, so without this second resolution they were applied unresolved (no capacity check, no
+    source debit; EXCH-02). Resolving them inside the lifecycle phase, before the apply step builds the body, makes an inheritance a move: the body
+    holds only what no heir took. It is not a phase of its own because the golden live-signal fixture counts the clock reads of every run_phase."""
+    if not any(e.resource_transfers for e in update.entity_updates.values()):
+        return update
+    return AuthoritativeApplyPipeline._resolve_resource_transactions(state, update)

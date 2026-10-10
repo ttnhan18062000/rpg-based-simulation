@@ -1055,7 +1055,7 @@ class CompileProfileResolver:
             ResolvedFactionEconomyProfile,
         )
 
-        ctx = CompileContext()
+        ctx = CompileContext(tax_share=self.default_semantics.get_tax_share())
 
         # 0. Populate legacy enums and region ownership
         from src.core.enums import EntityRole, Faction
@@ -1080,8 +1080,6 @@ class CompileProfileResolver:
         # Local to this resolve() call only -- keeps spawn-position resolution a pure function
         # of this call's spec (TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION).
         claimed_positions: Dict[str, Set[Tuple[int, int]]] = {}
-
-        ctx.tax_share = self.default_semantics.get_tax_share()
 
         # 1. Resolve Factions Treasury
         for f_spec in getattr(spec, "factions", []):

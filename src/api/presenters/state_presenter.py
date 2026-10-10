@@ -183,7 +183,8 @@ class StatePresenter:
             "influence": region.influence,
             "hazard": region.hazard_level,
             "kind": region.kind,
-            "weather": region.weather
+            "weather": region.weather,
+            "tax_share": region.tax_share,
         }
 
     @staticmethod

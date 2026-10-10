@@ -3205,7 +3205,7 @@ The following legacy behaviors have been intentionally omitted or retired.
 
 - **Legacy Behavior**: every tax tick each functional building in a held region MINTED +10 into the holder's vault and the vault paid -5 maintenance to nobody; a vault that could not cover all of its faction's buildings disabled every one of them.
 - **New Behavior**: on the upkeep tick (every `2 x town_resolution` ticks) the holder's treasury pays each functional building 5 gold into that building's own purse, in building id order, while it holds the coin; a building the treasury cannot pay is left unpaid and disabled and offers no work. Debts a treasury owes (see 2.107) are paid first, oldest first. Town work is therefore the ordinary WORK shift (200 ticks, 6 gold) at a building a treasury keeps: the coin reaches the worker through treasury, building purse, wage. No coin is minted and none vanishes.
-- **Disclosed**: an unpaid building is disabled for good (nothing re-enables it, as for a sabotaged one); a treasury refills only by tax (decision 51) and escheat. Partial payment replaces the old all-or-nothing disable.
+- **Disclosed**: an unpaid building that still stands (hp above 0) opens again on the first upkeep tick the treasury pays it in full; a wrecked one (hp 0, sabotage) is not reopened by upkeep. A treasury refills only by tax (decision 51) and escheat. Partial payment replaces the old all-or-nothing disable.
 - **Rationale**: **Intentional Gameplay Change** (decisions 37 and 58) and **Bug Fix** (the +10 mint and the -5 to nobody broke conservation).
 - **Verification**: `tests/unit/treasury/test_tax_and_upkeep.py`, `tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py`, `tests/unit/treasury/test_total_coin_is_conserved.py`.
 

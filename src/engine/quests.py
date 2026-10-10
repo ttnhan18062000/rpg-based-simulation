@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, List, Dict, Optional
 
 from src.core.quests import QuestState, QuestKind, QuestStatus
 from src.core.updates import QuestUpdate
+from src.engine.place_tax import reward_payer
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -158,7 +159,6 @@ class QuestResolutionSystem:
         Ensures that quest rewards are capacity-aware.
         """
         from src.core.updates import ResourceTransferIntent, EntityUpdate
-        from src.engine.place_tax import reward_payer
         from src.core.cognition_write import read_through_cognition
         from dataclasses import replace
         from src.core.quests import QuestStatus
@@ -215,9 +215,7 @@ class QuestResolutionSystem:
                         transfer_kind="QUEST_REWARD",
                         transaction_id=f"quest:{q_id}:reward",
                         group_id=f"quest:{q_id}:reward",
-                        is_group_required=True,
-                        treasury_faction=reward_payer(state, entity, project.source_building_id),
-                        treasury_pays=True,
+                        is_group_required=True, treasury_faction=reward_payer(state, entity, project.source_building_id), treasury_pays=True,
                     )
                     
                     # Transition to REWARD_PENDING (if not already)

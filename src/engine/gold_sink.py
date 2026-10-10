@@ -24,6 +24,9 @@ import logging
 from dataclasses import replace
 from typing import TYPE_CHECKING, List
 
+from src.core.update_models.resources import ResourceTransferIntent
+from src.engine.place_tax import ground_holder
+
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
     from src.core.updates import StateUpdate
@@ -38,6 +41,11 @@ _TAX_RATE: float = 0.05                # fraction of gold taxed
 _TAX_MIN: int = 1
 _TAX_MAX: int = 50
 _TAX_WEALTH_MULTIPLIER: float = 1.5   # entities above mean * multiplier are taxed
+
+
+def _fee(kind: str, amount: int, holder: int) -> "ResourceTransferIntent":
+    """One fee intent: `amount` taken from the payer and paid to the treasury of `holder` (EXCH-02: a fee is a transfer, not a deletion)."""
+    return ResourceTransferIntent(source_id="gold_sink", source_kind=kind, gold_cost=amount, gold_delta=0, transfer_kind="FEE", treasury_faction=holder)
 
 
 class GoldSinkSystem:
@@ -58,7 +66,6 @@ class GoldSinkSystem:
         Returns update unchanged when the sink condition is not met.
         """
         from src.economy.health_monitor import EconomyHealthMonitor
-        from src.core.update_models.resources import ResourceTransferIntent
         from src.core.updates import EntityUpdate
 
         # Only fire at window-size boundaries (same cadence as EconomyHealthMonitor)
@@ -74,13 +81,6 @@ class GoldSinkSystem:
         if not alive_entities:
             return update
 
-        from src.core.enums import Faction
-        from src.engine.spatial_query import SpatialQueryService
-
-        def payee(entity) -> int:
-            region = SpatialQueryService.get_region_at(state, entity.navigation.position)
-            return int(region.owner_faction_id) if region is not None and region.owner_faction_id is not None else int(Faction.NEUTRAL)
-
         # Pre-compute mean gold for TAX threshold
         gold_values = [float(e.inventory.gold) for e in alive_entities]
         mean_gold = sum(gold_values) / len(gold_values) if gold_values else 0.0
@@ -93,44 +93,25 @@ class GoldSinkSystem:
             intents: List[ResourceTransferIntent] = []
             entity_gold = entity.inventory.gold
 
+            holder = ground_holder(state, entity)  # the treasury that receives the fees (EXCH-02)
+
             # --- Mechanism 1: REPAIR_FEE ---
             degraded_slots = GoldSinkSystem._count_degraded_slots(entity)
             if degraded_slots > 0 and entity_gold > 0:
                 fee = min(degraded_slots * _REPAIR_FEE_PER_SLOT, entity_gold)
-                intents.append(ResourceTransferIntent(
-                    source_id="gold_sink",
-                    source_kind="REPAIR_FEE",
-                    gold_cost=fee,
-                    gold_delta=0,
-                    transfer_kind="FEE",
-                    treasury_faction=payee(entity),
-                ))
+                intents.append(_fee("REPAIR_FEE", fee, holder))
                 total_gold_attempted += fee
 
             # --- Mechanism 2: SERVICE_FEE ---
             if entity_gold >= _SERVICE_FEE_FLAT:
-                intents.append(ResourceTransferIntent(
-                    source_id="gold_sink",
-                    source_kind="SERVICE_FEE",
-                    gold_cost=_SERVICE_FEE_FLAT,
-                    gold_delta=0,
-                    transfer_kind="FEE",
-                    treasury_faction=payee(entity),
-                ))
+                intents.append(_fee("SERVICE_FEE", _SERVICE_FEE_FLAT, holder))
                 total_gold_attempted += _SERVICE_FEE_FLAT
 
             # --- Mechanism 3: TAX ---
             if float(entity_gold) > tax_threshold and entity_gold > 0:
                 tax = min(_TAX_MAX, max(_TAX_MIN, int(entity_gold * _TAX_RATE)))
                 tax = min(tax, entity_gold)  # never exceed what entity has
-                intents.append(ResourceTransferIntent(
-                    source_id="gold_sink",
-                    source_kind="TAX",
-                    gold_cost=tax,
-                    gold_delta=0,
-                    transfer_kind="FEE",
-                    treasury_faction=payee(entity),
-                ))
+                intents.append(_fee("TAX", tax, holder))
                 total_gold_attempted += tax
 
             if not intents:

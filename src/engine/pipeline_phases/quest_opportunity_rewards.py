@@ -89,9 +89,7 @@ class QuestOpportunityRewardSystem:
                     transfer_kind="QUEST_REWARD",
                     transaction_id=f"quest:{intent.quest_id}:reward",
                     group_id=f"quest:{intent.quest_id}:reward",
-                    is_group_required=True,
-                    treasury_faction=reward_payer(state, entity),
-                    treasury_pays=True,
+                    is_group_required=True, treasury_faction=reward_payer(state, entity), treasury_pays=True,
                 )
                 ent_upd = update.entity_updates.get(
                     intent.entity_id,

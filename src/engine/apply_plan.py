@@ -54,6 +54,13 @@ class ApplyPlanBuilder:
     """
 
     @staticmethod
+    def _body_of(e_id: int, position: tuple, inv: Any, tick: int) -> tuple:
+        """(body, emptied inventory) for an entity that died carrying `inv`. The body holds what the dead entity carried: it MOVES, so the dead
+        record keeps nothing (EXCH-02: goods and coin exist once); the second item is the change to the dead record's inventory ({} when there was nothing to move)."""
+        body = CorpseState(id=1000000 + e_id, original_entity_id=e_id, position=position, items=list(inv.items), decay_tick=tick + 100, gold=int(inv.gold))
+        return body, ({"inventory": _dc_replace(inv, items=[], gold=0)} if inv.items or inv.gold else {})
+
+    @staticmethod
     def build_plan(
         prior_state: AuthoritativeState,
         update: StateUpdate,
@@ -340,21 +347,10 @@ class ApplyPlanBuilder:
             # Precompute death corpse creation
             comb = changes.get("combat", entity.combat)
             if entity.combat.alive and not comb.alive:
-                corpse_id = 1000000 + e_id
-                nav = changes.get("navigation", entity.navigation)
-                inv = changes.get("inventory", entity.inventory)
-                corpse = CorpseState(
-                    id=corpse_id,
-                    original_entity_id=e_id,
-                    position=nav.position,
-                    items=list(inv.items),
-                    decay_tick=tick + 100,
-                    gold=int(inv.gold),
-                )
+                corpse, emptied = ApplyPlanBuilder._body_of(e_id, changes.get("navigation", entity.navigation).position,
+                                                            changes.get("inventory", entity.inventory), tick)
                 plan.new_corpses.append(corpse)
-                # The body now holds what the dead entity carried: it MOVES, so the dead record keeps nothing (EXCH-02: goods and coin exist once).
-                if inv.items or inv.gold:
-                    changes["inventory"] = _dc_replace(inv, items=[], gold=0)
+                changes.update(emptied)
                 cols.add("corpses")
                 
             # Precompute dirty tags

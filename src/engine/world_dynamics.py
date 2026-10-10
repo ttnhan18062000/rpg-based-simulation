@@ -3,12 +3,11 @@
 # Phase 7 Implementation: Handles Regional Hazards, Calamities, and World Consequences (LEG-RPG-071/139).
 from __future__ import annotations
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
 from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
 from src.core.violent_cause import is_violent_death_cause
-from src.core.enums import Faction
-from src.core.treasury import treasury_key
+from src.core.treasury import neutral_faction, treasury_key
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState, EntityState
@@ -297,18 +296,7 @@ class WorldDynamicsSystem:
                 refined_chest_updates[c_id] = replace(c_upd, cooldown_set=chest.cooldown_remaining - 1)
         
         # 5.3 Corpses & Ground Items (Decay)
-        corpses_remove = list(update.corpses_remove)
-        resource_updates = dict(update.resource_updates)
-        for cp_id, corpse in state.corpses.items():
-            if state.tick + 1 >= corpse.decay_tick:  # the apply step (next tick) removes a body whose decay tick it has reached
-                corpses_remove.append(cp_id)
-                if corpse.gold > 0:
-                    # Coin on a decayed body is not lost (EXCH-02): it escheats to the treasury of the faction that holds the ground it lies on,
-                    # or the neutral treasury where nobody does.
-                    region = WorldDynamicsSystem._get_region_for_pos(state, corpse.position)
-                    owner = region.owner_faction_id if region is not None and region.owner_faction_id is not None else int(Faction.NEUTRAL)
-                    key = treasury_key(owner)
-                    resource_updates[key] = resource_updates.get(key, 0.0) + corpse.gold
+        corpses_remove, resource_updates = WorldDynamicsSystem._decay_corpses(state, update)
 
         return update.replace(
             world_updates=refined_world_updates,
@@ -317,6 +305,27 @@ class WorldDynamicsSystem:
             corpses_remove=corpses_remove,
             resource_updates=resource_updates
         )
+
+    @staticmethod
+    def _decay_corpses(state: AuthoritativeState, update: StateUpdate) -> tuple:
+        """(bodies to remove, resource updates) after decay. The apply step (next tick) removes a body whose decay tick it has reached, so this does
+        too, and a decayed body's coin escheats instead of vanishing."""
+        corpses_remove = list(update.corpses_remove)
+        resource_updates = dict(update.resource_updates)
+        for cp_id, corpse in state.corpses.items():
+            if state.tick + 1 >= corpse.decay_tick:
+                corpses_remove.append(cp_id)
+                WorldDynamicsSystem._escheat(state, corpse, resource_updates)
+        return corpses_remove, resource_updates
+
+    @staticmethod
+    def _escheat(state: AuthoritativeState, corpse: Any, resource_updates: dict) -> None:
+        """Coin on a decayed body is not lost (EXCH-02): it escheats to the treasury of the faction that holds the ground it lies on, or the
+        neutral treasury where nobody does."""
+        if corpse.gold > 0:
+            region = WorldDynamicsSystem._get_region_for_pos(state, corpse.position)
+            key = treasury_key(region.owner_faction_id if region is not None and region.owner_faction_id is not None else neutral_faction())
+            resource_updates[key] = resource_updates.get(key, 0.0) + corpse.gold
 
     @staticmethod
     def _get_region_for_pos(state: AuthoritativeState, pos: tuple[float, float]) -> RegionState | None:

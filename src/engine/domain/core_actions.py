@@ -6,13 +6,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from src.core.enums import ReasonCode
 from src.core.items import food_hunger_recovery
 from src.core.models.inventory import ItemStack
-from src.engine.building_services import service_building
+from src.engine.repair import repair_update
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
     InteractionUpdate, NavigationUpdate, ResourceTransferIntent, StaminaUpdate
 )
-
-REPAIR_KIT = "repair_kit"  # carried away from a smith: used up by a field repair, no coin moves (EXCH-02, decision 58)
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
@@ -617,24 +615,7 @@ class CoreActions:
         if not repair_deltas:
             return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
             
-        from src.core.updates import EquipmentUpdate, InventoryUpdate, ResourceTransferIntent
-        smith = service_building(context, entity, "REPAIR") if context is not None else None
-        if smith is not None:
-            # One charge, into the smith's own purse (EXCH-02, decision 58): the price is gold_cost only.
-            intent = ResourceTransferIntent(
-                source_id=smith.id,
-                source_kind="TOWN_SERVICE",
-                gold_cost=total_cost,
-                transfer_kind="REPAIR",
-                equipment_upd=EquipmentUpdate(durability_set=repair_deltas)
-            )
-            return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-100.0, resource_transfers=[intent])}
-        if any(i.item_id == REPAIR_KIT and i.quantity > 0 for i in entity.inventory.items):
-            # Away from a smith a carried kit is used up and no coin moves.
-            return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-100.0,
-                                            equipment=EquipmentUpdate(durability_set=repair_deltas),
-                                            inventory=InventoryUpdate(items_remove=[ItemStack(REPAIR_KIT, 1)]))}
-        return {entity.id: EntityUpdate(entity_id=entity.id)}  # no smith in reach and no kit: no repair is offered
+        return repair_update(entity, repair_deltas, total_cost, context)
 
     @staticmethod
     def execute_interact(
