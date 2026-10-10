@@ -1,0 +1,121 @@
+
+== crowded_frontier  seeds [42, 43, 44, 45, 46]
+  alive total @1000                  base   23.2(2.1)  t3   21.0(3.6)  paired diff -2.2 SE 1.0 **>2SE**
+  alive total @2500                  base    3.0(1.5)  t3    3.2(1.5)  paired diff +0.2 SE 1.0
+  alive total @5000                  base    2.8(1.2)  t3    2.8(0.7)  paired diff +0.0 SE 0.6
+  heroes_other alive @1000           base    3.2(0.7)  t3    3.8(0.4)  paired diff +0.6 SE 0.2 **>2SE**
+  heroes_other alive @2500           base    2.0(0.0)  t3    2.0(0.0)  paired diff +0.0 SE 0.0
+  heroes_other alive @5000           base    2.0(0.0)  t3    2.0(0.0)  paired diff +0.0 SE 0.0
+  heroes_other starved               base    4.2(0.7)  t3    4.6(0.8)  paired diff +0.4 SE 0.2
+  heroes_other ever-ate              base    0.0(0.0)  t3    0.2(0.4)  paired diff +0.2 SE 0.2
+  merchants alive @1000              base    1.2(0.7)  t3    0.6(0.5)  paired diff -0.6 SE 0.2 **>2SE**
+  merchants alive @5000              base    0.0(0.0)  t3    0.0(0.0)  paired diff +0.0 SE 0.0
+  merchants starved                  base    1.2(0.7)  t3    0.6(0.5)  paired diff -0.6 SE 0.2 **>2SE**
+  merchants ever-ate                 base    0.0(0.0)  t3    0.0(0.0)  paired diff +0.0 SE 0.0
+  raiders alive @1000                base    8.0(1.7)  t3    7.0(2.2)  paired diff -1.0 SE 0.3 **>2SE**
+  raiders alive @2500                base    0.2(0.4)  t3    0.4(0.5)  paired diff +0.2 SE 0.3
+  raiders alive @5000                base    0.2(0.4)  t3    0.4(0.5)  paired diff +0.2 SE 0.3
+  raiders starved                    base    6.0(0.0)  t3    4.6(1.5)  paired diff -1.4 SE 0.7 **>2SE**
+  raiders ever-ate                   base    0.8(1.6)  t3    1.2(1.2)  paired diff +0.4 SE 0.7
+  town_guards_scouts alive @1000     base    4.6(0.5)  t3    4.0(1.4)  paired diff -0.6 SE 0.5
+  town_guards_scouts alive @2500     base    0.2(0.4)  t3    0.2(0.4)  paired diff +0.0 SE 0.3
+  town_guards_scouts alive @5000     base    0.2(0.4)  t3    0.0(0.0)  paired diff -0.2 SE 0.2
+  town_guards_scouts starved         base    2.6(0.8)  t3    1.8(1.0)  paired diff -0.8 SE 0.5
+  town_guards_scouts ever-ate        base    0.4(0.5)  t3    1.2(1.0)  paired diff +0.8 SE 0.5
+  town_workers alive @1000           base    6.2(2.6)  t3    5.6(2.2)  paired diff -0.6 SE 0.5
+  town_workers alive @2500           base    0.6(1.2)  t3    0.6(1.2)  paired diff +0.0 SE 0.8
+  town_workers alive @5000           base    0.4(0.8)  t3    0.4(0.8)  paired diff +0.0 SE 0.6
+  town_workers starved               base    3.6(2.0)  t3    3.2(1.2)  paired diff -0.4 SE 0.7
+  town_workers ever-ate              base    1.0(1.5)  t3    1.0(1.5)  paired diff +0.0 SE 0.8
+  tax paid by the poor (gold)        base  85.8(16.8)  t3    0.0(0.0)  paired diff -85.8 SE 7.5 **>2SE**
+  coin_drift                         base 5941.6(78.8)  t3    0.2(0.4)  paired diff -5941.4 SE 35.1 **>2SE**
+  hero_treasury_end                  base 7632.2(106.7)  t3    2.2(1.6)  paired diff -7630.0 SE 48.2 **>2SE**
+  owed                               base    0.0(0.0)  t3    0.0(0.0)  paired diff +0.0 SE 0.0
+  coin_created                       base   50.0(0.0)  t3   50.0(0.0)  paired diff +0.0 SE 0.0
+  accepted transfers/run base {'CARRIED_FOOD/EAT': 4.0, 'COMBAT/KILL_REWARD': 43.8, 'CORPSE/AUTO': 3.8, 'NODE/AUTO': 17.4, 'SERVICE_FEE/FEE': 154.2, 'TAX/FEE': 52.8, 'TAX/TAX': 193.0, 'TOWN_SERVICE/EAT': 3.2, 'TOWN_SERVICE/REST': 9.2}
+  accepted transfers/run t3 {'CARRIED_FOOD/EAT': 1.8, 'COMBAT/KILL_REWARD': 24.2, 'CORPSE/AUTO': 4.0, 'INHERIT/INHERIT': 21.0, 'NODE/AUTO': 16.6, 'SERVICE_FEE/FEE': 220.8, 'TAX/FEE': 79.0, 'TOWN_SERVICE/EAT': 2.4, 'TOWN_SERVICE/REST': 4.4}
+  deaths/run base {'COMBAT': 12.4, 'DEFEAT': 6.2, 'HAZARD': 3.8, 'SLEEP_DEPRIVATION': 0.2, 'STARVATION': 17.6}
+  deaths/run t3 {'COMBAT': 14.6, 'DEFEAT': 6.2, 'HAZARD': 3.4, 'SLEEP_DEPRIVATION': 1.2, 'STARVATION': 14.8}
+
+== frontier_living_world  seeds [42, 43, 44, 45, 46]
+  alive total @1000                  base   25.8(1.7)  t3   23.4(3.3)  paired diff -2.4 SE 1.2
+  alive total @2500                  base   10.8(1.7)  t3   12.0(3.3)  paired diff +1.2 SE 0.9
+  alive total @5000                  base   10.0(2.1)  t3   11.0(3.2)  paired diff +1.0 SE 0.7
+  heroes_other alive @1000           base    3.6(0.8)  t3    3.2(0.7)  paired diff -0.4 SE 0.6
+  heroes_other alive @2500           base    4.2(0.4)  t3    4.2(0.4)  paired diff +0.0 SE 0.3
+  heroes_other alive @5000           base    4.0(0.0)  t3    4.0(0.0)  paired diff +0.0 SE 0.0
+  heroes_other starved               base    7.0(0.6)  t3    6.0(0.6)  paired diff -1.0 SE 0.4 **>2SE**
+  heroes_other ever-ate              base    0.0(0.0)  t3    0.0(0.0)  paired diff +0.0 SE 0.0
+  merchants alive @1000              base    4.0(0.9)  t3    3.2(1.0)  paired diff -0.8 SE 0.3 **>2SE**
+  merchants alive @2500              base    0.2(0.4)  t3    0.6(0.8)  paired diff +0.4 SE 0.4
+  merchants alive @5000              base    0.2(0.4)  t3    0.2(0.4)  paired diff +0.0 SE 0.0
+  merchants starved                  base    3.4(1.0)  t3    3.0(0.6)  paired diff -0.4 SE 0.4
+  merchants ever-ate                 base    0.6(0.5)  t3    0.2(0.4)  paired diff -0.4 SE 0.2
+  raiders alive @1000                base    1.8(0.7)  t3    2.0(0.9)  paired diff +0.2 SE 0.5
+  raiders alive @2500                base    0.2(0.4)  t3    0.8(0.7)  paired diff +0.6 SE 0.5
+  raiders alive @5000                base    0.2(0.4)  t3    0.6(0.8)  paired diff +0.4 SE 0.5
+  raiders starved                    base    1.6(1.0)  t3    1.0(1.1)  paired diff -0.6 SE 0.7
+  raiders ever-ate                   base    2.4(1.0)  t3    2.6(1.0)  paired diff +0.2 SE 0.4
+  town_guards_scouts alive @1000     base    3.8(1.7)  t3    3.0(0.6)  paired diff -0.8 SE 0.7
+  town_guards_scouts alive @2500     base    0.4(0.8)  t3    0.2(0.4)  paired diff -0.2 SE 0.2
+  town_guards_scouts alive @5000     base    0.4(0.8)  t3    0.2(0.4)  paired diff -0.2 SE 0.2
+  town_guards_scouts starved         base    3.0(2.1)  t3    1.4(1.0)  paired diff -1.6 SE 0.9
+  town_guards_scouts ever-ate        base    0.4(0.8)  t3    0.4(0.5)  paired diff +0.0 SE 0.3
+  town_workers alive @1000           base    4.4(1.6)  t3    3.8(2.7)  paired diff -0.6 SE 0.8
+  town_workers alive @2500           base    0.4(0.5)  t3    1.0(2.0)  paired diff +0.6 SE 0.8
+  town_workers alive @5000           base    0.2(0.4)  t3    1.0(2.0)  paired diff +0.8 SE 0.7
+  town_workers starved               base    2.2(1.2)  t3    1.4(1.0)  paired diff -0.8 SE 0.7
+  town_workers ever-ate              base    0.4(0.8)  t3    1.0(2.0)  paired diff +0.6 SE 0.5
+  undead alive @1000                 base    4.8(0.7)  t3    4.8(0.7)  paired diff +0.0 SE 0.0
+  undead alive @2500                 base    4.8(0.7)  t3    4.8(0.7)  paired diff +0.0 SE 0.0
+  undead alive @5000                 base    4.8(0.7)  t3    4.8(0.7)  paired diff +0.0 SE 0.0
+  undead starved                     base    0.0(0.0)  t3    0.0(0.0)  paired diff +0.0 SE 0.0
+  undead ever-ate                    base    0.0(0.0)  t3    0.0(0.0)  paired diff +0.0 SE 0.0
+  wildlife alive @1000               base    3.4(2.1)  t3    3.4(2.3)  paired diff +0.0 SE 1.7
+  wildlife alive @2500               base    0.6(0.5)  t3    0.4(0.8)  paired diff -0.2 SE 0.3
+  wildlife alive @5000               base    0.2(0.4)  t3    0.2(0.4)  paired diff +0.0 SE 0.3
+  wildlife starved                   base    3.0(2.2)  t3    2.8(2.1)  paired diff -0.2 SE 1.6
+  wildlife ever-ate                  base    3.4(0.5)  t3    5.2(1.0)  paired diff +1.8 SE 0.6 **>2SE**
+  tax paid by the poor (gold)        base 123.6(29.3)  t3    0.0(0.0)  paired diff -123.6 SE 13.1 **>2SE**
+  coin_drift                         base 8398.8(117.1)  t3    0.4(0.8)  paired diff -8398.4 SE 52.3 **>2SE**
+  hero_treasury_end                  base 10255.6(57.8)  t3    2.6(1.4)  paired diff -10253.0 SE 25.9 **>2SE**
+  owed                               base    0.0(0.0)  t3    0.0(0.0)  paired diff +0.0 SE 0.0
+  coin_created                       base  120.0(6.3)  t3  116.0(4.9)  paired diff -4.0 SE 2.2
+  accepted transfers/run base {'CARRIED_FOOD/EAT': 1.6, 'COMBAT/KILL_REWARD': 55.2, 'CORPSE/AUTO': 6.2, 'NODE/AUTO': 19.4, 'SERVICE_FEE/FEE': 171.6, 'TAX/FEE': 83.6, 'TAX/TAX': 256.0, 'TOWN_SERVICE/EAT': 15.8, 'TOWN_SERVICE/REST': 22.4}
+  accepted transfers/run t3 {'CARRIED_FOOD/EAT': 3.6, 'COMBAT/KILL_REWARD': 29.6, 'CORPSE/AUTO': 5.6, 'INHERIT/INHERIT': 19.2, 'NODE/AUTO': 17.2, 'SERVICE_FEE/FEE': 264.0, 'TAX/FEE': 115.6, 'TOWN_SERVICE/EAT': 7.2, 'TOWN_SERVICE/REST': 4.6}
+  deaths/run base {'COMBAT': 15.2, 'DEFEAT': 8.8, 'HAZARD': 6.0, 'SLEEP_DEPRIVATION': 0.8, 'STARVATION': 20.2}
+  deaths/run t3 {'COMBAT': 16.0, 'DEFEAT': 11.2, 'HAZARD': 6.4, 'SLEEP_DEPRIVATION': 0.4, 'STARVATION': 15.6}
+
+== urban_political  seeds [42, 43, 44, 45, 46]
+  alive total @1000                  base   22.8(1.7)  t3   20.8(2.8)  paired diff -2.0 SE 0.6 **>2SE**
+  alive total @2500                  base    9.2(5.3)  t3    6.0(2.9)  paired diff -3.2 SE 1.6
+  alive total @5000                  base    4.2(4.2)  t3    4.6(2.6)  paired diff +0.4 SE 1.3
+  heroes_other alive @1000           base    2.8(0.4)  t3    2.4(0.5)  paired diff -0.4 SE 0.2
+  heroes_other alive @2500           base    1.4(1.0)  t3    0.8(0.7)  paired diff -0.6 SE 0.5
+  heroes_other alive @5000           base    0.8(0.7)  t3    0.4(0.5)  paired diff -0.4 SE 0.4
+  heroes_other starved               base    0.8(0.7)  t3    1.8(0.4)  paired diff +1.0 SE 0.4 **>2SE**
+  heroes_other ever-ate              base    1.6(0.8)  t3    1.0(1.1)  paired diff -0.6 SE 0.2 **>2SE**
+  merchants alive @1000              base    5.4(1.4)  t3    5.4(1.4)  paired diff +0.0 SE 0.0
+  merchants alive @2500              base    2.8(1.2)  t3    2.4(1.6)  paired diff -0.4 SE 0.7
+  merchants alive @5000              base    1.4(1.5)  t3    2.4(1.6)  paired diff +1.0 SE 0.7
+  merchants starved                  base    2.0(1.3)  t3    2.4(1.0)  paired diff +0.4 SE 0.6
+  merchants ever-ate                 base    3.4(0.5)  t3    3.0(1.3)  paired diff -0.4 SE 0.6
+  town_guards_scouts alive @1000     base    5.8(0.7)  t3    4.6(1.2)  paired diff -1.2 SE 0.3 **>2SE**
+  town_guards_scouts alive @2500     base    2.0(1.1)  t3    0.6(0.8)  paired diff -1.4 SE 0.6 **>2SE**
+  town_guards_scouts alive @5000     base    1.2(0.7)  t3    0.4(0.5)  paired diff -0.8 SE 0.4
+  town_guards_scouts starved         base    3.2(1.2)  t3    3.0(1.4)  paired diff -0.2 SE 0.7
+  town_guards_scouts ever-ate        base    2.6(1.4)  t3    1.6(1.9)  paired diff -1.0 SE 0.4 **>2SE**
+  town_workers alive @1000           base    8.8(0.4)  t3    8.4(0.8)  paired diff -0.4 SE 0.4
+  town_workers alive @2500           base    3.0(2.5)  t3    2.2(1.2)  paired diff -0.8 SE 0.8
+  town_workers alive @5000           base    0.8(1.6)  t3    1.4(1.0)  paired diff +0.6 SE 0.5
+  town_workers starved               base    5.2(3.0)  t3    5.0(2.7)  paired diff -0.2 SE 0.7
+  town_workers ever-ate              base    3.4(3.2)  t3    3.4(3.0)  paired diff +0.0 SE 0.3
+  tax paid by the poor (gold)        base  79.0(12.3)  t3    0.0(0.0)  paired diff -79.0 SE 5.5 **>2SE**
+  coin_drift                         base 8602.2(62.9)  t3    0.0(0.0)  paired diff -8602.2 SE 28.1 **>2SE**
+  hero_treasury_end                  base 10029.0(52.0)  t3    2.2(1.5)  paired diff -10026.8 SE 23.0 **>2SE**
+  owed                               base    0.0(0.0)  t3    0.0(0.0)  paired diff +0.0 SE 0.0
+  coin_created                       base    0.0(0.0)  t3    0.0(0.0)  paired diff +0.0 SE 0.0
+  accepted transfers/run base {'CARRIED_FOOD/EAT': 5.4, 'COMBAT/KILL_REWARD': 16.4, 'CORPSE/AUTO': 1.0, 'NODE/AUTO': 18.2, 'SERVICE_FEE/FEE': 49.2, 'TAX/FEE': 27.4, 'TAX/TAX': 141.2, 'TOWN_SERVICE/EAT': 26.4, 'TOWN_SERVICE/REST': 88.6}
+  accepted transfers/run t3 {'CARRIED_FOOD/EAT': 5.6, 'COMBAT/KILL_REWARD': 8.8, 'CORPSE/AUTO': 0.6, 'INHERIT/INHERIT': 5.8, 'NODE/AUTO': 17.2, 'SERVICE_FEE/FEE': 150.0, 'TAX/FEE': 83.2, 'TOWN_SERVICE/EAT': 2.2, 'TOWN_SERVICE/REST': 7.6}
+  deaths/run base {'COMBAT': 4.2, 'DEFEAT': 3.8, 'HAZARD': 1.8, 'SLEEP_DEPRIVATION': 4.8, 'STARVATION': 11.2}
+  deaths/run t3 {'COMBAT': 4.6, 'DEFEAT': 3.8, 'HAZARD': 2.0, 'SLEEP_DEPRIVATION': 2.8, 'STARVATION': 12.2}
