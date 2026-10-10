@@ -10,6 +10,10 @@ key registration (the tax rc-0006 cost). Everything else must be equal: set id, 
     python -m visual_assets.review.icon_draft_fixture --check    # exit 1 if it differs from a fresh export
     ... --set icons-v2 --write | --check                        # the same for icon set v2 (icondraft_v2/)
     ... --set icons-owner-fixes-v1 --write | --check            # the same for the owner-fix revisions (icondraft_fixes/)
+
+These three sets are CLOSED owner gates: their committed copies are the evidence of what the owner decided on. A fresh export also lists a reference for every adopted slot that has a built artifact, so once art is
+built after the gate (the 36 icons, `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE`) `--check` reports a difference and `--write` would rewrite that evidence. Do not run `--write` on them; the guard is
+`tests/visual_assets/closed_draft_fixture.py` (drafts and references byte-checked against the gate's record). `--write` stays right for an OPEN draft set.
 """
 
 from __future__ import annotations

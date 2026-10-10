@@ -15,7 +15,7 @@ tags: [architecture, planning, testing]
 Visual asset foundation hardening: decoupled fixture guards, worktree-aware drawing server, structured safety and label fields, set-level revisions and draft drop, review tooling in the store CLI, a key-usage report, docs drift
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -42,7 +42,7 @@ Children in `SEQUENCE.md`, in dependency order (guard decoupling first so the re
 - Parked by the planner (owner saw them ranked): animation/slice/9-slice manifest fields, repeatable visual evidence (browser capture, real-bundle harness), faster PNG decoder, real-Aseprite CI, crash tests, atlases, Git LFS.
 
 ## Acceptance Criteria
-- [ ] All children done or explicitly deferred by the owner; `SEQUENCE.md` status states the outcome.
+- [x] All children done or explicitly deferred by the owner; `SEQUENCE.md` status states the outcome.
 
 ## Related Tickets
 

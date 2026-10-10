@@ -11,6 +11,7 @@ import shutil
 import yaml
 
 from tests.visual_assets import adopted_facts as af
+from tests.visual_assets import closed_draft_fixture as cdf
 from visual_assets.review import icon_compliance as cp
 from visual_assets.review import icon_draft_fixture as fx
 from visual_assets.review import icon_lookalikes as la
@@ -84,7 +85,7 @@ def test_the_glyphs_stay_inside_their_live_areas():
 
 def test_the_recorded_result_is_current_and_the_committed_copy_equals_a_fresh_export(tmp_path):
     assert (fx.COMMITTED_FIXES / fx.RESULT).read_text() == fx.recorded_result_text_fixes(), REGENERATE
-    assert fx.differences(_fresh(tmp_path), fx.COMMITTED_FIXES, fx.recorded_result_text_fixes) == [], REGENERATE
+    assert cdf.differences(of.SET_ID, _fresh(tmp_path), fx.COMMITTED_FIXES, fx.recorded_result_text_fixes) == [], REGENERATE
     manifest = parse_record(DraftPreviewManifest, (fx.COMMITTED_FIXES / fx.MANIFEST).read_bytes())
     assert manifest.set_id == of.SET_ID
     assert sorted(e.visual_key for e in manifest.entries if e.visual_key.startswith("icon.")) == sorted(of.KEYS)
@@ -98,4 +99,4 @@ def test_a_flipped_png_byte_in_the_fixes_copy_is_caught(tmp_path):
     data = bytearray((copy / icon_file).read_bytes())
     data[-20] ^= 1
     (copy / icon_file).write_bytes(bytes(data))
-    assert any(icon_file in p for p in fx.differences(_fresh(tmp_path), copy, fx.recorded_result_text_fixes))
+    assert any(icon_file in p for p in cdf.differences(of.SET_ID, _fresh(tmp_path), copy, fx.recorded_result_text_fixes))
