@@ -16,6 +16,8 @@ from pathlib import Path
 
 from visual_assets.store import config, pixels, records, verify
 from visual_assets.store.animation import runtime_animation_bytes
+from visual_assets.store.build.exportconfig import load_export_config
+from visual_assets.store.slices import SliceScaleError, runtime_slices_bytes
 from visual_assets.store.atlas import build_atlas
 from visual_assets.store.atlas import pack as pack_atlas
 from visual_assets.store.catalog.registry import fallback_problems, load_registry
@@ -57,11 +59,11 @@ def _write_new(path: Path, data: bytes) -> None:
         os.fsync(handle.fileno())
 
 
-def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, allow_fixture_namespace: bool = False, atlases: bool = False, animation: bool = False) -> RuntimeManifest:
+def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, allow_fixture_namespace: bool = False, atlases: bool = False, animation: bool = False, slices: bool = False) -> RuntimeManifest:
     """Write `<out_dir>/runtime_manifest.json` and `<out_dir>/<hex>.png`, or raise `BuildError` leaving no output and the catalog unchanged.
 
     With `atlases=True` it also writes `atlas-<family>.png` and `atlas-<family>.json` per family (`store/atlas.py`); with `animation=True` it also writes `animation.json` (`store/animation.py`: frame durations and tags of the
-    entries whose source has more than one frame). The per-file output and the manifest are byte-identical either way, and no flag means no extra file."""
+    entries whose source has more than one frame); with `slices=True` it also writes `slices.json` (`store/slices.py`: slices of the entries whose source has any, in the exported image's pixels). The per-file output and the manifest are byte-identical either way, and no flag means no extra file."""
     try:
         check(CatalogId, catalog_id)
     except IdentityError:
@@ -127,6 +129,11 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
                 files[f"atlas-{family}.json"] = sheet_json
         if animation:
             files["animation.json"] = runtime_animation_bytes(candidate.entries, catalog_id=catalog_id, release_id=release_id)
+        if slices:
+            scales = {c.name: c.scale for c in load_export_config().scale_classes}
+            files["slices.json"] = runtime_slices_bytes(candidate.entries, catalog_id=catalog_id, release_id=release_id, scales=scales)
+    except SliceScaleError as exc:
+        raise BuildError("slices_scale_unresolved", str(exc)) from None
     except RegistryError as exc:
         raise BuildError("registry_invalid", str(exc)) from None
     except (StageError, ContractError) as exc:

@@ -37,6 +37,7 @@ def summary(name: str, rev: str, digest: str, res: dict) -> dict:
         "frames": res["frames"],
         "layers": res["layers"],
         "tags": res["tags"],
+        "slices": res["slices"],
         "palette_size": res["palette_size"],
         "cels": res["cels"],
         "aseprite_version": res["aseprite_version"],

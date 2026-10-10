@@ -28,6 +28,7 @@ from pydantic import TypeAdapter, ValidationError
 from visual_assets.store import config
 from visual_assets.store.contracts.animation import TagName
 from visual_assets.store.contracts.intake import IntakeFindingCode as Code
+from visual_assets.store.contracts.slices import SliceName
 
 MAGIC_FILE = 0xA5E0
 MAGIC_FRAME = 0xF1FA
@@ -41,6 +42,7 @@ CHUNK_OLD_PALETTE_6BIT = 0x0011
 CHUNK_LAYER = 0x2004
 CHUNK_CEL = 0x2005
 CHUNK_TAGS = 0x2018
+CHUNK_SLICE = 0x2022
 CHUNK_PALETTE = 0x2019
 
 
@@ -56,6 +58,27 @@ class RawTag:
 
 
 @dataclass(frozen=True)
+class RawSliceKey:
+    """One slice key as the file stores it: from `frame` on, the rectangle (x, y, w, h) in sprite pixels; the 9-slice centre (x, y, w, h) and the pivot (x, y) are relative to the slice's own corner."""
+
+    frame: int
+    x: int
+    y: int
+    w: int
+    h: int
+    center: tuple[int, int, int, int] | None
+    pivot: tuple[int, int] | None
+
+
+@dataclass(frozen=True)
+class RawSlice:
+    """One slice chunk as the file stores it. Validated by `read_facts`, turned into a contract record by `store/slices.py`."""
+
+    name: str
+    keys: tuple[RawSliceKey, ...]
+
+
+@dataclass(frozen=True)
 class AsepriteFacts:
     width: int
     height: int
@@ -67,6 +90,7 @@ class AsepriteFacts:
     palette_size: int | None  # None when it cannot be verified without decoding pixels (see module docstring)
     frame_durations_ms: tuple[int, ...] = ()  # one per frame, read from the frame headers, at most MAX_ANIMATION_FRAMES entries
     animation_tags: tuple[RawTag, ...] = ()  # at most MAX_ANIMATION_TAGS entries; never walked past that bound
+    slices: tuple[RawSlice, ...] = ()  # at most MAX_SOURCE_SLICES entries of at most MAX_SLICE_KEYS keys each; never walked past those bounds
 
 
 Problem = tuple[Code, str]
@@ -75,7 +99,12 @@ MAX_PALETTE_ENTRIES = 65536  # a palette larger than this is refused as malforme
 TAG_FIXED_BYTES = 19  # from(2) to(2) direction(1) repeat(2) reserved(6) colour(3) extra(1) + the name's length word(2); the smallest legal tag, with an empty name
 TAGS_HEADER_BYTES = 10  # tag count(2) + reserved(8)
 DIRECTIONS = 4  # forward, reverse, ping-pong, ping-pong reverse
+SLICE_HEADER_BYTES = 14  # key count(4) + flags(4) + reserved(4) + the name's length word(2); the smallest legal slice chunk, with an empty name and no keys
+SLICE_KEY_BYTES = 20  # frame(4) x(4) y(4) w(4) h(4); the 9-slice flag adds 16 bytes (centre x, y, w, h), the pivot flag adds 8 (x, y)
+SLICE_FLAG_NINE = 1
+SLICE_FLAG_PIVOT = 2
 _TAG_NAME = TypeAdapter(TagName)
+_SLICE_NAME = TypeAdapter(SliceName)
 
 
 def _read_tags(data: bytes, body: int, end: int, found: list[RawTag]) -> tuple[int, list[Problem]]:
@@ -109,6 +138,48 @@ def _read_tags(data: bytes, body: int, end: int, found: list[RawTag]) -> tuple[i
             continue
         found.append(RawTag(name, from_frame, to_frame, direction, repeat))
     return declared, problems
+
+
+def _read_slice(data: bytes, body: int, end: int, found: list[RawSlice], number: int) -> list[Problem]:
+    """Read one slice chunk body. Every count and length is checked against the chunk's own bytes BEFORE it is used; the slice count and the key count are checked against their
+    bounds before any entry is read, so a hostile chunk can neither run past its bytes nor make this allocate or loop long. Findings name a slice by its chunk position (`number`, counting rejected chunks too), never by text."""
+    if end - body < SLICE_HEADER_BYTES:
+        return [(Code.SOURCE_TRUNCATED_CHUNK, "slice chunk is too short for its header")]
+    if number > config.MAX_SOURCE_SLICES:
+        return [(Code.SLICE_OUT_OF_BOUNDS, f"more than {config.MAX_SOURCE_SLICES} slices")]
+    count, flags = struct.unpack_from("<II", data, body)
+    (length,) = struct.unpack_from("<H", data, body + 12)
+    name_start = body + SLICE_HEADER_BYTES
+    if name_start + length > end:
+        return [(Code.SOURCE_TRUNCATED_CHUNK, f"the name of slice {number} runs past its chunk")]
+    if count > config.MAX_SLICE_KEYS:
+        return [(Code.SLICE_OUT_OF_BOUNDS, f"slice {number} has {count} keys; limit is {config.MAX_SLICE_KEYS}")]
+    if count == 0:
+        return [(Code.SLICE_INVALID, f"slice {number} has no keys")]
+    if flags & ~(SLICE_FLAG_NINE | SLICE_FLAG_PIVOT):
+        return [(Code.SLICE_INVALID, f"slice {number} has unknown flag bits")]
+    key_bytes = SLICE_KEY_BYTES + (16 if flags & SLICE_FLAG_NINE else 0) + (8 if flags & SLICE_FLAG_PIVOT else 0)
+    pos = name_start + length
+    if pos + key_bytes * count > end:
+        return [(Code.SOURCE_TRUNCATED_CHUNK, f"slice {number} declares {count} keys but its chunk is too short to hold them")]
+    try:
+        name = _SLICE_NAME.validate_python(data[name_start:pos].decode("utf-8"))
+    except (UnicodeDecodeError, ValidationError):
+        return [(Code.SLICE_INVALID, f"the name of slice {number} is empty, over 32 characters, not plain text or not UTF-8")]
+    keys: list[RawSliceKey] = []
+    for _ in range(count):
+        frame, x, y, w, h = struct.unpack_from("<IiiII", data, pos)
+        pos += SLICE_KEY_BYTES
+        center = pivot = None
+        if flags & SLICE_FLAG_NINE:
+            center = struct.unpack_from("<iiII", data, pos)
+            pos += 16
+        if flags & SLICE_FLAG_PIVOT:
+            pivot = struct.unpack_from("<ii", data, pos)
+            pos += 8
+        keys.append(RawSliceKey(frame, x, y, w, h, center, pivot))
+    found.append(RawSlice(name, tuple(keys)))
+    return []
 
 
 def _old_palette(data: bytes, start: int, end: int, nonblack: set[int]) -> int | None:
@@ -177,6 +248,8 @@ def read_facts(data: bytes) -> tuple[AsepriteFacts | None, list[Problem]]:
     layers = cels = tags = 0
     durations: list[int] = []
     raw_tags: list[RawTag] = []
+    raw_slices: list[RawSlice] = []
+    slice_chunks = 0
     new_palette: int | None = None
     old_palette = 0
     nonblack_new: set[int] = set()
@@ -228,6 +301,13 @@ def read_facts(data: bytes) -> tuple[AsepriteFacts | None, list[Problem]]:
                 if any(code is Code.SOURCE_TRUNCATED_CHUNK for code, _ in tag_problems):
                     broken = True
                     break
+            elif chunk_type == CHUNK_SLICE:
+                slice_chunks += 1
+                slice_problems = _read_slice(data, body, chunk_end, raw_slices, slice_chunks)
+                problems += slice_problems
+                if any(code is Code.SOURCE_TRUNCATED_CHUNK for code, _ in slice_problems):
+                    broken = True
+                    break
             elif chunk_type == CHUNK_PALETTE:
                 declared, bad = _new_palette(data, body, chunk_end, nonblack_new)
                 if bad is not None:
@@ -265,7 +345,8 @@ def read_facts(data: bytes) -> tuple[AsepriteFacts | None, list[Problem]]:
         palette_size = None
         problems.append((Code.PALETTE_UNVERIFIABLE, "the stored palette is all opaque black, so its loaded size depends on pixel data"))
     problems += _animation_problems(frames, durations, raw_tags)
-    facts = AsepriteFacts(width, height, frames, depth, layers, cels, tags, palette_size, tuple(durations), tuple(raw_tags))
+    problems += _slice_problems(frames, width, height, raw_slices)
+    facts = AsepriteFacts(width, height, frames, depth, layers, cels, tags, palette_size, tuple(durations), tuple(raw_tags), tuple(raw_slices))
     return facts, problems
 
 
@@ -282,4 +363,31 @@ def _animation_problems(frames: int, durations: list[int], tags: list[RawTag]) -
     names = [t.name for t in tags]
     if len(set(names)) != len(names):
         out.append((Code.ANIMATION_TAG_INVALID, "two tags share a name"))
+    return out
+
+
+def _slice_problems(frames: int, width: int, height: int, slices: list[RawSlice]) -> list[Problem]:
+    """Consistency of the slices that were read: unique names, key frames in range and increasing, rectangles inside the canvas, centres and pivots inside their slice. Positions, never names."""
+    out: list[Problem] = []
+    names = [s.name for s in slices]
+    if len(set(names)) != len(names):
+        out.append((Code.SLICE_INVALID, "two slices share a name"))
+    for number, one in enumerate(slices, 1):
+        frames_seen = [k.frame for k in one.keys]
+        if any(f >= frames for f in frames_seen):
+            out.append((Code.SLICE_INVALID, f"slice {number} has a key past the {frames} frames"))
+        if frames_seen != sorted(set(frames_seen)):
+            out.append((Code.SLICE_INVALID, f"the keys of slice {number} are not in increasing frame order"))
+        for key in one.keys:
+            if key.w < 1 or key.h < 1 or key.x < 0 or key.y < 0 or key.x + key.w > width or key.y + key.h > height:
+                out.append((Code.SLICE_GEOMETRY_INVALID, f"slice {number} has a rectangle outside the {width}x{height} canvas or without area"))
+                break
+            if key.center is not None:
+                cx, cy, cw, ch = key.center
+                if cw < 1 or ch < 1 or cx < 0 or cy < 0 or cx + cw > key.w or cy + ch > key.h:
+                    out.append((Code.SLICE_GEOMETRY_INVALID, f"slice {number} has a 9-slice centre outside its slice or without area"))
+                    break
+            if key.pivot is not None and not (0 <= key.pivot[0] <= key.w and 0 <= key.pivot[1] <= key.h):
+                out.append((Code.SLICE_GEOMETRY_INVALID, f"slice {number} has a pivot outside its slice"))
+                break
     return out

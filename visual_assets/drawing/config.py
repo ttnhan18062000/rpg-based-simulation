@@ -12,7 +12,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 LUA_PATH = HERE / "backend" / "lua" / "ops.lua"
 # Pinned hash of backend/lua/ops.lua; bump deliberately with `python -m visual_assets.drawing.pin`.
-LUA_SHA256 = "ad42d215cea94f6b016f36abeaa344cdb912124e0c7881c2e9616e356883d9d0"
+LUA_SHA256 = "5a9b265f167a0ca9c436bc370d186d7c7702a31abc81355536b4aa9627ac6b54"
 
 WORKSPACE = Path(
     os.environ.get("ASEPRITE_MCP_WORKSPACE", Path.home() / ".cache" / "rpg-aseprite-mcp")
@@ -27,6 +27,7 @@ MAX_PIXELS_PER_CALL = 8192
 MAX_OPS = 256
 MAX_REFS = 8
 MAX_FRAMES = 16
+MAX_SLICES = 16  # equal to the store's MAX_SOURCE_SLICES (a parity test), so no tool-made source carries more slices than the store accepts
 MAX_PALETTE = 64
 MAX_REGION = 32
 MAX_SCALE = 16
