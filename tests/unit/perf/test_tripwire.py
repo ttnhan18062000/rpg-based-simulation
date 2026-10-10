@@ -41,14 +41,14 @@ def test_the_declared_scenarios_are_small_tripwire_specs_on_the_canonical_contra
 
 def test_the_threshold_clears_the_measured_noise_and_keeps_its_floor() -> None:
     """The relative threshold must sit above the largest A/A deviation seen with identical code (tripwire.NOISE_BUDGET, from `calibrate`)."""
-    assert tw.NOISE_BUDGET == 0.31
+    assert tw.NOISE_BUDGET == 0.35
     assert tw.TRIPWIRE_THRESHOLDS.relative > tw.NOISE_BUDGET
     assert tw.TRIPWIRE_THRESHOLDS.absolute_ms == 5.0 and tw.TRIPWIRE_THRESHOLDS.metric == "avg"
 
 
 def test_a_noise_sized_delta_is_a_pass_under_the_declared_thresholds() -> None:
-    """A +30% delta, the size of the observed A/A noise, must not be a regression at the declared thresholds."""
-    result = tw.run_scenario("s", SPEC, BASE, HEAD, spawn=fake_spawn({"base": [100.0], "head": [130.0]}, []))
+    """A +35% delta, the size of the largest observed A/A noise, must not be a regression at the declared thresholds."""
+    result = tw.run_scenario("s", SPEC, BASE, HEAD, spawn=fake_spawn({"base": [100.0], "head": [135.0]}, []))
     assert result.outcome.state is OutcomeState.PASS
 
 
@@ -93,6 +93,12 @@ def test_at_most_one_retry_runs_and_the_report_has_both_outcomes() -> None:
     assert body["first"]["state"] == "REGRESSION" and body["retry"]["state"] == "REGRESSION"
 
 
+def test_the_retry_runs_head_first_so_an_order_bias_cannot_repeat() -> None:
+    calls: List[Path] = []
+    tw.run_scenario("s", SPEC, BASE, HEAD, Thresholds(0.25, 5.0), fake_spawn({"base": [100.0, 100.0], "head": [300.0, 300.0]}, calls))
+    assert calls == [BASE, HEAD, HEAD, BASE]  # first attempt base then head; the retry head then base
+
+
 def test_a_retry_that_disagrees_is_inconclusive_never_a_pass() -> None:
     result = tw.run_scenario("s", SPEC, BASE, HEAD, Thresholds(0.25, 5.0), fake_spawn({"base": [100.0, 100.0], "head": [300.0, 101.0]}, []))
     assert result.first.outcome.state is OutcomeState.REGRESSION and result.retry.outcome.state is OutcomeState.PASS
@@ -107,6 +113,19 @@ def test_a_side_that_cannot_produce_a_record_is_inconclusive_naming_the_side() -
 
     result = tw.run_scenario("s", SPEC, BASE, HEAD, spawn=spawn)
     assert result.outcome.state is OutcomeState.INCONCLUSIVE and "base side" in result.outcome.reason
+    assert result.retry is None and result.first.retryable is False  # a retry would fail the same way: no runtime wasted
+
+
+def test_calibrate_alternates_which_run_goes_first() -> None:
+    order: List[str] = []
+    ratios = iter([10.0] * 8)
+
+    def spawn(spec, root):
+        order.append("call")
+        return make_record(avg=next(ratios))
+
+    report = tw.calibrate(Path("/x"), 4, scenarios=[("s", SPEC)], spawn=spawn)
+    assert len(order) == 8 and set(report["s"]["metrics"]["avg"]) >= {"mean_ratio_base_first", "mean_ratio_head_first"}
 
 
 # ── non-blocking ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────

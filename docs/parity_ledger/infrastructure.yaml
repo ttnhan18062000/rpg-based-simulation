@@ -12956,5 +12956,5 @@
   proof_type: contract
   test_path: tests/unit/perf/test_tripwire.py
   divergence_note: DEV-022 (Stabilized)
-  support_boundary: Nothing is blocking (OD-8). The CI wiring (.github/workflows/test.yml) is not changed here; it waits for testing-planner (issue 488). The threshold values are a proposal for
-    docs/engine/performance_contract.md section 5 (rpg-owned P1) until the owner approves them. The declared set is two synthetic scenarios; combat and the corpus worlds are PERF-M2-T08.
+  support_boundary: Nothing is blocking (OD-8). The CI wiring (.github/workflows/test.yml) is not changed here; it waits for testing-planner (issue 488). The threshold values (max(5 ms, base x 1.40)) are owner-approved as provisional
+    (2026-10-10) in docs/engine/performance_contract.md section 5 and must be recalibrated on the CI runner; the noise budget measured here is 0.35. The declared set is two synthetic scenarios; combat and the corpus worlds are PERF-M2-T08.

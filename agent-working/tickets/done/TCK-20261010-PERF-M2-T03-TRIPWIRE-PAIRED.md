@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED
-phase: inprogress
+phase: done
 date: 2026-10-10
 tags: [performance, benchmarking, testing, regression]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking, testing, regression]
 PERF-M2-T03: Tripwire projection as a paired base/head comparison
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -54,7 +54,7 @@ Source concern IDs: C4.
 - [x] When the first comparison is not PASS, at most one diagnostic retry runs, and the emitted report contains both the original and the retry outcome (a test asserts retry count <= 1)
 - [x] A non-PASS outcome does not fail the CI job: the tripwire test or step exits zero and emits the outcome as a report or annotation
 - [x] tools/perf/check_perf_regression.py, tools/perf/perf_ci.py and their tests and Makefile targets are deleted or replaced, and no remaining reference exists in the Makefile, tools/gate_checks/test_scope_coverage_static.py, tests/codebase/test_repo_root_allowlist.py or tools/perf_guard.py
-- [ ] docs/engine/performance_contract.md §5 states the concrete threshold values, and §5.2 records the absorb-or-delete disposition of absolute ceilings and perf_baselines.json/PerfBudget  **NOT DONE here: `performance_contract.md` is rpg-owned P1 and the owner approves the values first. The proposed values and dispositions are in the PR body; the doc edit is the one thing left on this ticket.**
+- [x] docs/engine/performance_contract.md §5 states the concrete threshold values, and §5.2 records the absorb-or-delete disposition of absolute ceilings and perf_baselines.json/PerfBudget  (done after the owner's decision of 2026-10-10: values approved as provisional, dispositions accepted)
 
 ## Related Tickets
 - TCK-20261003-PERF-M2-CLAUSE-INVENTORY
@@ -72,7 +72,7 @@ Source concern IDs: C4.
 - docs/plans/design_enhancement/performance_optimization/performance_m2_performance_contract_epic.md
 
 ## Related Stored Artifacts
-None.
+- agent-working/stored_artifacts/TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED/ (plan.md, investigation.md, test_plan.md)
 
 ## Related Code Areas
 - tests/perf/test_perf_regression_baseline.py
@@ -98,16 +98,18 @@ None.
 - Nightly or local use of the pre-DEV-017 committed baselines continues until T08
 
 ## Implementation Notes
-- Plan, investigation and test plan: `agent-working/staging_artifacts/TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED/` (moved to `stored_artifacts/` when the ticket closes).
-- **Built:** `tools/perf/tripwire.py` (declared `TRIPWIRE_SCENARIOS`, paired runner, one diagnostic retry, non-blocking report and `::warning` annotations, an A/A `calibrate` command, `load_baseline` / `compare_with_baseline` for the nightly lane); the nightly test now reports `INCONCLUSIVE` with a named reason instead of `pytest.skip`; `check_perf_regression.py`, `perf_ci.py` and the tools' own test are removed with their two scope-map entries.
-- **Measured noise, which sets the threshold:** with identical code on both sides on this 6-vCPU VM, head/base average latency deviated by up to 0.31 (14 A/A pairs per scenario, idle_100_local and movement_100_local); the median was no steadier (up to 0.25 over 8 pairs). The old `1.25x` rule sits inside that noise. `TRIPWIRE_THRESHOLDS` is therefore `relative 0.40`, `absolute 5 ms`, metric `avg`, and a test pins `relative > NOISE_BUDGET (0.31)`. **Consequence stated plainly: on this host the tripwire detects only changes above about 40%.** The number is this VM's; recalibrate on the CI runner.
-- **Held, on purpose:** `.github/workflows/test.yml` is untouched (testing-planner to agree, issue #488; the proposed step is in the PR body); `docs/engine/performance_contract.md` §3.3, §5 and §5.2 are not edited (rpg-owned P1; proposed text in the PR body).
+- Plan, investigation and test plan: `agent-working/stored_artifacts/TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED/`.
+- **Built:** `tools/perf/tripwire.py` (declared `TRIPWIRE_SCENARIOS`, paired runner, one diagnostic retry that runs head first and is skipped when a side failed to spawn, non-blocking report and `::warning` annotations, an alternating-order A/A `calibrate`, `load_baseline` / `compare_with_baseline` for the nightly lane); the nightly test reports `INCONCLUSIVE` with a named reason instead of `pytest.skip`; `check_perf_regression.py`, `perf_ci.py` and the tools' own test are removed with their two scope-map entries.
+- **The owner decided on 2026-10-10 (relayed by perf-planner):** section 5 approved **as provisional** (`max(5 ms, base x 1.40)`, paired, one retry, never blocking, to be recalibrated on the CI runner once the CI step lands); section 5.2: absolute ceilings stay as soft smoke bounds, `PerfBudget` / `perf_baselines.json` / `perf_guard.py` are deleted in a follow-up (`TCK-20261010-PERF-M2-PERFBUDGET-RETIRE`, filed, not started), `regression_gate.py` retires under its own later lift. Applied to `docs/engine/performance_contract.md` (§3.3, §5, §5.2), together with T04's §3.3 text. The file's owner is rpg-planner; merging this PR approves the §3.3 descriptive text.
+- **The evidence was corrected after the decision.** The decision cited a noise budget of 0.31 from 28 A/A pairs. A third calibration (order alternated, 44 pairs in all) found a same-code deviation of 0.352, so `NOISE_BUDGET` is 0.35 and the contract states it. The approved 1.40 rule still clears the worst average pair (1.352) but the margin is 0.05; this is flagged in the PR for the owner. The value of the rule was **not** changed.
+- **Measured noise:** with identical code on both sides on this 6-vCPU VM, head/base average latency deviated by up to 0.352; the median was no steadier (up to 0.397). On this host the tripwire detects only changes above about 40%. The number is this VM's; recalibrate on the CI runner.
+- **Held:** `.github/workflows/test.yml` is untouched (testing-planner to agree, issue #488; the proposed step is in the PR body).
 - The ticket's reference list was partly wrong: the Makefile, `tests/codebase/test_repo_root_allowlist.py` and `tools/perf_guard.py` do not reference the retired tools. The real references were `tools/gate_checks/test_scope_coverage_static.py` and `tests/tools/test_test_scope_coverage_static.py` (owners: agent-working-planner, rpg-planner).
 - The combat scenario and the corpus worlds are not in the declared set (the combat builder takes team sizes, not an entity count); they are PERF-M2-T08's.
 
 ## Test Summary
-- New: `tests/unit/perf/test_tripwire.py` (19: 18 default, 1 real fresh-process run marked `slow`); `tests/perf/test_perf_regression_baseline.py` rewritten (reports INCONCLUSIVE for the legacy references). With `tests/unit/perf`, the scope-map tests, the paths guard and the repo-root allowlist test: passing.
-- Calibration (A/A, this VM): see Implementation Notes and `investigation.md`.
+- New: `tests/unit/perf/test_tripwire.py` (21: 20 default, 1 real fresh-process run marked `slow`); `tests/perf/test_perf_regression_baseline.py` rewritten (reports INCONCLUSIVE for the legacy references). With `tests/unit/perf`, the scope-map tests, the paths guard and the repo-root allowlist test: passing.
+- Calibration (A/A, this VM, three runs, 44 pairs): see Implementation Notes and `investigation.md`.
 - Not run: the full suite; the tripwire against a real base branch checkout in CI (test.yml is held).
 
 ## Files Changed
@@ -116,4 +118,4 @@ None.
 - Removed: `tools/perf/check_perf_regression.py`, `tools/perf/perf_ci.py`, `tests/tools/test_check_perf_regression.py`.
 
 ## Completion Summary
-NOT COMPLETE: the code, tests and non-held docs are done; one acceptance criterion remains, the `performance_contract.md` §5 and §5.2 edit, which waits for the owner's approval of the thresholds and dispositions (proposal in the PR body). The ticket stays INPROGRESS.
+`tools/perf/tripwire.py` is the CI-fast tripwire: base and head paired on one runner, each in a fresh process, through `compare()`, one head-first diagnostic retry, never blocking, with `INCONCLUSIVE` and a named reason in place of `pytest.skip`; the retired `check_perf_regression.py` and `perf_ci.py` are gone. `docs/engine/performance_contract.md` states the owner-approved provisional threshold (`max(5 ms, base x 1.40)`) and the section 5.2 dispositions. Left open: the CI step (`test.yml`, issue #488), recalibration on the CI runner, the `PerfBudget` deletion (`TCK-20261010-PERF-M2-PERFBUDGET-RETIRE`), and the thin margin between the noise (0.35) and the threshold (0.40), flagged for the owner.

@@ -50,13 +50,13 @@ TRIPWIRE_SCENARIOS: Tuple[Tuple[str, RunSpec], ...] = tuple(
         ("movement_100_local", "movement", 100, "PERF_1GB_LOCAL"),
     )
 )
-#: The noise budget: the largest head/base deviation seen with *identical* code on both sides (``calibrate``, 2026-10-10, this 6-vCPU VM, 14 A/A pairs per
-#: scenario, idle_100_local and movement_100_local): 0.31 for avg latency of movement_100_local. The median was no steadier (up to 0.25 over 8 pairs), so the
-#: noise is whole-process variance, not tail ticks. It is the host's, not the engine's: recalibrate on the CI runner before relying on it.
-NOISE_BUDGET = 0.31
+#: The noise budget: the largest head/base deviation seen with *identical* code on both sides (``calibrate``, 2026-10-10, this 6-vCPU VM, 22 A/A pairs per
+#: scenario, 44 in all, idle_100_local and movement_100_local): 0.35 for avg latency of idle_100_local (0.31 for movement_100_local). The median was no steadier
+#: (up to 0.40 for movement), so the noise is whole-process variance, not tail ticks. It is the host's, not the engine's: recalibrate on the CI runner.
+NOISE_BUDGET = 0.35
 #: relative + absolute floor (``compare`` regresses above ``max(absolute_ms, base * (1 + relative))``). ``relative`` must clear ``NOISE_BUDGET`` (a test
 #: pins that), so on this host the tripwire detects only changes above about 40%: a finer tripwire needs a quieter runner or a larger sample, not a tighter
-#: number. PROVISIONAL until the owner approves the values for docs/engine/performance_contract.md section 5 (proposal in the T03 PR).
+#: number. The margin is small (0.35 against 0.40). PROVISIONAL: owner-approved 2026-10-10 as provisional (docs/engine/performance_contract.md section 5).
 TRIPWIRE_THRESHOLDS = Thresholds(relative=0.40, absolute_ms=5.0, metric="avg")
 MAX_RETRIES = 1
 
@@ -70,6 +70,8 @@ class Attempt:
     outcome: Outcome
     base_avg_ms: Optional[float] = None
     head_avg_ms: Optional[float] = None
+    #: False when a side could not produce a record: a retry would fail the same way and only cost runtime.
+    retryable: bool = True
 
 
 @dataclass(frozen=True)
@@ -86,14 +88,19 @@ def _avg(record: Optional[BenchmarkRecord]) -> Optional[float]:
     return record.result.latency_ms.get("avg") if record is not None else None
 
 
-def pair(spec: RunSpec, base_root: Path, head_root: Path, thresholds: Thresholds, spawn: Spawn) -> Attempt:
-    """One base run and one head run, each in a fresh process, compared. A side that cannot produce a record is INCONCLUSIVE."""
+def pair(spec: RunSpec, base_root: Path, head_root: Path, thresholds: Thresholds, spawn: Spawn, head_first: bool = False) -> Attempt:
+    """One base run and one head run, each in a fresh process, compared. A side that cannot produce a record is INCONCLUSIVE.
+
+    ``head_first`` swaps the order of the two runs. The diagnostic retry uses it, so a systematic order effect (a warm cache, thermal state) cannot show up
+    as a regression in both attempts.
+    """
     records: Dict[str, BenchmarkRecord] = {}
-    for side, root in (("base", base_root), ("head", head_root)):
+    sides = [("base", base_root), ("head", head_root)]
+    for side, root in reversed(sides) if head_first else sides:
         try:
             records[side] = spawn(spec, root)
         except CapacityRunError as exc:
-            return Attempt(Outcome(OutcomeState.INCONCLUSIVE, f"{side} side: {exc}"))
+            return Attempt(Outcome(OutcomeState.INCONCLUSIVE, f"{side} side: {exc}"), retryable=False)
     return Attempt(compare(records["base"], records["head"], thresholds), _avg(records["base"]), _avg(records["head"]))
 
 
@@ -111,9 +118,10 @@ def _final(first: Attempt, retry: Optional[Attempt]) -> Outcome:
 def run_scenario(
     name: str, spec: RunSpec, base_root: Path, head_root: Path, thresholds: Thresholds = TRIPWIRE_THRESHOLDS, spawn: Spawn = capacity_run.spawn
 ) -> ScenarioResult:
-    """The first paired comparison, and at most ``MAX_RETRIES`` diagnostic retry when it is not PASS."""
+    """The first paired comparison, and at most ``MAX_RETRIES`` diagnostic retry (head first) when it is not PASS and a retry could change it."""
     first = pair(spec, base_root, head_root, thresholds, spawn)
-    retry = pair(spec, base_root, head_root, thresholds, spawn) if first.outcome.state not in (OutcomeState.PASS, OutcomeState.NOT_APPLICABLE) and MAX_RETRIES >= 1 else None
+    needs_retry = first.retryable and first.outcome.state not in (OutcomeState.PASS, OutcomeState.NOT_APPLICABLE) and MAX_RETRIES >= 1
+    retry = pair(spec, base_root, head_root, thresholds, spawn, head_first=True) if needs_retry else None
     return ScenarioResult(name, first, retry, _final(first, retry))
 
 
@@ -203,7 +211,15 @@ def calibrate(root: Path, trials: int, scenarios: Sequence[Tuple[str, RunSpec]] 
     """A/A: the same code as base and as head, ``trials`` times per scenario. Reports, per latency metric, how far head/base moves with no code change."""
     out: Dict[str, Any] = {}
     for name, spec in scenarios:
-        pairs = [(spawn(spec, root), spawn(spec, root)) for _ in range(trials)]
+        pairs = []
+        for trial in range(trials):
+            if trial % 2 == 0:
+                base = spawn(spec, root)
+                head = spawn(spec, root)
+            else:  # alternate which run goes first, so an order effect shows up as a bias between the two groups
+                head = spawn(spec, root)
+                base = spawn(spec, root)
+            pairs.append((base, head))
         per_metric: Dict[str, Any] = {}
         for metric in CALIBRATION_METRICS:
             ratios = [head.result.latency_ms[metric] / base.result.latency_ms[metric] for base, head in pairs]
@@ -212,6 +228,8 @@ def calibrate(root: Path, trials: int, scenarios: Sequence[Tuple[str, RunSpec]] 
                 "ratios": [round(r, 4) for r in ratios],
                 "max_deviation": round(max(deviations), 4),
                 "mean_deviation": round(statistics.fmean(deviations), 4),
+                "mean_ratio_base_first": round(statistics.fmean(ratios[0::2]), 4),
+                "mean_ratio_head_first": round(statistics.fmean(ratios[1::2]), 4) if len(ratios) > 1 else None,
             }
         out[name] = {"trials": trials, "metrics": per_metric}
     return out

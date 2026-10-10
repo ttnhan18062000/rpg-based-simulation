@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
@@ -28,4 +28,6 @@ Pre-planned by perf-planner (M2 epic "Delivery plan"; dispatch 2026-10-10, batch
 - **Mode check:** the old `_RUNTIME_MODE_HARD_SCENARIOS` (always empty) and its helper are gone; `compare()`'s excursion rule (OD-3) replaces them.
 - **Threshold:** set above the measured A/A noise (see investigation.md), pinned by a test. It is provisional and this VM's.
 - **Retired tools' stale scope-map entries are removed** (two files outside my domain; owners named in the PR).
-- **Not done:** the `performance_contract.md` edit (owner approval), the `test.yml` step (testing-planner), deleting the `PerfBudget` store and `perf_guard.py` (a separate cleanup; see the proposal).
+- **Done after the owner's decision (relayed by perf-planner, 2026-10-10):** the `performance_contract.md` edit (§3.3, §5, §5.2) with the word "provisional" kept, and T04's §3.3 text so the contract is edited once.
+- **Review notes taken (perf-planner):** the diagnostic retry runs head first; a first INCONCLUSIVE from a side that failed to spawn is not retried (`retryable = False`); `calibrate` alternates the order.
+- **Not done:** the `test.yml` step (testing-planner, issue #488); deleting the `PerfBudget` store and `perf_guard.py` (`TCK-20261010-PERF-M2-PERFBUDGET-RETIRE`, filed, not started).

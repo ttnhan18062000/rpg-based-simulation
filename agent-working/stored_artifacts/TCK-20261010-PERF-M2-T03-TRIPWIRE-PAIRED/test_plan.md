@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
@@ -24,6 +24,7 @@ tags: [performance, benchmarking, documentation]
 | Non-PASS does not fail the job | unit | behaviour | OD-8 | exit 0, `blocking: false`, a `::warning` annotation | same |
 | Retired tools gone, no stale references | unit + guards | check | the T03 acceptance criteria | files absent; scope-map tests and repo-root allowlist test pass | `pytest tests/tools/test_test_scope_coverage_static.py tests/codebase/test_repo_root_allowlist.py` |
 | Threshold clears the measured noise | unit | check | the calibration in `investigation.md` | `relative > NOISE_BUDGET` | `pytest tests/unit/perf/test_tripwire.py` |
-| Contract values stated in `performance_contract.md` | review | document | owner approval | **not done here** | n/a |
+| Contract values stated in `performance_contract.md` | review | document | the owner's decision of 2026-10-10 | §3.3, §5 (provisional) and §5.2 state the values and dispositions | `grep -n provisional docs/engine/performance_contract.md`; `pytest tests/perf/test_perf_regression_baseline.py` (pins the contract's scoped-claims text) |
+| Retry order and no wasted retry | unit | behaviour | perf-planner's review | the retry runs head first; a side that failed to spawn is not retried | `pytest tests/unit/perf/test_tripwire.py` |
 
-Not proven: the contract edit; the tripwire in real CI; the thresholds on the CI runner.
+Not proven: the tripwire in real CI; the thresholds on the CI runner; an order bias (8 alternated pairs show none conclusively).
