@@ -32,7 +32,8 @@ DRAWING_ALLOWED: dict[str, set[str]] = {
     "backend": {"backend", "config", "errors"},
     "workspace": {"workspace", "config", "errors"},
     "api": {"api", "schema", "backend", "workspace", "config", "errors", "colors"},
-    "compose": {"compose", "api", "technique", "config", "errors", "colors"},
+    "palettes": {"palettes", "errors"},
+    "compose": {"compose", "palettes", "api", "technique", "config", "errors", "colors"},
     "handoff": {"handoff", "api", "config", "errors", "colors"},  # + store.contracts (below)
     "server": {"server", "api", "compose", "handoff", "config", "errors", "colors"},
     "pin": set(),

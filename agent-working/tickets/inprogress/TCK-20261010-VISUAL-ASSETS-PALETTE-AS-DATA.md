@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Committed terrain palette and GPL exports, and an advisory palette-membership lint in the drawing tools
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -60,9 +60,11 @@ Child 6 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. Only `visual_assets/p
 
 
 ## Implementation Notes
+See staging plan. `lint_sprite` MCP gained optional `palette` / `palette_id`.
 
 
 ## Test Summary
+test_palette_data.py passes; drawing unit and boundary tests pass.
 
 
 ## Files Changed
