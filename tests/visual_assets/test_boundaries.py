@@ -32,7 +32,8 @@ DRAWING_ALLOWED: dict[str, set[str]] = {
     "backend": {"backend", "config", "errors"},
     "workspace": {"workspace", "config", "errors"},
     "api": {"api", "schema", "backend", "workspace", "config", "errors", "colors"},
-    "compose": {"compose", "api", "technique", "config", "errors", "colors"},
+    "palettes": {"palettes", "errors"},
+    "compose": {"compose", "palettes", "api", "technique", "config", "errors", "colors"},
     "handoff": {"handoff", "api", "config", "errors", "colors"},  # + store.contracts (below)
     "server": {"server", "api", "compose", "handoff", "config", "errors", "colors"},
     "pin": set(),
@@ -62,32 +63,39 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "review": {"review", "rendering", "intake", "pixels", "contracts", "identities", "errors", "config"},
     # build owns the one allowed import from drawing (the shared sandbox)
     "build": {"build", "records", "revoke", "catalogwrite", "intake", "pixels", "contracts", "identities", "errors", "config"},
-    "cli": {"cli", "intake", "adoption", "setadoption", "drafts", "draftexport", "revoke", "audit", "records", "review", "rendering", "build", "release", "runtime_export", "verify", "gc", "catalog", "contracts", "identities", "errors", "config"},
+    "cli": {"cli", "lock", "deletionlog", "intake", "adoption", "setadoption", "drafts", "draftexport", "revoke", "audit", "records", "review", "rendering", "build", "release", "runtime_export", "verify", "gc", "catalog", "contracts", "identities", "errors", "config"},
     "__main__": {"cli"},
     # catalog records and the human-gated writers (adoption, revoke, catalogwrite) are never reachable from the drawing tools
     "records": {"records", "intake", "contracts", "identities", "errors", "config"},
     "catalogwrite": {"catalogwrite", "intake", "errors", "config"},
-    "adoption": {"adoption", "records", "rendering", "catalogwrite", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
+    "adoption": {"adoption", "animation", "records", "rendering", "catalogwrite", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
     # draft sets live in git OUTSIDE the catalog and record no approval; the set adoption is a human gate that writes the catalog (it reuses adopt's checks)
     "drafts": {"drafts", "records", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
     # read-only on the drafts and the catalog; writes a NEW directory outside both (the isolated preview page's input); the drawing server may not import it
     "draftexport": {"draftexport", "drafts", "records", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     "setadoption": {"setadoption", "adoption", "drafts", "records", "rendering", "catalogwrite", "catalog", "intake", "pixels", "contracts", "identities", "errors", "config"},
     "revoke": {"revoke", "records", "catalogwrite", "intake", "contracts", "identities", "errors", "config"},
-    "audit": {"audit", "records", "intake", "contracts", "identities", "errors", "config"},
+    "audit": {"audit", "deletionlog", "records", "intake", "contracts", "identities", "errors", "config"},
     "release": {"release", "records", "catalog", "catalogwrite", "revoke", "pixels", "intake", "contracts", "identities", "errors", "config"},
-    "verify": {"verify", "records", "audit", "build", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
-    "gc": {"gc", "records", "intake", "contracts", "identities", "errors", "config"},
+    "verify": {"verify", "lock", "deletionlog", "records", "audit", "build", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
+    "gc": {"gc", "deletionlog", "records", "intake", "contracts", "identities", "errors", "config"},
     # reads committed candidates, writes a new directory OUTSIDE the catalog; not a gate layer, but the drawing server still may not import it (no MCP export)
-    "runtime_export": {"runtime_export", "records", "verify", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
+    "runtime_export": {"runtime_export", "atlas", "animation", "records", "verify", "catalog", "pixels", "intake", "contracts", "identities", "errors", "config"},
     # shaped, bounded, read-only views for agents; the drawing server may import it
+    # ADR D24: the store write lock (leaf: config, errors, identities) and the local gc deletion log (a writer, so a gate layer)
+    "lock": {"lock", "identities", "errors", "config"},
+    "deletionlog": {"deletionlog", "intake", "contracts", "identities", "errors", "config"},
+    # opt-in runtime atlases: pure packing and a minimal PNG encoder over decoded pixels
+    "atlas": {"atlas", "pixels", "intake", "contracts", "identities", "errors", "config"},
+    # animation metadata of a source (derived from its bytes by the intake reader; read back from SourceRecords for the opt-in export): no gate, no write
+    "animation": {"animation", "records", "intake", "contracts", "identities", "errors", "config"},
     "readmodel": {"readmodel", "records", "intake", "pixels", "contracts", "identities", "errors", "config"},
 }
 # store layers that write the tracked catalog (human gates): no drawing module may import them, not even the server
-GATE_LAYERS = {"adoption", "setadoption", "revoke", "catalogwrite", "release", "gc"}
+GATE_LAYERS = {"adoption", "setadoption", "revoke", "catalogwrite", "release", "gc", "deletionlog"}
 # the ONLY store layers the drawing MCP server may import: intake (submit_candidate) and the read-only views, plus the shared leaves.
 # Everything else (adoption, revoke, build, release, gc, cli, verify, review, rendering, records, audit, catalogwrite, pixels) is a violation.
-SERVER_STORE_ALLOWED = {"intake", "readmodel", "contracts", "identities", "errors", "config"}
+SERVER_STORE_ALLOWED = {"intake", "readmodel", "contracts", "identities", "errors", "config", "lock"}
 # `visual_assets.review` (TCK-20261008-VISUAL-ASSETS-REVIEW-TOOLING-IN-STORE-CLI) is a peer package: read-only on the drafts and the catalog records, it may import ONLY these store layers (never a gate layer, never `build`)
 # and ONLY the pure `technique` layer of drawing (lint, ramps); `store` and `drawing` never import it. Not `src`, like everything under visual_assets (the c14/c15 import contracts).
 REVIEW_STORE_ALLOWED = {"config", "pixels", "records", "draftexport", "catalog"}  # `catalog` = the read-only registry loader (the key-usage report)

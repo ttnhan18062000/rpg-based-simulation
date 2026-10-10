@@ -2,19 +2,31 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
+from collections.abc import Sequence
+from pathlib import Path
 
 from visual_assets.drawing.colors import hex_to_rgba, luma
 from visual_assets.drawing.technique.shading import N4
 
-_BUDGETS = ((16, 8), (32, 12), (64, 16))  # (max side, colour budget); above: 24
+def _load_rules() -> tuple[tuple[tuple[int, int], ...], int]:
+    """The colour budgets, read once from the committed `style_rules.json` next to this module (the same numbers the code held before; a test pins them)."""
+    data = json.loads(Path(__file__).with_name("style_rules.json").read_text(encoding="utf-8"))
+    return tuple((int(side), int(budget)) for side, budget in data["color_budgets"]), int(data["color_budget_above"])
+
+
+_BUDGETS, _BUDGET_ABOVE = _load_rules()  # (max side, colour budget) rows; above the last row: _BUDGET_ABOVE
 
 
 OUTLINE_LUMA_MAX = 70.0
 
 
-def lint_grid(grid: list[list[str]], layers_hint: dict | None = None) -> dict:
-    """Check a flattened frame against the researched rules. Findings are advice, not gates."""
+def lint_grid(grid: list[list[str]], layers_hint: dict | None = None, palette: Sequence[str] | None = None) -> dict:
+    """Check a flattened frame against the researched rules. Findings are advice, not gates.
+
+    `palette` (optional, `#rrggbb` strings) adds an advisory `off_palette` finding: opaque pixels whose RGB is not in it, as a count, the distinct colours and the first coordinates. It is reported, never ruled
+    (level `info`, so it never turns `ok` false)."""
     h, w = len(grid), len(grid[0]) if grid else 0
     rgba = [[hex_to_rgba(c) for c in row] for row in grid]
     opaque = {(x, y) for y in range(h) for x in range(w) if rgba[y][x][3] > 0}
@@ -30,7 +42,7 @@ def lint_grid(grid: list[list[str]], layers_hint: dict | None = None) -> dict:
 
     colors = Counter(grid[y][x] for x, y in opaque)
     side = max(w, h)
-    budget = next((b for s, b in _BUDGETS if side <= s), 24)
+    budget = next((b for s, b in _BUDGETS if side <= s), _BUDGET_ABOVE)
     stats["colors"] = len(colors)
     stats["color_budget"] = budget
     if len(colors) > budget:
@@ -81,4 +93,12 @@ def lint_grid(grid: list[list[str]], layers_hint: dict | None = None) -> dict:
             f"{frac:.0%} of the silhouette edge is dark. Sources disagree on mixed outlines: selective "
             "outlining is a valid style when intentional, but check it is not accidental",
             fraction=round(frac, 3))
+    if palette is not None:
+        allowed = {c.lower()[:7] for c in palette}
+        off = [(x, y) for y, x in sorted((y, x) for x, y in opaque) if grid[y][x].lower()[:7] not in allowed]
+        stats["off_palette_pixels"] = len(off)
+        if off:
+            distinct = sorted({grid[y][x].lower()[:7] for x, y in off})
+            add("info", "off_palette", f"{len(off)} opaque pixels use {len(distinct)} colours that are not in the given palette (reported, not ruled)",
+                count=len(off), colors=distinct[:10], pixels=off[:20])
     return {"ok": not any(f["level"] == "warn" for f in findings), "findings": findings, "stats": stats}

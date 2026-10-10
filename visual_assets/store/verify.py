@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from visual_assets.store import config, pixels, records
+from visual_assets.store import config, deletionlog, lock, pixels, records
 from visual_assets.store.audit import audit_chain
 from visual_assets.store.build.exportconfig import load_export_config
 from visual_assets.store.catalog.registry import load_registry
@@ -127,11 +127,16 @@ def _set_adoptions(root: Path, out: list[Finding]) -> None:
                 out.append(Finding("SET_ADOPTION_MISMATCH", rel, f"{entry.visual_key}: the adoption record names another intake, key or detail value"))
 
 
+def _local_state(name: str) -> bool:
+    """The gitignored local files of ADR D24 (the store lock, the gc deletion log and its archives); `audit_chain` checks the log."""
+    return name in (lock.LOCK_NAME, deletionlog.LOG_NAME) or deletionlog.ARCHIVE.fullmatch(name) is not None
+
+
 def _tracked_tree(root: Path, out: list[Finding]) -> None:
     if not root.is_dir():
         return
     for entry in sorted(root.iterdir()):
-        if entry.name not in _TOP and not entry.name.startswith(".tmp-"):
+        if entry.name not in _TOP and not entry.name.startswith(".tmp-") and not _local_state(entry.name):
             out.append(Finding("UNEXPECTED_FILE", entry.name, "not part of the store layout"))
     for name, allowed in _INSIDE.items():
         base = root / name

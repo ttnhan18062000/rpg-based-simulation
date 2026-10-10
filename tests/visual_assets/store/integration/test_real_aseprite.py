@@ -205,3 +205,27 @@ def test_aseprite_reloads_the_synthetic_palette_shapes_like_the_parser_says(tmp_
         facts, problems = aseprite.read_facts(data)
         assert problems == [], label
         assert facts_tuple(facts) == aseprite_counts(path, tmp_path), label
+
+
+def test_the_parser_reads_animation_metadata_exactly_as_aseprite_reads_it_back(tmp_path):
+    """The builders and the parser share one reading of the frame header word and the tags chunk; real Aseprite is the oracle (`TCK-20261010-VISUAL-ASSETS-ANIMATION-METADATA-FIELDS`).
+    Aseprite writes a 4-frame sprite with distinct durations and one tag per direction, then reloads it and prints what it holds; the parser must report the same, shifted to zero-based frames."""
+    path = tmp_path / "anim.aseprite"
+    script = [
+        "local spr = Sprite(8, 8)", "spr:newFrame(); spr:newFrame(); spr:newFrame()",
+        "local ms = {50, 100, 150, 200}", "for i = 1, 4 do spr.frames[i].duration = ms[i] / 1000 end",
+        'local function tag(a, z, name, dir, n) local t = spr:newTag(a, z); t.name = name; t.aniDir = dir; t.repeats = n end',
+        'tag(1, 2, "idle", AniDir.FORWARD, 0)', 'tag(1, 1, "back", AniDir.REVERSE, 2)', 'tag(2, 4, "walk", AniDir.PING_PONG, 3)', 'tag(3, 4, "swing", AniDir.PING_PONG_REVERSE, 7)',
+        f'spr:saveAs("{path}")', f'local r = app.open("{path}")',
+        'for i, f in ipairs(r.frames) do print("F", i, math.floor(f.duration * 1000 + 0.5)) end',
+        'local function d(x) return x == AniDir.FORWARD and 0 or x == AniDir.REVERSE and 1 or x == AniDir.PING_PONG and 2 or 3 end',
+        'for _, t in ipairs(r.tags) do print("T", t.name, t.fromFrame.frameNumber, t.toFrame.frameNumber, d(t.aniDir), t.repeats) end',
+    ]
+    lines = [line.split("\t") for line in run_lua(tmp_path, "anim", script).splitlines() if line.strip()]
+    real_durations = tuple(int(x[2]) for x in lines if x[0] == "F")
+    real_tags = [(x[1], int(x[2]) - 1, int(x[3]) - 1, int(x[4]), int(x[5])) for x in lines if x[0] == "T"]
+    assert real_durations == (50, 100, 150, 200) and sorted(t[3] for t in real_tags) == [0, 1, 2, 3]
+    facts, problems = aseprite.read_facts(path.read_bytes())
+    assert not [p for p in problems if p[0].value.startswith(("ANIMATION_", "SOURCE_"))], problems
+    assert facts.frame_durations_ms == real_durations
+    assert sorted((t.name, t.from_frame, t.to_frame, t.direction, t.repeat) for t in facts.animation_tags) == sorted(real_tags)

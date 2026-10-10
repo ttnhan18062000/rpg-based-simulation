@@ -7,7 +7,7 @@ readback, tiled, so they work on any sprite up to 128x128 (slower on large ones;
 
 from __future__ import annotations
 
-from visual_assets.drawing import api, config
+from visual_assets.drawing import api, config, palettes
 from visual_assets.drawing.colors import hex_to_rgba, hue_toward, luma, norm_hex, rgba_to_hex
 from visual_assets.drawing.errors import AdapterError
 from visual_assets.drawing.technique.ascii import ascii_grid
@@ -315,9 +315,16 @@ def remap_palette(
     return out
 
 
-def lint(name: str, revision: str | None = None, frame: int = 1) -> dict:
+def lint(name: str, revision: str | None = None, frame: int = 1, palette: list[str] | None = None, palette_id: str | None = None) -> dict:
+    """Advisory lint of one frame; `palette` (a list of colours) or `palette_id` (a committed palette such as `icons-v1`) adds the off-palette report. Giving both is an error."""
+    if palette is not None and palette_id is not None:
+        raise AdapterError("give palette or palette_id, not both")
+    if palette_id is not None:
+        palette = palettes.load_palette(palette_id)
+    elif palette is not None:
+        palette = [norm_hex(c)[:7] for c in palette]
     grid, _ = read_grid(name, revision, frame)
-    return lint_grid(grid)
+    return lint_grid(grid, palette=palette)
 
 
 def ascii_view(name: str, revision: str | None = None, frame: int = 1) -> dict:
