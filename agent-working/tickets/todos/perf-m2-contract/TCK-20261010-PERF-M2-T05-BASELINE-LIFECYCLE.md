@@ -27,14 +27,13 @@ feature
 P1
 
 ## Request Summary
-Rewrite perf_baseline_policy.md as lifecycle rules that cite testing's shared baseline_change_policy.md. That doc may not exist yet, so this depends on it or on TCK-20261009-RPG-GATE-BASELINE-FORMAT-AND-STALENESS or its policy-doc child. Keep only the perf preconditions: refuse dirty_src and a non-NORMAL sequence, record the before and after identities, and accept a re-baseline that cites a behaviour PR or a divergence id (OD-3). Make known_debt_ledger.yaml the second user of the shared known-reds registry module (TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE), with the common fields plus a perf extension, expected_signature. Add a tools/perf/baseline_lifecycle.py promotion tool, and a test that every tests/perf/baselines/ file is either a schema record or a listed legacy tripwire reference. No src/ change. Depends on T02b. The reason: under the canonical contract a deliberate behaviour change shows up as REGRESSION, so re-baselines need a cited cause, and a missing or incompatible baseline must never silently pass.
+Rewrite perf_baseline_policy.md as lifecycle rules that cite testing's shared baseline_change_policy.md. That doc may not exist yet, so this depends on it or on TCK-20261009-RPG-GATE-BASELINE-FORMAT-AND-STALENESS or its policy-doc child. Keep only the perf preconditions: refuse dirty_src and a non-NORMAL sequence, record the before and after identities, and accept a re-baseline that cites a behaviour PR or a divergence id (OD-3). The known-debt ledger is split out to TCK-20261010-PERF-M2-T05B-KNOWN-DEBT-LEDGER. Add a tools/perf/baseline_lifecycle.py promotion tool, and a test that every tests/perf/baselines/ file is either a schema record or a listed legacy tripwire reference. No src/ change. Depends on T02b. The reason: under the canonical contract a deliberate behaviour change shows up as REGRESSION, so re-baselines need a cited cause, and a missing or incompatible baseline must never silently pass.
 
 Source concern ids: C3.
 
 ## Scope
 - Rewrite docs/performance/perf_baseline_policy.md as lifecycle rules citing the shared baseline_change_policy.md, keeping only the perf-specific preconditions
 - Add tools/perf/baseline_lifecycle.py with a promote command. It refuses dirty_src=true, a non-NORMAL mode_sequence, a missing cost_accounting_version, or no cited cause. It writes a new versioned record without overwriting the prior one and records the before and after identities using T02b field names.
-- Add docs/performance/known_debt_ledger.yaml, loaded through the shared known-reds module with the shared fields (owner, ticket, added_on, expires_on, kind) plus expected_signature, and define the expected_signature format
 - Add a test that enumerates tests/perf/baselines/*.json and requires each file to be a valid BenchmarkRecord or listed in a legacy-tripwire allowlist (today all 15 files)
 - Add tests for the promotion refusals and successful versioned promotion
 
@@ -43,6 +42,7 @@ Source concern ids: C3.
 - Making any perf check blocking
 - Writing the testing-owned baseline_change_policy.md or extracting the known-reds module, if a testing-owned ticket covers it (coordinate, don't duplicate)
 - Rerunning or replacing committed baselines (PERF-M2-T08)
+- docs/performance/known_debt_ledger.yaml and its expected_signature format: split out to TCK-20261010-PERF-M2-T05B-KNOWN-DEBT-LEDGER (2026-10-10), which waits for the shared known-reds module
 - Tripwire comparison logic (PERF-M2-T03)
 
 ## Acceptance Criteria
@@ -50,7 +50,6 @@ Source concern ids: C3.
 - [ ] promote exits non-zero with a named reason when the candidate's mode_sequence holds any value other than NORMAL, and leaves tests/perf/baselines/ unchanged
 - [ ] promote exits non-zero when no cause (ticket, divergence id or behaviour PR) is cited, or when the record lacks cost_accounting_version
 - [ ] A successful promotion writes a new versioned record, leaves the prior version file byte-identical, and records the before identity, the after identity and the cited cause
-- [ ] docs/performance/known_debt_ledger.yaml loads through the shared known-reds module with owner, ticket, added_on, expires_on, kind and expected_signature. A test shows the lint rejects an expired entry, a shadowed entry and an ownerless entry.
 - [ ] A test enumerating tests/perf/baselines/*.json fails when a file is neither a valid BenchmarkRecord nor named in the legacy-tripwire allowlist, and passes on the current tree
 - [ ] The ticket's git diff touches no file under src/
 
@@ -94,6 +93,7 @@ None.
 - The legacy allowlist is a migration ledger that shrinks as T08 reruns replace files
 
 ## Implementation Notes
+- 2026-10-10 (perf-planner): split. The known-debt ledger scope and its acceptance criterion moved to TCK-20261010-PERF-M2-T05B-KNOWN-DEBT-LEDGER, which waits for TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE. Do not write an interim known-reds loader in perf. T05 starts now. The policy rewrite cites docs/plans/test_architecture/reference/baseline_change_policy.md as a forward reference (testing-planner agreed the shared policy on #475), labelled "pending" until that doc lands.
 
 ## Test Summary
 
