@@ -3,9 +3,9 @@
   "counts": {
     "errors": 0,
     "failed": 0,
-    "passed": 204,
+    "passed": 205,
     "skipped": 0,
-    "total": 204
+    "total": 205
   },
   "guarded_files": [
     {
@@ -50,11 +50,11 @@
     },
     {
       "path": "tests/visual_assets/store/adoption_support.py",
-      "sha256": "sha256:00ee4cb0c0fb6c3a134f5ad5203cf4bacff217f1e94d9ab458b6cee420e4fa7d"
+      "sha256": "sha256:9a2db68d8040312fa6f0cbeea9628bb05c4942c0fade79c6aacd6ead67ff7c9d"
     },
     {
       "path": "tests/visual_assets/store/builders.py",
-      "sha256": "sha256:8e394945fedf95ab527e1cc1bc6a5d573c7bb7d63a513b94c3877dc12a0a1458"
+      "sha256": "sha256:11221b74dffcbb0a170fdbfc2a822188ece3cf5c0d3e5bee48b6b231d0dd79d0"
     },
     {
       "path": "tests/visual_assets/store/integration/test_build_real.py",
@@ -62,7 +62,7 @@
     },
     {
       "path": "tests/visual_assets/store/integration/test_real_aseprite.py",
-      "sha256": "sha256:a8ff79e1ad540fea8a8080ef347bc992a84442886b0be91fd89961af2783f9a0"
+      "sha256": "sha256:9e96ce8fb1e90e41733e1a76787ccc19971e7254ae11dcbc7391737c43db4fc3"
     },
     {
       "path": "tests/visual_assets/store/runtime_fixture.py",
@@ -250,7 +250,11 @@
     },
     {
       "path": "visual_assets/store/adoption.py",
-      "sha256": "sha256:08a722032dc0945a4e2141205f44de97f820360780d70377fadb26c3d69ceb77"
+      "sha256": "sha256:c28e4c60fa12883a1d6e51bfd80db943e020307a8675085b2e1c574891099dae"
+    },
+    {
+      "path": "visual_assets/store/animation.py",
+      "sha256": "sha256:2c9b433b14b621e028c1de54cf540f55df67a494c8fcacdfbe5776c75b82f594"
     },
     {
       "path": "visual_assets/store/atlas.py",
@@ -290,11 +294,11 @@
     },
     {
       "path": "visual_assets/store/cli.py",
-      "sha256": "sha256:a6f5da103ab3b7d0e7948f91c4d24a8f910bf49ea8a050d9e02f9e53ebd738b1"
+      "sha256": "sha256:a530364ed75280d57461685df74ad53ecf90f2868d7f21540ad2143476ef1f98"
     },
     {
       "path": "visual_assets/store/config.py",
-      "sha256": "sha256:dd017506981d6deebee679a8ce73c2246939d6c5b2a2b3757503e2aa5448184b"
+      "sha256": "sha256:ee7dd3680ce28c0c191535580ef127882801f46cbdd2b2819eeefd4d88f91f8e"
     },
     {
       "path": "visual_assets/store/contracts/__init__.py",
@@ -303,6 +307,10 @@
     {
       "path": "visual_assets/store/contracts/adoption.py",
       "sha256": "sha256:fb904b05001e429e384cac14f3cccb6da38d387525b8ef3acdd40b45849bfa37"
+    },
+    {
+      "path": "visual_assets/store/contracts/animation.py",
+      "sha256": "sha256:5b387de00a5d842e7df13ae469b7971ee5fe991bf50169a5157f2b19c4bbbac7"
     },
     {
       "path": "visual_assets/store/contracts/artifact.py",
@@ -334,7 +342,7 @@
     },
     {
       "path": "visual_assets/store/contracts/intake.py",
-      "sha256": "sha256:07e54e929137169f6e2b04aee73a9904fad6c0eb7bc9e5cdbe317d4c5d9d2932"
+      "sha256": "sha256:bc7cf1d5a623314a7ea646ec3acc87a53022b94ede1d4ef0eb781ecdc573d51d"
     },
     {
       "path": "visual_assets/store/contracts/release.py",
@@ -350,7 +358,7 @@
     },
     {
       "path": "visual_assets/store/contracts/source.py",
-      "sha256": "sha256:1517dd7db1780da8f2903bf506a4b290272235232c038007bf57e387774dd4d6"
+      "sha256": "sha256:6724ffc9b73c3246ee7b9185bcbe2014ed5d3c3eed6372bf2a64e4966aafef62"
     },
     {
       "path": "visual_assets/store/deletionlog.py",
@@ -382,7 +390,7 @@
     },
     {
       "path": "visual_assets/store/intake/aseprite.py",
-      "sha256": "sha256:a4283589a2cbfcbf55ac45abc59552e0f5e96eb4f1a1888d02daa2af0b314820"
+      "sha256": "sha256:ecaed00a81075f1a6be8d169312bbc2ff80816394eac7ca17da9d8afe0369cbc"
     },
     {
       "path": "visual_assets/store/intake/quarantine.py",
@@ -394,7 +402,7 @@
     },
     {
       "path": "visual_assets/store/intake/validator.py",
-      "sha256": "sha256:7cb1a0c77b515daadc8c2fbd9048e47fa796a8adacdf559eb868700498006dba"
+      "sha256": "sha256:ae8bba1e0546e1a708ae1cc08ae2663359a14f1e57189bb6d292a0005d138d97"
     },
     {
       "path": "visual_assets/store/lock.py",
@@ -430,18 +438,18 @@
     },
     {
       "path": "visual_assets/store/runtime_export.py",
-      "sha256": "sha256:911d2e63d2ba9d2c4f3c6f4cb131814e7b502849421d9e163a0dcd2198eaef7f"
+      "sha256": "sha256:cd4a78633bc5a952b216de9e15a26e09e0f5f3ba6862a4e7859e5ed3cbc2dc5e"
     },
     {
       "path": "visual_assets/store/setadoption.py",
-      "sha256": "sha256:b203258a124ad5423ab535a35c295227076c4b0b8b4c2634ad4c2880f034fec7"
+      "sha256": "sha256:d854393fb0280084547d71799e5507adbead7375bea5f7e2db0f3d90aa958d4b"
     },
     {
       "path": "visual_assets/store/verify.py",
       "sha256": "sha256:273e79ef546f44ef25d9cc94980b1b620aac3cd1b1e35ebff334529e92b8d3b5"
     }
   ],
-  "guarded_hash": "sha256:f652cd57034ddf6e5582d43be4f9bbcfdfac8c02d86901de0a70f203e0141da7",
+  "guarded_hash": "sha256:95cbc63eb759c061a6b100a4f4a7f244f3fdc74ee6914c3217a236d3c7cc669e",
   "make_target": "visual-assets-aseprite-local",
   "record_type": "aseprite_local_proof",
   "release_rebuild": {
@@ -450,8 +458,8 @@
     "identical": 70,
     "release": "pilot/rc-0008"
   },
-  "run_at_utc": "2026-10-10T08:10:48Z",
-  "run_commit": "9a4083372b34f20c32675f0ca76b63746e5c3484",
+  "run_at_utc": "2026-10-10T09:08:23Z",
+  "run_commit": "dd3e46ac08581b027275f5074ecc37575433e976",
   "schema_version": 1,
   "strict": true
 }
