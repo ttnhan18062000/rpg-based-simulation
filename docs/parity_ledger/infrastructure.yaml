@@ -12900,3 +12900,24 @@
     builder_version, det_port_tier and verification_level hold the "unknown" sentinel (no source yet), so a PASS lists them as unverified.
     src/perf/regression_gate.py is not deleted (outside the OD-8 lift). long_run_harness.py is not migrated to nearest-rank or the record
     (PERF-M2-T04).
+
+- id: INFRA-431
+  text: 'TCK-20261010-PERF-M2-T05-BASELINE-LIFECYCLE: a performance baseline is added only by tools/perf/baseline_lifecycle.py promote,
+    which refuses (exit 2, every applicable reason printed, nothing written) a candidate that is not a valid BenchmarkRecord, has
+    engine.dirty_src true, left NORMAL or has no mode sequence, lacks the current result.cost_accounting_version, or cites no cause (an
+    existing ticket id, a recorded DEV-nnn divergence, or a PR number). A promotion writes the next <name>.vNNNN.json, never touches an
+    earlier version, links it through identity.baseline_ref (id, schema_version, record_digest) and records the cause, the before identity
+    and the after identity in a promotion object that BenchmarkRecord.from_dict ignores. The check subcommand requires every
+    tests/perf/baselines/*.json to be a valid BenchmarkRecord or named in LEGACY_TRIPWIRE_REFERENCES (the 15 pre-schema files) and each
+    version chain to be intact. docs/performance/perf_baseline_policy.md is the lifecycle policy. No check becomes blocking and no baseline
+    is re-recorded.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/perf/baseline_lifecycle.py (promote, refusals, check, LEGACY_TRIPWIRE_REFERENCES); docs/performance/perf_baseline_policy.md
+  proof_type: contract
+  test_path: tests/unit/perf/test_baseline_lifecycle.py
+  divergence_note: null
+  support_boundary: The known-debt ledger (owner, expiry, expected_signature) is PERF-M2-T05b and waits for the shared known-reds module. The shared
+    baseline_change_policy.md does not exist yet and is cited as a forward reference. A cited PR number is accepted by shape (not checkable
+    offline). The 15 legacy files are not re-recorded (PERF-M2-T08).

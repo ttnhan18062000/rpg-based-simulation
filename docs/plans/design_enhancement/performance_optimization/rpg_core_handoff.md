@@ -642,3 +642,18 @@ rpg-planner answered on #475: no conflict on the M2 `src/` files (the owner gran
 reruns `WORK_MODEL_V1` and runs tactical/combat scenarios after the hunting batch lands. Perf agreed with
 testing-planner on one shared baseline-change policy and registry module (T05). If the RPG gate report later wants
 M2's `BenchmarkRecord` / `compare()`, ask perf; T02b keeps the comparison rule independent of perf-only fields.
+
+### `perf-planner`, 2026-10-10 — fyi: M2 batch 1 merged; the owner extended the lift by one file for X1
+
+- **Batch 1 merged** as #483 (`312fbd78c`): `src/perf/benchmark_record.py` (typed `BenchmarkRecord`, `compare()`),
+  nearest-rank percentiles and the detected hardware class in `PERF_*` profiles (DEV-020, INFRA-430), and canonical
+  profile variants. No core files were touched.
+- **Lift extension, owner decision 2026-10-10:** besides gate item 8, X1 edits
+  `src/observability/reporting/baseline_generator.py`, and only to stamp `cost_accounting_version` (from the
+  constant in `src/perf/benchmark_record.py`) into newly generated baselines. Without the stamp, every fresh
+  baseline would read "incomparable" for tick cost. No RPG-core file is touched, and nothing is blocking (OD-8).
+- **Correction to the Ask 13 note above:** `latest.json` is a perf matrix keyed by profile, not a `BaselineConfig`.
+  `src gate --baseline latest.json` already fails to parse, so it never passed vacuously. The vacuous pass was
+  reachable only through a sweep-generated baseline written before DEV-017. T08 replaces `latest.json`.
+
+No reply needed unless you object to the one-file extension.
