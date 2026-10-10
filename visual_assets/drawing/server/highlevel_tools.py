@@ -70,10 +70,11 @@ def register(mcp) -> None:
         return call(compose.remap_palette, name, base_revision, palette, frame)
 
     @mcp.tool()
-    def lint_sprite(name: str, revision: str | None = None, frame: int = 1) -> dict:
+    def lint_sprite(name: str, revision: str | None = None, frame: int = 1, palette: list[str] | None = None, palette_id: str | None = None) -> dict:
         """Check a frame against pixel-art guidance: colour budget by size, orphan pixels, grayscale value
-        separation, canvas-edge clipping, outline consistency. Findings are advice, not gates."""
-        return call(compose.lint, name, revision, frame)
+        separation, canvas-edge clipping, outline consistency. Findings are advice, not gates. Optional `palette`
+        (colours) or `palette_id` (a committed palette: icons-v1, terrain-v1) adds an advisory off-palette report."""
+        return call(compose.lint, name, revision, frame, palette, palette_id)
 
     @mcp.tool()
     def ascii_view(name: str, revision: str | None = None, frame: int = 1) -> dict:

@@ -19,6 +19,8 @@ import hashlib
 import struct
 import zlib
 from dataclasses import dataclass
+from functools import lru_cache
+from itertools import accumulate
 
 from visual_assets.store import config
 from visual_assets.store.errors import PngDecodeError
@@ -70,49 +72,88 @@ def _chunks(data: bytes) -> list[tuple[bytes, bytes]]:
     return out
 
 
+def _add_bytes(x: bytes, y: bytes) -> bytes:
+    """Byte-wise `(x + y) & 255` of two equal-length byte strings, in C-speed big-integer arithmetic (a SWAR add: the low 7 bits of every byte are added without
+    carrying into the next byte, then the top bits are folded back with xor)."""
+    n = len(x)
+    if not n:
+        return b""
+    low = int.from_bytes(b"\x7f" * n, "big")
+    a, b = int.from_bytes(x, "big"), int.from_bytes(y, "big")
+    return (((a & low) + (b & low)) ^ ((a ^ b) & ~low & ((1 << (8 * n)) - 1))).to_bytes(n, "big")
+
+
 def _unfilter(raw: bytes, width_bytes: int, height: int, bpp: int) -> bytearray:
+    """Undo the per-row PNG filters. Same output as the plain per-byte definition (the corpus test compares them), but each filter works per colour channel on
+    slices: Sub is a running sum, Up one big-integer add, Average and Paeth carry their left/up-left neighbours in local variables instead of indexing."""
     stride = width_bytes
     out = bytearray(stride * height)
+    prev = bytes(stride)  # the row above row 0 is all zeros, so no filter needs a first-row special case
+    view = memoryview(raw)
     for row in range(height):
         base = row * (stride + 1)
         ftype = raw[base]
-        line = raw[base + 1 : base + 1 + stride]
+        line = bytes(view[base + 1 : base + 1 + stride])
         dst = row * stride
-        prev = dst - stride  # offset of the previous output row (valid when row > 0)
         if ftype == 0:
-            out[dst : dst + stride] = line
+            cur = line
         elif ftype == 1:  # Sub
-            for i in range(stride):
-                left = out[dst + i - bpp] if i >= bpp else 0
-                out[dst + i] = (line[i] + left) & 255
+            cur = bytearray(stride)
+            for ch in range(min(bpp, stride)):
+                cur[ch::bpp] = bytes(map((255).__and__, accumulate(line[ch::bpp])))
         elif ftype == 2:  # Up
-            if row == 0:
-                out[dst : dst + stride] = line
-            else:
-                for i in range(stride):
-                    out[dst + i] = (line[i] + out[prev + i]) & 255
+            cur = _add_bytes(line, prev)
         elif ftype == 3:  # Average
-            for i in range(stride):
-                left = out[dst + i - bpp] if i >= bpp else 0
-                up = out[prev + i] if row else 0
-                out[dst + i] = (line[i] + ((left + up) >> 1)) & 255
+            cur = bytearray(stride)
+            for ch in range(min(bpp, stride)):
+                a = 0
+                res = bytearray()
+                push = res.append
+                for x, b in zip(line[ch::bpp], prev[ch::bpp]):
+                    a = (x + ((a + b) >> 1)) & 255
+                    push(a)
+                cur[ch::bpp] = res
         elif ftype == 4:  # Paeth
-            for i in range(stride):
-                a = out[dst + i - bpp] if i >= bpp else 0
-                b = out[prev + i] if row else 0
-                c = out[prev + i - bpp] if (row and i >= bpp) else 0
-                p = a + b - c
-                pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
-                pred = a if (pa <= pb and pa <= pc) else (b if pb <= pc else c)
-                out[dst + i] = (line[i] + pred) & 255
+            cur = bytearray(stride)
+            for ch in range(min(bpp, stride)):
+                a = c = 0
+                res = bytearray()
+                push = res.append
+                for x, b in zip(line[ch::bpp], prev[ch::bpp]):
+                    pa = b - c
+                    pb = a - c
+                    pc = pa + pb
+                    if pa < 0:
+                        pa = -pa
+                    if pb < 0:
+                        pb = -pb
+                    if pc < 0:
+                        pc = -pc
+                    a = (x + (a if (pa <= pb and pa <= pc) else (b if pb <= pc else c))) & 255
+                    push(a)
+                    c = b
+                cur[ch::bpp] = res
         else:
             raise _fail("malformed", f"row {row} has the unknown filter type {ftype}")
+        out[dst : dst + stride] = cur
+        prev = bytes(cur)
     return out
 
 
 def decode_png(data: bytes, *, max_dim: int | None = None) -> DecodedImage:
-    """Decode `data` to RGBA or raise `PngDecodeError`. `max_dim` defaults to `config.MAX_DIM` (read at call time)."""
+    """Decode `data` to RGBA or raise `PngDecodeError`. `max_dim` defaults to `config.MAX_DIM` (read at call time).
+
+    A pure function, so the last few results are memoised by (bytes, dimension limit, decoded-size bound): `adopt`, `review` and `intake` look at the same preview
+    several times and now pay for one decode. A refusal is never cached (it is raised again each time); `decode_png.cache_clear()` empties it."""
+    data = bytes(data)  # hashable for the memo (a bytearray or memoryview works as before)
     limit = config.MAX_DIM if max_dim is None else max_dim
+    if len(data) > config.MAX_DECODED_BYTES:
+        return _decode.__wrapped__(data, limit, config.MAX_DECODED_BYTES)  # a file bigger than the decoded-size bound (any legal PNG is about that size) is decoded (or refused) but never kept resident
+    return _decode(data, limit, config.MAX_DECODED_BYTES)
+
+
+@lru_cache(maxsize=4)  # at most 4 decoded images (each at most MAX_DECODED_BYTES) are kept
+def _decode(data: bytes, limit: int, max_decoded: int) -> DecodedImage:
     chunks = _chunks(data)
     if chunks[0][0] != b"IHDR" or len(chunks[0][1]) != 13:
         raise _fail("malformed", "the first chunk is not a 13-byte IHDR")
@@ -170,8 +211,8 @@ def decode_png(data: bytes, *, max_dim: int | None = None) -> DecodedImage:
     channels = _CHANNELS[ctype]
     stride = width * channels
     expected = (stride + 1) * height
-    if expected > config.MAX_DECODED_BYTES:
-        raise _fail("too_large", f"the decoded size {expected} is over the {config.MAX_DECODED_BYTES} byte bound")
+    if expected > max_decoded:
+        raise _fail("too_large", f"the decoded size {expected} is over the {max_decoded} byte bound")
     inflater = zlib.decompressobj()
     try:
         raw = inflater.decompress(b"".join(idat), expected + 1)  # never inflate more than one byte past what is expected
@@ -203,6 +244,9 @@ def decode_png(data: bytes, *, max_dim: int | None = None) -> DecodedImage:
                 raise _fail("malformed", "a pixel indexes past the palette")
             rgba[4 * i : 4 * i + 4] = table[index]
     return DecodedImage(width, height, bytes(rgba))
+
+
+decode_png.cache_clear = _decode.cache_clear  # type: ignore[attr-defined]
 
 
 def pixel_hash_of(image: DecodedImage) -> str:
