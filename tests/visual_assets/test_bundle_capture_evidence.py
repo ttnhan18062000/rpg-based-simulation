@@ -137,3 +137,15 @@ def test_a_planted_run_that_the_capture_did_not_fail_is_reported_not_recorded():
 
 def test_a_record_that_is_not_an_object_is_reported():
     assert bundle.record_problems([], MANIFEST, FILES) and bundle.record_problems(None, MANIFEST, FILES)
+# ---- the committed record (the only part that reads the repository's evidence) ----
+
+def test_the_committed_record_is_valid_and_equal_in_shape_to_a_fresh_composition():
+    assert bundle.RECORD_PATH.is_file(), "docs/assets/surface_rehearsal_bundle_evidence.json.txt is missing: run `make visual-assets-bundle-capture` locally and commit its record"
+    committed = json.loads(bundle.RECORD_PATH.read_text())
+    assert bundle.record_problems(committed) == []
+    assert set(committed) == set(good_record()) and [p["page"] for p in committed["pages"]] == list(bundle.PAGE_NAMES)
+
+
+def test_the_committed_record_names_a_real_commit_and_a_real_browser():
+    committed = json.loads(bundle.RECORD_PATH.read_text())
+    assert len(committed["run_commit"]) == 40 and committed["browser"] == "chromium" and committed["browser_version"].split(".")[0].isdigit()
