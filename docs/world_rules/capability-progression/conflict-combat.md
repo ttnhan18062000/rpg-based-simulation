@@ -102,6 +102,12 @@ directly, 2026-10-09; rows 47 and 49 of the memo):**
     does it threaten me or mine) plus a reason (defence of self or goods, a duty that is a real
     property of the occupation). It must never come from a list of roles that do not chase
     (decision 46). **Fixed in milestone 1** (the appraisal child). No milestone 0 change.
+  - **A chase ends at the edge of what the pursuer perceives (since #474, `39f353b95`,
+    2026-10-10; divergence 2.104, COMB-344).** A pursuer drops the chase when the target leaves
+    its perception, and an interceptor aims at a chasing target's current position, not ahead of
+    its aim point. Still open: a chase has no duration limit (`chase_ticks` is never
+    incremented), and pressing hunger or sleep does not yet end a held chase (the need-wake
+    work, SURV-07).
   - **CONFLICTING: invaders kill all wildlife on sight (rpg-planner's trace, 2026-10-10).**
     `bandit_company`, `goblin_warband` and undead are aligned as invaders and so are
     faction-hostile to every non-invader, including `wild_fauna` and `wild_beast_pack`. The
