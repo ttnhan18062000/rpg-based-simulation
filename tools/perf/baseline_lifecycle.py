@@ -20,7 +20,7 @@ valid record.
 unlabelled-identity files from before schema 1.0, kept as tripwire references until ``PERF-M2-T08`` re-records them), and the version
 chain of each promoted baseline is intact.
 
-Exit codes: 0 done, 1 usage or unreadable input, 2 refused (the reasons are printed, one per line, as ``REFUSED: <code>: <message>``).
+Exit codes: 0 done, 1 usage or unreadable input (including a corrupt earlier version), 2 refused (the reasons are printed, one per line, as ``REFUSED: <code>: <message>``).
 """
 from __future__ import annotations
 
@@ -46,6 +46,7 @@ from src.perf.benchmark_record import (  # noqa: E402
     BenchmarkRecord,
     BenchmarkRecordError,
 )
+from tools.agent_working_paths import TICKETS  # noqa: E402
 
 DEFAULT_BASELINES_DIR = REPO_ROOT / "tests" / "perf" / "baselines"
 
@@ -77,6 +78,10 @@ _DIVERGENCE_RE = re.compile(r"^DEV-\d{3,}$")
 _PR_RE = re.compile(r"^(?:PR ?#?|#)(?P<number>\d+)$")
 
 
+class UnreadableInput(Exception):
+    """An existing file the tool must read (an earlier version) is unreadable. Not a refusal of the candidate: exit 1."""
+
+
 @dataclass(frozen=True)
 class Refusal:
     """One reason a promotion was refused."""
@@ -100,8 +105,8 @@ def _cause_refusal(cause: Optional[str], repo_root: Path) -> Optional[Refusal]:
     if not cause:
         return Refusal("no_cause", "no cause cited: give a ticket id, a divergence id (DEV-nnn) or a behaviour PR (PR #n)")
     if _TICKET_RE.match(cause):
-        if not any(repo_root.joinpath("agent-working", "tickets").rglob(f"{cause}.md")):
-            return Refusal("unknown_cause", f"ticket {cause} does not exist under agent-working/tickets/")
+        if not any((repo_root / TICKETS).rglob(f"{cause}.md")):
+            return Refusal("unknown_cause", f"ticket {cause} does not exist under {TICKETS}/")
         return None
     if _DIVERGENCE_RE.match(cause):
         divergences = repo_root / "docs" / "guidelines" / "intentional_divergences.md"
@@ -181,7 +186,10 @@ def promote(
     before: Optional[Dict[str, Any]] = None
     if previous:
         last_version, last_path = previous[-1]
-        last_record = _load_record(json.loads(last_path.read_text(encoding="utf-8")))
+        try:
+            last_record = _load_record(json.loads(last_path.read_text(encoding="utf-8")))
+        except (OSError, ValueError, BenchmarkRecordError, KeyError, TypeError, AttributeError) as exc:
+            raise UnreadableInput(f"the previous version {last_path.name} is not a valid record: {exc}") from None
         digest = record_digest(last_record)
         record = dataclasses.replace(
             record,
@@ -288,6 +296,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 1
     try:
         path = promote(candidate, args.name, args.cause, args.baselines_dir, args.note, args.repo_root)
+    except UnreadableInput as exc:
+        print(f"cannot read: {exc}", file=sys.stderr)
+        return 1
     except ValueError as exc:
         print(exc, file=sys.stderr)
         return 2

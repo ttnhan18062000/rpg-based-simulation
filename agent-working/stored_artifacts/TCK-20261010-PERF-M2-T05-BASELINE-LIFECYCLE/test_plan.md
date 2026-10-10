@@ -11,7 +11,7 @@ tags: [performance, benchmarking, documentation]
 
 # Test plan: TCK-20261010-PERF-M2-T05-BASELINE-LIFECYCLE
 
-All in `tests/unit/perf/test_baseline_lifecycle.py` (29 tests): refusal per code with the directory unchanged (`dirty_src`, `mode_not_normal`,
+All in `tests/unit/perf/test_baseline_lifecycle.py` (30 tests): refusal per code with the directory unchanged (`dirty_src`, `mode_not_normal`,
 `mode_sequence_empty`, `cost_accounting_version_missing`/`_stale`, `no_cause`, `unknown_cause`, `invalid_candidate`, `bad_name`); all reasons reported
 together; the three kinds of accepted cause; version 1 and version 2 (prior bytes identical, `baseline_ref`, before and after identity, cause);
 independent names; exclusive create (`FileExistsError`); `check` on the committed tree, an unlisted file, a listed legacy file, a valid unversioned

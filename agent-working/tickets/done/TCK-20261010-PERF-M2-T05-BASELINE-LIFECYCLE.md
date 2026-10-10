@@ -100,7 +100,7 @@ Source concern ids: C3.
 - Not verified: no real benchmark candidate was promoted (tests use temporary directories and the committed tree); the knowledge index was not rebuilt in this worktree.
 
 ## Test Summary
-- New: `tests/unit/perf/test_baseline_lifecycle.py`, 29 tests. With the rest of `tests/unit/perf` and `tests/tools/test_perf_inventories_committed_in_sync.py`: 149 passed. `tests/tools/test_perf_tag_test_scoper_wiring.py` and the doc tests that pin this doc: passed.
+- New: `tests/unit/perf/test_baseline_lifecycle.py`, 30 tests. With the rest of `tests/unit/perf` and `tests/tools/test_perf_inventories_committed_in_sync.py`: 149 passed. `tests/tools/test_perf_tag_test_scoper_wiring.py` and the doc tests that pin this doc: passed.
 - `python3 tools/gate_checks/tools_orphan_check.py`: the tool is LIVE. Parity-ledger schema gate: OK (0 new).
 - `git diff perf-planner-m2-review --name-only` lists no `src/` path.
 - Not run: the full suite.

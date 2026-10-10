@@ -10,6 +10,7 @@ import pytest
 
 from src.perf.benchmark_record import COST_ACCOUNTING_VERSION, BenchmarkRecord, ModeRun
 from tests.unit.perf.test_benchmark_record import make_record
+from tools.agent_working_paths import TICKETS
 from tools.perf import baseline_lifecycle as lifecycle
 
 TICKET = "TCK-20261010-PERF-M2-T05-BASELINE-LIFECYCLE"
@@ -18,7 +19,7 @@ TICKET = "TCK-20261010-PERF-M2-T05-BASELINE-LIFECYCLE"
 @pytest.fixture()
 def repo(tmp_path: Path) -> Path:
     """A minimal repo root: one ticket, one divergence."""
-    ticket_dir = tmp_path / "agent-working" / "tickets" / "done"
+    ticket_dir = tmp_path / TICKETS / "done"
     ticket_dir.mkdir(parents=True)
     (ticket_dir / f"{TICKET}.md").write_text("# ticket\n", encoding="utf-8")
     doc = tmp_path / "docs" / "guidelines"
@@ -219,3 +220,16 @@ def test_the_cli_exit_codes(tmp_path, baselines, repo, capsys) -> None:
 
 def test_the_cost_accounting_constant_is_what_a_current_record_carries() -> None:
     assert candidate()["result"]["cost_accounting_version"] == COST_ACCOUNTING_VERSION
+
+
+def test_a_corrupt_earlier_version_is_unreadable_input_not_a_refusal(tmp_path, baselines, repo, capsys) -> None:
+    first = promote(candidate(), baselines, repo)
+    first.write_text("{ not json", encoding="utf-8")
+    good = tmp_path / "good.json"
+    good.write_text(json.dumps(candidate()), encoding="utf-8")
+    before = listing(baselines)
+    with pytest.raises(lifecycle.UnreadableInput, match="idle_100_local.v0001.json"):
+        promote(candidate(), baselines, repo)
+    code = run_cli("promote", "--candidate", str(good), "--name", "idle_100_local", "--cause", TICKET, "--baselines-dir", str(baselines), "--repo-root", str(repo))
+    assert code == 1 and "cannot read" in capsys.readouterr().err
+    assert listing(baselines) == before
