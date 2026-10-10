@@ -5,6 +5,7 @@ import importlib.util
 import json
 import pickle
 import sqlite3
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -289,3 +290,47 @@ class TestRunSearchFusionWiring:
         for key in ("doc_id", "title", "heading", "source_path", "section",
                     "score", "semantic_score", "keyword_score", "excerpt"):
             assert key in results[0], f"missing key in _run_search result: {key}"
+
+
+# --- TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION: a worktree with no index reads the main one ---
+
+
+class TestResolveIndexDir:
+    """A worktree with no knowledge index of its own queries the main checkout's."""
+
+    def _make_index(self, root: Path) -> Path:
+        index_dir = root / KNOWLEDGE_INDEX
+        index_dir.mkdir(parents=True)
+        (index_dir / "knowledge.db").write_bytes(b"")
+        return index_dir
+
+    def test_own_index_wins_when_present(self, tmp_path: Path) -> None:
+        own = self._make_index(tmp_path / "worktree")
+        self._make_index(tmp_path / "main")
+        assert _mod._resolve_index_dir(own, tmp_path / "worktree", tmp_path / "main") == own
+
+    def test_falls_back_to_main_checkout_index_when_own_missing(self, tmp_path: Path) -> None:
+        own = tmp_path / "worktree" / KNOWLEDGE_INDEX
+        main_index = self._make_index(tmp_path / "main")
+        assert _mod._resolve_index_dir(own, tmp_path / "worktree", tmp_path / "main") == main_index
+
+    def test_keeps_own_path_when_neither_index_exists(self, tmp_path: Path) -> None:
+        own = tmp_path / "worktree" / KNOWLEDGE_INDEX
+        assert _mod._resolve_index_dir(own, tmp_path / "worktree", tmp_path / "main") == own
+
+    def test_keeps_own_path_when_main_root_unknown(self, tmp_path: Path) -> None:
+        own = tmp_path / "worktree" / KNOWLEDGE_INDEX
+        assert _mod._resolve_index_dir(own, tmp_path / "worktree", None) == own
+
+    def test_main_checkout_root_from_a_worktree(self, tmp_path: Path) -> None:
+        main = tmp_path / "main"
+        main.mkdir()
+        git = ["git", "-c", "user.name=t", "-c", "user.email=t@t", "-c", "init.defaultBranch=main"]
+        subprocess.run([*git, "init", "-q", str(main)], check=True)
+        subprocess.run([*git, "-C", str(main), "commit", "-q", "--allow-empty", "-m", "x"], check=True)
+        subprocess.run([*git, "-C", str(main), "worktree", "add", "-q", str(tmp_path / "wt")], check=True)
+        assert _mod._main_checkout_root(tmp_path / "wt") == main.resolve()
+        assert _mod._main_checkout_root(main) == main.resolve()
+
+    def test_main_checkout_root_outside_git_is_none(self, tmp_path: Path) -> None:
+        assert _mod._main_checkout_root(tmp_path) is None
