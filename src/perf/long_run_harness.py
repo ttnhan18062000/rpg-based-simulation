@@ -6,8 +6,9 @@ import os
 import time
 import logging
 import statistics
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 
 import psutil
@@ -18,7 +19,28 @@ from src.config.profiles import RuntimeProfile, HardwareClass
 from src.platform.rng import DeterministicRNG
 from src.perf.scenarios import SCENARIO_BUILDERS
 from src.api.read_model_cache import ReadModelCache
-from src.engine.checkpoint import CanonicalStateHasher
+from src.engine.checkpoint import PROOF_DIGEST_SCHEME
+from src.perf.benchmark_record import (
+    BenchmarkRecord,
+    GateTier,
+    HashScheme,
+    Outcome,
+    OutcomeState,
+    PercentileMethod,
+    Protocol,
+    RecordOptions,
+    Result,
+    Runner,
+    RunSubject,
+    Validity,
+    collect_identity,
+    compress_modes,
+    default_samples_dir,
+    latency_stats,
+    nearest_rank,
+    utc_now,
+    write_samples_file,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -75,10 +97,14 @@ class LongRunStabilityReport:
     latency_stable: bool
     caches_bounded: bool
     gc_stable: bool
-    passed_certification: bool
+    #: Replaces the old ``passed_certification`` boolean. PASS when all four invariants held, else REGRESSION naming the ones that did not.
+    outcome: Outcome
     
     final_state_hash: str
     samples: List[LongRunSample] = field(default_factory=list)
+    #: Wall time of every measured tick (ms) and the RuntimeMode name at every measured tick, for the capacity record.
+    tick_wall_ms: Tuple[float, ...] = ()
+    mode_per_tick: Tuple[str, ...] = ()
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -103,10 +129,32 @@ class LongRunStabilityReport:
                 "latency_stable": self.latency_stable,
                 "caches_bounded": self.caches_bounded,
                 "gc_stable": self.gc_stable,
-                "passed_certification": self.passed_certification
+                "outcome": {"state": self.outcome.state.value, "reason": self.outcome.reason}
             },
+            "warmup_ticks": self.warmup_ticks,
+            "sample_interval_ticks": self.sample_interval_ticks,
+            "samples": [
+                {"tick": x.tick, "rss_mb": round(x.rss_mb, 2), "p95_tick_ms": round(x.p95_tick_ms, 3), "active_mode": x.active_mode}
+                for x in self.samples
+            ],
             "final_state_hash": self.final_state_hash
         }
+
+
+def _window_percentiles(recent_tick_ms: List[float]) -> Tuple[float, float, float]:
+    """p50, p95, p99 of the recent window, nearest-rank (PERF-M2 OD-1). Zeroes for an empty window."""
+    if not recent_tick_ms:
+        return 0.0, 0.0, 0.0
+    ordered = sorted(recent_tick_ms)
+    return nearest_rank(ordered, 0.5), nearest_rank(ordered, 0.95), nearest_rank(ordered, 0.99)
+
+
+def _stability_outcome(invariants: Dict[str, bool]) -> Outcome:
+    """PASS when every stability invariant held; otherwise REGRESSION naming the ones that did not."""
+    failed = sorted(name for name, held in invariants.items() if not held)
+    if failed:
+        return Outcome(OutcomeState.REGRESSION, "stability invariant(s) violated: " + ", ".join(failed))
+    return Outcome(OutcomeState.PASS, "rss_bounded, latency_stable, caches_bounded and gc_stable all held")
 
 
 class LongRunStabilityHarness:
@@ -174,7 +222,8 @@ class LongRunStabilityHarness:
         recent_tick_ms: List[float] = []
         
         start_ts = time.perf_counter()
-        tick_times = []
+        tick_times: List[float] = []
+        modes: List[str] = []
         
         for t in range(1, total_ticks + 1):
             t_start = time.perf_counter_ns()
@@ -183,6 +232,7 @@ class LongRunStabilityHarness:
             t_ms = (time.perf_counter_ns() - t_start) / 1e6
             recent_tick_ms.append(t_ms)
             tick_times.append(t_ms)
+            modes.append(kernel.status.current_mode.name)
             
             if len(recent_tick_ms) > sample_interval:
                 recent_tick_ms.pop(0)
@@ -192,11 +242,7 @@ class LongRunStabilityHarness:
                 gc_counts = self._get_gc_collections()
                 
                 # Compute latency percentiles over the recent window
-                sorted_ms = sorted(recent_tick_ms)
-                cnt = len(sorted_ms)
-                p50 = sorted_ms[int(cnt * 0.5)] if cnt else 0.0
-                p95 = sorted_ms[int(cnt * 0.95)] if cnt else 0.0
-                p99 = sorted_ms[int(cnt * 0.99)] if cnt else 0.0
+                p50, p95, p99 = _window_percentiles(recent_tick_ms)
                 
                 # Cache Sizes
                 m_cache = getattr(kernel.state, "movement_cache", None)
@@ -260,7 +306,9 @@ class LongRunStabilityHarness:
         # 4. GC Stable: GC collections remain healthy across long horizons
         gc_stable = total_gc_delta[2] <= max(10, total_ticks // 10) and total_gc_delta[1] <= max(100, total_ticks)
         
-        passed = rss_bounded and latency_stable and caches_bounded and gc_stable
+        outcome = _stability_outcome(
+            {"rss_bounded": rss_bounded, "latency_stable": latency_stable, "caches_bounded": caches_bounded, "gc_stable": gc_stable}
+        )
         
         report = LongRunStabilityReport(
             scenario_id=scenario_id,
@@ -283,12 +331,47 @@ class LongRunStabilityHarness:
             latency_stable=latency_stable,
             caches_bounded=caches_bounded,
             gc_stable=gc_stable,
-            passed_certification=passed,
+            outcome=outcome,
             final_state_hash=final_hash,
-            samples=samples
+            samples=samples,
+            tick_wall_ms=tuple(tick_times),
+            mode_per_tick=tuple(modes),
         )
         
         return report
+
+    def to_record(self, report: LongRunStabilityReport, samples_dir: Optional[Path] = None, runner: Optional[Runner] = None) -> BenchmarkRecord:
+        """Map a report into a schema record: ``gate.tier = capacity_run``, ``gate.projection = long_run_stability``, ``runner.controlled = false``.
+
+        ``latency_ms`` is computed from the per-tick wall time (the tick plus the read-model update), the series this harness measures, so the
+        projection name keeps it from being compared with a ``BenchHarness`` capacity run. The raw ticks are written to a pointed-to file.
+        """
+        flags = {"no_frame_pacing": True, "no_replay": report.run_mode == RunMode.PURE, "force_full_scan": False}
+        subject = RunSubject(scenario_id=report.scenario_id, entity_count=report.entity_count, seed=report.seed, flags=flags, warmup_ticks=report.warmup_ticks)
+        options = RecordOptions(GateTier.CAPACITY_RUN, "long_run_stability", samples_dir, runner or Runner(controlled=False))
+        wall = report.tick_wall_ms
+        total_s = sum(wall) / 1000.0
+        return BenchmarkRecord(
+            identity=collect_identity(self._profile, subject, options),
+            result=Result(
+                protocol=Protocol(
+                    warmup_ticks=report.warmup_ticks, measured_ticks=report.total_ticks, percentile_method=PercentileMethod.NEAREST_RANK
+                ),
+                latency_ms=latency_stats(wall),
+                throughput={"wall_tps": round(report.total_ticks / total_s, 2) if total_s > 0 else 0.0},
+                time_s={"wall": round(total_s, 4)},
+                memory_mb={
+                    "rss_high_water": round(report.peak_rss_mb, 2),
+                    "rss_delta": round(report.peak_rss_mb - report.warmup_rss_mb, 2),
+                    "sample_every_ticks": report.sample_interval_ticks,
+                },
+                runtime_mode_sequence=compress_modes(report.mode_per_tick),
+                outcome=report.outcome,
+                recorded_at=utc_now(),
+                samples=write_samples_file(samples_dir or default_samples_dir(), f"{report.scenario_id}_{self._profile.name}_long_run", wall),
+                validity=Validity(final_state_hash=report.final_state_hash, hash_scheme=HashScheme(PROOF_DIGEST_SCHEME)),
+            ),
+        )
 
     def verify_determinism_parity(
         self,

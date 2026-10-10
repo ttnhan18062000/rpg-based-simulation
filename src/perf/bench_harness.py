@@ -6,7 +6,6 @@ import logging
 from dataclasses import dataclass
 import statistics
 import os
-from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 import psutil
@@ -29,7 +28,8 @@ from src.perf.benchmark_record import (
     Samples,
     collect_identity,
     compress_modes,
-    nearest_rank,
+    default_samples_dir,
+    latency_stats,
     utc_now,
     write_samples_file,
 )
@@ -253,7 +253,7 @@ class BenchHarness:
                 samples = Samples(tick_wall_ms=tuple(wall_ms), tick_compute_ms=tuple(compute_ms))
             else:
                 stem = f"{subject.scenario_id}_{self._profile.name}_{int(result['timestamp'])}"
-                samples = write_samples_file(options.samples_dir or Path("reports/perf/samples"), stem, wall_ms, compute_ms)
+                samples = write_samples_file(options.samples_dir or default_samples_dir(), stem, wall_ms, compute_ms)
             return BenchmarkRecord(
                 identity=collect_identity(self._profile, subject, options),
                 result=Result(
@@ -288,17 +288,4 @@ class BenchHarness:
 
     def _calculate_stats(self, values: List[float]) -> Dict[str, float]:
         """Distribution statistics. Percentiles are nearest-rank, ceil(q * n) (PERF-M2 OD-1), not ``sorted[int(n * q)]``."""
-        if not values:
-            return {"avg": 0.0, "p50": 0.0, "p95": 0.0, "p99": 0.0, "max": 0.0}
-
-        sorted_values = sorted(values)
-        count = len(sorted_values)
-
-        return {
-            "avg": round(sum(values) / count, 3),
-            "p50": round(nearest_rank(sorted_values, 0.5), 3),
-            "p95": round(nearest_rank(sorted_values, 0.95), 3),
-            "p99": round(nearest_rank(sorted_values, 0.99), 3),
-            "max": round(sorted_values[-1], 3),
-            "min": round(sorted_values[0], 3),
-        }
+        return latency_stats(values)
