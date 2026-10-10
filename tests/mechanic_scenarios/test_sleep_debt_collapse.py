@@ -28,7 +28,7 @@ from tests.helpers.scenario import compile_world
 pytestmark = [pytest.mark.domain("combat"), pytest.mark.level("scenario")]
 
 WORLD, SEED = "frontier_living_world", 42
-WINDOW = 400
+WINDOW = 700
 WALK_TO = (58.0, 30.0)
 
 
@@ -71,6 +71,7 @@ def test_main_weakened_then_collapsed_where_it_stands_then_awake_and_walking_wit
     assert all(r["pos"] == spot for r in rows[first:woke]), "collapsed on the tile it occupied, and does not move while asleep"
     assert rows[woke]["debt"] < SLEEP_DEBT.wake_line, "awake only once the debt is below the wake line"
     assert rows[woke]["debt"] < rows[first]["debt"] - 10.0, "the debt is slept off while it is asleep"
+    assert woke - first >= 100, "a collapse is a deep sleep of hundreds of ticks, not a few"
     assert any(r["pos"] != spot for r in rows[woke:]), "and it walks on afterwards"
     assert all(r["hp"] >= start_hp and r["alive"] for r in rows), "health never lower than at staging"
 

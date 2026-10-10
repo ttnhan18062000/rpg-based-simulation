@@ -7,19 +7,24 @@ subject about 100 ticks after the line, still walking (LB-S19).
 Every stage is derived from ``BiologicalComponent.sleep_debt`` alone: no new state field. The collapse itself is a held ``SLEEP`` task
 (``collapse_update``) that the actions phase keeps until ``is_rested_enough``. ``SLEEP_DEBT`` is the one place these values are tuned.
 
-Where each value comes from (owner decision 33: values follow the fiction, never fitted to an outcome):
-  - ``weakened_line`` 80: the pre-existing EXHAUSTION line in ``combat.py`` (attack x0.8 above 80), now read from here.
+Values (owner decision 33: they follow the fiction, never fitted to an outcome; ruled by the designer, D41 / LB-S19, applying SURV-07):
+  - ``weakened_line`` 80: the pre-existing EXHAUSTION line in ``combat.py``; recovery at ``recovery_scale`` 0.5 (decision 36's scale), confirmed.
   - ``collapse_line`` 98: the pre-existing drain line in ``apply.py`` that decision 41 turns into a collapse.
-  - ``wake_line`` 60 and ``recovery_scale`` 0.5: rpg-planner's suggested values (LB-S19), recorded, not yet ruled by the designer;
-    the recovery scale is the one decision 36 uses for a body weakened by hunger.
+  - ``wake_line``: no new number, SURV-07's escalation onset (``need_pull.ESCALATION_ONSET`` x ``SLEEP_LINE``, about 59): the debt below which a
+    sleeper wakes and then DECIDES (decision 32): keep sleeping if safe and tired, or get up.
+  - ``rest_factor`` 2: while asleep the debt falls at twice the kind's own accrual rate (people 0.1 a tick against 0.05; animals by their own
+    profile, decision 42), for a collapse and for a voluntary sleep alike. A collapse from 98 then lasts about 390 ticks (about 4 hours).
+    A bed still improves quality; it has no separate rate.
+  - ``bed_reach`` 30 tiles: how far a tired subject walks for a bed (about half an hour at 36 s a tick).
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from src.core.movement_modes import MovementMode
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
+from src.engine.need_pull import ESCALATION_ONSET, SLEEP_LINE
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,14 +32,16 @@ class SleepDebtTable:
     """The stage lines and effects, tuned in this one place."""
     weakened_line: float = 80.0   # debt above which the body weakens: recovery and attack are scaled
     collapse_line: float = 98.0   # debt at which the subject falls asleep where it stands
-    wake_line: float = 60.0       # debt below which a collapsed subject wakes
+    wake_line: float = ESCALATION_ONSET * SLEEP_LINE  # debt below which a sleeper wakes (about 59), then decides
+    rest_factor: float = 2.0      # while asleep the debt falls at this multiple of the kind's own accrual rate
     recovery_scale: float = 0.5   # stamina and readiness regeneration while weakened
-    bed_reach: float = 30.0       # tiles a tired subject will walk for a bed (placeholder: about half an hour's walk at 36 s a tick; designer to rule)
+    bed_reach: float = 30.0       # tiles a tired subject will walk for a bed (ruled: about half an hour's walk at 36 s a tick)
 
 
 SLEEP_DEBT = SleepDebtTable()
 COLLAPSE_LINE = SLEEP_DEBT.collapse_line
-COLLAPSE_FLAG = "collapse"  # carried by the held SLEEP task's payload (a key other than `reason`, which the outcome annotation drops)
+COLLAPSE_FLAG = "collapse"  # marks a SLEEP task that began as a collapse (a key other than `reason`, which the outcome annotation drops)
+SLEEP_ACTIONS = frozenset({"SLEEP", "REST"})  # the actions that put a subject to sleep; each is held until the debt is below the wake line
 
 
 def is_weakened(sleep_debt: float) -> bool:
@@ -66,7 +73,11 @@ def collapse_update(entity: Any) -> EntityUpdate:
     )
 
 
-def sleep_done(entity: Any, actor_update: Optional[EntityUpdate]) -> bool:
-    """True when a held collapse sleep ends: the debt after this execution is below the wake line (or the action did nothing)."""
-    delta = actor_update.biological.sleep_debt_delta if actor_update is not None and actor_update.biological is not None else 0.0
-    return is_rested_enough(entity.biological.sleep_debt + delta)
+def is_asleep(entity: Any) -> bool:
+    """True when the subject's task is a sleep (a collapse, a rest in place or a rest at a bed): the debt then falls instead of accruing."""
+    return entity.task.work_kind == "ENTITY_ACT" and entity.task.payload.get("action") in SLEEP_ACTIONS
+
+
+def debt_change_per_tick(accrual_rate: float, asleep: bool) -> float:
+    """The change in sleep debt per tick: +the kind's accrual rate awake, -rest_factor x that rate asleep."""
+    return -SLEEP_DEBT.rest_factor * accrual_rate if asleep else accrual_rate

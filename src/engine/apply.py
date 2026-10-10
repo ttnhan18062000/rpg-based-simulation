@@ -45,7 +45,7 @@ from src.core.updates import StateUpdate, EntityUpdate, SocialUpdate, StrategicU
 from src.engine.legality import LegalityServiceV2
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.rpg_depth import StaminaService, SkillScalingService
-from src.engine.sleep_debt import recovery_scale as sleep_recovery_scale
+from src.engine.sleep_debt import debt_change_per_tick, is_asleep, recovery_scale as sleep_recovery_scale
 from src.engine.starvation import STARVING_LINE, hp_loss, recovery_scale
 from src.systems.social_memory import SocialMemoryService
 from src.systems.social_systems.relationships import RelationshipService
@@ -91,7 +91,7 @@ class ApplyPath:
                 bio = entity.biological
                 changes["biological"] = replace(bio, 
                     hunger=min(100.0, bio.hunger + need_rates(entity)[0] * cadence.biological),
-                    sleep_debt=min(100.0, bio.sleep_debt + need_rates(entity)[1] * cadence.biological)
+                    sleep_debt=max(0.0, min(100.0, bio.sleep_debt + debt_change_per_tick(need_rates(entity)[1], is_asleep(entity)) * cadence.biological))
                 )
             
             # Lifecycle / Health Decay

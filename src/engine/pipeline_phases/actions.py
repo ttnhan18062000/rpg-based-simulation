@@ -12,7 +12,7 @@ from src.core.state import _readonly_mapping
 from src.engine.domain_logic import SimulationDomainLogic
 from src.engine.legality import LegalityServiceV2
 from src.engine.apply import ApplyPath
-from src.engine.sleep_debt import COLLAPSE_FLAG, sleep_done
+from src.engine.sleep_debt import SLEEP_ACTIONS, is_rested_enough
 from src.engine.work_shift import shift_done
 
 if TYPE_CHECKING:
@@ -44,13 +44,13 @@ _ENDS_HELD_REASONS_BY_ACTION = {"ATTACK": _ENDS_HELD_ATTACK_REASONS, "INTERACT":
 
 
 def _survival_action_ends(action: str, is_survival: bool, outcome: str, actor_update: Optional[EntityUpdate], held: tuple) -> bool:
-    """A survival action that succeeded ends its task, except a shift of work, which is held until its last tick (work_shift.py), and a collapse
-    sleep, which is held until the debt is below the wake line (sleep_debt.py). ``held`` is (the task payload, the acting entity)."""
+    """A survival action that succeeded ends its task, except a shift of work, which is held until its last tick (work_shift.py), and a sleep (a collapse, a
+    rest in place, a rest at a bed), which is held until the debt is below the wake line (sleep_debt.py). ``held`` is (the task payload, the acting entity)."""
     if not (is_survival and outcome == "SUCCESS"):
         return False
     if action == "WORK":
         return shift_done(actor_update)
-    return sleep_done(held[1], actor_update) if action == "SLEEP" and held[0].get(COLLAPSE_FLAG) else True
+    return is_rested_enough(held[1].biological.sleep_debt) if action in SLEEP_ACTIONS else True
 
 
 def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: object) -> bool:

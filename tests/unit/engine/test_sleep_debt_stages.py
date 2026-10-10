@@ -24,7 +24,8 @@ from src.engine.sleep_debt import (
     is_weakened,
     must_collapse,
     recovery_scale,
-    sleep_done,
+    debt_change_per_tick,
+    is_asleep,
 )
 from src.engine.tactical import TacticalDecisionSystem
 
@@ -81,12 +82,30 @@ def test_a_held_walk_stops_where_it_stands_when_the_debt_reaches_the_collapse_li
     assert MovementCandidateSelector.move_ends_here(_walking(SLEEP_DEBT.collapse_line - 1), {1: _walking(SLEEP_DEBT.collapse_line - 1)}) is False
 
 
-def test_a_collapse_sleep_is_held_until_the_debt_is_below_the_wake_line_but_an_ordinary_sleep_ends_at_once():
-    relief = EntityUpdate(entity_id=1, biological=BiologicalUpdate(sleep_debt_delta=-20.0))
-    deep, nearly = _subject(SLEEP_DEBT.collapse_line), _subject(SLEEP_DEBT.wake_line + 10.0)
-    held = {COLLAPSE_FLAG: True}
-    assert _survival_action_ends("SLEEP", True, "SUCCESS", relief, (held, deep)) is False  # 98 - 20 is still above the wake line
-    assert _survival_action_ends("SLEEP", True, "SUCCESS", relief, (held, nearly)) is True  # 70 - 20 is below it
-    assert _survival_action_ends("SLEEP", True, "SUCCESS", relief, ({}, deep)) is True  # an ordinary SLEEP is one success
-    assert _survival_action_ends("SLEEP", True, "FAILURE", relief, (held, nearly)) is False
-    assert sleep_done(nearly, relief) and not sleep_done(deep, relief)
+def test_a_sleep_is_held_until_the_debt_is_below_the_wake_line_and_it_falls_at_twice_the_accrual_rate():
+    rate = 0.05
+    assert debt_change_per_tick(rate, asleep=False) == rate and debt_change_per_tick(rate, asleep=True) == -SLEEP_DEBT.rest_factor * rate
+    deep, nearly = _subject(SLEEP_DEBT.collapse_line), _subject(SLEEP_DEBT.wake_line - 1.0)
+    for action in ("SLEEP", "REST"):
+        assert _survival_action_ends(action, True, "SUCCESS", None, ({"action": action}, deep)) is False  # still above the wake line
+        assert _survival_action_ends(action, True, "SUCCESS", None, ({"action": action}, nearly)) is True
+        assert _survival_action_ends(action, True, "FAILURE", None, ({"action": action}, nearly)) is False
+    sleeping = replace(deep, task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "SLEEP"}))
+    assert is_asleep(sleeping) and not is_asleep(deep)
+
+
+def test_an_asleep_subject_sleeps_off_its_debt_over_hundreds_of_ticks_and_an_awake_one_does_not():
+    from src.engine.biological_needs import need_rates
+
+    def after(entity, ticks):
+        state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
+        for _ in range(ticks):
+            state = ApplyPath.apply_generation(state, StateUpdate())
+        return state.entities[1].biological.sleep_debt
+
+    awake = _subject(SLEEP_DEBT.collapse_line - 10)
+    asleep = replace(awake, task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "SLEEP"}))
+    rate = need_rates(awake)[1]
+    assert after(awake, 100) > awake.biological.sleep_debt
+    gone = awake.biological.sleep_debt - after(asleep, 100)
+    assert abs(gone - 100 * SLEEP_DEBT.rest_factor * rate) < 0.5, "it falls at the ruled rate, per tick"

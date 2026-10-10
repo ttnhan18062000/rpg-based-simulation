@@ -15,4 +15,4 @@ def way_in_range(entity: Any, position: Tuple[float, float]) -> bool:
     if not nav.leash_radius or nav.leash_radius <= 0 or nav.home_position is None:
         return True
     home = nav.home_position
-    return abs(int(home[0]) - int(position[0])) + abs(int(home[1]) - int(position[1])) <= nav.leash_radius
+    return bool(abs(int(home[0]) - int(position[0])) + abs(int(home[1]) - int(position[1])) <= nav.leash_radius)
