@@ -11,6 +11,17 @@ from src.observability.reporting.run_set_repository import RunSetArtifactReposit
 from src.observability.sweeper import RunSetManifest
 
 
+def _stamp_current_cost_accounting(path):
+    """Mark a baseline as measured under the current cost accounting (DEV-017)."""
+    from src.perf.benchmark_record import COST_ACCOUNTING_VERSION
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data["cost_accounting_version"] = COST_ACCOUNTING_VERSION
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+
+
 @pytest.fixture
 def fake_baseline(tmp_path):
     baseline_path = tmp_path / "baseline.json"
@@ -78,6 +89,7 @@ def fake_baseline(tmp_path):
 
     with open(baseline_path, "w", encoding="utf-8") as f:
         f.write(config.model_dump_json(indent=2))
+    _stamp_current_cost_accounting(baseline_path)
 
     return str(baseline_path)
 
@@ -165,3 +177,76 @@ def test_compare_single_run_insufficient_data(fake_baseline, tmp_path):
 
     assert res.status == "INSUFFICIENT_DATA"
     assert res.metric_comparisons["tick_compute_ms_p95"].status == "INSUFFICIENT_DATA"
+
+
+def _rewrite_baseline(path, **changes):
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    for key, value in changes.items():
+        if value is None:
+            data.pop(key, None)
+        else:
+            data[key] = value
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+
+
+def _good_run(tmp_path, run_id="run_good"):
+    run_dir = tmp_path / "runs"
+    target = run_dir / run_id
+    os.makedirs(target, exist_ok=True)
+    with open(target / "run_report.json", "w") as f:
+        json.dump({"metadata": {"health_score": 100.0, "errors_count": 0, "warnings_count": 0,
+                                "hard_law_violations_count": 0}}, f)
+    with open(target / "metric_windows.jsonl", "w") as f:
+        f.write(json.dumps({"tick_compute_ms_p95": 80.0, "memory_rss_bytes_max": 150.0, "event_count": 10}) + "\n")
+    with open(target / "anomalies.json", "w") as f:
+        json.dump([], f)
+    return run_id, str(run_dir)
+
+
+def test_run_against_baseline_without_cost_accounting_is_inconclusive_not_pass(fake_baseline, tmp_path):
+    """A tick cost judged against a pre-DEV-017 baseline looks cheaper whatever it does (TCK-...-VACUOUSLY)."""
+    _rewrite_baseline(fake_baseline, cost_accounting_version=None)
+    run_id, run_dir = _good_run(tmp_path)
+
+    res = BaselineComparator.compare_run(run_id, fake_baseline, run_dir=run_dir)
+
+    assert res.status == "INCONCLUSIVE"
+    assert res.tick_cost_incomparable_reason.startswith("baseline incomparable: cost_accounting_version is missing")
+    assert res.metric_comparisons["tick_compute_ms_p95"].status == "INCONCLUSIVE"
+    # the checks DEV-017 does not touch still run and still pass
+    assert res.metric_comparisons["health_score"].status == "PASS"
+    assert res.metric_comparisons["memory_rss_bytes_max"].status == "PASS"
+
+
+def test_run_against_baseline_with_other_cost_accounting_version_is_inconclusive(fake_baseline, tmp_path):
+    _rewrite_baseline(fake_baseline, cost_accounting_version="pre-DEV-017")
+    run_id, run_dir = _good_run(tmp_path)
+
+    res = BaselineComparator.compare_run(run_id, fake_baseline, run_dir=run_dir)
+
+    assert res.status == "INCONCLUSIVE"
+    assert "'pre-DEV-017' differs from the current" in res.tick_cost_incomparable_reason
+
+
+def test_incomparable_baseline_still_fails_a_real_tick_cost_regression(fake_baseline, tmp_path):
+    """The baseline only loosens a threshold, so a failure against it stays a failure."""
+    _rewrite_baseline(fake_baseline, cost_accounting_version=None)
+    run_id, run_dir = _good_run(tmp_path)
+    with open(os.path.join(run_dir, run_id, "metric_windows.jsonl"), "w") as f:
+        f.write(json.dumps({"tick_compute_ms_p95": 5000.0, "memory_rss_bytes_max": 150.0, "event_count": 10}) + "\n")
+
+    res = BaselineComparator.compare_run(run_id, fake_baseline, run_dir=run_dir)
+
+    assert res.status == "WARNING"
+    assert res.metric_comparisons["tick_compute_ms_p95"].status == "WARNING"
+
+
+def test_run_against_current_baseline_compares_as_before(fake_baseline, tmp_path):
+    run_id, run_dir = _good_run(tmp_path)
+
+    res = BaselineComparator.compare_run(run_id, fake_baseline, run_dir=run_dir)
+
+    assert res.status == "PASS"
+    assert res.tick_cost_incomparable_reason is None
