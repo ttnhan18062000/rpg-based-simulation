@@ -111,7 +111,7 @@ Each sprite tool creates exactly one new revision and rejects a stale `base_revi
 | `stroke` | Polyline through points; `pixel_perfect` cleans L-shaped doubles from freehand trace and keeps end points and corners next to longer segments |
 | `auto_outline` | Silhouette outline on its own layer: `full` (one colour) or `selout` (reuses an existing darker colour) |
 | `remap_palette` | Snap opaque pixels to the nearest colour of a given palette |
-| `lint_sprite` | Advisory report: palette budget, orphans, value separation, edge clipping, outline mix |
+| `lint_sprite` | Advisory report: palette budget, orphans, value separation, edge clipping, outline mix. Optional `palette` (a list of colours) or `palette_id` (`icons-v1`, `terrain-v1`) adds an `off_palette` finding (count, distinct colours, the first 20 coordinates; level `info`: reported, never ruled, `ok` unchanged). The colour budgets by sprite size live in `visual_assets/drawing/technique/style_rules.json` (same values as before, pinned by a test) |
 | `ascii_view` | Text grid of the flattened frame with a colour legend |
 
 Mapping to the art experiments: W01 `silhouette`; W02/W06 `grayscale` + `replace_color` on a `branch_sprite`

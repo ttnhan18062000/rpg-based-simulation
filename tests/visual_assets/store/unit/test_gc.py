@@ -25,7 +25,7 @@ DAY = timedelta(days=1)
 def run_gc(*, delete: bool = False, now: datetime):
     """`gc` as the CLI calls it: the library takes a cutoff timestamp (it never reads the clock), so the test computes it from `now`."""
     cutoff = (now - timedelta(days=config.MAX_UNADOPTED_INTAKE_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return gc_mod.gc(delete=delete, expire_before=cutoff)
+    return gc_mod.gc(delete=delete, expire_before=cutoff, decided_at="2026-02-01T00:00:00Z" if delete else None)
 
 
 @pytest.fixture
@@ -207,7 +207,7 @@ def test_a_malformed_cutoff_is_refused_and_nothing_is_listed_or_deleted(env, cut
     before = (snapshot(env.catalog), snapshot(env.quarantine), snapshot(env.review))
     for delete in (False, True):
         with pytest.raises(IdentityError):
-            gc_mod.gc(delete=delete, expire_before=cutoff)
+            gc_mod.gc(delete=delete, expire_before=cutoff, decided_at="2026-02-01T00:00:00Z" if delete else None)
     with pytest.raises(IdentityError):
         gc_mod.collect(cutoff)
     assert (snapshot(env.catalog), snapshot(env.quarantine), snapshot(env.review)) == before

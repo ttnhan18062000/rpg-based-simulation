@@ -122,7 +122,7 @@ def adopt_set(
 
         ad_id, _adoption, adoption_bytes, source_bytes = adoption.build_entry_records(
             intake_id=entry.draft_id, result=files.result, result_bytes=files.result_bytes, review_bytes=review_bytes,
-            source_hash=source_hash, package=package, source_asset_id=entry.source_asset_id, revision=revision,
+            source_hash=source_hash, source_bytes=files.source, package=package, source_asset_id=entry.source_asset_id, revision=revision,
             parent_revision=parent, visual_key=entry.visual_key, detail_value=entry.detail, licence_evidence_ref=licence_evidence_ref,
             approver=approver, approver_role=approver_role, decided_at=decided_at,
         )
