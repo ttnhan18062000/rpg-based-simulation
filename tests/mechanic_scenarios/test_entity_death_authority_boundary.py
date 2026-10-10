@@ -177,14 +177,24 @@ def test_hazard_drain_no_longer_destroys_a_same_tick_combat_kill_record():
     )
 
 
+# The corpus run ends at the first terminal DEFEAT or at this many ticks, whichever comes first. The count of DEFEATs in a fixed window
+# depends on pursuit geometry (the claim below does not): on `frontier_marches` seed 42 there are 0 DEFEAT deaths by tick 120, 2 by tick 200
+# and 8 by tick 400. #474's intercept change (a chaser aims at where a pursuing target IS, not ahead of it) moved scout 17's death from
+# DEFEAT at tick 93 to COMBAT at tick 104, so the first DEFEAT now lands at tick 120, one tick past the 120-tick window this test had.
+CORPUS_DEFEAT_WINDOW = 400
+
+
 @pytest.mark.slow
 def test_defeat_deaths_are_recorded_in_unscripted_corpus_play():
     """C1's Q1/Q2 production finding, rewritten to the fixed contract by
-    TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE. The same 120-tick
-    `frontier_marches` seed-42 run once showed terminal `DEFEAT` outcomes
-    (src/engine/combat.py forces is_lethal=False for HERO defenders) committed as combat-dead /
-    lifecycle-alive with no death_reason. Now every terminal DEFEAT is a recorded death with its own
-    reason, deactivated by resolve_lifecycle (hero rebirth was retired).
+    TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE. The same `frontier_marches` seed-42 run once showed terminal
+    `DEFEAT` outcomes (src/engine/combat.py forces is_lethal=False for HERO defenders) committed as combat-dead / lifecycle-alive with no
+    death_reason. Now every terminal DEFEAT is a recorded death with its own reason, deactivated by resolve_lifecycle (hero rebirth was
+    retired).
+
+    The claim is that EVERY DEFEAT that occurs is a recorded death, not that one occurs by a given tick: the run goes on until the first
+    DEFEAT, bounded at `CORPUS_DEFEAT_WINDOW` ticks, and a run with no DEFEAT inside the bound still fails (so the test cannot pass
+    vacuously). Per trajectory on this seed: 0 DEFEAT deaths at tick 120, 2 at tick 200, 8 at tick 400.
 
     The remaining combat-dead / lifecycle-active / unrecorded residue is the hazard route
     (world_dynamics.py:39 overwrites outcome_kind), owned by
@@ -195,14 +205,16 @@ def test_defeat_deaths_are_recorded_in_unscripted_corpus_play():
 
     kernel = _pinned_kernel(state)
     try:
-        for _ in range(120):
+        for _ in range(CORPUS_DEFEAT_WINDOW):
             kernel.tick_once()
+            if any(e.lifecycle.death_reason == "DEFEAT" for e in kernel._state.entities.values()):
+                break
         entities = list(kernel._state.entities.values())
     finally:
         kernel.shutdown()
 
     defeated = [e for e in entities if e.lifecycle.death_reason == "DEFEAT"]
-    assert defeated, "expected at least one terminal DEFEAT in the 120-tick corpus run (was 4 on 71c4aa321)"
+    assert defeated, f"expected at least one terminal DEFEAT within {CORPUS_DEFEAT_WINDOW} ticks of the corpus run"
     assert all(e.lifecycle.active is False and e.combat.alive is False for e in defeated)
 
     # Tightened by TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND and
