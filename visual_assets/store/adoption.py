@@ -12,6 +12,7 @@ from __future__ import annotations
 from pydantic import ValidationError
 
 from visual_assets.store import animation as source_animation
+from visual_assets.store import slices as source_slices
 from visual_assets.store import config, pixels, records, rendering
 from visual_assets.store.catalog.registry import Registry, load_registry
 from visual_assets.store.catalogwrite import Confirm, publish
@@ -225,6 +226,10 @@ def build_entry_records(
     except source_animation.AnimationError:
         raise _refuse("source_animation_invalid", f"{intake_id}: the source's animation metadata is invalid; it should have been quarantined at intake") from None
     try:
+        slices = source_slices.slices_from_source(source_bytes)  # derived the same way; None for a source without slices
+    except source_slices.SliceError:
+        raise _refuse("source_slices_invalid", f"{intake_id}: the source's slice metadata is invalid; it should have been quarantined at intake") from None
+    try:
         adoption = AdoptionRecord(
             record_type="adoption_record", schema_version=1, adoption_id=ad_id, intake_id=intake_id,
             intake_hash=validator.file_hash(result_bytes), review_hash=validator.file_hash(review_bytes),
@@ -239,7 +244,7 @@ def build_entry_records(
             record_type="source_record", schema_version=1, source_asset_id=source_asset_id, source_revision=revision,
             source_hash=source_hash, parent_revision=parent_revision, adoption_id=ad_id,
             adoption_hash=validator.file_hash(adoption_bytes), source_format=SourceFormat.ASEPRITE,
-            width=package.width, height=package.height, animation=animation,
+            width=package.width, height=package.height, animation=animation, slices=slices,
         )
         record_bytes = canonical_json(source)
     except (ValidationError, ContractError) as exc:

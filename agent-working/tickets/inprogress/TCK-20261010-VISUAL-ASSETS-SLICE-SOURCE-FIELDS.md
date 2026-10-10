@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261010-VISUAL-ASSETS-SLICE-SOURCE-FIELDS
-phase: open
+phase: implement
 date: 2026-10-10
 tags: [architecture, testing, security]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, security]
 Slice metadata (name, per-frame rect, 9-slice centre, pivot) read from each source and stored per source revision
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -68,13 +68,13 @@ Child 1 of `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`. Owner, 2026-10-10 (blocking 
 - Store edits make `docs/assets/aseprite_local_proof.json` stale: do NOT re-run it here; child 4 re-runs it once after the last store edit.
 
 ## Implementation Notes
-
+Parser `_read_slice`/`_slice_problems` (bounds before reads, findings by chunk position), `contracts/slices.py`, `store/slices.py`, `SourceRecord.slices` (empty tuple refused), adoption derives and refuses a bad one, three `SLICE_*` codes, bounds 16/16 with budgets rows (worst case 30,683 B), ADR D25 accepted by the owner 2026-10-10. Security review: clean (80k fuzz cases, only `SliceError`); its note on finding positions after a rejected slice was fixed. Handoff slice-count check is part of child 3.
 
 ## Test Summary
-
+41 new unit tests, 9 parser mutants all caught, real-Aseprite parity test passes locally; `tests/visual_assets` + docs + static green except the proof-record staleness test (expected; child 4 re-runs the record).
 
 ## Files Changed
-
+`visual_assets/store/{config,adoption,slices}.py`, `contracts/{slices,source,intake}.py`, `intake/aseprite.py`, builders, unit + integration tests, `test_boundaries.py`, `budgets.md`, ADR D25, staging artifacts.
 
 ## Completion Summary
 

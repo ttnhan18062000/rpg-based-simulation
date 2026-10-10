@@ -229,3 +229,33 @@ def test_the_parser_reads_animation_metadata_exactly_as_aseprite_reads_it_back(t
     assert not [p for p in problems if p[0].value.startswith(("ANIMATION_", "SOURCE_"))], problems
     assert facts.frame_durations_ms == real_durations
     assert sorted((t.name, t.from_frame, t.to_frame, t.direction, t.repeat) for t in facts.animation_tags) == sorted(real_tags)
+
+
+def test_the_parser_reads_slices_exactly_as_aseprite_reads_them_back(tmp_path):
+    """The slice chunk layout (`TCK-20261010-VISUAL-ASSETS-SLICE-SOURCE-FIELDS`, ADR D25): real Aseprite writes a plain slice, a 9-slice with a centre and a slice with a pivot, then reloads the
+    file and prints what it holds; the parser must report the same. Centre and pivot are relative to the slice's own corner, bounds to the image."""
+    path = tmp_path / "slices.aseprite"
+    script = [
+        "local spr = Sprite(32, 24)",
+        'local a = spr:newSlice(Rectangle(2, 3, 8, 6)); a.name = "plain"',
+        'local n = spr:newSlice(Rectangle(0, 0, 16, 16)); n.name = "panel"; n.center = Rectangle(4, 5, 8, 6)',
+        'local p = spr:newSlice(Rectangle(10, 12, 12, 10)); p.name = "hand"; p.pivot = Point(3, 7)',
+        f'spr:saveAs("{path}")', f'local r = app.open("{path}")',
+        'for _, s in ipairs(r.slices) do local b = s.bounds; local c = s.center; local v = s.pivot;'
+        ' print("S", s.name, b.x, b.y, b.width, b.height, c and c.x or "-", c and c.y or "-", c and c.width or "-", c and c.height or "-", v and v.x or "-", v and v.y or "-") end',
+    ]
+    lines = [line.split("\t") for line in run_lua(tmp_path, "slices", script).splitlines() if line.strip().startswith("S")]
+    assert len(lines) == 3, lines
+
+    def num(value: str):
+        return None if value == "-" else int(value)
+
+    real = {x[1]: (tuple(int(v) for v in x[2:6]), None if x[6] == "-" else tuple(int(v) for v in x[6:10]), None if x[10] == "-" else (num(x[10]), num(x[11]))) for x in lines}
+    assert real["panel"][1] == (4, 5, 8, 6) and real["hand"][2] == (3, 7) and real["plain"][1:] == (None, None)
+    facts, problems = aseprite.read_facts(path.read_bytes())
+    assert not [p for p in problems if p[0].value.startswith(("SLICE_", "SOURCE_"))], problems
+    parsed = {s.name: ((k := s.keys[0]).x, k.y, k.w, k.h) for s in facts.slices}
+    assert {name: value[0] for name, value in real.items()} == parsed
+    assert {s.name: s.keys[0].center for s in facts.slices} == {name: value[1] for name, value in real.items()}
+    assert {s.name: s.keys[0].pivot for s in facts.slices} == {name: value[2] for name, value in real.items()}
+    assert all(s.keys[0].frame == 0 and len(s.keys) == 1 for s in facts.slices)
