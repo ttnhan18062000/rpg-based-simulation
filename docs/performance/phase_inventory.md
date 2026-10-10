@@ -8,7 +8,7 @@ tags: [performance, architecture, engine]
 
 # Authoritative Pipeline Phase Inventory
 
-Generated from commit `262d7e57ba18a1ac17b66dffa7b0fa6f62d93e9e` by `tools/perf/phase_inventory.py`.
+Generated from commit `8328df920f142cc1baf89ca0f0a3521364a708e1` by `tools/perf/phase_inventory.py`.
 Regenerate with:
 
 ```
@@ -69,7 +69,7 @@ Counts below are measured, not asserted anywhere in a test: `refine()` changes o
 | 36 | `lead_contradiction` | 409 | - | AuthoritativeApplyPipeline._enforce_lead_contradiction | no |
 | 37 | `near_death_hardening` | 410 | - | AuthoritativeApplyPipeline._apply_near_death_hardening | no |
 | 38 | `occupancy_resolution` | 412 | - | AuthoritativeApplyPipeline._resolve_occupancy_conflicts | no |
-| 39 | `lifecycle` | 414 | - | LifecycleSystem.resolve_lifecycle | no |
+| 39 | `lifecycle` | 414 | - | _resolve_death_transfers | no |
 | 40 | `groups` | 416 | - | AuthoritativeApplyPipeline._resolve_groups | no |
 | 41 | `clan_lifecycle` | 418 | - | AuthoritativeApplyPipeline._resolve_clan_lifecycle | no |
 | 42 | `expired_offers` | 425 | - | ContractService.reap_expired_offers | no |

@@ -126,7 +126,7 @@ def base_state():
 
 def test_town_tax_refactor(base_state):
     """EXCH-02, decision 51: the periodic per-head levy is retired. A stranger holding coin in a held region, on a tax tick, is not taxed:
-    tax is a share of a sale or a wage (`place_tax.py`, tested in tests/unit/treasury/test_tax_and_upkeep.py), so one who earns nothing pays nothing."""
+    tax is a share of a sale or a wage (`place_tax.py`, tested in tests/unit/resource/test_tax_and_upkeep.py), so one who earns nothing pays nothing."""
     region = RegionState(id="r1", name="Test Town", bounds=(0,0,10,10), owner_faction_id=Faction.MONSTER_HORDE)  # held by the monster horde
     state = replace(base_state, tick=0, regions={"r1": region}, buildings={})
     hero = state.entities[1]  # a Guild member: a stranger to the region's holder

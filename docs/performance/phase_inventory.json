@@ -432,7 +432,7 @@
         "name_expression": null,
         "line": 414,
         "feature_flag": null,
-        "dispatch": "LifecycleSystem.resolve_lifecycle",
+        "dispatch": "_resolve_death_transfers",
         "conditional_or_loop": false,
         "context": []
       },

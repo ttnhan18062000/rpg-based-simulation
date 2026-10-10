@@ -11,4 +11,4 @@ tags: [economy, resource]
 # test_plan — TCK-20261009-TAX-IS-A-SHARE-OF-SALES-AND-WAGES-PAID-TO-THE-PLACE-HOLDERS-TREASURY-DECISION-51
 
 ## Tests
-tests/unit/treasury/test_tax_and_upkeep.py, tests/integration/world/test_regional_sovereignty.py
+tests/unit/resource/test_tax_and_upkeep.py, tests/integration/world/test_regional_sovereignty.py

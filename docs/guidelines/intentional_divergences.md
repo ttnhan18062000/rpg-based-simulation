@@ -3199,7 +3199,7 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Old and new values**: levy 2 gold per 20 ticks per non-member to 10 percent of income, rounded down (a 6-gold wage pays nothing, a 20-gold sale pays 2).
 - **Disclosed**: only HERO_GUILD owns regions in the shipped worlds, so only its treasury receives tax (a content fact). The account unit is the four-value legacy bucket, so catalog factions sharing a bucket share one treasury; a typed `AuthoritativeState.treasuries` keyed by catalog faction belongs with M2's ledger.
 - **Rationale**: **Intentional Gameplay Change** (decision 51: tax is a share of income or trade, never minted, never on a subject that earns nothing).
-- **Verification**: `tests/unit/treasury/test_tax_and_upkeep.py`, `tests/integration/world/test_regional_sovereignty.py`.
+- **Verification**: `tests/unit/resource/test_tax_and_upkeep.py`, `tests/integration/world/test_regional_sovereignty.py`.
 
 ### 2.106 A Treasury Pays a Building's Upkeep Into the Building's Own Purse, and the Building Pays Its Workers; the +10 Building Mint Is Gone (EXCH-02, owner decisions 37 and 58) (TCK-20261009-THE-FACTION-TREASURY-PAYS-WAGES-FOR-TOWN-WORK-DECISION-37)
 
@@ -3207,7 +3207,7 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **New Behavior**: on the upkeep tick (every `2 x town_resolution` ticks) the holder's treasury pays each functional building 5 gold into that building's own purse, in building id order, while it holds the coin; a building the treasury cannot pay is left unpaid and disabled and offers no work. Debts a treasury owes (see 2.107) are paid first, oldest first. Town work is therefore the ordinary WORK shift (200 ticks, 6 gold) at a building a treasury keeps: the coin reaches the worker through treasury, building purse, wage. No coin is minted and none vanishes.
 - **Disclosed**: an unpaid building that still stands (hp above 0) opens again on the first upkeep tick the treasury pays it in full; a wrecked one (hp 0, sabotage) is not reopened by upkeep. A treasury refills only by tax (decision 51) and escheat. Partial payment replaces the old all-or-nothing disable.
 - **Rationale**: **Intentional Gameplay Change** (decisions 37 and 58) and **Bug Fix** (the +10 mint and the -5 to nobody broke conservation).
-- **Verification**: `tests/unit/treasury/test_tax_and_upkeep.py`, `tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py`, `tests/unit/treasury/test_total_coin_is_conserved.py`.
+- **Verification**: `tests/unit/resource/test_tax_and_upkeep.py`, `tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py`, `tests/unit/resource/test_total_coin_is_conserved.py`.
 
 ### 2.107 A Kill Mints No Coin, a Body Holds the Dead Entity's Own Coin, and a Quest Reward Is Paid by a Treasury or Owed (EXCH-02, owner decisions 38 and 58) (TCK-20261009-MINTED-KILL-AND-QUEST-COIN-IS-PAID-BY-A-PAYER-EXCH-02-B)
 
@@ -3215,7 +3215,7 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **New Behavior**: a kill grants experience only. At death the dead entity's coin and goods move to the body (`CorpseState.gold`; the dead record keeps nothing); a looter takes the body's coin (the intent cannot name another sum); a body that decays pays its coin to the treasury of the faction holding the ground (the neutral treasury where nobody does). A quest reward's gold is paid by the treasury of the faction holding the ground of the building the quest was posted at (else the claimant's ground; neutral if unheld); a treasury that cannot pay grants the rest of the reward and records an `OwedRecord` (creditor, debtor treasury, amount, posted tick), paid oldest first on the upkeep tick, written off if the creditor dies, shown by the state presenter. Gold-sink fees are paid to the treasury of the faction holding the ground the payer stands on.
 - **Disclosed**: monster and animal kills mostly stop paying coin (XP stays); a hunter's coin way is selling surplus meat or hides. No bounty system exists, so no bounty is posted.
 - **Rationale**: **Intentional Gameplay Change** (decision 38) and **Bug Fix** (coin was minted and destroyed).
-- **Verification**: `tests/unit/treasury/test_rewards_repair_and_fees.py`, `tests/unit/treasury/test_corpse_gold.py`, `tests/unit/treasury/test_total_coin_is_conserved.py`.
+- **Verification**: `tests/unit/resource/test_rewards_repair_and_fees.py`, `tests/unit/resource/test_corpse_gold.py`, `tests/unit/resource/test_total_coin_is_conserved.py`.
 
 ### 2.108 An Inheritance Moves Goods and Coin Once; a Repair Is Charged Once to the Smith or Uses a Kit; One Vault per Bucket (EXCH-02, owner decision 58) (TCK-20261009-FACTION-TREASURY-IS-ONE-TYPED-ACCOUNT-EXCH-02-C)
 
@@ -3223,4 +3223,4 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **New Behavior**: an INHERIT transfer moves the dead entity's items and coin to the heir atomically (the dead entity is debited with the heir's receipt; a full heir inventory leaves the goods where they were); the lifecycle phase resolves it before the apply step builds the body, so the body holds only what no heir took. A repair is charged once (`gold_cost`) into the smith's purse; with no smith in reach, only a subject carrying a `repair_kit` repairs, consuming the kit and moving no coin; with neither nothing happens. The compiler builds one treasury per region-owner bucket (`src/core/treasury.py`), started with the sum of its members' declared starting gold (HERO_GUILD is single-member in every shipped world: unchanged).
 - **Disclosed**: the named heirlooms still arrive as a separate CHEST grant (the lifecycle's declared heirloom list is not inventory; unchanged). A dead record whose entity died without a body (old age) and has no heir keeps its goods on the record, counted but unreachable.
 - **Rationale**: **Bug Fix** (conservation) with an **Intentional Gameplay Change** for the repair rule.
-- **Verification**: `tests/unit/treasury/test_inheritance_moves_goods_once.py`, `tests/unit/treasury/test_treasury_account.py`, `tests/unit/treasury/test_rewards_repair_and_fees.py`, `tests/unit/resource/test_conservation_rejection_paths.py`.
+- **Verification**: `tests/unit/resource/test_inheritance_moves_goods_once.py`, `tests/unit/resource/test_treasury_account.py`, `tests/unit/resource/test_rewards_repair_and_fees.py`, `tests/unit/resource/test_conservation_rejection_paths.py`.

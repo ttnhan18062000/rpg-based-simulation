@@ -40,7 +40,7 @@ The treasury was an untyped `global_resources` key written three ways, read one 
 - The free-meal removal stack and the hunger pull.
 
 ## Acceptance Criteria
-- [x] Total coin over a pinned run changes only by declared world-creation coin (tests/unit/treasury/test_total_coin_is_conserved.py).
+- [x] Total coin over a pinned run changes only by declared world-creation coin (tests/unit/resource/test_total_coin_is_conserved.py).
 - [x] Every transfer named here has a payer and a payee, with a rejection case where the resolver can refuse.
 - [x] Pinned 5-seed x 3-world measurement against main reported to rpg-planner.
 
@@ -63,7 +63,7 @@ The treasury was an untyped `global_resources` key written three ways, read one 
 Batch 3 of the material-economy chain, one PR on branch `batch3-treasury`.
 
 ## Test Summary
-tests/unit/treasury/*, tests/unit/resource/test_conservation_rejection_paths.py, tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py
+tests/unit/resource/test_treasury_*, test_total_coin_*, test_inheritance_*, test_corpse_gold.py, test_tax_and_upkeep.py, test_rewards_repair_and_fees.py, tests/unit/resource/test_conservation_rejection_paths.py, tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py
 
 ## Files Changed
 See the batch-3 PR.

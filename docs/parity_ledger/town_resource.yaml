@@ -2523,7 +2523,7 @@
   legacy_evidence: null
   v2_evidence: '`src/engine/place_tax.py`, `src/engine/shop_sale.py`, `src/engine/work_shift.py`, `src/core/conservation.py` (`_tax_credit`), `src/engine/town_resolution.py`, `data/content/defaults.yaml` (`default_tax_share`), `RegionState.tax_share`'
   proof_type: parity
-  test_path: tests/unit/treasury/test_tax_and_upkeep.py
+  test_path: tests/unit/resource/test_tax_and_upkeep.py
   divergence_note: 'Intentional divergence 2.105 (Intentional Gameplay Change).'
   support_boundary: 'Only HERO_GUILD owns regions in the shipped worlds. The account unit is the four-value legacy bucket.'
 - id: TOWN-206
@@ -2543,7 +2543,7 @@
   legacy_evidence: null
   v2_evidence: '`src/engine/combat.py`, `src/engine/apply_plan.py`, `src/core/conservation.py` (`_reward_result`, CORPSE), `src/engine/world_dynamics.py`, `src/engine/quests.py`, `src/engine/town_resolution.py`, `src/core/state.py` (`CorpseState.gold`, `OwedRecord`)'
   proof_type: parity
-  test_path: tests/unit/treasury/test_rewards_repair_and_fees.py
+  test_path: tests/unit/resource/test_rewards_repair_and_fees.py
   divergence_note: 'Intentional divergence 2.107 (Intentional Gameplay Change, Bug Fix).'
   support_boundary: 'No bounty system exists, so no bounty is posted.'
 - id: TOWN-208
@@ -2553,6 +2553,6 @@
   legacy_evidence: null
   v2_evidence: '`src/core/conservation.py` (`_inherit_result`), `src/systems/lifecycle_systems/lifecycle.py`, `src/engine/pipeline.py`, `src/engine/domain/core_actions.py`, `src/worldbuilding/compiler.py`'
   proof_type: parity
-  test_path: tests/unit/treasury/test_total_coin_is_conserved.py
+  test_path: tests/unit/resource/test_total_coin_is_conserved.py
   divergence_note: 'Intentional divergence 2.108 (Bug Fix, Intentional Gameplay Change).'
   support_boundary: 'Named heirlooms keep their separate CHEST grant.'

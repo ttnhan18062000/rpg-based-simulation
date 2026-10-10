@@ -37,7 +37,7 @@ Owner decisions 38 and 58: a kill grants experience only; the dead entity's coin
 - The free-meal removal stack and the hunger pull.
 
 ## Acceptance Criteria
-- [x] Total coin over a pinned run changes only by declared world-creation coin (tests/unit/treasury/test_total_coin_is_conserved.py).
+- [x] Total coin over a pinned run changes only by declared world-creation coin (tests/unit/resource/test_total_coin_is_conserved.py).
 - [x] Every transfer named here has a payer and a payee, with a rejection case where the resolver can refuse.
 - [x] Pinned 5-seed x 3-world measurement against main reported to rpg-planner.
 
@@ -60,7 +60,7 @@ Owner decisions 38 and 58: a kill grants experience only; the dead entity's coin
 Batch 3 of the material-economy chain, one PR on branch `batch3-treasury`.
 
 ## Test Summary
-tests/unit/treasury/test_rewards_repair_and_fees.py, tests/unit/treasury/test_corpse_gold.py
+tests/unit/resource/test_rewards_repair_and_fees.py, tests/unit/resource/test_corpse_gold.py
 
 ## Files Changed
 See the batch-3 PR.

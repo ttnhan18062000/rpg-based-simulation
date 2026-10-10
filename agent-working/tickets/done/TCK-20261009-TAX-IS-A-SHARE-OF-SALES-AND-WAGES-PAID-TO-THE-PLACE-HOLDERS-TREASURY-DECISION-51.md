@@ -38,7 +38,7 @@ Owner decision 51 and 58: tax is a share of income, rounded down per transaction
 - The free-meal removal stack and the hunger pull.
 
 ## Acceptance Criteria
-- [x] Total coin over a pinned run changes only by declared world-creation coin (tests/unit/treasury/test_total_coin_is_conserved.py).
+- [x] Total coin over a pinned run changes only by declared world-creation coin (tests/unit/resource/test_total_coin_is_conserved.py).
 - [x] Every transfer named here has a payer and a payee, with a rejection case where the resolver can refuse.
 - [x] Pinned 5-seed x 3-world measurement against main reported to rpg-planner.
 
@@ -61,7 +61,7 @@ Owner decision 51 and 58: tax is a share of income, rounded down per transaction
 Batch 3 of the material-economy chain, one PR on branch `batch3-treasury`.
 
 ## Test Summary
-tests/unit/treasury/test_tax_and_upkeep.py, tests/integration/world/test_regional_sovereignty.py
+tests/unit/resource/test_tax_and_upkeep.py, tests/integration/world/test_regional_sovereignty.py
 
 ## Files Changed
 See the batch-3 PR.
