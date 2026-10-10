@@ -193,6 +193,7 @@ def test_setup(tmp_path):
     baseline_path = tmp_path / "baseline.json"
     with open(baseline_path, "w", encoding="utf-8") as f:
         json.dump(baseline, f, indent=2)
+    _stamp_current_cost_accounting(baseline_path)
 
     return base_dir, sweep_id, baseline_path
 
@@ -254,3 +255,77 @@ def test_ci_gate_gating_warnings_and_failures(test_setup):
         warn_as_fail=True
     )
     assert gate_result_warn_fail.status == "FAIL"
+
+
+def _stamp_current_cost_accounting(path):
+    """Mark a baseline as measured under the current cost accounting (DEV-017)."""
+    from src.perf.benchmark_record import COST_ACCOUNTING_VERSION
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data["cost_accounting_version"] = COST_ACCOUNTING_VERSION
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+
+def _drop_cost_accounting(path):
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data.pop("cost_accounting_version", None)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+
+
+def test_gate_against_baseline_without_cost_accounting_reports_the_reason_and_no_tick_drift(test_setup):
+    base_dir, sweep_id, baseline_path = test_setup
+    _drop_cost_accounting(baseline_path)
+
+    md_path, json_path, gate = SweepReportGenerator.generate(
+        sweep_id=sweep_id, baseline_path=str(baseline_path), base_dir=str(base_dir)
+    )
+
+    assert gate.status != "PASS"
+    assert "cost_accounting_version is missing" in gate.tick_cost_incomparable_reason
+    with open(json_path, "r", encoding="utf-8") as f:
+        report = json.load(f)
+    assert report["tick_cost_incomparable_reason"] == gate.tick_cost_incomparable_reason
+    assert "tick_compute_ms_p95" not in report["drifts"]  # a drift against it would read as IMPROVED
+
+
+def test_gate_status_is_inconclusive_when_only_the_tick_cost_is_incomparable(test_setup, monkeypatch):
+    from src.observability.reporting import baseline_comparator
+
+    base_dir, sweep_id, baseline_path = test_setup
+    reason = "baseline incomparable: cost_accounting_version is missing, so its tick costs predate DEV-017"
+    real = baseline_comparator.BaselineComparator.compare_sweep
+
+    def inconclusive(*args, **kwargs):
+        result = real(*args, **kwargs)
+        return result.model_copy(
+            update={"status": "INCONCLUSIVE", "tick_cost_incomparable_reason": reason}
+        )
+
+    monkeypatch.setattr(baseline_comparator.BaselineComparator, "compare_sweep", staticmethod(inconclusive))
+
+    md_path, json_path, gate = SweepReportGenerator.generate(
+        sweep_id=sweep_id, baseline_path=str(baseline_path), base_dir=str(base_dir)
+    )
+
+    assert gate.status == "INCONCLUSIVE"
+    assert reason in gate.message
+    with open(md_path, "r", encoding="utf-8") as f:
+        md = f.read()
+    assert "**CI GATE STATUS**: **INCONCLUSIVE**" in md
+    assert "**CI GATE STATUS**: **PASS**" not in md
+
+
+def test_gate_against_current_cost_accounting_baseline_still_reports_tick_drift(test_setup):
+    base_dir, sweep_id, baseline_path = test_setup
+
+    _, json_path, gate = SweepReportGenerator.generate(
+        sweep_id=sweep_id, baseline_path=str(baseline_path), base_dir=str(base_dir)
+    )
+
+    assert gate.status != "INCONCLUSIVE"
+    assert gate.tick_cost_incomparable_reason is None
+    with open(json_path, "r", encoding="utf-8") as f:
+        assert "tick_compute_ms_p95" in json.load(f)["drifts"]

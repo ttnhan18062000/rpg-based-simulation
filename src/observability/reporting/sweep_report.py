@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class CIGateResult(BaseModel):
     """Result schema for the CI pass/fail gate evaluation."""
-    status: str  # "PASS" | "WARNING" | "FAIL" | "INSUFFICIENT_DATA"
+    status: str  # "PASS" | "WARNING" | "FAIL" | "INSUFFICIENT_DATA" | "INCONCLUSIVE"
     failed_metrics: List[str] = Field(default_factory=list)
     warning_metrics: List[str] = Field(default_factory=list)
     failed_runs: List[str] = Field(default_factory=list)
@@ -23,6 +23,28 @@ class CIGateResult(BaseModel):
     baseline_id: str
     sweep_id: str
     message: str
+    tick_cost_incomparable_reason: Optional[str] = None
+
+
+def _evaluate_gate(
+    comparison: SweepComparisonResult, failed_runs: List[str], warn_as_fail: bool, insufficient_as_fail: bool
+) -> tuple[str, str]:
+    """Map a sweep comparison to the CI gate status and message. INCONCLUSIVE is reported, never a pass."""
+    if comparison.status == "FAIL":
+        return "FAIL", "CI Gate failed: Baseline comparison or custom envelope expectations were failed."
+    if failed_runs:
+        return "FAIL", f"CI Gate failed: {len(failed_runs)} run(s) failed execution inside the sweep."
+    if comparison.status == "WARNING":
+        if warn_as_fail:
+            return "FAIL", "CI Gate failed: Warnings detected and --warn-as-fail is enabled."
+        return "WARNING", "CI Gate passed with warnings."
+    if comparison.status == "INCONCLUSIVE":
+        return "INCONCLUSIVE", f"CI Gate is INCONCLUSIVE, not a pass: {comparison.tick_cost_incomparable_reason}"
+    if comparison.status == "INSUFFICIENT_DATA":
+        if insufficient_as_fail:
+            return "FAIL", "CI Gate failed: Insufficient data detected and --insufficient-as-fail is enabled."
+        return "INSUFFICIENT_DATA", "CI Gate returned status: INSUFFICIENT_DATA."
+    return "PASS", "All validation checks passed successfully."
 
 
 class SweepReportGenerator:
@@ -97,29 +119,7 @@ class SweepReportGenerator:
                     logger.error(f"Failed parsing run comparison result for {r.run_id}: {e}")
 
         # 3. Evaluate CI Gate Result
-        gate_status = "PASS"
-        gate_message = "All validation checks passed successfully."
-
-        if comparison.status == "FAIL":
-            gate_status = "FAIL"
-            gate_message = "CI Gate failed: Baseline comparison or custom envelope expectations were failed."
-        elif failed_runs:
-            gate_status = "FAIL"
-            gate_message = f"CI Gate failed: {len(failed_runs)} run(s) failed execution inside the sweep."
-        elif comparison.status == "WARNING":
-            if warn_as_fail:
-                gate_status = "FAIL"
-                gate_message = "CI Gate failed: Warnings detected and --warn-as-fail is enabled."
-            else:
-                gate_status = "WARNING"
-                gate_message = "CI Gate passed with warnings."
-        elif comparison.status == "INSUFFICIENT_DATA":
-            if insufficient_as_fail:
-                gate_status = "FAIL"
-                gate_message = "CI Gate failed: Insufficient data detected and --insufficient-as-fail is enabled."
-            else:
-                gate_status = "INSUFFICIENT_DATA"
-                gate_message = "CI Gate returned status: INSUFFICIENT_DATA."
+        gate_status, gate_message = _evaluate_gate(comparison, failed_runs, warn_as_fail, insufficient_as_fail)
 
         gate_result = CIGateResult(
             status=gate_status,
@@ -129,7 +129,8 @@ class SweepReportGenerator:
             outlier_runs=comparison.outlier_runs,
             baseline_id=baseline_id,
             sweep_id=sweep_id,
-            message=gate_message
+            message=gate_message,
+            tick_cost_incomparable_reason=comparison.tick_cost_incomparable_reason
         )
 
         # Save ci_gate_result.json
@@ -139,16 +140,13 @@ class SweepReportGenerator:
 
         # 4. Generate Markdown report containing all 12 required sections
         md_content = []
-        status_color = "🔴 FAIL" if gate_status == "FAIL" else ("🟡 WARNING" if gate_status in ("WARNING", "INSUFFICIENT_DATA") else "🟢 PASS")
+        status_color = "🔴 FAIL" if gate_status == "FAIL" else ("🟡 WARNING" if gate_status in ("WARNING", "INSUFFICIENT_DATA", "INCONCLUSIVE") else "🟢 PASS")
 
         # Section 1: Executive Summary
         md_content.append(f"# Sweep Observability & Validation Report: {status_color}\n")
-        if gate_status == "FAIL":
-            md_content.append(f"> [!CAUTION]\n> **CI GATE STATUS**: **FAIL**\n> {gate_message}\n")
-        elif gate_status == "WARNING":
-            md_content.append(f"> [!WARNING]\n> **CI GATE STATUS**: **WARNING**\n> {gate_message}\n")
-        else:
-            md_content.append(f"> [!NOTE]\n> **CI GATE STATUS**: **PASS**\n> {gate_message}\n")
+        callout = {"FAIL": "CAUTION", "WARNING": "WARNING", "INCONCLUSIVE": "WARNING"}.get(gate_status, "NOTE")
+        banner = gate_status if callout != "NOTE" else "PASS"
+        md_content.append(f"> [!{callout}]\n> **CI GATE STATUS**: **{banner}**\n> {gate_message}\n")
 
         md_content.append(f"Aggregated average health score: **{summary_data.get('average_health_score', 0.0):.2f}** across **{summary_data.get('total_runs', 0)}** runs.\n")
 
@@ -289,6 +287,7 @@ class SweepReportGenerator:
             },
             "failed_metrics": failed_metrics,
             "warning_metrics": warning_metrics,
+            "tick_cost_incomparable_reason": comparison.tick_cost_incomparable_reason,
             "ci_gate": {
                 "status": gate_status,
                 "message": gate_message
