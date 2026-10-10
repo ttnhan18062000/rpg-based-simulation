@@ -270,7 +270,8 @@ class BaselineGenerator:
             exclusion_reasons=exclusion_reasons,
             is_weak_baseline=is_weak_baseline,
             metrics=metrics_dist,
-            threshold_recommendations=recommendations, cost_accounting_version=COST_ACCOUNTING_VERSION
+            threshold_recommendations=recommendations,
+            cost_accounting_version=COST_ACCOUNTING_VERSION,
         )
 
         baseline_path = os.path.join(repo.base_dir, sweep_id, "baseline.json")

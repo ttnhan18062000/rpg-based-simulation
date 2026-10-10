@@ -37,7 +37,8 @@ def _evaluate_gate(
     if comparison.status == "WARNING":
         if warn_as_fail:
             return "FAIL", "CI Gate failed: Warnings detected and --warn-as-fail is enabled."
-        return "WARNING", "CI Gate passed with warnings."
+        incomparable = f" Tick cost is not comparable: {comparison.tick_cost_incomparable_reason}" if comparison.tick_cost_incomparable_reason else ""
+        return "WARNING", "CI Gate passed with warnings." + incomparable
     if comparison.status == "INCONCLUSIVE":
         return "INCONCLUSIVE", f"CI Gate is INCONCLUSIVE, not a pass: {comparison.tick_cost_incomparable_reason}"
     if comparison.status == "INSUFFICIENT_DATA":

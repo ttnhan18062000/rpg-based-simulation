@@ -98,7 +98,7 @@ python3 -m src inspect-sweep <sweep_id>
 python3 -m src gate <sweep_id> --baseline docs/observability/baselines/latest.json
 ```
 
-> **Warning (interim).** `latest.json` is a perf matrix keyed by profile (`IDLE_100`, ...), not a baseline file this command can read: it fails with a validation error and exit 1. It was also captured on 2026-05-26, before DEV-017 (#448), so its tick costs are inflated by the double count and are incomparable per [`baseline_invalidation_ledger.md`](../performance/baseline_invalidation_ledger.md). `TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS` replaces it. A baseline with no current `cost_accounting_version` gets an INCONCLUSIVE tick-cost verdict, never a PASS (`TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE`).
+> **Warning (interim).** `latest.json` is a perf matrix keyed by profile (`IDLE_100`, ...), not a baseline file this command can read: it fails with a validation error and exit 1. It was also captured on 2026-05-26, before DEV-017 (#448), so its tick costs are inflated by the double count and are incomparable per [`baseline_invalidation_ledger.md`](../performance/baseline_invalidation_ledger.md). `TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS` replaces it. A baseline with no current `cost_accounting_version` gets an INCONCLUSIVE tick-cost verdict, never a PASS (`TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE`). The command still exits 0 on INCONCLUSIVE (it is reported, not blocking, per the M2 lift), so read the printed status, not the exit code.
 
 ---
 

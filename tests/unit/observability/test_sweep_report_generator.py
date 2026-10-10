@@ -329,3 +329,17 @@ def test_gate_against_current_cost_accounting_baseline_still_reports_tick_drift(
     assert gate.tick_cost_incomparable_reason is None
     with open(json_path, "r", encoding="utf-8") as f:
         assert "tick_compute_ms_p95" in json.load(f)["drifts"]
+
+
+def test_a_warning_gate_message_keeps_the_tick_cost_incomparability_reason() -> None:
+    """A WARNING elsewhere must not hide that tick cost could not be compared (X1 review note)."""
+    from types import SimpleNamespace
+
+    from src.observability.reporting.sweep_report import _evaluate_gate
+
+    comparison = SimpleNamespace(status="WARNING", tick_cost_incomparable_reason="baseline has no cost_accounting_version")
+    status, message = _evaluate_gate(comparison, [], False, False)  # type: ignore[arg-type]
+    assert status == "WARNING" and "cost_accounting_version" in message
+
+    clean = SimpleNamespace(status="WARNING", tick_cost_incomparable_reason=None)
+    assert _evaluate_gate(clean, [], False, False)[1] == "CI Gate passed with warnings."  # type: ignore[arg-type]
