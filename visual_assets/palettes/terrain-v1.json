@@ -1,0 +1,149 @@
+{
+ "record_type": "terrain_palette",
+ "palette_id": "terrain-v1",
+ "decision": "derived read-only from the Live Map terrain fills in frontend/src/constants/colors.ts, one per terrain-v1 key; editing the fills is the frontend's, not this file's",
+ "derivation": "visual_assets/review/palette_data.py::build_terrain_palette (the file is exactly its output)",
+ "terrain_set": "terrain-v1",
+ "colors": [
+  "#4a6050",
+  "#4a2d2d",
+  "#3a3040",
+  "#3a3420",
+  "#6a3040",
+  "#6a7a40",
+  "#1a1d27",
+  "#1b3a1b",
+  "#4a6030",
+  "#4a4050",
+  "#0a4a0a",
+  "#8a3000",
+  "#3a3a3a",
+  "#5a5040",
+  "#4a4035",
+  "#2d3a4a",
+  "#2a5070",
+  "#c8d8e8",
+  "#2a2a3a",
+  "#2d4a3e",
+  "#5a2a1a",
+  "#555b73",
+  "#1e3a5f"
+ ],
+ "entries": [
+  {
+   "color": "#4a6050",
+   "role": "terrain",
+   "source": "terrain.bridge"
+  },
+  {
+   "color": "#4a2d2d",
+   "role": "terrain",
+   "source": "terrain.camp"
+  },
+  {
+   "color": "#3a3040",
+   "role": "terrain",
+   "source": "terrain.cave"
+  },
+  {
+   "color": "#3a3420",
+   "role": "terrain",
+   "source": "terrain.desert"
+  },
+  {
+   "color": "#6a3040",
+   "role": "terrain",
+   "source": "terrain.dungeon_entrance"
+  },
+  {
+   "color": "#6a7a40",
+   "role": "terrain",
+   "source": "terrain.farmland"
+  },
+  {
+   "color": "#1a1d27",
+   "role": "terrain",
+   "source": "terrain.floor"
+  },
+  {
+   "color": "#1b3a1b",
+   "role": "terrain",
+   "source": "terrain.forest"
+  },
+  {
+   "color": "#4a6030",
+   "role": "terrain",
+   "source": "terrain.grassland"
+  },
+  {
+   "color": "#4a4050",
+   "role": "terrain",
+   "source": "terrain.graveyard"
+  },
+  {
+   "color": "#0a4a0a",
+   "role": "terrain",
+   "source": "terrain.jungle"
+  },
+  {
+   "color": "#8a3000",
+   "role": "terrain",
+   "source": "terrain.lava"
+  },
+  {
+   "color": "#3a3a3a",
+   "role": "terrain",
+   "source": "terrain.mountain"
+  },
+  {
+   "color": "#5a5040",
+   "role": "terrain",
+   "source": "terrain.road"
+  },
+  {
+   "color": "#4a4035",
+   "role": "terrain",
+   "source": "terrain.ruins"
+  },
+  {
+   "color": "#2d3a4a",
+   "role": "terrain",
+   "source": "terrain.sanctuary"
+  },
+  {
+   "color": "#2a5070",
+   "role": "terrain",
+   "source": "terrain.shallow_water"
+  },
+  {
+   "color": "#c8d8e8",
+   "role": "terrain",
+   "source": "terrain.snow"
+  },
+  {
+   "color": "#2a2a3a",
+   "role": "terrain",
+   "source": "terrain.swamp"
+  },
+  {
+   "color": "#2d4a3e",
+   "role": "terrain",
+   "source": "terrain.town"
+  },
+  {
+   "color": "#5a2a1a",
+   "role": "terrain",
+   "source": "terrain.volcanic"
+  },
+  {
+   "color": "#555b73",
+   "role": "terrain",
+   "source": "terrain.wall"
+  },
+  {
+   "color": "#1e3a5f",
+   "role": "terrain",
+   "source": "terrain.water"
+  }
+ ]
+}

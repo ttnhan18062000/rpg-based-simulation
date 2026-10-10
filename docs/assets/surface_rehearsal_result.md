@@ -12,6 +12,26 @@ tags: [live-map, rendering, testing, architecture]
 Two dated results: **2026-10-04** (the terrain pilot role, `terrain.forest`; this section) and, below it as history, the unchanged **2026-10-03** synthetic-fixture result.
 Plan: `docs/plans/visual-asset-management-runtime-integration/05_surface_compatibility_rehearsal_plan.md`; gates: the proposal's gate table.
 
+## Evidence 2026-10-10: the harness pages captured from the BUILT bundle (no gate result moves)
+
+`TCK-20261010-VISUAL-ASSETS-EVIDENCE-CAPTURE-REAL-BUNDLE`. Until now every capture ran against the Vite dev server, whose image URLs are `/src/...` paths. `make visual-assets-bundle-capture` (local only, CI never runs it) builds the five harness pages with `frontend/vite.rehearsal-bundle.config.ts`, serves them with `vite preview` and captures them in Chromium 151.0.7922.71 at a device pixel ratio of 1. The committed record is `docs/assets/surface_rehearsal_bundle_evidence.json.txt` (run on commit `507bb4979`, 2026-10-10T08:48:29Z, vite/7.3.1).
+
+**What each page has, in plain words:**
+
+| Page | Images loaded (all from hashed `/assets/<64 hex>-<hash>.png`, none from the dev server, none inlined, none failed) | Pixel verdict |
+|---|---|---|
+| `rehearsal.html` | 3 | **Yes.** The three image cells were hashed with the store's own `pixels-v1` hash and each equals the pixel hash of the stored artifact in the committed manifest (gem, rock, frame). |
+| `rehearsal-pilot.html` | 3 | **No.** Asset-loading evidence only. |
+| `rehearsal-map.html` | 34 | **No.** Asset-loading evidence only. |
+| `rehearsal-icons.html` | 53 | **No.** Asset-loading evidence only. |
+| `rehearsal-draft.html` | 7 | **No.** Asset-loading evidence only. |
+
+Only `rehearsal.html` is pixel-verified. The other four pages show that the built bundle serves their images from hashed URLs and that they settle; they are NOT claimed to draw the stored pixels, and the record says so on each page (`pixel_verification: not_taken: asset-loading evidence only, no pixel verdict`).
+
+**How the pixel check is trusted.** The check hashes what a page really drew, with `frontend/src/visualAssets/pixelsV1.ts`, a second implementation of the Python hash. It is proven equal to the Python hash on known vectors (the three committed artifacts, a non-square image, an alpha mix and transparent pixels that carry colour; `tests/visual_assets/test_pixelhash_vectors.py` and `frontend/src/visualAssets/__tests__/pixelsV1.test.ts`). The drawn cell is sampled at the page's own integer scale (the top-left pixel of each block, every block one colour: smoothing off) and the Playwright config pins the device pixel ratio to 1. **The check can fail:** in a copy of the same bundle one fixture PNG (the gem) had the red byte of one pixel changed, and the same capture failed on exactly `fixture.rehearsal.gem` while the other two cells stayed identical.
+
+**What this does not change.** The overall M5 classification stays `INCONCLUSIVE` and every gate result above is unchanged. This is evidence about how a built bundle serves and draws the harness, not a new gate decision. It runs only on the licence holder's machine; CI checks that the committed record is valid and says what a real run established (`tests/visual_assets/test_bundle_capture_evidence.py`). The bundle config sets `assetsInlineLimit: 0`, because Vite would otherwise inline these tiny PNGs as `data:` URLs and there would be no hashed URL to check; a real application build may inline small images, which is not tested here.
+
 ## Result 2026-10-06: the adopted terrain set (`pilot/rc-0005`)
 
 Detail: `docs/assets/pilot_terrain_m5_results.md` (section "Result 2026-10-06"), ticket `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`, all checks on commit `2c793286f81c907711a39a3fa84cdc3013ef7ef7`. Scope: the 22 terrain tiles and nine border masks the owner adopted on 2026-10-05T18:17:03Z, drawn from the `rc-0005` export.

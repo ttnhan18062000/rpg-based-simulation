@@ -270,6 +270,10 @@ typecheck: ## Run TypeScript type checking
 visual-assets-aseprite-local: ## Strict local run of the real-Aseprite tests (fails on any skip; writes reports/visual_assets/aseprite_local_run.json; ADR D10)
 	$(PYTHON3) -m tools.visual_assets_aseprite_local
 
+.PHONY: visual-assets-bundle-capture
+visual-assets-bundle-capture: ## Local only, CI never runs it: capture the rehearsal pages from the built bundle and write docs/assets/surface_rehearsal_bundle_evidence.json.txt (TCK-20261010-VISUAL-ASSETS-EVIDENCE-CAPTURE-REAL-BUNDLE)
+	$(PYTHON3) -m tools.visual_assets_bundle_capture
+
 lint-py: ## Lint Python under src/ with ruff (check only: no formatter, no --fix). Reports existing violations; the baseline ratchet is TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY
 	python3 -m ruff check src
 
