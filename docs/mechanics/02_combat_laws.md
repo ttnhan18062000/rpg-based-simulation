@@ -206,6 +206,7 @@ tactical pass has always chosen).
     dominant axis (a tie takes the y axis, as the local step does); it used to add a unit vector
     and leave the entity between tiles, where the truncated legality distance and the float
     pursuit distance disagreed (`TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT`).
+*   **The World Has an Edge; a Chase Leads Only a Destination**: a tile outside every declared region is not part of the world (Bible 06): `verify_occupancy` refuses it (`OUT_OF_BOUNDS`) and the hard law `LAW-POSITION-IN-WORLD` names any committed position outside the union of the region bounds. An intercept leads a target that is walking to a destination (2 tiles along its path); a target that is itself pursuing is aimed at where it is, because its own aim point is another intercept point and two chasers leading each other's leads never converge. A held task whose target the entity can no longer perceive is let go. (The chase-duration limit waits for Phase B: `chase_ticks` is never incremented.)
 *   **An Action Task Does Not Walk**: movement runs on `navigation.target`, whatever the task kind, so an entity that holds an
     action task (`ENTITY_ACT` with a payload: ATTACK, SKILL, INTERACT, HOLD) must not keep walking on a target an earlier
     decision left behind. The ATTACK and SKILL emissions clear the navigation target (`tactical.py`); an entity holding an action

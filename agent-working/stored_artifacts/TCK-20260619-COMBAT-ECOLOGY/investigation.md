@@ -40,5 +40,5 @@ In `service.py::evaluate()`, check `actor.social.combat_loss_counts.get(target.i
 
 ## Parity
 Update `docs/parity_ledger/combat_movement.yaml` with:
-- COMB-XXX: grudge scope is run-only (status=verified)
-- COMB-XXX: fear_avoidance posture at loss_count >= 3 (status=verified)
+- COMB-344: grudge scope is run-only (status=verified)
+- COMB-344: fear_avoidance posture at loss_count >= 3 (status=verified)
