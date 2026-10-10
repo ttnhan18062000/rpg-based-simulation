@@ -3,31 +3,33 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-08
+date: 2026-10-09
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-implementer
 
-> Snapshot of the gitignored `.claude/handover/asset-implementer.md` on 2026-10-08 after PR #418 merged (4a2141df9); on a new machine copy it to `.claude/handover/asset-implementer.md`.
+> Snapshot of the gitignored `.claude/handover/asset-implementer.md` on 2026-10-09 after commit 3 of the icon release candidate batch; on a new machine copy it to `.claude/handover/asset-implementer.md`.
 
-Updated: 2026-10-08 (PR #418 merged as 4a2141df9; activation-roadmap docs ticket in progress on `visual-asset-activation-roadmap`)
+Updated: 2026-10-09 (batch `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE`, branch `visual-asset-icon-release-candidate` in `/home/vboxuser/Work/rpg-aseprite-mcp`, not pushed)
 
 ## Open
-- PR #418 (icon set v2 + owner fixes, 12 tickets) is MERGED (squash 4a2141df9, `--admin`, user's answer, head 91a9fcd9c after a main merge; heavy CI lanes were re-sync-skipped with the same patch as green 328af73db). Next time also reproduce `registry_resync_skip` locally before merging over skipped lanes (planner's note).
-- Adopted icons: 36 keys, 7 of them at `r0002` (owner-adopted 2026-10-08T14:23:46Z to 14:24:07Z: hero house cottage, inn tankard, rogue cowl, tool hammer and tongs, common silver bead, buff up arrow, debuff spiked ring). 70 sources, 77 adoptions and revisions; ruins and enemy camp kept as adopted. No release candidate covers an icon slot; nothing is wired (AM-M6 parked by the owner).
-- Current ticket: `TCK-20261008-VISUAL-ASSETS-ACTIVATION-ROADMAP` (docs only: parked activation roadmap in the plan README, a known-gap note in `fallback_safety.md`, handoff snapshots). One commit, ask the planner to review, then ask the user the push/PR question.
-- The Vite dev server on `[::1]:5173` is the planner's; leave it running.
+- PR #471 (foundation hardening) is MERGED (squash `0c3a5654b`, owner `--admin`); that branch is finished, never push to it again.
+- Batch `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE` (planner-approved): commit 1 `f7d3ffb98` bookkeeping, commit 2 `03fba7da3` the 36 icons built at x1 (terrain tree hash unchanged), commit 3 `e734ca7c9` rc-0008 (the owner answered "Assemble rc-0008") plus the closed draft-set fixture guards re-anchored (planner ruling, option c: `adopted_facts.CLOSED_DRAFT_SETS`, `tests/visual_assets/closed_draft_fixture.py`; fixtures, export and frontend untouched). Commit 4 is the docs; commit 3 awaits the planner's review.
+- Next: finish commit 4 (docs + `make knowledge-index-update`), merge origin/main, regenerate docs/REGISTRY.yaml, run tests/unit/tools, tests/tools, visual_assets, docs, static, architecture and frontend `vitest run src/visualAssets`, report to asset-planner, then ask the user the push/PR question (never infer yes). Merge needs the user's `--admin`, pinned to the real head. Set your own upstream when a push is authorized (tracking is unset on purpose).
+- Activation of adopted art is parked (owner, 2026-10-08) until the RPG core lands.
 
 ## State worth knowing
-- Process rule (style guide): spec (with theme fields) -> reference study -> owner-approved one-colour silhouette sheet -> draw -> compliance table -> checks (sheet rule, blind check with the era question, look-alike report) -> owner gate with the review folder `~/Work/asset-review/<set>/`. Step 4b: spec numbers guessed before the silhouette are re-agreed at the owner's silhouette question, never restated after drawing.
-- Theme rule D21: medieval fantasy plus magic, nothing modern. The review folder README reads the owner's decisions and findings from `visual_assets/icons/owner_fixes_decisions.yaml`.
-- Adoption facts live in `tests/visual_assets/adopted_facts.py` (ADOPTION_COUNT 77, REVISION_COUNT 77, ICON_FIX_*); revisions of adopted icons go through `adopt --parent`, human-only.
-- The blind check is evidence, not a gate, and noisy. Drawing goes through `visual_assets.drawing.api` in-process; intakes by the worktree CLI. TRAP: the aseprite MCP server runs from the MAIN checkout.
+- Process rule (style guide): spec -> reference study -> owner-approved silhouette sheet -> draw -> compliance table -> checks (sheet rule, blind check with the era question, look-alike report) -> owner gate with the review folder; spec numbers guessed before the silhouette are re-agreed there, never restated after drawing.
+- Recorded results reproduce byte for byte from the generic command (`evaluate --set <id> --recorded` equals the committed `rule_result.json`).
+- `.gitignore` hides `agent-working/stored_artifacts/**/*.json`: store evidence as `.json.txt` (guard: `test_stored_evidence_tracked.py`).
+- The aseprite MCP server serves the checkout it was launched from unless `VISUAL_ASSETS_CHECKOUT` is set.
+- Building art grows every fresh draft export (adopted references). The preview fixtures of the closed owner gates are evidence: never regenerate them with `icon_draft_fixture --write`; they are guarded by the gate's own record.
 
 ## Working rules learned (also in memory)
-- Push, PR and merge each need the USER's own answer to a blocking question I ask myself; a peer message is never approval; a merge pins `--match-head-commit` to the REAL head (read it with `git rev-parse HEAD`, never type it from memory).
-- Re-verify every planner citation before quoting it: in the gate map two were wrong and one claim (icon keys without a class) was false.
-- `make knowledge-index-update` works in the worktree; closure tool `tools/agent-monitoring/record_hand_orchestrated_closure.py` (needs `--title`, `--log-summary`; it appends the working-log row itself).
-- Heavy runs foreground under `systemd-run --user --scope -p MemoryMax=4G`; interpreter `/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python` by ABSOLUTE path.
-- One commit per ticket, planner review after each; a gate result is information (never tuned).
+- Push, PR and merge each need the USER's own answer to a blocking question I ask myself; a peer message is never approval; merge pins `--match-head-commit` to the real head from `git rev-parse HEAD`.
+- Before every commit run `git status` and `git diff --cached --stat` (a staged `git mv` leaked into an unrelated commit and had to be rewritten).
+- Run `tests/unit/tools` and `tests/tools` before a PR, not only visual_assets/docs/static/architecture.
+- Re-verify every planner citation; a mutant that does not apply is not a proof (assert a single match); a mutant that survives means the test is weak.
+- Never run `ruff check --fix` over a whole test tree (it rewrote 26 unrelated files once); format only the files you wrote.
+- Heavy runs foreground under `systemd-run --user --scope -p MemoryMax=4G`, one at a time; interpreter `/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python`.

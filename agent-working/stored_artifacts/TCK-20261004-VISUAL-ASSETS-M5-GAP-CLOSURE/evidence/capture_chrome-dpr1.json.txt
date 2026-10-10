@@ -1,0 +1,15 @@
+{
+  "project": "chrome-dpr1",
+  "browser": "chromium",
+  "version": "151.0.7922.71",
+  "generation": "sha256:4f5eb10ff20955596bfabbc7a9a19f11cee8d2dda38ea11beb814b8655aaea42",
+  "cleanForestCellsChecked": 30,
+  "tileDifferingPixels": 0,
+  "flatDifferingPixels": 0,
+  "devicePixelRatio": 1,
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+  "canvasCss": [
+    192,
+    128
+  ]
+}

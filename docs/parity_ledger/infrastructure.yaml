@@ -12876,3 +12876,48 @@
     compared by any test, which checks counts only). The WorkClass members PERIODIC, OPPORTUNISTIC and DEFERRED and
     their ConcurrencyLaw priorities remain as unused constants (follow-up). src/domains/cooperation/phase.py keeps a
     dead hasattr(state, "periodic_due_ticks") guard (follow-up for the RPG side).
+
+- id: INFRA-430
+  text: 'TCK-20261010-PERF-M2-T02B-RECORD (PERF-M2 OD-1, OD-3, OD-4, OD-6): benchmark identity and result schema 1.0 is binding in
+    docs/performance/benchmark_identity_schema.md and implemented by src/perf/benchmark_record.py. BenchmarkRecord is frozen and round-trips
+    through to_dict/from_dict. compare(base, head, thresholds) returns PASS, REGRESSION, INCONCLUSIVE or NOT_APPLICABLE with a reason: a
+    missing base, a MAJOR schema_version mismatch, a missing or different result.cost_accounting_version, a declared hardware class that is
+    not the detected one, or any blocking identity field that differs is INCONCLUSIVE and names the field; a head-side non-NORMAL
+    RuntimeMode against an all-NORMAL base is REGRESSION under the canonical signal contract and INCONCLUSIVE under the live one.
+    compare reads no perf-only result field. Percentiles are nearest-rank ceil(q*n) (protocol.percentile_method, blocking). BenchHarness
+    leaves a BenchmarkRecord in last_record, embedding raw samples for a tripwire and a {uri, sha256} pointer for a capacity run, and its
+    result dict is unchanged. PERF_* profiles take hardware_class from HardwareClassifier.detect_class(). Every PERF_* profile has a
+    PERF_CANONICAL_PROFILES variant (name suffix _CANONICAL) with signal_contract=CANONICAL; the defaults stay LIVE. No gate behaviour
+    changes and no check becomes blocking.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/perf/benchmark_record.py (BenchmarkRecord, compare, nearest_rank, collect_identity); src/perf/bench_harness.py (BenchHarness.run_benchmark, _build_record, _calculate_stats); src/perf/profiles.py (detected_hardware_class, canonical_variant, PERF_CANONICAL_PROFILES)
+  proof_type: contract
+  test_path: tests/unit/perf/test_benchmark_record.py
+  divergence_note: DEV-020 (Bug Fix)
+  support_boundary: Measurements stay provisional and no check is blocking; a gate adopts compare() in PERF-M2-T03/T04/T05. content_hash,
+    builder_version, det_port_tier and verification_level hold the "unknown" sentinel (no source yet), so a PASS lists them as unverified.
+    src/perf/regression_gate.py is not deleted (outside the OD-8 lift). long_run_harness.py is not migrated to nearest-rank or the record
+    (PERF-M2-T04).
+
+- id: INFRA-431
+  text: 'TCK-20261010-PERF-M2-T05-BASELINE-LIFECYCLE: a performance baseline is added only by tools/perf/baseline_lifecycle.py promote,
+    which refuses (exit 2, every applicable reason printed, nothing written) a candidate that is not a valid BenchmarkRecord, has
+    engine.dirty_src true, left NORMAL or has no mode sequence, lacks the current result.cost_accounting_version, or cites no cause (an
+    existing ticket id, a recorded DEV-nnn divergence, or a PR number). A promotion writes the next <name>.vNNNN.json, never touches an
+    earlier version, links it through identity.baseline_ref (id, schema_version, record_digest) and records the cause, the before identity
+    and the after identity in a promotion object that BenchmarkRecord.from_dict ignores. The check subcommand requires every
+    tests/perf/baselines/*.json to be a valid BenchmarkRecord or named in LEGACY_TRIPWIRE_REFERENCES (the 15 pre-schema files) and each
+    version chain to be intact. docs/performance/perf_baseline_policy.md is the lifecycle policy. No check becomes blocking and no baseline
+    is re-recorded.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/perf/baseline_lifecycle.py (promote, refusals, check, LEGACY_TRIPWIRE_REFERENCES); docs/performance/perf_baseline_policy.md
+  proof_type: contract
+  test_path: tests/unit/perf/test_baseline_lifecycle.py
+  divergence_note: null
+  support_boundary: The known-debt ledger (owner, expiry, expected_signature) is PERF-M2-T05b and waits for the shared known-reds module. The shared
+    baseline_change_policy.md does not exist yet and is cited as a forward reference. A cited PR number is accepted by shape (not checkable
+    offline). The 15 legacy files are not re-recorded (PERF-M2-T08).

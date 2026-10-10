@@ -6,14 +6,16 @@ audience: agent
 tags: [performance, benchmarking, schema, documentation]
 ---
 
-# Benchmark Identity and Result Schema (PERF-M2-T02 design draft)
+# Benchmark Identity and Result Schema (schema 1.0)
 
-> **Provisional design draft under the RPG-core stability entry gate.** Nothing in this document is
-> implemented or binding. It becomes a contract only when `PERF-M2-T03`, `T04` and `T05` adopt it,
-> and only after the entry gate lifts and M1 has reported the corrections that change benchmark
-> identity (§8). It is based on reading code and committed files on 2026-10-03; no benchmark,
-> baseline or profile was run for it. The owner approved writing it before the gate as a deliberate
-> exception (`TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA`).
+> **Status: the contract for schema version `1.0`.** It is implemented by `src/perf/benchmark_record.py`
+> (`BenchmarkRecord`, `compare`), adopted by `PERF-M2-T02b` (`TCK-20261010-PERF-M2-T02B-RECORD`).
+> It began as the design draft of `PERF-M2-T02` (`TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA`),
+> written from code read on 2026-10-03; §1 and §2 are that inventory and still describe the formats as
+> they were then. The owner accepted decisions OD-1 to OD-8 on 2026-10-09 and they are written into this
+> document (§7); §8 records the revalidation against M1. **Nothing here makes a check blocking:** every
+> measurement stays provisional, the existing gates behave as before, and a gate adopts this schema in
+> `PERF-M2-T03` / `T04` / `T05`. Nothing was ever written in the draft shape, so there is nothing to migrate.
 
 Inputs: `docs/performance/performance_clause_inventory.md` (`PERF-M2-T01`), PERF-D1, D2 and D4 in
 `docs/architecture/performance_optimization_decisions.md`, the M2 epic's "Required contract
@@ -154,7 +156,7 @@ provides it.
 
 | Field | Type | Req. | Source |
 |---|---|---|---|
-| `schema_version` | string `MAJOR.MINOR` | required | constant in the writer; not yet (`PERF-M2-T03`) |
+| `schema_version` | string `MAJOR.MINOR` | required | today: `benchmark_record.SCHEMA_VERSION` (`1.0`) |
 | `scenario.id` | string | required | today: `BenchHarness` `scenario_id`. Note: an id must not map to `build_metropolis_state()` until `TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION` is fixed |
 | `scenario.builder` | string (module path and function) | required | not yet (`PERF-M2-T03`); builders live in `src/perf/scenarios.py` |
 | `scenario.builder_version` | string (content hash of the builder source) | optional | not yet |
@@ -180,9 +182,11 @@ provides it.
 | `runtime.logical_cores` | integer | required | today: `os.cpu_count()` |
 | `runtime.ram_mb` | integer | required | not yet; needed because `certification_contract.md` §3 defines hardware class by cores and RAM |
 | `runtime.native_kernels` | object name → version | required (empty allowed) | not yet; no native kernel exists today |
-| `runtime.hardware_class` | string (`certification_contract.md` §3) | required | not yet (M2-T05); today profiles hard-code `CLASS_A` and `PERF_HARDWARE_CLASS` is an env label, neither detected |
+| `runtime.hardware_class` | string (`certification_contract.md` §3) | required | today, **detected** from cores and RAM by `HardwareClassifier.detect_class()` (OD-4). `PERF_*` profiles take their class from it; the hard-coded `CLASS_A` is gone. `PERF_HARDWARE_CLASS` (F11) stays an env label outside this schema |
+| `runtime.declared_hardware_class` | string or null | required (null = no claim) | today: the profile's `hardware_class`. A runner may declare a class only to match the detected one; a declared class that differs from `runtime.hardware_class` makes the record `INCONCLUSIVE` (OD-4) |
 | `runtime.det_port_tier` | enum `DET-PORT-0/1/2` | required | not yet; derived from the fields above and the "Scope of the guarantee" section of `deterministic_execution.md` |
-| `contract.determinism` | enum `canonical`, `live_bounded` | required | not yet (PERF-M1; PERF-D1) |
+| `contract.signal_contract` | enum `live`, `canonical` | required, **blocking** (R-1) | today: `RuntimeProfile.signal_contract`. Replaces the draft's `contract.determinism`: `canonical` is the canonical contract, `live` is PERF-D1's live-bounded one (the name `live_bounded` in OD-3 means `live`) |
+| `contract.work_model_version` | string | required, **blocking** (R-1) | today: `src.engine.work_units.WORK_MODEL_VERSION`. Under `canonical` the mode sequence depends on it, so a V1 and a V2 run do different work |
 | `contract.verification_level` | string (for example `FULL`, `REDUCED`) | required | not yet; runs that reach DEGRADED or SURVIVAL keep a `REDUCED` label (C-04) |
 | `executor.backend` | enum `sequential`, `thread`, `process` | required | not yet; implied today by the `_LOCAL`/`_CONC` profile suffix |
 | `executor.worker_count` | integer ≥ 1 | required | not yet; PERF-M1-T01 changes what zero means |
@@ -198,30 +202,31 @@ provides it.
 | `protocol.warmup_ticks` | integer | required | today: harness argument, not written |
 | `protocol.measured_ticks` | integer | required | today: `sample_ticks` |
 | `protocol.repetitions` | integer ≥ 1 | required | today: `flag_attribution` only |
-| `protocol.percentile_method` | enum `nearest_rank`, `linear` | required | not yet; three methods exist today (finding 4) |
+| `protocol.percentile_method` | enum `nearest_rank`, `linear` | required | **decided (OD-1): `nearest_rank`, `ceil(q * n)`, for every producer.** `BenchHarness` writes it. An old `sorted[int(n * q)]` record never compares with a new one (blocking) |
 | `protocol.clock` | string (`perf_counter`, `process_time`, `instructions`) | required | not yet |
 | `protocol.gc_disabled` | boolean | required | today: harness disables gc during sampling, unrecorded |
-| `samples.tick_wall_ms` | array of number, or `{uri, sha256}` | required for `capacity_run`, optional for `tripwire` | today: toolkit `phases.json`; the harness drops it |
+| `samples` | `{tick_wall_ms, tick_compute_ms}` (arrays of number), or `{uri, sha256}` | required for `capacity_run`, optional for `tripwire` | **decided (OD-6):** a tripwire record embeds both series (at most `MAX_EMBEDDED_SAMPLES` = 500 values each); a capacity record, and a tripwire above the cap, carries a `{uri, sha256}` pointer to an uncommitted file under `reports/perf/`. `latency_ms` is computed from `tick_compute_ms` (the kernel's reported tick cost); `tick_wall_ms` is the wall time around each `tick_once` |
 | `latency_ms` | object `{avg, p50, p95, p99, max, min}` | required | today: `tick_ms` |
 | `throughput` | object `{compute_tps, wall_tps}` | required | today: harness |
 | `time_s` | object `{wall, cpu_user, cpu_system}` | required | today: harness (CPU includes warmup, which wall does not; the schema fixes one window) |
 | `memory_mb` | object `{rss_high_water, rss_delta, sample_every_ticks}` | required | today: `mem_rss_mb`, sampled every 10th tick; `delta` is max minus min of samples |
 | `scaling_slope` | object or null | optional | not yet (M4) |
 | `runtime_mode_sequence` | array of `{mode, ticks}` (run-length) | required | today: `mode_sequence` per tick; toolkit compresses |
-| `work` | object `{processed, dropped, coalesced, phase_runs, phase_skips}` | required | today: `metrics` per-tick means and kernel `_metrics`; dropped and coalesced names are not yet defined |
-| `validity` | object `{replay_ok, final_state_hash, hash_scheme}` | required for `capacity_run` | today: `final_state_hash` only in F22; `hash_scheme` waits for `PERF-M1-T03` |
+| `work` | object name → number | required (may be empty) | today: the kernel's `metrics` per-tick means under the names it emits. The processed / dropped / coalesced split is not named yet, and the collector does not invent counts. Work debt is gone (DEV-019), so there is no debt counter to describe (R-5) |
+| `validity` | object `{replay_ok, final_state_hash, hash_scheme}` | required for `capacity_run` | today: `final_state_hash` only in F22. `hash_scheme` is an enum `flat-sha256-v1`, `flat-sha256-v2` (R-3; v2 since DEV-019); a hash needs its scheme |
 | `phases` | object phase → latency object | optional | today: `phase_breakdown` |
 | `outcome.state` | enum `PASS`, `REGRESSION`, `INCONCLUSIVE`, `NOT_APPLICABLE` | required | `performance_contract.md` §3.3; not implemented anywhere today |
 | `outcome.reason` | enum code plus free text | required | not yet |
-| `recorded_at` | string RFC 3339 | required | today: `timestamp` (epoch float) |
+| `recorded_at` | string RFC 3339 | required | today: `benchmark_record.utc_now()` (the harness dict keeps its epoch `timestamp`) |
+| `cost_accounting_version` | string | required, **blocking** (R-2) | today: `benchmark_record.COST_ACCOUNTING_VERSION` = `DEV-017`, a constant (no engine edit, OD-8). DEV-017 changed what a tick's and a phase's reported cost means, so a record without this value, or with another one, is not comparable on tick cost |
 
 ### 3.2 JSON Schema draft
 
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "benchmark-result-v0.1-provisional",
-  "title": "Benchmark result record (provisional PERF-M2-T02 draft)",
+  "$id": "benchmark-result-v1.0",
+  "title": "Benchmark result record (schema 1.0)",
   "type": "object",
   "required": ["schema_version", "identity", "result"],
   "additionalProperties": false,
@@ -293,14 +298,16 @@ provides it.
             "ram_mb": {"type": "integer", "minimum": 1},
             "native_kernels": {"type": "object", "additionalProperties": {"type": "string"}},
             "hardware_class": {"type": "string"},
+            "declared_hardware_class": {"type": ["string", "null"]},
             "det_port_tier": {"enum": ["DET-PORT-0", "DET-PORT-1", "DET-PORT-2"]}
           }
         },
         "contract": {
           "type": "object",
-          "required": ["determinism", "verification_level"],
+          "required": ["signal_contract", "work_model_version", "verification_level"],
           "properties": {
-            "determinism": {"enum": ["canonical", "live_bounded"]},
+            "signal_contract": {"enum": ["live", "canonical"]},
+            "work_model_version": {"type": "string"},
             "verification_level": {"type": "string"}
           }
         },
@@ -338,7 +345,7 @@ provides it.
     },
     "result": {
       "type": "object",
-      "required": ["protocol", "latency_ms", "throughput", "time_s", "memory_mb", "runtime_mode_sequence", "work", "outcome", "recorded_at"],
+      "required": ["protocol", "latency_ms", "throughput", "time_s", "memory_mb", "runtime_mode_sequence", "work", "outcome", "recorded_at", "cost_accounting_version"],
       "additionalProperties": false,
       "properties": {
         "protocol": {
@@ -353,9 +360,10 @@ provides it.
             "gc_disabled": {"type": "boolean"}
           }
         },
+        "cost_accounting_version": {"type": "string", "minLength": 1},
         "samples": {
           "oneOf": [
-            {"type": "object", "required": ["tick_wall_ms"], "properties": {"tick_wall_ms": {"type": "array", "items": {"type": "number"}}}},
+            {"type": "object", "required": ["tick_wall_ms", "tick_compute_ms"], "properties": {"tick_wall_ms": {"type": "array", "items": {"type": "number"}}, "tick_compute_ms": {"type": "array", "items": {"type": "number"}}}},
             {"type": "object", "required": ["uri", "sha256"], "properties": {"uri": {"type": "string"}, "sha256": {"type": "string"}}}
           ]
         },
@@ -394,22 +402,14 @@ provides it.
         },
         "work": {
           "type": "object",
-          "required": ["processed", "dropped", "coalesced"],
-          "properties": {
-            "processed": {"type": "integer", "minimum": 0},
-            "dropped": {"type": "integer", "minimum": 0},
-            "coalesced": {"type": "integer", "minimum": 0},
-            "phase_runs": {"type": "integer", "minimum": 0},
-            "phase_skips": {"type": "integer", "minimum": 0}
-          }
+          "additionalProperties": {"type": "number"}
         },
         "validity": {
           "type": "object",
-          "required": ["replay_ok", "final_state_hash", "hash_scheme"],
           "properties": {
-            "replay_ok": {"type": "boolean"},
-            "final_state_hash": {"type": "string"},
-            "hash_scheme": {"type": "string"}
+            "replay_ok": {"type": ["boolean", "null"]},
+            "final_state_hash": {"type": ["string", "null"]},
+            "hash_scheme": {"enum": ["flat-sha256-v1", "flat-sha256-v2", null]}
           }
         },
         "phases": {"type": "object", "additionalProperties": {"type": "object"}},
@@ -429,7 +429,9 @@ provides it.
 ```
 
 `samples` and `validity` are required by the tier rules in §3.1 (capacity run), not by this
-structural schema; a tier-aware validator belongs to `PERF-M2-T03`/`T04`.
+structural schema; a tier-aware validator belongs to `PERF-M2-T03`/`T04`. The typed `BenchmarkRecord`
+enforces what the structure can: frozen fields, the `hash_scheme` enum, a hash with its scheme,
+embedded-or-pointer samples, and an outcome with a reason.
 
 ## 4. Comparability rule
 
@@ -452,14 +454,35 @@ never a skip that reads as success. A missing baseline, a baseline with a differ
 | `runtime.python_version` patch | recorded only | not part of the DET-PORT-0 definition |
 | `runtime.logical_cores`, `runtime.ram_mb`, `runtime.hardware_class` | blocking | hardware class is defined by them |
 | `runtime.det_port_tier` | blocking | a hash proof is comparable only within its tier |
-| `contract.determinism`, `contract.verification_level` | blocking | different contract, different work |
+| `contract.signal_contract`, `contract.work_model_version`, `contract.verification_level` | blocking | different contract or work model, different work (R-1) |
+| `result.cost_accounting_version` | blocking; a record without it is `INCONCLUSIVE` | cost accounting changed at DEV-017 (R-2). This is the vacuous-pass gap of `TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE`, expressed as a schema field |
+| `runtime.declared_hardware_class` | `INCONCLUSIVE` when it differs from the detected `runtime.hardware_class` on either side | a runner may declare a class only to match the detected one (OD-4) |
 | `executor.backend`, `executor.worker_count` | blocking | different execution route |
 | `observer.level` | blocking | observer cost is part of the measurement |
 | `gate.tier`, `gate.projection` | blocking | a tripwire result never stands in for a capacity run |
 | `protocol.*` (warmup, measured ticks, repetitions, percentile method, clock, gc) | blocking | a 20-tick and a 1000-tick sample are not comparable (finding 3) |
-| `runtime_mode_sequence` | blocking when either side left `NORMAL`; otherwise recorded | an excursion changes the work done (`RuntimeMode` can leave `NORMAL`) |
-| `validity.hash_scheme` | blocking when both carry a hash; digests of different schemes are not comparable (PERF-D5) | two digests produced by different hash schemes can differ with identical state, so a mismatch proves nothing |
+| `runtime_mode_sequence` | see the excursion rule below | an excursion changes the work done (`RuntimeMode` can leave `NORMAL`) |
+| `validity.hash_scheme` | blocking when both carry a hash; digests of different schemes are not comparable (PERF-D5) | two digests produced by different hash schemes can differ with identical state, so a mismatch proves nothing. The enum is `flat-sha256-v1`, `flat-sha256-v2` (R-3) |
 | `recorded_at`, host name, load average | recorded only | noise context; load average may add a variance warning, not a verdict |
+
+**Excursion rule (OD-3).** `compare` reads `runtime_mode_sequence` after every blocking field has matched.
+An empty sequence, or a base that left `NORMAL`, is `INCONCLUSIVE`: the baseline does not prove it did
+the nominal work. A head that left `NORMAL` against an all-`NORMAL` base is a `REGRESSION` when
+`contract.signal_contract` is `canonical` (the mode sequence does not depend on the host, so the work
+changed) and `INCONCLUSIVE` when it is `live` (the excursion may be host-dependent). A deliberate
+behaviour change therefore reads as `REGRESSION` under the canonical contract; `PERF-M2-T05` accepts a
+re-baseline that cites the behaviour PR or divergence id as its cause.
+
+**Unknown identity values.** A field the collector cannot fill yet (`content.content_hash`,
+`scenario.builder_version`, `runtime.det_port_tier`, `contract.verification_level`) holds the sentinel
+`"unknown"`; the collector never invents a value. `unknown` on both sides is comparable and a `PASS` reason
+lists those fields as unverified; `unknown` against a known value is a mismatch, so it is `INCONCLUSIVE`.
+
+**Thresholds.** `compare(base, head, thresholds)` regresses when the head's `latency_ms[metric]` exceeds
+`max(absolute_ms, base * (1 + relative))`; the defaults (`avg`, 0.25, 5 ms) are the F1 rule
+`max(5 ms, x1.25)`. The values `PERF-M2-T03` chooses go in `Thresholds`, not in `compare`. `compare` reads
+identity, the protocol, the mode sequence, the hash scheme and that one latency number, and no other
+perf-only result field, so a gate report outside `src/perf/` can reuse it.
 
 **Schema version change.** A MAJOR bump invalidates every stored baseline of the older MAJOR for
 comparison. They stay readable and are reported `INCONCLUSIVE` until migrated or re-recorded by an
@@ -471,7 +494,7 @@ required field.
 
 The survey (`performance_stack_survey.md`, "Benchmark harness" and "CI regression tracking" rows)
 picks `pytest-benchmark` for the PR lane, `pyperf` for controlled confirmation runs, and
-instruction-count measurement for the tripwire. No tool is installed or added by this draft.
+instruction-count measurement for the tripwire. No tool is installed or added by this schema.
 
 **`pytest-benchmark` 5.3.0** (documentation `pytest-benchmark.readthedocs.io/en/stable`, fetched
 2026-10-03; key names from the 5.3.0 source `stats.py` and `utils.py`).
@@ -519,7 +542,7 @@ records as `extra_info`. Choosing the tool is `PERF-M2-T03`.
 | F9 optimization proof | Retire the fixed prose; regenerate from schema records that carry identity, with a missing baseline key an error, not `1.0`. Until then treat its speedups as unlabeled |
 | F10 comparison | Retire (no consumer); `CRASHED` becomes `outcome.state = INCONCLUSIVE` with reason `crashed` |
 | F11 `perf_baselines.json`, `.perf_last_run.json` | Keep outside the schema: per-test wall budgets with a tolerance, whole-test granularity; the file is empty. `T03` decides whether to retire it (clause inventory §5.2 records `PerfBudget` as tripwire-adjacent debt) |
-| F12 `PerfBaseline` / `PerfResult` | Retire; `src/` removal is out of this draft and waits for the `src/` freeze to lift |
+| F12 `PerfBaseline` / `PerfResult` | Retire. Disposition recorded by `PERF-M2-T02b`: `src/perf/regression_gate.py` has no consumer and a second comparison path, `compare()` replaces it, and its deletion is not done here because the file is outside the OD-8 lift; it needs its own owner lift (`PERF-M2-T03` or the full lift) |
 | F13 threshold warnings | Keep as the in-test outcome channel; `T03` decides how a breach becomes an `outcome` record |
 | F14 inventories | Keep outside the schema (evidence documents, not measurements) |
 | F15 profiling toolkit | Keep outside the schema as diagnostic evidence stamped PROVISIONAL; align its header names to `identity` where the names overlap so a profile can cite a record |
@@ -532,52 +555,42 @@ records as `extra_info`. Choosing the tool is `PERF-M2-T03`.
 
 Existing `tests/perf/baselines/` files remain tripwire references, per PERF-D4.
 
-## 7. Open questions
+## 7. Decisions
 
-For perf-planner and the owner.
+The open questions of the draft, as the owner answered them on 2026-10-09 (the M2 epic's "Delivery plan",
+step 1). "Q" numbers are the draft's.
 
-1. Which instruction-count tool does the tripwire use, and does the owner accept a hosted tracking
-   service (open with the owner; PERF-D4's revisit condition names it)?
-2. Which `pyperf` release is pinned, and is the `stable` documentation's JSON identical to that
-   release? The fetched pages cite 0.8.2 only as the version of an example.
-3. The full `machine_info` key set of `pytest-benchmark` 5.3.0 was not on the fetched pages; confirm
-   from the installed package at adoption.
-4. `content.content_hash` and `scenario.builder_version` have no source today. Is a content hash an
-   M1 or M3 deliverable?
-5. Should a `capacity_run` record embed raw samples, or keep a `{uri, sha256}` pointer? Size and
-   retention depend on the runner decision (`PERF-M2-T04`).
-6. Which percentile method is the contract's? Nearest-rank is the toolkit's and `pyperf`-friendly;
-   the harness's `int(n*q)` makes p95 equal the max at 20 ticks or fewer and p99 equal the max at 100 ticks or fewer.
-7. Is `runtime.hardware_class` detected from cores and RAM per `certification_contract.md` §3, or
-   declared by the runner configuration?
-8. Should the blocking set vary by projection? `runtime.cpu_model` and `runtime.logical_cores` are
-   blocking, so a wall-clock tripwire on shared CI runners whose CPU model varies would often return
-   `INCONCLUSIVE`. An instruction-count tripwire (the survey's choice) may not need `cpu_model` to
-   block. This draft does not change the rule.
-9. Should a `RuntimeMode` excursion be `INCONCLUSIVE` or `REGRESSION`? §4 makes it `INCONCLUSIVE`
-   when either side left `NORMAL`, but a head-side excursion against a `NORMAL` base may be the
-   regression itself, and the live test already fails hard on it for scenarios in
-   `_RUNTIME_MODE_HARD_SCENARIOS` (empty today). This draft does not change the rule.
-10. Findings 1 to 7 in §1: which become tickets? Finding 1 (claim text without identity) touches a
-   file under `tools/release/`.
+| Q | Question | Decision |
+|---|---|---|
+| Q1, Q8 | Instruction-count tool; whether the blocking set varies by projection | **OD-2.** The tripwire pairs base and head on the same runner in the same job, so `cpu_model` stays blocking without making every PR `INCONCLUSIVE`. The instruction-count tool and any hosted service are a separate spike after M2. Built by `PERF-M2-T03` |
+| Q2 | Which `pyperf` release | **OD-7.** `pyperf` is not adopted in M2; `PERF-M2-T04` uses `BenchHarness` with process-level repetitions |
+| Q3 | `pytest-benchmark` `machine_info` key set | Not needed while `pytest-benchmark` is not adopted; confirm from the installed package if it is |
+| Q4 | `content_hash`, `builder_version` source | No source yet; both hold `unknown` (§4), and the collector invents nothing |
+| Q5 | Embed raw samples or point to them | **OD-6.** A tripwire record embeds them (at most a few hundred values); a capacity record carries `{uri, sha256}` to an uncommitted file under `reports/perf/` |
+| Q6 | Percentile method | **OD-1.** Nearest-rank, `ceil(q * n)`, for every producer; `protocol.percentile_method` is blocking |
+| Q7 | Detected or declared hardware class | **OD-4.** Detected from cores and RAM; a declared class must match it, a mismatch is `INCONCLUSIVE` |
+| Q9 | A `RuntimeMode` excursion | **OD-3.** `REGRESSION` under the canonical contract, `INCONCLUSIVE` under the live one (§4) |
+| Q10 | Findings 1 to 7 of §1 | Findings 1 and 5 are fixed by their tickets (§1). Finding 2 (hardware class) is fixed by OD-4, finding 4 (percentiles) by OD-1, finding 6 (no `INCONCLUSIVE`) by `compare`, and finding 7 (no mode sequence in a baseline) by the excursion rule; finding 3 (run lengths) waits for `PERF-M2-T03` |
 
-### M1 candidates that could change identity fields
+**OD-8.** The `src/` lift for M2 covers only `src/perf/bench_harness.py`, `src/perf/profiles.py`,
+`src/perf/long_run_harness.py`, the new `src/perf/benchmark_record.py`,
+`src/observability/reporting/baseline_comparator.py` and `sweep_report.py`. No core file
+(`state.py`, `apply.py`, `pipeline.py`, `kernel.py`) is in it, which is why `cost_accounting_version` is a
+constant in `benchmark_record.py` and not an engine field.
 
-The M2 entry condition "M1 identifies every correction that changes benchmark or baseline identity"
-is not met. These are the fields each M1 candidate could affect
-(`performance_m1_correctness_prerequisites_epic.md`):
+## 8. Revalidation against M1
 
-| M1 candidate | Identity or result fields it may change |
-|---|---|
-| `PERF-M1-T01` zero-capacity semantics | `executor.worker_count` (what zero and disabled mean), `runtime_mode_sequence` (the DEGRADED trigger), `contract.verification_level`; every concurrent-profile baseline |
-| `PERF-M1-T02` debt-harness correctness | `work.*` accounting and any debt-related counters; `scenario.checkpoint_id` if fixtures change |
-| `PERF-M1-T03` hash-policy reconciliation | `validity.hash_scheme`, `validity.final_state_hash`, persistence-phase cost in `phases`, and any baseline taken with the old schedule |
-| `PERF-M1-T04` tied-result determinism | `executor.backend`, `executor.worker_count`, and the supported-protocol statement behind `runtime.det_port_tier` |
-| `PERF-M1-T05` invalidation ledger | the list of stored artifacts that stay valid, need a rerun, or are incomparable; this document's migration table is rechecked against it |
-| PERF-D1 amendment A1 (wall-clock reads) | `observer.level` and `protocol.clock` if wall-clock reads in decision inputs become configuration |
+The draft required a re-read after M1 reported its identity-changing corrections. M1 closed in #473. The
+findings, and what each changed in this schema:
 
-## 8. Revalidation
+| # | Finding | Source | Change |
+|---|---|---|---|
+| R-1 | Nothing recorded whether a run's governor read a modelled or a measured cost, or which work model it used | DEV-018 (#448); `RuntimeProfile.signal_contract`; `WORK_MODEL_VERSION` | `contract.signal_contract` and `contract.work_model_version`, both blocking |
+| R-2 | Tick and phase totals changed meaning at DEV-017 but `engine.commit` is recorded only, so a pre-#448 record compared as comparable | DEV-017 (#448) | `result.cost_accounting_version`, blocking; a record without it is `INCONCLUSIVE` |
+| R-3 | `validity.hash_scheme` was a free string | DEV-019 (#455) | An enum (`flat-sha256-v1`, `flat-sha256-v2`); the rule is unchanged |
+| R-4 | The zero-worker `DEGRADED` mistrigger | `PERF-M1-T01` (#352) | None: covered by `executor.worker_count` (blocking) and the all-`NORMAL` rule |
+| R-5 | Work debt is gone, so the draft's M1-T02 row ("debt-related counters") had nothing to describe | DEV-019 (#455) | The debt wording is dropped; `work` holds the kernel's metric means and invents no counts |
 
-This draft is re-read after M1 reports its identity-changing corrections and after the entry gate
-lifts. Until then: no field here is a requirement, no threshold or runner is chosen, and the
-existing gates keep their current behavior.
+The remaining M1 effects on identity (`PERF-M1-T03` hash policy, `PERF-M1-T04` tied-result determinism,
+`PERF-M1-T05` invalidation ledger) are covered by `validity.hash_scheme`, `executor.*` and the ledger
+(`docs/performance/baseline_invalidation_ledger.md`). Schema version stays `1.0`. A later MAJOR bump follows §4.

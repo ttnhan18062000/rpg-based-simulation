@@ -72,6 +72,29 @@ def _lineage(source_asset_id: str, new: bool, parent: str | None) -> tuple[str, 
         raise _refuse("revision_limit", f"{source_asset_id} has no revision numbers left") from None
 
 
+def revision_of(source_asset_id: str, parent: str) -> tuple[str, str]:
+    """The (revision, parent) of the NEXT revision of an existing source asset; refused unless `parent` is its latest unrevoked revision. Used by the set adoption."""
+    try:
+        revision, parent_revision = _lineage(source_asset_id, False, parent)
+    except (StageError, ContractError) as exc:
+        raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
+    return revision, parent
+
+
+def check_revision_keeps_slot(source_asset_id: str, parent: str, definition, detail_value: str | None) -> None:
+    """ADR D22: a revision is a new drawing for the SAME slot. The parent revision was adopted for one visual key and detail value; a revision that names another would silently move
+    the source asset to a different slot, so it is refused (`revision_changes_slot`), by `adopt --parent` and by the set adoption alike."""
+    try:
+        parent_key, parent_detail = records.revision_slot(source_asset_id, parent)
+    except (StageError, ContractError) as exc:
+        raise _refuse("catalog_unreadable", f"the parent revision's records could not be read ({exc.code})") from None
+    same_slot = parent_key == definition.key and definition.effective_detail(parent_detail) == definition.effective_detail(detail_value)
+    if not same_slot:
+        was = parent_key if parent_detail is None else f"{parent_key} [{parent_detail}]"
+        now = definition.key if detail_value is None else f"{definition.key} [{detail_value}]"
+        raise _refuse("revision_changes_slot", f"{source_asset_id} {parent} was adopted for {was}; a revision keeps its slot, but this one names {now}")
+
+
 def new_source_asset(source_asset_id: str) -> tuple[str, None]:
     """The (revision, parent) of a brand-new source asset; refused if the id already exists. Used by the set adoption, which only creates new assets."""
     try:
@@ -284,6 +307,8 @@ def adopt(
         revision, parent_revision = _lineage(source_asset_id, new, parent)
     except (StageError, ContractError) as exc:
         raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
+    if parent_revision is not None:
+        check_revision_keeps_slot(source_asset_id, parent_revision, definition, detail_value)
     review_bytes = _verify_store_render(intake_id, directory, files, staged, renderer)
 
     try:

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 
-from tests.visual_assets import icon_lookalikes as la
-from tests.visual_assets import icon_recognition as rec
-from tests.visual_assets import icon_specs as specs_mod
+from visual_assets.review import icon_lookalikes as la
+from visual_assets.review import icon_recognition as rec
+from visual_assets.review import icon_specs as specs_mod
 from visual_assets.store import pixels
 
 SPECS = specs_mod.load()
@@ -74,7 +74,7 @@ def test_synonyms_match_whole_words_so_a_crossbow_is_not_a_bow_and_a_swordfish_i
 
 
 def test_the_distractor_check_uses_the_same_whole_word_rule_as_the_scoring():
-    from tests.visual_assets import icon_specs as sm
+    from visual_assets.review import icon_specs as sm
 
     assert sm.has_word("a crossbow", "bow") is False and sm.has_word("a bow and arrow", "bow") is True
     assert "crossbow" in SPECS["icon.class.ranger"].distractors  # the actual misread is offered, and it is not a correct answer

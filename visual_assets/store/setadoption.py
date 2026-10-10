@@ -5,7 +5,7 @@ the store's own Aseprite NOW, that the draft's source renders to exactly the dra
 runs the same checks `adopt` runs (staged bytes, the same bytes not adopted or revoked, the key and detail slot declared and free, the licence and approver). It
 then shows ONE confirmation listing every entry, the DraftSet's file hash and the evidence the human states, and writes all files together or none: per entry the
 source, the intake result copy, a fresh ReviewRenderCheck, an ordinary `AdoptionRecord` and a `SourceRecord`, then one `SetAdoptionRecord` binding the decision to
-the exact bytes of the set. Entries are always NEW source assets; replacing a held slot means revoking it first, as with `adopt`.
+the exact bytes of the set. An entry is either a NEW source asset or, when the draft declares `parent_revision` (ADR D22), the next REVISION of an existing one, under the rules `adopt --parent` applies (the parent is the latest unrevoked revision now, and the slot does not change); replacing a slot held by ANOTHER asset still means revoking it first, as with `adopt`.
 """
 
 from __future__ import annotations
@@ -88,7 +88,7 @@ def adopt_set(
             raise _refuse("catalog_unreadable", f"an adoption record could not be read ({exc.code})") from None
         source_hash = validator.file_hash(files.source)
         adoption.check_source_bytes_are_new(entry.draft_id, source_hash)
-        _, slot, slot_name = adoption.check_slot(registry, entry.visual_key, entry.detail, entry.source_asset_id)
+        definition, slot, slot_name = adoption.check_slot(registry, entry.visual_key, entry.detail, entry.source_asset_id)
         # nothing of this set is written yet, so the catalog checks above cannot see the set's own earlier entries
         if (entry.visual_key, slot) in seen_slots:
             raise _refuse("duplicate_slot", f"two entries of {set_id} fill {slot_name}")
@@ -100,7 +100,11 @@ def adopt_set(
             check(SourceAssetId, entry.source_asset_id)
         except Exception:
             raise _refuse("invalid_source_asset_id", f"{entry.source_asset_id!r} is not valid") from None
-        revision, parent = adoption.new_source_asset(entry.source_asset_id)
+        if entry.parent_revision is None:
+            revision, parent = adoption.new_source_asset(entry.source_asset_id)
+        else:  # ADR D22: the next revision of an existing source asset, under exactly the rules `adopt --parent` applies (parent = latest unrevoked NOW, same slot)
+            revision, parent = adoption.revision_of(entry.source_asset_id, entry.parent_revision)
+            adoption.check_revision_keeps_slot(entry.source_asset_id, parent, definition, entry.detail)
 
         try:
             comparison = rendering.compare_preview(intake_id=entry.draft_id, source=files.source, preview=files.preview, tool=renderer, created_at=decided_at)
@@ -130,9 +134,10 @@ def adopt_set(
             (records.adoptions_dir() / f"{ad_id}.json", adoption_bytes),
             (record_path, source_bytes),
         ]
-        adopted.append(SetAdoptedEntry(visual_key=entry.visual_key, detail=entry.detail, adoption_id=ad_id, intake_id=entry.draft_id))
+        adopted.append(SetAdoptedEntry(visual_key=entry.visual_key, detail=entry.detail, adoption_id=ad_id, intake_id=entry.draft_id, parent_revision=parent))
         remark = " (the key's default detail value)" if entry.detail is None and slot is not None else ""
-        lines.append(f"  {slot_name}{remark}: {entry.source_asset_id} {revision} from {entry.draft_id}, the store's render MATCHES the draft preview")
+        what = f"NEW source asset {entry.source_asset_id} {revision}" if parent is None else f"REVISION of {entry.source_asset_id}: {parent} -> {revision} (parent {parent} is the latest unrevoked)"
+        lines.append(f"  {what} for {slot_name}{remark} from {entry.draft_id}, the store's render MATCHES the draft preview")
 
     try:
         sa_id = set_adoption_id_for(set_id, draft_set_hash)
@@ -146,7 +151,7 @@ def adopt_set(
     to_publish.append((records.set_adoptions_dir() / f"{sa_id}.json", set_bytes_out))
 
     notices = (
-        f"adopt the REVIEWED draft set {set_id}: {len(adopted)} entries, ALL or NONE",
+        f"adopt the REVIEWED draft set {set_id}: {len(adopted)} entries ({sum(1 for a in adopted if a.parent_revision is None)} new, {sum(1 for a in adopted if a.parent_revision is not None)} revisions), ALL or NONE",
         f"the DraftSet file hash is {draft_set_hash}: check it is the set you reviewed (the preview page shows the same hash)",
         "the store re-rendered every source just now and each render MATCHES its draft preview, pixel for pixel",
         *lines,

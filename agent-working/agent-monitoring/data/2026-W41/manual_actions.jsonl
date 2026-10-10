@@ -17,3 +17,6 @@
 {"ts":"2026-10-08T14:36:37.249433Z","category":"handover_recovery","source":"sample","session_id":"b5e68753-20c7-4219-b0fe-29e93125a48d","session_role":"rpg-designer","batch":null,"count":1}
 {"ts":"2026-10-08T10:28:25.984367Z","category":"handover_recovery","source":"sample","session_id":"e2081b98-0f57-4b88-a1c6-003c401f7eda","session_role":"testing-planner","batch":null,"count":1}
 {"ts":"2026-10-09T04:17:57.129795Z","category":"handover_recovery","source":"sample","session_id":"6e15c8f0-1b3d-4aff-a568-93c878bf86af","session_role":"agent-working-planner","batch":null,"count":1}
+{"ts":"2026-10-09T07:37:48.116683Z","category":"handover_recovery","source":"sample","session_id":"59a6aadf-78c7-43a4-8361-b98096d60429","session_role":"agent-working-planner","batch":null,"count":1}
+{"ts":"2026-10-10T02:54:53.151007Z","category":"handover_recovery","source":"sample","session_id":"15451802-7579-4691-877d-b16a2704774c","session_role":"perf-implementer","batch":null,"count":1}
+{"ts":"2026-10-10T02:47:27.489903Z","category":"handover_recovery","source":"sample","session_id":"944d2b70-a257-4fea-900c-9d8ccaac4d33","session_role":"perf-planner","batch":null,"count":1}

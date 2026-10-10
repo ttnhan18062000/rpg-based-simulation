@@ -67,7 +67,7 @@ visual_assets/                     # ONE ROOT FOLDER: code and managed data toge
     technique/                     #   pure maths, no I/O, no Aseprite
       ramps.py dither.py stroke.py shading.py masks.py lint.py ascii.py
     compose.py                     #   sprite-facing high-level tools (shade, dither, stroke, outline, remap, lint)
-    handoff.py                     #   NEW (later ticket): build a CandidateHandoffPackage from one exact revision
+    handoff.py                     #   build a CandidateHandoffPackage from one exact revision (built)
     server/
       app.py                       #   FastMCP instance + instructions
       lowlevel_tools.py highlevel_tools.py handoff_tools.py store_readonly_tools.py
@@ -103,7 +103,7 @@ visual_assets/                     # ONE ROOT FOLDER: code and managed data toge
     verify.py                      #   whole-store integrity: every record <-> bytes <-> hashes (pure Python, runs in CI)
     revoke.py                      #   quarantine/revoke a candidate or source revision; blocks build eligibility
     gc.py                          #   reachability-based dry-run GC of .quarantine and unreferenced generated files
-    cli.py  __main__.py            #   python -m visual_assets.store <intake|review|adopt|revoke|audit|list|show> built; build|release|verify|gc later
+    cli.py  __main__.py            #   python -m visual_assets.store <intake|review|adopt|adopt-set|revoke|audit|list|show|draft|build|release|export-runtime|verify|gc> (all built)
     records.py catalogwrite.py audit.py   # safe record reads; all-or-nothing tracked publish; read-only chain audit (built)
     README.md
 
@@ -147,7 +147,7 @@ tests/
   visual_assets/test_boundaries.py      # import-direction and write-boundary rules (below)
   tools/test_mcp_json_registration.py   # extended for the new server entry
   tools/test_mcp_launcher_hardening.py  # extended for visual_assets/start_mcp.sh
-  visual_assets/test_catalog_integrity.py  # `verify` over the committed visual_assets/catalog/ tree (later ticket)
+  visual_assets/test_catalog_integrity.py  # `verify` over the committed visual_assets/catalog/ tree (built)
 
 docs/
   assets/                          # new doc area

@@ -1,0 +1,898 @@
+{
+ "flagged_era": [
+  "icon.item.tool",
+  "icon.status.frame_debuff"
+ ],
+ "flagged_free_text": [
+  "icon.item.tool",
+  "icon.marker.ruins",
+  "icon.status.frame_debuff",
+  "icon.tier.a",
+  "icon.tier.d",
+  "icon.tier.e"
+ ],
+ "missed_in_choice": [],
+ "results": {
+  "icon.building.blacksmith": {
+   "choice": {
+    "correct": true,
+    "picked": "an anvil with a raised hammer"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "blacksmith anvil hammer"
+   },
+   "era_answer": "medieval or fantasy: blacksmith anvil hammer",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "anvil",
+     "hammer"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "anvil with hammer",
+   "status": "adopted"
+  },
+  "icon.building.class_hall": {
+   "choice": {
+    "correct": true,
+    "picked": "an open book"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "open spellbook"
+   },
+   "era_answer": "medieval or fantasy: open spellbook",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "spellbook"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "open spellbook",
+   "status": "v2"
+  },
+  "icon.building.guild": {
+   "choice": {
+    "correct": true,
+    "picked": "a banner on a pole"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "red banner flag"
+   },
+   "era_answer": "medieval or fantasy: red banner flag",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "banner",
+     "flag"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "red banner flag",
+   "status": "v2"
+  },
+  "icon.building.hero_house": {
+   "choice": {
+    "correct": true,
+    "picked": "a timber-framed cottage"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "thatched cottage house"
+   },
+   "era_answer": "medieval or fantasy: thatched cottage house",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "house",
+     "cottage"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "cottage house",
+   "status": "revision"
+  },
+  "icon.building.inn": {
+   "choice": {
+    "correct": true,
+    "picked": "a tankard with wooden staves and iron hoops"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "wooden beer tankard"
+   },
+   "era_answer": "medieval or fantasy: wooden beer tankard",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "mug",
+     "beer"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "beer mug",
+   "status": "revision"
+  },
+  "icon.building.store": {
+   "choice": {
+    "correct": true,
+    "picked": "a coin purse"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "gold coin pouch"
+   },
+   "era_answer": "medieval or fantasy: gold coin pouch",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "coin",
+     "gold",
+     "pouch"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "gold coin pouch",
+   "status": "v2"
+  },
+  "icon.class.mage": {
+   "choice": {
+    "correct": true,
+    "picked": "a pointed wizard hat"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "purple wizard hat"
+   },
+   "era_answer": "medieval or fantasy: purple wizard hat",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "wizard",
+     "hat"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "purple wizard hat",
+   "status": "v2"
+  },
+  "icon.class.ranger": {
+   "choice": {
+    "correct": true,
+    "picked": "a longbow with a nocked arrow"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "bow and arrow"
+   },
+   "era_answer": "medieval or fantasy: bow and arrow",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "bow",
+     "arrow"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "bow and arrow",
+   "status": "v2"
+  },
+  "icon.class.rogue": {
+   "choice": {
+    "correct": true,
+    "picked": "a hooded cowl"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "hooded cloaked figure"
+   },
+   "era_answer": "medieval or fantasy: hooded cloaked figure",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "hooded"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "hooded figure",
+   "status": "revision"
+  },
+  "icon.class.warrior": {
+   "choice": {
+    "correct": true,
+    "picked": "a shield with a sword emblem"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "sword shield emblem"
+   },
+   "era_answer": "medieval or fantasy: sword shield emblem",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "shield"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "sword shield",
+   "status": "adopted"
+  },
+  "icon.item.armor": {
+   "choice": {
+    "correct": true,
+    "picked": "a breastplate"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "steel breastplate armor"
+   },
+   "era_answer": "medieval or fantasy: steel breastplate armor",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "armor",
+     "chest"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "steel chest armor",
+   "status": "v2"
+  },
+  "icon.item.consumable": {
+   "choice": {
+    "correct": true,
+    "picked": "a potion flask"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "red potion flask"
+   },
+   "era_answer": "medieval or fantasy: red potion flask",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "potion",
+     "flask"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "red potion flask",
+   "status": "v2"
+  },
+  "icon.item.material": {
+   "choice": {
+    "correct": true,
+    "picked": "an ore chunk"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "gold ore rock"
+   },
+   "era_answer": "medieval or fantasy: gold ore rock",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "ore",
+     "rock",
+     "gold"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "ore rock with gold",
+   "status": "v2"
+  },
+  "icon.item.tool": {
+   "choice": {
+    "correct": true,
+    "picked": "a smith's hammer crossed with tongs"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": true,
+    "modern_object_named": [
+     "wrench"
+    ],
+    "object": "hammer and wrench"
+   },
+   "era_answer": "medieval or fantasy: hammer and wrench",
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [
+     "hammer"
+    ],
+    "modern_object_named": [
+     "wrench"
+    ],
+    "named": true
+   },
+   "free_text": "crossed hammer and wrench",
+   "status": "revision"
+  },
+  "icon.item.trinket": {
+   "choice": {
+    "correct": true,
+    "picked": "a pendant on a chain"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "blue gem amulet"
+   },
+   "era_answer": "medieval or fantasy: blue gem amulet",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "pendant",
+     "amulet"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "blue pendant amulet",
+   "status": "v2"
+  },
+  "icon.item.weapon": {
+   "choice": {
+    "correct": true,
+    "picked": "a sword"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "golden-hilted sword"
+   },
+   "era_answer": "medieval or fantasy: golden-hilted sword",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "sword"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "sword",
+   "status": "v2"
+  },
+  "icon.marker.boss_arena": {
+   "choice": {
+    "correct": true,
+    "picked": "a skull"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "skull on plate"
+   },
+   "era_answer": "cannot tell: skull on plate",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "skull"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "skull",
+   "status": "v2"
+  },
+  "icon.marker.dungeon_entrance": {
+   "choice": {
+    "correct": true,
+    "picked": "an arched doorway"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "stone arched doorway"
+   },
+   "era_answer": "medieval or fantasy: stone arched doorway",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "door",
+     "archway"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "stone archway door",
+   "status": "v2"
+  },
+  "icon.marker.enemy_camp": {
+   "choice": {
+    "correct": true,
+    "picked": "crossed swords"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "crossed swords"
+   },
+   "era_answer": "medieval or fantasy: crossed swords",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "crossed sword",
+     "swords",
+     "sword"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "crossed swords",
+   "status": "adopted"
+  },
+  "icon.marker.resource_grove": {
+   "choice": {
+    "correct": true,
+    "picked": "a tree"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "green tree"
+   },
+   "era_answer": "cannot tell: green tree",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "tree"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "green tree",
+   "status": "v2"
+  },
+  "icon.marker.ruins": {
+   "choice": {
+    "correct": true,
+    "picked": "a ruined brick wall"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "grey grid tile"
+   },
+   "era_answer": "cannot tell: grey grid tile",
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [],
+    "modern_object_named": [],
+    "named": false
+   },
+   "free_text": "market stall or ledger",
+   "status": "v2"
+  },
+  "icon.marker.shrine": {
+   "choice": {
+    "correct": true,
+    "picked": "an obelisk"
+   },
+   "era": {
+    "era": "medieval or fantasy",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "stone obelisk marker"
+   },
+   "era_answer": "medieval or fantasy: stone obelisk marker",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "obelisk",
+     "stone"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "stone obelisk marker",
+   "status": "v2"
+  },
+  "icon.plate.location": {
+   "choice": {
+    "correct": true,
+    "picked": "a location plate"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "blank grey square"
+   },
+   "era_answer": "cannot tell: blank grey square",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "square"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "blank grey square",
+   "status": "adopted"
+  },
+  "icon.rarity.common": {
+   "choice": {
+    "correct": true,
+    "picked": "a silver bead"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "grey round orb"
+   },
+   "era_answer": "cannot tell: grey round orb",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "orb"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "white orb",
+   "status": "revision"
+  },
+  "icon.rarity.rare": {
+   "choice": {
+    "correct": true,
+    "picked": "a four-point sparkle gem"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "purple diamond gem"
+   },
+   "era_answer": "cannot tell: purple diamond gem",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "gem"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "purple gem",
+   "status": "v2"
+  },
+  "icon.rarity.uncommon": {
+   "choice": {
+    "correct": true,
+    "picked": "a kite-shaped gem"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "green diamond gem"
+   },
+   "era_answer": "cannot tell: green diamond gem",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "gem"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "green gem",
+   "status": "v2"
+  },
+  "icon.status.frame_buff": {
+   "choice": {
+    "correct": true,
+    "picked": "a round frame with a solid up arrow"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "upward arrow badge"
+   },
+   "era_answer": "cannot tell: upward arrow badge",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "up arrow"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "up arrow on green badge",
+   "status": "revision"
+  },
+  "icon.status.frame_debuff": {
+   "choice": {
+    "correct": true,
+    "picked": "a spiked ball frame with a down arrow"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": true,
+    "modern_object_named": [
+     "gear"
+    ],
+    "object": "red gear emblem"
+   },
+   "era_answer": "cannot tell: red gear emblem",
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [
+     "spiked"
+    ],
+    "modern_object_named": [
+     "gear"
+    ],
+    "named": true
+   },
+   "free_text": "red spiked gear target",
+   "status": "revision"
+  },
+  "icon.tier.a": {
+   "choice": {
+    "correct": true,
+    "picked": "an octagon badge with a frame cut out"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "grey ring disc"
+   },
+   "era_answer": "cannot tell: grey ring disc",
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [],
+    "modern_object_named": [],
+    "named": false
+   },
+   "free_text": "round grey disc",
+   "status": "adopted"
+  },
+  "icon.tier.b": {
+   "choice": {
+    "correct": true,
+    "picked": "an octagon badge with two pips cut out"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "green round token"
+   },
+   "era_answer": "cannot tell: green round token",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "button"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "green round button",
+   "status": "adopted"
+  },
+  "icon.tier.c": {
+   "choice": {
+    "correct": true,
+    "picked": "an octagon badge with one pip cut out"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "dark round ring"
+   },
+   "era_answer": "cannot tell: dark round ring",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "ring"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "dark ring on grey plate",
+   "status": "adopted"
+  },
+  "icon.tier.d": {
+   "choice": {
+    "correct": true,
+    "picked": "a plain octagon badge"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "dark green disc"
+   },
+   "era_answer": "cannot tell: dark green disc",
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [],
+    "modern_object_named": [],
+    "named": false
+   },
+   "free_text": "dark green circle",
+   "status": "adopted"
+  },
+  "icon.tier.e": {
+   "choice": {
+    "correct": true,
+    "picked": "a dark green plain octagon badge"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "dark green disc"
+   },
+   "era_answer": "cannot tell: dark green disc",
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [],
+    "modern_object_named": [],
+    "named": false
+   },
+   "free_text": "dark green circle",
+   "status": "adopted"
+  },
+  "icon.tier.s": {
+   "choice": {
+    "correct": true,
+    "picked": "a silver diamond badge"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "grey diamond gem"
+   },
+   "era_answer": "cannot tell: grey diamond gem",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "diamond"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "grey diamond",
+   "status": "adopted"
+  },
+  "icon.tier.ss": {
+   "choice": {
+    "correct": true,
+    "picked": "a gold diamond badge with one pip"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "gold ring diamond"
+   },
+   "era_answer": "cannot tell: gold ring diamond",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "diamond"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "gold ring diamond",
+   "status": "adopted"
+  },
+  "icon.tier.sss": {
+   "choice": {
+    "correct": true,
+    "picked": "a platinum diamond badge with two pips"
+   },
+   "era": {
+    "era": "cannot tell",
+    "flagged": false,
+    "modern_object_named": [],
+    "object": "white diamond shape"
+   },
+   "era_answer": "cannot tell: white diamond shape",
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "diamond"
+    ],
+    "modern_object_named": [],
+    "named": true
+   },
+   "free_text": "white diamond shape",
+   "status": "adopted"
+  }
+ }
+}

@@ -7,17 +7,17 @@ import json
 
 import pytest
 
-from tests.visual_assets import icon_lookalikes as la
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets import icon_silhouette_sheet as ss
-from tests.visual_assets import icon_specs
+from visual_assets.review import icon_lookalikes as la
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review import icon_silhouette_sheet as ss
+from visual_assets.review import icon_specs
 
 # the ruins arch and the tent camp were taken off the sheet when the owner kept the adopted versions ("Keep current versions", 2026-10-08)
 SLOTS = ["icon.rarity.common", "icon.status.frame_buff", "icon.class.rogue", "icon.item.tool", "icon.building.hero_house", "icon.status.frame_debuff", "icon.building.inn"]  # the theme-fit decisions of 2026-10-08 added the cottage, the spiked debuff frame and the tankard and replaced the toolbox
 
 
 def test_the_committed_sheet_equals_a_fresh_build():
-    assert ss.COMMITTED.read_text() == ss.text(ss.build()), "regenerate: python -m tests.visual_assets.icon_silhouette_sheet --write"
+    assert ss.COMMITTED.read_text() == ss.text(ss.build()), "regenerate: python -m visual_assets.review.icon_silhouette_sheet --write"
 
 
 def test_every_changed_slot_is_a_registered_icon_with_its_current_silhouette_and_at_least_one_option():

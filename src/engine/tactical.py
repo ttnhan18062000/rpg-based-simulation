@@ -24,6 +24,7 @@ from src.engine.tactical_threat import safety_retreat_warranted
 from src.engine.tactical_rest import in_place_survival_update
 from src.engine.building_arrival import building_arrival_update
 from src.engine.tactical_hold import held_swing_update, notice_unengaged_hostile, stalemate_break_update
+from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
 from src.engine.hostility import perceived_hostile, source_identity
 
 if TYPE_CHECKING:
@@ -69,6 +70,23 @@ def _combined_wound_scar_distress(wounds, scars) -> float:
     """Combined wound + scar distress signal, used only by the PROTECTOR guard
     branch (AC #2's 'ally wound/scar severity as an additional signal')."""
     return _wound_distress(wounds) + _scar_distress(scars)
+
+
+def _held_target_in_view(state: "AuthoritativeState", entity: "EntityState", target_id: int) -> bool:
+    """True when the held-task target is alive and the entity still perceives it (the goal-hysteresis shortcut keeps it)."""
+    target = state.entities.get(target_id)
+    return bool(target and target.combat.alive and _target_still_perceived(entity, target))
+
+
+def _target_still_perceived(entity: "EntityState", target: "EntityState") -> bool:
+    """A held pursuit target the entity can no longer perceive is let go: a chase ends at the edge of what the pursuer knows.
+
+    Applies to the held-task shortcut (goal hysteresis), which used to keep a target without asking the perception gate."""
+    dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, target.navigation.position)
+    try:
+        return bool(get_perception_gate().can_perceive(entity, get_entity_signals(target), {"distance": float(dist)}).perceived)
+    except (AttributeError, KeyError, TypeError, ValueError, RuntimeError):
+        return True  # gate failure: permissive, as the hostile list does
 
 
 def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) -> List["EntityState"]:
@@ -144,8 +162,7 @@ class TacticalDecisionSystem:
             # Maintain current task if target is still valid
             current_target_id = entity.task.payload.get("target_id")
             if current_target_id:
-                target = state.entities.get(current_target_id)
-                if target and target.combat.alive:
+                if _held_target_in_view(state, entity, current_target_id):
                     stale_ticks = entity.task.payload.get("stale_ticks", 0)
                     return EntityUpdate(
                         entity_id=entity.id,

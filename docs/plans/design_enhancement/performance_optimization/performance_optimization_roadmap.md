@@ -251,6 +251,13 @@ decided:
       2. memo row 7 (b) at 8 unbound (#393), 7 of them dead modules filed for deletion;
       3. no standing no-touch window on the four core files.
 
+8. **M2 lift (owner decision, 2026-10-09).** The gate and the Code Craft `src/` freeze are lifted for the M2 tickets on
+   six files: `src/perf/bench_harness.py`, `src/perf/profiles.py`, `src/perf/long_run_harness.py`, the new
+   `src/perf/benchmark_record.py`, `src/observability/reporting/baseline_comparator.py` and `sweep_report.py`.
+   rpg-planner confirmed that no open or planned RPG-core ticket edits them (Ask 13, #475). No core file is in the
+   lift. Measurements stay provisional, and no soft check becomes blocking. The full lift is still an owner
+   statement. Decisions OD-1 to OD-8 are recorded in the M2 epic's "Delivery plan".
+
 ### Foundation slice that may start now
 
 Documents, tickets, and read-only tooling only — no `src/` edit, no baseline:
@@ -318,7 +325,7 @@ spine:
 |---|---|---:|---|---|
 | [M0 — Architecture governance](performance_m0_architecture_governance_epic.md) | Durable sources, owners, PERF-D1..D6, P1 reconciliation | 9 | Planning sources available | Approved decisions or explicit blocked dispositions; one discoverable program authority |
 | [M1 — Correctness prerequisites](performance_m1_correctness_prerequisites_epic.md) | Capacity/debt/hash corrections and ordering verification | 5 | Relevant PERF decisions plus M0 reconciliation | Corrected contracts/tests and baseline invalidation decisions. **Done 2026-10-09:** T01 to T05 complete; the invalidation ledger is [`docs/performance/baseline_invalidation_ledger.md`](../../../performance/baseline_invalidation_ledger.md) (classification only, nothing rerun; reruns are M2) |
-| [M2 — Performance contract](performance_m2_performance_contract_epic.md) | One claim model and executable CI/scheduled projections | 6 | PERF-D2/D4 and affected M1 identities | Versioned authoritative contract with no silent missing-evidence pass |
+| [M2 — Performance contract](performance_m2_performance_contract_epic.md) | One claim model and executable CI/scheduled projections | 6 | PERF-D2/D4 and affected M1 identities | Versioned authoritative contract with no silent missing-evidence pass. **2026-10-09:** T01 and T02 (draft) done; the remaining tickets (T02b to T08), the owner decisions OD-1 to OD-8 and the schema revalidation are in the epic's "Delivery plan" |
 | [M3 — Phase and observability foundation](performance_m3_phase_observability_foundation_epic.md) | Phase catalog, scheduling funnel, bounded instrumentation | 7 | PERF-D1/D6, M2 metric identity, PA-05A evidence | Catalog conformance and bounded observer overhead |
 | [M4 — Continuous assurance, baselines, and Gate A](performance_m4_baseline_gate_a_epic.md) | Change-aware test routing, E2E/Arena/SimQ gates, audit evidence, baseline matrix, bottleneck decision | 12 | M1–M3 stable | Trustworthy regression-control loop, valid scenario dispositions, and approved Gate A report |
 | [M5 — Exact optimization delivery](performance_m5_exact_optimization_delivery_epic.md) | Only Gate-A-selected semantics-preserving accelerators | 8 conditional families | Gate A selects each family | Per-family parity, bounds, rollout, and promotion/rejection |

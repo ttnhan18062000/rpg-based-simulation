@@ -1,0 +1,435 @@
+{
+ "rule": {
+  "i1": "silhouette pixels differing >= {8: 3, 16: 6, 24: 8} (by canvas side) across classes",
+  "i2": "dL* of mean colours >= 6.0 in ['normal', 'protan', 'deutan', 'tritan']",
+  "i3": "plate rim colour vs terrain tile mean, dL* >= 12.0 in ['normal', 'protan', 'deutan', 'tritan']"
+ },
+ "i1": true,
+ "i2": true,
+ "i3": true,
+ "result": "PASS",
+ "groups": {
+  "badges": {
+   "size": 8,
+   "pairs": 55,
+   "min_shape_px_across_classes": 4,
+   "value_checked": false,
+   "min_dL_by_vision": {}
+  },
+  "buildings": {
+   "size": 24,
+   "pairs": 15,
+   "min_shape_px_across_classes": 65,
+   "value_checked": false,
+   "min_dL_by_vision": {}
+  },
+  "classes": {
+   "size": 24,
+   "pairs": 6,
+   "min_shape_px_across_classes": 132,
+   "value_checked": false,
+   "min_dL_by_vision": {}
+  },
+  "items": {
+   "size": 24,
+   "pairs": 15,
+   "min_shape_px_across_classes": 71,
+   "value_checked": false,
+   "min_dL_by_vision": {}
+  },
+  "locations": {
+   "size": 16,
+   "pairs": 15,
+   "min_shape_px_across_classes": 17,
+   "value_checked": false,
+   "min_dL_by_vision": {}
+  },
+  "rarity": {
+   "size": 8,
+   "pairs": 3,
+   "min_shape_px_across_classes": 13,
+   "value_checked": true,
+   "min_dL_by_vision": {
+    "normal": 10.197,
+    "protan": 9.609,
+    "deutan": 10.769,
+    "tritan": 11.007
+   }
+  }
+ },
+ "plates": {},
+ "failing": {
+  "i1": [],
+  "i2": [],
+  "i3": []
+ },
+ "off_palette_pixels": {},
+ "set_id": "icons-v2",
+ "draft_set_hash": "sha256:bb41c3eef245f6eab3488d5c7a940e574a463112a0bfba611b0c5cfd012737f4",
+ "lint": {
+  "icon.building.class_hall": {
+   "ok": true,
+   "colors": 7,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.building.guild": {
+   "ok": true,
+   "colors": 5,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.building.hero_house": {
+   "ok": true,
+   "colors": 8,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.building.inn": {
+   "ok": true,
+   "colors": 6,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.building.store": {
+   "ok": true,
+   "colors": 6,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.class.mage": {
+   "ok": true,
+   "colors": 5,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.class.ranger": {
+   "ok": true,
+   "colors": 6,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.class.rogue": {
+   "ok": true,
+   "colors": 7,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.item.armor": {
+   "ok": true,
+   "colors": 6,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.item.consumable": {
+   "ok": true,
+   "colors": 7,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.item.material": {
+   "ok": true,
+   "colors": 6,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.item.tool": {
+   "ok": true,
+   "colors": 4,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.item.trinket": {
+   "ok": true,
+   "colors": 7,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.item.weapon": {
+   "ok": true,
+   "colors": 8,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.marker.boss_arena": {
+   "ok": true,
+   "colors": 3,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.marker.dungeon_entrance": {
+   "ok": true,
+   "colors": 5,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.marker.resource_grove": {
+   "ok": true,
+   "colors": 4,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.marker.ruins": {
+   "ok": true,
+   "colors": 5,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.marker.shrine": {
+   "ok": true,
+   "colors": 5,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.rarity.common": {
+   "ok": true,
+   "colors": 3,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "warnings": []
+  },
+  "icon.rarity.rare": {
+   "ok": true,
+   "colors": 2,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "warnings": []
+  },
+  "icon.rarity.uncommon": {
+   "ok": true,
+   "colors": 2,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "warnings": []
+  }
+ },
+ "glyph_live_area": {
+  "icon.marker.resource_grove": {
+   "bbox": [
+    2,
+    2,
+    13,
+    13
+   ],
+   "margin": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  "icon.marker.ruins": {
+   "bbox": [
+    2,
+    2,
+    13,
+    12
+   ],
+   "margin": [
+    2,
+    2,
+    2,
+    3
+   ]
+  },
+  "icon.marker.dungeon_entrance": {
+   "bbox": [
+    2,
+    2,
+    13,
+    13
+   ],
+   "margin": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  "icon.marker.shrine": {
+   "bbox": [
+    4,
+    2,
+    11,
+    13
+   ],
+   "margin": [
+    4,
+    2,
+    4,
+    2
+   ]
+  },
+  "icon.marker.boss_arena": {
+   "bbox": [
+    2,
+    2,
+    13,
+    13
+   ],
+   "margin": [
+    2,
+    2,
+    2,
+    2
+   ]
+  }
+ },
+ "rarity_vs_tier_min_shape_px": {
+  "icon.rarity.common": 9,
+  "icon.rarity.uncommon": 16,
+  "icon.rarity.rare": 8
+ },
+ "panel_live_area": {
+  "icon.building.class_hall": [
+   2,
+   6,
+   21,
+   20
+  ],
+  "icon.building.guild": [
+   4,
+   2,
+   20,
+   21
+  ],
+  "icon.building.hero_house": [
+   2,
+   2,
+   21,
+   20
+  ],
+  "icon.building.inn": [
+   3,
+   2,
+   20,
+   20
+  ],
+  "icon.building.store": [
+   3,
+   3,
+   20,
+   21
+  ],
+  "icon.class.mage": [
+   2,
+   3,
+   21,
+   20
+  ],
+  "icon.class.ranger": [
+   3,
+   2,
+   20,
+   21
+  ],
+  "icon.class.rogue": [
+   2,
+   2,
+   20,
+   21
+  ],
+  "icon.item.armor": [
+   2,
+   3,
+   21,
+   21
+  ],
+  "icon.item.consumable": [
+   4,
+   2,
+   19,
+   21
+  ],
+  "icon.item.material": [
+   2,
+   2,
+   21,
+   20
+  ],
+  "icon.item.tool": [
+   4,
+   2,
+   21,
+   19
+  ],
+  "icon.item.trinket": [
+   5,
+   2,
+   18,
+   21
+  ],
+  "icon.item.weapon": [
+   5,
+   2,
+   18,
+   21
+  ]
+ }
+}

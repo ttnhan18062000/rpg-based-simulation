@@ -77,6 +77,7 @@ def fake_baseline(tmp_path):
 
     with open(baseline_path, "w", encoding="utf-8") as f:
         f.write(config.model_dump_json(indent=2))
+    _stamp_current_cost_accounting(baseline_path)
 
     return str(baseline_path)
 
@@ -308,3 +309,13 @@ def test_rules_engine_apply_envelope():
     assert stalled_config.severity_override == "WARNING"
     assert stalled_config.thresholds["tick_threshold"] == 40
     assert "resource_economy" in stalled_config.scenario_types
+
+
+def _stamp_current_cost_accounting(path):
+    """Mark a baseline as measured under the current cost accounting (DEV-017)."""
+    from src.perf.benchmark_record import COST_ACCOUNTING_VERSION
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data["cost_accounting_version"] = COST_ACCOUNTING_VERSION
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)

@@ -1,4 +1,4 @@
-// The committed icon draft export (a test-time copy of `draft export icons-key-v1`, see tests/visual_assets/icon_draft_fixture.py) as the build sees it, with the recorded result of the
+// The committed icon draft export (a test-time copy of `draft export icons-key-v1`, see visual_assets/review/icon_draft_fixture.py) as the build sees it, with the recorded result of the
 // Python sheet rule. Only the icon preview page and tests import this.
 import manifestText from './__fixtures__/icondraft/draft_preview_manifest.json?raw'
 import ruleResultText from './__fixtures__/icondraft/rule_result.json?raw'
@@ -21,7 +21,7 @@ export const iconDraftUrls: Readonly<Record<string, string>> = Object.freeze(
 )
 export const iconDraftUrlFor = (file: string): string | undefined => iconDraftUrls[file]
 
-// The one-colour silhouette sheet the owner approves before any full drawing (`TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`): committed by tests/visual_assets/icon_silhouette_sheet.py.
+// The one-colour silhouette sheet the owner approves before any full drawing (`TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`): committed by visual_assets/review/icon_silhouette_sheet.py.
 export const iconSilhouetteSheetText: string = silhouetteSheetText
 
 // The owner-fix revisions (`TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`): six new revisions of adopted icons, its own export and recorded results, shown beside the adopted drawings.

@@ -1,0 +1,12 @@
+{
+  "project": "chromium-dpr2",
+  "browser": "chromium",
+  "version": "148.0.7778.96",
+  "generation": "sha256:44bf5b2c7513ecbf4e98a55c803a4e6bb3aea29038e709a4bad9619dd1916c24",
+  "devicePixelRatio": 2,
+  "fringedCellsReportedByPage": 140,
+  "cellsWhoseOuterRingChanged": 140,
+  "pixelsChangedWithin4pxOfEdge": 7144,
+  "pixelsChangedInCellCentre": 0,
+  "flatControlDistinctColours": 533
+}

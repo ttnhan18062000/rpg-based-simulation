@@ -143,6 +143,31 @@ def test_a_missing_artifact_is_refused_as_a_mismatch(released, monkeypatch):
     refused(released, "artifact_mismatch")
 
 
+def test_a_key_left_without_an_alternative_is_refused_at_export_time(released, monkeypatch):
+    """`AM1-W06.3` at activation: the same check as at release time, run again when the client's manifest is written."""
+    monkeypatch.setattr(verify, "verify", lambda *a, **k: [])
+    seen = {}
+
+    def problems(registry, present):
+        seen["present"] = set(present)
+        return ["real.x.y: identifying key has no image in this release and no alternative that carries its fact"]
+
+    monkeypatch.setattr(runtime_export, "fallback_problems", problems)
+    real_load = runtime_export.load_registry
+
+    def with_an_extra_key_without_an_image(*args, **kwargs):  # same file hash, so the registry-mismatch refusal stays quiet; one more optional key that has no artifact
+        from visual_assets.store.catalog.registry import Registry
+        from visual_assets.store.contracts.definitions import Fallback, VisualKeyDefinition
+
+        registry = real_load(*args, **kwargs)
+        extra = VisualKeyDefinition(key="fixture.rehearsal.noimage", family="terrain", description="d", variant_axes=(), optional=True, safety_class="identifying", fallback=Fallback(kind="text", text="t"))
+        return Registry({**registry.keys, extra.key: extra}, dict(registry.aliases), registry.file_hash)
+
+    monkeypatch.setattr(runtime_export, "load_registry", with_an_extra_key_without_an_image)
+    refused(released, "fallback_missing")
+    assert seen["present"] == {key for _, key, *_ in fx.ASSETS}  # it is asked about exactly the keys the release has images for, not every registry key
+
+
 def test_a_registry_changed_since_the_candidate_was_assembled_is_refused(released, monkeypatch):
     monkeypatch.setattr(verify, "verify", lambda *a, **k: [])
     path = released.catalog / "definitions" / "visual_keys.yaml"

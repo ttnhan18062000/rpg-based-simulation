@@ -15,7 +15,7 @@ import shutil
 from pathlib import Path
 
 from visual_assets.store import config, pixels, records, verify
-from visual_assets.store.catalog.registry import load_registry
+from visual_assets.store.catalog.registry import fallback_problems, load_registry
 from visual_assets.store.contracts import ReleaseCandidateManifest, RuntimeManifest, canonical_json, parse_record, record_bound
 from visual_assets.store.contracts.runtime import RuntimeDetail, RuntimeEntry
 from visual_assets.store.errors import BuildError, ContractError, IdentityError, PngDecodeError, RegistryError, StageError
@@ -93,6 +93,9 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
             files[f"{digest}.png"] = png
             entries.append(RuntimeEntry(visual_key=entry.visual_key, family=registry.keys[entry.visual_key].family, pixel_hash=entry.pixel_hash,
                                         file=f"{digest}.png", width=decoded.width, height=decoded.height, detail=entry.detail))
+        missing = fallback_problems(registry, {e.visual_key for e in entries})  # AM1-W06.3 again at activation time: the client must be able to show something for every key it has no image for
+        if missing:
+            raise BuildError("fallback_missing", f"{len(missing)} key(s) without an image have no alternative, first: {missing[0]}")
         # the client picks over the DECLARED values, copied from the registry (the registry hash was just checked equal to the candidate's)
         details = tuple(
             RuntimeDetail(visual_key=key, values=tuple(registry.keys[key].detail.values), default=registry.keys[key].detail.default)

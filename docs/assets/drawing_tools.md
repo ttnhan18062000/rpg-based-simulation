@@ -15,7 +15,7 @@ behaviour change by `TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`. Evidence level
 not satisfy the M0 licence/provenance review, produces no production assets and activates nothing at
 runtime. The module layout and layering rules are in `visual_assets/drawing/README.md` and
 `docs/plans/visual-asset-foundation/README.md`; the store the drawings may later be handed to is described in
-`docs/assets/store_contract.md` (designed, not built).
+`docs/assets/store_contract.md` (built: intake, human-gated adoption, build, release candidates, runtime export, verify and gc).
 
 ## Run
 
@@ -50,7 +50,9 @@ not reflected), `utc_time`, `aseprite_version`, `passed`, `failed`, `errors`, `s
 `pytest_exit_code` and `ok`. A guard test (`tests/visual_assets/test_aseprite_licence_guard.py`) fails if a workflow
 names Aseprite or a tracked file is an Aseprite executable or package.
 
-The server is registered for this repository in `.mcp.json` as `aseprite-pixel-art`. Sprites live outside the
+**Review tooling (`visual_assets/review/`, `TCK-20261008-VISUAL-ASSETS-REVIEW-TOOLING-IN-STORE-CLI`).** The sheet rule, the compliance table, the look-alike report, the blind-check helpers and the owner review folder live in one peer package of `store` and `drawing`, with one command: `python -m visual_assets.review evaluate --set <id>` prints a set's evidence as JSON (`--recorded` prints the exact text committed as the frontend fixture's `rule_result.json`; `icon_draft_fixture --check` compares it byte for byte) and `python -m visual_assets.review review-sheets --set <id> [--out DIR]` writes the owner's review folder. For a set whose drafts declare revisions (`draft keep --revises`, ADR D22) the folder's README prints ONE `adopt-set` command with a NEW/REVISION summary (and the `draft drop` commands for drafts that are not proposed); for a set that predates it, the per-slot `review` and `adopt --parent` commands. The package reads drafts and catalog records only, imports no gate layer of the store and nothing from `src` (`tests/visual_assets/test_boundaries.py`, import contracts c14 and c15). Pilot colour vision's `tile_pixels()` now chooses the slot by key and detail through the export's manifest (default: the plain slot) instead of taking the first file, so `python -m visual_assets.review.pilot_colour_vision` prints the plain row (it printed the tree row before).
+
+The server is registered for this repository in `.mcp.json` as `aseprite-pixel-art`. **Working in a git worktree while Claude Code runs in the main checkout:** start Claude Code with `VISUAL_ASSETS_CHECKOUT=<absolute path of the worktree>` (for example `VISUAL_ASSETS_CHECKOUT=/home/vboxuser/Work/rpg-aseprite-mcp claude`) so `submit_candidate` stages into that worktree (see `store_contract.md`, "Which checkout the server serves"); without it the server serves the checkout it was launched from, and every store tool result says which (`store_root`). Sprites live outside the
 repo in `~/.cache/rpg-aseprite-mcp` (override: `ASEPRITE_MCP_WORKSPACE`; binary override:
 `ASEPRITE_MCP_BINARY`). That experiment workspace is not the asset store (`visual_assets/catalog/`).
 
@@ -78,7 +80,7 @@ Reviewing a draft set (`TCK-20261004-VISUAL-ASSETS-DRAFT-PREVIEW-PAGE`): `python
 It opens the committed fixture set by default; use its "Open an exported set" picker and choose `<out_dir>` to review yours. The page draws one deterministic map that uses every Live Map terrain code in patches (23, from the explicit code-to-key table `TERRAIN_DRAFT_KEYS` in `frontend/src/visualAssets/terrainDrafts.ts`: `terrain.` plus the snake_case name),
 picks forest-style detail values with `pickDetail`, marks a code with no draft with a diagonal over its flat fill, can show the plain colour fills beside it, lists per code which draft is shown, and prints the set id and the draft set hash, the same `sha256:` value the `adopt-set` confirmation prints, so a review record can name exactly what was reviewed.
 
-The icon key set has its own preview page, `frontend/rehearsal-icons.html` (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-DRAFT-SET`): the harness is a sibling of the terrain one because the terrain page is a map scene by tile code. It reads the committed `__fixtures__/icondraft/` export (`python -m tests.visual_assets.icon_draft_fixture --write` refreshes it, ignoring only the manifest's `registry_hash`). What the set holds and how to review it: `docs/assets/icon_key_set_review.md`. The MCP server runs from the main checkout, so `submit_candidate` writes its intakes to the MAIN checkout's quarantine; from a worktree, run the CLI `intake` on the same handoff directory (the intake ids are content-derived, so they match).
+The icon key set has its own preview page, `frontend/rehearsal-icons.html` (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-DRAFT-SET`): the harness is a sibling of the terrain one because the terrain page is a map scene by tile code. It reads the committed `__fixtures__/icondraft/` export (`python -m visual_assets.review.icon_draft_fixture --write` refreshes it, ignoring only the manifest's `registry_hash`). What the set holds and how to review it: `docs/assets/icon_key_set_review.md`. The MCP server runs from the main checkout, so `submit_candidate` writes its intakes to the MAIN checkout's quarantine; from a worktree, run the CLI `intake` on the same handoff directory (the intake ids are content-derived, so they match).
 
 **Rule for agents: an agent never runs `adopt` or `revoke`** (`python -m visual_assets.store adopt|revoke`). They are human decisions that write the tracked catalog; they refuse to run without a terminal and make the operator type the id, and the drawing code cannot import them.
 

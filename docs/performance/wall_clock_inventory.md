@@ -72,7 +72,7 @@ per module. §6 says how the scan was checked and what it cannot see.
 
 <!-- BEGIN GENERATED: tools/perf/wall_clock_inventory.py -->
 
-Generated from commit `999c1ad5cc869caf4fedb2ecf5b1a318a20df3b6` by `tools/perf/wall_clock_inventory.py`. Regenerate this block with:
+Generated from commit `e8eaaece9755ec8a07727738a99b520dc05ed4e8` by `tools/perf/wall_clock_inventory.py`. Regenerate this block with:
 
 ```
 python3 tools/perf/wall_clock_inventory.py --update-doc docs/performance/wall_clock_inventory.md
@@ -80,7 +80,7 @@ python3 tools/perf/wall_clock_inventory.py --format json > docs/performance/wall
 python3 tools/perf/wall_clock_inventory.py --check docs/performance/wall_clock_inventory.json
 ```
 
-Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the import graph, 205 elsewhere). Modules reachable from the kernel: 436.
+Reads found: 369 (159 in modules reachable from `src.engine.kernel` through the import graph, 210 elsewhere). Modules reachable from the kernel: 442.
 
 ### G1. Reads in modules reachable from the kernel (guards are the conditions inside the enclosing function, as written)
 
@@ -105,14 +105,14 @@ Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the 
 | 55 | `src/engine/kernel.py` | 472 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | if sleep_ms > 5.0; if target_ms > 0 and (not self._no_frame_pacing) |
 | 56 | `src/engine/kernel.py` | 480 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
 | 57 | `src/engine/kernel.py` | 482 | `Kernel._tick_once_inner` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 58 | `src/engine/kernel.py` | 616 | `Kernel._phase_resolution` | time.perf_counter_ns | wall-clock | - | if not overrun_reported and i % 10 == 0 and (not self._audit_mode) |
-| 59 | `src/engine/kernel.py` | 769 | `Kernel._phase_cleanup` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 60 | `src/engine/kernel.py` | 1234 | `Kernel.shutdown` | psutil.Process | CPU/host topology | - | try |
-| 61 | `src/engine/kernel.py` | 1263 | `Kernel.shutdown` | datetime.datetime.now | wall-clock | - | if hasattr(self, '_artifact_repo') and self._artifact_repo and self._run_id |
-| 62 | `src/engine/observability.py` | 47 | `SignalCollector.__init__` | psutil.Process | CPU/host topology | - | none in this function |
-| 63 | `src/engine/observability.py` | 48 | `SignalCollector.__init__` | time.perf_counter | wall-clock | - | none in this function |
-| 64 | `src/engine/observability.py` | 69 | `SignalCollector.collect_platform_signals` | psutil.Process.memory_info | memory | - | try; if tick % interval == 0 |
-| 65 | `src/engine/observability.py` | 136 | `SignalCollector.get_snapshot` | time.perf_counter | wall-clock | - | none in this function |
+| 58 | `src/engine/kernel.py` | 615 | `Kernel._phase_resolution` | time.perf_counter_ns | wall-clock | - | if not overrun_reported and i % 10 == 0 and (not self._audit_mode) |
+| 59 | `src/engine/kernel.py` | 763 | `Kernel._phase_cleanup` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 60 | `src/engine/kernel.py` | 1228 | `Kernel.shutdown` | psutil.Process | CPU/host topology | - | try |
+| 61 | `src/engine/kernel.py` | 1257 | `Kernel.shutdown` | datetime.datetime.now | wall-clock | - | if hasattr(self, '_artifact_repo') and self._artifact_repo and self._run_id |
+| 62 | `src/engine/observability.py` | 46 | `SignalCollector.__init__` | psutil.Process | CPU/host topology | - | none in this function |
+| 63 | `src/engine/observability.py` | 47 | `SignalCollector.__init__` | time.perf_counter | wall-clock | - | none in this function |
+| 64 | `src/engine/observability.py` | 68 | `SignalCollector.collect_platform_signals` | psutil.Process.memory_info | memory | - | try; if tick % interval == 0 |
+| 65 | `src/engine/observability.py` | 131 | `SignalCollector.get_snapshot` | time.perf_counter | wall-clock | - | none in this function |
 | 66 | `src/engine/pipeline.py` | 95 | `AuthoritativeApplyPipeline.refine` | time.perf_counter_ns | wall-clock | - | none in this function |
 | 67 | `src/engine/pipeline.py` | 138 | `AuthoritativeApplyPipeline.refine` | time.perf_counter_ns | wall-clock | - | none in this function |
 | 68 | `src/engine/pipeline.py` | 145 | `AuthoritativeApplyPipeline.refine` | time.perf_counter_ns | wall-clock | - | none in this function |
@@ -233,18 +233,18 @@ Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the 
 | 270 | `src/observability/stream/adapters.py` | 284 | `RedisStreamAdapter.flush` | time.perf_counter | wall-clock | - | none in this function |
 | 271 | `src/observability/stream/adapters.py` | 285 | `RedisStreamAdapter.flush` | time.perf_counter | wall-clock | - | none in this function |
 | 272 | `src/observability/stream/consumer.py` | 83 | `RedisStreamConsumer._send_to_dlq` | datetime.datetime.now | wall-clock | - | try |
-| 337 | `src/simulation_quality/feed.py` | 129 | `build_feed_from_env` | os.environ.get | environment | QUALITY_SCORING_DISABLED | none in this function |
-| 338 | `src/simulation_quality/feed.py` | 131 | `build_feed_from_env` | os.environ.get | environment | QUALITY_FEED_MODE | none in this function |
-| 339 | `src/simulation_quality/feed.py` | 136 | `build_feed_from_env` | os.environ.get | environment | QUALITY_BROKER_URL | if mode == 'broker' |
-| 340 | `src/simulation_quality/feed.py` | 137 | `build_feed_from_env` | os.environ.get | environment | QUALITY_STREAM_NAME | if mode == 'broker' |
-| 341 | `src/simulation_quality/feed.py` | 138 | `build_feed_from_env` | os.environ.get | environment | QUALITY_CONSUMER_GROUP | if mode == 'broker' |
-| 342 | `src/simulation_quality/quality_hub.py` | 117 | `QualityHub.__init__` | os.environ.get | environment | QUALITY_SCORING_DISABLED | none in this function |
-| 343 | `src/simulation_quality/quality_report.py` | 130 | `QualityReportBuilder.build` | datetime.datetime.now | wall-clock | - | none in this function |
-| 358 | `src/worldbuilding/compiler.py` | 371 | `WorldCompiler.compile` | time.perf_counter | wall-clock | - | none in this function |
-| 359 | `src/worldbuilding/compiler.py` | 839 | `WorldCompiler.compile` | time.perf_counter | wall-clock | - | none in this function |
-| 360 | `src/worldbuilding/repository.py` | 209 | `WorldRepository._update_index_entry` | datetime.datetime.now | wall-clock | - | none in this function |
-| 361 | `src/worldbuilding/repository.py` | 281 | `WorldRepository.rebuild_index` | datetime.datetime.now | wall-clock | - | try; if yaml_file.is_file(); if path.is_dir(); if self.worlds_dir.is_dir() |
-| 362 | `src/worldbuilding/repository.py` | 297 | `WorldRepository.rebuild_index` | datetime.datetime.now | wall-clock | - | if yaml_file.is_file(); if path.is_dir(); if self.worlds_dir.is_dir() |
+| 342 | `src/simulation_quality/feed.py` | 129 | `build_feed_from_env` | os.environ.get | environment | QUALITY_SCORING_DISABLED | none in this function |
+| 343 | `src/simulation_quality/feed.py` | 131 | `build_feed_from_env` | os.environ.get | environment | QUALITY_FEED_MODE | none in this function |
+| 344 | `src/simulation_quality/feed.py` | 136 | `build_feed_from_env` | os.environ.get | environment | QUALITY_BROKER_URL | if mode == 'broker' |
+| 345 | `src/simulation_quality/feed.py` | 137 | `build_feed_from_env` | os.environ.get | environment | QUALITY_STREAM_NAME | if mode == 'broker' |
+| 346 | `src/simulation_quality/feed.py` | 138 | `build_feed_from_env` | os.environ.get | environment | QUALITY_CONSUMER_GROUP | if mode == 'broker' |
+| 347 | `src/simulation_quality/quality_hub.py` | 117 | `QualityHub.__init__` | os.environ.get | environment | QUALITY_SCORING_DISABLED | none in this function |
+| 348 | `src/simulation_quality/quality_report.py` | 130 | `QualityReportBuilder.build` | datetime.datetime.now | wall-clock | - | none in this function |
+| 363 | `src/worldbuilding/compiler.py` | 425 | `WorldCompiler.compile` | time.perf_counter | wall-clock | - | none in this function |
+| 364 | `src/worldbuilding/compiler.py` | 890 | `WorldCompiler.compile` | time.perf_counter | wall-clock | - | none in this function |
+| 365 | `src/worldbuilding/repository.py` | 209 | `WorldRepository._update_index_entry` | datetime.datetime.now | wall-clock | - | none in this function |
+| 366 | `src/worldbuilding/repository.py` | 281 | `WorldRepository.rebuild_index` | datetime.datetime.now | wall-clock | - | try; if yaml_file.is_file(); if path.is_dir(); if self.worlds_dir.is_dir() |
+| 367 | `src/worldbuilding/repository.py` | 297 | `WorldRepository.rebuild_index` | datetime.datetime.now | wall-clock | - | if yaml_file.is_file(); if path.is_dir(); if self.worlds_dir.is_dir() |
 
 ### G2. Reads in modules not reachable from the kernel
 
@@ -253,10 +253,10 @@ Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the 
 | 1 | `src/api/admission_control.py` | 190 | `_check_admission` | time.time | wall-clock | - | if current_time is None |
 | 2 | `src/api/agent_ops_dashboard/ingest.py` | 558 | `DashboardCache._maybe_rebuild` | datetime.datetime.now | wall-clock | - | unless: now |
 | 3 | `src/api/agent_ops_dashboard/ingest.py` | 857 | `DashboardCache.get_agent_monitoring_stats` | datetime.datetime.now | wall-clock | - | if days; else of: if all_time |
-| 4 | `src/api/engine_manager.py` | 266 | `V2EngineManager.start` | time.time | wall-clock | - | none in this function |
-| 5 | `src/api/engine_manager.py` | 322 | `V2EngineManager._run_loop` | time.time | wall-clock | - | try; while not self._stop_requested.is_set() |
-| 6 | `src/api/engine_manager.py` | 387 | `V2EngineManager.last_tick_age_seconds` | time.time | wall-clock | - | none in this function |
-| 7 | `src/api/engine_manager.py` | 397 | `V2EngineManager.get_health_status` | time.time | wall-clock | - | none in this function |
+| 4 | `src/api/engine_manager.py` | 265 | `V2EngineManager.start` | time.time | wall-clock | - | none in this function |
+| 5 | `src/api/engine_manager.py` | 321 | `V2EngineManager._run_loop` | time.time | wall-clock | - | try; while not self._stop_requested.is_set() |
+| 6 | `src/api/engine_manager.py` | 386 | `V2EngineManager.last_tick_age_seconds` | time.time | wall-clock | - | none in this function |
+| 7 | `src/api/engine_manager.py` | 396 | `V2EngineManager.get_health_status` | time.time | wall-clock | - | none in this function |
 | 8 | `src/api/ws/stream.py` | 275 | `stream_live_events_ws.heartbeat_loop` | time.time | wall-clock | - | while True; try |
 | 9 | `src/certification/hardware.py` | 21 | `HardwareClassifier.detect_class` | psutil.cpu_count | CPU/host topology | - | none in this function |
 | 10 | `src/certification/hardware.py` | 22 | `HardwareClassifier.detect_class` | psutil.virtual_memory | memory | - | none in this function |
@@ -420,52 +420,57 @@ Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the 
 | 315 | `src/observability/watchdog.py` | 13 | `<module>` | os.environ.get | environment | LOKI_URL | none in this function |
 | 316 | `src/observability/watchdog.py` | 14 | `<module>` | os.environ.get | environment | POLL_INTERVAL | none in this function |
 | 317 | `src/observability/watchdog.py` | 70 | `SimulationWatchdog.check_loki_errors` | time.time | wall-clock | - | try |
-| 318 | `src/perf/bench_harness.py` | 38 | `BenchHarness.__init__` | psutil.Process | CPU/host topology | - | none in this function |
-| 319 | `src/perf/bench_harness.py` | 70 | `BenchHarness.run_benchmark` | psutil.Process.cpu_times | CPU time | - | try |
-| 320 | `src/perf/bench_harness.py` | 83 | `BenchHarness.run_benchmark` | time.perf_counter | wall-clock | - | try |
-| 321 | `src/perf/bench_harness.py` | 97 | `BenchHarness.run_benchmark` | psutil.Process.memory_info | memory | - | if i % 10 == 0; try; try |
-| 322 | `src/perf/bench_harness.py` | 102 | `BenchHarness.run_benchmark` | time.perf_counter | wall-clock | - | try |
-| 323 | `src/perf/bench_harness.py` | 103 | `BenchHarness.run_benchmark` | psutil.Process.cpu_times | CPU time | - | try |
-| 324 | `src/perf/bench_harness.py` | 162 | `BenchHarness.run_benchmark` | time.time | wall-clock | - | try |
-| 325 | `src/perf/long_run_harness.py` | 123 | `LongRunStabilityHarness.__init__` | psutil.Process | CPU/host topology | - | none in this function |
-| 326 | `src/perf/long_run_harness.py` | 171 | `LongRunStabilityHarness.execute_run` | psutil.Process.memory_info | memory | - | none in this function |
-| 327 | `src/perf/long_run_harness.py` | 178 | `LongRunStabilityHarness.execute_run` | time.perf_counter | wall-clock | - | none in this function |
-| 328 | `src/perf/long_run_harness.py` | 182 | `LongRunStabilityHarness.execute_run` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 329 | `src/perf/long_run_harness.py` | 185 | `LongRunStabilityHarness.execute_run` | time.perf_counter_ns | wall-clock | - | none in this function |
-| 330 | `src/perf/long_run_harness.py` | 193 | `LongRunStabilityHarness.execute_run` | psutil.Process.memory_info | memory | - | if t % sample_interval == 0 or t == total_ticks |
-| 331 | `src/perf/long_run_harness.py` | 229 | `LongRunStabilityHarness.execute_run` | time.perf_counter | wall-clock | - | none in this function |
-| 332 | `src/perf/long_run_harness.py` | 340 | `LongRunStabilityHarness._get_gc_collections` | gc.get_stats | memory | - | try |
-| 333 | `src/perf/long_run_harness.py` | 348 | `LongRunStabilityHarness._get_gc_collections` | gc.get_count | memory | - | none in this function |
-| 334 | `src/perf/profile_governance.py` | 36 | `profile_governance` | time.perf_counter | wall-clock | - | none in this function |
-| 335 | `src/perf/profile_governance.py` | 38 | `profile_governance` | time.perf_counter | wall-clock | - | none in this function |
-| 336 | `src/simulation_quality/api/routes.py` | 28 | `_is_disabled` | os.environ.get | environment | QUALITY_SCORING_DISABLED | none in this function |
-| 344 | `src/simulation_quality/worker.py` | 63 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_WEIGHTS_PATH | none in this function |
-| 345 | `src/simulation_quality/worker.py` | 66 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_GRADE_PATH | none in this function |
-| 346 | `src/simulation_quality/worker.py` | 69 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_DETECTION_PATH | none in this function |
-| 347 | `src/simulation_quality/worker.py` | 72 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_PROFILE | none in this function |
-| 348 | `src/simulation_quality/worker.py` | 73 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_RUN_ID | none in this function |
-| 349 | `src/simulation_quality/worker.py` | 74 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_RUN_DIR | none in this function |
-| 350 | `src/simulation_quality/worker.py` | 81 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_BROKER_URL | none in this function |
-| 351 | `src/simulation_quality/worker.py` | 82 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_STREAM_NAME | none in this function |
-| 352 | `src/simulation_quality/worker.py` | 83 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_CONSUMER_GROUP | none in this function |
-| 353 | `src/simulation_quality/worker.py` | 96 | `QualityWorker.run` | os.environ.get | environment | QUALITY_WORKER_PORT | none in this function |
-| 354 | `src/simulation_quality/worker.py` | 113 | `QualityWorker.run` | os.environ.get | environment | QUALITY_STALE_WARNING_SECONDS | none in this function |
-| 355 | `src/testing/scenario_runner.py` | 32 | `ScenarioRunner.execute` | time.perf_counter | wall-clock | - | none in this function |
-| 356 | `src/testing/scenario_runner.py` | 139 | `ScenarioRunner.execute` | time.perf_counter | wall-clock | - | none in this function |
-| 357 | `src/worldassembly/resolver.py` | 709 | `WorldAssemblyResolver.assemble` | datetime.datetime.now | wall-clock | - | none in this function |
-| 363 | `src/worldgeneration/generator.py` | 332 | `WorldProceduralGenerator.generate` | datetime.datetime.now | wall-clock | - | none in this function |
-| 364 | `src/worldgeneration/generator.py` | 599 | `ProceduralCompositionGenerator.generate` | datetime.datetime.now | wall-clock | - | none in this function |
+| 318 | `src/perf/bench_harness.py` | 56 | `BenchHarness.__init__` | psutil.Process | CPU/host topology | - | none in this function |
+| 319 | `src/perf/bench_harness.py` | 96 | `BenchHarness.run_benchmark` | psutil.Process.cpu_times | CPU time | - | try |
+| 320 | `src/perf/bench_harness.py` | 110 | `BenchHarness.run_benchmark` | time.perf_counter | wall-clock | - | try |
+| 321 | `src/perf/bench_harness.py` | 114 | `BenchHarness.run_benchmark` | time.perf_counter | wall-clock | - | try; try |
+| 322 | `src/perf/bench_harness.py` | 116 | `BenchHarness.run_benchmark` | time.perf_counter | wall-clock | - | try; try |
+| 323 | `src/perf/bench_harness.py` | 126 | `BenchHarness.run_benchmark` | psutil.Process.memory_info | memory | - | if i % 10 == 0; try; try |
+| 324 | `src/perf/bench_harness.py` | 131 | `BenchHarness.run_benchmark` | time.perf_counter | wall-clock | - | try |
+| 325 | `src/perf/bench_harness.py` | 132 | `BenchHarness.run_benchmark` | psutil.Process.cpu_times | CPU time | - | try |
+| 326 | `src/perf/bench_harness.py` | 191 | `BenchHarness.run_benchmark` | time.time | wall-clock | - | try |
+| 327 | `src/perf/benchmark_record.py` | 454 | `collect_runtime` | psutil.cpu_count | CPU/host topology | - | none in this function |
+| 328 | `src/perf/benchmark_record.py` | 455 | `collect_runtime` | psutil.virtual_memory | memory | - | none in this function |
+| 329 | `src/perf/benchmark_record.py` | 494 | `utc_now` | datetime.datetime.now | wall-clock | - | none in this function |
+| 330 | `src/perf/long_run_harness.py` | 121 | `LongRunStabilityHarness.__init__` | psutil.Process | CPU/host topology | - | none in this function |
+| 331 | `src/perf/long_run_harness.py` | 169 | `LongRunStabilityHarness.execute_run` | psutil.Process.memory_info | memory | - | none in this function |
+| 332 | `src/perf/long_run_harness.py` | 176 | `LongRunStabilityHarness.execute_run` | time.perf_counter | wall-clock | - | none in this function |
+| 333 | `src/perf/long_run_harness.py` | 180 | `LongRunStabilityHarness.execute_run` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 334 | `src/perf/long_run_harness.py` | 183 | `LongRunStabilityHarness.execute_run` | time.perf_counter_ns | wall-clock | - | none in this function |
+| 335 | `src/perf/long_run_harness.py` | 191 | `LongRunStabilityHarness.execute_run` | psutil.Process.memory_info | memory | - | if t % sample_interval == 0 or t == total_ticks |
+| 336 | `src/perf/long_run_harness.py` | 223 | `LongRunStabilityHarness.execute_run` | time.perf_counter | wall-clock | - | none in this function |
+| 337 | `src/perf/long_run_harness.py` | 334 | `LongRunStabilityHarness._get_gc_collections` | gc.get_stats | memory | - | try |
+| 338 | `src/perf/long_run_harness.py` | 342 | `LongRunStabilityHarness._get_gc_collections` | gc.get_count | memory | - | none in this function |
+| 339 | `src/perf/profile_governance.py` | 36 | `profile_governance` | time.perf_counter | wall-clock | - | none in this function |
+| 340 | `src/perf/profile_governance.py` | 38 | `profile_governance` | time.perf_counter | wall-clock | - | none in this function |
+| 341 | `src/simulation_quality/api/routes.py` | 28 | `_is_disabled` | os.environ.get | environment | QUALITY_SCORING_DISABLED | none in this function |
+| 349 | `src/simulation_quality/worker.py` | 63 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_WEIGHTS_PATH | none in this function |
+| 350 | `src/simulation_quality/worker.py` | 66 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_GRADE_PATH | none in this function |
+| 351 | `src/simulation_quality/worker.py` | 69 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_DETECTION_PATH | none in this function |
+| 352 | `src/simulation_quality/worker.py` | 72 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_PROFILE | none in this function |
+| 353 | `src/simulation_quality/worker.py` | 73 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_RUN_ID | none in this function |
+| 354 | `src/simulation_quality/worker.py` | 74 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_RUN_DIR | none in this function |
+| 355 | `src/simulation_quality/worker.py` | 81 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_BROKER_URL | none in this function |
+| 356 | `src/simulation_quality/worker.py` | 82 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_STREAM_NAME | none in this function |
+| 357 | `src/simulation_quality/worker.py` | 83 | `QualityWorker.__init__` | os.environ.get | environment | QUALITY_CONSUMER_GROUP | none in this function |
+| 358 | `src/simulation_quality/worker.py` | 96 | `QualityWorker.run` | os.environ.get | environment | QUALITY_WORKER_PORT | none in this function |
+| 359 | `src/simulation_quality/worker.py` | 113 | `QualityWorker.run` | os.environ.get | environment | QUALITY_STALE_WARNING_SECONDS | none in this function |
+| 360 | `src/testing/scenario_runner.py` | 32 | `ScenarioRunner.execute` | time.perf_counter | wall-clock | - | none in this function |
+| 361 | `src/testing/scenario_runner.py` | 139 | `ScenarioRunner.execute` | time.perf_counter | wall-clock | - | none in this function |
+| 362 | `src/worldassembly/resolver.py` | 709 | `WorldAssemblyResolver.assemble` | datetime.datetime.now | wall-clock | - | none in this function |
+| 368 | `src/worldgeneration/generator.py` | 332 | `WorldProceduralGenerator.generate` | datetime.datetime.now | wall-clock | - | none in this function |
+| 369 | `src/worldgeneration/generator.py` | 599 | `ProceduralCompositionGenerator.generate` | datetime.datetime.now | wall-clock | - | none in this function |
 
 ### G3. Counts by kind
 
 | Kind | Reads |
 |---|---|
 | CPU time | 2 |
-| CPU/host topology | 10 |
+| CPU/host topology | 11 |
 | entropy | 34 |
 | environment | 73 |
-| memory | 9 |
-| wall-clock | 236 |
+| memory | 10 |
+| wall-clock | 239 |
 
 ### G4. Calls whose receiver the scanner could not resolve by name
 
@@ -474,10 +479,10 @@ Reads found: 364 (159 in modules reachable from `src.engine.kernel` through the 
 | `src/certification/harness.py` | 145 | `CertificationHarness.run_scenario` | `kernel._replay.get_stats` | no |
 | `src/engine/kernel.py` | 544 | `Kernel._phase_init` | `self._worker_manager.get_stats` | yes |
 | `src/engine/kernel.py` | 545 | `Kernel._phase_init` | `self._replay.get_stats` | yes |
-| `src/engine/kernel.py` | 772 | `Kernel._record_runtime_signals` | `self._worker_manager.get_stats` | yes |
-| `src/engine/kernel.py` | 773 | `Kernel._record_runtime_signals` | `self._replay.get_stats` | yes |
-| `src/engine/observability.py` | 116 | `SignalCollector.get_snapshot` | `kernel._worker_manager.get_stats` | yes |
-| `src/engine/observability.py` | 117 | `SignalCollector.get_snapshot` | `kernel._replay.get_stats` | yes |
+| `src/engine/kernel.py` | 766 | `Kernel._record_runtime_signals` | `self._worker_manager.get_stats` | yes |
+| `src/engine/kernel.py` | 767 | `Kernel._record_runtime_signals` | `self._replay.get_stats` | yes |
+| `src/engine/observability.py` | 115 | `SignalCollector.get_snapshot` | `kernel._worker_manager.get_stats` | yes |
+| `src/engine/observability.py` | 116 | `SignalCollector.get_snapshot` | `kernel._replay.get_stats` | yes |
 | `src/engine/replay_manager.py` | 120 | `ReplayManager.on_tick_end` | `self.get_stats` | yes |
 | `src/engine/replay_manager.py` | 171 | `ReplayManager.finalize` | `self.get_stats` | yes |
 | `src/engine/replay_manager.py` | 352 | `ReplayManager.get_stats` | `self._buffer.get_stats` | yes |

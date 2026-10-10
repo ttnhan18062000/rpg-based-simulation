@@ -6,8 +6,8 @@ from collections import Counter
 
 import pytest
 
-from tests.visual_assets.icon_item_families import UnmappedCategory, family_of, load_mapping
-from tests.visual_assets.pilot_colour_vision import REPO
+from visual_assets.review.icon_item_families import UnmappedCategory, family_of, load_mapping
+from visual_assets.review.pilot_colour_vision import REPO
 
 
 @pytest.fixture(scope="module")

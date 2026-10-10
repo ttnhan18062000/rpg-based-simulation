@@ -9,64 +9,98 @@ audience: developer
 
 ## 1. Purpose and Scope
 
-This document is the **calibration procedure** for performance baselines. It is not where performance
-is defined, measured, compared, or claimed: since PERF-D4 (approved 2026-10-03) that is
-`docs/engine/performance_contract.md`, the single clause-level authority. Hardware classes are
-defined once, in `docs/engine/contracts/certification_contract.md` §3. The row-by-row evidence for
-this restructuring is `docs/performance/performance_clause_inventory.md`.
+This document is the **lifecycle policy** for performance baselines: how one is created, promoted, invalidated, migrated and
+rejected. It is not where performance is defined, measured, compared or claimed: since PERF-D4 (approved 2026-10-03) that is
+`docs/engine/performance_contract.md`, the single clause-level authority. The record a baseline is made of, and the rule for comparing two,
+are `docs/performance/benchmark_identity_schema.md` (schema 1.0, §4). Hardware classes are defined once, in
+`docs/engine/contracts/certification_contract.md` §3.
+
+The repository-wide rules for changing any baseline (versions are never overwritten, a change cites its cause and its PR, a stale or
+mismatched baseline never passes) belong to the shared baseline change policy,
+`docs/plans/test_architecture/reference/baseline_change_policy.md`. **That document does not exist yet (pending, testing-owned, agreed on
+#475); this policy cites it as a forward reference and adds only the performance preconditions in §3.** When it lands, its wording wins
+for the shared rules and this section is reduced to a link.
+
+Measurements stay provisional and no performance check is blocking (`PERF-M2` lift, OD-8). Nothing here makes one blocking.
 
 What this document used to contain, and where it went:
 
 | Earlier content | Now |
 |---|---|
 | Benchmark protocol (100 warmup, 1,000 sampled ticks) | `performance_contract.md` §3.2, as capacity-run minimums |
-| Hardware-class table (`CLASS_A`/`B`/`C` by cores and RAM) | Removed. It contradicted `certification_contract.md` §3 (for example `CLASS_A` here was 8+ cores and 16 GB, there 16 logical cores and 32 GB). The per-class entity targets moved to `performance_contract.md` §5.1, keyed to the certification classes |
-| CI regression thresholds (p50 5%, p95 10%, p99 15%; RSS and GC bounds) and the `UnacceptableRegressionError` rule | Moved to `performance_contract.md` §5 and §5.1 as documented targets that no check enforces yet. The mechanism the old text described did not run: `PerfRegressionGate` has no production caller and no `UnacceptableRegressionError` exists |
-| Calibration steps | Rewritten below to name what exists |
+| Hardware-class table (`CLASS_A`/`B`/`C` by cores and RAM) | Removed. It contradicted `certification_contract.md` §3. The per-class entity targets moved to `performance_contract.md` §5.1 |
+| CI regression thresholds and the `UnacceptableRegressionError` rule | `performance_contract.md` §5 and §5.1 as documented targets that no check enforces yet |
+| The five-step "refresh a tripwire reference" calibration procedure | Replaced by the lifecycle in §2 and §3, run by `tools/perf/baseline_lifecycle.py` |
 
 ---
 
-## 2. Calibration procedure
+## 2. Lifecycle
 
-A baseline is a reference for a comparison made by a projection of the performance contract
-(`performance_contract.md` §3.3). Which projection it serves decides what it may be used for.
+A baseline is a reference for a comparison made by a projection of the performance contract (`performance_contract.md` §3.3). Which
+projection it serves decides what it may be used for.
 
-### 2.1 What a baseline is, today
+| Stage | Rule |
+|---|---|
+| **Create** | Measure with `BenchHarness` on an isolated machine. The run yields a `BenchmarkRecord` (`harness.last_record`; schema 1.0). A record that is not a clean, `NORMAL`, current-accounting run is not a baseline candidate (§3). |
+| **Promote** | `python3 tools/perf/baseline_lifecycle.py promote --candidate <record.json> --name <baseline> --cause <cause>`. It writes the next `<baseline>.vNNNN.json` in `tests/perf/baselines/` and never touches an earlier version. The file is the record, with `identity.baseline_ref` pointing at the previous version (`{id, schema_version, record_digest}`), plus a `promotion` object holding the cause, the note, the time, the **before** identity and the **after** identity. |
+| **Invalidate** | A baseline stops being comparable when a blocking field of the schema (§4) changes. The tool does not delete it. `compare()` reports `INCONCLUSIVE` naming the field, which is the visible state of an invalidated baseline. `docs/performance/baseline_invalidation_ledger.md` lists which committed baselines the M1 corrections invalidated. |
+| **Migrate** | A MAJOR `schema_version` bump invalidates every baseline of the older MAJOR for comparison (schema §4). They stay readable and are re-recorded by a promotion that cites the cause, not converted: a converter would invent identity the old file never recorded. |
+| **Reject** | A missing baseline, an incompatible one, one without `cost_accounting_version`, or one whose cause cannot be shown is `INCONCLUSIVE`, never a pass and never a skip that reads as success. |
 
-- The 15 JSON files in `tests/perf/baselines/` are **tripwire references only**. They carry no capacity
-  claim. 12 of them are 20-tick samples taken by the smoke benchmark; only the three `simq_corpus_*`
-  files record 1,000 sampled ticks.
-- The synthetic-scenario files (`idle_100_local.json`, `movement_100_local.json`, ...) have the shape
-  and file names produced by `tools/perf/run_benchmarks.py` (one JSON per scenario, scale and mode, with
-  `matrix_scenario`, `matrix_scale`, `matrix_mode` fields). No script copies them into
-  `tests/perf/baselines/`; the only tool that writes there is `tools/bench_corpus_world.py --commit`
-  (§3 below).
-- The live comparison reads the committed JSON directly and compares `avg_tick_compute_ms` only
-  (`tests/perf/test_perf_regression_baseline.py`). A missing file is skipped. Under the performance
-  contract a missing or incompatible baseline is `INCONCLUSIVE`; that outcome is not implemented yet
-  (`PERF-M2-T03`).
+`python3 tools/perf/baseline_lifecycle.py check` verifies the directory: every `tests/perf/baselines/*.json` is a valid `BenchmarkRecord` or
+is named in the legacy list (`LEGACY_TRIPWIRE_REFERENCES`, §4), and the version chain of each promoted baseline is intact (each version's
+`baseline_ref` matches the digest of the previous file, so an edited earlier version is found). `tests/unit/perf/test_baseline_lifecycle.py`
+runs it on the committed tree.
 
-### 2.2 To refresh a tripwire reference
+---
 
-1. **Isolate the machine.** No other CPU- or disk-heavy process should be running. Pin to isolated
-   cores if available. Record the environment: interpreter version and build, OS, architecture, and the
-   hardware class that `certification_contract.md` §3 assigns to the host (the PERF-D2 runtime identity;
-   storing it in the file is pending `PERF-M2-T02`).
-2. **Run the benchmark.** `python3 tools/perf/run_benchmarks.py --smoke` writes one JSON per scenario
-   (the same 10-warmup, 20-sample sizes as the committed references). Use the same profile name the
-   existing file records in its `profile` field.
-3. **Check the run stayed in `NORMAL`.** The result's `mode_sequence` must contain only `NORMAL`; a
-   baseline measured while the governor left `NORMAL` is not valid (`performance_contract.md` §3.1).
-4. **Compare before committing.** Run `python3 -m pytest tests/perf/test_perf_regression_baseline.py -m "slow"`
-   against the old file, then replace the file. A change that raises the baseline needs its rationale
-   recorded in the commit message (`performance_contract.md` §5).
-5. **Commit** the changed `tests/perf/baselines/*.json` files with a commit message that names the
-   scenario and the reason. Nothing else (no timestamp in `performance_contract.md`) is updated: that
-   document carries no baseline revision.
+## 3. Preconditions for a promotion (performance-specific)
 
-No capacity-run baseline exists, and there is no calibration procedure for one yet (`PERF-M2-T04`).
+`promote` refuses, prints `REFUSED: <code>: <message>` for every reason that applies, writes nothing and exits 2, when the candidate:
 
-### 2.3 Named benchmark results
+| Code | Refused when |
+|---|---|
+| `invalid_candidate` | it is not a valid `BenchmarkRecord` |
+| `dirty_src` | `identity.engine.dirty_src` is true: a baseline comes from a clean `src/` tree |
+| `mode_not_normal`, `mode_sequence_empty` | `runtime_mode_sequence` left `NORMAL`, or is empty: the run does not prove it did the nominal work (`performance_contract.md` §3.1) |
+| `cost_accounting_version_missing`, `cost_accounting_version_stale` | `result.cost_accounting_version` is absent or is not the current one (DEV-017): tick and phase costs are not comparable |
+| `no_cause`, `unknown_cause` | it cites no cause, or a cause that does not exist here |
+| `bad_name` | the baseline name is not lower-case `[a-z0-9_]` |
+
+**The cause.** A baseline change is a reviewed change of evidence, not a way to make a build pass. The cause is one of: a ticket id
+(`TCK-YYYYMMDD-...`, which must exist under `agent-working/tickets/`), a divergence id (`DEV-nnn`, which must be recorded in
+`docs/guidelines/intentional_divergences.md`), or a behaviour PR (`PR #n`; a PR number cannot be checked offline and is accepted by shape).
+Under the canonical signal contract a deliberate behaviour change reads as `REGRESSION` (schema §4, OD-3), so the re-baseline that follows it
+cites the behaviour PR or the divergence id that caused the change. Raising a baseline to silence a regression, without a cause that
+explains the change, is not a promotion this policy allows.
+
+**Owner approval.** The promotion tool checks the preconditions, not authority. The owner approves a baseline (`perf-implementer` role card),
+and the approval is the review of the PR that adds the file.
+
+---
+
+## 4. What baselines exist today
+
+- The 15 JSON files in `tests/perf/baselines/` are **tripwire references with no recorded identity**. They are not schema records, they
+  carry no capacity claim, and they are named in `LEGACY_TRIPWIRE_REFERENCES`. 12 of them are 20-tick samples taken by the smoke
+  benchmark; only the three `simq_corpus_*` files record 1,000 sampled ticks. Their percentiles use the old `sorted[int(n * q)]` method,
+  and most of them predate DEV-017, so most are listed as needing a rerun or incomparable in the invalidation ledger.
+- The synthetic-scenario files (`idle_100_local.json`, ...) have the shape and file names produced by `tools/perf/run_benchmarks.py`. No
+  script copies them into `tests/perf/baselines/`; the only tool that writes there besides `baseline_lifecycle.py` is
+  `tools/bench_corpus_world.py --commit` (§6).
+- The live comparison (`tests/perf/test_perf_regression_baseline.py`) reads the committed JSON directly and compares `avg_tick_compute_ms`
+  only, and a missing file is skipped. Under the performance contract that is `INCONCLUSIVE`; `PERF-M2-T03` makes the live comparison use
+  `compare()`.
+- `PERF-M2-T08` re-records them as schema records under the canonical variants, through `promote`, and then retires the legacy list.
+- No capacity-run baseline exists (`PERF-M2-T04`).
+
+The **known-debt ledger** (a baseline lane that is already red, with an owner and an expiry) is `PERF-M2-T05b`
+(`TCK-20261010-PERF-M2-T05B-KNOWN-DEBT-LEDGER`). It waits for the shared known-reds module and is not part of this policy yet.
+
+---
+
+## 5. Named benchmark results
+
 
 - **SimQ mode isolation overhead** (`QUALITY_SCORING_DISABLED=1` vs. in-process vs. broker):
   `docs/performance/simq_isolation_overhead.md`, produced by
@@ -75,7 +109,7 @@ No capacity-run baseline exists, and there is no calibration procedure for one y
 
 ---
 
-## 3. SimQ Corpus World Baselines (`TCK-20260808-SIMQ-CORPUS-PERF-BASELINE-INTEGRATION`)
+## 6. SimQ Corpus World Baselines (`TCK-20260808-SIMQ-CORPUS-PERF-BASELINE-INTEGRATION`)
 
 Prior to 2026-08-08, all committed baselines (`tests/perf/baselines/*.json`) covered only
 synthetic scenarios (`combat_10`, `idle_100`, `mixed_200`, `movement_100`, `resource_100`,
