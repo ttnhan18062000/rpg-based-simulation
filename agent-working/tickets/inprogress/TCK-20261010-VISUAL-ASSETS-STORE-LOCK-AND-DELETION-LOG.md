@@ -15,7 +15,7 @@ tags: [architecture, security, testing]
 A store-wide lock, an append-only deletion log and kill-mid-publish tests (ADR D24, reverses D18)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -64,9 +64,11 @@ Child 1 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. ADR D18 says there is
 - Lock file location must not collide with `VISUAL_ASSETS_CHECKOUT` worktree data roots (one lock per store data root).
 
 ## Implementation Notes
+Design approved by asset-planner and D24 text/budget by the owner (2026-10-10). Code: `store/lock.py`, `store/deletionlog.py`, `contracts/deletion.py`, `gc`/`audit`/`verify`/`cli` wiring, MCP `submit_candidate`. Kill tests found two gaps fixed here: hard-linked files unreadable until the staging directory is removed (documented recovery), and an empty `sources/<id>` directory left by a kill before the first link (`audit` now reports it). Security review: APPROVED, hardening applied (torn-tail refusal, short-write loop, size cap on log reads); stated limits in `store_contract.md`. See staging `plan.md`, `investigation.md`, `test_plan.md`.
 
 
 ## Test Summary
+`tests/visual_assets` full tree passed (1976) before the last hardening; store/boundaries/budgets/no_ignored_files (1164) after it. New: test_lock.py (38), test_deletion_log.py (30), test_kill_mid_publish.py (20). 11 single-match mutants all killed.
 
 
 ## Files Changed

@@ -16,7 +16,11 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROOTS = ("visual_assets", "tests/visual_assets")
-ALLOWED_PREFIXES = ("visual_assets/catalog/.quarantine/", "visual_assets/catalog/.review/")
+ALLOWED_PREFIXES = (
+    "visual_assets/catalog/.quarantine/", "visual_assets/catalog/.review/",
+    # ADR D24 local state: the store lock and the gc deletion log with its archives
+    "visual_assets/catalog/.store.lock", "visual_assets/catalog/.deletions",
+)
 
 
 def unexpected_ignored(paths: Iterable[str]) -> List[str]:

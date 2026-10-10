@@ -134,7 +134,7 @@ def test_drafts_survive_gc_and_a_fresh_clone_and_the_catalog_never_sees_them(dra
     keep(drafting, 16, visual_key=ROCK)
     before_catalog = snapshot(drafting.catalog)
     before_drafts = snapshot(drafting.drafts)
-    gc.gc(expire_before="2999-01-01T00:00:00Z", delete=True)  # the most aggressive gc there is
+    gc.gc(expire_before="2999-01-01T00:00:00Z", delete=True, decided_at="2026-02-01T00:00:00Z")  # the most aggressive gc there is
     assert snapshot(drafting.drafts) == before_drafts and snapshot(drafting.catalog) == before_catalog
     assert all(f.code != "UNEXPECTED_FILE" for f in verify(drafting.catalog, allow_fixture_namespace=True))
     clone = tmp_path / "clone"

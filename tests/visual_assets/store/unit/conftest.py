@@ -69,6 +69,8 @@ def snapshot(root) -> dict[str, tuple]:
         return out
     for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
         for name in dirnames + filenames:
+            if name == ".store.lock" or name.startswith(".deletions"):
+                continue  # ADR D24: the advisory lock file and the local gc deletion log are gitignored local files, not tracked store state
             path = Path(dirpath) / name
             mode = path.lstat().st_mode
             rel = str(path.relative_to(root))
