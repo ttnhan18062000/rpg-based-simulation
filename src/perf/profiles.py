@@ -1,5 +1,11 @@
+from src.certification.hardware import HardwareClassifier
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.engine.cadence import SystemCadence
+
+
+def detected_hardware_class() -> HardwareClass:
+    """The class of this host from cores and RAM (``certification_contract.md`` section 3), as the profile enum (PERF-M2 OD-4)."""
+    return HardwareClass(HardwareClassifier.detect_class().value)
 
 
 def make_perf_profile(
@@ -36,7 +42,7 @@ def make_perf_profile(
     )
     return RuntimeProfile(
         name=name,
-        hardware_class=HardwareClass.CLASS_A,
+        hardware_class=detected_hardware_class(),
         max_ram_mb=ram_mb,
         max_cpu_percent=90.0,
         max_worker_count=workers,
