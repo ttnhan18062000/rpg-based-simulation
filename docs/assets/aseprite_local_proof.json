@@ -1,0 +1,457 @@
+{
+  "aseprite_version": "Aseprite 1.3.18.6-x64",
+  "counts": {
+    "errors": 0,
+    "failed": 0,
+    "passed": 204,
+    "skipped": 0,
+    "total": 204
+  },
+  "guarded_files": [
+    {
+      "path": "tests/visual_assets/conftest.py",
+      "sha256": "sha256:c1670c1ceae8cdb60a11fea8cde4bc35275cf4fe01ba6776943c98bcd5d35b57"
+    },
+    {
+      "path": "tests/visual_assets/drawing/conftest.py",
+      "sha256": "sha256:5380820a57332faaf5baadf059860bd97a35e38811c6f7c1b1f4adb232ecc35a"
+    },
+    {
+      "path": "tests/visual_assets/drawing/integration/test_api.py",
+      "sha256": "sha256:bd8844c35b0401b7e17428fa4079ab9f7616baa943195237939170c81297cab4"
+    },
+    {
+      "path": "tests/visual_assets/drawing/integration/test_compose.py",
+      "sha256": "sha256:4c8f718cbf68c40cb8dc196f0dec96fa74733a1185a3b217c9d138622ba6eb76"
+    },
+    {
+      "path": "tests/visual_assets/drawing/integration/test_handoff.py",
+      "sha256": "sha256:1bb29b095d2ac2a008938c60a4d40a912ff29ee2ac7562365c39221b59539d0f"
+    },
+    {
+      "path": "tests/visual_assets/drawing/integration/test_negative.py",
+      "sha256": "sha256:abadbb88fabd0893ff8197f71044b229243fb5fe69c69831922d1c33876487a9"
+    },
+    {
+      "path": "tests/visual_assets/drawing/integration/test_ops.py",
+      "sha256": "sha256:f3c5aa58b824bc612dfb221eb7f46623f58673919abaa1ff7f277cd455d2b036"
+    },
+    {
+      "path": "tests/visual_assets/drawing/integration/test_sandbox_timeout_leak.py",
+      "sha256": "sha256:05c28921ab3aca63c0a0704438b8c1e2e54331d2b69013b7474ba6d73936f2b9"
+    },
+    {
+      "path": "tests/visual_assets/drawing/integration/test_server_stdio.py",
+      "sha256": "sha256:a83c66f9c6316cc53a745563bf3b82004f660d23b5c0c47fdf2d678d19777c0d"
+    },
+    {
+      "path": "tests/visual_assets/drawing/integration/test_summary_facts.py",
+      "sha256": "sha256:e2842365d7210a4003a6c5fa91df0998467363aa21002cb5e7d28a6de017537a"
+    },
+    {
+      "path": "tests/visual_assets/store/adoption_support.py",
+      "sha256": "sha256:00ee4cb0c0fb6c3a134f5ad5203cf4bacff217f1e94d9ab458b6cee420e4fa7d"
+    },
+    {
+      "path": "tests/visual_assets/store/builders.py",
+      "sha256": "sha256:8e394945fedf95ab527e1cc1bc6a5d573c7bb7d63a513b94c3877dc12a0a1458"
+    },
+    {
+      "path": "tests/visual_assets/store/integration/test_build_real.py",
+      "sha256": "sha256:adf07c85b83ab33f55979c70bcf62aa6e7eea3cafcd14eddfd72485f926a77ec"
+    },
+    {
+      "path": "tests/visual_assets/store/integration/test_real_aseprite.py",
+      "sha256": "sha256:a8ff79e1ad540fea8a8080ef347bc992a84442886b0be91fd89961af2783f9a0"
+    },
+    {
+      "path": "tests/visual_assets/store/runtime_fixture.py",
+      "sha256": "sha256:8607004a287c424645e7ccb49bccb70d1ad5bc81e1c27709691eb9b84c817a9a"
+    },
+    {
+      "path": "tests/visual_assets/strict_aseprite.py",
+      "sha256": "sha256:196bc3d52b010b977ede92f35257d24970a33c1827f0474e8b8aabdfecfbcb47"
+    },
+    {
+      "path": "tests/visual_assets/test_aseprite_licence_guard.py",
+      "sha256": "sha256:2b0b4efa9bc1d84700d455c3d779ebd7cadf52155030b95fc8acacc9a349960b"
+    },
+    {
+      "path": "tests/visual_assets/test_release_byte_reproducibility.py",
+      "sha256": "sha256:e00fd1b0006af2cd24d9b061c9f83081dbdff427eb2b73617cb5bb749d2f677c"
+    },
+    {
+      "path": "tests/visual_assets/test_strict_aseprite.py",
+      "sha256": "sha256:4e7a101aa55aa40f51ac1d21a491ce903e8b001b468f1dd73d5e465a04d259a0"
+    },
+    {
+      "path": "tools/visual_assets_aseprite_local.py",
+      "sha256": "sha256:868b93f42a42692d9f3d00bd8020ee7d0f74b380141d4c2a555a65d70584826b"
+    },
+    {
+      "path": "tools/visual_assets_aseprite_proof.py",
+      "sha256": "sha256:67b581595ee93101446f7e5a7a53dd0259a4f24f3631d9da57f23086f8d96c4b"
+    },
+    {
+      "path": "visual_assets/catalog/build-config/export.toml",
+      "sha256": "sha256:d93595ed9514a70be2bf91efac217a6ad51eb46077b54ba014d783071b4df109"
+    },
+    {
+      "path": "visual_assets/drawing/__init__.py",
+      "sha256": "sha256:7d76a711c953c36ef58f86311d958468ff3813835758f59f6ca3575174ff880c"
+    },
+    {
+      "path": "visual_assets/drawing/api.py",
+      "sha256": "sha256:a64c773d43fc7fe1ef9871668e4379e7b33713da6e864c9995278fa423c9f1f7"
+    },
+    {
+      "path": "visual_assets/drawing/backend/__init__.py",
+      "sha256": "sha256:ce716c9d89aaf39761245f08047c270bcc2f2e5b3a0ec70f3badf090f42ed71e"
+    },
+    {
+      "path": "visual_assets/drawing/backend/lua/ops.lua",
+      "sha256": "sha256:ad42d215cea94f6b016f36abeaa344cdb912124e0c7881c2e9616e356883d9d0"
+    },
+    {
+      "path": "visual_assets/drawing/backend/lua_runner.py",
+      "sha256": "sha256:4b4d55ccd75d76235fe0817e821ece6845959ca14fb4310f212f699143802f9d"
+    },
+    {
+      "path": "visual_assets/drawing/backend/sandbox.py",
+      "sha256": "sha256:7242b258306e09bebe866cec11ab780a0c77ad3b116959338b263ef3d662e9b8"
+    },
+    {
+      "path": "visual_assets/drawing/colors.py",
+      "sha256": "sha256:55c7b29ba84deaba7e4ddee942c631cd15dd98252c7e05226922cacd4f3d5df6"
+    },
+    {
+      "path": "visual_assets/drawing/compose.py",
+      "sha256": "sha256:e2d51e1fe43f886afb894762994f3f2869d94939fb3b008326310ba09c34d26f"
+    },
+    {
+      "path": "visual_assets/drawing/config.py",
+      "sha256": "sha256:bcdb304bbbfd49e6e1071469121fbf1efa4cc634c6e86b1655e91e8c9b2b82e6"
+    },
+    {
+      "path": "visual_assets/drawing/errors.py",
+      "sha256": "sha256:0b0cc9f8ec2583c37682412d5e3efb2d2ca49c80aae279d99eb58a3c4b85b7c7"
+    },
+    {
+      "path": "visual_assets/drawing/handoff.py",
+      "sha256": "sha256:d105601f60137e4ffe3be9d500bec5744ff1de30c1cec434cd59a0a09cf456cf"
+    },
+    {
+      "path": "visual_assets/drawing/palettes.py",
+      "sha256": "sha256:3e0d2ce9c448850531fdfda3cdb1c3dcda297f4f18486288008f1279e4bd8b64"
+    },
+    {
+      "path": "visual_assets/drawing/pin.py",
+      "sha256": "sha256:30554ab0117d8f053e6c7450a72a070c8dbb8bd667029c969367e8682082cdad"
+    },
+    {
+      "path": "visual_assets/drawing/schema/__init__.py",
+      "sha256": "sha256:8fb5da23b943be1741b95ccd8f2cd54e4684c8139aa1f4d2f3b581e4a99fa0eb"
+    },
+    {
+      "path": "visual_assets/drawing/schema/ops.py",
+      "sha256": "sha256:40c4e9687f7350e350c728d2dfd2933b9c57267302945d183678c1bdc327c317"
+    },
+    {
+      "path": "visual_assets/drawing/schema/primitives.py",
+      "sha256": "sha256:500c0251f832659e9e60aee108dd9b5de79552bc36455d362746d71ffd062013"
+    },
+    {
+      "path": "visual_assets/drawing/server/__init__.py",
+      "sha256": "sha256:c34155c6aeb7dfb080570bebe5f45e40643fb3dcc003cf7716ba26dc66a481f9"
+    },
+    {
+      "path": "visual_assets/drawing/server/__main__.py",
+      "sha256": "sha256:875c956085d89c9f8c31311f349ec5c8d60aab92588bf7636a32e79a034beff1"
+    },
+    {
+      "path": "visual_assets/drawing/server/app.py",
+      "sha256": "sha256:9e5438e0c8f74bcf62e6ecc83ed2ba69917e73e5a6cda96a815eaa0a66d23fff"
+    },
+    {
+      "path": "visual_assets/drawing/server/handoff_tools.py",
+      "sha256": "sha256:45c3ff0884e25d7e5ebc1bc8a3afcf514da24ca41ebaa068ed089d3b81d7ca17"
+    },
+    {
+      "path": "visual_assets/drawing/server/highlevel_tools.py",
+      "sha256": "sha256:c0339483d4edc8720cb76e32df404d19448a6ba2d15e02683993eb0c173f047f"
+    },
+    {
+      "path": "visual_assets/drawing/server/lowlevel_tools.py",
+      "sha256": "sha256:3e62392dbb52752a4e8572bfd997d867ab3fa0d4c3e4a8b9f842d33ca1d8452a"
+    },
+    {
+      "path": "visual_assets/drawing/server/store_readonly_tools.py",
+      "sha256": "sha256:3ef8a8af15a639a557816096fb15162805c557628b646dac983f25c7b1dae3be"
+    },
+    {
+      "path": "visual_assets/drawing/technique/__init__.py",
+      "sha256": "sha256:3856976d1f7b2922f2c487dd90b185e1e9c37d6e557a81ef533d0752f0e059de"
+    },
+    {
+      "path": "visual_assets/drawing/technique/ascii.py",
+      "sha256": "sha256:acb16f54cbbc971845dff0e763abbc874dd92400855b6b2b03f0307af9acced4"
+    },
+    {
+      "path": "visual_assets/drawing/technique/dither.py",
+      "sha256": "sha256:222409dec3b2eb670def122c6abb5f48d4a60ced088680f87b1f82847eeb0877"
+    },
+    {
+      "path": "visual_assets/drawing/technique/lint.py",
+      "sha256": "sha256:a4d3fbb64a2b2e217b64b13d047383e81fd240177876c6da3c362e22d5759339"
+    },
+    {
+      "path": "visual_assets/drawing/technique/masks.py",
+      "sha256": "sha256:b286591f1748c43ebcb3e1a9811920e5024ad5c3e091ac4f27c9bf4b196906be"
+    },
+    {
+      "path": "visual_assets/drawing/technique/ramps.py",
+      "sha256": "sha256:29a00b3d6ed3d89de72727161749ee21f44fcae70b1e5d755df86a0d7109d933"
+    },
+    {
+      "path": "visual_assets/drawing/technique/shading.py",
+      "sha256": "sha256:19a8a0c7c76c73e17fa3ff37d1ad4116a8ac2fd004e74bc1e96ae78a7aa947e6"
+    },
+    {
+      "path": "visual_assets/drawing/technique/stroke.py",
+      "sha256": "sha256:91184ecd546c30e7bcebad57f06cbfcb8951f947b5fc59679509b68a6e38a697"
+    },
+    {
+      "path": "visual_assets/drawing/technique/style_rules.json",
+      "sha256": "sha256:7d0ef075a04bb5a3437b7f61959873bda7c5104cd9770f957cddcea16c00a3dc"
+    },
+    {
+      "path": "visual_assets/drawing/workspace/__init__.py",
+      "sha256": "sha256:70560fd25848e1f89fcd49b71fbf302b4ebace1c0d7203d72f1cde2f9d204fb9"
+    },
+    {
+      "path": "visual_assets/drawing/workspace/jobs.py",
+      "sha256": "sha256:88e624e817b1df409fdf3cd64216553054a970864316ef29663e418d417572f8"
+    },
+    {
+      "path": "visual_assets/drawing/workspace/locks.py",
+      "sha256": "sha256:a99a4cb0dbd87b3a7f250a0073e24a08e5aba51cbfd1f92e45ef0430381dc39a"
+    },
+    {
+      "path": "visual_assets/drawing/workspace/revisions.py",
+      "sha256": "sha256:a192ad514eb8069f15471c6b351dba405605eea3624186227eea799b486e1a6c"
+    },
+    {
+      "path": "visual_assets/store/__init__.py",
+      "sha256": "sha256:ec7106d8c5f4fbd9db3e111cd4f89dc73318fbbab58e64503b3d3a4738915a2c"
+    },
+    {
+      "path": "visual_assets/store/__main__.py",
+      "sha256": "sha256:8b2f0ea697880a2caf39ccd34627acabbaaffd05d08b33ba65c60a22c02c9918"
+    },
+    {
+      "path": "visual_assets/store/adoption.py",
+      "sha256": "sha256:08a722032dc0945a4e2141205f44de97f820360780d70377fadb26c3d69ceb77"
+    },
+    {
+      "path": "visual_assets/store/atlas.py",
+      "sha256": "sha256:4ae18b40d4c47a7ecf53be65dd699161341e819f63194023500a24bed7d6de66"
+    },
+    {
+      "path": "visual_assets/store/audit.py",
+      "sha256": "sha256:fa0ab1abcf05231c59ccecb935fb4924064c9174ba4ecea998361a2b6da81adb"
+    },
+    {
+      "path": "visual_assets/store/build/__init__.py",
+      "sha256": "sha256:b471a0c63fdd6588af9a2a7da257c82582c070dd86677d4f1bc4f38752607205"
+    },
+    {
+      "path": "visual_assets/store/build/exportconfig.py",
+      "sha256": "sha256:ec0e3c3cd33f302cbd6328254bfcf8c9bb5245c0cd55773bc120bc263cd0f5f9"
+    },
+    {
+      "path": "visual_assets/store/build/exporter.py",
+      "sha256": "sha256:7d19105cac04fa58b4f10d0d5c1e14b8b173348ef9b01ef647536b2f29319059"
+    },
+    {
+      "path": "visual_assets/store/build/fingerprint.py",
+      "sha256": "sha256:ef4a9f9f6d418ca728568e0926f53960bfabd4dee0fa4a91cd01f35b94e1756e"
+    },
+    {
+      "path": "visual_assets/store/catalog/__init__.py",
+      "sha256": "sha256:44d2964ca9e517d455ea5e6e3f629380839ee0f55c52b5473d5c21672a5dd16a"
+    },
+    {
+      "path": "visual_assets/store/catalog/registry.py",
+      "sha256": "sha256:a8e3465791284f822711c52d7626fcca4a575122c8f4020b3b976f8ebc357af4"
+    },
+    {
+      "path": "visual_assets/store/catalogwrite.py",
+      "sha256": "sha256:536790c947cbdfa0f8569ae12d2344b9655545cfbcaf3bcb112c1162880a0a1a"
+    },
+    {
+      "path": "visual_assets/store/cli.py",
+      "sha256": "sha256:a6f5da103ab3b7d0e7948f91c4d24a8f910bf49ea8a050d9e02f9e53ebd738b1"
+    },
+    {
+      "path": "visual_assets/store/config.py",
+      "sha256": "sha256:dd017506981d6deebee679a8ce73c2246939d6c5b2a2b3757503e2aa5448184b"
+    },
+    {
+      "path": "visual_assets/store/contracts/__init__.py",
+      "sha256": "sha256:82e812776d23cb589da3dd83700f48686180338e216641058c580a7a070a21b9"
+    },
+    {
+      "path": "visual_assets/store/contracts/adoption.py",
+      "sha256": "sha256:fb904b05001e429e384cac14f3cccb6da38d387525b8ef3acdd40b45849bfa37"
+    },
+    {
+      "path": "visual_assets/store/contracts/artifact.py",
+      "sha256": "sha256:eb9a0510d22c29d941880720d0e4a37b5e0623ea5efeb17a097de39f42eb42c7"
+    },
+    {
+      "path": "visual_assets/store/contracts/atlas.py",
+      "sha256": "sha256:6451a3a3f1d41af45f76fce34c13698c9196d1899172a5b73d2d16596e4249af"
+    },
+    {
+      "path": "visual_assets/store/contracts/base.py",
+      "sha256": "sha256:2d1b23f5d0f758262a5368f28d975db8227dc3b2c4727360d8edf15360a5df39"
+    },
+    {
+      "path": "visual_assets/store/contracts/definitions.py",
+      "sha256": "sha256:479680c55378349f24a35689f3f5df66b1fa354ff874e85b5f2e72e530b58d8c"
+    },
+    {
+      "path": "visual_assets/store/contracts/deletion.py",
+      "sha256": "sha256:dfc0551a3958e7764344e8058f98e71748d18b903b789c57e640cb9b45d081d3"
+    },
+    {
+      "path": "visual_assets/store/contracts/draft.py",
+      "sha256": "sha256:3690ab213a580e24ae7aa9ab0f3cc5c564f6095176c0f427d8b0898f6948eaf7"
+    },
+    {
+      "path": "visual_assets/store/contracts/handoff.py",
+      "sha256": "sha256:b8b74a6e792cd6f4df68a02f2bdf06f454663d9ebe5be6c47fe425dcf4874e24"
+    },
+    {
+      "path": "visual_assets/store/contracts/intake.py",
+      "sha256": "sha256:07e54e929137169f6e2b04aee73a9904fad6c0eb7bc9e5cdbe317d4c5d9d2932"
+    },
+    {
+      "path": "visual_assets/store/contracts/release.py",
+      "sha256": "sha256:da24bfe070177386062767b97783aaf115ba434bc86ce32bfd21c63f3a9a87a3"
+    },
+    {
+      "path": "visual_assets/store/contracts/review.py",
+      "sha256": "sha256:1b680c4101fb322c76d8c467b9dedb593b6fa20e99d833852098f11d979ce1bf"
+    },
+    {
+      "path": "visual_assets/store/contracts/runtime.py",
+      "sha256": "sha256:38811490f348db841082da4a19c0f352f358b92a3fa27a9eb1e12909c2f17faa"
+    },
+    {
+      "path": "visual_assets/store/contracts/source.py",
+      "sha256": "sha256:1517dd7db1780da8f2903bf506a4b290272235232c038007bf57e387774dd4d6"
+    },
+    {
+      "path": "visual_assets/store/deletionlog.py",
+      "sha256": "sha256:dc9099d4ca72d992d11b0c8a8172dae0a0baa383f0399f8f436bd09b6c2d65d4"
+    },
+    {
+      "path": "visual_assets/store/draftexport.py",
+      "sha256": "sha256:1187dc2a0437a4571e224a3bc046eef8a5ce7ff896ac78ad215834d2b0cea397"
+    },
+    {
+      "path": "visual_assets/store/drafts.py",
+      "sha256": "sha256:999b049c79b1fa288eed99b3840bc0203e50743ca60e0af2151a87aac66f3e96"
+    },
+    {
+      "path": "visual_assets/store/errors.py",
+      "sha256": "sha256:8e9d58857097c9ea1575fd26922a21fbdb4956510b991aa5fb15dcf4c0fcd2f5"
+    },
+    {
+      "path": "visual_assets/store/gc.py",
+      "sha256": "sha256:4720a1727328e0095cb92a7258bba36860c8e4cf321069cfd60574bd2e441d71"
+    },
+    {
+      "path": "visual_assets/store/identities.py",
+      "sha256": "sha256:f2cc76d48ec048e061c24d3b4351b5ef900b17d928f4030898641c5cac72b9e9"
+    },
+    {
+      "path": "visual_assets/store/intake/__init__.py",
+      "sha256": "sha256:7d619fd955d0bba0740c030bcde2584ebd8bf9a4a87bdf462602653242b29225"
+    },
+    {
+      "path": "visual_assets/store/intake/aseprite.py",
+      "sha256": "sha256:a4283589a2cbfcbf55ac45abc59552e0f5e96eb4f1a1888d02daa2af0b314820"
+    },
+    {
+      "path": "visual_assets/store/intake/quarantine.py",
+      "sha256": "sha256:52366921782c7cfac73a589a7d9c8df477fd0b68bd001384a12bc20e1761e2a2"
+    },
+    {
+      "path": "visual_assets/store/intake/service.py",
+      "sha256": "sha256:911d23e00eb89525a5da6c5d57648f86cb70d4e897bb27c75b6c397d4cfdcb09"
+    },
+    {
+      "path": "visual_assets/store/intake/validator.py",
+      "sha256": "sha256:7cb1a0c77b515daadc8c2fbd9048e47fa796a8adacdf559eb868700498006dba"
+    },
+    {
+      "path": "visual_assets/store/lock.py",
+      "sha256": "sha256:54bd97f054e0c3e1df9492791e01c11fb43c85f427fb08429686a291ede010ee"
+    },
+    {
+      "path": "visual_assets/store/pixels.py",
+      "sha256": "sha256:a9571d8c896e5990bb3df69c0018f544abb33767402048293c828514ed04468b"
+    },
+    {
+      "path": "visual_assets/store/readmodel.py",
+      "sha256": "sha256:57c6adfdfed4da0123f5e420a645e9093f41630c372b90ef6c461b2386c9d696"
+    },
+    {
+      "path": "visual_assets/store/records.py",
+      "sha256": "sha256:49871695717595995d8952ec84a6987406d14d75ec7cfdd814c36f729d17c2de"
+    },
+    {
+      "path": "visual_assets/store/release.py",
+      "sha256": "sha256:5cfd88531074b088a2348ee3b571a1e3a03fc83e3f275ea28dd64a60ccdb7f59"
+    },
+    {
+      "path": "visual_assets/store/rendering.py",
+      "sha256": "sha256:e71be64b84f684b7868241f58d86e14a43edbd39b976e66cc1216a0351e2106a"
+    },
+    {
+      "path": "visual_assets/store/review.py",
+      "sha256": "sha256:976aff4e1ff296727df74d6bd8af153fa1f14994becdd64758774ec2d9d47af7"
+    },
+    {
+      "path": "visual_assets/store/revoke.py",
+      "sha256": "sha256:01beb240cdfd16ffb5389fba5460d06cbe11ac1e5565b0c82c3937b22d6a71db"
+    },
+    {
+      "path": "visual_assets/store/runtime_export.py",
+      "sha256": "sha256:911d2e63d2ba9d2c4f3c6f4cb131814e7b502849421d9e163a0dcd2198eaef7f"
+    },
+    {
+      "path": "visual_assets/store/setadoption.py",
+      "sha256": "sha256:b203258a124ad5423ab535a35c295227076c4b0b8b4c2634ad4c2880f034fec7"
+    },
+    {
+      "path": "visual_assets/store/verify.py",
+      "sha256": "sha256:273e79ef546f44ef25d9cc94980b1b620aac3cd1b1e35ebff334529e92b8d3b5"
+    }
+  ],
+  "guarded_hash": "sha256:f652cd57034ddf6e5582d43be4f9bbcfdfac8c02d86901de0a70f203e0141da7",
+  "make_target": "visual-assets-aseprite-local",
+  "record_type": "aseprite_local_proof",
+  "release_rebuild": {
+    "bytes_differ_pixels_match": 0,
+    "entries": 70,
+    "identical": 70,
+    "release": "pilot/rc-0008"
+  },
+  "run_at_utc": "2026-10-10T08:10:48Z",
+  "run_commit": "9a4083372b34f20c32675f0ca76b63746e5c3484",
+  "schema_version": 1,
+  "strict": true
+}

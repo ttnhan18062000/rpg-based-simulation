@@ -61,13 +61,21 @@ Child 4 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. ADR D10 keeps real As
 - Depends on child 3 (rebuild verdict field).
 
 ## Implementation Notes
-
+- **Planner approval (2026-10-10):** guarded-path list and record shape APPROVED with additions: keep the BROAD guarded set (all of `store/**` and `drawing/**` minus `*.md`; no ast import-closure); the runner writes the record ONLY for the full make target (any pytest selection, a path or node id, or a selecting `PYTEST_ADDOPTS` means no record and the runner says why); the CI failure message says the only fix is a real `make visual-assets-aseprite-local` run and the record is never hand-edited (the test docstring says the same).
+- **Pieces:** `tools/visual_assets_aseprite_proof.py` (pure rules: guarded set, hash, compare, record validation, selection rule), `tools/visual_assets_aseprite_local.py` (writes `docs/assets/aseprite_local_proof.json` after a clean strict complete run), `tests/visual_assets/test_aseprite_local_proof.py` (CI, no Aseprite), `tools/ci_aseprite_skip_line.py` (the summary line also states the record's commit, version, date and match/DIFFER; reporting only, exit 0). Child 3's rebuild test writes its verdict JSON to `VISUAL_ASSETS_REBUILD_VERDICT_OUT` when the runner sets it.
+- **Beyond the plan, same intent:** the runner also refuses to write a record when a guarded file is modified or untracked (the record names the commit the tests ran on, so a dirty tree would make `run_commit` untrue). The proof module builds the marker name from parts so it and its test are not "marked" (and so guarded) merely by naming it.
+- **First record, from a real strict local run:** commit `9a4083372`, Aseprite 1.3.18.6-x64, 204 passed, 0 failed/errors/skipped, `pilot/rc-0008` rebuild 70 of 70 identical (0 bytes-differ), 108 guarded files, `guarded_hash sha256:f652cd57...`.
+- **D10 addendum: NOT written.** The text is in the plan; it waits for the owner (asset-planner is asking). `docs/architecture/visual_asset_foundation_adr.md` D10 is untouched until the owner approves the text.
+- **Operational note for the batch:** the guarded set includes `visual_assets/store/**`, so any later store code change in this batch (children 7 and others) makes this record stale and the CI test fails until a fresh local run rewrites it. The record must be refreshed once, after the last store change, before the PR.
 
 ## Test Summary
-
+- `tests/visual_assets/test_aseprite_local_proof.py`: 49 passed (guarded-set rules, hash and compare, 17 planted record violations each applied at one site, 10 selection cases and 5 full-target cases, the runner's refusals and its valid write, the committed record, and three comparison mutants: changed, added, removed file).
+- Real end-to-end mutation: one byte appended to `visual_assets/store/pixels.py` made the CI comparison fail naming that file, the make target and "never edit that record by hand"; restored, 49 passed.
+- Strict local run: 204 passed, 0 skipped (the first record).
 
 ## Files Changed
-
+`tools/visual_assets_aseprite_proof.py` (new), `tools/visual_assets_aseprite_local.py`, `tools/ci_aseprite_skip_line.py`, `tests/visual_assets/{test_aseprite_local_proof (new),test_ci_aseprite_skip_line,test_release_byte_reproducibility}.py`, `docs/assets/aseprite_local_proof.json` (new, written by the runner), `docs/assets/store_contract.md` (one paragraph).
 
 ## Completion Summary
+(open: the D10 addendum text awaits the owner; the record is refreshed again after the batch's last store change)
 
