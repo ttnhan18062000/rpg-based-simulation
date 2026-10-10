@@ -83,6 +83,15 @@ def snapshot(root) -> dict[str, tuple]:
     return out
 
 
+@pytest.fixture(autouse=True)
+def _fresh_decode_memo():
+    """The PNG decode memo is process-global; a test that patches the decoder must never see another test's cached result."""
+    from visual_assets.store import pixels
+
+    pixels.decode_png.cache_clear()
+    yield
+
+
 @pytest.fixture
 def env(tmp_path, monkeypatch):
     """An isolated catalog root plus quarantine and review roots; `config.NAME` is read at call time everywhere."""

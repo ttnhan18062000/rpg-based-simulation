@@ -11,7 +11,7 @@ tags: [architecture, mcp, documentation, rendering]
 
 ## Status
 
-Accepted for D1-D7 (decided by the user on 2026-10-02 or forced by existing CI constraints), D8-D10 (decided by the user on 2026-10-03: deployment profile, trust, where Aseprite may run), D11-D12 (2026-10-04, below), D13-D18 (the owner's `AM-M1` decisions, 2026-10-04), D19 (terrain borders, 2026-10-06), D20 (icon style, 2026-10-06) D21 (icon theme, 2026-10-08) and D24 (store lock and deletion log, 2026-10-10, reverses part of D18); nothing is still proposed.
+Accepted for D1-D7 (decided by the user on 2026-10-02 or forced by existing CI constraints), D8-D10 (decided by the user on 2026-10-03: deployment profile, trust, where Aseprite may run), D11-D12 (2026-10-04, below), D13-D18 (the owner's `AM-M1` decisions, 2026-10-04), D19 (terrain borders, 2026-10-06), D20 (icon style, 2026-10-06), D21 (icon theme, 2026-10-08) and D24 (store lock and deletion log, 2026-10-10, reverses part of D18); nothing is still proposed.
 Delivered: the foundation epic (the move, the skeletons, the boundary test, CI step, `.mcp.json` entry, typed records, identities and the registry loader, intake, human-gated adoption and revocation, sandboxed build, release candidates, `verify`, `gc`
 and the read-only MCP store tools; PRs #286 and #299), the runtime manifest and `export-runtime`, the isolated `AM-M5` rehearsal, the pilot terrain tile with its detail variants and the draft-set workflow (PRs #309, #317, #327). `AM1-W01`,
 `AM1-W08` and `U-02` are decided here (D8, D9, D10). The status of every `AM-M1` item, the `AM-M1` result and what would unblock it are in `docs/assets/m1_contract_register.md`.

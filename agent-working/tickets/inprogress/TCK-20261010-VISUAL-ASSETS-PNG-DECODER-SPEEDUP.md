@@ -15,7 +15,7 @@ tags: [performance, security, testing]
 A faster pure-Python PNG decoder and fewer decodes per adopt, with bounds unchanged (F3)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -62,9 +62,11 @@ Child 2 of `TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING`. budgets.md F3: the pu
 
 
 ## Implementation Notes
+Per-channel slice unfilter plus a 4-entry decode memo in `visual_assets/store/pixels.py`; bounds unchanged; budgets.md F3 re-measured (2x on the worst filter). See staging `plan.md`, `investigation.md`, `test_plan.md`.
 
 
 ## Test Summary
+`tests/visual_assets` full tree 2133 passed before the final memo hardening; store + boundaries + budgets parity 1314 after it. New `test_pixels_unfilter.py` (reference-equality over random rows and every committed PNG, memo). 6 mutants: 5 killed, 1 equivalent (Paeth tie). Security review: CLEAN; applied bytes() coercion, no caching above the decoded-size bound, autouse memo reset.
 
 
 ## Files Changed
