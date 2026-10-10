@@ -71,7 +71,7 @@ def replace_identity(record: BenchmarkRecord, section: str, **changes: Any) -> B
 
 def test_record_is_frozen_and_versioned() -> None:
     record = make_record()
-    assert record.schema_version == SCHEMA_VERSION == "1.0"
+    assert record.schema_version == SCHEMA_VERSION == "1.1"
     with pytest.raises(dataclasses.FrozenInstanceError):
         record.schema_version = "2.0"  # type: ignore[misc]
     with pytest.raises(dataclasses.FrozenInstanceError):

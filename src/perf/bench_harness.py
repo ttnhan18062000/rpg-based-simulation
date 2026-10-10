@@ -6,7 +6,6 @@ import logging
 from dataclasses import dataclass
 import statistics
 import os
-from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 import psutil
@@ -29,7 +28,8 @@ from src.perf.benchmark_record import (
     Samples,
     collect_identity,
     compress_modes,
-    nearest_rank,
+    default_samples_dir,
+    latency_stats,
     utc_now,
     write_samples_file,
 )
@@ -127,6 +127,7 @@ class BenchHarness:
             rss_samples: List[float] = []
             mode_samples: List[str] = []
             tick_wall_ms: List[float] = []
+            history: List[Any] = []  # every sampled tick's signals: RuntimeStatus keeps only the last 100
             wall_start_ts = time.perf_counter()
 
             try:
@@ -134,6 +135,7 @@ class BenchHarness:
                     tick_start_ts = time.perf_counter()
                     kernel.tick_once()
                     tick_wall_ms.append((time.perf_counter() - tick_start_ts) * 1000.0)
+                    history.extend(kernel.status.get_recent_history(1))
 
                     # RuntimeMode is a trivial IntEnum read — sample every tick, unlike the
                     # throttled RSS collector below, so a transient CONSTRAINED/DEGRADED/SURVIVAL
@@ -155,7 +157,7 @@ class BenchHarness:
             wall_clock_tps = sample_ticks / wall_clock_s if wall_clock_s > 0 else 0
 
             # 3. COLLATION
-            measured = self._collate(kernel.status.get_recent_history(sample_ticks), tick_wall_ms, mode_samples)
+            measured = self._collate(history, tick_wall_ms, mode_samples)
             tick_times = measured.tick_times
 
             # Compute TPS: Theoretical throughput if no wall-clock overhead
@@ -253,7 +255,7 @@ class BenchHarness:
                 samples = Samples(tick_wall_ms=tuple(wall_ms), tick_compute_ms=tuple(compute_ms))
             else:
                 stem = f"{subject.scenario_id}_{self._profile.name}_{int(result['timestamp'])}"
-                samples = write_samples_file(options.samples_dir or Path("reports/perf/samples"), stem, wall_ms, compute_ms)
+                samples = write_samples_file(options.samples_dir or default_samples_dir(), stem, wall_ms, compute_ms)
             return BenchmarkRecord(
                 identity=collect_identity(self._profile, subject, options),
                 result=Result(
@@ -288,17 +290,4 @@ class BenchHarness:
 
     def _calculate_stats(self, values: List[float]) -> Dict[str, float]:
         """Distribution statistics. Percentiles are nearest-rank, ceil(q * n) (PERF-M2 OD-1), not ``sorted[int(n * q)]``."""
-        if not values:
-            return {"avg": 0.0, "p50": 0.0, "p95": 0.0, "p99": 0.0, "max": 0.0}
-
-        sorted_values = sorted(values)
-        count = len(sorted_values)
-
-        return {
-            "avg": round(sum(values) / count, 3),
-            "p50": round(nearest_rank(sorted_values, 0.5), 3),
-            "p95": round(nearest_rank(sorted_values, 0.95), 3),
-            "p99": round(nearest_rank(sorted_values, 0.99), 3),
-            "max": round(sorted_values[-1], 3),
-            "min": round(sorted_values[0], 3),
-        }
+        return latency_stats(values)

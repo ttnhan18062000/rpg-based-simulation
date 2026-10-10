@@ -1,10 +1,11 @@
 import pytest
+from src.perf.benchmark_record import RecordOptions
 from src.perf.scenarios import build_mixed_state
 from tests.tools.perf_assertions import assert_perf_threshold
 
 @pytest.mark.perf
 @pytest.mark.slow
-def test_perf_mixed_stress(perf_harness, request):
+def test_perf_mixed_stress(perf_harness, request, tmp_path):
     """
     Stress test: 200 entities with mixed work (Heroes, Monsters, Resource Nodes).
     Goal: Verify performance under realistic load.
@@ -16,7 +17,9 @@ def test_perf_mixed_stress(perf_harness, request):
         scenario_id="MIXED_200",
         initial_state=state,
         warmup_ticks=100,
-        sample_ticks=1000
+        sample_ticks=1000,
+        # 1000 ticks is over the embed cap, so the record points at a samples file: keep it out of reports/perf/samples/
+        record_options=RecordOptions(samples_dir=tmp_path),
     )
 
     # Store for reporter
