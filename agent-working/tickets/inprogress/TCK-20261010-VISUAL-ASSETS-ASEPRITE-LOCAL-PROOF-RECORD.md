@@ -15,7 +15,7 @@ tags: [testing, determinism]
 A committed local real-Aseprite proof record and a CI check that it is not stale (D10 kept)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
