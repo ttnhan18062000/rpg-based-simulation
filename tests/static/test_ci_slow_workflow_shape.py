@@ -63,7 +63,7 @@ def _summary_step() -> dict:
 
 
 def _report_step() -> dict:
-    matches = [s for s in _slow_job_steps() if "slow_regression_report.py" in s.get("run", "")]
+    matches = [s for s in _slow_job_steps() if "tools.test_architecture.slow_regression_report" in s.get("run", "")]
     assert len(matches) == 1, "expected exactly one report step"
     return matches[0]
 
@@ -224,3 +224,9 @@ def test_decision_steps_use_pipefail_so_a_crashing_decision_module_is_not_hidden
     watchdog_step = [s for s in watchdog["jobs"]["watchdog"]["steps"] if s.get("id") == "decide"][0]
     for step in (gate_step, watchdog_step):
         assert "| tee" in step["run"] and "set -o pipefail" in step["run"]
+
+
+def test_report_step_runs_the_report_as_a_module_so_its_shared_import_resolves() -> None:
+    run = _report_step()["run"]
+    assert "python3 -m tools.test_architecture.slow_regression_report" in run
+    assert "python3 tools/test_architecture/slow_regression_report.py" not in run
