@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261011-PR-ATTRIBUTION-OFF-AT-SOURCE
-phase: open
+phase: done
 date: 2026-10-11
 tags: [ai, governance, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance, delivery]
 Turn off the Claude Code PR attribution line at its source, so pr-body-lint stops failing hand-opened PRs
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -73,9 +73,13 @@ None.
 - Assumes the installed Claude Code supports the `attribution` settings key; the fallback covers the case it does not.
 
 ## Implementation Notes
+Added top-level `"attribution": {"pr": ""}` to `.claude/settings.json`; nothing else changed; commit attribution untouched. Owner to confirm the literal diff (governing file). Path taken: the settings key, NOT the CLAUDE.md fallback.
 
 ## Test Summary
+JSON parses. Evidence the key is honoured: in THIS running session, the attribution reminder the harness re-sent after the edit lists only the commit line (`Co-Authored-By: ...`); before the edit it also said to end PR descriptions with the Generated-with line. This is in-session evidence, NOT a fresh launch: I did not launch a new session (the `claude` binary is not run from here), so a fresh-launch check is still open. `settings_freshness.py .` reports only the expected 'differs from origin/main' for changed cards/settings.
 
 ## Files Changed
+`.claude/settings.json`.
 
 ## Completion Summary
+PR attribution is turned off at its source via the settings key; fresh-launch confirmation remains.
