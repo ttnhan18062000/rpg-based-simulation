@@ -185,13 +185,13 @@ class MovementCandidateSelector:
 
     @staticmethod
     def arrived_in_area(entity: "EntityState") -> bool:
-        """True when a held move has reached the AREA it was issued for: a step away (KEEP_DISTANCE, FLEE_THREAT, AVOID_HOSTILE) within a tile of its
-        clamped point, a LEASH_RETURN inside the home area (``LeashService.in_home_area``), a REGROUP within the cohesion radius the move was issued
+        """True when a held move has reached the AREA it was issued for: a step away (KEEP_DISTANCE, FLEE_THREAT, AVOID_HOSTILE, PANIC_RETREAT) within a tile of its
+        clamped point (a cornered flight's point is its own tile: it ends at once and the brain decides again), a LEASH_RETURN inside the home area (``LeashService.in_home_area``), a REGROUP within the cohesion radius the move was issued
         with (``arrival_radius``) of the anchor it was sent to. Other reasons have no area and end only as ``move_ends_here`` says."""
         payload = entity.task.payload
         reason = payload.get("reason")
         position, target = entity.navigation.position, payload.get("target_position")
-        if reason in ARRIVAL_ENDS_MOVE_REASONS or reason == "AVOID_HOSTILE":
+        if reason in ARRIVAL_ENDS_MOVE_REASONS or reason in ("AVOID_HOSTILE", "PANIC_RETREAT"):
             return _within_a_tile(position, target)
         if reason == "LEASH_RETURN":
             return LeashService.in_home_area(entity)

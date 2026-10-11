@@ -4838,3 +4838,14 @@
   test_path: tests/unit/engine/test_move_completes_on_arriving_in_its_area.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.113.
   support_boundary: Frozen-after-arrival ticks fall on all three reasons (measured, seeds 42 to 46, 5000 ticks). A leashed monster hovers at the leash edge (frontier LEASH_RETURN re-issues within 20 ticks of a completion 12 to 1644 a run); a dead band is a designer knob not taken.
+- id: COMB-346
+  text: 'TCK-20261011-A-PANIC-RETREAT-TO-ITS-OWN-TILE-IS-HELD-WITH-NO-THREAT-IN-SIGHT: a panic flight needs a present threat (the first tactical gate flees only with a perceived hostile, so low hit points, regional dread or a grudge never flee alone; a cornered subject with a threat in sight holds its tile, MOV-03), and a PANIC_RETREAT move ends within a tile of its point (a cornered flight to its own tile ends at once).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/tactical.py (the is_fleeing gate with _perceived_threats), src/engine/candidate_selector.py (arrived_in_area).
+  proof_type: regression
+  test_path: tests/unit/combat/test_panic_flight_needs_a_present_threat.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.114.
+  support_boundary: 'Panic hold ticks fall (urban 1357 to 1, frontier 2181 to 115 per run, seeds 42 to 46, 5000 ticks). There is no natural hit-point regeneration outside a town tile, an inn rest or a level-up; a disclosed gap, not fixed here.'
+

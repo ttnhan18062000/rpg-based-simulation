@@ -33,7 +33,7 @@ def test_the_set_other_branches_converge_on_names_the_within_a_tile_reasons():
     assert ARRIVAL_ENDS_MOVE_REASONS == frozenset({"KEEP_DISTANCE", "FLEE_THREAT"})
 
 
-@pytest.mark.parametrize("reason", sorted(ARRIVAL_ENDS_MOVE_REASONS | {"AVOID_HOSTILE"}))
+@pytest.mark.parametrize("reason", sorted(ARRIVAL_ENDS_MOVE_REASONS | {"AVOID_HOSTILE", "PANIC_RETREAT"}))
 def test_a_step_away_ends_within_a_tile_of_its_point_and_not_before(reason):
     assert _ends(_held(reason, (30.0, 30.0), (30.0, 31.0))) is True
     assert _ends(_held(reason, (30.0, 30.0), (30.0, 33.0))) is False
@@ -58,7 +58,7 @@ def test_a_regroup_ends_within_the_cohesion_radius_it_was_issued_with():
     assert _ends(_held("REGROUP", (30.0, 30.0), (30.0, 30.0))) is False                         # no radius recorded: not an area move
 
 
-@pytest.mark.parametrize("reason", ["WANDER", "OBJECTIVE", "PANIC_RETREAT", None])
+@pytest.mark.parametrize("reason", ["WANDER", "OBJECTIVE", "SAFETY_PRESSURE_RETREAT", None])
 def test_a_move_without_an_area_is_not_ended_by_standing_near_its_point(reason):
     assert _ends(_held(reason, (30.0, 30.0), (30.0, 31.0))) is False
 

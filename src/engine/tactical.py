@@ -195,12 +195,11 @@ class TacticalDecisionSystem:
             social_context=entity.social
         )
         
-        if emotion.is_fleeing:
+        threats = _perceived_threats(entity, neighbors)
+        if emotion.is_fleeing and threats:  # no threat in sight, no flight: low HP, dread and grudge feed the panic but never flee alone (divergence 2.114)
              # PANIC: Move away from the perceived threats, inside the current region
              # (MOV-01 / LOC-01); hold position when no valid destination exists (MOV-03).
-             retreat_to = _destination_or_hold(
-                 entity, retreat_destination(state, entity, _perceived_threats(entity, neighbors))
-             )
+             retreat_to = _destination_or_hold(entity, retreat_destination(state, entity, threats))
              return EntityUpdate(
                  entity_id=entity.id,
                  navigation=NavigationUpdate(target_set=retreat_to, movement_mode_set=MovementMode.RETREAT),
