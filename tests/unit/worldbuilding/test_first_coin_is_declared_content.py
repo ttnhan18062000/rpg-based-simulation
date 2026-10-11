@@ -66,7 +66,11 @@ def test_crowded_frontier_has_a_forage_node_owned_by_a_hazard_free_near_edge_reg
     """Decision 35: crowded_frontier's lack of wild land was an oversight; the forest edge beside its settlement holds a thicket."""
     from src.engine.legality import LegalityServiceV2
     state = _state("crowded_frontier")
-    nodes = [n for n in state.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0]
+    food = [n for n in state.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0]
+    # D57: the goblin camp's own berries (module goblin_camp_forage) are the other food node; the forest edge holds exactly one thicket.
+    owners = {n.id: LegalityServiceV2.get_region_for_position(n.position, state).id for n in food}
+    assert sorted(owners.values()) == ["forest_edge", "goblin_camp_edge"]
+    nodes = [n for n in food if owners[n.id] == "forest_edge"]
     assert len(nodes) == 1 and nodes[0].max_charges == 10
     owner = LegalityServiceV2.get_region_for_position(nodes[0].position, state)
     assert owner.id == "forest_edge" and owner.kind == "WILDERNESS" and owner.hazard_level == 0.0

@@ -29,4 +29,6 @@ module_refs:
     order: 2
   - module_id: "hero_adventurers"
     order: 3
+  - module_id: "goblin_camp_forage"
+    order: 4
 generation_seed: 42

@@ -42,9 +42,14 @@ def _food_nodes(state):
     return [n for n in state.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0]
 
 
+def _forest_food_nodes(state):
+    """The wild-land nodes; the berries at the edge of a goblin camp (D57, module goblin_camp_forage) are counted apart."""
+    return [n for n in _food_nodes(state) if LegalityServiceV2.get_region_for_position(n.position, state).id != "goblin_camp_edge"]
+
+
 def test_a_forest_region_compiles_exactly_one_food_node_with_the_high_fertility_charges():
     state = _state(WILD_WORLD)
-    nodes = _food_nodes(state)
+    nodes = _forest_food_nodes(state)
     assert [n.kind for n in nodes] == [FOOD_KIND]
     assert nodes[0].max_charges == nodes[0].remaining_charges == HIGH_FERTILITY_CHARGES
     x_min, y_min, x_max, y_max = state.regions["near_forest"].bounds
@@ -53,7 +58,7 @@ def test_a_forest_region_compiles_exactly_one_food_node_with_the_high_fertility_
 
 @pytest.mark.parametrize("seed", [42, 43, 44])
 def test_the_food_node_count_does_not_depend_on_the_seed(seed):
-    assert len(_food_nodes(_state(WILD_WORLD, seed))) == 1
+    assert len(_forest_food_nodes(_state(WILD_WORLD, seed))) == 1
 
 
 @pytest.mark.parametrize("world", ["urban_political"])  # crowded_frontier declares a forest edge since Decision 35
@@ -71,7 +76,7 @@ def test_no_food_node_is_declared_in_the_home_town_region():
 def test_the_need_path_report_counts_the_wild_food_node():
     behavior_consumers._auto_init()
     rows = need_path_report(_state(WILD_WORLD), behavior_consumers._catalog)
-    assert rows and all(row["food_nodes_in_world"] == 1 for row in rows)
+    assert rows and all(row["food_nodes_in_world"] == 2 for row in rows)  # the forest's patch and the goblin camp's (D57)
     assert any(row["hunger_path"] is True for row in rows)
     rows_without = need_path_report(_state("urban_political"), behavior_consumers._catalog)
     assert all(row["food_nodes_in_world"] == 0 for row in rows_without)
@@ -100,8 +105,8 @@ def test_a_stripped_node_regrows_and_reports_recovery_through_the_ecology_proces
 
 WORLDS_WITH_RESOLVED_SPEC = sorted(p.parent.name for p in __import__("pathlib").Path("data/worlds").glob("*/resolved"))
 SETTLEMENT_KINDS = {"TOWN"}
-WILD_FOOD_REGIONS = {"near_forest", "sacred_grove", "swamp_border_territory", "forest_edge"}  # HIGH, HIGH, LOWER, HIGH (Decision 35); the frontier village biome holds none
-CHARGES_BY_REGION = {"near_forest": 10, "sacred_grove": 10, "swamp_border_territory": 8, "forest_edge": 10}
+WILD_FOOD_REGIONS = {"near_forest", "sacred_grove", "swamp_border_territory", "forest_edge", "goblin_camp_edge", "calibration_camp_edge"}  # HIGH, HIGH, LOWER, HIGH (Decision 35); the frontier village biome holds none
+CHARGES_BY_REGION = {"near_forest": 10, "sacred_grove": 10, "swamp_border_territory": 8, "forest_edge": 10, "goblin_camp_edge": 10, "calibration_camp_edge": 10}
 
 
 @pytest.mark.parametrize("world", WORLDS_WITH_RESOLVED_SPEC)

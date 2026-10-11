@@ -46,6 +46,22 @@
   danger_level: 3
   controlling_faction: "goblin_warband"
 
+# Decision 57 (owner 2026-10-09): the berries at the edge of the goblin camp, inside its warriors' range (module goblin_camp_forage).
+- id: "goblin_camp_edge"
+  display_name: "Goblin Camp Edge"
+  biome: "goblin_camp"
+  tags: ["hostile", "goblin", "forage"]
+  danger_level: 3
+  controlling_faction: "goblin_warband"
+
+# Decision 57: the berries at the edge of the calibration goblin camp (module camp_maturity_calibration_pilot).
+- id: "calibration_camp_edge"
+  display_name: "Calibration Camp Edge"
+  biome: "goblin_camp"
+  tags: ["hostile", "goblin", "forage"]
+  danger_level: 2
+  controlling_faction: "goblin_warband"
+
 # STATE: LEGACY-EXPORT
 - id: "moon_cave"
   display_name: "Shimmering Moonstone Cave"
