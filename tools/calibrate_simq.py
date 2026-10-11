@@ -191,8 +191,13 @@ def _run_engine(
     entity_count: int = 10,
     extra_flags: dict | None = None,
     cal_dir: str | None = None,
+    audit_mode: bool = False,
 ) -> tuple[str, float, str]:
     """Drive the kernel tick_once() N times; return (run_dir, elapsed_sec, run_id).
+
+    ``audit_mode`` (default off, so every other caller is unchanged) builds the Kernel with ``flags["audit_mode"]``: outside audit_mode the kernel's wall-clock
+    watchdog and throttle make a run depend on host speed. The grade anchors are measured with it on (TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE). It is a
+    Kernel constructor flag, so ``extra_flags`` (state feature flags) can not carry it.
 
     If a compiled world spec exists for ``name``, loads it via WorldCompiler and
     injects the resulting AuthoritativeState into the Kernel.  Falls back to a
@@ -297,7 +302,7 @@ def _run_engine(
     # max_tick_budget_ms for real-time pacing). Calibration runs are offline/batch, not
     # real-time, so this sleep only slows down the run without affecting simulation logic.
     # Same fix as tests/regression/test_behavioral_5k.py (TCK-20260628-E-LONGRUN-REGRESSION).
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True, **({"audit_mode": True} if audit_mode else {})})
 
     run_id = getattr(kernel, "_run_id", None)
     start = time.perf_counter()
@@ -490,6 +495,15 @@ def main():
     parser.add_argument("--name", type=str, default="generic")
     parser.add_argument("--entities", type=int, default=10)
     parser.add_argument(
+        "--audit-mode",
+        action="store_true",
+        help=(
+            "Build the Kernel with audit_mode so the run does not depend on host speed (off by default). "
+            "The grade anchors are measured with it; tools/evaluate_simq.py always passes it. "
+            "A campaign-mode profile already runs under audit_mode."
+        ),
+    )
+    parser.add_argument(
         "--profile",
         type=str,
         default=None,
@@ -553,7 +567,7 @@ def main():
     else:
         engine_run_dir, elapsed, run_id = _run_engine(
             args.name, args.seed, args.ticks, args.entities,
-            extra_flags=profile_feature_flags, cal_dir=cal_dir,
+            extra_flags=profile_feature_flags, cal_dir=cal_dir, audit_mode=args.audit_mode,
         )
     print(f"[calibrate_simq] Engine done in {elapsed:.2f}s. JSONL at: {engine_run_dir}")
 

@@ -578,7 +578,7 @@ def test_urban_political_seed123_500t_cognition_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{world_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -698,7 +698,7 @@ def test_simq_routing_test_seed42_500t_cognition_grade_stability() -> None:
     def _run_cognition(label: str, cal_dir: str) -> dict:
         profile = _resolve_profile(profile_name)
         feature_flags = _load_profile_feature_flags(profile)
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_{label}")
         _replay_jsonl_through_hub(engine_run_dir, hub)
@@ -799,7 +799,7 @@ def test_simq_routing_test_seed42_1000t_cognition_grade_stability() -> None:
     def _run_cognition(label: str, cal_dir: str) -> dict:
         profile = _resolve_profile(profile_name)
         feature_flags = _load_profile_feature_flags(profile)
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_{label}")
         _replay_jsonl_through_hub(engine_run_dir, hub)
@@ -900,7 +900,7 @@ def test_hero_guild_routing_seed42_1000t_cognition_grade_stability() -> None:
     def _run_cognition(label: str, cal_dir: str) -> dict:
         profile = _resolve_profile(profile_name)
         feature_flags = _load_profile_feature_flags(profile)
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_{label}")
         _replay_jsonl_through_hub(engine_run_dir, hub)
@@ -1017,7 +1017,7 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1129,7 +1129,7 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1248,7 +1248,7 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1339,7 +1339,7 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1445,7 +1445,7 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1534,7 +1534,7 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1646,7 +1646,7 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1738,7 +1738,7 @@ def test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stabi
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1850,7 +1850,7 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1941,7 +1941,7 @@ def test_frontier_living_world_seed123_200t_combat_narrative_grade_stability() -
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -2038,7 +2038,7 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
