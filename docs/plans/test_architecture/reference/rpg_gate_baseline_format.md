@@ -34,7 +34,15 @@ its worlds, seeds or ticks differ from the config. A stale baseline never yields
 new value outside a stop line (declared in rpg's config) unless an `owner_ruling` is given. The before/after of every changed row is computed from
 the two files and stored in the record.
 
+## Rules added in review
+
+- The row key `(id, scope, world, group, key, tick)` is the pairing key the report (child 4) must use. `scope` is `run` or `pooled`; a pooled outcome row has a `value` and no `per_seed`.
+- A baseline holds validity rows only at 0 violations; a validity fail is owned in `rpg_gate_known.yaml` (`state: fail`), never normalised by a re-baseline, and no ruling overrides that.
+- `provenance.cites` is required and non-empty on every version; a later version must contain the PR and a divergence id or memo row.
+- `owner_ruling` is `{ref, date}`; only the owner's ruling counts (a peer's or designer's message does not; a designer-recorded memo row the owner confirmed does).
+- Stop lines are checked on every candidate row, so a ruling is needed at each re-baseline while a value stays past the line.
+
 ## Open points for rpg
 
-- The config path and the stop-line shape (`name`, `metric`/`group` fnmatch patterns, `min`/`max` on a row's mean or violation total) are testing's proposal.
+- Config: `tests/simulation_quality/rpg_gate/config.yaml`, rpg's (agreed by rpg-planner). Stop-line shape: `name`, `metric`/`group` free fnmatch patterns (`group` is a property-based kind group, D42, never an EntityRole name), `min`/`max` on a row's value.
 - The candidate document a re-baseline reads is the baseline shape without `version` and `rebaseline`; child 4's report will emit it.
