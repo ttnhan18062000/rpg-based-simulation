@@ -46,6 +46,8 @@ domains:
       - registries/session_*.yaml   # exactly session_roles.yaml and session_authority.yaml today; one glob keeps the card within its token budget
       - .claude/agents/**
       - .graphifyignore
+      - tools/graphify_link.py
+      - tools/graphify_prune.py
       - tests/tools/**
       - tests/docs/**
     owns_not:

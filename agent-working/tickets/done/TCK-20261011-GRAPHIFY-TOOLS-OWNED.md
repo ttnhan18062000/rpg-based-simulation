@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261011-GRAPHIFY-TOOLS-OWNED
-phase: open
+phase: done
 date: 2026-10-11
 tags: [ai, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance]
 `tools/graphify_link.py` and `tools/graphify_prune.py` route to no domain after #506
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -61,9 +61,13 @@ None.
 None.
 
 ## Implementation Notes
+The ticket suggested `tools/graphify_*.py`, but that glob also matches `tools/graphify_to_html.py` (from #449), which this ticket does not cover. Two explicit entries instead (`tools/graphify_link.py`, `tools/graphify_prune.py`) in the agent-working domain's `owns`; the card compresses them with no token cost beyond the budget check. `graphify_to_html.py` stays unowned (reported in the PR body).
 
 ## Test Summary
+`route.py` names agent-working for both tools; `tools.sessions.validate` 0 findings (17 roles); `generate_agents --check` 0 drift. Card budget unchanged at 400.
 
 ## Files Changed
+`registries/session_roles.yaml`, `.claude/agents/session-agent-working-*.md`.
 
 ## Completion Summary
+Both graphify tools now route to agent-working. Owner confirms the literal `session_roles.yaml` diff in the PR body.
