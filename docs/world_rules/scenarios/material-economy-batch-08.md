@@ -344,6 +344,14 @@ pays nobody.
   - **Control arm (the treasury is empty):** no wage is paid. Either W does not take the work, or
     it works and no coin appears. W's gold stays 0 and no meal is bought.
   - **Why the control:** it proves the town wage is a transfer out of the treasury, not minted.
+  - **How the wage reaches W (decision 58, amended 2026-10-09):** the treasury pays a building it
+    owns its upkeep, into that building's own purse, and the building pays W's wage from that
+    purse, at the same rate as an inn shift. So "falls by the same amount" reads across the
+    chain: the treasury falls by the upkeep, the building's purse rises by the upkeep and then
+    falls by the wage. In the control arm, an unpaid building is disabled and offers no work.
+  - **Amended (decision 61, 2026-10-11):** a building meets its upkeep from its own purse first,
+    and the treasury tops up only a shortfall. Add an arm in which a building with coin in its
+    own purse and an empty treasury stays open and pays W.
   - **Engineering, not observable:** what counts as town work, the wage and stint length (from the
     fiction, as in ME-S20), and how a treasury refills (taxes, trade). Its refilling is a later
     Rule's question.
@@ -374,9 +382,11 @@ that place. A subject who earns and trades nothing pays no tax, however long it 
     never rises because of I.
   - **Conservation over the window:** total coins across every purse and the treasury are
     unchanged. The treasury's rise equals the sum of the shares, and nothing else credits it.
-- **Engineering and content, not observable:** the share's size (light and plausible, decision
-  33), rounding, which side of a sale pays it, and whether non-members of F pay a different
-  share.
+- **Decided (decision 58, 2026-10-09):** the share is a tenth, rounded down on each transaction,
+  and non-members pay the same. So a 6-gold wage pays nothing and a 20-gold sale pays 2. Stage
+  W's wage and S's price so that the expected share is stated in the spec, and add a small-sum
+  arm: a transaction under 10 gold moves no coin to the treasury.
+- **Engineering and content, not observable:** which side of a sale pays the share.
 - **Result (2026-10-09): revealed contradiction on main.** A regional levy takes 2 gold every 20
   ticks from anyone present (`src/engine/town_resolution.py`), so I is taxed while earning
   nothing (decision 51's evidence). Expected to be **covered** with
@@ -400,8 +410,12 @@ because a kill or a quest happened.
   - **Bounty (unfunded):** the same, but F's treasury cannot cover the bounty. No bounty is
     posted, or the claim pays nothing. No coin appears.
   - **Quest reward:** giver G, holding coin, offers a task with a reward and H completes it. H's
-    gold rises by the reward and G's purse falls by the same amount. If G cannot pay, no reward
-    is offered.
+    gold rises by the reward and G's purse falls by the same amount.
+  - **Quest reward owed (decision 58, 2026-10-09):** G cannot pay when H completes the task. No
+    coin appears. A recorded debt (H is owed, by G, this amount, since this tick) exists and stays
+    visible. When G later holds the coin, the debt is paid, oldest first, and then cleared.
+  - **No giver (decision 61, 2026-10-11):** a quest with no identifiable giver pays no coin. No
+    other purse or treasury is debited for it.
   - **Loot (control):** H kills a creature that no one has posted a bounty on. H gains exactly
     what the body carried, coin and items, and the body is left without them. A creature that
     carried nothing yields nothing; an animal never carries coin.
@@ -414,6 +428,28 @@ because a kill or a quest happened.
   `_reward_result` in `src/core/conservation.py`, which credits and never debits. Spawned bodies,
   wolves included, are given gold at birth (`src/systems/world_systems/generator.py`). Expected to
   be **covered** with `TCK-20261009-MINTED-KILL-AND-QUEST-COIN-IS-PAID-BY-A-PAYER-EXCH-02-B`.
+
+---
+
+## ME-S24 — A repair is paid once to the smith, or uses up a kit away from one (EXCH-02, decision 58) (added 2026-10-09)
+
+A worn item is repaired either by a smith, who is paid once, or in the field with a repair kit
+that is used up. No coin leaves without someone receiving it.
+
+- **Rules invoked:** EXCH-02 (every coin moves purse to purse), decision 58.
+- **Kernel spec (`mechanic_scenario`).** Three arms, with every purse known at the start:
+  - **At the smith:** subject R with a worn item and enough coin has it repaired. R's gold falls
+    by the price once, the smith's purse rises by the same amount, and the item's durability
+    rises.
+  - **In the field:** R is far from any smith and carries a repair kit. The repair is offered and
+    done. The kit is gone, no coin moves, and the item's durability rises.
+  - **Control:** R is far from any smith and carries no kit. No repair is offered, and R's gold
+    and the item are unchanged.
+  - **Conservation:** total coins across every purse are unchanged in every arm.
+- **Engineering, not observable:** the price, the reach to a smith, and how much a kit restores.
+- **Result (2026-10-09): revealed contradiction on main** (relayed by rpg-planner). Repair
+  charges `gold_cost` on top of `gold_delta` (twice), and a repair with no smith in reach pays
+  nobody. Expected to be **covered** with Lane B's treasury batch.
 
 ---
 

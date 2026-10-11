@@ -381,6 +381,25 @@ designed-not-built) is a governance act, and belongs to whichever process alread
 decision — today, the mechanism registry. Evaluation never adjudicates; it only ever produces the
 evidence adjudication needs.
 
+**Applied first to needs and livelihood (2026-10-09; roadmap §12, memo row 54).** The regression
+set for survival splits on §5's line:
+- **Validity checks** fail when a rule contradicts itself:
+  - food or coin from nothing, and conservation;
+  - a death beside a way to eat the subject knew of and never tried;
+  - a kind eating outside its diet, or served where its kind does not trade;
+  - a position outside the world;
+  - a declared way that is never used where its preconditions hold (a dead way).
+- **Outcome figures** are described and watched for drift, never graded alone: starvation share,
+  population and deaths by cause per kind group, attacks on people, the mix of ways, treasury
+  balances, and kills not eaten.
+
+A starving world with valid causes is good evidence. A fed world kept alive by a free meal is
+not. Bands around an outcome figure are not used, because a band is a target in disguise
+(decision 33). A drifting figure prompts a causal trace and fails nothing until that trace finds
+a validity break. A deliberate change re-baselines only with a cited divergence or memo row.
+Carried by `TCK-20261009-RPG-REGRESSION-METRICS-COMPUTED-FROM-TYPED-RECORDS` and
+`TCK-20261009-SIMQ-NEEDS-AND-LIVELIHOOD-PILLAR-GRADES-CAUSAL-VALIDITY`.
+
 ---
 
 ## 11. What this document does not do
