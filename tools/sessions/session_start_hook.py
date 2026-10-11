@@ -44,6 +44,15 @@ def _git(cwd: str, *args: str) -> str:
     return out.stdout.strip() if out.returncode == 0 else ""
 
 
+def _manifest_worktree(role, cwd: str) -> str | None:
+    """Realpath of the role's manifest worktree, `<main checkout>/.claude/worktrees/<placement>` (the path `launch.py`
+    defaults to); None when the main checkout cannot be determined, so a git failure keeps the old behaviour (fail open)."""
+    common = _git(cwd, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    if not common:
+        return None
+    return os.path.realpath(Path(common).parent / ".claude" / "worktrees" / role.worktree)
+
+
 def _same_process(recorded, current) -> bool:
     """True when both are known and name the same process (same pid AND start time; the command line is not compared)."""
     return recorded is not None and current is not None and (recorded.pid, recorded.start) == (current.pid, current.start)
@@ -150,10 +159,16 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
     if wt is not None and wt.writer == role.role and instance_id == role.role:
         # only the role's first instance takes the lease; a second instance (`<role>-2`) has a different id, would be
         # refused by the first's lease, and writes only in its own per-piece worktree (implementer card)
-        try:
-            st.take_lease(state_root, worktree, instance_id, binding.session_id, proc, proc_root)
-        except st.LeaseRefused as exc:
-            notes.append(f"session-roles: WRITER LEASE NOT TAKEN: {exc}")
+        # TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE: lease only the role's own manifest worktree,
+        # never whatever directory the session happened to launch in (the main checkout in particular)
+        manifest = _manifest_worktree(role, cwd)
+        if manifest is not None and os.path.realpath(worktree) != manifest:
+            notes.append(f"session-roles: writer lease not taken: launched outside {manifest}")
+        else:
+            try:
+                st.take_lease(state_root, worktree, instance_id, binding.session_id, proc, proc_root)
+            except st.LeaseRefused as exc:
+                notes.append(f"session-roles: WRITER LEASE NOT TAKEN: {exc}")
     parts.extend(notes)
     parts.append(_handover_text(role, root, instance_id))
     return "\n\n".join(parts)
