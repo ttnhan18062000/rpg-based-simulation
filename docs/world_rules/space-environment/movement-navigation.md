@@ -234,8 +234,9 @@ since #424 (`2a50072f2`, 2026-10-08), for the whole-tile clause.**
   ATTACK task against an OUT_OF_RANGE target was never re-decided, and one entity re-swung at a
   diagonal target 267 times. OUT_OF_RANGE must lead to a re-decision or a closing step.
 
-**Scenarios:** none traced yet. One is owed when the ticket lands: an attacker diagonal to its
-target steps one orthogonal tile, then strikes, and never swings from the diagonal.
+**Scenarios:** SPC-S17 (`docs/world_rules/scenarios/space-environment-batch-04.md`, 2026-10-11),
+covered since #385: an attacker diagonal to its target steps one orthogonal tile, then strikes
+within two brain cadences, and never swings from the diagonal (OUT_OF_RANGE ends the task).
 
 ---
 

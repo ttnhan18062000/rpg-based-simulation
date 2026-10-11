@@ -872,6 +872,18 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 49. what makes prey afraid (decided 2026-10-09: what the other is and what it is doing, CONFLICT-03);
 50. how detailed foundation content is (decided 2026-10-09: generic archetypes and coarse bands now; named species and exact figures after the foundation is hardened);
 51. how tax is levied (decided 2026-10-09: a share of income or trade when coin changes hands; no levy on the destitute, EXCH-02).
+52. whether people hunt at milestone 0 (decided 2026-10-09: yes, eating raw kills by the same reading as every creature, SURV-06);
+53. a kind its properties leave with nothing to overcome (decided 2026-10-09: its own description decides; otherwise a scavenger, disclosed; the Cave Spider is one, SURV-06);
+54. the milestone-0 gate (decided 2026-10-09: hard logic checks H1-H7, report-only figures R1-R5 with stop lines to the owner, §12.3).
+55. whether subjects provide for a coming need (decided 2026-10-09: yes, scaled by wits, with storing as a declared habit; the rule is written now and built in milestone 3, SURV-07).
+56. which hunger-cognition gaps are fixed before the milestone-0 gate (decided 2026-10-09: the inn-only target before the gate; true-map knowledge in milestone 1, SURV-07).
+57. how people-kind camps eat (decided 2026-10-09: wild food within the camp's range now, hunting once it lands, the fixed tether replaced by a home range in milestone 1, SURV-06);
+58. how the treasury's coin moves (decided 2026-10-09: a tenth of each sale and wage rounded down, upkeep paid into buildings that pay town wages, one-time repair or a used-up kit, unpaid rewards owed, EXCH-02).
+59. what grazing is (decided 2026-10-10: the land's plant cover, declared per biome with its wild food, and read by all forage and camp food; values decided 2026-10-11: a bite of 20, bands 1/2/4 patches per 1,000 tiles, regrowth 1/2/3 per check, SURV-06);
+60. how much meat a body gives and how often meat-eaters eat (decided 2026-10-10: meat in proportion to size, a meat-eater's full meal lasts at least a day, SURV-06).
+61. who keeps a building up and who pays a quest (decided 2026-10-11: a building pays its own upkeep and the treasury covers only a shortfall; only the real giver pays a quest; coin on a corpse stays where it fell, EXCH-02);
+62. how far faction hostility reaches (decided 2026-10-11: wild creatures go by the appraisal now; monster factions keep faction hostility until milestone 1, when each monster kind declares why it fights, CONFLICT-03);
+63. what a hero is (decided 2026-10-11: a person doing adventuring work, not a kind or a role; the guild is an organization people join, ID-02).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -1079,13 +1091,59 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    Done when broke workers earn and eat in all three measured worlds, meat-eaters eat what they
    kill, and nobody is fed for free. Then the free meal goes, for every kind at once (decision
    44).
+
+   **The gate as observable conditions (decided by the owner directly, 2026-10-09; memo row 54).**
+   Three worlds, five seeds each, governor pinned NORMAL. Two arms: the free meal on and the free
+   meal off for every kind. The hard checks are read on the off arm.
+   - A *broke worker* is a subject of a kind that keeps coin and trades (decision 43) that starts
+     the run with no coin and no food. Fix the list from the start state.
+   - A *way* to eat is gathering, hunting and eating raw, buying, or receiving. Selling and wages
+     are ways to get coin, not food.
+
+   Hard pass (every world; seeds pooled per world):
+   - H1 **earn:** a broke worker receives coin by selling or a wage, debited from the payer's
+     purse (EXCH-02). Minted kill or quest coin does not count.
+   - H2 **eat by a real way:** broke workers eat by at least one way that is not free; the mix is
+     reported. A city may be buy-only (decision 35).
+   - H3 **nobody fed free:** zero food eaten without a source item, for every kind.
+   - H4 **diets hold:** zero inn meals for kinds that do not keep coin and trade, and zero plant
+     forages by kinds that eat only meat.
+   - H5 **meat-eaters eat their kills:** where a meat-eating group and something it can overcome
+     both live, at least one kill made to eat (decision 48) whose meat is eaten, per group. Kinds
+     that can overcome nothing yet (SURV-06, memo row 53, e.g. the Cave Spider) are exempt and
+     listed.
+   - H6 **no starvation beside an untried way:** zero broke-worker starvation deaths whose
+     death record shows a way judged open and in reach that was never attempted. It is read from
+     a typed starvation-death record (way ids from SURV-06, every kind), which lands before the
+     gate run. Without that record, H6 is report-only and the gate cannot pass. The record lists
+     both the ways the subject's pull judged open and in reach, and the ways truly in reach. H6 is
+     judged on the first; a way the subject did not know of is reported, never a failure (memo
+     row 56). Before the gate run, the pull aims at the nearest open way, not always the inn.
+   - H7 **conservation:** the coin and food invariants are green on both arms.
+
+   Report-only. A crossed stop line goes to the owner for a ruling; it is not an automatic fail,
+   and values are never tuned to pass it (decision 33):
+   - R1 broke-worker starvation, off against on, with mean (SD) and paired SE. Stop if off is
+     worse by more than 2 SE in any world.
+   - R2 population and starvation per kind group (decision 42). Stop if a kind dies out in
+     every seed of a world where it was placed.
+   - R3 meat-eater attacks on people, against the free-meal arm and the pre-hunting main.
+   - R4 minted kill and quest coin, and treasury balances (decision 38's exception).
+   - R5 the mix of ways per world and kind group.
 1. **Kinds by properties.**
    - The property model in coarse bands, as schema and content.
    - The appraisal.
    - `kind` always means species, and occupation is a separate field.
    - Honest perception defaults (each kind's own senses; signals follow the body).
+   - Food and other places are found from what the subject perceives, remembers or was told,
+     not from the true map (decision 56).
    - An activity period per kind, and hazard tolerance per body.
    - Retire behaviour that branches on role, kind or faction names, in stages, measured each time.
+     This includes the fixed camp tether, replaced by a home range (decision 57).
+   - Each monster kind declares why it fights (the undead hate the living, a spirit guards a
+     place, a troll hunts by diet), which replaces faction hostility for monsters (decision 62).
+   - A hero is a person doing adventuring work: retire the hero role and the hero-guild faction
+     as kinds of being, and make the guild a membership people join and leave (decision 63).
 
    Done when no decision reads a role, kind or faction name, a new kind works from content alone,
    and a probe finds no name switch left in a decision path.
@@ -1105,11 +1163,13 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    - Corpse fate: butchery, scavenging, rot, burial.
    - Spoilage by food type, with cooking and drying to preserve.
    - Fire needs fuel and a place.
+   - Providing for a coming need (decision 55, SURV-07): eating or packing food before leaving
+     the reach of one's ways, and stores for kinds that keep them, scaled by wits.
    - Water, cold and disease are recorded as explicit "not yet" choices; shelter and cold come
      first if rough sleep proves too easy.
 
-   Done when a resting wounded creature recovers, a hunt's meat spoils unless used, and a cooked
-   meal fills more than a raw one.
+   Done when a resting wounded creature recovers, a hunt's meat spoils unless used, a cooked
+   meal fills more than a raw one, and a person who sets out beyond its ways takes food with it.
 
 **How the path runs:**
 - Each milestone's rule work (catalog text, kernel specs) is done before its code.
