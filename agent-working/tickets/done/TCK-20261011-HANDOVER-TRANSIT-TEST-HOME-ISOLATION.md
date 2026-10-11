@@ -55,6 +55,7 @@ None (hotfix).
 
 ## Related Code Areas
 - tests/tools/test_handover_transit.py
+- docs/plans/codebase_health/knowledge_lock_transit_test_brief.md (batch brief, committed with this ticket)
 
 ## Assumptions / Open Questions
 None open. The `Path.home` monkeypatch is enough: no code seam needed.
@@ -67,6 +68,7 @@ Red: the old test on origin/main fails on this VM (`TransitError` at tools/hando
 
 ## Files Changed
 - tests/tools/test_handover_transit.py
+- docs/plans/codebase_health/knowledge_lock_transit_test_brief.md (batch brief, committed with this ticket)
 
 ## Completion Summary
 The default-memory-dir test now runs against a tmp HOME (Path.home and $HOME redirected, non-repo cwd, symlink alias for the second candidate) and cannot read the real ~/.claude. Pinned: one filled candidate chosen; two filled raise TransitError. No change to tools/handover_transit.py. Unstaffed-seat exception (agent-working). Refs #513 part 1; the real-dir merge (part 2) stays the owner's.
