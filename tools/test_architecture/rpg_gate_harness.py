@@ -86,14 +86,20 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def _module_source(spec: str, root: Path) -> bytes:
-    """The source of the metrics module ``spec`` (``module`` or ``module:attr``), found on disk under ``root`` without importing anything.
-    A module that is not there yet (rpg's, before it lands) hashes as a fixed marker, so its arrival changes the hash."""
+def module_path(spec: str, root: Optional[Path] = None) -> Optional[Path]:
+    """The file of the metrics module ``spec`` (``module`` or ``module:attr``) under ``root``, found without importing anything; ``None`` when it is not there."""
+    root = root or repo_root()
     relative = Path(*spec.partition(":")[0].split("."))
     for candidate in (root / relative.with_suffix(".py"), root / relative / "__init__.py"):
         if candidate.is_file():
-            return candidate.read_bytes()
-    return b"<metrics module not found>"
+            return candidate
+    return None
+
+
+def _module_source(spec: str, root: Path) -> bytes:
+    """The source of the metrics module, or a fixed marker for one that is not there yet (rpg's, before it lands), so its arrival changes the hash."""
+    path = module_path(spec, root)
+    return path.read_bytes() if path else b"<metrics module not found>"
 
 
 def harness_hash(config_path: Path, root: Optional[Path] = None, metrics_module: str = "") -> str:

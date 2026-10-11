@@ -9,9 +9,9 @@ name: RPG gate report
 #     ago; a dispatch always runs (tools/test_architecture/slow_regression_gate.py, parameterised by workflow and suite job);
 #   - one shard job per world (fresh process per seed inside it), then an aggregate job that evaluates, writes the step summary, uploads the documents and the
 #     report, and (scheduled runs on main only) updates the rolling issue;
-#   - rpg's config (tests/simulation_quality/rpg_gate/config.yaml) and metric module (src/observability/rpg_gate_metrics.py) may not exist yet. No config: the
-#     plan job says so and the run ends green. No module: every run is metric_error / no-data, the verdict is green and the summary says plainly that the module
-#     is absent.
+#   - rpg's config (tests/simulation_quality/rpg_gate/config.yaml) and metric module (src/observability/rpg_gate_metrics.py) may not exist yet. No config or
+#     no module: the plan job says so ("rpg's metric module is absent: nothing was run"), no shard or report job runs, the run ends green and counts as
+#     untested (the simulations are not run just to get metric_error). An INVALID config turns the plan job red.
 # Cost (planning): 3 worlds x 5 seeds x 5000 ticks is about 50-60 min wall on one 2-vCPU ubuntu-latest runner (TCK-20261009-RPG-GATE-PINNED-FRESH-PROCESS-HARNESS
 # measured 200-700 s per run on a busy development host); sharding by world runs the shards in parallel and bills the same minutes.
 
@@ -75,27 +75,30 @@ jobs:
     permissions:
       contents: read
     outputs:
-      have_config: ${{ steps.plan.outputs.have_config }}
+      ready: ${{ steps.plan.outputs.ready }}
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.sha }}
+      # Ready only with a VALID config and rpg's metric module present. An absent config or module ends the run green with nothing run (no billed simulation
+      # minutes just to get metric_error); an INVALID config exits non-zero here, which turns this job red.
       - name: Plan
         id: plan
         run: |
-          set -o pipefail
-          python3 -m tools.test_architecture.rpg_gate_plan | tee plan.txt
+          rc=0
+          python3 -m tools.test_architecture.rpg_gate_plan > plan.txt || rc=$?
           cat plan.txt >> "$GITHUB_OUTPUT"
           {
             echo "### RPG gate report plan"
             sed 's/^/- /' plan.txt
           } >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
 
   shard:
     name: "Shard (${{ matrix.world }})"
     needs: plan
-    if: ${{ !cancelled() && needs.plan.outputs.have_config == 'true' }}
+    if: ${{ !cancelled() && needs.plan.outputs.ready == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -129,7 +132,7 @@ jobs:
     # The suite job the #464 gate looks for: it concludes success or failure only when a run actually reported; a skipped run leaves it `skipped`.
     name: "RPG gate report"
     needs: [plan, shard]
-    if: ${{ !cancelled() && needs.plan.outputs.have_config == 'true' }}
+    if: ${{ !cancelled() && needs.plan.outputs.ready == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     # Job-level permissions drop everything not listed: checkout needs contents, the rolling issue needs issues.
@@ -148,7 +151,7 @@ jobs:
           pattern: rpg-gate-docs-*
           path: gate-docs
           merge-multiple: true
-      - name: Evaluate (rerun once on a fail or drift)
+      - name: Evaluate (rerun once on a fail or drift, 2 workers, bounded)
         run: |
           mkdir -p report
           python -m tools.test_architecture.rpg_gate_report \

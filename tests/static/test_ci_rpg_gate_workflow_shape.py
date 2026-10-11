@@ -70,10 +70,12 @@ def test_only_an_explicit_skip_decision_stops_a_run_and_a_dispatch_always_runs()
     assert _jobs()["plan"]["needs"] == "gate"
 
 
-def test_missing_config_stops_the_run_green_before_any_shard():
+def test_missing_config_or_module_stops_the_run_green_before_any_shard_and_an_invalid_config_turns_plan_red():
     for job in ("shard", "report"):
-        assert "needs.plan.outputs.have_config == 'true'" in _jobs()[job]["if"]
-    assert "rpg_gate_plan" in _run_text("plan")
+        assert "needs.plan.outputs.ready == 'true'" in _jobs()[job]["if"]
+    run = _run_text("plan")
+    assert "rpg_gate_plan" in run and 'exit "$rc"' in run  # the plan's exit status (non-zero for an invalid config) is the job's, after the outputs are written
+    assert "set -o pipefail" not in run or "| tee" not in run  # no pipe that would hide the plan's exit status
 
 
 def test_shards_do_not_fail_fast_run_the_harness_per_world_and_have_a_timeout_with_headroom():

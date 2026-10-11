@@ -54,23 +54,23 @@ def test_collect_passes_the_workflow_file_to_gh(monkeypatch):
 
 def test_plan_without_a_config_says_so_and_still_gives_a_one_value_matrix(tmp_path):
     result = plan.plan(tmp_path / "missing.yaml")
-    assert result["have_config"] is False and "does not exist yet" in result["message"] and json.loads(result["matrix"]) == {"world": ["none"]}
+    assert result["ready"] is False and "does not exist yet" in result["message"] and json.loads(result["matrix"]) == {"world": ["none"]}
 
 
 def test_plan_reads_the_worlds_from_the_config_and_reports_an_invalid_one(tmp_path):
     cfg = tmp_path / "c.yaml"
     cfg.write_text("worlds: [a, b]\nseeds: [1, 2, 3]\nticks: 100\nstale_after_days: 30\n")
-    result = plan.plan(cfg)
-    assert result["have_config"] and json.loads(result["matrix"]) == {"world": ["a", "b"]} and "2 world(s) x 3 seed(s) x 100 ticks" in result["message"]
+    result = plan.plan(cfg, "tests.helpers.rpg_gate_stub_metrics")  # the stub stands in for rpg's module: present
+    assert result["ready"] and json.loads(result["matrix"]) == {"world": ["a", "b"]} and "2 world(s) x 3 seed(s) x 100 ticks" in result["message"]
     cfg.write_text("worlds: [a]\n")
     bad = plan.plan(cfg)
-    assert not bad["have_config"] and "invalid" in bad["message"]
+    assert not bad["ready"] and "invalid" in bad["message"]
 
 
 def test_plan_cli_prints_github_output_lines(tmp_path, capsys):
     assert plan.main(["--config", str(tmp_path / "none.yaml")]) == 0
     out = capsys.readouterr().out
-    assert "have_config=false" in out and "matrix=" in out
+    assert "ready=false" in out and "matrix=" in out
 
 
 # ---- shards
@@ -190,3 +190,84 @@ def test_main_wires_a_client_and_prints_what_was_done(tmp_path, capsys):
     client = FakeClient()
     assert issue.main(["--report", str(path), "--repo", "o/r", "--run-id", "9", "--sha", "s"], client_factory=lambda repo: client) == 0
     assert "created" in capsys.readouterr().out and client.calls
+
+
+# ---- review round: no simulation minutes without rpg's module; an invalid config is red; the rerun is bounded
+
+def test_plan_is_not_ready_while_rpg_s_metric_module_is_absent_and_says_so(tmp_path):
+    cfg = tmp_path / "c.yaml"
+    cfg.write_text("worlds: [a]\nseeds: [1]\nticks: 100\nstale_after_days: 30\n")
+    root = tmp_path / "root"
+    root.mkdir()
+    absent = plan.plan(cfg, "pkg.metrics", root)
+    assert absent["ready"] is False and absent["invalid"] is False and absent["message"] == "rpg's metric module is absent: nothing was run"
+    (root / "pkg").mkdir()
+    (root / "pkg" / "metrics.py").write_text("def compute(a): ...\n")
+    ready = plan.plan(cfg, "pkg.metrics", root)
+    assert ready["ready"] is True and json.loads(ready["matrix"]) == {"world": ["a"]}
+    (root / "pkg" / "metrics.py").unlink()
+    (root / "pkg" / "metrics").mkdir()
+    (root / "pkg" / "metrics" / "__init__.py").write_text("")
+    assert plan.plan(cfg, "pkg.metrics:compute", root)["ready"] is True  # a package and a module:attr spec resolve like the harness hash does
+
+
+def test_the_default_module_is_the_one_the_harness_names_and_is_absent_on_main_today():
+    assert plan.DEFAULT_METRICS_MODULE == harness.DEFAULT_METRICS_MODULE
+
+
+def test_an_invalid_config_is_red_and_an_absent_one_is_green(tmp_path, capsys):
+    bad = tmp_path / "bad.yaml"
+    bad.write_text("worlds: [a]\n")
+    assert plan.main(["--config", str(bad)]) == 1  # invalid: the plan job turns red
+    assert "ready=false" in capsys.readouterr().out
+    assert plan.main(["--config", str(tmp_path / "absent.yaml")]) == 0  # absent: green, nothing runs
+    bad.write_text("- not a mapping\n")
+    assert plan.plan(bad)["invalid"] is True
+    bad.write_text("worlds: [a, a]\nseeds: [1]\nticks: 1\nstale_after_days: 1\n")
+    assert plan.plan(bad)["invalid"] is True
+
+
+def test_the_rerun_runs_two_at_a_time_and_starts_nothing_after_its_budget(tmp_path, monkeypatch):
+    import threading
+    import time
+
+    cfg = tmp_path / "c.yaml"
+    cfg.write_text("worlds: [w]\nseeds: [1, 2, 3, 4]\nticks: 10\nstale_after_days: 30\n")
+    config = load_config(cfg)
+    active, peak, ran = [0], [0], []
+    lock = threading.Lock()
+
+    def fake_run_one(world, seed, config, out, **kw):
+        with lock:
+            active[0] += 1
+            peak[0] = max(peak[0], active[0])
+        time.sleep(0.05)
+        ran.append(seed)
+        (out / harness.doc_name(world, seed)).write_text(json.dumps({"schema": "rpg-gate-metrics/v1", "status": "ok", "metrics": []}))
+        with lock:
+            active[0] -= 1
+
+    monkeypatch.setattr(harness, "run_one", fake_run_one)
+    monkeypatch.setattr(harness, "pool_world", lambda *a, **k: None)
+    pairs = [("w", s) for s in (1, 2, 3, 4)]
+    rerun = rep._harness_rerun(config, cfg, tmp_path / "docs", "x.y", "sha", workers=2, budget_s=60)
+    rerun(pairs)
+    assert peak[0] == 2 and sorted(ran) == [1, 2, 3, 4] and rerun.skipped == []
+    ran.clear()
+    expired = rep._harness_rerun(config, cfg, tmp_path / "docs2", "x.y", "sha", workers=2, budget_s=0)
+    expired(pairs)
+    assert ran == [] and sorted(expired.skipped) == pairs
+
+
+def test_a_rerun_that_skipped_pairs_for_budget_says_so_and_does_not_mark_them_unstable():
+    docs = {("w", 1): {"schema": "rpg-gate-metrics/v1", "status": "ok", "harness_hash": "h", "world": "w", "seed": 1, "metrics": [
+        {"id": "V1", "class": "validity", "scope": "run", "group": "*", "violations": 2, "examples": [], "oracle": "o"}]}}
+    config = GateConfig(("w",), (1,), 10, 30)
+
+    def rerun(pairs):
+        return {}
+
+    rerun.skipped = [("w", 1)]
+    report = rep.build_report(config, docs, None, {}, [], dt.date(2026, 10, 12), harness_hash="h", rerun=rerun)
+    assert report["rerun"]["not_performed_budget"] == [["w", 1]] and any(f["state"] == "fail" for f in report["findings"])
+    assert "rerun not performed (budget)" in rep.render_markdown(report)
