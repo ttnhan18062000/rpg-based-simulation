@@ -51,7 +51,7 @@ exists, so an old file is never modified. ``stop_lines`` come from rpg's config 
     stale_after_days: 30
     stop_lines: [{name: R1, metric: "O2.*", group: "*", min: 0, max: 10}]   # min/max optional; metric and group are fnmatch patterns
 
-A stop line is crossed when a candidate row's value (the ``mean`` of a run outcome row, the ``value`` of a pooled outcome row, the ``violations`` of a
+Stop lines apply to outcome rows only (never validity). A stop line is crossed when a candidate row's value (the ``mean`` of a run outcome row, the ``value`` of a pooled outcome row, the ``violations`` of a
 validity row) is outside ``[min, max]``. It is checked on every candidate row, not only the changed ones, so a ruling is needed at each re-baseline
 while a value stays past the line; that is intended. The config lives at ``tests/simulation_quality/rpg_gate/config.yaml`` and is rpg's. ``group`` is
 a property-based kind group (D42), never an EntityRole name; ``metric`` and ``group`` are free fnmatch patterns.
@@ -183,6 +183,8 @@ def lint_baseline(doc: Any, filename: Optional[str] = None) -> List[str]:
     if not doc.get("milestone"):
         problems.append("missing milestone")
     problems.extend(_lint_provenance(doc.get("provenance")))
+    if "owner_ruling" in doc and _ruling_problem(doc["owner_ruling"]):
+        problems.append(_ruling_problem(doc["owner_ruling"]))
     problems.extend(_lint_metrics(doc.get("metrics")))
     problems.extend(_lint_rebaseline(doc.get("rebaseline"), version, (doc.get("provenance") or {}).get("cites")))
     return problems
@@ -388,7 +390,7 @@ def stop_lines_crossed(rows: Sequence[Mapping[str, Any]], stop_lines: Sequence[S
     for line in stop_lines:
         for row in rows:
             value = row_value(row)
-            if value is None or not fnmatch.fnmatchcase(str(row.get("id")), line.metric) or not fnmatch.fnmatchcase(str(row.get("group")), line.group):
+            if row.get("class") != "outcome" or value is None or not fnmatch.fnmatchcase(str(row.get("id")), line.metric) or not fnmatch.fnmatchcase(str(row.get("group")), line.group):
                 continue
             if (line.min is not None and value < line.min) or (line.max is not None and value > line.max):
                 crossed.append(line.name)
@@ -432,7 +434,7 @@ def rebaseline(
     version = existing[-1]["version"] + 1 if existing else 1
     rows = candidate.get("metrics") or []
     crossed = stop_lines_crossed(rows, config.stop_lines)
-    if existing and (crossed or undecided_world_semantic_change) and not owner_ruling:
+    if (crossed or undecided_world_semantic_change) and not owner_ruling:
         why = f"crosses stop line(s) {crossed}" if crossed else "carries an undecided world-semantic change"
         raise RebaselineRefused(f"this re-baseline {why}; it needs an owner_ruling {{ref, date}}")
     if owner_ruling and _ruling_problem(owner_ruling):
@@ -453,6 +455,8 @@ def rebaseline(
         "metrics": list(rows),
         "rebaseline": None,
     }
+    if owner_ruling and not existing:
+        doc["owner_ruling"] = dict(owner_ruling)  # version 1 has no rebaseline record to hold it
     if existing:
         doc["rebaseline"] = {
             "previous_version": existing[-1]["version"],

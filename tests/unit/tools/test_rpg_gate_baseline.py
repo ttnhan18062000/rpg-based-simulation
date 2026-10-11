@@ -288,3 +288,20 @@ def test_config_rejects_a_duplicate_seed_or_world(tmp_path):
         cfg.write_text(body + "ticks: 1\nstale_after_days: 1\n")
         with pytest.raises(rgb.BaselineError, match="duplicate"):
             rgb.load_config(cfg)
+
+
+def test_stop_lines_apply_to_outcome_rows_only():
+    rows = _candidate()["metrics"]  # includes a validity row at 0
+    assert rgb.stop_lines_crossed(rows, [rgb.StopLine("ALL", "*", "*", 1, None)]) == ["ALL"]  # the pooled outcome row (0.4) is below 1
+    only_validity = [r for r in rows if r["class"] == "validity"]
+    assert rgb.stop_lines_crossed(only_validity, [rgb.StopLine("ALL", "*", "*", 1, None)]) == []
+
+
+def test_the_first_baseline_past_a_stop_line_needs_a_ruling_too(tmp_path):
+    cfg = _config()
+    with pytest.raises(rgb.RebaselineRefused, match="owner_ruling"):
+        rgb.rebaseline(_candidate(deaths=11.0), cfg, tmp_path, pr=None, cites=["t"], now=NOW)
+    with pytest.raises(rgb.RebaselineRefused, match="undecided"):
+        rgb.rebaseline(_candidate(), cfg, tmp_path, pr=None, cites=["t"], undecided_world_semantic_change=True, now=NOW)
+    path = rgb.rebaseline(_candidate(deaths=11.0), cfg, tmp_path, pr=None, cites=["t"], owner_ruling=RULING, now=NOW)
+    assert json.loads(path.read_text())["owner_ruling"] == RULING and rgb.lint_dir(tmp_path) == []
