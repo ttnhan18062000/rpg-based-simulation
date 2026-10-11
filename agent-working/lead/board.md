@@ -27,7 +27,6 @@ dispatches, reorders a queue or approves anything. Rows are added by the lead. F
 
 Squash-merged leftovers. **Never push any of these again.** Each one was confirmed by its owning planner on 2026-10-11 (this host only; the other host may differ).
 
-- codebase: worktree `/data/vboxuser/Work/rpg-ledger-epic-close` (branch `ledger-epic-close`); local branches `import-linter-adoption`, `python-code-craft-gates-closure`, `python-code-craft-gates-flip`.
 - perf: worktrees `rpg-wt-perf-m2-plan`, `rpg-wt-perf-m2-tickets`; branches `perf-m2-detailed-plan` (#475), `perf-m2-contract-tickets` (in #483), `perf-planner-m2-review` (#486), `perf-planner-m2-followups` (#496).
 - asset: local branch `visual-asset-slices` (#499).
 - repo root (main checkout, untracked since 10-03): `agent-monitoring/`, `stored_artifacts/` (27 files, old pre-`agent-working/` layout).
