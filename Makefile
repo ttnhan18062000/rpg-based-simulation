@@ -66,10 +66,13 @@ PYTHON3 := $(shell for py in .venv/bin/python3 /home/u24desktop/Working/rpg-base
 # (found through `git rev-parse --git-common-dir`, so a worktree on any host reaches it, same as
 # tools/start_search_mcp.sh), then this checkout's own `.venv-knowledge`, then `python3`. Each candidate must still
 # pass the sentence_transformers probe.
+# Kept out of the shell loop below so tests/tools/test_makefile_interpreter_selection.py can still extract and
+# exercise that one-line selection command.
+KNOWLEDGE_MAIN_ROOT := $(patsubst %/.git,%,$(shell git rev-parse --path-format=absolute --git-common-dir 2>/dev/null))
 ifdef KNOWLEDGE_PYTHON
 PYTHON_KNOWLEDGE := $(KNOWLEDGE_PYTHON)
 else
-PYTHON_KNOWLEDGE := $(shell main="$$(dirname "$$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")"; for py in "$$main/.venv-knowledge/bin/python3" .venv-knowledge/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && "$$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('sentence_transformers') else 1)" >/dev/null 2>&1 && echo "$$py" && break; done)
+PYTHON_KNOWLEDGE := $(shell for py in "$(KNOWLEDGE_MAIN_ROOT)/.venv-knowledge/bin/python3" .venv-knowledge/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && "$$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('sentence_transformers') else 1)" >/dev/null 2>&1 && echo "$$py" && break; done)
 endif
 
 dev: ## Start backend + frontend dev server with live map (hot reload)
