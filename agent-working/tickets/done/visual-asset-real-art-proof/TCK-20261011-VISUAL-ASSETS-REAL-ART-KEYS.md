@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261011-VISUAL-ASSETS-REAL-ART-KEYS
-phase: open
+phase: done
 date: 2026-10-11
 tags: [architecture, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation]
 Real-art proof: register three optional keys (ui.panel_frame, fx.selection_ring, fx.campfire) and refresh the session_handoff snapshots
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -84,4 +84,4 @@ Nothing else fails. Without the keys `test_atlas.py` passes 17/17.
 - `docs/assets/session_handoff/asset-implementer.md`, `docs/assets/session_handoff/asset-planner.md`
 
 ## Completion Summary
-
+Three optional keys (`ui.panel_frame`, `fx.selection_ring`, `fx.campfire`) registered, registry 28,241 -> 29,525 B (6.4 % of the bound); both session_handoff snapshots refreshed; the registry-content pins moved to exact values. Finding: any registry edit makes older candidates unexportable until a new one is assembled, so the branch was red on 12 export tests from this commit until rc-0009 (asset-planner ruling, option B). Commit `0abcc3153`.

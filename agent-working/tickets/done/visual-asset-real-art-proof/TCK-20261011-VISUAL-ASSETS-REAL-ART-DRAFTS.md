@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261011-VISUAL-ASSETS-REAL-ART-DRAFTS
-phase: open
+phase: done
 date: 2026-10-11
 tags: [architecture, testing, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, mcp]
 Real-art proof: draw the three sources with the drawing tool, hand off, intake PASS, owner adopts
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -66,7 +66,7 @@ Child 2 of `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF`. Real art, made throu
 
 ## Implementation Notes
 - DEVIATION (accepted by asset-planner 2026-10-11): the three sources were NOT drawn through the aseprite MCP server. The server in this session was started at 17:35, before PR #499 merged, and its in-memory Lua pin no longer matches the checked-out `ops.lua` (`new_sprite` refuses: "lua/ops.lua does not match its pinned hash; refusing to run"). The guard refusing is correct behaviour, not a bug. I called the exact functions the tools wrap (`visual_assets.drawing.api`, `compose`, `handoff.build_handoff`) from this worktree, whose pin matches (`5a9b265f...`, `python -m visual_assets.drawing.pin` unchanged), with a private `ASEPRITE_MCP_WORKSPACE`. Intake and review ran with `python -m visual_assets.store` in this worktree (`submit_candidate` would have staged into the main checkout). No code changed.
-- The pixels come from small deterministic scripts tuned by eye after looking at every preview, not stroke-by-stroke drawing. The owner was told this and approved. The scripts are kept in `agent-working/staging_artifacts/TCK-20261011-VISUAL-ASSETS-REAL-ART-DRAFTS/scripts/` (moved to stored artifacts at close) so the art can be reproduced; the dry-run measurement is next to them.
+- The pixels come from small deterministic scripts tuned by eye after looking at every preview, not stroke-by-stroke drawing. The owner was told this and approved. The scripts are kept in `agent-working/stored_artifacts/TCK-20261011-VISUAL-ASSETS-REAL-ART-DRAFTS/scripts/ (as `.py.txt`)` (moved to stored artifacts at close) so the art can be reproduced; the dry-run measurement is next to them.
 - Art: `ui.panel_frame` 24x24, bevelled frame, four corner studs, constant centre rows/columns, slice `panel` 24x24 with 9-slice centre 8,8,8,8, 8 colours. `fx.selection_ring` 32x32, 8 frames at 100 ms, tag `pulse`, iso ring with a lit upper-left arc and a travelling highlight, slice `anchor` pivot (16,16), 4 colours. `fx.campfire` 64x64, 16 frames at 80 ms, tag `burn`, crossed logs, stones, dithered ground glow, three flames in four bands, embers, sparks rising 4 px per frame (a seamless loop), slice `base` pivot (32,63), 15 colours.
 - Lint: `touches_edge` and `orphan_pixels` (info) are deliberate. The campfire has 5 `value_separation` warnings, all dark ground, log and ember tones of a decorative effect, judged acceptable and stated in the handoff limitation; one palette nudge reduced but did not clear them.
 - Measurements (bounds from `visual_assets/store/config.py`), `ui.panel_frame` / `fx.selection_ring` / `fx.campfire`: source 421 / 1,919 / 10,154 B (campfire 9.9 % of `MAX_SOURCE_BYTES` 102,400); dimensions 24 / 32 / 64 (`MAX_DIM` 128); frames 1 / 8 / 16 (`MAX_ANIMATION_FRAMES` 16); tags 0 / 1 / 1 (16); slices 1 / 1 / 1 (16); slice keys per slice 1 (16); `IntakeResult` 672 B each (`MAX_RECORD_BYTES` 131,072); preview 828 B 192x192 / 881 B 256x256 / 3,397 B 512x512 (`MAX_PREVIEW_BYTES` 524,288, `MAX_PREVIEW_DIM` 1024); handoff `package.json` 1,159 / 1,188 / 1,223 B. No bound exceeded.
@@ -81,7 +81,7 @@ Child 2 of `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF`. Real art, made throu
 ## Files Changed
 - `visual_assets/catalog/sources/{ui_panel_frame,fx_selection_ring,fx_campfire}/r0001.{aseprite,source.json}`, `visual_assets/catalog/provenance/adoptions/ad-{89f6a62b866bba54,6b7562f0799be9ea,27d874d5da867cc0}.json`, `visual_assets/catalog/provenance/intake/in-{a60055155aaf773c,4023376bcfb08add,01dc468da4fc8235}{,.review}.json`
 - `tests/visual_assets/adopted_facts.py`, `tests/visual_assets/test_icon_owner_fixes_adoption.py`, `tests/visual_assets/store/unit/test_detail_axis.py`, `tests/visual_assets/store/unit/test_animation_metadata.py`, `tests/visual_assets/store/unit/test_slice_metadata.py`
-- `agent-working/staging_artifacts/TCK-20261011-VISUAL-ASSETS-REAL-ART-DRAFTS/` (drawing scripts, dry-run measurement)
+- `agent-working/stored_artifacts/TCK-20261011-VISUAL-ASSETS-REAL-ART-DRAFTS/` (drawing scripts, dry-run measurement)
 
 ## Completion Summary
-
+Three real sources drawn (scripts tuned by eye, driven through the drawing api because the session's MCP server was stale), intake PASS, largest 10,154 B of 102,400, no bound exceeded; the owner adopted them (`ad-89f6a62b866bba54`, `ad-6b7562f0799be9ea`, `ad-27d874d5da867cc0`) after being told the four facts asset-planner required. Commit `d94f58b69`.

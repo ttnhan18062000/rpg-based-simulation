@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261011-VISUAL-ASSETS-REAL-ART-BUDGETS-AND-CLOSE
-phase: open
+phase: done
 date: 2026-10-11
 tags: [architecture, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation]
 Real-art proof: budgets.md measurements against every bound, Git LFS and raise-bounds verdicts, docs, close
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -78,7 +78,7 @@ Child 4 of `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF`. Lead condition 3: th
 `tests/visual_assets/test_budgets_parity.py` 6 passed (the new section does not touch the `Bounds` table). Full `tests/visual_assets` and the tools suites are in the epic's Completion Summary.
 
 ## Files Changed
-- `docs/assets/budgets.md`, `docs/assets/store_contract.md`, `docs/assets/session_handoff/*`, `agent-working/staging_artifacts/TCK-20261011-VISUAL-ASSETS-REAL-ART-BUDGETS-AND-CLOSE/noise_measurement.py`
+- `docs/assets/budgets.md`, `docs/assets/store_contract.md`, `docs/assets/session_handoff/*`, `agent-working/stored_artifacts/TCK-20261011-VISUAL-ASSETS-REAL-ART-BUDGETS-AND-CLOSE/noise_measurement.py.txt`
 
 ## Completion Summary
-
+budgets.md section `Real-art measurements (2026-10)` with a row per bound touched; verdicts: Git LFS (D2) keep closed, raise a bound none; frame-1 fact and the registry-edit known gap in store_contract.md; snapshots refreshed naming the next batch; closure by hand (`batch_hand_close`). Commit `4692f2149` and the closing commit.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261011-VISUAL-ASSETS-REAL-ART-RELEASE-PROOF
-phase: open
+phase: done
 date: 2026-10-11
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Real-art proof: build, rc-0009 (70 + 3) on the owner's answer, export-runtime --atlas --slices
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -81,4 +81,4 @@ Child 3 of `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF`. Proves the release a
 - `tests/visual_assets/adopted_facts.py`, `tests/visual_assets/test_rc_0009_extends_rc_0008.py` (new), `tests/visual_assets/store/unit/test_atlas.py`, `tests/visual_assets/test_release_byte_reproducibility.py`, `tests/visual_assets/test_icon_set_adoption.py`, `tests/visual_assets/test_icon_v2_keys.py`, `tests/visual_assets/store/unit/test_animation_metadata.py`, `tests/visual_assets/store/unit/test_slice_metadata.py`
 
 ## Completion Summary
-
+Built the three artifacts, assembled `pilot/rc-0009` (73 = rc-0008's 70 byte-identical + 3) on the owner's answer, proved `export-runtime --atlas --slices` (two runs byte-identical, slice coordinates and atlas placement hand-checked), re-pointed the 12 red tests from rc-0008 to rc-0009 without weakening, re-ran the local Aseprite proof record last. Commits `a28282206`, `96ca645f9`.

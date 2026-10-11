@@ -28,4 +28,4 @@ authorizes; merge needs the user's `--admin`.
 
 ## Status
 
-OPEN (2026-10-11): filed and dispatched to asset-implementer.
+DONE (2026-10-11): all four children committed and reviewed by asset-planner; closed by hand (`batch_hand_close`). Awaiting the user's push/PR decision.
