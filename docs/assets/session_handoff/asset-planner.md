@@ -9,10 +9,11 @@ tags: [architecture, documentation]
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-10 at the close of the store-tooling batch (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261010-VISUAL-ASSETS-STORE-TOOLING-DOCS-AND-CLOSE`.
-Updated: 2026-10-10 (store-tooling: owner gates answered, c3-c7+c9 reviewed)
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-10 at the close of the slices batch (the planner's live handover is authoritative) (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261010-VISUAL-ASSETS-SLICES-DOCS-AND-CLOSE`.
+Updated: 2026-10-10 (store-tooling MERGED as PR #487 `231e35f77`; slices batch built on `visual-asset-slices`, awaiting the user's push/PR decision)
 
 ## Open
+- 2026-10-10 slices batch (`TCK-20261010-EPIC-VISUAL-ASSET-SLICES`, branch `visual-asset-slices`): all four children committed and reviewed (SLICE-SOURCE-FIELDS `20c146af4`, SLICE-RUNTIME-EXPORT `76418d7a5`, SLICE-DRAWING-TOOL `b30ae1663`, then docs and close). Owner decisions: store + drawing tool; 16 slices / 16 keys; ADR D25 approved as written (with the handoff `slice_count` and export scaling sentences). Store-tooling (below) is MERGED as PR #487 (`231e35f77`); its notes are kept for the record.
 - 2026-10-10 IN FLIGHT: batch visual-asset-store-tooling FILED + DISPATCHED to asset-implementer (msg). Epic
   TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING + 9 children (todos/visual-asset-store-tooling/SEQUENCE.md), branch
   visual-asset-store-tooling off 312fbd78c, planning commit 4c4b0b8d5, upstream unset (implementer checks it out in

@@ -3,9 +3,9 @@
   "counts": {
     "errors": 0,
     "failed": 0,
-    "passed": 205,
+    "passed": 215,
     "skipped": 0,
-    "total": 205
+    "total": 215
   },
   "guarded_files": [
     {
@@ -45,6 +45,10 @@
       "sha256": "sha256:a83c66f9c6316cc53a745563bf3b82004f660d23b5c0c47fdf2d678d19777c0d"
     },
     {
+      "path": "tests/visual_assets/drawing/integration/test_slices.py",
+      "sha256": "sha256:3ad226b395a25fcac1c6a0c4dc54df56d3ce3906401118d11b6d288a37661cde"
+    },
+    {
       "path": "tests/visual_assets/drawing/integration/test_summary_facts.py",
       "sha256": "sha256:e2842365d7210a4003a6c5fa91df0998467363aa21002cb5e7d28a6de017537a"
     },
@@ -54,7 +58,7 @@
     },
     {
       "path": "tests/visual_assets/store/builders.py",
-      "sha256": "sha256:11221b74dffcbb0a170fdbfc2a822188ece3cf5c0d3e5bee48b6b231d0dd79d0"
+      "sha256": "sha256:56a2a11c63130fd78ca1396680b5153b231f112af62fffed402e7dc23df6bcf6"
     },
     {
       "path": "tests/visual_assets/store/integration/test_build_real.py",
@@ -62,7 +66,7 @@
     },
     {
       "path": "tests/visual_assets/store/integration/test_real_aseprite.py",
-      "sha256": "sha256:9e96ce8fb1e90e41733e1a76787ccc19971e7254ae11dcbc7391737c43db4fc3"
+      "sha256": "sha256:dc56097be935ff29dc21402d493df2da570dc4690eb683d758719364bfcc264e"
     },
     {
       "path": "tests/visual_assets/store/runtime_fixture.py",
@@ -102,7 +106,7 @@
     },
     {
       "path": "visual_assets/drawing/api.py",
-      "sha256": "sha256:a64c773d43fc7fe1ef9871668e4379e7b33713da6e864c9995278fa423c9f1f7"
+      "sha256": "sha256:2982244dc0e65e5f4cade87ce452ddb4d02a15473d7c3d581968b5472655e296"
     },
     {
       "path": "visual_assets/drawing/backend/__init__.py",
@@ -110,7 +114,7 @@
     },
     {
       "path": "visual_assets/drawing/backend/lua/ops.lua",
-      "sha256": "sha256:ad42d215cea94f6b016f36abeaa344cdb912124e0c7881c2e9616e356883d9d0"
+      "sha256": "sha256:5a9b265f167a0ca9c436bc370d186d7c7702a31abc81355536b4aa9627ac6b54"
     },
     {
       "path": "visual_assets/drawing/backend/lua_runner.py",
@@ -130,7 +134,7 @@
     },
     {
       "path": "visual_assets/drawing/config.py",
-      "sha256": "sha256:bcdb304bbbfd49e6e1071469121fbf1efa4cc634c6e86b1655e91e8c9b2b82e6"
+      "sha256": "sha256:f275bea3bc4379afd4717c256cc5afa99ab1a1da9a7628b81e2e159de61a3e99"
     },
     {
       "path": "visual_assets/drawing/errors.py",
@@ -138,7 +142,7 @@
     },
     {
       "path": "visual_assets/drawing/handoff.py",
-      "sha256": "sha256:d105601f60137e4ffe3be9d500bec5744ff1de30c1cec434cd59a0a09cf456cf"
+      "sha256": "sha256:60e205109e0a3e1b98346c53382b1d3f911fcab13f7ce442ec9b13f8a30d7d38"
     },
     {
       "path": "visual_assets/drawing/palettes.py",
@@ -154,7 +158,7 @@
     },
     {
       "path": "visual_assets/drawing/schema/ops.py",
-      "sha256": "sha256:40c4e9687f7350e350c728d2dfd2933b9c57267302945d183678c1bdc327c317"
+      "sha256": "sha256:099a4af77af77ed470f3a7ea59c5b236c4305290af9b8799c09db079bbb3537e"
     },
     {
       "path": "visual_assets/drawing/schema/primitives.py",
@@ -182,7 +186,7 @@
     },
     {
       "path": "visual_assets/drawing/server/lowlevel_tools.py",
-      "sha256": "sha256:3e62392dbb52752a4e8572bfd997d867ab3fa0d4c3e4a8b9f842d33ca1d8452a"
+      "sha256": "sha256:badd37967c67227b4f7169f38bc0b39d62bcc6924f7a852bfb40808df780a5c0"
     },
     {
       "path": "visual_assets/drawing/server/store_readonly_tools.py",
@@ -250,7 +254,7 @@
     },
     {
       "path": "visual_assets/store/adoption.py",
-      "sha256": "sha256:c28e4c60fa12883a1d6e51bfd80db943e020307a8675085b2e1c574891099dae"
+      "sha256": "sha256:21785272f3a4351a22d43330b2e2fd6c5b7a8452b3129ad253b108de0bd4b78d"
     },
     {
       "path": "visual_assets/store/animation.py",
@@ -294,11 +298,11 @@
     },
     {
       "path": "visual_assets/store/cli.py",
-      "sha256": "sha256:a530364ed75280d57461685df74ad53ecf90f2868d7f21540ad2143476ef1f98"
+      "sha256": "sha256:3deb6c6e754ac80788fd27370137550bf65bd8911aff116d4e99825129aaf92c"
     },
     {
       "path": "visual_assets/store/config.py",
-      "sha256": "sha256:ee7dd3680ce28c0c191535580ef127882801f46cbdd2b2819eeefd4d88f91f8e"
+      "sha256": "sha256:56c5ae0a487cbe6f6e2152405046671243f0102eddd147719e2dc750053dc1bb"
     },
     {
       "path": "visual_assets/store/contracts/__init__.py",
@@ -338,11 +342,11 @@
     },
     {
       "path": "visual_assets/store/contracts/handoff.py",
-      "sha256": "sha256:b8b74a6e792cd6f4df68a02f2bdf06f454663d9ebe5be6c47fe425dcf4874e24"
+      "sha256": "sha256:7f1a2a42b1e9b285f5844de3ef58669dc7cbe5b17e537136b962bcdde59ad382"
     },
     {
       "path": "visual_assets/store/contracts/intake.py",
-      "sha256": "sha256:bc7cf1d5a623314a7ea646ec3acc87a53022b94ede1d4ef0eb781ecdc573d51d"
+      "sha256": "sha256:e48ec78f5426023f91a257600170ba1b9511ba7e5b052da7292591954f25b98c"
     },
     {
       "path": "visual_assets/store/contracts/release.py",
@@ -357,8 +361,12 @@
       "sha256": "sha256:38811490f348db841082da4a19c0f352f358b92a3fa27a9eb1e12909c2f17faa"
     },
     {
+      "path": "visual_assets/store/contracts/slices.py",
+      "sha256": "sha256:7c722a2fb3747500bb648536faedd8a18c6467b8c6f7e4bcc646abebe0d7df5b"
+    },
+    {
       "path": "visual_assets/store/contracts/source.py",
-      "sha256": "sha256:6724ffc9b73c3246ee7b9185bcbe2014ed5d3c3eed6372bf2a64e4966aafef62"
+      "sha256": "sha256:3403ea4ce2e43f7f7cc35ef353c628a2bea96ba50542b2d0433d6b05973849a4"
     },
     {
       "path": "visual_assets/store/deletionlog.py",
@@ -390,7 +398,7 @@
     },
     {
       "path": "visual_assets/store/intake/aseprite.py",
-      "sha256": "sha256:ecaed00a81075f1a6be8d169312bbc2ff80816394eac7ca17da9d8afe0369cbc"
+      "sha256": "sha256:a1cd1cfe48151c631a053760fdedbc81dcacdd596f2547197f8518567e469687"
     },
     {
       "path": "visual_assets/store/intake/quarantine.py",
@@ -402,7 +410,7 @@
     },
     {
       "path": "visual_assets/store/intake/validator.py",
-      "sha256": "sha256:ae8bba1e0546e1a708ae1cc08ae2663359a14f1e57189bb6d292a0005d138d97"
+      "sha256": "sha256:6eb7ac3163a741edbf1dc15ff864a25648e0460d4a5465473037fe43e304701b"
     },
     {
       "path": "visual_assets/store/lock.py",
@@ -438,18 +446,22 @@
     },
     {
       "path": "visual_assets/store/runtime_export.py",
-      "sha256": "sha256:cd4a78633bc5a952b216de9e15a26e09e0f5f3ba6862a4e7859e5ed3cbc2dc5e"
+      "sha256": "sha256:5fbba49d9e92bd6f0d88802597464e27f2aef17bcf4cd6d10ffcb0a346b1c13d"
     },
     {
       "path": "visual_assets/store/setadoption.py",
       "sha256": "sha256:d854393fb0280084547d71799e5507adbead7375bea5f7e2db0f3d90aa958d4b"
     },
     {
+      "path": "visual_assets/store/slices.py",
+      "sha256": "sha256:5245a1de429791e06d45f9b391ed01c2991455aeeabd71ee06f2eff3c0b4fa20"
+    },
+    {
       "path": "visual_assets/store/verify.py",
       "sha256": "sha256:273e79ef546f44ef25d9cc94980b1b620aac3cd1b1e35ebff334529e92b8d3b5"
     }
   ],
-  "guarded_hash": "sha256:95cbc63eb759c061a6b100a4f4a7f244f3fdc74ee6914c3217a236d3c7cc669e",
+  "guarded_hash": "sha256:ae341b836dca9fe4d136b528df6810ffd4212204e49bfe09eea2bb82e78c01bc",
   "make_target": "visual-assets-aseprite-local",
   "record_type": "aseprite_local_proof",
   "release_rebuild": {
@@ -458,8 +470,8 @@
     "identical": 70,
     "release": "pilot/rc-0008"
   },
-  "run_at_utc": "2026-10-10T09:08:23Z",
-  "run_commit": "dd3e46ac08581b027275f5074ecc37575433e976",
+  "run_at_utc": "2026-10-10T13:59:11Z",
+  "run_commit": "5270c653bf0258e3aff7345ba04c0960d79b052a",
   "schema_version": 1,
   "strict": true
 }

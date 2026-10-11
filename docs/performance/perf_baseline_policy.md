@@ -88,9 +88,13 @@ and the approval is the review of the PR that adds the file.
 - The synthetic-scenario files (`idle_100_local.json`, ...) have the shape and file names produced by `tools/perf/run_benchmarks.py`. No
   script copies them into `tests/perf/baselines/`; the only tool that writes there besides `baseline_lifecycle.py` is
   `tools/bench_corpus_world.py --commit` (§6).
-- The live comparison (`tests/perf/test_perf_regression_baseline.py`) reads the committed JSON directly and compares `avg_tick_compute_ms`
-  only, and a missing file is skipped. Under the performance contract that is `INCONCLUSIVE`; `PERF-M2-T03` makes the live comparison use
-  `compare()`.
+- **Two tripwire lanes, both through `compare()`** (`PERF-M2-T03`). The pull-request lane is `tools/perf/tripwire.py`: base and head are run paired on
+  one runner, each side in a fresh process, over the declared scenario list (`TRIPWIRE_SCENARIOS`: 10 warmup and 50 sampled ticks, canonical contract).
+  A scenario that is not `PASS` is run once more as a diagnostic; both outcomes are reported, and when they disagree the result is `INCONCLUSIVE`
+  ("not reproducible"), never a pass. The nightly lane (`tests/perf/test_perf_regression_baseline.py`, `slow`) compares the head with the latest
+  promoted baseline record. A missing baseline, or one of the 15 legacy references that carry no identity, is `INCONCLUSIVE` with a named reason: it is
+  reported, never skipped. Both lanes only report (a `::warning` annotation or a `PerformanceThresholdWarning`); neither blocks.
+- `tools/perf/check_perf_regression.py` and `tools/perf/perf_ci.py` are retired: they were a second comparison with its own tolerance and no caller.
 - `PERF-M2-T08` re-records them as schema records under the canonical variants, through `promote`, and then retires the legacy list.
 - No capacity-run baseline exists (`PERF-M2-T04`).
 

@@ -40,6 +40,7 @@ cannot settle that, the row says so and takes the conservative status.
 | DEV-017 | A tick's reported cost no longer counts refine sub-phases twice | #448 `28d0af111` (2026-10-08) | the artifact has a `resolution_overhead` phase and a tick total |
 | DEV-018 | Opt-in Canonical signal contract; `WORK_MODEL_V1` provisional | #448 `28d0af111` (2026-10-08) | nothing is invalidated: new opt-in, `LIVE` is unchanged (golden fixture) |
 | DEV-019 | Work debt removed; proof digest `flat-sha256-v2`; certification result schema `v2` | #455 `77fe33645` (2026-10-09) | the artifact stores a `CanonicalStateHasher` digest or a certification result |
+| DEV-021 | `BenchHarness` statistics cover every sampled tick; before, only the last 100 (`signal_history` is a 100-slot deque) and `compute_tps` was overstated by `sample_ticks / 100` | `PERF-M2-T04` (this ticket's PR) | the artifact was made with `sample_ticks` above 100: the three `simq_corpus_*` baselines (1000 ticks). Already `rerun` for T01 and DEV-017; this is a second reason, and their `compute_tps` / `avg_tps` are about 10x too high |
 
 DEV-018 and #380 invalidate nothing committed: no committed baseline records `dropped_work` (the only tracked data file with the field is the Live golden
 fixture, where `dropped_work_delta` is the constant 0 of a hand-built signal), and no committed run used the Canonical contract.
@@ -50,7 +51,7 @@ Counts reconcile with the search in section 6: `tests/perf/baselines` 15 files, 
 15 files, `perf_baselines.json`, `tests/regression/baseline_5k.json`, the SimQ fixtures, 21 compile reports, and
 the generated and test-pinned files.
 
-### 3.1 `tests/perf/baselines/` (tripwire references; `tests/perf/test_perf_regression_baseline.py`, `tools/perf/check_perf_regression.py`)
+### 3.1 `tests/perf/baselines/` (tripwire references; `tests/perf/test_perf_regression_baseline.py`; `tools/perf/check_perf_regression.py` was retired by `PERF-M2-T03`)
 
 | Artifact | Captured | Status | Deciding change and evidence |
 |---|---|---|---|

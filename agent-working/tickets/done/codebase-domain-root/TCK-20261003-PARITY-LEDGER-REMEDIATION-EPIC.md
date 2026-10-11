@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-PARITY-LEDGER-REMEDIATION-EPIC
-phase: open
+phase: done
 date: 2026-10-03
 tags: [planning]
 ---
@@ -15,7 +15,7 @@ tags: [planning]
 Bring the parity ledger to zero schema errors without loosening the schema, routed per subsystem
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -41,9 +41,9 @@ Owner decision 2026-10-03: the 2,862 schema errors are fixed through a scope-onl
 - Writing new tests to justify an entry inside these children (a missing test is a finding for the owning domain, not something to invent here)
 
 ## Acceptance Criteria
-- [ ] Every child filed with its owning domain and listed here
+- [ ] Every child filed with its owning domain and listed here (NOT met: no child was filed in the 7 days since 2026-10-03; carried forward by owner decision 2026-10-10, see AC 3)
 - [x] proof_type decision recorded: owner decision 2026-10-04, REMAP (the enum is not extended). The 25 values outside the enum (feature 13, architecture 6, unit 5, integration 1) are remapped to an existing enum value by each owning domain's remediation child, entry by entry, with a reason
-- [ ] Ratchet baseline at zero, or the remainder carried forward by explicit owner decision
+- [x] Ratchet baseline at zero, or the remainder carried forward by explicit owner decision: carried forward by owner decision 2026-10-10 (made to codebase-planner). Counts: 2862 schema errors at the 2026-10-03 start, 2851 on `cd202049b` after the baseline tighten in `TCK-20261010-PARITY-LEDGER-BASELINE-TIGHTEN`; not zero
 
 ## Related Tickets
 - TCK-20261003-PARITY-LEDGER-SCHEMA-RATCHET
@@ -65,9 +65,13 @@ None.
 - Routing children to other domains is a request to their planners (outbox if not running); this epic does not assign their work
 
 ## Implementation Notes
+- Closed under its own AC 3 with zero children filed. Owner decision 2026-10-10: the CI ratchet stays and stops any rise (live test `tests/codebase/test_parity_ledger_schema_gate.py`, run in `Tools · a–e`); codebase tightens the baseline as counts fall; per-domain paydown goes to lead-planner as a finding, sent by codebase-planner, to sequence into domain backlogs.
 
 ## Test Summary
+Not applicable (scope-only epic, no code).
 
 ## Files Changed
+None besides this ticket and its folder move.
 
 ## Completion Summary
+Epic closed with no children filed and the remainder (2851 schema errors) carried forward by explicit owner decision 2026-10-10. The ratchet keeps blocking any rise; codebase lowers the baseline as counts fall; per-domain paydown is lead-planner's to sequence.
