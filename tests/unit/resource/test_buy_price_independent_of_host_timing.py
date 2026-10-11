@@ -75,7 +75,11 @@ def test_buy_price_is_the_same_on_a_fast_and_a_very_slow_host(monkeypatch, shop_
     fast = _run_with_clock(monkeypatch, shop_world, FAST_STEP_NS)
     slow = _run_with_clock(monkeypatch, shop_world, SLOW_STEP_NS)
 
-    assert _buy_cost(shop_world, fast) == _buy_cost(shop_world, slow) == 100
+    # The price is MarketSystem's (Bible 03 section 4: base value, region and building modifiers, the buy factor): a function of the
+    # world's content and not of the host's speed.
+    from src.systems.economy_systems.market import MarketSystem
+    expected = MarketSystem.calculate_price(shop_world, shop_world.buildings[101], "healing_potion", is_buy=True)
+    assert _buy_cost(shop_world, fast) == _buy_cost(shop_world, slow) == expected
 
 
 def test_no_measured_timing_reaches_authoritative_pressure_signals(monkeypatch, shop_world):

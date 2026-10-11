@@ -25,6 +25,8 @@ module_refs:
     namespace: "trading"
     parameters:
       merchant_count: 3
+  - module_id: "goblin_camp_forage"
+    order: 9
 default_perspectives:
   - "hero_guild_perspective"
   - "wild_beast_pack_perspective"

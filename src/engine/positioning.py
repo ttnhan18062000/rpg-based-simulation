@@ -118,7 +118,12 @@ class PositioningService:
         """
         if not target.navigation.target:
             return target.navigation.position
-            
+
+        # A target that is itself pursuing has an aim point that is another intercept point, and leading it leads a lead
+        # that always stays ahead (two chasers then run on without converging); aim at where it is.
+        if target.task.payload.get("target_id") is not None:
+            return target.navigation.position
+
         tx, ty = target.navigation.position
         gx, gy = target.navigation.target
         

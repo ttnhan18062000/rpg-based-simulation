@@ -27,8 +27,7 @@ def test_prometheus_metrics_registry_and_structure():
         max_queue_depth=10,
         max_tick_budget_ms=50,
         max_replay_buffer_kb=1024,
-        max_observability_budget_percent=5.0,
-        max_work_debt=100
+        max_observability_budget_percent=5.0
     )
     
     manager = V2EngineManager(profile, seed=42, entities_count=5)
@@ -59,7 +58,6 @@ def test_prometheus_metrics_registry_and_structure():
             "sim_worker_utilization",
             "sim_queue_utilization",
             "sim_memory_rss_bytes",
-            "sim_work_debt_total",
             "sim_governor_mode",
             "sim_gold_circulation_total",
             "sim_hard_law_last_violation_tick"
@@ -81,8 +79,7 @@ def test_prometheus_hard_law_violation_metrics_export():
         max_queue_depth=10,
         max_tick_budget_ms=50,
         max_replay_buffer_kb=1024,
-        max_observability_budget_percent=5.0,
-        max_work_debt=100
+        max_observability_budget_percent=5.0
     )
     
     manager = V2EngineManager(profile, seed=42, entities_count=5)
@@ -124,8 +121,7 @@ async def test_metrics_endpoint_direct():
         max_queue_depth=10,
         max_tick_budget_ms=50,
         max_replay_buffer_kb=1024,
-        max_observability_budget_percent=5.0,
-        max_work_debt=100
+        max_observability_budget_percent=5.0
     )
     manager = V2EngineManager(profile)
     try:
@@ -199,8 +195,7 @@ def test_multiple_registries_prevent_collision():
         max_queue_depth=10,
         max_tick_budget_ms=50,
         max_replay_buffer_kb=1024,
-        max_observability_budget_percent=5.0,
-        max_work_debt=100
+        max_observability_budget_percent=5.0
     )
     profile2 = RuntimeProfile(
         name="p2",
@@ -211,8 +206,7 @@ def test_multiple_registries_prevent_collision():
         max_queue_depth=10,
         max_tick_budget_ms=50,
         max_replay_buffer_kb=1024,
-        max_observability_budget_percent=5.0,
-        max_work_debt=100
+        max_observability_budget_percent=5.0
     )
     
     m1 = V2EngineManager(profile1, seed=1)

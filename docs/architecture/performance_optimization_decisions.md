@@ -560,6 +560,14 @@ Each follows §3.1 and is intentionally empty.
   serialized.
 - Related dispositions: C-06, C-09.
 
+- **Update 2026-10-08 (owner decision, `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`):** when work debt and
+  `periodic_due_ticks` are removed from `AuthoritativeState`, the proof digest becomes **`flat-sha256-v2`**: the
+  `flat-sha256-v1` canonical data minus the `work_debt` and `periodic_due_ticks` keys, nothing else changed. Every
+  state digest moves once. Digests are comparable only within one scheme, and the engine computes only the current
+  one. The scheme name is recorded beside the certification artifact and the long-run `final_state_hash`. The
+  alternative was to keep v1 and write both keys as constant `{}`; it was rejected because it leaves two permanent
+  dead keys.
+
 #### PERF-D6 — Phase-catalog authority
 
 - **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`

@@ -45,6 +45,7 @@ from src.core.updates import StateUpdate, EntityUpdate, SocialUpdate, StrategicU
 from src.engine.legality import LegalityServiceV2
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.rpg_depth import StaminaService, SkillScalingService
+from src.engine.sleep_debt import debt_change_per_tick, is_asleep, recovery_scale as sleep_recovery_scale
 from src.engine.starvation import STARVING_LINE, hp_loss, recovery_scale
 from src.systems.social_memory import SocialMemoryService
 from src.systems.social_systems.relationships import RelationshipService
@@ -90,7 +91,7 @@ class ApplyPath:
                 bio = entity.biological
                 changes["biological"] = replace(bio, 
                     hunger=min(100.0, bio.hunger + need_rates(entity)[0] * cadence.biological),
-                    sleep_debt=min(100.0, bio.sleep_debt + need_rates(entity)[1] * cadence.biological)
+                    sleep_debt=max(0.0, min(100.0, bio.sleep_debt + debt_change_per_tick(need_rates(entity)[1], is_asleep(entity)) * cadence.biological))
                 )
             
             # Lifecycle / Health Decay
@@ -101,7 +102,6 @@ class ApplyPath:
                 total_passive_dmg = 0
                 if bio.hunger >= STARVING_LINE:
                     total_passive_dmg += hp_loss(bio.hunger, entity.combat.max_hp, tick, entity.id, cadence.lifecycle)
-                if bio.sleep_debt >= 98.0: total_passive_dmg += 1
                 
                 if total_passive_dmg > 0 or new_age != life.age_ticks:
                     comb = changes.get("combat", entity.combat)
@@ -116,10 +116,7 @@ class ApplyPath:
                     passive_cause_tick = life.passive_death_cause_tick
                     if (comb.hp > 0 and new_hp == 0 and total_passive_dmg > 0
                             and life.death_reason is None and not life.is_permadeath):
-                        passive_cause = (
-                            PassiveDeathCause.STARVATION if bio.hunger >= 95.0
-                            else PassiveDeathCause.SLEEP_DEPRIVATION
-                        )
+                        passive_cause = PassiveDeathCause.STARVATION  # sleep debt costs no health (decision 41): hunger is the only passive drain
                         passive_cause_tick = tick
                     # The passive branch never DEACTIVATES: resolve_lifecycle is the sole declared
                     # authority for HP-death and old-age deactivation (PROG-030). Its one remaining
@@ -139,7 +136,8 @@ class ApplyPath:
                     )
             
             # Weakened by hunger (owner decision 36): slower recovery. One compare per entity; 1.0 off the weakened path.
-            rscale = recovery_scale(changes["biological"].hunger if "biological" in changes else entity.biological.hunger)
+            rbio = changes["biological"] if "biological" in changes else entity.biological
+            rscale = min(recovery_scale(rbio.hunger), sleep_recovery_scale(rbio.sleep_debt))  # the worse of the hunger and sleep stages
 
             # Stamina Regen
             stamina = entity.stamina
@@ -316,13 +314,6 @@ class ApplyPath:
         for k, v in update.rejections_delta.items():
             new_rejections[k] = new_rejections.get(k, 0) + v
 
-        new_periodic = dict(prior_state.periodic_due_ticks)
-        new_periodic.update(update.periodic_updates)
-
-        new_work_debt = dict(prior_state.work_debt)
-        for k, delta in update.work_debt_updates.items():
-            new_work_debt[k] = max(0, new_work_debt.get(k, 0) + delta)
-
         if audit_mode:
             new_trace = list(prior_state.transaction_trace)
             new_trace.extend(update.transaction_trace)
@@ -497,8 +488,6 @@ class ApplyPath:
             terrain=prior_state.terrain,
             home_storage=new_storage,
             town_center=prior_state.town_center,
-            periodic_due_ticks=new_periodic,
-            work_debt=new_work_debt,
             movement_count=new_movement_count,
             maturity=new_maturity,
             last_calamity_tick=new_last_calamity,

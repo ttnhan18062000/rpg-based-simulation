@@ -151,28 +151,18 @@ def test_town_tax_refactor(base_state):
     assert refined.resource_updates.get(f_key) == 2.0
 
 def test_shop_sell_refactor(base_state):
-    """Verify that ShopSystem uses ResourceTransferIntent."""
+    """EXCH-02 (owner decision 34): selling is a chosen act, not an automatic act of whoever stands in a shop. Standing in a shop with ore
+    proposes no sale; the sale is the SELL action (`shop_sale.plan_sale`), tested in test_sell_is_a_chosen_act.py."""
     hero = base_state.entities[1]
-    # Hero has an item to sell
     item = ItemStack(item_id="iron_ore", quantity=1)
-    base_state = replace(base_state, entities={**base_state.entities, 1: replace(hero, 
+    base_state = replace(base_state, entities={**base_state.entities, 1: replace(hero,
         inventory=replace(hero.inventory, items=[item]),
         navigation=replace(hero.navigation, position=(0.0, 0.0))
     )})
-    # Ensure building_tiles is "shop" and buildings exists
     base_state = replace(base_state, building_tiles={(0,0): "shop"})
-    
-    # ShopSystem reacts to inventory state
-    update = StateUpdate(force_full_scan=True)
-    
-    refined = AuthoritativeApplyPipeline.refine(base_state, update)
-    
+    refined = AuthoritativeApplyPipeline.refine(base_state, StateUpdate(force_full_scan=True))
     ent_upd = refined.entity_updates.get(1)
-    assert ent_upd is not None
-    assert ent_upd.inventory is not None
-    # iron_ore sell price is 10
-    assert ent_upd.inventory.gold_delta == 10
-    assert any(i.item_id == "iron_ore" for i in ent_upd.inventory.items_remove)
+    assert ent_upd is None or not [t for t in ent_upd.resource_transfers if t.source_kind == "SHOP_SELL"]
 
 def test_blacksmith_craft_refactor(base_state):
     """Verify that BlacksmithSystem uses ResourceTransferIntent."""

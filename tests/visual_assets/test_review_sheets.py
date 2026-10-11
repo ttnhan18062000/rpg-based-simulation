@@ -10,10 +10,10 @@ import struct
 import pytest
 
 from tests.visual_assets import adopted_facts as af
-from tests.visual_assets import icon_owner_fixes_draft_set as fixes
-from tests.visual_assets import icon_specs
-from tests.visual_assets import review_sheets as rs
-from tests.visual_assets.pilot_colour_vision import REPO
+from visual_assets.review import icon_owner_fixes_draft_set as fixes
+from visual_assets.review import icon_specs
+from visual_assets.review import review_sheets as rs
+from visual_assets.review.pilot_colour_vision import REPO
 from visual_assets.store import config
 
 SET = fixes.SET_ID
@@ -73,7 +73,7 @@ def test_the_readme_holds_what_each_image_shows_the_recorded_results_the_finding
         assert name in text
     assert "NOTHING IS ADOPTED:" in text and "RECORDED RESULTS" in text and "PASS" in text and "FINDINGS FOR YOU" in text
     assert text.count(" review in-") == 7 and text.count(" adopt in-") == 7 and text.count("--parent r0001") == 7
-    assert "<your licence decision>" in text and "adopt-set cannot make new revisions" in text
+    assert "<your licence decision>" in text and "this set predates that, so its revisions are adopted one slot at a time with --parent" in text
     for e in rs.load_set(SET)[0]:
         if e.key in fixes.PROPOSED:
             assert f"review {e.draft_id}" in text and f"--source-asset-id {e.key.replace('.', '_')} " in text  # the EXISTING source id, not the draft's
@@ -160,3 +160,74 @@ def test_the_readme_prints_the_decisions_and_findings_from_the_one_recorded_file
     review = (rs.REPO / "docs" / "assets" / "icon_set_v2_review.md").read_text()
     assert all(f'"{d["answer"]}"' in review for d in recorded["decisions"])
     assert text.count("Accept as drawn") == 2 and "accepted both as drawn" in text
+
+
+# ---- owner commands: ONE adopt-set for a set whose drafts declare revisions (ADR D22), per-slot commands for a set that predates it ----------------
+
+def _revising_drafts(tmp_path, *, keep_new: str | None = None):
+    """A copy of the committed fixes set whose proposed drafts declare `parent_revision` (all but `keep_new`, which stays a NEW source asset)."""
+    root = tmp_path / "drafts"
+    shutil.copytree(REPO / "visual_assets" / "drafts" / SET, root / SET)
+    path = root / SET / "draft_set.json"
+    record = json.loads(path.read_text())
+    for entry in record["entries"]:
+        if entry["visual_key"] in fixes.PROPOSED and entry["visual_key"] != keep_new:
+            entry["parent_revision"] = "r0001"
+    path.write_text(json.dumps(record, sort_keys=True, separators=(",", ":")))
+    return root
+
+
+def _commands(text: str) -> str:
+    return text.split("YOUR COMMAND")[1]
+
+
+def test_a_set_whose_drafts_declare_revisions_gets_one_adopt_set_command_with_the_new_and_revision_summary(tmp_path, monkeypatch):
+    monkeypatch.setattr(rs, "adopted_intakes", lambda: {})
+    root = _revising_drafts(tmp_path, keep_new="icon.item.tool")
+    out = tmp_path / "out"
+    rs.generate(SET, out, root=root)
+    text = (out / "README.txt").read_text()
+    commands = _commands(text)
+    assert text.count(f"visual_assets.store adopt-set {SET}") == 1 and " review in-" not in text and " adopt in-" not in text and "--parent" not in commands
+    assert "YOUR COMMAND (own terminal" in text and "ONE decision for the whole set" in text
+    assert "1 new, 6 revisions" in commands
+    assert "icon.item.tool: NEW source asset icon_item_tool_fix r0001" in commands
+    assert "icon.rarity.common: REVISION of icon_rarity_common_fix: r0001 -> r0002 (parent r0001 must still be the latest unrevoked revision)" in commands
+    for key in fixes.PROPOSED:
+        assert f"#   {key}: " in commands
+    for key in fixes.NOT_PROPOSED:  # adopt-set adopts EVERY draft: the declined ones must be dropped first
+        assert f"draft drop {SET} --slot {key} --reason" in commands
+    assert commands.index("store draft drop") < commands.index(f"store adopt-set {SET}")
+    assert "<your licence decision>" in commands and "adopt-set adopts the new icons and the revisions together" in text
+
+
+def test_a_set_that_predates_revises_keeps_the_per_slot_commands_and_says_why(tmp_path, monkeypatch):
+    monkeypatch.setattr(rs, "adopted_intakes", lambda: {})
+    monkeypatch.setattr(rs, "latest_revision", lambda source: "r0001")
+    out = tmp_path / "out"
+    rs.generate(SET, out)
+    text = (out / "README.txt").read_text()
+    assert "YOUR COMMANDS (own terminal" in text and text.count(" adopt in-") == 7 and "adopt-set " + SET not in text.split("YOUR COMMANDS")[1].split("this set predates")[0]
+    assert "this set predates that, so its revisions are adopted one slot at a time with --parent" in text
+
+
+def test_a_partly_adopted_revising_set_falls_back_to_per_slot_commands_because_adopt_set_refuses_an_adopted_draft(tmp_path, monkeypatch):
+    root = _revising_drafts(tmp_path)
+    first = json.loads((root / SET / "draft_set.json").read_text())["entries"][0]["draft_id"]
+    monkeypatch.setattr(rs, "adopted_intakes", lambda: {first: "ad-0123456789abcdef"})
+    monkeypatch.setattr(rs, "latest_revision", lambda source: "r0001")
+    out = tmp_path / "out"
+    rs.generate(SET, out, root=root)
+    text = (out / "README.txt").read_text()
+    assert "YOUR COMMANDS (own terminal" in text and "ALREADY ADOPTED" in text and text.count(" adopt in-") == 6 and f"adopt-set {SET}" not in text.split("YOUR COMMANDS")[1].split("adopt-set adopts")[0]
+
+
+def test_commands_mode_is_decided_by_the_drafts_alone(monkeypatch):
+    class E:
+        def __init__(self, parent, draft="in-1"):
+            self.parent_revision, self.draft_id = parent, draft
+
+    monkeypatch.setattr(rs, "adopted_intakes", lambda: {})
+    assert rs.commands_mode([E(None), E(None)]) == "slot" and rs.commands_mode([E(None), E("r0001")]) == "set" and rs.commands_mode([]) == "slot"
+    monkeypatch.setattr(rs, "adopted_intakes", lambda: {"in-1": "ad-1"})
+    assert rs.commands_mode([E("r0001", "in-1"), E("r0001", "in-2")]) == "slot"

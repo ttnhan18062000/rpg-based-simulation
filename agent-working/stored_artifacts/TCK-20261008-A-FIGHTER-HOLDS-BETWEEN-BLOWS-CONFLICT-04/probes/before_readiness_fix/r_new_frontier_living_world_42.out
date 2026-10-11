@@ -1,1 +1,0 @@
-RBTRACE {"world": "frontier_living_world", "seed": 42, "label": "new", "counts": {"blocker_entity_ticks": 748, "blocker_episodes": 1, "open_blocker_lifetime_max": 747, "open_blocker_lifetime_sum": 747, "readiness_rejections": 1, "resolve_blocker_starts": 104, "unresolved_at_end": 1}}

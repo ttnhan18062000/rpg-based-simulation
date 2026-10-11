@@ -11,31 +11,24 @@ Tests that pin the deterministic scheduler and work classification laws. Every b
 
 ## 1. Scheduler Contract
 
+Pinned in `tests/unit/kernel/test_scheduler_contract.py` and `tests/integration/kernel/test_work_debt_is_gone.py`.
+
 | Test Name | Input | Expected Rule | Regression Caught |
 | :--- | :--- | :--- | :--- |
-| `test_readiness_driven_selection` | Entities [99, 100, 101] | Only 100, 101 selected | Early action or missed due work |
+| `test_readiness_driven_selection` | Entities at readiness 100, 99.9, 150 | All three selected as `ENTITY_BRAIN` (a brain is never readiness-gated), ordered readiness DESC then id ASC | Early action or missed due work |
+| `test_action_readiness_gate` | `ENTITY_ACT` with a payload, readiness 50 vs 100 | Only the ready one is selected | An action running before it is ready |
 | `test_deterministic_tiebreak` | 3 entities at 100 readiness | Ordered by ID: 1, 2, 3 | Nondeterministic iteration order |
-| `test_stable_periodic_order` | 2 subsystems due same tick | Ordered by fixed ID | Intermittent periodic drift |
+| `test_the_scheduler_selects_only_entity_work` | One entity | Every item is `CRITICAL` entity work; the dropped count is 0 | Periodic, deferred or opportunistic selection returning |
 
 ## 2. Work Classification
 
-| Test Name | Input | Expected Rule | Regression Caught |
-| :--- | :--- | :--- | :--- |
-| `test_bucket_prioritization` | 1 CRITICAL, 1 PERIODIC | CRITICAL executes first regardless of ID | Priority inversion |
-| `test_subordinate_opportunistic` | 1 CRITICAL, 1 OPPORTUNISTIC | CRITICAL runs first | Optional work gaining authority |
+Removed in Phase B (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`). The scheduler produces only `CRITICAL` entity work, so the bucket-priority tests (`test_bucket_prioritization`, `test_subordinate_opportunistic`) and the periodic ordering test (`test_stable_periodic_order`) were removed with the periodic, opportunistic and deferred branches. The `WorkClass` members `PERIODIC`, `OPPORTUNISTIC` and `DEFERRED` remain in `src/core/work.py` as unused constants (their `ConcurrencyLaw` priorities are still used by result-ordering tests); removing them is a follow-up.
 
 ## 3. Bounded Work Debt
 
-> **Status 2026-10-04:** only the drain half of the debt design exists; nothing produces debt, so the overflow tests below were never written (`test_debt_overflow_reject` is not in `tests/`). The tests that exist seed debt by hand (`tests/unit/core/test_deferred_work_debt.py`), and `tests/integration/kernel/test_work_debt_stays_empty_in_production.py` guards that production debt stays empty. Retirement: `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`.
-
-| Test Name | Input | Expected Rule | Regression Caught |
-| :--- | :--- | :--- | :--- |
-| `test_non_deferrable_critical` | CRITICAL work budget overflow | Kernel error / violation | Illegal critical deferral |
-| `test_deferred_drain_order` | Deferred work from T-1 | Runs before T current work | Backlog starvation |
-| `test_debt_overflow_reject` | Deferred pile > capacity | `RetentionError` or similar | Unbounded backlog growth |
+Removed in Phase B. Work debt, the `DRAIN_DEBT` drain and the `max_work_debt` threshold no longer exist (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, owner decision 2026-10-04). The overflow tests below were never written, and the drain tests (`test_deferred_work_debt.py`, `test_milestone_c_desimulation.py`) and the production guard (`test_work_debt_stays_empty_in_production.py`) were deleted. `tests/integration/kernel/test_work_debt_is_gone.py` pins that the names, fields, signal and metric are gone.
 
 ## Regression Intent
 
 - **Semantic Drift**: Catching cases where scheduling changes who gets to act first.
-- **Hidden Backlogs**: Catching deferred queues that grow without limits. (No deferred queue exists in production today; see the status note in section 3.)
 - **State Inconsistency**: Catching cases where the scheduler uses non-authoritative data to make decisions.

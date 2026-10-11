@@ -75,7 +75,9 @@ class CognitionDomain:
         # 2. Tactical Intent
         tactical_up = TacticalDecisionSystem.evaluate_entity_intent(readonly_state, entity, salient_neighbors, trauma)
 
+        # A strategic update the tactical layer itself returned (the end of a shop visit, building_arrival.py) is the decision of this tick; the
+        # information-need project is proposed again on the next one.
         return {entity.id: replace(tactical_up,
-            strategic=info_update,
+            strategic=tactical_up.strategic or info_update,
             readiness_delta=0.0
         )}

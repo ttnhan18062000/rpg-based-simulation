@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from src.core.enums import ReasonCode
 from src.core.items import food_hunger_recovery
 from src.core.models.inventory import ItemStack
+from src.engine.building_services import repair_source
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
     InteractionUpdate, NavigationUpdate, ResourceTransferIntent, StaminaUpdate
@@ -17,7 +18,6 @@ if TYPE_CHECKING:
 
 # SURV-06: rest never requires a building. A rough rest in place recovers this much sleep debt per REST;
 # a bed only improves recovery (the inn's town service adds its own on top).
-ROUGH_REST_SLEEP_DEBT_RECOVERY = 10.0
 
 
 def interact_target_unavailable(state: Any, target_id: Any) -> Optional[ReasonCode]:
@@ -80,18 +80,21 @@ class CoreActions:
                 entity_id=entity.id,
                 readiness_delta=-100.0,
                 biological=BiologicalUpdate(
-                    sleep_debt_delta=-20.0,
                     rest_pressure_delta=-10.0,
                     last_sleep_tick_set=current_tick
                 )
             )}
         elif action == "EAT":
             return {entity.id: eat_update(entity, current_tick)}
+        elif action == "SELL":
+            # A chosen sale at a shop: the goods change hands in the town resolution (`shop_sale.plan_sale`), so the action itself is a typed
+            # no-op that succeeds and ends its task like a survival action.
+            return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
         elif action == "REST":
             return {entity.id: EntityUpdate(
                 entity_id=entity.id,
                 readiness_delta=0.0,
-                biological=BiologicalUpdate(sleep_debt_delta=-ROUGH_REST_SLEEP_DEBT_RECOVERY, rest_pressure_delta=-30.0)
+                biological=BiologicalUpdate(rest_pressure_delta=-30.0)
             )}
         return {}
 
@@ -596,7 +599,8 @@ class CoreActions:
     @staticmethod
     def execute_repair(
         entity: EntityState,
-        current_tick: int
+        current_tick: int,
+        context: Any = None
     ) -> Dict[int, EntityUpdate]:
         total_cost = 0
         repair_deltas = {}
@@ -611,7 +615,7 @@ class CoreActions:
             
         from src.core.updates import EquipmentUpdate, ResourceTransferIntent
         intent = ResourceTransferIntent(
-            source_id="BLACKSMITH",
+            source_id=repair_source(context, entity),
             source_kind="TOWN_SERVICE",
             gold_delta=-total_cost,
             gold_cost=total_cost,

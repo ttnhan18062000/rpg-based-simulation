@@ -12,6 +12,10 @@ per permutation, five levels:
   5. the proof digest (`CanonicalStateHasher.get_hash`, PERF-D5; never the fingerprint).
 
 Scenarios are non-combat: the combat path has an open nondeterminism ticket that would confound this.
+
+Since `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE` (C1) there are no ID-zero system results, and the sort key
+`(class_priority, -local_priority, entity_id)` is unique per result, so no two results can tie. The module now proves that
+arrival order cannot matter because the order is total, and keeps the instrument and the route-agreement checks.
 """
 from __future__ import annotations
 
@@ -23,7 +27,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import pytest
 
 from src.config.profiles import PROD_SMALL
-from src.core.concurrency_law import ConcurrencyLaw
 from src.core.protocol_validator import ProtocolValidator, ProtocolViolationError
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState
@@ -43,7 +46,6 @@ from src.platform.rng import DeterministicRNG
 TICKS = 5
 SEED = 42
 FLAGS = {"audit_mode": True, "no_frame_pacing": True, "no_replay": True}
-DEBT = {"SYS_A": 9, "SYS_B": 7, "SYS_C": 5, "SYS_D": 3}  # four subsystems: four ID-zero DRAIN_DEBT results per tick
 
 def _ready_movers_state() -> AuthoritativeState:
     """Twelve entities that are all ready to act every tick, so many CRITICAL results share class and local priority."""
@@ -169,12 +171,10 @@ def _make_executor(route: str):
 
 
 def run_scenario(
-    holder: Dict[str, Any], scenario: str, route: str, perm: str, *, debt: Optional[Dict[str, int]] = DEBT,
+    holder: Dict[str, Any], scenario: str, route: str, perm: str, *,
     inject: Optional[Callable[[List[WorkerResult]], List[WorkerResult]]] = None, ticks: int = TICKS,
 ) -> List[TickRecord]:
     state = SCENARIOS[scenario]()
-    if debt:
-        state = dataclasses.replace(state, work_debt=dict(debt))
     executor, manager = _make_executor(route)
     kernel = PermutingKernel(PROD_SMALL, state, DeterministicRNG(SEED), executor=executor, flags=dict(FLAGS))
     kernel.perm_mode = perm
@@ -244,17 +244,27 @@ def _params():
 @pytest.mark.parametrize("scenario, route", list(_params()))
 def test_permuted_arrival_order_leaves_all_five_levels_unchanged(capture_updates, scenario, route):
     base = run_scenario(capture_updates, scenario, route, "identity")
-    ran_tied = False
+    reordered = False
     for perm in PERMUTATIONS[1:]:
         other = run_scenario(capture_updates, scenario, route, perm)
         assert_same_levels(base, other, f"{scenario}/{route}/{perm}")
-        # The permutation really reordered the tied results (AC2: the input differs, the keys are equal).
-        for a, b in zip(base, other):
-            for key, ids in a.tied_groups.items():
-                if len(ids) > 1 and b.tied_groups[key] != ids:
-                    ran_tied = True
-                    assert sorted(b.tied_groups[key]) == sorted(ids)
-    assert ran_tied, "no permutation reordered a tied group; the experiment would pass vacuously"
+        # The permutation really reordered the input (AC2: the arrival order differs, the outcome does not) ...
+        reordered = reordered or any(a.input_order != b.input_order for a, b in zip(base, other))
+    if any(len(rec.input_order) > 1 for rec in base):  # a tick with a single result has no order to change
+        assert reordered, "no permutation changed the arrival order; the experiment would pass vacuously"
+    # ... and there is nothing to decide by arrival order: no two results share the whole sort key.
+    for rec in base:
+        assert rec.tied_groups == {}, f"{scenario}/{route}: results tie on the full key {list(rec.tied_groups)}"
+
+
+@pytest.mark.parametrize("route", ["local", "thread"])
+def test_the_permutations_really_reorder_a_many_result_scenario(capture_updates, route):
+    """Non-vacuity: `ready_movers` yields several results per tick, and every permutation changes their arrival order."""
+    base = run_scenario(capture_updates, "ready_movers", route, "identity")
+    assert all(len(rec.input_order) > 1 for rec in base)
+    for perm in PERMUTATIONS[1:]:
+        other = run_scenario(capture_updates, "ready_movers", route, perm)
+        assert any(a.input_order != b.input_order for a, b in zip(base, other)), perm
 
 
 @pytest.mark.parametrize("scenario", list(SCENARIOS))
@@ -271,24 +281,9 @@ def test_routes_agree_on_state_and_proof_digest(capture_updates, scenario):
 # B. Real ties of each kind
 # ---------------------------------------------------------------------------
 
-def test_id_zero_system_results_tie_on_the_full_key_and_commute(capture_updates):
-    """Kind: ID zero. Four DRAIN_DEBT results (distinct subsystems) share the whole key every tick."""
-    base = run_scenario(capture_updates, "idle", "local", "identity")
-    first = base[0]
-    (key, ids), = first.tied_groups.items()
-    assert key == (ConcurrencyLaw.get_class_priority(WorkClass.DEFERRED), 0, 0)
-    assert len(ids) == len(DEBT)
-    other = run_scenario(capture_updates, "idle", "local", "reverse")
-    assert other[0].tied_groups[key] == tuple(reversed(ids))  # the input order differs, the key is equal
-    assert base[0].batch != other[0].batch  # the tie order survives the stable sort, so level 1 differs in order only
-    assert_same_levels(base, other, "id-zero tie")
-    # the drain is real: every subsystem's debt moved, so the comparison saw a non-trivial merge
-    assert base[-1].state["work_debt"] != dict(DEBT)
-
-
 def test_equal_class_and_local_priority_entity_results_are_ordered_by_entity_id(capture_updates):
     """Kind: equal priorities. Entity results share (class, local) but the entity id completes the key."""
-    base = run_scenario(capture_updates, "ready_movers", "thread", "identity", debt=None)
+    base = run_scenario(capture_updates, "ready_movers", "thread", "identity")
     saw_shared_priority = False
     for rec in base:
         keys = [_key_from_batch(row) for row in rec.batch]
@@ -325,60 +320,26 @@ def test_same_entity_tie_is_rejected_in_either_order(capture_updates):
 
     for perm in ("identity", "reverse"):
         with pytest.raises(ProtocolViolationError):
-            run_scenario(capture_updates, "idle", "local", perm, debt=None, inject=inject, ticks=1)
+            run_scenario(capture_updates, "idle", "local", perm, inject=inject, ticks=1)
 
 
 # ---------------------------------------------------------------------------
-# C. The bound of the merge rule, and the instrument seeing a divergence
+# C. The instrument sees a divergence
 # ---------------------------------------------------------------------------
 
-def _drain(subsystem: str, value: int, work_id: str) -> WorkerResult:
-    return WorkerResult(
-        source_packet_id=f"local:1:{work_id}", work_id=work_id, entity_id=0,
-        work_class=WorkClass.DEFERRED, update=EntityUpdate(entity_id=0),
-        class_priority=ConcurrencyLaw.get_class_priority(WorkClass.DEFERRED),
-        work_debt_update=value, subsystem_id=subsystem,
-    )
+def test_the_comparison_fails_when_a_level_differs(capture_updates):
+    """Non-vacuity: `assert_same_levels` reports a difference at each level, so the equalities above are not an instrument blind spot."""
+    base = run_scenario(capture_updates, "idle", "local", "identity", ticks=2)
+    for level, change in (("digest", {"digest": "tampered"}), ("state", {"state": {"tampered": True}})):
+        other = [dataclasses.replace(base[0], **change)] + list(base[1:])
+        with pytest.raises(AssertionError, match=f"level {level!r} differs at tick 1"):
+            assert_same_levels(base, other, "tampered")
 
 
-def test_validator_rejects_two_system_results_for_one_subsystem():
-    """The bound of the merge rule is enforced (TCK-20261004-PERF-M1-VALIDATOR-ONE-SYSTEM-RESULT-PER-SUBSYSTEM).
-
-    Before that ticket the validator accepted this batch, which is why the mutation test below injects
-    its divergent pair *after* collection-time validation, directly into resolution: it keeps showing
-    that the comparison can see the divergence the validator now makes unreachable.
-    """
-    for batch in ([_drain("SYS_A", -2, "a1"), _drain("SYS_A", -5, "a2")], [_drain("SYS_A", -5, "a2"), _drain("SYS_A", -2, "a1")]):
-        with pytest.raises(ProtocolViolationError, match="SYS_A"):
-            ProtocolValidator.validate_result_batch(batch, {})
-
-
-def test_shipped_constructors_never_emit_two_system_results_for_one_subsystem(capture_updates):
-    for route in ("local", "thread"):
-        base = run_scenario(capture_updates, "idle", route, "identity")
-        for rec in base:
-            subsystems = [dict(row)["subsystem_id"] for row in rec.batch if dict(row)["entity_id"] == "0"]
-            assert len(subsystems) == len(set(subsystems)), f"{route}: duplicate system result for a subsystem"
-
-
-def test_mutation_proof_a_noncommutative_tie_makes_the_comparison_fail(capture_updates):
-    """The instrument can see a divergence: two same-subsystem drains with different values are last-writer-wins.
-
-    The pair is injected into `_phase_resolution`, below the validator that now rejects it at collection.
-    """
+def test_entity_zero_is_not_a_valid_result_slot(capture_updates):
+    """A result for entity 0 is rejected before it can reach resolution, so the old system-result tie cannot come back unnoticed."""
     def inject(results):
-        return results + [_drain("SYS_A", -1, "inj_a"), _drain("SYS_A", -4, "inj_b")]
+        return results + [_entity_result(0, "sys_a"), _entity_result(0, "sys_b")]
 
-    base = run_scenario(capture_updates, "idle", "local", "identity", inject=inject, ticks=2)
-    other = run_scenario(capture_updates, "idle", "local", "reverse", inject=inject, ticks=2)
-    with pytest.raises(AssertionError, match="differs at tick"):
-        assert_same_levels(base, other, "non-commutative tie")
-    assert base[0].digest != other[0].digest  # the proof digest itself diverges
-
-    # And the same injection with equal values commutes, so the failure above is caused by the values.
-    def inject_equal(results):
-        return results + [_drain("SYS_A", -2, "inj_a"), _drain("SYS_A", -2, "inj_b")]
-
-    eq_base = run_scenario(capture_updates, "idle", "local", "identity", inject=inject_equal, ticks=2)
-    eq_other = run_scenario(capture_updates, "idle", "local", "reverse", inject=inject_equal, ticks=2)
-    assert_same_levels(eq_base, eq_other, "equal-valued duplicate drains")
+    with pytest.raises(ProtocolViolationError):
+        run_scenario(capture_updates, "idle", "local", "identity", inject=inject, ticks=1)

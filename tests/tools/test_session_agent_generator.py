@@ -32,8 +32,9 @@ def test_generation_is_deterministic():
 def test_generates_one_file_per_seat_with_launcher_only_description():
     files = gen.generate(ROOT)
     roster = load_roster(ROOT)
-    # 12 seats: the codebase domain (three unstaffed seats) was registered with the owner's approval.
-    assert len(files) == len(roster.roles) == 12
+    # 17 seats: the codebase domain (three seats) was registered with the owner's approval; the asset and perf
+    # planner/implementer seats and lead-planner on the owner's request of 2026-10-09 (TCK-20261009-REGISTER-OTHER-HOST-SEATS).
+    assert len(files) == len(roster.roles) == 17
     for role in roster.roles:
         content = files[gen.AGENT_DIR / f"session-{role.role}.md"]
         assert f"name: session-{role.role}\n" in content

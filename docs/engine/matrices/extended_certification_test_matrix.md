@@ -13,9 +13,9 @@ Full engine certification surface: clean baselines, pressure and degradation pat
 
 | Scenario | Input Condition | Expected Law | Status |
 | :--- | :--- | :--- | :--- |
-| `IDLE_CLEAN` | Empty state, 0 debt | NORMAL mode, bit-identical hashes | **CERTIFIED** |
+| `IDLE_CLEAN` | Empty state | NORMAL mode, bit-identical hashes | **CERTIFIED** |
 | `STEADY_STATE_NORMAL` | Low entity load | NORMAL mode throughout | **CERTIFIED** |
-| `QUIET_TICK_STABILITY` | No actions pending | Zero work debt, 0% worker utilization | **CERTIFIED** |
+| `QUIET_TICK_STABILITY` | No actions pending | 0% worker utilization | **CERTIFIED** |
 
 ## 2. Pressure & Degradation
 
@@ -24,15 +24,15 @@ Full engine certification surface: clean baselines, pressure and degradation pat
 | `RAM_PRESSURE` | 1000 entities | Escalation to CONSTRAINED/DEGRADED | **CERTIFIED** (Allowed Timeout) |
 | `TICK_BUDGET_PRESSURE` | Massive entity load | Escalation to DEGRADED/SURVIVAL | **CERTIFIED** (Allowed Timeout) |
 | `QUEUE_INFLIGHT_PRESSURE` | 500 entities | Shedding observed, conformance pass | **CERTIFIED** |
-| `WORK_DEBT_BUILDUP` | Injected debt (30) | Escalation to DEGRADED | **CERTIFIED** |
+| `WORK_DEBT_BUILDUP` | Removed in Phase B: work debt was never produced and `PressureInjector.inject_work_debt` had no caller | n/a | **REMOVED** (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`) |
 | `REPLAY_PRESSURE` | 1000 entities | `REPLAY_ALLOWED=False` in SURVIVAL | **CERTIFIED** |
 
 ## 3. Recovery Paths
 
 | Scenario | Input Condition | Expected Law | Status |
 | :--- | :--- | :--- | :--- |
-| `DEGRADED_NORMAL_RECOVERY` | 30 debt → Drain | Monotonic recovery to NORMAL | **CERTIFIED** |
-| `SURVIVAL_NORMAL_RECOVERY` | 50 debt → Drain | Step recovery: SURVIVAL → DEGRADED → NORMAL | **CERTIFIED** |
+| `DEGRADED_NORMAL_RECOVERY` | Pressure, then relief (the matrix used to name an injected debt of 30 drained over time; that injection was never wired and is removed) | Monotonic recovery to NORMAL | **CERTIFIED** |
+| `SURVIVAL_NORMAL_RECOVERY` | Pressure, then relief (the matrix used to name an injected debt of 50; removed as above) | Step recovery: SURVIVAL → DEGRADED → NORMAL | **CERTIFIED** |
 
 ## 4. Lifecycle & Faults
 

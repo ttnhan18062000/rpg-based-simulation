@@ -27,7 +27,7 @@ def _state(entities) -> AuthoritativeState:
         chests={}, ground_items={}, corpses={}, camps={},
         local_scars={}, global_resources={}, town_tiles=(),
         building_tiles=(), terrain=(), home_storage={},
-        town_center=(0, 0), periodic_due_ticks={}, work_debt={},
+        town_center=(0, 0),
         movement_count=0, maturity=0, last_calamity_tick=0,
         blocked_tiles=(), town_entity_ids=(),
     )

@@ -1,6 +1,6 @@
 """The drawn icon key set `icons-key-v1` (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-DRAFT-SET`): structure, palette, sizes and the arithmetic of the read-back.
 
-Never asserts the sheet rule's VERDICT on the art (a test must not decide the result on art, as with AM5-S): the verdict is recorded by `python -m tests.visual_assets.icon_draft_set` and shown on the
+Never asserts the sheet rule's VERDICT on the art (a test must not decide the result on art, as with AM5-S): the verdict is recorded by `python -m visual_assets.review.icon_draft_set` and shown on the
 preview page. What is asserted here are facts about the drawn set that the style guide and the palette make checkable.
 """
 
@@ -11,8 +11,8 @@ import re
 
 import pytest
 
-from tests.visual_assets import icon_draft_set as ds
-from tests.visual_assets import icon_palette, icon_sheet_rule as rule
+from visual_assets.review import icon_draft_set as ds
+from visual_assets.review import icon_palette, icon_sheet_rule as rule
 from visual_assets.store.catalog.registry import load_registry
 
 
@@ -25,7 +25,7 @@ def test_the_set_holds_exactly_the_14_key_set_keys_and_the_registry_holds_those_
     entries = json.loads((ds.DRAFTS / ds.SET_ID / "draft_set.json").read_text())["entries"]
     assert sorted(e["visual_key"] for e in entries) == sorted(ds.SIZES) and len(entries) == 14
     registry = load_registry()
-    from tests.visual_assets import icon_v2_keys as v2
+    from visual_assets.review import icon_v2_keys as v2
 
     assert sorted(k for k in registry.keys if k.startswith("icon.")) == sorted([*ds.SIZES, *v2.KEYS])  # the 22 v2 keys are registered but not drawn yet
     assert all(registry.keys[k].optional for k in ds.SIZES)  # nothing in the registry needs these drafts; a missing image leaves today's fallback

@@ -24,13 +24,13 @@ ROSTER, AUTHORITY = load_roster(), load_authority()
 
 
 def _caller(role_id):
-    role = ROSTER.role(role_id)
+    role = ROSTER.role(guard._base_role(role_id, ROSTER))
     return guard.Caller(True, role_id, role.role, role.function, "binding")
 
 
-def _decide(command, role_id, lease_role=None, lease_found=True, tool="Bash", tool_input=None, on_default=False):
+def _decide(command, role_id, lease_role=None, lease_found=True, tool="Bash", tool_input=None, on_default=False, in_role_worktree=False):
     c = classify(tool, tool_input if tool_input is not None else {"command": command})
-    return guard.decide(c, _caller(role_id), AUTHORITY, lease_role, lease_found, on_default, command if tool == "Bash" else "")
+    return guard.decide(c, _caller(role_id), AUTHORITY, lease_role, lease_found, on_default, command if tool == "Bash" else "", in_role_worktree)
 
 
 # ---- decision table ---------------------------------------------------------------------------
@@ -427,3 +427,45 @@ def test_a_planner_commits_in_its_own_worktree_but_not_in_the_implementers():
     assert _decide("git commit -m x", "agent-working-planner", lease_role="agent-working-planner")[0] is None
     decision, reason = _decide("git commit -m x", "agent-working-planner", lease_role="agent-working-implementer")
     assert decision == guard.DENY and "writer is agent-working-implementer" in reason
+
+
+# ---- TCK-20261009-SECOND-INSTANCE-SHARED-WORKTREE-WRITE-GUARD ----------------------------------
+
+_WRITES = ("git commit -m x", "git push -u origin feature-x", "gh pr create --title t")
+
+
+@pytest.mark.parametrize("command", _WRITES)
+def test_a_second_instance_is_denied_in_the_roles_shared_worktree_with_no_lease(command):
+    decision, reason = _decide(command, "rpg-implementer-2", lease_found=False, in_role_worktree=True)
+    assert decision == guard.DENY and "per-piece worktree" in reason
+
+
+@pytest.mark.parametrize("command", _WRITES)
+def test_a_second_instance_is_allowed_in_a_per_piece_worktree_with_no_lease(command):
+    assert _decide(command, "rpg-implementer-2", lease_found=False, in_role_worktree=False)[0] is None
+
+
+@pytest.mark.parametrize("command", _WRITES)
+def test_the_first_instance_is_unchanged_in_the_roles_worktree(command):
+    # in_role_worktree is only ever True for a later instance (see in_shared_role_worktree)
+    assert _decide(command, "rpg-implementer", lease_role="rpg-implementer", lease_found=True)[0] is None
+    assert _decide(command, "rpg-implementer", lease_found=False)[0] is None
+
+
+def test_in_shared_role_worktree_is_true_only_for_a_later_instance_in_the_placement_worktree(tmp_path):
+    main = tmp_path / "main"
+    shared = main / ".claude" / "worktrees" / ROSTER.role("rpg-implementer").worktree
+    piece = tmp_path / "piece"
+    subprocess.run(["git", "init", "-q", "-b", "main", str(main)], check=True)
+    subprocess.run(["git", "-C", str(main), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "i"], check=True)
+    subprocess.run(["git", "-C", str(main), "worktree", "add", "-q", "-b", "rpg", str(shared)], check=True)
+    subprocess.run(["git", "-C", str(main), "worktree", "add", "-q", "-b", "piece", str(piece)], check=True)
+    two, one = _caller("rpg-implementer-2"), _caller("rpg-implementer")
+    assert guard.in_shared_role_worktree(two, ROSTER, str(shared), str(shared)) is True
+    assert guard.in_shared_role_worktree(two, ROSTER, str(piece), str(piece)) is False
+    assert guard.in_shared_role_worktree(one, ROSTER, str(shared), str(shared)) is False
+
+
+def test_the_existing_lease_denial_of_a_second_instance_still_applies():
+    decision, reason = _decide("git commit -m x", "rpg-implementer-2", lease_role="rpg-implementer", lease_found=True)
+    assert decision == guard.DENY and "writer is rpg-implementer" in reason

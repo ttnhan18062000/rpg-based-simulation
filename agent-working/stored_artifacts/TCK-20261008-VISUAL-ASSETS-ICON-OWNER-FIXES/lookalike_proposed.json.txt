@@ -1,0 +1,763 @@
+{
+ "method": "bounding box fitted to 24x24 by nearest neighbour, XOR pixels out of 576; report only",
+ "close_threshold_xor_px": 60,
+ "icons": 36,
+ "close_pairs": [
+  {
+   "a": "icon.tier.d",
+   "b": "icon.tier.e",
+   "xor_px": 0,
+   "cross_family": false
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.tier.d",
+   "xor_px": 25,
+   "cross_family": true
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.tier.e",
+   "xor_px": 25,
+   "cross_family": true
+  },
+  {
+   "a": "icon.tier.a",
+   "b": "icon.tier.c",
+   "xor_px": 36,
+   "cross_family": false
+  },
+  {
+   "a": "icon.tier.c",
+   "b": "icon.tier.d",
+   "xor_px": 36,
+   "cross_family": false
+  },
+  {
+   "a": "icon.tier.c",
+   "b": "icon.tier.e",
+   "xor_px": 36,
+   "cross_family": false
+  },
+  {
+   "a": "icon.tier.s",
+   "b": "icon.tier.ss",
+   "xor_px": 36,
+   "cross_family": false
+  },
+  {
+   "a": "icon.item.material",
+   "b": "icon.status.frame_buff",
+   "xor_px": 41,
+   "cross_family": true
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.tier.d",
+   "xor_px": 48,
+   "cross_family": true
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.tier.e",
+   "xor_px": 48,
+   "cross_family": true
+  },
+  {
+   "a": "icon.marker.dungeon_entrance",
+   "b": "icon.plate.location",
+   "xor_px": 55,
+   "cross_family": true
+  },
+  {
+   "a": "icon.rarity.uncommon",
+   "b": "icon.tier.s",
+   "xor_px": 56,
+   "cross_family": true
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.rarity.common",
+   "xor_px": 59,
+   "cross_family": true
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.rarity.uncommon",
+   "xor_px": 59,
+   "cross_family": false
+  },
+  {
+   "a": "icon.building.hero_house",
+   "b": "icon.item.material",
+   "xor_px": 60,
+   "cross_family": true
+  }
+ ],
+ "closest_cross_family_pairs": [
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.tier.d",
+   "xor_px": 25
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.tier.e",
+   "xor_px": 25
+  },
+  {
+   "a": "icon.item.material",
+   "b": "icon.status.frame_buff",
+   "xor_px": 41
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.tier.d",
+   "xor_px": 48
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.tier.e",
+   "xor_px": 48
+  },
+  {
+   "a": "icon.marker.dungeon_entrance",
+   "b": "icon.plate.location",
+   "xor_px": 55
+  },
+  {
+   "a": "icon.rarity.uncommon",
+   "b": "icon.tier.s",
+   "xor_px": 56
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.rarity.common",
+   "xor_px": 59
+  },
+  {
+   "a": "icon.building.hero_house",
+   "b": "icon.item.material",
+   "xor_px": 60
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.tier.c",
+   "xor_px": 61
+  }
+ ],
+ "nearest": {
+  "icon.building.blacksmith": [
+   {
+    "key": "icon.item.material",
+    "xor_px": 142,
+    "cross_family": true
+   },
+   {
+    "key": "icon.class.rogue",
+    "xor_px": 146,
+    "cross_family": true
+   },
+   {
+    "key": "icon.building.store",
+    "xor_px": 149,
+    "cross_family": false
+   }
+  ],
+  "icon.building.class_hall": [
+   {
+    "key": "icon.marker.ruins",
+    "xor_px": 97,
+    "cross_family": true
+   },
+   {
+    "key": "icon.item.tool",
+    "xor_px": 115,
+    "cross_family": true
+   },
+   {
+    "key": "icon.item.material",
+    "xor_px": 129,
+    "cross_family": true
+   }
+  ],
+  "icon.building.guild": [
+   {
+    "key": "icon.class.warrior",
+    "xor_px": 148,
+    "cross_family": true
+   },
+   {
+    "key": "icon.status.frame_buff",
+    "xor_px": 159,
+    "cross_family": true
+   },
+   {
+    "key": "icon.building.hero_house",
+    "xor_px": 164,
+    "cross_family": false
+   }
+  ],
+  "icon.building.hero_house": [
+   {
+    "key": "icon.item.material",
+    "xor_px": 60,
+    "cross_family": true
+   },
+   {
+    "key": "icon.class.rogue",
+    "xor_px": 64,
+    "cross_family": true
+   },
+   {
+    "key": "icon.status.frame_buff",
+    "xor_px": 75,
+    "cross_family": true
+   }
+  ],
+  "icon.building.inn": [
+   {
+    "key": "icon.building.store",
+    "xor_px": 83,
+    "cross_family": false
+   },
+   {
+    "key": "icon.status.frame_buff",
+    "xor_px": 95,
+    "cross_family": true
+   },
+   {
+    "key": "icon.marker.boss_arena",
+    "xor_px": 100,
+    "cross_family": true
+   }
+  ],
+  "icon.building.store": [
+   {
+    "key": "icon.item.consumable",
+    "xor_px": 75,
+    "cross_family": true
+   },
+   {
+    "key": "icon.item.material",
+    "xor_px": 79,
+    "cross_family": true
+   },
+   {
+    "key": "icon.building.inn",
+    "xor_px": 83,
+    "cross_family": false
+   }
+  ],
+  "icon.class.mage": [
+   {
+    "key": "icon.class.rogue",
+    "xor_px": 76,
+    "cross_family": false
+   },
+   {
+    "key": "icon.item.consumable",
+    "xor_px": 106,
+    "cross_family": true
+   },
+   {
+    "key": "icon.marker.shrine",
+    "xor_px": 108,
+    "cross_family": true
+   }
+  ],
+  "icon.class.ranger": [
+   {
+    "key": "icon.rarity.rare",
+    "xor_px": 166,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.s",
+    "xor_px": 178,
+    "cross_family": true
+   },
+   {
+    "key": "icon.building.blacksmith",
+    "xor_px": 180,
+    "cross_family": true
+   }
+  ],
+  "icon.class.rogue": [
+   {
+    "key": "icon.building.hero_house",
+    "xor_px": 64,
+    "cross_family": true
+   },
+   {
+    "key": "icon.class.mage",
+    "xor_px": 76,
+    "cross_family": false
+   },
+   {
+    "key": "icon.item.consumable",
+    "xor_px": 94,
+    "cross_family": true
+   }
+  ],
+  "icon.class.warrior": [
+   {
+    "key": "icon.item.armor",
+    "xor_px": 77,
+    "cross_family": true
+   },
+   {
+    "key": "icon.marker.resource_grove",
+    "xor_px": 84,
+    "cross_family": true
+   },
+   {
+    "key": "icon.status.frame_debuff",
+    "xor_px": 106,
+    "cross_family": true
+   }
+  ],
+  "icon.item.armor": [
+   {
+    "key": "icon.class.warrior",
+    "xor_px": 77,
+    "cross_family": true
+   },
+   {
+    "key": "icon.status.frame_buff",
+    "xor_px": 126,
+    "cross_family": true
+   },
+   {
+    "key": "icon.marker.boss_arena",
+    "xor_px": 129,
+    "cross_family": true
+   }
+  ],
+  "icon.item.consumable": [
+   {
+    "key": "icon.building.store",
+    "xor_px": 75,
+    "cross_family": true
+   },
+   {
+    "key": "icon.marker.shrine",
+    "xor_px": 78,
+    "cross_family": true
+   },
+   {
+    "key": "icon.class.rogue",
+    "xor_px": 94,
+    "cross_family": true
+   }
+  ],
+  "icon.item.material": [
+   {
+    "key": "icon.status.frame_buff",
+    "xor_px": 41,
+    "cross_family": true
+   },
+   {
+    "key": "icon.building.hero_house",
+    "xor_px": 60,
+    "cross_family": true
+   },
+   {
+    "key": "icon.rarity.uncommon",
+    "xor_px": 72,
+    "cross_family": true
+   }
+  ],
+  "icon.item.tool": [
+   {
+    "key": "icon.marker.dungeon_entrance",
+    "xor_px": 70,
+    "cross_family": true
+   },
+   {
+    "key": "icon.marker.ruins",
+    "xor_px": 90,
+    "cross_family": true
+   },
+   {
+    "key": "icon.rarity.common",
+    "xor_px": 95,
+    "cross_family": true
+   }
+  ],
+  "icon.item.trinket": [
+   {
+    "key": "icon.item.weapon",
+    "xor_px": 120,
+    "cross_family": false
+   },
+   {
+    "key": "icon.marker.shrine",
+    "xor_px": 121,
+    "cross_family": true
+   },
+   {
+    "key": "icon.item.consumable",
+    "xor_px": 131,
+    "cross_family": false
+   }
+  ],
+  "icon.item.weapon": [
+   {
+    "key": "icon.marker.shrine",
+    "xor_px": 101,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.sss",
+    "xor_px": 119,
+    "cross_family": true
+   },
+   {
+    "key": "icon.item.trinket",
+    "xor_px": 120,
+    "cross_family": false
+   }
+  ],
+  "icon.marker.boss_arena": [
+   {
+    "key": "icon.tier.d",
+    "xor_px": 48,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.e",
+    "xor_px": 48,
+    "cross_family": true
+   },
+   {
+    "key": "icon.rarity.common",
+    "xor_px": 59,
+    "cross_family": true
+   }
+  ],
+  "icon.marker.dungeon_entrance": [
+   {
+    "key": "icon.plate.location",
+    "xor_px": 55,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.d",
+    "xor_px": 64,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.e",
+    "xor_px": 64,
+    "cross_family": true
+   }
+  ],
+  "icon.marker.enemy_camp": [
+   {
+    "key": "icon.class.rogue",
+    "xor_px": 190,
+    "cross_family": true
+   },
+   {
+    "key": "icon.class.mage",
+    "xor_px": 198,
+    "cross_family": true
+   },
+   {
+    "key": "icon.building.guild",
+    "xor_px": 200,
+    "cross_family": true
+   }
+  ],
+  "icon.marker.resource_grove": [
+   {
+    "key": "icon.class.warrior",
+    "xor_px": 84,
+    "cross_family": true
+   },
+   {
+    "key": "icon.rarity.uncommon",
+    "xor_px": 108,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.s",
+    "xor_px": 108,
+    "cross_family": true
+   }
+  ],
+  "icon.marker.ruins": [
+   {
+    "key": "icon.item.tool",
+    "xor_px": 90,
+    "cross_family": true
+   },
+   {
+    "key": "icon.marker.dungeon_entrance",
+    "xor_px": 96,
+    "cross_family": false
+   },
+   {
+    "key": "icon.building.class_hall",
+    "xor_px": 97,
+    "cross_family": true
+   }
+  ],
+  "icon.marker.shrine": [
+   {
+    "key": "icon.item.consumable",
+    "xor_px": 78,
+    "cross_family": true
+   },
+   {
+    "key": "icon.item.weapon",
+    "xor_px": 101,
+    "cross_family": true
+   },
+   {
+    "key": "icon.class.mage",
+    "xor_px": 108,
+    "cross_family": true
+   }
+  ],
+  "icon.plate.location": [
+   {
+    "key": "icon.marker.dungeon_entrance",
+    "xor_px": 55,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.d",
+    "xor_px": 99,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.e",
+    "xor_px": 99,
+    "cross_family": true
+   }
+  ],
+  "icon.rarity.common": [
+   {
+    "key": "icon.tier.d",
+    "xor_px": 25,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.e",
+    "xor_px": 25,
+    "cross_family": true
+   },
+   {
+    "key": "icon.marker.boss_arena",
+    "xor_px": 59,
+    "cross_family": true
+   }
+  ],
+  "icon.rarity.rare": [
+   {
+    "key": "icon.tier.s",
+    "xor_px": 72,
+    "cross_family": true
+   },
+   {
+    "key": "icon.rarity.uncommon",
+    "xor_px": 96,
+    "cross_family": false
+   },
+   {
+    "key": "icon.tier.ss",
+    "xor_px": 108,
+    "cross_family": true
+   }
+  ],
+  "icon.rarity.uncommon": [
+   {
+    "key": "icon.tier.s",
+    "xor_px": 56,
+    "cross_family": true
+   },
+   {
+    "key": "icon.rarity.common",
+    "xor_px": 59,
+    "cross_family": false
+   },
+   {
+    "key": "icon.item.material",
+    "xor_px": 72,
+    "cross_family": true
+   }
+  ],
+  "icon.status.frame_buff": [
+   {
+    "key": "icon.item.material",
+    "xor_px": 41,
+    "cross_family": true
+   },
+   {
+    "key": "icon.marker.boss_arena",
+    "xor_px": 63,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.d",
+    "xor_px": 63,
+    "cross_family": true
+   }
+  ],
+  "icon.status.frame_debuff": [
+   {
+    "key": "icon.class.warrior",
+    "xor_px": 106,
+    "cross_family": true
+   },
+   {
+    "key": "icon.marker.resource_grove",
+    "xor_px": 126,
+    "cross_family": true
+   },
+   {
+    "key": "icon.item.armor",
+    "xor_px": 151,
+    "cross_family": true
+   }
+  ],
+  "icon.tier.a": [
+   {
+    "key": "icon.tier.c",
+    "xor_px": 36,
+    "cross_family": false
+   },
+   {
+    "key": "icon.tier.b",
+    "xor_px": 72,
+    "cross_family": false
+   },
+   {
+    "key": "icon.tier.d",
+    "xor_px": 72,
+    "cross_family": false
+   }
+  ],
+  "icon.tier.b": [
+   {
+    "key": "icon.tier.a",
+    "xor_px": 72,
+    "cross_family": false
+   },
+   {
+    "key": "icon.tier.d",
+    "xor_px": 72,
+    "cross_family": false
+   },
+   {
+    "key": "icon.tier.e",
+    "xor_px": 72,
+    "cross_family": false
+   }
+  ],
+  "icon.tier.c": [
+   {
+    "key": "icon.tier.a",
+    "xor_px": 36,
+    "cross_family": false
+   },
+   {
+    "key": "icon.tier.d",
+    "xor_px": 36,
+    "cross_family": false
+   },
+   {
+    "key": "icon.tier.e",
+    "xor_px": 36,
+    "cross_family": false
+   }
+  ],
+  "icon.tier.d": [
+   {
+    "key": "icon.tier.e",
+    "xor_px": 0,
+    "cross_family": false
+   },
+   {
+    "key": "icon.rarity.common",
+    "xor_px": 25,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.c",
+    "xor_px": 36,
+    "cross_family": false
+   }
+  ],
+  "icon.tier.e": [
+   {
+    "key": "icon.tier.d",
+    "xor_px": 0,
+    "cross_family": false
+   },
+   {
+    "key": "icon.rarity.common",
+    "xor_px": 25,
+    "cross_family": true
+   },
+   {
+    "key": "icon.tier.c",
+    "xor_px": 36,
+    "cross_family": false
+   }
+  ],
+  "icon.tier.s": [
+   {
+    "key": "icon.tier.ss",
+    "xor_px": 36,
+    "cross_family": false
+   },
+   {
+    "key": "icon.rarity.uncommon",
+    "xor_px": 56,
+    "cross_family": true
+   },
+   {
+    "key": "icon.item.material",
+    "xor_px": 72,
+    "cross_family": true
+   }
+  ],
+  "icon.tier.ss": [
+   {
+    "key": "icon.tier.s",
+    "xor_px": 36,
+    "cross_family": false
+   },
+   {
+    "key": "icon.rarity.uncommon",
+    "xor_px": 92,
+    "cross_family": true
+   },
+   {
+    "key": "icon.item.material",
+    "xor_px": 108,
+    "cross_family": true
+   }
+  ],
+  "icon.tier.sss": [
+   {
+    "key": "icon.tier.s",
+    "xor_px": 72,
+    "cross_family": false
+   },
+   {
+    "key": "icon.tier.b",
+    "xor_px": 108,
+    "cross_family": false
+   },
+   {
+    "key": "icon.tier.ss",
+    "xor_px": 108,
+    "cross_family": false
+   }
+  ]
+ }
+}

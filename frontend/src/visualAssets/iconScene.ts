@@ -52,7 +52,7 @@ export const SCENE_COLUMNS = SCENE_ROWS[0].length
 export const SCENE_ROW_COUNT = SCENE_ROWS.length
 
 // Colour-vision approximations as SVG `feColorMatrix` values, applied in linear RGB (`color-interpolation-filters="linearRGB"`), the same space and matrices (Machado, Oliveira and Fernandes
-// 2009, severity 1.0) as tests/visual_assets/pilot_colour_vision.py, which a test compares. This is a visual approximation for the eye, not the rule.
+// 2009, severity 1.0) as visual_assets/review/pilot_colour_vision.py, which a test compares. This is a visual approximation for the eye, not the rule.
 export const MACHADO: Readonly<Record<'protan' | 'deutan' | 'tritan', readonly (readonly number[])[]>> = Object.freeze({
   protan: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
   deutan: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]],

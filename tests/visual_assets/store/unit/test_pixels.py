@@ -308,5 +308,5 @@ def test_the_pixels_layer_is_pure():
     tree = ast.parse(Path(pixels.__file__).read_text())
     imported = {a.name.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
     imported |= {n.module.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
-    assert imported <= {"__future__", "hashlib", "struct", "zlib", "dataclasses", "visual_assets"}
+    assert imported <= {"__future__", "hashlib", "struct", "zlib", "dataclasses", "functools", "itertools", "visual_assets"}
     assert not any(isinstance(n, ast.Call) and getattr(n.func, "id", "") == "open" for n in ast.walk(tree))

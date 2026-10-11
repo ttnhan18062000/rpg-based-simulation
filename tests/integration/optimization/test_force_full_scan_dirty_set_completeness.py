@@ -90,7 +90,15 @@ def test_refine_forces_full_dirty_set_when_force_full_scan_true_with_no_entity_u
     update_2 = _raw_update_with_building_mutation()
     refined_default = AuthoritativeApplyPipeline.refine(state_2, update_2)
     assert refined_default.dirty_set.all_dirty_entities != all_ids
-    assert refined.entity_updates == refined_default.entity_updates
+    # The full scan lets the shop phase visit entities the default run skips (entity 1 stands beside
+    # the shop), but visiting is not mutating: every update it adds is a blank EntityUpdate, so the
+    # outcome of the tick is the same. (Decision 34 removed the shop's auto-sell, which is what used
+    # to make this visit visible as a real update; the full-scan claim itself is unchanged.)
+    from src.core.updates import EntityUpdate
+    extra = {k: v for k, v in refined.entity_updates.items() if refined_default.entity_updates.get(k) != v}
+    assert extra, "the full scan should have visited at least one entity the default run skipped"
+    assert all(v == EntityUpdate(entity_id=k) for k, v in extra.items())
+    assert {k: v for k, v in refined.entity_updates.items() if k not in extra} == refined_default.entity_updates
 
 
 def test_refine_does_not_force_full_dirty_set_when_force_full_scan_false():

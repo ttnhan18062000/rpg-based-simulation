@@ -56,7 +56,6 @@
   required_ticks: 8
   default_charges: 10
   preferred_biomes: ["near_forest", "sacred_grove", "sunken_swamp"]
-  placement: "owned_by_declared_region"
   metadata:
     source_region_tags: ["near_forest"]
 

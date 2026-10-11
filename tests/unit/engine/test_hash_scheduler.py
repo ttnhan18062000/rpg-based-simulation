@@ -114,7 +114,7 @@ class TestComputeHashIsFlatOnly:
 class TestProofDigest:
     def test_scheme_name_is_versioned_flat_sha256(self):
         from src.engine.checkpoint import PROOF_DIGEST_SCHEME
-        assert PROOF_DIGEST_SCHEME == "flat-sha256-v1"
+        assert PROOF_DIGEST_SCHEME == "flat-sha256-v2"
 
     def test_computed_digest_carries_scheme_tick_status_and_value(self):
         from src.engine.checkpoint import (

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from tests.visual_assets import icon_compliance as cp
-from tests.visual_assets import icon_lookalikes as la
-from tests.visual_assets import icon_sheet_rule as rule
+from visual_assets.review import icon_compliance as cp
+from visual_assets.review import icon_lookalikes as la
+from visual_assets.review import icon_sheet_rule as rule
 
 INK = {"#": "#0e1018", "s": "#91a2ab", "g": "#e8c040", "b": "#5a2a1a"}
 
@@ -124,7 +124,7 @@ def test_a_wall_that_slopes_one_way_like_the_boot_fails_the_u_shape_row_and_a_u_
 
 # ---- the owner-fix revisions (r0002): each spec row fails on its own planted defect (`TCK-20261008-VISUAL-ASSETS-ICON-OWNER-FIXES`) ----
 
-from tests.visual_assets import icon_owner_fixes_draft_set as of  # noqa: E402
+from visual_assets.review import icon_owner_fixes_draft_set as of  # noqa: E402
 
 
 def _edit(sprite: rule.Sprite, changes: dict[tuple[int, int], tuple[int, int, int, int]]) -> rule.Sprite:

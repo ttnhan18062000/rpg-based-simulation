@@ -15,6 +15,7 @@ import importlib.util
 import json
 import os
 import sqlite3
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -44,8 +45,43 @@ if "hybrid_retrieval" not in sys.modules:
     spec.loader.exec_module(_hr)
 _hr = sys.modules["hybrid_retrieval"]
 
-_INDEX_DIR = _ks._DEFAULT_DB.parent
-_DB_PATH = _ks._DEFAULT_DB
+
+
+def _main_checkout_root(start: Path) -> Path | None:
+    """The main checkout's root, from any worktree of it (or from the main checkout itself)."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(start), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    common_dir = proc.stdout.strip()
+    return Path(common_dir).parent if proc.returncode == 0 and common_dir else None
+
+
+def _resolve_index_dir(own_index_dir: Path, own_root: Path, main_root: Path | None) -> Path:
+    """This checkout's own knowledge index, or the main checkout's when this one has none.
+
+    The index is generated and gitignored, so a fresh git worktree has none and every
+    search_docs call there answered "index not found"
+    (TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION). Querying reads the main checkout's index
+    instead; building one (`make knowledge-index`) still writes only to the checkout it runs in.
+    """
+    db_name = _ks._DEFAULT_DB.name
+    if (own_index_dir / db_name).exists() or main_root is None:
+        return own_index_dir
+    try:
+        main_index_dir = main_root / own_index_dir.relative_to(own_root)
+    except ValueError:
+        return own_index_dir
+    return main_index_dir if (main_index_dir / db_name).exists() else own_index_dir
+
+
+_INDEX_DIR = _resolve_index_dir(
+    _ks._DEFAULT_DB.parent, _TOOLS_DIR.resolve().parent, _main_checkout_root(_TOOLS_DIR)
+)
+_DB_PATH = _INDEX_DIR / _ks._DEFAULT_DB.name
 _BM25_PATH = _INDEX_DIR / "bm25.pkl"
 _MODEL_NAME: str = _ks._MODEL_NAME
 

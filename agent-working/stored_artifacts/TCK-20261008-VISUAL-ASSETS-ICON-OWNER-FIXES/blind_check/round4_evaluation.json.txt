@@ -1,0 +1,591 @@
+{
+ "flagged_free_text": [
+  "icon.marker.enemy_camp",
+  "icon.marker.ruins",
+  "icon.status.frame_debuff",
+  "icon.tier.d",
+  "icon.tier.e"
+ ],
+ "missed_in_choice": [],
+ "results": {
+  "icon.building.blacksmith": {
+   "choice": {
+    "correct": true,
+    "picked": "an anvil with a raised hammer"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "anvil",
+     "hammer"
+    ],
+    "named": true
+   },
+   "free_text": "anvil with hammer",
+   "status": "adopted"
+  },
+  "icon.building.class_hall": {
+   "choice": {
+    "correct": true,
+    "picked": "an open book"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "book"
+    ],
+    "named": true
+   },
+   "free_text": "open book",
+   "status": "v2"
+  },
+  "icon.building.guild": {
+   "choice": {
+    "correct": true,
+    "picked": "a banner on a pole"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "banner",
+     "flag"
+    ],
+    "named": true
+   },
+   "free_text": "red banner flag",
+   "status": "v2"
+  },
+  "icon.building.hero_house": {
+   "choice": {
+    "correct": true,
+    "picked": "a small house"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "house"
+    ],
+    "named": true
+   },
+   "free_text": "red-roofed house",
+   "status": "v2"
+  },
+  "icon.building.inn": {
+   "choice": {
+    "correct": true,
+    "picked": "a mug of beer"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "mug",
+     "beer"
+    ],
+    "named": true
+   },
+   "free_text": "beer mug",
+   "status": "v2"
+  },
+  "icon.building.store": {
+   "choice": {
+    "correct": true,
+    "picked": "a coin purse"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "coin",
+     "gold",
+     "pouch"
+    ],
+    "named": true
+   },
+   "free_text": "gold coin pouch",
+   "status": "v2"
+  },
+  "icon.class.mage": {
+   "choice": {
+    "correct": true,
+    "picked": "a pointed wizard hat"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "wizard",
+     "hat"
+    ],
+    "named": true
+   },
+   "free_text": "purple wizard hat",
+   "status": "v2"
+  },
+  "icon.class.ranger": {
+   "choice": {
+    "correct": true,
+    "picked": "a longbow with a nocked arrow"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "bow",
+     "arrow"
+    ],
+    "named": true
+   },
+   "free_text": "bow and arrow",
+   "status": "v2"
+  },
+  "icon.class.rogue": {
+   "choice": {
+    "correct": true,
+    "picked": "a hooded cowl"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "hooded"
+    ],
+    "named": true
+   },
+   "free_text": "hooded figure",
+   "status": "revision"
+  },
+  "icon.class.warrior": {
+   "choice": {
+    "correct": true,
+    "picked": "a shield with a sword emblem"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "shield"
+    ],
+    "named": true
+   },
+   "free_text": "sword shield",
+   "status": "adopted"
+  },
+  "icon.item.armor": {
+   "choice": {
+    "correct": true,
+    "picked": "a breastplate"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "armor",
+     "chest"
+    ],
+    "named": true
+   },
+   "free_text": "steel chest armor",
+   "status": "v2"
+  },
+  "icon.item.consumable": {
+   "choice": {
+    "correct": true,
+    "picked": "a potion flask"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "potion",
+     "flask"
+    ],
+    "named": true
+   },
+   "free_text": "red potion flask",
+   "status": "v2"
+  },
+  "icon.item.material": {
+   "choice": {
+    "correct": true,
+    "picked": "an ore chunk"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "ore",
+     "rock",
+     "gold"
+    ],
+    "named": true
+   },
+   "free_text": "ore rock with gold",
+   "status": "v2"
+  },
+  "icon.item.tool": {
+   "choice": {
+    "correct": true,
+    "picked": "a toolbox"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "toolbox"
+    ],
+    "named": true
+   },
+   "free_text": "red toolbox",
+   "status": "revision"
+  },
+  "icon.item.trinket": {
+   "choice": {
+    "correct": true,
+    "picked": "a pendant on a chain"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "pendant",
+     "amulet"
+    ],
+    "named": true
+   },
+   "free_text": "gold amulet pendant",
+   "status": "v2"
+  },
+  "icon.item.weapon": {
+   "choice": {
+    "correct": true,
+    "picked": "a sword"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "sword"
+    ],
+    "named": true
+   },
+   "free_text": "steel sword",
+   "status": "v2"
+  },
+  "icon.marker.boss_arena": {
+   "choice": {
+    "correct": true,
+    "picked": "a skull"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "skull"
+    ],
+    "named": true
+   },
+   "free_text": "white skull",
+   "status": "v2"
+  },
+  "icon.marker.dungeon_entrance": {
+   "choice": {
+    "correct": true,
+    "picked": "an arched doorway"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "archway"
+    ],
+    "named": true
+   },
+   "free_text": "stone archway",
+   "status": "v2"
+  },
+  "icon.marker.enemy_camp": {
+   "choice": {
+    "correct": true,
+    "picked": "a tent with crossed spears"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [],
+    "named": false
+   },
+   "free_text": "crossed tools on red mound",
+   "status": "revision"
+  },
+  "icon.marker.resource_grove": {
+   "choice": {
+    "correct": true,
+    "picked": "a tree"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "tree"
+    ],
+    "named": true
+   },
+   "free_text": "green tree",
+   "status": "v2"
+  },
+  "icon.marker.ruins": {
+   "choice": {
+    "correct": true,
+    "picked": "a broken stone arch"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [],
+    "named": false
+   },
+   "free_text": "document with arrow",
+   "status": "revision"
+  },
+  "icon.marker.shrine": {
+   "choice": {
+    "correct": true,
+    "picked": "an obelisk"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "stone"
+    ],
+    "named": true
+   },
+   "free_text": "stone tombstone",
+   "status": "v2"
+  },
+  "icon.plate.location": {
+   "choice": {
+    "correct": true,
+    "picked": "a location plate"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "tile",
+     "square"
+    ],
+    "named": true
+   },
+   "free_text": "grey square tile",
+   "status": "adopted"
+  },
+  "icon.rarity.common": {
+   "choice": {
+    "correct": true,
+    "picked": "a silver bead"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "orb"
+    ],
+    "named": true
+   },
+   "free_text": "grey-blue orb",
+   "status": "revision"
+  },
+  "icon.rarity.rare": {
+   "choice": {
+    "correct": true,
+    "picked": "a four-point sparkle gem"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "gem"
+    ],
+    "named": true
+   },
+   "free_text": "purple gem diamond",
+   "status": "v2"
+  },
+  "icon.rarity.uncommon": {
+   "choice": {
+    "correct": true,
+    "picked": "a kite-shaped gem"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "gem"
+    ],
+    "named": true
+   },
+   "free_text": "green gem",
+   "status": "v2"
+  },
+  "icon.status.frame_buff": {
+   "choice": {
+    "correct": true,
+    "picked": "a round frame with a solid up arrow"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "up arrow"
+    ],
+    "named": true
+   },
+   "free_text": "up arrow in green ring",
+   "status": "revision"
+  },
+  "icon.status.frame_debuff": {
+   "choice": {
+    "correct": true,
+    "picked": "an inverted-triangle frame with a down arrow"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [],
+    "named": false
+   },
+   "free_text": "red warning triangle",
+   "status": "adopted"
+  },
+  "icon.tier.a": {
+   "choice": {
+    "correct": true,
+    "picked": "an octagon badge with a frame cut out"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "button"
+    ],
+    "named": true
+   },
+   "free_text": "grey round button",
+   "status": "adopted"
+  },
+  "icon.tier.b": {
+   "choice": {
+    "correct": true,
+    "picked": "an octagon badge with two pips cut out"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "token"
+    ],
+    "named": true
+   },
+   "free_text": "green round token",
+   "status": "adopted"
+  },
+  "icon.tier.c": {
+   "choice": {
+    "correct": true,
+    "picked": "an octagon badge with one pip cut out"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "ring"
+    ],
+    "named": true
+   },
+   "free_text": "dark ring on plate",
+   "status": "adopted"
+  },
+  "icon.tier.d": {
+   "choice": {
+    "correct": true,
+    "picked": "a plain octagon badge"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [],
+    "named": false
+   },
+   "free_text": "dark green circle",
+   "status": "adopted"
+  },
+  "icon.tier.e": {
+   "choice": {
+    "correct": true,
+    "picked": "a dark green plain octagon badge"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": true,
+    "matched": [],
+    "named": false
+   },
+   "free_text": "dark green circle",
+   "status": "adopted"
+  },
+  "icon.tier.s": {
+   "choice": {
+    "correct": true,
+    "picked": "a silver diamond badge"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "diamond"
+    ],
+    "named": true
+   },
+   "free_text": "grey diamond",
+   "status": "adopted"
+  },
+  "icon.tier.ss": {
+   "choice": {
+    "correct": true,
+    "picked": "a gold diamond badge with one pip"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "diamond"
+    ],
+    "named": true
+   },
+   "free_text": "gold ring diamond",
+   "status": "adopted"
+  },
+  "icon.tier.sss": {
+   "choice": {
+    "correct": true,
+    "picked": "a platinum diamond badge with two pips"
+   },
+   "free": {
+    "confused_with": [],
+    "flagged": false,
+    "matched": [
+     "diamond"
+    ],
+    "named": true
+   },
+   "free_text": "white diamond shape",
+   "status": "adopted"
+  }
+ }
+}

@@ -206,8 +206,7 @@
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries",
-      "placement": "owned_by_declared_region"
+      "yield_item": "wild_berries"
     }
   },
   "factions": {

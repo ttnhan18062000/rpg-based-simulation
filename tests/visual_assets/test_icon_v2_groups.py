@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets import icon_v2_groups as g
-from tests.visual_assets import icon_v2_keys as v2
-from tests.visual_assets.icon_draft_set import SIZES as V1_SIZES
-from tests.visual_assets.pilot_colour_vision import from_hex
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review import icon_v2_groups as g
+from visual_assets.review import icon_v2_keys as v2
+from visual_assets.review.icon_draft_set import SIZES as V1_SIZES
+from visual_assets.review.pilot_colour_vision import from_hex
 
 
 def _flat(side: int, colour: str, shape: set) -> rule.Sprite:
@@ -76,7 +76,7 @@ def test_shape_only_groups_skip_i2_and_say_so_while_the_rarity_group_keeps_i2():
 
 
 def test_a_rarity_badge_with_a_tier_silhouette_fails_i1_in_the_badge_group_and_a_distinct_one_passes():
-    from tests.visual_assets.icon_sheet_synthetic import LADDER_SHAPES
+    from visual_assets.review.icon_sheet_synthetic import LADDER_SHAPES
 
     tier = LADDER_SHAPES["s"]
     icons = {"icon.tier.s": _flat(8, "#9ea4b6", tier), "icon.rarity.rare": _flat(8, "#a78bfa", tier)}

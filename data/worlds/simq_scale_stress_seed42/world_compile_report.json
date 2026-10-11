@@ -2,16 +2,16 @@
   "world_id": "simq_scale_stress_seed42",
   "seed": 42,
   "entity_count": 68,
-  "region_count": 13,
-  "resource_node_count": 21,
+  "region_count": 14,
+  "resource_node_count": 22,
   "building_count": 7,
   "quest_count": 27,
   "distinct_populated_factions": 11,
   "warnings": [
     "QuestDefinition 'survey_river_route' required_location_tag 'river' does not match any region type or tag in this world"
   ],
-  "compile_duration_ms": 445.9295920096338,
-  "state_hash": "9841b9eed91e589e278baad837aeed79",
-  "canonical_state_hash": "52b370cc9238fdd6f0a203bd49938636f92df512044faa96f54f43be2f6c9995",
+  "compile_duration_ms": 516.8062797747552,
+  "state_hash": "68e8894766c5f0181c07a1d29ecc5528",
+  "canonical_state_hash": "838bca8c087cb849539b6fe726d0bbaf8441539bd578805164a6b58f11d9dde2",
   "place_count": 5
 }

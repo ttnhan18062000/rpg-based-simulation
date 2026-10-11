@@ -111,14 +111,7 @@ The town layer participates in 9 of 17 authoritative pipeline phases:
 
 ## Home Rest
 
-**Entry point:** `HomeAction.rest(entity, state) → Optional[StateUpdate]`
-
-Private rest reduces sleep debt by 40% of current value:
-```
-sleep_debt_delta = -(entity.biological.sleep_debt * 0.4)
-```
-
-Free (no gold cost). Contrast with Inn rest (`HEAL_DEBT` service) which fully restores sleep debt but costs gold.
+`HomeAction` and `InnAction` (`src/town/home.py`, `src/town/inn.py`) were deleted: nothing called them. A bed at a home or an inn is a REST action served at action time by `src/engine/building_services.py` (`building_arrival.py` dispatches it on arrival), priced by the building's service price; see the batch-2 divergence 2.101.
 
 ---
 

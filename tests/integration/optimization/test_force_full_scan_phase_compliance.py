@@ -117,33 +117,47 @@ def test_strategic_phase_force_full_scan_processes_active_project_entity_with_em
 def test_shop_phase_force_full_scan_processes_inventory_entity_with_empty_dirty_set():
     """
     Given:
-        entity at shop building tile with sellable items in inventory
+        entity at a shop building tile carrying a SHOP_BUY intent priced below the legal price
         update.force_full_scan=True
         dirty_set empty
 
     Expect:
-        ShopSystem creates auto-sell resource transfer intent.
+        ShopSystem still visits the entity: the underpriced buy is sanitised away and rejected.
+
+    (Decision 34 removed the shop's auto-sell, so this test used to assert a sale that no longer
+    happens on a visit; the force-full-scan claim is kept, exercised through the price law the phase
+    still enforces. The same entity with the default scan is not visited: control below.)
     """
+    from src.core.enums import ReasonCode
+    from src.core.updates import ResourceTransferIntent
+
     state = AuthoritativeState(tick=1, seed=42)
     entity = (V2EntityBuilder(1)
               .location(1.0, 1.0)
               .navigation(position=(1.0, 1.0))
               .lifecycle(active=True)
               .combat(alive=True)
-              .inventory(items=[ItemStack("wood", 10)])
               .build())
     state = replace(state, entities={1: entity})
-    
+
     building = BuildingState(id=100, kind="shop", position=(1, 1), functional=True)
     state = replace(state, building_tiles={(1, 1): "shop"}, buildings={100: building})
-    
-    update = StateUpdate(force_full_scan=True, dirty_set=DirtySet(), entity_updates={})
-    
-    refined = ShopSystem.enforce(state, update)
-    
-    assert 1 in refined.entity_updates
-    assert len(refined.entity_updates[1].resource_transfers) > 0
-    assert refined.entity_updates[1].resource_transfers[0].source_kind == "SHOP_SELL"
+
+    cheat = ResourceTransferIntent(
+        transaction_id="t1", source_kind="SHOP_BUY", source_id=100,
+        items_add=[ItemStack("iron_sword", 1)], gold_cost=0,
+    )
+
+    def staged(**flags):
+        upd = StateUpdate(dirty_set=DirtySet(), entity_updates={1: EntityUpdate(entity_id=1, resource_transfers=[cheat])}, **flags)
+        return ShopSystem.enforce(state, upd)
+
+    scanned = staged(force_full_scan=True)
+    assert scanned.entity_updates[1].resource_transfers == []
+    assert [r.reason for r in scanned.rejection_events] == [ReasonCode.ILLEGAL_ACTION]
+
+    skipped = staged(force_full_scan=False)
+    assert skipped.entity_updates[1].resource_transfers == [cheat]
 
 
 def test_capacity_phase_force_full_scan_processes_all_inventory_entities():

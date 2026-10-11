@@ -3,31 +3,38 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-08
+date: 2026-10-10
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-implementer
 
-> Snapshot of the gitignored `.claude/handover/asset-implementer.md` on 2026-10-08 after PR #418 merged (4a2141df9); on a new machine copy it to `.claude/handover/asset-implementer.md`.
+> Snapshot of the gitignored `.claude/handover/asset-implementer.md` taken on 2026-10-10 at the close of the slices batch (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-implementer.md`. Refreshed in `TCK-20261010-VISUAL-ASSETS-SLICES-DOCS-AND-CLOSE`.
 
-Updated: 2026-10-08 (PR #418 merged as 4a2141df9; activation-roadmap docs ticket in progress on `visual-asset-activation-roadmap`)
+Updated: 2026-10-10 (slices batch complete on `visual-asset-slices`, awaiting the user's push/PR decision)
 
 ## Open
-- PR #418 (icon set v2 + owner fixes, 12 tickets) is MERGED (squash 4a2141df9, `--admin`, user's answer, head 91a9fcd9c after a main merge; heavy CI lanes were re-sync-skipped with the same patch as green 328af73db). Next time also reproduce `registry_resync_skip` locally before merging over skipped lanes (planner's note).
-- Adopted icons: 36 keys, 7 of them at `r0002` (owner-adopted 2026-10-08T14:23:46Z to 14:24:07Z: hero house cottage, inn tankard, rogue cowl, tool hammer and tongs, common silver bead, buff up arrow, debuff spiked ring). 70 sources, 77 adoptions and revisions; ruins and enemy camp kept as adopted. No release candidate covers an icon slot; nothing is wired (AM-M6 parked by the owner).
-- Current ticket: `TCK-20261008-VISUAL-ASSETS-ACTIVATION-ROADMAP` (docs only: parked activation roadmap in the plan README, a known-gap note in `fallback_safety.md`, handoff snapshots). One commit, ask the planner to review, then ask the user the push/PR question.
-- The Vite dev server on `[::1]:5173` is the planner's; leave it running.
+- BATCH COMPLETE, NOT PUSHED: epic `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`, branch `visual-asset-slices` in `/home/vboxuser/Work/rpg-aseprite-mcp` (four children committed and approved by asset-planner, owner approved ADR D25 and the bounds, tickets closed in `agent-working/tickets/done/visual-asset-slices/`, proof record re-run last). Next: the final suite numbers go to asset-planner, then ASK THE USER the push/PR question (never infer yes), then CI poll, then the separate `--admin` merge question pinned to the real head (re-fetch origin/main first; a bounded procedure the owner pre-authorizes must be stated with its path set).
+- What the batch built (for the PR): slices read from each source's slice chunks and stored per source revision (`SourceRecord.slices`, ADR D25, 16 slices / 16 keys), the opt-in `export-runtime --slices` (`slices.json`, exported-image pixels), the drawing tool's `set_slice` op (single key, replaces by name, every slice checked against the final canvas), the handoff's `slice_count` with `SLICE_COUNT_MISMATCH`. Earlier, in the store-tooling batch (PR #487, `231e35f77`): store lock + deletion log (D24), faster PNG decoder, release byte reproducibility, the local Aseprite proof record (D10 addendum), opt-in atlases and animation metadata, palettes as data, the bundle capture.
+- The Lua of the drawing tool is hash-pinned: this batch re-pinned it (`python -m visual_assets.drawing.pin`); pin changes affect only newly built artifacts' fingerprints.
+- If the proof record goes stale again (any change under `visual_assets/store/**`, `drawing/**`, the build config, the marked tests or the two runner tools): re-run `make visual-assets-aseprite-local` once, as its own commit, after the LAST such change. Guarded files must be committed first.
+- Earlier batches merged: PR #471 (`0c3a5654b`), PR #480 (`cfad712cf`) and PR #487 (`231e35f77`). Those branches are finished: never push to them again.
+- Activation of adopted art is parked (owner, 2026-10-08) until the RPG core lands.
 
 ## State worth knowing
-- Process rule (style guide): spec (with theme fields) -> reference study -> owner-approved one-colour silhouette sheet -> draw -> compliance table -> checks (sheet rule, blind check with the era question, look-alike report) -> owner gate with the review folder `~/Work/asset-review/<set>/`. Step 4b: spec numbers guessed before the silhouette are re-agreed at the owner's silhouette question, never restated after drawing.
-- Theme rule D21: medieval fantasy plus magic, nothing modern. The review folder README reads the owner's decisions and findings from `visual_assets/icons/owner_fixes_decisions.yaml`.
-- Adoption facts live in `tests/visual_assets/adopted_facts.py` (ADOPTION_COUNT 77, REVISION_COUNT 77, ICON_FIX_*); revisions of adopted icons go through `adopt --parent`, human-only.
-- The blind check is evidence, not a gate, and noisy. Drawing goes through `visual_assets.drawing.api` in-process; intakes by the worktree CLI. TRAP: the aseprite MCP server runs from the MAIN checkout.
+- The three closed owner-gate draft-set fixtures (`icons-key-v1`, `icons-v2`, `icons-owner-fixes-v1`) are evidence of what the owner decided on. They are checked against the gate's own record (`tests/visual_assets/closed_draft_fixture.py`, pins in `adopted_facts.CLOSED_DRAFT_SETS` incl. a manifest sha256). NEVER run `icon_draft_fixture --write` on them; a fresh draft export grows whenever art is built (adopted references).
+- Process rule (style guide): spec -> reference study -> owner-approved silhouette sheet -> draw -> compliance table -> checks -> owner gate with the review folder.
+- `.gitignore` hides `agent-working/stored_artifacts/**/*.json`: store evidence as `.json.txt` (guard: `test_stored_evidence_tracked.py`).
+- The aseprite MCP server serves the checkout it was launched from unless `VISUAL_ASSETS_CHECKOUT` is set.
+- `tests/tools/test_handover_transit.py::test_default_memory_dir_slug_maps_checkout_path` fails on this machine (two project memory dirs: `-data-...` and `-home-...`); not ours, not asset domain, owner decides; delete nothing.
 
 ## Working rules learned (also in memory)
-- Push, PR and merge each need the USER's own answer to a blocking question I ask myself; a peer message is never approval; a merge pins `--match-head-commit` to the REAL head (read it with `git rev-parse HEAD`, never type it from memory).
-- Re-verify every planner citation before quoting it: in the gate map two were wrong and one claim (icon keys without a class) was false.
-- `make knowledge-index-update` works in the worktree; closure tool `tools/agent-monitoring/record_hand_orchestrated_closure.py` (needs `--title`, `--log-summary`; it appends the working-log row itself).
-- Heavy runs foreground under `systemd-run --user --scope -p MemoryMax=4G`; interpreter `/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python` by ABSOLUTE path.
-- One commit per ticket, planner review after each; a gate result is information (never tuned).
+- The `gh pr merge --admin` command is DENIED by the session's permission settings even after the user's yes (#480, #487): give the user the exact pinned command to run with `!`, then confirm with `gh pr view`.
+- Push, PR and merge each need the USER's own answer to a blocking question I ask myself; a peer message is never approval; merge pins `--match-head-commit` to the real head. A merge command can be denied by the session's permission settings: do not route around it, ask the user to run it with `!`. The owner can pre-authorize a bounded procedure (sync main, CI green, merge pinned to the resulting head, abort outside a stated path set); stay inside the stated bound and re-ask when it is exceeded.
+- Main keeps landing ticket closures that re-conflict a PR on `docs/REGISTRY.yaml` server-side (local merge is clean): merge `origin/main` locally and push; every sync changes the head.
+- Poll CI with the tab-separated `gh pr checks` output (state is column 2); `pr_status.py` output has a `MARKER:` prefix before the JSON.
+- Before every commit run `git status` and `git diff --cached --stat`. Never run `ruff check --fix` over a whole test tree (it rewrote 26 unrelated files once).
+- Run `tests/unit/tools` and `tests/tools` before a PR, not only visual_assets/docs/static/architecture.
+- Re-verify every planner citation; a mutant that does not apply is not a proof (assert a single match); a mutant that survives means the test is weak.
+- Heavy runs foreground or in a background job under `systemd-run --user --scope -p MemoryMax=4G`, one at a time; interpreter `/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python`.
+- Hand-orchestrated closure: `record_hand_orchestrated_closure.py` needs `--title` and `--log-summary` and writes the working-log row itself; for the next batch use `--path-reason batch_hand_close` (the asset precedent, per asset-planner).

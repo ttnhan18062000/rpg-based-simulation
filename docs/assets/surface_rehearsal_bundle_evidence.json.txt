@@ -1,0 +1,502 @@
+{
+  "browser": "chromium",
+  "browser_version": "151.0.7922.71",
+  "device_pixel_ratio": 1,
+  "gate_result_moved": false,
+  "make_target": "visual-assets-bundle-capture",
+  "pages": [
+    {
+      "all_images_hashed": true,
+      "data_url_images": 0,
+      "dev_server_requests": [],
+      "failed_requests": [],
+      "images": [
+        {
+          "fixture_file": "007e2b41e2f4f18f29d02e4609637fbe4a4ee827aac723d3e0122f1dd1644182.png",
+          "url": "/assets/007e2b41e2f4f18f29d02e4609637fbe4a4ee827aac723d3e0122f1dd1644182-BwtSYzqj.png"
+        },
+        {
+          "fixture_file": "505260f1285c3e6d37e2f3fde8764cef46bc9b5fd30718f135cfab76c24f50c0.png",
+          "url": "/assets/505260f1285c3e6d37e2f3fde8764cef46bc9b5fd30718f135cfab76c24f50c0-CbHSblwI.png"
+        },
+        {
+          "fixture_file": "daa89f2fe8011349c1da726535bdfecd66e1fff0170fe5f172fc12367d970533.png",
+          "url": "/assets/daa89f2fe8011349c1da726535bdfecd66e1fff0170fe5f172fc12367d970533-BWCoG8ee.png"
+        }
+      ],
+      "page": "rehearsal",
+      "pixel_verdicts": {
+        "fixture.rehearsal.frame": {
+          "drawn": "pixels-v1:007e2b41e2f4f18f29d02e4609637fbe4a4ee827aac723d3e0122f1dd1644182",
+          "expected": "pixels-v1:007e2b41e2f4f18f29d02e4609637fbe4a4ee827aac723d3e0122f1dd1644182",
+          "identical": true,
+          "scale": 1
+        },
+        "fixture.rehearsal.gem": {
+          "drawn": "pixels-v1:daa89f2fe8011349c1da726535bdfecd66e1fff0170fe5f172fc12367d970533",
+          "expected": "pixels-v1:daa89f2fe8011349c1da726535bdfecd66e1fff0170fe5f172fc12367d970533",
+          "identical": true,
+          "scale": 1
+        },
+        "fixture.rehearsal.rock": {
+          "drawn": "pixels-v1:505260f1285c3e6d37e2f3fde8764cef46bc9b5fd30718f135cfab76c24f50c0",
+          "expected": "pixels-v1:505260f1285c3e6d37e2f3fde8764cef46bc9b5fd30718f135cfab76c24f50c0",
+          "identical": true,
+          "scale": 1
+        }
+      },
+      "pixel_verification": "verified: the drawn cells were hashed and compared with the stored artifacts",
+      "settled": "data-settled=true on [data-testid=rehearsal]"
+    },
+    {
+      "all_images_hashed": true,
+      "data_url_images": 0,
+      "dev_server_requests": [],
+      "failed_requests": [],
+      "images": [
+        {
+          "fixture_file": "2f62ba6cd4df1284815545b59371f7f5d37216234a1d6342424312da56e672a8.png",
+          "url": "/assets/2f62ba6cd4df1284815545b59371f7f5d37216234a1d6342424312da56e672a8-DGt5b6Vo.png"
+        },
+        {
+          "fixture_file": "569ba7004064ee83b51f9c8c13c2624e1c8e4bcf0ad76936e740a4b8fa031654.png",
+          "url": "/assets/569ba7004064ee83b51f9c8c13c2624e1c8e4bcf0ad76936e740a4b8fa031654-CQDPXyoq.png"
+        },
+        {
+          "fixture_file": "58f2fd6fff9025564b0b03efbe0cef18691e3673486e616539d20ef6ba8fac33.png",
+          "url": "/assets/58f2fd6fff9025564b0b03efbe0cef18691e3673486e616539d20ef6ba8fac33-Dr8j0lIi.png"
+        }
+      ],
+      "page": "pilot",
+      "pixel_verdicts": null,
+      "pixel_verification": "not_taken: asset-loading evidence only, no pixel verdict",
+      "settled": "data-settled=true on [data-testid=pilot]"
+    },
+    {
+      "all_images_hashed": true,
+      "data_url_images": 0,
+      "dev_server_requests": [],
+      "failed_requests": [],
+      "images": [
+        {
+          "fixture_file": "07a1a61f1ddda0ca6f4eab7557afb86fc3db1b06ffed39d171b28a7e5d2582cd.png",
+          "url": "/assets/07a1a61f1ddda0ca6f4eab7557afb86fc3db1b06ffed39d171b28a7e5d2582cd-Czeu_z7j.png"
+        },
+        {
+          "fixture_file": "099fc501d89e99bbbaa5a0bc690ea315fd914616a800c29b6ec903604575da1b.png",
+          "url": "/assets/099fc501d89e99bbbaa5a0bc690ea315fd914616a800c29b6ec903604575da1b-Dv_aShlv.png"
+        },
+        {
+          "fixture_file": "0b2fdbe7eddaa079d0628eb1acb2835500c05d2c0486e5267124b464f2cd02b7.png",
+          "url": "/assets/0b2fdbe7eddaa079d0628eb1acb2835500c05d2c0486e5267124b464f2cd02b7-C348-5lb.png"
+        },
+        {
+          "fixture_file": "0cf821b23288b234f6e01f93cebbc6a5ad5ff9ed19c43ef9d0179311560b233b.png",
+          "url": "/assets/0cf821b23288b234f6e01f93cebbc6a5ad5ff9ed19c43ef9d0179311560b233b-4lEtmgoQ.png"
+        },
+        {
+          "fixture_file": "0f684a5c1f04e899d57c81c5dd759d8e624aa745cae564f7b083bbfbd477446f.png",
+          "url": "/assets/0f684a5c1f04e899d57c81c5dd759d8e624aa745cae564f7b083bbfbd477446f-DnPJ_aq3.png"
+        },
+        {
+          "fixture_file": "0fec082f516cc6ee0780dcd9d65455228168ec5ba52687cfb99b202b12cc077e.png",
+          "url": "/assets/0fec082f516cc6ee0780dcd9d65455228168ec5ba52687cfb99b202b12cc077e-D1CNv8J1.png"
+        },
+        {
+          "fixture_file": "254b70f936e65d79cda2b83efee42f16082689013f48d7cd4dfdc912e057e3d9.png",
+          "url": "/assets/254b70f936e65d79cda2b83efee42f16082689013f48d7cd4dfdc912e057e3d9-t1mZbixU.png"
+        },
+        {
+          "fixture_file": "2f62ba6cd4df1284815545b59371f7f5d37216234a1d6342424312da56e672a8.png",
+          "url": "/assets/2f62ba6cd4df1284815545b59371f7f5d37216234a1d6342424312da56e672a8-DGt5b6Vo.png"
+        },
+        {
+          "fixture_file": "38174241225525b4e69698b82ddc13e85ad10eced3a5aac1bef809607ad226b9.png",
+          "url": "/assets/38174241225525b4e69698b82ddc13e85ad10eced3a5aac1bef809607ad226b9-hwj9YOHD.png"
+        },
+        {
+          "fixture_file": "4191aa760a00778a11b670b8593132ee1eaea26ba3e27e356ea4523160d2443e.png",
+          "url": "/assets/4191aa760a00778a11b670b8593132ee1eaea26ba3e27e356ea4523160d2443e-6BZH7ltl.png"
+        },
+        {
+          "fixture_file": "42d5c78b44e71ca68d1f4a26efa6c267e58e7656e74928453dd04ac540fcb760.png",
+          "url": "/assets/42d5c78b44e71ca68d1f4a26efa6c267e58e7656e74928453dd04ac540fcb760-BF2XcQ2a.png"
+        },
+        {
+          "fixture_file": "4f8b3ee2a9c7cc34bdf17634fe18122100c60eb306ec04d94fb99c6bb95ae640.png",
+          "url": "/assets/4f8b3ee2a9c7cc34bdf17634fe18122100c60eb306ec04d94fb99c6bb95ae640-tsWvSa5a.png"
+        },
+        {
+          "fixture_file": "569ba7004064ee83b51f9c8c13c2624e1c8e4bcf0ad76936e740a4b8fa031654.png",
+          "url": "/assets/569ba7004064ee83b51f9c8c13c2624e1c8e4bcf0ad76936e740a4b8fa031654-CQDPXyoq.png"
+        },
+        {
+          "fixture_file": "57fdcb7415ec9bc17b3aec66a712accf9fd55d7c4476cfc9c513d4df36cb69b8.png",
+          "url": "/assets/57fdcb7415ec9bc17b3aec66a712accf9fd55d7c4476cfc9c513d4df36cb69b8-D7gLYhMM.png"
+        },
+        {
+          "fixture_file": "58c20365a8b7747d30aec2fdc44fac3721608f8e25ec57da307965da98c1642e.png",
+          "url": "/assets/58c20365a8b7747d30aec2fdc44fac3721608f8e25ec57da307965da98c1642e-rVhOWa2G.png"
+        },
+        {
+          "fixture_file": "58f2fd6fff9025564b0b03efbe0cef18691e3673486e616539d20ef6ba8fac33.png",
+          "url": "/assets/58f2fd6fff9025564b0b03efbe0cef18691e3673486e616539d20ef6ba8fac33-Dr8j0lIi.png"
+        },
+        {
+          "fixture_file": "5a8ac7eb3962818220249cd4da513c39efda387fd116f96cd4fc260d5edbfe72.png",
+          "url": "/assets/5a8ac7eb3962818220249cd4da513c39efda387fd116f96cd4fc260d5edbfe72-B2ocG5VO.png"
+        },
+        {
+          "fixture_file": "6d267907d35056fde05fcf0af6c45718e286242fd016a85bde13a5ff7d7da919.png",
+          "url": "/assets/6d267907d35056fde05fcf0af6c45718e286242fd016a85bde13a5ff7d7da919-BN_8IwKX.png"
+        },
+        {
+          "fixture_file": "723ab911963b87bbe8b948133e6e50091cebb34ae5f4f4a138467e372d89dcea.png",
+          "url": "/assets/723ab911963b87bbe8b948133e6e50091cebb34ae5f4f4a138467e372d89dcea-BriYhmX5.png"
+        },
+        {
+          "fixture_file": "837e76c42a8223c5c195e55a4a94c9bb52bd0db1320e4d6928d974151f978e3d.png",
+          "url": "/assets/837e76c42a8223c5c195e55a4a94c9bb52bd0db1320e4d6928d974151f978e3d-BMiv-Zcg.png"
+        },
+        {
+          "fixture_file": "87dbdd85bec1f3aff740fdbf688a47a8f29ba80f338a5eb11bb2db9e1e4cb5db.png",
+          "url": "/assets/87dbdd85bec1f3aff740fdbf688a47a8f29ba80f338a5eb11bb2db9e1e4cb5db-BgaoTq-h.png"
+        },
+        {
+          "fixture_file": "91272423d13a85d20dc81e103ba6880faa9423e3facfcd8fc72aa749ee5ca563.png",
+          "url": "/assets/91272423d13a85d20dc81e103ba6880faa9423e3facfcd8fc72aa749ee5ca563-HZenixEG.png"
+        },
+        {
+          "fixture_file": "bc69ee217f066937bdbe91367995561bb09d66cae336145bbfa720a7c1155da8.png",
+          "url": "/assets/bc69ee217f066937bdbe91367995561bb09d66cae336145bbfa720a7c1155da8-BX8ul8qD.png"
+        },
+        {
+          "fixture_file": "c58838ea35c1f42af754cc4a98194e4704cd7b02f7e12bfa76730fa305370dc0.png",
+          "url": "/assets/c58838ea35c1f42af754cc4a98194e4704cd7b02f7e12bfa76730fa305370dc0-BV_xumbY.png"
+        },
+        {
+          "fixture_file": "c76376976c6d6c1ad9e80045b7b1b0d5b409b6e21b4643ea626b0156a7aba327.png",
+          "url": "/assets/c76376976c6d6c1ad9e80045b7b1b0d5b409b6e21b4643ea626b0156a7aba327-BgV1WdCJ.png"
+        },
+        {
+          "fixture_file": "c95014e56fd3debfb5ce90f4412935898a98bc069385f116e8700d5f4160306d.png",
+          "url": "/assets/c95014e56fd3debfb5ce90f4412935898a98bc069385f116e8700d5f4160306d-hofCWyfL.png"
+        },
+        {
+          "fixture_file": "ca0f7873ea6a57ccd3b50796a2b3f11d529322a555fd9f743f469edc8e372432.png",
+          "url": "/assets/ca0f7873ea6a57ccd3b50796a2b3f11d529322a555fd9f743f469edc8e372432-BLrlrLBl.png"
+        },
+        {
+          "fixture_file": "ce3ca58ecf7eba469d0553d873dc6436cf337bcde75cc0f33c477489629a0d7e.png",
+          "url": "/assets/ce3ca58ecf7eba469d0553d873dc6436cf337bcde75cc0f33c477489629a0d7e-uX8xVvMy.png"
+        },
+        {
+          "fixture_file": "cf510e73e71f0dce73f8826cdb29db5d9eedb80ebd84d4b486b6597a1c86010b.png",
+          "url": "/assets/cf510e73e71f0dce73f8826cdb29db5d9eedb80ebd84d4b486b6597a1c86010b-BxYf46Xq.png"
+        },
+        {
+          "fixture_file": "d28490f83c53e3d96d833c1a3b15dcbee215b52c4da2e36a981ea5dd32e37629.png",
+          "url": "/assets/d28490f83c53e3d96d833c1a3b15dcbee215b52c4da2e36a981ea5dd32e37629-Cst8razy.png"
+        },
+        {
+          "fixture_file": "d2fcba72988e15cfab9d79448fa8f19a1d846ba67d86b4e90d985ba93c77903c.png",
+          "url": "/assets/d2fcba72988e15cfab9d79448fa8f19a1d846ba67d86b4e90d985ba93c77903c-gq8QWQht.png"
+        },
+        {
+          "fixture_file": "dead3c2e163977516c632ad56578da701226e447b1159b6dd342498f4e8ec0df.png",
+          "url": "/assets/dead3c2e163977516c632ad56578da701226e447b1159b6dd342498f4e8ec0df-CESp_UTq.png"
+        },
+        {
+          "fixture_file": "e835ba42f8cdd5d1eb431cfb1ce08eb07345615d8b2d9d1b860788f18a3a95b0.png",
+          "url": "/assets/e835ba42f8cdd5d1eb431cfb1ce08eb07345615d8b2d9d1b860788f18a3a95b0-DZdq8ajR.png"
+        },
+        {
+          "fixture_file": "f6d71570a4ed1f9c9dbd8515c16ebfb005497ecefa27a5a3f940079ca30d7bcb.png",
+          "url": "/assets/f6d71570a4ed1f9c9dbd8515c16ebfb005497ecefa27a5a3f940079ca30d7bcb-Br-JctS7.png"
+        }
+      ],
+      "page": "map",
+      "pixel_verdicts": null,
+      "pixel_verification": "not_taken: asset-loading evidence only, no pixel verdict",
+      "settled": "data-settled=true on [data-testid=map]"
+    },
+    {
+      "all_images_hashed": true,
+      "data_url_images": 0,
+      "dev_server_requests": [],
+      "failed_requests": [],
+      "images": [
+        {
+          "fixture_file": "006581f407ca01ceca8c7e61cf191427675ab7583a32129fcd4192abdb013ba1.png",
+          "url": "/assets/006581f407ca01ceca8c7e61cf191427675ab7583a32129fcd4192abdb013ba1-Dx7aXkdp.png"
+        },
+        {
+          "fixture_file": "09181dcdfe4ce6492f2ebb53a20b1dc0357daf7359500831c45026b5965412b4.png",
+          "url": "/assets/09181dcdfe4ce6492f2ebb53a20b1dc0357daf7359500831c45026b5965412b4-BfQLED-D.png"
+        },
+        {
+          "fixture_file": "0c80d1c4ea6dc7a9777ca2c14c20ebab89a26b560cbe788321aa3429453debbb.png",
+          "url": "/assets/0c80d1c4ea6dc7a9777ca2c14c20ebab89a26b560cbe788321aa3429453debbb-CsDfLeC_.png"
+        },
+        {
+          "fixture_file": "0da4454f35b38437b0e8998ff04ac94a948a4116114c12c3fda47244b611da25.png",
+          "url": "/assets/0da4454f35b38437b0e8998ff04ac94a948a4116114c12c3fda47244b611da25-C8UNHAHO.png"
+        },
+        {
+          "fixture_file": "0ea9acfbdf0374c38c81b742fc2465d6e681541d3bb2f20002cc24d2310afa2e.png",
+          "url": "/assets/0ea9acfbdf0374c38c81b742fc2465d6e681541d3bb2f20002cc24d2310afa2e-C1IZYGju.png"
+        },
+        {
+          "fixture_file": "0fec082f516cc6ee0780dcd9d65455228168ec5ba52687cfb99b202b12cc077e.png",
+          "url": "/assets/0fec082f516cc6ee0780dcd9d65455228168ec5ba52687cfb99b202b12cc077e-D1CNv8J1.png"
+        },
+        {
+          "fixture_file": "20ceccf263c445925c7ed8ec3dda473c1f3258958524894163e51ebb84117673.png",
+          "url": "/assets/20ceccf263c445925c7ed8ec3dda473c1f3258958524894163e51ebb84117673-BpmuUyo3.png"
+        },
+        {
+          "fixture_file": "27e5c7d19029c3135855b848a3d970ba06062d1e3b15b4bfefe598bf25fc08ea.png",
+          "url": "/assets/27e5c7d19029c3135855b848a3d970ba06062d1e3b15b4bfefe598bf25fc08ea-BhxP73Mr.png"
+        },
+        {
+          "fixture_file": "2a7eba2071c927815a54a40c311559c1645d1f0a8223204b82b85090101c68b4.png",
+          "url": "/assets/2a7eba2071c927815a54a40c311559c1645d1f0a8223204b82b85090101c68b4-dALBEbTz.png"
+        },
+        {
+          "fixture_file": "38174241225525b4e69698b82ddc13e85ad10eced3a5aac1bef809607ad226b9.png",
+          "url": "/assets/38174241225525b4e69698b82ddc13e85ad10eced3a5aac1bef809607ad226b9-hwj9YOHD.png"
+        },
+        {
+          "fixture_file": "47bd11b56dbc055d42f474616fc2a693138539cf298c7cf0ef74b9ffa1a6270a.png",
+          "url": "/assets/47bd11b56dbc055d42f474616fc2a693138539cf298c7cf0ef74b9ffa1a6270a-CXPFTtsR.png"
+        },
+        {
+          "fixture_file": "549e6624c5d91a7b45ecad6ffacc17099671ba9105b60527913d7692dae36909.png",
+          "url": "/assets/549e6624c5d91a7b45ecad6ffacc17099671ba9105b60527913d7692dae36909-Z9cInISM.png"
+        },
+        {
+          "fixture_file": "569ba7004064ee83b51f9c8c13c2624e1c8e4bcf0ad76936e740a4b8fa031654.png",
+          "url": "/assets/569ba7004064ee83b51f9c8c13c2624e1c8e4bcf0ad76936e740a4b8fa031654-CQDPXyoq.png"
+        },
+        {
+          "fixture_file": "58fa4fd94de562808f218ca85f794780a3886f19ca9bc466f168dcdc5d994ec7.png",
+          "url": "/assets/58fa4fd94de562808f218ca85f794780a3886f19ca9bc466f168dcdc5d994ec7-BTrk5vOx.png"
+        },
+        {
+          "fixture_file": "5eada4875a37447beb315bbbb198559b73183a7d9f0c1c1f8ce9c66ceecca931.png",
+          "url": "/assets/5eada4875a37447beb315bbbb198559b73183a7d9f0c1c1f8ce9c66ceecca931-B6Qn4oAK.png"
+        },
+        {
+          "fixture_file": "5f99881c991c7f215b06a65f28fa9f2baa5bd0370c1ad9cf3d8c2495b129eb80.png",
+          "url": "/assets/5f99881c991c7f215b06a65f28fa9f2baa5bd0370c1ad9cf3d8c2495b129eb80-CfvlB1Hu.png"
+        },
+        {
+          "fixture_file": "64c747924e7f3f32124ae15c59e3143d8b4aec634512ba27070a805e802a0157.png",
+          "url": "/assets/64c747924e7f3f32124ae15c59e3143d8b4aec634512ba27070a805e802a0157-GvFF_-qL.png"
+        },
+        {
+          "fixture_file": "6644ca71bba5d4534f226a661b9cb9c083b5710f6a501f3107cf388fc6e19737.png",
+          "url": "/assets/6644ca71bba5d4534f226a661b9cb9c083b5710f6a501f3107cf388fc6e19737-DR0aTUjy.png"
+        },
+        {
+          "fixture_file": "6d267907d35056fde05fcf0af6c45718e286242fd016a85bde13a5ff7d7da919.png",
+          "url": "/assets/6d267907d35056fde05fcf0af6c45718e286242fd016a85bde13a5ff7d7da919-BN_8IwKX.png"
+        },
+        {
+          "fixture_file": "723ab911963b87bbe8b948133e6e50091cebb34ae5f4f4a138467e372d89dcea.png",
+          "url": "/assets/723ab911963b87bbe8b948133e6e50091cebb34ae5f4f4a138467e372d89dcea-BriYhmX5.png"
+        },
+        {
+          "fixture_file": "73dae786c3360ccd246d1d0196328ff54d687f533315e60f18bb3891bc8b3123.png",
+          "url": "/assets/73dae786c3360ccd246d1d0196328ff54d687f533315e60f18bb3891bc8b3123-DEJkkkpz.png"
+        },
+        {
+          "fixture_file": "7708aef3cd851f0c16ca6388d84e6733166a37953f9dc94bf740e54235290afd.png",
+          "url": "/assets/7708aef3cd851f0c16ca6388d84e6733166a37953f9dc94bf740e54235290afd-Bee9oQLE.png"
+        },
+        {
+          "fixture_file": "796e25a2b7fad8daefc5ddb58f5245f5ab5b48f01c2fffd4ab904733b0a3716f.png",
+          "url": "/assets/796e25a2b7fad8daefc5ddb58f5245f5ab5b48f01c2fffd4ab904733b0a3716f-DtCceC1y.png"
+        },
+        {
+          "fixture_file": "7d35d45c2f2f808f91bc55e35cb7d4b9effeba8457ba9f741461c2f0b782c124.png",
+          "url": "/assets/7d35d45c2f2f808f91bc55e35cb7d4b9effeba8457ba9f741461c2f0b782c124-B0nH07iw.png"
+        },
+        {
+          "fixture_file": "8aec7e8d741a1cc4bd70471078cb7b434ef8d78fff9118ee5afcf649e0c21e98.png",
+          "url": "/assets/8aec7e8d741a1cc4bd70471078cb7b434ef8d78fff9118ee5afcf649e0c21e98-T_8cmBg_.png"
+        },
+        {
+          "fixture_file": "8be231b79b7845b5c99d4588ea305a53efb57e7e7ad1eb6cff0e0086bae6a013.png",
+          "url": "/assets/8be231b79b7845b5c99d4588ea305a53efb57e7e7ad1eb6cff0e0086bae6a013-xlz7Bt6j.png"
+        },
+        {
+          "fixture_file": "90b29d17613ea8dce0680ded9ffe3f78c1c027f3ef5079e648a608bb206a2459.png",
+          "url": "/assets/90b29d17613ea8dce0680ded9ffe3f78c1c027f3ef5079e648a608bb206a2459-CszUlntJ.png"
+        },
+        {
+          "fixture_file": "95874cd75a57dfe1704a0827e048dc55271d9ddcd4d8eee7112d06b160484e4f.png",
+          "url": "/assets/95874cd75a57dfe1704a0827e048dc55271d9ddcd4d8eee7112d06b160484e4f-BcbMm-NE.png"
+        },
+        {
+          "fixture_file": "9666ac778a46b4258164b61f63a2d65de3bc002f65d183dbe9746000299cf48f.png",
+          "url": "/assets/9666ac778a46b4258164b61f63a2d65de3bc002f65d183dbe9746000299cf48f-B5tpdtmR.png"
+        },
+        {
+          "fixture_file": "a2a7ecdacc7fcf7a8ab3f2c237bbe8e822f49d5b0b743306ad6eb1182c9cf4ef.png",
+          "url": "/assets/a2a7ecdacc7fcf7a8ab3f2c237bbe8e822f49d5b0b743306ad6eb1182c9cf4ef-DZEemvfr.png"
+        },
+        {
+          "fixture_file": "a54e14520c284d113c982cf8b468fbc4df7b6a7dde56f652bc2a1bff07720db3.png",
+          "url": "/assets/a54e14520c284d113c982cf8b468fbc4df7b6a7dde56f652bc2a1bff07720db3-oW3JVGl2.png"
+        },
+        {
+          "fixture_file": "a7ebdd7e925b23fe10ad93b340afd96a1c21113a346a2d87404d8742f9b1ebbb.png",
+          "url": "/assets/a7ebdd7e925b23fe10ad93b340afd96a1c21113a346a2d87404d8742f9b1ebbb-GbsaZyy8.png"
+        },
+        {
+          "fixture_file": "a9bb949251c90cafb35a7875181b8568f2b42ea6d95bb50239b353d4d3562035.png",
+          "url": "/assets/a9bb949251c90cafb35a7875181b8568f2b42ea6d95bb50239b353d4d3562035-7h0GOyTC.png"
+        },
+        {
+          "fixture_file": "ad9142c7e0db2beb146e8df867a47277e5dc290e75f5622eefc09272804a530f.png",
+          "url": "/assets/ad9142c7e0db2beb146e8df867a47277e5dc290e75f5622eefc09272804a530f-BM4ZKUfu.png"
+        },
+        {
+          "fixture_file": "ae2194045076a363ae3c15ef8f02a6c810e13f754ce2d7d0211a2aaeb4d92f9e.png",
+          "url": "/assets/ae2194045076a363ae3c15ef8f02a6c810e13f754ce2d7d0211a2aaeb4d92f9e-BiX36yO0.png"
+        },
+        {
+          "fixture_file": "b5a0acc3d1b47a88b10b78f71f1f960c14ddce15f4a82c3101a0f23169f097e1.png",
+          "url": "/assets/b5a0acc3d1b47a88b10b78f71f1f960c14ddce15f4a82c3101a0f23169f097e1-DpyrW1tt.png"
+        },
+        {
+          "fixture_file": "b5b2290346dabf2ac171a5f2cec7f3dff0b169788b969a73b822e2a642c62889.png",
+          "url": "/assets/b5b2290346dabf2ac171a5f2cec7f3dff0b169788b969a73b822e2a642c62889-BLdODFh8.png"
+        },
+        {
+          "fixture_file": "b5f5c9cc4ddc6bf5e775358e81ddf4f934e84f9d4dbed8c957f95f5a3e1d80dd.png",
+          "url": "/assets/b5f5c9cc4ddc6bf5e775358e81ddf4f934e84f9d4dbed8c957f95f5a3e1d80dd-C9HD-i9a.png"
+        },
+        {
+          "fixture_file": "b79b591cf5085f1f00e45fcc7accde6451b073b9c6024abc65b41a7a4f510010.png",
+          "url": "/assets/b79b591cf5085f1f00e45fcc7accde6451b073b9c6024abc65b41a7a4f510010-D2Lr2ktG.png"
+        },
+        {
+          "fixture_file": "bf8dd99bdefb78cbe27eeba1157ebfe5f7d0f976298b5a2421a8ad5c392e2e95.png",
+          "url": "/assets/bf8dd99bdefb78cbe27eeba1157ebfe5f7d0f976298b5a2421a8ad5c392e2e95-5UWW4jbp.png"
+        },
+        {
+          "fixture_file": "c3fe4b75d882d0e4c6ce7b25c60196ab8e79af4538ca0fd690ff7c052bcb5d5e.png",
+          "url": "/assets/c3fe4b75d882d0e4c6ce7b25c60196ab8e79af4538ca0fd690ff7c052bcb5d5e-BXthPHzt.png"
+        },
+        {
+          "fixture_file": "c4ecec7215d55caebfbe4752e131d6302ebb8dd57bbac900ccf75854cc4ba3a3.png",
+          "url": "/assets/c4ecec7215d55caebfbe4752e131d6302ebb8dd57bbac900ccf75854cc4ba3a3-B7RhJ03v.png"
+        },
+        {
+          "fixture_file": "c6dbc01268583c7a3b9f8d2682a64d9b5e0bc6ee11030e1b65492c10c63e41e7.png",
+          "url": "/assets/c6dbc01268583c7a3b9f8d2682a64d9b5e0bc6ee11030e1b65492c10c63e41e7-BOn8eevL.png"
+        },
+        {
+          "fixture_file": "c76376976c6d6c1ad9e80045b7b1b0d5b409b6e21b4643ea626b0156a7aba327.png",
+          "url": "/assets/c76376976c6d6c1ad9e80045b7b1b0d5b409b6e21b4643ea626b0156a7aba327-BgV1WdCJ.png"
+        },
+        {
+          "fixture_file": "ca0f7873ea6a57ccd3b50796a2b3f11d529322a555fd9f743f469edc8e372432.png",
+          "url": "/assets/ca0f7873ea6a57ccd3b50796a2b3f11d529322a555fd9f743f469edc8e372432-BLrlrLBl.png"
+        },
+        {
+          "fixture_file": "cb29bbd4e1ec893d44c9d4afebcc6def497d5852e80b2aba739317ad8f15b47a.png",
+          "url": "/assets/cb29bbd4e1ec893d44c9d4afebcc6def497d5852e80b2aba739317ad8f15b47a-nMbpRGi5.png"
+        },
+        {
+          "fixture_file": "ce4fcff99033ebcd348c1e4c962a4c0e8398169c613bd3bde3ac192f269a4e0d.png",
+          "url": "/assets/ce4fcff99033ebcd348c1e4c962a4c0e8398169c613bd3bde3ac192f269a4e0d-DLv22zvb.png"
+        },
+        {
+          "fixture_file": "cf510e73e71f0dce73f8826cdb29db5d9eedb80ebd84d4b486b6597a1c86010b.png",
+          "url": "/assets/cf510e73e71f0dce73f8826cdb29db5d9eedb80ebd84d4b486b6597a1c86010b-BxYf46Xq.png"
+        },
+        {
+          "fixture_file": "d0b950c8b0e22e1a178e45a45df4ed3470f12303805b6a2157ec72adad62e569.png",
+          "url": "/assets/d0b950c8b0e22e1a178e45a45df4ed3470f12303805b6a2157ec72adad62e569-C9BoSEdZ.png"
+        },
+        {
+          "fixture_file": "e496c122894403b96035edcd639e923fa609dfab600f5b4ef9a816efddfebd5d.png",
+          "url": "/assets/e496c122894403b96035edcd639e923fa609dfab600f5b4ef9a816efddfebd5d-DcQvFXwf.png"
+        },
+        {
+          "fixture_file": "e986598cc1ec1842f34715406f97c01db966f93cf6b6e3771a31610654492a71.png",
+          "url": "/assets/e986598cc1ec1842f34715406f97c01db966f93cf6b6e3771a31610654492a71-C2aP96_g.png"
+        },
+        {
+          "fixture_file": "eba4d8b01c8ae9a50efdacf51630ed5e467ccc7166bed18a5fb200754259605d.png",
+          "url": "/assets/eba4d8b01c8ae9a50efdacf51630ed5e467ccc7166bed18a5fb200754259605d-RIwwT3Lx.png"
+        },
+        {
+          "fixture_file": "efa387b8aaf000e60f31d722424714bf43f3bc5abc487bca7adec559d5e7bd18.png",
+          "url": "/assets/efa387b8aaf000e60f31d722424714bf43f3bc5abc487bca7adec559d5e7bd18-DxKZ81iG.png"
+        }
+      ],
+      "page": "icons",
+      "pixel_verdicts": null,
+      "pixel_verification": "not_taken: asset-loading evidence only, no pixel verdict",
+      "settled": "network idle and an image is visible (this page has no data-settled marker)"
+    },
+    {
+      "all_images_hashed": true,
+      "data_url_images": 0,
+      "dev_server_requests": [],
+      "failed_requests": [],
+      "images": [
+        {
+          "fixture_file": "041206951bbf6d72ec4b05ae07b9f9719186f6d0e425e43e6e1a6c5cf0d66509.png",
+          "url": "/assets/041206951bbf6d72ec4b05ae07b9f9719186f6d0e425e43e6e1a6c5cf0d66509-B7IfMixK.png"
+        },
+        {
+          "fixture_file": "6947c1da2962aff8ca94ed7c5d67f8aca6ee78df03bf314e1f8b0815f2c673bf.png",
+          "url": "/assets/6947c1da2962aff8ca94ed7c5d67f8aca6ee78df03bf314e1f8b0815f2c673bf-CR1GMP47.png"
+        },
+        {
+          "fixture_file": "9499f020e877928c54e3ff294dfb00f054cde93990e19ef3cbfe0324f27ff9a5.png",
+          "url": "/assets/9499f020e877928c54e3ff294dfb00f054cde93990e19ef3cbfe0324f27ff9a5-DmZx9H93.png"
+        },
+        {
+          "fixture_file": "b07660a9badc9401768b0cbb16d367f821606f727c39d528c6f7c1354a944790.png",
+          "url": "/assets/b07660a9badc9401768b0cbb16d367f821606f727c39d528c6f7c1354a944790-DxTogv6L.png"
+        },
+        {
+          "fixture_file": "daf40b42a0202988d41352dfd7c2d7bd50982af61ca7c9f121c8a2a65c20eb63.png",
+          "url": "/assets/daf40b42a0202988d41352dfd7c2d7bd50982af61ca7c9f121c8a2a65c20eb63-B3xA7SEk.png"
+        },
+        {
+          "fixture_file": "e6248f8c0d3868beae10a393dfe844f9761fcbff9c669e6ca23908ee961f2cee.png",
+          "url": "/assets/e6248f8c0d3868beae10a393dfe844f9761fcbff9c669e6ca23908ee961f2cee-CPuONl3T.png"
+        },
+        {
+          "fixture_file": "f060fac09bc6d72bc45cf9580296d4969902e76f6d0fb734c25ba5ca08b5c049.png",
+          "url": "/assets/f060fac09bc6d72bc45cf9580296d4969902e76f6d0fb734c25ba5ca08b5c049-C3d6c6WA.png"
+        }
+      ],
+      "page": "draft",
+      "pixel_verdicts": null,
+      "pixel_verification": "not_taken: asset-loading evidence only, no pixel verdict",
+      "settled": "data-settled=true on [data-testid=draft-page]"
+    }
+  ],
+  "planted": {
+    "capture_failed": true,
+    "changed_fixture_file": "daa89f2fe8011349c1da726535bdfecd66e1fff0170fe5f172fc12367d970533.png",
+    "failing_verdicts": [
+      "fixture.rehearsal.gem"
+    ],
+    "unchanged_verdicts_identical": 2,
+    "what_changed": "the red byte of one pixel (the first opaque one) in one hashed fixture PNG of a copy of the built bundle"
+  },
+  "record_type": "surface_rehearsal_bundle_evidence",
+  "run_at_utc": "2026-10-10T08:48:29Z",
+  "run_commit": "507bb49791727bff2b7977994227284d55d8f9a8",
+  "schema_version": 1,
+  "vite_version": "vite/7.3.1 linux-x64 node-v20.19.4"
+}

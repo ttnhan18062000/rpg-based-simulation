@@ -12,9 +12,9 @@ tags: [architecture, testing, hud]
 Written and committed by `TCK-20261006-VISUAL-ASSETS-ICON-PALETTE-AND-SHEET-RULE` **before any icon art exists**, so no threshold can be tuned to a drawing. The decision is ADR D20
 (`docs/architecture/visual_asset_foundation_adr.md`): palette = `terrain-v1` colours + 3-4 step ramps + a small accent set, checked sheet-wide. `lint_sprite`'s `value_separation` only compares
 neighbouring pixels inside one sprite; nothing else checks that two tiers, or a buff and a debuff frame, differ by more than hue. This page fixes the rule that does. It is the icon analogue of
-`AM5-S` (`docs/assets/pilot_terrain_m5_criteria.md`) and reuses its Machado simulation, Lab and CIE76 code (`tests/visual_assets/pilot_colour_vision.py`).
+`AM5-S` (`docs/assets/pilot_terrain_m5_criteria.md`) and reuses its Machado simulation, Lab and CIE76 code (`visual_assets/review/pilot_colour_vision.py`).
 
-Code: `tests/visual_assets/icon_sheet_rule.py` (the rule), `icon_palette.py` (the palette's derivation), `icon_sheet_synthetic.py` (mock-ups and the baseline measurement),
+Code: `visual_assets/review/icon_sheet_rule.py` (the rule), `icon_palette.py` (the palette's derivation), `icon_sheet_synthetic.py` (mock-ups and the baseline measurement),
 `test_icon_sheet_rule.py` (tests on planted input). Palette file: `visual_assets/palettes/icons-v1.json`. None of this decides a verdict on art; the verdict on `icons-key-v1` is recorded by
 the draft-set ticket when the art exists.
 
@@ -66,7 +66,7 @@ and the dark outline belongs to the glyph and the badges drawn on the plate. The
 
 ## The palette `icons-v1`
 
-`visual_assets/palettes/icons-v1.json` is exactly the output of `tests/visual_assets/icon_palette.py::build_palette` (a test asserts it), 52 colours, a list of `#rrggbb` that `remap_palette` takes directly,
+`visual_assets/palettes/icons-v1.json` is exactly the output of `visual_assets/review/icon_palette.py::build_palette` (a test asserts it), 52 colours, a list of `#rrggbb` that `remap_palette` takes directly,
 with an `entries` list recording where each colour comes from:
 
 1. **Terrain base, 23 colours:** the Live Map fill of each `terrain-v1` key. Each is checked against its adopted tile: the 256-pixel mean is within 2.5 units per channel of the fill. The 22 re-tinted drafts are within 1.0;
@@ -91,7 +91,7 @@ Written and committed by `TCK-20261007-VISUAL-ASSETS-ICON-V2-SHEET-RULE-GROUPS` 
 
 So **24x24 now has an I1 threshold of 8 px** (a size with no threshold still raises an error instead of passing: the code has `shape_min = {8: 3, 16: 6, 24: 8}`), and the four subject groups are checked by I1 alone.
 
-**The v2 must-differ groups** (`tests/visual_assets/icon_v2_groups.py`; a group is a list of classes, every pair from different classes must differ):
+**The v2 must-differ groups** (`visual_assets/review/icon_v2_groups.py`; a group is a list of classes, every pair from different classes must differ):
 
 | Group | Members | Size | Rules |
 |---|---|---|---|

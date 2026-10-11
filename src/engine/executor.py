@@ -123,7 +123,7 @@ class LocalSequentialExecutor:
         profile: RuntimeProfile,
     ) -> List[WorkerResult]:
         from src.engine.domain_logic import SimulationDomainLogic
-        from src.core.updates import TaskUpdate, EntityUpdate, EMPTY_ENTITY_UPDATE
+        from src.core.updates import TaskUpdate, EMPTY_ENTITY_UPDATE
         from src.core.concurrency_law import ConcurrencyLaw
 
         # Critical isolation boundary:
@@ -198,30 +198,6 @@ class LocalSequentialExecutor:
                         )
                     )
 
-            # 2. SYSTEM DEFERRED WORK
-            elif item.work_kind == "DRAIN_DEBT" and isinstance(item.owner_id, str):
-                from src.engine.domain_logic import SimulationDomainLogic
-                from src.core.updates import EntityUpdate
-                from src.core.concurrency_law import ConcurrencyLaw
-
-                drain = SimulationDomainLogic.drain_debt(item.owner_id, profile)
-
-                results.append(
-                    WorkerResult(
-                        source_packet_id=f"local:{readonly_state.tick}:{i}",
-                        work_id=item.work_id,
-                        entity_id=0,
-                        work_class=item.work_class,
-                        update=EntityUpdate(entity_id=0),
-                        work_debt_update=drain,
-                        subsystem_id=item.owner_id,
-                        class_priority=ConcurrencyLaw.get_class_priority(
-                            item.work_class
-                        ),
-                        local_priority=item.priority,
-                    )
-                )
-
         return results
 
     def set_concurrency_limit(self, limit: float) -> None:
@@ -251,7 +227,7 @@ class ConcurrentExecutionAdapter:
         from src.engine.worker_logic import default_simulation_worker
         from src.core.protocol_validator import ProtocolValidator
         from src.core.concurrency_law import ConcurrencyLaw
-        from src.core.updates import EntityUpdate, EMPTY_ENTITY_UPDATE
+        from src.core.updates import EMPTY_ENTITY_UPDATE
         from src.core.immutability import deep_freeze
         from dataclasses import replace
 
@@ -343,25 +319,6 @@ class ConcurrentExecutionAdapter:
                     )
                     packets.append(packet)
                     source_meta[packet_id] = (item, packet)
-
-            # 2. SYSTEM DEFERRED WORK (Milestone C: De-simulation)
-            elif item.work_kind == "DRAIN_DEBT" and isinstance(item.owner_id, str):
-                from src.engine.domain_logic import SimulationDomainLogic
-                from src.core.concurrency_law import ConcurrencyLaw
-                from src.core.updates import EntityUpdate
-                
-                drain = SimulationDomainLogic.drain_debt(item.owner_id, profile)
-                final_results.append(WorkerResult(
-                    source_packet_id=f"local:{state.tick}:{i}",
-                    work_id=item.work_id,
-                    entity_id=0,
-                    work_class=item.work_class,
-                    update=EntityUpdate(entity_id=0),
-                    work_debt_update=drain,
-                    subsystem_id=item.owner_id,
-                    class_priority=ConcurrencyLaw.get_class_priority(item.work_class),
-                    local_priority=item.priority
-                ))
 
         ProtocolValidator.validate_packet_batch(packets)
         

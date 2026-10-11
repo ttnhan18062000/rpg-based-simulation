@@ -99,7 +99,7 @@
   combat_profile: "basic_melee"
   cognition_profile: "practical_humanoid"
   drive_profile: "cautious_commoner"
-  inventory_profile: "hero_pocket"
+  inventory_profile: "laborer_empty"
   skill_profile: "blacksmith_skills"
   traits: ["humanoid", "tool_user", "social_humanoid"]
   themes: ["village", "frontier"]

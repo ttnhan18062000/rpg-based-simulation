@@ -1,7 +1,7 @@
 # Construction specs of every icon (TCK-20261008-VISUAL-ASSETS-ICON-RECOGNISABILITY-CHECKS), written 2026-10-08 BEFORE any redraw.
 # One entry per registered icon key. `status: v2` entries are targets for the drawing (the 4c redraw works to them); `status: adopted` entries DESCRIBE the adopted art as it is.
 # `synonyms` are what counts as naming the object in the blind recognition check (case-insensitive substring of the free-text answer); `distractors` join the intended name in the candidate list.
-# The human-readable table in docs/assets/icon_style_guide.md is generated from this file (python -m tests.visual_assets.icon_specs --table); a test fails if they differ.
+# The human-readable table in docs/assets/icon_style_guide.md is generated from this file (python -m visual_assets.review.icon_specs --table); a test fails if they differ.
 # Reference studies: Kenney Tiny Dungeon (CC0, "Kenney", https://kenney.nl/assets/tiny-dungeon) and Kenney 1-Bit Pack (CC0, https://kenney.nl/assets/1-bit-pack), looked at only, nothing traced or copied.
 families:
   marker: {size: 16, convention: "16x16 glyph, live area 12x12 (2 px margin), dark outline #0e1018, drawn over the plate; one object, upright and centred, no scene"}

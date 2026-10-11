@@ -57,6 +57,15 @@ def compile_world(world_id: str, seed: int = DEFAULT_SEED, worlds_dir: str = os.
     return state
 
 
+def empty_inventories(state: AuthoritativeState) -> AuthoritativeState:
+    """The state with every entity's inventory emptied. Declared inventory profiles are applied at compile (EXCH-02), so a scenario about
+    movement or combat judgement that must not depend on what a body carries (a leader's hoard changes its judgement) stages this explicitly."""
+    from dataclasses import replace
+
+    from src.core.state import InventoryComponent
+    return replace(state, entities={i: replace(e, inventory=InventoryComponent()) for i, e in state.entities.items()})
+
+
 def run_scenario(
     state: AuthoritativeState,
     *,

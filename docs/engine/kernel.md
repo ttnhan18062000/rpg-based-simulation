@@ -200,7 +200,7 @@ The **lightweight fingerprint** (`StateFingerprinter.get_fingerprint()`) is an M
 the most gameplay-visible state (entities, strategic state, resources, regions, groups).
 It is emitted in `REFINED_UPDATE` events in all replay-enabled modes (NORMAL, CONSTRAINED,
 DEGRADED). It is NOT a complete determinism proof — buildings, corpses, ground items,
-chests, home storage, camps, tile indices, work debt, and the RNG checkpoint are excluded.
+chests, home storage, camps, tile indices, and the RNG checkpoint are excluded.
 
 **Shutdown always emits the final canonical hash** regardless of runtime mode.
 

@@ -1,13 +1,14 @@
 {
-  "manifest_id": "prov_956c0c4511a2060e",
+  "manifest_id": "prov_1285ea76f086721d",
   "world_id": "simq_scale_stress_seed42",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
+  "catalog_fingerprint": "cf283514caed0a1d59ac9a263f89149a33ba028a730d6172ddb64542cb49ac9a",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
+    "goblin_camp_forage": "79af965c2ca3a71404f844c2f02753c21149e5cff4e6f21707e6223e1dac63cb",
     "moon_cult_ruins": "221540c964e3501b5484973b794233e06a5a3217fd9f6398a34c85b9ab9c11ac",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
@@ -17,10 +18,10 @@
     "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584",
     "forest_warden_grove": "c41ff99559a8e7f6603051db5d5fff790fd4cbf4b35a3d50a5ff48eccc33c6ea"
   },
-  "composition_fingerprint": "f3b449529b6fd62f108ceb47c6ca3a49e17f086d7b70f92e43fd0ec4a4ad39f9",
+  "composition_fingerprint": "dd358694e8bb6cf9ed8dea16947a1e8d4f83ea1e645fd7ab37242b41e27bd9a7",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "956c0c4511a2060e332ce143252929b0e3ea2d55a3de25f7b9698d215859e4cf",
-  "created_at": "2026-10-08T11:03:26.350009Z",
+  "content_fingerprint": "1285ea76f086721d4e436ef72a60c25a757219ae06eddf456c6d82fd46042435",
+  "created_at": "2026-10-09T17:40:25.570285Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -264,7 +265,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",
@@ -895,6 +896,41 @@
           "defense"
         ],
         "reward_budget": 120
+      }
+    },
+    "goblin_camp_edge": {
+      "element_id": "goblin_camp_edge",
+      "element_type": "region",
+      "source_module": "goblin_camp_forage",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "goblin_camp"
+      },
+      "details": {
+        "bounds": [
+          106,
+          34,
+          114,
+          42
+        ],
+        "terrain": "forest",
+        "hazard_level": 3.0,
+        "ecology_source": []
+      }
+    },
+    "goblin_camp_forage__berry_thicket_0": {
+      "element_id": "goblin_camp_forage__berry_thicket_0",
+      "element_type": "resource",
+      "source_module": "goblin_camp_forage",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
+        "region": "goblin_camp_edge"
       }
     },
     "moon_cave": {

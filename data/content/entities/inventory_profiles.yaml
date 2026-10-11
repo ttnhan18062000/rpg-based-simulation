@@ -5,6 +5,13 @@
   starting_gold: 100.0
 
 # STATE: REDESIGNED-CORE
+# EXCH-02 (owner decisions 34 and 37, "no starting purse standing in for earning"): a village labourer lives wage to wage and starts with no coin and
+# no goods of his own in the catalog; he was wrongly given `hero_pocket` (a hero's 100 gold and a potion).
+- id: "laborer_empty"
+  starting_items: {}
+  starting_gold: 0.0
+
+# STATE: REDESIGNED-CORE
 - id: "empty_animal_inventory"
   starting_items: {}
   starting_gold: 0.0

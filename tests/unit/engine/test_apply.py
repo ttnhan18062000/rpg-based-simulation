@@ -53,7 +53,7 @@ def test_passive_branch_records_hp_death_cause_but_never_deactivates():
         .kind("HERO")
         .location(0.0, 0.0)
         .biological(hunger=95.0, sleep_debt=98.0)
-        .combat(hp=1)
+        .combat(hp=1, max_hp=6000)  # a 6000-HP body loses 1 HP every life-due tick at the starving line (decision 36), so the staging reaches 0
         .lifecycle(active=True, age_ticks=0, max_age_ticks=100_000)
         .build()
     )

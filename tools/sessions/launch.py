@@ -36,11 +36,12 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+from tools.graphify_link import link_shared_graph  # noqa: E402
 from tools.handover_home import handover_base  # noqa: E402
 
 from tools.sessions import state as st  # noqa: E402
 from tools.sessions.resolve import instance_ids  # noqa: E402
-from tools.sessions.roster import Role, Roster, load_roster  # noqa: E402
+from tools.sessions.roster import Role, Roster, handover_rel, load_roster  # noqa: E402
 from tools.sessions import settings_freshness as sf  # noqa: E402
 
 EXIT_USAGE, EXIT_REFUSED, EXIT_NEEDS_CHOICE = 2, 4, 3
@@ -363,7 +364,7 @@ def plan_launch(target: Target, root: Path, state_root: Path, worktree: Path, pd
                 session_id: str | None, interactive: bool, resume_flag: bool, input_fn=input) -> tuple[int, list[str], str | None]:
     """Decide what to do. Returns (exit code, lines to print, session id to resume or None). Exit 0 = go."""
     instance = st.read_instance(state_root, target.instance)
-    handover = handover_base(root) / target.role.handover
+    handover = handover_base(root) / handover_rel(target.role, target.instance)
     if instance is None or st.liveness(instance) == st.RELEASED:
         stub = [] if handover.is_file() else ["no handover note yet: a stub will be created"]
         return 0, stub, None
@@ -462,15 +463,16 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         print(line)
     cmd, env = build_command(target, sid)
     if a.dry_run:
-        note = handover_base(root) / role.handover
-        print(f"handover note: {note if note.is_file() else 'none'} (read from the main checkout, not the role's worktree)")
+        note = handover_base(root) / handover_rel(role, target.instance)
+        print(f"handover note: {note}{'' if note.is_file() else ' (none yet: a stub is created at launch)'} (read from the main checkout, not the role's worktree)")
         print("DRY RUN: " + " ".join(f"{k}={shlex.quote(v)}" for k, v in env.items()) + " " + " ".join(shlex.quote(c) for c in cmd)
               + f"   (cwd {wt})")
         return 0
-    handover = handover_base(root) / role.handover
+    handover = handover_base(root) / handover_rel(role, target.instance)
     if not handover.is_file():
         handover.parent.mkdir(parents=True, exist_ok=True)
         handover.write_text(HANDOVER_STUB.format(role=target.instance, date=time.strftime("%Y-%m-%d")), encoding="utf-8")
+    link_shared_graph(wt)  # graphify-out -> the main checkout's graph; a no-op when it has its own or is the main checkout
     os.chdir(wt)
     os.execvpe(cmd[0], cmd, {**os.environ, **env})
     return 0  # pragma: no cover

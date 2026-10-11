@@ -134,9 +134,8 @@ class PhaseBudgetGovernor:
                 strat_b = min(strat_b, 20)
                 sweep_int = max(sweep_int, 4)
 
-        # 3. Overall Tick Budget or Work Debt Pressure
-        max_debt = profile.max_work_debt if profile else 0
-        if (max_tick_ms > 0 and signals.effective_tick_cost > max_tick_ms * 0.8) or (max_debt > 0 and signals.work_debt_total > max_debt * 0.7):
+        # 3. Overall Tick Budget Pressure
+        if max_tick_ms > 0 and signals.effective_tick_cost > max_tick_ms * 0.8:
             if not opt_profile or opt_profile.compaction_level != "NONE":
                 comp_lvl = "AGGRESSIVE"
 

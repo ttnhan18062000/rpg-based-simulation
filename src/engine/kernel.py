@@ -608,7 +608,6 @@ class Kernel:
         
         self._final_results.sort(key=lambda r: (r.class_priority, -r.local_priority, r.entity_id))
         
-        work_debt_updates: Dict[str, int] = {}
         entity_updates: Dict[int, EntityUpdate] = {}
         overrun_reported = False
         for i, res in enumerate(self._final_results):
@@ -619,10 +618,6 @@ class Kernel:
                     # so what a run computes does not depend on how fast the host is.
                     overrun_reported = True
                     self._report_budget_overrun(elapsed, self._profile.max_tick_budget_ms, "mid_tick", self._state.tick)
-
-            if res.work_debt_update is not None and res.subsystem_id:
-                work_debt_updates[res.subsystem_id] = res.work_debt_update
-                continue
 
             if res.entity_id in entity_updates:
                 raise ProtocolViolationError(f"Duplicate authoritative result for entity {res.entity_id}")
@@ -639,7 +634,6 @@ class Kernel:
         # TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING).
         raw_update = StateUpdate(
             entity_updates=entity_updates,
-            work_debt_updates=work_debt_updates,
             current_mode_set=self._current_policy.mode,
             current_policy_set=self._current_policy
         )

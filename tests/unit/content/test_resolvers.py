@@ -274,7 +274,7 @@ class TestLivingDefaultsResolver:
     def test_resolve_human_natural_traits(self, living: LivingDefaultsResolver):
         result = living.resolve_living_defaults("human")
         assert isinstance(result.natural_traits, list)
-        assert len(result.natural_traits) == 3  # humanoid, tool_user, social_humanoid
+        assert len(result.natural_traits) == 4  # humanoid, tool_user, social_humanoid, keeps_coin_and_trades (owner decision 43)
         assert all(isinstance(t, TraitDefinition) for t in result.natural_traits)
         trait_ids = [t.id for t in result.natural_traits]
         assert "humanoid" in trait_ids
@@ -284,7 +284,7 @@ class TestLivingDefaultsResolver:
         """Natural traits must be returned in the same order as declared in the species definition."""
         result = living.resolve_living_defaults("human")
         trait_ids = [t.id for t in result.natural_traits]
-        assert trait_ids == ["humanoid", "tool_user", "social_humanoid"]
+        assert trait_ids == ["humanoid", "tool_user", "social_humanoid", "keeps_coin_and_trades"]
 
     def test_resolve_human_attribute_tendencies_dict(self, living: LivingDefaultsResolver):
         result = living.resolve_living_defaults("human")

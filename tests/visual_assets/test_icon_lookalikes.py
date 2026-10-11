@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from tests.visual_assets import icon_lookalikes as la
-from tests.visual_assets import icon_sheet_rule as rule
+from visual_assets.review import icon_lookalikes as la
+from visual_assets.review import icon_sheet_rule as rule
 
 INK = {"#": "#102030"}
 

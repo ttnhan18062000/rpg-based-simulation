@@ -42,9 +42,14 @@ def _food_nodes(state):
     return [n for n in state.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0]
 
 
+def _forest_food_nodes(state):
+    """The wild-land nodes; the berries at the edge of a goblin camp (D57, module goblin_camp_forage) are counted apart."""
+    return [n for n in _food_nodes(state) if LegalityServiceV2.get_region_for_position(n.position, state).id != "goblin_camp_edge"]
+
+
 def test_a_forest_region_compiles_exactly_one_food_node_with_the_high_fertility_charges():
     state = _state(WILD_WORLD)
-    nodes = _food_nodes(state)
+    nodes = _forest_food_nodes(state)
     assert [n.kind for n in nodes] == [FOOD_KIND]
     assert nodes[0].max_charges == nodes[0].remaining_charges == HIGH_FERTILITY_CHARGES
     x_min, y_min, x_max, y_max = state.regions["near_forest"].bounds
@@ -53,10 +58,10 @@ def test_a_forest_region_compiles_exactly_one_food_node_with_the_high_fertility_
 
 @pytest.mark.parametrize("seed", [42, 43, 44])
 def test_the_food_node_count_does_not_depend_on_the_seed(seed):
-    assert len(_food_nodes(_state(WILD_WORLD, seed))) == 1
+    assert len(_forest_food_nodes(_state(WILD_WORLD, seed))) == 1
 
 
-@pytest.mark.parametrize("world", ["crowded_frontier", "urban_political"])
+@pytest.mark.parametrize("world", ["urban_political"])  # crowded_frontier declares a forest edge since Decision 35
 def test_a_world_with_no_wild_land_declares_no_food_node(world):
     assert _food_nodes(_state(world)) == []
 
@@ -71,9 +76,9 @@ def test_no_food_node_is_declared_in_the_home_town_region():
 def test_the_need_path_report_counts_the_wild_food_node():
     behavior_consumers._auto_init()
     rows = need_path_report(_state(WILD_WORLD), behavior_consumers._catalog)
-    assert rows and all(row["food_nodes_in_world"] == 1 for row in rows)
+    assert rows and all(row["food_nodes_in_world"] == 2 for row in rows)  # the forest's patch and the goblin camp's (D57)
     assert any(row["hunger_path"] is True for row in rows)
-    rows_without = need_path_report(_state("crowded_frontier"), behavior_consumers._catalog)
+    rows_without = need_path_report(_state("urban_political"), behavior_consumers._catalog)
     assert all(row["food_nodes_in_world"] == 0 for row in rows_without)
 
 
@@ -100,8 +105,8 @@ def test_a_stripped_node_regrows_and_reports_recovery_through_the_ecology_proces
 
 WORLDS_WITH_RESOLVED_SPEC = sorted(p.parent.name for p in __import__("pathlib").Path("data/worlds").glob("*/resolved"))
 SETTLEMENT_KINDS = {"TOWN"}
-WILD_FOOD_REGIONS = {"near_forest", "sacred_grove", "swamp_border_territory"}  # HIGH, HIGH, LOWER; the frontier village biome holds none
-CHARGES_BY_REGION = {"near_forest": 10, "sacred_grove": 10, "swamp_border_territory": 8}
+WILD_FOOD_REGIONS = {"near_forest", "sacred_grove", "swamp_border_territory", "forest_edge", "goblin_camp_edge", "calibration_camp_edge"}  # HIGH, HIGH, LOWER, HIGH (Decision 35); the frontier village biome holds none
+CHARGES_BY_REGION = {"near_forest": 10, "sacred_grove": 10, "swamp_border_territory": 8, "forest_edge": 10, "goblin_camp_edge": 10, "calibration_camp_edge": 10}
 
 
 @pytest.mark.parametrize("world", WORLDS_WITH_RESOLVED_SPEC)
@@ -115,17 +120,31 @@ def test_no_food_node_stands_on_a_tile_a_settlement_region_owns(world, seed):
         assert node.max_charges == CHARGES_BY_REGION[owner.id]
 
 
-@pytest.mark.parametrize("world", ["frontier_living_world", "wilderness_survival", "sandbox_world"])
-def test_the_placement_rule_changes_only_the_food_node(world):
-    """A kind without the placement field keeps its exact draws: everything but the food node compiles the same with the rule off."""
-    def compiled(rule_on):
-        spec, ctx = WorldRepository("data/worlds").load_world_with_context(world)
-        if not rule_on:
-            for profile in ctx.resources.values():
-                profile.placement = None
-        state, _ = WorldCompiler.compile(spec, 42, context=ctx)
-        return replace(state, resource_nodes={i: n for i, n in state.resource_nodes.items() if n.kind != FOOD_KIND})
-    assert repr(compiled(True)) == repr(compiled(False))
+def _compile(world, seed, rule_on):
+    spec, ctx = WorldRepository("data/worlds").load_world_with_context(world)
+    if not rule_on:
+        for profile in ctx.resources.values():
+            profile.placement = "uniform"
+    state, _ = WorldCompiler.compile(spec, seed, context=ctx)
+    return spec, state
+
+
+@pytest.mark.parametrize("world", WORLDS_WITH_RESOLVED_SPEC)
+@pytest.mark.parametrize("seed", [42, 43])
+def test_every_recipe_node_lands_on_a_tile_its_declared_region_owns_and_only_a_misplaced_one_moves(world, seed):
+    """P3 (placement for all kinds): a node whose first draw is already owned keeps its tile (so the rest of the world compiles
+    identically); a node whose first draw was owned by another region is redrawn onto a tile its own region owns."""
+    spec, on = _compile(world, seed, True)
+    _, off = _compile(world, seed, False)
+    declared = [r.region for r in spec.resources if r.region in on.regions]
+    assert len(declared) == len(on.resource_nodes) == len(off.resource_nodes)
+    for region_id, (nid, node_on), node_off in zip(declared, sorted(on.resource_nodes.items()), [n for _, n in sorted(off.resource_nodes.items())]):
+        assert LegalityServiceV2.get_region_for_position(node_on.position, on).id == region_id
+        owned_off = LegalityServiceV2.get_region_for_position(node_off.position, off).id == region_id
+        if owned_off:
+            assert node_on.position == node_off.position
+    strip = lambda st: repr(replace(st, resource_nodes={}))  # noqa: E731
+    assert strip(on) == strip(off)  # nothing but node positions differs
 
 
 def test_the_compiled_positions_are_the_same_on_a_second_compile():

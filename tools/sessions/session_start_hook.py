@@ -28,6 +28,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 for _p in (str(_REPO_ROOT), str(_REPO_ROOT / "tools" / "agent-monitoring")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
+from tools.graphify_link import link_shared_graph  # noqa: E402
 from tools.handover_home import handover_base  # noqa: E402
 
 SOURCES = ("startup", "resume", "clear", "compact")
@@ -42,6 +43,15 @@ LAUNCH_HINT = (
 def _git(cwd: str, *args: str) -> str:
     out = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, timeout=10)
     return out.stdout.strip() if out.returncode == 0 else ""
+
+
+def _manifest_worktree(role, cwd: str) -> str | None:
+    """Realpath of the role's manifest worktree, `<main checkout>/.claude/worktrees/<placement>` (the path `launch.py`
+    defaults to); None when the main checkout cannot be determined, so a git failure keeps the old behaviour (fail open)."""
+    common = _git(cwd, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    if not common:
+        return None
+    return os.path.realpath(Path(common).parent / ".claude" / "worktrees" / role.worktree)
 
 
 def _same_process(recorded, current) -> bool:
@@ -72,14 +82,17 @@ def find_claude_pid(environ=os.environ, proc_root: Path = Path("/proc")) -> int 
     return None
 
 
-def _handover_text(role, root: Path) -> str:
-    path = handover_base(root) / role.handover
+def _handover_text(role, root: Path, instance_id: str | None = None) -> str:
+    from tools.sessions.roster import handover_rel
+
+    rel = handover_rel(role, instance_id)
+    path = handover_base(root) / rel
     if not path.is_file():
-        return f"(no handover note yet at {role.handover}; create one at the first HARD reset boundary)"
+        return f"(no handover note yet at {rel}; create one at the first HARD reset boundary)"
     text = path.read_text(encoding="utf-8", errors="replace").strip()
     if len(text) > HANDOVER_CAP_CHARS:
-        text = text[:HANDOVER_CAP_CHARS] + f"\n[... note cut at {HANDOVER_CAP_CHARS} chars; full file: {role.handover}]"
-    return f"Your handover note ({role.handover}):\n{text}"
+        text = text[:HANDOVER_CAP_CHARS] + f"\n[... note cut at {HANDOVER_CAP_CHARS} chars; full file: {rel}]"
+    return f"Your handover note ({rel}):\n{text}"
 
 
 def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path = Path("/proc")) -> str:
@@ -147,12 +160,20 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
     if wt is not None and wt.writer == role.role and instance_id == role.role:
         # only the role's first instance takes the lease; a second instance (`<role>-2`) has a different id, would be
         # refused by the first's lease, and writes only in its own per-piece worktree (implementer card)
-        try:
-            st.take_lease(state_root, worktree, instance_id, binding.session_id, proc, proc_root)
-        except st.LeaseRefused as exc:
-            notes.append(f"session-roles: WRITER LEASE NOT TAKEN: {exc}")
+        # TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE: lease only the role's own manifest worktree,
+        # never whatever directory the session happened to launch in (the main checkout in particular)
+        manifest = _manifest_worktree(role, cwd)
+        if manifest is not None and os.path.realpath(worktree) != manifest:
+            notes.append(f"session-roles: writer lease not taken: launched outside {manifest}")
+        else:
+            try:
+                st.take_lease(state_root, worktree, instance_id, binding.session_id, proc, proc_root)
+            except st.LeaseRefused as exc:
+                notes.append(f"session-roles: WRITER LEASE NOT TAKEN: {exc}")
+    if link_shared_graph(worktree) == "linked":
+        notes.append("session-roles: linked graphify-out to the main checkout's graph (read-only here; refresh it from the main checkout).")
     parts.extend(notes)
-    parts.append(_handover_text(role, root))
+    parts.append(_handover_text(role, root, instance_id))
     return "\n\n".join(parts)
 
 

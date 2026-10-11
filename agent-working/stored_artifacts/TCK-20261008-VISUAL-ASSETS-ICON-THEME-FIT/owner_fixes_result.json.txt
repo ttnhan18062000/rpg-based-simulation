@@ -1,0 +1,602 @@
+{
+ "set_id": "icons-owner-fixes-v1",
+ "proposed": [
+  "icon.status.frame_buff",
+  "icon.class.rogue",
+  "icon.item.tool",
+  "icon.rarity.common",
+  "icon.building.hero_house",
+  "icon.status.frame_debuff",
+  "icon.building.inn"
+ ],
+ "pending_redraw": {},
+ "not_proposed": {
+  "icon.marker.ruins": "owner decision: keep the adopted brick wall (the arch still misread in free text, \"document with arrow\", and the adopted version reads better)",
+  "icon.marker.enemy_camp": "owner decision: keep the adopted crossed swords (the tent still misread in free text, \"crossed tools on red mound\", and the adopted version reads better)"
+ },
+ "draft_set_hash": "sha256:bab784060aedc76838ebc246a3534d88559c9493082b1e076a1bdedb8b8fc6e0",
+ "result": "PASS",
+ "key_set_rule": {
+  "rule": {
+   "i1": "silhouette pixels differing >= {8: 3, 16: 6, 24: 8} (by canvas side) across classes",
+   "i2": "dL* of mean colours >= 6.0 in ['normal', 'protan', 'deutan', 'tritan']",
+   "i3": "plate rim colour vs terrain tile mean, dL* >= 12.0 in ['normal', 'protan', 'deutan', 'tritan']"
+  },
+  "i1": true,
+  "i2": true,
+  "i3": true,
+  "result": "PASS",
+  "groups": {
+   "status": {
+    "size": 16,
+    "pairs": 1,
+    "min_shape_px_across_classes": 28,
+    "value_checked": true,
+    "min_dL_by_vision": {
+     "normal": 15.659,
+     "protan": 20.247,
+     "deutan": 12.815,
+     "tritan": 15.52
+    }
+   },
+   "tiers": {
+    "size": 8,
+    "pairs": 28,
+    "min_shape_px_across_classes": 4,
+    "value_checked": true,
+    "min_dL_by_vision": {
+     "normal": 9.136,
+     "protan": 8.742,
+     "deutan": 8.786,
+     "tritan": 9.297
+    }
+   }
+  },
+  "plates": {
+   "icon.plate.location": {
+    "rim_colours": [
+     "#9ea4b6"
+    ],
+    "closest_by_vision": {
+     "normal": {
+      "dL": 18.198,
+      "rim": "#9ea4b6",
+      "tile": "terrain.snow"
+     },
+     "protan": {
+      "dL": 18.48,
+      "rim": "#9ea4b6",
+      "tile": "terrain.snow"
+     },
+     "deutan": {
+      "dL": 18.005,
+      "rim": "#9ea4b6",
+      "tile": "terrain.snow"
+     },
+     "tritan": {
+      "dL": 18.181,
+      "rim": "#9ea4b6",
+      "tile": "terrain.snow"
+     }
+    }
+   }
+  },
+  "failing": {
+   "i1": [],
+   "i2": [],
+   "i3": []
+  },
+  "off_palette_pixels": {}
+ },
+ "v2_rule": {
+  "rule": {
+   "i1": "silhouette pixels differing >= {8: 3, 16: 6, 24: 8} (by canvas side) across classes",
+   "i2": "dL* of mean colours >= 6.0 in ['normal', 'protan', 'deutan', 'tritan']",
+   "i3": "plate rim colour vs terrain tile mean, dL* >= 12.0 in ['normal', 'protan', 'deutan', 'tritan']"
+  },
+  "i1": true,
+  "i2": true,
+  "i3": true,
+  "result": "PASS",
+  "groups": {
+   "badges": {
+    "size": 8,
+    "pairs": 55,
+    "min_shape_px_across_classes": 4,
+    "value_checked": false,
+    "min_dL_by_vision": {}
+   },
+   "buildings": {
+    "size": 24,
+    "pairs": 15,
+    "min_shape_px_across_classes": 69,
+    "value_checked": false,
+    "min_dL_by_vision": {}
+   },
+   "classes": {
+    "size": 24,
+    "pairs": 6,
+    "min_shape_px_across_classes": 53,
+    "value_checked": false,
+    "min_dL_by_vision": {}
+   },
+   "items": {
+    "size": 24,
+    "pairs": 15,
+    "min_shape_px_across_classes": 71,
+    "value_checked": false,
+    "min_dL_by_vision": {}
+   },
+   "locations": {
+    "size": 16,
+    "pairs": 15,
+    "min_shape_px_across_classes": 17,
+    "value_checked": false,
+    "min_dL_by_vision": {}
+   },
+   "rarity": {
+    "size": 8,
+    "pairs": 3,
+    "min_shape_px_across_classes": 13,
+    "value_checked": true,
+    "min_dL_by_vision": {
+     "normal": 14.444,
+     "protan": 13.012,
+     "deutan": 14.482,
+     "tritan": 14.822
+    }
+   }
+  },
+  "plates": {},
+  "failing": {
+   "i1": [],
+   "i2": [],
+   "i3": []
+  },
+  "off_palette_pixels": {}
+ },
+ "lint": {
+  "icon.building.hero_house": {
+   "ok": true,
+   "colors": 11,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.building.inn": {
+   "ok": true,
+   "colors": 7,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.class.rogue": {
+   "ok": true,
+   "colors": 6,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.item.tool": {
+   "ok": true,
+   "colors": 7,
+   "color_budget": 12,
+   "findings": [
+    "orphan_pixels"
+   ],
+   "warnings": []
+  },
+  "icon.rarity.common": {
+   "ok": true,
+   "colors": 4,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "warnings": []
+  },
+  "icon.status.frame_buff": {
+   "ok": true,
+   "colors": 4,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "warnings": []
+  },
+  "icon.status.frame_debuff": {
+   "ok": true,
+   "colors": 4,
+   "color_budget": 8,
+   "findings": [
+    "orphan_pixels",
+    "touches_edge"
+   ],
+   "warnings": []
+  }
+ },
+ "compliance": {
+  "icon.status.frame_buff": [
+   {
+    "item": "frame unchanged",
+    "spec": "no pixel outside the central 8 x 9 box differs from the adopted frame",
+    "measured": "0 pixels differ outside the box (16 in all)",
+    "ok": true
+   },
+   {
+    "item": "solid head",
+    "spec": "head rows 2, 4 then 6 px wide",
+    "measured": "first rows [2, 4, 6]",
+    "ok": true
+   },
+   {
+    "item": "shaft",
+    "spec": "2 px wide and 5 px tall below the head",
+    "measured": "rows [2, 2, 2, 2, 2]",
+    "ok": true
+   },
+   {
+    "item": "solid, not an outline",
+    "spec": "22 bone pixels in all, one filled shape",
+    "measured": "22 px in 1 piece(s)",
+    "ok": true
+   },
+   {
+    "item": "centred",
+    "spec": "the arrow's columns centre on the canvas axis",
+    "measured": "columns 5 to 10 of 16",
+    "ok": true
+   }
+  ],
+  "icon.class.rogue": [
+   {
+    "item": "peaked hood",
+    "spec": "the top row is 2 px wide or less and rows widen steadily to the shoulders",
+    "measured": "top row 2 px; widest 18 px; steady widening over the first 12 rows: True",
+    "ok": true
+   },
+   {
+    "item": "shoulders",
+    "spec": "widest row 18 px",
+    "measured": "18 px",
+    "ok": true
+   },
+   {
+    "item": "face opening",
+    "spec": ">= 8 px wide and >= 8 px tall, dark",
+    "measured": "8 x 9 px, 56 px",
+    "ok": true
+   },
+   {
+    "item": "eye glints",
+    "spec": "two separate gold marks of 2 px",
+    "measured": "4 px in 2 marks",
+    "ok": true
+   },
+   {
+    "item": "no brim",
+    "spec": "the hood is never wider than the shoulders at its top half (a hat has a brim): the first 10 rows are at most 14 px wide",
+    "measured": "widest of the first 10 rows 12 px",
+    "ok": true
+   },
+   {
+    "item": "live area",
+    "spec": "margins of at least 2 px left, top and right on the 24x24 canvas",
+    "measured": "2, 2, 2 px",
+    "ok": true
+   }
+  ],
+  "icon.item.tool": [
+   {
+    "item": "size",
+    "spec": "19 px wide and 19 px tall, outline included (an X, not a long weapon)",
+    "measured": "19 x 19 px",
+    "ok": true
+   },
+   {
+    "item": "live area",
+    "spec": "margins of at least 2 px on all four sides of the 24x24 canvas",
+    "measured": "3, 2, 2, 3 px",
+    "ok": true
+   },
+   {
+    "item": "wooden handle",
+    "spec": ">= 14 px of wood colour (the hammer's handle)",
+    "measured": "21 px",
+    "ok": true
+   },
+   {
+    "item": "steel hammer head",
+    "spec": ">= 20 steel pixels in the top right (a short heavy head; the outline the owner approved gives 22)",
+    "measured": "22 px",
+    "ok": true
+   },
+   {
+    "item": "tong jaws",
+    "spec": ">= 8 steel pixels in the top left (the closed jaws)",
+    "measured": "16 px",
+    "ok": true
+   },
+   {
+    "item": "rivet at the crossing",
+    "spec": "a gold rivet of at least 8 px",
+    "measured": "8 px",
+    "ok": true
+   },
+   {
+    "item": "crossed, one piece",
+    "spec": "the two tools touch: all content is one connected piece",
+    "measured": "1 piece(s)",
+    "ok": true
+   }
+  ],
+  "icon.rarity.common": [
+   {
+    "item": "round, not square",
+    "spec": "silhouette fills at most 80 % of its bounding box",
+    "measured": "76 %",
+    "ok": true
+   },
+   {
+    "item": "size",
+    "spec": "7 x 7 px",
+    "measured": "7 x 7 px",
+    "ok": true
+   },
+   {
+    "item": "silver fill",
+    "spec": ">= 12 px of silver (#c8d8e8)",
+    "measured": "13 px",
+    "ok": true
+   },
+   {
+    "item": "highlight",
+    "spec": "2 px of bright highlight (#eafeff)",
+    "measured": "2 px",
+    "ok": true
+   },
+   {
+    "item": "shade",
+    "spec": ">= 4 px of shade (#91a2ab) on the lower right",
+    "measured": "6 px",
+    "ok": true
+   },
+   {
+    "item": "lighter than the dark tier badges",
+    "spec": "mean L* at least 20 above tier D and tier E",
+    "measured": "52.3 L* above the nearer one",
+    "ok": true
+   },
+   {
+    "item": "distance from the tier badges",
+    "spec": ">= 3 px (I1 floor) from every tier silhouette",
+    "measured": "9 px",
+    "ok": true
+   }
+  ],
+  "icon.building.hero_house": [
+   {
+    "item": "size",
+    "spec": "20 px wide and 20 px tall, outline included",
+    "measured": "20 x 20 px",
+    "ok": true
+   },
+   {
+    "item": "thatched roof",
+    "spec": ">= 80 px of thatch (two golds; the approved outline gives 84)",
+    "measured": "84 px",
+    "ok": true
+   },
+   {
+    "item": "timber frame",
+    "spec": ">= 40 px of timber brown",
+    "measured": "52 px",
+    "ok": true
+   },
+   {
+    "item": "plaster walls",
+    "spec": ">= 30 px of cream plaster (the approved outline gives 36)",
+    "measured": "36 px",
+    "ok": true
+   },
+   {
+    "item": "small windows with dark panes",
+    "spec": "two separate dark panes of 4 px",
+    "measured": "2 panes [4, 4]",
+    "ok": true
+   },
+   {
+    "item": "shutters",
+    "spec": "four separate green shutter strips",
+    "measured": "4 strips",
+    "ok": true
+   },
+   {
+    "item": "arched wooden door",
+    "spec": ">= 20 px of door wood",
+    "measured": "23 px",
+    "ok": true
+   },
+   {
+    "item": "no modern blue glass",
+    "spec": "no pixel of the old window blue (#50a8e0)",
+    "measured": "0 px",
+    "ok": true
+   },
+   {
+    "item": "palette",
+    "spec": "within the 24x24 budget of 12 colours (outline included)",
+    "measured": "11",
+    "ok": true
+   }
+  ],
+  "icon.status.frame_debuff": [
+   {
+    "item": "size",
+    "spec": "16 x 16 px, filling its canvas like the buff frame",
+    "measured": "16 x 16 px",
+    "ok": true
+   },
+   {
+    "item": "eight spikes",
+    "spec": "a red spike beyond the ring in each of the eight compass directions",
+    "measured": "spikes in 8 of 8 directions",
+    "ok": true
+   },
+   {
+    "item": "red rim",
+    "spec": ">= 40 red pixels",
+    "measured": "52 px",
+    "ok": true
+   },
+   {
+    "item": "solid down arrow",
+    "spec": "20 bone pixels in one piece: a shaft 2 wide and 4 tall, then a head 6, 4 and 2 wide",
+    "measured": "20 px, row widths [2, 2, 2, 2, 6, 4, 2]",
+    "ok": true
+   },
+   {
+    "item": "not a triangle (not a road sign)",
+    "spec": "the silhouette fills at least 60 % of its bounding box (a triangle fills 50 %)",
+    "measured": "69 %",
+    "ok": true
+   },
+   {
+    "item": "symmetric",
+    "spec": "the silhouette is mirror-symmetric left to right",
+    "measured": "0 differing px",
+    "ok": true
+   },
+   {
+    "item": "differs from the round buff frame",
+    "spec": ">= 6 px (I1 at 16x16)",
+    "measured": "28 px",
+    "ok": true
+   }
+  ],
+  "icon.building.inn": [
+   {
+    "item": "same outline",
+    "spec": "the silhouette is exactly the adopted tankard's",
+    "measured": "0 differing px",
+    "ok": true
+   },
+   {
+    "item": "stave seams",
+    "spec": ">= 2 vertical dark brown seams of at least 7 px",
+    "measured": "columns [8, 11, 13]",
+    "ok": true
+   },
+   {
+    "item": "iron hoops",
+    "spec": "two steel-grey rows of at least 9 px",
+    "measured": "rows [11, 17]",
+    "ok": true
+   },
+   {
+    "item": "foam and handle untouched",
+    "spec": "no pixel outside the body box differs from the adopted drawing",
+    "measured": "0 px differ outside the body",
+    "ok": true
+   }
+  ]
+ },
+ "compliance_all_ok": true,
+ "rarity_vs_tier_min_shape_px": {
+  "icon.rarity.common": 9
+ },
+ "lookalike_close_pairs": [
+  {
+   "a": "icon.tier.d",
+   "b": "icon.tier.e",
+   "xor_px": 0,
+   "cross_family": false
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.tier.d",
+   "xor_px": 25,
+   "cross_family": true
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.tier.e",
+   "xor_px": 25,
+   "cross_family": true
+  },
+  {
+   "a": "icon.tier.a",
+   "b": "icon.tier.c",
+   "xor_px": 36,
+   "cross_family": false
+  },
+  {
+   "a": "icon.tier.c",
+   "b": "icon.tier.d",
+   "xor_px": 36,
+   "cross_family": false
+  },
+  {
+   "a": "icon.tier.c",
+   "b": "icon.tier.e",
+   "xor_px": 36,
+   "cross_family": false
+  },
+  {
+   "a": "icon.tier.s",
+   "b": "icon.tier.ss",
+   "xor_px": 36,
+   "cross_family": false
+  },
+  {
+   "a": "icon.item.material",
+   "b": "icon.status.frame_buff",
+   "xor_px": 41,
+   "cross_family": true
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.tier.d",
+   "xor_px": 48,
+   "cross_family": true
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.tier.e",
+   "xor_px": 48,
+   "cross_family": true
+  },
+  {
+   "a": "icon.marker.dungeon_entrance",
+   "b": "icon.plate.location",
+   "xor_px": 55,
+   "cross_family": true
+  },
+  {
+   "a": "icon.rarity.uncommon",
+   "b": "icon.tier.s",
+   "xor_px": 56,
+   "cross_family": true
+  },
+  {
+   "a": "icon.marker.boss_arena",
+   "b": "icon.rarity.common",
+   "xor_px": 59,
+   "cross_family": true
+  },
+  {
+   "a": "icon.rarity.common",
+   "b": "icon.rarity.uncommon",
+   "xor_px": 59,
+   "cross_family": false
+  }
+ ]
+}

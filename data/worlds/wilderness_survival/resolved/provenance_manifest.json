@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_f6293a1d9ff9713a",
+  "manifest_id": "prov_9b4997130929eb46",
   "world_id": "wilderness_survival",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "2b07ba8e479f6790e9982e09489b01fe6ce5d9f56e2212045cdf47a832ca5878",
+  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
     "survivor_camp_shelter": "c017935a30d51e3b5b293be4cc2c54cc8ef7a0f4a72a0932be26983db7ddc355",
@@ -11,8 +11,8 @@
   },
   "composition_fingerprint": "7365bbbc187e289a2241a1d504e2d75ecb6ff8314cdb3c27fb1470cf2a03abf9",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "f6293a1d9ff9713a151f7c5be3793f23ab23241dc3b17d931dacd948c1a569d3",
-  "created_at": "2026-10-08T11:03:37.377561Z",
+  "content_fingerprint": "9b4997130929eb46789ba5fbaa12ed4242606c407b616c8ac8e512b33fda53bf",
+  "created_at": "2026-10-09T03:59:03.401638Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

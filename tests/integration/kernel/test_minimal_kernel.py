@@ -43,7 +43,6 @@ def test_quiet_tick_validity():
         max_cpu_percent=50.0,
         max_worker_count=1,
         max_queue_depth=10,
-        max_work_debt=10,
         max_replay_buffer_kb=0,
         max_observability_budget_percent=0.0,
         max_tick_budget_ms=100.0

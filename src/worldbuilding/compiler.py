@@ -17,6 +17,7 @@ from src.core.state import (
     BuildingState,
     ResourceNodeState,
     InventoryComponent,
+    ItemStack,
     PersonalityComponent,
     FactionState,
     PlaceState,
@@ -117,12 +118,13 @@ _ENTITY_SPAWN_COLLISION_MAX_REROLLS = 12
 _ENTITY_SPAWN_COLLISION_SUB_ID_BASE = 100
 
 
-RESOURCE_PLACEMENT_OWNED_BY_DECLARED_REGION = "owned_by_declared_region"
+RESOURCE_PLACEMENT_OWNED_BY_DECLARED_REGION = "owned_by_declared_region"  # the default for every recipe node kind
+RESOURCE_PLACEMENT_UNIFORM = "uniform"  # opt-out: any tile of the declared region's bounding box, owned or not
 RESOURCE_PLACEMENT_ATTEMPTS = 64
 
 
 def _draw_tile_owned_by(rng: Any, node_id: int, ordered_regions: Any, region_id: str, bounds: tuple) -> Optional[tuple]:
-    """The first draw whose tile the declared region OWNS by region precedence, else None (at most ``RESOURCE_PLACEMENT_ATTEMPTS`` draws).
+    """The first draw whose tile the declared region OWNS by region precedence (the placement of every recipe node kind unless it opts out with `placement: uniform`), else None (at most ``RESOURCE_PLACEMENT_ATTEMPTS`` draws).
 
     Attempt 0 is the same draw every kind makes (sub ids 0 and 1 of the node's seeded stream), so a tile that is owned from the start is
     the tile the uniform rule would have picked; later attempts use the next sub ids of the same stream.
@@ -135,6 +137,25 @@ def _draw_tile_owned_by(rng: Any, node_id: int, ordered_regions: Any, region_id:
         if owner is not None and owner.id == region_id:
             return x, y
     return None
+
+
+def _with_declared_inventory(builder: Any, context: Any, population_id: str) -> Any:
+    """The entity's declared inventory profile applied at spawn: its coin and its items (EXCH-02, owner decision 37: starting coin is
+    declared world content; no context, no profile, or a profile with neither leaves the builder untouched)."""
+    profile = context.entities.get(population_id) if context is not None else None
+    if profile is None or not (profile.starting_gold or profile.starting_items):
+        return builder
+    items = [ItemStack(item_id=item_id, quantity=quantity) for item_id, quantity in sorted(profile.starting_items.items())]
+    return builder.inventory(gold=int(profile.starting_gold), items=items)
+
+
+def _building_till(context: Any, building_id: str) -> InventoryComponent:
+    """A building's till and stock at world creation, from its resolved profile (declared world content; EXCH-02, owner decision 37)."""
+    profile = context.buildings.get(building_id) if context is not None else None
+    if profile is None:
+        return InventoryComponent()
+    items = [ItemStack(item_id=item_id, quantity=quantity) for item_id, quantity in sorted(profile.starting_stock.items())]
+    return InventoryComponent(gold=int(profile.starting_gold), items=items)
 
 
 def _resource_profile(res_spec: Any, context: Any) -> tuple:
@@ -568,7 +589,7 @@ class WorldCompiler:
                 y = rng.get_int(Domain.WORLD, 0, next_resource_id, min_y, max_y, sub_id=1)
 
                 required_ticks, yields_item, placement = _resource_profile(res_spec, context)
-                if placement == RESOURCE_PLACEMENT_OWNED_BY_DECLARED_REGION:
+                if placement != RESOURCE_PLACEMENT_UNIFORM:
                     owned = _draw_tile_owned_by(rng, next_resource_id, spec.regions, region_id, region.bounds)
                     if owned is None:
                         warnings.append(f"resource '{res_spec.id}' ({res_spec.resource_type}) found no tile owned by region '{region_id}' "
@@ -613,7 +634,8 @@ class WorldCompiler:
                     position=(float(x), float(y)),
                     hp=hp,
                     max_hp=max_hp,
-                    functional=True
+                    functional=True,
+                    inventory=_building_till(context, bld_spec.id),
                 )
                 blocked_tiles.add((x, y))
                 next_building_id += 1
@@ -737,6 +759,7 @@ class WorldCompiler:
                         .spawn_combat_stats_are_final().replace_self_model(default_self_model())
                         .lifecycle(active=True)
                     )
+                    builder = _with_declared_inventory(builder, context, pop_key)
                     entities[next_entity_id] = builder.build()
                     if region.kind == "TOWN":
                         town_entity_ids.add(next_entity_id)

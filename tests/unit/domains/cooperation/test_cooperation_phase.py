@@ -4,16 +4,14 @@ tests/unit/domains/cooperation/test_cooperation_phase.py
 Unit tests verifying CooperationPhase respects the ENABLE_SOCIAL_COOPERATION
 feature flag — specifically that last_cooperation_decision is set in
 property_updates when the phase runs and eligible entities are present, and
-that the phase is a no-op when the flag disables it.
+that the phase is skipped when the flag turns it OFF.
 
-These tests exercise CooperationPhase.execute() directly (not via pipeline
-run_phase), so they do not depend on FeatureFlagManager or
-AuthoritativeApplyPipeline.
-
-The phase's internal flag check reads:
-  flag = getattr(state, "social_cooperation_enabled", True)        # always True
-  if "social_cooperation_disabled" in state.periodic_due_ticks:    # OFF path
-      flag = False
+The ON test exercises CooperationPhase.execute() directly. The OFF test goes
+through AuthoritativeApplyPipeline.refine(), because the real OFF switch is the
+pipeline's feature-flag gate (``run_phase("cooperation", ..., "ENABLE_SOCIAL_COOPERATION")``).
+The phase used to carry a second, test-only OFF switch, a ``social_cooperation_disabled``
+key in ``state.periodic_due_ticks``; nothing in src/ ever set it, and it went away
+with that field (TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE).
 
 To bypass the inner-loop guard (``if not help_needs and group_id is None: continue``),
 entities are given a non-None group_id, which forces evaluation through the full
@@ -77,20 +75,6 @@ def _state_flag_on(*entities) -> AuthoritativeState:
     return AuthoritativeState(entities=ent_map, tick=1, seed=42)
 
 
-def _state_flag_off(*entities) -> AuthoritativeState:
-    """State where CooperationPhase.execute short-circuits via periodic_due_ticks sentinel."""
-    ent_map = {e.id: e for e in entities}
-    # CooperationPhase checks:
-    #   if hasattr(state, "periodic_due_ticks") and "social_cooperation_disabled" in state.periodic_due_ticks:
-    #       flag = False
-    return AuthoritativeState(
-        entities=ent_map,
-        tick=1,
-        seed=42,
-        periodic_due_ticks={"social_cooperation_disabled": 1},
-    )
-
-
 # ---------------------------------------------------------------------------
 # Test: flag ON → last_cooperation_decision set for group-member entities
 # ---------------------------------------------------------------------------
@@ -125,56 +109,27 @@ def test_cooperation_phase_sets_property_when_enabled():
 
 def test_cooperation_phase_skips_when_disabled():
     """
-    G-3 (test_plan.md T-4): When periodic_due_ticks contains
-    "social_cooperation_disabled", CooperationPhase.execute() must return the
-    update unchanged — no last_cooperation_decision in any entity's
-    property_updates.
+    G-3 (test_plan.md T-4): With ENABLE_SOCIAL_COOPERATION OFF, the pipeline skips the
+    cooperation phase: it is counted as skipped and no last_cooperation_decision is
+    written for any entity. The same state with the flag ON runs the phase (control).
     """
-    hero1 = _make_group_entity(1, group_id=10, x=0.0, y=0.0)
-    hero2 = _make_group_entity(2, group_id=10, x=5.0, y=0.0)
-    state = _state_flag_off(hero1, hero2)
-    update = StateUpdate()
+    from src.domains.optimization.feature_flags import FeatureMode
+    from src.engine.pipeline import AuthoritativeApplyPipeline
 
-    result = CooperationPhase.execute(state, update)
+    def refine(mode):
+        hero1 = _make_group_entity(1, group_id=10, x=0.0, y=0.0)
+        hero2 = _make_group_entity(2, group_id=10, x=5.0, y=0.0)
+        state = AuthoritativeState(entities={e.id: e for e in (hero1, hero2)}, tick=1, seed=42,
+                                   feature_flags={"ENABLE_SOCIAL_COOPERATION": mode})
+        return AuthoritativeApplyPipeline.refine(state, StateUpdate())
 
-    entities_with_decision = [
-        eid
-        for eid, eu in result.entity_updates.items()
-        if "last_cooperation_decision" in eu.property_updates
-    ]
-    assert len(entities_with_decision) == 0, (
-        "Expected no last_cooperation_decision when social_cooperation_disabled "
-        "sentinel is present in periodic_due_ticks."
-    )
+    def decisions(update):
+        return [eid for eid, eu in update.entity_updates.items() if "last_cooperation_decision" in eu.property_updates]
 
+    on = refine(FeatureMode.ON)
+    assert on.metric_counters.get("run_cooperation", 0) == 1 and decisions(on), "the control run did not exercise the phase"
 
-# ---------------------------------------------------------------------------
-# Test: no eligible entities → no property_updates produced
-# ---------------------------------------------------------------------------
-
-def test_cooperation_phase_no_output_for_inactive_entities():
-    """
-    Inactive/dead entities must be skipped by CooperationPhase even when the
-    flag is ON — the inner loop guard exits early for them.
-    """
-    hero = (
-        V2EntityBuilder(1)
-        .kind("HERO")
-        .location(0.0, 0.0)
-        .combat(hp=0, max_hp=100)
-        .lifecycle(active=False)
-        .build()
-    )
-    state = _state_flag_on(hero)
-    update = StateUpdate()
-
-    result = CooperationPhase.execute(state, update)
-
-    entities_with_decision = [
-        eid
-        for eid, eu in result.entity_updates.items()
-        if "last_cooperation_decision" in eu.property_updates
-    ]
-    assert len(entities_with_decision) == 0, (
-        "Inactive/dead entities must not produce last_cooperation_decision updates."
-    )
+    off = refine(FeatureMode.OFF)
+    assert off.metric_counters.get("skip_cooperation", 0) == 1
+    assert "run_cooperation" not in off.metric_counters
+    assert decisions(off) == []

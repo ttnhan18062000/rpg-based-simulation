@@ -5,6 +5,10 @@
   max_hp: 500
   service_profile_id: "general_store_service"
   themes: ["village", "trade"]
+  # EXCH-02 (owner decision 37): the till holds about what a travelling merchant carries as trade capital (250, `merchant_trade_pack`), and the
+  # shelves hold the staples a village shop keeps.
+  starting_gold: 250
+  starting_stock: {travel_ration: 10, wood: 10, iron_ore: 5}
 
 # STATE: EXISTING-LOGIC
 - id: "town_hall"
@@ -28,6 +32,10 @@
   max_hp: 600
   service_profile_id: "inn_service"
   themes: ["village", "trade"]
+  # EXCH-02 (owner decision 37): an inn takes 5 a meal and 10 a bed, so 100 is about twenty meals of change (a hero's pocket, `hero_pocket`); it
+  # keeps the food it cooks from.
+  starting_gold: 100
+  starting_stock: {travel_ration: 20, bread: 10}
 
 # STATE: ADDITIONAL
 - id: "watchtower"

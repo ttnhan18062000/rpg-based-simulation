@@ -112,6 +112,11 @@ class BlacksmithSystem:
         ),
     }
 
+    # DELIBERATELY NOT RESOLVED THROUGH service_reach yet (rpg-planner ruling 2026-10-08): `building_tiles` is empty in compiled worlds, so the
+    # smithy lookup in `enforce` never matches and the wholesale learning never fires. Wiring it would teach every entity that stands beside a smithy
+    # all 46 recipes for free (4, 4 and 3 entities per run in the three measured worlds, all with 0 gold, so they would meet crafting blockers); that
+    # is a fiction call for the designer (a smith should teach one recipe at a time, for a price, over time).
+    # See TCK-20261007-SHOP-AND-BLACKSMITH-TOWN-PATHS-NEVER-RAN-IN-A-COMPILED-WORLD.
     @staticmethod
     def enforce(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         """

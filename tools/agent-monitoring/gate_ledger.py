@@ -113,7 +113,8 @@ def attested_without_verdict(rows: list[dict], week: str | None = None) -> list[
 
 def derive_outcomes(verdicts: list[dict]) -> dict[str, dict]:
     """`{gate_verdict_id: {"outcome", "followup_verdict_id"}}` for a blocking verdict whose next verdict on the
-    same (ticket, gate) is a pass (`fixed_and_rerun`) or a block with the same inputs (`rerun_no_change`)."""
+    same (ticket, gate) has a later pass (`fixed_and_rerun`, first passing one is the follow-up) or whose next verdict
+    is a block with the same inputs (`rerun_no_change`)."""
     groups: dict[tuple, list[tuple[int, dict]]] = {}
     for index, row in enumerate(verdicts):
         if row.get("ticket_id") and row.get("gate_id"):
@@ -121,13 +122,20 @@ def derive_outcomes(verdicts: list[dict]) -> dict[str, dict]:
     derived: dict[str, dict] = {}
     for members in groups.values():
         members.sort(key=lambda pair: (str(pair[1].get("ts", "")), pair[0]))
-        for (_, current), (_, following) in zip(members, members[1:]):
+        rows = [row for _, row in members]
+        for position, current in enumerate(rows):
             if not current.get("blocking"):
                 continue
-            if not following.get("blocking"):
-                outcome = "fixed_and_rerun"
-            elif following.get("inputs_ref") == current.get("inputs_ref"):
-                outcome = "rerun_no_change"
+            later = rows[position + 1:]
+            if not later:
+                continue
+            # Any later pass on the same (ticket, gate) means the gate was eventually fixed, even when a second
+            # block with different inputs came in between (TCK-20261009-GATE-LEDGER-SELFCHECK-FALSE-UNRESOLVED-BLOCKS).
+            passing = next((row for row in later if not row.get("blocking")), None)
+            if later[0].get("blocking") and later[0].get("inputs_ref") == current.get("inputs_ref"):
+                outcome, following = "rerun_no_change", later[0]
+            elif passing is not None:
+                outcome, following = "fixed_and_rerun", passing
             else:
                 continue
             derived[current["gate_verdict_id"]] = {"outcome": outcome, "followup_verdict_id": following["gate_verdict_id"]}

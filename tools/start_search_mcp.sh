@@ -37,15 +37,28 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 # loudly in the exec'd process's own startup (an ImportError, not a silent hang), the same as any
 # other cold-start import error already would; the probe's job is catching the *wrong-venv*
 # fallthrough case (proven fixed), not guaranteeing a flawless install.
+# TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION (also): the probe requires `mcp` too. System
+# python3 on host ubuntu has sentence_transformers but not mcp, so it passed the old probe and
+# search_mcp.py then died with "mcp package not installed" (CONNECTION_CLOSED).
+#
+# TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION: resolve the main checkout generically. The
+# hardcoded u24desktop path in the list below only exists on that one host; on any other host a worktree's
+# $REPO_ROOT has no venv, so the launch fell through to system python3. `git rev-parse
+# --git-common-dir` names the main checkout's .git from any worktree (and from the main checkout
+# itself), so its parent is where the one shared .venv-knowledge lives on every host.
+MAIN_ROOT=""
+COMMON_DIR="$(git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
+[ -n "$COMMON_DIR" ] && MAIN_ROOT="$(dirname "$COMMON_DIR")"
 for py in \
     "/home/u24desktop/Working/rpg-based-simulation/.venv-knowledge/bin/python3" \
+    "${MAIN_ROOT:+$MAIN_ROOT/.venv-knowledge/bin/python3}" \
     "$REPO_ROOT/.venv-knowledge/bin/python3" \
     "/home/vboxuser/Work/venv/bin/python3" \
     "$(command -v python3 2>/dev/null)"; do
     [ -x "$py" ] || continue
-    "$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('sentence_transformers') else 1)" >/dev/null 2>&1 || continue
+    "$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('mcp') and importlib.util.find_spec('sentence_transformers') else 1)" >/dev/null 2>&1 || continue
     exec "$py" "$SCRIPT_DIR/search_mcp.py" "$@"
 done
 
-echo "ERROR: no usable python3 with sentence_transformers found for search_mcp" >&2
+echo "ERROR: no usable python3 with sentence_transformers and mcp found for search_mcp" >&2
 exit 1

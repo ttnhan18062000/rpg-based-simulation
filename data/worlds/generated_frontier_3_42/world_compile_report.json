@@ -2,14 +2,14 @@
   "world_id": "generated_frontier_3_42",
   "seed": 42,
   "entity_count": 44,
-  "region_count": 6,
-  "resource_node_count": 9,
+  "region_count": 7,
+  "resource_node_count": 10,
   "building_count": 6,
   "quest_count": 16,
   "distinct_populated_factions": 7,
   "warnings": [],
-  "compile_duration_ms": 251.7524822615087,
-  "state_hash": "fa22f8d8f94a4c210338722d9e7f4f12",
-  "canonical_state_hash": "b7c09c1be4701517ccd66f823392e1e3d89f4175191d629e4f0898bd0df9eb99",
-  "place_count": 2
+  "compile_duration_ms": 457.8706403262913,
+  "state_hash": "7b67dd1bcffff4561b01a0f7cc7d8104",
+  "canonical_state_hash": "ca2a12ebea20e95e5b4bb976341e8dd50de6ecde1d64de05215a128b0d0105ea",
+  "place_count": 3
 }

@@ -22,6 +22,7 @@ from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
+from tests.helpers.scenario import empty_inventories
 
 WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
 SEED = 42
@@ -34,6 +35,7 @@ def _run():
     repo = WorldRepository(os.path.join("data", "worlds"))
     spec, context = repo.load_world_with_context(WORLD_ID)
     state, _report = WorldCompiler.compile(spec, SEED, context=context)
+    state = empty_inventories(state)  # the scenario is about the navigation target, not about what the two bodies carry
     kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(SEED),
                     flags={"no_frame_pacing": True, "no_replay": True}, executor=LocalSequentialExecutor())
     samples = []  # (tick, entity id, nav target, opponent position)

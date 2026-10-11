@@ -29,10 +29,10 @@ If `gc` ever gains a deletion kind for tracked objects, a typed roots record mus
 Proof: `tests/visual_assets/store/unit/test_gc.py` (17 tests). Mutants, each failing a named test: age guard dropped (young intake listed), adoption guard dropped (old adopted intake listed), age bound infinite
 (old intake kept), boundary off by one (an intake exactly on the cutoff listed), unreferenced report emptied.
 
-## Store operations (`ADR D18`, owner, 2026-10-04)
+## Store operations (`ADR D18` as amended by `ADR D24`, owner, 2026-10-04 and 2026-10-10)
 
-- **Single operator, no lock.** One store command at a time; the rule, not a lock, covers two commands at once. The code still defends only a single operator (all-or-nothing staged writes, exclusive-create release publishing). Reverses when a second operator or automation runs store commands.
-- **`gc --delete` keeps no record.** It prints each item it removes (`deleted <kind> <name> (<reason>)`, the `gc` branch of `visual_assets/store/cli.py`) and cannot delete tracked state, so no protected record is lost. The printed line is the only trace.
+- **A store lock (`ADR D24`, replaces "single operator, no lock").** Every command that writes the store, or exports from it, holds one advisory lock per store data root (`catalog/.store.lock`); a second writer refuses at once naming the last holder. Details and the recovery after a hard kill: `docs/assets/store_contract.md` ("Store lock, deletion log and recovery").
+- **`gc --delete` keeps a record (`ADR D24`, replaces "keeps no record").** It still prints each item it removes and cannot delete tracked state; it also appends one hash-chained record per removal to the local, gitignored deletion log BEFORE removing the item (`python -m visual_assets.store deletions` lists it; `audit` verifies it).
 - **Growth review by hand.** When the tracked catalog passes 50 MB (about 0.9 MB today, `du -sh visual_assets/catalog`) the owner reviews it. A review trigger, not an enforced limit; nothing checks it.
 
 ## Rollback drill (`AM5-W09`, `AM-C06`) under Profile A (ADR D8)

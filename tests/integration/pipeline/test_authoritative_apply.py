@@ -51,13 +51,3 @@ def test_resource_update_determinism():
     next_state = ApplyPath.apply_generation(state, update, 2, 11)
     assert next_state.global_resources["gold"] == 150.0
     assert next_state.global_resources["wood"] == 20.0
-
-
-def test_periodic_update_determinism():
-    """Verify periodic due ticks are updated and sorted."""
-    state = AuthoritativeState(tick=1, seed=1, periodic_due_ticks={"P1": 10})
-    update = StateUpdate(periodic_updates={"P2": 20, "P1": 30})
-    
-    next_state = ApplyPath.apply_generation(state, update, 2, 2)
-    assert next_state.periodic_due_ticks["P1"] == 30
-    assert next_state.periodic_due_ticks["P2"] == 20

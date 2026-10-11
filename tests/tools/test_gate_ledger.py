@@ -59,6 +59,20 @@ class TestDerivation:
         _put(tmp_path, _verdict("a", "2026-10-06T01:00:00Z", True), _verdict("b", "2026-10-06T02:00:00Z", True, inputs={"cmd_sha": "z"}))
         assert _view(tmp_path)["a"]["outcome"] is None
 
+    def test_block_then_block_with_other_inputs_then_pass_resolves_both_as_fixed_and_rerun(self, tmp_path):
+        _put(tmp_path, _verdict("a", "2026-10-06T01:00:00Z", True), _verdict("b", "2026-10-06T02:00:00Z", True, inputs={"cmd_sha": "z"}),
+             _verdict("c", "2026-10-06T03:00:00Z", False))
+        view = _view(tmp_path)
+        assert [(view[v]["outcome"], view[v]["followup_verdict_id"]) for v in "ab"] == [("fixed_and_rerun", "c")] * 2
+        assert view["c"]["outcome"] is None
+
+    def test_a_same_inputs_rerun_stays_rerun_no_change_and_the_rerun_itself_resolves_on_the_later_pass(self, tmp_path):
+        _put(tmp_path, _verdict("a", "2026-10-06T01:00:00Z", True), _verdict("b", "2026-10-06T02:00:00Z", True),
+             _verdict("c", "2026-10-06T03:00:00Z", False))
+        view = _view(tmp_path)
+        assert (view["a"]["outcome"], view["a"]["followup_verdict_id"]) == ("rerun_no_change", "b")
+        assert (view["b"]["outcome"], view["b"]["followup_verdict_id"]) == ("fixed_and_rerun", "c")
+
     def test_lone_block_is_unresolved_and_other_tickets_or_gates_do_not_count(self, tmp_path):
         _put(tmp_path, _verdict("a", "2026-10-06T01:00:00Z", True),
              _verdict("b", "2026-10-06T02:00:00Z", False, ticket="TCK-2"), _verdict("c", "2026-10-06T03:00:00Z", False, gate="cli:other"))

@@ -1,39 +1,29 @@
 # Compliance IDs: INFRA-116
 from __future__ import annotations
 
-from typing import List, Dict, Any, Sequence, Optional, Tuple, TYPE_CHECKING
-from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 from src.core.state import AuthoritativeState
 from src.core.work import WorkItem, WorkClass
 from src.engine.candidate_selector import MovementCandidateSelector
+from src.engine.cadence import SystemCadence, should_run
+from src.engine.need_pull import need_is_pressing
 
 # Ticks between the brain wakes of an entity beside an unengaged hostile (decision 32); the decision comes within this bound.
 ADJACENCY_WAKE_COOLDOWN = 2
+
+# Ticks between the brain wakes of a holder of a move while a need is pressing: the strategic cadence, the rate at which an idle
+# entity already decides, so a held mover is no slower to decide than an idle one.
+NEED_WAKE_CADENCE: int = SystemCadence.model_fields["strategic_intelligence"].default
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
     from src.engine.policy import GovernorPolicy
 
 
-@dataclass(frozen=True, slots=True)
-class PeriodicDefinition:
-    """
-    Static definition for a periodic background task.
-    """
-    subsystem_id: str
-    work_kind: str
-    cadence: int
-    is_authoritative: bool = True  # M5 Law: Non-auth tasks shed in SURVIVAL
-    payload: Dict[str, Any] = field(default_factory=dict)
-
-
 class DeterministicScheduler:
     """
     Authoritative orchestrator for deterministic work selection.
     """
-
-    def __init__(self, periodic_defs: Sequence[PeriodicDefinition] = ()):
-        self._periodic_defs = {pd.subsystem_id: pd for pd in periodic_defs}
 
     def select_work(
         self, 
@@ -52,7 +42,6 @@ class DeterministicScheduler:
         focus_points = [state.town_center]
         
         work_sequence: List[WorkItem] = []
-        dropped_count = 0
 
         # Decision 32 ("notice and decide"): an entity beside a perceived hostile it is not engaged with is woken for the brain ahead of its
         # cadence, every ADJACENCY_WAKE_COOLDOWN ticks while that holds. Stateless: the wake needs only this tick's positions.
@@ -67,48 +56,21 @@ class DeterministicScheduler:
         critical_items.sort(key=lambda x: (-x.readiness, x.owner_id))
         work_sequence.extend(critical_items)
 
-        # 2. PERIODIC: Subsystem Upkeep
-        periodic_items: List[WorkItem] = []
-        for sid, pdef in self._periodic_defs.items():
-            if not pdef.is_authoritative and not policy.allow_non_authoritative_periodic:
-                dropped_count += 1
-                continue
-                
-            due_tick = state.periodic_due_ticks.get(sid, 0)
-            if state.tick >= due_tick:
-                periodic_items.append(WorkItem(
-                    owner_id=sid,
-                    work_id=f"{state.tick}:periodic:{sid}",
-                    work_class=WorkClass.PERIODIC,
-                    work_kind=pdef.work_kind,
-                    payload=pdef.payload,
-                    due_tick=due_tick,
-                    cadence=pdef.cadence
-                ))
-        
-        periodic_items.sort(key=lambda x: (x.due_tick, x.owner_id))
-        work_sequence.extend(periodic_items)
+        # Nothing in this scheduler sheds work, so the dropped count is always 0 (kept so the kernel's accounting reads one place).
+        return work_sequence, 0
 
-        # 3. DEFERRED: Drain postponed authoritative work
-        deferred_items: List[WorkItem] = []
-        for d_id, debt_count in state.work_debt.items():
-            if debt_count > 0:
-                deferred_items.append(WorkItem(
-                    owner_id=d_id,
-                    work_id=f"{state.tick}:deferred:{d_id}",
-                    work_class=WorkClass.DEFERRED,
-                    work_kind="DRAIN_DEBT",
-                    due_tick=state.tick
-                ))
-        
-        deferred_items.sort(key=lambda x: x.owner_id)
-        work_sequence.extend(deferred_items)
-
-        # 4. OPPORTUNISTIC: Optional Enrichment
-        if policy.allow_opportunistic:
-            pass
-        
-        return work_sequence, dropped_count
+    @staticmethod
+    def _is_need_woken(ent: "EntityState", state: AuthoritativeState, work_kind: str) -> bool:
+        """SURV-07 / decision 32 for a need: an entity holding a move while a biological need is pressing is woken for the brain on
+        the strategic cadence (staggered by id), so the hunger or sleep goal it already ranks first can displace the held move.
+        Waking is only a re-decision: a present threat to life (the only thing that outranks a pressing need, SURV-07) is seen again by
+        that decision and re-issues the flight, so a held flight is woken too; one whose threat is gone (a retreat that never completes)
+        is no longer held."""
+        return (
+            work_kind == "ENTITY_MOVE"
+            and need_is_pressing(ent.biological.hunger, ent.biological.sleep_debt)
+            and should_run(state.tick, ent.id, NEED_WAKE_CADENCE)
+        )
 
     @staticmethod
     def _is_woken(ent: "EntityState", state: AuthoritativeState, work_kind: str, wake_index: Dict[Any, List[int]]) -> bool:
@@ -146,7 +108,7 @@ class DeterministicScheduler:
         # Milestone 3: Staggered Entity Execution
         # Gating non-critical work items based on strategic cadence.
         is_idle_act = (work_kind == "ENTITY_ACT" and not ent.task.payload)
-        woken = self._is_woken(ent, state, work_kind, wake_index)
+        woken = self._is_woken(ent, state, work_kind, wake_index) or self._is_need_woken(ent, state, work_kind)
         is_brain = woken or work_kind == "ENTITY_BRAIN" or is_idle_act
 
         # Readiness gate: thinking (brain) is free; only actual actions/movement

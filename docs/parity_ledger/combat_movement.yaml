@@ -4818,3 +4818,13 @@
   test_path: tests/mechanic_scenarios/test_decision32_notice_and_decide.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.95.
   support_boundary: 'IGNORE is unreachable in the corpus (KEEP_WALKING fires 0 times); WATCH is a typed HOLD wait (WATCH_HOSTILE); the wake bypasses the LOD throttle (6 percent of wakes); brain decisions +16 to +17 percent in crowded_frontier; total deaths converge by tick 5000 (a food-supply effect).'
+- id: COMB-344
+  text: 'TCK-20261009-PURSUING-GUARDS-RUN-HUNDREDS-OF-TILES-OFF-THE-MAP-AND-STARVE: the world has an edge (verify_occupancy refuses a tile outside the union of the declared region bounds with OUT_OF_BOUNDS; LAW-POSITION-IN-WORLD names any committed position outside it); an intercept aims at the current position of a target that is itself pursuing; a held goal-hysteresis target the entity can no longer perceive is dropped.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/spatial_query.py (world_bounds, is_inside_world), src/engine/legality.py (verify_occupancy), src/observability/hard_law_monitor.py (LAW-POSITION-IN-WORLD), src/engine/positioning.py (find_intercept_position), src/engine/tactical.py (_target_still_perceived).
+  proof_type: regression
+  test_path: tests/engine/test_world_extent_and_chase.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.104.
+  support_boundary: The chase-duration limit is not built (chase_ticks is never incremented and the task has no start tick; the fix needs apply.py, Phase B). One pursuit still ran 1434 ticks. Measured on urban_political and frontier_living_world, seeds 41 to 45, 1500 ticks.

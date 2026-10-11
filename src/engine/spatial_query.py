@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Tuple, Optional, TYPE_CHECKING, Dict
 
-from src.core.region_resolution import resolve_region_among
+from src.core.region_resolution import resolve_region_among, world_extent
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState, ResourceNodeState, BuildingState, RegionState
@@ -217,24 +217,7 @@ class SpatialQueryService:
 
     @staticmethod
     def _get_regions_global_bounds(state: AuthoritativeState) -> Optional[tuple[float, float, float, float]]:
-        cache_key = "_regions_global_bounds"
-        bounds = getattr(state, cache_key, None)
-        if bounds is False:
-            return None
-        if bounds is None:
-            if not state.regions:
-                object.__setattr__(state, cache_key, False)
-                return None
-            x_min = y_min = float('inf')
-            x_max = y_max = float('-inf')
-            for r in state.regions.values():
-                x_min = min(x_min, r.bounds[0])
-                y_min = min(y_min, r.bounds[1])
-                x_max = max(x_max, r.bounds[2])
-                y_max = max(y_max, r.bounds[3])
-            bounds = (x_min, y_min, x_max, y_max)
-            object.__setattr__(state, cache_key, bounds)
-        return bounds
+        return world_extent(state)
 
     @staticmethod
     def get_building_region(state: AuthoritativeState, building_id: int) -> Optional[RegionState]:
