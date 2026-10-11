@@ -212,19 +212,24 @@ def test_the_contract_refuses_each_planted_violation(name, build):
 
 def test_every_committed_source_record_round_trips_byte_for_byte_and_carries_no_animation():
     files = sorted((REAL / "sources").glob("*/r*.source.json"))
+    from tests.visual_assets import adopted_facts as af
+
     assert len(files) >= 77
     for path in files:
         data = path.read_bytes()
         record = parse_record(SourceRecord, data)
-        assert record.animation is None and canonical_json(record) == data, path
-        assert b"animation" not in data, path
+        animated = path.parent.name in af.PROOF_ANIMATED  # only the two real-art proof sources animate
+        assert (record.animation is not None) == animated and canonical_json(record) == data, path
+        assert (b"animation" in data) == animated, path
 
 
 def test_every_committed_source_reads_with_no_new_finding_and_derives_no_animation():
     for path in sorted((REAL / "sources").glob("*/r*.aseprite")):
         source = path.read_bytes()
         assert not any(c.value.startswith("ANIMATION_") for c in codes(source)), path
-        assert animation.animation_from_source(source) is None, path
+        from tests.visual_assets import adopted_facts as af
+
+        assert (animation.animation_from_source(source) is not None) == (path.parent.name in af.PROOF_ANIMATED), path
 
 
 def test_a_record_with_an_animation_serializes_it_and_parses_back_equal():

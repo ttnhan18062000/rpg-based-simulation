@@ -229,19 +229,24 @@ def test_the_worst_case_slice_json_fits_a_source_record():
 
 def test_every_committed_source_record_round_trips_byte_for_byte_and_carries_no_slices():
     files = sorted((REAL / "sources").glob("*/r*.source.json"))
+    from tests.visual_assets import adopted_facts as af
+
     assert len(files) >= 77
     for path in files:
         data = path.read_bytes()
         record = parse_record(SourceRecord, data)
-        assert record.slices is None and canonical_json(record) == data, path
-        assert b"slices" not in data, path
+        sliced = path.parent.name in af.PROOF_SOURCES  # only the three real-art proof sources carry a slice
+        assert (record.slices is not None) == sliced and canonical_json(record) == data, path
+        assert (b"slices" in data) == sliced, path
 
 
 def test_every_committed_source_reads_with_no_new_finding_and_derives_no_slices():
     for path in sorted((REAL / "sources").glob("*/r*.aseprite")):
         source = path.read_bytes()
         assert not some(source), path
-        assert slices.slices_from_source(source) is None, path
+        from tests.visual_assets import adopted_facts as af
+
+        assert (slices.slices_from_source(source) is not None) == (path.parent.name in af.PROOF_SOURCES), path
 
 
 # ---- intake -> adoption -> SourceRecord ----
