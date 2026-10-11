@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_a54f9b17cf094e6a",
+  "manifest_id": "prov_cf17a6a4f2dc7461",
   "world_id": "frontier_extended",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "cf283514caed0a1d59ac9a263f89149a33ba028a730d6172ddb64542cb49ac9a",
+  "catalog_fingerprint": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
@@ -12,13 +12,13 @@
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
     "trading_company_hub": "154fc6ef87e46522880df12f548520ebc2564b1b6a2d44c14a37284b1a390c8d",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584",
+    "wolf_den_near_forest": "705d6afb6e0b2992d1fde612cc46a9f55d6e9eddd4cda6c15e864b76f3e62d81",
     "forest_warden_grove": "c41ff99559a8e7f6603051db5d5fff790fd4cbf4b35a3d50a5ff48eccc33c6ea"
   },
   "composition_fingerprint": "a62991178376e649d5be280513bd87c7fa10d32851f622abdb7affc7cec0cb65",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "a54f9b17cf094e6a0e90ddd541961bf68ffc2e19dc9bc2ebd89203aaed5a48ac",
-  "created_at": "2026-10-09T17:40:16.553597Z",
+  "content_fingerprint": "cf17a6a4f2dc7461bdb0516cd6bc6fa6ea273160d68c49d8b290f5de275d96f6",
+  "created_at": "2026-10-11T08:41:22.593930Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -210,6 +210,18 @@
       },
       "details": {
         "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
       }
     },
     "hometown": {
@@ -1575,6 +1587,30 @@
         "population_recipe_source": "wolf_pack_small"
       }
     },
+    "small_plant_eater_herd_wild_small_plant_eater": {
+      "element_id": "small_plant_eater_herd_wild_small_plant_eater",
+      "element_type": "population",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "wild_creature",
+        "faction": "wild_fauna",
+        "stats_profile": "small_plant_eater_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "NEUTRAL"
+        }
+      },
+      "details": {
+        "count": 6,
+        "spawn_region": "near_forest",
+        "archetype_source": "wild_small_plant_eater",
+        "population_recipe_source": "small_plant_eater_herd"
+      }
+    },
     "wolf_den_near_forest__wood_node_0": {
       "element_id": "wolf_den_near_forest__wood_node_0",
       "element_type": "resource",
@@ -1912,6 +1948,286 @@
           "mystery"
         ],
         "reward_budget": 150
+      }
+    },
+    "cover__near_forest__0": {
+      "element_id": "cover__near_forest__0",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__1": {
+      "element_id": "cover__near_forest__1",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__2": {
+      "element_id": "cover__near_forest__2",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__3": {
+      "element_id": "cover__near_forest__3",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__4": {
+      "element_id": "cover__near_forest__4",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__5": {
+      "element_id": "cover__near_forest__5",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__6": {
+      "element_id": "cover__near_forest__6",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__7": {
+      "element_id": "cover__near_forest__7",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__sacred_grove__0": {
+      "element_id": "cover__sacred_grove__0",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_medium"
+      },
+      "details": {
+        "count": 12,
+        "region": "sacred_grove"
+      }
+    },
+    "cover__sacred_grove__1": {
+      "element_id": "cover__sacred_grove__1",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_medium"
+      },
+      "details": {
+        "count": 12,
+        "region": "sacred_grove"
+      }
+    },
+    "cover__sacred_grove__2": {
+      "element_id": "cover__sacred_grove__2",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_medium"
+      },
+      "details": {
+        "count": 12,
+        "region": "sacred_grove"
+      }
+    },
+    "cover__sacred_grove__3": {
+      "element_id": "cover__sacred_grove__3",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_medium"
+      },
+      "details": {
+        "count": 12,
+        "region": "sacred_grove"
+      }
+    },
+    "cover__deep_forest__0": {
+      "element_id": "cover__deep_forest__0",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "deep_forest"
+      }
+    },
+    "cover__deep_forest__1": {
+      "element_id": "cover__deep_forest__1",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "deep_forest"
+      }
+    },
+    "cover__deep_forest__2": {
+      "element_id": "cover__deep_forest__2",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "deep_forest"
+      }
+    },
+    "cover__deep_forest__3": {
+      "element_id": "cover__deep_forest__3",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "deep_forest"
+      }
+    },
+    "cover__deep_forest__4": {
+      "element_id": "cover__deep_forest__4",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "deep_forest"
+      }
+    },
+    "cover__deep_forest__5": {
+      "element_id": "cover__deep_forest__5",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "deep_forest"
+      }
+    },
+    "cover__deep_forest__6": {
+      "element_id": "cover__deep_forest__6",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "deep_forest"
+      }
+    },
+    "cover__deep_forest__7": {
+      "element_id": "cover__deep_forest__7",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "deep_forest"
       }
     }
   }

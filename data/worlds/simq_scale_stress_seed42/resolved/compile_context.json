@@ -1398,133 +1398,393 @@
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null,
-      "yield_item": "wood"
+      "yield_item": "wood",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "res_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "goblin_camp_forage__berry_thicket_0": {
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries"
+      "yield_item": "wild_berries",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "moon_cult_ruins__moon_resin_tree_0": {
       "required_ticks": 20,
       "resource_type": "moon_resin_tree",
       "yield_policy": null,
-      "yield_item": "moon_resin"
+      "yield_item": "moon_resin",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "moon_cult_ruins__crystal_outcrop_1": {
       "required_ticks": 18,
       "resource_type": "crystal_outcrop",
       "yield_policy": null,
-      "yield_item": "crystal_shard"
+      "yield_item": "crystal_shard",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "old_mine_resource_loop__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
       "yield_policy": null,
-      "yield_item": "iron_ore"
+      "yield_item": "iron_ore",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "old_mine_resource_loop__crystal_outcrop_1": {
       "required_ticks": 18,
       "resource_type": "crystal_outcrop",
       "yield_policy": null,
-      "yield_item": "crystal_shard"
+      "yield_item": "crystal_shard",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "old_mine_resource_loop__silver_vein_2": {
       "required_ticks": 18,
       "resource_type": "silver_vein",
       "yield_policy": null,
-      "yield_item": "silver_ore"
+      "yield_item": "silver_ore",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "orc_clan_territory__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
       "yield_policy": null,
-      "yield_item": "iron_ore"
+      "yield_item": "iron_ore",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "orc_clan_territory__wood_node_1": {
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null,
-      "yield_item": "wood"
+      "yield_item": "wood",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "river_crossing__herb_patch_0": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "sunken_swamp_border__wood_node_0": {
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null,
-      "yield_item": "wood"
+      "yield_item": "wood",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "sunken_swamp_border__herb_patch_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "sunken_swamp_border__berry_thicket_2": {
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries"
+      "yield_item": "wild_berries",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "undead_battlefield__spirit_wisp_0": {
       "required_ticks": 25,
       "resource_type": "spirit_wisp",
       "yield_policy": null,
-      "yield_item": "spirit_essence"
+      "yield_item": "spirit_essence",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "wolf_den_near_forest__wood_node_0": {
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null,
-      "yield_item": "wood"
+      "yield_item": "wood",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "wolf_den_near_forest__herb_patch_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "wolf_den_near_forest__healing_flower_patch_2": {
       "required_ticks": 12,
       "resource_type": "healing_flower_patch",
       "yield_policy": null,
-      "yield_item": "healing_flower"
+      "yield_item": "healing_flower",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "wolf_den_near_forest__berry_thicket_3": {
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries"
+      "yield_item": "wild_berries",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "forest_warden_grove__healing_flower_patch_0": {
       "required_ticks": 12,
       "resource_type": "healing_flower_patch",
       "yield_policy": null,
-      "yield_item": "healing_flower"
+      "yield_item": "healing_flower",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "forest_warden_grove__spirit_wisp_1": {
       "required_ticks": 25,
       "resource_type": "spirit_wisp",
       "yield_policy": null,
-      "yield_item": "spirit_essence"
+      "yield_item": "spirit_essence",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "forest_warden_grove__berry_thicket_2": {
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries"
+      "yield_item": "wild_berries",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
+    },
+    "cover__river_ford__0": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__1": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__2": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__3": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__4": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__swamp_border_territory__0": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_low",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 4800
+    },
+    "cover__swamp_border_territory__1": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_low",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 4800
+    },
+    "cover__near_forest__0": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__1": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__2": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__3": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__4": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__5": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__6": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__7": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__sacred_grove__0": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_medium",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 2400
+    },
+    "cover__sacred_grove__1": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_medium",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 2400
+    },
+    "cover__sacred_grove__2": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_medium",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 2400
+    },
+    "cover__sacred_grove__3": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_medium",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 2400
+    },
+    "cover__deep_forest__0": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__deep_forest__1": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__deep_forest__2": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__deep_forest__3": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__deep_forest__4": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__deep_forest__5": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__deep_forest__6": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__deep_forest__7": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
     }
   },
   "factions": {

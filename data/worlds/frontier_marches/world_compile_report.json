@@ -1,15 +1,15 @@
 {
   "world_id": "frontier_marches",
   "seed": 42,
-  "entity_count": 62,
+  "entity_count": 68,
   "region_count": 10,
-  "resource_node_count": 16,
+  "resource_node_count": 26,
   "building_count": 6,
   "quest_count": 19,
-  "distinct_populated_factions": 9,
+  "distinct_populated_factions": 10,
   "warnings": [],
-  "compile_duration_ms": 478.42078004032373,
-  "state_hash": "fed1a98948826a5aacda7d13402d2b98",
-  "canonical_state_hash": "de32e105d7dc6b7b3e330a814ef99c1a9ca2199f3b973ea3606798620e9663b0",
+  "compile_duration_ms": 498.14921291545033,
+  "state_hash": "048205f61cca5fa1e4352f16fe6a7057",
+  "canonical_state_hash": "bc7ace18c9e38940161daceaadb5a8f92dbd6d378c204a3f0e01d9e3088224cb",
   "place_count": 4
 }

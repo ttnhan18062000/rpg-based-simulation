@@ -245,7 +245,10 @@ def test_wider_scope_numbers_pinned():
     # class) and +src/engine/way_in_range.py (one function, the range rule). Both are helpers.
     # 323 -> 324 on 2026-10-11 (D57, #500 folded into the combined RPG PR): +src/worldbuilding/camp_food.py (camp_food_gaps and
     # camp_food_sources; functions only, no class, so it adds no unbound mechanism-shaped class).
-    assert wider["scope_files"] == 324
+    # 324 -> 330 on 2026-10-11 (hunting, diet gate and grazing, owner decisions 44 to 50 and row 59): +src/engine/appraisal.py, carcass.py,
+    # tactical_avoid.py, tile_distance.py, +src/core/resource_regrowth.py and +src/worldassembly/cover.py. Functions and constants only (appraisal.py
+    # holds one Relation enum), helpers of the existing mechanisms, so they add no wired unbound class.
+    assert wider["scope_files"] == 330
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -265,7 +268,8 @@ def test_wider_scope_numbers_pinned():
     # 236 -> 234 on 2026-10-09 (batch 4): inn.py and home.py were unbound dead modules.
     # 234 -> 236 on 2026-10-09 (sleep collapse): the two helper modules above are unbound.
     # 236 -> 237 on 2026-10-11 (D57): src/worldbuilding/camp_food.py is an unbound helper (a validator report: pure functions, no mechanism).
-    assert wider["unbound_files"] == 237
+    # 237 -> 243 on 2026-10-11 (hunting, diet gate and grazing): the six new helper modules above are unbound.
+    assert wider["unbound_files"] == 243
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.

@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_014e5104f194e9b5",
+  "manifest_id": "prov_a4a1e461190d08f8",
   "world_id": "dungeon_crawl",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "84181d5d641345ff21967786aee997f200d7d23b1e56eead7bb39691d2b1dfd4",
+  "catalog_fingerprint": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
   "module_fingerprints": {
     "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71",
     "scalable_bandit_camp": "082f8715e9546c290140e123b62fcbc252117e4322c2324d3b728ab8a5daf9c1"
   },
   "composition_fingerprint": "fe77fe0c7199bc49ea1ddfebce5f839db5667b70a77eb1a86a62ed856b7524ea",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "014e5104f194e9b586f83d0900013e5db73dc35d1fe9e7cce63431523b82aa23",
-  "created_at": "2026-10-09T13:49:05.577821Z",
+  "content_fingerprint": "a4a1e461190d08f85b3b0fc5ca1776951912e102a7db7ea9bb427215e31d1240",
+  "created_at": "2026-10-11T08:41:21.070055Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

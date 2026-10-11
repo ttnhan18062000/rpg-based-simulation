@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_6869f5bc6d5ba7d6",
+  "manifest_id": "prov_927ae4dd9c2402f3",
   "world_id": "quest_dense_frontier",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "84181d5d641345ff21967786aee997f200d7d23b1e56eead7bb39691d2b1dfd4",
+  "catalog_fingerprint": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
@@ -11,8 +11,8 @@
   },
   "composition_fingerprint": "4fb31b9a0c2ac9434f1a592156fb1b4830932512d90580b57ff554ebf4628183",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "6869f5bc6d5ba7d6e540078cc8a5aea4515a642ac4e97d5b43d9f4e11f1b2555",
-  "created_at": "2026-10-09T13:49:18.740182Z",
+  "content_fingerprint": "927ae4dd9c2402f3f964466b0b67198c51047ae281114f04cb3e4860d679f7fd",
+  "created_at": "2026-10-11T08:41:35.159697Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -466,6 +466,76 @@
           "spirit"
         ],
         "reward_budget": 150
+      }
+    },
+    "cover__river_ford__0": {
+      "element_id": "cover__river_ford__0",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "river_ford"
+      }
+    },
+    "cover__river_ford__1": {
+      "element_id": "cover__river_ford__1",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "river_ford"
+      }
+    },
+    "cover__river_ford__2": {
+      "element_id": "cover__river_ford__2",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "river_ford"
+      }
+    },
+    "cover__river_ford__3": {
+      "element_id": "cover__river_ford__3",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "river_ford"
+      }
+    },
+    "cover__river_ford__4": {
+      "element_id": "cover__river_ford__4",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "river_ford"
       }
     }
   }

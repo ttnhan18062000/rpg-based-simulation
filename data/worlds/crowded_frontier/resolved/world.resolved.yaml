@@ -272,6 +272,21 @@ resources:
   count: 10
   region: forest_edge
   regen_rate: 1
+- id: cover__forest_edge__0
+  resource_type: cover_patch_high
+  count: 20
+  region: forest_edge
+  regen_rate: 3
+- id: cover__forest_edge__1
+  resource_type: cover_patch_high
+  count: 20
+  region: forest_edge
+  regen_rate: 3
+- id: cover__forest_edge__2
+  resource_type: cover_patch_high
+  count: 20
+  region: forest_edge
+  regen_rate: 3
 buildings:
 - id: town_hall_0
   type: town_hall

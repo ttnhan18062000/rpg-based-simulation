@@ -28,6 +28,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'grass' is active but never consumed by any downstream component",
       "target": "grass"
     },
@@ -42,12 +48,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -766,8 +766,32 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Resource 'cover_patch_low' is active but never consumed by any downstream component",
+      "target": "cover_patch_low"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Resource 'cover_patch_medium' is active but never consumed by any downstream component",
+      "target": "cover_patch_medium"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Resource 'cover_patch_high' is active but never consumed by any downstream component",
+      "target": "cover_patch_high"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Item 'steel_sword' is active but never consumed by any downstream component",
       "target": "steel_sword"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Item 'grass_cover' is active but never consumed by any downstream component",
+      "target": "grass_cover"
     },
     {
       "severity": "WARNING",
@@ -862,10 +886,16 @@
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 137
+    "warnings_count": 141
   },
   "blocking_errors": [],
   "warnings": [
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
+    },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
@@ -883,12 +913,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -1607,8 +1631,32 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Resource 'cover_patch_low' is active but never consumed by any downstream component",
+      "target": "cover_patch_low"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Resource 'cover_patch_medium' is active but never consumed by any downstream component",
+      "target": "cover_patch_medium"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Resource 'cover_patch_high' is active but never consumed by any downstream component",
+      "target": "cover_patch_high"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Item 'steel_sword' is active but never consumed by any downstream component",
       "target": "steel_sword"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Item 'grass_cover' is active but never consumed by any downstream component",
+      "target": "grass_cover"
     },
     {
       "severity": "WARNING",
@@ -1694,7 +1742,7 @@
     }
   ],
   "fingerprints": {
-    "catalog": "84181d5d641345ff21967786aee997f200d7d23b1e56eead7bb39691d2b1dfd4",
+    "catalog": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
     "modules": {
       "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
       "wolf_den_near_forest": "705d6afb6e0b2992d1fde612cc46a9f55d6e9eddd4cda6c15e864b76f3e62d81"

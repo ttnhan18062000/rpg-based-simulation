@@ -394,19 +394,121 @@
       "required_ticks": 15,
       "resource_type": "iron_vein",
       "yield_policy": null,
-      "yield_item": "iron_ore"
+      "yield_item": "iron_ore",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "mountain_pass__frost_shard_cluster_1": {
       "required_ticks": 24,
       "resource_type": "frost_shard_cluster",
       "yield_policy": null,
-      "yield_item": "frost_shard"
+      "yield_item": "frost_shard",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "river_crossing__herb_patch_0": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
+    },
+    "cover__near_forest__0": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__1": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__2": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__3": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__4": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__5": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__6": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__0": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__1": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__2": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__3": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__4": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
     }
   },
   "factions": {

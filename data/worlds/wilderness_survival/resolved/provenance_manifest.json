@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_9744dd90d31dafc7",
+  "manifest_id": "prov_f58105dcb94e7c33",
   "world_id": "wilderness_survival",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "84181d5d641345ff21967786aee997f200d7d23b1e56eead7bb39691d2b1dfd4",
+  "catalog_fingerprint": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
     "survivor_camp_shelter": "c017935a30d51e3b5b293be4cc2c54cc8ef7a0f4a72a0932be26983db7ddc355",
@@ -11,8 +11,8 @@
   },
   "composition_fingerprint": "7365bbbc187e289a2241a1d504e2d75ecb6ff8314cdb3c27fb1470cf2a03abf9",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "9744dd90d31dafc7d53c24832f7a7e9f16c205f89c2a9aaa155541db92137d34",
-  "created_at": "2026-10-09T13:49:36.272188Z",
+  "content_fingerprint": "f58105dcb94e7c333a8dd8037a694fa3dbfc1a1751e43aaf0c6e4400d18437aa",
+  "created_at": "2026-10-11T08:41:54.046675Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -649,6 +649,174 @@
           "resource"
         ],
         "reward_budget": 80
+      }
+    },
+    "cover__survivor_outpost__0": {
+      "element_id": "cover__survivor_outpost__0",
+      "element_type": "resource",
+      "source_module": "survivor_camp_shelter",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "survivor_outpost"
+      }
+    },
+    "cover__survivor_outpost__1": {
+      "element_id": "cover__survivor_outpost__1",
+      "element_type": "resource",
+      "source_module": "survivor_camp_shelter",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "survivor_outpost"
+      }
+    },
+    "cover__survivor_outpost__2": {
+      "element_id": "cover__survivor_outpost__2",
+      "element_type": "resource",
+      "source_module": "survivor_camp_shelter",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "survivor_outpost"
+      }
+    },
+    "cover__survivor_outpost__3": {
+      "element_id": "cover__survivor_outpost__3",
+      "element_type": "resource",
+      "source_module": "survivor_camp_shelter",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "survivor_outpost"
+      }
+    },
+    "cover__near_forest__0": {
+      "element_id": "cover__near_forest__0",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__1": {
+      "element_id": "cover__near_forest__1",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__2": {
+      "element_id": "cover__near_forest__2",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__3": {
+      "element_id": "cover__near_forest__3",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__4": {
+      "element_id": "cover__near_forest__4",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__5": {
+      "element_id": "cover__near_forest__5",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__6": {
+      "element_id": "cover__near_forest__6",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__7": {
+      "element_id": "cover__near_forest__7",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
       }
     }
   }

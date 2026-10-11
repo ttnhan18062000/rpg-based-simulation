@@ -7,7 +7,7 @@ role, a trait list or a predator/prey label, and none mutates state. Constants l
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from src.cognition.common_knowledge import believed_danger_rank
 from src.content.schema import PROPERTY_BANDS
@@ -68,10 +68,15 @@ def can_eat_item(eater: "EntityState", item_id: str) -> bool:
 
     A body whose diet is undeclared, or an entity with no known species, keeps the legacy "eats any food" behaviour: missing data gates
     nothing."""
+    return kind_can_eat_item(get_species_id_str(eater), item_id)
+
+
+def kind_can_eat_item(species_id: Optional[str], item_id: str) -> bool:
+    """``can_eat_item`` for a kind (a species id) rather than an entity: what a camp's creatures, not one individual, can eat."""
     item_class = food_class(item_id)
     if item_class is None:
         return False
-    _, body = get_kind_properties(get_species_id_str(eater))
+    _, body = get_kind_properties(species_id)
     if body is None or body.diet is None:
         return True
     return item_class in body.diet

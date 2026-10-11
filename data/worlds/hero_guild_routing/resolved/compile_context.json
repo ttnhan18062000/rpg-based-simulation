@@ -693,31 +693,41 @@
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null,
-      "yield_item": "wood"
+      "yield_item": "wood",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "res_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "goblin_camp_forage__berry_thicket_0": {
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries"
+      "yield_item": "wild_berries",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "mountain_pass__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
       "yield_policy": null,
-      "yield_item": "iron_ore"
+      "yield_item": "iron_ore",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "mountain_pass__frost_shard_cluster_1": {
       "required_ticks": 24,
       "resource_type": "frost_shard_cluster",
       "yield_policy": null,
-      "yield_item": "frost_shard"
+      "yield_item": "frost_shard",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     }
   },
   "factions": {

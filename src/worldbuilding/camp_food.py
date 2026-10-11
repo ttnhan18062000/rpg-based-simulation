@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 from src.core.items import food_hunger_recovery
+from src.engine.appraisal import kind_can_eat_item
 from src.core.region_resolution import resolve_region_among
 from src.core.state import AuthoritativeState
 
@@ -18,13 +19,15 @@ CAMP_SPAWN_RANGE = 8.0
 
 def camp_food_gaps(state: AuthoritativeState) -> List[str]:
     """Ids of the camps that have no food node with charges inside the range their spawns keep to."""
-    food_nodes = [n for n in state.resource_nodes.values() if n.remaining_charges > 0 and food_hunger_recovery(n.yields_item) > 0.0]
-    gaps: List[str] = []
-    for camp_id, camp in state.camps.items():
-        cx, cy = camp.position
-        if not any(abs(n.position[0] - cx) + abs(n.position[1] - cy) <= CAMP_SPAWN_RANGE for n in food_nodes):
-            gaps.append(camp_id)
-    return sorted(gaps)
+    return sorted(camp_id for camp_id, camp in state.camps.items() if not _food_in_range(state, camp))
+
+
+def _food_in_range(state: AuthoritativeState, camp) -> List:
+    """The nodes with charges inside the camp's range whose food the camp's own kind can eat (a diet that cannot eat a food has no way from it)."""
+    cx, cy = camp.position
+    return [n for n in state.resource_nodes.values()
+            if n.remaining_charges > 0 and food_hunger_recovery(n.yields_item) > 0.0 and kind_can_eat_item(camp.kind, n.yields_item)
+            and abs(n.position[0] - cx) + abs(n.position[1] - cy) <= CAMP_SPAWN_RANGE]
 
 
 def camp_food_sources(state: AuthoritativeState) -> Dict[str, str]:
@@ -35,9 +38,7 @@ def camp_food_sources(state: AuthoritativeState) -> Dict[str, str]:
     sources: Dict[str, str] = {}
     for camp_id, camp in state.camps.items():
         cx, cy = camp.position
-        in_range = [n for n in state.resource_nodes.values()
-                    if n.remaining_charges > 0 and food_hunger_recovery(n.yields_item) > 0.0
-                    and abs(n.position[0] - cx) + abs(n.position[1] - cy) <= CAMP_SPAWN_RANGE]
+        in_range = _food_in_range(state, camp)
         if not in_range:
             continue
         nearest = min(in_range, key=lambda n: (abs(n.position[0] - cx) + abs(n.position[1] - cy), n.id))

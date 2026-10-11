@@ -3,15 +3,15 @@
   "seed": 42,
   "entity_count": 6,
   "region_count": 3,
-  "resource_node_count": 3,
+  "resource_node_count": 8,
   "building_count": 1,
   "quest_count": 6,
   "distinct_populated_factions": 1,
   "warnings": [
     "QuestDefinition 'survey_river_route' required_location_tag 'river' does not match any region type or tag in this world"
   ],
-  "compile_duration_ms": 441.1378628574312,
-  "state_hash": "4de5bcac21e4e982e830b4f9f6cbaff1",
-  "canonical_state_hash": "b183934fa2ca5e721cf22f26190d1209ecb211fe864dcf861324e39d80acd9b2",
+  "compile_duration_ms": 463.00088008865714,
+  "state_hash": "8db4da38c3711b2b783d49c136a28b35",
+  "canonical_state_hash": "44b3c921f5c98d8fb86cce9342cd7a73b4cf3c53b7bddf62f8eb91c8da04af16",
   "place_count": 1
 }

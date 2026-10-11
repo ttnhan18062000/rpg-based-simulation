@@ -403,13 +403,17 @@
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null,
-      "yield_item": "wood"
+      "yield_item": "wood",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "res_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     }
   },
   "factions": {

@@ -203,6 +203,66 @@ resources:
   count: 3
   region: river_ford
   regen_rate: 1
+- id: cover__near_forest__0
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__1
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__2
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__3
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__4
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__5
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__6
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__river_ford__0
+  resource_type: cover_patch_high
+  count: 20
+  region: river_ford
+  regen_rate: 3
+- id: cover__river_ford__1
+  resource_type: cover_patch_high
+  count: 20
+  region: river_ford
+  regen_rate: 3
+- id: cover__river_ford__2
+  resource_type: cover_patch_high
+  count: 20
+  region: river_ford
+  regen_rate: 3
+- id: cover__river_ford__3
+  resource_type: cover_patch_high
+  count: 20
+  region: river_ford
+  regen_rate: 3
+- id: cover__river_ford__4
+  resource_type: cover_patch_high
+  count: 20
+  region: river_ford
+  regen_rate: 3
 buildings:
 - id: watchtower_0
   type: watchtower

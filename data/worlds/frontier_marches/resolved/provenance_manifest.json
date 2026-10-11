@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_1281fccb3b2f52c0",
+  "manifest_id": "prov_9c35679993eed5a6",
   "world_id": "frontier_marches",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "cf283514caed0a1d59ac9a263f89149a33ba028a730d6172ddb64542cb49ac9a",
+  "catalog_fingerprint": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
@@ -13,12 +13,12 @@
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
     "sunken_swamp_border": "11e37d8a23ded39f278c7bcb0acedc5dcbe626076765d6caa18fcd4b4befb8fd",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "87c915735d10b1e943f14fd2a5b0b88109c22089f33c0a51a1dd8e12e9ba7584"
+    "wolf_den_near_forest": "705d6afb6e0b2992d1fde612cc46a9f55d6e9eddd4cda6c15e864b76f3e62d81"
   },
   "composition_fingerprint": "21303aed08d8c7e447812e725c080de5fa0f9c9d067e6c02d02d19183ce57a91",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "1281fccb3b2f52c0f620c828554affed1bd9c0fbc6f1c24e107e938be3288312",
-  "created_at": "2026-10-09T17:40:18.093800Z",
+  "content_fingerprint": "9c35679993eed5a6587b5ac1c23fb858cc53ee7467d93a7e8427dd8166fe349a",
+  "created_at": "2026-10-11T08:41:25.721508Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -210,6 +210,18 @@
       },
       "details": {
         "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
       }
     },
     "hometown": {
@@ -1605,6 +1617,30 @@
         "population_recipe_source": "wolf_pack_small"
       }
     },
+    "small_plant_eater_herd_wild_small_plant_eater": {
+      "element_id": "small_plant_eater_herd_wild_small_plant_eater",
+      "element_type": "population",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "wild_creature",
+        "faction": "wild_fauna",
+        "stats_profile": "small_plant_eater_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "NEUTRAL"
+        }
+      },
+      "details": {
+        "count": 6,
+        "spawn_region": "near_forest",
+        "archetype_source": "wild_small_plant_eater",
+        "population_recipe_source": "small_plant_eater_herd"
+      }
+    },
     "wolf_den_near_forest__wood_node_0": {
       "element_id": "wolf_den_near_forest__wood_node_0",
       "element_type": "resource",
@@ -1739,6 +1775,146 @@
           "resource"
         ],
         "reward_budget": 80
+      }
+    },
+    "cover__swamp_border_territory__0": {
+      "element_id": "cover__swamp_border_territory__0",
+      "element_type": "resource",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_low"
+      },
+      "details": {
+        "count": 6,
+        "region": "swamp_border_territory"
+      }
+    },
+    "cover__swamp_border_territory__1": {
+      "element_id": "cover__swamp_border_territory__1",
+      "element_type": "resource",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_low"
+      },
+      "details": {
+        "count": 6,
+        "region": "swamp_border_territory"
+      }
+    },
+    "cover__near_forest__0": {
+      "element_id": "cover__near_forest__0",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__1": {
+      "element_id": "cover__near_forest__1",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__2": {
+      "element_id": "cover__near_forest__2",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__3": {
+      "element_id": "cover__near_forest__3",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__4": {
+      "element_id": "cover__near_forest__4",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__5": {
+      "element_id": "cover__near_forest__5",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__6": {
+      "element_id": "cover__near_forest__6",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__7": {
+      "element_id": "cover__near_forest__7",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
       }
     }
   }
