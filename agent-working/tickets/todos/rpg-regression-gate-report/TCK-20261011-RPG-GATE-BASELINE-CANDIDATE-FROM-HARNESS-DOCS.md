@@ -47,14 +47,22 @@ Child 6 of TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC, found by testing-pla
    - any document `no-data` (any reason);
    - the documents disagree on `sha` or `harness_hash`;
    - the worlds, seeds or ticks differ from the config;
-   - any validity row has `violations > 0` (a baseline holds validity rows only at 0, per child 2; such a fail is owned in `rpg_gate_known.yaml` and fixed, not recorded);
+   - any validity row has `violations > 0` with NO current owner. Unowned or expired fails block the candidate. A baseline still never holds a validity row above 0, per child 2.
+   - **Owned validity fails are omitted, not blocking** (rpg-planner and testing-planner, 2026-10-11). A validity row with `violations > 0` that has a current, unexpired `state: fail` entry in `rpg_gate_known.yaml` (matched by `<metric_id>[:<group>]`, through the shared `known_reds.owner_of(..., state="fail")`) is left out of the candidate. This is safe because validity is judged absolutely on every run and never against a baseline. Without the omission, an owned M0 fail such as V3 would block v1, and with it all outcome drift, for weeks.
+   - **The omission is recorded.** The candidate, and the baseline written from it, carries `omitted_validity: [{row, known_match, ticket}]`. Child 2's lint accepts that field, and requires each listed row to be absent from `metrics`. `--known` is a required builder input.
    - k, floor or oracle disagree across documents for one (id, group);
    - fewer than 2 seeds for a run outcome row.
 
    Each refusal names the document and the rule.
 3. **Workflow:** the `RPG gate report` job also writes the candidate as part of its uploaded artifact, but only when the builder accepts, and best-effort: a refusal is a line in the step summary, never a job failure. That way rpg records v1 from a scheduled or dispatched run's artifact, never from a local machine. A branch-ref dispatch's candidate is labelled "evidence only, not a baseline source" (as child 5 states).
 4. **Docs:** update `rpg_gate_baseline_format.md` with the candidate section and the exact v1 recording command (download artifact -> `rebaseline --candidate ... --config ... --cite <metric-set ticket>`). Remove "child 4's report will emit it".
-5. **Tests:** a round trip (stub harness docs -> candidate -> `rebaseline()` writes v1 -> `lint_baseline` clean -> the report evaluates the same docs against it as all `pass`), plus each refusal, plus a byte-identical candidate for the same inputs.
+5. **Tests:**
+   - a round trip: stub harness docs -> candidate -> `rebaseline()` writes v1 -> `lint_baseline` clean -> the report evaluates the same docs against it as all `pass`;
+   - each refusal;
+   - a byte-identical candidate for the same inputs;
+   - an owned validity fail omitted and recorded in `omitted_validity`;
+   - an unowned validity fail refused, and an expired one refused;
+   - the lint rejecting `omitted_validity` whose row is still in `metrics`.
 
 ## Out of Scope
 - Recording v1 itself (rpg does that, citing the metric-set ticket).
