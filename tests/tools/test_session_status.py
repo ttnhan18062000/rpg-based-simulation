@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from tools.sessions import state as st
 from tools.sessions import status as status_mod
 from tools.sessions.roster import Domain, Role, Roster, Worktree
 from tools.sessions.launch import _worktree_entries
@@ -196,3 +197,23 @@ def test_collect_runs_against_the_real_repository_without_failing() -> None:
     root = Path(__file__).resolve().parents[2]
     text = status_mod.collect(root, volume=lambda p: (1, 100), pr_reader=lambda b, p: PR_UNKNOWN, size_reader=lambda p: 0)
     assert "seats:" in text and "worktree " in text
+
+
+def test_a_seat_shows_the_batch_worktree_it_is_writing_in(tmp_path: Path) -> None:
+    """TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD: `writing in: <path>` per seat."""
+    sroot = tmp_path / "state"
+    sroot.mkdir()
+    st.write_bound_worktree(sroot, "owned-designer", tmp_path / "rpg-batch", True)
+    st.write_bound_worktree(sroot, "owned-planner", tmp_path / "default", False)  # the default path is not "elsewhere"
+    seats = seat_infos(_roster(), sroot)
+    assert [s.writing_in for s in seats] == [str(tmp_path / "rpg-batch"), None]
+    text = render([], seats, [], [], [], 0.0)
+    assert f"owned-designer: worktree owned, staffed, instance none, writing in: {tmp_path / 'rpg-batch'}" in text
+    assert "owned-planner: worktree owned, unstaffed, instance none\n" in text + "\n"
+
+
+def test_a_main_checkout_seat_is_listed_as_such() -> None:
+    from tools.sessions.roster import load_roster
+
+    lead = next(s for s in seat_infos(load_roster(), Path("/nonexistent")) if s.role == "lead-planner")
+    assert lead.worktree == "(main checkout)"

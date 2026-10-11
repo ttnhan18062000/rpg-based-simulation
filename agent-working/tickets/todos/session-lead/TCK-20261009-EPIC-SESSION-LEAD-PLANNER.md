@@ -101,6 +101,9 @@ Evidence that the gap is real (lead-planner's first survey, 2026-10-09):
   `question`; closing it means "absorbed into a ticket" or "answered", with a link. Acceptance: a seeded
   issue for the role appears and one for another role does not; with `gh` failing or slow the output is
   unchanged apart from the missing list, within the timeout; the guide carries the convention.
+  **Children (filed 2026-10-11):** E4a `TCK-20261011-SESSION-START-FOR-ROLE-ISSUES` (the issue list; the
+  `fleet.py` count waits for E2), E4b `TCK-20261011-LEAD-STATUS-MESSAGES-AND-BOARD` (message classes, board
+  skeleton, `agent-working/lead/**` ownership). Order in `session-lead/SEQUENCE.md`.
 - **E5 — Measurement hook-in.** Lead actions (status requests, recommendations, escalations to the
   owner) are recorded with `session_role: lead-planner`. The Epic D M7 review evaluates whether the
   lead lowers the headline metric (manual orchestration actions per completed batch).

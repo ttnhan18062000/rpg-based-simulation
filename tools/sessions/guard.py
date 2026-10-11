@@ -186,7 +186,7 @@ def in_shared_role_worktree(caller: Caller, roster, toplevel: str, cwd: str) -> 
         return False
     role = roster.role(caller.role_id)
     common = _git_out(cwd, "rev-parse", "--path-format=absolute", "--git-common-dir")
-    if role is None or not common:
+    if role is None or not common or not role.worktree:
         return False
     shared = Path(common).parent / ".claude" / "worktrees" / role.worktree
     return os.path.realpath(toplevel) == os.path.realpath(shared)

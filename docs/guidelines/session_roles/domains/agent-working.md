@@ -12,4 +12,4 @@ Source of the agent-working part of a role card. Ownership and routes come from 
 and are not restated here. Only `## Card` is injected.
 
 ## Card
-Domain: agent-working (process, tooling, monitoring, delivery). Process problems are ticketed here. Owns `mechanisms.yaml` tooling only. Designer reviews.
+Domain: agent-working (process, tooling, monitoring, delivery). Process problems are ticketed here. Designer reviews.

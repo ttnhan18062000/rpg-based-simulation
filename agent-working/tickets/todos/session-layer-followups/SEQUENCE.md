@@ -6,12 +6,10 @@ seats. agent-working-planner may re-scope or re-order; these are findings, not a
 
 ## Order
 
-Re-ordered 2026-10-11 by agent-working-planner. Batch 1 = items 1-4; batch 2 = item 5 (plus Epic E's E4).
-Items 1 and 4 touch `tools/sessions/session_start_hook.py` / `launch.py`, like PR #491: start them only
-after #491 is merged and the batch branch is based on that main.
+Items 1-4 landed in PR #506 (batch 1, 2026-10-11): TCK-20261010-PR-BODY-LINT-WORKFLOW-UNOWNED,
+TCK-20261011-PR-ATTRIBUTION-OFF-AT-SOURCE, TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE,
+TCK-20261011-GRAPHIFY-SHARED-GRAPH-FROM-WORKTREES. Batch 2 (2026-10-11) is the two items below plus
+`agent-working/tickets/todos/session-lead/SEQUENCE.md` items 1-2, in one batch PR.
 
-1. TCK-20261010-PR-BODY-LINT-WORKFLOW-UNOWNED  (no deps; hotfix; manifest edit)
-2. TCK-20261011-PR-ATTRIBUTION-OFF-AT-SOURCE  (no deps; hotfix; issue #495; governing file)
-3. TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE  (depends on: PR #491 merged; hotfix; live on host ubuntu)
-4. TCK-20261011-GRAPHIFY-SHARED-GRAPH-FROM-WORKTREES  (depends on: 3; standard; issue #498)
-5. TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD  (depends on: 3; next batch)
+1. TCK-20261011-GRAPHIFY-TOOLS-OWNED  (no deps; hotfix; manifest edit)
+2. TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD  (no deps now; standard; includes placements outside .claude/worktrees)
