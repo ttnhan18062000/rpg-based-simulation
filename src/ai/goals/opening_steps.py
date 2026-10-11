@@ -121,19 +121,31 @@ def _hunt_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
     return OpeningStep(OpeningStepKind.HUNT, True, target_id=str(best.id), target_pos=best.navigation.position, target_entity_id=best.id)
 
 
+def shop_sale_in_reach(entity: EntityState, state: AuthoritativeState):
+    """The nearest (shop, sale) the subject can sell spare goods to inside its range, or None. One test for the pull and for the H6 record."""
+    found = nearest_sale(state, entity)
+    if found is not None and not LeashService.way_in_range(entity, tuple(found[0].position)):
+        return None
+    return found
+
+
+def work_in_reach(entity: EntityState, state: AuthoritativeState):
+    """The nearest building that can pay the subject a wage for a shift, inside its range, or None."""
+    inn = nearest_work(state, entity)
+    if inn is not None and not LeashService.way_in_range(entity, tuple(inn.position)):
+        return None
+    return inn
+
+
 def _earn_then_buy_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
     """SELL (EXCH-02): open when the subject can spare goods a functional shop would buy (its purse covers at least one unit); its target is
     the nearest such shop. The sale happens on arrival (the SELL action), the coin comes out of the shop's own purse, and with the price of a
     meal the subject's hunger goal then points at the inn. Paid work (a wage) is not a step yet."""
-    found = nearest_sale(state, entity)
-    if found is not None and not LeashService.way_in_range(entity, tuple(found[0].position)):
-        found = None
+    found = shop_sale_in_reach(entity, state)
     if found is not None:
         shop, _sale = found
         return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(shop.id), target_pos=tuple(shop.position))
-    inn = nearest_work(state, entity)
-    if inn is not None and not LeashService.way_in_range(entity, tuple(inn.position)):
-        inn = None
+    inn = work_in_reach(entity, state)
     if inn is None:
         return OpeningStep(OpeningStepKind.EARN_THEN_BUY, False, "nothing to sell that a shop with coin in its purse would buy, and no inn that can pay a wage")
     return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(inn.id), target_pos=tuple(inn.position))

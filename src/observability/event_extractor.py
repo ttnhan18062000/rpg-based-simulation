@@ -69,6 +69,7 @@ _NON_SURVIVAL_PROJECT_KINDS = frozenset(("harvesting", "exploration", "social", 
 
 # Spawn interval (must match SpawnService.SPAWN_INTERVAL)
 _SPAWN_INTERVAL = 50
+from src.observability.starvation_record import StarvationRecorder
 
 
 class EventExtractor:
@@ -109,6 +110,7 @@ class EventExtractor:
         cls._emitted_contract_milestones.clear()
         cls._last_capability_growth_tick.clear()
         cls._emitted_capability_stalled.clear()
+        StarvationRecorder.reset_run_state()
 
     @staticmethod
     def extract(
@@ -1698,6 +1700,8 @@ class EventExtractor:
                         payload={"faction_id": str(_fid)},
                     ))
 
+        # H6 (M0 gate): the starvation-death record, its live header and the ways-tried trail (observational only)
+        events.extend(StarvationRecorder.observe(prior_state, current_state, update))
         return events
 
     @staticmethod

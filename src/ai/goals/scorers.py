@@ -4,6 +4,7 @@ from src.ai.goals.base import GoalScorer, GoalScore, NeedAccess
 from src.ai.goals.opening_steps import first_open_step
 from src.core.items import food_hunger_recovery
 from src.engine.appraisal import can_eat_item, can_use_inn_meal
+from src.ai.goals.ways import inn_in_reach
 from src.engine.need_pull import hunger_pull, sleep_pull
 from src.engine.sleep_debt import SLEEP_DEBT
 from src.engine.way_in_range import way_in_range
@@ -112,10 +113,7 @@ class EatScorer(GoalScorer):
 
         utility = bio.hunger
 
-        from src.engine.spatial_query import SpatialQueryService
-        best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
-        if best_bldg is not None and not way_in_range(entity, best_bldg.position):
-            best_bldg = None  # a range-bound subject's ways are inside its range (owner decision D57)
+        best_bldg = inn_in_reach(entity, state)  # a range-bound subject's ways are inside its range (owner decision D57)
         # Decision 27: with no inn within reach there is nothing for the pull to point at, so it goes to the step that opens a way
         # (forage); with no step the goal keeps the hunger value and says `no_open_step`. (Free meals stay on: an inn within reach is a
         # way to eat whether or not the subject can pay, for every kind, a recorded flaw until the animals' own ways exist: owner decision 44.)

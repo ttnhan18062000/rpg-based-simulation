@@ -321,6 +321,8 @@ class Kernel:
 
         from src.observability.event_extractor import EventExtractor
         EventExtractor.reset_run_state()
+        from src.observability.starvation_record import StarvationRecorder
+        StarvationRecorder.configure(profile.cadence.strategic_intelligence)
         from src.observability.event_shapers import StrategyShaper, ProgressionShaper, SocialShaper, FactionShaper
         StrategyShaper.reset_run_state()
         ProgressionShaper.reset_run_state()
@@ -1191,6 +1193,8 @@ class Kernel:
         # persisting or erroring loudly. See
         # TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD.
         if hasattr(self, "_event_recorder") and self._event_recorder:
+            from src.observability.starvation_record import StarvationRecorder
+            self._event_recorder.record(StarvationRecorder.tally_event(self._state.tick))  # H6: the deaths seen, to tell a silent channel from a zero
             self._event_recorder.shutdown()
             workers_stopped += 1
 
