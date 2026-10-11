@@ -178,8 +178,22 @@ def default_branches(cwd: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(("main", named))) if named else ("main",)
 
 
+def in_shared_role_worktree(caller: Caller, roster, toplevel: str, cwd: str) -> bool:
+    """Whether `toplevel` is the placement worktree of the caller's role and the caller is an instance beyond the first
+    (TCK-20261009-SECOND-INSTANCE-SHARED-WORKTREE-WRITE-GUARD). The path is `<main checkout>/.claude/worktrees/<placement>`,
+    as `launch.py` builds it (a `--worktree` override is not visible here); both sides are realpath-resolved."""
+    if not caller.resolved or caller.instance == caller.role_id or not toplevel:
+        return False
+    role = roster.role(caller.role_id)
+    common = _git_out(cwd, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    if role is None or not common:
+        return False
+    shared = Path(common).parent / ".claude" / "worktrees" / role.worktree
+    return os.path.realpath(toplevel) == os.path.realpath(shared)
+
+
 def decide(classification, caller: Caller, authority, lease_role: str | None, lease_found: bool, on_default: bool | None = False,
-           command: str = ""):
+           command: str = "", in_role_worktree: bool = False):
     """Pure decision: (DENY | ASK | None, reason). None means allow.
 
     `on_default` is whether the call's current branch is the default branch: True, False, or None when it could not
@@ -206,6 +220,10 @@ def decide(classification, caller: Caller, authority, lease_role: str | None, le
     for action in actions:
         if action in forbidden:
             return DENY, f"{caller.role_id} ({caller.function}) must not {action}: `forbidden` for this function in session_authority.yaml"
+    for action in actions:
+        if action in _WRITER_ACTIONS and in_role_worktree:
+            return DENY, (f"{action} refused: {caller.instance} is an instance beyond the first of {caller.role_id}; "
+                          "work in a per-piece worktree, not the role's shared worktree")
     for action in actions:
         if action in _WRITER_ACTIONS and lease_found and lease_role != caller.instance:
             return DENY, f"{action} refused: this worktree's writer is {lease_role}, not {caller.instance}"
@@ -272,13 +290,14 @@ def _guard(payload: dict, stdout) -> int:
     if cl.COMMIT in classification.actions or (cl.PUSH in classification.actions and classification.push_implicit):
         branch = current_branch(acts_in) if acts_in else ""
         on_default = (branch in defaults) if branch else None
-    lease_role, lease_found = None, False
+    lease_role, lease_found, in_role_worktree = None, False, False
     if caller.resolved and _WRITER_ACTIONS & classification.actions:
         toplevel = _git_toplevel(acts_in or cwd)
+        in_role_worktree = in_shared_role_worktree(caller, roster, toplevel, acts_in or cwd)
         lease = st.read_lease(root, toplevel) if toplevel else None
         lease_role, lease_found = (lease.role if lease else None), lease is not None
     command = str((payload.get("tool_input") or {}).get("command", "")) if payload.get("tool_name") == "Bash" else ""
-    decision, reason = decide(classification, caller, authority, lease_role, lease_found, on_default, command)
+    decision, reason = decide(classification, caller, authority, lease_role, lease_found, on_default, command, in_role_worktree)
     if decision is None:
         return 0
     _emit(stdout, decision, reason)

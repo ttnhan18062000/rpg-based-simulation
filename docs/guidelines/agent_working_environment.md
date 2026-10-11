@@ -16,9 +16,9 @@ This document is the single reference for setting up and operating the local con
 
 | Requirement | Version | Notes |
 |---|---|---|
-| Docker Engine | 24+ | Required for `make search-server-docker` (primary) |
-| Python | 3.12+ (floor); 3.13 is the CI-tested version | The floor is `requires-python` in `pyproject.toml`, which is the source; `[tool.mypy] python_version` and `[tool.ruff] target-version` move with it. CI (`.github/workflows/test.yml`) and `.python-version` use 3.13. The floor is 3.12 (owner decision 2026-10-09, amending roadmap decision 12). The 3.13 floor needs, on every host: a 3.13 system `python3` (hooks and `python3 tools/...` commands run under it, not a venv) and a 3.13 `.venv-knowledge`. `ubuntu`: both 3.13 (verified 2026-10-09). `u24desktop-Virtual-Machine`: both 3.12.3 (agent-working-planner, PR #456). |
-| `uv` | 0.11+ | Resolves and installs from `pyproject.toml` and `uv.lock`. On this machine every `uv` network command needs `--system-certs` (see "TLS interception" below). |
+| Docker Engine | 24+ | Required for `make search-server-docker` (primary). The search image is `python:3.13-slim` (`tools/search/Dockerfile`); its build is **unverified** until it is run on a host with an unblocked torch index (on `u24desktop-Virtual-Machine` the build fails at the CPU torch install, TLS to the index, 2026-10-09), and `sentence-transformers` and `sqlite-vec` on 3.13 are untested in the image. |
+| Python | 3.12+ (floor); 3.13 is the CI-tested version | The floor is `requires-python` in `pyproject.toml`, which is the source; `[tool.mypy] python_version` and `[tool.ruff] target-version` move with it. CI (`.github/workflows/test.yml`) and `.python-version` use 3.13. The floor is 3.12 (owner decision 2026-10-09, amending roadmap decision 12). The 3.13 floor needs, on every host: a 3.13 system `python3` (hooks and `python3 tools/...` commands run under it, not a venv) and a 3.13 `.venv-knowledge`. Knowledge-venv (`.venv-knowledge`) Python per host: `ubuntu` 3.13.7 (verified 2026-10-09); `u24desktop-Virtual-Machine` 3.12.3 (verified 2026-10-09; `torch` 2.12.1+cpu, `sentence-transformers` 5.6.0). System `python3`: `ubuntu` 3.13, `u24desktop-Virtual-Machine` 3.12.3 (PR #456). The floor can reach 3.13 only when `u24desktop-Virtual-Machine`'s venv does, and that is blocked by the torch-index filter in "Why the knowledge stack is stuck on 3.12" below. |
+| `uv` | 0.11+ | Resolves and installs from `pyproject.toml` and `uv.lock`. On `u24desktop-Virtual-Machine` (the TLS-intercepted network) every `uv` network command needs `--system-certs` (see "TLS interception" below). |
 | `uv sync --system-certs` (or `make install-py`) | — | Core app, test and dev deps from `uv.lock` (`fastapi`, `uvicorn`, `pytest`, etc.), plus the `lint` group (`ruff`, `complexipy`). Dependencies are declared once, in `pyproject.toml`. CI installs this way too (`uv sync --locked --no-install-project`); every CI job except `tools-a-e` passes `--no-group lint`. |
 | `uv export --frozen --no-hashes --no-emit-project \| uv pip install -r -` | — | Same set (including the `lint` tools) for an environment that is not the project's own `.venv`, such as another worktree or `.venv-knowledge`. There is no committed `requirements.txt` any more (`TCK-20261008-DROP-UNUSED-REQUIREMENTS-EXPORT`): the export is generated on demand from `uv.lock`, and no CI job uses it. |
 | `pip install -r requirements-knowledge.txt` | — | Knowledge-search stack: `torch`, `sentence-transformers`, `sqlite-vec`, `rank_bm25`. Local agent tooling only — CI never installs this. |
@@ -34,7 +34,7 @@ First-time model download: `all-MiniLM-L6-v2` (~22 MB) is downloaded automatical
 | Venv | Python | Use it for | Why |
 |---|---|---|---|
 | `.venv` | **3.13.14** | **Engine, API, and all test runs** | Matches what CI actually runs (`.github/workflows/test.yml` declares `python-version: "3.13"`); holds only the locked default deps (`uv.lock`), no editable install of this package. Running tests on anything else means a local pass cannot rule out a version-specific CI failure. |
-| `.venv-knowledge` | 3.12.3 | Knowledge-search tooling (`tools/knowledge_search.py`, `search_mcp.py`, `search_server.py`) **and** general local dev use | Holds `torch`/`sentence-transformers` (cannot be migrated to 3.13 — see below), **plus** the locked core app deps, **plus** this package itself editable-installed (`pip install -e .`, giving the `rpg-sim`/`rpg-world`/`rpg-lab` console scripts), **plus** `headroom-ai==0.37.0` (pinned in `requirements-knowledge.txt` since PR #228 — see `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT`). It is not narrowly scoped to the knowledge stack; despite the name, it is this machine's fuller general-purpose venv. |
+| `.venv-knowledge` | 3.12.3 | Knowledge-search tooling (`tools/knowledge_search.py`, `search_mcp.py`, `search_server.py`) **and** general local dev use | Holds `torch`/`sentence-transformers` (cannot be migrated to 3.13 — see below), **plus** the locked core app deps, **plus** this package itself editable-installed (`pip install -e .`, giving the `rpg-sim`/`rpg-world`/`rpg-lab` console scripts), **plus** `headroom-ai==0.37.0` (pinned in `requirements-knowledge.txt` since PR #228 — see `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT`). It is not narrowly scoped to the knowledge stack; despite the name, it is `u24desktop-Virtual-Machine`'s fuller general-purpose venv. |
 
 **Run tests as `.venv/bin/python3 -m pytest …`**, not the bare `python3` on PATH (which is 3.12,
 still resolving to `.venv-knowledge`'s interpreter — see above).
@@ -51,14 +51,14 @@ implied.)*
 
 ### Why the knowledge stack is stuck on 3.12
 
-`download.pytorch.org` is **blocked by this network's content filter**, not merely TLS-intercepted. Confirmed 2026-09-14:
+`download.pytorch.org` is **blocked by `u24desktop-Virtual-Machine`'s network content filter**, not merely TLS-intercepted. Confirmed 2026-09-14:
 
 ```
 openssl s_client -connect download.pytorch.org:443 | openssl x509 -noout -subject -issuer
 subject=O = Fortinet, CN = Fortiguard SDNS Blocked Page
 ```
 
-So `torch==2.12.1+cpu` cannot be installed for a new Python version from this machine by any tool. The existing `.venv-knowledge` predates the block and **must be preserved** — deleting it permanently breaks `search_docs` for every session here. `tools/start_search_mcp.sh` hardcodes its absolute path for exactly this reason. On any host it also finds the main checkout's `.venv-knowledge` from a git worktree through `git rev-parse --git-common-dir`, and it only selects an interpreter that has both `mcp` and `sentence_transformers`. A worktree has no knowledge index of its own (`agent-working/.index/` is gitignored), so `search_mcp.py` queries the main checkout's index when the worktree's own is missing (`TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION`).
+So `torch==2.12.1+cpu` cannot be installed for a new Python version from `u24desktop-Virtual-Machine` by any tool. The existing `.venv-knowledge` predates the block and **must be preserved** — deleting it permanently breaks `search_docs` for every session here. `tools/start_search_mcp.sh` hardcodes its absolute path for exactly this reason. On any host it also finds the main checkout's `.venv-knowledge` from a git worktree through `git rev-parse --git-common-dir`, and it only selects an interpreter that has both `mcp` and `sentence_transformers`. A worktree has no knowledge index of its own (`agent-working/.index/` is gitignored), so `search_mcp.py` queries the main checkout's index when the worktree's own is missing (`TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION`).
 
 **Symptoms the block produces, none of which name the real cause:**
 - `pip`: `Could not find a version that satisfies the requirement torch==2.12.1+cpu (from versions: none)` — pip fetched the *block page*, which lists no packages.
@@ -222,7 +222,7 @@ automatically (no make target, script, CI step or session hook), and CI stays th
   (`tools/hooks/post-commit-reindex.sh`, a no-op unless docs/ or `agent-working/tickets/done/` changed and a
   knowledge index exists). The check sees the **staged** content: prek stashes unstaged changes while the
   hooks run and restores them afterwards.
-- **Install affects every worktree on this machine.** `.git/hooks` is the common directory shared by all
+- **Install affects every worktree of this clone's host.** `.git/hooks` is the common directory shared by all
   worktrees of this repository, so once anyone installs, the pre-commit hook runs on every commit in every
   worktree, including ones with no project environment and ones on a branch cut before this config existed. The
   hooks therefore never block for a missing environment: without ruff, without the registry, without
