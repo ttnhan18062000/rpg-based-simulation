@@ -1,0 +1,28 @@
+# rpg gate config (rpg-owned; format and rules are testing's: tools/test_architecture/rpg_gate_baseline.py,
+# docs/plans/test_architecture/reference/rpg_gate_baseline_format.md).
+# Holds ONLY the run matrix, staleness and the stop lines. k, the per-metric floors and the oracles live in the metric module
+# (src/observability/rpg_gate_metrics.py, TCK-20261009-RPG-REGRESSION-METRICS-COMPUTED-FROM-TYPED-RECORDS). This file is hashed by the
+# harness, so editing it (a stop line included) makes the current baseline stale: that is the intended, safe direction.
+
+# The measurement protocol's three worlds (a town, a frontier with camps, a crowded frontier) and five seeds; 5000 ticks covers the
+# ~2-day staged starvation (D36), sleep collapse (D41) and the ecology regrowth bands (D59).
+worlds: [urban_political, frontier_living_world, crowded_frontier]
+seeds: [42, 43, 44, 45, 46]
+ticks: 5000
+stale_after_days: 30
+
+# Stop lines: M0 gate report-only checks R1-R5 (designer memo rows 52-54, owner-confirmed; roadmap section 12.3). Crossing one does
+# not fail anything; it means a re-baseline needs the owner's ruling ({ref, date}). Outcome rows only. `group` is a property-based kind
+# group (D42), never an EntityRole name.
+stop_lines:
+  # R2: a kind dies out in ALL seeds of a world. The metric module emits, per world and kind group, the pooled outcome
+  # `O2.seeds_with_survivors` = the number of seeds in which at least one member of the group is alive at the last tick.
+  # 0 means extinct in every seed.
+  - name: R2-kind-extinct-in-all-seeds
+    metric: "O2.seeds_with_survivors"
+    group: "*"
+    min: 1
+
+# R1 (meal OFF vs ON starvation differs by more than 2 SE in any world) compares two ARMS of the free-meal switch. One run matrix
+# cannot express it as a min/max on a row value, so it is NOT a stop line here yet: it needs the two-arm run (the free-meal removal
+# stack) and is read from the paired report until then. Tracked in the metrics ticket.

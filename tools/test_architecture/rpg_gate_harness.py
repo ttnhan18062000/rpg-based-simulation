@@ -42,6 +42,7 @@ CLI (``--metrics-module`` defaults to :data:`DEFAULT_METRICS_MODULE`)::
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import hashlib
 import json
 import os
@@ -85,14 +86,20 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def _module_source(spec: str, root: Path) -> bytes:
-    """The source of the metrics module ``spec`` (``module`` or ``module:attr``), found on disk under ``root`` without importing anything.
-    A module that is not there yet (rpg's, before it lands) hashes as a fixed marker, so its arrival changes the hash."""
+def module_path(spec: str, root: Optional[Path] = None) -> Optional[Path]:
+    """The file of the metrics module ``spec`` (``module`` or ``module:attr``) under ``root``, found without importing anything; ``None`` when it is not there."""
+    root = root or repo_root()
     relative = Path(*spec.partition(":")[0].split("."))
     for candidate in (root / relative.with_suffix(".py"), root / relative / "__init__.py"):
         if candidate.is_file():
-            return candidate.read_bytes()
-    return b"<metrics module not found>"
+            return candidate
+    return None
+
+
+def _module_source(spec: str, root: Path) -> bytes:
+    """The source of the metrics module, or a fixed marker for one that is not there yet (rpg's, before it lands), so its arrival changes the hash."""
+    path = module_path(spec, root)
+    return path.read_bytes() if path else b"<metrics module not found>"
 
 
 def harness_hash(config_path: Path, root: Optional[Path] = None, metrics_module: str = "") -> str:
@@ -279,10 +286,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--workers", type=int, default=DEFAULT_WORKERS)
     parser.add_argument("--sha")
+    parser.add_argument("--only-world", action="append", default=[], help="run only this world of the config (repeatable); a CI shard runs one world")
     parser.add_argument("--keep-runs", action="store_true")
     parser.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT_S)
     args = parser.parse_args(argv)
-    matrix = run_matrix(load_config(args.config), args.config, args.out, metrics_module=args.metrics_module, sha=args.sha or _git_head(),
+    config = load_config(args.config)
+    if args.only_world:
+        unknown = [w for w in args.only_world if w not in config.worlds]
+        if unknown:
+            parser.error(f"--only-world not in the config: {unknown}")
+        config = dataclasses.replace(config, worlds=tuple(w for w in config.worlds if w in args.only_world))
+    matrix = run_matrix(config, args.config, args.out, metrics_module=args.metrics_module, sha=args.sha or _git_head(),
                         workers=args.workers, keep_runs=args.keep_runs, timeout_s=args.timeout)
     bad = [r for r in matrix["runs"] if r["status"] != OK]
     print(f"{len(matrix['runs']) - len(bad)}/{len(matrix['runs'])} runs ok in {matrix['wall_seconds']}s; matrix: {args.out / 'matrix.json'}")

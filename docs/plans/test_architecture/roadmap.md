@@ -106,6 +106,7 @@ C6 bounded pilot exercises C1–C5 on a real (or labelled synthetic) core-RPG ch
 | Mechanic outcome scenario | a compiled world + kernel, one mechanic | occurrence **and** effect; a control only where the claim needs one | every relevant PR |
 | Cross-domain scenario | ≥2 domains in one run | effect at each hop | relevant PR, or nightly (then **not** PR evidence) |
 | Broad simulation | long runs, corpus | invariant monitors; SimQ tolerance bands | nightly / on demand |
+| Broad simulation: rpg gate report (advisory) | pinned fresh-process runs of the configured worlds and seeds | validity metrics exact (fail); outcome metrics paired against the last and milestone-first baselines (drift, "trace the cause") | daily on main; on demand on a branch (`rpg-gate-report.yml`) |
 
 **Techniques** (example, property, stateful property, metamorphic, characterization) are chosen per
 behaviour by documented criteria, not required everywhere. Metamorphic and exact-replay techniques
@@ -123,6 +124,7 @@ The report keeps these **separate**:
 - mutation evidence;
 - escaped defects;
 - SimQ anchors;
+- rpg gate report (system health; advisory): states `pass` · `fail` (validity) · `drift` (outcome) · `unstable` · `stale` · `no-data`; never a proof status (principle 3), never a required check (principle 8); format and rules in `reference/rpg_gate_baseline_format.md` and `tools/test_architecture/rpg_gate_report.py`;
 - census reachability;
 - hygiene.
 

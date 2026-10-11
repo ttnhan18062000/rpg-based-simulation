@@ -352,16 +352,18 @@ def run_report(
 class GhClient:
     """The `gh` CLI as a client. Needs GH_TOKEN in the environment and `issues: write`."""
 
-    def __init__(self, repo: str) -> None:
+    def __init__(self, repo: str, label: str = LABEL, description: str = "Slow regression failing set") -> None:
         self.repo = repo
+        self.label = label
+        self.description = description
 
     def _gh(self, *args: str) -> str:
         return subprocess.run(["gh", *args], check=True, capture_output=True, text=True).stdout
 
     def list_issues(self) -> List[dict]:
-        self._gh("label", "create", LABEL, "--repo", self.repo, "--force", "--description", "Slow regression failing set")
+        self._gh("label", "create", self.label, "--repo", self.repo, "--force", "--description", self.description)
         out = self._gh(
-            "api", f"repos/{self.repo}/issues?labels={LABEL}&state=open&per_page=100", "--paginate"
+            "api", f"repos/{self.repo}/issues?labels={self.label}&state=open&per_page=100", "--paginate"
         )
         # `--paginate` concatenates one JSON array per page.
         rows: List[dict] = []
@@ -397,7 +399,7 @@ class GhClient:
         return bodies
 
     def create_issue(self, title: str, body: str) -> None:
-        self._gh("issue", "create", "--repo", self.repo, "--title", title, "--body", body, "--label", LABEL)
+        self._gh("issue", "create", "--repo", self.repo, "--title", title, "--body", body, "--label", self.label)
 
     def update_issue(self, number: int, title: str, body: str) -> None:
         self._gh("issue", "edit", str(number), "--repo", self.repo, "--title", title, "--body", body)
