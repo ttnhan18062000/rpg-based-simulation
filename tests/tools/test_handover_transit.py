@@ -137,10 +137,52 @@ def test_unsafe_manifest_path_is_refused(tmp_path):
                          memory_dir=tmp_path / "m", local_host="b")
 
 
-def test_default_memory_dir_slug_maps_checkout_path():
+def _isolated_home(tmp_path: Path, monkeypatch):
+    """Redirect `Path.home()` and `$HOME` into tmp_path and run from a non-repo checkout dir, so the memory-dir
+    candidates resolve under a tmp `.claude/projects` and never under the real one (TCK-20261011-HANDOVER-
+    TRANSIT-TEST-HOME-ISOLATION). Returns (home, resolved checkout, its symlink-alias spelling)."""
+    home = tmp_path / "home"
+    checkout = tmp_path / "data" / "checkout"
+    checkout.mkdir(parents=True)
+    home.mkdir()
+    (home / "Alias").symlink_to(tmp_path / "data")
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
+    monkeypatch.chdir(checkout)
+    monkeypatch.setenv("PWD", str(checkout))
+    return home, checkout.resolve(), home / "Alias" / "checkout"
+
+
+def _slug_memory(home: Path, root: Path) -> Path:
+    return home / ".claude" / "projects" / str(root).replace("/", "-") / "memory"
+
+
+def test_default_memory_dir_slug_maps_checkout_path(tmp_path, monkeypatch):
+    home, checkout, _alias = _isolated_home(tmp_path, monkeypatch)
     p = ht.default_memory_dir()
+    assert p == _slug_memory(home, checkout)
     assert p.name == "memory" and p.parent.parent.name == "projects"
     assert "/" not in p.parent.name
+
+
+def test_default_memory_dir_one_filled_candidate_is_chosen(tmp_path, monkeypatch):
+    home, checkout, alias = _isolated_home(tmp_path, monkeypatch)
+    filled = _slug_memory(home, alias)
+    filled.mkdir(parents=True)
+    (filled / "MEMORY.md").write_text("- idx\n")
+    assert filled in ht.memory_dir_candidates()
+    assert ht.default_memory_dir() == filled
+
+
+def test_default_memory_dir_two_filled_candidates_refuse(tmp_path, monkeypatch):
+    home, checkout, alias = _isolated_home(tmp_path, monkeypatch)
+    for root in (checkout, alias):
+        d = _slug_memory(home, root)
+        d.mkdir(parents=True)
+        (d / "MEMORY.md").write_text("- idx\n")
+    with pytest.raises(ht.TransitError, match="ambiguous"):
+        ht.default_memory_dir()
 
 
 def test_discard_refuses_without_marker_then_force_works(tmp_path):
