@@ -153,20 +153,20 @@ def test_verify_rejects_a_wrong_file_hash_and_a_wrong_size():
         atlas.verify_atlas(png, manifest.model_copy(update={"width": manifest.width + 1}))
 
 
-# ---- the export: rc-0008, byte equality, nothing else changes ----
+# ---- the export: rc-0009, byte equality, nothing else changes ----
 
 @pytest.fixture(scope="module")
 def exports(tmp_path_factory):
     base = tmp_path_factory.mktemp("atlas-export")
-    runtime_export.export_runtime("pilot", "rc-0008", base / "plain")
-    runtime_export.export_runtime("pilot", "rc-0008", base / "one", atlases=True)
-    runtime_export.export_runtime("pilot", "rc-0008", base / "two", atlases=True)
+    runtime_export.export_runtime("pilot", "rc-0009", base / "plain")
+    runtime_export.export_runtime("pilot", "rc-0009", base / "one", atlases=True)
+    runtime_export.export_runtime("pilot", "rc-0009", base / "two", atlases=True)
     return base
 
 
 def test_the_atlas_options_leave_the_per_file_export_and_the_manifest_unchanged(exports):
     plain, one = exports / "plain", exports / "one"
-    assert sorted(p.name for p in one.iterdir()) == sorted([p.name for p in plain.iterdir()] + [f"atlas-{f}.{x}" for f in ("border", "icon", "terrain") for x in ("png", "json")])
+    assert sorted(p.name for p in one.iterdir()) == sorted([p.name for p in plain.iterdir()] + [f"atlas-{f}.{x}" for f in ("border", "fx", "icon", "terrain", "ui") for x in ("png", "json")])
     for p in plain.iterdir():
         assert (one / p.name).read_bytes() == p.read_bytes()  # runtime_manifest.json included
 
@@ -176,11 +176,11 @@ def test_two_atlas_exports_are_byte_identical(exports):
     assert {p.name: p.read_bytes() for p in one.iterdir()} == {p.name: p.read_bytes() for p in two.iterdir()}
 
 
-def test_every_key_of_rc_0008_reads_back_from_its_atlas_with_the_artifact_pixels(exports):
+def test_every_key_of_rc_0009_reads_back_from_its_atlas_with_the_artifact_pixels(exports):
     one = exports / "one"
     runtime = json.loads((one / "runtime_manifest.json").read_text())
     seen = 0
-    for family in ("border", "icon", "terrain"):
+    for family in ("border", "fx", "icon", "terrain", "ui"):
         manifest = parse_record(AtlasManifest, (one / f"atlas-{family}.json").read_bytes())
         sheet = sheet_of((one / manifest.file).read_bytes())
         for e in manifest.entries:
@@ -188,7 +188,7 @@ def test_every_key_of_rc_0008_reads_back_from_its_atlas_with_the_artifact_pixels
             rect = pixels.DecodedImage(e.width, e.height, b"".join(sheet.rgba[((e.y + r) * sheet.width + e.x) * 4 : ((e.y + r) * sheet.width + e.x + e.width) * 4] for r in range(e.height)))
             assert rect.rgba == source.rgba and pixels.pixel_hash_of(rect) == e.pixel_hash
             seen += 1
-    assert seen == len(runtime["entries"]) == 70
+    assert seen == len(runtime["entries"]) == 73
 
 
 def test_atlas_pngs_pass_the_chunk_allowlist(exports):
@@ -197,10 +197,10 @@ def test_atlas_pngs_pass_the_chunk_allowlist(exports):
 
 
 def test_the_cli_flag_is_opt_in(tmp_path):
-    assert cli.main(["export-runtime", "--catalog-id", "pilot", "--release-id", "rc-0008", "--out", str(tmp_path / "a")]) == 0
+    assert cli.main(["export-runtime", "--catalog-id", "pilot", "--release-id", "rc-0009", "--out", str(tmp_path / "a")]) == 0
     assert not list((tmp_path / "a").glob("atlas-*"))
-    assert cli.main(["export-runtime", "--catalog-id", "pilot", "--release-id", "rc-0008", "--out", str(tmp_path / "b"), "--atlas"]) == 0
-    assert len(list((tmp_path / "b").glob("atlas-*"))) == 6
+    assert cli.main(["export-runtime", "--catalog-id", "pilot", "--release-id", "rc-0009", "--out", str(tmp_path / "b"), "--atlas"]) == 0
+    assert len(list((tmp_path / "b").glob("atlas-*"))) == 10
     shutil.rmtree(tmp_path / "a")
 
 

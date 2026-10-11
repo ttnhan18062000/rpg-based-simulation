@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Real-art proof: build, rc-0009 (70 + 3) on the owner's answer, export-runtime --atlas --slices
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -65,13 +65,20 @@ Child 3 of `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF`. Proves the release a
 - If the owner declines rc-0009, the export proof runs on a local, uncommitted release and the ticket says so.
 
 ## Implementation Notes
-
+- `build` of the three sources (own Aseprite run, 4 GB memory cap): `ui_panel_frame--x1` 234 B PNG 24x24, `fx_selection_ring--x1` 294 B 32x32, `fx_campfire--x1` 1,060 B 64x64 (against `MAX_PNG_FILE_BYTES` 4,259,840 and `MAX_DECODED_BYTES` 4,198,400, each is far smaller). FRAME-1 FACT: the build exports frame 1 only (`build/exportconfig.py:53`), so the released artifact of the ring and the campfire is their first frame; the durations and tags travel in the animation metadata (`export-runtime --animation`). Recorded as a fact for activation, not changed (backlog ticket `TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY`, not part of this batch).
+- Owner answer (2026-10-11, blocking question with the facts: rc-0008's 70 byte-identical + 3 = 73, frame 1 only, this candidate fixes the 12 red tests): "Assemble rc-0009". `release --catalog-id pilot` -> `pilot/rc-0009: 73 entries`, 12,238 B (`MAX_MANIFEST_BYTES` 524,288). rc-0008 untouched (`cmp` against a copy taken before); all 70 rc-0008 entries equal their rc-0009 entry; the new entries are exactly `fx.campfire`, `fx.selection_ring`, `ui.panel_frame`; `store verify` ok. New guard: `tests/visual_assets/test_rc_0009_extends_rc_0008.py`.
+- `export-runtime --catalog-id pilot --release-id rc-0009 --atlas --slices` (twice into new directories, `diff -r`: byte-identical): runtime manifest 18,505 B (73 entries; `MAX_MANIFEST_BYTES`), `slices.json` 512 B, five atlas sheets (`MAX_ATLAS_DIM` 1024): border 172x20 (257 B PNG, 1,855 B JSON), fx 103x68 (761 B, 591 B), icon 725x28 (2,884 B, 6,109 B), terrain 476x20 (3,435 B, 4,317 B), ui 28x28 (170 B, 432 B); 85 files, 58,738 B in all. A third export with `--animation` adds `animation.json` 475 B.
+- Hand check of `slices.json` against the sources (build scale x1, so source pixels = exported pixels): `fx.campfire` `base` 0,0 64x64 pivot (32,63) = the source slice (pivot on the bottom row); `fx.selection_ring` `anchor` 0,0 32x32 pivot (16,16); `ui.panel_frame` `panel` 0,0 24x24 centre 8,8 8x8. Each has one key at frame 0. Atlas placement checked by hand against `gutter` 1 + `extrude` 1: the margin is 2 and the gap between sprites 3: `fx.campfire` at (2,2), `fx.selection_ring` at (69,2) (2+64+3), sheet 103x68 (2+64+3+32+2 by 64+4); `ui.panel_frame` at (2,2), sheet 28x28. The tests read each atlas rectangle back and compare it with the artifact pixels.
+- `animation.json`: `fx.campfire` 16 x 80 ms, tag `burn` 0..15 forward; `fx.selection_ring` 8 x 100 ms, tag `pulse` 0..7 forward; `ui.panel_frame` has none.
+- The 12 red tests (`test_atlas.py` 5, `test_release_byte_reproducibility.py` 7) are re-pointed from rc-0008 to rc-0009 (the pin in `test_release_byte_reproducibility.py`, `export_runtime(... "rc-0009")` and the CLI calls in `test_atlas.py`, the atlas families now `border fx icon terrain ui`, 73 entries, 10 atlas files). Nothing weakened. `adopted_facts.py` gains `RC_0009_ENTRIES`, `PROOF_KEYS`, `PROOF_GENERATED`, `rc-0009.json`; the two icon candidate tests accept rc-0009 next to rc-0008. Asset-planner's child-2 nits folded in: the animation and slice guard tests renamed `..._only_the_proof_sources_*`, `adopted_facts` imported at module level, `== af.REVISION_COUNT`, and the exact proof-art metadata pinned (`PROOF_ANIMATION`, `PROOF_SLICES`).
+- No bound was exceeded and none was changed; no store or drawing code changed.
 
 ## Test Summary
-
+`tests/visual_assets` (project venv): all green after the re-point except `test_the_guarded_files_still_match_the_committed_record`, which is expected until the local Aseprite proof record is re-run once, as its own commit, after the last guarded change (see Completion Summary).
 
 ## Files Changed
-
+- `visual_assets/catalog/generated/{ui_panel_frame,fx_selection_ring,fx_campfire}--x1/`, `visual_assets/catalog/manifests/candidates/pilot/rc-0009.json`
+- `tests/visual_assets/adopted_facts.py`, `tests/visual_assets/test_rc_0009_extends_rc_0008.py` (new), `tests/visual_assets/store/unit/test_atlas.py`, `tests/visual_assets/test_release_byte_reproducibility.py`, `tests/visual_assets/test_icon_set_adoption.py`, `tests/visual_assets/test_icon_v2_keys.py`, `tests/visual_assets/store/unit/test_animation_metadata.py`, `tests/visual_assets/store/unit/test_slice_metadata.py`
 
 ## Completion Summary
 

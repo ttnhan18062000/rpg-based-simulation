@@ -15,6 +15,7 @@ import time
 
 import pytest
 
+from tests.visual_assets import adopted_facts as af
 from tests.visual_assets.store import adoption_support as s
 from tests.visual_assets.store import builders as b
 from visual_assets.drawing import config as drawing_config
@@ -210,25 +211,23 @@ def test_the_contract_refuses_each_planted_violation(name, build):
 
 # ---- every committed record is byte-identical ----
 
-def test_every_committed_source_record_round_trips_byte_for_byte_and_carries_no_animation():
+def test_every_committed_source_record_round_trips_byte_for_byte_and_only_the_proof_sources_animate():
     files = sorted((REAL / "sources").glob("*/r*.source.json"))
-    from tests.visual_assets import adopted_facts as af
-
-    assert len(files) >= 77
+    assert len(files) == af.REVISION_COUNT
     for path in files:
         data = path.read_bytes()
         record = parse_record(SourceRecord, data)
         animated = path.parent.name in af.PROOF_ANIMATED  # only the two real-art proof sources animate
         assert (record.animation is not None) == animated and canonical_json(record) == data, path
         assert (b"animation" in data) == animated, path
+        if animated:  # the exact metadata of the adopted proof art, so a re-adoption with different art fails visibly
+            assert (len(record.animation.frame_durations_ms), [(t.name, t.from_frame, t.to_frame) for t in record.animation.tags]) == af.PROOF_ANIMATION[path.parent.name], path
 
 
-def test_every_committed_source_reads_with_no_new_finding_and_derives_no_animation():
+def test_every_committed_source_reads_with_no_new_finding_and_only_the_proof_sources_derive_an_animation():
     for path in sorted((REAL / "sources").glob("*/r*.aseprite")):
         source = path.read_bytes()
         assert not any(c.value.startswith("ANIMATION_") for c in codes(source)), path
-        from tests.visual_assets import adopted_facts as af
-
         assert (animation.animation_from_source(source) is not None) == (path.parent.name in af.PROOF_ANIMATED), path
 
 
