@@ -531,6 +531,12 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     about 3,400 tiles feeds about 14. A bigger herd strips the land and must move or starve: the
     land decides, and nothing sets a target. Crowding also slows regrowth (the existing density
     modifier), and grazer survival is measured with it on.
+    **Every regrowing kind waits once emptied (decided by the owner directly, 2026-10-11;
+    built after the M0 gate's baseline is set, so measurements do not move during the gate).**
+    Each resource kind declares how it regrows (`regrowth_mode`, content, no name checks). A
+    berry thicket picked bare waits about a day before fruiting again, an herb about half a day
+    (it regrows from the root), and a felled tree the longest. Until that ticket lands, only
+    grazing cover waits.
   - **Meat follows body size, and meat-eaters feast and fast (decided by the owner directly,
     2026-10-10; row 60 of the memo; a decision-33 pass, before and after recorded):** a small
     body is about one meal for a meat-eater, a medium carcass about a day's food for a
