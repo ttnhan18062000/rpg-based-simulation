@@ -9,9 +9,9 @@ from __future__ import annotations
 from typing import Dict, List
 
 from src.core.items import food_hunger_recovery
-from src.engine.appraisal import kind_can_eat_item
 from src.core.region_resolution import resolve_region_among
-from src.core.state import AuthoritativeState
+from src.core.state import AuthoritativeState, CampState
+from src.engine.appraisal import kind_can_eat_item
 
 # The smallest leash a camp spawn gets (the goblin, ``generator.py``); a node within it is in range of every spawn kind.
 CAMP_SPAWN_RANGE = 8.0
@@ -22,7 +22,7 @@ def camp_food_gaps(state: AuthoritativeState) -> List[str]:
     return sorted(camp_id for camp_id, camp in state.camps.items() if not _food_in_range(state, camp))
 
 
-def _food_in_range(state: AuthoritativeState, camp) -> List:
+def _food_in_range(state: AuthoritativeState, camp: CampState) -> List:
     """The nodes with charges inside the camp's range whose food the camp's own kind can eat (a diet that cannot eat a food has no way from it)."""
     cx, cy = camp.position
     return [n for n in state.resource_nodes.values()
