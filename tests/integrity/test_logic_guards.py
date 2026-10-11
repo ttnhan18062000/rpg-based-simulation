@@ -58,6 +58,19 @@ def _run_integrated_loop(profile, seed=42, ticks=100):
     """
     Run the integrated progression loop from a freshly built scenario state.
 
+    The loop runs under ``audit_mode``, the documented determinism configuration
+    (docs/engine/deterministic_execution.md, "What runs today" and its audit_mode
+    paragraph): it zeroes the governor's wall-clock and host-resource signals and
+    silences the tick-budget overrun report, so the governor chooses its mode from
+    deterministic inputs. This guard reads LOGIC nondeterminism (dict order,
+    id()-keyed caches, RNG misuse); that can only be read with the documented
+    wall-clock inputs suppressed.
+
+    What it does NOT cover: dependence of outcomes on host speed through the
+    governor with audit_mode off. That is a real, documented, perf-owned open item
+    (PERF-M1, the Canonical signal contract in deterministic_execution.md); this
+    guard does not hide it and does not claim it.
+
     Important:
         Do not reuse the same initial_state object across runs. If any legacy
         path mutates state in-place, the second run would start from a polluted
@@ -69,6 +82,7 @@ def _run_integrated_loop(profile, seed=42, ticks=100):
         profile,
         initial_state,
         DeterministicRNG(seed),
+        flags={"audit_mode": True},
     )
 
     try:
