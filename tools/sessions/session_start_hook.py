@@ -72,14 +72,17 @@ def find_claude_pid(environ=os.environ, proc_root: Path = Path("/proc")) -> int 
     return None
 
 
-def _handover_text(role, root: Path) -> str:
-    path = handover_base(root) / role.handover
+def _handover_text(role, root: Path, instance_id: str | None = None) -> str:
+    from tools.sessions.roster import handover_rel
+
+    rel = handover_rel(role, instance_id)
+    path = handover_base(root) / rel
     if not path.is_file():
-        return f"(no handover note yet at {role.handover}; create one at the first HARD reset boundary)"
+        return f"(no handover note yet at {rel}; create one at the first HARD reset boundary)"
     text = path.read_text(encoding="utf-8", errors="replace").strip()
     if len(text) > HANDOVER_CAP_CHARS:
-        text = text[:HANDOVER_CAP_CHARS] + f"\n[... note cut at {HANDOVER_CAP_CHARS} chars; full file: {role.handover}]"
-    return f"Your handover note ({role.handover}):\n{text}"
+        text = text[:HANDOVER_CAP_CHARS] + f"\n[... note cut at {HANDOVER_CAP_CHARS} chars; full file: {rel}]"
+    return f"Your handover note ({rel}):\n{text}"
 
 
 def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path = Path("/proc")) -> str:
@@ -152,7 +155,7 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
         except st.LeaseRefused as exc:
             notes.append(f"session-roles: WRITER LEASE NOT TAKEN: {exc}")
     parts.extend(notes)
-    parts.append(_handover_text(role, root))
+    parts.append(_handover_text(role, root, instance_id))
     return "\n\n".join(parts)
 
 
