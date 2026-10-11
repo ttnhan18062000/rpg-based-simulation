@@ -6,8 +6,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
-from src.engine.domain.view import DomainView
-from src.core.enums import ReasonCode, EntityRole
 from src.core.region_resolution import is_inside_world
 from src.content_semantics.faction import (
     are_entities_hostile,

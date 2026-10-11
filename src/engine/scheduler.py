@@ -7,7 +7,6 @@ from src.core.work import WorkItem, WorkClass
 from src.engine.candidate_selector import MovementCandidateSelector
 from src.engine.cadence import SystemCadence, should_run
 from src.engine.need_pull import need_is_pressing
-from src.engine.tactical_rest import CARCASS_NEAR
 
 # Ticks between the brain wakes of an entity beside an unengaged hostile (decision 32); the decision comes within this bound.
 ADJACENCY_WAKE_COOLDOWN = 2

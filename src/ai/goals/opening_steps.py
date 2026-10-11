@@ -21,9 +21,9 @@ from src.ai.goals.base import OpeningStepKind
 from src.content_semantics.faction import get_species_id_str
 from src.core.items import food_hunger_recovery
 from src.core.state import AuthoritativeState, EntityState, ResourceNodeState
-from src.engine.rpg_depth import LeashService
 from src.engine.appraisal import Relation, can_eat_item
 from src.engine.hostility import relation
+from src.engine.rpg_depth import LeashService
 from src.engine.shop_sale import nearest_sale
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.work_shift import nearest_work
