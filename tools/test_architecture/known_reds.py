@@ -147,8 +147,16 @@ def shadowed_entries(entries: Sequence[dict]) -> List[str]:
     return problems
 
 
+def _require_state_when_entries_have_one(known: Sequence[dict], state: Optional[str]) -> None:
+    """A registry with states must be asked about a state: an entry of either state would otherwise own an id (a drift entry hiding a fail)."""
+    if state is None and any(entry.get("state") for entry in known):
+        raise ValueError("this registry has entries with a state; pass state= so only that state's entries are considered")
+
+
 def owner_of(test_id: str, known: Sequence[dict], state: Optional[str] = None) -> Optional[dict]:
-    """The first entry matching ``test_id``; with ``state`` given, only entries covering that state are considered."""
+    """The first entry matching ``test_id``; with ``state`` given, only entries covering that state are considered.
+    A registry whose entries carry a ``state`` requires it (``ValueError`` otherwise)."""
+    _require_state_when_entries_have_one(known, state)
     for entry in known:
         if state is not None and entry.get("state") != state:
             continue
@@ -167,6 +175,7 @@ def days_to_expiry(entry: dict, today: dt.date) -> int:
 
 def classify(failing: Mapping[str, str], known: Sequence[dict], today: dt.date, state: Optional[str] = None) -> Tuple[List[str], List[str]]:
     """(UNOWNED ids, EXPIRED ids) among the failing ids; with ``state`` given, only entries of that state own an id."""
+    _require_state_when_entries_have_one(known, state)
     unowned, expired = [], []
     for test_id in sorted(failing):
         entry = owner_of(test_id, known, state)
@@ -179,6 +188,7 @@ def classify(failing: Mapping[str, str], known: Sequence[dict], today: dt.date, 
 
 def stale_mappings(failing: Mapping[str, str], known: Sequence[dict], state: Optional[str] = None) -> List[dict]:
     """Entries (of ``state``, when given) that match none of the failing ids."""
+    _require_state_when_entries_have_one(known, state)
     return [
         e
         for e in known

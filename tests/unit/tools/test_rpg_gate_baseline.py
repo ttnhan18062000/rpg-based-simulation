@@ -305,3 +305,12 @@ def test_the_first_baseline_past_a_stop_line_needs_a_ruling_too(tmp_path):
         rgb.rebaseline(_candidate(), cfg, tmp_path, pr=None, cites=["t"], undecided_world_semantic_change=True, now=NOW)
     path = rgb.rebaseline(_candidate(deaths=11.0), cfg, tmp_path, pr=None, cites=["t"], owner_ruling=RULING, now=NOW)
     assert json.loads(path.read_text())["owner_ruling"] == RULING and rgb.lint_dir(tmp_path) == []
+
+
+def test_config_carries_k_floors_and_oracles_and_a_v1_ruling_records_the_lines_it_covers(tmp_path):
+    cfg = tmp_path / "c.yaml"
+    cfg.write_text("worlds: [w]\nseeds: [1, 2]\nticks: 5000\nstale_after_days: 30\nk: 2.5\nfloors: {O2.deaths: 0.5}\noracles: {V1: docs/x.md}\n")
+    loaded = rgb.load_config(cfg)
+    assert (loaded.k, loaded.floors, loaded.oracles) == (2.5, {"O2.deaths": 0.5}, {"V1": "docs/x.md"})
+    path = rgb.rebaseline(_candidate(deaths=11.0), _config(), tmp_path / "b", pr=None, cites=["t"], owner_ruling=RULING, now=NOW)
+    assert json.loads(path.read_text())["stop_lines_crossed"] == ["R1"]
