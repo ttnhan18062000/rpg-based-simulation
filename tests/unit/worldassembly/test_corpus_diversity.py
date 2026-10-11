@@ -125,7 +125,8 @@ ALL_CORPUS_WORLDS = sorted(p.name for p in WORLDS_ROOT.iterdir() if p.is_dir())
 # (low, high) inclusive; high=None means open-ended (">50").
 ANCHORED_WORLD_BANDS: dict[str, tuple[int, int | None]] = {
     "frontier_extended": (51, None),
-    "frontier_living_world": (35, 50),
+    # Re-banded 35..50 -> 35..56 (owner row 59, divergence 2.107): the module wolf_den_near_forest places the six-strong small_plant_eater_herd (49 -> 55).
+    "frontier_living_world": (35, 56),
     "wilderness_survival": (0, 19),
     "highland_traverse": (0, 19),
     "swamp_border_world": (20, 35),

@@ -55,9 +55,11 @@ change to spawning or perception semantics.
 import json
 import os
 import shutil
+from dataclasses import replace
 
 import pytest
 
+from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
 from src.lab.repository import ScenarioRepository, ExperimentRepository, LabRunRepository
 from src.lab.orchestrator import ScenarioLabOrchestrator
@@ -136,6 +138,25 @@ def _contact_rich_load_world(original_load_world):
     return load_world
 
 
+HUNGRY = 90.0  # past the hunt onset (appraisal.HUNT_HUNGER), so a wolf regards a person as prey the moment it perceives one
+
+
+def _hungry_wolves_compile(original_compile):
+    """`WorldCompiler.compile` with every wolf starting hungry. Wolves are wild creatures (hostility.is_wild_creature, decision 47 scope B): the faction
+    and species-relation verdicts no longer decide whether a wolf fights a person, appraisal does, and a sated wolf regards a person as nothing. The
+    layout therefore needs hungry wolves to produce wolf-human contact in the baseline."""
+
+    def compile(spec, seed, *args, **kwargs):
+        state, report = original_compile(spec, seed, *args, **kwargs)
+        entities = {
+            eid: replace(e, biological=replace(e.biological, hunger=HUNGRY)) if (e.identity.properties or {}).get("species_id") == "wolf" else e
+            for eid, e in state.entities.items()
+        }
+        return replace(state, entities=entities), report
+
+    return staticmethod(compile)
+
+
 def _engagements_per_seed(lab_run_id: str) -> dict:
     counts = {}
     for seed in SEEDS:
@@ -182,6 +203,7 @@ def test_species_hostility_increase_does_not_decrease_combat_engagement_rate(mon
     # orchestrator loads its world through WorldRepository.load_world (see the module docstring).
     monkeypatch.setattr(governor_module, "ResourceGovernor", PinnedNormalGovernor)
     monkeypatch.setattr(WorldRepository, "load_world", _contact_rich_load_world(WorldRepository.load_world))
+    monkeypatch.setattr(WorldCompiler, "compile", _hungry_wolves_compile(WorldCompiler.compile))
 
     with open(SPECIES_RELATIONS_PATH, "r", encoding="utf-8") as f:
         original_content = f.read()
