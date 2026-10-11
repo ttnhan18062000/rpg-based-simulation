@@ -115,6 +115,7 @@ def build_handoff(
         "layer_count": len(info["layers"]),
         "cel_count": info["cels"],
         "tag_count": len(info["tags"]),
+        **({"slice_count": len(info["slices"])} if info["slices"] else {}),  # always declared when the sprite has any; omitted when it has none, so a package without slices is byte-identical to before
         "palette_size": info["palette_size"],
         "preview_hash": _file_hash(preview),
         "brief_id": brief_id,
