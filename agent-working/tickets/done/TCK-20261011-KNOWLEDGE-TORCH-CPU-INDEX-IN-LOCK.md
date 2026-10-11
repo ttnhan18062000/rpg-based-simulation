@@ -69,7 +69,7 @@ None (hotfix).
 See brief.
 
 ## Test Summary
-`uv.lock` unchanged and `uv lock --check` passes (127 packages resolved). `make` PYTHON_KNOWLEDGE resolves to the main checkout's `.venv-knowledge` by default, `KNOWLEDGE_PYTHON=/x/py` env and `make KNOWLEDGE_PYTHON=/y/py` both used verbatim. `bash -n tools/start_headroom_mcp.sh` ok. `tests/static`, `test_mcp_launcher_hardening.py`, `test_handover_transit.py`: 159 passed, no ordering assertion changed.
+`uv.lock` unchanged and `uv lock --check` passes (127 packages resolved). `make` PYTHON_KNOWLEDGE resolves to the main checkout's `.venv-knowledge` by default, `KNOWLEDGE_PYTHON=/x/py` env and `make KNOWLEDGE_PYTHON=/y/py` both used verbatim. `bash -n tools/start_headroom_mcp.sh` ok. `tests/static`, `test_mcp_launcher_hardening.py`, `test_handover_transit.py`: 159 passed, no ordering assertion changed. CI's Tools f-z lane then failed `tests/tools/test_makefile_interpreter_selection.py` on the first multi-statement form of PYTHON_KNOWLEDGE (the test extracts a one-line `for py in` loop); fixed in the Makefile (git-common-dir lookup moved to `KNOWLEDGE_MAIN_ROOT`), test file untouched and as strict as before. Whole `tests/tools` run locally: 4782 passed, 29 skipped, 1 xfailed.
 
 ## Files Changed
 - Makefile
