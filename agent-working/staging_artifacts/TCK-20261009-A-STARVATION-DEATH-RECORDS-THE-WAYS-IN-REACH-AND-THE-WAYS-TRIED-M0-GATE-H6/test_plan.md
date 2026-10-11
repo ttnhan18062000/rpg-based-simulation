@@ -17,4 +17,5 @@ tags: []
 - Determinism: two runs of the same seed give byte-identical records; the record serialises (to_dict round trip).
 - Observational: running with and without the extractor gives identical state hashes (no behaviour change).
 - Not a starvation death (combat, hazard): no record.
+- Channel liveness: observability OFF or a missing record path reads as channel-not-live (no-data, reason harness_error), never as zero violations; a normal run has the header and records == starvation_deaths_seen.
 - Pinned run: a 1500-tick pinned run on the three worlds records every STARVATION death exactly once (count equals the deaths by `passive_death_cause`).
