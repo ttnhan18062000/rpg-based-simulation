@@ -257,6 +257,36 @@ kills it.
   kills in 11 ticks (ENV-08's evidence). Expected to be **covered** once Lane B's content data
   lands in the decision-27 + earn-then-buy batch and this spec passes.
 
+## SPC-S17 — A fighter diagonal to its foe steps first, then strikes (MOV-07) (added 2026-10-11)
+
+A strong fighter stands diagonal to a weak foe, one tile across and one tile down. It does not
+swing from there. It steps one tile along an edge and then strikes, and it does so quickly.
+
+- **Rules invoked:** MOV-07 (adjacency is orthogonal, positions are whole tiles), CONFLICT-04
+  (a fighter holds between blows), REACH-01 through MOV-06 (reach is the same adjacency).
+- **Kernel spec.** Attacker A (300 HP, attack range 1, ready) at (10, 10). Target T (40 HP)
+  at (11, 11), whose position is pinned each tick so the pair's geometry is the only variable.
+  They are hostile factions, there is nothing else in the world, and the brain runs every 10
+  ticks.
+  - **Main arm:** A's first strike lands within two brain cadences (20 ticks). It takes one
+    orthogonal step to an edge-sharing tile, its pursuit completes on the next tick, and the
+    next brain tick decides ATTACK.
+  - **Never from the diagonal:** an ATTACK against a target at Manhattan distance 2 comes back
+    OUT_OF_RANGE. That ends the task, so the brain decides again instead of re-swinging. Before
+    the fix, one diagonal pair held 267 swings in 2,000 ticks. A swing in reach keeps its task,
+    and so does a swing refused only for readiness.
+  - **Control arm:** with the completion-tick guard switched off (the old rule), the pursuer
+    steps once more off adjacency, takes an opportunity attack, and its first strike misses the
+    20-tick bound.
+  - **Flank case:** a bracketing move on the diagonal tile is not complete and keeps walking.
+    One orthogonal step later it is complete. The flank and the yield push (MOV-07's two
+    exceptions) can leave a fighter diagonal, and this scenario shows it still steps first.
+- **Result (2026-10-11): covered** since #385 (`bbaaf2034`) by
+  `tests/unit/engine/test_diagonal_melee_pair_strikes.py` (the main arm, the control, and the
+  flank case) and `tests/unit/actions/test_held_attack_out_of_range.py` (OUT_OF_RANGE ends the
+  task, and the in-reach and readiness cases keep it). 12 passed on `rpg-designer-next`, whose
+  base is main `39f353b95`.
+
 ---
 
 ## Cross-batch note
