@@ -50,8 +50,12 @@ def _entry(match="V3:wolves", ticket="TCK-OWN", expires="2026-12-31"):
     return {"match": match, "ticket": ticket, "owner": "rpg", "added_on": "2026-10-01", "expires_on": expires, "state": "fail"}
 
 
+def _report(*findings, skipped=(), sha=SHA):
+    return {"schema": "rpg-gate-report/v1", "sha": sha, "harness_hash": HASH, "findings": list(findings), "rerun": {"performed": True, "not_performed_budget": [list(p) for p in skipped]}}
+
+
 def _build(directory, known=(), **kw):
-    return cand.build_candidate(directory, kw.pop("config", _config()), list(known), today=TODAY, **kw)
+    return cand.build_candidate(directory, kw.pop("config", _config()), list(known), kw.pop("report", _report()), today=TODAY, **kw)
 
 
 # ---- the round trip
@@ -162,7 +166,7 @@ def test_an_owned_validity_fail_is_omitted_and_recorded(tmp_path):
         {"row": "V3:run:w:wolves", "known_match": "V3:wolves", "ticket": "TCK-OWN"},
     ]
     baselines = tmp_path / "b"
-    base.rebaseline(candidate, _config(), baselines, pr=None, cites=["TCK-METRIC-SET"])
+    base.rebaseline(candidate, _config(), baselines, pr=None, cites=["TCK-METRIC-SET"], known=[_entry()], today=TODAY)
     written = json.loads((baselines / "rpg_gate_v1.json").read_text())
     assert written["omitted_validity"] == candidate["omitted_validity"] and base.lint_dir(baselines) == []
 
@@ -202,10 +206,12 @@ def test_the_cli_writes_the_file_or_refuses_without_writing(tmp_path, capsys):
     known = tmp_path / "known.yaml"
     known.write_text("known: []\n")
     out = tmp_path / "out" / "candidate.json"
-    args = ["--config", str(config), "--docs", str(_write(tmp_path / "ok")), "--known", str(known), "--out", str(out), "--milestone", "M0"]
+    report = tmp_path / "report.json"
+    report.write_text(json.dumps(_report()))
+    args = ["--report", str(report), "--config", str(config), "--docs", str(_write(tmp_path / "ok")), "--known", str(known), "--out", str(out), "--milestone", "M0"]
     assert cand.main(args) == 0 and json.loads(out.read_text())["milestone"] == "M0"
     out.unlink()
-    bad = ["--config", str(config), "--docs", str(_write(tmp_path / "bad", _failing())), "--known", str(known), "--out", str(out)]
+    bad = ["--report", str(report), "--config", str(config), "--docs", str(_write(tmp_path / "bad", _failing())), "--known", str(known), "--out", str(out)]
     assert cand.main(bad) == 2 and not out.exists()
     assert "REFUSED:" in capsys.readouterr().err
 
@@ -217,3 +223,39 @@ def test_rebaseline_cli_takes_the_milestone(tmp_path):
         base.rebaseline(candidate, _config(), tmp_path / "b1", pr=None, cites=["T"])
     target = base.rebaseline(candidate, _config(), tmp_path / "b2", pr=None, cites=["T"], milestone="M0")
     assert json.loads(target.read_text())["milestone"] == "M0"
+
+
+# ---- the report must stand behind the run
+
+def test_an_unstable_finding_refuses_naming_the_metric(tmp_path):
+    unstable = {"world": "w", "id": "O1", "group": "*", "state": "unstable"}
+    _refused(_write(tmp_path / "d"), r"unstable finding.*w/O1", report=_report(unstable))
+
+
+def test_a_rerun_cut_by_the_budget_refuses_naming_the_unconfirmed_metrics(tmp_path):
+    drift = {"world": "w", "id": "O1", "group": "*", "state": "drift"}
+    _refused(_write(tmp_path / "d"), r"not performed \(budget\).*w/O1", report=_report(drift, skipped=[("w", 2)]))
+
+
+def test_a_confirmed_first_pass_drift_or_fail_is_accepted(tmp_path):
+    findings = [{"world": "w", "id": "O1", "group": "*", "state": "drift"}, {"world": "w", "id": "V3", "group": "wolves", "state": "fail"}]
+    assert _build(_write(tmp_path / "d"), report=_report(*findings), milestone="M0")["metrics"]
+
+
+def test_a_report_from_other_documents_refuses(tmp_path):
+    _refused(_write(tmp_path / "d"), "the report is from sha", report=_report(sha="other"))
+    _refused(_write(tmp_path / "e"), "not an rpg-gate-report/v1", report={"findings": []})
+
+
+# ---- rebaseline re-checks the owners of omitted rows
+
+def test_rebaseline_rechecks_each_omitted_owner_against_the_current_registry(tmp_path):
+    candidate = _build(_write(tmp_path / "d", _failing()), [_entry()], milestone="M0")
+    kw = dict(pr=None, cites=["T"])
+    with pytest.raises(base.RebaselineRefused, match="--known"):
+        base.rebaseline(candidate, _config(), tmp_path / "b0", **kw)
+    with pytest.raises(base.RebaselineRefused, match="no longer a state: fail entry"):
+        base.rebaseline(candidate, _config(), tmp_path / "b1", known=[], **kw)
+    with pytest.raises(base.RebaselineRefused, match="expired on 2026-10-01"):
+        base.rebaseline(candidate, _config(), tmp_path / "b2", known=[_entry(expires="2026-10-01")], today=TODAY, **kw)
+    assert base.rebaseline(candidate, _config(), tmp_path / "b3", known=[_entry()], today=TODAY, **kw).exists()

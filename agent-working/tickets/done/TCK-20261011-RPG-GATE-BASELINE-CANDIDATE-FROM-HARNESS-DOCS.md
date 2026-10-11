@@ -106,11 +106,12 @@ Child 6 of TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC, found by testing-pla
 - The expected documents come from the config (worlds x seeds plus pooled), so `matrix.json` is not needed; an unexpected document is a matrix mismatch.
 - Owned validity fails (`known_reds.owner_of(..., state="fail")`, unexpired) are omitted for the whole (world, id, group), run and pooled, and listed one entry per omitted row label in `omitted_validity`; unowned, expired or wrong-state owners refuse.
 - `rpg_gate_baseline`: lint accepts `omitted_validity` and rejects a listed row still in `metrics`; `rebaseline` carries it, refuses `evidence_only` candidates, and takes `--milestone` (the workflow's candidate has none, rpg names the milestone).
+- Review fixes (testing-planner on #508): the builder takes the run's report (`--report`) and refuses an `unstable` finding or a budget-cut rerun, naming the metric; `rebaseline --known` re-checks each omitted row's owner against the current registry; the workflow summary says which condition made a candidate evidence-only.
 - Workflow: a `continue-on-error` step before the artifact upload; a candidate from anything but a main run without a `ref` input is built with `--evidence-only`.
 
 ## Test Summary
-- `tests/unit/tools/test_rpg_gate_candidate.py`: 17 passed. `tests/static/test_ci_rpg_gate_workflow_shape.py`: 11 passed.
-- Scoped run `tests/unit/tools` + `tests/static` with `-k "rpg_gate or slow or known_reds or workflow"`: 292 passed.
+- `tests/unit/tools/test_rpg_gate_candidate.py`: 23 passed. `tests/static/test_ci_rpg_gate_workflow_shape.py`: 11 passed.
+- Scoped run `tests/unit/tools` + `tests/static` with `-k "rpg_gate or slow or known_reds or workflow"`: 297 passed.
 
 ## Files Changed
 - `tools/test_architecture/rpg_gate_candidate.py` (new), `tools/test_architecture/rpg_gate_baseline.py`, `.github/workflows/rpg-gate-report.yml`

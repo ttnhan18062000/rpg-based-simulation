@@ -118,7 +118,7 @@ def test_the_report_job_writes_a_baseline_candidate_best_effort_and_labels_a_non
     step = next(s for s in _steps("report") if s.get("name", "").startswith("Baseline candidate"))
     assert step["continue-on-error"] is True and step["if"] == "${{ !cancelled() }}"  # a refusal never fails the job
     run = step["run"]
-    assert "tools.test_architecture.rpg_gate_candidate" in run and "--known tools/test_architecture/rpg_gate_known.yaml" in run
+    assert "tools.test_architecture.rpg_gate_candidate" in run and "--known tools/test_architecture/rpg_gate_known.yaml" in run and "--report report/rpg-gate-report.json" in run and "$why" in run
     assert "report/rpg-gate-candidate.json" in run and "--evidence-only" in run and "Baseline candidate refused" in run
     names = [s.get("name", "") for s in _steps("report")]
     assert names.index(step["name"]) < names.index("Upload report")  # inside the uploaded `report/` directory

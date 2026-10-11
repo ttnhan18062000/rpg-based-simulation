@@ -61,7 +61,7 @@ a property-based kind group (D42), never an EntityRole name; ``metric`` and ``gr
 CLI (stdlib plus PyYAML)::
 
     python -m tools.test_architecture.rpg_gate_baseline lint [--dir DIR]
-    python -m tools.test_architecture.rpg_gate_baseline rebaseline --candidate FILE --config FILE [--dir DIR]
+    python -m tools.test_architecture.rpg_gate_baseline rebaseline --candidate FILE --config FILE [--dir DIR] [--milestone M] [--known FILE]
         [--divergence-id ID] [--memo-row ROW] [--pr REF] [--cite TEXT ...] [--owner-ruling-ref REF --owner-ruling-date YYYY-MM-DD]
         [--undecided-world-semantic-change]
         (version 1 needs at least one --cite; a later version builds its cites from the divergence id, memo row and PR plus any --cite)
@@ -80,6 +80,8 @@ from pathlib import Path
 from typing import Any, List, Mapping, Optional, Sequence, Tuple
 
 import yaml
+
+from tools.test_architecture import known_reds
 
 SCHEMA = "rpg-gate-baseline/v1"
 DEFAULT_DIR = Path("tests/simulation_quality/rpg_gate/baselines")
@@ -450,12 +452,23 @@ def rebaseline(
     undecided_world_semantic_change: bool = False,
     now: Optional[dt.datetime] = None,
     milestone: Optional[str] = None,
+    known: Optional[Sequence[dict]] = None,
+    today: Optional[dt.date] = None,
 ) -> Path:
     """Write the next version from ``candidate`` and return its path, or raise :class:`RebaselineRefused`. Never modifies an existing file.
-    A candidate marked ``evidence_only`` (from a branch-ref dispatch) is refused; ``milestone`` overrides the candidate's."""
+    A candidate marked ``evidence_only`` (from a branch-ref dispatch) is refused; ``milestone`` overrides the candidate's. A candidate that omitted owned validity
+    fails needs ``known`` (the current ``rpg_gate_known.yaml`` entries): each omission's ``known_match`` must still be a ``state: fail`` entry and not expired."""
     directory = Path(directory)
     if candidate.get("evidence_only"):
         raise RebaselineRefused("this candidate is evidence only (a branch-ref dispatch); a baseline is recorded from a main run's candidate")
+    for omitted in candidate.get("omitted_validity") or []:
+        if known is None:
+            raise RebaselineRefused("this candidate omitted owned validity fails; pass the current rpg_gate_known.yaml (--known) so each owner can be re-checked")
+        entry = next((e for e in known if e.get("match") == omitted.get("known_match") and e.get("state") == "fail"), None)
+        if entry is None:
+            raise RebaselineRefused(f"omitted validity row {omitted.get('row')}: its owner entry {omitted.get('known_match')!r} is no longer a state: fail entry in rpg_gate_known.yaml")
+        if known_reds.is_expired(entry, today or dt.datetime.now(dt.timezone.utc).date()):
+            raise RebaselineRefused(f"omitted validity row {omitted.get('row')}: its owner entry {entry['match']!r} expired on {entry['expires_on']}")
     existing = load_baselines(directory)
     if existing and not (divergence_id or memo_row):
         raise RebaselineRefused("a re-baseline needs a divergence id and/or a memo row")
@@ -525,6 +538,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     reb.add_argument("--config", type=Path, required=True)
     reb.add_argument("--dir", type=Path, default=DEFAULT_DIR)
     reb.add_argument("--milestone", help="the milestone id (overrides the candidate's; the workflow's candidate has none)")
+    reb.add_argument("--known", type=Path, help="rpg_gate_known.yaml; required when the candidate omitted owned validity fails")
     reb.add_argument("--divergence-id")
     reb.add_argument("--memo-row")
     reb.add_argument("--pr")
@@ -550,6 +564,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             cites=args.cite,
             undecided_world_semantic_change=args.undecided_world_semantic_change,
             milestone=args.milestone,
+            known=known_reds.load_known_reds(args.known, known_reds.RPG_GATE_SPEC) if args.known else None,
         )
     except BaselineError as exc:
         print(f"REFUSED: {exc}" if isinstance(exc, RebaselineRefused) else f"ERROR: {exc}", file=sys.stderr)

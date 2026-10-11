@@ -21,6 +21,9 @@ and never reads a baseline's ``se``, so it is provenance only.
 
 A candidate is never partial. :func:`build_candidate` raises :class:`CandidateRefused` (naming the document and the rule) when:
 
+* the report (``--report``, the ``rpg-gate-report/v1`` of the same run) has an ``unstable`` finding, or says the same-SHA rerun was not performed for some
+  runs (budget): a finding the rerun did not reproduce, or never got to confirm, is not a baseline. A first-pass fail/drift the rerun confirmed is accepted
+  (it is what the baseline records as it stands). The report must also come from the documents' ``sha`` and ``harness_hash``;
 * a document is missing, unexpected for the config's worlds and seeds, unreadable, or ``no-data`` (any reason: a baseline can not be recorded from a run that did not run);
 * the documents disagree on ``sha`` or ``harness_hash`` (or ``sha`` differs from ``commit_sha`` when one is given);
 * a document's ``ticks`` or ``world`` / ``seed`` differs from the config or its file name;
@@ -36,7 +39,7 @@ A candidate is never partial. :func:`build_candidate` raises :class:`CandidateRe
 
 CLI::
 
-    python -m tools.test_architecture.rpg_gate_candidate --config FILE --docs DIR --known FILE --out FILE [--milestone M] [--commit-sha SHA] [--evidence-only]
+    python -m tools.test_architecture.rpg_gate_candidate --config FILE --docs DIR --known FILE --report FILE --out FILE [--milestone M] [--commit-sha SHA] [--evidence-only]
 
 Exit 0 and the file written, or exit 2 and the refusal on stderr (nothing written).
 """
@@ -107,6 +110,29 @@ def _load(docs_dir: Path, config: GateConfig) -> Dict[Tuple[str, Optional[int]],
     return docs
 
 
+def _check_report(report: Mapping[str, Any], sha: str, hhash: str) -> None:
+    """Refuse a run the report does not stand behind: unstable findings, an unconfirmed (budget-cut) rerun, or a report from other documents."""
+    if report.get("schema") != "rpg-gate-report/v1":
+        raise CandidateRefused("the report is not an rpg-gate-report/v1 document")
+    if (report.get("sha") and report["sha"] != sha) or (report.get("harness_hash") and report["harness_hash"] != hhash):
+        raise CandidateRefused(f"the report is from sha {report.get('sha')!r} / harness {report.get('harness_hash')!r}, the documents from {sha!r} / {hhash!r}")
+    findings = report.get("findings") or []
+    unstable = sorted({rep_id(f) for f in findings if f.get("state") == "unstable"})
+    if unstable:
+        raise CandidateRefused(f"the report has unstable finding(s) the same-SHA rerun did not reproduce: {', '.join(unstable)}; a nondeterministic metric is not a baseline")
+    skipped = (report.get("rerun") or {}).get("not_performed_budget") or []
+    if skipped:
+        worlds = {pair[0] for pair in skipped}
+        unconfirmed = sorted({rep_id(f) for f in findings if f.get("state") in ("fail", "drift") and f.get("world") in worlds})
+        raise CandidateRefused(
+            f"the report's same-SHA rerun was not performed (budget) for {len(skipped)} run(s); unconfirmed fail/drift finding(s): {', '.join(unconfirmed) or 'none named'}"
+        )
+
+
+def rep_id(finding: Mapping[str, Any]) -> str:
+    return f"{finding.get('world')}/{metric_test_id(finding)}"
+
+
 def _single(docs: Mapping[Any, dict], field: str, what: str) -> str:
     values = {doc.get(field) for doc in docs.values()}
     if len(values) != 1 or not next(iter(values)):
@@ -170,6 +196,7 @@ def build_candidate(
     docs_dir: Path,
     config: GateConfig,
     known: Sequence[dict],
+    report: Mapping[str, Any],
     *,
     milestone: Optional[str] = None,
     commit_sha: Optional[str] = None,
@@ -185,6 +212,7 @@ def build_candidate(
     hhash = _single(docs, "harness_hash", "the harness hash")
     if commit_sha and commit_sha != sha:
         raise CandidateRefused(f"the documents are from {sha}, not the requested commit {commit_sha}")
+    _check_report(report, sha, hhash)
     _thresholds(docs)
     omitted = _omissions(docs, config, known, today)
     omitted_rows: List[dict] = []
@@ -269,18 +297,26 @@ def dump_candidate(candidate: Mapping[str, Any]) -> str:
     return json.dumps(candidate, sort_keys=True, indent=2) + "\n"
 
 
+def _read_report(path: Path) -> dict:
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise CandidateRefused(f"the report {path} can not be read ({exc})") from exc
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--docs", type=Path, required=True)
     parser.add_argument("--known", type=Path, required=True, help="rpg_gate_known.yaml: owned validity fails are omitted and recorded")
+    parser.add_argument("--report", type=Path, required=True, help="the rpg-gate-report/v1 JSON of the same run: unstable or unconfirmed findings refuse")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--milestone")
     parser.add_argument("--commit-sha")
     parser.add_argument("--evidence-only", action="store_true", help="mark the candidate as evidence from a branch-ref dispatch; rebaseline refuses it")
     args = parser.parse_args(argv)
     try:
-        candidate = build_candidate(args.docs, load_config(args.config), known_reds.load_known_reds(args.known, known_reds.RPG_GATE_SPEC), milestone=args.milestone, commit_sha=args.commit_sha, evidence_only=args.evidence_only)
+        candidate = build_candidate(args.docs, load_config(args.config), known_reds.load_known_reds(args.known, known_reds.RPG_GATE_SPEC), _read_report(args.report), milestone=args.milestone, commit_sha=args.commit_sha, evidence_only=args.evidence_only)
     except BaselineError as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 2

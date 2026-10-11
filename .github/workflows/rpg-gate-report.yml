@@ -171,14 +171,15 @@ jobs:
           REF_NAME: ${{ github.ref_name }}
           INPUT_REF: ${{ inputs.ref }}
         run: |
-          evidence=""
-          if [ "$REF_NAME" != "main" ] || [ -n "$INPUT_REF" ]; then evidence="--evidence-only"; fi
+          evidence=""; why=""
+          if [ "$REF_NAME" != "main" ]; then evidence="--evidence-only"; why="the run is on ref $REF_NAME, not main"; fi
+          if [ -n "$INPUT_REF" ]; then evidence="--evidence-only"; why="${why:+$why; }the dispatch checked out ref input $INPUT_REF"; fi
           if python -m tools.test_architecture.rpg_gate_candidate \
               --config tests/simulation_quality/rpg_gate/config.yaml --docs gate-docs \
-              --known tools/test_architecture/rpg_gate_known.yaml \
+              --known tools/test_architecture/rpg_gate_known.yaml --report report/rpg-gate-report.json \
               --out report/rpg-gate-candidate.json --commit-sha "$(git rev-parse HEAD)" $evidence 2> candidate.err; then
             echo "### Baseline candidate" >> "$GITHUB_STEP_SUMMARY"
-            echo "- written to the report artifact as rpg-gate-candidate.json${evidence:+ (evidence only, not a baseline source: this is not a run of main)}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- written to the report artifact as rpg-gate-candidate.json${evidence:+ (evidence only, not a baseline source: $why)}" >> "$GITHUB_STEP_SUMMARY"
           else
             { echo "### Baseline candidate refused"; sed 's/^/- /' candidate.err; } >> "$GITHUB_STEP_SUMMARY"
           fi

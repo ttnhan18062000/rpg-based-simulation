@@ -56,7 +56,7 @@ by `rebaseline`). Run outcome rows carry `per_seed`, `mean`, `se` and the row's 
 It refuses (exit 2, nothing written) on any `no-data` document, a missing or unexpected (world, seed), a `sha` / `harness_hash` / ticks disagreement, a
 `k` / `floor` / `oracle` mismatch across documents, a row absent from a seed, fewer than 2 seeds, and a validity fail with no current owner. A validity
 fail with a current, unexpired `state: fail` entry in `rpg_gate_known.yaml` is instead left out of `metrics` and listed in `omitted_validity`
-(`{row, known_match, ticket}`), because validity is judged absolutely on every run and never against a baseline. The lint rejects a listed row still present in `metrics`.
+(`{row, known_match, ticket}`), because validity is judged absolutely on every run and never against a baseline. The lint rejects a listed row still present in `metrics`, and `rebaseline --known FILE` re-checks each omission's owner against the current registry (refuses when it is gone, no longer `state: fail`, or expired).
 
 The `RPG gate report` job writes `rpg-gate-candidate.json` into its report artifact on every run where the builder accepts (a refusal is a line in the step
 summary, never a job failure). A run that is not main's is built with `--evidence-only`, and `rebaseline` refuses such a candidate.
@@ -68,4 +68,4 @@ Recording v1 (rpg, after the metric module and config are on main; the milestone
    (add `--owner-ruling-ref ... --owner-ruling-date ...` when a stop line is crossed).
 3. Commit `tests/simulation_quality/rpg_gate/baselines/rpg_gate_v1.json` in a PR that cites the same ticket.
 
-To rebuild a candidate from a downloaded `gate-docs` directory: `python -m tools.test_architecture.rpg_gate_candidate --config ... --docs gate-docs --known tools/test_architecture/rpg_gate_known.yaml --out candidate.json --milestone M0`.
+To rebuild a candidate from a downloaded `gate-docs` directory: `python -m tools.test_architecture.rpg_gate_candidate --config ... --docs gate-docs --known tools/test_architecture/rpg_gate_known.yaml --report rpg-gate-report.json --out candidate.json --milestone M0`.
