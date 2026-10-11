@@ -51,6 +51,21 @@ def tags_chunk_of(specs: list[tuple[str, int, int, int, int]]) -> bytes:
     return _chunk(0x2018, body)
 
 
+def slice_chunk(name: str, keys: list[tuple], *, nine: bool = False, pivot: bool = False, flags: int | None = None, count: int | None = None) -> bytes:
+    """A slice chunk (0x2022). Each key is (frame, x, y, w, h) plus, when `nine`, (cx, cy, cw, ch) and, when `pivot`, (px, py), in that order. `flags` and `count` override what the keys imply (hostile cases)."""
+    declared = (1 if nine else 0) | (2 if pivot else 0) if flags is None else flags
+    body = struct.pack("<III", len(keys) if count is None else count, declared, 0) + _string(name)
+    for key in keys:
+        body += struct.pack("<IiiII", *key[:5])
+        rest = key[5:]
+        if nine:
+            body += struct.pack("<iiII", *rest[:4])
+            rest = rest[4:]
+        if pivot:
+            body += struct.pack("<ii", *rest[:2])
+    return _chunk(0x2022, body)
+
+
 def palette_chunk(size: int, *, black: bool = False, named: bool = False, transparent: bool = False) -> bytes:
     """A new-style palette chunk. By default entries are non-black (so the size is reported exactly)."""
     entries = max(size, 1)
@@ -96,9 +111,10 @@ def aseprite(
     header_colors: int | None = None,
     durations: list[int] | None = None,
     tag_specs: list[tuple[str, int, int, int, int]] | None = None,
+    slice_chunks: list[bytes] | None = None,
 ) -> bytes:
     """A syntactically valid sprite. `cels` defaults to one per layer per frame, spread over the frames. `durations` are the frame header durations in ms (one per frame, default 100);
-    `tag_specs` replaces the anonymous `tags` chunk with named ones (name, from_frame, to_frame, direction byte, repeat)."""
+    `tag_specs` replaces the anonymous `tags` chunk with named ones (name, from_frame, to_frame, direction byte, repeat); `slice_chunks` (see `slice_chunk`) go in the first frame."""
     total_cels = layers * frames if cels is None else cels
     frame_chunks: list[list[bytes]] = [[] for _ in range(frames)]
     frame_chunks[0] += palette_chunks if palette_chunks is not None else [palette_chunk(palette)]
@@ -109,6 +125,7 @@ def aseprite(
         frame_chunks[0].append(tags_chunk_of(tag_specs))
     elif tags:
         frame_chunks[0].append(tags_chunk(tags))
+    frame_chunks[0] += slice_chunks or []
     frame_chunks[0] += extra_first_frame or []
     times = durations if durations is not None else [100] * frames
     assert len(times) == frames

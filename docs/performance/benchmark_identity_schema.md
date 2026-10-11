@@ -6,9 +6,9 @@ audience: agent
 tags: [performance, benchmarking, schema, documentation]
 ---
 
-# Benchmark Identity and Result Schema (schema 1.0)
+# Benchmark Identity and Result Schema (schema 1.1)
 
-> **Status: the contract for schema version `1.0`.** It is implemented by `src/perf/benchmark_record.py`
+> **Status: the contract for schema version `1.1`** (`1.0` plus the optional `identity.runner` section, §3.1; a MINOR bump, so a `1.0` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
 > (`BenchmarkRecord`, `compare`), adopted by `PERF-M2-T02b` (`TCK-20261010-PERF-M2-T02B-RECORD`).
 > It began as the design draft of `PERF-M2-T02` (`TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA`),
 > written from code read on 2026-10-03; §1 and §2 are that inventory and still describe the formats as
@@ -192,7 +192,9 @@ provides it.
 | `executor.worker_count` | integer ≥ 1 | required | not yet; PERF-M1-T01 changes what zero means |
 | `observer.level` | string | required | not yet (M3); today `replay_enabled`, `frame_pacing_enabled`, `audit_mode`, profiler attachment |
 | `gate.tier` | enum `tripwire`, `capacity_run`, `comparative` | required | `performance_contract.md` §3 |
-| `gate.projection` | string | required | not yet (`PERF-M2-T03`/`T04`) |
+| `gate.projection` | string | required | today: `bench_harness` (the default tripwire record), `capacity_run` (`tools/perf/capacity_run.py`, `BenchHarness` repetitions) and `long_run_stability` (`LongRunStabilityHarness.to_record`). Blocking, so a long-run record is never compared with a `BenchHarness` capacity record: they time different things (the long run times the tick plus the read-model update). `PERF-M2-T03` names the tripwire projection |
+| `runner.controlled` | boolean | optional (default false) | today: `false` for every record. No approved runner exists (owner decision OD-5), so a capacity record makes no capacity claim; the field flips only when the owner names one |
+| `runner.name` | string | optional (default `unknown`) | today: the host name (`platform.node()`) for a capacity run; `unknown` for a tripwire record. Blocking, so a capacity result is compared only on the host that produced it |
 | `baseline_ref` | object `{id, schema_version, record_digest}` or null | optional | not yet (`PERF-M2-T05`) |
 
 **Result**
@@ -205,7 +207,7 @@ provides it.
 | `protocol.percentile_method` | enum `nearest_rank`, `linear` | required | **decided (OD-1): `nearest_rank`, `ceil(q * n)`, for every producer.** `BenchHarness` writes it. An old `sorted[int(n * q)]` record never compares with a new one (blocking) |
 | `protocol.clock` | string (`perf_counter`, `process_time`, `instructions`) | required | not yet |
 | `protocol.gc_disabled` | boolean | required | today: harness disables gc during sampling, unrecorded |
-| `samples` | `{tick_wall_ms, tick_compute_ms}` (arrays of number), or `{uri, sha256}` | required for `capacity_run`, optional for `tripwire` | **decided (OD-6):** a tripwire record embeds both series (at most `MAX_EMBEDDED_SAMPLES` = 500 values each); a capacity record, and a tripwire above the cap, carries a `{uri, sha256}` pointer to an uncommitted file under `reports/perf/`. `latency_ms` is computed from `tick_compute_ms` (the kernel's reported tick cost); `tick_wall_ms` is the wall time around each `tick_once` |
+| `samples` | `{tick_wall_ms, tick_compute_ms}` (arrays of number), or `{uri, sha256}` | required for `capacity_run`, optional for `tripwire` | **decided (OD-6):** a tripwire record embeds both series (at most `MAX_EMBEDDED_SAMPLES` = 500 values each); a capacity record, and a tripwire above the cap, carries a `{uri, sha256}` pointer to an uncommitted file under `reports/perf/samples/` (`$PERF_SAMPLES_DIR` overrides it). Every write creates a new file (a random suffix, exclusive create), so two records written in the same second never share a file and a pointer's `sha256` cannot go stale; the file holds `tick_wall_ms`, and `tick_compute_ms` when the producer measured it (the long-run harness has only wall time) `latency_ms` is computed from `tick_compute_ms` (the kernel's reported tick cost); `tick_wall_ms` is the wall time around each `tick_once` |
 | `latency_ms` | object `{avg, p50, p95, p99, max, min}` | required | today: `tick_ms` |
 | `throughput` | object `{compute_tps, wall_tps}` | required | today: harness |
 | `time_s` | object `{wall, cpu_user, cpu_system}` | required | today: harness (CPU includes warmup, which wall does not; the schema fixes one window) |
@@ -331,6 +333,10 @@ provides it.
             "tier": {"enum": ["tripwire", "capacity_run", "comparative"]},
             "projection": {"type": "string"}
           }
+        },
+        "runner": {
+          "type": "object",
+          "properties": {"controlled": {"type": "boolean"}, "name": {"type": "string"}}
         },
         "baseline_ref": {
           "type": ["object", "null"],
@@ -460,6 +466,7 @@ never a skip that reads as success. A missing baseline, a baseline with a differ
 | `executor.backend`, `executor.worker_count` | blocking | different execution route |
 | `observer.level` | blocking | observer cost is part of the measurement |
 | `gate.tier`, `gate.projection` | blocking | a tripwire result never stands in for a capacity run |
+| `runner.controlled`, `runner.name` | blocking | an uncontrolled result is not comparable with a controlled one, and a capacity result is read only against the same host |
 | `protocol.*` (warmup, measured ticks, repetitions, percentile method, clock, gc) | blocking | a 20-tick and a 1000-tick sample are not comparable (finding 3) |
 | `runtime_mode_sequence` | see the excursion rule below | an excursion changes the work done (`RuntimeMode` can leave `NORMAL`) |
 | `validity.hash_scheme` | blocking when both carry a hash; digests of different schemes are not comparable (PERF-D5) | two digests produced by different hash schemes can differ with identical state, so a mismatch proves nothing. The enum is `flat-sha256-v1`, `flat-sha256-v2` (R-3) |
@@ -537,7 +544,7 @@ records as `extra_info`. Choosing the tool is `PERF-M2-T03`.
 | F2 mode check | Replaced by `runtime_mode_sequence` and the comparability rule; the empty hard-scenario set goes away |
 | F3 corpus checks | Updated by `T03` to assert the new required fields |
 | F4, F5, F7 (`run_perf_baseline.py` shape), F8 | Map into the schema: the harness dict becomes `result`, the caller-added fields move into `identity` |
-| F6 `check_perf_regression.py`, `perf_ci.py` | Retire in favor of the single comparison over the schema; the two threshold policies collapse into the contract's thresholds (set by `T03`, not here) |
+| F6 `check_perf_regression.py`, `perf_ci.py` | **Retired by `PERF-M2-T03`.** Replaced by `tools/perf/tripwire.py` (paired base/head, each side in a fresh process) and the nightly baseline lane, both through `compare()`; the two threshold policies collapsed into `TRIPWIRE_THRESHOLDS` |
 | F7 `bench_worker_throughput.py` writer and `perf_baseline.py` | Retire from the `latest.json` path (no consumer for the flat shape); keep `bench_worker_throughput.py` as a separate measurement with its own file name |
 | F9 optimization proof | Retire the fixed prose; regenerate from schema records that carry identity, with a missing baseline key an error, not `1.0`. Until then treat its speedups as unlabeled |
 | F10 comparison | Retire (no consumer); `CRASHED` becomes `outcome.state = INCONCLUSIVE` with reason `crashed` |
@@ -548,7 +555,7 @@ records as `extra_info`. Choosing the tool is `PERF-M2-T03`.
 | F15 profiling toolkit | Keep outside the schema as diagnostic evidence stamped PROVISIONAL; align its header names to `identity` where the names overlap so a profile can cite a record |
 | F16, F17, F18, F20, F21 | Keep outside the schema: profiles with profiler overhead, whole-suite memory, a leak probe, payload sizes and a stress run, none of which is a benchmark result in this sense |
 | F19 WS payload | Keep outside the schema (bytes, not time); its `attempted/aborted/abort_reason` is the model for `outcome.reason` codes |
-| F22 long-run report | Map `scenario_id`, `entity_count`, `seed`, `final_state_hash`, memory into the schema as a `capacity_run`-tier record; stop dropping `samples`, `warmup_ticks` and `active_mode`; `passed_certification` is replaced by `outcome` |
+| F22 long-run report | **Done by `PERF-M2-T04`.** `LongRunStabilityHarness.to_record` maps it into a `comparative`-tier record (its checks compare the start and the end of one run, `performance_contract.md` §3.3; `gate.projection = long_run_stability`, `runner.controlled = false`, raw ticks as a pointer, the mode at every tick, `final_state_hash` with `flat-sha256-v2`). The report no longer has `passed_certification`: it has `outcome` (`PASS` when the four invariants held, otherwise `REGRESSION` naming the ones that did not), and its `to_dict` keeps `warmup_ticks`, `sample_interval_ticks` and every sample with its `active_mode`. Its window percentiles are nearest-rank |
 | F23 `PhaseTimingRecord` | Candidate source for `phases` and `work` if the kernel ever calls it (M3); not a result record |
 | F24 kernel signals | Source, not a format |
 | F25 `simq_isolation_overhead.md` | Keep (named comparative result); a machine-readable `comparative` record is future work |
@@ -594,3 +601,5 @@ findings, and what each changed in this schema:
 The remaining M1 effects on identity (`PERF-M1-T03` hash policy, `PERF-M1-T04` tied-result determinism,
 `PERF-M1-T05` invalidation ledger) are covered by `validity.hash_scheme`, `executor.*` and the ledger
 (`docs/performance/baseline_invalidation_ledger.md`). Schema version stays `1.0`. A later MAJOR bump follows §4.
+
+**Schema history.** `1.0` (PERF-M2-T02b): the first binding version. `1.1` (PERF-M2-T04): the optional `identity.runner` section; records without it read as `controlled = false`, `name = unknown`.
