@@ -196,7 +196,8 @@ class MovementCandidateSelector:
         if reason == "LEASH_RETURN":
             return LeashService.in_home_area(entity)
         if reason == "REGROUP" and target is not None and payload.get("arrival_radius") is not None:
-            return (position[0] - target[0]) ** 2 + (position[1] - target[1]) ** 2 <= payload["arrival_radius"] ** 2
+            radius = float(payload["arrival_radius"])
+            return bool((position[0] - target[0]) ** 2 + (position[1] - target[1]) ** 2 <= radius ** 2)
         return False
 
     @staticmethod
