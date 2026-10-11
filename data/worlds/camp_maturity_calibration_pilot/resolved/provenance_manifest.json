@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_c5e742a621aeca18",
+  "manifest_id": "prov_e000a2b05b7e014e",
   "world_id": "camp_maturity_calibration_pilot",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
+  "catalog_fingerprint": "b8bb22e6ee8d96c03ecfcf6470b304ef088ab7bb39d4358f4bad4cfaba8e52b3",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
-    "camp_maturity_calibration_pilot": "6819a951a4f721da8e81251ef22ba19d875ba4298097f51da67ecb58e5947a77"
+    "camp_maturity_calibration_pilot": "e5b91e10a54ecef4793eaf2af84858ae9842828e0c17096b20c587d0cc399e9f"
   },
   "composition_fingerprint": "73c78480fe6521b529e836d714dbb87b2945d305f77e887504f810ad4566ad3b",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "c5e742a621aeca1816deac192ebcc36036e1937b2633927f926065387a899da8",
-  "created_at": "2026-10-09T03:58:26.919040Z",
+  "content_fingerprint": "e000a2b05b7e014eee8a7bb281a5ec1cfd77761a5c6cfd1f098d70588d2c0386",
+  "created_at": "2026-10-09T17:40:55.271437Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -496,6 +496,29 @@
         "reward_budget": 120
       }
     },
+    "calibration_camp_edge": {
+      "element_id": "calibration_camp_edge",
+      "element_type": "region",
+      "source_module": "camp_maturity_calibration_pilot",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "goblin_camp"
+      },
+      "details": {
+        "bounds": [
+          156,
+          156,
+          164,
+          164
+        ],
+        "terrain": "forest",
+        "hazard_level": 2.0,
+        "ecology_source": [
+          "monster_calibration_ecology"
+        ]
+      }
+    },
     "monster_calibration_zone": {
       "element_id": "monster_calibration_zone",
       "element_type": "region",
@@ -517,6 +540,20 @@
         "ecology_source": [
           "monster_calibration_ecology"
         ]
+      }
+    },
+    "camp_maturity_calibration_pilot__berry_thicket_0": {
+      "element_id": "camp_maturity_calibration_pilot__berry_thicket_0",
+      "element_type": "resource",
+      "source_module": "camp_maturity_calibration_pilot",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
+        "region": "calibration_camp_edge"
       }
     }
   }

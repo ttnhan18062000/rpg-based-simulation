@@ -296,6 +296,12 @@
       "resource_type": "herb_patch",
       "yield_policy": null,
       "yield_item": "herb"
+    },
+    "camp_maturity_calibration_pilot__berry_thicket_0": {
+      "required_ticks": 8,
+      "resource_type": "berry_thicket",
+      "yield_policy": null,
+      "yield_item": "wild_berries"
     }
   },
   "factions": {
