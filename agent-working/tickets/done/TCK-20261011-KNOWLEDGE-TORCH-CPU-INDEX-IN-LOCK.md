@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261011-KNOWLEDGE-TORCH-CPU-INDEX-IN-LOCK
-phase: open
+phase: done
 date: 2026-10-11
 tags: [knowledge-store]
 ---
