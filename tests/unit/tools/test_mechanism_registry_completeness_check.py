@@ -248,7 +248,9 @@ def test_wider_scope_numbers_pinned():
     # 324 -> 327 on 2026-10-11 (EXCH-02 treasury batch, folded into the combined RPG PR): +src/core/treasury.py (the treasury accessor) and src/engine/place_tax.py (tax and reward payer).
     # (same batch): +src/engine/repair.py and +src/core/models/world_records.py (data records and a pure
     # function; unbound helpers) and -src/engine/gold_sink.py (GoldSinkSystem retired: one unbound candidate fewer).
-    assert wider["scope_files"] == 327
+    # 327 -> 328 on 2026-10-11 (held-move completion, divergence 2.113): +src/engine/tile_distance.py (one function, the whole-tile
+    # Manhattan distance, a leaf helper; no class, so it adds no unbound candidate). The hunting branch adds the same file: one bump, not two.
+    assert wider["scope_files"] == 328
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -270,7 +272,8 @@ def test_wider_scope_numbers_pinned():
     # 236 -> 237 on 2026-10-11 (D57): src/worldbuilding/camp_food.py is an unbound helper (a validator report: pure functions, no mechanism).
     # 237 -> 240 on 2026-10-11 (EXCH-02 treasury batch): treasury.py and place_tax.py are unbound until rpg-planner binds them (mechanisms.yaml is its).
     # (same batch): repair.py and world_records.py unbound, gold_sink.py removed.
-    assert wider["unbound_files"] == 240
+    # 240 -> 241 on 2026-10-11 (divergence 2.113): src/engine/tile_distance.py is an unbound leaf helper (one function).
+    assert wider["unbound_files"] == 241
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
