@@ -22,6 +22,7 @@ import logging
 import os
 import sys
 import time
+import uuid
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("calibrate_simq")
@@ -302,7 +303,10 @@ def _run_engine(
     # max_tick_budget_ms for real-time pacing). Calibration runs are offline/batch, not
     # real-time, so this sleep only slows down the run without affecting simulation logic.
     # Same fix as tests/regression/test_behavioral_5k.py (TCK-20260628-E-LONGRUN-REGRESSION).
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True, **({"audit_mode": True} if audit_mode else {})})
+    # A unique run id per call: the Kernel's default id is ``run_<unix second>_<seeded suffix>``, the same for every run with one seed, so two same-seed runs
+    # starting within one second (xdist workers, parallel processes) would share one ``data/runs/<id>`` directory and double each other's events.
+    unique_run_id = f"{name}_{seed}_{ticks}_{os.getpid()}_{uuid.uuid4().hex[:8]}"
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True, **({"audit_mode": True} if audit_mode else {})}, run_id=unique_run_id)
 
     run_id = getattr(kernel, "_run_id", None)
     start = time.perf_counter()

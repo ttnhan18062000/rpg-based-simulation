@@ -82,3 +82,26 @@ def test_every_grade_stability_test_runs_its_engine_under_audit_mode():
     source = CORPUS_TEST.read_text(encoding="utf-8")
     calls = re.findall(r"_run_engine\(world_name[^)]*\)", source)
     assert len(calls) >= 15 and all("audit_mode=True" in c for c in calls), [c for c in calls if "audit_mode=True" not in c]
+
+
+def test_two_same_seed_runs_in_one_second_get_distinct_run_dirs(monkeypatch, tmp_path):
+    """The Kernel's default run id is ``run_<unix second>_<seeded suffix>``; two same-seed runs started within one second would share a directory and double each
+    other's events (found in the stage-1 proof). ``_run_engine`` passes a unique id, so a frozen clock still gives two directories."""
+    import time
+
+    monkeypatch.setattr(time, "time", lambda: 1_800_000_000.0)
+    dirs = []
+    for index in range(2):
+        cal = tmp_path / f"cal{index}"
+        cal.mkdir()
+        run_dir, _elapsed, run_id = cal_mod._run_engine("generic", seed=42, ticks=2, entity_count=4, cal_dir=str(cal))
+        dirs.append((run_dir, run_id))
+    try:
+        assert dirs[0][0] != dirs[1][0] and dirs[0][1] != dirs[1][1]
+        assert all(Path(d).name == rid for d, rid in dirs)
+    finally:
+        import shutil
+
+        for run_dir, _ in dirs:
+            if Path(run_dir).parent.name == "runs":
+                shutil.rmtree(run_dir, ignore_errors=True)  # exactly the directories this test created
