@@ -38,7 +38,7 @@ def test_same_sha_world_seed_gives_byte_identical_documents(tmp_path):
         assert (tmp_path / "a" / name).read_bytes() == (tmp_path / "b" / name).read_bytes()
     doc = _doc(tmp_path, "a", h.doc_name(WORLD, 1))
     assert doc["schema"] == h.SCHEMA and doc["status"] == "ok" and doc["sha"] == SHA and doc["ticks"] == 15
-    assert doc["harness_hash"] == h.harness_hash(tmp_path / "config.yaml")
+    assert doc["harness_hash"] == h.harness_hash(tmp_path / "config.yaml", metrics_module=STUB)
 
 
 def test_a_module_global_mutated_in_one_run_does_not_reach_the_next(tmp_path):
@@ -95,7 +95,7 @@ def test_a_timeout_is_no_data(tmp_path):
 def test_run_directories_are_removed_by_id_and_cost_is_recorded(tmp_path):
     matrix = _run(tmp_path, "a")
     for seed in (1, 2):
-        assert not (ROOT / h.RUNS_DIR / h.run_id_for(WORLD, seed, SHA)).exists()
+        assert not list((ROOT / h.RUNS_DIR).glob(f"{h.run_id_for(WORLD, seed, SHA)}*"))
     assert all(r["wall_seconds"] > 0 and r["peak_rss_mb"] > 0 for r in matrix["runs"])
     assert "wall_seconds" in matrix and "peak_rss_mb" not in _doc(tmp_path, "a", h.doc_name(WORLD, 1))  # cost stays out of the document
 
@@ -131,3 +131,32 @@ def test_the_metric_module_is_named_in_one_place_and_the_run_hands_it_the_event_
     _run(tmp_path, "a")
     counts = next(m for m in _doc(tmp_path, "a", h.doc_name(WORLD, 1))["metrics"] if m["id"] == "V9")["counts"]
     assert counts["events_file_exists"] is True
+
+
+def test_the_harness_hash_covers_the_metrics_module_source_and_name(tmp_path):
+    cfg = _cfg(tmp_path)
+    root = tmp_path / "root"
+    for rel in h._HARNESS_SOURCES:
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text("x")
+    module = root / "pkg" / "metrics.py"
+    module.parent.mkdir(parents=True)
+    module.write_text("V = 1")
+    base = h.harness_hash(cfg, root, "pkg.metrics")
+    module.write_text("V = 2")  # a changed metric definition
+    assert h.harness_hash(cfg, root, "pkg.metrics") != base
+    assert h.harness_hash(cfg, root, "pkg.metrics:compute") != h.harness_hash(cfg, root, "pkg.metrics")  # a different name is a different input
+    assert h.harness_hash(cfg, root, "pkg.absent") != base  # a module not there yet hashes as a marker, so its arrival changes the hash
+    absent = h.harness_hash(cfg, root, "pkg.later")
+    (root / "pkg" / "later.py").write_text("V = 1")
+    assert h.harness_hash(cfg, root, "pkg.later") != absent
+
+
+def test_the_real_stub_source_is_hashed_by_the_run_that_records_it(tmp_path):
+    cfg = _cfg(tmp_path)
+    with_stub = h.harness_hash(cfg, metrics_module=STUB)
+    assert with_stub != h.harness_hash(cfg, metrics_module="tests.helpers.not_there")
+
+
+def test_two_invocations_on_one_sha_use_different_run_ids():
+    assert h.run_id_for(WORLD, 1, SHA, "7-1") != h.run_id_for(WORLD, 1, SHA, "8-1")

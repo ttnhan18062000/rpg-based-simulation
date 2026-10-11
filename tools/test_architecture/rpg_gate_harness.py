@@ -22,10 +22,13 @@ Document (``rpg-gate-metrics/v1``): ``{"schema", "status": "ok"|"no-data", "worl
 It is written with sorted keys and carries no time or path, so the same (SHA, world, seed) gives byte-identical bytes. Wall time and peak memory go
 to a sidecar ``<doc>.cost.json`` and ``matrix.json``, never into the document.
 
-Harness hash (:func:`harness_hash`): sha256 over the harness sources, the pin settings and the config bytes; every document records it, and baseline staleness
+Harness hash (:func:`harness_hash`): sha256 over the harness sources, the pin settings, the config bytes and the metrics module's name and source
+(read from disk, never imported; ``src/`` simulation code is deliberately not hashed); every document records it, and baseline staleness
 compares it.
 
-Run directories: each child's ``Kernel`` gets ``run_id = rpg-gate-<world>-s<seed>-<sha8>`` so it writes ``data/runs/<run_id>``; the harness removes exactly
+``tools/`` imports ``tests.helpers.kernel_pinning`` on purpose: the pinned governor is the one shared copy, and a guard in ``tests/architecture/`` forbids local copies.
+
+Run directories: each child's ``Kernel`` gets ``run_id = rpg-gate-<world>-s<seed>-<sha8>-<invocation token>`` (the token keeps two invocations on one SHA apart) so it writes ``data/runs/<run_id>``; the harness removes exactly
 that directory afterwards unless ``keep_runs`` is set (CLAUDE.md: clean only the run data this session wrote, by id).
 
 CLI (``--metrics-module`` defaults to :data:`DEFAULT_METRICS_MODULE`)::
@@ -65,6 +68,7 @@ PIN_SETTINGS: Dict[str, Any] = {
     "flags": {"audit_mode": True, "no_frame_pacing": True},
     "profile": "PROD_SMALL with max_tick_budget_ms=1e9",
     "world_loader": "WorldRepository.load_world_with_context + WorldCompiler.compile",
+    "metrics_module": "named and hashed per invocation (see harness_hash)",
 }
 
 _HARNESS_SOURCES = (
@@ -78,10 +82,26 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def harness_hash(config_path: Path, root: Optional[Path] = None) -> str:
-    """A stable hash of the harness code, the pin settings and the config; any change to one of them changes it."""
+def _module_source(spec: str, root: Path) -> bytes:
+    """The source of the metrics module ``spec`` (``module`` or ``module:attr``), found on disk under ``root`` without importing anything.
+    A module that is not there yet (rpg's, before it lands) hashes as a fixed marker, so its arrival changes the hash."""
+    relative = Path(*spec.partition(":")[0].split("."))
+    for candidate in (root / relative.with_suffix(".py"), root / relative / "__init__.py"):
+        if candidate.is_file():
+            return candidate.read_bytes()
+    return b"<metrics module not found>"
+
+
+def harness_hash(config_path: Path, root: Optional[Path] = None, metrics_module: str = "") -> str:
+    """A stable hash of the harness code, the pin settings, the config and the metrics module's source; any change to one of them changes it.
+
+    The metrics module is hashed so that a changed metric definition makes every older baseline stale. Simulation code under ``src/`` is deliberately not
+    hashed: a behaviour change there is what the gate exists to detect.
+    """
     root = root or repo_root()
     digest = hashlib.sha256()
+    digest.update(metrics_module.encode())
+    digest.update(_module_source(metrics_module, root) if metrics_module else b"")
     for rel in _HARNESS_SOURCES:
         digest.update(rel.encode())
         digest.update((root / rel).read_bytes())
@@ -90,8 +110,9 @@ def harness_hash(config_path: Path, root: Optional[Path] = None) -> str:
     return digest.hexdigest()
 
 
-def run_id_for(world: str, seed: int, sha: str) -> str:
-    return f"rpg-gate-{world}-s{seed}-{sha[:8]}"
+def run_id_for(world: str, seed: int, sha: str, token: str = "") -> str:
+    """``token`` is per invocation, so two invocations on the same SHA never share a run directory."""
+    return f"rpg-gate-{world}-s{seed}-{sha[:8]}" + (f"-{token}" if token else "")
 
 
 def doc_name(world: str, seed: Optional[int]) -> str:
@@ -146,10 +167,10 @@ def _read_ok_doc(path: Path) -> Optional[str]:
     return None
 
 
-def run_one(world: str, seed: int, config: GateConfig, out_dir: Path, *, metrics_module: str, sha: str, hhash: str, keep_runs: bool, timeout_s: float) -> Path:
+def run_one(world: str, seed: int, config: GateConfig, out_dir: Path, *, metrics_module: str, sha: str, hhash: str, keep_runs: bool, timeout_s: float, token: str = "") -> Path:
     """Run one (world, seed) in a fresh process; the result file is always written (a ``no-data`` document on any failure)."""
     target = out_dir / doc_name(world, seed)
-    run_id = run_id_for(world, seed, sha)
+    run_id = run_id_for(world, seed, sha, token)
     started = time.monotonic()
     error = _call_child(
         ["run", "--world", world, "--seed", str(seed), "--ticks", str(config.ticks), "--metrics-module", metrics_module, "--sha", sha,
@@ -204,12 +225,13 @@ def run_matrix(
     """Run every (world, seed), pool each world, write ``matrix.json`` and return it. One failing run never stops the others."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    hhash = harness_hash(config_path)
+    hhash = harness_hash(config_path, metrics_module=metrics_module)
+    token = f"{os.getpid()}-{int(time.time()) % 100000}"
     jobs = [(w, s) for w in config.worlds for s in config.seeds]
     started = time.monotonic()
     with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
         futures = {
-            (w, s): pool.submit(run_one, w, s, config, out_dir, metrics_module=metrics_module, sha=sha, hhash=hhash, keep_runs=keep_runs, timeout_s=timeout_s)
+            (w, s): pool.submit(run_one, w, s, config, out_dir, metrics_module=metrics_module, sha=sha, hhash=hhash, keep_runs=keep_runs, timeout_s=timeout_s, token=token)
             for w, s in jobs
         }
         seed_paths = {key: fut.result() for key, fut in futures.items()}
