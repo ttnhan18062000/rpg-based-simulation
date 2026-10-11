@@ -6,7 +6,9 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, List, Dict, Optional, Any
 import json
+import os
 import time
+import uuid
 import logging
 import gc
 from pathlib import Path
@@ -34,6 +36,12 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def default_run_id(seeded_suffix: int) -> str:
+    """A run id no other process can also pick: the wall-clock second, the seeded suffix (kept so ids stay recognisable), the process id and a
+    NON-seeded nonce. The run id is a name only; it is in no state hash and draws nothing from the simulation RNG."""
+    return f"run_{int(time.time())}_{seeded_suffix}_{os.getpid()}_{uuid.uuid4().hex[:8]}"
+
+
 class Kernel:
     """
     v2 is a deterministic, resource-bounded, profile-driven simulation runtime.
@@ -48,7 +56,7 @@ class Kernel:
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
         "_pending_grief_triggers",
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
-        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer", "_personality_recorder",
+        "_run_id", "_run_id_is_default", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer", "_personality_recorder",
         "_workers_started", "_last_shutdown_report",
         "_quality_hub", "_quality_feed",
     )
@@ -139,9 +147,10 @@ class Kernel:
         obs_mode = ObservabilityConfig.get_mode()
 
         self._run_id = run_id
+        self._run_id_is_default = run_id is None
         if self._run_id is None:
-            _run_suffix = self._rng.get_int(Domain.INIT, 0, 0, 1000, 9999)
-            self._run_id = f"run_{int(time.time())}_{_run_suffix}"
+            _run_suffix = self._rng.get_int(Domain.INIT, 0, 0, 1000, 9999)  # stateless: a pure function of the seed, so it moves no other draw
+            self._run_id = default_run_id(_run_suffix)
 
         self._artifact_repo = None
         if obs_mode != ObservabilityMode.OFF:
@@ -177,7 +186,7 @@ class Kernel:
                 state_hash=None,
                 signal_contract=signal_contract_record(profile, self._audit_mode),
             )
-            self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
+            self._create_run_directory(manifest)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
 
         self._replay = self._init_replay(profile, replay, self._run_id)
@@ -1145,6 +1154,20 @@ class Kernel:
             ), self._current_policy)
             
         self._replay.on_tick_end(self._state.tick)
+
+    def _create_run_directory(self, manifest: Any) -> None:
+        """An explicit run id may replace its own directory (the caller named it). A default id never touches an existing directory: it
+        takes a fresh id and tries again, so two processes can never share one."""
+        if not self._run_id_is_default:
+            self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
+            return
+        for _attempt in range(8):
+            try:
+                self._artifact_repo.create_run(self._run_id, manifest.model_copy(update={"run_id": self._run_id}), overwrite=False)
+                return
+            except FileExistsError:
+                self._run_id = default_run_id(self._rng.get_int(Domain.INIT, 0, 0, 1000, 9999))
+        raise FileExistsError(f"no unused default run directory after 8 attempts (last id {self._run_id})")
 
     def shutdown(self, timeout_s: float = 5.0) -> ShutdownResult:
         from src.core.lifecycle import ShutdownReport
