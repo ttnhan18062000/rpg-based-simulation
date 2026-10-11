@@ -100,6 +100,41 @@ decode + pixels-v1 hash of that real preview took 0.543 s, and `adopt` decodes a
 the dimension bounds protect.
 Since 2026-10-10 (`TCK-20261010-VISUAL-ASSETS-PNG-DECODER-SPEEDUP`) that decode is memoised (`pixels.decode_png`, the last four results), so `adopt` pays for one decode of a given preview instead of three, and the per-row unfilter is about 2x faster (F3).
 
+## Real-art measurements (2026-10)
+
+Batch `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF` drew three real sources, adopted them and released them as `pilot/rc-0009` (rc-0008's 70 entries + 3 = 73). Measured on the licence holder's machine (Aseprite 1.3.18.6-x64), 2026-10-11, from the committed catalog and the exports (`export-runtime --atlas --slices`, then `--animation`). The sources: `ui.panel_frame` (24x24, 1 frame, 9-slice), `fx.selection_ring` (32x32, 8 frames, 1 tag, pivot), `fx.campfire` (64x64, 16 frames, 1 tag, pivot). Fits are recorded as well as the near misses; **no bound is exceeded and none was changed**. The `Bounds` table above is untouched; its `Proposed` column is what the code carries.
+
+| Bound | Measured | Bound value | Used | Which |
+|---|---|---|---|---|
+| `MAX_REGISTRY_BYTES` | 29,525 B, 65 keys (was 28,241 B, 62 keys); load median 0.064 s (was 0.045 s) | 458752 | 6.4 % (was 6.2 %) | the registry with the 3 new optional keys. The realistic-maximum row above (~90 % at 1024 keys) is unchanged: the keys add no field. The load-time change is noise at this size, not a trend |
+| `MAX_SOURCE_BYTES` (D2) | 10,154 B / 1,919 B / 421 B | 102400 | 9.9 % / 1.9 % / 0.4 % | campfire / ring / panel |
+| `MAX_DIM` | 64 | 128 | 50 % | campfire |
+| `MAX_ANIMATION_FRAMES` | 16 | 16 | 100 % | campfire, by design (the heaviest case); the ring has 8 |
+| `MAX_ANIMATION_TAGS` | 1 | 16 | 6 % | ring and campfire |
+| `MAX_SOURCE_SLICES` | 1 | 16 | 6 % | every proof source |
+| `MAX_SLICE_KEYS` | 1 | 16 | 6 % | one key per slice, holding for every frame |
+| `MAX_RECORD_BYTES` | `SourceRecord` 520 / 669 / 677 B (adopted; the dry run said 520 / 666 / 680 B), `IntakeResult` 672 B, handoff `package.json` 1,159 / 1,188 / 1,223 B | 131072 | 0.5 % / 0.5 % / 0.9 % at most | panel / ring / campfire |
+| `MAX_PREVIEW_BYTES` | 828 / 881 / 3,397 B | 524288 | 0.6 % at most | campfire |
+| `MAX_PREVIEW_DIM` | 192 / 256 / 512 px | 1024 | 50 % at most | campfire (64 px at scale 8) |
+| `MAX_PNG_FILE_BYTES` | artifacts 234 / 294 / 1,060 B; largest atlas sheet 3,435 B (terrain) | 4259840 | 0.02 % / 0.08 % | campfire artifact; terrain atlas |
+| `MAX_DECODED_BYTES` | campfire artifact 16,448 B; largest atlas sheet (icon, 725x28) 81,228 B | 4198400 | 0.4 % / 1.9 % | decoded RGBA with filter bytes |
+| `MAX_MANIFEST_BYTES` | `rc-0009.json` 12,238 B; `runtime_manifest.json` 18,505 B; largest atlas JSON (icon) 6,109 B; `slices.json` 512 B; `animation.json` 475 B | 524288 | 2.3 % / 3.5 % / 1.2 % / 0.1 % / 0.1 % | rc-0009, 73 entries |
+| `MAX_ATLAS_DIM` | widest sheet 725 px (icon); fx 103x68, ui 28x28 (the new families) | 1024 | 70.8 % | icon family, 36 entries; the proof added the `fx` and `ui` sheets |
+
+Facts recorded with the measurement:
+
+- **The build exports frame 1 only** (`build/exportconfig.py:53`). A release carries the ring and the campfire as their first frame (campfire artifact 1,060 B, 64x64); durations and tags travel in `animation.json`. Not a bug and not changed here (backlog `TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY`).
+- **Any registry edit makes every older candidate unexportable** (`export-runtime` refuses with `registry_mismatch`: each candidate carries the registry file hash). `verify` is unaffected. Not a rollback break: rollback redeploys the previous frontend build, it does not re-export. Adding the three keys therefore needed rc-0009 in the same batch.
+- Export reproducibility: two `export-runtime --atlas --slices` runs into new directories are byte-identical (85 files, 58,738 B).
+
+### Verdict 1: Git LFS (ADR D2): keep closed
+
+The largest real source is 10,154 B, 9.9 % of `MAX_SOURCE_BYTES` (102,400). The tracked `visual_assets/catalog` went from 380,335 B in 558 files to 418,669 B in 580 files (+38,334 B, +10 %), of which the three sources and their records are +14,360 B (`sources/`: 58,408 B -> 72,768 B). A scratch measurement of a 64x64, 16-frame campfire filled with noise (not committed art, `.aseprite` bytes): a 2-colour dither with a new pattern every frame is 16,835 B (16 %); 16-colour noise is 53,832 B (53 %); full-colour noise is 225,803 B (2.2x over the bound). The last is not pixel art (an earlier row measured 128 px, 16 frames, noise at 889,025 B), so the realistic worst case sits at about half the bound and the D2 reversal trigger (R4: a real source above `MAX_SOURCE_BYTES`) has not fired. Raising or reopening D2 stays an owner decision.
+
+### Verdict 2: raise a bound: none
+
+No bound is exceeded and no measurement triggers a change. The closest are `MAX_ANIMATION_FRAMES` at 100 % (the campfire is the 16-frame case by design; an animation longer than 16 frames would be quarantined, which is the bound doing its job, and would be the trigger for an owner question) and `MAX_ATLAS_DIM` at 70.8 % (the icon sheet, 36 entries; a larger icon family would reach 1024 first). Both are reported only, never acted on here.
+
 ## Rulings and flags
 
 The planner's rulings (2026-10-03) on the first draft of this record, and what changed.

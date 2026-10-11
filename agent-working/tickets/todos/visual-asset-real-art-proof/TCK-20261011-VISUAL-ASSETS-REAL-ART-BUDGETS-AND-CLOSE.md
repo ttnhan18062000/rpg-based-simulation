@@ -15,7 +15,7 @@ tags: [architecture, documentation]
 Real-art proof: budgets.md measurements against every bound, Git LFS and raise-bounds verdicts, docs, close
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -69,13 +69,16 @@ Child 4 of `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF`. Lead condition 3: th
 
 
 ## Implementation Notes
-
+- `docs/assets/budgets.md`: new section "Real-art measurements (2026-10)" before "Rulings and flags": a row per bound touched (registry, source, dim, frames, tags, slices, slice keys, record, preview bytes and dim, PNG file, decoded, manifest, atlas), measured / bound / percent used / which source, fits included; the `Bounds` table is untouched (the parity test passes). Two verdicts written there and in the epic's Completion Summary: Git LFS (D2) keep closed, raise a bound none.
+- Git LFS evidence: largest real source 10,154 B = 9.9 % of 102,400; tracked `visual_assets/catalog` 380,335 B / 558 files (origin/main 9a9058808) -> 418,669 B / 580 files (+38,334 B, +10 %), `sources/` 58,408 -> 72,768 B (+14,360 B). Scratch noisy 64x64x16 (not committed art): 2-colour dither with a new pattern per frame 16,835 B (16 %), 16-colour noise 53,832 B (53 %), full-colour noise 225,803 B (2.2x over, not pixel art). The scratch script is in the staging artifacts.
+- `docs/assets/store_contract.md`: the frame-1 fact next to the animation section, and a Known-gaps bullet: any registry edit makes every older candidate unexportable (`registry_mismatch`), not a rollback break; a batch that adds a key assembles a new candidate in the same batch (asset-planner's ruling).
+- Both session_handoff snapshots refreshed at close. The proof record was re-run in `96ca645f9` after the last guarded change (strict run 215 passed, 0 skipped).
 
 ## Test Summary
-
+`tests/visual_assets/test_budgets_parity.py` 6 passed (the new section does not touch the `Bounds` table). Full `tests/visual_assets` and the tools suites are in the epic's Completion Summary.
 
 ## Files Changed
-
+- `docs/assets/budgets.md`, `docs/assets/store_contract.md`, `docs/assets/session_handoff/*`, `agent-working/staging_artifacts/TCK-20261011-VISUAL-ASSETS-REAL-ART-BUDGETS-AND-CLOSE/noise_measurement.py`
 
 ## Completion Summary
 
