@@ -169,8 +169,12 @@ Catalog has found.
   after merging that main, together with the need-wake tests: 50 passed.
   - **Disclosed by the ticket, still open:** the pull of the return-to-town goal (`TownScorer`)
     also grows with sleep debt and walks a subject toward town far from any inn. It is a
-    separate pull, unchanged. The cause label (the typed source of the last health lost) is its
-    own ticket, so the "real killer" paragraph above holds until that lands too.
+    separate pull, unchanged.
+  - **The cause label is right by construction since #505:** hunger is now the only passive
+    drain, so `apply.py` records a passive death as STARVATION only when hunger took the last
+    health. `PassiveDeathCause.SLEEP_DEPRIVATION` stays in the enum for old records and is never
+    written. The mislabel in the "real killer" paragraph is gone. If a second passive drain is
+    added, the label must come from the typed source of the last health lost, as ruled.
 - **Scenario:** [LB-S19](../scenarios/life-body-batch-05.md#lb-s19) (weakened, collapse where it
   stands, no action while asleep, wakes, no HP loss; a rested control).
 
