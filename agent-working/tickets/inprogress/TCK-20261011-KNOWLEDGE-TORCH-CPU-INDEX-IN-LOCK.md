@@ -15,7 +15,7 @@ tags: [knowledge-store]
 The knowledge extra's comments and the Makefile tell the truth about torch and the knowledge venv path (option 2; lock unchanged)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -69,10 +69,15 @@ None (hotfix).
 See brief.
 
 ## Test Summary
-TBD
+`uv.lock` unchanged and `uv lock --check` passes (127 packages resolved). `make` PYTHON_KNOWLEDGE resolves to the main checkout's `.venv-knowledge` by default, `KNOWLEDGE_PYTHON=/x/py` env and `make KNOWLEDGE_PYTHON=/y/py` both used verbatim. `bash -n tools/start_headroom_mcp.sh` ok. `tests/static`, `test_mcp_launcher_hardening.py`, `test_handover_transit.py`: 159 passed, no ordering assertion changed.
 
 ## Files Changed
-TBD
+- Makefile
+- pyproject.toml (comment only)
+- requirements-knowledge.txt (comment only)
+- tools/start_headroom_mcp.sh
+- docs/guidelines/agent_working_environment.md
+- docs/plans/codebase_health/knowledge_lock_transit_test_brief.md
 
 ## Completion Summary
-TBD
+Option 2 (lead's decision): the lock is untouched and the comments now say it resolves PyPI torch and that .venv-knowledge is not lock-reproducible. Makefile PYTHON_KNOWLEDGE has no host path: KNOWLEDGE_PYTHON, main-checkout venv via git common dir, repo-relative venv, python3. Headroom launcher: u24desktop candidate dropped (the generic main-root candidate covers it) and KNOWLEDGE_PYTHON honoured first. Follow-ups for agent-working (not done here): `tools/start_headroom_mcp.sh` still sets HEADROOM_WORKSPACE_DIR to the u24desktop path (a behaviour change, not a path swap); `tools/start_search_mcp.sh` still lists the u24desktop candidate. Revisit trigger for the #514 closing comment: option 1 (CPU index in the lock) becomes viable once download.pytorch.org is reachable from every working host (the owner's call). Unstaffed-seat exception; lead reviews pyproject/uv.lock/Makefile by PR comment.

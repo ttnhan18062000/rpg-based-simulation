@@ -15,7 +15,7 @@ tags: [delivery]
 handover_transit's default-memory-dir test no longer reads the real ~/.claude
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -63,10 +63,10 @@ None open. The `Path.home` monkeypatch is enough: no code seam needed.
 Second candidate is produced via a symlink under the tmp home (the real-world alias case). Never touches real memory dirs.
 
 ## Test Summary
-TBD
+Red: the old test on origin/main fails on this VM (`TransitError` at tools/handover_transit.py:135, two filled candidates). Green: `tests/tools/test_handover_transit.py` 43 passed with the isolated test plus one-filled and two-filled cases.
 
 ## Files Changed
-TBD
+- tests/tools/test_handover_transit.py
 
 ## Completion Summary
-TBD
+The default-memory-dir test now runs against a tmp HOME (Path.home and $HOME redirected, non-repo cwd, symlink alias for the second candidate) and cannot read the real ~/.claude. Pinned: one filled candidate chosen; two filled raise TransitError. No change to tools/handover_transit.py. Unstaffed-seat exception (agent-working). Refs #513 part 1; the real-dir merge (part 2) stays the owner's.
