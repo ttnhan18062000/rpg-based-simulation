@@ -193,7 +193,7 @@ def test_the_real_known_reds_file_is_loadable_and_lints_clean():
         ("frontier_extended_seed42_200t_narrative", "TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE"),
         ("urban_political_seed42_1000t_social", "TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE"),
         ("unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative", "TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE"),
-        ("simq_routing_test_seed42_1000t_cognition", "TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED"),
+        ("simq_routing_test_seed42_1000t_cognition", "TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE"),
     ],
 )
 def test_real_file_resolves_each_corpus_anchor_to_its_own_entry_not_the_catch_all(anchor, ticket):
@@ -201,7 +201,7 @@ def test_real_file_resolves_each_corpus_anchor_to_its_own_entry_not_the_catch_al
     known = srr.load_known_reds(REAL_KNOWN_REDS)
     entry = srr.owner_of(f"{CORPUS}{anchor}_grade_stability", known)
     assert entry is not None and entry["ticket"] == ticket
-    assert (entry["kind"] == "flaky") == (ticket == "TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED")
+    assert (entry["kind"] == "flaky") == (ticket == "TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE")
 
 
 def test_real_file_keeps_the_corpus_catch_all_last():
@@ -491,3 +491,17 @@ def test_main_fails_on_a_lint_problem_in_the_known_reds_file(tmp_path, capsys):
     _junit(tmp_path / "slow_tests.xml", [("c", "t", "pass")])
     code = _main(tmp_path, lambda repo: FakeClient([]), extra=["--known-reds", str(bad)])
     assert code == 1 and "::error title=slow_known_reds::" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "test_id",
+    [
+        "population_stability[frontier_marches]",
+        "population_stability[urban_political]",
+        "generated_frontier_3_42_extended_population_stability",
+    ],
+)
+def test_real_file_gives_each_population_stability_test_its_own_entry_before_the_catch_all(test_id):
+    known = srr.load_known_reds(REAL_KNOWN_REDS)
+    entry = srr.owner_of(f"{CORPUS}{test_id}", known)
+    assert entry["ticket"] == "TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2" and entry["kind"] == "flaky" and not entry["match"].endswith("*")
