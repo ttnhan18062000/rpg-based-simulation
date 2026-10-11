@@ -15,7 +15,7 @@ tags: [performance, benchmarking, testing, regression]
 PERF-M2-T05b: Perf known-debt ledger as the second user of the shared known-reds module
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 standard
@@ -52,18 +52,19 @@ Split out of TCK-20261010-PERF-M2-T05-BASELINE-LIFECYCLE on 2026-10-10 by perf-p
 
 ## Related Docs
 - docs/plans/design_enhancement/performance_optimization/performance_m2_performance_contract_epic.md ("Delivery plan")
-- docs/plans/test_architecture/reference/baseline_change_policy.md (not yet on main)
+- docs/plans/test_architecture/reference/baseline_change_policy.md (testing expects it by 2026-10-13; until then follow docs/plans/test_architecture/reference/rpg_gate_baseline_format.md)
 - docs/performance/perf_baseline_policy.md
 
 ## Related Stored Artifacts
 None.
 
 ## Related Code Areas
+- tools/test_architecture/known_reds.py (the shared module, merged in #502: one frozen RegistrySpec per registry)
 - tools/test_architecture/slow_known_reds.yaml (the first user's data)
 - tools/perf/
 
 ## Assumptions / Open Questions
-- Blocked until TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE lands the shared module on main
+- UNBLOCKED 2026-10-11: the shared module merged in #502. Perf adds its own RegistrySpec and file, with expected_signature in optional_fields and strict_fields=True. That case is unit-tested upstream (test_a_registry_can_declare_an_extension_field_without_touching_the_rules). No change to the shared rules (testing-planner, #488).
 - T03 and T04 do not need the ledger, so this does not block them; T06 needs it
 
 ## Implementation Notes
