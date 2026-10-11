@@ -14,6 +14,7 @@ File: ``<baselines dir>/rpg_gate_v<N>.json`` (proposed dir ``tests/simulation_qu
          "per_seed": {"1": 3, "2": 4}, "mean": 3.5, "se": 0.5},
         {"id": "O9.share", "class": "outcome", "scope": "pooled", "world": "w", "group": "*", "value": 0.4},
         {"id": "V1", "class": "validity", "scope": "run", "world": "w", "group": "*", "per_seed": {"1": 0, "2": 0}, "violations": 0}],
+     "omitted_validity": [{"row": "V3:run:w:*", "known_match": "V3", "ticket": "TCK-..."}],   # optional
      "rebaseline": null | {"previous_version": 2, "divergence_id": "...", "memo_row": "...", "pr": "#123",
                            "changes": [{"row": "...", "before": 3.0, "after": 3.5}],
                            "stop_lines_crossed": ["R1"], "owner_ruling": {"ref": "<memo row or decision id>", "date": "2026-10-11"}}}
@@ -22,6 +23,8 @@ File: ``<baselines dir>/rpg_gate_v<N>.json`` (proposed dir ``tests/simulation_qu
   (child 4) must use to match a run's metric with a baseline row. ``scope`` is ``run`` or ``pooled`` (the metric contract's spelling). A run outcome
   row carries ``per_seed`` values plus their ``mean`` and ``se``; a pooled outcome row carries one ``value`` and no ``per_seed``. A validity row
   carries ``violations`` and, when it is a run row, ``per_seed`` counts.
+* ``omitted_validity`` (optional) lists validity rows that failed but are owned in ``rpg_gate_known.yaml`` (``state: fail``) and so were left out of ``metrics`` by the
+  candidate builder (``rpg_gate_candidate``); the lint requires ``row``, ``known_match`` and ``ticket`` and rejects a listed row that is still in ``metrics``.
 * A baseline holds validity rows only at ``violations == 0``. Validity is absolute (any non-zero value is a FAIL) and is never compared with a
   baseline, so a re-baseline can not normalise a validity fail; the lint, the loader and ``rebaseline()`` all refuse it and no ruling overrides that.
   A known validity fail is owned in ``rpg_gate_known.yaml`` (``state: fail``), never here.
@@ -187,6 +190,7 @@ def lint_baseline(doc: Any, filename: Optional[str] = None) -> List[str]:
     if "owner_ruling" in doc and _ruling_problem(doc["owner_ruling"]):
         problems.append(_ruling_problem(doc["owner_ruling"]))
     problems.extend(_lint_metrics(doc.get("metrics")))
+    problems.extend(_lint_omitted_validity(doc.get("omitted_validity"), doc.get("metrics")))
     problems.extend(_lint_rebaseline(doc.get("rebaseline"), version, (doc.get("provenance") or {}).get("cites")))
     return problems
 
@@ -256,6 +260,27 @@ def _lint_metrics(metrics: Any) -> List[str]:
                 problems.append(f"{label}: a baseline holds validity rows at 0 violations; a validity fail is owned in rpg_gate_known.yaml, never normalised here")
             elif per_seed and sum(per_seed.values()) != violations:
                 problems.append(f"{label}: violations {violations} is not the sum of per_seed {sum(per_seed.values())}")
+    return problems
+
+
+def _lint_omitted_validity(omitted: Any, metrics: Any) -> List[str]:
+    """``omitted_validity`` lists validity rows that failed but were owned in ``rpg_gate_known.yaml`` and so left out of ``metrics``; each needs a row label,
+    the ``known_match`` pattern and the ``ticket`` that owns it, and a listed row must not also be in ``metrics`` (a baseline never holds a validity fail)."""
+    if omitted is None:
+        return []
+    if not isinstance(omitted, list):
+        return ["omitted_validity must be a list"]
+    present = {row_label(r) for r in metrics if isinstance(r, dict)} if isinstance(metrics, list) else set()
+    problems: List[str] = []
+    for index, entry in enumerate(omitted):
+        if not isinstance(entry, dict):
+            problems.append(f"omitted_validity[{index}]: not an object")
+            continue
+        for name in ("row", "known_match", "ticket"):
+            if not entry.get(name):
+                problems.append(f"omitted_validity[{index}]: missing {name}")
+        if entry.get("row") in present:
+            problems.append(f"omitted_validity[{index}]: {entry['row']} is listed as omitted but is still in metrics")
     return problems
 
 
@@ -424,9 +449,13 @@ def rebaseline(
     cites: Sequence[str] = (),
     undecided_world_semantic_change: bool = False,
     now: Optional[dt.datetime] = None,
+    milestone: Optional[str] = None,
 ) -> Path:
-    """Write the next version from ``candidate`` and return its path, or raise :class:`RebaselineRefused`. Never modifies an existing file."""
+    """Write the next version from ``candidate`` and return its path, or raise :class:`RebaselineRefused`. Never modifies an existing file.
+    A candidate marked ``evidence_only`` (from a branch-ref dispatch) is refused; ``milestone`` overrides the candidate's."""
     directory = Path(directory)
+    if candidate.get("evidence_only"):
+        raise RebaselineRefused("this candidate is evidence only (a branch-ref dispatch); a baseline is recorded from a main run's candidate")
     existing = load_baselines(directory)
     if existing and not (divergence_id or memo_row):
         raise RebaselineRefused("a re-baseline needs a divergence id and/or a memo row")
@@ -451,11 +480,13 @@ def rebaseline(
     doc: dict = {
         "schema": SCHEMA,
         "version": version,
-        "milestone": candidate.get("milestone"),
+        "milestone": milestone or candidate.get("milestone"),
         "provenance": prov,
         "metrics": list(rows),
         "rebaseline": None,
     }
+    if candidate.get("omitted_validity"):
+        doc["omitted_validity"] = list(candidate["omitted_validity"])
     if owner_ruling and not existing:
         doc["owner_ruling"] = dict(owner_ruling)  # version 1 has no rebaseline record to hold it
         doc["stop_lines_crossed"] = crossed
@@ -493,6 +524,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     reb.add_argument("--candidate", type=Path, required=True)
     reb.add_argument("--config", type=Path, required=True)
     reb.add_argument("--dir", type=Path, default=DEFAULT_DIR)
+    reb.add_argument("--milestone", help="the milestone id (overrides the candidate's; the workflow's candidate has none)")
     reb.add_argument("--divergence-id")
     reb.add_argument("--memo-row")
     reb.add_argument("--pr")
@@ -517,6 +549,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             owner_ruling={"ref": args.owner_ruling_ref, "date": args.owner_ruling_date} if (args.owner_ruling_ref or args.owner_ruling_date) else None,
             cites=args.cite,
             undecided_world_semantic_change=args.undecided_world_semantic_change,
+            milestone=args.milestone,
         )
     except BaselineError as exc:
         print(f"REFUSED: {exc}" if isinstance(exc, RebaselineRefused) else f"ERROR: {exc}", file=sys.stderr)

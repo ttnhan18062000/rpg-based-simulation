@@ -112,3 +112,13 @@ def test_the_workflow_is_advisory_nothing_needs_it_and_no_other_workflow_trigger
     assert not any("workflow_run" in str((yaml.safe_load(p.read_text(encoding="utf-8")) or {})) and "RPG gate report" in p.read_text(encoding="utf-8")
                    for p in (_ROOT / ".github" / "workflows").glob("*.yml") if p != _PATH)
     assert "RPG gate report" not in (_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
+
+
+def test_the_report_job_writes_a_baseline_candidate_best_effort_and_labels_a_non_main_one_evidence_only():
+    step = next(s for s in _steps("report") if s.get("name", "").startswith("Baseline candidate"))
+    assert step["continue-on-error"] is True and step["if"] == "${{ !cancelled() }}"  # a refusal never fails the job
+    run = step["run"]
+    assert "tools.test_architecture.rpg_gate_candidate" in run and "--known tools/test_architecture/rpg_gate_known.yaml" in run
+    assert "report/rpg-gate-candidate.json" in run and "--evidence-only" in run and "Baseline candidate refused" in run
+    names = [s.get("name", "") for s in _steps("report")]
+    assert names.index(step["name"]) < names.index("Upload report")  # inside the uploaded `report/` directory
