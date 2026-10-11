@@ -58,6 +58,10 @@ fixed cadence:
 3. Skip if `cooldown_remaining > 0`.
 4. Otherwise: `new_charges = min(max_charges, remaining_charges + regen_rate_per_tick)`.
 
+**Bare wait** (declared `regrowth_mode: regrow`, memo row 59): the harvest that empties such a node starts `respawn_cooldown` ticks of waiting
+(the typed `RESOURCE_DEPLETED` record site, `economy._record_depletion`); the wait ends with no charges added and rules 1 to 4 resume from zero.
+The default mode `none` starts no wait. (A finished wait on a `none` node adds `max_charges`, a latent path no kind reaches today.)
+
 **Events emitted** (via `StateUpdate.world_events_add` → `recent_world_events`):
 
 | Event | When |
@@ -88,6 +92,9 @@ A dead body is a source of food, and the only one that is not a resource node.
     for a meat-eater, a medium one about a day's food for a same-size meat-eater, a large one several days or a pack's day. A meat-eater's hunger
     rate is the `very_low` need level (0.3 of the base, 0.03 per tick), so a full meal lasts at least a day to the starvation line. With no
     spoilage until M3 a carcass keeps until it decays (`CORPSE_DECAY`).
+*   **Plant cover** (memo row 59): wild land of a biome that declares `grazing_cover` carries patches of a `regrow` resource kind (one kind per
+    fertility band: 6 / 12 / 20 charges, regrowing 1 / 2 / 3 per ecology check, a patch emptied stays bare 4800 / 2400 / 1200 ticks and regrows
+    from zero). It yields `grass_cover`, food class `graze` (20 hunger), eaten only by a diet that includes `graze`.
 *   **Wild creatures and factions** (decision 47): a faction verdict never decides a fight with a wild creature (a body with a diet whose faction
     has the `wild` alignment). Appraisal decides, in both directions: hunt if hungry and able to overcome, defend or flee if threatened.
 

@@ -2520,14 +2520,16 @@
   text: 'A dead body leaves food (decision 44): at death, whatever the cause, a body whose kind declares meat in `edible_as` leaves `meat_yield`
     units of raw meat on its corpse. An eater eats an item only if its food class (plant, meat, prepared) is in its body diet (an undeclared
     diet eats any food); raw meat fills 20 against 30 for a prepared meal. A hungry subject whose diet includes meat opens a way to eat by
-    scavenging a carcass (eating where it lies, a CORPSE_FOOD transfer keyed by the corpse id) or hunting a creature it appraises as prey.'
+    scavenging a carcass (eating where it lies, a CORPSE_FOOD transfer keyed by the corpse id) or hunting a creature it appraises as prey. Wild land
+    carries plant cover (memo row 59): a biome declares a fertility band and cover patches (nodes of a `regrow` kind that wait bare once emptied and regrow
+    from zero) that only a diet with the food class `graze` eats.'
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: '`src/engine/carcass.py` (`body_meat`), `src/engine/apply_plan.py` (corpse creation), `src/core/conservation.py` (`_corpse_food_result`),
     `src/engine/domain/core_actions.py` (`corpse_meal`, `eat_at_corpse_update`), `src/engine/appraisal.py` (`can_eat_item`, `can_use_inn_meal`),
     `src/ai/goals/opening_steps.py` (`_scavenge_step`, `_hunt_step`), `src/engine/tactical.py` (`_hunger_corpse`), `data/content/living/body_models.yaml`,
-    `data/content/world/items.yaml`; `docs/mechanics/03_economic_laws.md` section 3.2'
+    `data/content/world/items.yaml`; grazing (memo row 59): `src/worldassembly/cover.py`, `src/engine/economy.py` (`_record_depletion`), `src/engine/world_dynamics.py` (`_node_cooldown_updates`), `data/content/world/resources.yaml` (`cover_patch_*`) and `biomes.yaml`; `docs/mechanics/03_economic_laws.md` sections 3.1 and 3.2'
   proof_type: parity
   test_path: tests/mechanic_scenarios/test_hunting_kill_to_meat.py
   divergence_note: 'Intentional divergence 2.107 (Intentional Gameplay Change).'
