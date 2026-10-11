@@ -21,7 +21,7 @@ k = Kernel(profile=PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), st
            flags={"no_frame_pacing": True, "no_replay": True, "audit_mode": True}, executor=LocalSequentialExecutor())
 cur = {"tick": 0}
 def coin(st):
-    e=sum(x.inventory.gold for x in st.entities.values()); b=sum(x.inventory.gold for x in st.buildings.values()); c=sum(getattr(x,'gold',0) for x in st.corpses.values()); t=sum(v for kk,v in st.global_resources.items() if kk.startswith('faction_') and kk.endswith('_gold')); return e,b,c,t
+    e=sum(x.inventory.gold for x in st.entities.values()); b=sum(x.inventory.gold for x in st.buildings.values()); c=sum(getattr(x,'gold',0) for x in st.corpses.values())+sum(getattr(x,'gold',0) for x in st.ground_items.values()); t=sum(v for kk,v in st.global_resources.items() if kk.startswith('faction_') and kk.endswith('_gold')); return e,b,c,t
 c0=coin(k.state); seen0=set(k.state.entities); created=0.0
 kinds = collections.Counter(); tax_total = 0; tax_payers = collections.Counter(); events = collections.defaultdict(list)
 orig = R.resolve
@@ -46,11 +46,13 @@ def group(e):
     if sp == "human" and kind in ("worker", "blacksmith"): return "town_workers"
     if sp == "human": return "town_guards_scouts"
     return "heroes_other"
-alive = {}; galive = collections.defaultdict(dict)
+series = []; alive = {}; galive = collections.defaultdict(dict)
 for t in range(TICKS):
     k.tick_once()
     for _i,_x in k.state.entities.items():
         if _i not in seen0: seen0.add(_i); created+=_x.inventory.gold
+    if (t + 1) % 250 == 0:
+        series.append(((t + 1), round(k.state.global_resources.get('faction_hero_guild_gold', 0.0), 1), sum(b.inventory.gold for b in k.state.buildings.values()), sum(1 for b in k.state.buildings.values() if b.functional), len(k.state.buildings), sum(g.gold for g in k.state.ground_items.values())))
     if t + 1 in (1000, 2500, 5000):
         alive[t + 1] = sum(1 for e in k.state.entities.values() if e.combat.alive)
         for e in k.state.entities.values():
@@ -74,6 +76,6 @@ for eid, ev in events.items():
         else: fed += 1; gaps.append(nxt - tk)
 k.shutdown()
 c1=coin(k.state); hero_t=k.state.global_resources.get('faction_hero_guild_gold',0.0)
-print("CH", json.dumps(dict(coin_start=c0, coin_end=c1, coin_created=created, coin_drift=sum(c1)-sum(c0)-created, hero_treasury_end=hero_t, owed=len(getattr(k.state,'owed',{})), label=LABEL, world=WORLD, seed=SEED, ticks=TICKS, alive=alive, deaths_by_reason=dict(dead), kinds={f"{a}/{b}": v for (a, b), v in kinds.items()},
+print("CH", json.dumps(dict(coin_start=c0, coin_end=c1, coin_created=created, coin_drift=sum(c1)-sum(c0)-created, hero_treasury_end=hero_t, owed=len(getattr(k.state,'owed',{})), series=series, label=LABEL, world=WORLD, seed=SEED, ticks=TICKS, alive=alive, deaths_by_reason=dict(dead), kinds={f"{a}/{b}": v for (a, b), v in kinds.items()},
     tax_poor_total=tax_total, tax_poor_payers=len(tax_payers), sales=fed + taxed, sales_then_meal=fed, sales_no_meal_after=taxed,
     groups=groups, median_sale_to_meal=(statistics.median(gaps) if gaps else None), digest=digest)))
