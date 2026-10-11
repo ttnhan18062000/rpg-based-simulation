@@ -520,6 +520,17 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     specific features on top. This replaces grazers sharing a single berry thicket with people,
     which starved them (one thicket of 10 charges for six grazers and people on
     `frontier_living_world`).
+    **Values (decided by the owner directly, 2026-10-11, "moderate bands"; a decision-33 pass).**
+    Cover is a few `cover_patch` resource nodes per region, yielding `graze` (a food class that
+    only a plant-eating diet eats), so a grazer reaches it like any other way. One bite removes
+    20 hunger, against a berry's 30, so a plant-eater needs 12 bites a day. Per fertility band
+    (low / medium / high): 1 / 2 / 4 patches per 1,000 tiles of open land (at least 1 where the
+    biome has cover); 6 / 12 / 20 bites at most; 1 / 2 / 3 bites regrown per 200-tick ecology
+    check. A patch grazed bare waits 2 days / 1 day / half a day, then regrows from nothing. A
+    patch regrowing r bites per check feeds r grazers for good, so a medium wild region of
+    about 3,400 tiles feeds about 14. A bigger herd strips the land and must move or starve: the
+    land decides, and nothing sets a target. Crowding also slows regrowth (the existing density
+    modifier), and grazer survival is measured with it on.
   - **Meat follows body size, and meat-eaters feast and fast (decided by the owner directly,
     2026-10-10; row 60 of the memo; a decision-33 pass, before and after recorded):** a small
     body is about one meal for a meat-eater, a medium carcass about a day's food for a
