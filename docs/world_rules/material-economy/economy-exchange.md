@@ -168,6 +168,28 @@ wealth, but no Rule said how a person comes to hold money at all.
   - **Alternatives not taken:** rounding half up, or a daily tax on takings; maintenance as a
     sink with a separate treasury wage, or a new town hall; no repair away from a smith; a reward
     lost, or a quest refused unless its reward is reserved at posting.
+  - **Amended: a building pays its own upkeep first (decided by the owner directly, 2026-10-11;
+    row 61 of the memo).** Under the first text, every town shut by about tick 750. The treasury
+    paid all upkeep, but its only income was the share of sales and wages, which barely run
+    while the free meal stands. Meanwhile its buildings held about 2,000 gold idle. A business
+    keeps itself up:
+    - each building meets its upkeep from its own purse, and the owning treasury tops up only a
+      shortfall;
+    - a building closes only when neither can pay, and reopens when paid;
+    - meeting upkeep sends no coin to nowhere: coin leaves a building only as wages for the work
+      that maintains it, and as tax on its own sales (a meal or bed sold is a sale, decision 51).
+  - **A quest is paid only by its real giver (owner, row 61):** whoever posted it pays, from its
+    own purse or its own faction's treasury, or owes it. Neither the claimant's local holder nor a
+    neutral reserve pays for a quest it never offered. A quest with no identifiable giver carries
+    no coin reward.
+  - **Coin on an unclaimed corpse stays where it fell (owner, row 61):** coin does not rot. It
+    lies as a purse to be found. A lord claiming unclaimed goods waits for a law Rule.
+  - **Fees and taxes retired (rpg-designer, applying decisions 51 and 58):** a repair fee or
+    service fee charged on top of the price, and a wealth-triggered tax (`GoldSinkSystem`, about
+    50 coin per 100 ticks destroyed), are retired rather than re-routed.
+  - **Measured on the batch** (Lane B, pinned, five seeds, three worlds, relayed by rpg-planner):
+    coin drift goes from +6,000 to +8,600 per run on main (minting) to about 0; tax on the poor is
+    0; debts end at 0. A building disabled for unpaid upkeep reopens when paid.
   - **Evidence: CONFLICTING** until Lane B's treasury batch lands. Scenarios:
     [ME-S21](../scenarios/material-economy-batch-08.md#me-s21),
     [ME-S22](../scenarios/material-economy-batch-08.md#me-s22),

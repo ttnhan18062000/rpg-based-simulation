@@ -349,6 +349,9 @@ pays nobody.
     purse, at the same rate as an inn shift. So "falls by the same amount" reads across the
     chain: the treasury falls by the upkeep, the building's purse rises by the upkeep and then
     falls by the wage. In the control arm, an unpaid building is disabled and offers no work.
+  - **Amended (decision 61, 2026-10-11):** a building meets its upkeep from its own purse first,
+    and the treasury tops up only a shortfall. Add an arm in which a building with coin in its
+    own purse and an empty treasury stays open and pays W.
   - **Engineering, not observable:** what counts as town work, the wage and stint length (from the
     fiction, as in ME-S20), and how a treasury refills (taxes, trade). Its refilling is a later
     Rule's question.
@@ -411,6 +414,8 @@ because a kill or a quest happened.
   - **Quest reward owed (decision 58, 2026-10-09):** G cannot pay when H completes the task. No
     coin appears. A recorded debt (H is owed, by G, this amount, since this tick) exists and stays
     visible. When G later holds the coin, the debt is paid, oldest first, and then cleared.
+  - **No giver (decision 61, 2026-10-11):** a quest with no identifiable giver pays no coin. No
+    other purse or treasury is debited for it.
   - **Loot (control):** H kills a creature that no one has posted a bounty on. H gains exactly
     what the body carried, coin and items, and the body is left without them. A creature that
     carried nothing yields nothing; an animal never carries coin.
