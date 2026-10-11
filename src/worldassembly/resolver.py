@@ -14,6 +14,7 @@ from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
 from src.worldmodules.utils import topological_sort_modules
 from src.worldmodules.normalizer import NormalizedWorldModule
+from src.worldassembly.cover import cover_patch_specs
 from src.worldassembly.schema import (
     WorldCompositionSpec,
     NormalizedWorldComposition,
@@ -672,6 +673,16 @@ class WorldAssemblyResolver:
 
         width = normalized_comp.global_parameters.get("topology_width", max_region_x)
         height = normalized_comp.global_parameters.get("topology_height", max_region_y)
+
+        # Plant cover (owner row 59): every region whose biome carries cover gets its patches, declared as ordinary resource nodes.
+        for cover in cover_patch_specs(self.catalog_repo, regions):
+            resources[cover.id] = cover
+            entity_origins[cover.id] = entity_origins.get(cover.region, "")
+            prov_records[cover.id] = ProvenanceRecord(
+                element_id=cover.id, element_type="resource", source_module=entity_origins[cover.id], recipe_type="biome_cover",
+                parameters={}, profiles={"resource_type": cover.resource_type},
+                details={"count": cover.count, "region": cover.region},
+            )
 
         # 4. Assembled clean worldspec.v1
         world_spec = WorldSpec(

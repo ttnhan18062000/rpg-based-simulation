@@ -69,7 +69,8 @@ COMMON_KNOWLEDGE_DANGER_LEVELS = ("low", "medium", "high", "extreme")
 PROPERTY_BANDS = ("small", "medium", "large")
 # Decision 44: food classes name what a body can eat (diet) and what its own body feeds (edibility). Behaviour derives
 # hunting, grazing and fleeing from these properties; no module may read a role or trait list for it.
-FOOD_CLASSES = ("plant", "meat", "prepared")
+FOOD_CLASSES = ("plant", "meat", "prepared", "graze")
+FERTILITY_BANDS = ("low", "medium", "high")  # coarse land fertility (decision 50: bands, no exact figures in the vocabulary)
 
 
 class NeedProfileDefinition(CatalogBaseDefinition):
@@ -331,6 +332,9 @@ class ResourceDefinition(CatalogBaseDefinition):
         ),
     )
     bare_wait_ticks: int = Field(0, ge=0, description="Ticks a 'regrow' node stays bare after being emptied (the land's fertility band); 0 for 'none'")
+    fertility: Optional[str] = Field(None, description="Land fertility band this kind of plant cover belongs to (low, medium, high); set on cover kinds only")
+    density_per_1000_tiles: Optional[int] = Field(None, gt=0, description="Patches of this kind a biome places per 1,000 tiles of a region's bounds (a cover kind a biome names)")
+    regen_per_check: Optional[int] = Field(None, ge=0, description="Charges restored per ecology check; None keeps the node spec's own default")
     placement: Optional[str] = Field(
         None,
         description=(
@@ -437,6 +441,15 @@ class BiomeDefinition(CatalogBaseDefinition):
     common_materials: List[str] = Field(default_factory=list)
     default_factions: List[str] = Field(default_factory=list)
     danger_level: int = Field(0, ge=0)
+    fertility: Optional[str] = Field(None, description="Land fertility band of the biome's wild land (low, medium, high); None declares none")
+    grazing_cover: Optional[str] = Field(None, description="The resource kind of plant cover this biome's open land carries (a 'regrow' kind of the same fertility band); None: none")
+
+    @field_validator("fertility")
+    @classmethod
+    def _fertility_is_a_band(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in FERTILITY_BANDS:
+            raise ValueError(f"fertility must be one of {FERTILITY_BANDS}, got {v!r}")
+        return v
 
 
 class EcologyDefinition(CatalogBaseDefinition):

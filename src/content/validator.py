@@ -149,6 +149,36 @@ def _missing_kind_properties(species: Any, body: Any) -> List[str]:
     return missing
 
 
+def cover_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
+    """Plant cover (owner row 59): a biome's cover kind must be a declared ``regrow`` kind of the biome's own fertility band, and a grazing kind
+    placed in an ecology none of whose biomes carries cover is a gap reported by name (its food would be berries alone)."""
+    issues: List[ValidationIssue] = []
+    for biome_id, biome in repo.biomes.items():
+        if not biome.grazing_cover:
+            continue
+        kind = repo.get_resource(biome.grazing_cover)
+        if kind is None or kind.regrowth_mode != "regrow" or kind.density_per_1000_tiles is None or kind.fertility != biome.fertility:
+            issues.append(ValidationIssue(
+                severity="ERROR", rule_id="CAT-COVER-001", target_id=biome_id, filename="world/biomes.yaml",
+                message=f"Biome '{biome_id}' names cover '{biome.grazing_cover}', which is not a 'regrow' resource with a density and the biome's fertility '{biome.fertility}'",
+            ))
+    for eco_id, eco in repo.ecologies.items():
+        if any(repo.biomes[b].grazing_cover for b in eco.biomes if b in repo.biomes):
+            continue
+        for pop_id in eco.populations:
+            pop = repo.get_population_recipe(pop_id)
+            for archetype_id in (pop.members if pop else {}):
+                archetype = repo.entity_archetypes.get(archetype_id)
+                species = repo.species.get(archetype.species) if archetype else None
+                body = repo.body_models.get(species.body_model) if species else None
+                if body is not None and "graze" in (body.diet or ()):
+                    issues.append(ValidationIssue(
+                        severity="WARNING", rule_id="CAT-COVER-002", target_id=eco_id, filename="world/ecologies.yaml",
+                        message=f"Ecology '{eco_id}' places grazer '{archetype.species}' (population '{pop_id}') but none of its biomes {sorted(eco.biomes)} declares grazing_cover",
+                    ))
+    return issues
+
+
 class CatalogValidator:
     """
     Independent validator for the static Content Catalog.
@@ -204,7 +234,7 @@ class CatalogValidator:
         self._validate_recipe_relations(issues)
         self._validate_region_relations(issues)
         self._validate_species_relations(issues)
-        issues.extend(need_profile_gap_issues(self.repo) + kind_property_gap_issues(self.repo))
+        issues.extend(need_profile_gap_issues(self.repo) + kind_property_gap_issues(self.repo) + cover_gap_issues(self.repo))
         self._validate_biome_relations(issues)
         self._validate_ecology_relations(issues)
         self._validate_defaults(issues)

@@ -91,6 +91,6 @@
   movement_modes: ["walk", "run"]
   equipment_slots: []
   size: "small"
-  diet: ["plant"]
+  diet: ["plant", "graze"]
   edible_as: ["meat"]
   meat_yield: 2
