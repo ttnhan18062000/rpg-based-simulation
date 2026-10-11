@@ -1,7 +1,7 @@
 # Compliance IDs: WORLD-CAT-001, WORLD-CAT-002, WORLD-CAT-003
 from __future__ import annotations
 
-from typing import Optional, Any, Dict, List, Tuple
+from typing import Optional, Any, Dict, List, Literal, Tuple
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 
@@ -323,6 +323,14 @@ class ResourceDefinition(CatalogBaseDefinition):
     runtime_kind: Optional[str] = Field(None, description="Explicit runtime resource type")
     legacy_id: Optional[str] = Field(None, description="Explicit legacy ID mapping")
     required_tool: Optional[str] = Field(None, description="Explicit required tool")
+    regrowth_mode: Literal["none", "regrow"] = Field(
+        "none",
+        description=(
+            "'none' (the default for every existing kind): the legacy rules, no wait is started when the node is emptied. 'regrow': the harvest that "
+            "empties the node starts a bare wait of ``bare_wait_ticks``; the wait ends with no charges added and the ecology regrowth resumes from zero."
+        ),
+    )
+    bare_wait_ticks: int = Field(0, ge=0, description="Ticks a 'regrow' node stays bare after being emptied (the land's fertility band); 0 for 'none'")
     placement: Optional[str] = Field(
         None,
         description=(

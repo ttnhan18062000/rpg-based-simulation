@@ -4,6 +4,7 @@
 from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
+from src.core.state import REGROW_MODE
 from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
 from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
 from src.core.violent_cause import is_violent_death_cause
@@ -311,7 +312,10 @@ class WorldDynamicsSystem:
             if node.cooldown_remaining > 0:
                 n_upd = refined_node_updates.get(n_id, ResourceNodeUpdate(node_id=n_id))
                 # If finished cooldown, recharge
-                if node.cooldown_remaining == 1:
+                if node.cooldown_remaining == 1 and node.regrowth_mode == REGROW_MODE:
+                     # A bare wait ends with nothing added: the ecology regrowth resumes from empty (owner row 59).
+                     refined_node_updates[n_id] = replace(n_upd, cooldown_set=0)
+                elif node.cooldown_remaining == 1:
                      refined_node_updates[n_id] = replace(n_upd, 
                         cooldown_set=0,
                         charges_delta=node.max_charges

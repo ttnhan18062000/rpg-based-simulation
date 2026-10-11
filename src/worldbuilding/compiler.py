@@ -171,6 +171,14 @@ def _resource_profile(res_spec: Any, context: Any) -> tuple:
     return required_ticks, registered or yields_item, placement
 
 
+def _resource_regrowth(res_spec: Any, context: Any) -> dict:
+    """The node fields a ``regrow`` kind adds (the wait is the node's ``respawn_cooldown``); nothing for the default kind."""
+    profile = context.resources.get(res_spec.id) if context is not None else None
+    if profile is None or profile.regrowth_mode == "none":
+        return {}
+    return {"regrowth_mode": profile.regrowth_mode, "respawn_cooldown": profile.bare_wait_ticks}
+
+
 def _resolve_entity_spawn_tile(
     rng: "DeterministicRNG",
     entity_id: int,
@@ -607,6 +615,7 @@ class WorldCompiler:
                     required_ticks=required_ticks,
                     cooldown_remaining=0,
                     regen_rate_per_tick=res_spec.regen_rate,
+                    **_resource_regrowth(res_spec, context),
                 )
                 next_resource_id += 1
 

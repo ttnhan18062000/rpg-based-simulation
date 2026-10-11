@@ -1182,6 +1182,9 @@ class EntityState:
 # EntityState properties moved into class body to support slots.
 
 
+REGROW_MODE = "regrow"  # ResourceNodeState.regrowth_mode: emptied, then a bare wait, then regrowth from zero (the default "none" is the legacy rules)
+
+
 @dataclass(frozen=True, slots=True)
 class ResourceNodeState:
     """Authoritative state for a harvestable resource."""
@@ -1195,6 +1198,7 @@ class ResourceNodeState:
     respawn_cooldown: int = 100
     cooldown_remaining: int = 0
     regen_rate_per_tick: int = 0  # charges regenerated per ecology tick (0 = no regen)
+    regrowth_mode: str = "none"  # declared by the kind: "regrow" waits ``respawn_cooldown`` ticks bare after being emptied, then regrows from zero
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
     _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -1216,6 +1220,8 @@ class ResourceNodeState:
             "cooldown_remaining": self.cooldown_remaining,
             "regen_rate_per_tick": self.regen_rate_per_tick,
         }
+        if self.regrowth_mode != "none":
+            res["regrowth_mode"] = self.regrowth_mode  # left out for the default so every existing node hashes as before
         object.__setattr__(self, "_canonical_cache", res)
         return res
 

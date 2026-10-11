@@ -1195,7 +1195,8 @@ class CompileProfileResolver:
 
             ctx.register_resource(res_spec.id, ResolvedResourceProfile(
                 required_ticks=required_ticks, resource_type=res_spec.resource_type, yield_item=yield_item,
-                placement=getattr(res_def, "placement", None) if res_def else None))
+                placement=getattr(res_def, "placement", None) if res_def else None,
+                regrowth_mode=res_def.regrowth_mode if res_def else "none", bare_wait_ticks=res_def.bare_wait_ticks if res_def else 0))
 
         # 4. Resolve Buildings
         for bld_spec in getattr(spec, "buildings", []):

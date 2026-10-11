@@ -86,6 +86,9 @@ class ResolvedResourceProfile(BaseModel):
     yield_item: Optional[str] = None
     # Compile-time placement rule of the kind (``ResourceDefinition.placement``); None is the default (owned by the declared region) and is left out of the serialized context; "uniform" opts out.
     placement: Optional[str] = None
+    # Regrowth of the kind (``ResourceDefinition.regrowth_mode`` and ``bare_wait_ticks``); the default is the legacy rules.
+    regrowth_mode: str = "none"
+    bare_wait_ticks: int = 0
 
 
 class ResolvedFactionEconomyProfile(BaseModel):

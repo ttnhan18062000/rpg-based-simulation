@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from dataclasses import replace
 
 from src.core.enums import ReasonCode
-from src.core.state import IntentResult, ItemStack
+from src.core.state import REGROW_MODE, IntentResult, ItemStack
 from src.core.updates import EntityUpdate, StateUpdate, InventoryUpdate, RejectionEvent, ResourceTransferIntent, ChestUpdate
 from src.core.inventory import InventoryService
 from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
@@ -18,6 +18,21 @@ class ResourceTransactionSystem:
     Engine-level system for resolving batch resource transfers.
     Coordinates between the Core Conservation laws and the Authoritative State.
     """
+
+    @staticmethod
+    def _record_depletion(state: "AuthoritativeState", node: Any, new_node_updates: Dict[int, Any],
+                          world_events: List[WorldEvent], depleted_nodes: set) -> None:
+        """The one place a harvest that empties a node is recorded (RESOURCE_DEPLETED). A node of the declared ``regrow`` mode also starts its
+        bare wait here (``respawn_cooldown`` ticks with no charges; nothing is added when it ends: the ecology regrowth resumes from empty)."""
+        new_charges = node.remaining_charges + new_node_updates[node.id].charges_delta
+        if node.remaining_charges <= 0 or new_charges > 0:
+            return
+        world_events.append(WorldEvent(
+            category=WorldEventCategory.RESOURCE_DEPLETED, tick=state.tick, region_id=None, subject=str(node.id), severity=1.0,
+        ))
+        depleted_nodes.add(node.id)
+        if node.regrowth_mode == REGROW_MODE and node.respawn_cooldown > 0:
+            new_node_updates[node.id] = replace(new_node_updates[node.id], cooldown_set=node.respawn_cooldown)
 
     @staticmethod
     def resolve_all(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
@@ -121,17 +136,7 @@ class ResourceTransactionSystem:
                                 node_id = result.node_update.node_id
                                 node = state.resource_nodes.get(node_id)
                                 if node and node_id not in depleted_nodes:
-                                    accumulated_delta = new_node_updates[node_id].charges_delta
-                                    new_charges = node.remaining_charges + accumulated_delta
-                                    if node.remaining_charges > 0 and new_charges <= 0:
-                                        world_events.append(WorldEvent(
-                                            category=WorldEventCategory.RESOURCE_DEPLETED,
-                                            tick=state.tick,
-                                            region_id=None,
-                                            subject=str(node_id),
-                                            severity=1.0,
-                                        ))
-                                        depleted_nodes.add(node_id)
+                                    ResourceTransactionSystem._record_depletion(state, node, new_node_updates, world_events, depleted_nodes)
 
                             # Global metrics tracking (PH10 Parity)
                             for item in result.inventory_update.items_add if result.inventory_update else []:
@@ -208,17 +213,7 @@ class ResourceTransactionSystem:
                                 node_id = res.node_update.node_id
                                 node = state.resource_nodes.get(node_id)
                                 if node and node_id not in depleted_nodes:
-                                    accumulated_delta = new_node_updates[node_id].charges_delta
-                                    new_charges = node.remaining_charges + accumulated_delta
-                                    if node.remaining_charges > 0 and new_charges <= 0:
-                                        world_events.append(WorldEvent(
-                                            category=WorldEventCategory.RESOURCE_DEPLETED,
-                                            tick=state.tick,
-                                            region_id=None,
-                                            subject=str(node_id),
-                                            severity=1.0,
-                                        ))
-                                        depleted_nodes.add(node_id)
+                                    ResourceTransactionSystem._record_depletion(state, node, new_node_updates, world_events, depleted_nodes)
 
                             # Global metrics tracking (PH10 Parity)
                             for item in res.inventory_update.items_add if res.inventory_update else []:
