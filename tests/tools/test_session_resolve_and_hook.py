@@ -111,6 +111,15 @@ def _payload(repo, **kw):
             "agent_type": f"session-{WRITER}", **kw}
 
 
+def _manifest_wt(world, role_id):
+    """The role's manifest worktree `<main>/.claude/worktrees/<placement>`, created as a real git worktree (idempotent)."""
+    _, repo, _ = world
+    path = repo / ".claude" / "worktrees" / ROSTER.role(role_id).worktree
+    if not path.exists():
+        subprocess.run(["git", "worktree", "add", "-q", "-b", f"wt-{path.name}", str(path)], cwd=repo, check=True, env=_ENV)
+    return path
+
+
 def _ctx(world, payload, env=None):
     root, repo, state_root = world
     return hook.build_context(payload, env or {}, root, state_root)
@@ -157,34 +166,38 @@ def test_each_start_appends_a_binding_and_updates_the_instance(world):
 
 def test_the_writer_role_takes_the_lease_and_another_role_cannot_take_a_held_one(world):
     root, repo, state_root = world
-    _ctx(world, _payload(repo))
-    assert st.read_lease(state_root, repo).role == WRITER
-    _ctx(world, _payload(repo, agent_type=f"session-{OTHER}", session_id="d"))
-    assert st.read_lease(state_root, repo).role == WRITER  # the designer did not take it
+    wt = _manifest_wt(world, WRITER)
+    _ctx(world, _payload(repo, cwd=str(wt)))
+    assert st.read_lease(state_root, wt).role == WRITER
+    _ctx(world, _payload(repo, agent_type=f"session-{OTHER}", session_id="d", cwd=str(wt)))
+    assert st.read_lease(state_root, wt).role == WRITER  # the designer did not take it
 
 
 @pytest.mark.parametrize("role_id", ["rpg-designer", "agent-working-planner", "testing-planner", "codebase-designer"])
 def test_a_designer_or_planner_takes_the_lease_in_its_own_worktree(world, role_id):
     """TCK-20261007-SESSION-PER-ROLE-WORKTREES: each designer/planner is the writer of its own worktree."""
     root, repo, state_root = world
-    out = _ctx(world, _payload(repo, agent_type=f"session-{role_id}"))
-    assert "WRITER LEASE NOT TAKEN" not in out and st.read_lease(state_root, repo).role == role_id
+    wt = _manifest_wt(world, role_id)
+    out = _ctx(world, _payload(repo, agent_type=f"session-{role_id}", cwd=str(wt)))
+    assert "WRITER LEASE NOT TAKEN" not in out and st.read_lease(state_root, wt).role == role_id
 
 
 def test_a_planners_second_instance_does_not_take_the_planners_lease(world):
     root, repo, state_root = world
-    _ctx(world, _payload(repo, agent_type="session-agent-working-planner"))
-    out = _ctx(world, _payload(repo, agent_type="session-agent-working-planner", session_id="s2"),
+    wt = _manifest_wt(world, "agent-working-planner")
+    _ctx(world, _payload(repo, agent_type="session-agent-working-planner", cwd=str(wt)))
+    out = _ctx(world, _payload(repo, agent_type="session-agent-working-planner", session_id="s2", cwd=str(wt)),
                env={"SESSION_ROLE": "agent-working-planner-2"})
-    assert "WRITER LEASE NOT TAKEN" not in out and st.read_lease(state_root, repo).role == "agent-working-planner"
+    assert "WRITER LEASE NOT TAKEN" not in out and st.read_lease(state_root, wt).role == "agent-working-planner"
 
 
 def test_another_roles_lease_is_reported_not_stolen(world):
     root, repo, state_root = world
-    st.take_lease(state_root, repo, "someone-else", "s0", None)
-    out = _ctx(world, _payload(repo))
+    wt = _manifest_wt(world, WRITER)
+    st.take_lease(state_root, wt, "someone-else", "s0", None)
+    out = _ctx(world, _payload(repo, cwd=str(wt)))
     assert "WRITER LEASE NOT TAKEN" in out and "someone-else" in out
-    assert st.read_lease(state_root, repo).role == "someone-else"
+    assert st.read_lease(state_root, wt).role == "someone-else"
     assert f"You are `{WRITER}`" in out  # still bound and carded
 
 
@@ -354,9 +367,36 @@ def test_an_instance_id_beyond_max_sessions_is_unknown_and_two_different_instanc
 def test_a_second_instance_neither_takes_nor_complains_about_the_writer_lease(world):
     """Launcher fix D: `<role>-2` has a different id from the lease holder; it skips the lease silently."""
     root, repo, state_root = world
-    first = _ctx(world, _payload(repo, agent_type="session-rpg-implementer"), {"SESSION_ROLE": "rpg-implementer"})
-    assert "WRITER LEASE NOT TAKEN" not in first and st.read_lease(state_root, repo).role == "rpg-implementer"
-    second = _ctx(world, _payload(repo, agent_type="session-rpg-implementer", session_id="sess-2"),
+    wt = _manifest_wt(world, "rpg-implementer")
+    first = _ctx(world, _payload(repo, agent_type="session-rpg-implementer", cwd=str(wt)), {"SESSION_ROLE": "rpg-implementer"})
+    assert "WRITER LEASE NOT TAKEN" not in first and st.read_lease(state_root, wt).role == "rpg-implementer"
+    second = _ctx(world, _payload(repo, agent_type="session-rpg-implementer", session_id="sess-2", cwd=str(wt)),
                   {"SESSION_ROLE": "rpg-implementer-2"})
     assert "WRITER LEASE NOT TAKEN" not in second
-    assert st.read_lease(state_root, repo).role == "rpg-implementer"
+    assert st.read_lease(state_root, wt).role == "rpg-implementer"
+
+
+# ---- TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE -----------------------
+
+def test_a_writer_launched_in_the_main_checkout_takes_no_lease_and_says_why(world):
+    root, repo, state_root = world
+    out = _ctx(world, _payload(repo, agent_type="session-rpg-implementer"), {"SESSION_ROLE": "rpg-implementer"})
+    assert st.read_lease(state_root, repo) is None
+    assert "writer lease not taken: launched outside" in out and "WRITER LEASE NOT TAKEN" not in out
+    assert "You are `rpg-implementer`" in out  # still bound and carded
+
+
+def test_a_writer_launched_in_a_foreign_path_takes_no_lease(world, tmp_path):
+    root, repo, state_root = world
+    foreign = tmp_path / "foreign"
+    subprocess.run(["git", "worktree", "add", "-q", "-b", "foreign", str(foreign)], cwd=repo, check=True, env=_ENV)
+    out = _ctx(world, _payload(repo, agent_type="session-rpg-implementer", cwd=str(foreign)), {"SESSION_ROLE": "rpg-implementer"})
+    assert st.read_lease(state_root, foreign) is None and "launched outside" in out
+
+
+def test_seven_seats_launched_in_the_main_checkout_leave_it_unleased(world):
+    root, repo, state_root = world
+    for i, role_id in enumerate(("rpg-implementer", "agent-working-implementer", "testing-implementer", "codebase-implementer",
+                                 "rpg-planner", "agent-working-planner", "testing-planner")):
+        _ctx(world, _payload(repo, agent_type=f"session-{role_id}", session_id=f"s{i}"), {"SESSION_ROLE": role_id})
+    assert st.read_lease(state_root, repo) is None

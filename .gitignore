@@ -273,6 +273,7 @@ task.md
 # graphify-out/.graphify_uncached.txt
 # graphify-out/.graphify_root
 # graphify-out/.graphify_python
+/graphify-out
 graphify-out/*
 src/graphify-out/
 
