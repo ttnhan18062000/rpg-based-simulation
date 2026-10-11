@@ -24,3 +24,10 @@ A `WayJudgement(tick, open: tuple[WayKind], chosen: Optional[WayKind])` ring buf
 ## Out of scope / ordering
 - The metric module follows H6. SURV-07's hunger-pull fix (Lane A) lands first so the (a) column reflects the fixed pull; Option A reads the same scorer helper so it follows automatically.
 - Typed shape needs rpg-planner's yes before building (stated in the message); nothing is built now.
+
+## Ruling (rpg-planner, 2026-10-11): Option A accepted, Option B rejected, with four amendments
+1. Column (a) is the UNION of `ways_in_reach` over the subject's decisions since its last meal while hunger >= ESCALATION_ONSET x HUNGER_LINE, sampled on the ticks where `should_run(tick, entity_id, cadence.strategic_intelligence)` holds (the strategic re-decision ticks: (tick + id) % 10 == 0 at the default cadence; computable by the extractor, no decision-tick visibility needed; if the profile overrides the cadence the extractor reads it from the kernel profile when reachable). The record carries `ways_open_in_reach_union`, `ways_in_reach_at_death` and `ways_attempted`; all reset on a meal.
+2. `ways_in_reach` covers HUNT_EAT_RAW by diet (D42) once Lane A's hunting batch is on main (test with a meat-eater); RECEIVE is a declared enum value never returned until it exists (disclosed).
+3. The extractor runs in rpg_gate runs (plain Kernel, audit_mode, default LIGHT observability; events flush to `data/runs/<run_id>/simulation_events.jsonl` = `RunArtifacts.run_dir`). To verify at build: LIGHT's volume policy cannot drop the record; the gate environment does not set SIM_OBS_MODE=OFF.
+4. The (a)==(b) pin stays, commented as split only by M1's honest-perception child.
+Extractor state (union and attempted sets) is class-level like `_emitted_*`; cleared in `reset_run_state`; deterministic across two runs. Build after the folded RPG PR merges, cut from origin/main.
