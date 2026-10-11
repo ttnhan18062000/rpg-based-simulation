@@ -36,6 +36,7 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+from tools.graphify_link import link_shared_graph  # noqa: E402
 from tools.handover_home import handover_base  # noqa: E402
 
 from tools.sessions import state as st  # noqa: E402
@@ -471,6 +472,7 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
     if not handover.is_file():
         handover.parent.mkdir(parents=True, exist_ok=True)
         handover.write_text(HANDOVER_STUB.format(role=target.instance, date=time.strftime("%Y-%m-%d")), encoding="utf-8")
+    link_shared_graph(wt)  # graphify-out -> the main checkout's graph; a no-op when it has its own or is the main checkout
     os.chdir(wt)
     os.execvpe(cmd[0], cmd, {**os.environ, **env})
     return 0  # pragma: no cover

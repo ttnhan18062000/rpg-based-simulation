@@ -45,6 +45,7 @@ domains:
       - agent-working/agent-monitoring/retro/**
       - registries/session_*.yaml   # exactly session_roles.yaml and session_authority.yaml today; one glob keeps the card within its token budget
       - .claude/agents/**
+      - .graphifyignore
       - tests/tools/**
       - tests/docs/**
     owns_not:

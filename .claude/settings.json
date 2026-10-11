@@ -158,7 +158,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',d).get('file_path',''))\" 2>/dev/null || true); case \"$FILE\" in */src/*|*/tests/*) [ -f graphify-out/graph.json ] && graphify update . 2>/dev/null || true ;; esac"
+            "command": "FILE=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',d).get('file_path',''))\" 2>/dev/null || true); case \"$FILE\" in */src/*|*/tests/*) [ ! -L graphify-out ] && [ -f graphify-out/graph.json ] && graphify update . 2>/dev/null || true ;; esac"
           }
         ]
       },

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261011-GRAPHIFY-SHARED-GRAPH-FROM-WORKTREES
-phase: open
+phase: done
 date: 2026-10-11
 tags: [ai, knowledge-store, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, knowledge-store, process-improvement]
 `graphify query` works from every git worktree against the main checkout's graph, the graph is written only from the main checkout, and nodes for deleted files are pruned
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -101,7 +101,7 @@ Further findings on the issue:
 - docs/engine/contracts/knowledge_gateway_mcp_contract.md (graphify provider)
 
 ## Related Stored Artifacts
-None.
+`agent-working/stored_artifacts/TCK-20261011-GRAPHIFY-SHARED-GRAPH-FROM-WORKTREES/{plan,investigation,test_plan}.md`
 
 ## Related Code Areas
 - tools/sessions/launch.py, tools/sessions/session_start_hook.py
@@ -117,9 +117,13 @@ None.
   (`session_start_hook.py`, `launch.py`); implement after them in the batch.
 
 ## Implementation Notes
+Design: symlink, not a `--graph` wrapper (plan.md). `tools/graphify_link.py::link_shared_graph` is called by `launch.py` (before exec) and the SessionStart hook; it links only when nothing exists at `graphify-out` (a real directory, any symlink, even a broken one, is left alone), the worktree is not the main checkout, and the main checkout has a `graph.json`. `/graphify-out` added to `.gitignore`. The PostToolUse hook now needs `[ ! -L graphify-out ]` before `graphify update .`, so only the main checkout refreshes the shared graph. `tools/graphify_prune.py` removes nodes whose `source_file` is gone, every link touching them and their hyperedge membership (top-level and `graph.hyperedges`; a hyperedge left under two members is dropped), writes atomically, refuses to write through a symlinked `graphify-out`, prints counts and size and warns above 150 MB, always exits 0. On a copy of the real graph (61.3 MB) a dry run reports 795 stale nodes, 888 links, 3 hyperedges. `.graphifyignore` gains `scratch/`, `experiments/`, `reviews/` and is owned by agent-working. The agent-working planner card went to 404 tokens, so two domain-text phrases were shortened (`docs/guidelines/session_roles/domains/agent-working.md`: now 380/397/386, budget 400). Governing-file diffs for the owner: `.claude/settings.json` (hook condition), `CLAUDE.md` (one Graphify Integration bullet), `registries/session_roles.yaml` (`.graphifyignore` in owns). NOT done: running the prune on the real shared graph (that rewrites a gitignored file in the main checkout; after merge, run it there) and a fresh-launch end-to-end `graphify query` from a launcher-made worktree; the link and the hook path are covered with real git worktrees instead.
 
 ## Test Summary
+New tests/tools/test_graphify_link_and_prune.py (12): fresh worktree linked and idempotent; real dir / foreign / broken symlink untouched; main checkout never linked; no main graph -> no link; git status ignores the link; SessionStart wiring; the real settings.json hook command run with a fake `graphify` (not run in a linked worktree, run in the main checkout); prune removes nodes, links and hyperedge members, idempotent byte-for-byte, dry-run and symlink write nothing, size warning exit 0, clean graph unchanged; `.graphifyignore` entries and route to agent-working. Related suites: session tools + handover transit 665 passed; tests that mention settings.json/CLAUDE.md/.gitignore 1077 passed, 36 skipped. validate 0 findings (17 roles), generate_agents 0 drift.
 
 ## Files Changed
+`tools/graphify_link.py`, `tools/graphify_prune.py`, `tools/sessions/launch.py`, `tools/sessions/session_start_hook.py`, `.claude/settings.json`, `.gitignore`, `.graphifyignore`, `CLAUDE.md`, `registries/session_roles.yaml`, `docs/guidelines/session_roles/domains/agent-working.md`, regenerated `.claude/agents/*`, `tests/tools/test_graphify_link_and_prune.py`.
 
 ## Completion Summary
+Worktrees read the main checkout's graph through a link made by the launcher and SessionStart, only the main checkout writes it, a prune tool drops stale nodes, and `.graphifyignore` has an owner.

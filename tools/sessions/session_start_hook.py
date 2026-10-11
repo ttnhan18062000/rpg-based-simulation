@@ -28,6 +28,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 for _p in (str(_REPO_ROOT), str(_REPO_ROOT / "tools" / "agent-monitoring")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
+from tools.graphify_link import link_shared_graph  # noqa: E402
 from tools.handover_home import handover_base  # noqa: E402
 
 SOURCES = ("startup", "resume", "clear", "compact")
@@ -169,6 +170,8 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
                 st.take_lease(state_root, worktree, instance_id, binding.session_id, proc, proc_root)
             except st.LeaseRefused as exc:
                 notes.append(f"session-roles: WRITER LEASE NOT TAKEN: {exc}")
+    if link_shared_graph(worktree) == "linked":
+        notes.append("session-roles: linked graphify-out to the main checkout's graph (read-only here; refresh it from the main checkout).")
     parts.extend(notes)
     parts.append(_handover_text(role, root, instance_id))
     return "\n\n".join(parts)
