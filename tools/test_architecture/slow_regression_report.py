@@ -17,7 +17,7 @@ Rules:
 - A closed issue is not reopened: a recurrence after closing creates a NEW issue, by design.
 - A step that produced no JUnit file is "missing", and an expected corpus id with no result is "unmeasured":
   their previous state is carried over (never reported FIXED) and the issue is not closed.
-- `slow_known_reds.yaml` entries carry owner, added_on, expires_on and kind. A failing test resolves to the FIRST
+- `slow_known_reds.yaml` (schema, matcher and lint: `known_reds.py`, shared with the rpg gate report) entries carry owner, added_on, expires_on and kind. A failing test resolves to the FIRST
   entry whose pattern matches, so a narrower entry must precede any broader one covering it (the lint rejects a
   shadowed entry). A failing test matching no entry is UNOWNED; one matching an entry past `expires_on` is EXPIRED
   and listed under its own heading.
@@ -37,7 +37,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import fnmatch
 import json
 import re
 import subprocess
@@ -47,7 +46,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
-import yaml
+from tools.test_architecture.known_reds import (  # noqa: F401  (the registry rules live in known_reds.py; names re-exported)
+    KINDS,
+    REQUIRED_ENTRY_FIELDS,
+    classify,
+    days_to_expiry,
+    is_expired,
+    lint_known_reds,
+    load_known_reds,
+    owner_of,
+    shadowed_entries,
+    stale_mappings,
+)
 
 LABEL = "slow-regression"
 BOT_LOGIN = "github-actions[bot]"
@@ -59,8 +69,6 @@ STEP_BY_FILE_PREFIX = (
     ("legacy_regression", "legacy regression"),
 )
 EXPECTED_STEPS = tuple(step for _, step in STEP_BY_FILE_PREFIX)
-REQUIRED_ENTRY_FIELDS = ("match", "ticket", "owner", "added_on", "expires_on", "kind")
-KINDS = ("broken", "flaky")
 _STATE_RE = re.compile(r"```json\s*(\{.*?\})\s*```", re.S)
 
 
@@ -125,97 +133,6 @@ def parse_junit_dir(junit_dir: Path) -> Tuple[Dict[str, str], Set[str], Set[str]
             if case.find("failure") is not None or case.find("error") is not None:
                 failing[f"{case.get('classname', '')}::{case.get('name', '')}"] = step
     return failing, seen, measured
-
-
-# ── known reds ───────────────────────────────────────────────────────────────────────────────
-
-
-def load_known_reds(path: Optional[Path]) -> List[dict]:
-    if path is None or not Path(path).exists():
-        return []
-    data = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
-    return list(data.get("known_reds", []))
-
-
-def lint_known_reds(entries: Sequence[dict]) -> List[str]:
-    """Problems with the YAML entries (a missing field, a bad date, expires_on before added_on, an unknown kind)."""
-    problems: List[str] = []
-    for index, entry in enumerate(entries):
-        label = entry.get("match", f"entry {index}")
-        for name in REQUIRED_ENTRY_FIELDS:
-            if not entry.get(name):
-                problems.append(f"{label}: missing {name}")
-        dates = {}
-        for name in ("added_on", "expires_on"):
-            value = entry.get(name)
-            if not value:
-                continue
-            try:
-                dates[name] = dt.date.fromisoformat(str(value))
-            except ValueError:
-                problems.append(f"{label}: {name} is not an ISO date: {value!r}")
-        if len(dates) == 2 and dates["expires_on"] < dates["added_on"]:
-            problems.append(f"{label}: expires_on is before added_on")
-        if entry.get("kind") and entry["kind"] not in KINDS:
-            problems.append(f"{label}: kind must be one of {KINDS}, got {entry['kind']!r}")
-        if "[" in str(entry.get("match", "")):
-            # fnmatch reads `[...]` as a character class, so an exact parametrized id such as
-            # `t::test_x[5000]` would never match itself and its failure would show as UNOWNED.
-            problems.append(f"{label}: '[' is a character class in fnmatch; write the parameter part with '*' or '?' instead")
-    problems.extend(shadowed_entries(entries))
-    return problems
-
-
-def _sample_id(pattern: str) -> str:
-    """A concrete id the pattern matches: `*` -> nothing, `?` -> one character (the lint forbids `[` in patterns)."""
-    return pattern.replace("*", "").replace("?", "x")
-
-
-def shadowed_entries(entries: Sequence[dict]) -> List[str]:
-    """Entries a test id can never reach, because owner_of() returns the first match and an earlier, broader
-    pattern also matches the later entry's ids. A catch-all must come after every narrower entry it covers."""
-    problems: List[str] = []
-    for later_index, later in enumerate(entries):
-        pattern = later.get("match")
-        if not pattern:
-            continue
-        sample = _sample_id(pattern)
-        for earlier in entries[:later_index]:
-            if earlier.get("match") and fnmatch.fnmatchcase(sample, earlier["match"]):
-                problems.append(f"{pattern}: shadowed by the earlier entry {earlier['match']!r}; move it before that entry")
-                break
-    return problems
-
-
-def owner_of(test_id: str, known: Sequence[dict]) -> Optional[dict]:
-    for entry in known:
-        if fnmatch.fnmatchcase(test_id, entry["match"]):
-            return entry
-    return None
-
-
-def is_expired(entry: dict, today: dt.date) -> bool:
-    return dt.date.fromisoformat(str(entry["expires_on"])) < today
-
-
-def days_to_expiry(entry: dict, today: dt.date) -> int:
-    return (dt.date.fromisoformat(str(entry["expires_on"])) - today).days
-
-
-def classify(failing: Dict[str, str], known: Sequence[dict], today: dt.date) -> Tuple[List[str], List[str]]:
-    """(UNOWNED ids, EXPIRED ids) among the failing tests."""
-    unowned, expired = [], []
-    for test_id in sorted(failing):
-        entry = owner_of(test_id, known)
-        if entry is None:
-            unowned.append(test_id)
-        elif is_expired(entry, today):
-            expired.append(test_id)
-    return unowned, expired
-
-
-def stale_mappings(failing: Dict[str, str], known: Sequence[dict]) -> List[dict]:
-    return [e for e in known if not any(fnmatch.fnmatchcase(t, e["match"]) for t in failing)]
 
 
 # ── issue body and state ─────────────────────────────────────────────────────────────────────

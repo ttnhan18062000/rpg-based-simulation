@@ -127,7 +127,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python3 tools/test_architecture/slow_regression_report.py \
+          # `-m` from the repo root: the report imports the shared known_reds module as tools.test_architecture.known_reds
+          # (TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE); run by path it would not find it.
+          python3 -m tools.test_architecture.slow_regression_report \
             --junit-dir reports/slow \
             --repo "${{ github.repository }}" \
             --run-id "${{ github.run_id }}" \

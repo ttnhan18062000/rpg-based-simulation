@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-SLOW-REGRESSION-OFF-HOUR-AND-SKIP-UNCHANGED-MAIN
-phase: open
+phase: done
 date: 2026-10-09
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 The Slow regression schedule moves off the hour, and a scheduled run skips the suite when main has not changed since a run that already tested it
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -93,11 +93,17 @@ Scope 2 (testing-implementer, 2026-10-09):
 
 ## Test Summary
 Scope 2: `pytest tests/unit/tools/test_slow_regression_gate.py tests/unit/tools/test_slow_regression_watchdog.py` 52 passed (the gate: head untested, other commit tested, tested 2 h / 23 h 59 / exactly 24 h / 25 h ago, only gate-skipped runs, a gate-skipped run newer than the tested one, in-progress run at head, own run excluded, other branch, malformed input, per-conclusion `actually_tested`, `collect` job fetching, CLI; the watchdog: stale-but-head-tested skips, tested over a day dispatches, untested head dispatches, gate-skipped newest run counts as the slot firing, no `--head-sha` unchanged, CLI flag). `tests/static/test_ci_slow_workflow_shape.py` plus the gate and watchdog tests: 128 passed. Other readers of the slow workflows (`test_impact_report`, `test_ci_workflow_test_coverage`, `test_ci_split_tools_jobs`, `test_ci_narrow_path_filtered_jobs`, `test_corpus_diversity_ci_isolation`, `test_ci_step_summary_reporting`): 100 passed.
-Live check of the collector against the real repo (before merge): the suite job is named `Slow regression` and reports its conclusion; main head 22a1d1853 (untested) -> `run`; head 42ce987b6 (tested by run 37867736198, 4.5 h earlier) -> `skip`. AC5's scheduled-run evidence is open until the merged workflow produces one `run` and one `skip` decision.
+Live check of the collector against the real repo (before merge): the suite job is named `Slow regression` and reports its conclusion; main head 22a1d1853 (untested) -> `run`; head 42ce987b6 (tested by run 37867736198, 4.5 h earlier) -> `skip`. AC5's scheduled-run evidence is below.
+
+AC5 live evidence (recorded 2026-10-11 from testing-planner's observations; ids from the Actions history):
+- gate decided `run` (scheduled, head tested earlier than 24 h or never): runs 37952552217 (head 20af2959a), 38039712970 and 38077342204 (the latter posted issue #390's comment of 2026-10-10T20:23:13Z).
+- gate decided `skip`: scheduled run 38096309395 (created 2026-10-10T23:48:50Z, head 82f0aa7e7). Its `Gate: skip if main was tested recently` job succeeded and its `Slow regression` job is `skipped`. The same head was tested by run 38077342204 (18:49Z, about 5 h earlier, under the 24 h interval).
+- Issue #390's `updatedAt` stayed 2026-10-10T20:23:13Z after the skip (baseline before the gate, 2026-10-09T03:06:29Z), so a skipped run does not touch the rolling issue.
+- Not covered: the 08:41Z slot of 2026-10-10 was dropped by GitHub and the watchdog did not cover it; that is the watchdog ticket's AC4.
 
 ## Files Changed
 Scope 1: `.github/workflows/slow-regression.yml`, `tests/static/test_ci_slow_workflow_shape.py`, `tools/test_architecture/slow_regression_watchdog.py`, this ticket.
 Scope 2: `tools/test_architecture/slow_regression_gate.py` (new), `tools/test_architecture/slow_regression_watchdog.py`, `.github/workflows/slow-regression.yml`, `.github/workflows/slow-regression-watchdog.yml`, `tests/unit/tools/test_slow_regression_gate.py` (new), `tests/unit/tools/test_slow_regression_watchdog.py`, `tests/static/test_ci_slow_workflow_shape.py`, this ticket.
 
 ## Completion Summary
-(implementer)
+The slow workflow's cron moved off the busy hour (Scope 1) and a scheduled run now skips when main's head was actually tested under 24 h ago (Scope 2: `slow_regression_gate.py`, the `gate` job, the watchdog applying the same rule). Live: gate `run` on runs 37952552217, 38039712970, 38077342204; gate `skip` on run 38096309395 with the suite job skipped and issue #390 untouched. Closed with all five acceptance criteria met.
