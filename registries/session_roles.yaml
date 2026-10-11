@@ -107,13 +107,11 @@ domains:
       - src/perf/**
       - tests/perf/**
       - tools/perf/**
-      - tools/perf_guard.py
       - tools/bench_corpus_world.py
       - docs/performance/**
       - docs/plans/design_enhancement/performance_optimization/**
       - docs/architecture/performance_optimization_decisions.md   # PERF-D records; the owner approves
       - tests/unit/perf/**
-      - perf_baselines.json                  # PerfBudget store (M2-T03 decides absorb or retire)
       - tests/tools/perf_assertions.py       # soft-threshold helper; perf is first reviewer
     owns_not: []
     routes:

@@ -404,7 +404,7 @@ Each follows §3.1 and is intentionally empty.
   express: overhead ratios, the SimQ isolation bands, and within-run trend checks became a third,
   named **comparative** clause kind in `performance_contract.md` §3.3 (perf-planner decision,
   2026-10-03); absolute per-scenario and per-phase ceilings and the `PerfBudget` store are recorded
-  in its §5.2 as tripwire-adjacent debt for `PERF-M2-T03`; the governor's trigger rule stays a runtime
+  in its §5.2 with their dispositions (the store was deleted by `PERF-M2-PERFBUDGET-RETIRE`); the governor's trigger rule stays a runtime
   control rule outside the contract.
 - **Context:** three P1 documents and the live gate disagree (conflict C-13).
   `docs/engine/performance_contract.md` and `docs/performance/perf_baseline_policy.md` require 100

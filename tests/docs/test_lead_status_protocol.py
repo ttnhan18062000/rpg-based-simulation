@@ -27,9 +27,11 @@ def test_status_request_never_authorizes_work():
     assert "never authorizes work" in text
 
 
-def test_board_has_the_seven_columns_and_no_rows():
+def test_board_has_the_seven_columns_and_every_row_fills_them():
     lines = [ln for ln in BOARD.read_text().splitlines() if ln.startswith("|")]
-    assert len(lines) == 2, "header and separator only; the lead fills rows"
+    assert len(lines) >= 2, "header and separator"
     header = [c.strip() for c in lines[0].strip("|").split("|")]
     assert len(header) == 7
     assert header[0] == "epic or batch" and header[-1].startswith("owner decision needed")
+    for row in lines[2:]:
+        assert len(row.strip().strip("|").split("|")) == 7, row
