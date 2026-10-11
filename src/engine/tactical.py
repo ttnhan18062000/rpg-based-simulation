@@ -367,7 +367,7 @@ class TacticalDecisionSystem:
                         navigation=NavigationUpdate(target_set=group.anchor, movement_mode_set=MovementMode.REGROUP),
                         task=TaskUpdate(
                             work_kind_set="ENTITY_MOVE",
-                            payload_set={"target_position": group.anchor, "reason": "REGROUP"}
+                            payload_set={"target_position": group.anchor, "reason": "REGROUP", "arrival_radius": group.cohesion_radius}
                         )
                     )
             

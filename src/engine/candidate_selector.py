@@ -8,11 +8,23 @@ from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.hostility import is_engaged, perceived_hostile
 from src.engine.legality import LegalityServiceV2
 from src.engine.phase_governor import ScanPolicy
+from src.engine.rpg_depth import LeashService
 from src.engine.sleep_debt import must_collapse
+from src.engine.tile_distance import manhattan_tile_distance
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate
+
+
+def _within_a_tile(position: tuple, target: object) -> bool:
+    """True when ``target`` is a position within one whole tile of ``position``."""
+    return target is not None and manhattan_tile_distance(position, target) <= 1  # type: ignore[arg-type]
+
+
+# Held moves that end when the entity reaches their target and hand it back to the brain; every other held move runs on without one. A creature that
+# fled or kept its distance and then stood frozen in the held move would never forage again (measured: a plant-eater starved 1900 ticks after one flight).
+ARRIVAL_ENDS_MOVE_REASONS = frozenset({"KEEP_DISTANCE", "FLEE_THREAT"})
 
 
 class MovementCandidateSelector:
@@ -172,6 +184,22 @@ class MovementCandidateSelector:
         return entity.task.work_kind == "ENTITY_MOVE" and entity.task.payload.get("reason") in MovementCandidateSelector.FLIGHT_REASONS
 
     @staticmethod
+    def arrived_in_area(entity: "EntityState") -> bool:
+        """True when a held move has reached the AREA it was issued for: a step away (KEEP_DISTANCE, FLEE_THREAT, AVOID_HOSTILE) within a tile of its
+        clamped point, a LEASH_RETURN inside the home area (``LeashService.in_home_area``), a REGROUP within the cohesion radius the move was issued
+        with (``arrival_radius``) of the anchor it was sent to. Other reasons have no area and end only as ``move_ends_here`` says."""
+        payload = entity.task.payload
+        reason = payload.get("reason")
+        position, target = entity.navigation.position, payload.get("target_position")
+        if reason in ARRIVAL_ENDS_MOVE_REASONS or reason == "AVOID_HOSTILE":
+            return _within_a_tile(position, target)
+        if reason == "LEASH_RETURN":
+            return LeashService.in_home_area(entity)
+        if reason == "REGROUP" and target is not None and payload.get("arrival_radius") is not None:
+            return (position[0] - target[0]) ** 2 + (position[1] - target[1]) ** 2 <= payload["arrival_radius"] ** 2
+        return False
+
+    @staticmethod
     def move_ends_here(
         entity: "EntityState",
         entities: Mapping[int, "EntityState"],
@@ -188,7 +216,9 @@ class MovementCandidateSelector:
         if MovementCandidateSelector.tracked_move_complete(entity, entities) or must_collapse(entity.biological.sleep_debt):
             return True  # (a subject whose sleep debt reached the collapse line stops where it stands, decision 41)
         if entity.task.payload.get("reason") == "KEEP_WALKING" and entity.navigation.position == entity.task.payload.get("target_position"):
-            return True  # a walk the brain chose to keep (decision 32) ends on arrival: arriving does not end other held moves
+            return True  # a walk the brain chose to keep (decision 32) ends on arrival
+        if MovementCandidateSelector.arrived_in_area(entity):
+            return True  # a move ends on arriving in its area, not on its exact tile (divergence 2.113)
         return (not MovementCandidateSelector.is_decided_flight(entity)
                 and MovementCandidateSelector.engaged_adjacent_hostile(entity, entities, index))
 
