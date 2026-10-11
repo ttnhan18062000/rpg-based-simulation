@@ -2,6 +2,7 @@
   "sorted_module_ids": [
     "frontier_village_core",
     "goblin_camp_conflict",
+    "goblin_camp_forage",
     "hero_adventurers",
     "mountain_pass",
     "orc_clan_territory",
@@ -27,7 +28,7 @@
     "dragon_cult",
     "spirit_court"
   ],
-  "regions_count": 8,
+  "regions_count": 9,
   "entities_count": 15,
   "catalog_validation": [
     {
@@ -39,8 +40,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -51,8 +52,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -843,7 +844,8 @@
     "goblin_camp_conflict": [],
     "wolf_den_near_forest": [],
     "orc_clan_territory": [],
-    "river_crossing": []
+    "river_crossing": [],
+    "goblin_camp_forage": []
   },
   "composition_validation": [],
   "world_validation": [
@@ -912,8 +914,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -924,8 +926,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -1763,10 +1765,11 @@
     }
   ],
   "fingerprints": {
-    "catalog": "88c23592d51ca91d67a68a2d0932c7426a3fc4cbebc5c5463eb2aacbb71e039c",
+    "catalog": "c2234d065b76d2e08fa38add073cbc0a3f90c5eddd309e67d007c6fd1d06773c",
     "modules": {
       "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
       "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
+      "goblin_camp_forage": "79af965c2ca3a71404f844c2f02753c21149e5cff4e6f21707e6223e1dac63cb",
       "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
       "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
       "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",

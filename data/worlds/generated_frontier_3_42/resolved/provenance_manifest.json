@@ -1,20 +1,21 @@
 {
-  "manifest_id": "prov_a0e345bb373cedc9",
+  "manifest_id": "prov_7449dca2b383a302",
   "world_id": "generated_frontier_3_42",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "88c23592d51ca91d67a68a2d0932c7426a3fc4cbebc5c5463eb2aacbb71e039c",
+  "catalog_fingerprint": "c2234d065b76d2e08fa38add073cbc0a3f90c5eddd309e67d007c6fd1d06773c",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
+    "goblin_camp_forage": "79af965c2ca3a71404f844c2f02753c21149e5cff4e6f21707e6223e1dac63cb",
     "moon_cult_ruins": "221540c964e3501b5484973b794233e06a5a3217fd9f6398a34c85b9ab9c11ac",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
   },
-  "composition_fingerprint": "0c4009dd39c79937d9a28028dfd3858a9705860f5044aaca10acde5992db4a85",
+  "composition_fingerprint": "c3c027721a2be107fc829e57a100bfa01ac093445860f681f5bf41518229731a",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "a0e345bb373cedc9806a08c94f97b0dcfb5e3b01922b1913fea314f34a29bc5a",
-  "created_at": "2026-10-10T10:51:29.035010Z",
+  "content_fingerprint": "7449dca2b383a3021aff1cb2b920ecb1498d4520d338523a44193069a10c6cd6",
+  "created_at": "2026-10-11T08:13:37.252470Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -872,6 +873,41 @@
           "defense"
         ],
         "reward_budget": 120
+      }
+    },
+    "goblin_camp_edge": {
+      "element_id": "goblin_camp_edge",
+      "element_type": "region",
+      "source_module": "goblin_camp_forage",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "goblin_camp"
+      },
+      "details": {
+        "bounds": [
+          106,
+          34,
+          114,
+          42
+        ],
+        "terrain": "forest",
+        "hazard_level": 3.0,
+        "ecology_source": []
+      }
+    },
+    "goblin_camp_forage__berry_thicket_0": {
+      "element_id": "goblin_camp_forage__berry_thicket_0",
+      "element_type": "resource",
+      "source_module": "goblin_camp_forage",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
+        "region": "goblin_camp_edge"
       }
     },
     "moon_cave": {

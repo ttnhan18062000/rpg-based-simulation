@@ -36,6 +36,19 @@ regions:
     position:
     - 25
     - 25
+- id: calibration_camp_edge
+  type: wilderness
+  bounds:
+  - 156
+  - 156
+  - 164
+  - 164
+  terrain: forest
+  hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+  places: []
 - id: monster_calibration_zone
   type: wilderness
   bounds:
@@ -150,6 +163,11 @@ resources:
   resource_type: herb_patch
   count: 5
   region: hometown
+  regen_rate: 1
+- id: camp_maturity_calibration_pilot__berry_thicket_0
+  resource_type: berry_thicket
+  count: 10
+  region: calibration_camp_edge
   regen_rate: 1
 buildings:
 - id: town_hall_0

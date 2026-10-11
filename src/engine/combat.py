@@ -12,6 +12,7 @@ from src.core.enums import EntityRole, ReasonCode
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.core.state import EquipSlot
+from src.engine.sleep_debt import is_weakened
 from src.engine.starvation import attack_scale
 
 if TYPE_CHECKING:
@@ -21,7 +22,7 @@ def _biological_attack_modifiers(bio: Any) -> Dict[str, float]:
     """Attack multipliers from the attacker's body, in application order: exhaustion (sleep debt above 80, x0.8) and, compounding with it,
     weakness from hunger (owner decision 36, x0.8 from hunger 85). Only the factors that apply are returned."""
     out: Dict[str, float] = {}
-    if bio.sleep_debt > 80.0:
+    if is_weakened(bio.sleep_debt):
         out["EXHAUSTION"] = 0.8
     weak = attack_scale(bio.hunger)
     if weak < 1.0:

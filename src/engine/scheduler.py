@@ -5,9 +5,15 @@ from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 from src.core.state import AuthoritativeState
 from src.core.work import WorkItem, WorkClass
 from src.engine.candidate_selector import MovementCandidateSelector
+from src.engine.cadence import SystemCadence, should_run
+from src.engine.need_pull import need_is_pressing
 
 # Ticks between the brain wakes of an entity beside an unengaged hostile (decision 32); the decision comes within this bound.
 ADJACENCY_WAKE_COOLDOWN = 2
+
+# Ticks between the brain wakes of a holder of a move while a need is pressing: the strategic cadence, the rate at which an idle
+# entity already decides, so a held mover is no slower to decide than an idle one.
+NEED_WAKE_CADENCE: int = SystemCadence.model_fields["strategic_intelligence"].default
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
@@ -54,6 +60,19 @@ class DeterministicScheduler:
         return work_sequence, 0
 
     @staticmethod
+    def _is_need_woken(ent: "EntityState", state: AuthoritativeState, work_kind: str) -> bool:
+        """SURV-07 / decision 32 for a need: an entity holding a move while a biological need is pressing is woken for the brain on
+        the strategic cadence (staggered by id), so the hunger or sleep goal it already ranks first can displace the held move.
+        Waking is only a re-decision: a present threat to life (the only thing that outranks a pressing need, SURV-07) is seen again by
+        that decision and re-issues the flight, so a held flight is woken too; one whose threat is gone (a retreat that never completes)
+        is no longer held."""
+        return (
+            work_kind == "ENTITY_MOVE"
+            and need_is_pressing(ent.biological.hunger, ent.biological.sleep_debt)
+            and should_run(state.tick, ent.id, NEED_WAKE_CADENCE)
+        )
+
+    @staticmethod
     def _is_woken(ent: "EntityState", state: AuthoritativeState, work_kind: str, wake_index: Dict[Any, List[int]]) -> bool:
         """Decision 32: True when an entity that holds no action has a perceived hostile it is not engaged with orthogonally adjacent and
         this is one of its wake ticks (every ADJACENCY_WAKE_COOLDOWN ticks, staggered by id). An action holder is not interrupted."""
@@ -89,7 +108,7 @@ class DeterministicScheduler:
         # Milestone 3: Staggered Entity Execution
         # Gating non-critical work items based on strategic cadence.
         is_idle_act = (work_kind == "ENTITY_ACT" and not ent.task.payload)
-        woken = self._is_woken(ent, state, work_kind, wake_index)
+        woken = self._is_woken(ent, state, work_kind, wake_index) or self._is_need_woken(ent, state, work_kind)
         is_brain = woken or work_kind == "ENTITY_BRAIN" or is_idle_act
 
         # Readiness gate: thinking (brain) is free; only actual actions/movement

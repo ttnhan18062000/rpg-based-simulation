@@ -9,8 +9,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -21,8 +21,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -813,7 +813,8 @@
     "goblin_camp_conflict": [],
     "wolf_den_near_forest": [],
     "orc_clan_territory": [],
-    "river_crossing": []
+    "river_crossing": [],
+    "goblin_camp_forage": []
   },
   "composition_validation": [],
   "world_validation": [

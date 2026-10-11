@@ -21,7 +21,7 @@
     "dragon_cult",
     "spirit_court"
   ],
-  "regions_count": 2,
+  "regions_count": 3,
   "entities_count": 4,
   "catalog_validation": [
     {
@@ -33,8 +33,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -45,8 +45,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -851,8 +851,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -863,8 +863,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -1648,10 +1648,10 @@
     }
   ],
   "fingerprints": {
-    "catalog": "88c23592d51ca91d67a68a2d0932c7426a3fc4cbebc5c5463eb2aacbb71e039c",
+    "catalog": "c2234d065b76d2e08fa38add073cbc0a3f90c5eddd309e67d007c6fd1d06773c",
     "modules": {
       "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
-      "camp_maturity_calibration_pilot": "6819a951a4f721da8e81251ef22ba19d875ba4298097f51da67ecb58e5947a77"
+      "camp_maturity_calibration_pilot": "e5b91e10a54ecef4793eaf2af84858ae9842828e0c17096b20c587d0cc399e9f"
     }
   }
 }

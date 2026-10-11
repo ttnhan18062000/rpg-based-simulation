@@ -1094,7 +1094,7 @@ def test_real_composition_normalization_preserves_perspectives():
         "goblin_warband_perspective"
     ]
 
-    assert len(normalized.module_refs) == 7
+    assert len(normalized.module_refs) == 8  # + goblin_camp_forage (D57)
     module_ids = [ref.module_id for ref in normalized.module_refs]
     assert "frontier_village_core" in module_ids
     assert "wolf_den_near_forest" in module_ids

@@ -1,19 +1,20 @@
 {
-  "manifest_id": "prov_356813b389dc026f",
+  "manifest_id": "prov_b9d2a2db2a71f7f5",
   "world_id": "hero_guild_routing",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "88c23592d51ca91d67a68a2d0932c7426a3fc4cbebc5c5463eb2aacbb71e039c",
+  "catalog_fingerprint": "c2234d065b76d2e08fa38add073cbc0a3f90c5eddd309e67d007c6fd1d06773c",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
+    "goblin_camp_forage": "79af965c2ca3a71404f844c2f02753c21149e5cff4e6f21707e6223e1dac63cb",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
     "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71"
   },
-  "composition_fingerprint": "a5cf4ce8ce30c9d28faa36caecc9d766ab466633b44e47b33de9577e53d686fb",
+  "composition_fingerprint": "bbd93ea144e4daa4ee19a9c1c06ce12127dca067109e06693cd2d61155246b17",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "356813b389dc026f56d35268f44ea19e5d06e3a30aad45f50882576f24e34671",
-  "created_at": "2026-10-10T10:51:30.447775Z",
+  "content_fingerprint": "b9d2a2db2a71f7f52083dc2b41dac140508c278ea8323f91f2331493c1aeee42",
+  "created_at": "2026-10-11T08:13:38.651863Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -696,6 +697,41 @@
           "defense"
         ],
         "reward_budget": 120
+      }
+    },
+    "goblin_camp_edge": {
+      "element_id": "goblin_camp_edge",
+      "element_type": "region",
+      "source_module": "goblin_camp_forage",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "goblin_camp"
+      },
+      "details": {
+        "bounds": [
+          106,
+          34,
+          114,
+          42
+        ],
+        "terrain": "forest",
+        "hazard_level": 3.0,
+        "ecology_source": []
+      }
+    },
+    "goblin_camp_forage__berry_thicket_0": {
+      "element_id": "goblin_camp_forage__berry_thicket_0",
+      "element_type": "resource",
+      "source_module": "goblin_camp_forage",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
+        "region": "goblin_camp_edge"
       }
     },
     "pop_0": {

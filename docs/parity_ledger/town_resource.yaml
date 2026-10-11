@@ -2499,7 +2499,7 @@
   v2_evidence: '`src/engine/place_tax.py`, `src/engine/shop_sale.py`, `src/engine/work_shift.py`, `src/core/conservation.py` (`_tax_credit`), `src/engine/town_resolution.py`, `data/content/defaults.yaml` (`default_tax_share`), `RegionState.tax_share`'
   proof_type: parity
   test_path: tests/unit/resource/test_tax_and_upkeep.py
-  divergence_note: 'Intentional divergence 2.17 (Intentional Gameplay Change).'
+  divergence_note: 'Intentional divergence 2.107 (Intentional Gameplay Change).'
   support_boundary: 'Only HERO_GUILD owns regions in the shipped worlds. The account unit is the four-value legacy bucket.'
 - id: TOWN-206
   text: 'Each functional building meets 5 gold of upkeep from its own purse on the upkeep tick (nothing is paid out to a payee); the holder''s treasury tops up only a shortfall; a building neither can pay is disabled and reopens when it can; no building tax is minted.'
@@ -2509,7 +2509,7 @@
   v2_evidence: '`src/engine/town_resolution.py` (section 4), `src/core/treasury.py`'
   proof_type: parity
   test_path: tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py
-  divergence_note: 'Intentional divergence 2.18 (Intentional Gameplay Change, Bug Fix).'
+  divergence_note: 'Intentional divergence 2.108 (Intentional Gameplay Change, Bug Fix).'
   support_boundary: 'A wrecked building (hp 0) is not reopened by upkeep.'
 - id: TOWN-207
   text: 'A kill grants experience and no coin; a dead entity''s coin and goods move to its body (CorpseState.gold), a looter takes the body''s coin, a decayed body''s coin lies where it fell as a purse on the ground (gold, source entity, drop tick) that is lootable; a quest reward is paid by its one real giver (the posting building''s ground holder, or the offering faction) or recorded as an OwedRecord paid oldest first, and a quest with no giver pays experience only.'
@@ -2519,7 +2519,7 @@
   v2_evidence: '`src/engine/combat.py`, `src/engine/apply_plan.py`, `src/core/conservation.py` (`_reward_result`, CORPSE), `src/engine/world_dynamics.py`, `src/engine/quests.py`, `src/engine/town_resolution.py`, `src/core/state.py` (`CorpseState.gold`, `OwedRecord`)'
   proof_type: parity
   test_path: tests/unit/resource/test_rewards_repair_and_fees.py
-  divergence_note: 'Intentional divergence 2.19 (Intentional Gameplay Change, Bug Fix).'
+  divergence_note: 'Intentional divergence 2.109 (Intentional Gameplay Change, Bug Fix).'
   support_boundary: 'No bounty system exists, so no bounty is posted.'
 - id: TOWN-208
   text: 'An inheritance moves the dead entity''s items and coin to the heir once, atomically; a repair is charged once to the smith, or uses a carried repair kit away from one; the world has one treasury per region-owner bucket; total coin is conserved over a run.'

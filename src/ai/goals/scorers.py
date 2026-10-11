@@ -3,6 +3,8 @@ from typing import Tuple
 from src.ai.goals.base import GoalScorer, GoalScore, NeedAccess
 from src.ai.goals.opening_steps import first_open_step
 from src.engine.need_pull import hunger_pull, sleep_pull
+from src.engine.sleep_debt import SLEEP_DEBT
+from src.engine.way_in_range import way_in_range
 from src.ai.goals.present_threat import present_threat_to
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
@@ -69,6 +71,9 @@ class SleepScorer(GoalScorer):
             
         from src.engine.spatial_query import SpatialQueryService
         best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
+        # A bed is a way only within reach and inside the subject's range; otherwise it rests where it stands (no target), which is always open.
+        if best_bldg and (_travel_tiles(entity, best_bldg.position) > SLEEP_DEBT.bed_reach or not way_in_range(entity, best_bldg.position)):
+            best_bldg = None
         # SURV-07: the pull grows with the sleep debt the subject will have on arrival at the inn (no inn: no walk).
         rate = need_rates(entity)[1]
         if best_bldg:
@@ -100,6 +105,8 @@ class EatScorer(GoalScorer):
 
         from src.engine.spatial_query import SpatialQueryService
         best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
+        if best_bldg is not None and not way_in_range(entity, best_bldg.position):
+            best_bldg = None  # a range-bound subject's ways are inside its range (owner decision D57)
         # Decision 27: with no inn within reach there is nothing for the pull to point at, so it goes to the step that opens a way
         # (forage); with no step the goal keeps the hunger value and says `no_open_step`. (Free meals stay on: an inn within reach is a
         # way to eat whether or not the subject can pay, for every kind, a recorded flaw until the animals' own ways exist: owner decision 44.)

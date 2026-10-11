@@ -1,0 +1,24 @@
+# STATE: NEW (Decision 57, owner 2026-10-09: a range-bound camp must not be foodless by construction; D30, D33, D35/D39 kind)
+module_id: "goblin_camp_forage"
+module_type: "ecology"
+display_name: "Goblin Camp Forage"
+description: "Wild berries growing at the edge of the goblin camp, inside the range its warriors keep to (their leash). Berries and nothing else: no den, no beasts, no faction, no building. The camp stands in a forest, so the land bears fruit (D33: the amount follows the land, never a starvation count)."
+version: "1.0.0"
+requires: ["goblin_camp_conflict"]
+provides: ["camp_wild_food"]
+observability_tags: ["ecology", "wilderness", "forage"]
+biomes: ["goblin_camp"]
+regions:
+  # Centred on the camp place of goblin_camp_conflict (110, 38). Camp spawns are placed at the camp position and keep a leash of 8 (goblin)
+  # to 10 (other kinds) around it, so a box of +-4 holds every tile within Manhattan 8 of the camp: a thicket anywhere in it is a way in
+  # range. The box lies inside the camp region (grid_bounds [95, 20, 125, 55]); the contained region owns its tiles. Hazard as the camp's.
+  - id: "goblin_camp_edge"
+    type: "wilderness"
+    grid_bounds: [106, 34, 114, 42]
+    terrain: "forest"
+    hazard_level: 3.0
+    hazard_kind: "NATURAL_TERRAIN"
+    tags: [forest]
+resources:
+  # HIGH fertility (a forest): the same charges as wild_edge_forage (Decision 35) and the wood_node default (Decision 29).
+  berry_thicket: 10

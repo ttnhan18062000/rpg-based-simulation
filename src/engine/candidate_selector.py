@@ -8,6 +8,7 @@ from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.hostility import is_engaged, perceived_hostile
 from src.engine.legality import LegalityServiceV2
 from src.engine.phase_governor import ScanPolicy
+from src.engine.sleep_debt import must_collapse
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -184,8 +185,8 @@ class MovementCandidateSelector:
         the move is ``tracked_move_completion_update``."""
         if entity.task.work_kind != "ENTITY_MOVE":
             return False
-        if MovementCandidateSelector.tracked_move_complete(entity, entities):
-            return True
+        if MovementCandidateSelector.tracked_move_complete(entity, entities) or must_collapse(entity.biological.sleep_debt):
+            return True  # (a subject whose sleep debt reached the collapse line stops where it stands, decision 41)
         if entity.task.payload.get("reason") == "KEEP_WALKING" and entity.navigation.position == entity.task.payload.get("target_position"):
             return True  # a walk the brain chose to keep (decision 32) ends on arrival: arriving does not end other held moves
         return (not MovementCandidateSelector.is_decided_flight(entity)
