@@ -130,12 +130,18 @@ def _draw_tile_owned_by(rng: Any, node_id: int, ordered_regions: Any, region_id:
     Attempt 0 is the same draw every kind makes (sub ids 0 and 1 of the node's seeded stream), so a tile that is owned from the start is
     the tile the uniform rule would have picked; later attempts use the next sub ids of the same stream.
     """
-    min_x, min_y, max_x, max_y = bounds
+    return _draw_free_tile(rng, node_id, ordered_regions, (region_id, bounds), ())
+
+
+def _draw_free_tile(rng: Any, node_id: int, ordered_regions: Any, owner_region: tuple, taken: Any) -> Optional[tuple]:
+    """``_draw_tile_owned_by`` for ``owner_region`` = (region id, bounds), also skipping a draw on a tile a node already stands on (``taken``), like a
+    draw the region does not own, so two nodes never share a tile (LAW-SPAWN-OCCUPANCY); a draw that does not collide is the same draw as before."""
+    region_id, (min_x, min_y, max_x, max_y) = owner_region
     for attempt in range(RESOURCE_PLACEMENT_ATTEMPTS):
         x = rng.get_int(Domain.WORLD, 0, node_id, min_x, max_x, sub_id=2 * attempt)
         y = rng.get_int(Domain.WORLD, 0, node_id, min_y, max_y, sub_id=2 * attempt + 1)
         owner = first_region_at(ordered_regions, x, y)
-        if owner is not None and owner.id == region_id:
+        if owner is not None and owner.id == region_id and (x, y) not in taken:
             return x, y
     return None
 
@@ -598,7 +604,7 @@ class WorldCompiler:
 
                 required_ticks, yields_item, placement = _resource_profile(res_spec, context)
                 if placement != RESOURCE_PLACEMENT_UNIFORM:
-                    owned = _draw_tile_owned_by(rng, next_resource_id, spec.regions, region_id, region.bounds)
+                    owned = _draw_free_tile(rng, next_resource_id, spec.regions, (region_id, region.bounds), {(int(n.position[0]), int(n.position[1])) for n in resource_nodes.values()})
                     if owned is None:
                         warnings.append(f"resource '{res_spec.id}' ({res_spec.resource_type}) found no tile owned by region '{region_id}' "
                                         f"in {RESOURCE_PLACEMENT_ATTEMPTS} draws (bounds {region.bounds}); node not placed")
