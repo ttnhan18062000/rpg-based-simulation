@@ -7,8 +7,9 @@ region is the compiler's, from the node's seeded stream.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
+from src.worldassembly.schema import ProvenanceRecord
 from src.worldbuilding.schema import ResourceNodeSpec
 
 if TYPE_CHECKING:
@@ -32,6 +33,19 @@ def region_cover_kind(repo: "CatalogRepository", region_id: str) -> Optional[str
         region_def = repo.get_region(region_id.split("_", 1)[1])
     biome = repo.get_biome(region_def.biome) if region_def is not None and region_def.biome else None
     return biome.grazing_cover if biome is not None else None
+
+
+def with_cover_patches(repo: "CatalogRepository", regions: Dict[str, "RegionSpec"], resources: Dict[str, ResourceNodeSpec],
+                       origins: Dict[str, str], provenance: Dict[str, Any]) -> List[ResourceNodeSpec]:
+    """The assembled resource list with every cover region's patches added (their origin and provenance recorded as the region's own)."""
+    for cover in cover_patch_specs(repo, regions):
+        resources[cover.id] = cover
+        origins[cover.id] = origins.get(cover.region, "")
+        provenance[cover.id] = ProvenanceRecord(
+            element_id=cover.id, element_type="resource", source_module=origins[cover.id], recipe_type="biome_cover", parameters={},
+            profiles={"resource_type": cover.resource_type}, details={"count": cover.count, "region": cover.region},
+        )
+    return list(resources.values())
 
 
 def cover_patch_specs(repo: "CatalogRepository", regions: Dict[str, "RegionSpec"]) -> List[ResourceNodeSpec]:

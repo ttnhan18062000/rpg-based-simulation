@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from datetime import datetime, timezone
 import yaml
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Set, Tuple
@@ -14,7 +15,7 @@ from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
 from src.worldmodules.utils import topological_sort_modules
 from src.worldmodules.normalizer import NormalizedWorldModule
-from src.worldassembly.cover import cover_patch_specs
+from src.worldassembly.cover import with_cover_patches
 from src.worldassembly.schema import (
     WorldCompositionSpec,
     NormalizedWorldComposition,
@@ -674,16 +675,6 @@ class WorldAssemblyResolver:
         width = normalized_comp.global_parameters.get("topology_width", max_region_x)
         height = normalized_comp.global_parameters.get("topology_height", max_region_y)
 
-        # Plant cover (owner row 59): every region whose biome carries cover gets its patches, declared as ordinary resource nodes.
-        for cover in cover_patch_specs(self.catalog_repo, regions):
-            resources[cover.id] = cover
-            entity_origins[cover.id] = entity_origins.get(cover.region, "")
-            prov_records[cover.id] = ProvenanceRecord(
-                element_id=cover.id, element_type="resource", source_module=entity_origins[cover.id], recipe_type="biome_cover",
-                parameters={}, profiles={"resource_type": cover.resource_type},
-                details={"count": cover.count, "region": cover.region},
-            )
-
         # 4. Assembled clean worldspec.v1
         world_spec = WorldSpec(
             schema_version="worldspec.v1",
@@ -697,14 +688,11 @@ class WorldAssemblyResolver:
             pending_information_responses=list(normalized_comp.pending_information_responses),
             pending_self_model_information_events=list(normalized_comp.pending_self_model_information_events),
             entities=list(entities.values()),
-            resources=list(resources.values()),
+            resources=with_cover_patches(self.catalog_repo, regions, resources, entity_origins, prov_records),
             buildings=list(buildings.values()),
             quest_definitions=list(quest_defs.values()),
         )
 
-        import hashlib
-        from datetime import datetime, timezone
-        
         # Calculate composition fingerprint
         comp_dump = normalized_comp.model_dump()
         comp_serialized = str(sorted(comp_dump.items()))
@@ -1206,8 +1194,7 @@ class CompileProfileResolver:
 
             ctx.register_resource(res_spec.id, ResolvedResourceProfile(
                 required_ticks=required_ticks, resource_type=res_spec.resource_type, yield_item=yield_item,
-                placement=getattr(res_def, "placement", None) if res_def else None,
-                regrowth_mode=res_def.regrowth_mode if res_def else "none", bare_wait_ticks=res_def.bare_wait_ticks if res_def else 0))
+                placement=getattr(res_def, "placement", None) if res_def else None, **ResolvedResourceProfile.regrowth_of(res_def)))
 
         # 4. Resolve Buildings
         for bld_spec in getattr(spec, "buildings", []):

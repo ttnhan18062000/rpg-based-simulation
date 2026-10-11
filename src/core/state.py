@@ -1182,9 +1182,6 @@ class EntityState:
 # EntityState properties moved into class body to support slots.
 
 
-REGROW_MODE = "regrow"  # ResourceNodeState.regrowth_mode: emptied, then a bare wait, then regrowth from zero (the default "none" is the legacy rules)
-
-
 @dataclass(frozen=True, slots=True)
 class ResourceNodeState:
     """Authoritative state for a harvestable resource."""

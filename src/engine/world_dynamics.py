@@ -4,8 +4,8 @@
 from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
-from src.core.state import REGROW_MODE
-from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
+from src.core.resource_regrowth import REGROW_MODE
+from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate, ResourceNodeUpdate
 from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
 from src.core.violent_cause import is_violent_death_cause
 from src.domains.world_emergence.schema import WorldEvent as _WorldEvent, WorldEventCategory as _WorldEventCategory
@@ -48,6 +48,23 @@ def _decay_corpses(state: "AuthoritativeState", already_removed: list) -> "tuple
             events.append(_WorldEvent(category=_WorldEventCategory.MEAT_DECAYED, tick=state.tick, subject=str(corpse_id),
                                       payload={"quantity": float(meat_left)}))
     return removed, events
+
+
+def _node_cooldown_updates(state: "AuthoritativeState", node_updates: dict) -> dict:
+    """``node_updates`` with every cooling node's cooldown ticked down (LEG-RPG-002/005). A finished cooldown recharges the node to full, except a
+    node of the declared ``regrow`` mode, whose bare wait ends with nothing added (the ecology regrowth resumes from empty: owner row 59)."""
+    refined = dict(node_updates)
+    for n_id, node in state.resource_nodes.items():
+        if node.cooldown_remaining <= 0:
+            continue
+        upd = refined.get(n_id, ResourceNodeUpdate(node_id=n_id))
+        if node.cooldown_remaining > 1:
+            refined[n_id] = replace(upd, cooldown_set=node.cooldown_remaining - 1)
+        elif node.regrowth_mode == REGROW_MODE:
+            refined[n_id] = replace(upd, cooldown_set=0)
+        else:
+            refined[n_id] = replace(upd, cooldown_set=0, charges_delta=node.max_charges)
+    return refined
 
 
 class WorldDynamicsSystem:
@@ -304,24 +321,10 @@ class WorldDynamicsSystem:
                 refined_world_updates[r_id] = replace(world_upd, kind_set=new_kind)
         
         # 5. Global Object Lifecycle (LEG-RPG-002/005)
-        from src.core.updates import ResourceNodeUpdate, ChestUpdate
+        from src.core.updates import ChestUpdate
         
         # 5.1 Nodes
-        refined_node_updates = dict(update.node_updates)
-        for n_id, node in state.resource_nodes.items():
-            if node.cooldown_remaining > 0:
-                n_upd = refined_node_updates.get(n_id, ResourceNodeUpdate(node_id=n_id))
-                # If finished cooldown, recharge
-                if node.cooldown_remaining == 1 and node.regrowth_mode == REGROW_MODE:
-                     # A bare wait ends with nothing added: the ecology regrowth resumes from empty (owner row 59).
-                     refined_node_updates[n_id] = replace(n_upd, cooldown_set=0)
-                elif node.cooldown_remaining == 1:
-                     refined_node_updates[n_id] = replace(n_upd, 
-                        cooldown_set=0,
-                        charges_delta=node.max_charges
-                    )
-                else:
-                     refined_node_updates[n_id] = replace(n_upd, cooldown_set=node.cooldown_remaining - 1)
+        refined_node_updates = _node_cooldown_updates(state, update.node_updates)
 
         # 5.2 Chests
         refined_chest_updates = dict(update.chest_updates)

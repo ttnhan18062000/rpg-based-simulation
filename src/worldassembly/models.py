@@ -90,6 +90,11 @@ class ResolvedResourceProfile(BaseModel):
     regrowth_mode: str = "none"
     bare_wait_ticks: int = 0
 
+    @staticmethod
+    def regrowth_of(res_def: Optional[Any]) -> Dict[str, Any]:
+        """The regrowth fields of a catalog resource definition (the legacy rules when there is none)."""
+        return {"regrowth_mode": res_def.regrowth_mode, "bare_wait_ticks": res_def.bare_wait_ticks} if res_def else {}
+
 
 class ResolvedFactionEconomyProfile(BaseModel):
     """Internal compile-ready properties for a faction's treasury."""

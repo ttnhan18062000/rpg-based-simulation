@@ -614,8 +614,7 @@ class WorldCompiler:
                     max_charges=res_spec.count,
                     required_ticks=required_ticks,
                     cooldown_remaining=0,
-                    regen_rate_per_tick=res_spec.regen_rate,
-                    **_resource_regrowth(res_spec, context),
+                    regen_rate_per_tick=res_spec.regen_rate, **_resource_regrowth(res_spec, context),
                 )
                 next_resource_id += 1
 

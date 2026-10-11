@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from dataclasses import replace
 
 from src.core.enums import ReasonCode
-from src.core.state import REGROW_MODE, IntentResult, ItemStack
+from src.core.resource_regrowth import REGROW_MODE
+from src.core.state import IntentResult, ItemStack
 from src.core.updates import EntityUpdate, StateUpdate, InventoryUpdate, RejectionEvent, ResourceTransferIntent, ChestUpdate
 from src.core.inventory import InventoryService
 from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory

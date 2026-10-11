@@ -152,31 +152,38 @@ def _missing_kind_properties(species: Any, body: Any) -> List[str]:
 def cover_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
     """Plant cover (owner row 59): a biome's cover kind must be a declared ``regrow`` kind of the biome's own fertility band, and a grazing kind
     placed in an ecology none of whose biomes carries cover is a gap reported by name (its food would be berries alone)."""
+    return _biome_cover_issues(repo) + _grazer_without_cover_issues(repo)
+
+
+def _biome_cover_issues(repo: CatalogRepository) -> List[ValidationIssue]:
     issues: List[ValidationIssue] = []
     for biome_id, biome in repo.biomes.items():
-        if not biome.grazing_cover:
-            continue
-        kind = repo.get_resource(biome.grazing_cover)
-        if kind is None or kind.regrowth_mode != "regrow" or kind.density_per_1000_tiles is None or kind.fertility != biome.fertility:
+        kind = repo.get_resource(biome.grazing_cover) if biome.grazing_cover else None
+        if biome.grazing_cover and (kind is None or kind.regrowth_mode != "regrow" or kind.density_per_1000_tiles is None or kind.fertility != biome.fertility):
             issues.append(ValidationIssue(
                 severity="ERROR", rule_id="CAT-COVER-001", target_id=biome_id, filename="world/biomes.yaml",
                 message=f"Biome '{biome_id}' names cover '{biome.grazing_cover}', which is not a 'regrow' resource with a density and the biome's fertility '{biome.fertility}'",
             ))
-    for eco_id, eco in repo.ecologies.items():
-        if any(repo.biomes[b].grazing_cover for b in eco.biomes if b in repo.biomes):
-            continue
-        for pop_id in eco.populations:
-            pop = repo.get_population_recipe(pop_id)
-            for archetype_id in (pop.members if pop else {}):
-                archetype = repo.entity_archetypes.get(archetype_id)
-                species = repo.species.get(archetype.species) if archetype else None
-                body = repo.body_models.get(species.body_model) if species else None
-                if body is not None and "graze" in (body.diet or ()):
-                    issues.append(ValidationIssue(
-                        severity="WARNING", rule_id="CAT-COVER-002", target_id=eco_id, filename="world/ecologies.yaml",
-                        message=f"Ecology '{eco_id}' places grazer '{archetype.species}' (population '{pop_id}') but none of its biomes {sorted(eco.biomes)} declares grazing_cover",
-                    ))
     return issues
+
+
+def _ecology_grazers(repo: CatalogRepository, eco: Any) -> List[str]:
+    """The species ids of the grazing bodies (diet includes the food class ``graze``) the ecology's populations place."""
+    archetypes = (repo.entity_archetypes.get(a) for pop_id in eco.populations for a in (getattr(repo.get_population_recipe(pop_id), "members", None) or {}))
+    species = [repo.species.get(a.species) for a in archetypes if a is not None]
+    return [s.id for s in species if s is not None and "graze" in (getattr(repo.body_models.get(s.body_model), "diet", None) or ())]
+
+
+def _grazer_without_cover_issues(repo: CatalogRepository) -> List[ValidationIssue]:
+    return [
+        ValidationIssue(
+            severity="WARNING", rule_id="CAT-COVER-002", target_id=eco_id, filename="world/ecologies.yaml",
+            message=f"Ecology '{eco_id}' places grazer '{species_id}' but none of its biomes {sorted(eco.biomes)} declares grazing_cover",
+        )
+        for eco_id, eco in repo.ecologies.items()
+        if not any(repo.biomes[b].grazing_cover for b in eco.biomes if b in repo.biomes)
+        for species_id in _ecology_grazers(repo, eco)
+    ]
 
 
 class CatalogValidator:
