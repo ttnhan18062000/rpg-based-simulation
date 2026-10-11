@@ -62,6 +62,8 @@ tests/integrity/test_logic_guards.py (`_run_integrated_loop`).
 ## Implementation Notes
 _run_integrated_loop passes flags={"audit_mode": True}; the guard's docstring cites docs/engine/deterministic_execution.md and states what it does not cover (host-speed dependence through the governor, PERF-M1). The optional unpinned governor-mode report was not built (not cheap).
 
+For the perf-owned host-speed item (PERF-M1), found while diagnosing TCK-20261009-CAMPAIGN-EPISODE-DELIBERATE-ATTACKS-STRICT-XFAIL-DEPENDS-ON-TEST-ORDER: a wall-clock consumer other than the governor mode still changes what is computed outside audit_mode even under PinnedNormalGovernor. Proof: the campaign episode (seed 42, 70 ticks) gives 5 deliberate attacks or 2 depending on a 10 ms stall in tick 1 (0 s: 2; 0.01 s and more: 5), and 2 in both orders under audit_mode. The consumer is NOT isolated (by deterministic_execution.md, audit_mode also zeroes the replay backlog and per-phase costs in the signals, so the per-phase cost/budget path is the likely one). No src change was made.
+
 ## Test Summary
 test_autonomous_loop_determinism_drift_guard under -m slow: 3 runs alone (21.3 s each) and 3 runs under 8 CPU-burning processes (25.5 s each): the equality assertion held in all 6; each ends in the known xfail (steel_sword), as before.
 
