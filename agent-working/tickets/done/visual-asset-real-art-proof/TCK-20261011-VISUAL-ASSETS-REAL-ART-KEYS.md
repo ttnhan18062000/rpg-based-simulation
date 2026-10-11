@@ -73,10 +73,7 @@ Three new `optional: true` keys (planner decision; the owner may overrule):
 - Registry-content pins moved to exact new values (62 -> 65 keys, key list incl. the three, `Counter` of (family, class)); the label pin stays 35; the three keys are also asserted optional, decorative, `fallback none`, no axis, no detail, no label.
 
 ## Test Summary
-`tests/visual_assets` (project venv): 2427 passed after the pin updates; EXPECTED RED until rc-0009 (owner-gated), all `BuildError registry_mismatch` on an export of the committed rc-0008:
-- `tests/visual_assets/store/unit/test_atlas.py`: `test_the_atlas_options_leave_the_per_file_export_and_the_manifest_unchanged`, `test_two_atlas_exports_are_byte_identical`, `test_every_key_of_rc_0008_reads_back_from_its_atlas_with_the_artifact_pixels`, `test_atlas_pngs_pass_the_chunk_allowlist`, `test_the_cli_flag_is_opt_in` (5; the planner counted 4, the fifth is the CLI test that exits 2 for the same cause).
-- `tests/visual_assets/test_release_byte_reproducibility.py`: `test_two_exports_of_the_committed_candidate_are_byte_identical`, `test_no_exported_png_carries_a_chunk_outside_the_allowlist`, `test_the_allowlist_check_fails_on_a_planted_chunk[tIME|tEXt|iTXt|zTXt]` (4), `test_an_export_that_differs_by_one_byte_changes_the_tree_hash` (7).
-Nothing else fails. Without the keys `test_atlas.py` passes 17/17.
+At this commit (`0abcc3153`): `tests/visual_assets` 2427 passed; 12 tests red by planner ruling (option B), all `BuildError registry_mismatch` on an export of the committed rc-0008 (any registry edit makes older candidates unexportable): `test_atlas.py` 5 (`test_the_atlas_options_leave_the_per_file_export_and_the_manifest_unchanged`, `test_two_atlas_exports_are_byte_identical`, `test_every_key_of_rc_0008_reads_back_from_its_atlas_with_the_artifact_pixels`, `test_atlas_pngs_pass_the_chunk_allowlist`, `test_the_cli_flag_is_opt_in`) and `test_release_byte_reproducibility.py` 7. All 12 are green from `a28282206` (rc-0009); at the batch head `tests/visual_assets` is 2441 passed, 0 red.
 
 ## Files Changed
 - `visual_assets/catalog/definitions/visual_keys.yaml`

@@ -74,7 +74,7 @@ Child 3 of `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF`. Proves the release a
 - No bound was exceeded and none was changed; no store or drawing code changed.
 
 ## Test Summary
-`tests/visual_assets` (project venv): all green after the re-point except `test_the_guarded_files_still_match_the_committed_record`, which is expected until the local Aseprite proof record is re-run once, as its own commit, after the last guarded change (see Completion Summary).
+`tests/visual_assets` at `96ca645f9` and at the batch head: 2441 passed, 0 red. The 12 export tests are re-pointed to rc-0009 and green; new guard `test_rc_0009_extends_rc_0008.py`; the local Aseprite proof record re-run last (strict: 215 passed, 0 skipped) and `test_aseprite_local_proof.py` passes (guarded files match).
 
 ## Files Changed
 - `visual_assets/catalog/generated/{ui_panel_frame,fx_selection_ring,fx_campfire}--x1/`, `visual_assets/catalog/manifests/candidates/pilot/rc-0009.json`

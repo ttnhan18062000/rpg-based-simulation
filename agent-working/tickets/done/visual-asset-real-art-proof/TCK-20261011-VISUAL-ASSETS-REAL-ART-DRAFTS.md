@@ -76,7 +76,7 @@ Child 2 of `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF`. Real art, made throu
 - Known fact (not a bug, recorded for activation): the build exports frame 1 only (`build/exportconfig.py:53`), so a release carries the ring and the campfire as their first frame; the animation stays in the source and in `export-runtime --animation`.
 
 ## Test Summary
-`tests/visual_assets` (project venv) after the adoption and the catalog-pin updates: 2427 passed, 12 red, and the 12 are exactly the known set (`registry_mismatch` on an export of rc-0008): `test_atlas.py` 5, `test_release_byte_reproducibility.py` 7. Catalog fixtures moved to exact new values in `adopted_facts.py` (73 sources, 80 adoptions, 160 intake files, 80 revisions; `PROOF_SOURCES`, `PROOF_ANIMATED`) and the two "no animation / no slices" guards now assert exactly which committed sources carry them (the proof sources only) instead of "none".
+At this commit (`d94f58b69`): `tests/visual_assets` 2427 passed; the same 12 `registry_mismatch` tests red until rc-0009, nothing else. Catalog fixtures moved to exact new values in `adopted_facts.py` (73 sources, 80 adoptions, 160 intake files, 80 revisions; `PROOF_SOURCES`, `PROOF_ANIMATED`); the two guards now assert exactly which committed sources carry animation and slices (the proof sources only). At the batch head: 2441 passed, 0 red.
 
 ## Files Changed
 - `visual_assets/catalog/sources/{ui_panel_frame,fx_selection_ring,fx_campfire}/r0001.{aseprite,source.json}`, `visual_assets/catalog/provenance/adoptions/ad-{89f6a62b866bba54,6b7562f0799be9ea,27d874d5da867cc0}.json`, `visual_assets/catalog/provenance/intake/in-{a60055155aaf773c,4023376bcfb08add,01dc468da4fc8235}{,.review}.json`

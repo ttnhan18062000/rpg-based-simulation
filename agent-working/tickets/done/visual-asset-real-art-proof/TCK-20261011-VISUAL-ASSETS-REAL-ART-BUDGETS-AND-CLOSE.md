@@ -75,7 +75,7 @@ Child 4 of `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF`. Lead condition 3: th
 - Both session_handoff snapshots refreshed at close. The proof record was re-run in `96ca645f9` after the last guarded change (strict run 215 passed, 0 skipped).
 
 ## Test Summary
-`tests/visual_assets/test_budgets_parity.py` 6 passed (the new section does not touch the `Bounds` table). Full `tests/visual_assets` and the tools suites are in the epic's Completion Summary.
+`tests/visual_assets` 2441 passed, 0 red (includes `test_budgets_parity.py`, the new budgets section does not touch the `Bounds` table); `generate_registry.py --check` in sync; `done_checker_static.py --ticket-id` PASS for all five tickets; the mechanism-registry advisory reports 0 drift. Tools, docs and architecture subsets: see the epic.
 
 ## Files Changed
 - `docs/assets/budgets.md`, `docs/assets/store_contract.md`, `docs/assets/session_handoff/*`, `agent-working/stored_artifacts/TCK-20261011-VISUAL-ASSETS-REAL-ART-BUDGETS-AND-CLOSE/noise_measurement.py.txt`

@@ -75,7 +75,7 @@ Three new `optional: true` keys (planner decision; the owner may overrule):
 
 
 ## Test Summary
-
+`tests/visual_assets` at the batch head: 2441 passed, 0 red (it was 12 red between the keys commit and the rc-0009 commit, by planner ruling). Targeted `tests/tools`, `tests/docs`, `tests/architecture` subsets and `done_checker_static.py` per ticket are listed in the PR body.
 
 ## Files Changed
 
