@@ -51,7 +51,7 @@ Counts reconcile with the search in section 6: `tests/perf/baselines` 15 files, 
 15 files, `perf_baselines.json`, `tests/regression/baseline_5k.json`, the SimQ fixtures, 21 compile reports, and
 the generated and test-pinned files.
 
-### 3.1 `tests/perf/baselines/` (tripwire references; `tests/perf/test_perf_regression_baseline.py`, `tools/perf/check_perf_regression.py`)
+### 3.1 `tests/perf/baselines/` (tripwire references; `tests/perf/test_perf_regression_baseline.py`; `tools/perf/check_perf_regression.py` was retired by `PERF-M2-T03`)
 
 | Artifact | Captured | Status | Deciding change and evidence |
 |---|---|---|---|

@@ -95,8 +95,10 @@ Operations inside `apply_ops` (targeted ops take optional `layer` name and `fram
 | Draw | `pixels`, `line`, `rect`, `ellipse` (filled/outline), `flood_fill`, `outline`, `silhouette`, `flip`, `clear` |
 | Colour | `replace_color`, `grayscale`, `set_palette` |
 | Compose | `stamp` (composite another sprite/revision/frame at x,y; must fit) |
-| Document | `add_layer`, `rename_layer`, `set_visible`, `add_frame` (copy inserted after its source), `set_duration`, `add_tag` |
+| Document | `add_layer`, `rename_layer`, `set_visible`, `add_frame` (copy inserted after its source), `set_duration`, `add_tag`, `set_slice` |
 | Structure | `delete_layer {layer}`, `delete_frame {frame}` (both refuse the last one; target required), `resize_canvas {width,height}` (1..128, top-left anchored crop or transparent pad on every layer/frame) |
+
+`set_slice {name,x,y,w,h,center?,pivot?}` (`TCK-20261010-VISUAL-ASSETS-SLICE-DRAWING-TOOL`, ADR D25) makes a named slice with ONE key that holds for every frame. `x,y,w,h` are in sprite pixels; the optional 9-slice `center {x,y,w,h}` and `pivot {x,y}` are RELATIVE to the slice's top-left corner (the pivot may sit on the far edge). It REPLACES the whole slice of that name: a slice with per-frame keys made by hand becomes single-key, and a name outside the tool's pattern (`[A-Za-z0-9][A-Za-z0-9 _-]{0,31}`) cannot be targeted. Names, integer ranges, the centre and the pivot are checked before Aseprite runs; the canvas is not known then (a batch may resize it), so Aseprite checks EVERY slice of the sprite against the FINAL canvas after the last op and fails the whole batch (no revision) when one no longer fits. At most 16 slices (`MAX_SLICES`, equal to the store's bound); there is no delete op. `inspect` lists the slices and a handoff declares `slice_count` whenever the sprite has any (`SLICE_COUNT_MISMATCH` at intake when it differs from the file). The tool's Lua is hash-pinned, so this change re-pinned it; artifacts already built keep the pin they were built with.
 
 ### High-level tools (`technique/` maths, `compose.py` sprite tools, `server/highlevel_tools.py` registration)
 

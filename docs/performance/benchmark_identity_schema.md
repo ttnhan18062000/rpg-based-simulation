@@ -544,7 +544,7 @@ records as `extra_info`. Choosing the tool is `PERF-M2-T03`.
 | F2 mode check | Replaced by `runtime_mode_sequence` and the comparability rule; the empty hard-scenario set goes away |
 | F3 corpus checks | Updated by `T03` to assert the new required fields |
 | F4, F5, F7 (`run_perf_baseline.py` shape), F8 | Map into the schema: the harness dict becomes `result`, the caller-added fields move into `identity` |
-| F6 `check_perf_regression.py`, `perf_ci.py` | Retire in favor of the single comparison over the schema; the two threshold policies collapse into the contract's thresholds (set by `T03`, not here) |
+| F6 `check_perf_regression.py`, `perf_ci.py` | **Retired by `PERF-M2-T03`.** Replaced by `tools/perf/tripwire.py` (paired base/head, each side in a fresh process) and the nightly baseline lane, both through `compare()`; the two threshold policies collapsed into `TRIPWIRE_THRESHOLDS` |
 | F7 `bench_worker_throughput.py` writer and `perf_baseline.py` | Retire from the `latest.json` path (no consumer for the flat shape); keep `bench_worker_throughput.py` as a separate measurement with its own file name |
 | F9 optimization proof | Retire the fixed prose; regenerate from schema records that carry identity, with a missing baseline key an error, not `1.0`. Until then treat its speedups as unlabeled |
 | F10 comparison | Retire (no consumer); `CRASHED` becomes `outcome.state = INCONCLUSIVE` with reason `crashed` |
