@@ -61,14 +61,15 @@ None.
 
 ## Implementation Notes
 - `default_run_id(seeded_suffix)` in `src/engine/kernel.py`: `run_<second>_<seeded suffix>_<pid>_<uuid4 hex[:8]>`. The `get_int(Domain.INIT, ...)` draw is stateless (`src/platform/rng.py:90`), so it is kept and only appended to; it moves no stream.
-- `Kernel._create_run_directory`: an explicit run id keeps `overwrite=True` (the caller named it). A default id creates with `overwrite=False` and, on `FileExistsError`, takes a fresh id (8 attempts, then raises). Before this, a default id also used `overwrite=True`, so a collision removed another process's directory.
+- `Kernel._create_run_directory`: an explicit run id keeps `overwrite=True` (the caller named it). A default id creates with `overwrite=False` and, on `FileExistsError`, takes a fresh id (8 attempts, then raises). THE WORSE HALF OF THE BUG: before this, a default id also used `overwrite=True`, so a collision did not only interleave events, it `rmtree`'d the other process's live run directory.
+- Pre-existing test leak fixed at its source: `tests/unit/engine/test_content_hotpath_guard.py` calls `ContentWarmupService.warmup(repo=MagicMock)`, which configures `behavior_consumers` with the mock; its autouse fixture reset only the faction cache, so the mock catalog outlived the test and any later Kernel in the process failed in `common_knowledge_seed.py:49` (`Mock object has no attribute 'species'`). The fixture now calls `reset_behavior_consumers()` before and after.
 - The run id is in no state hash or canonical dict (grep of `checkpoint.py`/`state.py`: none).
 
 ## Test Summary
-`tests/unit/engine/test_default_run_id_cannot_collide.py`: 5 pass alone (same-second same-seed kernels differ in id and dir; an existing directory is untouched and a fresh id is taken; an explicit id is unchanged; pid and a non-seeded nonce; two same-seed runs end with an identical state hash). Run inside `tests/unit/engine -k "kernel or run"`, 4 of them fail with `Mock object has no attribute 'species'` from `common_knowledge_seed.py:49`: another test leaves a Mock in a content registry (pre-existing order dependence in `compile_world`, not this change); the other 77 kernel/run tests pass.
+`tests/unit/engine/test_default_run_id_cannot_collide.py`: 5 pass alone (same-second same-seed kernels differ in id and dir; an existing directory is untouched and a fresh id is taken; an explicit id is unchanged; pid and a non-seeded nonce; two same-seed runs end with an identical state hash). The whole of `tests/unit/engine` passes (519 passed, 3 skipped, `-p no:randomly`) and the new file passes alone (5). An earlier in-set failure (`Mock object has no attribute 'species'`) was a pre-existing leak, fixed at its source (see Implementation Notes).
 
 ## Files Changed
-src/engine/kernel.py; tests/unit/engine/test_default_run_id_cannot_collide.py
+src/engine/kernel.py; tests/unit/engine/test_default_run_id_cannot_collide.py; tests/unit/engine/test_content_hotpath_guard.py (leak fix)
 
 ## Completion Summary
 TBD
