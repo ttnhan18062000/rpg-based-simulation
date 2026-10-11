@@ -17,6 +17,8 @@ from dataclasses import replace
 
 import pytest
 
+from src.engine.behavior_consumers import get_kind_properties
+
 from src.config.profiles import PROD_SMALL
 from src.core.items import food_hunger_recovery
 from src.engine.executor import LocalSequentialExecutor
@@ -75,7 +77,8 @@ def test_main_a_hungry_meat_eater_kills_leaves_meat_and_eats_it_at_the_carcass()
     rows, prey_id = _run(_stage(hunger=HUNGRY))
     killed = next(i for i, r in enumerate(rows) if r["prey_alive"] is False)
     carcass_id = 1000000 + prey_id
-    assert ("raw_meat", 1) in rows[killed]["corpses"][carcass_id], "the kill must leave meat on the carcass"
+    declared = get_kind_properties("goblin")[1].meat_yield  # what the prey's body declares, not a figure in the test
+    assert ("raw_meat", declared) in rows[killed]["corpses"][carcass_id], "the kill must leave the meat its body declares"
     eaten = next(i for i, r in enumerate(rows) if i >= killed and "raw_meat" not in dict(r["corpses"].get(carcass_id, ())))
     assert eaten > killed, "the meat leaves the carcass only after the kill, by being eaten"
     before = max(r["hunger"] for r in rows[killed:eaten])

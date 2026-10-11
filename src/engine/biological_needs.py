@@ -31,7 +31,7 @@ BASE_HUNGER_RATE = 0.1
 BASE_SLEEP_DEBT_RATE = 0.05
 
 # Qualitative need level -> multiple of the base rate. ``medium`` is the pre-SURV-05 constant.
-NEED_LEVEL_RATE_SCALE: Dict[str, float] = {"none": 0.0, "low": 0.5, "medium": 1.0, "high": 1.5}
+NEED_LEVEL_RATE_SCALE: Dict[str, float] = {"none": 0.0, "very_low": 0.3, "low": 0.5, "medium": 1.0, "high": 1.5}
 
 PERSON_FALLBACK_PROFILE_ID = "humanoid_survival"
 _PERSON_ROLES = frozenset({

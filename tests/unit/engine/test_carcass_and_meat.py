@@ -177,3 +177,17 @@ def test_an_inn_serves_no_meal_to_a_diet_without_prepared_food_however_it_came_t
         assert (service_delta(state, eater, "EAT", 5) is not None) is served
         relief = eat_update(eater, 5).biological
         assert (relief is not None and relief.hunger_delta < 0) is served
+
+
+def test_a_full_meal_of_a_meat_eater_lasts_at_least_a_day_before_its_line():
+    """Owner row 60: a medium meat-eater's full meal carries it a day or more to the starvation line (a day is 2400 ticks)."""
+    from src.engine.biological_needs import BASE_HUNGER_RATE, NEED_LEVEL_RATE_SCALE
+    from src.content.repository import CatalogRepository
+
+    repo = CatalogRepository("data/content")
+    repo.load_all()
+    level = repo.need_profiles["carnivore_survival"].needs["hunger"]
+    rate = BASE_HUNGER_RATE * NEED_LEVEL_RATE_SCALE[level]
+    body = repo.body_models[repo.species["wolf"].body_model]
+    meal_hunger = body.meat_yield * 20.0  # a unit of raw meat gives 20 hunger
+    assert meal_hunger / rate >= 2400

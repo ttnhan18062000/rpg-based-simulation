@@ -84,6 +84,12 @@ A dead body is a source of food, and the only one that is not a resource node.
 *   **Diet gate**: an eater may eat an item only if the item's `food_class` (`plant`, `meat`, `prepared`) is in its body's `diet`. An undeclared
     diet keeps the legacy "eats any food". Raw meat fills less than a prepared meal (20 against 30: raw flesh is harder to digest).
 *   **Exclusions**: a kind never regards its own species as food, and a faction never hunts its own members.
+*   **Yield by size** (owner row 60, band anchors not targets): small 2, medium 5, large 12 to 15 units of 20 hunger each: a small body is one meal
+    for a meat-eater, a medium one about a day's food for a same-size meat-eater, a large one several days or a pack's day. A meat-eater's hunger
+    rate is the `very_low` need level (0.3 of the base, 0.03 per tick), so a full meal lasts at least a day to the starvation line. With no
+    spoilage until M3 a carcass keeps until it decays (`CORPSE_DECAY`).
+*   **Wild creatures and factions** (decision 47): a faction verdict never decides a fight with a wild creature (a body with a diet whose faction
+    has the `wild` alignment). Appraisal decides, in both directions: hunt if hungry and able to overcome, defend or flee if threatened.
 
 *Sources: `src/engine/carcass.py`, `src/core/conservation.py` (`_corpse_food_result`), `src/engine/domain/core_actions.py` (`corpse_meal`),
 `src/engine/appraisal.py` (`can_eat_item`), `data/content/living/body_models.yaml`, `data/content/world/items.yaml`.*

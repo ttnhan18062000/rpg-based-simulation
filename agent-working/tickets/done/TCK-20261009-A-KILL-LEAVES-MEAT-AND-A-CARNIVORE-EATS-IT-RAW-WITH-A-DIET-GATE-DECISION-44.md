@@ -30,7 +30,7 @@ P1
 Owner decision 44 (the user decided directly, 2026-10-09): the free-meal removal waits for the animals' own ways. Before: no meat, no carcass food, no eat-corpse action; meat-only kinds ate by walking to an inn. Decisions 46 to 49 bind it: kinds declare properties only (no predator, prey, grazer or hunter label); hunting is derived from diet, edibility and the believed danger of the kind; a kill to eat is not trauma; a wary creature keeps its distance and a threatened one flees.
 
 ## Scope
-1. Content: coarse size, power and wits bands and diet, edibility and meat yield per kind (commit i). 2. `appraisal.py` and `hostility.relation` (FACTION_HOSTILE > PREDATION > THREATENING > WARY > NONE), the attack permission for PREDATION and for self-defence, the `AVOID_NO_ROUTE` hold (commit ii). 3. Raw meat on the corpse at death, the `raw_meat` item, the diet gate, eat at the carcass (`CORPSE_FOOD`), the `SCAVENGE` and `HUNT` ways to eat inside the leash (commit iii). 4. The kill-to-eat trauma exemption derived at the trauma site, the `FEEDING_KILL` and `MEAT_DECAYED` records, the killing blow ends the held attack (commit iv). 5. LB-S20 kernel scenario, Bible 03 section 3.2, parity `TOWN-205`, divergence 2.104, pinned measurement.
+1. Content: coarse size, power and wits bands and diet, edibility and meat yield per kind (commit i). 2. `appraisal.py` and `hostility.relation` (FACTION_HOSTILE > PREDATION > THREATENING > WARY > NONE), the attack permission for PREDATION and for self-defence, the `AVOID_NO_ROUTE` hold (commit ii). 3. Raw meat on the corpse at death, the `raw_meat` item, the diet gate, eat at the carcass (`CORPSE_FOOD`), the `SCAVENGE` and `HUNT` ways to eat inside the leash (commit iii). 4. The kill-to-eat trauma exemption derived at the trauma site, the `FEEDING_KILL` and `MEAT_DECAYED` records, the killing blow ends the held attack (commit iv). 5. LB-S20 kernel scenario, Bible 03 section 3.2, parity `TOWN-205`, divergence 2.107, pinned measurement.
 
 ## Out of Scope
 - Cooking and the cooked equivalent of raw meat (M3); people hunting for sale; the free-meal removal (landed by batch 2); individual births of game (ECOL-03); the body-signal defaults move (deferred, behaviour-neutral).
@@ -45,7 +45,7 @@ Owner decision 44 (the user decided directly, 2026-10-09): the free-meal removal
 - TCK-20261009-GENERIC-PLANT-EATER-ARCHETYPES-GRAZE-AND-FLEE-DECISIONS-45-50 (same batch). TCK-20261009-CAMPAIGN-EPISODE-DELIBERATE-ATTACKS-STRICT-XFAIL-DEPENDS-ON-TEST-ORDER (pre-existing failure on main).
 
 ## Related Docs
-- `docs/mechanics/03_economic_laws.md` section 3.2; `docs/guidelines/intentional_divergences.md` 2.104; parity `TOWN-205`.
+- `docs/mechanics/03_economic_laws.md` section 3.2; `docs/guidelines/intentional_divergences.md` 2.107; parity `TOWN-205`.
 
 ## Related Stored Artifacts
 - `agent-working/stored_artifacts/TCK-20261009-A-KILL-LEAVES-MEAT-AND-A-CARNIVORE-EATS-IT-RAW-WITH-A-DIET-GATE-DECISION-44/`
@@ -57,13 +57,13 @@ Owner decision 44 (the user decided directly, 2026-10-09): the free-meal removal
 - **D44's "posture verdict" is implemented as the same KNOW-04 capability prior, read directly rather than through `last_combat_posture`** (planner ruling): `can_overcome` is the subject's own power band strictly above the danger it believes the other's kind poses; a tie is "cannot". M0 shortcut, closed by Milestone 1's one-appraisal child (individual condition and groups come there).
 - The kill-to-eat exemption is derived at the single trauma site instead of a new outcome kind (rpg-planner accepted, with the `FEEDING_KILL` record).
 - Any death leaves meat (a body is a body); a faction never hunts its own members and a kind never regards its own species as prey or danger (no cannibalism in M0).
-- A small-power meat-eater can overcome nothing, so the Cave Spider only scavenges in M0 (disclosed verbatim in 2.104).
+- A small-power meat-eater can overcome nothing, so the Cave Spider only scavenges in M0 (disclosed verbatim in 2.107).
 
 ## Implementation Notes
 Eight local commits over the batch, rebased twice (batch 2, then Phase B). The measurement is at `origin/main` `9f9514ead` against the batch before the final rebase and the one-stride eat reach, so it is indicative of the mechanism, not of the final head.
 
 ## Test Summary
-See the batch Test Summary in TCK-20261009-GENERIC-PLANT-EATER-ARCHETYPES-GRAZE-AND-FLEE-DECISIONS-45-50 and divergence 2.104: focused suites, the architecture guards, the full sweep, code health, mypy and import contracts all green except the one pre-existing failure.
+See the batch Test Summary in TCK-20261009-GENERIC-PLANT-EATER-ARCHETYPES-GRAZE-AND-FLEE-DECISIONS-45-50 and divergence 2.107: focused suites, the architecture guards, the full sweep, code health, mypy and import contracts all green except the one pre-existing failure.
 
 ## Files Changed
 See `git diff origin/main --stat` of the batch PR.

@@ -44,7 +44,7 @@ The corpus had 13 kinds and no plant-eater, so a meat-eater had no game. Decisio
 - TCK-20261009-A-KILL-LEAVES-MEAT-AND-A-CARNIVORE-EATS-IT-RAW-WITH-A-DIET-GATE-DECISION-44 (same batch). The next batch holds the held-action fix (a gatherer on a regrowing node holds its INTERACT forever).
 
 ## Related Docs
-- `docs/guidelines/intentional_divergences.md` 2.104; `docs/world_rules/scenarios/life-body-batch-05.md` LB-S21.
+- `docs/guidelines/intentional_divergences.md` 2.107; `docs/world_rules/scenarios/life-body-batch-05.md` LB-S21.
 
 ## Related Stored Artifacts
 - `agent-working/stored_artifacts/TCK-20261009-GENERIC-PLANT-EATER-ARCHETYPES-GRAZE-AND-FLEE-DECISIONS-45-50/`

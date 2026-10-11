@@ -16,7 +16,7 @@
 - id: "carnivore_survival"
   display_name: "Carnivore Survival"
   needs:
-    hunger: "high"
+    hunger: "very_low"
     sleep: "medium"
     safety: "medium"
     territory: "high"

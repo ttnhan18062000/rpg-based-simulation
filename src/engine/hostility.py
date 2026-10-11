@@ -14,6 +14,7 @@ from src.content_semantics.faction import (
 )
 from src.content_semantics.relation import RelationContext
 from src.engine.appraisal import Relation, appraise, perceives
+from src.engine.behavior_consumers import get_kind_properties
 from src.engine.tile_distance import manhattan_tile_distance
 from src.entities.identity_resolver import (
     EntityIdentityResolver,
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
 
 
 ATTACK_RELATIONS = frozenset({Relation.FACTION_HOSTILE, Relation.PREDATION})
+WILD_ALIGNMENT = "wild"  # the alignment bucket of the factions animals belong to (wild_beast_pack, wild_fauna)
 
 
 def source_identity(entity: "EntityState") -> Tuple[str, str]:
@@ -41,12 +43,24 @@ def is_engaged(entity: "EntityState", other: "EntityState") -> bool:
     return entity.task.payload.get("target_id") == other.id or other.task.payload.get("target_id") == entity.id
 
 
+def is_wild_creature(entity: "EntityState") -> bool:
+    """True for a creature that eats and belongs to a faction of the wild alignment (an animal, not a people or a monster).
+
+    Properties only: a body diet and the faction's alignment bucket, read from content; no kind list and no predator label."""
+    _, body = get_kind_properties(get_species_id_str(entity))
+    if body is None or not body.diet:
+        return False
+    return get_faction_semantics_service().get_alignment_bucket(source_identity(entity)[0]) == WILD_ALIGNMENT
+
+
 def faction_hostile(entity: "EntityState", other: "EntityState", source: Optional[Tuple[str, str]] = None) -> bool:
     """True when ``entity`` perceives ``other`` (alive, passes the perception gate) and the faction semantics rate it hostile.
 
     ``source`` is ``source_identity(entity)`` when the caller tests many neighbours of one entity."""
     if not perceives(entity, other):
         return False
+    if is_wild_creature(entity) or is_wild_creature(other):
+        return False  # decision 47: a wild creature is regarded by appraisal, never by faction verdict
     dist = manhattan_tile_distance(entity.navigation.position, other.navigation.position)
     # `intruding` is left unset (None): see the note in LegalityServiceV2.verify_attack_legality (engine/legality.py).
     context = RelationContext(
@@ -95,6 +109,8 @@ def attack_allowed(attacker: "EntityState", target: "EntityState", faction_verdi
     """Decisions 44 and 47: an attack the factions refuse (``faction_verdict`` False) is still permitted when the attacker is hunting the target
     (PREDATION), or when the target is attacking the attacker and holds an attack relation to it (a creature may fight back against whatever
     is hunting it)."""
+    if is_wild_creature(attacker) or is_wild_creature(target):
+        faction_verdict = False  # decision 47: appraisal decides alone when a wild creature is on either side
     if faction_verdict or relation(attacker, target) is Relation.PREDATION:
         return True
     return target.task.payload.get("target_id") == attacker.id and relation(target, attacker) in ATTACK_RELATIONS

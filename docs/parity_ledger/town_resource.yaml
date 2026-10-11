@@ -2516,6 +2516,7 @@
   test_path: tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py
   divergence_note: 'Intentional divergence 2.102 (Intentional Gameplay Change).'
   support_boundary: 'Dormant in the measured worlds while the free meal stands; ME-S20 is on the parked removal stack. Held out: the treasury wage for public town work (decision 37). People only (decisions 42 and 43): see 2.103.'
+- id: TOWN-205
   text: 'A dead body leaves food (decision 44): at death, whatever the cause, a body whose kind declares meat in `edible_as` leaves `meat_yield`
     units of raw meat on its corpse. An eater eats an item only if its food class (plant, meat, prepared) is in its body diet (an undeclared
     diet eats any food); raw meat fills 20 against 30 for a prepared meal. A hungry subject whose diet includes meat opens a way to eat by
@@ -2529,5 +2530,5 @@
     `data/content/world/items.yaml`; `docs/mechanics/03_economic_laws.md` section 3.2'
   proof_type: parity
   test_path: tests/mechanic_scenarios/test_hunting_kill_to_meat.py
-  divergence_note: null
+  divergence_note: 'Intentional divergence 2.107 (Intentional Gameplay Change).'
   support_boundary: 'Held out: cooking (a cooked equivalent of raw meat), people hunting for sale, and individual births of game (ECOL-03).'

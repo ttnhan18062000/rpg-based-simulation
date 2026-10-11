@@ -7,7 +7,7 @@
   size: "medium"
   diet: ["plant", "meat", "prepared"]
   edible_as: ["meat"]
-  meat_yield: 2
+  meat_yield: 5
 
 # STATE: REDESIGNED-CORE
 - id: "small_humanoid"
@@ -18,7 +18,7 @@
   size: "small"
   diet: ["plant", "meat", "prepared"]
   edible_as: ["meat"]
-  meat_yield: 1
+  meat_yield: 2
 
 # STATE: REDESIGNED-CORE
 - id: "quadruped_predator"
@@ -29,7 +29,7 @@
   size: "medium"
   diet: ["meat"]
   edible_as: ["meat"]
-  meat_yield: 2
+  meat_yield: 5
 
 # STATE: ADDITIONAL
 - id: "arachnid_body"
@@ -40,7 +40,7 @@
   size: "small"
   diet: ["meat"]
   edible_as: ["meat"]
-  meat_yield: 1
+  meat_yield: 2
 
 # STATE: ADDITIONAL
 - id: "large_humanoid"
@@ -51,7 +51,7 @@
   size: "large"
   diet: ["plant", "meat", "prepared"]
   edible_as: ["meat"]
-  meat_yield: 4
+  meat_yield: 12
 
 # STATE: ADDITIONAL
 - id: "spirit_body"
@@ -82,7 +82,7 @@
   size: "large"
   diet: ["meat"]
   edible_as: ["meat"]
-  meat_yield: 4
+  meat_yield: 15
 
 # STATE: ADDITIONAL
 - id: "small_quadruped"
@@ -93,4 +93,4 @@
   size: "small"
   diet: ["plant"]
   edible_as: ["meat"]
-  meat_yield: 1
+  meat_yield: 2
