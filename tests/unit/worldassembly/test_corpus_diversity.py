@@ -161,22 +161,25 @@ POPULATION_STABILITY_WORLDS = list(ANCHORED_WORLD_BANDS.keys()) + [
 # All 10 worlds' distinct-populated-faction counts, verified against
 # agent-working/staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md §2 and re-confirmed by
 # TCK-20260704-SIMQ-CORPUS-SCALE-METRIC's own recompile cross-check (investigation.md §3).
+# Hunting batch (owner decisions 44 to 50, 2026-10-11): the wolf_den_near_forest module now places the plant-eater herd of the new faction `wild_fauna`, so
+# every world that composes it (wilderness_survival, sandbox_world, swamp_border_world, frontier_living_world, frontier_extended, frontier_marches) gains one
+# populated faction: 2, 3, 4, 6, 9, 9 became 3, 4, 5, 7, 10, 10.
 EXPECTED_DISTINCT_POPULATED_FACTIONS: dict[str, int] = {
-    "wilderness_survival": 2,
-    "sandbox_world": 3,
+    "wilderness_survival": 3,
+    "sandbox_world": 4,
     "highland_traverse": 3,
     "urban_political": 4,
     "dungeon_crawl": 2,  # TCK-20261004-CLOSED-P1-BALANCE-FIX-WRITTEN-TO-NON-RUNNING-WORLD-DEFINITION: the accepted 2-module remedy now runs; was 4, a faithful count of the unintended 4-module world that ran
-    "swamp_border_world": 4,
+    "swamp_border_world": 5,
     "simq_routing_test": 5,
-    "frontier_living_world": 6,
+    "frontier_living_world": 7,
     "generated_frontier_3_42": 7,
-    "frontier_extended": 9,
+    "frontier_extended": 10,
     # new — TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS (re-confirmed against each world's own
     # world_compile_report.json, not eyeballed from world.yaml).
     "crowded_frontier": 6,
     "resource_dense_basin": 4,
-    "frontier_marches": 9,
+    "frontier_marches": 10,
 }
 
 # The 10 modules Step 4 (of the corpus-uplift ticket this constant originates from) brought
