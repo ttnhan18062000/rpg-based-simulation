@@ -33,6 +33,7 @@ domains:
     owns:
       - tools/agent-monitoring/**
       - tools/delivery/**
+      - .github/workflows/pr-body-lint.yml
       - tools/gate_checks/**
       - tools/agent_orchestration/**
       - tools/sessions/**
@@ -42,9 +43,11 @@ domains:
       - docs/guidelines/session_roles/**
       - agent-working/agent-orchestration/**
       - agent-working/agent-monitoring/retro/**
-      - registries/session_roles.yaml
-      - registries/session_authority.yaml
+      - registries/session_*.yaml   # exactly session_roles.yaml and session_authority.yaml today; one glob keeps the card within its token budget
       - .claude/agents/**
+      - .graphifyignore
+      - tools/graphify_link.py
+      - tools/graphify_prune.py
       - tests/tools/**
       - tests/docs/**
     owns_not:
@@ -128,7 +131,7 @@ domains:
       - .mcp.json
       - .github/workflows/deploy-docs.yml
       - docs/architecture/**                 # asset's ADR and perf's PERF-D file are split below
-      # agent-working/lead/** joins once its first file is on main (an owns glob must match a file)
+      - agent-working/lead/**
     owns_not: []
     routes:
       "src/**": rpg-planner
@@ -272,7 +275,7 @@ roles:
                              "docs/plans/visual-asset-foundation/**", "docs/plans/visual-asset-management-runtime-integration/**",
                              "agent-working/tickets/**", "agent-working/staging_artifacts/**",
                              "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
-    placement: {worktree: asset-planner, max_sessions: 1}   # ubuntu: proposed ~/Work/rpg-asset-planner (owner decides)
+    placement: {launch: main-checkout, max_sessions: 1}   # owner 2026-10-10: needs no worktree of its own
     handover: .claude/handover/asset-planner.md
   - role: asset-implementer
     identity: {domain: asset, function: implementer, session_name: asset-implementer,
@@ -310,12 +313,13 @@ roles:
       accepts_dispatch_from: [user]
     capability: {may_write: [".claude/handover/drafts/**", "agent-working/lead/**", "agent-working/tickets/**",
                              "docs/architecture/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
-    placement: {worktree: lead-planner, max_sessions: 1}   # mostly reads from the main checkout
+    placement: {launch: main-checkout, max_sessions: 1}   # reads from the main checkout
     handover: .claude/handover/lead-planner.md
 
 # Exclusive resources. The writer slot belongs to the worktree; a worktree hosts exactly one role, its
-# writer (every designer, planner and implementer has its own worktree and lands its own PR). The lease
-# itself is taken at SessionStart by M2 and is runtime state.
+# writer (every designer, planner and implementer has its own worktree and lands its own PR, except a role
+# with `placement.launch: main-checkout`, which names no worktree and holds no lease). The lease itself is
+# taken at SessionStart by M2 and is runtime state.
 worktrees:
   rpg: {writer: rpg-implementer}
   agent-working: {writer: agent-working-implementer}
@@ -330,7 +334,5 @@ worktrees:
   codebase-designer: {writer: codebase-designer}
   codebase-planner: {writer: codebase-planner}
   asset: {writer: asset-implementer}
-  asset-planner: {writer: asset-planner}
   perf: {writer: perf-implementer}
   perf-planner: {writer: perf-planner}
-  lead-planner: {writer: lead-planner}

@@ -28,6 +28,10 @@ module_refs:
   enabled: true
   order: 5
   parameters: {}
+- module_id: goblin_camp_forage
+  enabled: true
+  order: 6
+  parameters: {}
 default_perspectives: []
 provided_features: []
 global_parameters: {}

@@ -13,6 +13,7 @@ modules:
   - "undead_battlefield"
   - "sunken_swamp_border"
   - "old_mine_resource_loop"
+  - "goblin_camp_forage"
 default_perspectives:
   - "hero_guild_perspective"
   - "wild_beast_pack_perspective"

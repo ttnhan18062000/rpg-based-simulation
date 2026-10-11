@@ -114,7 +114,7 @@ def test_real_world_compositions_determinism_and_provenance(repos):
     assert bundle1.provenance_manifest.manifest_id == bundle2.provenance_manifest.manifest_id
 
     # Check that module fingerprints are resolved and consistent
-    assert len(bundle1.provenance_manifest.module_fingerprints) == 7
+    assert len(bundle1.provenance_manifest.module_fingerprints) == 8  # 7 + goblin_camp_forage (D57, divergence 2.106)
     assert bundle1.provenance_manifest.module_fingerprints == bundle2.provenance_manifest.module_fingerprints
 
     # Verify provenance manifest details (records and origins mapped)

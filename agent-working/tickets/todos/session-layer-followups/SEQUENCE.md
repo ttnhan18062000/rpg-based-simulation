@@ -6,6 +6,10 @@ seats. agent-working-planner may re-scope or re-order; these are findings, not a
 
 ## Order
 
-1. TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE  (no deps; hotfix; live on host ubuntu)
-2. TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD  (depends on: 1)
-3. TCK-20261010-PR-BODY-LINT-WORKFLOW-UNOWNED  (no deps; independent one-line manifest edit, may go with 1)
+Items 1-4 landed in PR #506 (batch 1, 2026-10-11): TCK-20261010-PR-BODY-LINT-WORKFLOW-UNOWNED,
+TCK-20261011-PR-ATTRIBUTION-OFF-AT-SOURCE, TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE,
+TCK-20261011-GRAPHIFY-SHARED-GRAPH-FROM-WORKTREES. Batch 2 (2026-10-11) is the two items below plus
+`agent-working/tickets/todos/session-lead/SEQUENCE.md` items 1-2, in one batch PR.
+
+1. TCK-20261011-GRAPHIFY-TOOLS-OWNED  (no deps; hotfix; manifest edit)
+2. TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD  (no deps now; standard; includes placements outside .claude/worktrees)

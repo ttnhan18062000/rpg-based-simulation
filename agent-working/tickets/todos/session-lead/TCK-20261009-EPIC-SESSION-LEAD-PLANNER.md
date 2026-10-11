@@ -91,6 +91,19 @@ Evidence that the gap is real (lead-planner's first survey, 2026-10-09):
   `agent-working/lead/board.md`, with one row per active epic or batch: owner role, state,
   depends-on, blocked-by, the lead's recommended next step, and whether the owner needs to decide.
   The board is advice; a planner's queue is still set by the owner.
+  **Scope addition (GitHub issue #492, owner-approved 2026-10-10, absorbed 2026-10-11):** cross-host lead
+  handoffs go out as GitHub issues labelled `for:<role>` (one label per seat). At SessionStart (`startup`,
+  `resume`, `clear`) list the role's open `for:<role>` issues after the handover note: number, title and age
+  only, never bodies; one `gh issue list --label for:<role> --state open --json number,title,createdAt` call
+  with a short timeout; no output and never a blocked start when `gh` is missing, unauthenticated, offline or
+  slow; capped at 10 plus "and N more". `fleet.py` (E2) shows the open `for:<role>` count per seat. The
+  session-roles messaging guide documents the convention: an issue is a durable cross-host `finding` or
+  `question`; closing it means "absorbed into a ticket" or "answered", with a link. Acceptance: a seeded
+  issue for the role appears and one for another role does not; with `gh` failing or slow the output is
+  unchanged apart from the missing list, within the timeout; the guide carries the convention.
+  **Children (filed 2026-10-11):** E4a `TCK-20261011-SESSION-START-FOR-ROLE-ISSUES` (the issue list; the
+  `fleet.py` count waits for E2), E4b `TCK-20261011-LEAD-STATUS-MESSAGES-AND-BOARD` (message classes, board
+  skeleton, `agent-working/lead/**` ownership). Order in `session-lead/SEQUENCE.md`.
 - **E5 — Measurement hook-in.** Lead actions (status requests, recommendations, escalations to the
   owner) are recorded with `session_role: lead-planner`. The Epic D M7 review evaluates whether the
   lead lowers the headline metric (manual orchestration actions per completed batch).

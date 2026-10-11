@@ -56,7 +56,7 @@ def service_delta(context: Any, entity: Any, action: str, tick: int) -> Optional
         charge = ResourceTransferIntent(source_id=building.id, source_kind="TOWN_SERVICE", gold_delta=-REST_PRICE_GOLD, transfer_kind="REST",
                                         is_group_required=True)
         return EntityUpdate(entity_id=entity.id, readiness_delta=10.0, combat=CombatUpdate(hp_delta=5),
-                            biological=BiologicalUpdate(sleep_debt_delta=-5.0), resource_transfers=[charge])
+                            resource_transfers=[charge])
     if action == "EAT":
         charge = ResourceTransferIntent(source_id=building.id, source_kind="TOWN_SERVICE", gold_delta=-EAT_PRICE_GOLD, transfer_kind="EAT",
                                         is_group_required=True)
@@ -67,8 +67,8 @@ def service_delta(context: Any, entity: Any, action: str, tick: int) -> Optional
 
 def with_service(updates: dict, entity: Any, action: str, tick: int, context: Any) -> dict:
     """The action's updates with the building service for `action` merged into the subject's own update."""
-    if context is None or entity.id not in updates:
-        return updates
+    if context is None or entity.id not in updates or (action == "REST" and "outcome" in entity.task.payload):
+        return updates  # (a held sleep repeats its action every tick; the bed is paid for, and heals, once)
     delta = service_delta(context, entity, action, tick)
     if delta is None:
         return updates

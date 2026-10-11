@@ -139,7 +139,38 @@ Catalog has found.
   applies to every living subject that has the need, animals as well as people: a wolf, a deer, a
   goblin and a townsperson alike. The kind's own need profile sizes it (its rate, its stage
   lines, its recovery). "Person" in the text above is an example, not a limit.
-- **Evidence: CONFLICTING** until its code ticket lands.
+- **Values from the fiction (rpg-designer under decision 33, 2026-10-10; asked by rpg-planner):**
+  - **Sleeping restores at twice the kind's own waking rate.** A third of the day asleep
+    balances two thirds awake: a person (0.05 per tick awake) sleeps it off at 0.1 per tick,
+    about 16 hours awake to about 80, then about 8 hours of sleep. Animals use their own profile
+    at the same ratio. The same rate applies to a collapse and to sleep by choice, and a bed
+    improves the quality of rest, not its rate. Today's relief of 20 per action is retired: it made
+    a collapse last 11 ticks and a night's sleep about half an hour.
+  - **A collapsed sleeper wakes once the need is no longer pressing,** below SURV-07's onset (0.6
+    of the line, about 59 for a person), and then decides (decision 32). From 98 that is about 390
+    ticks, about 4 hours of helplessness.
+  - **Very tired** (from a debt of 80): recovery at half rate, the same scale as decision 36.
+  - **A bed is sought within about 30 tiles** (half an hour's walk at 36 s per tick); beyond
+    that, the subject rests where it stands. The arrival-adjusted pull already stops a walk to a
+    bed it would collapse before reaching.
+- **The real killer, found 2026-10-10:** every death labelled starvation in Lane A's trace
+  (people, wolves, plant-eaters) was this drain. Each had a sleep debt of 100 and lost 1 HP per
+  tick, against 1-2 HP from hunger in its last 300 ticks. The label was set by hunger at death,
+  not by the source of the HP loss (`src/engine/apply.py`). That is fixed to the typed source,
+  and this collapse now lands first, as its own PR.
+- **Evidence: SUPPORTED since #505 (`20f67b744`, 2026-10-11)**, divergence 2.105, parity entry
+  `PROG-130`. Past 98 the subject sleeps where it stands and loses no health
+  (`src/engine/sleep_debt.py`). Asleep, the debt falls at twice the kind's own rate, and the
+  subject wakes at about 59. A bed is sought only within 30 tiles and inside a range-bound
+  subject's range, or else the subject rests in place. A collapse from 98 lasts about 408 ticks,
+  measured for a person and a wolf. Pinned by `tests/unit/engine/test_sleep_debt_stages.py`,
+  `tests/mechanic_scenarios/test_sleep_debt_collapse.py` (LB-S19) and
+  `tests/mechanic_scenarios/test_sleep_pull_nearest_open_way.py`. Re-run on `rpg-designer-next`
+  after merging that main, together with the need-wake tests: 50 passed.
+  - **Disclosed by the ticket, still open:** the pull of the return-to-town goal (`TownScorer`)
+    also grows with sleep debt and walks a subject toward town far from any inn. It is a
+    separate pull, unchanged. The cause label (the typed source of the last health lost) is its
+    own ticket, so the "real killer" paragraph above holds until that lands too.
 - **Scenario:** [LB-S19](../scenarios/life-body-batch-05.md#lb-s19) (weakened, collapse where it
   stands, no action while asleep, wakes, no HP loss; a rested control).
 
@@ -309,6 +340,24 @@ profiles reach the same hunger at different times.
   - A hungry wolf may turn on a lone person when nothing easier is near, and keeps away from a
     group it cannot overcome.
   - People hunt (decision 31) by the same reading.
+    **People hunt and eat raw kills from milestone 0 (decided by the owner directly, 2026-10-09;
+    row 52 of the memo):** meat is in people's diet. A hungry person hunts under the same reading
+    as any creature, and eats the kill raw until fire and cooking exist (roadmap §12, milestone
+    3). Raw meat fills less than the same meat cooked will (decision 31), and the ratio is content
+    under decision 33. Hunting is a way a broke worker eats; it does not count as earning.
+  - **A kind its own properties leave with nothing to overcome (decided by the owner directly,
+    2026-10-09; row 53 of the memo):** for example a small kind that eats only meat, while
+    "can overcome" needs a strictly greater power band. The kind's own description decides, never
+    a list of who would otherwise go hungry:
+    1. if its description makes it a pack hunter, it waits for group appraisal (milestone 1) and
+       scavenges or starves until then, disclosed per kind;
+    2. its band is corrected only when a reader would call it plainly wrong for the description,
+       never so that it can hunt;
+    3. otherwise it is a scavenger at this stage, disclosed.
+    Equal bands stay milestone 1's open tie rule. **Applied, 2026-10-09:** the Cave Spider (small
+    power, meat only) is case 3. Its own data disagree (strength medium, danger medium, venomous,
+    against power small), and milestone 1's appraisal resolves that from its properties,
+    venom included, kind by kind.
 - **Applies everywhere, not only to food:** the same principle holds for every role a kind
   might be given. A role is an outcome of declared properties and the situation, not an authored
   tag, unless a rule says why a tag is the property itself (for example decision 43's "keeps
@@ -397,6 +446,24 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
     five wolves five tiles from the hometown, against decision 30 (land near a settlement is
     livable; lethal danger sits deeper). The new module's placement must not overlap
     `bandit_road`.
+  - **Camps of people-kinds have food within their range (decided by the owner directly,
+    2026-10-09; row 57 of the memo):** goblin and orc warriors spawned at camps are held within
+    8-10 tiles, where nothing can feed them, so they starve (26 of the 40 deaths that the living
+    world's trace counted as heroes). A camp is where a kind lives (decision 30; roadmap §12,
+    milestone 2), so each camp module gets wild food within its range, sized by the land. Its
+    meat-eating kinds also hunt plant-eaters placed nearby once hunting lands. Raiding stays
+    undeclared until a Rule declares it. The fixed tether is a leftover of the monster role,
+    against decision 46. Milestone 1 replaces it with a home range taken from the kind's
+    properties, and until then the food sits inside it.
+    - **Evidence: SUPPORTED for goblin camps since #505 (`20f67b744`)**, divergence 2.106. The
+      module `goblin_camp_forage` places one berry thicket within 4 tiles of each camp, nine
+      composed worlds use it, and `src/worldbuilding/camp_food.py` reports any camp with no food
+      way in range. Over seeds 42-46 (5,000 ticks), camp monsters ate 84 and 88 berry meals in
+      the two camp worlds, none of them outside their range or at an inn, against none at all
+      before. Their starvation fell from 6.4 to 2.4 and from 3.0 to 0.0 a run.
+      **Gaps, disclosed:** wolf nests are meat-only camps, reported rather than filled with
+      berries (hunting closes them), and the food is a per-module line until grazing moves it
+      to the biome (row 59).
   - **Unchanged guardrails:** wild food enters by harvest and leaves by eating (Bible 03
     conservation); it is its own declared item and node kind, never herb; and the integrity
     check (`need_paths.py`) counts a wild-food node within reach as a hunger way for the kinds
@@ -466,11 +533,46 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     ECOL's population rules, never a target.
     Scenario: [LB-S21](../scenarios/life-body-batch-05.md#lb-s21) (grazes, flees a noticed
     predator, numbers change only by births and deaths).
+  - **Grazing is the land's plant cover (decided by the owner directly, 2026-10-10; row 59 of
+    the memo):** wild land carries plant cover (grass, browse) that a grazing diet can eat and a
+    person's cannot. It regrows by the land's fertility band and runs down when overgrazed. Each
+    biome declares its wild food (forage kinds and a fertility band) and its grazing cover, and
+    camp food (decision 57), wild-edge forage and grazing all read the biome. A module adds
+    specific features on top. This replaces grazers sharing a single berry thicket with people,
+    which starved them (one thicket of 10 charges for six grazers and people on
+    `frontier_living_world`).
+    **Values (decided by the owner directly, 2026-10-11, "moderate bands"; a decision-33 pass).**
+    Cover is a few `cover_patch` resource nodes per region, yielding `graze` (a food class that
+    only a plant-eating diet eats), so a grazer reaches it like any other way. One bite removes
+    20 hunger, against a berry's 30, so a plant-eater needs 12 bites a day. Per fertility band
+    (low / medium / high): 1 / 2 / 4 patches per 1,000 tiles of open land (at least 1 where the
+    biome has cover); 6 / 12 / 20 bites at most; 1 / 2 / 3 bites regrown per 200-tick ecology
+    check. A patch grazed bare waits 2 days / 1 day / half a day, then regrows from nothing. A
+    patch regrowing r bites per check feeds r grazers for good, so a medium wild region of
+    about 3,400 tiles feeds about 14. A bigger herd strips the land and must move or starve: the
+    land decides, and nothing sets a target. Crowding also slows regrowth (the existing density
+    modifier), and grazer survival is measured with it on.
+    **Every regrowing kind waits once emptied (decided by the owner directly, 2026-10-11;
+    built after the M0 gate's baseline is set, so measurements do not move during the gate).**
+    Each resource kind declares how it regrows (`regrowth_mode`, content, no name checks). A
+    berry thicket picked bare waits about a day before fruiting again, an herb about half a day
+    (it regrows from the root), and a felled tree the longest. Until that ticket lands, only
+    grazing cover waits.
+  - **Meat follows body size, and meat-eaters feast and fast (decided by the owner directly,
+    2026-10-10; row 60 of the memo; a decision-33 pass, before and after recorded):** a small
+    body is about one meal for a meat-eater, a medium carcass about a day's food for a
+    meat-eater of its size, a large one several days. A full meal lasts a meat-eater at least a
+    day before its line; a wolf crossed its line about 6 hours after a full meal and needed about
+    9 medium kills a day. People and plant-eaters keep their rates. Until spoilage exists
+    (milestone 3), a large carcass does not rot, which is disclosed.
   - **Scenario:** [LB-S20](../scenarios/life-body-batch-05.md#lb-s20) (a predator eats what it
     kills, raw; it does not forage what its diet excludes; no kill means no meat).
   - **Measured preview** (Lane B, `frontier_living_world`, seed 42; five-seed figures per kind
     group to follow). With free meals removed, wildlife that ever ate goes from 4 to 1, wildlife
     starvation from 2 to 4, and wildlife end hunger from 92 to 100.
+  - **The gate is observable (decided by the owner directly, 2026-10-09; row 54 of the memo):**
+    the removal lands only when the milestone-0 gate in roadmap §12.3 passes. That gate has hard
+    logic checks and report-only figures with stop lines.
   - **Alternatives not taken:** remove the free meal for people now and close the inn to animals
     (wildlife starvation accepted); close the inn to animals now but keep the free meal for
     people (animals lose their only meal).
@@ -601,6 +703,34 @@ others, not a reflex.
     behaviour"); a redirect to any means, including crime (it creates ways to get food that no
     Rule declares).
 
+- **Amendment, providing for a coming need (decided by the owner directly, 2026-10-09; row 55 of
+  the memo):**
+
+  > A subject that can foresee a need provides for it before it presses. A person about to
+  > leave the reach of every way it has (a long trip, a hunt, a patrol into the wild) eats
+  > first or takes food with it, sized to the trip it plans. A kind whose nature is to keep a
+  > store (a cache, a larder, a granary) puts food by while it is plentiful and draws on it
+  > later. Foresight scales with the kind's wits, and storing is a declared habit of the kind,
+  > never a role label (decision 46). A creature with little foresight acts only on the need it
+  > feels now. Providing ahead is attempted, not guaranteed, and it creates no food: it moves
+  > food the subject already has or can get by a SURV-06 way.
+
+  - **Why:** without it, every subject is purely reactive. It acts only once the pull is
+    already high, so a traveller sets out with nothing and starves beyond reach of a way. Real
+    people and many animals plan their next meals.
+  - **When it is built:** milestone 3 of the foundation path (roadmap §12.3), with spoilage
+    and preserving. A store or a pack of provisions only makes sense once food can spoil and be
+    kept. The milestone 0 gate stays reactive, and its held-chase defect is fixed and measured
+    first.
+  - **Engineering, not this Rule:** how far ahead a wits band plans, how a trip's need is
+    estimated, the property naming the storing habit, and where a store lives (it is durable
+    state with an owner, ownership rules apply).
+  - **Alternatives not taken:** build the trip half in milestone 1 with the wits property (it
+    widens milestone 1 beyond its no-name-checks gate); leave it as a known gap for the whole
+    foundation (subjects stay purely reactive).
+  - **Scenario owed** when it is built: a person who plans a trip beyond its ways eats or packs
+    food first and comes back fed; a low-wits creature on the same trip does not.
+
 **Repository evidence: PARTLY SUPPORTED for the amendment since #454 (`0b4f12af7`, 2026-10-09);
 the escalation and the present-threat gate shipped in #414 (`c2e18b182`).** Lane A's trace, `crowded_frontier`, seed 42, on #403's tree:
 - `ResolveBlockerScorer` returns a flat 80.0 whenever an unresolved, unsuppressed blocker exists
@@ -649,6 +779,52 @@ the escalation and the present-threat gate shipped in #414 (`c2e18b182`).** Lane
     The fiction reason: at the base rate a person reached the starvation line 9.5 hours after a
     full meal and needed about six inn meals a day.
   - **The SUPPORTED flip** waits for the free-meal removal and earning.
+
+- **Two cognition gaps found, 2026-10-09** (rpg-planner's read of `origin/main` at `3c16569b4`,
+  asked at the owner's direction; row 56 of the memo):
+  - **CONFLICTING: the pull aims at one building.** `EatScorer` (`src/ai/goals/scorers.py:92-111`)
+    computes the arrival fraction from the walk to the nearest inn, and `nearest_building`
+    (`src/engine/spatial_query.py:32-45`) has no distance cap. So "no inn within reach" means "no
+    inn in the world", and a forager or hunter escalates against however far that inn is.
+    Carried food is eaten by a separate in-place hook outside the pull. **Fixed before the
+    milestone 0 gate:** the pull aims at the subject's nearest open way per its kind's diet, and
+    "within reach" gets a real bound sized by what the subject can walk before its line.
+  - **CONFLICTING: food is found on the true map.** The inn search reads every inn in state, and
+    `_forage_step` (`src/ai/goals/opening_steps.py:40-55`) reads every node's true charges and
+    cooldown. Nothing reads what the subject perceived, remembers or was told (KNOW, PERC, the
+    uncertainty rule). **Fixed in milestone 1** (honest perception): food places come from
+    perception, memory, leads and common knowledge, with a home range for animals.
+  - **CONFLICTING, the same shape for sleep:** `SleepScorer` also aims at the nearest inn with no
+    distance cap. By this Rule's own text it is read the same way, without a new decision: resting
+    where the subject stands is always open, at distance 0, so the pull escalates against the
+    subject's own line. A bed (home, or an inn bed it can pay for) is chosen only when one is
+    within reach and the better rest is worth the walk. For animals, the rest place is the den or
+    where they stand, inside their home range. **Fixed with sleep collapse** (decision 41,
+    LB-S19), in milestone 0. It does not block the gate's H6. **Done in #505:** the sleep goal
+    names a bed only within 30 tiles and inside a range-bound subject's range, or else the
+    subject rests where it stands (divergence 2.105).
+  - **Ticket:** `TCK-20261009-THE-HUNGER-PULL-AIMS-AT-THE-NEAREST-OPEN-WAY-NOT-THE-INN-SURV-07`
+    (Lane A, after the hunting batch, before the gate run).
+  - **Every kind takes the same path** (decision 42 holds): animals and all seven cognition
+    profiles reach `EatScorer` through `GoalRegistry`, with per-kind rates (SURV-05). Two
+    override paths skip the pull: an active objective returns before scoring
+    (`src/systems/strategic_systems/intelligence.py:1260-1541`), and a leash return
+    (`tactical.py:189-206`) overrides food outside the radius. Both are in the planner's P1 tickets.
+  - **A held move no longer blocks the pull (#505, `20f67b744`, 2026-10-11; divergence 2.106):**
+    a hunger or sleep debt at the escalation onset wakes the brain of a subject holding a move,
+    every strategic cadence. Before this, people spent 1,470 to 1,900 of their first 2,000
+    ticks frozen in a held avoid-hostile or regroup move that never ended, and those who never
+    ate all died at the same age. **Earlier population figures for this Rule were dominated by
+    that defect and are superseded.** A range-bound subject now aims only at ways inside its
+    range (`LeashService.way_in_range`), which closes the leash-return override for food.
+    Measured over seeds 42-46, 5,000 ticks: deaths per run in `urban_political` fell from 25.8
+    to 19.8 (paired SE 1.8), while `frontier_living_world` and `crowded_frontier` moved within
+    noise. Starvation among people fell in every group, by about 1 to 2.4 a run. Some of the
+    fed met other deaths instead, a change of cause rather than new deaths. Pinned by
+    `tests/unit/engine/test_pressing_need_wakes_a_held_move.py` and
+    `tests/unit/ai/test_way_in_range.py`. **Still open:** the inn-first `EatScorer` and the
+    true-map search above; a group does not yet wait for a member who leaves to eat; and
+    people who starve without holding a move are not yet diagnosed.
 
 **Scenarios:** none traced yet. Four are owed when implemented:
 - a tired worker heading to the inn keeps going when a routine blocker reappears;

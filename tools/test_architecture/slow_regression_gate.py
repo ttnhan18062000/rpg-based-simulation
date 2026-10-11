@@ -29,6 +29,8 @@ that was tested less than 24 h ago.
 
 Malformed input raises ``ValueError``: a silent ``run`` on bad data would spend ~2 runner-hours per slot.
 
+The rule is parameterised by workflow file and suite job name, so the rpg gate report workflow (``rpg-gate-report.yml``, suite job ``RPG gate report``) reuses it.
+
 CLI (stdlib only; shells out to ``gh``)::
 
     python -m tools.test_architecture.slow_regression_gate decide --head-sha SHA [--exclude-run-id ID] [--now ISO]
@@ -47,6 +49,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Iterable, Mapping
 
 MAIN_BRANCH = "main"
+WORKFLOW_FILE = "slow-regression.yml"
 SUITE_JOB_NAME = "Slow regression"
 TESTED_CONCLUSIONS = frozenset({"success", "failure"})
 RERUN_AFTER = timedelta(hours=24)
@@ -67,11 +70,11 @@ def _parse_time(value: Any, *, run: Mapping[str, Any]) -> datetime:
     return parsed
 
 
-def actually_tested(run: Mapping[str, Any], jobs: Iterable[Mapping[str, Any]]) -> bool:
+def actually_tested(run: Mapping[str, Any], jobs: Iterable[Mapping[str, Any]], suite_job: str = SUITE_JOB_NAME) -> bool:
     """True if ``run`` is completed and its suite job concluded ``success`` or ``failure`` (see the module docstring)."""
     if run.get("status") != "completed":
         return False
-    return any(job.get("name") == SUITE_JOB_NAME and job.get("conclusion") in TESTED_CONCLUSIONS for job in jobs)
+    return any(job.get("name") == suite_job and job.get("conclusion") in TESTED_CONCLUSIONS for job in jobs)
 
 
 def decide(head_sha: str, runs: Iterable[Mapping[str, Any]], now: datetime, exclude_run_id: Any = None) -> tuple[str, str]:
@@ -107,11 +110,13 @@ def collect(
     head_sha: str,
     list_runs: Callable[[], list[dict]] | None = None,
     view_jobs: Callable[[Any], list[dict]] | None = None,
+    workflow: str = WORKFLOW_FILE,
+    suite_job: str = SUITE_JOB_NAME,
 ) -> list[dict]:
     """Recent Slow regression runs with ``tested`` filled in. Jobs are fetched only for completed runs at ``head_sha``."""
     list_runs = list_runs or (
         lambda: _gh_json([
-            "run", "list", "--workflow", "slow-regression.yml", "--branch", MAIN_BRANCH, "--limit", "30",
+            "run", "list", "--workflow", workflow, "--branch", MAIN_BRANCH, "--limit", "30",
             "--json", "databaseId,event,status,createdAt,headBranch,headSha",
         ])
     )
@@ -119,7 +124,7 @@ def collect(
     runs = []
     for run in list_runs():
         run = dict(run)
-        run["tested"] = run.get("headSha") == head_sha and run.get("status") == "completed" and actually_tested(run, view_jobs(run["databaseId"]))
+        run["tested"] = run.get("headSha") == head_sha and run.get("status") == "completed" and actually_tested(run, view_jobs(run["databaseId"]), suite_job)
         runs.append(run)
     return runs
 
@@ -130,10 +135,12 @@ def main(argv: list[str] | None = None) -> int:
     for name in ("decide", "collect"):
         p = sub.add_parser(name)
         p.add_argument("--head-sha", required=True)
+        p.add_argument("--workflow", default=WORKFLOW_FILE, help="workflow file whose runs are looked at (default: the slow regression workflow)")
+        p.add_argument("--suite-job", default=SUITE_JOB_NAME, help="name of the job whose success/failure means the run tested (default: Slow regression)")
     sub.choices["decide"].add_argument("--exclude-run-id", type=int)
     sub.choices["decide"].add_argument("--now", help="ISO-8601 UTC time to decide at (default: the current time)")
     args = parser.parse_args(argv)
-    runs = collect(args.head_sha)
+    runs = collect(args.head_sha, workflow=args.workflow, suite_job=args.suite_job)
     if args.cmd == "collect":
         json.dump(runs, sys.stdout)
         return 0

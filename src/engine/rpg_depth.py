@@ -194,6 +194,19 @@ class LeashService:
         return dist > nav.leash_radius
 
     @staticmethod
+    def way_in_range(entity: EntityState, target_pos: Optional[Tuple[float, float]]) -> bool:
+        """True when a way to meet a need at ``target_pos`` is inside the entity's range.
+
+        A range-bound subject (``leash_radius`` above 0, a leashed animal or monster) judges its ways to eat and to sleep inside its
+        range, the Manhattan distance of ``home_position``; one with no way inside it has no open step and stays honestly hungry
+        (SURV-06), it is not a wanderer. A subject with no range-bound home (people: a leash or post is a duty) has every way in
+        range. The one test the hunger and sleep goals and the opening steps share (owner decision D57; the designer's range rule)."""
+        nav = entity.navigation
+        if nav.leash_radius <= 0 or nav.home_position is None or target_pos is None:
+            return True
+        return abs(target_pos[0] - nav.home_position[0]) + abs(target_pos[1] - nav.home_position[1]) <= nav.leash_radius
+
+    @staticmethod
     def should_give_up_chase(entity: EntityState) -> bool:
         """
         Check if a chasing mob should abandon pursuit.
