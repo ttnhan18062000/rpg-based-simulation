@@ -30,6 +30,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
     },
@@ -44,12 +50,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'sand' is active but never consumed by any downstream component",
       "target": "sand"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -905,6 +905,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
     },
@@ -919,12 +925,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'sand' is active but never consumed by any downstream component",
       "target": "sand"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -1762,7 +1762,7 @@
     }
   ],
   "fingerprints": {
-    "catalog": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
+    "catalog": "303769973378e61afa185b56b72afa1d771968e58e47509ee2d90deea6f176cf",
     "modules": {
       "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
       "survivor_camp_shelter": "c017935a30d51e3b5b293be4cc2c54cc8ef7a0f4a72a0932be26983db7ddc355",

@@ -1,6 +1,7 @@
 
 import pytest
 from dataclasses import replace
+from src.core.state import AuthoritativeState, BuildingState
 from src.core.state import (
     EntityState, CombatComponent, EquipmentComponent, EquipSlot,
     InventoryComponent, ItemStack, AuthoritativeState, AttributeComponent,
@@ -103,15 +104,19 @@ class TestRepairMechanism:
         """Repair cost should be (100 - durability) * 0.5."""
         hero = make_entity(gold=100, slots={EquipSlot.MAIN_HAND: "steel_sword"}, durability={EquipSlot.MAIN_HAND: 80.0})
         
+        # A smith in reach (EXCH-02, decision 58): the repair is charged once, into the smith's own purse (gold_cost only).
+        smith = BuildingState(id=9, kind="blacksmith", position=(0, 0), functional=True)
+        state = AuthoritativeState(tick=1, seed=1, entities={hero.id: hero}, buildings={9: smith}, building_tiles={(0, 0): "blacksmith"})
         logic = SimulationDomainLogic()
-        updates = logic.execute_action(hero, {"action": "REPAIR"}, current_tick=1)
+        updates = logic.execute_action(hero, {"action": "REPAIR"}, current_tick=1, context=state)
         
         ent_upd = updates[hero.id]
         intent = ent_upd.resource_transfers[0]
         
-        # (100 - 80) * 0.5 = 10 gold
-        assert intent.gold_delta == -10
+        # (100 - 80) * 0.5 = 10 gold, charged once
+        assert intent.gold_delta == 0
         assert intent.gold_cost == 10
+        assert intent.source_id == 9
         assert intent.equipment_upd.durability_set[EquipSlot.MAIN_HAND] == 100.0
 
     def test_apply_repair_update(self):

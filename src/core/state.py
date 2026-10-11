@@ -18,6 +18,7 @@ from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
 from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent, ItemInstance, AcquiredMethod
 from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
+from src.core.models.world_records import CorpseState, OwedRecord  # noqa: F401  (re-exported: state.py is where callers import them from)
 from src.core.immutability import shallow_freeze
 from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
@@ -299,6 +300,9 @@ class RegionState:
     # decision (see PlaceState.region_id for the back-reference half). A Region can hold
     # zero or many Places.
     places: List[str] = field(default_factory=list)
+    # EXCH-02 (decision 51): the share of a sale or a wage in this region paid to the owner's treasury, rounded down per transaction. Declared
+    # content (`default_tax_share`), set at compile for a region someone holds; 0.0 taxes nothing.
+    tax_share: float = 0.0
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -326,6 +330,8 @@ class RegionState:
             "service_availability": self.service_availability,
             "places": list(self.places),
         }
+        if self.tax_share:
+            res["tax_share"] = self.tax_share
         object.__setattr__(self, "_canonical_cache", res)
         return res
 
@@ -1224,16 +1230,24 @@ class ResourceNodeState:
 
 @dataclass(frozen=True, slots=True)
 class GroundItemState:
-    """An item dropped on the ground."""
+    """An item, or coin, left on the ground. A purse is a stack with no item (``quantity`` 0) and ``gold`` > 0: coin lies where it fell (EXCH-02,
+    ruling 61) with its provenance, whose body it fell from (``source_entity_id``) and when (``dropped_tick``)."""
     id: int
     item_id: str
     quantity: int
     position: tuple[float, float]
+    gold: int = 0
+    source_entity_id: Optional[int] = None
+    dropped_tick: int = 0
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
     _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self):
         object.__setattr__(self, "_readonly_cache", self)
+
+    def stack(self) -> List["ItemStack"]:
+        """The item stack this holds (none for a coin purse)."""
+        return [ItemStack(self.item_id, self.quantity)] if self.quantity > 0 else []
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         if self._canonical_cache is not None:
@@ -1244,32 +1258,10 @@ class GroundItemState:
             "quantity": self.quantity,
             "position": self.position
         }
+        if self.gold:
+            res.update(gold=self.gold, source_entity_id=self.source_entity_id, dropped_tick=self.dropped_tick)
         object.__setattr__(self, "_canonical_cache", res)
         return res
-
-@dataclass(frozen=True, slots=True)
-class CorpseState:
-    """A dead entity that can be looted."""
-    id: int
-    original_entity_id: int
-    position: tuple[float, float]
-    items: List[ItemStack]
-    decay_tick: int
-    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
-
-    def to_canonical_dict(self) -> Dict[str, Any]:
-        if self._canonical_cache is not None:
-            return self._canonical_cache
-        res = {
-            "id": self.id,
-            "original_entity_id": self.original_entity_id,
-            "position": self.position,
-            "items": [i.to_canonical_dict() for i in sorted(self.items, key=lambda x: x.item_id)],
-            "decay_tick": self.decay_tick,
-        }
-        object.__setattr__(self, "_canonical_cache", res)
-        return res
-
 
 @dataclass(frozen=True, slots=True)
 class ChestState:
@@ -1386,6 +1378,7 @@ class AuthoritativeState:
     resource_nodes: Dict[int, ResourceNodeState] = field(default_factory=dict)
     ground_items: Dict[int, GroundItemState] = field(default_factory=dict)
     corpses: Dict[int, CorpseState] = field(default_factory=dict)
+    owed: Dict[str, OwedRecord] = field(default_factory=dict)  # debts a treasury could not pay (EXCH-02), keyed by record id
     chests: Dict[int, ChestState] = field(default_factory=dict)
     buildings: Dict[int, BuildingState] = field(default_factory=dict)
     camps: Dict[str, CampState] = field(default_factory=dict)
@@ -1597,6 +1590,7 @@ class AuthoritativeState:
             entities=ro_entities,
             resource_nodes=ReadOnlyDict(self.resource_nodes),
             corpses=ReadOnlyDict(self.corpses),
+            owed=ReadOnlyDict(self.owed),
             chests=ReadOnlyDict(self.chests),
             buildings=ReadOnlyDict(self.buildings),
             camps=ReadOnlyDict(self.camps),

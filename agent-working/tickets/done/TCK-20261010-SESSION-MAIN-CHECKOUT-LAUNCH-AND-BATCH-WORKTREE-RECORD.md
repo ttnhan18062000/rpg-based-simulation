@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD
-phase: open
+phase: done
 date: 2026-10-10
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 Make launching from the main checkout a supported policy, record each implementer's per-batch worktree in role state, and reconcile the function cards
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,6 +62,12 @@ sibling hotfix) attaches to the wrong path.
 - **Plan.** Amend `session_layer_working_process.md` §4/§8 and record the owner decision of
   2026-10-10 in §12.3.
 
+- **Placements outside `.claude/worktrees/` (added 2026-10-11 by agent-working-planner, from the #506 review).**
+  Since #506 the SessionStart hook leases only `<main checkout>/.claude/worktrees/<placement>`. Seats whose real
+  worktree is elsewhere, asset (`~/Work/rpg-aseprite-mcp`) and perf (`~/Work/rpg-perf`) on host ubuntu, now get the
+  note "writer lease not taken" and no lease. Let a role declare its real worktree path, or bind it through the
+  recorded batch worktree above, so these seats take the lease where they write. Test both.
+
 ## Out of Scope
 - The lease-on-launch-cwd bug itself (sibling hotfix
   `TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE`; land it first).
@@ -89,7 +95,7 @@ sibling hotfix) attaches to the wrong path.
 - `docs/guidelines/session_roles/functions/{planner,designer,implementer}.md`
 
 ## Related Stored Artifacts
-None.
+- agent-working/stored_artifacts/TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD/
 
 ## Related Code Areas
 `tools/sessions/launch.py`, `tools/sessions/state.py`, `tools/sessions/status.py`,
@@ -103,13 +109,13 @@ None.
   diff.
 
 ## Implementation Notes
-(Open.)
+New `placement.launch: main-checkout` (per role, validator rule `launch-contradiction`), applied to asset-planner and lead-planner; the other planners and designers keep their worktrees until the owner flips them. Record: `worktree.json` in the instance's role state, written by a real `launch.py` launch; SessionStart leases the manifest worktree or the recorded one (covers batch worktrees and out-of-tree placements); `status.py` shows `writing in:`. First-commit detection not attempted (the guard cannot know the batch). Card budget kept by a lossless sibling-file brace merge in the generator and by dropping the redundant "Owns `mechanisms.yaml` tooling only." from the agent-working domain card.
 
 ## Test Summary
-(Open.)
+New tests in test_session_roster, _launch, _resolve_and_hook, _status, _cards; session, graphify and docs tests pass. `test_collect_runs_against_the_real_repository_without_failing` timed out once under machine load (91 s) and passed on rerun (16 s) and from the main checkout.
 
 ## Files Changed
-(Open.)
+`tools/sessions/{roster,validate,card,guard,launch,state,status,session_start_hook,prune_branches}.py`, `registries/session_roles.yaml`, `.claude/agents/session-*.md`, `docs/guidelines/session_roles/{domains/agent-working,functions/planner,functions/designer}.md`, plan §4/§8/§12.3, six test files.
 
 ## Completion Summary
-(Open.)
+Read-mostly seats can launch from the main checkout with no lease; an implementer's batch worktree holds the lease and status.py shows it. Not verified on host ubuntu with real asset/perf launches. Owner confirms the literal `session_roles.yaml` diff.

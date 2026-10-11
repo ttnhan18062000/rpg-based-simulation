@@ -27,6 +27,7 @@ from src.core.state import (
 from src.core.builder import V2EntityBuilder
 from src.core.registries import ResourceRegistry
 from src.core.enums import EntityRole, Faction
+from src.core.treasury import treasury_key
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
 from src.worldassembly.region_precedence import first_region_at
@@ -540,6 +541,7 @@ class WorldCompiler:
                 kind=r_spec.type.upper(),
                 influence=100.0 if r_spec.type == "town" else 0.0,
                 owner_faction_id=owner_faction,
+                tax_share=(float(context.tax_share) if context is not None and owner_faction is not None else 0.0),
                 hazard_level=getattr(r_spec, "hazard_level", 0.0),
                 hazard_kind=getattr(r_spec, "hazard_kind", "PHYSICAL"),
                 population_cohorts=_seed_population_cohorts(region_declared_population.get(r_spec.id, 0)),
@@ -556,9 +558,11 @@ class WorldCompiler:
                 town_center = ((min_x + max_x) / 2.0, (min_y + max_y) / 2.0)
                 break
 
-        # 3. Compile factions (Initialize starting vaults in global_resources)
+        # 3. Compile factions. One treasury per region-owner bucket (src/core/treasury.py), started with each member faction's declared starting
+        # gold once (EXCH-02: the per-faction keys that no phase read are gone, and catalog factions sharing a bucket no longer overwrite each other).
         global_resources: Dict[str, float] = {}
         factions: Dict[str, FactionState] = {}
+        bucket_gold: Dict[int, float] = {}
         for f_spec in spec.factions:
             faction_enum = get_faction_enum(f_spec.id, context=context)
             starting_gold = 1000.0
@@ -567,19 +571,15 @@ class WorldCompiler:
             if context is not None and f_spec.id in context.factions:
                 starting_gold = context.factions[f_spec.id].starting_gold
 
-            if faction_enum == Faction.HERO_GUILD:
-                global_resources["faction_hero_guild_gold"] = starting_gold
-            elif faction_enum == Faction.MONSTER_HORDE:
-                global_resources["faction_monster_horde_gold"] = starting_gold
-            elif faction_enum == Faction.TOWN_COUNCIL:
-                global_resources["faction_town_council_gold"] = starting_gold
-            else:
-                global_resources[f"faction_{f_spec.id.lower()}_gold"] = starting_gold
+            bucket_gold[int(faction_enum)] = bucket_gold.get(int(faction_enum), 0.0) + starting_gold
 
             factions[f_spec.id] = FactionState(
                 faction_id=f_spec.id,
                 tension_level=f_spec.initial_tension_level,
             )
+
+        for bucket, gold in sorted(bucket_gold.items()):
+            global_resources[treasury_key(bucket)] = gold
 
         # Collected across steps 4-7; step 6 also appends LAW-SPAWN-OCCUPANCY
         # region-exhaustion warnings (see _resolve_entity_spawn_tile).

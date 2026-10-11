@@ -1874,5 +1874,6 @@
     "ranger": 5,
     "guardian": 5
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

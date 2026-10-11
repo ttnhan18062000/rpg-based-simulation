@@ -1209,5 +1209,6 @@
     "alpha": 2,
     "wild_creature": 2
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

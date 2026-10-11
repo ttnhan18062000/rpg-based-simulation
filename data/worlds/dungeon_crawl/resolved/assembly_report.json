@@ -28,8 +28,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -40,8 +40,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -917,8 +917,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -929,8 +929,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -1790,7 +1790,7 @@
     }
   ],
   "fingerprints": {
-    "catalog": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
+    "catalog": "303769973378e61afa185b56b72afa1d771968e58e47509ee2d90deea6f176cf",
     "modules": {
       "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71",
       "scalable_bandit_camp": "082f8715e9546c290140e123b62fcbc252117e4322c2324d3b728ab8a5daf9c1"

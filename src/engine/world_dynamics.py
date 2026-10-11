@@ -8,6 +8,7 @@ from src.core.resource_regrowth import REGROW_MODE
 from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate, ResourceNodeUpdate
 from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
 from src.core.violent_cause import is_violent_death_cause
+from src.core.state import GroundItemState
 from src.domains.world_emergence.schema import WorldEvent as _WorldEvent, WorldEventCategory as _WorldEventCategory
 from src.engine.carcass import RAW_MEAT_ITEM
 from src.engine.hostility import is_feeding_kill
@@ -35,19 +36,16 @@ def _feeding_kill_event(state: "AuthoritativeState", victim_id: int, victim: "En
                        payload={"killer": float(killer_id), "victim": float(victim_id), "corpse": float(1000000 + victim_id)})
 
 
-def _decay_corpses(state: "AuthoritativeState", already_removed: list) -> "tuple[list, list]":
-    """(corpse ids to remove, MEAT_DECAYED events): corpses past their decay tick go, and meat still on one leaves the world through a typed sink
-    (decision 44), so conservation balances from records."""
-    removed, events = list(already_removed), []
-    for corpse_id, corpse in state.corpses.items():
-        if state.tick < corpse.decay_tick:
-            continue
-        removed.append(corpse_id)
-        meat_left = sum(s.quantity for s in corpse.items if s.item_id == RAW_MEAT_ITEM)
-        if meat_left > 0:
-            events.append(_WorldEvent(category=_WorldEventCategory.MEAT_DECAYED, tick=state.tick, subject=str(corpse_id),
-                                      payload={"quantity": float(meat_left)}))
-    return removed, events
+def _meat_decayed_events(state: "AuthoritativeState") -> list:
+    """The MEAT_DECAYED events of this tick: a body the decay step removes (the same tick+1 rule as ``WorldDynamicsSystem._decay_corpses``) that
+    still holds raw meat sends that meat out of the world through a typed sink (decision 44), so conservation balances from records."""
+    return [
+        _WorldEvent(category=_WorldEventCategory.MEAT_DECAYED, tick=state.tick, subject=str(corpse_id), payload={"quantity": float(meat_left)})
+        for corpse_id, corpse in state.corpses.items()
+        if state.tick + 1 >= corpse.decay_tick
+        for meat_left in [sum(s.quantity for s in corpse.items if s.item_id == RAW_MEAT_ITEM)]
+        if meat_left > 0
+    ]
 
 
 def _node_cooldown_updates(state: "AuthoritativeState", node_updates: dict) -> dict:
@@ -113,7 +111,7 @@ class WorldDynamicsSystem:
 
         # 2.1 Death-triggered Trauma & Sovereignty (LEG-RPG-071/139)
         from src.core.enums import Faction
-        corpses_remove, record_events = _decay_corpses(state, update.corpses_remove)  # decision 44: decayed meat and feeding kills are recorded
+        record_events: list = []  # decision 44: feeding kills and decayed meat are recorded
         for e_id, ent_upd in update.entity_updates.items():
             if ent_upd.combat and ent_upd.combat.alive_set is False and is_violent_death_cause(ent_upd.combat.outcome_kind):  # ENV-07
                 entity = state.entities.get(e_id)
@@ -334,13 +332,35 @@ class WorldDynamicsSystem:
                 refined_chest_updates[c_id] = replace(c_upd, cooldown_set=chest.cooldown_remaining - 1)
         
         # 5.3 Corpses & Ground Items (Decay)
+        corpses_remove, resource_updates, purses = WorldDynamicsSystem._decay_corpses(state, update)
+        record_events.extend(_meat_decayed_events(state))  # decision 44: meat still on a decaying body leaves the world through a recorded sink
+
         return update.replace(
+            ground_items_add_or_update=[*update.ground_items_add_or_update, *purses],
             world_updates=refined_world_updates,
             node_updates=refined_node_updates,
             chest_updates=refined_chest_updates,
             corpses_remove=corpses_remove,
             world_events_add=list(update.world_events_add) + record_events,
+            resource_updates=resource_updates
         )
+
+    @staticmethod
+    def _decay_corpses(state: AuthoritativeState, update: StateUpdate) -> tuple:
+        """(bodies to remove, resource updates, purses left on the ground) after decay. The apply step (next tick) removes a body whose decay tick
+        it has reached, so this does too. A decayed body's coin is not lost (EXCH-02, ruling 61): it stays where it fell, as a purse on the ground
+        that carries whose body it fell from and when, and it is lootable (found, not sought)."""
+        corpses_remove = list(update.corpses_remove)
+        resource_updates = dict(update.resource_updates)
+        purses = []
+        for cp_id, corpse in state.corpses.items():
+            if state.tick + 1 >= corpse.decay_tick:
+                corpses_remove.append(cp_id)
+                if corpse.gold > 0:
+                    # The body is gone this tick, so its id is free: the purse takes it (deterministic, no second id space).
+                    purses.append(GroundItemState(id=cp_id, item_id="", quantity=0, position=corpse.position, gold=corpse.gold,
+                                                  source_entity_id=corpse.original_entity_id, dropped_tick=state.tick + 1))
+        return corpses_remove, resource_updates, purses
 
     @staticmethod
     def _get_region_for_pos(state: AuthoritativeState, pos: tuple[float, float]) -> RegionState | None:

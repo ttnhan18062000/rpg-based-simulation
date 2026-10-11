@@ -79,6 +79,10 @@ def _building(*, functional: bool = True, gold: int = 0, items: list[ItemStack] 
 WOOD = [ItemStack("wood", 1)]
 
 
+def _dead_entity(*, gold: int = 0, items: list[ItemStack] | None = None):
+    return (V2EntityBuilder(SOURCE_ID).kind("hero").location(1.0, 1.0).combat(alive=False).inventory(gold=gold, items=items or []).build())
+
+
 def _case(case_id, source_kind, reason, *, actor=None, state=None, intent=None, reservations=None):
     return pytest.param(
         source_kind, reason, actor or {}, state or {}, intent or {}, reservations,
@@ -177,6 +181,13 @@ REJECTION_CASES = [
           intent={"items_remove": WOOD}),
     _case("home_storage_deposit_not_carried", "HOME_STORAGE", ReasonCode.ACTION_EXHAUSTION,
           intent={"items_remove": WOOD}),
+    _case("inherit_dead_entity_missing", "INHERIT", ReasonCode.TARGET_INVALID, intent={"items_add": WOOD}),
+    _case("inherit_heir_inventory_full", "INHERIT", ReasonCode.INVENTORY_FULL,
+          actor={"max_slots": 0}, state={"entities_extra": {SOURCE_ID: _dead_entity(items=[ItemStack("wood", 1)])}}, intent={"items_add": WOOD}),
+    _case("inherit_items_not_carried", "INHERIT", ReasonCode.INSUFFICIENT_RESOURCES,
+          state={"entities_extra": {SOURCE_ID: _dead_entity()}}, intent={"items_add": WOOD}),
+    _case("inherit_gold_not_carried", "INHERIT", ReasonCode.INSUFFICIENT_RESOURCES,
+          state={"entities_extra": {SOURCE_ID: _dead_entity(gold=3)}}, intent={"gold_delta": 5}),
     _case("unknown_source_kind", "NO_SUCH_KIND", ReasonCode.UNKNOWN_SOURCE_KIND),
 ]
 
@@ -185,7 +196,8 @@ UNKNOWN_KIND = "NO_SUCH_KIND"
 
 def _resolve(source_kind, actor_kwargs, state_kwargs, intent_kwargs, reservations):
     actor = _actor(**actor_kwargs)
-    state = AuthoritativeState(tick=1, seed=42, entities={ACTOR_ID: actor}, **state_kwargs)
+    extra = state_kwargs.pop("entities_extra", {}) if isinstance(state_kwargs, dict) else {}
+    state = AuthoritativeState(tick=1, seed=42, entities={ACTOR_ID: actor, **extra}, **state_kwargs)
     intent_kwargs = {"transaction_id": TX_ID, **intent_kwargs}
     intent = ResourceTransferIntent(source_id=SOURCE_ID, source_kind=source_kind, **intent_kwargs)
     return ResourceTransactionResolver.resolve(state, actor, intent, reservations=reservations)

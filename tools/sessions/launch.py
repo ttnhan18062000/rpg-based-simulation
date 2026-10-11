@@ -133,6 +133,8 @@ def agent_file_exists(role: Role, root: Path = _REPO_ROOT) -> bool:
 # ---- worktrees ---------------------------------------------------------------------------------
 
 def default_worktree_path(role: Role, main_checkout: Path) -> Path:
+    if role.launch == "main-checkout":  # read-mostly seat: it starts in the main checkout and takes no lease
+        return main_checkout
     return main_checkout / ".claude" / "worktrees" / role.worktree
 
 
@@ -472,6 +474,11 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
     if not handover.is_file():
         handover.parent.mkdir(parents=True, exist_ok=True)
         handover.write_text(HANDOVER_STUB.format(role=target.instance, date=time.strftime("%Y-%m-%d")), encoding="utf-8")
+    if role.launch == "worktree":  # the lease follows the recorded worktree (a batch worktree via --worktree)
+        try:
+            st.write_bound_worktree(sroot, target.instance, os.path.realpath(wt), bool(a.worktree))
+        except (OSError, st.StateError):
+            pass  # the record is a convenience; the launch never fails on it
     link_shared_graph(wt)  # graphify-out -> the main checkout's graph; a no-op when it has its own or is the main checkout
     os.chdir(wt)
     os.execvpe(cmd[0], cmd, {**os.environ, **env})

@@ -36,12 +36,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'grass' is active but never consumed by any downstream component",
       "target": "grass"
     },
@@ -50,6 +44,12 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -886,12 +886,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'grass' is active but never consumed by any downstream component",
       "target": "grass"
     },
@@ -900,6 +894,12 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -1713,7 +1713,7 @@
     }
   ],
   "fingerprints": {
-    "catalog": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
+    "catalog": "303769973378e61afa185b56b72afa1d771968e58e47509ee2d90deea6f176cf",
     "modules": {
       "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
       "nomadic_herd": "e0b53d7425fadb99628787a2dd1ff809a8053ad29243fc8c299c5c5de101ddec",

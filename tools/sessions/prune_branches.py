@@ -289,7 +289,7 @@ class WorktreeReport:
 
 def _seat_paths(main: Path, roster) -> dict[str, str]:
     """Resolved worktree path -> why it is a seat, from the roster."""
-    names = {r.worktree: r.role for r in roster.roles}
+    names = {r.worktree: r.role for r in roster.roles if r.worktree}
     names.update({w.name: w.writer or "shared worktree" for w in roster.worktrees})
     return {str((main / ".claude" / "worktrees" / n).resolve()): who for n, who in names.items()}
 

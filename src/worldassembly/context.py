@@ -26,7 +26,7 @@ class CompileContext:
     with catalog-resolved semantic profiles and attributes.
     """
 
-    def __init__(self):
+    def __init__(self, tax_share: float = 0.0):
         # Maps spec indices/ids to resolved internal profile definitions
         self.entities: Dict[str, ResolvedEntityProfile] = {}
         self.buildings: Dict[str, ResolvedBuildingProfile] = {}
@@ -36,6 +36,7 @@ class CompileContext:
         # Region ownership decisions and legacy mappings
         from src.core.enums import EntityRole, Faction
         self.region_ownership: Dict[str, Faction] = {}
+        self.tax_share: float = tax_share  # declared content (DefaultCompileProfile.default_tax_share); a held region taxes sales and wages by this share
         self.legacy_factions: Dict[str, Faction] = {}
         self.legacy_roles: Dict[str, EntityRole] = {}
         self.provenance: Optional[Any] = None
@@ -78,6 +79,7 @@ class CompileContext:
             "legacy_factions": {k: int(v) for k, v in self.legacy_factions.items()},
             "legacy_roles": {k: int(v) for k, v in self.legacy_roles.items()},
             "perspectives": dict(self.perspectives),
+            **({"tax_share": self.tax_share} if self.tax_share else {}),
         }
 
     @classmethod
@@ -101,5 +103,6 @@ class CompileContext:
             ctx.legacy_roles[k] = EntityRole(v)
         for k, v in data.get("perspectives", {}).items():
             ctx.perspectives[k] = v
+        ctx.tax_share = float(data.get("tax_share", 0.0))
 
         return ctx

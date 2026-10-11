@@ -32,14 +32,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -50,8 +50,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -917,14 +917,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -935,8 +935,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -1782,7 +1782,7 @@
     }
   ],
   "fingerprints": {
-    "catalog": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
+    "catalog": "303769973378e61afa185b56b72afa1d771968e58e47509ee2d90deea6f176cf",
     "modules": {
       "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
       "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",

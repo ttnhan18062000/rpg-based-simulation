@@ -177,7 +177,7 @@ def test_writer_placed_elsewhere_is_reported(fixture_root):
 
 def test_real_manifest_gives_every_designer_and_planner_its_own_worktree():
     roster = load_roster(REAL_ROOT)
-    for r in roster.roles:
+    for r in (r for r in roster.roles if r.launch == "worktree"):
         wt = next(w for w in roster.worktrees if w.name == r.worktree)
         assert wt.writer == r.role
         assert (r.worktree == r.role) == (r.function != "implementer")
@@ -300,3 +300,52 @@ def test_schema_stores_no_liveness_and_does_not_key_on_agent_type():
         assert key not in text, key
     fields = {f.name for f in dataclasses.fields(roster_mod.Role)}
     assert not fields & {"pid", "process_id", "live", "state", "agent_type"}
+
+
+# --- main-checkout launch policy (TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD) -----------
+
+def _main_checkout_role(roles: dict, role_id: str) -> None:
+    """Make `role_id` a main-checkout seat the way the real manifest does: no worktree, no writer entry."""
+    _role(roles, role_id)["placement"] = {"launch": "main-checkout", "max_sessions": 1}
+    roles["worktrees"].pop(role_id, None)
+
+
+def test_a_main_checkout_planner_is_accepted(fixture_root):
+    assert validate_clean(_mutated(fixture_root, lambda r: _main_checkout_role(r, "d1-planner")))
+
+
+def validate_clean(findings) -> bool:
+    return not findings
+
+
+def test_the_real_manifest_launches_asset_planner_and_lead_from_the_main_checkout():
+    roster = load_roster(REAL_ROOT)
+    for rid in ("asset-planner", "lead-planner"):
+        r = roster.role(rid)
+        assert r.launch == "main-checkout" and r.worktree == ""
+        assert rid not in {w.writer for w in roster.worktrees}
+
+
+def test_a_main_checkout_role_that_also_names_a_worktree_is_a_contradiction(fixture_root):
+    def mutate(r):
+        _role(r, "d1-planner")["placement"] = {"launch": "main-checkout", "worktree": "d1-planner", "max_sessions": 1}
+
+    assert "launch-contradiction" in _rules(_mutated(fixture_root, mutate))
+
+
+def test_a_main_checkout_role_that_is_still_a_worktree_writer_is_a_contradiction(fixture_root):
+    def mutate(r):
+        _role(r, "d1-planner")["placement"] = {"launch": "main-checkout", "max_sessions": 1}  # writer entry kept
+
+    assert "launch-contradiction" in _rules(_mutated(fixture_root, mutate))
+
+
+def test_an_implementer_cannot_launch_from_the_main_checkout(fixture_root):
+    assert "launch-contradiction" in _rules(_mutated(fixture_root, lambda r: _main_checkout_role(r, "d1-implementer")))
+
+
+def test_an_unknown_launch_mode_is_a_bad_field(fixture_root):
+    def mutate(r):
+        _role(r, "d1-planner")["placement"]["launch"] = "anywhere"
+
+    assert "bad-field" in _rules(_mutated(fixture_root, mutate))

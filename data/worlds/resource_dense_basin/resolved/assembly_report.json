@@ -29,8 +29,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -41,14 +41,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -878,8 +878,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -890,14 +890,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -1711,7 +1711,7 @@
     }
   ],
   "fingerprints": {
-    "catalog": "5c51179e1565294f3c5a0524cbe1deaf47af2c898abbd749d50510241113a9e3",
+    "catalog": "303769973378e61afa185b56b72afa1d771968e58e47509ee2d90deea6f176cf",
     "modules": {
       "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
       "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",

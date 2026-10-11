@@ -36,3 +36,9 @@ class ResourceTransferIntent:
     strategic_upd: Optional[StrategicUpdate] = None
     equipment_upd: Optional[EquipmentUpdate] = None
     reward_upd: Optional[RewardUpdate] = None
+    # EXCH-02: a faction treasury as a purse in this transfer. `treasury_gold` is the share of the receiver's proceeds (a sale or a wage) paid
+    # to the treasury of `treasury_faction` (the tax). When `treasury_pays` is set, the treasury funds `gold_delta` instead of it being minted
+    # (a reward): a short treasury pays nothing.
+    treasury_faction: Optional[int] = None
+    treasury_gold: int = 0
+    treasury_pays: bool = False

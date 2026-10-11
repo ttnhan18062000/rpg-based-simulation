@@ -10,8 +10,8 @@
   "warnings": [
     "QuestDefinition 'survey_river_route' required_location_tag 'river' does not match any region type or tag in this world"
   ],
-  "compile_duration_ms": 512.2775486670434,
-  "state_hash": "0afc6c56fc55abce8856ee4867301cc3",
-  "canonical_state_hash": "95e72c55f800fe800ddd53e26de41cfeb615874e3349f7296b32fe9f757a09ef",
+  "compile_duration_ms": 1264.1869466751814,
+  "state_hash": "8ba636918b6118658839d3a0ba93bf99",
+  "canonical_state_hash": "907709cee5bbb313cd422275f56225aa1e760eb9ad550f6b9a5a81d0bd4bdb94",
   "place_count": 5
 }
