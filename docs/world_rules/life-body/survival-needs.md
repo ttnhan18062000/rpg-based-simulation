@@ -158,7 +158,19 @@ Catalog has found.
   tick, against 1-2 HP from hunger in its last 300 ticks. The label was set by hunger at death,
   not by the source of the HP loss (`src/engine/apply.py`). That is fixed to the typed source,
   and this collapse now lands first, as its own PR.
-- **Evidence: CONFLICTING** until its code ticket lands.
+- **Evidence: SUPPORTED since #505 (`20f67b744`, 2026-10-11)**, divergence 2.105, parity entry
+  `PROG-130`. Past 98 the subject sleeps where it stands and loses no health
+  (`src/engine/sleep_debt.py`). Asleep, the debt falls at twice the kind's own rate, and the
+  subject wakes at about 59. A bed is sought only within 30 tiles and inside a range-bound
+  subject's range, or else the subject rests in place. A collapse from 98 lasts about 408 ticks,
+  measured for a person and a wolf. Pinned by `tests/unit/engine/test_sleep_debt_stages.py`,
+  `tests/mechanic_scenarios/test_sleep_debt_collapse.py` (LB-S19) and
+  `tests/mechanic_scenarios/test_sleep_pull_nearest_open_way.py`. Re-run on `rpg-designer-next`
+  after merging that main, together with the need-wake tests: 50 passed.
+  - **Disclosed by the ticket, still open:** the pull of the return-to-town goal (`TownScorer`)
+    also grows with sleep debt and walks a subject toward town far from any inn. It is a
+    separate pull, unchanged. The cause label (the typed source of the last health lost) is its
+    own ticket, so the "real killer" paragraph above holds until that lands too.
 - **Scenario:** [LB-S19](../scenarios/life-body-batch-05.md#lb-s19) (weakened, collapse where it
   stands, no action while asleep, wakes, no HP loss; a rested control).
 
@@ -443,6 +455,15 @@ the world, which contradicts SURV-03 (a need is modeled for its real, causal con
     undeclared until a Rule declares it. The fixed tether is a leftover of the monster role,
     against decision 46. Milestone 1 replaces it with a home range taken from the kind's
     properties, and until then the food sits inside it.
+    - **Evidence: SUPPORTED for goblin camps since #505 (`20f67b744`)**, divergence 2.106. The
+      module `goblin_camp_forage` places one berry thicket within 4 tiles of each camp, nine
+      composed worlds use it, and `src/worldbuilding/camp_food.py` reports any camp with no food
+      way in range. Over seeds 42-46 (5,000 ticks), camp monsters ate 84 and 88 berry meals in
+      the two camp worlds, none of them outside their range or at an inn, against none at all
+      before. Their starvation fell from 6.4 to 2.4 and from 3.0 to 0.0 a run.
+      **Gaps, disclosed:** wolf nests are meat-only camps, reported rather than filled with
+      berries (hunting closes them), and the food is a per-module line until grazing moves it
+      to the biome (row 59).
   - **Unchanged guardrails:** wild food enters by harvest and leaves by eating (Bible 03
     conservation); it is its own declared item and node kind, never herb; and the integrity
     check (`need_paths.py`) counts a wild-food node within reach as a hunger way for the kinds
@@ -779,7 +800,9 @@ the escalation and the present-threat gate shipped in #414 (`c2e18b182`).** Lane
     subject's own line. A bed (home, or an inn bed it can pay for) is chosen only when one is
     within reach and the better rest is worth the walk. For animals, the rest place is the den or
     where they stand, inside their home range. **Fixed with sleep collapse** (decision 41,
-    LB-S19), in milestone 0. It does not block the gate's H6.
+    LB-S19), in milestone 0. It does not block the gate's H6. **Done in #505:** the sleep goal
+    names a bed only within 30 tiles and inside a range-bound subject's range, or else the
+    subject rests where it stands (divergence 2.105).
   - **Ticket:** `TCK-20261009-THE-HUNGER-PULL-AIMS-AT-THE-NEAREST-OPEN-WAY-NOT-THE-INN-SURV-07`
     (Lane A, after the hunting batch, before the gate run).
   - **Every kind takes the same path** (decision 42 holds): animals and all seven cognition
@@ -787,6 +810,21 @@ the escalation and the present-threat gate shipped in #414 (`c2e18b182`).** Lane
     override paths skip the pull: an active objective returns before scoring
     (`src/systems/strategic_systems/intelligence.py:1260-1541`), and a leash return
     (`tactical.py:189-206`) overrides food outside the radius. Both are in the planner's P1 tickets.
+  - **A held move no longer blocks the pull (#505, `20f67b744`, 2026-10-11; divergence 2.106):**
+    a hunger or sleep debt at the escalation onset wakes the brain of a subject holding a move,
+    every strategic cadence. Before this, people spent 1,470 to 1,900 of their first 2,000
+    ticks frozen in a held avoid-hostile or regroup move that never ended, and those who never
+    ate all died at the same age. **Earlier population figures for this Rule were dominated by
+    that defect and are superseded.** A range-bound subject now aims only at ways inside its
+    range (`LeashService.way_in_range`), which closes the leash-return override for food.
+    Measured over seeds 42-46, 5,000 ticks: deaths per run in `urban_political` fell from 25.8
+    to 19.8 (paired SE 1.8), while `frontier_living_world` and `crowded_frontier` moved within
+    noise. Starvation among people fell in every group, by about 1 to 2.4 a run. Some of the
+    fed met other deaths instead, a change of cause rather than new deaths. Pinned by
+    `tests/unit/engine/test_pressing_need_wakes_a_held_move.py` and
+    `tests/unit/ai/test_way_in_range.py`. **Still open:** the inn-first `EatScorer` and the
+    true-map search above; a group does not yet wait for a member who leaves to eat; and
+    people who starve without holding a move are not yet diagnosed.
 
 **Scenarios:** none traced yet. Four are owed when implemented:
 - a tired worker heading to the inn keeps going when a routine blocker reappears;
