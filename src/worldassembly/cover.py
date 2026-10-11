@@ -54,12 +54,11 @@ def cover_patch_specs(repo: "CatalogRepository", regions: Dict[str, "RegionSpec"
     for region_id, region in regions.items():
         kind = region_cover_kind(repo, region_id)
         kind_def = repo.get_resource(kind) if kind else None
-        if kind_def is None or kind_def.density_per_1000_tiles is None:
+        if kind is None or kind_def is None or kind_def.density_per_1000_tiles is None:
             continue
-        regen = kind_def.regen_per_check
-        for i in range(patch_count(region.bounds, kind_def.density_per_1000_tiles)):
-            fields = {"id": f"cover__{region_id}__{i}", "resource_type": kind, "count": kind_def.default_charges, "region": region_id}
-            if regen is not None:
-                fields["regen_rate"] = regen
-            specs.append(ResourceNodeSpec(**fields))
+        regen = kind_def.regen_per_check if kind_def.regen_per_check is not None else ResourceNodeSpec.model_fields["regen_rate"].default
+        specs.extend(
+            ResourceNodeSpec(id=f"cover__{region_id}__{i}", resource_type=kind, count=kind_def.default_charges, region=region_id, regen_rate=regen)
+            for i in range(patch_count(region.bounds, kind_def.density_per_1000_tiles))
+        )
     return specs
