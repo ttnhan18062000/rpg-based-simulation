@@ -178,6 +178,21 @@ wealth, but no Rule said how a person comes to hold money at all.
     - a building closes only when neither can pay, and reopens when paid;
     - meeting upkeep sends no coin to nowhere: coin leaves a building only as wages for the work
       that maintains it, and as tax on its own sales (a meal or bed sold is a sale, decision 51).
+  - **Upkeep is measured in work (rpg-designer applying row 61, 2026-10-11; split and bands
+    decided by the owner directly the same day, row 66 of the memo).** A building's upkeep for a
+    period is the shifts it needs times the wage (6), so a building's upkeep and the work that
+    maintains it are one quantity, and the old fixed maintenance cost (5) is retired. Each
+    building keeps a typed count of the shifts worked in the period. Shifts come in two kinds,
+    told apart by who pays:
+    - **Upkeep shifts:** every building, capped at the shifts it needs each period: 1 for an
+      ordinary building, 3 for the town hall (decision 50, coarse). No shift beyond that is
+      offered, which rules out make-work. These are the only shifts the treasury may top up.
+    - **Business shifts:** a building that declares paid work (the inn today) may hire as many
+      as its own purse covers, from its own takings, with no treasury money. This is earned
+      coin going round, and it is the main wage way for poor townspeople.
+    - Both pay the same wage. **Not taken:** one cap everywhere, which would cut the main wage
+      way to about one shift a period; bands by declared size, since no size property exists
+      yet.
   - **A quest is paid only by its real giver (owner, row 61):** whoever posted it pays, from its
     own purse or its own faction's treasury, or owes it. Neither the claimant's local holder nor a
     neutral reserve pays for a quest it never offered. A quest with no identifiable giver carries

@@ -178,6 +178,24 @@ Catalog has found.
 - **Scenario:** [LB-S19](../scenarios/life-body-batch-05.md#lb-s19) (weakened, collapse where it
   stands, no action while asleep, wakes, no HP loss; a rested control).
 
+- **Amendment, bodies heal slowly, faster at rest (decided by the owner directly, 2026-10-11;
+  row 65 of the memo).** Health came back only on a town tile, by a paid inn rest, on a level-up
+  or through one core action, so a wounded wolf, goblin, deer or traveller in the wild never
+  healed. Every living kind (decision 42) now heals a little wherever it is: 1 HP every
+  round(9600 / max HP) ticks awake, and every round(4800 / max HP) ticks while asleep or resting,
+  a collapse included. That is full health in about 4 days awake or about 2 days at rest,
+  whatever the body's size, in the same shape as staged starvation's loss.
+  - **Needs gate it, on decision 36's scale:** no healing at or past the starving line, and half
+    speed while weakened (the worse of hunger and sleep decides). It is derived from the needs,
+    with no new state field.
+  - The inn keeps its worth: a paid rest heals at once. These rates are placeholders (decision
+    33); rates per kind come with milestone 1's body properties.
+  - It lands before the milestone 0 gate's baseline, because wounded subjects that never heal
+    distort its deaths. **Disclosed for milestone 3:** healing by standing on a town tile (1 HP a
+    tick, unpaid) is healing given free by place, against "nothing free".
+  - **Alternatives not taken:** healing only at rest (an awake, wounded creature never
+    improves); leaving it to milestone 1 (old wounds keep killing, which skews the gate).
+
 **Scenarios:** [LB-S08](../scenarios/life-body-batch-05.md#lb-s08) (survival pressure).  Staged starvation:
 [LB-S18](../scenarios/life-body-batch-05.md#lb-s18) (weakened within hours, dies at 2 to 3 days;
 a control that eats), a kernel spec owed with Lane A's decision-36 ticket.
@@ -706,6 +724,24 @@ others, not a reflex.
     subject's need becomes a countdown timer again, against SURV-03 and SURV-06's "avoidable by
     behaviour"); a redirect to any means, including crime (it creates ways to get food that no
     Rule declares).
+
+- **Amendment, a pressing hunger wakes a sleeper (decided by the owner directly, 2026-10-11;
+  row 64 of the memo; meets decision 41's sleep hold).** Lane C traced two subjects who fell
+  asleep at hunger 96-100 and slept 300-400 ticks until they died. One, a merchant, carried 81
+  gold and could have bought a meal. A held sleep runs no brain, so the hunger pull ranked first
+  and could not act.
+  - **A chosen sleep or rest** (a held SLEEP or REST below the collapse line) ends as soon as
+    hunger reaches this Rule's escalation onset. The subject then decides (decision 32): it eats
+    if a way is open, or sleeps again, and sleep resumes later because the debt remains.
+  - **A collapse** (the debt reached 98) holds until the debt falls back below the collapse
+    line, about 20 ticks for a person. Then the same hunger check ends it, and the subject wakes
+    still weakened and goes to eat. Without this floor, a starving and exhausted subject would
+    wake and collapse again on every tick.
+  - No new number: the onset and the collapse line already exist. The check runs on the same
+    cadence as the need wake.
+  - **Alternatives not taken:** waking every sleep, collapse included (a collapse loop, so
+    collapse would mean nothing to the hungry); keeping sleep unbroken and only refusing to fall
+    asleep hungry (it does not help a collapse, which is how both died).
 
 - **Amendment, providing for a coming need (decided by the owner directly, 2026-10-09; row 55 of
   the memo):**

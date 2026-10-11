@@ -883,7 +883,10 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 60. how much meat a body gives and how often meat-eaters eat (decided 2026-10-10: meat in proportion to size, a meat-eater's full meal lasts at least a day, SURV-06).
 61. who keeps a building up and who pays a quest (decided 2026-10-11: a building pays its own upkeep and the treasury covers only a shortfall; only the real giver pays a quest; coin on a corpse stays where it fell, EXCH-02);
 62. how far faction hostility reaches (decided 2026-10-11: wild creatures go by the appraisal now; monster factions keep faction hostility until milestone 1, when each monster kind declares why it fights, CONFLICT-03);
-63. what a hero is (decided 2026-10-11: a person doing adventuring work, not a kind or a role; the guild is an organization people join, ID-02).
+63. what a hero is (decided 2026-10-11: a person doing adventuring work, not a kind or a role; the guild is an organization people join, ID-02);
+64. whether hunger wakes a sleeper (decided 2026-10-11: yes; a collapse first holds until the debt is back below its line, SURV-07);
+65. whether bodies heal outside towns (decided 2026-10-11: slowly everywhere, twice as fast at rest, none while starving; placeholders until milestone 1, SURV-02);
+66. how upkeep work is capped (decided 2026-10-11: upkeep shifts capped at need and the only ones the treasury tops up; business shifts from the building's own purse; 1 shift a period, 3 for the town hall, EXCH-02).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -1159,7 +1162,8 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    Done when a long-run conservation ledger balances for coin, food, goods and creatures, with
    every change traced to a cause.
 3. **Bodies heal, food ends, fire cooks.**
-   - Ways to recover per kind (rest and time, treatment, potions consumed).
+   - Ways to recover per kind (treatment, potions consumed; rest and time already heal at a
+     placeholder rate since decision 65). Decide whether a town tile should heal for free.
    - Corpse fate: butchery, scavenging, rot, burial.
    - Spoilage by food type, with cooking and drying to preserve.
    - Fire needs fuel and a place.
