@@ -508,3 +508,33 @@ def test_a_gh_timeout_falls_back_to_git_cherry(repo, monkeypatch):
 
     monkeypatch.setattr(ln, "_run", fake)
     assert "squash-merged" in ln.branch_spent_reason(name, repo)
+
+
+# ---- TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD ------------------------------------
+
+def test_a_main_checkout_role_launches_in_the_main_checkout(tmp_path):
+    lead = ROSTER.role("lead-planner")
+    assert lead.launch == "main-checkout" and lead.worktree == ""
+    assert ln.default_worktree_path(lead, tmp_path) == tmp_path
+    assert ln.default_worktree_path(ROSTER.role(ROLE), tmp_path) == tmp_path / ".claude" / "worktrees" / "agent-working"
+
+
+def test_launching_with_worktree_records_it_for_the_instance(repo, seat_worktree, monkeypatch):
+    monkeypatch.setattr(os, "execvpe", lambda *a, **k: None)
+    monkeypatch.setattr(os, "chdir", lambda *_: None)
+    assert ln.main([ROLE, "--worktree", str(seat_worktree)], root=seat_worktree) == 0
+    assert st.read_bound_worktree(st.state_root(repo), ROLE) == (os.path.realpath(seat_worktree), True)
+
+
+def test_a_dry_run_records_nothing(repo, seat_worktree, monkeypatch):
+    monkeypatch.setattr(os, "execvpe", lambda *a, **k: pytest.fail("no exec"))
+    ln.main([ROLE, "--dry-run", "--worktree", str(seat_worktree)], root=seat_worktree)
+    assert st.read_bound_worktree(st.state_root(repo), ROLE) is None
+
+
+def test_an_unreadable_record_reads_as_none(repo):
+    sroot = st.state_root(repo)
+    st.write_role_file(sroot, ROLE, "worktree.json", {"path": 3})
+    assert st.read_bound_worktree(sroot, ROLE) is None
+    (st.role_dir(sroot, ROLE) / "worktree.json").write_text("{not json")
+    assert st.read_bound_worktree(sroot, ROLE) is None

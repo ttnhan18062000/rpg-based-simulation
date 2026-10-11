@@ -206,9 +206,15 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
         # refused by the first's lease, and writes only in its own per-piece worktree (implementer card)
         # TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE: lease only the role's own manifest worktree,
         # never whatever directory the session happened to launch in (the main checkout in particular)
+        # TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD: the worktree the launcher recorded for this
+        # instance (a batch worktree via `--worktree`, or a placement outside `.claude/worktrees`) takes the lease too
         manifest = _manifest_worktree(role, cwd)
-        if manifest is not None and os.path.realpath(worktree) != manifest:
-            notes.append(f"session-roles: writer lease not taken: launched outside {manifest}")
+        bound = st.read_bound_worktree(state_root, instance_id)
+        allowed = {manifest} if manifest is not None else set()
+        if bound is not None:
+            allowed.add(os.path.realpath(bound[0]))
+        if allowed and os.path.realpath(worktree) not in allowed:
+            notes.append(f"session-roles: writer lease not taken: launched outside {' or '.join(sorted(allowed))}")
         else:
             try:
                 st.take_lease(state_root, worktree, instance_id, binding.session_id, proc, proc_root)

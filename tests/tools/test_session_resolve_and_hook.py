@@ -489,3 +489,53 @@ def test_issue_ages_and_hostile_titles_are_rendered_as_one_short_line(monkeypatc
     monkeypatch.delenv("SESSION_START_ISSUES", raising=False)
     now = datetime(2026, 10, 11, 12, 0, tzinfo=timezone.utc)
     assert [hook._age(t, now) for t in ("2026-10-08T12:00:00Z", "2026-10-11T07:00:00Z", "2026-10-11T11:48:00Z", "junk")] == ["3d", "5h", "12m", "?"]
+
+
+# --- TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD ----------------------------------------
+
+def _batch_wt(world, tmp_path, name="rpg-batch"):
+    _, repo, _ = world
+    path = tmp_path / name
+    subprocess.run(["git", "worktree", "add", "-q", "-b", f"b-{name}", str(path)], cwd=repo, check=True, env=_ENV)
+    return path
+
+
+def test_the_recorded_batch_worktree_takes_the_lease_not_the_main_checkout(world, tmp_path):
+    batch = _batch_wt(world, tmp_path)
+    st.write_bound_worktree(world[2], WRITER, batch, True)
+    out = _ctx(world, _payload(world[1], cwd=str(batch)))
+    assert "writer lease not taken" not in out
+    lease = st.read_lease(world[2], batch)
+    assert lease is not None and lease.role == WRITER
+    assert st.read_lease(world[2], world[1]) is None
+
+
+def test_a_placement_outside_claude_worktrees_leases_where_the_seat_writes(world, tmp_path):
+    """asset and perf on host ubuntu write in ~/Work/rpg-*: launch.py --worktree records that path."""
+    batch = _batch_wt(world, tmp_path, "rpg-perf")
+    st.write_bound_worktree(world[2], "perf-implementer", batch, True)
+    out = _ctx(world, _payload(world[1], agent_type="session-perf-implementer", cwd=str(batch)), {"SESSION_ROLE": "perf-implementer"})
+    assert "writer lease not taken" not in out
+    assert st.read_lease(world[2], batch).role == "perf-implementer"
+
+
+def test_a_session_outside_both_the_manifest_and_the_recorded_worktree_takes_no_lease_and_names_both(world, tmp_path):
+    batch = _batch_wt(world, tmp_path)
+    other = _batch_wt(world, tmp_path, "elsewhere")
+    st.write_bound_worktree(world[2], WRITER, batch, True)
+    out = _ctx(world, _payload(world[1], cwd=str(other)))
+    assert "writer lease not taken: launched outside" in out and str(batch.resolve()) in out
+    assert st.read_lease(world[2], other) is None
+
+
+def test_without_a_record_the_manifest_worktree_still_takes_the_lease(world):
+    wt = _manifest_wt(world, WRITER)
+    _ctx(world, _payload(world[1], cwd=str(wt)))
+    assert st.read_lease(world[2], wt).role == WRITER
+
+
+def test_a_main_checkout_seat_takes_no_lease_and_says_nothing_about_one(world):
+    out = _ctx(world, _payload(world[1], agent_type="session-lead-planner"), {"SESSION_ROLE": "lead-planner"})
+    assert "Launches from the main checkout, no lease" in out
+    assert "writer lease not taken" not in out and "WRITER LEASE" not in out
+    assert st.read_lease(world[2], world[1]) is None

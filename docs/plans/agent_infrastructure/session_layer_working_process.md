@@ -144,7 +144,9 @@ review, Appendix I). They may share a physical file, except authority:
 2. **Responsibility**: `owns` / `owns_not` globs and `routes` (who owns what is outside this role).
 3. **Capability**: tool allowlist, `may_write` paths (what the role *can* touch).
 4. **Placement**: the worktree a role works in and `max_sessions`. The **writer slot is a property of
-   the worktree, not of a role** (see the `worktrees:` resource below).
+   the worktree, not of a role** (see the `worktrees:` resource below). A read-mostly role may instead declare `placement.launch: main-checkout`: it starts in the main
+   checkout, names no worktree, is nobody's `worktrees:` writer and holds no lease (an implementer never may; the
+   validator rule `launch-contradiction` rejects it, and also a main-checkout role that names a worktree or is a writer).
 5. **Authority**: what needs the user, standing grants. **Lives in its own file,
    `registries/session_authority.yaml`, treated as a governing file** (see 10).
 
@@ -414,6 +416,16 @@ hygiene on top; it does not change those rules.
 - **Name by role**: the implementer's worktree keeps the domain name (`agent-working`, `rpg`, `testing`, `codebase`); every designer and planner has a worktree named after its role (`agent-working-planner`, `rpg-designer`, ...), created with `launch.py <role> --branch <topic>` (branch `<role>-<topic>` off `origin/main`). A worktree hosts only its writer (validator rule `worktree-shared`). (`doc-tag-enforcement`
   is the historical name of the agent-working worktree; renaming is pending and needs both sessions
   out of it.)
+- **Launch policy (owner decision 2026-10-10).** Read-mostly seats (lead, planners, designers) may launch from the main
+  checkout and hold no lease there; the manifest says which with `placement.launch: main-checkout` (today `asset-planner`,
+  which needs no worktree of its own, and `lead-planner`). The other planners and designers keep their own worktrees until
+  the owner flips them one line at a time. **Implementers get a fresh worktree per batch** (`~/Work/rpg-<batch>` on host
+  ubuntu), and a placement may live outside `.claude/worktrees/` (asset and perf on ubuntu).
+- **Batch-worktree record.** `launch.py <role> --worktree <path>` records the path in the instance's role state
+  (`worktree.json`, written on a real launch only). SessionStart takes the writer lease in the manifest worktree **or** the
+  recorded one, so a batch worktree or an out-of-tree placement holds the lease where the seat writes, and the main checkout
+  does not. `status.py` shows `writing in: <path>` per seat. Detecting the first commit in a new worktree is not attempted:
+  the guard cannot know which batch a commit belongs to, so recording needs the explicit `--worktree` launch.
 - **Inventory** `tools/sessions/status.py`: per worktree: path, branch, dirty state, owner role,
   open PR, size on disk, last commit. Read-only. Answers "what is in flight" without asking.
 - **Disk budget**: warn at 85% of the volume and name the largest worktrees. (2026-10-02: 100%,
@@ -765,6 +777,10 @@ only committer (sections 4, 5, 7); `.claude/agents/session-<role>.md` files are 
 manifest (M0d may force a separate directory).
 
 **Decided by the owner (2026-10-09 and 2026-10-10):** the lead seat is advisory and sequencing only, with no dispatch or queue authority (2026-10-09). Cross-host handoffs go out as GitHub issues labelled `for:<role>`, which SessionStart lists for the role; the owning planner turns an accepted one into its own ticket (2026-10-10, issue #492; see `docs/guides/cross_session_messages.md`).
+
+**Decided by the owner (2026-10-10, relayed by lead-planner on #476):** read-mostly seats (lead, planners, designers) launch from the main
+checkout; implementers get a fresh worktree per batch; the launcher records which batch worktree an instance uses; asset-planner needs no
+worktree of its own (section 8, "Launch policy").
 
 **Open, for the owner:**
 1. Staffing: `agent-working-planner` and `testing-designer` are unstaffed. Who holds them, and when?
