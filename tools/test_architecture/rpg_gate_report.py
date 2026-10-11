@@ -354,6 +354,7 @@ def build_report(
         "harness_hash": harness_hash,
         "verdict": outcome,
         "reasons": reasons,
+        "module_absent": any(f["state"] == NO_DATA and f.get("reason") == "metric_error" and str(f.get("detail", "")).startswith("ModuleNotFoundError") for f in findings),
         "run_errors": [
             {"world": f["world"], "seed": f.get("seed"), "error": f.get("detail", "")} for f in findings if f.get("reason") == "run_error"
         ],
@@ -376,6 +377,8 @@ def build_report(
 def render_markdown(report: Mapping[str, Any]) -> str:
     lines = [f"## rpg gate report: {report['verdict'].upper()}", ""]
     lines.append(f"SHA `{report['sha'][:9]}`, harness `{report['harness_hash'][:12]}`. " + ", ".join(f"{s}: {report['counts'][s]}" for s in STATES))
+    if report.get("module_absent"):
+        lines += ["", "> **rpg's metric module is absent** (`ModuleNotFoundError`): every run is `metric_error` / `no-data`, so this report judges nothing yet. The job stays green."]
     if report["references"]:
         lines.append("References: " + "; ".join(f"{r['ref']} = v{r['version']} ({r['milestone']}){' STALE: ' + '; '.join(r['stale']) if r['stale'] else ''}" for r in report["references"]))
     else:

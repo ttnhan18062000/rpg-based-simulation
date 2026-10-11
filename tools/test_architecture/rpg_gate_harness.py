@@ -42,6 +42,7 @@ CLI (``--metrics-module`` defaults to :data:`DEFAULT_METRICS_MODULE`)::
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import hashlib
 import json
 import os
@@ -279,10 +280,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--workers", type=int, default=DEFAULT_WORKERS)
     parser.add_argument("--sha")
+    parser.add_argument("--only-world", action="append", default=[], help="run only this world of the config (repeatable); a CI shard runs one world")
     parser.add_argument("--keep-runs", action="store_true")
     parser.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT_S)
     args = parser.parse_args(argv)
-    matrix = run_matrix(load_config(args.config), args.config, args.out, metrics_module=args.metrics_module, sha=args.sha or _git_head(),
+    config = load_config(args.config)
+    if args.only_world:
+        unknown = [w for w in args.only_world if w not in config.worlds]
+        if unknown:
+            parser.error(f"--only-world not in the config: {unknown}")
+        config = dataclasses.replace(config, worlds=tuple(w for w in config.worlds if w in args.only_world))
+    matrix = run_matrix(config, args.config, args.out, metrics_module=args.metrics_module, sha=args.sha or _git_head(),
                         workers=args.workers, keep_runs=args.keep_runs, timeout_s=args.timeout)
     bad = [r for r in matrix["runs"] if r["status"] != OK]
     print(f"{len(matrix['runs']) - len(bad)}/{len(matrix['runs'])} runs ok in {matrix['wall_seconds']}s; matrix: {args.out / 'matrix.json'}")
