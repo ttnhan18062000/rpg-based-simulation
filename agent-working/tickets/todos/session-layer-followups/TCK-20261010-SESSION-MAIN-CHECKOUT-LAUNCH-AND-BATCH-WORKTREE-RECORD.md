@@ -62,6 +62,12 @@ sibling hotfix) attaches to the wrong path.
 - **Plan.** Amend `session_layer_working_process.md` §4/§8 and record the owner decision of
   2026-10-10 in §12.3.
 
+- **Placements outside `.claude/worktrees/` (added 2026-10-11 by agent-working-planner, from the #506 review).**
+  Since #506 the SessionStart hook leases only `<main checkout>/.claude/worktrees/<placement>`. Seats whose real
+  worktree is elsewhere, asset (`~/Work/rpg-aseprite-mcp`) and perf (`~/Work/rpg-perf`) on host ubuntu, now get the
+  note "writer lease not taken" and no lease. Let a role declare its real worktree path, or bind it through the
+  recorded batch worktree above, so these seats take the lease where they write. Test both.
+
 ## Out of Scope
 - The lease-on-launch-cwd bug itself (sibling hotfix
   `TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE`; land it first).
