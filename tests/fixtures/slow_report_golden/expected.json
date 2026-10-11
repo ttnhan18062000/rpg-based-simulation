@@ -1,0 +1,176 @@
+{
+ "first_run_no_tracker": {
+  "calls": [
+   [
+    "create_issue",
+    "Slow regression: 4 failing on main",
+    "<!-- slow-regression-tracker -->\nFailing set of the `Slow regression` workflow, as of run [111](https://github.com/o/r/actions/runs/111) at `aaaaaaaaaaaa`.\n\n### EXPIRED (counted as red until someone re-dates, fixes or removes the entry)\n- [tests.old.test_expired::test_b](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-OLD`, owner someone, expired 2026-10-06\n\n### corpus diversity (1)\n- [tests.corpus.test_div::test_world[b]](https://github.com/o/r/actions/runs/111) \u2014 **UNOWNED**\n\n### slow tests (3)\n- [tests.old.test_expired::test_b](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-OLD`\n- [tests.perf.test_perf_combat::test_a](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-PERF`\n- [tests.unknown.test_new::test_c](https://github.com/o/r/actions/runs/111) \u2014 **UNOWNED**\n\n### Stale mappings (mapped to a ticket but not failing; consider cleaning up)\n- `tests.regression.test_gone*` \u2014 `TCK-GOLDEN-GONE`\n\nLast seen: run [111](https://github.com/o/r/actions/runs/111) at `aaaaaaaaaaaa`.\n\n```json\n{\n \"failing\": {\n  \"tests.corpus.test_div::test_world[b]\": \"corpus diversity\",\n  \"tests.old.test_expired::test_b\": \"slow tests\",\n  \"tests.perf.test_perf_combat::test_a\": \"slow tests\",\n  \"tests.unknown.test_new::test_c\": \"slow tests\"\n },\n \"first_seen\": {\n  \"tests.corpus.test_div::test_world[b]\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.old.test_expired::test_b\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.perf.test_perf_combat::test_a\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.unknown.test_new::test_c\": \"2026-10-09T12:00:00+00:00\"\n }\n}\n```"
+   ]
+  ],
+  "exit_code": 1,
+  "failing": {
+   "tests.corpus.test_div::test_world[b]": "corpus diversity",
+   "tests.old.test_expired::test_b": "slow tests",
+   "tests.perf.test_perf_combat::test_a": "slow tests",
+   "tests.unknown.test_new::test_c": "slow tests"
+  },
+  "lint": [],
+  "measured": [
+   "tests.corpus.test_div::test_world[a]",
+   "tests.corpus.test_div::test_world[b]",
+   "tests.legacy.test_l::test_one",
+   "tests.legacy.test_l::test_two",
+   "tests.ok.test_fine::test_d",
+   "tests.ok.test_xfail::test_e",
+   "tests.old.test_expired::test_b",
+   "tests.perf.test_perf_combat::test_a",
+   "tests.unknown.test_new::test_c"
+  ],
+  "message": "first run: created the issue with 4 failing, no per-test comments",
+  "reasons": [
+   "2 failing test(s) with no known-reds entry (UNOWNED): tests.corpus.test_div::test_world[b], tests.unknown.test_new::test_c",
+   "1 failing test(s) under an EXPIRED entry: tests.old.test_expired::test_b"
+  ],
+  "seen": [
+   "corpus diversity",
+   "legacy regression",
+   "slow tests"
+  ],
+  "warnings": []
+ },
+ "new_and_fixed_and_digest": {
+  "calls": [
+   [
+    "comment",
+    7,
+    "NEW: `tests.unknown.test_new::test_c` (slow tests)\nFIXED: `tests.regression.test_gone::test_fixed`\nRun 111, head `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`."
+   ],
+   [
+    "comment",
+    7,
+    "<!-- slow-regression-digest 2026-W41 -->\nWeekly digest, 2026-W41 (4 failing).\n\n| test | ticket | owner | kind | tracked since | age (days) | days to expiry | flags |\n|---|---|---|---|---|---|---|---|\n| `tests.corpus.test_div::test_world[b]` | \u2014 | \u2014 | \u2014 | 2026-10-09 | 0 | \u2014 | UNOWNED |\n| `tests.old.test_expired::test_b` | `TCK-GOLDEN-OLD` | someone | flaky | 2026-10-09 | 0 | -3 | EXPIRED |\n| `tests.perf.test_perf_combat::test_a` | `TCK-GOLDEN-PERF` | perf-owner | broken | 2026-10-09 | 0 | 53 |  |\n| `tests.unknown.test_new::test_c` | \u2014 | \u2014 | \u2014 | 2026-10-09 | 0 | \u2014 | UNOWNED |\n\nStale mappings (not failing): `tests.regression.test_gone*`"
+   ],
+   [
+    "update_issue",
+    7,
+    "Slow regression: 4 failing on main",
+    "<!-- slow-regression-tracker -->\nFailing set of the `Slow regression` workflow, as of run [111](https://github.com/o/r/actions/runs/111) at `aaaaaaaaaaaa`.\n\n### EXPIRED (counted as red until someone re-dates, fixes or removes the entry)\n- [tests.old.test_expired::test_b](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-OLD`, owner someone, expired 2026-10-06\n\n### corpus diversity (1)\n- [tests.corpus.test_div::test_world[b]](https://github.com/o/r/actions/runs/111) \u2014 **UNOWNED**\n\n### slow tests (3)\n- [tests.old.test_expired::test_b](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-OLD`\n- [tests.perf.test_perf_combat::test_a](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-PERF`\n- [tests.unknown.test_new::test_c](https://github.com/o/r/actions/runs/111) \u2014 **UNOWNED**\n\n### Stale mappings (mapped to a ticket but not failing; consider cleaning up)\n- `tests.regression.test_gone*` \u2014 `TCK-GOLDEN-GONE`\n\nLast seen: run [111](https://github.com/o/r/actions/runs/111) at `aaaaaaaaaaaa`.\n\n```json\n{\n \"failing\": {\n  \"tests.corpus.test_div::test_world[b]\": \"corpus diversity\",\n  \"tests.old.test_expired::test_b\": \"slow tests\",\n  \"tests.perf.test_perf_combat::test_a\": \"slow tests\",\n  \"tests.unknown.test_new::test_c\": \"slow tests\"\n },\n \"first_seen\": {\n  \"tests.corpus.test_div::test_world[b]\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.old.test_expired::test_b\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.perf.test_perf_combat::test_a\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.unknown.test_new::test_c\": \"2026-10-09T12:00:00+00:00\"\n }\n}\n```"
+   ]
+  ],
+  "exit_code": 1,
+  "failing": {
+   "tests.corpus.test_div::test_world[b]": "corpus diversity",
+   "tests.old.test_expired::test_b": "slow tests",
+   "tests.perf.test_perf_combat::test_a": "slow tests",
+   "tests.unknown.test_new::test_c": "slow tests"
+  },
+  "lint": [],
+  "measured": [
+   "tests.corpus.test_div::test_world[a]",
+   "tests.corpus.test_div::test_world[b]",
+   "tests.legacy.test_l::test_one",
+   "tests.legacy.test_l::test_two",
+   "tests.ok.test_fine::test_d",
+   "tests.ok.test_xfail::test_e",
+   "tests.old.test_expired::test_b",
+   "tests.perf.test_perf_combat::test_a",
+   "tests.unknown.test_new::test_c"
+  ],
+  "message": "set changed: commented and refreshed",
+  "reasons": [
+   "2 failing test(s) with no known-reds entry (UNOWNED): tests.corpus.test_div::test_world[b], tests.unknown.test_new::test_c",
+   "1 failing test(s) under an EXPIRED entry: tests.old.test_expired::test_b"
+  ],
+  "seen": [
+   "corpus diversity",
+   "legacy regression",
+   "slow tests"
+  ],
+  "warnings": []
+ },
+ "unchanged_set_digest_already_posted": {
+  "calls": [
+   [
+    "update_issue",
+    7,
+    "Slow regression: 4 failing on main",
+    "<!-- slow-regression-tracker -->\nFailing set of the `Slow regression` workflow, as of run [111](https://github.com/o/r/actions/runs/111) at `aaaaaaaaaaaa`.\n\n### EXPIRED (counted as red until someone re-dates, fixes or removes the entry)\n- [tests.old.test_expired::test_b](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-OLD`, owner someone, expired 2026-10-06\n\n### corpus diversity (1)\n- [tests.corpus.test_div::test_world[b]](https://github.com/o/r/actions/runs/111) \u2014 **UNOWNED**\n\n### slow tests (3)\n- [tests.old.test_expired::test_b](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-OLD`\n- [tests.perf.test_perf_combat::test_a](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-PERF`\n- [tests.unknown.test_new::test_c](https://github.com/o/r/actions/runs/111) \u2014 **UNOWNED**\n\n### Stale mappings (mapped to a ticket but not failing; consider cleaning up)\n- `tests.regression.test_gone*` \u2014 `TCK-GOLDEN-GONE`\n\nLast seen: run [111](https://github.com/o/r/actions/runs/111) at `aaaaaaaaaaaa`.\n\n```json\n{\n \"failing\": {\n  \"tests.corpus.test_div::test_world[b]\": \"corpus diversity\",\n  \"tests.old.test_expired::test_b\": \"slow tests\",\n  \"tests.perf.test_perf_combat::test_a\": \"slow tests\",\n  \"tests.unknown.test_new::test_c\": \"slow tests\"\n },\n \"first_seen\": {\n  \"tests.corpus.test_div::test_world[b]\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.old.test_expired::test_b\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.perf.test_perf_combat::test_a\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.unknown.test_new::test_c\": \"2026-10-09T12:00:00+00:00\"\n }\n}\n```"
+   ]
+  ],
+  "exit_code": 1,
+  "failing": {
+   "tests.corpus.test_div::test_world[b]": "corpus diversity",
+   "tests.old.test_expired::test_b": "slow tests",
+   "tests.perf.test_perf_combat::test_a": "slow tests",
+   "tests.unknown.test_new::test_c": "slow tests"
+  },
+  "lint": [],
+  "measured": [
+   "tests.corpus.test_div::test_world[a]",
+   "tests.corpus.test_div::test_world[b]",
+   "tests.legacy.test_l::test_one",
+   "tests.legacy.test_l::test_two",
+   "tests.ok.test_fine::test_d",
+   "tests.ok.test_xfail::test_e",
+   "tests.old.test_expired::test_b",
+   "tests.perf.test_perf_combat::test_a",
+   "tests.unknown.test_new::test_c"
+  ],
+  "message": "set unchanged: refreshed 'last seen' only",
+  "reasons": [
+   "2 failing test(s) with no known-reds entry (UNOWNED): tests.corpus.test_div::test_world[b], tests.unknown.test_new::test_c",
+   "1 failing test(s) under an EXPIRED entry: tests.old.test_expired::test_b"
+  ],
+  "seen": [
+   "corpus diversity",
+   "legacy regression",
+   "slow tests"
+  ],
+  "warnings": []
+ },
+ "unchanged_set_digest_not_yet_posted": {
+  "calls": [
+   [
+    "comment",
+    7,
+    "<!-- slow-regression-digest 2026-W41 -->\nWeekly digest, 2026-W41 (4 failing).\n\n| test | ticket | owner | kind | tracked since | age (days) | days to expiry | flags |\n|---|---|---|---|---|---|---|---|\n| `tests.corpus.test_div::test_world[b]` | \u2014 | \u2014 | \u2014 | 2026-10-09 | 0 | \u2014 | UNOWNED |\n| `tests.old.test_expired::test_b` | `TCK-GOLDEN-OLD` | someone | flaky | 2026-10-09 | 0 | -3 | EXPIRED |\n| `tests.perf.test_perf_combat::test_a` | `TCK-GOLDEN-PERF` | perf-owner | broken | 2026-10-09 | 0 | 53 |  |\n| `tests.unknown.test_new::test_c` | \u2014 | \u2014 | \u2014 | 2026-10-09 | 0 | \u2014 | UNOWNED |\n\nStale mappings (not failing): `tests.regression.test_gone*`"
+   ],
+   [
+    "update_issue",
+    7,
+    "Slow regression: 4 failing on main",
+    "<!-- slow-regression-tracker -->\nFailing set of the `Slow regression` workflow, as of run [111](https://github.com/o/r/actions/runs/111) at `aaaaaaaaaaaa`.\n\n### EXPIRED (counted as red until someone re-dates, fixes or removes the entry)\n- [tests.old.test_expired::test_b](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-OLD`, owner someone, expired 2026-10-06\n\n### corpus diversity (1)\n- [tests.corpus.test_div::test_world[b]](https://github.com/o/r/actions/runs/111) \u2014 **UNOWNED**\n\n### slow tests (3)\n- [tests.old.test_expired::test_b](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-OLD`\n- [tests.perf.test_perf_combat::test_a](https://github.com/o/r/actions/runs/111) \u2014 `TCK-GOLDEN-PERF`\n- [tests.unknown.test_new::test_c](https://github.com/o/r/actions/runs/111) \u2014 **UNOWNED**\n\n### Stale mappings (mapped to a ticket but not failing; consider cleaning up)\n- `tests.regression.test_gone*` \u2014 `TCK-GOLDEN-GONE`\n\nLast seen: run [111](https://github.com/o/r/actions/runs/111) at `aaaaaaaaaaaa`.\n\n```json\n{\n \"failing\": {\n  \"tests.corpus.test_div::test_world[b]\": \"corpus diversity\",\n  \"tests.old.test_expired::test_b\": \"slow tests\",\n  \"tests.perf.test_perf_combat::test_a\": \"slow tests\",\n  \"tests.unknown.test_new::test_c\": \"slow tests\"\n },\n \"first_seen\": {\n  \"tests.corpus.test_div::test_world[b]\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.old.test_expired::test_b\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.perf.test_perf_combat::test_a\": \"2026-10-09T12:00:00+00:00\",\n  \"tests.unknown.test_new::test_c\": \"2026-10-09T12:00:00+00:00\"\n }\n}\n```"
+   ]
+  ],
+  "exit_code": 1,
+  "failing": {
+   "tests.corpus.test_div::test_world[b]": "corpus diversity",
+   "tests.old.test_expired::test_b": "slow tests",
+   "tests.perf.test_perf_combat::test_a": "slow tests",
+   "tests.unknown.test_new::test_c": "slow tests"
+  },
+  "lint": [],
+  "measured": [
+   "tests.corpus.test_div::test_world[a]",
+   "tests.corpus.test_div::test_world[b]",
+   "tests.legacy.test_l::test_one",
+   "tests.legacy.test_l::test_two",
+   "tests.ok.test_fine::test_d",
+   "tests.ok.test_xfail::test_e",
+   "tests.old.test_expired::test_b",
+   "tests.perf.test_perf_combat::test_a",
+   "tests.unknown.test_new::test_c"
+  ],
+  "message": "set unchanged: refreshed 'last seen' only",
+  "reasons": [
+   "2 failing test(s) with no known-reds entry (UNOWNED): tests.corpus.test_div::test_world[b], tests.unknown.test_new::test_c",
+   "1 failing test(s) under an EXPIRED entry: tests.old.test_expired::test_b"
+  ],
+  "seen": [
+   "corpus diversity",
+   "legacy regression",
+   "slow tests"
+  ],
+  "warnings": []
+ }
+}
