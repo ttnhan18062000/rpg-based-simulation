@@ -6,7 +6,7 @@
 --            refs = <count of /job/ref<N>.aseprite stamp sources>, frame, region }
 -- Every op may carry `layer` (name, default: bottom layer) and `frame` (1-based, default 1).
 
-local MAX_LAYERS, MAX_FRAMES = 16, 16
+local MAX_LAYERS, MAX_FRAMES, MAX_SLICES = 16, 16, 16
 
 local function read_all(path)
   local f = assert(io.open(path, "rb"))
@@ -283,6 +283,39 @@ function handlers.add_tag(op)
   t.name = op.name
 end
 
+-- Slice rules are the store's (ADR D25): inside the canvas with an area, the centre inside its slice (relative to the slice corner),
+-- the pivot inside its slice with the far edges inclusive. Used per op (against the CURRENT canvas) and again on EVERY slice before saving.
+local function slice_problem(x, y, w, h, center, pivot)
+  if w < 1 or h < 1 or x < 0 or y < 0 or x + w > spr.width or y + h > spr.height then return "slice is outside the canvas" end
+  if center and (center.width < 1 or center.height < 1 or center.x < 0 or center.y < 0
+      or center.x + center.width > w or center.y + center.height > h) then return "9-slice centre is outside its slice" end
+  if pivot and (pivot.x < 0 or pivot.y < 0 or pivot.x > w or pivot.y > h) then return "pivot is outside its slice" end
+  return nil
+end
+
+function handlers.set_slice(op)
+  local c = op.center and Rectangle(op.center.x, op.center.y, op.center.w, op.center.h) or nil
+  local bad = slice_problem(op.x, op.y, op.w, op.h, c, op.pivot)
+  if bad then error(bad) end
+  for i = #spr.slices, 1, -1 do -- replace: the whole slice of that name goes, whatever keys it had
+    if spr.slices[i].name == op.name then spr:deleteSlice(spr.slices[i]) end
+  end
+  if #spr.slices >= MAX_SLICES then error("slice limit reached") end
+  local s = spr:newSlice(Rectangle(op.x, op.y, op.w, op.h))
+  s.name = op.name
+  if c then s.center = c end
+  if op.pivot then s.pivot = Point(op.pivot.x, op.pivot.y) end
+end
+
+local function check_all_slices()
+  if #spr.slices > MAX_SLICES then error("slice limit exceeded: " .. #spr.slices) end
+  for i, s in ipairs(spr.slices) do
+    local b = s.bounds
+    local bad = slice_problem(b.x, b.y, b.width, b.height, s.center, s.pivot)
+    if bad then error("slice " .. i .. " (final canvas " .. spr.width .. "x" .. spr.height .. "): " .. bad) end
+  end
+end
+
 function handlers.set_palette(op)
   local pal = spr.palettes[1]
   pal:resize(#op.colors)
@@ -358,11 +391,20 @@ local function summary()
   for _, t in ipairs(spr.tags) do
     tags[#tags + 1] = { name = t.name, from = t.fromFrame.frameNumber, to = t.toFrame.frameNumber }
   end
+  local slices = {}
+  for _, s in ipairs(spr.slices) do
+    local b, c, v = s.bounds, s.center, s.pivot
+    slices[#slices + 1] = {
+      name = s.name, x = b.x, y = b.y, w = b.width, h = b.height,
+      center = c and { x = c.x, y = c.y, w = c.width, h = c.height } or nil,
+      pivot = v and { x = v.x, y = v.y } or nil,
+    }
+  end
   local pal = {}
   local p = spr.palettes[1]
   for i = 0, math.min(#p, 64) - 1 do pal[#pal + 1] = hex(p:getColor(i).rgbaPixel) end
   res.width, res.height = spr.width, spr.height
-  res.frames, res.layers, res.tags = frames, layers, tags
+  res.frames, res.layers, res.tags, res.slices = frames, layers, tags, slices
   res.palette, res.palette_size = pal, #p
   res.colors, res.n_colors = colors, n_colors
   res.nonempty_pixels = frames[1].nonempty
@@ -394,6 +436,7 @@ local ok, err = pcall(function()
     if not ok2 then error("op " .. i .. " (" .. op.op .. "): " .. tostring(e2)) end
   end
 
+  check_all_slices() -- after every op, so a later resize cannot leave a slice outside the final canvas; the batch fails and no revision is saved
   summary()
 
   if req.mode == "inspect" and req.region then
