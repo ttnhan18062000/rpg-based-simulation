@@ -45,7 +45,7 @@ Owner decisions 37 and 58: town work is the ordinary WORK shift at a building a 
 - TCK-20261009-FACTION-TREASURY-IS-ONE-TYPED-ACCOUNT-EXCH-02-C, TCK-20261009-TAX-IS-A-SHARE-OF-SALES-AND-WAGES-PAID-TO-THE-PLACE-HOLDERS-TREASURY-DECISION-51, TCK-20261009-THE-FACTION-TREASURY-PAYS-WAGES-FOR-TOWN-WORK-DECISION-37, TCK-20261009-MINTED-KILL-AND-QUEST-COIN-IS-PAID-BY-A-PAYER-EXCH-02-B (one batch, one PR)
 
 ## Related Docs
-- `docs/mechanics/03_economic_laws.md` section 4.1, `docs/guidelines/intentional_divergences.md` 2.105-2.108, `docs/parity_ledger/town_resource.yaml` TOWN-205..208
+- `docs/mechanics/03_economic_laws.md` section 4.1, `docs/guidelines/intentional_divergences.md` 2.17-2.110, `docs/parity_ledger/town_resource.yaml` TOWN-205..208
 
 ## Related Stored Artifacts
 - `agent-working/stored_artifacts/TCK-20261009-THE-FACTION-TREASURY-PAYS-WAGES-FOR-TOWN-WORK-DECISION-37/`
