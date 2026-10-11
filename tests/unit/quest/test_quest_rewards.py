@@ -34,6 +34,12 @@ from src.core.treasury import treasury_key as _tk
 
 FUNDED = {_tk(_F.NEUTRAL): 10000.0}  # a world whose neutral treasury funds a reward (EXCH-02: a reward is paid by a treasury or owed)
 
+# The one real giver (EXCH-02, ruling 61): the quest was posted at building 1, which stands on ground the neutral faction holds, so the neutral
+# treasury (FUNDED) is the payer. A quest posted nowhere pays experience only.
+from src.core.state import BuildingState as _BS, RegionState as _RS
+QUEST_TOWN = dict(buildings={1: _BS(id=1, kind="shop", position=(1.0, 1.0), functional=True)},
+                  regions={"r": _RS(id="r", name="R", bounds=(0, 0, 100, 100), owner_faction_id=int(_F.NEUTRAL))})
+
 def _make_hero(entity_id: int = 1):
     return V2EntityBuilder(entity_id=entity_id).identity(role=EntityRole.HERO).build()
 
@@ -51,7 +57,7 @@ def _make_quest_opp(
         trigger_condition="test",
         objective_chain=("slay:goblin:3",),
         reward_spec=reward_spec,
-        faction_source=None,
+        faction_source="neutral",
         expiry_ticks=9999,
         source_event_id=None,
         status=status,
@@ -66,7 +72,7 @@ def _make_state(entity_id: int = 1, quest_id: str = "q-001", reward_spec: dict |
         seed=42,
         entities={entity_id: hero},
         quest_registry={quest_id: quest_opp},
-        global_resources=FUNDED,
+        global_resources=FUNDED, **QUEST_TOWN,
     )
 
 
@@ -211,7 +217,7 @@ def test_full_inventory_defers_opportunity_reward():
         seed=42,
         entities={entity_id: hero},
         quest_registry={"q-001": quest_opp},
-        global_resources=FUNDED,
+        global_resources=FUNDED, **QUEST_TOWN,
     )
 
     # Use a reward_spec that contains items so inventory_full matters; here we
@@ -224,7 +230,7 @@ def test_full_inventory_defers_opportunity_reward():
         seed=42,
         entities={entity_id: hero},
         quest_registry={"q-001": quest_opp2},
-        global_resources=FUNDED,
+        global_resources=FUNDED, **QUEST_TOWN,
     )
     update = StateUpdate(
         quest_opportunity_reward_intents=[_make_intent(entity_id=entity_id)]
@@ -330,7 +336,7 @@ def test_no_direct_entity_mutation_from_quest_opportunity():
         seed=42,
         entities={1: hero},
         quest_registry={"q-001": quest_opp},
-        global_resources=FUNDED,
+        global_resources=FUNDED, **QUEST_TOWN,
     )
 
     result_update = QuestLifecycleService.tick(state)
@@ -398,7 +404,7 @@ def test_entity_project_quest_state_unaffected_by_opportunity_reward():
         seed=42,
         entities={entity_id: hero},
         quest_registry={"q-001": quest_opp},
-        global_resources=FUNDED,
+        global_resources=FUNDED, **QUEST_TOWN,
     )
 
     update = StateUpdate(
@@ -443,7 +449,7 @@ def test_quest_completion_non_escort_kind_does_not_touch_reputation():
     )
     hero = _make_hero(entity_id)
     hero = replace(hero, strategic=StrategicComponent(projects={quest.id: quest}))
-    state = AuthoritativeState(tick=10, seed=42, entities={entity_id: hero}, global_resources=FUNDED)
+    state = AuthoritativeState(tick=10, seed=42, entities={entity_id: hero}, global_resources=FUNDED, **QUEST_TOWN)
 
     update = StateUpdate(
         entity_updates={

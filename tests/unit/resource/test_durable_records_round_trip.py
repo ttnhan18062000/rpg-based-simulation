@@ -38,3 +38,15 @@ def test_the_full_view_shows_bodies_and_debts():
     debt = OwedRecord(id="owed:q:1", creditor_id=1, debtor_faction=0, amount=30, posted_tick=2)
     view = StatePresenter.present_full(_state(corpses={9: body}, owed={debt.id: debt}))
     assert view["corpses"][0]["gold"] == 7 and view["owed"][0]["amount"] == 30 and view["owed"][0]["creditor_id"] == 1
+
+
+def test_a_purse_on_the_ground_keeps_its_coin_and_provenance_in_the_hash_checkpoint_data_and_view():
+    from src.core.state import GroundItemState
+    purse = GroundItemState(id=9, item_id="", quantity=0, position=(2.0, 2.0), gold=7, source_entity_id=1, dropped_tick=11)
+    other_source = replace(purse, source_entity_id=2)
+    assert CanonicalStateHasher.get_hash(_state(ground_items={9: purse})) != CanonicalStateHasher.get_hash(_state(ground_items={9: other_source}))
+    assert CanonicalStateHasher.get_hash(_state(ground_items={9: purse})) == CanonicalStateHasher.get_hash(_state(ground_items={9: replace(purse)}))
+    data = CanonicalStateHasher.to_canonical_data(_state(ground_items={9: purse}))["ground_items"]["9"]
+    assert (data["gold"], data["source_entity_id"], data["dropped_tick"]) == (7, 1, 11)
+    view = StatePresenter.present_full(_state(ground_items={9: purse}))["ground_items"][0]
+    assert (view["gold"], view["source_entity_id"], view["dropped_tick"]) == (7, 1, 11)

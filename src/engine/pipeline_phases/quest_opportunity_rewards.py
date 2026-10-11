@@ -4,7 +4,7 @@ import logging
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from src.engine.place_tax import reward_payer
+from src.engine.place_tax import offering_faction_payer
 from src.core.updates import EntityUpdate, QuestOpportunityRewardIntent
 from src.core.update_models.resources import ResourceTransferIntent
 from src.core.updates import RewardUpdate
@@ -69,7 +69,7 @@ class QuestOpportunityRewardSystem:
                 continue
 
             reward_spec = quest_opp.reward_spec
-            gold = int(reward_spec.get("gold", 0))
+            payer, gold = offering_faction_payer(quest_opp.faction_source), int(reward_spec.get("gold", 0))
             xp = int(reward_spec.get("xp", 0))
 
             faction_rep = reward_spec.get("faction_rep", 0.0)
@@ -80,16 +80,16 @@ class QuestOpportunityRewardSystem:
                     intent.quest_id,
                 )
 
-            if gold > 0 or xp > 0:
+            if (gold > 0 and payer is not None) or xp > 0:
                 reward_intent = ResourceTransferIntent(
                     source_id=intent.quest_id,
                     source_kind="QUEST",
-                    gold_delta=gold,
+                    gold_delta=gold if payer is not None else 0,  # a world event has no giver and pays no coin
                     reward_upd=RewardUpdate(xp_gain=xp),
                     transfer_kind="QUEST_REWARD",
                     transaction_id=f"quest:{intent.quest_id}:reward",
                     group_id=f"quest:{intent.quest_id}:reward",
-                    is_group_required=True, treasury_faction=reward_payer(state, entity), treasury_pays=True,
+                    is_group_required=True, treasury_faction=payer, treasury_pays=payer is not None,
                 )
                 ent_upd = update.entity_updates.get(
                     intent.entity_id,

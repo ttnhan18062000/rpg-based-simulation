@@ -7,13 +7,14 @@ from typing import TYPE_CHECKING, Dict
 from src.core.enums import Faction
 from src.core.treasury import treasury_key
 from src.core.updates import (
+    BuildingUpdate,
     CombatUpdate,
     EntityUpdate,
     InventoryUpdate,
 )
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState
+    from src.core.state import AuthoritativeState, BuildingState
     from src.core.updates import StateUpdate
     from src.engine.cadence import SystemCadence
 
@@ -29,7 +30,6 @@ class TownResolutionSystem:
         Detect entities in town and apply general passive laws (Healing).
         Also handles regional taxation and maintenance.
         """
-        from src.core.updates import BuildingUpdate
         from src.domains.world_emergence.schema import WorldEventCategory
         from src.engine.cadence import SystemCadence as DefaultCadence
         from src.engine.spatial_query import SpatialQueryService
@@ -114,10 +114,9 @@ class TownResolutionSystem:
                         )
                         refined_entity_updates[e_id] = ent_upd
 
-        # 4. Upkeep (EXCH-02, decisions 51 and 58). There is no periodic levy and no coin is minted here: the treasury of the faction that holds a
-        # building's ground pays the building's maintenance INTO THE BUILDING'S OWN PURSE, and the building pays its workers' wages from that
-        # purse (work_shift.py). A treasury that cannot pay a building leaves it unpaid, and an unpaid building is disabled and offers no work;
-        # paid in full on a later upkeep tick it opens again.
+        # 4. Upkeep (EXCH-02, decisions 51 and 58). There is no periodic levy and no coin is minted here: each building meets its upkeep from its own purse (the coin
+        # leaves it only as wages, work_shift.py, and tax); the treasury of the faction that holds the ground tops up only a shortfall. A building
+        # neither can pay is disabled and offers no work; it opens again when it can pay.
         new_owed_remove = list(update.owed_remove)
         if is_tax_tick:
             # Debts first (decision 58): a treasury pays what it owes, oldest first, before it spends on upkeep; the queue waits at the first
@@ -138,7 +137,6 @@ class TownResolutionSystem:
                 refined_entity_updates[rec.creditor_id] = replace(held, inventory=held.inventory.merge(credit) if held.inventory else credit)
                 new_owed_remove.append(rec.id)
 
-            MAINTENANCE_COST = 5.0
             for b_id in sorted(state.buildings):
                 building = state.buildings[b_id]
                 if not building.functional and building.hp <= 0:
@@ -148,16 +146,7 @@ class TownResolutionSystem:
                     continue
                 fid = region.owner_faction_id
                 key = faction_keys[fid]
-                if state.global_resources.get(key, 0.0) + new_resource_updates.get(key, 0.0) >= MAINTENANCE_COST:
-                    new_resource_updates[key] = new_resource_updates.get(key, 0.0) - MAINTENANCE_COST
-                    b_upd = refined_building_updates.get(b_id, BuildingUpdate(building_id=b_id))
-                    credit = InventoryUpdate(gold_delta=int(MAINTENANCE_COST))
-                    # Paid in full: an unpaid (closed but standing) building opens again, so a missed payment is not a ratchet (decision 58).
-                    refined_building_updates[b_id] = replace(b_upd, inventory=b_upd.inventory.merge(credit) if b_upd.inventory else credit,
-                                                             functional_set=True if not building.functional else b_upd.functional_set)
-                else:
-                    b_upd = refined_building_updates.get(b_id, BuildingUpdate(building_id=b_id))
-                    refined_building_updates[b_id] = replace(b_upd, functional_set=False)
+                _meet_upkeep(building, key, state.global_resources, new_resource_updates, refined_building_updates)
 
         return replace(update,
             entity_updates=refined_entity_updates,
@@ -166,3 +155,25 @@ class TownResolutionSystem:
             metric_counters=new_metric_counters,
             owed_remove=new_owed_remove,
         )
+
+
+MAINTENANCE_COST = 5
+
+
+def _meet_upkeep(building: "BuildingState", key: str, treasury_balances: Dict[str, float], resource_updates: Dict[str, float],
+                 building_updates: Dict[int, BuildingUpdate]) -> None:
+    """One building's upkeep (decision 58, ruling 61): met from its OWN purse, which is only checked (nothing is paid out to a payee); the owning
+    treasury (`key`) tops up ONLY a shortfall; a building neither can pay is closed, and it reopens when it can."""
+    shortfall = max(0, MAINTENANCE_COST - building.inventory.gold)
+    b_upd = building_updates.get(building.id, BuildingUpdate(building_id=building.id))
+    if shortfall and treasury_balances.get(key, 0.0) + resource_updates.get(key, 0.0) < shortfall:
+        building_updates[building.id] = replace(b_upd, functional_set=False)
+        return
+    if shortfall:
+        resource_updates[key] = resource_updates.get(key, 0.0) - shortfall
+        credit = InventoryUpdate(gold_delta=shortfall)
+        b_upd = replace(b_upd, inventory=b_upd.inventory.merge(credit) if b_upd.inventory else credit)
+    if not building.functional:
+        b_upd = replace(b_upd, functional_set=True)  # paid: a closed but standing building opens again
+    if shortfall or not building.functional:
+        building_updates[building.id] = b_upd

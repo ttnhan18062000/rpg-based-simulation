@@ -66,19 +66,26 @@ def _tax_credit(intent: ResourceTransferIntent) -> Optional[TreasuryTransfer]:
     return TreasuryTransfer(faction=intent.treasury_faction, gold_delta=min(intent.treasury_gold, intent.gold_delta))
 
 
-def _wage_result(state: Any, intent: ResourceTransferIntent) -> TransactionResult:
-    """EXCH-02: a wage is a transfer from the employer's own purse. A short purse pays nothing (the worker is unpaid, no coin appears)."""
+def _wage_result(state: Any, intent: ResourceTransferIntent, treasury_pending: Optional[Dict[str, float]] = None) -> TransactionResult:
+    """EXCH-02: a wage is a transfer from the employer's own purse. A short purse pays nothing (the worker is unpaid, no coin appears), unless the
+    intent says the owning treasury funds a shortfall (``treasury_pays``, maintenance work at a treasury building, ruling 61): then the treasury tops
+    the purse up by exactly the shortfall first, and the treasury's net change (the top-up less any tax share) is one typed transfer."""
     employer = state.buildings.get(intent.source_id)
     if employer is None or not employer.functional:
         return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
-    if intent.gold_delta <= 0 or employer.inventory.gold < intent.gold_delta:
+    if intent.gold_delta <= 0:
+        return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
+    shortfall = max(0, intent.gold_delta - employer.inventory.gold)
+    faction = intent.treasury_faction
+    if shortfall > 0 and not (intent.treasury_pays and faction is not None and can_pay(state.global_resources, faction, shortfall, treasury_pending)):
         return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
     tax = _tax_credit(intent)
+    net = (tax.gold_delta if tax else 0) - shortfall
     return TransactionResult(
         accepted=True,
         inventory_update=InventoryUpdate(gold_delta=intent.gold_delta - (tax.gold_delta if tax else 0)),
-        building_update=BuildingUpdate(building_id=employer.id, inventory=InventoryUpdate(gold_delta=-intent.gold_delta)),
-        treasury_update=tax)
+        building_update=BuildingUpdate(building_id=employer.id, inventory=InventoryUpdate(gold_delta=shortfall - intent.gold_delta)),
+        treasury_update=TreasuryTransfer(faction=faction, gold_delta=net) if net and faction is not None else None)
 
 
 def _service_credit(state: Any, intent: ResourceTransferIntent, price: int) -> Optional[Any]:
@@ -248,7 +255,7 @@ class ResourceTransactionResolver:
             # VERIFIED v2: loot_harvest_side_effects
 
         elif intent.source_kind == "GROUND_ITEM":
-            if inventory_full:
+            if inventory_full and intent.items_add:
                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
             ground_item = state.ground_items.get(intent.source_id)
             if not ground_item:
@@ -260,7 +267,7 @@ class ResourceTransactionResolver:
             
             return TransactionResult(
                 accepted=True,
-                inventory_update=InventoryUpdate(items_add=intent.items_add),
+                inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=ground_item.gold),
                 ground_item_remove=intent.source_id
             )
 
@@ -345,7 +352,7 @@ class ResourceTransactionResolver:
             return _shop_sell_result(state, intent, target_inventory)
 
         elif intent.source_kind == "WAGE":
-            return _wage_result(state, intent)
+            return _wage_result(state, intent, treasury_pending)
 
         elif intent.source_kind == "INHERIT":
             return _inherit_result(state, intent, inventory_full)

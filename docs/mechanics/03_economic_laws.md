@@ -101,10 +101,10 @@ See that section for the full formula, notes, and reference — not duplicated h
 ### 4.1 Treasuries, Tax and Rewards (EXCH-02, owner decisions 37, 38, 51 and 58)
 *   **Treasury**: each region-owner bucket has one treasury (`global_resources`, key via `src/core/treasury.py`), started with the sum of its member factions' declared starting gold. It is coin like any purse: it pays only what it holds and never goes negative by a transfer.
 *   **Tax**: there is no periodic levy. A sale or a wage pays a tenth of the proceeds (declared content, rounded down per transaction, the same for outsiders) to the treasury of the faction holding the building's region, in the same transaction.
-*   **Upkeep**: on the upkeep tick the treasury pays each functional building in its regions 5 gold into the building's own purse, after paying its debts oldest first; a building it cannot pay is disabled. No coin is minted.
-*   **Rewards**: a kill grants experience only; the dead entity's coin and goods move to its body and a looter takes them; a body that decays pays its coin to the treasury of the ground's holder. A quest reward's gold is paid by a treasury; a short treasury records an owed debt, paid oldest first.
+*   **Upkeep**: on the upkeep tick each functional building meets 5 gold of upkeep from its OWN purse (nothing is paid out to a payee: coin leaves a building only as wages and tax); the holder's treasury pays its debts oldest first, then tops up only a building's shortfall; a building neither can pay is disabled and reopens when it can. No coin is minted. A shift at a treasury-backed WORK kind pays the inn rate from the building's purse, topped up by the treasury (declared, not yet reachable in play).
+*   **Rewards**: a kill grants experience only; the dead entity's coin and goods move to its body and a looter takes them; a body that decays leaves its coin where it fell, as a purse on the ground (with the body it fell from and the tick) that a looter can take. A quest reward's gold is paid by its one real giver (the posting building's ground holder or the offering faction); a short giver records an owed debt, paid oldest first; a quest with no giver pays experience only. There is no gold sink: no wealth levy, surcharge or repair fee.
 *   **Inheritance and repair**: an heir takes the dead entity's items and coin atomically; a repair is charged once into the smith's purse, or uses a carried repair kit away from one.
-*   **Conservation**: the total of entity purses, building purses, bodies and treasuries changes only by declared world-creation coin.
+*   **Conservation**: the total of entity purses, building purses, bodies, purses on the ground and treasuries changes only by declared world-creation coin.
 
 ---
 

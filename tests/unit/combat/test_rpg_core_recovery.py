@@ -200,6 +200,7 @@ def test_quest_lifecycle():
             xp=100,
             gold=50,
         ),
+        source_building_id=1,  # posted at a building on ground the neutral faction holds: the one real giver (ruling 61)
         metadata={
             "target_kind": "MONSTER",
         },
@@ -251,6 +252,7 @@ def test_quest_lifecycle():
         .build()
     )
 
+    from src.core.state import BuildingState, RegionState
     state = AuthoritativeState(
         tick=1,
         seed=42,
@@ -258,6 +260,8 @@ def test_quest_lifecycle():
             1: hero,
             2: monster,
         },
+        buildings={1: BuildingState(id=1, kind="shop", position=(1.0, 1.0), functional=True)},
+        regions={"r": RegionState(id="r", name="R", bounds=(0, 0, 100, 100), owner_faction_id=int(Faction.NEUTRAL))},
     )
 
     raw_update = StateUpdate(

@@ -113,9 +113,6 @@ def test_with_no_smith_and_no_kit_nothing_is_offered_and_nothing_changes():
     assert not upd.resource_transfers and upd.equipment is None and upd.inventory is None
 
 
-def test_a_gold_sink_fee_is_paid_to_the_treasury_of_the_faction_holding_the_ground():
-    entity = _hero(1, gold=50)
-    state = _state(0.0)
-    intent = ResourceTransferIntent(source_id="gold_sink", source_kind="SERVICE_FEE", gold_cost=1, gold_delta=0, transfer_kind="FEE", treasury_faction=HERO)
-    res = ResourceTransactionResolver.resolve(state, entity, intent)
-    assert res.accepted and res.inventory_update.gold_delta == -1 and res.treasury_update.gold_delta == 1
+def test_the_gold_sink_is_retired_and_no_phase_proposes_a_fee():
+    import importlib.util
+    assert importlib.util.find_spec("src.engine.gold_sink") is None   # ruling 61: no periodic wealth levy, no surcharge, no repair fee

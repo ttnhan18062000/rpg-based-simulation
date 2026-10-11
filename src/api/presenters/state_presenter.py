@@ -33,6 +33,7 @@ class StatePresenter:
             "regions": [StatePresenter.present_region(r) for r in state.regions.values()],
             "global_resources": state.global_resources,
             "corpses": [StatePresenter.present_corpse(c) for c in state.corpses.values()],
+            "ground_items": [StatePresenter.present_ground_item(g) for g in sorted(state.ground_items.values(), key=lambda g: g.id)],
             "owed": [StatePresenter.present_owed(o) for o in sorted(state.owed.values(), key=lambda o: (o.posted_tick, o.id))],
             "transaction_trace": state.transaction_trace,
             "status": "ACTIVE"
@@ -45,6 +46,12 @@ class StatePresenter:
             "id": corpse.id, "original_entity_id": corpse.original_entity_id, "position": corpse.position,
             "gold": corpse.gold, "items": [{"id": i.item_id, "quantity": i.quantity} for i in corpse.items], "decay_tick": corpse.decay_tick,
         }
+
+    @staticmethod
+    def present_ground_item(item: Any) -> Dict[str, Any]:
+        """Something left on the ground: an item stack, or a purse of coin with whose body it fell from and when."""
+        return {"id": item.id, "item_id": item.item_id, "quantity": item.quantity, "position": item.position,
+                "gold": item.gold, "source_entity_id": item.source_entity_id, "dropped_tick": item.dropped_tick}
 
     @staticmethod
     def present_owed(owed: Any) -> Dict[str, Any]:

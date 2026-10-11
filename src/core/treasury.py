@@ -73,12 +73,13 @@ def treasury_coin(resources: Mapping[str, float]) -> float:
 
 
 def total_coin(state: Any) -> float:
-    """Every coin in the world: entity purses (alive or dead), building purses, corpses and treasuries. Conservation says this changes only by
+    """Every coin in the world: entity purses (alive or dead), building purses, corpses, coin on the ground and treasuries. Conservation says this changes only by
     declared world-creation coin (a spawn's inventory profile, a building's declared till)."""
     entities = sum(e.inventory.gold for e in state.entities.values())
     buildings = sum(b.inventory.gold for b in state.buildings.values())
     corpses = sum(getattr(c, "gold", 0) for c in getattr(state, "corpses", {}).values()) if isinstance(getattr(state, "corpses", None), dict) else 0
-    return float(entities + buildings + corpses + treasury_coin(state.global_resources))
+    ground = sum(g.gold for g in state.ground_items.values()) if isinstance(getattr(state, "ground_items", None), dict) else 0
+    return float(entities + buildings + corpses + ground + treasury_coin(state.global_resources))
 
 
 def declared_starting_gold(members: Iterable[float]) -> float:

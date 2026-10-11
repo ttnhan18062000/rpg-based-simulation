@@ -242,7 +242,9 @@ def test_wider_scope_numbers_pinned():
     # add no unbound mechanism-shaped class (candidates stay 72).
     # 323 -> 321 on 2026-10-09 (batch 4): the dead src/town/inn.py and src/town/home.py are deleted.
     # 321 -> 323 on 2026-10-10 (EXCH-02 treasury batch): +src/core/treasury.py (the treasury accessor) and src/engine/place_tax.py (tax and reward payer).
-    assert wider["scope_files"] == 323
+    # 323 -> 324 on 2026-10-11 (treasury batch, ruling 61): +src/engine/repair.py and +src/core/models/world_records.py (data records and a pure
+    # function; unbound helpers) and -src/engine/gold_sink.py (GoldSinkSystem retired: one unbound candidate fewer).
+    assert wider["scope_files"] == 324
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -261,9 +263,11 @@ def test_wider_scope_numbers_pinned():
     # are bound under `town_services`; service_prices.py stays an unbound constants module.
     # 236 -> 234 on 2026-10-09 (batch 4): inn.py and home.py were unbound dead modules.
     # 234 -> 236 on 2026-10-10 (EXCH-02 treasury batch): treasury.py and place_tax.py are unbound until rpg-planner binds them (mechanisms.yaml is its).
-    assert wider["unbound_files"] == 236
+    # 236 -> 237 on 2026-10-11 (treasury batch): repair.py and world_records.py unbound, gold_sink.py removed.
+    assert wider["unbound_files"] == 237
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
-    assert wider["candidates"] == 72  # unbound mechanism-shaped classes, wired or not
+    # 72 -> 71 on 2026-10-11 (treasury batch): GoldSinkSystem is gone.
+    assert wider["candidates"] == 71  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
     assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 3
 
