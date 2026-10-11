@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261011-LEAD-STATUS-MESSAGES-AND-BOARD
-phase: open
+phase: done
 date: 2026-10-11
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 Lead protocol: `status-request` / `status-report` message classes, the cross-domain board skeleton, and lead ownership of `agent-working/lead/**` (Epic E, part E4b)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -73,7 +73,7 @@ board. Epic E's acceptance criterion 5 asks for both, plus the plan §9.0 table 
 - docs/guidelines/session_roles/domains/lead.md
 
 ## Related Stored Artifacts
-None.
+- agent-working/stored_artifacts/TCK-20261011-LEAD-STATUS-MESSAGES-AND-BOARD/
 
 ## Related Code Areas
 - registries/session_roles.yaml
@@ -83,9 +83,13 @@ None.
 - lead-planner (on host ubuntu) may comment on the batch PR about the column set; it does not approve it.
 
 ## Implementation Notes
+Two table rows (guide and plan §9.0) with the same sender and receiver; a lead-as-information-hub paragraph in §9.0; the owner decisions of 2026-10-09 and 2026-10-10 in §12.3 (§12.5 untouched); `agent-working/lead/board.md` with the seven columns and no rows; the deferred comment in the lead `owns` replaced by `agent-working/lead/**`.
 
 ## Test Summary
+`tests/docs/test_lead_status_protocol.py` (3 tests); validate 0 findings, generator 0 drift, route names lead for the board.
 
 ## Files Changed
+`docs/guides/cross_session_messages.md`, `docs/plans/agent_infrastructure/session_layer_working_process.md`, `agent-working/lead/board.md`, `registries/session_roles.yaml`, `.claude/agents/session-lead-planner.md`, `tests/docs/test_lead_status_protocol.py`.
 
 ## Completion Summary
+Protocol and board skeleton are on main once merged; owner confirms the literal `session_roles.yaml` diff in the PR body. lead-planner may comment on the columns, not approve.

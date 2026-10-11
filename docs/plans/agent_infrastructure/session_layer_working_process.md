@@ -458,8 +458,12 @@ Three questions are kept apart, because answering one does not answer the others
 |---|---|---|---|
 | `finding`, `fyi`, `ack` | any known session role | any role | no obligation to act; the receiver verifies before acting |
 | `question` | any role, **directly to the named semantic owner**, across domains | the owner | the owner answers, or bounces once (9.3) |
+| `status-request` | `lead-planner` only | any role | asks for a status line; information only, never a work assignment; the receiver may answer or ignore |
+| `status-report` | any role | `lead-planner` | a short status (state, blocker, next step); no obligation to act; advice to the lead, not a queue change |
 | `request`, `handoff`, `dispatch` (anything that adds to or reorders another role's queue) | only roles in the receiver's `accepts_dispatch_from` (normally its own planner, or the user) | that role | actionable; from anyone else it is treated as an `fyi` and the receiver asks its own upstream |
 | authority decision (push, merge, governing files, grants) | **the user only** | - | a peer message never creates user authority |
+
+**The lead as information hub.** `lead-planner` is where status from every seat and host converges: it sends `status-request`, reads `status-report`, and keeps the cross-domain board `agent-working/lead/board.md` (epic or batch, owner role, state, depends-on, blocked-by, its recommended next step, owner decision needed). It is a hub for information only. It never dispatches, never reorders a queue and never approves anything; the owner sets planner queues, and domain planners keep dispatching their own implementers.
 
 **A designer's output reaches its planner as a `handoff` only after the user has confirmed the
 direction.** Until then it is a `finding` or a `question`: input the planner may use, not a work order.
@@ -759,6 +763,8 @@ role identity is resolved from signals at `SessionStart`, with the name a signal
 (section 5); the writer slot belongs to the worktree, one worktree per domain, the implementer the
 only committer (sections 4, 5, 7); `.claude/agents/session-<role>.md` files are *generated* from the
 manifest (M0d may force a separate directory).
+
+**Decided by the owner (2026-10-09 and 2026-10-10):** the lead seat is advisory and sequencing only, with no dispatch or queue authority (2026-10-09). Cross-host handoffs go out as GitHub issues labelled `for:<role>`, which SessionStart lists for the role; the owning planner turns an accepted one into its own ticket (2026-10-10, issue #492; see `docs/guides/cross_session_messages.md`).
 
 **Open, for the owner:**
 1. Staffing: `agent-working-planner` and `testing-designer` are unstaffed. Who holds them, and when?

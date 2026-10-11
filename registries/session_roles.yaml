@@ -133,7 +133,7 @@ domains:
       - .mcp.json
       - .github/workflows/deploy-docs.yml
       - docs/architecture/**                 # asset's ADR and perf's PERF-D file are split below
-      # agent-working/lead/** joins once its first file is on main (an owns glob must match a file)
+      - agent-working/lead/**
     owns_not: []
     routes:
       "src/**": rpg-planner
