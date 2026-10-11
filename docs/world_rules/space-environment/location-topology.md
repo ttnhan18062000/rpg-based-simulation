@@ -50,6 +50,14 @@ confirms an area/extent spatial model already exists for at least one kind of su
 `PlaceKind.CITY` — without needing to be reduced to its single `position` point. Both are real,
 coexisting spatial models in the same repository, exactly as the refined rule anticipates.
 
+**A position outside the world is not a location (evidence added 2026-10-10).** Before #474,
+the occupancy check did not test world bounds, so subjects could be committed to tiles off the
+map. In `urban_political` a loop of six people intercepting each other's aim points ran them off
+at one tile per tick, for 5,599 entity-ticks outside the world. **SUPPORTED since #474
+(`39f353b95`, 2026-10-10)**, divergence 2.104, parity COMB-344: one authoritative bounds check
+makes an out-of-world tile illegal, and the hard-law invariant `LAW-POSITION-IN-WORLD` holds on
+every tick (5,599 to 0 entity-ticks outside; deaths unchanged).
+
 **Scenarios:** [SPC-S11](../scenarios/space-environment-batch-04.md#spc-s11) (location change ≠
 identity change — already implied by ID-01's own worked list, reconfirmed here),
 [SPC-S14](../scenarios/space-environment-batch-04.md#spc-s14) (added 2026-09-21 — spatial

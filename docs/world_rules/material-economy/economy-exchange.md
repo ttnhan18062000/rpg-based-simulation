@@ -138,6 +138,63 @@ wealth, but no Rule said how a person comes to hold money at all.
   - **Evidence: CONFLICTING** until the levy is retired (`src/engine/town_resolution.py`).
   - **Scenario:** [ME-S22](../scenarios/material-economy-batch-08.md#me-s22) (a share of a sale
     and of a wage reaches the treasury; an idler pays nothing).
+- **Amendment, how the treasury's coin moves (decided by the owner directly, 2026-10-09; row 58
+  of the memo; asked by rpg-planner on Lane B's treasury design):**
+  - **The tax share is a tenth, rounded down on each transaction.** It is declared once in the
+    world's economy rules, and outsiders pay the same for now. Rounding down is "someone who
+    earns nothing pays nothing": a 6-gold wage pays nothing and a 20-gold sale pays 2. Treasury
+    income comes mostly from larger trades. That is reported, never tuned.
+  - **Upkeep pays for town work.** The owning treasury pays each building's maintenance into
+    that building's own purse, and the building pays wages from it. Town work (decision 37) is
+    work at a building the treasury owns, at the same pay as an inn shift. Coin goes round:
+    treasury, building, worker, tax, treasury. The coin buildings created from nothing each tax
+    tick is removed (decision 38). A building whose upkeep goes unpaid is disabled. No town hall
+    is added, and paid guards stay unplanned (roadmap §12.4).
+  - **A repair is paid once, to the smith.** Away from a smith, repair is offered only to a
+    subject carrying a repair kit, which is used up and moves no coin. Repair that charged twice,
+    or paid nobody, goes.
+  - **A reward the payer cannot pay is owed.** It becomes a recorded debt (who is owed, which
+    treasury owes it, how much, since when), paid oldest first when the treasury can, and visible
+    until then.
+  - **Applied from decisions already made (rpg-designer, same day):**
+    - kill gold is no longer minted: the looter takes what the body carried, and a bounty is paid
+      only where a faction posted one, from its treasury, while experience stays;
+    - an heir takes the dead's coin and goods, moved and never copied, and the body keeps only
+      what no heir claims;
+    - a faction vault starts with its members' declared starting gold, each coin counted once.
+  - **Disclosed:** only one guild holds regions in all 20 worlds, so other treasuries receive no
+    tax. That is world content for later, not a reason to change the share. Most kills stop
+    paying coin; a hunter earns by selling meat or hides (decisions 31 and 34).
+  - **Alternatives not taken:** rounding half up, or a daily tax on takings; maintenance as a
+    sink with a separate treasury wage, or a new town hall; no repair away from a smith; a reward
+    lost, or a quest refused unless its reward is reserved at posting.
+  - **Amended: a building pays its own upkeep first (decided by the owner directly, 2026-10-11;
+    row 61 of the memo).** Under the first text, every town shut by about tick 750. The treasury
+    paid all upkeep, but its only income was the share of sales and wages, which barely run
+    while the free meal stands. Meanwhile its buildings held about 2,000 gold idle. A business
+    keeps itself up:
+    - each building meets its upkeep from its own purse, and the owning treasury tops up only a
+      shortfall;
+    - a building closes only when neither can pay, and reopens when paid;
+    - meeting upkeep sends no coin to nowhere: coin leaves a building only as wages for the work
+      that maintains it, and as tax on its own sales (a meal or bed sold is a sale, decision 51).
+  - **A quest is paid only by its real giver (owner, row 61):** whoever posted it pays, from its
+    own purse or its own faction's treasury, or owes it. Neither the claimant's local holder nor a
+    neutral reserve pays for a quest it never offered. A quest with no identifiable giver carries
+    no coin reward.
+  - **Coin on an unclaimed corpse stays where it fell (owner, row 61):** coin does not rot. It
+    lies as a purse to be found. A lord claiming unclaimed goods waits for a law Rule.
+  - **Fees and taxes retired (rpg-designer, applying decisions 51 and 58):** a repair fee or
+    service fee charged on top of the price, and a wealth-triggered tax (`GoldSinkSystem`, about
+    50 coin per 100 ticks destroyed), are retired rather than re-routed.
+  - **Measured on the batch** (Lane B, pinned, five seeds, three worlds, relayed by rpg-planner):
+    coin drift goes from +6,000 to +8,600 per run on main (minting) to about 0; tax on the poor is
+    0; debts end at 0. A building disabled for unpaid upkeep reopens when paid.
+  - **Evidence: CONFLICTING** until Lane B's treasury batch lands. Scenarios:
+    [ME-S21](../scenarios/material-economy-batch-08.md#me-s21),
+    [ME-S22](../scenarios/material-economy-batch-08.md#me-s22),
+    [ME-S23](../scenarios/material-economy-batch-08.md#me-s23) and
+    [ME-S24](../scenarios/material-economy-batch-08.md#me-s24).
 
 **Repository evidence: MISSING for wages; PARTIAL for selling and rewards.** Lane B's
 feasibility read (relayed by rpg-planner, 2026-10-08): every town worker starts with 0 gold, and

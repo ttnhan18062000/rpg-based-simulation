@@ -323,7 +323,11 @@ off. Its health never drops from lack of sleep. A rested one does none of this.
     numbers (2026-10-09): weakened at 80, reusing the existing attack x0.8 EXHAUSTION hook in
     `combat.py` plus regen x0.5 as in decision 36's `src/engine/starvation.py`, collapse at 98,
     and wake below about 60.
-- **Result (2026-10-09): revealed contradiction on main.** `sleep_debt >= 98.0` costs 1 HP per
+- **Result (2026-10-11): covered** since #505 (`20f67b744`) by
+  `tests/mechanic_scenarios/test_sleep_debt_collapse.py` (the person and the wolf in the main arm,
+  and the rested control), with the stage table in `tests/unit/engine/test_sleep_debt_stages.py`.
+  A collapse from 98 lasts about 408 ticks, and health never drops below its staged value.
+- **Earlier result (2026-10-09): revealed contradiction on main.** `sleep_debt >= 98.0` costs 1 HP per
   tick (Bible 01, biological pressures), so S loses HP from the first tick past the line and
   dies about 100 ticks later, still walking. Expected to be **covered** with the decision-41 code
   ticket (`TCK-20261009-SLEEP-DEBT-WEAKENS-THEN-COLLAPSES-THE-SUBJECT-WHERE-IT-STANDS-NO-HP-LOSS`).
