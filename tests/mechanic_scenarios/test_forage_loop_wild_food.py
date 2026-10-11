@@ -62,8 +62,10 @@ def _stage(state: AuthoritativeState, *, wild_food: bool) -> Tuple[Authoritative
                      inventory=replace(worker.inventory, gold=0, items=[]),
                      navigation=replace(worker.navigation, position=(38.0, 30.0)))  # inside the settlement, beside the inn
     nodes = {i: n for i, n in state.resource_nodes.items() if n.kind != FOOD_KIND}
+    # The scenario is the forest's patch; the berries at the edge of the goblin camp (D57, module goblin_camp_forage) are another patch.
+    forest_patches = {i: n for i, n in state.resource_nodes.items() if n.kind == FOOD_KIND and not (106 <= n.position[0] <= 114 and 34 <= n.position[1] <= 42)}
     if wild_food:
-        nodes.update({i: replace(n, remaining_charges=STAGED_CHARGES) for i, n in state.resource_nodes.items() if n.kind == FOOD_KIND})
+        nodes.update({i: replace(n, remaining_charges=STAGED_CHARGES) for i, n in forest_patches.items()})
     buildings = {i: b for i, b in state.buildings.items() if b.kind != "inn"}
     tiles = {t: kind for t, kind in state.building_tiles.items() if kind != "inn"}
     return replace(state, entities={worker.id: worker}, resource_nodes=nodes, buildings=buildings, building_tiles=tiles), worker.id

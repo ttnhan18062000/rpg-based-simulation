@@ -31,6 +31,8 @@ module_refs:
     order: 3
   - module_id: "goblin_camp_conflict"
     order: 4
+  - module_id: "goblin_camp_forage"
+    order: 5
 generation_seed: 717
 
 # LOC-08 (owner decision 13): authored precedence where region bounds overlap; winner first. The resolved region

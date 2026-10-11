@@ -199,6 +199,7 @@ mechanisms:
       - src/engine/tactical_hold.py::stalemate_break_update
       - src/engine/tactical_hold.py::notice_unengaged_hostile
       - src/engine/hostility.py::perceived_hostile
+      - src/engine/rpg_depth.py::LeashService
       - src/world/motivation/pressure_resolver.py::MotivationPressureResolver
     verified:
       instrument: corpus_run
@@ -263,6 +264,7 @@ mechanisms:
         the scheduler wakes the brain of an entity beside a perceived hostile it is not engaged with every 2 ticks (`scheduler.py`, LOD bypass for the wake),
         and `tactical_hold.notice_unengaged_hostile` follows the entity's own combat-engagement verdict (ignore keeps walking, avoid steps away).
         `ignore` is unreachable in the corpus today (0 firings); `watch` stands and observes (a typed HOLD wait, WATCH_HOSTILE). Pinned 5x3: opportunity-attack hits down 33 to 67 percent.
+        **Note, added 2026-10-11 (#500, D57, TCK-20261009-HEROES-ON-A-LEASH-NEVER-SEEK-FOOD-AND-STARVE-WITHOUT-ONE-EAT-ATTEMPT):** a leashed subject's range (LeashService) bounds both the tactical leash return and which food ways count as in range (way_in_range). `LeashService` is cited above because the hunger and fatigue goals and the opening steps now call `way_in_range`, which made it a wired mechanism-shaped class.
   - id: combat_engagement
     layer: entity
     systems: [combat]

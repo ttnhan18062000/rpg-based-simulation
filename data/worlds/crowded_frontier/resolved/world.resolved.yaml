@@ -28,6 +28,19 @@ regions:
     position:
     - 25
     - 25
+- id: goblin_camp_edge
+  type: wilderness
+  bounds:
+  - 106
+  - 34
+  - 114
+  - 42
+  terrain: forest
+  hazard_level: 3.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+  places: []
 - id: goblin_camp
   type: wilderness
   bounds:
@@ -235,6 +248,11 @@ resources:
   resource_type: herb_patch
   count: 5
   region: hometown
+  regen_rate: 1
+- id: goblin_camp_forage__berry_thicket_0
+  resource_type: berry_thicket
+  count: 10
+  region: goblin_camp_edge
   regen_rate: 1
 - id: orc_clan_territory__iron_vein_0
   resource_type: iron_vein

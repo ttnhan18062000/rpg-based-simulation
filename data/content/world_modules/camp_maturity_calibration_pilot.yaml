@@ -28,6 +28,15 @@ requires: ["frontier_village_core"]
 biomes: ["monster_calibration_zone"]
 ecologies: ["monster_calibration_ecology"]
 regions:
+  # Decision 57: berries at the edge of the goblin camp (160, 160), a box of +-4 inside its leash range. First, so the module's resource
+  # lands here (the resolver puts a module's resources in its first region); the contained region owns its tiles.
+  - id: "calibration_camp_edge"
+    type: "wilderness"
+    grid_bounds: [156, 156, 164, 164]
+    terrain: "forest"
+    hazard_level: 2.0
+    hazard_kind: "NATURAL_TERRAIN"
+    tags: [forest]
   - id: "monster_calibration_zone"
     type: "wilderness"
     grid_bounds: [150, 150, 190, 190]
@@ -49,5 +58,6 @@ regions:
 factions: ["goblin_warband"]
 populations: []
 relationships: []
-resources: {}
+resources:
+  berry_thicket: 10
 observability_tags: ["ecology", "calibration"]
