@@ -79,3 +79,13 @@ def test_the_worker_dispatcher_ends_the_move_by_the_same_rule():
     assert ended.navigation.target_clear is True and ended.task.work_kind_set == "ENTITY_ACT"
     kept = _worker_update(_held("LEASH_RETURN", (55.0, 56.0), HOME))
     assert kept.navigation.target_clear is not True and kept.task is None
+
+
+def test_a_regroup_ends_by_the_radius_it_was_issued_with_whatever_the_groups_radius_becomes():
+    """The radius travels in the move's payload: a cohesion radius that changes mid-move (a group growing or shrinking) does not move the end."""
+    at, anchor = (33.0, 36.0), (30.0, 30.0)                     # 6.7 from the anchor
+    issued_wide = _held("REGROUP", at, anchor, arrival_radius=8.0)
+    issued_narrow = _held("REGROUP", at, anchor, arrival_radius=5.0)
+    assert _ends(issued_wide) is True and _ends(issued_narrow) is False
+    # the same entity, later in the same move, with nothing about the group in view: unchanged
+    assert _ends(replace(issued_wide, navigation=replace(issued_wide.navigation, position=at))) is True

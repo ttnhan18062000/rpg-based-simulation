@@ -265,6 +265,8 @@ mechanisms:
         and `tactical_hold.notice_unengaged_hostile` follows the entity's own combat-engagement verdict (ignore keeps walking, avoid steps away).
         `ignore` is unreachable in the corpus today (0 firings); `watch` stands and observes (a typed HOLD wait, WATCH_HOSTILE). Pinned 5x3: opportunity-attack hits down 33 to 67 percent.
         **Note, added 2026-10-11 (#500, D57, TCK-20261009-HEROES-ON-A-LEASH-NEVER-SEEK-FOOD-AND-STARVE-WITHOUT-ONE-EAT-ATTEMPT):** a leashed subject's range (LeashService) bounds both the tactical leash return and which food ways count as in range (way_in_range). `LeashService` is cited above because the hunger and fatigue goals and the opening steps now call `way_in_range`, which made it a wired mechanism-shaped class.
+
+        **Note, added 2026-10-11 (TCK-20261011-A-HELD-MOVE-STANDS-FROZEN-AFTER-ARRIVING-IN-ITS-AREA, divergence 2.113):** a held move now ends on arriving in the area it was issued for: `LeashService.in_home_area` (a LEASH_RETURN ends inside the leash radius) and the REGROUP move's `arrival_radius` (set in `tactical.py`, read by `MovementCandidateSelector.arrived_in_area`).
   - id: combat_engagement
     layer: entity
     systems: [combat]

@@ -4550,4 +4550,4 @@
   proof_type: regression
   test_path: tests/unit/engine/test_pressing_need_wakes_a_held_move.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.106.
-  support_boundary: A range-bound subject (leash above 0) targets only ways inside its range (way_in_range) and stays honestly hungry with none; goblin camps have berries in range (goblin_camp_forage), wolf nests are a reported meat-only gap. The held-move completion rule is a separate ticket. Measured on urban_political, frontier_living_world and crowded_frontier, seeds 42 to 46, 5000 ticks.
+  support_boundary: A range-bound subject (leash above 0) targets only ways inside its range (way_in_range) and stays honestly hungry with none; goblin camps have berries in range (goblin_camp_forage), wolf nests are a reported meat-only gap. The held-move completion rule is COMB-345 (divergence 2.113). Measured on urban_political, frontier_living_world and crowded_frontier, seeds 42 to 46, 5000 ticks.
