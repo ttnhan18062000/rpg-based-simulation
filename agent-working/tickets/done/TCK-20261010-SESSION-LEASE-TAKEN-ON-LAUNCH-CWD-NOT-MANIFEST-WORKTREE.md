@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261010-SESSION-LEASE-TAKEN-ON-LAUNCH-CWD-NOT-MANIFEST-WORKTREE
-phase: open
+phase: done
 date: 2026-10-10
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 SessionStart takes the writer lease on whatever directory the session was launched in, not on the role's manifest worktree
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -94,13 +94,13 @@ None.
   already does.
 
 ## Implementation Notes
-(Open.)
+`session_start_hook._manifest_worktree(role, cwd)` = realpath of `<main checkout>/.claude/worktrees/<role.worktree>` (main checkout = parent of `git rev-parse --path-format=absolute --git-common-dir`, the path `launch.py` defaults to). The writer's lease is taken only when the session's physical worktree realpath equals it; otherwise one SessionStart note `session-roles: writer lease not taken: launched outside <manifest worktree>` is added and the session is still bound and carded. If the main checkout cannot be determined (git failure) the old behaviour is kept (fail open). Only the default path is compared: a `launch.py --worktree` override to another path is treated as foreign (no recorded per-role override exists in state to compare against), which is the safe direction: no lease rather than the wrong lease. Existing hook tests that launched writers in the repo root now launch in the role's manifest worktree.
 
 ## Test Summary
-(Open.)
+New: writer launched in the main checkout takes no lease and says why (still bound/carded); in a foreign git worktree takes none; seven seats launched in the main checkout leave it unleased. Regression: designer/planner/writer launched in its own manifest worktree still take the lease; `<role>-2` unchanged; another role's lease still reported not stolen. tests/tools/test_session_*.py: 612 passed.
 
 ## Files Changed
-(Open.)
+`tools/sessions/session_start_hook.py`, `tests/tools/test_session_resolve_and_hook.py`.
 
 ## Completion Summary
-(Open.)
+A writer role launched outside its manifest worktree no longer takes a lease there; the main checkout stays unleased.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261010-PR-BODY-LINT-WORKFLOW-UNOWNED
-phase: open
+phase: done
 date: 2026-10-10
 tags: [ai, governance, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance, delivery]
 `.github/workflows/pr-body-lint.yml` routes to no domain after #476
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -60,13 +60,13 @@ None.
 None.
 
 ## Implementation Notes
-(Open.)
+Added `.github/workflows/pr-body-lint.yml` to agent-working's `owns` in `registries/session_roles.yaml`, next to `tools/delivery/**`. The agent-working planner card then exceeded the 400-token budget (411), so the two session registry files collapsed into the glob `registries/session_*.yaml`, which matches exactly `session_roles.yaml` and `session_authority.yaml` today (the only `session_*` files in `registries/`); the three agent-working cards are now 383/400/389 tokens. Owner to confirm the literal diff (governing file); note the glob would also own a future `registries/session_*.yaml`.
 
 ## Test Summary
-(Open.)
+`route.py .github/workflows/pr-body-lint.yml` -> owned, domain agent-working. Routing of both registry files unchanged. `tools.sessions.validate`: 0 findings, 17 roles. `generate_agents --check`: 0 drift. Session cards/roster/route/generator/settings_freshness tests: 113 passed.
 
 ## Files Changed
-(Open.)
+`registries/session_roles.yaml`, `.claude/agents/session-agent-working-{designer,implementer,planner}.md` (regenerated).
 
 ## Completion Summary
-(Open.)
+pr-body-lint.yml now routes to the agent-working domain.

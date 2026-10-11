@@ -58,6 +58,7 @@ import os
 import statistics
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
@@ -340,7 +341,10 @@ def build_report(
         pairs = _affected_pairs(suspects, config)
         second = evaluate({**docs, **rerun(pairs)}, config, refs, reasons_by_version, harness_hash)
         findings = _apply_rerun(findings, second)
+        skipped = [list(p) for p in getattr(rerun, "skipped", [])]
         rerun_info = {"performed": True, "pairs": [list(p) for p in pairs], "unstable": sum(1 for f in findings if f["state"] == UNSTABLE)}
+        if skipped:
+            rerun_info["not_performed_budget"] = skipped  # these pairs were not rerun; their findings keep the first pass's state, so they are not marked unstable
     findings = _ownership(findings, known, today)
     stale_known = {
         state: [e["match"] for e in known_reds.stale_mappings({metric_test_id(f): "" for f in findings if f["state"] == state}, known, state=state)]
@@ -354,6 +358,7 @@ def build_report(
         "harness_hash": harness_hash,
         "verdict": outcome,
         "reasons": reasons,
+        "module_absent": any(f["state"] == NO_DATA and f.get("reason") == "metric_error" and str(f.get("detail", "")).startswith("ModuleNotFoundError") for f in findings),
         "run_errors": [
             {"world": f["world"], "seed": f.get("seed"), "error": f.get("detail", "")} for f in findings if f.get("reason") == "run_error"
         ],
@@ -376,12 +381,16 @@ def build_report(
 def render_markdown(report: Mapping[str, Any]) -> str:
     lines = [f"## rpg gate report: {report['verdict'].upper()}", ""]
     lines.append(f"SHA `{report['sha'][:9]}`, harness `{report['harness_hash'][:12]}`. " + ", ".join(f"{s}: {report['counts'][s]}" for s in STATES))
+    if report.get("module_absent"):
+        lines += ["", "> **rpg's metric module is absent** (`ModuleNotFoundError`): every run is `metric_error` / `no-data`, so this report judges nothing yet. The job stays green."]
     if report["references"]:
         lines.append("References: " + "; ".join(f"{r['ref']} = v{r['version']} ({r['milestone']}){' STALE: ' + '; '.join(r['stale']) if r['stale'] else ''}" for r in report["references"]))
     else:
         lines.append("References: none (no baseline exists)")
     if report["rerun"].get("performed"):
         lines.append(f"Same-SHA rerun: {len(report['rerun']['pairs'])} (world, seed) run(s), {report['rerun']['unstable']} metric(s) unstable.")
+        if report["rerun"].get("not_performed_budget"):
+            lines.append(f"- rerun not performed (budget) for {len(report['rerun']['not_performed_budget'])} run(s): their fail/drift findings are unconfirmed.")
     for reason in report["reasons"]:
         lines.append(f"- **RED**: {reason}")
     if report["run_errors"]:
@@ -422,17 +431,29 @@ def _detail(f: Mapping[str, Any]) -> str:
 # ---------------------------------------------------------------- CLI
 
 
-def _harness_rerun(config: GateConfig, config_path: Path, docs_dir: Path, metrics_module: str, sha: str) -> Rerun:
+def _harness_rerun(config: GateConfig, config_path: Path, docs_dir: Path, metrics_module: str, sha: str, workers: int = 2, budget_s: float = 5400.0) -> Rerun:
     from tools.test_architecture import rpg_gate_harness as harness
 
     hhash = harness.harness_hash(config_path, metrics_module=metrics_module)
     token = f"rerun-{os.getpid()}-{int(time.time()) % 100000}"  # per invocation, like the harness's own run ids
 
     def rerun(pairs: Sequence[Tuple[str, int]]) -> Docs:
+        """Rerun the pairs in fresh processes, ``workers`` at a time, starting none after ``budget_s``; the pairs never started are in ``rerun.skipped``."""
         out = Path(str(docs_dir) + "-rerun")
         out.mkdir(parents=True, exist_ok=True)
-        for world, seed in pairs:
-            harness.run_one(world, seed, config, out, metrics_module=metrics_module, sha=sha, hhash=hhash, keep_runs=False, timeout_s=harness.DEFAULT_TIMEOUT_S, token=token)
+        deadline = time.monotonic() + budget_s
+        rerun.skipped = []
+
+        def one(pair: Tuple[str, int]) -> None:
+            if time.monotonic() >= deadline:
+                rerun.skipped.append(pair)
+                return
+            harness.run_one(pair[0], pair[1], config, out, metrics_module=metrics_module, sha=sha, hhash=hhash, keep_runs=False,
+                            timeout_s=min(harness.DEFAULT_TIMEOUT_S, max(60.0, deadline - time.monotonic())), token=token)
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            list(pool.map(one, pairs))
+        pairs = [p for p in pairs if p not in rerun.skipped]
         for world in sorted({w for w, _ in pairs}):
             if not all((world, seed) in set(pairs) for seed in config.seeds):
                 continue  # a pooled document needs every seed; the first pass's pooled document stands
@@ -454,6 +475,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--metrics-module", default=None)
     parser.add_argument("--sha", default="")
     parser.add_argument("--no-rerun", action="store_true")
+    parser.add_argument("--rerun-workers", type=int, default=2)
+    parser.add_argument("--rerun-budget", type=float, default=5400.0, help="seconds after which no further rerun is started")
     parser.add_argument("--fail-on-red", action="store_true")
     args = parser.parse_args(argv)
     from tools.test_architecture import rpg_gate_harness as harness
@@ -465,7 +488,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     baselines = load_baselines(args.baselines)
     refs = resolve_references(baselines)
     reasons = {b["version"]: staleness(b, now, hhash, config).reasons for b in ((refs.last, refs.milestone_first) if refs else ())}
-    rerun = None if args.no_rerun else _harness_rerun(config, args.config, args.docs, metrics_module, args.sha)
+    rerun = None if args.no_rerun else _harness_rerun(config, args.config, args.docs, metrics_module, args.sha, args.rerun_workers, args.rerun_budget)
     report = build_report(
         config, load_documents(args.docs, config), refs, reasons, known_reds.load_known_reds(args.known, known_reds.RPG_GATE_SPEC), now.date(),
         sha=args.sha, harness_hash=hhash, rerun=rerun,
