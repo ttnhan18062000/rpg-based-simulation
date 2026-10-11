@@ -71,11 +71,10 @@ Directories: `.agents`, `.claude`, `.codex`, `.github`, `agent-working`, `codeba
 
 Files: `.dockerignore`, `.gitattributes`, `.gitignore`, `.gitmessage`, `.graphifyignore`, `.mcp.json`,
 `.pre-commit-config.yaml`, `.python-version`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `LICENSE`, `Makefile`,
-`README.md`, `compose.yaml`, `perf_baselines.json`, `pyproject.toml`, `requirements-knowledge.txt`, `skills-lock.json`,
+`README.md`, `compose.yaml`, `pyproject.toml`, `requirements-knowledge.txt`, `skills-lock.json`,
 `uv.lock`.
 <!-- repo-root-allowlist:end -->
 
-Two entries are listed on purpose and may move later by their owners' decision, not this guard's: `perf_baselines.json`
-(perf domain; perf-planner asked to keep it at the root for now and will say before moving it) and `skills-lock.json`
-(the external `npx skills` CLI's file). Local untracked clutter (`tmp/`, `scratch/`, `reports/`, logs) is not tracked, so
+One entry is listed on purpose and may move later by its owner's decision, not this guard's: `skills-lock.json`
+(the external `npx skills` CLI's file). (The per-test perf budget file that used to sit at the root was removed by `TCK-20261010-PERF-M2-PERFBUDGET-RETIRE`.) Local untracked clutter (`tmp/`, `scratch/`, `reports/`, logs) is not tracked, so
 it is not checked.
