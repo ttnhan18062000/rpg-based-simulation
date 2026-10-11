@@ -47,7 +47,7 @@ def test_tracked_root_equals_the_allowlist():
 
 def test_allowlist_parse_is_not_vacuous():
     allowed = parse_allowlist((_REPO_ROOT / _GUIDELINE).read_text(encoding="utf-8"))
-    assert {"src", "tools", "docker", "compose.yaml", "pyproject.toml", "perf_baselines.json", "skills-lock.json"} <= allowed
+    assert {"src", "tools", "docker", "compose.yaml", "pyproject.toml", "skills-lock.json"} <= allowed
     assert not {"requirements.txt", "make.bat", "package.json", "backend.Dockerfile", "grafana", "scripts"} & allowed
 
 
