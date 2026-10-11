@@ -27,6 +27,7 @@ import pytest
 from src.config.profiles import PROD_SMALL
 from src.core.enums import EntityRole
 from src.core.items import food_hunger_recovery
+from src.engine.appraisal import kind_can_eat_item
 from src.core.state import AuthoritativeState
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.engine.kernel import Kernel
@@ -81,7 +82,7 @@ def _run(*, wild_food: bool) -> Trace:
             kernel.tick_once()
             now = kernel._state
             worker = now.entities[worker_id]
-            food = sorted(n.remaining_charges for n in now.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0)
+            food = sorted(n.remaining_charges for n in now.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0 and kind_can_eat_item("human", n.yields_item))  # the worker's food; plant cover is the grazer's (owner row 59)
             trace.ticks.append((now.tick, worker.biological.hunger, worker.inventory.gold, _carried(worker), tuple(food)))
             trace.events.update((e.category, e.subject) for e in now.recent_world_events)
         trace.final = kernel._state
