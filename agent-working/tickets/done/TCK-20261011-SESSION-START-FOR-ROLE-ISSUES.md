@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261011-SESSION-START-FOR-ROLE-ISSUES
-phase: open
+phase: done
 date: 2026-10-11
 tags: [ai, process-improvement, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, delivery]
 SessionStart lists the role's open GitHub issues labelled `for:<role>` (Epic E, part E4a)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -71,7 +71,7 @@ note. Today, agent-working-planner found #492, #495 and #498 only because the ow
 - docs/plans/agent_infrastructure/session_layer_working_process.md (§9.0)
 
 ## Related Stored Artifacts
-None.
+- agent-working/stored_artifacts/TCK-20261011-SESSION-START-FOR-ROLE-ISSUES/
 
 ## Related Code Areas
 - tools/sessions/session_start_hook.py
@@ -82,9 +82,13 @@ None.
   exactly the slow/offline case and must stay invisible.
 
 ## Implementation Notes
+`role_issues_text` in the SessionStart hook: one `gh` call, 3 s timeout, fail open, cap 10, skipped on `compact`; `SESSION_START_ISSUES=off` opt-out, set for all tools tests by `tests/tools/conftest.py`. Convention in the cross-session guide.
 
 ## Test Summary
+Eight new hook tests (found, other label not requested, second instance, failing/bad JSON/wrong shape/empty, missing, hanging, cap, compact, age); `tests/tools/test_session_resolve_and_hook.py` 59 passed.
 
 ## Files Changed
+`tools/sessions/session_start_hook.py`, `tests/tools/conftest.py`, `tests/tools/test_session_resolve_and_hook.py`, `docs/guides/cross_session_messages.md`.
 
 ## Completion Summary
+Sessions now see their role's open `for:<role>` issues at start. Not verified against the real `gh`/GitHub from a fresh launch (stubbed only); the TLS failures on host u24desktop are the slow/offline case and stay invisible.

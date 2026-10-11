@@ -400,3 +400,92 @@ def test_seven_seats_launched_in_the_main_checkout_leave_it_unleased(world):
                                  "rpg-planner", "agent-working-planner", "testing-planner")):
         _ctx(world, _payload(repo, agent_type=f"session-{role_id}", session_id=f"s{i}"), {"SESSION_ROLE": role_id})
     assert st.read_lease(state_root, repo) is None
+
+
+# --- TCK-20261011-SESSION-START-FOR-ROLE-ISSUES: the role's open `for:<role>` issues, fail open ---------------
+
+import time  # noqa: E402
+
+
+def _gh(tmp_path, monkeypatch, body: str):
+    """Put a stub `gh` first on PATH (git stays reachable); returns the file the stub appends its arguments to."""
+    bindir = tmp_path / "ghbin"
+    bindir.mkdir(exist_ok=True)
+    log = tmp_path / "gh.args"
+    stub = bindir / "gh"
+    stub.write_text(f'#!/bin/sh\necho "$@" >> "{log}"\n{body}\n')
+    stub.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bindir}{os.pathsep}{os.environ['PATH']}")
+    monkeypatch.delenv("SESSION_START_ISSUES", raising=False)
+    return log
+
+
+def _issues_json(n, label_for=None):
+    return json.dumps([{"number": 100 + i, "title": f"issue {i}", "createdAt": "2026-10-01T00:00:00Z"} for i in range(n)])
+
+
+def test_issues_for_the_role_follow_the_handover_note_and_only_that_label_is_requested(world, tmp_path, monkeypatch):
+    log = _gh(tmp_path, monkeypatch, f"echo '{_issues_json(1)}'")
+    out = _ctx(world, _payload(world[1]))
+    assert "#100 issue 0 (" in out
+    assert out.index("Your handover note") < out.index("Open GitHub issues")
+    args = log.read_text()
+    assert f"--label for:{WRITER}" in args and "for:rpg-planner" not in args
+    assert "--limit 11" in args and "body" not in args
+
+
+def test_a_second_instance_uses_its_roles_label(world, tmp_path, monkeypatch):
+    log = _gh(tmp_path, monkeypatch, "echo '[]'")
+    _ctx(world, _payload(world[1], agent_type="session-rpg-implementer", session_title="rpg-implementer-3"),
+         {"SESSION_ROLE": "rpg-implementer-3"})
+    assert "--label for:rpg-implementer " in log.read_text()
+
+
+@pytest.mark.parametrize("body", ["exit 1", "echo 'not json'", "echo '{\"a\": 1}'", "echo '[]'"])
+def test_a_failing_or_empty_gh_leaves_the_output_unchanged(world, tmp_path, monkeypatch, body):
+    monkeypatch.setenv("SESSION_START_ISSUES", "off")
+    baseline = _ctx(world, _payload(world[1]))
+    _gh(tmp_path, monkeypatch, body)
+    assert _ctx(world, _payload(world[1])) == baseline
+
+
+def test_a_missing_gh_leaves_the_output_unchanged(world, tmp_path, monkeypatch):
+    monkeypatch.setenv("SESSION_START_ISSUES", "off")
+    baseline = _ctx(world, _payload(world[1]))
+    bindir = tmp_path / "gitonly"
+    bindir.mkdir()
+    (bindir / "git").symlink_to(shutil.which("git"))
+    monkeypatch.setenv("PATH", str(bindir))
+    monkeypatch.delenv("SESSION_START_ISSUES", raising=False)
+    assert _ctx(world, _payload(world[1])) == baseline
+
+
+def test_a_hanging_gh_is_cut_off_at_the_timeout(world, tmp_path, monkeypatch):
+    monkeypatch.setenv("SESSION_START_ISSUES", "off")
+    baseline = _ctx(world, _payload(world[1]))
+    _gh(tmp_path, monkeypatch, "exec sleep 30")
+    monkeypatch.setattr(hook, "ISSUE_TIMEOUT_S", 0.5)
+    start = time.monotonic()
+    out = _ctx(world, _payload(world[1]))
+    assert time.monotonic() - start < 5
+    assert out == baseline
+
+
+def test_more_than_ten_issues_show_ten_and_an_and_more_line(world, tmp_path, monkeypatch):
+    _gh(tmp_path, monkeypatch, f"echo '{_issues_json(11)}'")
+    out = _ctx(world, _payload(world[1]))
+    assert "#109 " in out and "#110 " not in out and "... and more" in out
+
+
+def test_compact_does_not_call_gh(world, tmp_path, monkeypatch):
+    log = _gh(tmp_path, monkeypatch, f"echo '{_issues_json(2)}'")
+    out = _ctx(world, _payload(world[1], source="compact"))
+    assert not log.exists() and "Open GitHub issues" not in out
+
+
+def test_issue_ages_and_hostile_titles_are_rendered_as_one_short_line(monkeypatch):
+    from datetime import datetime, timezone
+
+    monkeypatch.delenv("SESSION_START_ISSUES", raising=False)
+    now = datetime(2026, 10, 11, 12, 0, tzinfo=timezone.utc)
+    assert [hook._age(t, now) for t in ("2026-10-08T12:00:00Z", "2026-10-11T07:00:00Z", "2026-10-11T11:48:00Z", "junk")] == ["3d", "5h", "12m", "?"]
