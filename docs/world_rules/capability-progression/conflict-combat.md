@@ -117,6 +117,17 @@ directly, 2026-10-09; rows 47 and 49 of the memo):**
     overcome; defend or flee when threatened; otherwise ignore it or stay wary. Wolves attack
     people the same way, not by a faction verdict. **Fixed in the hunting batch** (rpg-designer
     applying decision 47, no new ruling), which discloses its effect on attacks on people.
+  - **Scope of the change, by milestone (decided by the owner directly, 2026-10-11; row 62 of the
+    memo).** In the hunting batch, only a kind with a diet in a faction declared wild
+    (`wild_beast_pack`, `wild_fauna`) drops faction hostility and goes by the appraisal. Monster
+    factions (`undead_remnants`, `dragon_cult`, `spirit_court` and others) keep faction hostility
+    for now, which is disclosed as interim. In milestone 1, each monster kind declares why it
+    fights as a property read generically (decision 46): the undead hate the living, a spirit
+    guards a place, and a troll or dragonkin hunts by its diet and the appraisal. That drive
+    replaces faction hostility for monsters too, leaving faction as a reason to fight only
+    between people. **Alternatives not taken:** every non-people kind at once (the undead,
+    slimes and spirits have no diet and would ignore people until a drive exists); wild
+    animals only, for good (monsters would stay enemies by a label).
 
 **Disposition: ACCEPT — decided by world-rule-catalog-design under owner delegation, 2026-10-06**
 (row 18 of `docs/plans/systemic_world/owner_decision_memo.md`; the owner confirmed the

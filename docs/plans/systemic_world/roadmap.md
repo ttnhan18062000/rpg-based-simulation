@@ -881,7 +881,8 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 58. how the treasury's coin moves (decided 2026-10-09: a tenth of each sale and wage rounded down, upkeep paid into buildings that pay town wages, one-time repair or a used-up kit, unpaid rewards owed, EXCH-02).
 59. what grazing is (decided 2026-10-10: the land's plant cover, declared per biome with its wild food, and read by all forage and camp food; values decided 2026-10-11: a bite of 20, bands 1/2/4 patches per 1,000 tiles, regrowth 1/2/3 per check, SURV-06);
 60. how much meat a body gives and how often meat-eaters eat (decided 2026-10-10: meat in proportion to size, a meat-eater's full meal lasts at least a day, SURV-06).
-61. who keeps a building up and who pays a quest (decided 2026-10-11: a building pays its own upkeep and the treasury covers only a shortfall; only the real giver pays a quest; coin on a corpse stays where it fell, EXCH-02).
+61. who keeps a building up and who pays a quest (decided 2026-10-11: a building pays its own upkeep and the treasury covers only a shortfall; only the real giver pays a quest; coin on a corpse stays where it fell, EXCH-02);
+62. how far faction hostility reaches (decided 2026-10-11: wild creatures go by the appraisal now; monster factions keep faction hostility until milestone 1, when each monster kind declares why it fights, CONFLICT-03).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -1138,6 +1139,8 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    - An activity period per kind, and hazard tolerance per body.
    - Retire behaviour that branches on role, kind or faction names, in stages, measured each time.
      This includes the fixed camp tether, replaced by a home range (decision 57).
+   - Each monster kind declares why it fights (the undead hate the living, a spirit guards a
+     place, a troll hunts by diet), which replaces faction hostility for monsters (decision 62).
 
    Done when no decision reads a role, kind or faction name, a new kind works from content alone,
    and a probe finds no name switch left in a decision path.
