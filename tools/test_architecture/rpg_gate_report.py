@@ -24,6 +24,10 @@ States of one finding:
   child never started) or ``seed_no_data``.
 * ``unstable``: a ``fail`` or ``drift`` that the same-SHA rerun did not reproduce. Routed to test infrastructure (roadmap §4.5, nondeterminism), not to the feature team.
 
+Every document's ``harness_hash`` must equal the current harness hash and the documents must agree with each other; otherwise they are ``no-data`` with the
+reason "documents from another harness version". A validity row without an integer ``violations`` or without an ``oracle`` (the report must cite it), and an
+outcome row without a numeric value or mean, are likewise contract errors (``no-data``), never a pass and never a crash.
+
 Same-SHA rerun: when the first pass has any ``fail`` or ``drift``, the affected (world, seed) set is rerun ONCE (fresh processes, via the ``rerun`` callable) and
 evaluated again; a finding whose state differs the second time becomes ``unstable``. A run-scope validity ``fail`` reruns its seed; everything else reruns every
 seed of its world.
@@ -50,8 +54,10 @@ import argparse
 import datetime as dt
 import json
 import math
+import os
 import statistics
 import sys
+import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
@@ -97,6 +103,10 @@ def _no_data(world: str, seed: Optional[int], detail: str, reason: str = "harnes
     return {"world": world, "scope": scope, "id": "*", "group": "*", "class": "run", "state": NO_DATA, "reason": reason, "detail": detail, **({"seed": seed} if seed is not None else {})}
 
 
+def _is_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
 def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str], str]:
     """``(id, group) -> reason`` for rows that break the threshold contract: an outcome row without a numeric ``k`` / ``floor`` (a pooled one needs only the
     floor), or rows of one (id, group) that disagree on ``k``, ``floor`` or ``oracle`` across the documents of the run set."""
@@ -108,10 +118,19 @@ def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str], str]:
         for row in doc["metrics"]:
             key = (row["id"], row.get("group", "*"))
             if row.get("class") == "outcome":
-                need = ("floor",) if row.get("scope") == "pooled" else ("k", "floor")
-                missing = [n for n in need if not isinstance(row.get(n), (int, float)) or isinstance(row.get(n), bool)]
+                pooled = row.get("scope") == "pooled"
+                need = ("floor", "value") if pooled else ("k", "floor")
+                missing = [n for n in need if not _is_number(row.get(n))]
+                if not pooled and not (_is_number(row.get("value")) or _is_number(row.get("mean"))):
+                    missing.append("value")
                 if missing:
-                    problems[key] = f"contract error: outcome row without {' and '.join(missing)}"
+                    problems[key] = f"contract error: outcome row without a numeric {' and '.join(missing)}"
+            elif row.get("class") == "validity":
+                violations = row.get("violations")
+                if not isinstance(violations, int) or isinstance(violations, bool) or violations < 0:
+                    problems[key] = "contract error: validity row without an integer violations count"
+                elif not row.get("oracle"):
+                    problems[key] = "contract error: validity row without an oracle to cite"
             seen.setdefault(key, set()).add((row.get("k"), row.get("floor"), row.get("oracle")))
     for key, versions in seen.items():
         if len(versions) > 1:
@@ -123,7 +142,7 @@ def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str], str]:
 
 
 def _validity(row: Mapping[str, Any], world: str, seed: Optional[int], config: GateConfig) -> dict:
-    violations = row.get("violations", 0)
+    violations = row["violations"]
     finding = {
         "world": world, "scope": row.get("scope", "run"), "id": row["id"], "group": row.get("group", "*"), "class": "validity",
         "state": FAIL if violations > 0 else PASS, "violations": violations,
@@ -196,9 +215,21 @@ def _contract_no_data(world: str, row: Mapping[str, Any], seed: Optional[int], d
     return finding
 
 
-def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons_by_version: Mapping[int, Sequence[str]]) -> List[dict]:
+def _check_harness_versions(docs: Docs, current: str) -> Docs:
+    """Documents from another harness version are ``no-data`` (contract error): each document's ``harness_hash`` must equal the current one (when known) and
+    the documents must agree with each other."""
+    hashes = {d.get("harness_hash") for d in docs.values() if d.get("status") == "ok"}
+    if len(hashes) <= 1 and (not current or hashes <= {current}):
+        return docs
+    bad = (lambda d: d.get("harness_hash") != current) if current else (lambda d: True)
+    return {k: ({**d, "status": "no-data", "reason": "contract_error", "metrics": [], "error": "documents from another harness version"} if d.get("status") == "ok" and bad(d) else d)
+            for k, d in docs.items()}
+
+
+def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons_by_version: Mapping[int, Sequence[str]], harness_hash: str = "") -> List[dict]:
     """Findings for every metric of every (world, seed) / world in ``docs``; nothing is guessed for a missing document or a contract error (it is ``no-data``)."""
     findings: List[dict] = []
+    docs = _check_harness_versions(docs, harness_hash)
     problems = _threshold_problems(docs)
 
     def validity(row: Mapping[str, Any], world: str, seed: Optional[int]) -> dict:
@@ -232,7 +263,7 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
                     key = (r["id"], r.get("group", "*"), r.get("key"), r.get("tick"))
                     row = grouped.setdefault(key, {"id": r["id"], "group": r.get("group", "*"), "key": r.get("key"), "tick": r.get("tick"), "scope": "run",
                                                    "k": r.get("k"), "floor": r.get("floor"), "per_seed": {}})
-                    row["per_seed"][seed] = r["value"] if "value" in r else r["mean"]
+                    row["per_seed"][seed] = r["value"] if _is_number(r.get("value")) else r.get("mean")
         for row in grouped.values():
             problem = problems.get((row["id"], row["group"]))
             findings.append(_contract_no_data(world, row, None, problem) if problem else _outcome(row, world, refs, reasons_by_version, config))
@@ -302,12 +333,12 @@ def build_report(
     rerun: Optional[Rerun] = None,
 ) -> dict:
     """Evaluate, rerun once on a fail/drift, apply ownership and the verdict, and return the JSON-able report."""
-    findings = evaluate(docs, config, refs, reasons_by_version)
+    findings = evaluate(docs, config, refs, reasons_by_version, harness_hash)
     suspects = [f for f in findings if f["state"] in (FAIL, DRIFT)]
     rerun_info: Dict[str, Any] = {"performed": False}
     if suspects and rerun is not None:
         pairs = _affected_pairs(suspects, config)
-        second = evaluate({**docs, **rerun(pairs)}, config, refs, reasons_by_version)
+        second = evaluate({**docs, **rerun(pairs)}, config, refs, reasons_by_version, harness_hash)
         findings = _apply_rerun(findings, second)
         rerun_info = {"performed": True, "pairs": [list(p) for p in pairs], "unstable": sum(1 for f in findings if f["state"] == UNSTABLE)}
     findings = _ownership(findings, known, today)
@@ -395,12 +426,13 @@ def _harness_rerun(config: GateConfig, config_path: Path, docs_dir: Path, metric
     from tools.test_architecture import rpg_gate_harness as harness
 
     hhash = harness.harness_hash(config_path, metrics_module=metrics_module)
+    token = f"rerun-{os.getpid()}-{int(time.time()) % 100000}"  # per invocation, like the harness's own run ids
 
     def rerun(pairs: Sequence[Tuple[str, int]]) -> Docs:
         out = Path(str(docs_dir) + "-rerun")
         out.mkdir(parents=True, exist_ok=True)
         for world, seed in pairs:
-            harness.run_one(world, seed, config, out, metrics_module=metrics_module, sha=sha, hhash=hhash, keep_runs=False, timeout_s=harness.DEFAULT_TIMEOUT_S, token="rerun")
+            harness.run_one(world, seed, config, out, metrics_module=metrics_module, sha=sha, hhash=hhash, keep_runs=False, timeout_s=harness.DEFAULT_TIMEOUT_S, token=token)
         for world in sorted({w for w, _ in pairs}):
             if not all((world, seed) in set(pairs) for seed in config.seeds):
                 continue  # a pooled document needs every seed; the first pass's pooled document stands

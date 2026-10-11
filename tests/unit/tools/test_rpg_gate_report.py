@@ -31,7 +31,7 @@ def _seed_doc(seed, *, value=10.0, violations=0, status="ok", o_id="O1", example
         outcome["k"] = k
     if floor is not None:
         outcome["floor"] = floor
-    return {"schema": "rpg-gate-metrics/v1", "status": "ok", "world": "w", "seed": seed, "metrics": [
+    return {"schema": "rpg-gate-metrics/v1", "status": "ok", "harness_hash": "h", "world": "w", "seed": seed, "metrics": [
         outcome,
         {"id": "V1", "class": "validity", "scope": "run", "group": "*", "violations": violations, "examples": list(examples), "oracle": oracle},
     ]}
@@ -41,7 +41,7 @@ def _pooled_doc(violations=0, status="ok", value=None, floor=2.0):
     metrics = [{"id": "V7", "class": "validity", "scope": "pooled", "group": "wolves", "violations": violations, "examples": ["e"], "oracle": ORACLE}]
     if value is not None:
         metrics.append({"id": "O9", "class": "outcome", "scope": "pooled", "group": "*", "value": value, **({"floor": floor} if floor is not None else {})})
-    return {"schema": "rpg-gate-metrics/v1", "status": status, "reason": "metric_error", "world": "w", "metrics": metrics if status == "ok" else [], "error": "x"}
+    return {"schema": "rpg-gate-metrics/v1", "status": status, "harness_hash": "h", "reason": "metric_error", "world": "w", "metrics": metrics if status == "ok" else [], "error": "x"}
 
 
 def _docs(values=(10, 10, 10, 10, 10), **kw):
@@ -337,9 +337,12 @@ def test_cli_writes_json_and_markdown_and_fails_on_red_only_when_asked(tmp_path)
     docs.mkdir()
     cfg = tmp_path / "config.yaml"
     cfg.write_text("worlds: [w]\nseeds: [1, 2]\nticks: 10\nstale_after_days: 30\n")
+    from tools.test_architecture import rpg_gate_harness
+
+    current = rpg_gate_harness.harness_hash(cfg, metrics_module="tests.helpers.rpg_gate_stub_metrics")  # the documents must come from the current harness
     for seed in (1, 2):
-        (docs / f"w__s{seed}.json").write_text(json.dumps(_seed_doc(seed, violations=1, oracle="oracle-x")))
-    (docs / "w__pooled.json").write_text(json.dumps({**_pooled_doc(), "metrics": []}))
+        (docs / f"w__s{seed}.json").write_text(json.dumps({**_seed_doc(seed, violations=1, oracle="oracle-x"), "harness_hash": current}))
+    (docs / "w__pooled.json").write_text(json.dumps({**_pooled_doc(), "metrics": [], "harness_hash": current}))
     known = tmp_path / "known.yaml"
     known.write_text("known: []\n")
     args = ["--config", str(cfg), "--docs", str(docs), "--baselines", str(tmp_path / "none"), "--known", str(known),
@@ -347,3 +350,42 @@ def test_cli_writes_json_and_markdown_and_fails_on_red_only_when_asked(tmp_path)
     assert rep.main(args) == 0
     assert rep.main([*args, "--fail-on-red"]) == 1
     assert json.loads((tmp_path / "r.json").read_text())["verdict"] == "red" and "oracle: oracle-x" in (tmp_path / "r.md").read_text()
+
+
+def _contract(report, rid):
+    return [f for f in report["findings"] if f["id"] == rid and f.get("reason") == "contract_error"]
+
+
+def test_a_validity_row_without_a_count_or_an_oracle_is_a_contract_error_not_a_pass():
+    for edit, word in ((lambda row: row.pop("violations"), "violations"), (lambda row: row.update(violations="3"), "violations"), (lambda row: row.pop("oracle"), "oracle")):
+        docs = _docs()
+        for s in SEEDS:
+            docs[("w", s)] = _seed_doc(s)
+            edit(docs[("w", s)]["metrics"][1])
+        found = _contract(_build(docs), "V1")
+        assert found and all(f["state"] == "no-data" and word in f["detail"] for f in found)
+
+
+def test_an_outcome_row_without_a_value_or_mean_is_a_contract_error_not_a_crash():
+    docs = _docs()
+    for s in SEEDS:
+        docs[("w", s)] = _seed_doc(s)
+        del docs[("w", s)]["metrics"][0]["value"]
+    found = _contract(_build(docs), "O1")
+    assert found and found[0]["state"] == "no-data" and "value" in found[0]["detail"]
+    pooled = _docs()
+    pooled[("w", None)] = _pooled_doc(value=5.0)
+    del pooled[("w", None)]["metrics"][1]["value"]
+    assert _contract(_build(pooled, refs=_refs(_baseline(2, pooled=2.0))), "O9")
+
+
+def test_documents_from_another_harness_version_are_no_data():
+    docs = _docs()
+    docs[("w", 2)] = {**_seed_doc(2), "harness_hash": "other"}
+    report = _build(docs)  # current harness hash is "h": the odd document is the stale one
+    assert next(f for f in report["findings"] if f.get("seed") == 2)["detail"] == "documents from another harness version"
+    assert _states(report)[("V1", 1, "run")] == "pass"
+    all_old = {k: {**d, "harness_hash": "old"} for k, d in _docs().items()}
+    assert {f["detail"] for f in _build(all_old)["findings"] if f["state"] == "no-data"} == {"documents from another harness version"}
+    disagree = rep.build_report(_config(), docs, _refs(), {}, [], TODAY, harness_hash="")  # no current hash known: disagreement alone is enough
+    assert all(f["state"] == "no-data" for f in disagree["findings"])
