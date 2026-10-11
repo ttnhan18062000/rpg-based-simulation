@@ -31,8 +31,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# torch must be installed separately from the CPU wheel before this extra:
+# torch is not pinned here, and uv.lock resolves it from PyPI (the CUDA build). `.venv-knowledge` (3.12) is built by a
+# manual CPU-wheel step instead:
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# so that venv is NOT reproducible from the lock: do not `uv sync --extra knowledge` expecting the CPU env. The lock
+# stays index-free because download.pytorch.org is blocked on u24desktop-Virtual-Machine (see "Why the knowledge stack
+# is stuck on 3.12" in docs/guidelines/agent_working_environment.md); revisit once it is reachable from every host.
 knowledge = [
     "sentence-transformers>=2.7.0",
     "sqlite-vec>=0.1.1",
