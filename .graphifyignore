@@ -5,3 +5,6 @@ agent-working/tickets/
 agent-working/stored_artifacts/
 agent-working/reviews/
 reports/
+scratch/
+experiments/
+reviews/

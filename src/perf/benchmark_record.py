@@ -24,12 +24,14 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import platform
 import re
 import subprocess
 import sysconfig
 import types
 import typing
+import uuid
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
 from enum import Enum
@@ -54,7 +56,7 @@ from src.config.profiles import RuntimeProfile, SignalContract
 from src.core.governance import RuntimeMode
 from src.engine.work_units import WORK_MODEL_VERSION
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"  # 1.1 added the optional identity.runner section (additive: a MINOR bump, schema section 4)
 
 #: Source of ``result.cost_accounting_version`` (OD-8: a constant here, no engine edit). DEV-017 (#448) changed what a tick's and a phase's
 #: reported cost means, so a record without this value, or with another one, is not comparable on tick cost.
@@ -65,6 +67,10 @@ UNKNOWN = "unknown"
 
 #: A tripwire record embeds raw samples up to this many values; above it the record carries a pointer like a capacity record (OD-6).
 MAX_EMBEDDED_SAMPLES = 500
+
+#: Where capacity-run and over-cap tripwire samples go (uncommitted). ``PERF_SAMPLES_DIR`` overrides it; the perf tests set it to a temporary directory.
+DEFAULT_SAMPLES_SUBDIR = Path("reports") / "perf" / "samples"
+SAMPLES_DIR_ENV = "PERF_SAMPLES_DIR"
 
 _VERSION_RE = re.compile(r"^[0-9]+\.[0-9]+$")
 
@@ -199,6 +205,14 @@ class Runtime:
 
 
 @dataclass(frozen=True)
+class Runner:
+    """Who ran it. ``controlled`` is false until the owner names an approved runner (PERF-M2 OD-5), and then no capacity claim is made."""
+
+    controlled: bool = False
+    name: str = UNKNOWN
+
+
+@dataclass(frozen=True)
 class Contract:
     """``signal_contract`` replaces the draft's ``determinism``: ``canonical`` is the canonical contract, ``live`` is PERF-D1's live-bounded one."""
 
@@ -261,6 +275,7 @@ class Identity:
     observer: Observer
     gate: Gate
     baseline_ref: Optional[BaselineRef] = None
+    runner: Runner = field(default_factory=Runner)
 
 
 # ── result ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -548,6 +563,7 @@ class RecordOptions:
     gate_tier: GateTier = GateTier.TRIPWIRE
     gate_projection: str = "bench_harness"
     samples_dir: Optional[Path] = None
+    runner: Runner = field(default_factory=Runner)
 
 
 def collect_identity(profile: RuntimeProfile, subject: RunSubject, options: RecordOptions = RecordOptions(), repo_root: Optional[Path] = None) -> Identity:  # noqa: B008 - frozen
@@ -566,6 +582,7 @@ def collect_identity(profile: RuntimeProfile, subject: RunSubject, options: Reco
         executor=Executor(backend="thread" if workers > 0 else "sequential", worker_count=workers),
         observer=Observer(level=observer_level(subject.flags)),
         gate=Gate(tier=options.gate_tier, projection=options.gate_projection),
+        runner=options.runner,
     )
 
 
@@ -574,13 +591,44 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def write_samples_file(directory: Path, stem: str, tick_wall_ms: Sequence[float], tick_compute_ms: Sequence[float]) -> Samples:
-    """Write raw samples to ``directory/stem.json`` (an uncommitted location) and return the ``{uri, sha256}`` pointer (OD-6)."""
+def default_samples_dir() -> Path:
+    """The directory for pointed-to samples: ``$PERF_SAMPLES_DIR`` if set, else ``reports/perf/samples`` under the working directory."""
+    override = os.environ.get(SAMPLES_DIR_ENV)
+    return Path(override) if override else DEFAULT_SAMPLES_SUBDIR
+
+
+def write_samples_file(
+    directory: Path, stem: str, tick_wall_ms: Sequence[float], tick_compute_ms: Optional[Sequence[float]] = None
+) -> Samples:
+    """Write raw samples to a new file in ``directory`` (an uncommitted location) and return the ``{uri, sha256}`` pointer (OD-6).
+
+    The file name is ``stem`` plus a random suffix and the file is created exclusively, so two writes in the same second cannot share a file
+    and an earlier pointer's ``sha256`` can never go stale. ``tick_compute_ms`` is omitted when the producer has only wall time.
+    """
     directory.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps({"tick_wall_ms": list(tick_wall_ms), "tick_compute_ms": list(tick_compute_ms)}, sort_keys=True).encode("utf-8")
-    path = directory / f"{stem}.json"
-    path.write_bytes(payload)
+    series: Dict[str, List[float]] = {"tick_wall_ms": list(tick_wall_ms)}
+    if tick_compute_ms is not None:
+        series["tick_compute_ms"] = list(tick_compute_ms)
+    payload = json.dumps(series, sort_keys=True).encode("utf-8")
+    path = directory / f"{stem}_{uuid.uuid4().hex[:12]}.json"
+    with open(path, "xb") as handle:
+        handle.write(payload)
     return Samples(uri=str(path), sha256=hashlib.sha256(payload).hexdigest())
+
+
+def latency_stats(values: Sequence[float]) -> Dict[str, float]:
+    """avg, p50, p95, p99, max and min of ``values``; percentiles are nearest-rank (OD-1). Empty input gives zeroes (no ``min``)."""
+    if not values:
+        return {"avg": 0.0, "p50": 0.0, "p95": 0.0, "p99": 0.0, "max": 0.0}
+    ordered = sorted(values)
+    return {
+        "avg": round(sum(values) / len(ordered), 3),
+        "p50": round(nearest_rank(ordered, 0.5), 3),
+        "p95": round(nearest_rank(ordered, 0.95), 3),
+        "p99": round(nearest_rank(ordered, 0.99), 3),
+        "max": round(ordered[-1], 3),
+        "min": round(ordered[0], 3),
+    }
 
 
 # ── comparison (schema section 4) ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -643,6 +691,8 @@ _BLOCKING: Tuple[Tuple[str, Any], ...] = tuple(
         "identity.observer.level",
         "identity.gate.tier",
         "identity.gate.projection",
+        "identity.runner.controlled",
+        "identity.runner.name",
         "result.protocol.warmup_ticks",
         "result.protocol.measured_ticks",
         "result.protocol.repetitions",

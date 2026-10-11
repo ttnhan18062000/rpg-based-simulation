@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 
 import pytest
 
-from src.perf.benchmark_record import COST_ACCOUNTING_VERSION, BenchmarkRecord, ModeRun
+from src.perf.benchmark_record import COST_ACCOUNTING_VERSION, BenchmarkRecord, Engine, ModeRun
 from tests.unit.perf.test_benchmark_record import make_record
 from tools.agent_working_paths import TICKETS
 from tools.perf import baseline_lifecycle as lifecycle
@@ -38,8 +38,9 @@ def baselines(tmp_path: Path) -> Path:
 def candidate(**changes: Any) -> Dict[str, Any]:
     """A promotable candidate dict; ``changes`` edits the record's identity/result via dotted keys."""
     record = make_record()
-    if "dirty_src" in changes:
-        record = dataclasses.replace(record, identity=dataclasses.replace(record.identity, engine=dataclasses.replace(record.identity.engine, dirty_src=changes["dirty_src"])))
+    # Explicit, never the live git state: a test must not depend on whether src/ is dirty while it runs.
+    engine = Engine(commit="a" * 40, dirty_src=changes.get("dirty_src", False))
+    record = dataclasses.replace(record, identity=dataclasses.replace(record.identity, engine=engine))
     if "modes" in changes:
         record = dataclasses.replace(record, result=dataclasses.replace(record.result, runtime_mode_sequence=changes["modes"]))
     if "cost" in changes:

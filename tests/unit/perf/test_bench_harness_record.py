@@ -92,3 +92,14 @@ def test_a_record_failure_never_fails_the_benchmark(monkeypatch) -> None:
     harness = BenchHarness(PERF_PROFILES["PERF_512MB_LOCAL"])
     result = harness.run_benchmark("RECORD_BOOM", build_movement_state(entity_count=20), warmup_ticks=1, sample_ticks=3)
     assert set(result) == LEGACY_KEYS and harness.last_record is None
+
+
+def test_stats_cover_every_sampled_tick_not_just_the_last_hundred() -> None:
+    """RuntimeStatus keeps only 100 tick signals; a 150-tick run must still report 150 ticks (DEV-021)."""
+    harness = BenchHarness(PERF_PROFILES["PERF_512MB_LOCAL"])
+    result = harness.run_benchmark("WINDOW_UNIT", build_movement_state(entity_count=10), warmup_ticks=1, sample_ticks=150)
+    samples = harness.last_record.result.samples
+    assert len(samples.tick_wall_ms) == len(samples.tick_compute_ms) == 150
+    assert result["tick_ms"]["max"] == pytest.approx(max(samples.tick_compute_ms), abs=1e-3)
+    total_ms = sum(samples.tick_compute_ms)
+    assert result["compute_tps"] == pytest.approx(150 * 1000.0 / total_ms, rel=0.02)  # was 150 * 1000 / (sum of only the last 100)

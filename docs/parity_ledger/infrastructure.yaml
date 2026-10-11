@@ -12921,3 +12921,40 @@
   support_boundary: The known-debt ledger (owner, expiry, expected_signature) is PERF-M2-T05b and waits for the shared known-reds module. The shared
     baseline_change_policy.md does not exist yet and is cited as a forward reference. A cited PR number is accepted by shape (not checkable
     offline). The 15 legacy files are not re-recorded (PERF-M2-T08).
+
+- id: INFRA-432
+  text: 'TCK-20261010-PERF-M2-T04-CAPACITY-RUN (PERF-M2 OD-5, OD-6, OD-7): tools/perf/capacity_run.py runs N repetitions of BenchHarness (default 100
+    warmup, 1000 sampled ticks, 5 repetitions), each in a fresh process, and emits one schema-1.1 BenchmarkRecord per repetition with
+    gate.tier=capacity_run, gate.projection=capacity_run, identity.runner.controlled=false and a {uri, sha256} samples pointer. The outcome of an unpaired
+    run is INCONCLUSIVE (a dirty src tree, a repetition that left NORMAL or crashed, one repetition, or a coefficient of variation of avg latency above
+    the declared limit 0.10, the reason naming variance) or NOT_APPLICABLE; never PASS, and it states no capacity claim. Paired mode (--base, --head) runs
+    each side in fresh processes under its own checkout and returns compare() of the median repetition. The samples file of a record is created
+    exclusively under a unique name, so two records in the same second never share a file. LongRunStabilityReport has outcome in place of
+    passed_certification, nearest-rank window percentiles, and maps into a comparative record (gate.tier=comparative, gate.projection=long_run_stability). BenchHarness statistics cover every sampled tick (DEV-021), not the last 100. pyperf is not used.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/perf/capacity_run.py (run_once, spawn, assess, run_paired); src/perf/long_run_harness.py (LongRunStabilityHarness.to_record, _stability_outcome); src/perf/benchmark_record.py (Runner, write_samples_file, latency_stats)
+  proof_type: contract
+  test_path: tests/unit/perf/test_capacity_run.py
+  divergence_note: DEV-021 (Bug Fix)
+  support_boundary: No controlled runner exists, so no result is a capacity claim and no performance target is enforced (OD-5). The tool is not part of default CI.
+    The long-run record times the tick plus the read-model update, so it is a different projection from a BenchHarness capacity run. The two extra_slow
+    certification tests in tests/certification/test_cert_long_run_stability.py were updated to assert outcome but were not run (5000 ticks on 1000 entities).
+
+- id: INFRA-433
+  text: 'TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED (PERF-M2 OD-2): tools/perf/tripwire.py is the CI-fast tripwire. It runs base and head each in a fresh process on one
+    runner over the declared TRIPWIRE_SCENARIOS (10 warmup, 50 sampled ticks, canonical contract), passes both records to compare(base, head, TRIPWIRE_THRESHOLDS),
+    and runs one diagnostic retry for a scenario that is not PASS; both outcomes are reported and a disagreement is INCONCLUSIVE (not reproducible). It always exits 0
+    when it ran and reports with ::warning annotations: it blocks nothing. The nightly lane (tests/perf/test_perf_regression_baseline.py) compares the head
+    with the latest promoted baseline record and reports a missing or legacy baseline as INCONCLUSIVE with a named reason instead of pytest.skip. tools/perf/check_perf_regression.py and
+    tools/perf/perf_ci.py are removed.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/perf/tripwire.py (run_scenario, load_baseline, compare_with_baseline, calibrate); tests/perf/test_perf_regression_baseline.py
+  proof_type: contract
+  test_path: tests/unit/perf/test_tripwire.py
+  divergence_note: DEV-022 (Stabilized)
+  support_boundary: Nothing is blocking (OD-8). The CI wiring (.github/workflows/test.yml) is not changed here; it waits for testing-planner (issue 488). The threshold values (max(5 ms, base x 1.40)) are owner-approved as provisional
+    (2026-10-10) in docs/engine/performance_contract.md section 5 and must be recalibrated on the CI runner; the noise budget measured here is 0.35. The declared set is two synthetic scenarios; combat and the corpus worlds are PERF-M2-T08.

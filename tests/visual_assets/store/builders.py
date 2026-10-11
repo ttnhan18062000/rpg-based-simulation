@@ -43,6 +43,29 @@ def tags_chunk(count: int) -> bytes:
     return _chunk(0x2018, body)
 
 
+def tags_chunk_of(specs: list[tuple[str, int, int, int, int]]) -> bytes:
+    """A tags chunk from (name, from_frame, to_frame, direction byte, repeat) tuples, laid out exactly as `tags_chunk` does."""
+    body = struct.pack("<H8x", len(specs))
+    for name, from_frame, to_frame, direction, repeat in specs:
+        body += struct.pack("<HHBH6x3xB", from_frame, to_frame, direction, repeat, 0) + _string(name)
+    return _chunk(0x2018, body)
+
+
+def slice_chunk(name: str, keys: list[tuple], *, nine: bool = False, pivot: bool = False, flags: int | None = None, count: int | None = None) -> bytes:
+    """A slice chunk (0x2022). Each key is (frame, x, y, w, h) plus, when `nine`, (cx, cy, cw, ch) and, when `pivot`, (px, py), in that order. `flags` and `count` override what the keys imply (hostile cases)."""
+    declared = (1 if nine else 0) | (2 if pivot else 0) if flags is None else flags
+    body = struct.pack("<III", len(keys) if count is None else count, declared, 0) + _string(name)
+    for key in keys:
+        body += struct.pack("<IiiII", *key[:5])
+        rest = key[5:]
+        if nine:
+            body += struct.pack("<iiII", *rest[:4])
+            rest = rest[4:]
+        if pivot:
+            body += struct.pack("<ii", *rest[:2])
+    return _chunk(0x2022, body)
+
+
 def palette_chunk(size: int, *, black: bool = False, named: bool = False, transparent: bool = False) -> bytes:
     """A new-style palette chunk. By default entries are non-black (so the size is reported exactly)."""
     entries = max(size, 1)
@@ -68,9 +91,9 @@ def unknown_chunk(size_body: int = 4) -> bytes:
     return _chunk(0x7FFF, b"\x00" * size_body)
 
 
-def frame(chunks: list[bytes]) -> bytes:
+def frame(chunks: list[bytes], duration: int = 100) -> bytes:
     body = b"".join(chunks)
-    return struct.pack("<IHHHxxI", 16 + len(body), 0xF1FA, len(chunks), 100, 0) + body
+    return struct.pack("<IHHHxxI", 16 + len(body), 0xF1FA, len(chunks), duration, 0) + body
 
 
 def aseprite(
@@ -86,18 +109,27 @@ def aseprite(
     extra_first_frame: list[bytes] | None = None,
     palette_chunks: list[bytes] | None = None,
     header_colors: int | None = None,
+    durations: list[int] | None = None,
+    tag_specs: list[tuple[str, int, int, int, int]] | None = None,
+    slice_chunks: list[bytes] | None = None,
 ) -> bytes:
-    """A syntactically valid sprite. `cels` defaults to one per layer per frame, spread over the frames."""
+    """A syntactically valid sprite. `cels` defaults to one per layer per frame, spread over the frames. `durations` are the frame header durations in ms (one per frame, default 100);
+    `tag_specs` replaces the anonymous `tags` chunk with named ones (name, from_frame, to_frame, direction byte, repeat); `slice_chunks` (see `slice_chunk`) go in the first frame."""
     total_cels = layers * frames if cels is None else cels
     frame_chunks: list[list[bytes]] = [[] for _ in range(frames)]
     frame_chunks[0] += palette_chunks if palette_chunks is not None else [palette_chunk(palette)]
     frame_chunks[0] += [layer_chunk(f"layer{i}") for i in range(layers)]
     for n in range(total_cels):
         frame_chunks[n % frames].append(cel_chunk(n % max(layers, 1)))
-    if tags:
+    if tag_specs is not None:
+        frame_chunks[0].append(tags_chunk_of(tag_specs))
+    elif tags:
         frame_chunks[0].append(tags_chunk(tags))
+    frame_chunks[0] += slice_chunks or []
     frame_chunks[0] += extra_first_frame or []
-    body = b"".join(frame(chunks) for chunks in frame_chunks)
+    times = durations if durations is not None else [100] * frames
+    assert len(times) == frames
+    body = b"".join(frame(chunks, times[n]) for n, chunks in enumerate(frame_chunks))
     header = struct.pack("<IHHHHHIHII", 128 + len(body), 0xA5E0, frames, width, height, depth, 1, 100, 0, 0)
     colors = palette if header_colors is None else header_colors  # real Aseprite files: header count == stored entries
     header += b"\x00" + b"\x00\x00\x00" + struct.pack("<H", colors) + b"\x01\x01" + b"\x00" * 92

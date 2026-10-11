@@ -22,7 +22,7 @@ if str(REAL_ROOT) not in sys.path:
 
 from tools.sessions import launch as ln  # noqa: E402
 from tools.sessions import state as st  # noqa: E402
-from tools.sessions.roster import load_roster  # noqa: E402
+from tools.sessions.roster import handover_rel, load_roster  # noqa: E402
 
 ROSTER = load_roster(REAL_ROOT)
 ROLE = "agent-working-implementer"
@@ -115,6 +115,38 @@ def test_the_real_roster_gives_rpg_implementer_three_seats_and_no_fourth():
     assert ln.resolve_target("rpg-implementer-4", ROSTER) is None
     # every instance shares the role's single handover note
     assert third.role.handover == ROSTER.role("rpg-implementer").handover
+
+
+def test_each_instance_has_its_own_handover_path_and_the_first_keeps_the_roles(repo, seat_worktree, monkeypatch, capsys):
+    """TCK-20261009-PER-INSTANCE-HANDOVER-NOTE."""
+    role = ROSTER.role("rpg-implementer")
+    assert handover_rel(role, "rpg-implementer") == handover_rel(role) == ".claude/handover/rpg-implementer.md"
+    assert handover_rel(role, "rpg-implementer-3") == ".claude/handover/rpg-implementer-3.md"
+    monkeypatch.setattr(os, "execvpe", lambda *a, **k: pytest.fail("must not exec in a dry run"))
+    for name, rel in (("rpg-implementer", "rpg-implementer.md"), ("rpg-implementer-3", "rpg-implementer-3.md")):
+        assert ln.main([name, "--dry-run", "--worktree", str(seat_worktree)], root=seat_worktree) == 0
+        assert f"handover note: {repo}/.claude/handover/{rel}" in capsys.readouterr().out
+
+
+def test_the_stub_is_created_at_the_instances_own_path(repo, seat_worktree, monkeypatch):
+    execs = []
+    monkeypatch.setattr(os, "execvpe", lambda *a, **k: execs.append(a))
+    monkeypatch.setattr(os, "chdir", lambda p: None)
+    ln.main(["rpg-implementer-3", "--worktree", str(seat_worktree)], root=seat_worktree)
+    third = repo / ".claude" / "handover" / "rpg-implementer-3.md"
+    assert execs and third.is_file() and "rpg-implementer-3" in third.read_text()
+    assert not (repo / ".claude" / "handover" / "rpg-implementer.md").exists()
+
+
+def test_an_existing_instance_note_is_left_byte_identical_by_a_launch(repo, seat_worktree, monkeypatch):
+    note = repo / ".claude" / "handover" / "rpg-implementer-2.md"
+    note.parent.mkdir(parents=True)
+    note.write_bytes(b"# Lane B live state\r\nkeep me\n")
+    before = note.read_bytes()
+    monkeypatch.setattr(os, "execvpe", lambda *a, **k: None)
+    monkeypatch.setattr(os, "chdir", lambda p: None)
+    ln.main(["rpg-implementer-2", "--worktree", str(seat_worktree)], root=seat_worktree)
+    assert note.read_bytes() == before
 
 
 # ---- AC2: live refused, killed -> recovery, released -> fresh ----------------------------------
