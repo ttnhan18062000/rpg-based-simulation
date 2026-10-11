@@ -1,13 +1,14 @@
 # Compliance IDs: PROG-094, PROG-095, PROG-096, TOWN-014, TOWN-074, TOWN-075, TOWN-076
 # Compliance IDs: TOWN-074, TOWN-075, TOWN-076
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from dataclasses import replace
 
 from src.core.enums import ReasonCode
 from src.core.state import IntentResult, ItemStack
 from src.core.updates import EntityUpdate, StateUpdate, InventoryUpdate, RejectionEvent, ResourceTransferIntent, ChestUpdate
 from src.core.inventory import InventoryService
+from src.core.treasury import apply_transfer
 from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
 
 if TYPE_CHECKING:
@@ -38,6 +39,8 @@ class ResourceTransactionSystem:
         new_rejection_events = list(update.rejection_events)
         processed_ids = set(update.processed_transaction_ids)
         new_resource_updates = dict(update.resource_updates)
+        new_owed = list(update.owed_add_or_update)  # debts a short treasury took on instead of paying a reward
+        source_debits: Dict[int, InventoryUpdate] = {}  # what accepted transfers took from another entity's own inventory (an inheritance)
 
         world_events: list[WorldEvent] = []
         depleted_nodes: set[int] = set()
@@ -97,7 +100,8 @@ class ResourceTransactionSystem:
                             state, entity, intent,
                             inventory_override=current_inventory,
                             node_overrides=new_node_updates,
-                            reservations=reservations
+                            reservations=reservations,
+                            treasury_pending=new_resource_updates
                         )
                         
                         if result.accepted:
@@ -116,22 +120,9 @@ class ResourceTransactionSystem:
                                 result, e_id, new_node_updates, new_building_updates,
                                 new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations
                             )
+                            ResourceTransactionSystem._note_effects(result, new_resource_updates, source_debits, new_owed)
 
-                            if result.node_update:
-                                node_id = result.node_update.node_id
-                                node = state.resource_nodes.get(node_id)
-                                if node and node_id not in depleted_nodes:
-                                    accumulated_delta = new_node_updates[node_id].charges_delta
-                                    new_charges = node.remaining_charges + accumulated_delta
-                                    if node.remaining_charges > 0 and new_charges <= 0:
-                                        world_events.append(WorldEvent(
-                                            category=WorldEventCategory.RESOURCE_DEPLETED,
-                                            tick=state.tick,
-                                            region_id=None,
-                                            subject=str(node_id),
-                                            severity=1.0,
-                                        ))
-                                        depleted_nodes.add(node_id)
+                            ResourceTransactionSystem._note_depletion(state, result, new_node_updates, depleted_nodes, world_events)
 
                             # Global metrics tracking (PH10 Parity)
                             for item in result.inventory_update.items_add if result.inventory_update else []:
@@ -180,7 +171,8 @@ class ResourceTransactionSystem:
                             state, entity, intent,
                             inventory_override=group_current_inventory,
                             node_overrides=new_node_updates,
-                            reservations=reservations
+                            reservations=reservations,
+                            treasury_pending=new_resource_updates
                         )
                         trial_results.append((intent, res))
                         if not res.accepted:
@@ -203,22 +195,9 @@ class ResourceTransactionSystem:
                                 res, e_id, new_node_updates, new_building_updates,
                                 new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations
                             )
+                            ResourceTransactionSystem._note_effects(res, new_resource_updates, source_debits, new_owed)
 
-                            if res.node_update:
-                                node_id = res.node_update.node_id
-                                node = state.resource_nodes.get(node_id)
-                                if node and node_id not in depleted_nodes:
-                                    accumulated_delta = new_node_updates[node_id].charges_delta
-                                    new_charges = node.remaining_charges + accumulated_delta
-                                    if node.remaining_charges > 0 and new_charges <= 0:
-                                        world_events.append(WorldEvent(
-                                            category=WorldEventCategory.RESOURCE_DEPLETED,
-                                            tick=state.tick,
-                                            region_id=None,
-                                            subject=str(node_id),
-                                            severity=1.0,
-                                        ))
-                                        depleted_nodes.add(node_id)
+                            ResourceTransactionSystem._note_depletion(state, res, new_node_updates, depleted_nodes, world_events)
 
                             # Global metrics tracking (PH10 Parity)
                             for item in res.inventory_update.items_add if res.inventory_update else []:
@@ -273,6 +252,7 @@ class ResourceTransactionSystem:
                 intent_results=final_intent_results,
                 resource_transfers=[] # Clear intents after resolution (RPG-ECON-501)
             )
+        ResourceTransactionSystem._apply_source_debits(refined_entity_updates, source_debits)
         existing_world_events = list(update.world_events_add)
         existing_world_events.extend(world_events)
         return replace(update,
@@ -282,6 +262,7 @@ class ResourceTransactionSystem:
             building_updates=new_building_updates,
             home_storage_updates=new_home_storage_updates,
             resource_updates=new_resource_updates,
+            owed_add_or_update=new_owed,
             ground_items_remove=new_ground_items_remove,
             corpses_remove=new_corpses_remove,
             transaction_trace=new_trace,
@@ -289,6 +270,36 @@ class ResourceTransactionSystem:
             processed_transaction_ids=list(processed_ids.union(in_tick_processed_ids)),
             world_events_add=existing_world_events
         )
+
+    @staticmethod
+    def _note_depletion(state: AuthoritativeState, result: Any, node_updates: Dict[int, Any], depleted: set, events: list) -> None:
+        """Record a RESOURCE_DEPLETED event the first time this tick's accepted charges empty a node."""
+        if not result.node_update:
+            return
+        node_id = result.node_update.node_id
+        node = state.resource_nodes.get(node_id)
+        if node and node_id not in depleted and node.remaining_charges > 0 and node.remaining_charges + node_updates[node_id].charges_delta <= 0:
+            events.append(WorldEvent(category=WorldEventCategory.RESOURCE_DEPLETED, tick=state.tick, region_id=None, subject=str(node_id), severity=1.0))
+            depleted.add(node_id)
+
+    @staticmethod
+    def _apply_source_debits(entity_updates: Dict[int, EntityUpdate], source_debits: Dict[int, InventoryUpdate]) -> None:
+        """Put what accepted transfers took from other entities' inventories onto those entities' updates."""
+        for src_id in sorted(source_debits):
+            held = entity_updates.get(src_id, EntityUpdate(entity_id=src_id))
+            entity_updates[src_id] = replace(held, inventory=held.inventory.merge(source_debits[src_id]) if held.inventory else source_debits[src_id])
+
+    @staticmethod
+    def _note_effects(res: Any, resource_updates: Dict[str, float], source_debits: Dict[int, InventoryUpdate], owed: list) -> None:
+        """Fold what an accepted transfer does beyond its own entity's inventory into the tick: a treasury change (into the same dict later
+        transfers read their running balance from), what it took from another entity's inventory (an inheritance), and a debt it took on."""
+        if res.treasury_update:
+            resource_updates.update(apply_transfer(resource_updates, res.treasury_update))
+        if res.source_debit:
+            d = res.source_debit
+            source_debits[d.entity_id] = source_debits[d.entity_id].merge(d.inventory_update) if d.entity_id in source_debits else d.inventory_update
+        if res.owed:
+            owed.append(res.owed)
 
     @staticmethod
     def _merge_contingent_updates(ent_upd, res):

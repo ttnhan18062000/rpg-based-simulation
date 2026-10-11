@@ -216,14 +216,13 @@ def test_reward_atomicity(base_state):
     state_lethal = replace(base_state, entities={1: attacker, 3: target_weak})
     update_kill = CombatResolutionSystem.resolve_attack(attacker, target_weak, state_lethal)
     assert update_kill.outcome_kind == "KILL"
-    assert len(update_kill.resource_transfers) >= 2
+    assert len(update_kill.resource_transfers) >= 1
     # Find XP transfer
     xp_transfer = next((t for t in update_kill.resource_transfers if t.xp_reward > 0), None)
     assert xp_transfer is not None, "XP transfer missing"
     
-    # Find Gold transfer
-    gold_transfer = next((t for t in update_kill.resource_transfers if t.gold_delta > 0), None)
-    assert gold_transfer is not None, "Gold transfer missing"
+    # A kill mints no coin (EXCH-02, decision 38): the body's own coin is looted, never paid
+    assert not [t for t in update_kill.resource_transfers if t.gold_delta > 0], "a kill must not mint gold"
     
     # Trace consistency
     assert update_kill.trace["FINAL_ATK_MULT"] > 0

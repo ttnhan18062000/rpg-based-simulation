@@ -234,21 +234,13 @@ def test_xp_granted_even_if_inventory_full():
     )
 
     hero_up = results[1]
-    assert len(hero_up.resource_transfers) == 2
+    # A kill mints no coin (EXCH-02, decision 38): the experience is the only reward intent, so a full inventory cannot block a coin that is not there.
+    assert len(hero_up.resource_transfers) == 1
 
-    xp_intent = next(
-        intent for intent in hero_up.resource_transfers
-        if intent.xp_reward > 0
-    )
-    gold_intent = next(
-        intent for intent in hero_up.resource_transfers
-        if intent.gold_delta > 0
-    )
-
+    xp_intent = hero_up.resource_transfers[0]
+    assert xp_intent.xp_reward > 0 and xp_intent.gold_delta == 0
     assert xp_intent.group_id is None
     assert not xp_intent.is_group_required
-
-    assert gold_intent.group_id is not None or gold_intent.is_group_required
 
 
 def test_equipment_stat_injection_move_cost():

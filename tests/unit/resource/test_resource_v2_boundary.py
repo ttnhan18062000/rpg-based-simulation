@@ -125,30 +125,18 @@ def base_state():
     )
 
 def test_town_tax_refactor(base_state):
-    """Verify that TownResolutionSystem uses ResourceTransferIntent for taxes."""
-    region = RegionState(id="r1", name="Test Town", bounds=(0,0,10,10), owner_faction_id=Faction.MONSTER_HORDE) # Region owned by Monster
-    # Hero is Guild faction (0), so should be taxed
-    state = replace(base_state, regions={"r1": region}, buildings={})
-    
-    # Hero has 100 gold
-    hero = state.entities[1]
+    """EXCH-02, decision 51: the periodic per-head levy is retired. A stranger holding coin in a held region, on a tax tick, is not taxed:
+    tax is a share of a sale or a wage (`place_tax.py`, tested in tests/unit/resource/test_tax_and_upkeep.py), so one who earns nothing pays nothing."""
+    region = RegionState(id="r1", name="Test Town", bounds=(0,0,10,10), owner_faction_id=Faction.MONSTER_HORDE)  # held by the monster horde
+    state = replace(base_state, tick=0, regions={"r1": region}, buildings={})
+    hero = state.entities[1]  # a Guild member: a stranger to the region's holder
     state = replace(state, entities={**state.entities, 1: replace(hero, inventory=replace(hero.inventory, gold=100))})
-    
-    # Proposed update (empty)
-    update = StateUpdate()
-    
-    # Refine
-    refined = AuthoritativeApplyPipeline.refine(state, update)
-    
+
+    refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
+
     ent_upd = refined.entity_updates.get(1)
-    assert ent_upd is not None
-    assert ent_upd.inventory is not None, f"Inventory update missing. Results: {ent_upd.intent_results}"
-    # Tax is 2.0 (from town_resolution.py)
-    assert ent_upd.inventory.gold_delta == -2.0
-    
-    # Check if faction gold was updated
-    f_key = f"faction_{Faction.MONSTER_HORDE.name.lower()}_gold"
-    assert refined.resource_updates.get(f_key) == 2.0
+    assert ent_upd is None or ent_upd.inventory is None or ent_upd.inventory.gold_delta == 0
+    assert not refined.resource_updates.get(f"faction_{Faction.MONSTER_HORDE.name.lower()}_gold")
 
 def test_shop_sell_refactor(base_state):
     """EXCH-02 (owner decision 34): selling is a chosen act, not an automatic act of whoever stands in a shop. Standing in a shop with ore

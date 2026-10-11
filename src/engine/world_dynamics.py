@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
 from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
 from src.core.violent_cause import is_violent_death_cause
+from src.core.state import GroundItemState
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState, EntityState
@@ -295,17 +296,33 @@ class WorldDynamicsSystem:
                 refined_chest_updates[c_id] = replace(c_upd, cooldown_set=chest.cooldown_remaining - 1)
         
         # 5.3 Corpses & Ground Items (Decay)
-        corpses_remove = list(update.corpses_remove)
-        for cp_id, corpse in state.corpses.items():
-            if state.tick >= corpse.decay_tick:
-                corpses_remove.append(cp_id)
+        corpses_remove, resource_updates, purses = WorldDynamicsSystem._decay_corpses(state, update)
 
         return update.replace(
+            ground_items_add_or_update=[*update.ground_items_add_or_update, *purses],
             world_updates=refined_world_updates,
             node_updates=refined_node_updates,
             chest_updates=refined_chest_updates,
-            corpses_remove=corpses_remove
+            corpses_remove=corpses_remove,
+            resource_updates=resource_updates
         )
+
+    @staticmethod
+    def _decay_corpses(state: AuthoritativeState, update: StateUpdate) -> tuple:
+        """(bodies to remove, resource updates, purses left on the ground) after decay. The apply step (next tick) removes a body whose decay tick
+        it has reached, so this does too. A decayed body's coin is not lost (EXCH-02, ruling 61): it stays where it fell, as a purse on the ground
+        that carries whose body it fell from and when, and it is lootable (found, not sought)."""
+        corpses_remove = list(update.corpses_remove)
+        resource_updates = dict(update.resource_updates)
+        purses = []
+        for cp_id, corpse in state.corpses.items():
+            if state.tick + 1 >= corpse.decay_tick:
+                corpses_remove.append(cp_id)
+                if corpse.gold > 0:
+                    # The body is gone this tick, so its id is free: the purse takes it (deterministic, no second id space).
+                    purses.append(GroundItemState(id=cp_id, item_id="", quantity=0, position=corpse.position, gold=corpse.gold,
+                                                  source_entity_id=corpse.original_entity_id, dropped_tick=state.tick + 1))
+        return corpses_remove, resource_updates, purses
 
     @staticmethod
     def _get_region_for_pos(state: AuthoritativeState, pos: tuple[float, float]) -> RegionState | None:

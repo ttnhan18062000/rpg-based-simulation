@@ -83,7 +83,7 @@ def test_atomic_rewards_on_kill(base_state):
     total_xp = sum(intent.xp_reward for intent in res.resource_transfers)
     total_gold = sum(intent.gold_delta for intent in res.resource_transfers)
     assert total_xp > 0
-    assert total_gold > 0
+    assert total_gold == 0  # a kill mints no coin (EXCH-02, decision 38): the body's own coin is looted, not paid
 
 def test_multi_attacker_kill_rewards(base_state):
     # Two attackers hit one monster

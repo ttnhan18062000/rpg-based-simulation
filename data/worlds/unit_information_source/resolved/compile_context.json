@@ -477,5 +477,6 @@
     "blacksmith": 4,
     "hero": 0
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

@@ -145,19 +145,11 @@ def test_inflation_spiral_alert_emitted():
 
 @pytest.mark.slow
 @pytest.mark.integration
-def test_gold_sink_reduces_accumulation_rate():
-    """Gold sink drains fire within 200 ticks for an inflation-spiral economy.
-
-    Uses the same highly-unequal state (1 rich, 9 poor) so INFLATION_SPIRAL fires
-    at tick 100 and 200. GoldSinkSystem injects REPAIR_FEE/SERVICE_FEE/TAX intents;
-    ResourceTransactionSystem resolves them. We verify:
-    - At least one gold_sink_ticks counter incremented (GoldSinkSystem ran).
-    - The rich entity's gold decreased by at least the SERVICE_FEE (1 gold per sink tick).
-    Conservation is verified implicitly: resolver rejects insufficient-gold cases,
-    no gold is created.
-    """
+def test_an_inflation_spiral_draws_no_wealth_levy_and_no_surcharge():
+    """The gold sink is retired (EXCH-02, ruling 61): an unequal economy (1 rich, 9 poor) that the health monitor flags is NOT drained by a periodic
+    levy, a per-head surcharge or a repair fee. The rich entity keeps its coin and no sink counter is recorded."""
     state = _build_unequal_wealth_state()
-    initial_rich_gold = state.entities[1].inventory.gold  # 50000
+    initial_rich_gold = state.entities[1].inventory.gold
 
     kernel = _build_kernel(state)
     try:
@@ -167,22 +159,8 @@ def test_gold_sink_reduces_accumulation_rate():
         kernel.shutdown()
 
     final_state = kernel.state
-    final_rich_gold = final_state.entities[1].inventory.gold
-
-    # Gold sink must have drained from the rich entity
-    assert final_rich_gold < initial_rich_gold, (
-        f"Rich entity gold should have decreased via gold sinks. "
-        f"Initial: {initial_rich_gold}, Final: {final_rich_gold}. "
-        f"Check GoldSinkSystem is wired in pipeline.py Phase 5 and "
-        f"EconomyHealthMonitor sample fires at tick 100/200."
-    )
-
-    # Verify gold_sink_ticks metric was recorded in global_resources
-    sink_ticks = final_state.global_resources.get("metric_gold_sink_ticks", 0.0)
-    assert sink_ticks >= 1.0, (
-        f"metric_gold_sink_ticks should be >= 1 after 200 ticks with inflation, "
-        f"got {sink_ticks}. Check GoldSinkSystem.apply() is called in pipeline."
-    )
+    assert final_state.entities[1].inventory.gold == initial_rich_gold
+    assert "metric_gold_sink_ticks" not in final_state.global_resources
 
 
 # ---------------------------------------------------------------------------

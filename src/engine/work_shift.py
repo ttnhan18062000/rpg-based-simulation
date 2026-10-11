@@ -14,7 +14,8 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from src.core.updates import EntityUpdate, InteractionUpdate, ResourceTransferIntent
-from src.engine.building_services import service_building
+from src.engine.building_services import TREASURY_WORK_KINDS, service_building
+from src.engine.place_tax import building_holder, tax_on
 from src.engine.serves import nearest_serving, serves
 
 SHIFT_TICKS = 200
@@ -41,5 +42,9 @@ def work_update(entity: Any, payload: Dict[str, Any], tick: int, context: Any) -
         return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
     # A held action runs twice a tick (the worker, then the routing phase); one shift is paid once, by its transaction id.
     shift = f"wage:{entity.id}:{inn.id}:{payload.get(SHIFT_START, tick)}"
-    wage = ResourceTransferIntent(source_id=inn.id, source_kind="WAGE", gold_delta=WAGE_GOLD, transfer_kind="WAGE", transaction_id=shift)
+    holder, tax = tax_on(context, inn, WAGE_GOLD)
+    backer = building_holder(context, inn) if inn.kind in TREASURY_WORK_KINDS else None  # a treasury building: the treasury tops up a short purse
+    holder = backer if backer is not None else holder
+    wage = ResourceTransferIntent(source_id=inn.id, source_kind="WAGE", gold_delta=WAGE_GOLD, transfer_kind="WAGE", transaction_id=shift,
+                                  treasury_faction=holder, treasury_gold=tax, treasury_pays=backer is not None)
     return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0, resource_transfers=[wage], interaction=InteractionUpdate(reset=True))}

@@ -1055,7 +1055,7 @@ class CompileProfileResolver:
             ResolvedFactionEconomyProfile,
         )
 
-        ctx = CompileContext()
+        ctx = CompileContext(tax_share=self.default_semantics.get_tax_share())
 
         # 0. Populate legacy enums and region ownership
         from src.core.enums import EntityRole, Faction

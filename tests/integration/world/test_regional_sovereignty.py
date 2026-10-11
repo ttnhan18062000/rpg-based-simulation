@@ -126,12 +126,11 @@ def test_governance_taxation_and_vaults():
     refined_update = AuthoritativeApplyPipeline.refine(state, StateUpdate(), cadence=cadence)
     next_state = ApplyPath.apply_generation(state, refined_update, next_tick=101, cadence=cadence)
     
-    # Peasant should have paid 2.0 gold
-    assert next_state.entities[2].inventory.gold == 98.0
-    # Building should have produced 10.0 gold
-    # Vault should have 500 + 2 (peasant) + 10 (building) = 512
-    # PLUS maintenance deduction? 512 - 5 = 507.
-    assert next_state.global_resources["faction_hero_guild_gold"] == 507.0
+    # EXCH-02, decisions 51 and 58: no per-head levy (the other-faction peasant pays nothing), no +10 mint for a functional building. The vault pays
+    # the building's 5 upkeep INTO THE BUILDING'S OWN PURSE: 500 - 5 = 495, and the building holds the 5.
+    assert next_state.entities[2].inventory.gold == 100
+    assert next_state.global_resources["faction_hero_guild_gold"] == 495.0
+    assert next_state.buildings[1].inventory.gold == 5
 
 def test_governance_maintenance_and_degradation():
     """
@@ -168,8 +167,9 @@ def test_governance_maintenance_and_degradation():
     
     refined_ok = AuthoritativeApplyPipeline.refine(state_ok, StateUpdate(), cadence=cadence)
     next_state_ok = ApplyPath.apply_generation(state_ok, refined_ok, next_tick=101, cadence=cadence)
-    # Maintenance cost is 5.0
-    assert next_state_ok.global_resources["faction_hero_guild_gold"] == 100.0 + 10.0 - 5.0 # Tax +10, Maint -5
+    # Upkeep is 5.0, paid from the vault into the building's own purse (no +10 mint any more)
+    assert next_state_ok.global_resources["faction_hero_guild_gold"] == 100.0 - 5.0
+    assert next_state_ok.buildings[1].inventory.gold == 5
     assert next_state_ok.buildings[1].functional is True
     
     from src.core.updates import BuildingUpdate
@@ -182,15 +182,16 @@ def test_governance_maintenance_and_degradation():
         seed=42,
         regions={"town_region": region},
         buildings={1: building},
-        global_resources={"faction_hero_guild_gold": -100.0} # -100 + 10 (tax) = -90. Maintenance is 5. -90 < 5.
+        global_resources={"faction_hero_guild_gold": -100.0} # -100 < 5: the treasury cannot pay upkeep
     )
     
     refined_broke = AuthoritativeApplyPipeline.refine(state_broke, StateUpdate(), cadence=cadence)
     next_state_broke = ApplyPath.apply_generation(state_broke, refined_broke, next_tick=101, cadence=cadence)
     
-    # Vault should remain -90 (deduction skipped)
-    assert next_state_broke.global_resources["faction_hero_guild_gold"] == -90.0
-    # Building should be disabled
+    # Nothing is paid and nothing is minted: the vault stays -100 and the unpaid building holds nothing
+    assert next_state_broke.global_resources["faction_hero_guild_gold"] == -100.0
+    assert next_state_broke.buildings[1].inventory.gold == 0
+    # An unpaid building is disabled
     assert next_state_broke.buildings[1].functional is False
 
 

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from src.core.enums import ReasonCode
 from src.core.items import food_hunger_recovery
 from src.core.models.inventory import ItemStack
-from src.engine.building_services import repair_source
+from src.engine.repair import repair_update
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
     InteractionUpdate, NavigationUpdate, ResourceTransferIntent, StaminaUpdate
@@ -613,21 +613,7 @@ class CoreActions:
         if not repair_deltas:
             return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
             
-        from src.core.updates import EquipmentUpdate, ResourceTransferIntent
-        intent = ResourceTransferIntent(
-            source_id=repair_source(context, entity),
-            source_kind="TOWN_SERVICE",
-            gold_delta=-total_cost,
-            gold_cost=total_cost,
-            transfer_kind="REPAIR",
-            equipment_upd=EquipmentUpdate(durability_set=repair_deltas)
-        )
-        
-        return {entity.id: EntityUpdate(
-            entity_id=entity.id,
-            readiness_delta=-100.0,
-            resource_transfers=[intent]
-        )}
+        return repair_update(entity, repair_deltas, total_cost, context)
 
     @staticmethod
     def execute_interact(

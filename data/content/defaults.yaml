@@ -11,3 +11,5 @@
   default_resource_required_ticks: 10
   default_building_hp: 500
   default_faction_starting_gold: 1000.0
+  # EXCH-02, owner decision 58 (2026-10-09): a tenth of a sale or a wage, rounded down per transaction, the same for outsiders. Tax is declared here once.
+  default_tax_share: 0.1

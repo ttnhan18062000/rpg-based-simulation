@@ -83,3 +83,26 @@ def test_a_building_whose_region_belongs_to_a_hostile_faction_does_not_serve():
     assert not serves(hostile, human, inn)  # a monster horde region does not serve a town council member
     free = replace(state, regions={"r": replace(region, owner_faction_id=None)})
     assert serves(free, human, inn)  # a region with no owner serves anyone with the trait
+
+
+def _held_world(inn_gold=100):
+    from src.core.enums import Faction
+    from src.core.state import RegionState
+    state, ent, inn = _world(inn_gold=inn_gold)
+    return replace(state, regions={"r": RegionState(id="r", name="R", bounds=(0, 0, 50, 50), owner_faction_id=int(Faction.HERO_GUILD))}), ent
+
+
+def test_a_shift_at_a_treasury_backed_kind_asks_the_treasury_to_back_the_wage(monkeypatch):
+    """Maintenance work (ruling 61): at the inn rate, from the building's purse, the owning treasury topping up a shortfall. No kind is declared
+    treasury-backed yet and the decision layer sends nobody to one, so this path is tested here and not reachable in play."""
+    from src.engine import work_shift
+    monkeypatch.setattr(work_shift, "TREASURY_WORK_KINDS", frozenset({"inn"}))
+    state, ent = _held_world()
+    wage, = work_update(ent, {SHIFT_START: 1}, SHIFT_TICKS, state)[1].resource_transfers
+    assert wage.gold_delta == WAGE_GOLD == 6 and wage.treasury_pays and wage.treasury_faction is not None
+
+
+def test_a_shift_at_an_ordinary_inn_is_not_backed_by_the_treasury():
+    state, ent = _held_world()
+    wage, = work_update(ent, {SHIFT_START: 1}, SHIFT_TICKS, state)[1].resource_transfers
+    assert not wage.treasury_pays

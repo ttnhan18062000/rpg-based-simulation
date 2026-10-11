@@ -26,6 +26,11 @@ from src.engine.spatial_query import SpatialQueryService
 # The building kinds that serve an action.
 SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"}), "SELL": frozenset({"shop"}), "WORK": frozenset({"inn"}), "REPAIR": frozenset({"blacksmith"})}
 
+# The WORK building kinds whose coin the owning treasury backs: a shift there is paid from the building's purse and the treasury tops up a shortfall
+# (EXCH-02, ruling 61: maintenance work). None is declared yet and the decision layer sends nobody to a non-inn WORK building (TCK-20261011-NEAREST-
+# WORK-READS-THE-DECLARED-WORK-BUILDINGS-NOT-ONLY-THE-INN), so the path is built and tested but not reachable in play.
+TREASURY_WORK_KINDS: frozenset = frozenset()
+
 
 def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
     """The functional building (of the kinds that serve `action`) the subject stands on or orthogonally beside, or None."""
@@ -35,13 +40,6 @@ def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
     tile = service_tile(context, (int(entity.navigation.position[0]), int(entity.navigation.position[1])), kinds)
     building = SpatialQueryService.get_building_at(context, tile) if tile is not None else None
     return building if building is not None and building.functional else None
-
-
-def repair_source(context: Any, entity: Any) -> Any:
-    """The payee of a repair: the blacksmith in reach, so the resolver credits its purse with what was actually paid (EXCH-02: no coin
-    vanishes); with none in reach the repair keeps its old unnamed payee, as on main (repair needs no building today)."""
-    smith = service_building(context, entity, "REPAIR") if context is not None else None
-    return "BLACKSMITH" if smith is None else smith.id
 
 
 def service_delta(context: Any, entity: Any, action: str, tick: int) -> Optional[EntityUpdate]:
