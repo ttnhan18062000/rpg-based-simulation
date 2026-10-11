@@ -65,28 +65,55 @@ def build_kernel(world: str, seed: int, run_id: str):
     )
 
 
+def _no_data(args: argparse.Namespace, reason: str, exc: BaseException, seed: Optional[int]) -> Dict[str, Any]:
+    doc = {"schema": SCHEMA, "status": "no-data", "reason": reason, "error": f"{type(exc).__name__}: {exc}", "exception_type": type(exc).__name__,
+           "world": args.world, "ticks": args.ticks, "sha": args.sha, "harness_hash": args.harness_hash, "metrics": []}
+    if seed is not None:
+        doc["seed"] = seed
+    return doc
+
+
 def run(args: argparse.Namespace) -> int:
-    compute = _resolve(args.metrics_module, "compute")
-    kernel = build_kernel(args.world, args.seed, args.run_id)
+    """``run_error``: an exception in the simulation (world compile or ticks). ``metric_error``: an exception in rpg's ``compute``. Either way a
+    ``no-data`` document carrying the reason and the exception type is written and the child exits 0; anything else is the harness's ``harness_error``."""
+    out = Path(args.out)
     try:
+        compute = _resolve(args.metrics_module, "compute")
+    except Exception as exc:  # noqa: BLE001 - the module cannot be loaded: rpg's side
+        _write(out, _no_data(args, "metric_error", exc, args.seed))
+        return 0
+    kernel = None
+    try:
+        kernel = build_kernel(args.world, args.seed, args.run_id)
         for _ in range(args.ticks):
             kernel.tick_once()
+    except Exception as exc:  # noqa: BLE001
+        _write(out, _no_data(args, "run_error", exc, args.seed))
+        return 0
     finally:
-        kernel.shutdown()  # flushes the recorded event stream before the metrics read it
+        if kernel is not None:
+            kernel.shutdown()  # flushes the recorded event stream before the metrics read it
     run_dir = Path("data") / "runs" / args.run_id
-    result = compute(RunArtifacts(args.world, args.seed, args.ticks, args.sha, kernel.state, run_dir))
+    try:
+        result = compute(RunArtifacts(args.world, args.seed, args.ticks, args.sha, kernel.state, run_dir))
+    except Exception as exc:  # noqa: BLE001
+        _write(out, _no_data(args, "metric_error", exc, args.seed))
+        return 0
     metrics = result["metrics"] if isinstance(result, dict) else result  # rpg returns a whole document; the harness writes the header itself
     doc = {"schema": SCHEMA, "status": "ok", "world": args.world, "seed": args.seed, "ticks": args.ticks, "sha": args.sha, "harness_hash": args.harness_hash, "metrics": list(metrics)}
-    out = Path(args.out)
     _write(out, doc)
     _write(out.with_name(out.name + ".cost.json"), {"peak_rss_mb": _peak_rss_mb()})
     return 0
 
 
 def pool(args: argparse.Namespace) -> int:
-    pool_fn = _resolve(args.metrics_module, "pool")
-    docs = [json.loads(Path(p).read_text(encoding="utf-8")) for p in args.docs]
-    metrics = pool_fn(docs)
+    try:
+        pool_fn = _resolve(args.metrics_module, "pool")
+        docs = [json.loads(Path(p).read_text(encoding="utf-8")) for p in args.docs]
+        metrics = pool_fn(docs)
+    except Exception as exc:  # noqa: BLE001
+        _write(Path(args.out), _no_data(args, "metric_error", exc, None))
+        return 0
     _write(Path(args.out), {"schema": SCHEMA, "status": "ok", "world": args.world, "ticks": args.ticks, "sha": args.sha, "harness_hash": args.harness_hash, "metrics": list(metrics)})
     return 0
 

@@ -70,6 +70,7 @@ None.
 - Documents are written with sorted keys and carry no time or path (byte-identical per SHA, world, seed). Wall time and peak RSS go to `<doc>.cost.json` and `matrix.json`.
 - `harness_hash`: sha256 over the three harness sources (including `kernel_pinning.py`), the pin settings, the config bytes and the metrics module's name and source (read from disk, never imported; `src/` is not hashed). Review (testing-planner): a changed metric definition therefore makes older baselines stale; the run id carries a per-invocation token.
 - Run directories: removed by exact id after each run unless `--keep-runs`.
+- No-data reasons (rpg-planner's ruling): the child writes `run_error` (exception in world compile or ticks, with the exception type; an rpg defect) or `metric_error` (exception in compute or pool) into the no-data document; the harness writes `harness_error` (timeout, bad document, child never started) and `seed_no_data` (pool skipped because a seed has no data). Stub rows carry per-row `k`, `floor` and `oracle`.
 - The world, seed and tick lists are read from rpg's config (`load_config`); no world id is hard-coded.
 
 ## Test Summary

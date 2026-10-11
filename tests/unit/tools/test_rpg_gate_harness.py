@@ -65,13 +65,14 @@ def test_a_crashing_run_is_no_data_with_its_error_and_the_others_complete(tmp_pa
     assert status == {1: "ok", 2: "no-data", 3: "ok"}
     bad = _doc(tmp_path, "a", h.doc_name(WORLD, 2))
     assert bad["metrics"] == [] and "stub crash for seed 2" in bad["error"]
+    assert bad["reason"] == "metric_error" and bad["exception_type"] == "RuntimeError"  # an exception in compute
 
 
 def test_a_world_with_a_no_data_seed_gets_no_data_pooled_metrics_never_a_partial_pool(tmp_path, monkeypatch):
     monkeypatch.setenv("RPG_GATE_STUB_CRASH_SEED", "2")
     matrix = _run(tmp_path, "a")
     pooled = _doc(tmp_path, "a", h.doc_name(WORLD, None))
-    assert matrix["pooled"][WORLD]["status"] == "no-data" and pooled["metrics"] == [] and "without data" in pooled["error"]
+    assert matrix["pooled"][WORLD]["status"] == "no-data" and pooled["metrics"] == [] and "without data" in pooled["error"] and pooled["reason"] == "seed_no_data"
 
 
 def test_a_complete_world_is_pooled_in_a_fresh_process(tmp_path):
@@ -84,12 +85,15 @@ def test_a_complete_world_is_pooled_in_a_fresh_process(tmp_path):
 def test_a_missing_world_is_no_data_not_a_harness_failure(tmp_path):
     matrix = _run(tmp_path, "a", worlds=("no_such_world",))
     assert {r["status"] for r in matrix["runs"]} == {"no-data"}
+    doc = _doc(tmp_path, "a", h.doc_name("no_such_world", 1))
+    assert doc["reason"] == "run_error" and doc["exception_type"]  # the world could not be compiled: an exception in the simulation
 
 
 def test_a_timeout_is_no_data(tmp_path):
     cfg = _cfg(tmp_path)
     matrix = h.run_matrix(load_config(cfg), cfg, tmp_path / "a", metrics_module=STUB, sha=SHA, workers=2, timeout_s=0.01)
     assert {r["status"] for r in matrix["runs"]} == {"no-data"} and "timed out" in matrix["runs"][0]["error"]
+    assert _doc(tmp_path, "a", h.doc_name(WORLD, 1))["reason"] == "harness_error"
 
 
 def test_run_directories_are_removed_by_id_and_cost_is_recorded(tmp_path):

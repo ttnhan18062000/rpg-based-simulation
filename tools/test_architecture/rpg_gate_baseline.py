@@ -49,9 +49,6 @@ exists, so an old file is never modified. ``stop_lines`` come from rpg's config 
     seeds: [1, 2, 3, 4, 5]
     ticks: 5000
     stale_after_days: 30
-    k: 2.0                                   # the report's drift multiplier (child 4)
-    floors: {"O2.deaths": 0.5}                 # per metric id; every key and tick of that id
-    oracles: {"V1": "docs/mechanics/..."}      # the cited oracle per validity metric
     stop_lines: [{name: R1, metric: "O2.*", group: "*", min: 0, max: 10}]   # min/max optional; metric and group are fnmatch patterns
 
 Stop lines apply to outcome rows only (never validity). A stop line is crossed when a candidate row's value (the ``mean`` of a run outcome row, the ``value`` of a pooled outcome row) is outside ``[min, max]``. It is checked on every candidate row, not only the changed ones, so a ruling is needed at each re-baseline
@@ -116,9 +113,6 @@ class GateConfig:
     ticks: int
     stale_after_days: int
     stop_lines: Tuple[StopLine, ...] = ()
-    k: Optional[float] = None  # the report's drift multiplier on the standard error (rpg's)
-    floors: Mapping[str, float] = field(default_factory=dict)  # per metric id; applies to every key and tick of that id (rpg's)
-    oracles: Mapping[str, str] = field(default_factory=dict)  # per validity metric id: the cited oracle (rpg's)
 
 
 def load_config(path: Path) -> GateConfig:
@@ -136,9 +130,6 @@ def load_config(path: Path) -> GateConfig:
         lines.append(StopLine(raw["name"], raw["metric"], raw.get("group", "*"), raw.get("min"), raw.get("max")))
     return GateConfig(
         tuple(data["worlds"]), tuple(data["seeds"]), int(data["ticks"]), int(data["stale_after_days"]), tuple(lines),
-        k=float(data["k"]) if data.get("k") is not None else None,
-        floors={str(m): float(v) for m, v in (data.get("floors") or {}).items()},
-        oracles={str(m): str(v) for m, v in (data.get("oracles") or {}).items()},
     )
 
 

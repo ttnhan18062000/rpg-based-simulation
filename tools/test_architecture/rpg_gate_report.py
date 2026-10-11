@@ -1,7 +1,9 @@
 """The rpg gate report: evaluate the harness documents, rerun the same SHA once on a non-pass, and report six states.
 
 TCK-20261009-RPG-GATE-REPORT-STATES-AND-SAME-SHA-RERUN (child 4 of TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC). Testing owns the rules here; rpg owns the
-metric ids, the oracles, ``k`` and the floors (all read from rpg's config, never from constants in this module).
+metric ids, ``k``, the floors and the oracles. Those thresholds travel on the metric rows themselves (outcome rows carry ``k`` and ``floor``, validity rows an
+``oracle``), so the report reads only the documents, never imports ``src/`` and has no threshold table of its own; the harness hash covers them through the
+metrics module's source. The config holds only the run matrix, ``stale_after_days`` and the stop lines.
 
 States of one finding:
 
@@ -10,10 +12,16 @@ States of one finding:
   the pooled document.
 * ``drift`` (OUTCOME only, "trace the cause"; never a fail on its own): paired by ``(id, group, key, tick)`` across seeds (per world); the per-seed difference
   against a reference baseline has mean ``d`` and standard error ``se``; drift when ``|d| > k * se`` AND ``|d| > floor(id)`` (the floor applies to every key and
-  tick of that id; a metric without a floor has floor 0). A ``pooled`` outcome row has one value and no standard error, so it drifts on ``|d| > floor(id)`` alone.
+  tick of that id). A ``pooled`` outcome row has one value and no standard error, so it drifts on ``|d| > floor`` alone. A run outcome row without a numeric
+  ``k`` and ``floor`` (a pooled one without ``floor``) is a contract error: ``no-data`` with the reason, never a made-up threshold. Every row with the same
+  ``(id, group)`` must carry the same ``k``, ``floor`` and ``oracle`` across all documents of the run set; a mismatch is ``no-data`` with the reason
+  "mixed metric module versions". Each outcome result shows the seeds it was judged on ("judged on 3/5 seeds"); at least 2 paired seeds are needed.
   Both references are always reported: the LAST baseline and the FIRST baseline of the current milestone (child 2). Drift against either is drift.
 * ``stale``: the reference baseline is stale (child 2's :func:`staleness`); a stale baseline never yields a pass.
-* ``no-data``: the run (or its pooled document) has no data, the outcome has fewer than two paired seeds, there is no baseline row, or there is no baseline.
+* ``no-data``: the run (or its pooled document) has no data, the outcome has fewer than two paired seeds, there is no baseline row, there is no baseline, or the
+  rows break the contract. A document without data says why (its ``reason``): ``run_error`` (an exception in the simulation; an rpg DEFECT, shown prominently in
+  the summary even though it does not turn the job red), ``metric_error`` (an exception in rpg's compute or pool), ``harness_error`` (timeout, bad document,
+  child never started) or ``seed_no_data``.
 * ``unstable``: a ``fail`` or ``drift`` that the same-SHA rerun did not reproduce. Routed to test infrastructure (roadmap §4.5, nondeterminism), not to the feature team.
 
 Same-SHA rerun: when the first pass has any ``fail`` or ``drift``, the affected (world, seed) set is rerun ONCE (fresh processes, via the ``rerun`` callable) and
@@ -53,6 +61,7 @@ from tools.test_architecture.rpg_gate_baseline import GateConfig, References, lo
 SCHEMA = "rpg-gate-report/v1"
 PASS, FAIL, DRIFT, STALE, NO_DATA, UNSTABLE = "pass", "fail", "drift", "stale", "no-data", "unstable"
 STATES = (PASS, FAIL, DRIFT, UNSTABLE, STALE, NO_DATA)
+NO_DATA_REASONS = ("run_error", "metric_error", "harness_error", "seed_no_data", "contract_error")
 MAX_EXAMPLES = 5
 TEST_INFRA = "test-infrastructure"
 
@@ -83,9 +92,31 @@ def load_documents(directory: Path, config: GateConfig) -> Docs:
     return docs
 
 
-def _no_data(world: str, seed: Optional[int], detail: str) -> dict:
+def _no_data(world: str, seed: Optional[int], detail: str, reason: str = "harness_error") -> dict:
     scope = "run" if seed is not None else "pooled"
-    return {"world": world, "scope": scope, "id": "*", "group": "*", "class": "run", "state": NO_DATA, "detail": detail, **({"seed": seed} if seed is not None else {})}
+    return {"world": world, "scope": scope, "id": "*", "group": "*", "class": "run", "state": NO_DATA, "reason": reason, "detail": detail, **({"seed": seed} if seed is not None else {})}
+
+
+def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str], str]:
+    """``(id, group) -> reason`` for rows that break the threshold contract: an outcome row without a numeric ``k`` / ``floor`` (a pooled one needs only the
+    floor), or rows of one (id, group) that disagree on ``k``, ``floor`` or ``oracle`` across the documents of the run set."""
+    seen: Dict[Tuple[str, str], set] = {}
+    problems: Dict[Tuple[str, str], str] = {}
+    for doc in docs.values():
+        if doc.get("status") != "ok":
+            continue
+        for row in doc["metrics"]:
+            key = (row["id"], row.get("group", "*"))
+            if row.get("class") == "outcome":
+                need = ("floor",) if row.get("scope") == "pooled" else ("k", "floor")
+                missing = [n for n in need if not isinstance(row.get(n), (int, float)) or isinstance(row.get(n), bool)]
+                if missing:
+                    problems[key] = f"contract error: outcome row without {' and '.join(missing)}"
+            seen.setdefault(key, set()).add((row.get("k"), row.get("floor"), row.get("oracle")))
+    for key, versions in seen.items():
+        if len(versions) > 1:
+            problems[key] = "mixed metric module versions"
+    return problems
 
 
 # ---------------------------------------------------------------- evaluation
@@ -101,8 +132,8 @@ def _validity(row: Mapping[str, Any], world: str, seed: Optional[int], config: G
         finding["seed"] = seed
     if violations > 0:
         finding["examples"] = list(row.get("examples") or [])[:MAX_EXAMPLES]
-    if row["id"] in config.oracles:
-        finding["oracle"] = config.oracles[row["id"]]
+    if row.get("oracle"):
+        finding["oracle"] = row["oracle"]
     return finding
 
 
@@ -123,18 +154,19 @@ def _compare(label: str, baseline: Mapping[str, Any], reasons: Sequence[str], ro
     base = _baseline_row(baseline, cur_row, world)
     if base is None:
         return {**result, "state": NO_DATA, "detail": "no row for this metric in the baseline"}
-    floor = config.floors.get(cur_row["id"], 0.0)
+    floor = cur_row["floor"]
     if cur_row.get("scope") == "pooled":
         diff = row_values["value"] - base["value"]
         return {**result, "state": DRIFT if abs(diff) > floor else PASS, "diff": diff, "floor": floor}
     base_seeds = base.get("per_seed") or {}
     diffs = [row_values["per_seed"][seed] - base_seeds[str(seed)] for seed in sorted(row_values["per_seed"]) if str(seed) in base_seeds]
     if len(diffs) < 2:
-        return {**result, "state": NO_DATA, "detail": f"{len(diffs)} paired seed(s); at least 2 are needed for a standard error"}
+        return {**result, "state": NO_DATA, "n": len(diffs), "of": len(config.seeds), "detail": f"judged on {len(diffs)}/{len(config.seeds)} seeds; at least 2 are needed for a standard error"}
     mean = statistics.fmean(diffs)
     se = statistics.stdev(diffs) / math.sqrt(len(diffs))
-    drift = abs(mean) > config.k * se and abs(mean) > floor
-    return {**result, "state": DRIFT if drift else PASS, "diff": mean, "se": se, "k": config.k, "floor": floor, "threshold": config.k * se, "n": len(diffs)}
+    k = cur_row["k"]
+    drift = abs(mean) > k * se and abs(mean) > floor
+    return {**result, "state": DRIFT if drift else PASS, "diff": mean, "se": se, "k": k, "floor": floor, "threshold": k * se, "n": len(diffs), "of": len(config.seeds)}
 
 
 def _outcome(cur_row: dict, world: str, refs: Optional[References], reasons_by_version: Mapping[int, Sequence[str]], config: GateConfig) -> dict:
@@ -153,24 +185,44 @@ def _outcome(cur_row: dict, world: str, refs: Optional[References], reasons_by_v
     return {**finding, "state": state, "refs": results}
 
 
+def _contract_no_data(world: str, row: Mapping[str, Any], seed: Optional[int], detail: str) -> dict:
+    finding = {"world": world, "scope": row.get("scope", "run"), "id": row["id"], "group": row.get("group", "*"), "class": row.get("class", "outcome"),
+               "state": NO_DATA, "reason": "contract_error", "detail": detail}
+    if seed is not None:
+        finding["seed"] = seed
+    for name in ("key", "tick"):
+        if row.get(name) is not None:
+            finding[name] = row[name]
+    return finding
+
+
 def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons_by_version: Mapping[int, Sequence[str]]) -> List[dict]:
-    """Findings for every metric of every (world, seed) / world in ``docs``; nothing is guessed for a missing document (it is ``no-data``)."""
+    """Findings for every metric of every (world, seed) / world in ``docs``; nothing is guessed for a missing document or a contract error (it is ``no-data``)."""
     findings: List[dict] = []
+    problems = _threshold_problems(docs)
+
+    def validity(row: Mapping[str, Any], world: str, seed: Optional[int]) -> dict:
+        problem = problems.get((row["id"], row.get("group", "*")))
+        return _contract_no_data(world, row, seed, problem) if problem else _validity(row, world, seed, config)
+
     for world in config.worlds:
         seed_docs = {seed: docs.get((world, seed)) for seed in config.seeds}
         all_ok = True
         for seed, doc in seed_docs.items():
             if doc is None or doc.get("status") != "ok":
                 all_ok = False
-                findings.append(_no_data(world, seed, (doc or {}).get("error", "no document")))
+                findings.append(_no_data(world, seed, (doc or {}).get("error", "no document"), (doc or {}).get("reason", "harness_error")))
                 continue
-            findings.extend(_validity(r, world, seed, config) for r in doc["metrics"] if r.get("class") == "validity")
+            findings.extend(validity(r, world, seed) for r in doc["metrics"] if r.get("class") == "validity")  # judged from the seeds that have data
         pooled = docs.get((world, None))
         if pooled is None or pooled.get("status") != "ok":
-            findings.append(_no_data(world, None, (pooled or {}).get("error", "no pooled document")))
+            findings.append(_no_data(world, None, (pooled or {}).get("error", "no pooled document"), (pooled or {}).get("reason", "harness_error")))
         else:
-            findings.extend(_validity(r, world, None, config) for r in pooled["metrics"] if r.get("class") == "validity")
-            findings.extend(_outcome(r, world, refs, reasons_by_version, config) for r in pooled["metrics"] if r.get("class") == "outcome")
+            findings.extend(validity(r, world, None) for r in pooled["metrics"] if r.get("class") == "validity")
+            for r in pooled["metrics"]:
+                if r.get("class") == "outcome":
+                    problem = problems.get((r["id"], r.get("group", "*")))
+                    findings.append(_contract_no_data(world, r, None, problem) if problem else _outcome(r, world, refs, reasons_by_version, config))
         if not all_ok:
             continue  # a partial seed set would change what an outcome means; the missing seeds already report as no-data
         grouped: Dict[Tuple[Any, ...], dict] = {}
@@ -178,11 +230,12 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
             for r in doc["metrics"]:
                 if r.get("class") == "outcome":
                     key = (r["id"], r.get("group", "*"), r.get("key"), r.get("tick"))
-                    grouped.setdefault(key, {"id": r["id"], "group": r.get("group", "*"), "key": r.get("key"), "tick": r.get("tick"), "scope": "run", "per_seed": {}})["per_seed"][seed] = r["value"] if "value" in r else r["mean"]
+                    row = grouped.setdefault(key, {"id": r["id"], "group": r.get("group", "*"), "key": r.get("key"), "tick": r.get("tick"), "scope": "run",
+                                                   "k": r.get("k"), "floor": r.get("floor"), "per_seed": {}})
+                    row["per_seed"][seed] = r["value"] if "value" in r else r["mean"]
         for row in grouped.values():
-            if config.k is None:
-                raise ValueError("the config has no k, so outcome metrics cannot be judged")
-            findings.append(_outcome(row, world, refs, reasons_by_version, config))
+            problem = problems.get((row["id"], row["group"]))
+            findings.append(_contract_no_data(world, row, None, problem) if problem else _outcome(row, world, refs, reasons_by_version, config))
     return findings
 
 
@@ -270,6 +323,10 @@ def build_report(
         "harness_hash": harness_hash,
         "verdict": outcome,
         "reasons": reasons,
+        "run_errors": [
+            {"world": f["world"], "seed": f.get("seed"), "error": f.get("detail", "")} for f in findings if f.get("reason") == "run_error"
+        ],
+        "no_data_reasons": {name: sum(1 for f in findings if f["state"] == NO_DATA and f.get("reason") == name) for name in NO_DATA_REASONS},
         "counts": counts,
         "references": (
             [{"ref": "last", "version": refs.last["version"], "milestone": refs.last["milestone"], "stale": list(reasons_by_version.get(refs.last["version"], ()))},
@@ -296,6 +353,12 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         lines.append(f"Same-SHA rerun: {len(report['rerun']['pairs'])} (world, seed) run(s), {report['rerun']['unstable']} metric(s) unstable.")
     for reason in report["reasons"]:
         lines.append(f"- **RED**: {reason}")
+    if report["run_errors"]:
+        lines += ["", f"### RUN ERRORS ({len(report['run_errors'])}): an exception in the simulation, an rpg defect (does not turn the job red in the advisory phase)"]
+        lines += [f"- **{e['world']}{'/' + str(e['seed']) if e['seed'] is not None else ''}**: {e['error']}" for e in report["run_errors"]]
+    reasons_seen = {k: v for k, v in report["no_data_reasons"].items() if v}
+    if reasons_seen:
+        lines.append("No-data reasons: " + ", ".join(f"{k}: {v}" for k, v in reasons_seen.items()))
     shown = [f for f in report["findings"] if f["state"] != PASS]
     if shown:
         lines += ["", "| state | metric | world | detail |", "|---|---|---|---|"]
@@ -316,9 +379,10 @@ def _detail(f: Mapping[str, Any]) -> str:
         parts.append(f"was {f['first_state']}, rerun {f['rerun_state']}; route: {f['route']}")
     for r in f.get("refs", []):
         numbers = f" d={r['diff']:.4g}" + (f" se={r['se']:.4g} k*se={r['threshold']:.4g}" if "se" in r else "") + f" floor={r['floor']:.4g}" if "diff" in r else ""
-        parts.append(f"vs {r['ref']} v{r['version']}: {r['state']}{numbers}")
+        judged = f", judged on {r['n']}/{r['of']} seeds" if "n" in r else ""
+        parts.append(f"vs {r['ref']} v{r['version']}: {r['state']}{numbers}{judged}")
     if f.get("detail"):
-        parts.append(f["detail"])
+        parts.append((f"[{f['reason']}] " if f.get("reason") else "") + f["detail"])
     if f.get("ownership"):
         parts.append(f"{f['ownership']}{' ' + f['ticket'] if f.get('ticket') else ''}")
     return "; ".join(parts).replace("|", "\\|")

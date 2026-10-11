@@ -18,7 +18,10 @@ The metrics module (rpg's, planned at ``src.observability.rpg_gate_metrics``; na
 ``compute(run_artifacts) -> document or list[metric]`` and ``pool(docs) -> list[metric]`` following the ``rpg-gate-metrics/v1`` contract in the epic ticket.
 The harness keeps only the metrics and writes the document header itself.
 
-Document (``rpg-gate-metrics/v1``): ``{"schema", "status": "ok"|"no-data", "world", "seed", "ticks", "sha", "harness_hash", "metrics": [...], "error"?}``.
+Document (``rpg-gate-metrics/v1``): ``{"schema", "status": "ok"|"no-data", "world", "seed", "ticks", "sha", "harness_hash", "metrics": [...], "reason"?, "error"?}``.
+A ``no-data`` document carries ``reason``: ``run_error`` (an exception in the simulation, world compile or ticks; with ``exception_type``; an rpg defect),
+``metric_error`` (an exception in rpg's ``compute`` or ``pool``), ``harness_error`` (a timeout, a bad document, a child that never started) or
+``seed_no_data`` (the pool was skipped because a seed has no data).
 It is written with sorted keys and carries no time or path, so the same (SHA, world, seed) gives byte-identical bytes. Wall time and peak memory go
 to a sidecar ``<doc>.cost.json`` and ``matrix.json``, never into the document.
 
@@ -123,8 +126,13 @@ def dump_doc(doc: Dict[str, Any]) -> str:
     return json.dumps(doc, sort_keys=True, indent=2) + "\n"
 
 
-def no_data_doc(world: str, seed: Optional[int], ticks: int, sha: str, hhash: str, error: str) -> Dict[str, Any]:
-    doc: Dict[str, Any] = {"schema": SCHEMA, "status": NO_DATA, "world": world, "ticks": ticks, "sha": sha, "harness_hash": hhash, "metrics": [], "error": error}
+HARNESS_ERROR, SEED_NO_DATA = "harness_error", "seed_no_data"
+
+
+def no_data_doc(world: str, seed: Optional[int], ticks: int, sha: str, hhash: str, error: str, reason: str = HARNESS_ERROR) -> Dict[str, Any]:
+    """A ``no-data`` document. ``reason`` is ``run_error`` / ``metric_error`` (written by the child, which knows the phase) or ``harness_error`` (a timeout, a bad
+    document, a child that never started) or ``seed_no_data`` (a pool that was skipped because a seed has no data)."""
+    doc: Dict[str, Any] = {"schema": SCHEMA, "status": NO_DATA, "reason": reason, "world": world, "ticks": ticks, "sha": sha, "harness_hash": hhash, "metrics": [], "error": error}
     if seed is not None:
         doc["seed"] = seed
     return doc
@@ -198,6 +206,9 @@ def pool_world(world: str, seed_paths: Sequence[Path], config: GateConfig, out_d
     target = out_dir / doc_name(world, None)
     bad = [p.name for p in seed_paths if json.loads(p.read_text(encoding="utf-8")).get("status") != OK]
     error: Optional[str] = f"no pool: seed document(s) without data: {', '.join(bad)}" if bad else None
+    if error is not None:
+        target.write_text(dump_doc(no_data_doc(world, None, config.ticks, sha, hhash, error, SEED_NO_DATA)), encoding="utf-8")
+        return target
     if error is None:
         error = _call_child(
             ["pool", "--world", world, "--ticks", str(config.ticks), "--metrics-module", metrics_module, "--sha", sha, "--harness-hash", hhash,

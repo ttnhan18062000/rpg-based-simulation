@@ -15,29 +15,33 @@ SEEDS = (1, 2, 3, 4, 5)
 
 
 def _config(**over) -> GateConfig:
-    base = dict(worlds=("w",), seeds=SEEDS, ticks=100, stale_after_days=30, k=2.0, floors={"O1": 1.0}, oracles={"V1": "docs/mechanics/02_combat_laws.md"})
+    base = dict(worlds=("w",), seeds=SEEDS, ticks=100, stale_after_days=30)
     base.update(over)
     return GateConfig(**base)
 
 
-def _outcome_row(values, rid="O1", **extra):
-    return {"id": rid, "class": "outcome", "scope": "run", "group": "*", "value": None, **extra}
+ORACLE = "docs/mechanics/02_combat_laws.md"
 
 
-def _seed_doc(seed, *, value=10.0, violations=0, status="ok", o_id="O1", examples=()):
+def _seed_doc(seed, *, value=10.0, violations=0, status="ok", o_id="O1", examples=(), k=2.0, floor=1.0, reason="run_error", oracle=ORACLE):
     if status != "ok":
-        return {"schema": "rpg-gate-metrics/v1", "status": status, "world": "w", "seed": seed, "metrics": [], "error": "boom"}
+        return {"schema": "rpg-gate-metrics/v1", "status": status, "reason": reason, "world": "w", "seed": seed, "metrics": [], "error": "KeyError: boom"}
+    outcome = {"id": o_id, "class": "outcome", "scope": "run", "group": "*", "value": value}
+    if k is not None:
+        outcome["k"] = k
+    if floor is not None:
+        outcome["floor"] = floor
     return {"schema": "rpg-gate-metrics/v1", "status": "ok", "world": "w", "seed": seed, "metrics": [
-        {"id": o_id, "class": "outcome", "scope": "run", "group": "*", "value": value},
-        {"id": "V1", "class": "validity", "scope": "run", "group": "*", "violations": violations, "examples": list(examples)},
+        outcome,
+        {"id": "V1", "class": "validity", "scope": "run", "group": "*", "violations": violations, "examples": list(examples), "oracle": oracle},
     ]}
 
 
-def _pooled_doc(violations=0, status="ok", value=None):
-    metrics = [{"id": "V7", "class": "validity", "scope": "pooled", "group": "wolves", "violations": violations, "examples": ["e"]}]
+def _pooled_doc(violations=0, status="ok", value=None, floor=2.0):
+    metrics = [{"id": "V7", "class": "validity", "scope": "pooled", "group": "wolves", "violations": violations, "examples": ["e"], "oracle": ORACLE}]
     if value is not None:
-        metrics.append({"id": "O9", "class": "outcome", "scope": "pooled", "group": "*", "value": value})
-    return {"schema": "rpg-gate-metrics/v1", "status": status, "world": "w", "metrics": metrics if status == "ok" else [], "error": "x"}
+        metrics.append({"id": "O9", "class": "outcome", "scope": "pooled", "group": "*", "value": value, **({"floor": floor} if floor is not None else {})})
+    return {"schema": "rpg-gate-metrics/v1", "status": status, "reason": "metric_error", "world": "w", "metrics": metrics if status == "ok" else [], "error": "x"}
 
 
 def _docs(values=(10, 10, 10, 10, 10), **kw):
@@ -84,7 +88,7 @@ def test_validity_fail_is_exact_per_seed_with_five_examples_and_the_config_oracl
     report = _build(docs)
     fail = next(f for f in report["findings"] if f["state"] == "fail" and f["scope"] == "run")
     assert fail["seed"] == 3 and fail["violations"] == 7 and fail["examples"] == list("abcde")
-    assert fail["oracle"] == "docs/mechanics/02_combat_laws.md"
+    assert fail["oracle"] == ORACLE
     assert _states(report)[("V1", 4, "run")] == "pass"  # the other seeds are judged on their own
 
 
@@ -120,7 +124,7 @@ def test_both_references_are_reported_and_drift_against_either_is_drift():
 def test_floor_keyed_by_id_applies_to_every_key_and_tick():
     docs = _docs((10,) * 5)
     for s in SEEDS:
-        docs[("w", s)]["metrics"].append({"id": "O1", "class": "outcome", "scope": "run", "group": "g", "key": "STARVATION", "tick": 100, "value": 10.5})
+        docs[("w", s)]["metrics"].append({"id": "O1", "class": "outcome", "scope": "run", "group": "g", "key": "STARVATION", "tick": 100, "value": 10.5, "k": 2.0, "floor": 1.0})
     refs = _refs()
     refs.last["metrics"].append({"id": "O1", "class": "outcome", "scope": "run", "world": "w", "group": "g", "key": "STARVATION", "tick": 100, "per_seed": {str(s): 10 for s in SEEDS}, "mean": 10, "se": 0})
     keyed = [f for f in _build(docs, refs=refs)["findings"] if f.get("key") == "STARVATION"]
@@ -130,7 +134,7 @@ def test_floor_keyed_by_id_applies_to_every_key_and_tick():
 def test_a_pooled_outcome_drifts_on_the_floor_alone():
     docs = _docs()
     docs[("w", None)] = _pooled_doc(value=5.0)
-    config = _config(floors={"O1": 1.0, "O9": 2.0})
+    config = _config()
     over = _build(docs, refs=_refs(_baseline(2, pooled=2.0)), config=config)
     assert _states(over)[("O9", None, "pooled")] == "drift"
     under = _build(docs, refs=_refs(_baseline(2, pooled=4.0)), config=config)
@@ -276,19 +280,66 @@ def test_markdown_shows_states_references_examples_and_oracle():
     json.dumps(_build(docs))  # the report is JSON-serialisable
 
 
-def test_outcome_judgement_without_k_is_an_error_not_a_guess():
-    with pytest.raises(ValueError, match="no k"):
-        _build(_docs(), config=_config(k=None))
+def test_a_missing_k_or_floor_is_a_contract_error_reported_as_no_data_never_a_made_up_threshold():
+    for kw, word in (({"k": None}, "k"), ({"floor": None}, "floor")):
+        report = _build({**_docs(), **{("w", s): _seed_doc(s, **kw) for s in SEEDS}})
+        f = next(f for f in report["findings"] if f["id"] == "O1")
+        assert f["state"] == "no-data" and f["reason"] == "contract_error" and word in f["detail"] and "contract error" in f["detail"]
+    pooled = _docs()
+    pooled[("w", None)] = _pooled_doc(value=5.0, floor=None)
+    f = next(f for f in _build(pooled, refs=_refs(_baseline(2, pooled=2.0)))["findings"] if f["id"] == "O9")
+    assert f["state"] == "no-data" and "floor" in f["detail"]
+
+
+def test_rows_of_one_metric_that_disagree_on_k_floor_or_oracle_are_mixed_module_versions():
+    for kw in ({"k": 3.0}, {"floor": 2.0}, {"oracle": "other"}):
+        docs = _docs()
+        docs[("w", 2)] = _seed_doc(2, **kw)
+        report = _build(docs)
+        mixed = [f for f in report["findings"] if f.get("reason") == "contract_error"]
+        assert mixed and all(f["state"] == "no-data" and f["detail"] == "mixed metric module versions" for f in mixed)
+        assert not any(f["state"] in ("drift", "fail") for f in mixed)
+
+
+def test_the_judged_seed_count_is_shown_on_each_outcome_result():
+    report = _build(_docs((12, 13, 12, 13, 12)))
+    f = next(f for f in report["findings"] if f["id"] == "O1")
+    assert all(r["n"] == 5 and r["of"] == 5 for r in f["refs"]) and "judged on 5/5 seeds" in rep.render_markdown(report)
+    sparse = _baseline(2)
+    sparse["metrics"][0]["per_seed"] = {"1": 10, "2": 10, "3": 10}
+    report = _build(_docs(), refs=_refs(sparse))
+    assert "judged on 3/5 seeds" in rep.render_markdown({**report, "findings": [{**f, "state": "drift"} for f in report["findings"] if f["id"] == "O1"]})
+    assert next(f for f in report["findings"] if f["id"] == "O1")["refs"][0]["n"] == 3
+
+
+def test_no_data_reasons_are_split_and_a_run_error_is_prominent_but_not_red():
+    docs = _docs()
+    docs[("w", 1)] = _seed_doc(1, status="no-data", reason="run_error")
+    docs[("w", 2)] = _seed_doc(2, status="no-data", reason="metric_error")
+    del docs[("w", 3)]
+    report = _build(docs)
+    assert report["no_data_reasons"]["run_error"] == 1 and report["no_data_reasons"]["metric_error"] == 1 and report["no_data_reasons"]["harness_error"] == 1
+    assert report["run_errors"] == [{"world": "w", "seed": 1, "error": "KeyError: boom"}]
+    md = rep.render_markdown(report)
+    assert "RUN ERRORS (1)" in md and "rpg defect" in md and report["verdict"] == "green"
+
+
+def test_validity_is_still_judged_from_the_seeds_that_have_data():
+    docs = _docs()
+    docs[("w", 1)] = _seed_doc(1, status="no-data")
+    docs[("w", 2)] = _seed_doc(2, violations=3)
+    report = _build(docs)
+    assert _states(report)[("V1", 2, "run")] == "fail" and _states(report)[("V1", 3, "run")] == "pass" and ("V1", 1, "run") not in _states(report)
 
 
 def test_cli_writes_json_and_markdown_and_fails_on_red_only_when_asked(tmp_path):
     docs = tmp_path / "docs"
     docs.mkdir()
     cfg = tmp_path / "config.yaml"
-    cfg.write_text("worlds: [w]\nseeds: [1, 2]\nticks: 10\nstale_after_days: 30\nk: 2\noracles: {V1: oracle-x}\n")
+    cfg.write_text("worlds: [w]\nseeds: [1, 2]\nticks: 10\nstale_after_days: 30\n")
     for seed in (1, 2):
-        (docs / f"w__s{seed}.json").write_text(json.dumps(_seed_doc(seed, violations=1)))
-    (docs / "w__pooled.json").write_text(json.dumps(_pooled_doc()))
+        (docs / f"w__s{seed}.json").write_text(json.dumps(_seed_doc(seed, violations=1, oracle="oracle-x")))
+    (docs / "w__pooled.json").write_text(json.dumps({**_pooled_doc(), "metrics": []}))
     known = tmp_path / "known.yaml"
     known.write_text("known: []\n")
     args = ["--config", str(cfg), "--docs", str(docs), "--baselines", str(tmp_path / "none"), "--known", str(known),
