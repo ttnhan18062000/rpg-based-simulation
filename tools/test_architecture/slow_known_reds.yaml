@@ -23,6 +23,13 @@ known_reds:
     expires_on: "2026-10-28"
     kind: broken
     note: "remaining half is the boss assertion, stale against #356 (world-boss off by default); class (a) test update after KNOW-04; rpg-planner warns before 10-28 if it slips"
+  - match: "tests.integration.campaigns.test_catalog_entity_spawn_wiring::test_real_campaign_episode_event_mix_is_not_dominated_by_cooperation"
+    ticket: TCK-20261010-CAMPAIGN-EPISODE-COOPERATION-SHARE-CROSSES-HALF-ON-MAIN-AFTER-BATCH-2
+    owner: rpg-planner
+    added_on: "2026-10-09"
+    expires_on: "2026-10-31"
+    kind: broken
+    note: "first red in slow run 37952552217 (20af2959a); probable cause: cooperation_event fires for any help need and hunger creates one; the ticket bisects 2364b058a..20af2959a and rules out the module-fixture leak first; the 0.5 line is not moved"
   - match: "tests.perf.test_perf_movement*"
     ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
     owner: rpg-implementer-2
