@@ -140,7 +140,7 @@ def test_collect_fetches_jobs_only_for_completed_runs_at_head_and_flags_tested()
 
 def test_cli_decide_prints_decision_and_reason(monkeypatch, capsys):
     runs = [_run(timedelta(hours=2))]
-    monkeypatch.setattr(gate, "collect", lambda head: runs)
+    monkeypatch.setattr(gate, "collect", lambda head, **kwargs: runs)
     assert gate.main(["decide", "--head-sha", HEAD, "--now", "2026-10-09T12:00:00Z"]) == 0
     out = capsys.readouterr().out
     assert "decision=skip" in out and "reason=" in out
