@@ -11,8 +11,11 @@ from src.worldassembly.models import (
 
 
 def _empty_building_purse(profile: Any) -> Optional[set]:
-    """The purse fields to leave out of the serialized context when the building starts with neither coin nor stock."""
-    return None if (profile.starting_gold or profile.starting_stock) else {"starting_gold", "starting_stock"}
+    """The fields to leave out of the serialized context: the purse when the building starts with neither coin nor stock, the ordinary one maintenance shift."""
+    left_out = set() if (profile.starting_gold or profile.starting_stock) else {"starting_gold", "starting_stock"}
+    if profile.maintenance_shifts == 1:
+        left_out.add("maintenance_shifts")
+    return left_out or None
 
 
 def _empty_entity_purse(profile: Any) -> Optional[set]:

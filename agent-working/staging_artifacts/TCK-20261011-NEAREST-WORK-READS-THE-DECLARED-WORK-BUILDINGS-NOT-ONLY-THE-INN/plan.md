@@ -10,6 +10,13 @@ tags: []
 
 # plan — TCK-20261011-NEAREST-WORK-READS-THE-DECLARED-WORK-BUILDINGS-NOT-ONLY-THE-INN
 
+## RULING (owner, 2026-10-11, designer memo row 66; relayed by rpg-planner) — supersedes the Q1-Q3 proposals below
+- Q1, a split by who pays: MAINTENANCE shifts are on every building, capped at shifts-needed per period, and are the ONLY shifts the treasury may top up. COMMERCIAL shifts: a building that declares paid work in content (the inn today) hires from its OWN purse only, no top-up, bounded by the purse. Both pay WAGE_GOLD (6).
+- Q2: the WORK set = maintenance_shifts > 0 OR a content-declared commercial-work flag. SERVICE_KINDS["WORK"]'s meaning moves into that content declaration; no building name in code (D56).
+- Q3: maintenance_shifts is 1 for an ordinary building and 3 for the town hall (so the town_hall value already in buildings.yaml stands; remove the "provisional" comment).
+- Rejected (state in the divergence): one cap everywhere (it would collapse the inn's commercial work, breaking H1's earn-by-wage), and banding by size.
+- Consequences for the plan: (a) a second content field on BuildingDefinition, a commercial-work flag (name: `hires_for_pay`, default false; inn true) and the matching ResolvedBuildingProfile entry; (b) `work_update` pays a commercial shift with treasury_pays False and no counter; a maintenance shift with treasury_pays True, the counter, and the cap; (c) when a building both declares commercial work and needs maintenance (the inn), a shift is paid as commercial while its purse covers a wage and as maintenance (treasury-backed, counted) only while the maintenance count is below needed and the purse is short: the exact precedence is an open point for rpg-planner (proposed: maintenance first while needed > done, because it is the capped, treasury-funded path, then commercial); (d) `nearest_work` reads buildings where (needed > done and payer can pay incl. treasury) OR (hires_for_pay and purse >= WAGE_GOLD).
+
 ## Typed shape (durable state: needs rpg-planner's yes before code)
 - **Content:** `BuildingDefinition.maintenance_shifts: int = Field(1, ge=0)`, the shifts a building needs each upkeep period (0 = no upkeep, no work offered). A coarse band per kind in `data/content/world/buildings.yaml` (D50).
 - **State:** two typed ints on `BuildingState`, both in `to_canonical_dict` (serialised, inspectable, hashed):

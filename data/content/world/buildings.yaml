@@ -16,6 +16,9 @@
   hp: 1000
   max_hp: 1000
   themes: ["village"]
+  # EXCH-02, ruling 61 (upkeep in work): a large building needs more maintenance shifts a period than an ordinary one (1). A coarse band (D50);
+  # the town hall's 3 is owner-ruled (2026-10-11, designer memo row 66; TCK-20261011-NEAREST-WORK-READS-THE-DECLARED-WORK-BUILDINGS-NOT-ONLY-THE-INN).
+  maintenance_shifts: 3
 
 # STATE: ADDITIONAL
 - id: "blacksmith"

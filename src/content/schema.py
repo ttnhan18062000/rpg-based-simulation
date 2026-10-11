@@ -353,6 +353,7 @@ class BuildingDefinition(CatalogBaseDefinition):
     themes: List[str] = Field(default_factory=list, description="Aesthetic/functional themes of the building")
     starting_gold: int = Field(0, ge=0, description="The building's till at world creation: coin the place holds (EXCH-02, owner decision 37)")
     starting_stock: Dict[str, int] = Field(default_factory=dict, description="Items the building holds for sale at world creation (item id to quantity)")
+    maintenance_shifts: int = Field(1, ge=0, description="Maintenance shifts the building needs each upkeep period (EXCH-02, ruling 61: upkeep in work, shifts times the wage; a coarse band, D50). 0 = no upkeep")
 
 
 class ServiceProfileDefinition(CatalogBaseDefinition):
