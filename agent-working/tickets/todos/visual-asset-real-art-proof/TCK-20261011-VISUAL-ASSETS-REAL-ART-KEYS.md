@@ -15,7 +15,7 @@ tags: [architecture, documentation]
 Real-art proof: register three optional keys (ui.panel_frame, fx.selection_ring, fx.campfire) and refresh the session_handoff snapshots
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -67,13 +67,21 @@ Three new `optional: true` keys (planner decision; the owner may overrule):
 - `fx`/`ui` are new family names on optional keys only (no schema change, no client use). If the owner reads this as the parked "other asset kinds", fall back to proof keys under an existing family; ask before committing if unsure.
 
 ## Implementation Notes
-
+- Keys added before `aliases: []` with a header comment; descriptions carry size, frame count and role only (slice geometry and names live on the SourceRecord; asset-planner review 2026-10-11). Lead accepted the `ui`/`fx` families.
+- Registry measurement (7 in-process `load_registry` loads): before 28241 B, 62 keys, load min 0.042 s, median 0.045 s; after 29525 B, 65 keys, min 0.050 s, median 0.064 s. 29525 B is 6.4 % of `MAX_REGISTRY_BYTES` 458752. It does NOT change the realistic-maximum row in `budgets.md` (the ~90 % figure is the 1024-key worst case, and these keys add no field). The median change is load noise at this size, not a trend.
+- FINDING: `runtime_export.py:87` refuses when `registry.file_hash != candidate.registry_hash` and `release.py:120` stamps the registry file hash into every candidate, so ANY registry edit (optional keys included) makes every older candidate unexportable until a new one is assembled. `verify` is unaffected. Not a rollback break (rollback redeploys the previous frontend build, `retention_and_rollback.md:40`). Asset-planner ruling (option B): keep one commit per ticket; the branch is red on the export tests below from this commit until child 3's rc-0009; child 4 records the sentence in `store_contract.md`.
+- Registry-content pins moved to exact new values (62 -> 65 keys, key list incl. the three, `Counter` of (family, class)); the label pin stays 35; the three keys are also asserted optional, decorative, `fallback none`, no axis, no detail, no label.
 
 ## Test Summary
-
+`tests/visual_assets` (project venv): 2427 passed after the pin updates; EXPECTED RED until rc-0009 (owner-gated), all `BuildError registry_mismatch` on an export of the committed rc-0008:
+- `tests/visual_assets/store/unit/test_atlas.py`: `test_the_atlas_options_leave_the_per_file_export_and_the_manifest_unchanged`, `test_two_atlas_exports_are_byte_identical`, `test_every_key_of_rc_0008_reads_back_from_its_atlas_with_the_artifact_pixels`, `test_atlas_pngs_pass_the_chunk_allowlist`, `test_the_cli_flag_is_opt_in` (5; the planner counted 4, the fifth is the CLI test that exits 2 for the same cause).
+- `tests/visual_assets/test_release_byte_reproducibility.py`: `test_two_exports_of_the_committed_candidate_are_byte_identical`, `test_no_exported_png_carries_a_chunk_outside_the_allowlist`, `test_the_allowlist_check_fails_on_a_planted_chunk[tIME|tEXt|iTXt|zTXt]` (4), `test_an_export_that_differs_by_one_byte_changes_the_tree_hash` (7).
+Nothing else fails. Without the keys `test_atlas.py` passes 17/17.
 
 ## Files Changed
-
+- `visual_assets/catalog/definitions/visual_keys.yaml`
+- `tests/visual_assets/store/unit/test_registry.py`, `tests/visual_assets/test_key_usage.py`
+- `docs/assets/session_handoff/asset-implementer.md`, `docs/assets/session_handoff/asset-planner.md`
 
 ## Completion Summary
 

@@ -3,22 +3,23 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-10
+date: 2026-10-11
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-implementer
 
-> Snapshot of the gitignored `.claude/handover/asset-implementer.md` taken on 2026-10-10 at the close of the slices batch (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-implementer.md`. Refreshed in `TCK-20261010-VISUAL-ASSETS-SLICES-DOCS-AND-CLOSE`.
+> Snapshot of the gitignored `.claude/handover/asset-implementer.md` taken on 2026-10-11 at the start of the real-art proof batch (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-implementer.md`. Refreshed in `TCK-20261011-VISUAL-ASSETS-REAL-ART-KEYS`.
 
-Updated: 2026-10-10 (slices batch complete on `visual-asset-slices`, awaiting the user's push/PR decision)
+Updated: 2026-10-11 (slices batch MERGED as PR #499 `595021d6d`; real-art proof batch in flight on `visual-asset-real-art-proof`)
 
 ## Open
-- BATCH COMPLETE, NOT PUSHED: epic `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`, branch `visual-asset-slices` in `/home/vboxuser/Work/rpg-aseprite-mcp` (four children committed and approved by asset-planner, owner approved ADR D25 and the bounds, tickets closed in `agent-working/tickets/done/visual-asset-slices/`, proof record re-run last). Next: the final suite numbers go to asset-planner, then ASK THE USER the push/PR question (never infer yes), then CI poll, then the separate `--admin` merge question pinned to the real head (re-fetch origin/main first; a bounded procedure the owner pre-authorizes must be stated with its path set).
-- What the batch built (for the PR): slices read from each source's slice chunks and stored per source revision (`SourceRecord.slices`, ADR D25, 16 slices / 16 keys), the opt-in `export-runtime --slices` (`slices.json`, exported-image pixels), the drawing tool's `set_slice` op (single key, replaces by name, every slice checked against the final canvas), the handoff's `slice_count` with `SLICE_COUNT_MISMATCH`. Earlier, in the store-tooling batch (PR #487, `231e35f77`): store lock + deletion log (D24), faster PNG decoder, release byte reproducibility, the local Aseprite proof record (D10 addendum), opt-in atlases and animation metadata, palettes as data, the bundle capture.
+- IN FLIGHT: epic `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF` (4 children, `agent-working/tickets/todos/visual-asset-real-art-proof/SEQUENCE.md`), branch `visual-asset-real-art-proof` off origin/main `9a9058808` in `/home/vboxuser/Work/rpg-aseprite-mcp`, upstream unset (push later with `-u`). Order: keys (`ui.panel_frame`, `fx.selection_ring`, `fx.campfire`), real-art drafts (owner adopts), release proof (rc-0009 = rc-0008's 70 + 3 only on the owner's answer), budgets and close. Hard conditions: any bound exceeded -> STOP and report, no shrinking art, no bound or bound-guard edits, no store/drawing code change.
+- KNOWN RED from the keys commit until rc-0009 (planner ruling, owner-gated): any registry edit makes older candidates unexportable (`registry_mismatch`, `runtime_export.py:87`), so 12 tests that export rc-0008 fail (`test_atlas.py` 5, `test_release_byte_reproducibility.py` 7). Nothing else may fail; child 3's rc-0009 commit must turn them green.
+- Merged: PR #471, #480, #487, #499 (slices, `595021d6d`). Those branches are finished: never push to them again.
+- What the slices batch built (for reference): slices read from each source's slice chunks and stored per source revision (`SourceRecord.slices`, ADR D25, 16 slices / 16 keys), the opt-in `export-runtime --slices` (`slices.json`, exported-image pixels), the drawing tool's `set_slice` op (single key, replaces by name, every slice checked against the final canvas), the handoff's `slice_count` with `SLICE_COUNT_MISMATCH`. Earlier, in the store-tooling batch (PR #487, `231e35f77`): store lock + deletion log (D24), faster PNG decoder, release byte reproducibility, the local Aseprite proof record (D10 addendum), opt-in atlases and animation metadata, palettes as data, the bundle capture.
 - The Lua of the drawing tool is hash-pinned: this batch re-pinned it (`python -m visual_assets.drawing.pin`); pin changes affect only newly built artifacts' fingerprints.
 - If the proof record goes stale again (any change under `visual_assets/store/**`, `drawing/**`, the build config, the marked tests or the two runner tools): re-run `make visual-assets-aseprite-local` once, as its own commit, after the LAST such change. Guarded files must be committed first.
-- Earlier batches merged: PR #471 (`0c3a5654b`), PR #480 (`cfad712cf`) and PR #487 (`231e35f77`). Those branches are finished: never push to them again.
 - Activation of adopted art is parked (owner, 2026-10-08) until the RPG core lands.
 
 ## State worth knowing

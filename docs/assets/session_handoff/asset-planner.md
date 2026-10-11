@@ -3,16 +3,17 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-10
+date: 2026-10-11
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-10 at the close of the slices batch (the planner's live handover is authoritative) (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261010-VISUAL-ASSETS-SLICES-DOCS-AND-CLOSE`.
-Updated: 2026-10-10 (store-tooling MERGED as PR #487 `231e35f77`; slices batch built on `visual-asset-slices`, awaiting the user's push/PR decision)
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-11 at the start of the real-art proof batch (the planner's live handover is authoritative) (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261011-VISUAL-ASSETS-REAL-ART-KEYS`.
+Updated: 2026-10-11 (slices MERGED as PR #499 `595021d6d`; real-art proof batch `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF` dispatched, in flight on `visual-asset-real-art-proof`)
 
 ## Open
+- 2026-10-11 IN FLIGHT: real-art proof batch (candidate B, lead-planner approved on the owner's authority): epic `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF` + 4 children (`todos/visual-asset-real-art-proof/SEQUENCE.md`), branch `visual-asset-real-art-proof` off `9a9058808`, planning commit `8ed564419`, upstream unset. Keys `ui.panel_frame`, `fx.selection_ring`, `fx.campfire` (optional, decorative); owner adopts the drafts and approves rc-0009 (= 70 + 3) by blocking question; any bound exceeded -> STOP. Ruling: a registry edit makes every older candidate unexportable, so the branch is red on the rc-0008 export tests from the keys commit until rc-0009 (record the finding in `store_contract.md` in child 4). Slices batch (PR #499 `595021d6d`, 2026-10-11) is merged; its branch is finished.
 - 2026-10-10 slices batch (`TCK-20261010-EPIC-VISUAL-ASSET-SLICES`, branch `visual-asset-slices`): all four children committed and reviewed (SLICE-SOURCE-FIELDS `20c146af4`, SLICE-RUNTIME-EXPORT `76418d7a5`, SLICE-DRAWING-TOOL `b30ae1663`, then docs and close). Owner decisions: store + drawing tool; 16 slices / 16 keys; ADR D25 approved as written (with the handoff `slice_count` and export scaling sentences). Store-tooling (below) is MERGED as PR #487 (`231e35f77`); its notes are kept for the record.
 - 2026-10-10 IN FLIGHT: batch visual-asset-store-tooling FILED + DISPATCHED to asset-implementer (msg). Epic
   TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING + 9 children (todos/visual-asset-store-tooling/SEQUENCE.md), branch
