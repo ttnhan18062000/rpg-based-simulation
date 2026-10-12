@@ -255,9 +255,9 @@ def test_wider_scope_numbers_pinned():
     # not two). Functions and constants only (appraisal.py holds one Relation enum), helpers of the existing mechanisms: no wired unbound class.
     # 333 -> 334 on 2026-10-13 (natural healing, owner decision 42, divergence 2.116): +src/engine/natural_healing.py (HealingTable and hp_gain),
     # bound under `attributes_biology` (implemented_by ::hp_gain), so unbound_files and candidates are unchanged.
-    # 334 -> 336 on 2026-10-13 (M0 gate H6, starvation-death record): +src/ai/goals/ways.py (the food ways in reach: a pure read, one enum)
-    # and +src/observability/starvation_record.py (an observational recorder; no state, no behaviour). Unbound helpers; rpg-planner binds at the fold.
-    assert wider["scope_files"] == 336
+    # 334 -> 335 on 2026-10-13 (M0 gate H6, starvation-death record): +src/ai/goals/ways.py (the food ways in reach: a pure read and one enum);
+    # src/observability/starvation_record.py is outside the scope globs. rpg-planner binds and recomputes at the fold.
+    assert wider["scope_files"] == 335
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -281,7 +281,7 @@ def test_wider_scope_numbers_pinned():
     # (same batch): repair.py and world_records.py unbound, gold_sink.py removed.
     # 240 -> 241 on 2026-10-11 (divergence 2.113): src/engine/tile_distance.py is an unbound leaf helper (one function).
     # 241 -> 246 on 2026-10-11 (hunting, diet gate and grazing): the five new helper modules above are unbound.
-    # 246 -> 247 on 2026-10-13 (H6): the count as measured after the two new files; rpg-planner binds and recomputes at the fold.
+    # 246 -> 247 on 2026-10-13 (H6): src/ai/goals/ways.py is an unbound helper (a pure read); rpg-planner binds and recomputes at the fold.
     assert wider["unbound_files"] == 247
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
