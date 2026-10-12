@@ -1,0 +1,6 @@
+# Perf known-debt ledger (PERF-M2-T05b): a benchmark lane that is already red, with an owner, a ticket and an expiry.
+# Rules and fields are the shared known-reds ones (tools/test_architecture/known_reds.py); the format of
+# `expected_signature` is in docs/performance/perf_baseline_policy.md section 4 and linted by tools/perf/known_debt.py.
+# `match` is an fnmatch pattern on the scenario id; the FIRST matching entry owns a lane, so put narrower entries first.
+# `expected_signature` is optional: `<STATE>:<check>`, e.g. INCONCLUSIVE:latency. Entries are added with a ticket, never to make a build pass.
+known_debt: []
