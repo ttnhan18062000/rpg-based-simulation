@@ -253,7 +253,9 @@ def test_wider_scope_numbers_pinned():
     # 328 -> 333 on 2026-10-11 (hunting, diet gate and grazing, owner decisions 44 to 50 and row 59): +src/engine/appraisal.py, carcass.py,
     # tactical_avoid.py, +src/core/resource_regrowth.py and +src/worldassembly/cover.py (tile_distance.py is the fold's, already counted: one bump,
     # not two). Functions and constants only (appraisal.py holds one Relation enum), helpers of the existing mechanisms: no wired unbound class.
-    assert wider["scope_files"] == 333
+    # 333 -> 334 on 2026-10-13 (natural healing, owner decision 42, divergence 2.116): +src/engine/natural_healing.py (HealingTable and hp_gain),
+    # bound under `attributes_biology` (implemented_by ::hp_gain), so unbound_files and candidates are unchanged.
+    assert wider["scope_files"] == 334
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
