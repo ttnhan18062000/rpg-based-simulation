@@ -39,7 +39,8 @@ def test_typecheck_job_gets_mypy_from_the_lockfile_not_a_separate_pip_install():
     # step already installs it (TCK-20261002-UV-REMAINING-CI-JOBS removed `pip install mypy`).
     text = (_REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
     assert "pip install mypy" not in text
-    assert re.search(r'^\s*"mypy",?\s*$', (_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.MULTILINE)
+    # Pinned exactly (TCK-20261012-MYPY-DEV-PIN), equal to the version uv.lock resolves.
+    assert re.search(r'^\s*"mypy==\d+\.\d+\.\d+",?\s*$', (_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.MULTILINE)
 
 
 # ── TCK-20261003-MYPY-BASELINE-ADVISORY: existing errors live in a baseline, only new ones are reported ──
