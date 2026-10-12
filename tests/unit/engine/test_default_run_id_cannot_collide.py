@@ -11,9 +11,10 @@ from unittest import mock
 import pytest
 
 from src.config.profiles import PROD_SMALL
-from src.engine import kernel as kernel_module
+from src.engine import run_identity
 from src.engine.executor import LocalSequentialExecutor
-from src.engine.kernel import Kernel, default_run_id
+from src.engine.kernel import Kernel
+from src.engine.run_identity import default_run_id
 from src.platform.rng import DeterministicRNG
 from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world
 
@@ -38,7 +39,7 @@ def made():
 
 
 def test_two_same_seed_kernels_in_one_second_get_different_ids_and_directories(made):
-    with mock.patch.object(kernel_module.time, "time", return_value=1_800_000_000.0):
+    with mock.patch.object(run_identity.time, "time", return_value=1_800_000_000.0):
         a, b = _kernel(), _kernel()
     try:
         made.extend([a._run_id, b._run_id])
@@ -55,7 +56,7 @@ def test_a_default_id_never_reuses_an_existing_directory(made):
     open(marker, "w").write("another run's file")
     made.append(taken)
     ids = iter([taken, "run_1800000000_1234_1_cafef00d"])
-    with mock.patch.object(kernel_module, "default_run_id", side_effect=lambda suffix: next(ids)):
+    with mock.patch.object(run_identity, "default_run_id", side_effect=lambda suffix: next(ids)):
         k = _kernel()
     try:
         made.append(k._run_id)
