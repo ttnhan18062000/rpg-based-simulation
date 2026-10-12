@@ -93,7 +93,8 @@ class GroundItemState:
     def to_canonical_dict(self) -> Dict[str, Any]:
         """The ground item (or coin purse) as plain sorted-key data for hashing and checkpoints; gold fields appear only for a purse."""
         if self._canonical_cache is not None:
-            return self._canonical_cache
+            cached: Dict[str, Any] = self._canonical_cache
+            return cached
         res = {
             "id": self.id,
             "item_id": self.item_id,

@@ -81,7 +81,7 @@ def _purse_now(building: Any, building_pending: Optional[Dict[int, Any]]) -> int
     """The building's coin as this tick stands so far: its start-of-tick purse plus what accepted transactions already staged. Every debit of a
     purse reads this, not the start-of-tick balance, so a second transaction in one tick cannot spend coin a first one already took."""
     staged = _pending(building_pending, building.id)
-    return building.inventory.gold + (staged.inventory.gold_delta if staged is not None and staged.inventory else 0)
+    return int(building.inventory.gold + (staged.inventory.gold_delta if staged is not None and staged.inventory else 0))
 
 
 def _stock_now(building: Any, item_id: str, building_pending: Optional[Dict[int, Any]]) -> int:
@@ -90,16 +90,16 @@ def _stock_now(building: Any, item_id: str, building_pending: Optional[Dict[int,
     staged = _pending(building_pending, building.id)
     if staged is not None and staged.inventory:
         have += sum(s.quantity for s in staged.inventory.items_add if s.item_id == item_id) - sum(s.quantity for s in staged.inventory.items_remove if s.item_id == item_id)
-    return have
+    return int(have)
 
 
 def _shifts_done_now(building: Any, building_pending: Optional[Dict[int, Any]]) -> int:
     """Maintenance shifts counted this period as this tick stands so far (a staged period reset first, then the staged shifts)."""
     staged = _pending(building_pending, building.id)
     if staged is None:
-        return building.maintenance_shifts_done
+        return int(building.maintenance_shifts_done)
     base = staged.maintenance_shifts_done_set if staged.maintenance_shifts_done_set is not None else building.maintenance_shifts_done
-    return base + staged.maintenance_shifts_done_delta
+    return int(base + staged.maintenance_shifts_done_delta)
 
 
 def _wage_result(state: Any, intent: ResourceTransferIntent, treasury_pending: Optional[Dict[str, float]] = None,

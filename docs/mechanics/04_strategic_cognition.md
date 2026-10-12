@@ -1926,7 +1926,7 @@ observer, same observed entity → same estimate, always, matching this repo's e
 law. No unseeded RNG call is permitted anywhere in this pipeline — none exists in
 `OpponentPerceptionService.estimate()` today (it is pure arithmetic on already-stable inputs), and
 the power-gap-driven noise this section adds must stay that way. The precedent is
-`_hash_point_in_bounds()` (`src/worldassembly/resolver.py:947`): a deterministic point derived from
+`hash_point_in_bounds()` (`src/worldassembly/spawn_position.py`): a deterministic point derived from
 `hashlib.sha256(key.encode()).digest()`, no RNG object involved at all. This mechanism's own error
 term should be derived the same way — a stable key built from `(seed, tick, observer_id,
 observed_id)` hashed and mapped into the error range, never a call to `DeterministicRNG` or any
@@ -1951,7 +1951,7 @@ moment it becomes reachable for the first time, the same way `ENABLE_GUILD_QUEST
 `docs/simulation/domains/combat_engagement_contract.md` (the existing technical contract for this
 domain), `src/domains/memory/phase.py` (causal memory's own oldest-first eviction, the precedent
 this section deliberately does not copy), `src/worldassembly/resolver.py:947`
-(`_hash_point_in_bounds()`, the deterministic-hash precedent), `docs/mechanics/01_entity_anatomy.md`
+(`hash_point_in_bounds()`, the deterministic-hash precedent), `docs/mechanics/01_entity_anatomy.md`
 §1 (`Perception (PER)`), `docs/core/attributes_and_classes.md` (`INT`, the declared future
 consideration-weighting driver) (`TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER`,
 2026-09-13)

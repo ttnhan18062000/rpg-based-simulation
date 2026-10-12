@@ -325,6 +325,34 @@ def _assert_region_references_resolve(spec: WorldSpec) -> None:
         )
 
 
+def _compile_factions(spec: WorldSpec, context: Optional[Any]) -> tuple[Dict[str, FactionState], Dict[str, float]]:
+    """Compile the declared factions. One treasury per region-owner bucket (src/core/treasury.py), started with each member faction's declared
+    starting gold once (EXCH-02: the per-faction keys that no phase read are gone, and catalog factions sharing a bucket no longer overwrite each
+    other). Returns the faction states by id and the treasury balances by bucket key."""
+    global_resources: Dict[str, float] = {}
+    factions: Dict[str, FactionState] = {}
+    bucket_gold: Dict[int, float] = {}
+    for f_spec in spec.factions:
+        faction_enum = get_faction_enum(f_spec.id, context=context)
+        starting_gold = 1000.0
+
+        # Context-backed Faction starting gold override
+        if context is not None and f_spec.id in context.factions:
+            starting_gold = context.factions[f_spec.id].starting_gold
+
+        bucket_gold[int(faction_enum)] = bucket_gold.get(int(faction_enum), 0.0) + starting_gold
+
+        factions[f_spec.id] = FactionState(
+            faction_id=f_spec.id,
+            tension_level=f_spec.initial_tension_level,
+        )
+
+    for bucket, gold in sorted(bucket_gold.items()):
+        global_resources[treasury_key(bucket)] = gold
+    return factions, global_resources
+
+
+
 class WorldCompiler:
     """
     Deterministic World Compiler that transforms a validated WorldSpec into
@@ -564,28 +592,8 @@ class WorldCompiler:
                 town_center = ((min_x + max_x) / 2.0, (min_y + max_y) / 2.0)
                 break
 
-        # 3. Compile factions. One treasury per region-owner bucket (src/core/treasury.py), started with each member faction's declared starting
-        # gold once (EXCH-02: the per-faction keys that no phase read are gone, and catalog factions sharing a bucket no longer overwrite each other).
-        global_resources: Dict[str, float] = {}
-        factions: Dict[str, FactionState] = {}
-        bucket_gold: Dict[int, float] = {}
-        for f_spec in spec.factions:
-            faction_enum = get_faction_enum(f_spec.id, context=context)
-            starting_gold = 1000.0
-
-            # Context-backed Faction starting gold override
-            if context is not None and f_spec.id in context.factions:
-                starting_gold = context.factions[f_spec.id].starting_gold
-
-            bucket_gold[int(faction_enum)] = bucket_gold.get(int(faction_enum), 0.0) + starting_gold
-
-            factions[f_spec.id] = FactionState(
-                faction_id=f_spec.id,
-                tension_level=f_spec.initial_tension_level,
-            )
-
-        for bucket, gold in sorted(bucket_gold.items()):
-            global_resources[treasury_key(bucket)] = gold
+        # 3. Compile factions and their treasuries
+        factions, global_resources = _compile_factions(spec, context)
 
         # Collected across steps 4-7; step 6 also appends LAW-SPAWN-OCCUPANCY
         # region-exhaustion warnings (see _resolve_entity_spawn_tile).
