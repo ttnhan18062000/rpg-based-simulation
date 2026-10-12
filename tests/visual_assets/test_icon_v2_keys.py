@@ -43,7 +43,7 @@ def test_the_key_set_keys_are_unchanged_and_no_v2_key_collides_with_them():
     assert [k.replace(".", "_") for k in key_set] == af.ICON_SOURCES and len(key_set) == 14
 
 
-def test_every_v2_key_is_adopted_once_by_the_owners_set_adoption_is_built_and_sits_only_in_rc_0008():
+def test_every_v2_key_is_adopted_once_by_the_owners_set_adoption_is_built_and_sits_only_in_rc_0008_and_rc_0009():
     """The owner adopted `icons-v2` on 2026-10-08T00:40:15Z (`TCK-20261007-VISUAL-ASSETS-RECORD-ICON-V2-ADOPTION`): each key has exactly its own source; `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE` built one `x1` artifact for each, and only `pilot/rc-0008` lists them (rc-0001 to rc-0007 do not)."""
     registry = load_registry()
     for key in v2.KEYS:
@@ -55,7 +55,7 @@ def test_every_v2_key_is_adopted_once_by_the_owners_set_adoption_is_built_and_si
     candidates = config.CATALOG_ROOT / "manifests" / "candidates" / "pilot"
     for path in sorted(candidates.glob("rc-*.json")):
         held = {e["visual_key"] for e in json.loads(path.read_text())["entries"]}
-        if path.name == "rc-0008.json":
+        if path.name in ("rc-0008.json", "rc-0009.json"):  # rc-0009 keeps rc-0008's entries and adds the three proof keys
             assert set(v2.KEYS) <= held, path.name
         else:
             assert not held & set(v2.KEYS), path.name

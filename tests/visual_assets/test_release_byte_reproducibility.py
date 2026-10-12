@@ -25,7 +25,7 @@ from visual_assets.store.build import exporter
 from visual_assets.store.contracts import ReleaseCandidateManifest, parse_record
 
 REAL_CATALOG = config.CATALOG_ROOT
-CATALOG_ID, RELEASE_ID = "pilot", "rc-0008"  # the current release candidate (70 entries); a newer one moves this pin
+CATALOG_ID, RELEASE_ID = "pilot", "rc-0009"  # the current release candidate (73 entries: rc-0008's 70 + the three real-art proof keys); a newer one moves this pin
 # the chunks an exported PNG may carry: no timestamp, no text, no profile that would make two exports differ
 CHUNK_ALLOWLIST = {b"IHDR", b"PLTE", b"tRNS", b"sRGB", b"gAMA", b"IDAT", b"IEND"}
 STORE_PARTS = ("sources", "provenance", "definitions", "build-config", "STORE_FORMAT")
