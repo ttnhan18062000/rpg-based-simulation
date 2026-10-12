@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261012-HOST-PATH-LITERALS-MAKEFILE-AND-MCP-LAUNCHERS
-phase: open
+phase: done
 date: 2026-10-12
 tags: [ai, mcp, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, mcp, process-improvement]
 Remove the remaining host-specific absolute paths from Makefile PYTHON3 and the MCP launch scripts
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -100,9 +100,37 @@ resolves to the same venvs as the literals, which makes them redundant here.
 - Must be implemented and verified on u24desktop (the issue asks for it). agent-working-implementer runs on this host.
 
 ## Implementation Notes
+- `Makefile`: `KNOWLEDGE_MAIN_ROOT` is now defined once above `PYTHON3` (moved, not duplicated); `PYTHON3` candidates are `.venv/bin/python3`, `$(KNOWLEDGE_MAIN_ROOT)/.venv/bin/python3`, `python3`, each behind the same `find_spec('pydantic')` probe with fall-through. The two `/home/vboxuser/...` fallbacks in `agent-monitoring-index` and `PYTHON` were removed too (they sit in the same file and AC1 forbids any `/home/` there); `.venv/bin/python3` then `python3` remain.
+- `tools/start_headroom_mcp.sh`: workspace is `${HEADROOM_WORKSPACE_DIR:-${MAIN_ROOT:-$REPO_ROOT}/.headroom-workspace}`; vboxuser candidate dropped; an in-comment example path reworded.
+- `tools/start_search_mcp.sh`: `${KNOWLEDGE_PYTHON:-}` first; u24desktop and vboxuser literals dropped.
+- `docs/guidelines/agent_working_environment.md`: the "hardcodes its absolute path" sentence now describes the override and git-common-dir resolution.
+- Two existing static tests asserted the removed vboxuser candidates (`test_mcp_launcher_hardening.py`); they now assert the new ordering and the workspace expression. They tested the literals, not behaviour, so this is the intended change, not a gate bent.
+- Other `/home/` literals outside the three files: not searched for beyond these files (out of scope per the ticket).
+
+### Verification on u24desktop-Virtual-Machine (2026-10-12)
+`/home/u24desktop/Working` is a symlink to `/mnt/data/Working`; main checkout `/mnt/data/Working/rpg-based-simulation`; worktree `.claude/worktrees/agent-working`. Run with the worktree's own Makefile and scripts from each cwd:
+```
+== make -pn, cwd = main checkout
+KNOWLEDGE_MAIN_ROOT := /mnt/data/Working/rpg-based-simulation
+PYTHON3 := .venv/bin/python3                 (the main checkout's own .venv)
+== make -pn, cwd = worktree
+KNOWLEDGE_MAIN_ROOT := /mnt/data/Working/rpg-based-simulation
+PYTHON3 := /mnt/data/Working/rpg-based-simulation/.venv/bin/python3
+== echo '{"query":"session roles"}' | bash tools/start_search_mcp.sh --test   (both cwds)
+returns ranked results with the shared .venv-knowledge (score 0.0255, session-layer doc excerpt)
+== bash tools/start_headroom_mcp.sh --help   (both cwds)
+Usage: python -m headroom.cli mcp serve [OPTIONS]
+== headroom workspace expression, both cwds
+/mnt/data/Working/rpg-based-simulation/.headroom-workspace
+readlink -f /home/u24desktop/Working/rpg-based-simulation/.headroom-workspace -> same path
+```
+So the workspace is the same directory as the old literal, through the symlink; no headroom state is orphaned.
 
 ## Test Summary
+`pytest tests/tools/test_makefile_interpreter_selection.py tests/tools/test_no_host_paths_in_launchers.py tests/tools/test_mcp_launcher_hardening.py tests/tools/test_mcp_json_registration.py tests/tools/test_search_mcp.py`: pass. New: `PYTHON3` candidate-list test; a live test that builds a real git worktree and checks `make -pn` resolves the main checkout's `.venv` from it; the static no-`/home/` test over the three files.
 
 ## Files Changed
+Makefile, tools/start_headroom_mcp.sh, tools/start_search_mcp.sh, docs/guidelines/agent_working_environment.md, tests/tools/test_makefile_interpreter_selection.py, tests/tools/test_no_host_paths_in_launchers.py, tests/tools/test_mcp_launcher_hardening.py.
 
 ## Completion Summary
+The Makefile and both MCP launchers carry no host path; the main checkout is found through git. AC1-AC5 met. AC6 (lead-planner review of the Makefile diff) is a comment on the batch PR, pending. `.mcp.json` unchanged.
