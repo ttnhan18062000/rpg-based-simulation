@@ -405,6 +405,17 @@ search_health()
 
 No curl. No bash. Results arrive as a structured tool response directly in context.
 
+### One shared search model for the whole fleet (`TCK-20261012-SEARCH-MCP-SHARED-MODEL`)
+
+Every session's `search_mcp.py` used to load its own embedding model on its first query (about 600 MB each). The first session now starts one local server (`tools/search_shared.py serve`) and every later session asks it, so nine sessions hold about 1.2 GB instead of about 5.7 GB. Nothing to set up and nothing breaks without it:
+
+- **Same answers.** The server runs `search_mcp._search`, the very function the in-process path runs; the client also compares a hash of the result-deciding files (`search_mcp.py`, `search_shared.py`, `knowledge_search.py`, `hybrid_retrieval.py`) with the server's and searches in-process on a mismatch, so a server started from older code never answers.
+- **Fallback.** Any failure (no server, timeout, a bad answer, a state directory that is not private to your user) makes that call search in-process, as before. The staleness warning and the worktree index fallback do not depend on the server.
+- **Where it lives.** `$XDG_RUNTIME_DIR/rpg-search/<key>/` (outside the repo, `0700`; `<key>` is the sha256 of the index database's resolved path, so every worktree of a checkout shares one server): `server.json` (pid, port, token; `0600`), `lock`, `server.log`. It binds `127.0.0.1` on an OS-assigned port, requires the token, and exits after 30 idle minutes (`RPG_SEARCH_IDLE_SECONDS`), removing its state.
+- **Kill switch.** `RPG_SEARCH_SHARED=0` forces in-process search. `tests/tools` sets it for every test; no test starts a real detached server without `RPG_SEARCH_SHARED_ALLOW_TEST_SPAWN=1` and a tmp `XDG_RUNTIME_DIR`.
+- **Stopping one by hand:** `kill $(python3 -c 'import json,glob;print(json.load(open(glob.glob("'$XDG_RUNTIME_DIR'/rpg-search/*/server.json")[0]))["pid"])')`; the next search starts a fresh one.
+- The FastAPI `tools/search_server.py` (Docker, `make search-server-docker`) is a separate server with its own search path and different results; it is unchanged. Pointing it at the same core is an agent-working follow-up.
+
 ### When the index is stale
 
 Each worktree searches its own index (`agent-working/.index/knowledge-index/`), so a worktree on another branch, or one whose docs
