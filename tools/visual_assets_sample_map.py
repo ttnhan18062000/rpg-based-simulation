@@ -249,7 +249,16 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("render", help="draw a world with the rc-0009 runtime export: exact and alias views at x1 and x2, render_stats.json (and the page with --all)")
     r.add_argument("world", nargs="?")
     r.add_argument("--all", action="store_true")
+    sub.add_parser("evidence", help="write the committed x1 evidence crops under docs/assets/sample_map/ (at most 256 KiB in all)")
     args = parser.parse_args(argv)
+    if args.cmd == "evidence":
+        from tools import visual_assets_sample_map_render as render
+
+        sizes = render.write_evidence({w: build_data(w) for w in WORLDS}, render.Release(ensure_export()))
+        for name, size in sizes.items():
+            print(f"docs/assets/sample_map/{name}  {size} B")
+        print(f"total {sum(sizes.values())} B of {render.EVIDENCE_CAP_BYTES} B")
+        return 0
     if args.cmd == "keytable":
         print(keytable(list(WORLDS)))
         return 0

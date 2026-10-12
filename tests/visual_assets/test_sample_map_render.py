@@ -406,3 +406,28 @@ def test_the_page_names_the_view_of_every_number_and_labels_the_aliases(rendered
     page = r.write_page([stats], {data["world_id"]: data}, tmp_path).read_text()
     assert "Exact view (primary evidence)" in page and "unconfirmed: asset-planner proposal for rpg-planner (#519)" in page
     assert "never intaken, adopted or put in a release candidate" in page and "scaled to one 16 x 16 cell" in page
+
+
+# ---- the committed evidence (docs/assets/sample_map/) ----
+
+def test_the_committed_evidence_is_small_and_is_exactly_what_the_tool_produces(tmp_path):
+    from tools import visual_assets_sample_map as sm
+    from visual_assets.store import runtime_export
+
+    export = tmp_path / "runtime"
+    runtime_export.export_runtime("pilot", "rc-0009", export)
+    produced = r.evidence_files({w: sm.build_data(w) for w in sm.WORLDS}, r.Release(export))
+    committed = {p.name: p.read_bytes() for p in sorted(r.EVIDENCE_DIR.glob("*.png"))}
+    assert committed == produced  # regenerate with `python -m tools.visual_assets_sample_map evidence`
+    assert sum(len(b) for b in committed.values()) <= r.EVIDENCE_CAP_BYTES == 256 * 1024
+    assert sorted(committed) == sorted(f"{name}_{view}_x1.png" for name in r.EVIDENCE_CROPS for view in ("exact", "alias"))
+    docs_bytes = sum(p.stat().st_size for p in r.EVIDENCE_DIR.iterdir() if p.is_file())
+    assert docs_bytes <= r.EVIDENCE_CAP_BYTES  # the whole folder, README and gap report included
+
+
+def test_the_evidence_writer_refuses_a_total_over_the_cap(tmp_path, monkeypatch):
+    monkeypatch.setattr(r, "EVIDENCE_CAP_BYTES", 10)
+    monkeypatch.setattr(r, "evidence_files", lambda datas, release: {"a_exact_x1.png": b"x" * 11})
+    with pytest.raises(SystemExit):
+        r.write_evidence({}, object(), tmp_path)
+    assert list(tmp_path.iterdir()) == []

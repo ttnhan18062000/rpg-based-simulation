@@ -484,3 +484,46 @@ def write_page(results: list[dict], datas: dict[str, dict], out_root: Path | Non
     root.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(parts))
     return path
+
+
+# ---- committed evidence copies (the only thing of this batch under docs/): small x1 crops, at most 256 KiB in all ----
+
+EVIDENCE_DIR = REPO / "docs" / "assets" / "sample_map"
+EVIDENCE_CAP_BYTES = 256 * 1024
+# name -> (world, (x0, y0, x1, y1) in cells, half-open): where a gap shows best. Chosen from the data (see the README), not tuned for looks.
+EVIDENCE_CROPS = {
+    "frontier_town": ("frontier_living_world", (4, 8, 52, 40)),          # Hometown: town hall, shops, inn, blacksmith, healer, the CITY plate, wood node, herb patch
+    "highland_pass": ("highland_traverse", (80, 84, 128, 116)),          # the mountain pass: mountain and forest, an iron vein and a frost shard cluster
+    "dungeon_ruin": ("dungeon_crawl", (56, 76, 101, 116)),               # the ruin block, its place marker and the forest edge
+    "frontier_camp_ruin": ("frontier_living_world", (104, 24, 152, 56)),  # the goblin camp (CAMP place, berry thicket) and the haunted battlefield (RUIN place, ruin terrain)
+    "highland_river": ("highland_traverse", (124, 26, 172, 58)),         # River Ford: the river terrain, the watchtower and a herb patch
+}
+
+
+def crop_rows(canvas: list[bytearray], box: tuple[int, int, int, int]) -> list[bytearray]:
+    x0, y0, x1, y1 = box
+    return [bytearray(canvas[y][x0 * TILE * 4:x1 * TILE * 4]) for y in range(y0 * TILE, y1 * TILE)]
+
+
+def evidence_files(datas: dict[str, dict], release: Release) -> dict[str, bytes]:
+    """`<crop>_<view>_x1.png` for every crop and both views, drawn by the same code as the full renders."""
+    out: dict[str, bytes] = {}
+    for name, (world, box) in EVIDENCE_CROPS.items():
+        for view in ("exact", "alias"):
+            canvas, _ = draw_world(datas[world], release, view)
+            rows = crop_rows(canvas, box)
+            out[f"{name}_{view}_x1.png"] = encode_png((box[2] - box[0]) * TILE, (box[3] - box[1]) * TILE, rows)
+    return out
+
+
+def write_evidence(datas: dict[str, dict], release: Release, out_dir: Path | None = None) -> dict[str, int]:
+    """Write the evidence crops under `docs/assets/sample_map/` (or `out_dir` in a test); refuse when they exceed the cap."""
+    files = evidence_files(datas, release)
+    total = sum(len(b) for b in files.values())
+    if total > EVIDENCE_CAP_BYTES:
+        raise SystemExit(f"the evidence crops are {total} B, over the {EVIDENCE_CAP_BYTES} B cap; shrink a crop box, do not raise the cap")
+    target = out_dir or EVIDENCE_DIR
+    target.mkdir(parents=True, exist_ok=True)
+    for name, data in files.items():
+        (target / name).write_bytes(data)
+    return {name: len(data) for name, data in sorted(files.items())}
