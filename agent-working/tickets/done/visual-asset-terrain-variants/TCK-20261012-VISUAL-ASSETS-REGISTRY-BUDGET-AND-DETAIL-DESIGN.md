@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261012-VISUAL-ASSETS-REGISTRY-BUDGET-AND-DETAIL-DESIGN
-phase: open
+phase: done
 date: 2026-10-12
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Terrain variants: MAX_REGISTRY_BYTES budget review and the design for a detail axis on keys that already have adopted art
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -85,4 +85,5 @@ Measurement runs (`python -m tools.visual_assets_measure_budgets --only registry
 - `docs/assets/budgets.md` (dated re-measurement note, the 29,374 B correction), `docs/assets/sample_map/gap_report.md` (the corrected figure), `tools/visual_assets_measure_budgets.py` (generators to today's legal shape)
 
 ## Completion Summary
+DONE `e2f3565e4`. Budget review (registry 29,374 B corrected, worst legal case 80.2 % at 1.0 s) and the detail-axis design note, approved by the planner; the owner answered both open questions. No registry edit, no bound change.
 

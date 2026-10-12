@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES
-phase: open
+phase: done
 date: 2026-10-12
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Terrain variants: registry aliases for the V2 terrain names (plain, ruin, river) onto existing art
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -82,4 +82,5 @@ Nothing else is red. `test_v2_terrain_aliases.py` 7 passed; `test_budgets_parity
 - `visual_assets/catalog/definitions/visual_keys.yaml` (3 aliases, comment), `docs/assets/store_contract.md` (name rule section, Known gap), `tests/visual_assets/test_v2_terrain_aliases.py` (new), `tests/visual_assets/adopted_facts.py`, `tests/visual_assets/store/unit/test_registry.py`, `tests/visual_assets/test_sample_map_data.py`
 
 ## Completion Summary
+DONE `15288b81a`. Three registry-only aliases (`terrain.plain`, `terrain.ruin`, `terrain.river`) and the name -> key rule (lowercasing, so `PLAIN` and `plain` share one alias); the registry-only gap is a test and a Known gap. 16 tests were red until rc-0010, all turned green in `e772fca7c`.
 

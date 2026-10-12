@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261012-EPIC-VISUAL-ASSET-TERRAIN-VARIANTS
-phase: open
+phase: done
 date: 2026-10-12
 tags: [architecture, planning]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning]
 Visual asset terrain variants: V2 terrain aliases and about 14 detail variants for the terrains the sample worlds use
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -82,4 +82,5 @@ Planner's proposed split (14 tiles; the owner decides the values in child 3's bl
 
 
 ## Completion Summary
+All four children DONE on `visual-asset-terrain-variants` (off origin/main `6ba9083ef`), each approved by the planner: DESIGN `e2f3565e4`, ALIASES `15288b81a`, DRAFTS `5ef660231` + `cbbd22c2e`, RC-AND-CLOSE `e772fca7c` + `3bfedffbc`. Owner decisions: the 14 named features (2026-10-12), `adopt-set` of `terrain-variants-v1` (`sa-34445853fa87089b`), "Assemble rc-0010" (2026-10-13). Result: rc-0010 (87 entries) holds six terrain detail axes with 14 variants; registry 30,943 B (6.7 %); the sample map has no terrain gap offline (aliases are registry-only: a runtime consumer is needed at activation, and the client supports no variants live). Limits stated to the owner: each variant's feature sits at the same offset in its tile. Still open: G5 to G12, candidate A (markers, after #523 and this merge), the registry comment wording nit. No `src/` or `frontend/` change, no bound change, no new key.
 

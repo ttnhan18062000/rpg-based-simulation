@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANT-DRAFTS
-phase: open
+phase: done
 date: 2026-10-12
 tags: [architecture, testing, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, mcp]
 Terrain variants: detail axes on seven terrain keys, about 14 drawn variants, owner review folder and adopt-set
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -89,4 +89,5 @@ Planner's proposed split (14 tiles; the owner decides the values in child 3's bl
 - `visual_assets/catalog/definitions/visual_keys.yaml` (six detail axes), `visual_assets/drafts/terrain-variants-v1/` (the draft set, 14 drafts), `tests/visual_assets/closed_draft_fixture.py`, `tests/visual_assets/derived_runtime.py`, `tests/visual_assets/test_closed_details_rule.py` (new), `tests/visual_assets/adopted_facts.py`, `tests/visual_assets/store/unit/test_registry.py`, the staging scripts (variants spec, review builder)
 
 ## Completion Summary
+DONE `5ef660231` + `cbbd22c2e`. Owner chose the 14 named features; 14 variants drawn through the MCP, intake PASS, blind check 20 of 20 twice (one reader, a screen), reviewed by the owner as a whole set, who ran `adopt-set` (set-adoption `sa-34445853fa87089b`). Six detail axes declared; 12 tests broken by that were fixed by a pinned-key rule in the closed-fixture comparator and in `derived_runtime` (planner ruling, 10 new mutation tests); no fixture file or pin changed. The owner was told the variants' features sit at the same offset in every tile.
 

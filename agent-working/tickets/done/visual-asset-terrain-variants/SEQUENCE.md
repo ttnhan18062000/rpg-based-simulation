@@ -24,4 +24,4 @@ the user's `--admin`.
 
 ## Status
 
-OPEN (2026-10-12): filed and dispatched to asset-implementer.
+DONE (2026-10-13): all four children closed on `visual-asset-terrain-variants`; rc-0010 holds the 14 variants.
