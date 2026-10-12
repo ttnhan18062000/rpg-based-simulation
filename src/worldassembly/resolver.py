@@ -1210,6 +1210,7 @@ class CompileProfileResolver:
                 starting_gold=bld_def.starting_gold if bld_def else 0,
                 starting_stock=dict(bld_def.starting_stock) if bld_def else {},
                 maintenance_shifts=bld_def.maintenance_shifts if bld_def else 1,
+                hires_for_pay=bld_def.hires_for_pay if bld_def else False,
             ))
 
         return ctx

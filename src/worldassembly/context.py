@@ -15,6 +15,8 @@ def _empty_building_purse(profile: Any) -> Optional[set]:
     left_out = set() if (profile.starting_gold or profile.starting_stock) else {"starting_gold", "starting_stock"}
     if profile.maintenance_shifts == 1:
         left_out.add("maintenance_shifts")
+    if not profile.hires_for_pay:
+        left_out.add("hires_for_pay")
     return left_out or None
 
 

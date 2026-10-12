@@ -2490,7 +2490,7 @@
   proof_type: parity
   test_path: tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py
   divergence_note: 'Intentional divergence 2.102 (Intentional Gameplay Change).'
-  support_boundary: 'Dormant in the measured worlds while the free meal stands; ME-S20 is on the parked removal stack. Held out: the treasury wage for public town work (decision 37). People only (decisions 42 and 43): see 2.103.'
+  support_boundary: 'Dormant in the measured worlds while the free meal stands; ME-S20 is on the parked removal stack. The treasury-backed maintenance shift and the content-declared work set are TOWN-210. People only (decisions 42 and 43): see 2.103.'
 - id: TOWN-205
   text: 'A dead body leaves food (decision 44): at death, whatever the cause, a body whose kind declares meat in `edible_as` leaves `meat_yield`
     units of raw meat on its corpse. An eater eats an item only if its food class (plant, meat, prepared) is in its body diet (an undeclared
@@ -2520,7 +2520,7 @@
   divergence_note: 'Intentional divergence 2.108 (Intentional Gameplay Change).'
   support_boundary: 'Only HERO_GUILD owns regions in the shipped worlds. The account unit is the four-value legacy bucket.'
 - id: TOWN-207
-  text: 'Each functional building meets 5 gold of upkeep from its own purse on the upkeep tick (nothing is paid out to a payee); the holder''s treasury tops up only a shortfall; a building neither can pay is disabled and reopens when it can; no building tax is minted.'
+  text: 'Each functional building meets its upkeep (its maintenance shifts times the 6-gold wage, 6 for an ordinary building and 18 for the town hall) from its own purse on the upkeep tick (nothing is paid out to a payee); the holder''s treasury tops up only a shortfall; a building neither can pay is disabled and reopens when it can; no building tax is minted.'
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2549,3 +2549,13 @@
   test_path: tests/unit/resource/test_total_coin_is_conserved.py
   divergence_note: 'Intentional divergence 2.111 (Bug Fix, Intentional Gameplay Change).'
   support_boundary: 'Named heirlooms keep their separate CHEST grant.'
+- id: TOWN-210
+  text: 'The work a building offers is declared by its content, not by its kind in code: a maintenance shift while the building still needs shifts this upkeep period (`maintenance_shifts`, 1 for an ordinary building, 3 for the town hall), and commercial work (`hires_for_pay`, the inn). A maintenance shift pays the 6-gold wage from the building''s purse, the holding treasury topping up only a shortfall, and is counted on the building and refused past the need; a commercial shift is paid from the building''s own purse only. Maintenance is taken first while the count is below the need. The count resets each upkeep period. A subject looking for work is sent to the nearest building that offers a shift and can pay one.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/work_shift.py` (`offers_work`, `nearest_work`, `work_update`), `src/core/conservation.py` (`_wage_result`), `src/engine/town_resolution.py`, `src/core/state.py` (`BuildingState.maintenance_shifts_needed`, `maintenance_shifts_done`, `hires_for_pay`), `src/core/updates.py`, `src/engine/apply_plan.py`, `data/content/world/buildings.yaml`'
+  proof_type: parity
+  test_path: tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py
+  divergence_note: 'Intentional divergence 2.117 (Intentional Gameplay Change).'
+  support_boundary: 'Concurrent workers in one tick can each pass the need check before the count is applied, so a period can exceed its need by the number of simultaneous finishers. People only (decisions 42 and 43).'

@@ -39,6 +39,8 @@
   # keeps the food it cooks from.
   starting_gold: 100
   starting_stock: {travel_ration: 20, bread: 10}
+  # EXCH-02 (owner decision 34, ruling 66): the inn hires for pay, a shift paid from its OWN purse only (no treasury top-up).
+  hires_for_pay: true
 
 # STATE: ADDITIONAL
 - id: "watchtower"

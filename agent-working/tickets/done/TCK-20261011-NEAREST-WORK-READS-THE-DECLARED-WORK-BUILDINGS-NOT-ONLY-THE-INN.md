@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261011-NEAREST-WORK-READS-THE-DECLARED-WORK-BUILDINGS-NOT-ONLY-THE-INN
-phase: open
+phase: done
 date: 2026-10-11
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 A subject looking for paid work considers every building that declares a WORK shift, not only the inn, so a treasury building's upkeep pays maintenance wages (D58, memo row 61).
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -65,13 +65,13 @@ src/ai/goals/opening_steps.py, work_shift.py::nearest_work, building_services.py
 None.
 
 ## Implementation Notes
-Reassigned to Lane C (rpg-implementer-3) by rpg-planner 2026-10-11; branch rpg-nearest-work from rpg-fold-next fe1270233; goes in the PR after the fold. Staging artifacts (investigation, plan, test_plan) in agent-working/staging_artifacts/TCK-20261011-NEAREST-WORK-READS-THE-DECLARED-WORK-BUILDINGS-NOT-ONLY-THE-INN/. Design awaits rpg-planner's answer before code (BuildingState is a durable-state change).
+Built per the owner ruling (memo row 66) and rpg-planner's answers: content flags maintenance_shifts and hires_for_pay copied into BuildingState; WORK set derived from state (work_shift.offers_work), SERVICE_KINDS[WORK] and TREASURY_WORK_KINDS retired; maintenance first (treasury-backed, counted, capped in conservation._wage_result via ResourceTransferIntent.maintenance_shift), else commercial from the purse; upkeep = needed x WAGE_GOLD (MAINTENANCE_COST retired). Divergence 2.117, TOWN-210.
 
 ## Test Summary
-TBD
+Unit: work shift, tax and upkeep, maintenance counter; scenario: treasury upkeep; integration: regional sovereignty; forage scenario restaged. Broad non-slow run on this branch: 9119 passed; 4 failures, 3 fixed above (stale fixtures), 1 order-dependent that passes alone. Paired 5-seed measurement: path dormant while the free meal stands (0 wages).
 
 ## Files Changed
-TBD
+See the branch diff (src/content, core, engine, worldassembly, worldbuilding, data/content/world/buildings.yaml, resolved worlds, docs, tests).
 
 ## Completion Summary
-TBD
+Done on rpg-nearest-work. In-play wage effect is unmeasurable until the free-meal removal lands (disclosed in 2.117).

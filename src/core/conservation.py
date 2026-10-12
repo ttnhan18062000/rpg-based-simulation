@@ -74,13 +74,16 @@ def _tax_credit(intent: ResourceTransferIntent) -> Optional[TreasuryTransfer]:
 
 def _wage_result(state: Any, intent: ResourceTransferIntent, treasury_pending: Optional[Dict[str, float]] = None) -> TransactionResult:
     """EXCH-02: a wage is a transfer from the employer's own purse. A short purse pays nothing (the worker is unpaid, no coin appears), unless the
-    intent says the owning treasury funds a shortfall (``treasury_pays``, maintenance work at a treasury building, ruling 61): then the treasury tops
-    the purse up by exactly the shortfall first, and the treasury's net change (the top-up less any tax share) is one typed transfer."""
+    intent says the owning treasury funds a shortfall (``treasury_pays``, a maintenance shift, ruling 66): then the treasury tops the purse up by
+    exactly the shortfall first, and the treasury's net change (the top-up less any tax share) is one typed transfer. A maintenance shift is counted
+    on the building in the same transfer and is refused once the building has had the shifts it needs this period."""
     employer = state.buildings.get(intent.source_id)
     if employer is None or not employer.functional:
         return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
     if intent.gold_delta <= 0:
         return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
+    if intent.maintenance_shift and employer.maintenance_shifts_done >= employer.maintenance_shifts_needed:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)  # the period's maintenance is done: no more shifts are counted or paid
     shortfall = max(0, intent.gold_delta - employer.inventory.gold)
     faction = intent.treasury_faction
     if shortfall > 0 and not (intent.treasury_pays and faction is not None and can_pay(state.global_resources, faction, shortfall, treasury_pending)):
@@ -90,7 +93,8 @@ def _wage_result(state: Any, intent: ResourceTransferIntent, treasury_pending: O
     return TransactionResult(
         accepted=True,
         inventory_update=InventoryUpdate(gold_delta=intent.gold_delta - (tax.gold_delta if tax else 0)),
-        building_update=BuildingUpdate(building_id=employer.id, inventory=InventoryUpdate(gold_delta=shortfall - intent.gold_delta)),
+        building_update=BuildingUpdate(building_id=employer.id, inventory=InventoryUpdate(gold_delta=shortfall - intent.gold_delta),
+                                       maintenance_shifts_done_delta=1 if intent.maintenance_shift else 0),
         treasury_update=TreasuryTransfer(faction=faction, gold_delta=net) if net and faction is not None else None)
 
 

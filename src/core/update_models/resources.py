@@ -42,3 +42,5 @@ class ResourceTransferIntent:
     treasury_faction: Optional[int] = None
     treasury_gold: int = 0
     treasury_pays: bool = False
+    # A WAGE for a counted maintenance shift (EXCH-02, ruling 66): the transfer also counts the shift on the building, within what it still needs.
+    maintenance_shift: bool = False

@@ -390,7 +390,8 @@
       "starting_stock": {
         "travel_ration": 20,
         "bread": 10
-      }
+      },
+      "hires_for_pay": true
     },
     "healer_hut_0": {
       "hp": 450,

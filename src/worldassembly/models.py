@@ -75,6 +75,8 @@ class ResolvedBuildingProfile(BaseModel):
     starting_stock: Dict[str, int] = Field(default_factory=dict)
     # The maintenance shifts the building needs each upkeep period (BuildingDefinition, EXCH-02 ruling 61); the ordinary 1 is left out of the serialized context.
     maintenance_shifts: int = 1
+    # The building hires for pay from its own purse (BuildingDefinition.hires_for_pay, EXCH-02 ruling 66); false is left out of the serialized context.
+    hires_for_pay: bool = False
 
 
 class ResolvedResourceProfile(BaseModel):
