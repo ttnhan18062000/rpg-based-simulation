@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING, Dict
 
 from src.core.enums import Faction
 from src.core.treasury import treasury_key
-from src.engine.work_shift import WAGE_GOLD
 from src.core.updates import (
     BuildingUpdate,
     CombatUpdate,
     EntityUpdate,
     InventoryUpdate,
 )
+from src.engine.work_shift import WAGE_GOLD
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, BuildingState
