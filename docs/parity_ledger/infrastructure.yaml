@@ -12979,4 +12979,4 @@
   proof_type: contract
   test_path: tests/static/test_ci_perf_tripwire_step.py
   divergence_note: DEV-022 (Stabilized)
-  support_boundary: 'Report-only (OD-8). The 1.40 threshold stays provisional until the A/A calibration on the CI runner (workflow_dispatch) is recorded and the owner decides.'
+  support_boundary: 'Report-only (OD-8). The 1.40 threshold stays provisional; the CI-runner A/A calibration (workflow_dispatch) measured 0.025 and a tighter value is proposed to the owner, not applied.'
