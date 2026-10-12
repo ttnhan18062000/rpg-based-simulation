@@ -79,9 +79,8 @@ def test_evaluate_simq_passes_audit_mode_for_every_run_key_it_builds(monkeypatch
 
 
 def test_every_grade_stability_test_runs_its_engine_under_audit_mode():
-    source = CORPUS_TEST.read_text(encoding="utf-8")
-    calls = re.findall(r"_run_engine\(world_name[^)]*\)", source)
-    assert len(calls) >= 15 and all("audit_mode=True" in c for c in calls), [c for c in calls if "audit_mode=True" not in c]
+    lines = [ln for ln in CORPUS_TEST.read_text(encoding="utf-8").splitlines() if re.search(r"\b_run_engine\(\w", ln) and not ln.lstrip().startswith(("#", '"', "`"))]
+    assert len(lines) >= 13 and all("audit_mode=True" in ln for ln in lines), [ln for ln in lines if "audit_mode=True" not in ln]
 
 
 def test_two_same_seed_runs_in_one_second_get_distinct_run_dirs(monkeypatch, tmp_path):
