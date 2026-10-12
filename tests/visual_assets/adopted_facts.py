@@ -102,6 +102,11 @@ RC_0008_ICON_ENTRIES = 36
 # rc-0009 (the owner's answer, 2026-10-11: "Assemble rc-0009"): rc-0008's 70 entries, byte-identical, + one entry per real-art proof key, 73 in all, on the registry that carries the three keys.
 RC_0009_ENTRIES = 73
 # The V2 terrain aliases (`TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES`, owner answer on #523, 2026-10-12): registry-only, the documented mapping `review key-usage` shows.
+# The terrain detail axes of `TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANT-DRAFTS` (owner decision 2026-10-12): `base` (the art adopted before the axis) is the default; forest keeps plain/bush/tree and road has none.
+TERRAIN_VARIANT_AXES = {
+    "terrain.grassland": ("base", "tufts", "flowers", "clover", "bare"), "terrain.mountain": ("base", "crag", "scree"), "terrain.cave": ("base", "stalagmite", "rubble"),
+    "terrain.ruins": ("base", "moss", "fallen"), "terrain.swamp": ("base", "reeds", "puddle"), "terrain.shallow_water": ("base", "ripple", "pebbles"),
+}
 REGISTRY_ALIASES = {"terrain.plain": "terrain.grassland", "terrain.ruin": "terrain.ruins", "terrain.river": "terrain.shallow_water"}
 PROOF_KEYS = ["fx.campfire", "fx.selection_ring", "ui.panel_frame"]
 

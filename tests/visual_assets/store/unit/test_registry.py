@@ -60,7 +60,7 @@ def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_ot
         d = registry.keys[key]
         assert d.optional and d.family == "border" and d.variant_axes == () and d.detail.values == ("v1", "v2", "v3") and d.detail.default == "v1"
     others = [d for k, d in registry.keys.items() if k != "terrain.forest" and k not in borders and k not in icons and k not in v2.KEYS and k not in proof]
-    assert len(others) == 22 and all(d.optional and d.family == "terrain" and d.detail is None and d.variant_axes == () for d in others)
+    assert len(others) == 22 and all(d.optional and d.family == "terrain" and (d.detail is None if d.key not in af.TERRAIN_VARIANT_AXES else (d.detail.values, d.detail.default) == (af.TERRAIN_VARIANT_AXES[d.key], "base")) and d.variant_axes == () for d in others)
     forest = registry.keys["terrain.forest"]
     assert forest.family == "terrain" and forest.variant_axes == () and not forest.optional
     # the declared order is what the client picks over: the spread the user approved (64 x 64: plain 1354, bush 1397, tree 1345) was computed for it
