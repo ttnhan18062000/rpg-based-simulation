@@ -129,12 +129,15 @@ def test_an_alias_to_an_unregistered_key_is_refused():
         sm.key_rows(Counter({"river": 1}), "terrain.", KEYS, {"river": "terrain.not_registered"})
 
 
-def test_every_proposed_alias_names_a_registered_key_and_the_registry_has_no_alias():
+def test_every_proposed_alias_names_a_registered_key_and_the_registry_carries_exactly_the_three_v2_terrain_aliases():
     from visual_assets.store.catalog.registry import load_registry
 
     registry = load_registry(sm.REGISTRY_FILE)
     targets = {k for family in sm.PROPOSED_ALIASES.values() for k in family.values()}
-    assert targets <= set(registry.keys) and dict(registry.aliases) == {}  # the aliases live only in the sample-map data
+    from tests.visual_assets import adopted_facts as af
+
+    assert targets <= set(registry.keys) and dict(registry.aliases) == af.REGISTRY_ALIASES  # since `TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES` the three terrain proposals are registry aliases too
+    assert {f"terrain.{n.lower()}": k for n, k in sm.PROPOSED_ALIASES["terrain"].items()} == af.REGISTRY_ALIASES  # the proposals lowercased are exactly the registry's
     assert sm.ALIAS_LABEL == "unconfirmed: asset-planner proposal for rpg-planner (#519)"
 
 

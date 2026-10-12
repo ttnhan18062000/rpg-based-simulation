@@ -101,6 +101,8 @@ RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.j
 RC_0008_ICON_ENTRIES = 36
 # rc-0009 (the owner's answer, 2026-10-11: "Assemble rc-0009"): rc-0008's 70 entries, byte-identical, + one entry per real-art proof key, 73 in all, on the registry that carries the three keys.
 RC_0009_ENTRIES = 73
+# The V2 terrain aliases (`TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES`, owner answer on #523, 2026-10-12): registry-only, the documented mapping `review key-usage` shows.
+REGISTRY_ALIASES = {"terrain.plain": "terrain.grassland", "terrain.ruin": "terrain.ruins", "terrain.river": "terrain.shallow_water"}
 PROOF_KEYS = ["fx.campfire", "fx.selection_ring", "ui.panel_frame"]
 
 # The draft sets whose owner decision is recorded are CLOSED gates: their committed preview fixtures are the evidence of what the owner saw, so they are checked against the gate's own record

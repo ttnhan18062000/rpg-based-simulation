@@ -541,4 +541,11 @@ keys:
     optional: true
     safety_class: decorative
     fallback: {kind: "none"}
-aliases: []
+# Aliases (TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES, owner answer on #523, 2026-10-12): V2 terrain names are canonical and their art is reused through these aliases.
+# The name -> key rule is lower case with spaces to underscores, so `PLAIN` and `plain` both resolve through `terrain.plain` (a key cannot be upper case, `identities.py`); whether
+# `PLAIN` and `plain` stay two names is rpg's to dedupe (#523: no two V2 terrain names may differ only by case). REGISTRY-ONLY: no release, runtime export or client carries an alias
+# (the only consumer is `review key-usage`), so a runtime consumer is needed at activation; see `docs/assets/store_contract.md`, Known gaps.
+aliases:
+  - {alias: terrain.plain, target: terrain.grassland}
+  - {alias: terrain.ruin, target: terrain.ruins}
+  - {alias: terrain.river, target: terrain.shallow_water}

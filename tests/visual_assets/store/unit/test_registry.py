@@ -43,13 +43,14 @@ def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_ot
     borders = ["border.edge", "border.inner_corner", "border.outer_corner"]
     tiers = [f"icon.tier.{g}" for g in ("e", "d", "c", "b", "a", "s", "ss", "sss")]
     icons = ["icon.plate.location", "icon.marker.enemy_camp", "icon.building.blacksmith", "icon.class.warrior", *tiers, "icon.status.frame_buff", "icon.status.frame_debuff"]
+    from tests.visual_assets import adopted_facts as af
     from visual_assets.review import icon_v2_keys as v2
 
     proof = ["ui.panel_frame", "fx.selection_ring", "fx.campfire"]  # real-art proof keys (TCK-20261011-VISUAL-ASSETS-REAL-ART-KEYS)
     assert sorted(registry.keys) == sorted(expected + borders + icons + v2.KEYS + proof)
     for key in proof:
         d = registry.keys[key]
-        assert d.optional and d.family == key.split(".")[0] and d.safety_class == "decorative" and d.fallback.kind == "none" and d.variant_axes == () and d.detail is None and d.label is None and dict(registry.aliases) == {}
+        assert d.optional and d.family == key.split(".")[0] and d.safety_class == "decorative" and d.fallback.kind == "none" and d.variant_axes == () and d.detail is None and d.label is None
     sizes = {"icon.plate.location": 16, "icon.marker.enemy_camp": 16, "icon.building.blacksmith": 24, "icon.class.warrior": 24, "icon.status.frame_buff": 16, "icon.status.frame_debuff": 16, **dict.fromkeys(tiers, 8)}
     for key, size in {**sizes, **v2.SIZES}.items():
         d = registry.keys[key]
