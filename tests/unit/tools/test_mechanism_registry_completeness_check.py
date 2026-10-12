@@ -257,7 +257,9 @@ def test_wider_scope_numbers_pinned():
     # bound under `attributes_biology` (implemented_by ::hp_gain), so unbound_files and candidates are unchanged.
     # 334 -> 335 on 2026-10-13 (M0 gate H6, starvation-death record): +src/ai/goals/ways.py (the food ways in reach: a pure read and one enum);
     # src/observability/starvation_record.py is outside the scope globs. rpg-planner binds and recomputes at the fold.
-    assert wider["scope_files"] == 335
+    # 335 -> 338 on 2026-10-13 (code-health extractions, behaviour-free): +src/engine/run_identity.py (out of kernel.py),
+    # +src/worldassembly/spawn_position.py (out of resolver.py) and +src/core/update_models/buildings.py (BuildingUpdate out of updates.py).
+    assert wider["scope_files"] == 338
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -282,7 +284,9 @@ def test_wider_scope_numbers_pinned():
     # 240 -> 241 on 2026-10-11 (divergence 2.113): src/engine/tile_distance.py is an unbound leaf helper (one function).
     # 241 -> 246 on 2026-10-11 (hunting, diet gate and grazing): the five new helper modules above are unbound.
     # 246 -> 247 on 2026-10-13 (H6): src/ai/goals/ways.py is an unbound helper (a pure read); rpg-planner binds and recomputes at the fold.
-    assert wider["unbound_files"] == 247
+    # 247 -> 250 on 2026-10-13 (code-health extractions): the three moved-out modules above are unbound helpers; the code they hold was
+    # already unbound in its old module, and candidates are unchanged.
+    assert wider["unbound_files"] == 250
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
