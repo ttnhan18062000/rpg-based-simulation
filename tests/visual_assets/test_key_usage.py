@@ -106,7 +106,7 @@ def test_the_real_report_is_deterministic_read_only_and_describes_the_committed_
     first, second = ku.report_json(), ku.report_json()
     assert first == second and first.endswith("}\n")
     report = json.loads(first)
-    assert report["registry_keys"] == 62 and report["latest_release_candidate"].startswith("rc-")
+    assert report["registry_keys"] == 65 and report["latest_release_candidate"].startswith("rc-")
     assert set(report) >= {"unknown", "unreferenced", "adopted_unreleased", "fallback_only", "dynamic_references", "references", "released_keys"}
     assert "terrain.forest" in report["references"] and report["references"]["terrain.forest"]["harness"] >= 1
     assert all(k in report["released_keys"] for k in report["fallback_only"]) is False or report["fallback_only"] == []
@@ -122,4 +122,4 @@ def test_the_command_prints_the_report_exits_zero_and_changes_nothing(capsys, mo
     before = status()
     assert cli.main(["key-usage"]) == 0
     out = capsys.readouterr().out
-    assert json.loads(out)["registry_keys"] == 62 and status() == before
+    assert json.loads(out)["registry_keys"] == 65 and status() == before

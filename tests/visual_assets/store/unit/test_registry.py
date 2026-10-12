@@ -45,7 +45,11 @@ def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_ot
     icons = ["icon.plate.location", "icon.marker.enemy_camp", "icon.building.blacksmith", "icon.class.warrior", *tiers, "icon.status.frame_buff", "icon.status.frame_debuff"]
     from visual_assets.review import icon_v2_keys as v2
 
-    assert sorted(registry.keys) == sorted(expected + borders + icons + v2.KEYS) and dict(registry.aliases) == {}
+    proof = ["ui.panel_frame", "fx.selection_ring", "fx.campfire"]  # real-art proof keys (TCK-20261011-VISUAL-ASSETS-REAL-ART-KEYS)
+    assert sorted(registry.keys) == sorted(expected + borders + icons + v2.KEYS + proof)
+    for key in proof:
+        d = registry.keys[key]
+        assert d.optional and d.family == key.split(".")[0] and d.safety_class == "decorative" and d.fallback.kind == "none" and d.variant_axes == () and d.detail is None and d.label is None and dict(registry.aliases) == {}
     sizes = {"icon.plate.location": 16, "icon.marker.enemy_camp": 16, "icon.building.blacksmith": 24, "icon.class.warrior": 24, "icon.status.frame_buff": 16, "icon.status.frame_debuff": 16, **dict.fromkeys(tiers, 8)}
     for key, size in {**sizes, **v2.SIZES}.items():
         d = registry.keys[key]
@@ -54,7 +58,7 @@ def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_ot
     for key in borders:
         d = registry.keys[key]
         assert d.optional and d.family == "border" and d.variant_axes == () and d.detail.values == ("v1", "v2", "v3") and d.detail.default == "v1"
-    others = [d for k, d in registry.keys.items() if k != "terrain.forest" and k not in borders and k not in icons and k not in v2.KEYS]
+    others = [d for k, d in registry.keys.items() if k != "terrain.forest" and k not in borders and k not in icons and k not in v2.KEYS and k not in proof]
     assert len(others) == 22 and all(d.optional and d.family == "terrain" and d.detail is None and d.variant_axes == () for d in others)
     forest = registry.keys["terrain.forest"]
     assert forest.family == "terrain" and forest.variant_axes == () and not forest.optional
@@ -286,10 +290,10 @@ def test_fallback_problems_name_every_identifying_or_critical_key_left_without_a
 def test_the_committed_registry_carries_a_class_a_structured_fallback_and_35_labels_for_every_key():
     registry = load_registry()  # the real read path: every rule above applies to the committed file
     keys = registry.keys
-    assert len(keys) == 62 and all(d.safety_class and d.fallback for d in keys.values())
+    assert len(keys) == 65 and all(d.safety_class and d.fallback for d in keys.values())
     from collections import Counter
 
-    assert Counter((d.family, d.safety_class) for d in keys.values()) == Counter({("terrain", "identifying"): 23, ("border", "decorative"): 3, ("icon", "identifying"): 35, ("icon", "decorative"): 1})
+    assert Counter((d.family, d.safety_class) for d in keys.values()) == Counter({("terrain", "identifying"): 23, ("border", "decorative"): 3, ("icon", "identifying"): 35, ("icon", "decorative"): 1, ("ui", "decorative"): 1, ("fx", "decorative"): 2})
     labelled = {k: d.label for k, d in keys.items() if d.label is not None}
     assert len(labelled) == 35 and all(keys[k].label_key == f"label.{k}" for k in labelled) and "icon.plate.location" not in labelled
     assert labelled["icon.tier.sss"] == "Tier SSS" and labelled["icon.status.frame_debuff"] == "Harmful effect" and labelled["icon.item.consumable"] == "Consumable item"

@@ -3,22 +3,24 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-10
+date: 2026-10-12
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-implementer
 
-> Snapshot of the gitignored `.claude/handover/asset-implementer.md` taken on 2026-10-10 at the close of the slices batch (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-implementer.md`. Refreshed in `TCK-20261010-VISUAL-ASSETS-SLICES-DOCS-AND-CLOSE`.
+> Snapshot of the gitignored `.claude/handover/asset-implementer.md` taken on 2026-10-12 at the close of the sample-map batch (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-implementer.md`. Refreshed in `TCK-20261011-VISUAL-ASSETS-SAMPLE-MAP-GAP-REPORT`.
 
-Updated: 2026-10-10 (slices batch complete on `visual-asset-slices`, awaiting the user's push/PR decision)
+Updated: 2026-10-12 (real-art proof MERGED as PR #521 `5951fdb71`; sample-map batch COMPLETE on `visual-asset-sample-map`, awaiting the user's push/PR decision)
 
 ## Open
-- BATCH COMPLETE, NOT PUSHED: epic `TCK-20261010-EPIC-VISUAL-ASSET-SLICES`, branch `visual-asset-slices` in `/home/vboxuser/Work/rpg-aseprite-mcp` (four children committed and approved by asset-planner, owner approved ADR D25 and the bounds, tickets closed in `agent-working/tickets/done/visual-asset-slices/`, proof record re-run last). Next: the final suite numbers go to asset-planner, then ASK THE USER the push/PR question (never infer yes), then CI poll, then the separate `--admin` merge question pinned to the real head (re-fetch origin/main first; a bounded procedure the owner pre-authorizes must be stated with its path set).
-- What the batch built (for the PR): slices read from each source's slice chunks and stored per source revision (`SourceRecord.slices`, ADR D25, 16 slices / 16 keys), the opt-in `export-runtime --slices` (`slices.json`, exported-image pixels), the drawing tool's `set_slice` op (single key, replaces by name, every slice checked against the final canvas), the handoff's `slice_count` with `SLICE_COUNT_MISMATCH`. Earlier, in the store-tooling batch (PR #487, `231e35f77`): store lock + deletion log (D24), faster PNG decoder, release byte reproducibility, the local Aseprite proof record (D10 addendum), opt-in atlases and animation metadata, palettes as data, the bundle capture.
+- BATCH COMPLETE, NOT PUSHED: epic `TCK-20261011-EPIC-VISUAL-ASSET-SAMPLE-MAP` (3 children, closed in `agent-working/tickets/done/visual-asset-sample-map/`), branch `visual-asset-sample-map` in `/home/vboxuser/Work/rpg-aseprite-mcp`, upstream unset (off origin/main `5951fdb71`, which holds rc-0009). Built: `tools/visual_assets_sample_map.py` (`data`, `keytable`, `render`, `evidence`) and `tools/visual_assets_sample_map_render.py` (the border rule ported from `terrainBorders.ts`, proven on its test vectors, against its text and differentially against the real TS rule); three read-only data files and the exact and alias renders under the gitignored `reports/visual_assets/sample_map/`; `docs/assets/sample_map/` (README, gap report, ten x1 crops, 137,376 B of 256 KiB). Findings: 87.9 % of 73,808 sampled cells have no exact key (`PLAIN` 54,661, `plain` 5,578, `ruin`, `river`); `PLAIN` and `plain` coexist; the Live Map colours by a per-world index (rpg bug #523); #519 answered. The alias table is UNCONFIRMED (asset-planner's proposal for rpg-planner) and lives only in the data. Next: the numbers go to asset-planner (pre-check), then ASK THE USER the push/PR question, then CI poll, then the separate `--admin` merge question pinned to the real head.
+- NEXT BATCH (asset-planner, after this merges): candidate A, entity and object markers; it starts with the `MAX_REGISTRY_BYTES` budget review and waits for rpg's vocabulary answer (#523). Wait for the dispatch.
+- Process traps seen (also in memory): an unquoted heredoc eats backticks (quote it); `pkill -f` matches your own shell command; the full `tests/tools` is too long to run locally (run a `-k` subset and let CI's Tools lane cover it); the store's PNG decoder refuses images over `MAX_DECODED_BYTES`, so check big sheets through the header.
+- Merged: PR #471, #480, #487, #499 (slices, `595021d6d`). Those branches are finished: never push to them again.
+- What the slices batch built (for reference): slices read from each source's slice chunks and stored per source revision (`SourceRecord.slices`, ADR D25, 16 slices / 16 keys), the opt-in `export-runtime --slices` (`slices.json`, exported-image pixels), the drawing tool's `set_slice` op (single key, replaces by name, every slice checked against the final canvas), the handoff's `slice_count` with `SLICE_COUNT_MISMATCH`. Earlier, in the store-tooling batch (PR #487, `231e35f77`): store lock + deletion log (D24), faster PNG decoder, release byte reproducibility, the local Aseprite proof record (D10 addendum), opt-in atlases and animation metadata, palettes as data, the bundle capture.
 - The Lua of the drawing tool is hash-pinned: this batch re-pinned it (`python -m visual_assets.drawing.pin`); pin changes affect only newly built artifacts' fingerprints.
 - If the proof record goes stale again (any change under `visual_assets/store/**`, `drawing/**`, the build config, the marked tests or the two runner tools): re-run `make visual-assets-aseprite-local` once, as its own commit, after the LAST such change. Guarded files must be committed first.
-- Earlier batches merged: PR #471 (`0c3a5654b`), PR #480 (`cfad712cf`) and PR #487 (`231e35f77`). Those branches are finished: never push to them again.
 - Activation of adopted art is parked (owner, 2026-10-08) until the RPG core lands.
 
 ## State worth knowing
