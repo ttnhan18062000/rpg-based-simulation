@@ -72,19 +72,51 @@ def _tax_credit(intent: ResourceTransferIntent) -> Optional[TreasuryTransfer]:
     return TreasuryTransfer(faction=intent.treasury_faction, gold_delta=min(intent.treasury_gold, intent.gold_delta))
 
 
-def _wage_result(state: Any, intent: ResourceTransferIntent, treasury_pending: Optional[Dict[str, float]] = None) -> TransactionResult:
+def _pending(building_pending: Optional[Dict[int, Any]], building_id: int) -> Any:
+    """What this tick's accepted transactions have already staged on a building (the economy loop's running ``new_building_updates``), or None."""
+    return building_pending.get(building_id) if building_pending else None
+
+
+def _purse_now(building: Any, building_pending: Optional[Dict[int, Any]]) -> int:
+    """The building's coin as this tick stands so far: its start-of-tick purse plus what accepted transactions already staged. Every debit of a
+    purse reads this, not the start-of-tick balance, so a second transaction in one tick cannot spend coin a first one already took."""
+    staged = _pending(building_pending, building.id)
+    return building.inventory.gold + (staged.inventory.gold_delta if staged is not None and staged.inventory else 0)
+
+
+def _stock_now(building: Any, item_id: str, building_pending: Optional[Dict[int, Any]]) -> int:
+    """Units of `item_id` the building holds as this tick stands so far (start-of-tick stock plus what accepted transactions already staged)."""
+    have = sum(s.quantity for s in building.inventory.items if s.item_id == item_id)
+    staged = _pending(building_pending, building.id)
+    if staged is not None and staged.inventory:
+        have += sum(s.quantity for s in staged.inventory.items_add if s.item_id == item_id) - sum(s.quantity for s in staged.inventory.items_remove if s.item_id == item_id)
+    return have
+
+
+def _shifts_done_now(building: Any, building_pending: Optional[Dict[int, Any]]) -> int:
+    """Maintenance shifts counted this period as this tick stands so far (a staged period reset first, then the staged shifts)."""
+    staged = _pending(building_pending, building.id)
+    if staged is None:
+        return building.maintenance_shifts_done
+    base = staged.maintenance_shifts_done_set if staged.maintenance_shifts_done_set is not None else building.maintenance_shifts_done
+    return base + staged.maintenance_shifts_done_delta
+
+
+def _wage_result(state: Any, intent: ResourceTransferIntent, treasury_pending: Optional[Dict[str, float]] = None,
+                 building_pending: Optional[Dict[int, Any]] = None) -> TransactionResult:
     """EXCH-02: a wage is a transfer from the employer's own purse. A short purse pays nothing (the worker is unpaid, no coin appears), unless the
     intent says the owning treasury funds a shortfall (``treasury_pays``, a maintenance shift, ruling 66): then the treasury tops the purse up by
     exactly the shortfall first, and the treasury's net change (the top-up less any tax share) is one typed transfer. A maintenance shift is counted
-    on the building in the same transfer and is refused once the building has had the shifts it needs this period."""
+    on the building in the same transfer and is refused once the building has had the shifts it needs this period. The purse, the treasury and the
+    shift count are all read as this tick stands so far (``building_pending``, ``treasury_pending``), so wages granted earlier in the tick are spent."""
     employer = state.buildings.get(intent.source_id)
     if employer is None or not employer.functional:
         return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
     if intent.gold_delta <= 0:
         return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
-    if intent.maintenance_shift and employer.maintenance_shifts_done >= employer.maintenance_shifts_needed:
+    if intent.maintenance_shift and _shifts_done_now(employer, building_pending) >= employer.maintenance_shifts_needed:
         return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)  # the period's maintenance is done: no more shifts are counted or paid
-    shortfall = max(0, intent.gold_delta - employer.inventory.gold)
+    shortfall = max(0, intent.gold_delta - _purse_now(employer, building_pending))
     faction = intent.treasury_faction
     if shortfall > 0 and not (intent.treasury_pays and faction is not None and can_pay(state.global_resources, faction, shortfall, treasury_pending)):
         return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
@@ -200,12 +232,13 @@ def _fund_reward(result: TransactionResult, intent: ResourceTransferIntent, stat
     return replace(result, inventory_update=unpaid, owed=owed)
 
 
-def _shop_sell_result(state: Any, intent: ResourceTransferIntent, target_inventory: InventoryComponent) -> TransactionResult:
+def _shop_sell_result(state: Any, intent: ResourceTransferIntent, target_inventory: InventoryComponent,
+                      building_pending: Optional[Dict[int, Any]] = None) -> TransactionResult:
     """A sale at a shop (RPG-ECON-201): the shop pays the full price out of its own purse; the seller receives it minus the place holder's share."""
     building = state.buildings.get(intent.source_id)
     if not building or not building.functional:
         return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
-    if building.inventory.gold < intent.gold_delta:
+    if _purse_now(building, building_pending) < intent.gold_delta:
         return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
     for item in intent.items_remove:
         if sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id) < item.quantity:
@@ -251,7 +284,8 @@ class ResourceTransactionResolver:
         inventory_override: Optional[InventoryComponent] = None,
         node_overrides: Optional[Dict[int, ResourceNodeUpdate]] = None,
         reservations: Optional[Dict[tuple[str, str|int], int]] = None,
-        treasury_pending: Optional[Dict[str, float]] = None
+        treasury_pending: Optional[Dict[str, float]] = None,
+        building_pending: Optional[Dict[int, Any]] = None
     ) -> TransactionResult:
         """
         Validates an intent and produces the necessary updates.
@@ -368,8 +402,7 @@ class ResourceTransactionResolver:
             # 1. Capacity/Stock Check
             # RPG-ECON-200
             for item in intent.items_add:
-                have = sum(s.quantity for s in building.inventory.items if s.item_id == item.item_id)
-                if have < item.quantity:
+                if _stock_now(building, item.item_id, building_pending) < item.quantity:
                     return TransactionResult(accepted=False, reason=ReasonCode.OUT_OF_STOCK)
             
             # 2. Gold Check
@@ -394,10 +427,10 @@ class ResourceTransactionResolver:
             )
 
         elif intent.source_kind == "SHOP_SELL":
-            return _shop_sell_result(state, intent, target_inventory)
+            return _shop_sell_result(state, intent, target_inventory, building_pending)
 
         elif intent.source_kind == "WAGE":
-            return _wage_result(state, intent, treasury_pending)
+            return _wage_result(state, intent, treasury_pending, building_pending)
 
         elif intent.source_kind == "INHERIT":
             return _inherit_result(state, intent, inventory_full)

@@ -102,7 +102,8 @@ class ResourceTransactionSystem:
                             inventory_override=current_inventory,
                             node_overrides=new_node_updates,
                             reservations=reservations,
-                            treasury_pending=new_resource_updates
+                            treasury_pending=new_resource_updates,
+                            building_pending=new_building_updates
                         )
                         
                         if result.accepted:
@@ -173,7 +174,8 @@ class ResourceTransactionSystem:
                             inventory_override=group_current_inventory,
                             node_overrides=new_node_updates,
                             reservations=reservations,
-                            treasury_pending=new_resource_updates
+                            treasury_pending=new_resource_updates,
+                            building_pending=new_building_updates
                         )
                         trial_results.append((intent, res))
                         if not res.accepted:
@@ -343,10 +345,7 @@ class ResourceTransactionSystem:
             b_id = result.building_update.building_id
             existing = buildings.get(b_id)
             if existing:
-                new_inv = existing.inventory
-                if result.building_update.inventory:
-                    new_inv = new_inv.merge(result.building_update.inventory) if new_inv else result.building_update.inventory
-                buildings[b_id] = replace(existing, inventory=new_inv)
+                buildings[b_id] = existing.merge(result.building_update)  # every field: the shift count and the reset must survive a second update to a building
             else:
                 buildings[b_id] = result.building_update
 
