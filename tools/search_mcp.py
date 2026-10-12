@@ -17,7 +17,6 @@ import os
 import sqlite3
 import subprocess
 import sys
-from dataclasses import dataclass, field
 from pathlib import Path
 
 # Use locally cached HuggingFace models — avoids SSL cert failures on networks
@@ -96,12 +95,32 @@ _MODEL_NAME: str = _ks._MODEL_NAME
 
 
 # ── Lazy-loaded state (model loaded on first search_docs call) ────────────────
-@dataclass
 class _State:
-    model: object = None
-    bm25: object = None
-    doc_ids: list = field(default_factory=list)
-    ready: bool = False
+    """Lazy-loaded search state. The lexical index is ONE immutable `(bm25, doc_ids)` pair published by a single
+    reference swap, and a search reads it once at entry, so a reload (the shared server rebuilds it when the index
+    changes) can never give a search the new BM25 with the old document ids (TCK-20261012-SEARCH-MCP-SHARED-MODEL)."""
+
+    def __init__(self) -> None:
+        self.model: object = None
+        self.lexical: tuple[object, list] = (None, [])
+        self.ready: bool = False
+
+    @property
+    def bm25(self) -> object:
+        return self.lexical[0]
+
+    @bm25.setter
+    def bm25(self, value: object) -> None:
+        self.lexical = (value, self.lexical[1])
+
+    @property
+    def doc_ids(self) -> list:
+        return self.lexical[1]
+
+    @doc_ids.setter
+    def doc_ids(self, value: list) -> None:
+        self.lexical = (self.lexical[0], value)
+
 
 _STATE = _State()
 
@@ -115,7 +134,7 @@ def _ensure_loaded() -> bool:
     try:
         from sentence_transformers import SentenceTransformer
         _STATE.model = SentenceTransformer(_MODEL_NAME)
-        _STATE.bm25, _STATE.doc_ids = _ks._load_bm25(_BM25_PATH)
+        _STATE.lexical = tuple(_ks._load_bm25(_BM25_PATH))
         _STATE.ready = True
         return True
     except Exception:
@@ -155,6 +174,7 @@ def _search(query: str, top_k: int = 8, section: str | None = None,
     if not query.strip():
         return []
 
+    bm25, doc_ids = _STATE.lexical  # read once: one generation for the whole search
     query_tokens = _ks._tokenize(query)
     try:
         q_vec = _STATE.model.encode(query).tolist()
@@ -174,8 +194,8 @@ def _search(query: str, top_k: int = 8, section: str | None = None,
             conn=con,
             query_vec_bytes=q_bytes,
             query_tokens=query_tokens,
-            bm25_obj=_STATE.bm25,
-            bm25_doc_ids=_STATE.doc_ids,
+            bm25_obj=bm25,
+            bm25_doc_ids=doc_ids,
             top_k=top_k,
         )
     except Exception:

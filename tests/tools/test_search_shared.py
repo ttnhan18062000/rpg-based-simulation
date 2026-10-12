@@ -311,8 +311,7 @@ def test_the_server_reloads_bm25_when_the_index_is_rebuilt(tmp_path):
             return "bm25", ["d"]
 
     class State:
-        bm25 = None
-        doc_ids: list = []
+        lexical: tuple = (None, [])
 
     class Mcp:
         _DB_PATH = db
@@ -327,4 +326,79 @@ def test_the_server_reloads_bm25_when_the_index_is_rebuilt(tmp_path):
     os.utime(db, (time.time() + 10, time.time() + 10))
     search("b")
     search("c")
-    assert loads == [1] and State.bm25 == "bm25"
+    assert loads == [1] and State.lexical == ("bm25", ["d"])
+
+
+def test_a_reload_during_a_search_in_flight_never_mixes_generations(tmp_path):
+    """The in-flight search keeps the generation it read at entry; the reload publishes a new one by a single swap and
+    does not wait for it; the next search sees the new one. The interleaving is forced with Events, not timing."""
+    db = tmp_path / "knowledge.db"
+    db.write_bytes(b"1")
+    in_search, release = threading.Event(), threading.Event()
+    seen: dict[str, tuple] = {}
+    loads = {"n": 0}
+
+    class Ks:
+        @staticmethod
+        def _load_bm25(path: object) -> list:
+            loads["n"] += 1
+            return [f"bm25-gen{loads['n']}", [f"ids-gen{loads['n']}"]]
+
+    class State:
+        lexical = ("bm25-gen0", ["ids-gen0"])
+
+    def search_fn(query: str, **kw: object) -> list:
+        bm25, ids = State.lexical  # read once at entry, as search_mcp._search does
+        if query == "slow":
+            in_search.set()
+            assert release.wait(5)
+        seen[query] = (bm25, ids[0])
+        return [query]
+
+    class Mcp:
+        _DB_PATH = db
+        _BM25_PATH = tmp_path / "bm25.pkl"
+        _ks = Ks
+        _STATE = State
+        _search = staticmethod(search_fn)
+
+    search = ss._reloading(Mcp)
+    slow = threading.Thread(target=search, args=("slow",))
+    slow.start()
+    assert in_search.wait(5)
+    os.utime(db, (time.time() + 10, time.time() + 10))
+    search("fast")  # reloads while "slow" is parked inside its search, and must not wait for it
+    assert loads["n"] == 1 and seen["fast"] == ("bm25-gen1", "ids-gen1")
+    release.set()
+    slow.join(5)
+    assert seen["slow"] == ("bm25-gen0", "ids-gen0")  # old generation, whole: never bm25-gen0 with ids-gen1
+    assert isinstance(State.lexical, tuple)
+
+
+def test_the_server_refuses_to_serve_a_database_other_than_the_one_it_searches(tmp_path, monkeypatch, capsys):
+    class Mcp:
+        _DB_PATH = tmp_path / "searched.db"
+
+        @staticmethod
+        def _ensure_loaded() -> bool:
+            pytest.fail("must refuse before loading the model")
+
+    monkeypatch.setattr(ss, "_load_search_mcp", lambda: Mcp)
+    assert ss._main(["serve", "--db", str(tmp_path / "other.db")]) == 1
+    assert "refusing to serve" in capsys.readouterr().err
+
+
+def test_the_server_accepts_the_database_it_searches_under_any_spelling(tmp_path, monkeypatch):
+    real = tmp_path / "real"
+    real.mkdir()
+    (tmp_path / "alias").symlink_to(real)
+
+    class Mcp:
+        _DB_PATH = real / "knowledge.db"
+
+        @staticmethod
+        def _ensure_loaded() -> bool:
+            return False  # stop right after the identity check passed
+
+    monkeypatch.setattr(ss, "_load_search_mcp", lambda: Mcp)
+    assert ss._main(["serve", "--db", str(tmp_path / "alias" / "knowledge.db")]) == 1  # reached _ensure_loaded

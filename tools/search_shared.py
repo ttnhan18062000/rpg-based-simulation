@@ -378,6 +378,9 @@ def _main(argv: list[str]) -> int:
         print("usage: search_shared.py serve --db <knowledge.db>", file=sys.stderr)
         return 2
     mcp = _load_search_mcp()
+    if Path(argv[2]).resolve() != Path(mcp._DB_PATH).resolve():
+        print(f"[search_shared] refusing to serve {argv[2]}: this code searches {mcp._DB_PATH}", file=sys.stderr)
+        return 1
     if not mcp._ensure_loaded():  # loads the model and BM25 before the port is announced
         print("[search_shared] index or model not available; not serving", file=sys.stderr)
         return 1
@@ -387,16 +390,20 @@ def _main(argv: list[str]) -> int:
 
 
 def _reloading(mcp: object) -> Callable[..., list | dict]:
-    """`mcp._search`, preceded by a BM25 reload when the index was rebuilt (the model does not depend on the index)."""
+    """`mcp._search`, preceded by a BM25 reload when the index was rebuilt (the model does not depend on the index).
+
+    The new generation is built completely and published with ONE reference swap (`_STATE.lexical`); a search reads
+    that reference once at entry, so a reload never mixes generations and never blocks a search in flight."""
     lock = threading.Lock()
     seen = {"mtime": _mtime(mcp._DB_PATH)}
 
     def search(query: str, **kwargs: object) -> list | dict:
         current = _mtime(mcp._DB_PATH)
-        with lock:
-            if current != seen["mtime"]:
-                mcp._STATE.bm25, mcp._STATE.doc_ids = mcp._ks._load_bm25(mcp._BM25_PATH)
-                seen["mtime"] = current
+        if current != seen["mtime"]:
+            with lock:
+                if current != seen["mtime"]:
+                    mcp._STATE.lexical = tuple(mcp._ks._load_bm25(mcp._BM25_PATH))
+                    seen["mtime"] = current
         return mcp._search(query, **kwargs)
 
     return search
