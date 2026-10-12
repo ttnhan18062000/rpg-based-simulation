@@ -212,6 +212,33 @@ def keytable(worlds: list[str]) -> str:
     return "\n".join(lines)
 
 
+def ensure_export() -> Path:
+    """The rc-0009 runtime export under the report directory (written once, with the store's own `export-runtime`, which refuses an existing directory)."""
+    from tools.visual_assets_sample_map_render import EXPORT_DIR
+
+    if not (EXPORT_DIR / "runtime_manifest.json").is_file():
+        from visual_assets.store import runtime_export
+
+        runtime_export.export_runtime("pilot", "rc-0009", EXPORT_DIR)
+    return EXPORT_DIR
+
+
+def render_command(worlds: list[str], *, page: bool) -> int:
+    from tools import visual_assets_sample_map_render as render
+
+    release = render.Release(ensure_export())
+    results, datas = [], {}
+    for w in worlds:
+        data = build_data(w)
+        datas[w] = data
+        out = output_path(w).parent
+        results.append(render.render_world(data, release, out))
+        print(out.relative_to(REPO))
+    if page:
+        print(render.write_page(results, datas).relative_to(REPO))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="visual_assets_sample_map", description=__doc__.split("\n")[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -219,6 +246,9 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("world", nargs="?")
     d.add_argument("--all", action="store_true")
     sub.add_parser("keytable", help="print the terrain name -> key table over the chosen worlds")
+    r = sub.add_parser("render", help="draw a world with the rc-0009 runtime export: exact and alias views at x1 and x2, render_stats.json (and the page with --all)")
+    r.add_argument("world", nargs="?")
+    r.add_argument("--all", action="store_true")
     args = parser.parse_args(argv)
     if args.cmd == "keytable":
         print(keytable(list(WORLDS)))
@@ -226,6 +256,8 @@ def main(argv: list[str] | None = None) -> int:
     worlds = list(WORLDS) if args.all else [args.world]
     if not all(worlds):
         parser.error("give a world or --all")
+    if args.cmd == "render":
+        return render_command(worlds, page=args.all)
     for w in worlds:
         print(write_world(w).relative_to(REPO))
     return 0
