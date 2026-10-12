@@ -1,9 +1,9 @@
-"""Small durable records of the world's coin and bodies (EXCH-02): a body that can be looted, and a debt a treasury owes. They live in
-`AuthoritativeState.corpses` and `AuthoritativeState.owed`; `src/core/state.py` re-exports them."""
+"""Small durable records of the world's coin and bodies (EXCH-02): a body that can be looted, an item or coin purse on the ground, and a debt a
+treasury owes. They live in `AuthoritativeState.corpses`, `.ground_items` and `.owed`; `src/core/state.py` re-exports them."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from src.core.models.inventory import ItemStack
 
@@ -67,3 +67,40 @@ def fold_owed(prior: Dict[str, OwedRecord], removed: List[str], added: List[Owed
     merged = {k: v for k, v in prior.items() if k not in gone}
     merged.update({rec.id: rec for rec in added})
     return merged
+
+
+@dataclass(frozen=True, slots=True)
+class GroundItemState:
+    """An item, or coin, left on the ground. A purse is a stack with no item (``quantity`` 0) and ``gold`` > 0: coin lies where it fell (EXCH-02,
+    ruling 61) with its provenance, whose body it fell from (``source_entity_id``) and when (``dropped_tick``)."""
+    id: int
+    item_id: str
+    quantity: int
+    position: tuple[float, float]
+    gold: int = 0
+    source_entity_id: Optional[int] = None
+    dropped_tick: int = 0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+    _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "_readonly_cache", self)
+
+    def stack(self) -> List["ItemStack"]:
+        """The item stack this holds (none for a coin purse)."""
+        return [ItemStack(self.item_id, self.quantity)] if self.quantity > 0 else []
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        """The ground item (or coin purse) as plain sorted-key data for hashing and checkpoints; gold fields appear only for a purse."""
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "id": self.id,
+            "item_id": self.item_id,
+            "quantity": self.quantity,
+            "position": self.position
+        }
+        if self.gold:
+            res.update(gold=self.gold, source_entity_id=self.source_entity_id, dropped_tick=self.dropped_tick)
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
