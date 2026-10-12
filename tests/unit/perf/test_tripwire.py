@@ -8,7 +8,7 @@ from typing import Dict, List
 
 import pytest
 
-from src.perf.benchmark_record import OutcomeState, PercentileMethod, Thresholds
+from src.perf.benchmark_record import Outcome, OutcomeState, PercentileMethod, Thresholds
 from src.config.profiles import SignalContract
 from tests.unit.perf.test_benchmark_record import make_record, replace_identity
 from tools.agent_working_paths import TICKETS
@@ -212,3 +212,33 @@ def test_a_real_paired_run_writes_a_report_and_exits_zero(tmp_path, capsys) -> N
     assert scenario["outcome"]["state"] in {"PASS", "REGRESSION", "INCONCLUSIVE"}
     assert scenario["first"]["base_avg_ms"] > 0 and scenario["first"]["head_avg_ms"] > 0
     assert "::" in capsys.readouterr().out  # an annotation line
+
+
+# ── the CI report: provenance and the step-summary table (PERF-M2-T03B) ────────────────────────────────────────────────────────────
+
+
+def test_the_report_records_both_shas_and_the_cpu_model(tmp_path) -> None:
+    result = tw.run_scenario("s", SPEC, BASE, HEAD, Thresholds(0.25, 5.0), fake_spawn({"base": [100.0] * 5, "head": [101.0] * 5}, []))
+    doc = tw.report([result], prov=tw.provenance(Path(__file__).resolve().parents[3], Path(__file__).resolve().parents[3]))
+    assert set(doc["provenance"]) == {"base_sha", "head_sha", "cpu_model"}
+    assert doc["provenance"]["base_sha"] == doc["provenance"]["head_sha"] and doc["provenance"]["cpu_model"]
+    assert doc["blocking"] is False
+
+
+def test_the_summary_table_names_every_scenario_the_shas_and_that_it_blocks_nothing() -> None:
+    results = [
+        tw.run_scenario("fast", SPEC, BASE, HEAD, Thresholds(0.25, 5.0), fake_spawn({"base": [100.0] * 5, "head": [101.0] * 5}, [])),
+        tw.run_scenario("slow", SPEC, BASE, HEAD, Thresholds(0.25, 5.0), fake_spawn({"base": [100.0] * 5, "head": [300.0] * 5}, [])),
+    ]
+    text = tw.summary_markdown(tw.report(results, prov={"base_sha": "aaa", "head_sha": "bbb", "cpu_model": "Test CPU"}))
+    assert "`aaa`" in text and "`bbb`" in text and "Test CPU" in text and "blocks nothing" in text
+    assert "| fast | PASS |" in text and "| slow | REGRESSION |" in text
+
+
+def test_main_writes_the_summary_file_and_exits_zero_on_a_regression(tmp_path, monkeypatch) -> None:
+    regress = [tw.ScenarioResult("slow", tw.Attempt(Outcome(OutcomeState.REGRESSION, "r"), 100.0, 300.0), None, Outcome(OutcomeState.REGRESSION, "head slower"))]
+    monkeypatch.setattr(tw, "run_all", lambda *a, **k: regress)
+    summary = tmp_path / "summary.md"
+    code = tw.main(["run", "--base", str(tmp_path), "--head", str(tmp_path), "--out-dir", str(tmp_path / "out"), "--summary", str(summary)])
+    assert code == 0 and "| slow | REGRESSION |" in summary.read_text(encoding="utf-8")
+    assert (tmp_path / "out" / "report.json").exists()

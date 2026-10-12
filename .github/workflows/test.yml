@@ -884,6 +884,10 @@ jobs:
   perf-cert-arena:
     name: "Perf / cert / arena"
     runs-on: ubuntu-latest
+    # TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP (testing-planner's condition 1, issue 488): the paired tripwire below runs a base side too, so a hung
+    # run must fail the job instead of holding the runner. Sized from the p95 of this job over 11 recent successful pull_request runs: 262 s
+    # (4.4 min; range 161-262 s). 2 x p95 plus headroom for the paired step (two scenarios, base and head, one retry each: a few minutes) = 15.
+    timeout-minutes: 15
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
@@ -920,6 +924,45 @@ jobs:
                    tests/mechanic_scenarios \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
+      # ── Paired perf tripwire (TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP; owner decision OD-2, report-only OD-8) ──
+      # REPORT-ONLY: a tripwire REGRESSION or INCONCLUSIVE never fails this job. tools/perf/tripwire.py exits 0 whatever the outcomes and 1 only when it
+      # could not run (infrastructure: a crash, a missing checkout); the timeout above covers a hang. The verdict goes to the step summary and the
+      # `perf-tripwire` artifact (report.json: base and head SHA, runner CPU model, per-scenario outcomes). The base is the PR's base SHA, never
+      # HEAD~1; on any other event there is no base, so the step is skipped and says so.
+      - name: Perf tripwire base checkout
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: perf-base
+      - name: Perf tripwire (paired, report-only)
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "### Perf tripwire" >> "$GITHUB_STEP_SUMMARY"
+            echo "Skipped: this is a \`${{ github.event_name }}\` run, not a pull_request, so there is no base SHA to pair with (the tripwire never guesses HEAD~1)." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [ ! -f perf-base/src/perf/benchmark_record.py ]; then
+            echo "### Perf tripwire" >> "$GITHUB_STEP_SUMMARY"
+            echo "SKIPPED: the base commit predates the benchmark record (PERF-M2-T02b), so its side cannot be measured." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 tools/perf/tripwire.py run --base perf-base --head . --out-dir reports/perf/tripwire \
+                 --summary "$GITHUB_STEP_SUMMARY" --github-annotations
+      - name: Perf tripwire artifact
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-tripwire
+          path: reports/perf/tripwire/
+          if-no-files-found: ignore
+      # A/A noise measurement on this runner (the recalibration PERF-M2-T03B asks for): `gh workflow run test.yml --ref <branch>`. Not a PR step.
+      - name: Perf tripwire A/A calibration (manual dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          mkdir -p reports/perf
+          python3 tools/perf/tripwire.py calibrate --trials 8 > reports/perf/tripwire-calibration.json
+          { echo "### Perf tripwire A/A calibration"; echo "runner: $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2- | xargs), $(nproc) vCPU"; echo '```json'; cat reports/perf/tripwire-calibration.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Job summary
         if: always()
         run: python3 tools/ci_junit_summary.py "reports/junit/perf-cert-arena.xml" "perf-cert-arena" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"

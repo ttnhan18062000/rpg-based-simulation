@@ -37,7 +37,7 @@ if str(_SELF_ROOT) not in sys.path:  # run as a script, ``tools`` is not importa
 from tools.perf import baseline_lifecycle, capacity_run  # noqa: E402
 from tools.perf.capacity_run import REPO_ROOT, CapacityRunError, RunSpec  # noqa: E402
 
-from src.perf.benchmark_record import BenchmarkRecord, Outcome, OutcomeState, Thresholds, compare  # noqa: E402
+from src.perf.benchmark_record import BenchmarkRecord, Outcome, OutcomeState, Thresholds, compare, cpu_model, git_state  # noqa: E402
 
 WARMUP_TICKS = 10
 SAMPLE_TICKS = 50
@@ -147,9 +147,34 @@ def _attempt_dict(attempt: Optional[Attempt]) -> Optional[Dict[str, Any]]:
     }
 
 
-def report(results: Sequence[ScenarioResult], thresholds: Thresholds = TRIPWIRE_THRESHOLDS) -> Dict[str, Any]:
+def provenance(base_root: Path, head_root: Path) -> Dict[str, str]:
+    """What the paired run was: both commits and the CPU of the runner (the two sides share one machine)."""
+    return {"base_sha": git_state(base_root)[0], "head_sha": git_state(head_root)[0], "cpu_model": cpu_model()}
+
+
+def summary_markdown(doc: Dict[str, Any]) -> str:
+    """The step-summary table for a report: one row per scenario, with both SHAs and the CPU model above it. Report-only, so it says so."""
+    prov = doc.get("provenance", {})
+    lines = [
+        "### Perf tripwire (paired base/head, report-only)",
+        "",
+        f"base `{prov.get('base_sha', '?')}` / head `{prov.get('head_sha', '?')}` on {prov.get('cpu_model', '?')}. It blocks nothing and makes no capacity claim.",
+        "",
+        "| scenario | outcome | reason |",
+        "|---|---|---|",
+    ]
+    for item in doc["scenarios"]:
+        reason = item["outcome"]["reason"].replace("|", "/").replace("\n", " ")
+        lines.append(f"| {item['name']} | {item['outcome']['state']} | {reason} |")
+    return "\n".join(lines) + "\n"
+
+
+def report(
+    results: Sequence[ScenarioResult], thresholds: Thresholds = TRIPWIRE_THRESHOLDS, prov: Optional[Dict[str, str]] = None
+) -> Dict[str, Any]:
     """The machine-readable report. ``blocking`` is always false: a tripwire outcome never fails a build (OD-8)."""
     return {
+        "provenance": prov or {},
         "projection": "tripwire_paired",
         "blocking": False,
         "claim": capacity_run.NO_CLAIM,
@@ -243,6 +268,7 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--head", type=Path, default=REPO_ROOT, help="the head checkout (default: this one)")
     run.add_argument("--scenario", action="append", help="limit to this declared scenario (repeatable)")
     run.add_argument("--out-dir", type=Path)
+    run.add_argument("--summary", type=Path, help="append the markdown verdict table to this file (a CI step summary)")
     run.add_argument("--github-annotations", action="store_true", help="print ::warning/::notice lines")
     cal = sub.add_parser("calibrate", help="A/A noise measurement on this checkout")
     cal.add_argument("--trials", type=int, default=5)
@@ -263,7 +289,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     results = run_all(args.base, args.head, chosen)
     out_dir = args.out_dir or REPO_ROOT / "reports" / "perf" / "tripwire" / (datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "_" + uuid.uuid4().hex[:6])
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "report.json").write_text(json.dumps(report(results), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    doc = report(results, prov=provenance(args.base, args.head))
+    (out_dir / "report.json").write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if args.summary:
+        with args.summary.open("a", encoding="utf-8") as handle:
+            handle.write(summary_markdown(doc))
     for r in results:
         print(f"{r.name}: {r.outcome.state.value}: {r.outcome.reason}")
     if args.github_annotations:
