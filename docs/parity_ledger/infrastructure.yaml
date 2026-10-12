@@ -12958,3 +12958,14 @@
   divergence_note: DEV-022 (Stabilized)
   support_boundary: Nothing is blocking (OD-8). The CI wiring (.github/workflows/test.yml) is not changed here; it waits for testing-planner (issue 488). The threshold values (max(5 ms, base x 1.40)) are owner-approved as provisional
     (2026-10-10) in docs/engine/performance_contract.md section 5 and must be recalibrated on the CI runner; the noise budget measured here is 0.35. The declared set is two synthetic scenarios; combat and the corpus worlds are PERF-M2-T08.
+
+- id: INFRA-434
+  text: 'TCK-20261010-PERF-M2-T05B-KNOWN-DEBT-LEDGER: the perf known-debt ledger docs/performance/known_debt_ledger.yaml is loaded and linted through the shared known-reds module (tools/test_architecture/known_reds.py) with perf''s own RegistrySpec PERF_DEBT_SPEC (top key known_debt, strict fields). Entries carry owner, ticket, added_on, expires_on and kind; the optional expected_signature is <STATE>:<check> in a closed vocabulary (a non-pass OutcomeState and a compare() check name), and a malformed one is a lint error. The ledger is empty until a lane has an owned red.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/perf/known_debt.py (PERF_DEBT_SPEC, lint_ledger); docs/performance/known_debt_ledger.yaml
+  proof_type: contract
+  test_path: tests/unit/perf/test_known_debt.py
+  divergence_note: null
+  support_boundary: Report-only (OD-8): nothing consumes the ledger to gate a lane yet; T06 conformance and T08 add the first entries and the matching of a real outcome against an entry.
