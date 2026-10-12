@@ -87,11 +87,8 @@ contract with 2+ broken pairs, and every pair must appear.
 - `handoff_to_rpg.md`: one line. Contracts are blocking from this merge, so a new layer break fails `Code health`;
   fix it in your PR, or ask the codebase planner for a baseline entry with a reason. Condition 3 still open (or answered).
 
-## Ticket 2: `TCK-20261019-MYPY-EXACT-PIN` (hotfix, chore, P3)
-Owner decision 2026-10-10, via lead-planner, who owns `pyproject.toml` since #476 and acked this exact edit. In
-the dev group, change `"mypy"` to `"mypy==2.1.0"` (the version `uv.lock` already resolves). Proof: `uv lock --check`
-with no diff, and `make typecheck-py` with 0 new errors. If the lock no longer says 2.1.0 on 10-19, pin what the lock
-says and report it. Don't upgrade.
+## (Moved) Ticket 2: mypy exact pin
+T2 landed standalone as `TCK-20261012-MYPY-DEV-PIN` (PR #N, branch `mypy-dev-pin`), with one `uv.lock` metadata line. It is no longer in this batch.
 
 ## (Moved) Parity-ledger baseline tighten
 Moved out of this batch on 2026-10-10. It ships now, with the closure of `TCK-20261003-PARITY-LEDGER-REMEDIATION-EPIC` (owner decision 2026-10-10).
