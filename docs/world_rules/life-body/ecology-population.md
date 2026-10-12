@@ -60,6 +60,19 @@ the batch instruction's own explicit flag ("individual deaths not affecting popu
 finding is a fact about the current repository, not a restatement of the Rule; the Rule remains
 a standing requirement for whichever future mechanism eventually closes this gap.
 
+- **Measured consequence, and its sequencing (decided by the owner directly, 2026-10-13; row 67
+  of the memo):** once hunting and grazing landed, wild plant-eaters died out by the hunt
+  because no living creature is born. Lane A, relayed by rpg-planner: 3 worlds, seeds 42-44,
+  5,000 ticks; 6 plant-eaters fell to 0.3-1.0 alive, extinct in 4 of 9 runs; every death was a
+  kill (people 19, wolves 16, lizardfolk 6, orcs 5), and none starved. **Milestone 0 reports
+  this and does not grade it**, and the stop line on a kind dying out in every seed stays.
+  **Milestone 1 adds basic wild births:** a well-fed creature with a mate of its own kind nearby
+  has young at a rate its kind declares (content, decisions 46 and 50), and the young must eat,
+  so food and hunting set the numbers. That is the individual-event link this Rule asks for,
+  starting with the wild. **Alternatives not taken:** births before the gate (every population
+  number moves and the gate waits); topping herds up by spawning, which makes animals from
+  nothing (validity check V1).
+
 **Scenarios:** [LB-S12](../scenarios/life-body-batch-05.md#lb-s12) (population decline —
 scored against this finding, not assumed to pass).
 
