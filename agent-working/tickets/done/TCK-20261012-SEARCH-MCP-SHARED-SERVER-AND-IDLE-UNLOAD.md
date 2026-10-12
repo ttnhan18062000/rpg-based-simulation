@@ -129,7 +129,7 @@ loaded while sessions are active.
 Implementer (2026-10-12): see the stored plan. `tools/search_core.py` is new (shared `rank()`); `search_server.py` and `search_mcp.py` call it. Measured RSS (u24desktop): 24 MB before the first query, 598 MB after it, 434 MB after the idle unload, 30 MB on the shared-server path (server process 622 MB). The idle unload frees the model and BM25 (~164 MB) but not the imported torch libraries, so the larger saving is the proxy path; the ticket's "state why it frees memory" is answered in `_release_memory` (dropping the references frees the weights, `malloc_trim` returns glibc's small-block arenas) and the numbers above are the proof of how much.
 
 ## Test Summary
-`tests/tools/test_search_shared_path.py` (new, 24 cases), `test_search_mcp.py`, `test_search_server.py` pass; `pytest tests/tools -k "search or mcp or knowledge"`: 292 passed, 35 skipped. `.mcp.json` diff empty (AC8). Live run against `uvicorn tools.search_server:app` on :8765: same top ids on both paths, proxy path loaded no model. Not verified: Docker image; a live index mismatch (unit-tested).
+`tests/tools/test_search_shared_path.py` (new, 23 cases), `test_search_mcp.py`, `test_search_server.py` pass; `pytest tests/tools -k "search or mcp or knowledge"`: 292 passed, 35 skipped. `.mcp.json` diff empty (AC8). Live run against `uvicorn tools.search_server:app` on :8765: same top ids on both paths, proxy path loaded no model. Not verified: Docker image; a live index mismatch (unit-tested).
 
 ## Files Changed
 tools/search_core.py (new), tools/search_mcp.py, tools/search_server.py, docs/guidelines/agent_working_environment.md, tests/tools/test_search_shared_path.py (new), tests/tools/test_search_server.py (removed `_make_excerpt` tests with the helper).
