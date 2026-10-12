@@ -3,6 +3,7 @@
 # so draft set `terrain-v1` can name them (TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET); nothing is adopted for them and no release needs them. Key = `terrain.` + the snake_case name.
 # The `icon.*` family: 14 optional keys of the key set (D20) plus 22 of icon set v2; see the comments above them.
 # The `border.*` family (3 optional keys, D19) is not terrain: shared mask shapes for the fringes between terrains, kept in the same draft set so one `adopt-set` covers tiles and masks.
+# The `ui.*` and `fx.*` keys (3 optional keys, TCK-20261011-VISUAL-ASSETS-REAL-ART-KEYS): proof sources for real art that exercises slices (9-slice, pivot) and animation (frames, a tag) against the store bounds. Keys only: no schema field, no client use, nothing adopted until the owner decides.
 record_type: visual_key_registry
 schema_version: 1
 keys:
@@ -519,4 +520,25 @@ keys:
     fallback: {kind: "text", text: "the item type as text"}
     label_key: label.icon.item.material
     label: "Material item"
+  - key: ui.panel_frame
+    family: ui
+    description: HUD panel border proof source, one 24x24 image with a 9-slice centre; decorative, the panel draws without it
+    variant_axes: []
+    optional: true
+    safety_class: decorative
+    fallback: {kind: "none"}
+  - key: fx.selection_ring
+    family: fx
+    description: Selected-unit ring proof source, 32x32 with 8 frames and a centre pivot; decorative, an unmarked unit stays selectable
+    variant_axes: []
+    optional: true
+    safety_class: decorative
+    fallback: {kind: "none"}
+  - key: fx.campfire
+    family: fx
+    description: Campfire proof source, 64x64 with 16 frames (the animation frame maximum) and a base pivot; decorative, the heaviest animated source we would draw
+    variant_axes: []
+    optional: true
+    safety_class: decorative
+    fallback: {kind: "none"}
 aliases: []

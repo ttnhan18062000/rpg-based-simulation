@@ -1,0 +1,3 @@
+ui.panel_frame in-a60055155aaf773c src 421 dim 24 24 frames 1 tags 0 slices 1 SourceRecord 520 intake 672 preview 828 192x192 pkg 1159
+fx.selection_ring in-4023376bcfb08add src 1919 dim 32 32 frames 8 tags 1 slices 1 SourceRecord 666 intake 672 preview 881 256x256 pkg 1188
+fx.campfire in-01dc468da4fc8235 src 10154 dim 64 64 frames 16 tags 1 slices 1 SourceRecord 680 intake 672 preview 3397 512x512 pkg 1223
