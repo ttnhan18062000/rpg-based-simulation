@@ -40,16 +40,19 @@ def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
         return None
     tile = service_tile(context, (int(entity.navigation.position[0]), int(entity.navigation.position[1])), kinds)
     building = SpatialQueryService.get_building_at(context, tile) if tile is not None else None
-    return building if building is not None and building.functional else None
+    if building is None or not building.functional or not serves(context, entity, building):
+        return None  # one predicate for every route (rest, meal, sale, repair): the trait and the place's relationship, never a kind name (decision 43)
+    return building
 
 
 def service_delta(context: Any, entity: Any, action: str, tick: int) -> Optional[EntityUpdate]:
     """What the building service for `action` adds to the subject's update, or None (no such building in reach, or nothing to deliver).
 
-    A bed and an inn meal are as they were on main (free meals stay on, owner decision 44): the effects are on the update, the price is a
-    charge the resolver clamps at what the subject holds, and the building's purse is credited with what was actually paid."""
+    A bed and an inn meal are as they were on main (free meals stay on until M0 step 4, owner decision 44): the effects are on the update, the price is a
+    charge the resolver clamps at what the subject holds, and the building's purse is credited with what was actually paid. The building is found only
+    for a subject it serves (`service_building`)."""
     building = service_building(context, entity, action)
-    if building is None or (action == "SELL" and not serves(context, entity, building)) or (action == "EAT" and not can_use_inn_meal(entity)):
+    if building is None or (action == "EAT" and not can_use_inn_meal(entity)):
         return None  # an inn does not serve a meal to a diet without prepared food (decision 44), however the subject came to stand there
     if action == "REST":
         charge = ResourceTransferIntent(source_id=building.id, source_kind="TOWN_SERVICE", gold_delta=-REST_PRICE_GOLD, transfer_kind="REST",
