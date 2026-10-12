@@ -13,10 +13,10 @@ deterministic probe and then an expanding search — never a shared constant —
 position is no longer walkable.
 
 Batch B's TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION mechanism
-(src/worldassembly/resolver.py's `_resolve_spawn_position`) is NOT reused directly: it requires a
+(src/worldassembly/spawn_position.py's `resolve_spawn_position`) is NOT reused directly: it requires a
 `spawn_region` string, which no survivor has (see
-TCK-20260911-ENTITYSPAWNCONTEXT-SPAWN-REGION-THREADING-GAP). `_DECONFLICT_PROBE_OFFSETS` and
-`_hash_point_in_bounds` — the region-agnostic pieces — are reused directly.
+TCK-20260911-ENTITYSPAWNCONTEXT-SPAWN-REGION-THREADING-GAP). `DECONFLICT_PROBE_OFFSETS` and
+`hash_point_in_bounds` — the region-agnostic pieces — are reused directly.
 """
 from __future__ import annotations
 
@@ -25,7 +25,10 @@ from typing import Dict, Optional, Tuple
 
 from src.core.state import EntityState
 from src.engine.legality import LegalityServiceV2
-from src.worldassembly.resolver import _DECONFLICT_PROBE_OFFSETS, _hash_point_in_bounds
+from src.worldassembly.spawn_position import (
+    DECONFLICT_PROBE_OFFSETS,
+    hash_point_in_bounds,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +116,7 @@ def resolve_survivor_position(
 
     Chain: carried `last_position` (or a deterministic per-entity fallback origin if missing,
     e.g. a survivor carried forward before this field existed) -> `verify_occupancy()` -> a
-    deterministic probe (`_DECONFLICT_PROBE_OFFSETS`) -> an expanding growing-radius search,
+    deterministic probe (`DECONFLICT_PROBE_OFFSETS`) -> an expanding growing-radius search,
     clamped to `[0, world_width-1] x [0, world_height-1]` (a world-level clamp, not a region one
     — this fix anchors on last-known-position, not an authored region) -> if genuinely exhausted,
     a logged warning and the last-probed candidate anyway, mirroring `compiler.py`'s own
@@ -132,14 +135,14 @@ def resolve_survivor_position(
     if last_position is not None:
         origin = clamp(int(last_position[0]), int(last_position[1]))
     else:
-        origin = clamp(*_hash_point_in_bounds(f"survivor_{entity_id}", (0, 0, max_x, max_y)))
+        origin = clamp(*hash_point_in_bounds(f"survivor_{entity_id}", (0, 0, max_x, max_y)))
 
     ok, _reason = LegalityServiceV2.verify_occupancy(origin, ctx, ignore_entity_id=entity_id)
     if ok:
         return (float(origin[0]), float(origin[1]))
 
     last_candidate = origin
-    for dx, dy in _DECONFLICT_PROBE_OFFSETS:
+    for dx, dy in DECONFLICT_PROBE_OFFSETS:
         candidate = clamp(origin[0] + dx, origin[1] + dy)
         last_candidate = candidate
         ok, _reason = LegalityServiceV2.verify_occupancy(candidate, ctx, ignore_entity_id=entity_id)

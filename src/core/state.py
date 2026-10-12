@@ -18,7 +18,7 @@ from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
 from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent, ItemInstance, AcquiredMethod
 from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
-from src.core.models.world_records import CorpseState, OwedRecord  # noqa: F401  (re-exported: state.py is where callers import them from)
+from src.core.models.world_records import CorpseState, GroundItemState, OwedRecord  # noqa: F401  (re-exported: state.py is where callers import them from)
 from src.core.immutability import shallow_freeze
 from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
@@ -1225,41 +1225,6 @@ class ResourceNodeState:
         }
         if self.regrowth_mode != "none":
             res["regrowth_mode"] = self.regrowth_mode  # left out for the default so every existing node hashes as before
-        object.__setattr__(self, "_canonical_cache", res)
-        return res
-
-@dataclass(frozen=True, slots=True)
-class GroundItemState:
-    """An item, or coin, left on the ground. A purse is a stack with no item (``quantity`` 0) and ``gold`` > 0: coin lies where it fell (EXCH-02,
-    ruling 61) with its provenance, whose body it fell from (``source_entity_id``) and when (``dropped_tick``)."""
-    id: int
-    item_id: str
-    quantity: int
-    position: tuple[float, float]
-    gold: int = 0
-    source_entity_id: Optional[int] = None
-    dropped_tick: int = 0
-    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
-    _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
-
-    def __post_init__(self):
-        object.__setattr__(self, "_readonly_cache", self)
-
-    def stack(self) -> List["ItemStack"]:
-        """The item stack this holds (none for a coin purse)."""
-        return [ItemStack(self.item_id, self.quantity)] if self.quantity > 0 else []
-
-    def to_canonical_dict(self) -> Dict[str, Any]:
-        if self._canonical_cache is not None:
-            return self._canonical_cache
-        res = {
-            "id": self.id,
-            "item_id": self.item_id,
-            "quantity": self.quantity,
-            "position": self.position
-        }
-        if self.gold:
-            res.update(gold=self.gold, source_entity_id=self.source_entity_id, dropped_tick=self.dropped_tick)
         object.__setattr__(self, "_canonical_cache", res)
         return res
 

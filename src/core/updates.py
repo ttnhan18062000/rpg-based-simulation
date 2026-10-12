@@ -19,6 +19,7 @@ from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage, 
 from src.core.models.social import RelationshipRole
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode, DiplomaticState
+from src.core.update_models.buildings import BuildingUpdate  # noqa: F401  (re-exported: updates.py is where callers import it from)
 from src.core.update_models.inventory import InventoryUpdate, ItemInstanceUpdate
 from src.core.update_models.quests import QuestUpdate
 from src.core.update_models.resources import ResourceTransferIntent
@@ -806,40 +807,6 @@ class ResourceNodeUpdate:
             charges_delta=self.charges_delta + other.charges_delta,
             cooldown_set=other.cooldown_set if other.cooldown_set is not None else self.cooldown_set
         )
-
-
-@dataclass(frozen=True, slots=True)
-class BuildingUpdate:
-    """Updates to building health/status."""
-    building_id: int
-    hp_delta: int = 0
-    functional_set: Optional[bool] = None
-    inventory: Optional[InventoryUpdate] = None
-    price_modifiers_set: Optional[Dict[str, float]] = None
-    # Maintenance shifts done this upkeep period (EXCH-02, ruling 61): a paid shift adds to the counter (``delta``) and the period reset sets it
-    # to 0 (``set``). The apply path applies the set first, then the delta, so a reset on the tick a shift is paid cannot lose that shift.
-    maintenance_shifts_done_delta: int = 0
-    maintenance_shifts_done_set: Optional[int] = None
-
-    def merge(self, other: BuildingUpdate) -> BuildingUpdate:
-        if self.building_id != other.building_id:
-            raise ValueError("Cannot merge BuildingUpdates for different buildings")
-        
-        merged_inventory = self.inventory
-        if self.inventory and other.inventory:
-            merged_inventory = self.inventory.merge(other.inventory)
-        elif other.inventory:
-            merged_inventory = other.inventory
-
-        return replace(self,
-            hp_delta=self.hp_delta + other.hp_delta,
-            functional_set=other.functional_set if other.functional_set is not None else self.functional_set,
-            inventory=merged_inventory,
-            price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set,
-            maintenance_shifts_done_delta=self.maintenance_shifts_done_delta + other.maintenance_shifts_done_delta,
-            maintenance_shifts_done_set=other.maintenance_shifts_done_set if other.maintenance_shifts_done_set is not None else self.maintenance_shifts_done_set,
-        )
-
 
 
 #: In-band sentinel meaning "set the region's owner to None (unowned)".

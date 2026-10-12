@@ -192,7 +192,7 @@ survive past `WorldEntitySpawner.spawn_from_context()`.** That method hardcodes
 `EntitySpawnContext(spawn_region=None, ...)`, so no campaign-spawned entity's `spawn_region` ever
 reaches `EntityCarryForward`, `StrategicComponent.home_region_id`, or anywhere else on the live
 entity — reusing `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`'s
-`_resolve_spawn_position()` directly is not available; it requires a `spawn_region` string no
+`resolve_spawn_position()` (`src/worldassembly/spawn_position.py`) directly is not available; it requires a `spawn_region` string no
 survivor has. Recovering it would need new wiring across `entity_spawner.py` +
 `archetype_factory.py` + a new `EntityCarryForward` field (see the newly-filed threading-gap
 ticket below) — a materially bigger change than this entry originally implied.
@@ -200,7 +200,7 @@ ticket below) — a materially bigger change than this entry originally implied.
 The wiring fix instead carries each survivor's own `entity.navigation.position` (their real last
 position when the episode ended, already computed live by the simulation) into a new
 `EntityCarryForward.last_position` field, reused at reconstruction with a light deconfliction pass
-(`_DECONFLICT_PROBE_OFFSETS`, no region-bounds machinery needed). This is both the cheaper fix and
+(`DECONFLICT_PROBE_OFFSETS`, no region-bounds machinery needed). This is both the cheaper fix and
 the one the data actually supports.
 
 **Second correction, also found before implementation started**: region *bounds* are authored and

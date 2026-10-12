@@ -6,9 +6,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, List, Dict, Optional, Any
 import json
-import os
 import time
-import uuid
 import logging
 import gc
 from pathlib import Path
@@ -18,9 +16,9 @@ from src.core.updates import StateUpdate, EntityUpdate
 from src.core.governance import RuntimeMode
 from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
-from src.core.enums import Domain
 
 from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_source, signal_contract_record
+from src.engine.run_identity import create_run_directory, new_run_id
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
 
@@ -34,12 +32,6 @@ if TYPE_CHECKING:
     from src.engine.replay_manager import ReplayManager
 
 logger = logging.getLogger(__name__)
-
-
-def default_run_id(seeded_suffix: int) -> str:
-    """A run id no other process can also pick: the wall-clock second, the seeded suffix (kept so ids stay recognisable), the process id and a
-    NON-seeded nonce. The run id is a name only; it is in no state hash and draws nothing from the simulation RNG."""
-    return f"run_{int(time.time())}_{seeded_suffix}_{os.getpid()}_{uuid.uuid4().hex[:8]}"
 
 
 class Kernel:
@@ -149,8 +141,7 @@ class Kernel:
         self._run_id = run_id
         self._run_id_is_default = run_id is None
         if self._run_id is None:
-            _run_suffix = self._rng.get_int(Domain.INIT, 0, 0, 1000, 9999)  # stateless: a pure function of the seed, so it moves no other draw
-            self._run_id = default_run_id(_run_suffix)
+            self._run_id = new_run_id(self._rng)
 
         self._artifact_repo = None
         if obs_mode != ObservabilityMode.OFF:
@@ -186,7 +177,7 @@ class Kernel:
                 state_hash=None,
                 signal_contract=signal_contract_record(profile, self._audit_mode),
             )
-            self._run_id = self._create_run_directory(self._artifact_repo, str(self._run_id), manifest)
+            self._run_id = create_run_directory(self._artifact_repo, str(self._run_id), manifest, is_default=self._run_id_is_default, rng=self._rng)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
 
         self._replay = self._init_replay(profile, replay, self._run_id)
@@ -1149,20 +1140,6 @@ class Kernel:
             ), self._current_policy)
             
         self._replay.on_tick_end(self._state.tick)
-
-    def _create_run_directory(self, repo: Any, run_id: str, manifest: Any) -> str:
-        """Create the run directory and return the run id actually used. An explicit run id may replace its own directory (the caller named it). A
-        default id never touches an existing directory: it takes a fresh id and tries again, so two processes can never share one."""
-        if not self._run_id_is_default:
-            repo.create_run(run_id, manifest, overwrite=True)
-            return run_id
-        for _attempt in range(8):
-            try:
-                repo.create_run(run_id, manifest.model_copy(update={"run_id": run_id}), overwrite=False)
-                return run_id
-            except FileExistsError:
-                run_id = default_run_id(self._rng.get_int(Domain.INIT, 0, 0, 1000, 9999))
-        raise FileExistsError(f"no unused default run directory after 8 attempts (last id {run_id})")
 
     def shutdown(self, timeout_s: float = 5.0) -> ShutdownResult:
         from src.core.lifecycle import ShutdownReport
