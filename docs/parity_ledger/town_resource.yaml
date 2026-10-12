@@ -2558,4 +2558,4 @@
   proof_type: parity
   test_path: tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py
   divergence_note: 'Intentional divergence 2.117 (Intentional Gameplay Change).'
-  support_boundary: 'Concurrent workers in one tick can each pass the need check before the count is applied, so a period can exceed its need by the number of simultaneous finishers. People only (decisions 42 and 43).'
+  support_boundary: 'The need, the purse and the treasury are checked as the tick stands so far, in entity-id order, so simultaneous finishers are exact. People only (decisions 42 and 43).'
