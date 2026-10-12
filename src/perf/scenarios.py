@@ -286,6 +286,14 @@ def build_strategic_state(
     )
 
 
+def _first_free_tile(wanted: tuple[float, float], occupied: set[tuple[float, float]]) -> tuple[float, float]:
+    """``wanted`` when no object holds it, else the first tile at increasing y (same x) that none does. Deterministic: no randomness, no ordering input."""
+    x, y = wanted
+    while (x, y) in occupied:
+        y += 1.0
+    return x, y
+
+
 def build_mixed_state(
     *,
     entity_count: int,
@@ -304,14 +312,20 @@ def build_mixed_state(
     state_res = build_resource_state(entity_count=0, node_count=node_count, seed=seed + 2)
     
     entities = {**state_idle.entities}
+    # The three builders use independent coordinate schemes, so a monster can land on a hero's or a resource node's tile (LAW-SPAWN-OCCUPANCY,
+    # TCK-20261004-PERF-SCENARIO-MIXED-STATE-SPAWN-COLLISION). Heroes and nodes keep their tiles; a monster on a taken tile moves along y to the first free one.
+    occupied = {tuple(h.navigation.position) for h in entities.values()}
+    occupied |= {tuple(node.position) for node in state_res.resource_nodes.values()}
     # Offset monster IDs to avoid collision
     for eid, monster in state_combat.entities.items():
         new_id = hero_count + eid
+        x, y = _first_free_tile(tuple(monster.navigation.position), occupied)
+        occupied.add((x, y))
         entities[new_id] = (
             V2EntityBuilder(new_id)
             .replace_identity(monster.identity)
             .replace_combat(monster.combat)
-            .location(*monster.navigation.position)
+            .location(x, y)
             .build()
         )
         
