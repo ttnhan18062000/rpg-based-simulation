@@ -13,25 +13,15 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from src.core.updates import EntityUpdate, InteractionUpdate, ResourceTransferIntent
 from src.core.treasury import can_pay
-from src.engine.building_services import service_building
+from src.core.updates import EntityUpdate, InteractionUpdate, ResourceTransferIntent
+from src.engine.building_services import maintenance_open, offers_work, service_building
 from src.engine.place_tax import building_holder, tax_on
-from src.engine.serves import nearest_serving, serves
+from src.engine.serves import serves
 
 SHIFT_TICKS = 200
 WAGE_GOLD = 6
 SHIFT_START = "shift_start"  # the tick the shift began, carried by the held WORK task's payload
-
-
-def maintenance_open(building: Any) -> bool:
-    """True when `building` still needs maintenance shifts this upkeep period (EXCH-02, ruling 66)."""
-    return building.maintenance_shifts_done < building.maintenance_shifts_needed
-
-
-def offers_work(building: Any) -> bool:
-    """True when `building` offers a shift now: maintenance it still needs, or commercial work it declares (``hires_for_pay``). No building name."""
-    return building.functional and (maintenance_open(building) or building.hires_for_pay)
 
 
 def _can_pay_shift(state: Any, building: Any) -> bool:

@@ -25,14 +25,23 @@ from src.engine.shop_sale import plan_sale
 from src.engine.spatial_query import SpatialQueryService
 
 # The building kinds that serve an action. WORK is not here: the work a building offers is declared by its state (content ``hires_for_pay`` and
-# ``maintenance_shifts``, EXCH-02 ruling 66), see ``work_shift.offers_work``; no building name is in code (D56).
+# ``maintenance_shifts``, EXCH-02 ruling 66), see ``offers_work``; no building name is in code (D56).
 SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"}), "SELL": frozenset({"shop"}), "REPAIR": frozenset({"blacksmith"})}
+
+
+def maintenance_open(building: Any) -> bool:
+    """True when `building` still needs maintenance shifts this upkeep period (EXCH-02, ruling 66)."""
+    return bool(building.maintenance_shifts_done < building.maintenance_shifts_needed)
+
+
+def offers_work(building: Any) -> bool:
+    """True when `building` offers a shift now: maintenance it still needs, or commercial work it declares (``hires_for_pay``). No building name."""
+    return bool(building.functional and (maintenance_open(building) or building.hires_for_pay))
 
 
 def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
     """The functional building (of the kinds that serve `action`) the subject stands on or orthogonally beside, or None."""
     if action == "WORK":
-        from src.engine.work_shift import offers_work  # work_shift imports this module
         found = service_building_where(context, (int(entity.navigation.position[0]), int(entity.navigation.position[1])), offers_work)
         return found if found is not None and found.functional else None
     kinds = SERVICE_KINDS.get(action)

@@ -108,7 +108,7 @@ def test_a_commercial_shift_is_paid_from_the_purse_alone_once_maintenance_is_don
 
 
 def test_a_building_with_no_maintenance_need_and_no_commercial_work_offers_none():
-    from src.engine.work_shift import offers_work
+    from src.engine.building_services import offers_work
     state, _, _ = _world()
     plain = replace(state.buildings[10], maintenance_shifts_needed=0, hires_for_pay=False)
     assert not offers_work(plain)
