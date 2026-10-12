@@ -12968,4 +12968,4 @@
   proof_type: contract
   test_path: tests/unit/perf/test_known_debt.py
   divergence_note: null
-  support_boundary: Report-only (OD-8): nothing consumes the ledger to gate a lane yet; T06 conformance and T08 add the first entries and the matching of a real outcome against an entry.
+  support_boundary: 'Report-only (OD-8), nothing consumes the ledger to gate a lane yet; T06 conformance and T08 add the first entries and the matching of a real outcome against an entry.'
