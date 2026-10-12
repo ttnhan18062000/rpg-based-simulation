@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261011-VISUAL-ASSETS-SAMPLE-MAP-RENDER
-phase: open
+phase: done
 date: 2026-10-11
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Sample map: offline renderer from the rc-0009 runtime export, same composition rule as the client rehearsal
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -82,4 +82,4 @@ Child 2 of `TCK-20261011-EPIC-VISUAL-ASSET-SAMPLE-MAP`.
 - `tools/visual_assets_sample_map_render.py` (new), `tools/visual_assets_sample_map.py` (render subcommand), `tests/visual_assets/test_sample_map_render.py` (new)
 
 ## Completion Summary
-
+`tools/visual_assets_sample_map_render.py`: the border rule, the detail pick and the resolver order ported from the TS (not imported), proven on the TS vectors, against the TS text and differentially against the real TS rule (skips without node and esbuild); exact and labelled alias views per world, gaps marked and counted, two renders byte-identical, a static page. Commit `8a001d17a`.

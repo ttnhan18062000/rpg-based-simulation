@@ -21,4 +21,4 @@ One commit per ticket, each reviewed by `asset-planner`. One PR on the user's au
 
 ## Status
 
-OPEN (2026-10-11): filed, NOT dispatched (waits for B to close).
+DONE (2026-10-12): all three children committed and approved by the planner; closed by hand (`batch_hand_close`). Awaiting the user's push/PR decision.

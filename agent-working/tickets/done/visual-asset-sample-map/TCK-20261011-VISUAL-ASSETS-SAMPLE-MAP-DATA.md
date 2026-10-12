@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261011-VISUAL-ASSETS-SAMPLE-MAP-DATA
-phase: open
+phase: done
 date: 2026-10-11
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Sample map: read three real worlds' terrain grid and static objects read-only into sample-map data files
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -81,4 +81,4 @@ Child 1 of `TCK-20261011-EPIC-VISUAL-ASSET-SAMPLE-MAP`.
 - `tools/visual_assets_sample_map.py` (new), `tests/visual_assets/test_sample_map_data.py` (new)
 
 ## Completion Summary
-
+`tools/visual_assets_sample_map.py` (`data`, `keytable`): the state built exactly as the API builds it, in memory, nothing written outside the gitignored reports; three worlds (`frontier_living_world`, `highland_traverse`, `dungeon_crawl`) read, cells stored by terrain name, names mapped to keys by an exact rule (near keys listed, not applied); 87.9 % of 73,808 cells have no exact key; labelled proposed aliases added at asset-planner's request. Commit `8ca3eabea`.

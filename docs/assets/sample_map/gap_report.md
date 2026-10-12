@@ -49,7 +49,9 @@ have art in rc-0009, so no key falls back to the Live Map flat fill; the alias v
 
 ## The gaps (each sized and given a "needed by")
 
-Needed-by classes: **vocabulary** (rpg's #523 decision, no art), **terrain variants**, **connecting tiles**, **multi-tile structures**, **A markers** (candidate A, entity and object markers). Estimates count tiles or
+Read G12 first: no amount of terrain art makes these maps look rich, because the worlds themselves are a few rectangles over one default fill. G12 is rpg's to judge and does not change the options of the owner's question below.
+
+Needed-by classes: **vocabulary** (rpg's #523 decision, no art), **terrain variants**, **connecting tiles**, **multi-tile structures**, **A markers** (candidate A, entity and object markers), **rpg world generation** (not art). Estimates count tiles or
 sprites to draw at the sizes the store already holds (terrain tiles 16 x 16, building icons 24 x 24, markers 16 x 16); they are order-of-magnitude inputs for the owner's question, not commitments, and they do not include the
 registry growth a new key or a detail axis causes (see "Input list for candidate A").
 
@@ -65,6 +67,7 @@ registry growth a new key or a detail axis causes (see "Input list for candidate
 | G8 | resource-node kinds have no marker | 9 kinds, 15 nodes in the samples (berry_thicket 2, crystal_outcrop 1, frost_shard_cluster 1, healing_flower_patch 1, herb_patch 3, iron_vein 3, silver_vein 1, spirit_wisp 1, wood_node 2); no exact or aliased key | 9 icons (16 x 16), or one shared grove glyph plus per-kind variants; `icon.marker.resource_grove` exists but nothing maps to it (rpg: no world produces it) | A markers | unconfirmed by rpg-planner (#519) |
 | G9 | place kinds: CITY and NEST have no glyph; CAMP and RUIN only by alias | CITY 2, NEST 1 (no key); CAMP 1, RUIN 2 (alias `enemy_camp`, `ruins`, unconfirmed); LAIR, DUNGEON, LANDMARK unused in the samples; the live API puts no places on the map (`locations: []`) | 1 glyph for NEST (CITY may be the plate alone); LAIR to `boss_arena` and DUNGEON to `dungeon_entrance` are rpg's suggestions with a question mark | A markers | unconfirmed by rpg-planner (#519) |
 | G10 | no entity markers | 10 kinds, 79 entities in the samples (alpha, blacksmith, guard, leader, merchant, predator_hunter, raider, scout, sentinel, worker); `icon.class.*` holds warrior, ranger, mage and rogue only | 10 role markers, or about 4 to 6 property markers (diet, size) if rpg's M1 moves kinds to properties | A markers | waits on the vocabulary answer (#523); not drawn in the picture, counted in the data |
+| G12 | the sample worlds are rectangular regions over one default fill | 87.9 % of cells carry no exact key, and what is left is flat: the Hometown crop is eight building icons scattered over one terrain, River Ford is one 41 x 31 rectangle of `river`, the ruin and forest blocks are rectangles (`frontier_town_*`, `highland_river_*`, `dungeon_ruin_*` crops); region painting fills rectangles over `PLAIN` (rpg, #519, `compiler.py:380-426`) | 0 art: more tiles do not change the shape of the maps | rpg world generation, not art | rpg's to judge (#519, #523); recorded so the ranking of terrain variants (G4) is read next to it |
 | G11 | chests | `present_static` carries `treasure_chests` but the three worlds hold 0 | not estimated: no evidence | A markers | no data |
 
 Objects in the exact view (drawn / in the gap, from `render_stats.json`): `frontier_living_world` 3 / 21, `highland_traverse` 2 / 7, `dungeon_crawl` 0 / 1; in the alias view 7 / 17, 3 / 6, 1 / 0. The per-kind lists
@@ -74,7 +77,7 @@ Not gaps (stock to know about): 18 of the 23 terrain keys have art that no sampl
 
 ## The owner's art-priority question (drafted; asset-planner asks it)
 
-> The sample map shows the art covering 12.1 % of the sampled cells by exact name and all of them by the proposed aliases, and lists what is missing. Which should the next asset batch draw first, given the
+> The sample map shows the art covering 12.1 % of the sampled cells by exact name and all of them by the proposed aliases, and lists what is missing (and, in G12, that the sampled worlds are a few rectangles over one default fill, which is rpg's to judge). Which should the next asset batch draw first, given the
 > counts above? (Options in a fixed order, none recommended.)
 > 1. **Terrain variants** (G4: about 14 tiles, plus the registry budget review) and a name decision for `PLAIN`/`plain` (G1) if rpg wants new keys.
 > 2. **Map markers** (A: building icons G6, resource nodes G8, places G9, entities G10: about 4 + 9 + 1 + 4 to 10 icons).
