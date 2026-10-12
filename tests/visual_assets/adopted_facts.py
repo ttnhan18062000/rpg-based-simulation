@@ -74,6 +74,18 @@ ICON_FIX_SOURCES = sorted(ICON_FIX_ADOPTIONS)
 assert len(ICON_FIX_SOURCES) == 7 and set(ICON_FIX_SOURCES) <= set(ICON_SOURCES + ICON_V2_SOURCES)
 
 # The real-art proof sources (`TCK-20261011-VISUAL-ASSETS-REAL-ART-DRAFTS`, owner adopted 2026-10-11): the first sources with animation and slices metadata. Nothing is built or released from them until `TCK-20261011-VISUAL-ASSETS-REAL-ART-RELEASE-PROOF`.
+# The terrain variants (`TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANT-DRAFTS`, the owner's `adopt-set` of 2026-10-12, set-adoption `sa-34445853fa87089b`): 14 sources filling the new detail slots of six terrains.
+VARIANT_SET_ID = "terrain-variants-v1"
+VARIANT_SET_ADOPTION_ID = "sa-34445853fa87089b"
+VARIANT_DRAFT_SET_HASH = "sha256:d8de30ac8ef1c3750b371d5a550556b06e511b72a3b1a44e841683204f45b827"
+VARIANT_DETAILS = {  # source asset id -> (visual key, detail value)
+    "terrain_grassland_tufts": ("terrain.grassland", "tufts"), "terrain_grassland_flowers": ("terrain.grassland", "flowers"), "terrain_grassland_clover": ("terrain.grassland", "clover"),
+    "terrain_grassland_bare": ("terrain.grassland", "bare"), "terrain_mountain_crag": ("terrain.mountain", "crag"), "terrain_mountain_scree": ("terrain.mountain", "scree"),
+    "terrain_cave_stalagmite": ("terrain.cave", "stalagmite"), "terrain_cave_rubble": ("terrain.cave", "rubble"), "terrain_ruins_moss": ("terrain.ruins", "moss"), "terrain_ruins_fallen": ("terrain.ruins", "fallen"),
+    "terrain_swamp_reeds": ("terrain.swamp", "reeds"), "terrain_swamp_puddle": ("terrain.swamp", "puddle"), "terrain_shallow_water_ripple": ("terrain.shallow_water", "ripple"),
+    "terrain_shallow_water_pebbles": ("terrain.shallow_water", "pebbles"),
+}
+VARIANT_SOURCES = sorted(VARIANT_DETAILS)
 PROOF_SOURCES = sorted(["ui_panel_frame", "fx_selection_ring", "fx_campfire"])
 PROOF_ANIMATED = sorted(["fx_selection_ring", "fx_campfire"])  # 8 and 16 frames, one tag each; every proof source carries exactly one slice
 PROOF_ANIMATION = {"fx_selection_ring": (8, [("pulse", 0, 7)]), "fx_campfire": (16, [("burn", 0, 15)])}  # frames, then (tag, from_frame, to_frame)
@@ -82,13 +94,13 @@ PROOF_SLICES = {  # name -> [(x, y, w, h, has 9-slice centre, has pivot)] per ke
     "fx_selection_ring": [("anchor", [(0, 0, 32, 32, False, True)])],
     "fx_campfire": [("base", [(0, 0, 64, 64, False, True)])],
 }
-ADOPTED_SOURCES = sorted(TERRAIN_ERA_SOURCES + ICON_SOURCES + ICON_V2_SOURCES + PROOF_SOURCES)
-SET_ADOPTION_IDS = sorted([SET_ADOPTION_ID, ICON_SET_ADOPTION_ID, ICON_V2_SET_ADOPTION_ID])
+ADOPTED_SOURCES = sorted(TERRAIN_ERA_SOURCES + ICON_SOURCES + ICON_V2_SOURCES + PROOF_SOURCES + VARIANT_SOURCES)
+SET_ADOPTION_IDS = sorted([SET_ADOPTION_ID, ICON_SET_ADOPTION_ID, ICON_V2_SET_ADOPTION_ID, VARIANT_SET_ADOPTION_ID])
 # Counts under the committed catalog: one adoption per source plus one per revision (7), two intake provenance files (record and review) per adoption.
-ADOPTION_COUNT = 80
-INTAKE_FILE_COUNT = 160
-REVISION_COUNT = 80  # r0001 of each of the 73 sources + r0002 of the 7 revised icons (what `store list --kind source` counts)
-assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (73, 73 + len(ICON_FIX_SOURCES), 2 * 80)
+ADOPTION_COUNT = 94
+INTAKE_FILE_COUNT = 188
+REVISION_COUNT = 94  # r0001 of each of the 87 sources + r0002 of the 7 revised icons (what `store list --kind source` counts)
+assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (87, 87 + len(ICON_FIX_SOURCES), 2 * 94)
 # `build` and `release` (TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN, approved by the user on 2026-10-06): one generated artifact directory per adopted source, and the candidate pilot/rc-0005 holds all 34 slots.
 # rc-0004 still holds the forest's three slots only. rc-0006 (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, approved by the user on 2026-10-06) is rc-0005's 34 slots on the registry that added the 14 `icon.*` keys; rc-0007 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`, approved by the user on 2026-10-07) is the same 34 slots on the registry that added the 22 icon set v2 keys.
 TERRAIN_GENERATED = sorted(f"{source}--x1" for source in TERRAIN_ERA_SOURCES)  # the 34 built by `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`
