@@ -63,13 +63,18 @@ src/observability/event_extractor.py, the starvation apply path (D36 staged star
 - (original question) Where the per-decision "open and in reach" set is computed today, and whether it is kept or only local to the decision. If it's local, the record needs a bounded per-subject trail, which is a durable-state question for rpg-planner.
 
 ## Implementation Notes
-Owner lane: Lane B (rpg-implementer-2), with the removal stack.
+Owner lane: Lane B (rpg-implementer-2), with the removal stack. Built as Option A with rpg-planner's five amendments (plan.md).
+- `src/ai/goals/ways.py`: `WayKind` (str Enum: CARRIED_FOOD, INN_MEAL, FORAGE, SCAVENGE, HUNT_EAT_RAW, BUY, WORK_SHIFT, RECEIVE) and the pure `ways_in_reach(entity, state)`. Placed in `src/ai/goals` (not `src/observability`, as the plan said) so the scorer and the record share it without `ai` importing `observability`. The scorer's inn test is now `inn_in_reach`, and `shop_sale_in_reach`/`work_in_reach`/`open_food_step_kinds` are shared with `opening_steps`. Diet gates apply (D44): a meat-only body lists no plant, prepared-food or inn way. RECEIVE is declared and never returned.
+- `src/observability/starvation_record.py`: frozen `StarvationDeathRecord`, and `StarvationRecorder` with class-level bounded per-subject trail (union of ways judged open on strategic re-decision ticks while hungry enough to escalate, ways attempted from the resolver's accepted/rejected transfers, reset on a meal), cleared by `reset_run_state()`. Keyed off `PassiveDeathCause.STARVATION` with `passive_death_cause_tick == tick`. `_judged_ways` is the one seam M1's honest-perception child will split from the true map; a test pins (a) == (b) until then.
+- `src/observability/run_state.py`: `reset_run_state(strategic_cadence)` and `extract_events(...)` are what the kernel calls (it replaced five reset lines in the kernel's init, so the kernel and the extractor grew by 0 lines under the ratchet). The recorder runs beside, not inside, `EventExtractor.extract`; `extract_events` returns nothing from the recorder when the mode is OFF.
+- NO-DATA: a `starvation_channel_live` header opens the run; `EventRecorder.closing_event_sources` (registered by the recorder) writes a `starvation_channel_tally` (deaths seen, records emitted) at `EventRecorder.shutdown()` only for a recorder that saw the header. Amendment 3: the pressure modes DEGRADED and PRESSURE drop or sample INFO events, so the record, header and tally are severity WARNING; SURVIVAL drops everything, and the tally then exceeds the records (the no-data signal). The metric module maps not-live to `harness_error`.
+- No state.py, apply.py or other Phase B file is touched.
 
 ## Test Summary
-TBD
+`tests/unit/observability/test_starvation_death_record.py`: 14 tests (untried way in reach; every way tried; union keeps an earlier-open way; a meal resets; diet-restricted kind; one record per death; non-starvation or earlier cause tick writes none; (a)==(b) pin; two-run determinism; header and tally; OFF mode has no header; reset clears; a real Kernel run with one record, the header, WARNING severity and the shutdown tally; a meat-eater with prey and a carcass lists HUNT_EAT_RAW and SCAVENGE and no plant or inn way). Also green: tests/unit/ai (93 with the new file), tests/unit/observability + tests/unit/engine (1665 passed, 4 skipped), the mechanism pin test (scope 335, unbound 247). Ratchet OK (0 new, 0 worse); mypy baseline clean.
 
 ## Files Changed
-TBD
+src/ai/goals/{ways,opening_steps,scorers}.py; src/observability/{starvation_record,run_state,event_recorder}.py; src/engine/kernel.py; tests/unit/observability/test_starvation_death_record.py; tests/unit/tools/test_mechanism_registry_completeness_check.py (pins)
 
 ## Completion Summary
 TBD

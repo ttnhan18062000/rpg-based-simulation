@@ -15,12 +15,17 @@ path, when the subject has room to carry what it gathers. EARN_THEN_BUY and ASK 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from src.ai.goals.base import OpeningStepKind
 from src.content_semantics.faction import get_species_id_str
 from src.core.items import food_hunger_recovery
-from src.core.state import AuthoritativeState, EntityState, ResourceNodeState
+from src.core.state import (
+    AuthoritativeState,
+    BuildingState,
+    EntityState,
+    ResourceNodeState,
+)
 from src.engine.appraisal import Relation, can_eat_item
 from src.engine.hostility import relation
 from src.engine.rpg_depth import LeashService
@@ -121,7 +126,7 @@ def _hunt_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
     return OpeningStep(OpeningStepKind.HUNT, True, target_id=str(best.id), target_pos=best.navigation.position, target_entity_id=best.id)
 
 
-def shop_sale_in_reach(entity: EntityState, state: AuthoritativeState):
+def shop_sale_in_reach(entity: EntityState, state: AuthoritativeState) -> Optional[Tuple[BuildingState, Any]]:
     """The nearest (shop, sale) the subject can sell spare goods to inside its range, or None. One test for the pull and for the H6 record."""
     found = nearest_sale(state, entity)
     if found is not None and not LeashService.way_in_range(entity, tuple(found[0].position)):
@@ -129,7 +134,7 @@ def shop_sale_in_reach(entity: EntityState, state: AuthoritativeState):
     return found
 
 
-def work_in_reach(entity: EntityState, state: AuthoritativeState):
+def work_in_reach(entity: EntityState, state: AuthoritativeState) -> Optional[BuildingState]:
     """The nearest building that can pay the subject a wage for a shift, inside its range, or None."""
     inn = nearest_work(state, entity)
     if inn is not None and not LeashService.way_in_range(entity, tuple(inn.position)):
@@ -144,11 +149,11 @@ def _earn_then_buy_step(entity: EntityState, state: AuthoritativeState) -> Openi
     found = shop_sale_in_reach(entity, state)
     if found is not None:
         shop, _sale = found
-        return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(shop.id), target_pos=tuple(shop.position))
+        return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(shop.id), target_pos=(shop.position[0], shop.position[1]))
     inn = work_in_reach(entity, state)
     if inn is None:
         return OpeningStep(OpeningStepKind.EARN_THEN_BUY, False, "nothing to sell that a shop with coin in its purse would buy, and no inn that can pay a wage")
-    return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(inn.id), target_pos=tuple(inn.position))
+    return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(inn.id), target_pos=(inn.position[0], inn.position[1]))
 
 
 def _ask_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:
@@ -164,3 +169,8 @@ def opening_steps(entity: EntityState, state: AuthoritativeState) -> List[Openin
 def first_open_step(entity: EntityState, state: AuthoritativeState) -> Optional[OpeningStep]:
     """The first opening step that is open now, in the order they are tried, or None."""
     return next((step for step in opening_steps(entity, state) if step.available), None)
+
+
+def open_food_step_kinds(entity: EntityState, state: AuthoritativeState) -> frozenset:
+    """The kinds of the food-finding steps (forage, scavenge, hunt) that are open now: what the starvation record reads, from the same tests the pull runs."""
+    return frozenset(step.kind for step in (_forage_step(entity, state), _scavenge_step(entity, state), _hunt_step(entity, state)) if step.available)

@@ -319,15 +319,8 @@ class Kernel:
         self._workers_started = 2 if (obs_mode != ObservabilityMode.OFF) else 0
         self._last_shutdown_report = None
 
-        from src.observability.event_extractor import EventExtractor
-        EventExtractor.reset_run_state()
-        from src.observability.starvation_record import StarvationRecorder
-        StarvationRecorder.configure(profile.cadence.strategic_intelligence)
-        from src.observability.event_shapers import StrategyShaper, ProgressionShaper, SocialShaper, FactionShaper
-        StrategyShaper.reset_run_state()
-        ProgressionShaper.reset_run_state()
-        SocialShaper.reset_run_state()
-        FactionShaper.reset_run_state()
+        from src.observability.run_state import reset_run_state
+        reset_run_state(profile.cadence.strategic_intelligence)
 
         self.validate(flags)
 
@@ -975,13 +968,13 @@ class Kernel:
         if obs_mode == ObservabilityMode.OFF:
             return
 
-        from src.observability.event_extractor import EventExtractor
+        from src.observability.run_state import EventExtractor, extract_events
         from src.observability.events import SimulationEvent
 
         tick = self._state.tick
         
         # 1. Extract domain events
-        generated_events = EventExtractor.extract(prior_state, self._state, update, obs_mode)
+        generated_events = extract_events(prior_state, self._state, update, obs_mode)
 
         # 1a. Mid-tick grief triggers (TCK-20260824-GRIEF-NEMESIS-REACHABILITY): a live
         # ally's death detected this tick. This phase runs after this tick's ApplyPath
@@ -1193,8 +1186,6 @@ class Kernel:
         # persisting or erroring loudly. See
         # TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD.
         if hasattr(self, "_event_recorder") and self._event_recorder:
-            from src.observability.starvation_record import StarvationRecorder
-            self._event_recorder.record(StarvationRecorder.tally_event(self._state.tick))  # H6: the deaths seen, to tell a silent channel from a zero
             self._event_recorder.shutdown()
             workers_stopped += 1
 

@@ -14,7 +14,12 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional, Tuple
 
-from src.ai.goals.opening_steps import _forage_step, _hunt_step, _scavenge_step, shop_sale_in_reach, work_in_reach
+from src.ai.goals.base import OpeningStepKind
+from src.ai.goals.opening_steps import (
+    open_food_step_kinds,
+    shop_sale_in_reach,
+    work_in_reach,
+)
 from src.core.items import food_hunger_recovery
 from src.core.state import AuthoritativeState, BuildingState, EntityState
 from src.engine.appraisal import can_eat_item, can_use_inn_meal
@@ -49,12 +54,10 @@ def ways_in_reach(entity: EntityState, state: AuthoritativeState) -> Tuple[WayKi
         ways.append(WayKind.CARRIED_FOOD)
     if inn_in_reach(entity, state) is not None and can_use_inn_meal(entity):  # decision 44: a diet without prepared food has no inn meal
         ways.append(WayKind.INN_MEAL)
-    if _forage_step(entity, state).available:
-        ways.append(WayKind.FORAGE)
-    if _scavenge_step(entity, state).available:
-        ways.append(WayKind.SCAVENGE)
-    if _hunt_step(entity, state).available:
-        ways.append(WayKind.HUNT_EAT_RAW)
+    steps = open_food_step_kinds(entity, state)
+    for step_kind, way in ((OpeningStepKind.FORAGE, WayKind.FORAGE), (OpeningStepKind.SCAVENGE, WayKind.SCAVENGE), (OpeningStepKind.HUNT, WayKind.HUNT_EAT_RAW)):
+        if step_kind in steps:
+            ways.append(way)
     if shop_sale_in_reach(entity, state) is not None:
         ways.append(WayKind.BUY)
     if work_in_reach(entity, state) is not None:

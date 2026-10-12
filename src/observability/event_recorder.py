@@ -56,6 +56,9 @@ class ObservabilityController:
 class EventRecorder:
     """Manages thread-safe, memory-bounded SimulationEvent recording and JSONL persistence."""
 
+    # Channels that close a run with one last event (registered once at import by the channel's owner; each is given this recorder's per-type event counts and returns None when this recorder saw nothing of its channel).
+    closing_event_sources: List[Callable[[Dict[str, int]], Optional[SimulationEvent]]] = []
+
     def __init__(
         self,
         run_dir: Optional[str] = None,
@@ -309,6 +312,12 @@ class EventRecorder:
 
     def shutdown(self) -> None:
         """Shuts down and flushes any active file descriptors."""
+        # 0. Close any channel that writes a closing event (e.g. the starvation-record tally) while the queue still accepts events.
+        for closing_event in EventRecorder.closing_event_sources:
+            event = closing_event(self.event_count_by_type)
+            if event is not None:
+                self.record(event)
+
         # 1. Stop background drain worker. This blocks (joins, timeout=1.0s) until the
         # worker's thread has exited, so no further _run() loop iteration can race the
         # final drain below or QualityPersistence.shutdown() in Kernel.shutdown() (which

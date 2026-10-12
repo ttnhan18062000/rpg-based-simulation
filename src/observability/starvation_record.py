@@ -16,6 +16,9 @@ state and update streams each run, cleared by `reset_run_state()`, like the extr
 * `ways_in_reach_at_death`: the true-map set on the state before the fatal tick (column b).
 * `ways_attempted`: the ways the subject tried since its last meal, from the resolver's accepted and rejected transfers.
 
+Records, the header and the tally carry severity WARNING so the recorder's DEGRADED and PRESSURE modes (which drop or sample INFO) cannot lose them;
+SURVIVAL drops everything, and the tally then exceeds the records, which is the no-data signal.
+
 NO-DATA, never zero: a `starvation_channel_live` header opens the run and a `starvation_channel_tally` closes it with the count of starvation
 deaths seen. A run without the header, or with fewer records than deaths seen, did not measure H6 (the metric reads that as `harness_error`).
 """
@@ -57,6 +60,7 @@ class StarvationDeathRecord:
         return tuple(w for w in self.ways_open_in_reach_union if w not in self.ways_attempted)
 
     def to_payload(self) -> Dict[str, Any]:
+        """The record as plain JSON-able fields (way kinds by value)."""
         return {
             "entity_id": self.entity_id, "kind": self.kind, "tick": self.tick, "cause_tick": self.cause_tick,
             "ways_open_in_reach_union": [w.value for w in self.ways_open_in_reach_union],
@@ -86,7 +90,10 @@ def _attempted_way(source_kind: str, source_id: Any, state: AuthoritativeState) 
     if source_kind == "WAGE":
         return WayKind.WORK_SHIFT
     if source_kind == "NODE":
-        node = state.resource_nodes.get(str(source_id))
+        try:
+            node = state.resource_nodes.get(int(source_id))
+        except (TypeError, ValueError):
+            return None
         return WayKind.FORAGE if node is not None and food_hunger_recovery(node.yields_item) > 0.0 else None
     return None
 
@@ -94,7 +101,7 @@ def _attempted_way(source_kind: str, source_id: Any, state: AuthoritativeState) 
 class StarvationRecorder:
     """Per-run trail of the ways each hungry subject had open and tried; emits the death record, the live header and the tally."""
 
-    _period: int = SystemCadence().strategic_intelligence
+    _period: int = SystemCadence.model_fields["strategic_intelligence"].default
     _union: Dict[int, Set[WayKind]] = {}
     _attempted: Dict[int, Set[WayKind]] = {}
     _last_meal: Dict[int, int] = {}
@@ -102,10 +109,12 @@ class StarvationRecorder:
     _records_emitted: int = 0
     _header_sent: bool = False
     _recorded: Set[int] = set()
+    _last_tick: int = 0
 
     @classmethod
     def reset_run_state(cls) -> None:
-        cls._period = SystemCadence().strategic_intelligence
+        """Clear the trail, the counts and the header flag at run start (and in test teardown)."""
+        cls._period = SystemCadence.model_fields["strategic_intelligence"].default
         cls._union.clear()
         cls._attempted.clear()
         cls._last_meal.clear()
@@ -113,6 +122,7 @@ class StarvationRecorder:
         cls._deaths_seen = 0
         cls._records_emitted = 0
         cls._header_sent = False
+        cls._last_tick = 0
 
     @classmethod
     def configure(cls, strategic_cadence: int) -> None:
@@ -123,6 +133,7 @@ class StarvationRecorder:
     def observe(cls, prior: AuthoritativeState, current: AuthoritativeState, update: Any) -> List[SimulationEvent]:
         """Advance the trail by one tick and return the events it owes (the live header once, a record per starvation death)."""
         tick = current.tick
+        cls._last_tick = tick
         events: List[SimulationEvent] = []
         if not cls._header_sent:
             cls._header_sent = True
@@ -141,9 +152,14 @@ class StarvationRecorder:
         return events
 
     @classmethod
-    def tally_event(cls, tick: int) -> SimulationEvent:
+    def closing_event(cls, event_counts: Dict[str, int]) -> Optional[SimulationEvent]:
+        """The tally for a recorder that recorded this run's live header, else nothing: a channel that never opened must not look live."""
+        return cls.tally_event() if event_counts.get(CHANNEL_LIVE_EVENT, 0) > 0 else None
+
+    @classmethod
+    def tally_event(cls, tick: Optional[int] = None) -> SimulationEvent:
         """The closing marker: the starvation deaths this run saw against the records it wrote."""
-        return cls._event(CHANNEL_TALLY_EVENT, tick, None,
+        return cls._event(CHANNEL_TALLY_EVENT, cls._last_tick if tick is None else tick, None,
                           {"starvation_deaths_seen": cls._deaths_seen, "records_emitted": cls._records_emitted})
 
     @classmethod
@@ -187,5 +203,5 @@ class StarvationRecorder:
 
     @staticmethod
     def _event(event_type: str, tick: int, entity_id: Optional[int], payload: Dict[str, Any]) -> SimulationEvent:
-        return SimulationEvent(event_type=event_type, event_category="lifecycle", tick=tick, entity_id=entity_id, severity="INFO",
+        return SimulationEvent(event_type=event_type, event_category="lifecycle", tick=tick, entity_id=entity_id, severity="WARNING",
                                source_system=_SOURCE, message="", payload=payload, timestamp=time.time())
