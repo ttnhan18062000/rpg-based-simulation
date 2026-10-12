@@ -314,3 +314,40 @@ def test_health_reports_path_and_model_state(mcp, tmp_path, monkeypatch):
     assert health["path"] == "in-process" and health["model_loaded"] is False
     monkeypatch.setattr(mcp, "_shared_server_usable", lambda: True)
     assert mcp._run_health()["path"] == "shared-server"
+
+
+# ── Reviewer fix: the fingerprint is the index the server LOADED, and covers bm25.pkl ──
+
+def test_fingerprint_covers_bm25_pickle(tmp_path):
+    core = _load("search_core_fp_test", "search_core.py")
+    db = _make_db(tmp_path / "knowledge.db")
+    without = core.index_fingerprint(db)
+    (tmp_path / "bm25.pkl").write_bytes(b"one")
+    with_bm25 = core.index_fingerprint(db)
+    (tmp_path / "bm25.pkl").write_bytes(b"changed!")
+    assert len({without, with_bm25, core.index_fingerprint(db)}) == 3
+    assert core.index_fingerprint(tmp_path / "missing.db") is None
+
+
+def test_health_keeps_reporting_the_loaded_index_after_the_files_change(mcp, tmp_path, monkeypatch):
+    """After `make knowledge-index-update` the server still holds the old BM25, so it must not look current."""
+    from fastapi.testclient import TestClient
+
+    db = _make_db(tmp_path / "knowledge.db")
+    (tmp_path / "bm25.pkl").write_bytes(b"old")
+    server = _load("search_server_shared_test4", "search_server.py")
+    loaded = server._core.index_fingerprint(db)
+    monkeypatch.setattr(server, "_DB_PATH", db)
+    monkeypatch.setattr(server, "_INDEX_DIR", tmp_path)
+    monkeypatch.setattr(server, "_APP_STATE", server._AppState(ready=True, doc_count=1, chunk_count=1, index_fingerprint=loaded))
+
+    (tmp_path / "bm25.pkl").write_bytes(b"rebuilt-by-knowledge-index-update")   # the index is rebuilt under the running server
+    with TestClient(server.app, raise_server_exceptions=False) as client:
+        reported = client.get("/api/health").json()["index_fingerprint"]
+    assert reported == loaded != server._core.index_fingerprint(db)
+
+    # a session that now resolves the rebuilt index does not match, so it searches in-process
+    monkeypatch.setattr(mcp, "_DB_PATH", db)
+    monkeypatch.setattr(mcp, "_http_json", lambda *a, **k: {"status": "ok", "index_fingerprint": reported})
+    mcp._server_check.update(at=None, usable=False)
+    assert mcp._shared_server_usable() is False

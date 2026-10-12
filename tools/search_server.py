@@ -50,6 +50,8 @@ class _AppState:
     doc_ids: list = field(default_factory=list)
     doc_count: int = 0
     chunk_count: int = 0
+    # Fingerprint of the index files at the moment the model/BM25 were loaded; /api/health reports this, not the live files.
+    index_fingerprint: Optional[str] = None
     ready: bool = False
 
 _APP_STATE = _AppState()
@@ -73,6 +75,7 @@ async def lifespan(app: FastAPI):
 
     import sentence_transformers
     _APP_STATE.model = sentence_transformers.SentenceTransformer(_MODEL_NAME)
+    _APP_STATE.index_fingerprint = _core.index_fingerprint(_DB_PATH)
     _APP_STATE.bm25, _APP_STATE.doc_ids = _ks._load_bm25(_BM25_PATH)
 
     con = sqlite3.connect(str(_DB_PATH))
@@ -149,7 +152,7 @@ def health():
         "chunks": _APP_STATE.chunk_count,
         "model": _MODEL_NAME,
         # Identity of the index served, so a client can tell whether this is the index it would query itself.
-        "index_fingerprint": _core.index_fingerprint(_DB_PATH),
+        "index_fingerprint": _APP_STATE.index_fingerprint or _core.index_fingerprint(_DB_PATH),
         "index_path": str(_DB_PATH),
     }
 

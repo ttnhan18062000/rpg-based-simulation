@@ -67,13 +67,21 @@ def resolve_index_dir(own_index_dir: Path, own_root: Path, main_root: Path | Non
 
 
 def index_fingerprint(db_path: Path) -> str | None:
-    """Identity of the index file: size and mtime in ns. The same file reached through a bind mount, a symlink or another
-    checkout's path gives the same value, so it is compared instead of a path (a container's path differs from the host's)."""
-    try:
-        st = os.stat(db_path)
-    except OSError:
-        return None
-    return f"{st.st_size}:{st.st_mtime_ns}"
+    """Identity of the index: size and mtime in ns of `knowledge.db` and of the `bm25.pkl` beside it. The same files reached
+    through a bind mount, a symlink or another checkout's path give the same value, so it is compared instead of a path (a
+    container's path differs from the host's). Both files are in it because a rebuild changes them together and a server
+    holding the old BM25 against the new db must not look current."""
+    parts = []
+    for path in (db_path, db_path.parent / "bm25.pkl"):
+        try:
+            st = os.stat(path)
+        except OSError:
+            if path is db_path:
+                return None
+            parts.append("none")
+            continue
+        parts.append(f"{st.st_size}:{st.st_mtime_ns}")
+    return "|".join(parts)
 
 
 def derive_title(doc_id: str) -> str:
