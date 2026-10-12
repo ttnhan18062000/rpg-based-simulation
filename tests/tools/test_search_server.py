@@ -189,22 +189,6 @@ class TestDeriveTitle:
         assert srv._derive_title(old_scheme) == srv._derive_title(new_scheme)
 
 
-# ── Excerpt helper ────────────────────────────────────────────────────────────
-
-class TestMakeExcerpt:
-    def test_finds_query_token(self):
-        import tools.search_server as srv
-        text = "Lorem ipsum. Combat damage is calculated here. More text."
-        excerpt = srv._make_excerpt(text, ["combat"], max_len=50)
-        assert "combat" in excerpt.lower() or "Combat" in excerpt
-
-    def test_falls_back_to_start(self):
-        import tools.search_server as srv
-        text = "No matching tokens here at all."
-        excerpt = srv._make_excerpt(text, ["zzz"], max_len=20)
-        assert len(excerpt) <= 23  # 20 + possible ellipsis
-
-
 # ── CORS headers ──────────────────────────────────────────────────────────────
 
 class TestCORS:

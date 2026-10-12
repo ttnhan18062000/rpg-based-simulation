@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import importlib.util
-import re
 import sys
 import sqlite3
 import os
@@ -27,8 +26,19 @@ if "knowledge_search" not in sys.modules:
     spec.loader.exec_module(_ks)
 _ks = sys.modules["knowledge_search"]
 
-_INDEX_DIR = _ks._DEFAULT_DB.parent  # agent-working/.index/knowledge-index/
-_DB_PATH = _ks._DEFAULT_DB            # agent-working/.index/knowledge-index/knowledge.db
+# The one ranking path, shared with tools/search_mcp.py (TCK-20261012-SEARCH-MCP-SHARED-SERVER-AND-IDLE-UNLOAD).
+if "search_core" not in sys.modules:
+    _core_spec = importlib.util.spec_from_file_location("search_core", _TOOLS_DIR / "search_core.py")
+    _core_mod = importlib.util.module_from_spec(_core_spec)
+    sys.modules["search_core"] = _core_mod
+    _core_spec.loader.exec_module(_core_mod)
+_core = sys.modules["search_core"]
+
+# agent-working/.index/knowledge-index/, or the main checkout's when this checkout has none (a worktree).
+_INDEX_DIR = _core.resolve_index_dir(
+    _ks._DEFAULT_DB.parent, _TOOLS_DIR.resolve().parent, _core.main_checkout_root(_TOOLS_DIR)
+)
+_DB_PATH = _INDEX_DIR / _ks._DEFAULT_DB.name
 _BM25_PATH = _INDEX_DIR / "bm25.pkl"
 _MODEL_NAME: str = _ks._MODEL_NAME
 
@@ -119,28 +129,11 @@ class SearchResponse(BaseModel):
     query: str
     top_k: int
     results: list[SearchResult]
+    # Same block `search_docs` returns for an index behind the corpus: {"changed", "new", "removed"} or {"unknown": true}.
+    stale: Optional[dict] = None
 
 # ── Helper ────────────────────────────────────────────────────────────────────
-def _derive_title(doc_id: str) -> str:
-    """Derive display title from doc_id stem, stripping leading NN_ numbering prefix."""
-    stem = doc_id.split("/")[-1]
-    stem = re.sub(r"^\d+_", "", stem)
-    return stem.replace("_", " ").title()
-
-def _make_excerpt(text: str, query_tokens: list[str], max_len: int = 200) -> str:
-    lower = text.lower()
-    best_pos = 0
-    for tok in query_tokens:
-        pos = lower.find(tok)
-        if pos != -1:
-            best_pos = max(0, pos - 40)
-            break
-    snippet = text[best_pos : best_pos + max_len]
-    if best_pos > 0:
-        snippet = "…" + snippet
-    if best_pos + max_len < len(text):
-        snippet = snippet + "…"
-    return snippet
+_derive_title = _core.derive_title
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 @app.get("/api/health")
@@ -155,6 +148,9 @@ def health():
         "documents": _APP_STATE.doc_count,
         "chunks": _APP_STATE.chunk_count,
         "model": _MODEL_NAME,
+        # Identity of the index served, so a client can tell whether this is the index it would query itself.
+        "index_fingerprint": _core.index_fingerprint(_DB_PATH),
+        "index_path": str(_DB_PATH),
     }
 
 @app.post("/api/search", response_model=SearchResponse)
@@ -164,76 +160,25 @@ def search(req: SearchRequest):
     if not req.query.strip():
         raise HTTPException(status_code=422, detail="query must not be empty")
 
-    query_tokens = _ks._tokenize(req.query)
-    q_vec = _APP_STATE.model.encode(req.query).tolist()
-    q_bytes = _ks._serialize_f32(q_vec)
-
-    con = None
-    rows = []
-    try:
-        import sqlite_vec
-        con = sqlite3.connect(str(_DB_PATH))
-        con.enable_load_extension(True)
-        sqlite_vec.load(con)
-        con.enable_load_extension(False)
-
-        sql = """
-            SELECT kd.rowid, kd.doc_id, kd.path, kd.text, kd.heading, kd.section,
-                   distance
-            FROM knowledge_vec kv
-            JOIN knowledge_docs kd ON kd.rowid = kv.rowid
-            WHERE kv.embedding MATCH ?
-              AND k = ?
-            ORDER BY distance
-        """
-        rows = con.execute(sql, (q_bytes, min(req.top_k * 4, 50))).fetchall()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Search error: {e}")
-    finally:
-        try:
-            if con is not None:
-                con.close()
-        except Exception:
-            pass
-
-    # Apply filters
-    section_filter = req.filters.get("section")
-    if section_filter:
-        rows = [r for r in rows if r[5] == section_filter]
-
-    results = []
-    for row in rows[:req.top_k]:
-        rowid, doc_id, path, text, heading, section, distance = row
-        sem_score = max(0.0, 1.0 - float(distance))
-        kw_score = 0.0
-        if _APP_STATE.bm25 is not None and query_tokens:
-            scores = _APP_STATE.bm25.get_scores(query_tokens)
-            try:
-                idx = _APP_STATE.doc_ids.index(doc_id)
-                kw_score = float(scores[idx]) / 10.0
-            except ValueError:
-                kw_score = 0.0
-        title_boost, heading_boost, code_boost = _ks._compute_boosts(query_tokens, doc_id, heading, text)
-        combined = _ks._hybrid_score(sem_score, kw_score, title_boost, heading_boost, code_boost)
-        excerpt = _make_excerpt(text, query_tokens)
-        results.append(SearchResult(
-            doc_id=doc_id,
-            title=_derive_title(doc_id),
-            heading=heading or "",
-            source_path=path,
-            section=section or "",
-            score=round(combined, 4),
-            semantic_score=round(sem_score, 4),
-            keyword_score=round(kw_score, 4),
-            excerpt=excerpt,
-            text=text if req.include_text else None,
-        ))
-
-    results.sort(key=lambda r: r.score, reverse=True)
+    results = _core.rank(
+        req.query,
+        top_k=req.top_k,
+        section=req.filters.get("section"),
+        include_text=req.include_text,
+        model=_APP_STATE.model,
+        bm25=_APP_STATE.bm25,
+        doc_ids=_APP_STATE.doc_ids,
+        db_path=_DB_PATH,
+        connect=sqlite3.connect,
+    )
+    if isinstance(results, dict):
+        raise HTTPException(status_code=500, detail=f"Search error: {results.get('error', 'unknown')}")
+    stale = _ks.index_staleness(_DB_PATH)
     return SearchResponse(
         query=req.query,
         top_k=req.top_k,
-        results=results,
+        results=[SearchResult(**r) for r in results],
+        stale=stale if isinstance(stale, dict) else None,
     )
 
 if __name__ == "__main__":

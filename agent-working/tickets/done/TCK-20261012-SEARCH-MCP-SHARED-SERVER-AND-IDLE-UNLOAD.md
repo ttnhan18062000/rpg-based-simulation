@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261012-SEARCH-MCP-SHARED-SERVER-AND-IDLE-UNLOAD
-phase: open
+phase: done
 date: 2026-10-12
 tags: [ai, mcp, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, mcp, process-improvement]
 search_docs: use the shared search server when it answers, and release the in-process model when idle
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -108,7 +108,7 @@ not a two-line change.
 - docs/guidelines/agent_working_environment.md (MCP setup)
 
 ## Related Stored Artifacts
-- agent-working/stored_artifacts/TCK-20260612-LOCAL-CTX-MCP/ (if present)
+- agent-working/stored_artifacts/TCK-20261012-SEARCH-MCP-SHARED-SERVER-AND-IDLE-UNLOAD/ (plan, investigation with the RSS table, test_plan)
 
 ## Related Code Areas
 - tools/search_mcp.py, tools/search_server.py, tools/knowledge_search.py, tools/hybrid_retrieval.py
@@ -126,8 +126,13 @@ Planner (2026-10-12): issue #520 suggested a proxy or idle unload. Both are scop
 nothing on a host where the server is not running (u24desktop today), and idle unload alone keeps N copies
 loaded while sessions are active.
 
+Implementer (2026-10-12): see the stored plan. `tools/search_core.py` is new (shared `rank()`); `search_server.py` and `search_mcp.py` call it. Measured RSS (u24desktop): 24 MB before the first query, 598 MB after it, 434 MB after the idle unload, 30 MB on the shared-server path (server process 622 MB). The idle unload frees the model and BM25 (~164 MB) but not the imported torch libraries, so the larger saving is the proxy path; the ticket's "state why it frees memory" is answered in `_release_memory` (dropping the references frees the weights, `malloc_trim` returns glibc's small-block arenas) and the numbers above are the proof of how much.
+
 ## Test Summary
+`tests/tools/test_search_shared_path.py` (new, 24 cases), `test_search_mcp.py`, `test_search_server.py` pass; `pytest tests/tools -k "search or mcp or knowledge"`: 292 passed, 35 skipped. `.mcp.json` diff empty (AC8). Live run against `uvicorn tools.search_server:app` on :8765: same top ids on both paths, proxy path loaded no model. Not verified: Docker image; a live index mismatch (unit-tested).
 
 ## Files Changed
+tools/search_core.py (new), tools/search_mcp.py, tools/search_server.py, docs/guidelines/agent_working_environment.md, tests/tools/test_search_shared_path.py (new), tests/tools/test_search_server.py (removed `_make_excerpt` tests with the helper).
 
 ## Completion Summary
+Server and MCP rank through one function; `search_docs` forwards to the shared server only when it serves the same index and otherwise searches in-process silently; the in-process model is released after 10 idle minutes (`SEARCH_MCP_IDLE_UNLOAD_S`); `search_health` names the path. AC1-AC8 met, measurements recorded. Gaps: ownership of search_mcp/search_server/start_search_mcp.sh is still unrouted (planner's note); the idle unload keeps ~434 MB of imported libraries.
