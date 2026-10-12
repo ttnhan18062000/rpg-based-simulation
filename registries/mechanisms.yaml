@@ -463,6 +463,7 @@ mechanisms:
       - src/engine/apply.py::ApplyPath::_compute_entity_changes
       - src/engine/biological_needs.py::need_rates
       - src/engine/starvation.py::hp_loss
+      - src/engine/natural_healing.py::hp_gain
     verified:
       instrument: code_trace
       verdict: observed
@@ -505,6 +506,7 @@ mechanisms:
         (stamina and readiness recover at half rate, attack x0.8), then 1 HP lost every round(6000 / max_hp) ticks at hunger 95, death about
         6000 ticks (2.5 days) after the line instead of about 50. Implemented by TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02:
         `src/engine/starvation.py` (the one tuning table), `apply.py` (the HP term and the recovery scale), `combat.py` (the attack scale).
+        **Rule ratified 2026-10-11 (owner decision 42, memo row 65):** every living body heals naturally, 1 HP every round(9600 / max_hp) life-due ticks awake and round(4800 / max_hp) asleep or resting, none at the starving line and half speed while weakened. Implemented by TCK-20261011-EVERY-LIVING-KIND-HEALS-NATURALLY-FASTER-AT-REST-ROW-65: `src/engine/natural_healing.py` (the table and `hp_gain`), `apply.py` (the HP term).
   - id: derived_stats
     layer: entity
     systems: [progression]

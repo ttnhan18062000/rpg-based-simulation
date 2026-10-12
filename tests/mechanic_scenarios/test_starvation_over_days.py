@@ -107,7 +107,7 @@ def test_control_a_person_who_eats_stops_losing_health_and_survives(monkeypatch)
         assert not sv.is_weakened(final.biological.hunger)
     finally:
         kernel2.shutdown()
-    assert final.combat.alive and final.combat.hp == hp_after_meal, "health kept falling after the meal"
+    assert final.combat.alive and final.combat.hp >= hp_after_meal, "health kept falling after the meal"  # >=: a fed body also heals (decision 42)
     assert crossed > 0
 
 

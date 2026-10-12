@@ -47,6 +47,7 @@ from src.engine.legality import LegalityServiceV2
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.rpg_depth import StaminaService, SkillScalingService
 from src.engine.sleep_debt import debt_change_per_tick, is_asleep, recovery_scale as sleep_recovery_scale
+from src.engine.natural_healing import hp_gain
 from src.engine.starvation import STARVING_LINE, hp_loss, recovery_scale
 from src.systems.social_memory import SocialMemoryService
 from src.systems.social_systems.relationships import RelationshipService
@@ -106,7 +107,8 @@ class ApplyPath:
                 
                 if total_passive_dmg > 0 or new_age != life.age_ticks:
                     comb = changes.get("combat", entity.combat)
-                    new_hp = max(0, comb.hp - total_passive_dmg)
+                    heal = hp_gain(comb, bio, is_asleep(entity), tick // max(1, cadence.lifecycle), entity.id) if total_passive_dmg == 0 else 0  # decision 42
+                    new_hp = max(0, comb.hp - total_passive_dmg + heal)
                     if new_hp != comb.hp:
                         changes["combat"] = replace(comb, hp=new_hp, alive=(new_hp > 0))
                     # Passive HP-death cause, recorded at the writer on the fatal tick only (never
