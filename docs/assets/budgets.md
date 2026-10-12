@@ -106,7 +106,7 @@ Batch `TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF` drew three real sources, a
 
 | Bound | Measured | Bound value | Used | Which |
 |---|---|---|---|---|
-| `MAX_REGISTRY_BYTES` | 29,525 B, 65 keys (was 28,241 B, 62 keys); load median 0.064 s (was 0.045 s) | 458752 | 6.4 % (was 6.2 %) | the registry with the 3 new optional keys. The realistic-maximum row above (~90 % at 1024 keys) is unchanged: the keys add no field. The load-time change is noise at this size, not a trend |
+| `MAX_REGISTRY_BYTES` | 29,525 B as first measured, **29,374 B as committed** (the measurement preceded asset-planner's shortening of the three descriptions; corrected 2026-10-12, see the note below), 65 keys (was 28,241 B, 62 keys); load median 0.064 s (was 0.045 s) | 458752 | 6.4 % (was 6.2 %) | the registry with the 3 new optional keys. The realistic-maximum row above (~90 % at 1024 keys) is unchanged: the keys add no field. The load-time change is noise at this size, not a trend |
 | `MAX_SOURCE_BYTES` (D2) | 10,154 B / 1,919 B / 421 B | 102400 | 9.9 % / 1.9 % / 0.4 % | campfire / ring / panel |
 | `MAX_DIM` | 64 | 128 | 50 % | campfire |
 | `MAX_ANIMATION_FRAMES` | 16 | 16 | 100 % | campfire, by design (the heaviest case); the ring has 8 |
@@ -134,6 +134,24 @@ The largest real source is 10,154 B, 9.9 % of `MAX_SOURCE_BYTES` (102,400). The 
 ### Verdict 2: raise a bound: none
 
 No bound is exceeded and no measurement triggers a change. The closest are `MAX_ANIMATION_FRAMES` at 100 % (the campfire is the 16-frame case by design; an animation longer than 16 frames would be quarantined, which is the bound doing its job, and would be the trigger for an owner question) and `MAX_ATLAS_DIM` at 70.8 % (the icon sheet, 36 entries; a larger icon family would reach 1024 first). Both are reported only, never acted on here.
+
+## Registry re-measurement for the terrain-variants batch (2026-10-12)
+
+`TCK-20261012-VISUAL-ASSETS-REGISTRY-BUDGET-AND-DETAIL-DESIGN`, the budget review the standing rule asks for before the key schema grows. No bound is changed and no registry file is edited by this step. Measured on today's code with the real loader, 2026-10-12.
+
+| What | Bytes | Of `MAX_REGISTRY_BYTES` 458752 | Load time |
+|---|---|---|---|
+| the committed registry (65 keys, no alias; the 29,525 B recorded in the real-art section was measured before the three descriptions were shortened) | 29,374 | 6.4 % | median 0.064 s |
+| this batch's shape: the same plus a `detail` axis on 6 keys (grassland 5 values, mountain, cave, ruins, swamp, shallow_water 3 each, default `base`) and 3 aliases (`terrain.plain`, `terrain.ruin`, `terrain.river`) | 29,852 (+478) | 6.5 % | median 0.061 s |
+| the worst legal case in today's shape (a class and a glyph-and-text fallback on every key): 1,024 keys, 1,024 aliases, 64 keys with a 16-value detail axis | 367,838 | 80.2 % | 1.012 s, peak 19.1 MiB |
+| the same 1,024 keys, no axis | 350,174 | 76.3 % | 0.961 s |
+| keys of that shape grown to the byte bound | 454,442 (1,601 keys) | 99.1 % | 1.036 s, peak 22.9 MiB |
+| a candidate or runtime manifest with 1,024 entries, each with a 32-character detail (`MAX_MANIFEST_BYTES` 524288) | 337,129 | 64.3 % | parse 0.005 s |
+| the estimated rc-0010 runtime manifest (rc-0009's 73 entries + 14 new variants, 6 entries re-anchored, a `details` block for 7 keys) | about 22,700 (rc-0009's is 18,505) | 4.3 % | not measured (estimate from entry sizes) |
+
+Every row is under the 2 s line and under its bound; the realistic registry of this batch is far from either. The `details` block of the runtime manifest is 310 B for 4 keys today and about 481 B more for the 6 new axes. The older numbers in the `MAX_REGISTRY_BYTES` and `MAX_DETAIL_KEYS` rows above (90 % of the bound at 414,942 B, 431,326 B at 1.52 s) are of the shape that existed then; the shape measured here is the one the loader accepts now. `tools/visual_assets_measure_budgets.py` was updated to that shape (its `registry_scaling`, `registry_at_byte_bound` and `manifest_scaling` generators used `variant_axes`, refused since D17, had no class or fallback, and went over 1,024 manifest entries).
+
+A key of the real icon shape (a description of about 200 characters and a label) averages about 450 B, so a registry of real keys reaches the byte bound at about 1,000 keys: the headroom for NEW KEYS is smaller than the generator rows suggest, which is why candidate A (markers, about 18 to 24 new keys) still starts with its own review.
 
 ## Rulings and flags
 

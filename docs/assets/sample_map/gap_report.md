@@ -89,7 +89,7 @@ Not gaps (stock to know about): 18 of the 23 terrain keys have art that no sampl
 
 - The vocabulary decision (#523): asset terrain and entity keys follow V2's names, or V2 maps onto the 23-code set. A should not start before it.
 - The kinds and counts above (G6, G8, G9, G10) and rpg's counts over all worlds (#519); rpg's note that markers keyed on diet and size outlast markers keyed on role (M1 moves kinds to properties).
-- `MAX_REGISTRY_BYTES` budget review FIRST (`docs/assets/budgets.md`): the registry is at 29,525 B of 458,752 B after rc-0009 (6.4 %), and about 18 to 24 new marker keys (G6 to G10) and any detail axes (G4) are what the review has to size; a new key
+- `MAX_REGISTRY_BYTES` budget review FIRST (`docs/assets/budgets.md`): the registry is at 29,374 B of 458,752 B after rc-0009 (6.4 %; first recorded as 29,525 B, before three descriptions were shortened), and about 18 to 24 new marker keys (G6 to G10) and any detail axes (G4) are what the review has to size; a new key
   is optional and cheap, a new per-key field is not.
 - A new key needs a runtime release (any registry edit makes older candidates unexportable, `store_contract.md` Known gaps), so A ends with its own candidate and the tests that export the committed one re-pointed.
 - The frame-1-only build (`TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY`) matters only if a marker is animated.
