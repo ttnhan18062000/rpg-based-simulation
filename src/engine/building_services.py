@@ -31,7 +31,7 @@ SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"}), 
 
 def maintenance_open(building: Any) -> bool:
     """True when `building` still needs maintenance shifts this upkeep period (EXCH-02, ruling 66)."""
-    return building.maintenance_shifts_done < building.maintenance_shifts_needed
+    return bool(building.maintenance_shifts_done < building.maintenance_shifts_needed)
 
 
 def offers_work(building: Any) -> bool:

@@ -186,7 +186,7 @@ class Kernel:
                 state_hash=None,
                 signal_contract=signal_contract_record(profile, self._audit_mode),
             )
-            self._create_run_directory(manifest)
+            self._run_id = self._create_run_directory(self._artifact_repo, str(self._run_id), manifest)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
 
         self._replay = self._init_replay(profile, replay, self._run_id)
@@ -1150,19 +1150,19 @@ class Kernel:
             
         self._replay.on_tick_end(self._state.tick)
 
-    def _create_run_directory(self, manifest: Any) -> None:
-        """An explicit run id may replace its own directory (the caller named it). A default id never touches an existing directory: it
-        takes a fresh id and tries again, so two processes can never share one."""
+    def _create_run_directory(self, repo: Any, run_id: str, manifest: Any) -> str:
+        """Create the run directory and return the run id actually used. An explicit run id may replace its own directory (the caller named it). A
+        default id never touches an existing directory: it takes a fresh id and tries again, so two processes can never share one."""
         if not self._run_id_is_default:
-            self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
-            return
+            repo.create_run(run_id, manifest, overwrite=True)
+            return run_id
         for _attempt in range(8):
             try:
-                self._artifact_repo.create_run(self._run_id, manifest.model_copy(update={"run_id": self._run_id}), overwrite=False)
-                return
+                repo.create_run(run_id, manifest.model_copy(update={"run_id": run_id}), overwrite=False)
+                return run_id
             except FileExistsError:
-                self._run_id = default_run_id(self._rng.get_int(Domain.INIT, 0, 0, 1000, 9999))
-        raise FileExistsError(f"no unused default run directory after 8 attempts (last id {self._run_id})")
+                run_id = default_run_id(self._rng.get_int(Domain.INIT, 0, 0, 1000, 9999))
+        raise FileExistsError(f"no unused default run directory after 8 attempts (last id {run_id})")
 
     def shutdown(self, timeout_s: float = 5.0) -> ShutdownResult:
         from src.core.lifecycle import ShutdownReport

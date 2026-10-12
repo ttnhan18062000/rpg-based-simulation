@@ -142,8 +142,8 @@ class TownResolutionSystem:
                 building = state.buildings[b_id]
                 if building.maintenance_shifts_done:  # a new upkeep period: the count of maintenance shifts starts again (EXCH-02, ruling 61)
                     reset = BuildingUpdate(building_id=b_id, maintenance_shifts_done_set=0)
-                    held = refined_building_updates.get(b_id)
-                    refined_building_updates[b_id] = held.merge(reset) if held is not None else reset
+                    held_building = refined_building_updates.get(b_id)
+                    refined_building_updates[b_id] = held_building.merge(reset) if held_building is not None else reset
                 if not building.functional and building.hp <= 0:
                     continue  # wrecked (sabotage), not merely unpaid: upkeep does not reopen a ruin
                 region = SpatialQueryService.get_building_region(state, b_id)
