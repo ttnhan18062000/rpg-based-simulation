@@ -17,7 +17,6 @@ import os
 import sqlite3
 import subprocess
 import sys
-from dataclasses import dataclass, field
 from pathlib import Path
 
 # Use locally cached HuggingFace models — avoids SSL cert failures on networks
@@ -35,6 +34,15 @@ if "knowledge_search" not in sys.modules:
     sys.modules["knowledge_search"] = _ks
     spec.loader.exec_module(_ks)
 _ks = sys.modules["knowledge_search"]
+
+_SS_PATH = _TOOLS_DIR / "search_shared.py"
+
+if "search_shared" not in sys.modules:
+    spec = importlib.util.spec_from_file_location("search_shared", _SS_PATH)
+    _ss = importlib.util.module_from_spec(spec)
+    sys.modules["search_shared"] = _ss
+    spec.loader.exec_module(_ss)
+_ss = sys.modules["search_shared"]
 
 _HR_PATH = _TOOLS_DIR / "hybrid_retrieval.py"
 
@@ -87,12 +95,32 @@ _MODEL_NAME: str = _ks._MODEL_NAME
 
 
 # ── Lazy-loaded state (model loaded on first search_docs call) ────────────────
-@dataclass
 class _State:
-    model: object = None
-    bm25: object = None
-    doc_ids: list = field(default_factory=list)
-    ready: bool = False
+    """Lazy-loaded search state. The lexical index is ONE immutable `(bm25, doc_ids)` pair published by a single
+    reference swap, and a search reads it once at entry, so a reload (the shared server rebuilds it when the index
+    changes) can never give a search the new BM25 with the old document ids (TCK-20261012-SEARCH-MCP-SHARED-MODEL)."""
+
+    def __init__(self) -> None:
+        self.model: object = None
+        self.lexical: tuple[object, list] = (None, [])
+        self.ready: bool = False
+
+    @property
+    def bm25(self) -> object:
+        return self.lexical[0]
+
+    @bm25.setter
+    def bm25(self, value: object) -> None:
+        self.lexical = (value, self.lexical[1])
+
+    @property
+    def doc_ids(self) -> list:
+        return self.lexical[1]
+
+    @doc_ids.setter
+    def doc_ids(self, value: list) -> None:
+        self.lexical = (self.lexical[0], value)
+
 
 _STATE = _State()
 
@@ -106,7 +134,7 @@ def _ensure_loaded() -> bool:
     try:
         from sentence_transformers import SentenceTransformer
         _STATE.model = SentenceTransformer(_MODEL_NAME)
-        _STATE.bm25, _STATE.doc_ids = _ks._load_bm25(_BM25_PATH)
+        _STATE.lexical = tuple(_ks._load_bm25(_BM25_PATH))
         _STATE.ready = True
         return True
     except Exception:
@@ -123,11 +151,19 @@ def _run_search(query: str, top_k: int = 8, section: str | None = None,
     `{"results": [...], "stale": {"changed": n, "new": n, "removed": n}}` instead of the bare list, and an index whose
     manifest cannot be read gets `"stale": {"unknown": true}`; a current index still returns the bare list
     (TCK-20261006-KNOWLEDGE-INDEX-STALE-WARNING). The results are returned either way; the warning never blocks."""
-    results = _search(query, top_k=top_k, section=section, mode=mode)
+    results = _search_shared_or_local(query, top_k=top_k, section=section, mode=mode)
     if not with_staleness or not isinstance(results, list):
         return results
     stale = _ks.index_staleness(_DB_PATH)
     return {"results": results, "stale": stale} if stale else results
+
+
+def _search_shared_or_local(query: str, top_k: int = 8, section: str | None = None,
+                            mode: str = "hybrid") -> list[dict] | dict:
+    """The shared server's answer when one is available, else this process's own `_search`
+    (TCK-20261012-SEARCH-MCP-SHARED-MODEL). The server runs `_search` itself, so both give the same results."""
+    shared = _ss.try_search(_DB_PATH, query, top_k, section, mode)
+    return shared if shared is not None else _search(query, top_k=top_k, section=section, mode=mode)
 
 
 def _search(query: str, top_k: int = 8, section: str | None = None,
@@ -138,6 +174,7 @@ def _search(query: str, top_k: int = 8, section: str | None = None,
     if not query.strip():
         return []
 
+    bm25, doc_ids = _STATE.lexical  # read once: one generation for the whole search
     query_tokens = _ks._tokenize(query)
     try:
         q_vec = _STATE.model.encode(query).tolist()
@@ -157,8 +194,8 @@ def _search(query: str, top_k: int = 8, section: str | None = None,
             conn=con,
             query_vec_bytes=q_bytes,
             query_tokens=query_tokens,
-            bm25_obj=_STATE.bm25,
-            bm25_doc_ids=_STATE.doc_ids,
+            bm25_obj=bm25,
+            bm25_doc_ids=doc_ids,
             top_k=top_k,
         )
     except Exception:
