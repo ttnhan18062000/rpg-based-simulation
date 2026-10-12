@@ -13,6 +13,7 @@ import time
 import pytest
 from pydantic import ValidationError
 
+from tests.visual_assets import adopted_facts as af
 from tests.visual_assets.store import builders as b
 from visual_assets.store import config, slices
 from visual_assets.store.contracts import CandidateHandoffPackage, SourceRecord, canonical_json, parse_record
@@ -227,21 +228,24 @@ def test_the_worst_case_slice_json_fits_a_source_record():
 
 # ---- every committed record is byte-identical ----
 
-def test_every_committed_source_record_round_trips_byte_for_byte_and_carries_no_slices():
+def test_every_committed_source_record_round_trips_byte_for_byte_and_only_the_proof_sources_carry_slices():
     files = sorted((REAL / "sources").glob("*/r*.source.json"))
-    assert len(files) >= 77
+    assert len(files) == af.REVISION_COUNT
     for path in files:
         data = path.read_bytes()
         record = parse_record(SourceRecord, data)
-        assert record.slices is None and canonical_json(record) == data, path
-        assert b"slices" not in data, path
+        sliced = path.parent.name in af.PROOF_SOURCES  # only the three real-art proof sources carry a slice
+        assert (record.slices is not None) == sliced and canonical_json(record) == data, path
+        assert (b"slices" in data) == sliced, path
+        if sliced:  # exactly one slice with one key (the proof sources): name, bounds, 9-slice centre and pivot
+            assert [(x.name, [(k.bounds.x, k.bounds.y, k.bounds.w, k.bounds.h, k.center is not None, k.pivot is not None) for k in x.keys]) for x in record.slices] == af.PROOF_SLICES[path.parent.name], path
 
 
-def test_every_committed_source_reads_with_no_new_finding_and_derives_no_slices():
+def test_every_committed_source_reads_with_no_new_finding_and_only_the_proof_sources_derive_slices():
     for path in sorted((REAL / "sources").glob("*/r*.aseprite")):
         source = path.read_bytes()
         assert not some(source), path
-        assert slices.slices_from_source(source) is None, path
+        assert (slices.slices_from_source(source) is not None) == (path.parent.name in af.PROOF_SOURCES), path
 
 
 # ---- intake -> adoption -> SourceRecord ----
