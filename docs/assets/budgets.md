@@ -147,11 +147,23 @@ No bound is exceeded and no measurement triggers a change. The closest are `MAX_
 | the same 1,024 keys, no axis | 350,174 | 76.3 % | 0.961 s |
 | keys of that shape grown to the byte bound | 454,442 (1,601 keys) | 99.1 % | 1.036 s, peak 22.9 MiB |
 | a candidate or runtime manifest with 1,024 entries, each with a 32-character detail (`MAX_MANIFEST_BYTES` 524288) | 337,129 | 64.3 % | parse 0.005 s |
-| the estimated rc-0010 runtime manifest (rc-0009's 73 entries + 14 new variants, 6 entries re-anchored, a `details` block for 7 keys) | about 22,700 (rc-0009's is 18,505) | 4.3 % | not measured (estimate from entry sizes) |
+| the estimated rc-0010 runtime manifest (rc-0009's 73 entries + 14 new variants, 6 entries re-anchored, a `details` block for 7 keys) | about 22,700 (rc-0009's is 18,505) | 4.3 % | estimate from entry sizes; the real figure is in the next section |
 
 Every row is under the 2 s line and under its bound; the realistic registry of this batch is far from either. The `details` block of the runtime manifest is 310 B for 4 keys today and about 481 B more for the 6 new axes. The older numbers in the `MAX_REGISTRY_BYTES` and `MAX_DETAIL_KEYS` rows above (90 % of the bound at 414,942 B, 431,326 B at 1.52 s) are of the shape that existed then; the shape measured here is the one the loader accepts now. `tools/visual_assets_measure_budgets.py` was updated to that shape (its `registry_scaling`, `registry_at_byte_bound` and `manifest_scaling` generators used `variant_axes`, refused since D17, had no class or fallback, and went over 1,024 manifest entries).
 
 A key of the real icon shape (a description of about 200 characters and a label) averages about 450 B, so a registry of real keys reaches the byte bound at about 1,000 keys: the headroom for NEW KEYS is smaller than the generator rows suggest, which is why candidate A (markers, about 18 to 24 new keys) still starts with its own review.
+
+## rc-0010 measured (2026-10-13)
+
+`TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANTS-RC-AND-CLOSE`. Measured on the committed store, no bound changed.
+
+| What | Bytes | Of the bound | Note |
+|---|---|---|---|
+| the registry `visual_keys.yaml` (65 keys, 3 aliases, 6 detail axes) | 30,943 | 6.7 % of `MAX_REGISTRY_BYTES` 458,752 | estimate above was 29,852; the axis comments and descriptions made up the rest |
+| the candidate manifest `rc-0010.json` (87 entries) | 14,920 | 2.8 % of `MAX_MANIFEST_BYTES` 524,288 | |
+| the runtime manifest of the export (`runtime_manifest.json`, 87 entries, a `details` block for 7 keys) | 22,793 | 4.3 % | estimated 22,700 above |
+| the 14 variant sources | 360 to 406 each | 0.4 % of `MAX_SOURCE_BYTES` 102,400 | |
+| the committed sample-map crops | 237,953 | 90.8 % of the 262,144 B cap | three crop boxes shrunk, since the exact view now draws terrain everywhere |
 
 ## Rulings and flags
 

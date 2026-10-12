@@ -137,12 +137,12 @@ def test_every_proposed_alias_names_a_registered_key_and_the_registry_carries_ex
     from tests.visual_assets import adopted_facts as af
 
     assert targets <= set(registry.keys) and dict(registry.aliases) == af.REGISTRY_ALIASES  # since `TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES` the three terrain proposals are registry aliases too
-    assert {f"terrain.{n.lower()}": k for n, k in sm.PROPOSED_ALIASES["terrain"].items()} == af.REGISTRY_ALIASES  # the proposals lowercased are exactly the registry's
+    assert "terrain" not in sm.PROPOSED_ALIASES  # the terrain proposals ARE the registry's aliases now; the exact view resolves them with `Registry.resolve`, only the object proposals stay in the data
     assert sm.ALIAS_LABEL == "unconfirmed: asset-planner proposal for rpg-planner (#519)"
 
 
 def test_the_data_file_labels_the_aliases(dungeon):
     data = dungeon[0]
-    assert data["proposed_aliases"]["label"] == sm.ALIAS_LABEL and data["proposed_aliases"]["terrain"]["ruin"] == "terrain.ruins"
+    assert data["proposed_aliases"]["label"] == sm.ALIAS_LABEL and "terrain" not in data["proposed_aliases"] and data["proposed_aliases"]["place"]["RUIN"] == "icon.marker.ruins"
     ruin = next(r for r in data["terrain"] if r["name"] == "ruin")
-    assert ruin["key"] is None and ruin["proposed_alias"] == "terrain.ruins" and ruin["near"] == ["terrain.ruins"]
+    assert ruin["key"] == "terrain.ruins" and ruin["registry_alias"] == "terrain.ruin" and ruin["near"] == []  # resolved through the REGISTRY alias, not a data-file proposal
