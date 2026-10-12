@@ -963,6 +963,13 @@ jobs:
           mkdir -p reports/perf
           python3 tools/perf/tripwire.py calibrate --trials 8 > reports/perf/tripwire-calibration.json
           { echo "### Perf tripwire A/A calibration"; echo "runner: $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2- | xargs), $(nproc) vCPU"; echo '```json'; cat reports/perf/tripwire-calibration.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Perf tripwire A/A calibration artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-tripwire-calibration
+          path: reports/perf/tripwire-calibration.json
+          if-no-files-found: ignore
       - name: Job summary
         if: always()
         run: python3 tools/ci_junit_summary.py "reports/junit/perf-cert-arena.xml" "perf-cert-arena" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
