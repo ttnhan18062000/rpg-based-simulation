@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_cfed2da9c63517ce",
+  "manifest_id": "prov_4f4bb0db705cf99d",
   "world_id": "lifecycle_full_coverage_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "303769973378e61afa185b56b72afa1d771968e58e47509ee2d90deea6f176cf",
+  "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
@@ -16,8 +16,8 @@
   },
   "composition_fingerprint": "d48bde0340c743eae6dcfd2619bb1e12e501285f642fcf1e4538d4184ef35e9d",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "cfed2da9c63517ce523ddedd1fdfc4da6772d33573008a9d6d2c301b8124e580",
-  "created_at": "2026-10-11T13:57:52.821349Z",
+  "content_fingerprint": "4f4bb0db705cf99dbd22b0e3def52c8e43c5f6eafffc509464734acd00724c00",
+  "created_at": "2026-10-12T14:35:34.689785Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

@@ -30,7 +30,7 @@ TICKS = 260  # one shift (200 ticks) plus the upkeep ticks before it
 
 def _run(treasury: float, inn_gold: int = 0):
     region = RegionState(id="town", name="Town", bounds=(0, 0, 20, 20), kind="TOWN", owner_faction_id=HERO, tax_share=0.1)
-    inn = BuildingState(id=10, kind="inn", position=(5.0, 5.0), functional=True, inventory=InventoryComponent(gold=inn_gold))
+    inn = BuildingState(id=10, kind="inn", position=(5.0, 5.0), functional=True, inventory=InventoryComponent(gold=inn_gold), hires_for_pay=True, maintenance_shifts_needed=1)
     worker = (V2EntityBuilder(1).kind("worker").properties({"species_id": "human"}).location(5.0, 6.0).inventory(gold=0)
               .social(public_reputation=0.0).lifecycle(active=True).combat(alive=True, readiness=100.0).build())
     worker = replace(worker, task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "WORK", "target_id": 10, SHIFT_START: 1}))
@@ -57,12 +57,14 @@ def test_main_arm_an_inn_with_its_own_purse_pays_the_wage_and_the_treasury_pays_
     assert drift == 0.0                                             # no coin appeared or vanished
 
 
-def test_shortfall_arm_an_empty_inn_is_topped_up_by_exactly_the_shortfall_and_stays_open():
+def test_shortfall_arm_an_empty_inn_is_topped_up_for_upkeep_and_the_worker_is_paid_by_the_maintenance_shift():
     final, drift = _run(1000.0)
-    assert final.global_resources[KEY] == 1000.0 - 5                # topped up once, then the purse (5) covers every later upkeep tick
-    assert final.buildings[10].inventory.gold == 5 and final.buildings[10].functional is True
-    assert final.entities[1].inventory.gold == 0                    # 5 is under the 6-gold wage: unpaid until the inn's sales fill the purse
-    assert drift == 0.0
+    # Upkeep is one shift's wage (6): the treasury tops the empty purse up by exactly that, twice over 260 ticks (before and after the period's
+    # counter reset). The first top-up funds the worker's counted maintenance shift (the purse pays the wage), the second the next period's upkeep.
+    assert final.global_resources[KEY] == 1000.0 - 2 * WAGE_GOLD
+    assert final.buildings[10].inventory.gold == WAGE_GOLD and final.buildings[10].functional is True
+    assert final.entities[1].inventory.gold == WAGE_GOLD            # the worker earned the wage from the topped-up purse
+    assert drift == 0.0                                             # the treasury's coin moved to the worker: nothing appeared or vanished
 
 
 def test_control_an_empty_treasury_pays_nobody_and_the_unpaid_inn_offers_no_work():

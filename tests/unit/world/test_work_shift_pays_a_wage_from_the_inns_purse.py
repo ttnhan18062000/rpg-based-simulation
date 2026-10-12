@@ -13,7 +13,7 @@ from src.engine.work_shift import SHIFT_START, SHIFT_TICKS, WAGE_GOLD, nearest_w
 
 
 def _world(inn_gold=100, pos=(5.0, 6.0), tick=1):
-    inn = BuildingState(id=10, kind="inn", position=(5.0, 5.0), functional=True, inventory=InventoryComponent(gold=inn_gold))
+    inn = BuildingState(id=10, kind="inn", position=(5.0, 5.0), functional=True, inventory=InventoryComponent(gold=inn_gold), hires_for_pay=True, maintenance_shifts_needed=1)
     ent = V2EntityBuilder(1).kind("worker").properties({"species_id": "human"}).location(*pos).inventory(gold=0).social(public_reputation=0.0).build()
     return AuthoritativeState(tick=tick, seed=1, entities={1: ent}, buildings={10: inn}, town_tiles={(5, 5), (5, 6)}), ent, inn
 
@@ -92,17 +92,55 @@ def _held_world(inn_gold=100):
     return replace(state, regions={"r": RegionState(id="r", name="R", bounds=(0, 0, 50, 50), owner_faction_id=int(Faction.HERO_GUILD))}), ent
 
 
-def test_a_shift_at_a_treasury_backed_kind_asks_the_treasury_to_back_the_wage(monkeypatch):
-    """Maintenance work (ruling 61): at the inn rate, from the building's purse, the owning treasury topping up a shortfall. No kind is declared
-    treasury-backed yet and the decision layer sends nobody to one, so this path is tested here and not reachable in play."""
-    from src.engine import work_shift
-    monkeypatch.setattr(work_shift, "TREASURY_WORK_KINDS", frozenset({"inn"}))
+def test_a_maintenance_shift_is_counted_and_asks_the_treasury_to_back_the_wage():
+    """Maintenance first (ruling 66): while the building still needs shifts this period, the wage is treasury-backed and counted."""
     state, ent = _held_world()
     wage, = work_update(ent, {SHIFT_START: 1}, SHIFT_TICKS, state)[1].resource_transfers
-    assert wage.gold_delta == WAGE_GOLD == 6 and wage.treasury_pays and wage.treasury_faction is not None
+    assert wage.gold_delta == WAGE_GOLD == 6 and wage.treasury_pays and wage.maintenance_shift and wage.treasury_faction is not None
 
 
-def test_a_shift_at_an_ordinary_inn_is_not_backed_by_the_treasury():
+def test_a_commercial_shift_is_paid_from_the_purse_alone_once_maintenance_is_done():
+    state, ent = _held_world()
+    done = replace(state.buildings[10], maintenance_shifts_done=1)
+    state = replace(state, buildings={**state.buildings, 10: done})
+    wage, = work_update(ent, {SHIFT_START: 1}, SHIFT_TICKS, state)[1].resource_transfers
+    assert not wage.treasury_pays and not wage.maintenance_shift
+
+
+def test_a_building_with_no_maintenance_need_and_no_commercial_work_offers_none():
+    from src.engine.work_shift import offers_work
+    state, _, _ = _world()
+    plain = replace(state.buildings[10], maintenance_shifts_needed=0, hires_for_pay=False)
+    assert not offers_work(plain)
+    assert offers_work(replace(plain, hires_for_pay=True)) and offers_work(replace(plain, maintenance_shifts_needed=1))
+
+
+def test_the_conservation_cap_refuses_a_counted_shift_once_the_need_is_met():
+    from src.core.conservation import ResourceTransactionResolver
     state, ent = _held_world()
     wage, = work_update(ent, {SHIFT_START: 1}, SHIFT_TICKS, state)[1].resource_transfers
-    assert not wage.treasury_pays
+    assert ResourceTransactionResolver.resolve(state, ent, wage).building_update.maintenance_shifts_done_delta == 1
+    full = replace(state, buildings={**state.buildings, 10: replace(state.buildings[10], maintenance_shifts_done=1)})
+    assert not ResourceTransactionResolver.resolve(full, ent, wage).accepted
+
+
+def _with_hall(state, *, hall_gold=0, treasury=100.0, done=0):
+    """A town hall (not an inn) that needs 3 maintenance shifts, on ground held by the hero guild."""
+    from src.core.enums import Faction
+    from src.core.state import RegionState
+    from src.core.treasury import treasury_key
+    hall = BuildingState(id=20, kind="town_hall", position=(5.0, 9.0), functional=True, inventory=InventoryComponent(gold=hall_gold),
+                         maintenance_shifts_needed=3, maintenance_shifts_done=done)
+    region = RegionState(id="r", name="R", bounds=(0, 0, 50, 50), owner_faction_id=int(Faction.HERO_GUILD))
+    return replace(state, buildings={**state.buildings, 20: hall}, regions={"r": region},
+                   global_resources={treasury_key(int(Faction.HERO_GUILD)): treasury})
+
+
+def test_work_is_found_at_a_non_inn_building_that_needs_maintenance_and_the_treasury_can_back_it():
+    state, ent, inn = _world(inn_gold=0)  # the inn's purse is empty and its own maintenance is done: it cannot hire
+    state = replace(state, buildings={10: replace(inn, maintenance_shifts_done=1)})
+    state = _with_hall(state)
+    assert nearest_work(state, ent).kind == "town_hall"
+    assert nearest_work(_with_hall(state, treasury=0.0), ent) is None            # an empty treasury cannot back the wage, the hall's purse is empty
+    assert nearest_work(_with_hall(state, treasury=0.0, hall_gold=6), ent).kind == "town_hall"  # its own purse covers one wage
+    assert nearest_work(_with_hall(state, done=3), ent) is None                  # its maintenance for the period is done: it offers no more

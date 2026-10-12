@@ -2695,6 +2695,12 @@ mechanisms:
         the people-only trait plus non-hostile-controller gate (decision 43). Decision 34 removed
         ShopSystem's auto-sell; `ShopSystem.enforce` stays bound because it still sanitises SHOP_BUY
         intents. `src/town/inn.py`/`home.py` remain dead (deleted in this PR).
+        **Noted 2026-10-12** (TCK-20261011-NEAREST-WORK-READS-THE-DECLARED-WORK-BUILDINGS-NOT-ONLY-THE-INN,
+        rpg-implementer-3; divergence 2.117, TOWN-210): the work a building offers is declared by
+        its content (`maintenance_shifts`, `hires_for_pay`), read from `BuildingState` by
+        `work_shift.offers_work`/`nearest_work` with no building name in code; a maintenance shift
+        is counted and treasury-backed in `conservation._wage_result`, a commercial shift is paid
+        from the purse only; upkeep is shifts times the wage.
   - id: building_sabotage
     layer: world
     systems: [economy]

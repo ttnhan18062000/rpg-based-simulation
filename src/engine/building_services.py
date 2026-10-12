@@ -20,21 +20,21 @@ from src.core.updates import (
 from src.engine.appraisal import can_use_inn_meal
 from src.engine.serves import serves
 from src.engine.service_prices import EAT_PRICE_GOLD, INN_MEAL_HUNGER, REST_PRICE_GOLD
-from src.engine.service_reach import service_tile
+from src.engine.service_reach import service_building_where, service_tile
 from src.engine.shop_sale import plan_sale
 from src.engine.spatial_query import SpatialQueryService
 
-# The building kinds that serve an action.
-SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"}), "SELL": frozenset({"shop"}), "WORK": frozenset({"inn"}), "REPAIR": frozenset({"blacksmith"})}
-
-# The WORK building kinds whose coin the owning treasury backs: a shift there is paid from the building's purse and the treasury tops up a shortfall
-# (EXCH-02, ruling 61: maintenance work). None is declared yet and the decision layer sends nobody to a non-inn WORK building (TCK-20261011-NEAREST-
-# WORK-READS-THE-DECLARED-WORK-BUILDINGS-NOT-ONLY-THE-INN), so the path is built and tested but not reachable in play.
-TREASURY_WORK_KINDS: frozenset = frozenset()
+# The building kinds that serve an action. WORK is not here: the work a building offers is declared by its state (content ``hires_for_pay`` and
+# ``maintenance_shifts``, EXCH-02 ruling 66), see ``work_shift.offers_work``; no building name is in code (D56).
+SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"}), "SELL": frozenset({"shop"}), "REPAIR": frozenset({"blacksmith"})}
 
 
 def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
     """The functional building (of the kinds that serve `action`) the subject stands on or orthogonally beside, or None."""
+    if action == "WORK":
+        from src.engine.work_shift import offers_work  # work_shift imports this module
+        found = service_building_where(context, (int(entity.navigation.position[0]), int(entity.navigation.position[1])), offers_work)
+        return found if found is not None and found.functional else None
     kinds = SERVICE_KINDS.get(action)
     if kinds is None:
         return None

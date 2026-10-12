@@ -1161,7 +1161,8 @@
       "hp": 1000,
       "max_hp": 1000,
       "service_profile_id": null,
-      "owner_faction": null
+      "owner_faction": null,
+      "maintenance_shifts": 3
     },
     "shop_0": {
       "hp": 500,
@@ -1190,7 +1191,8 @@
       "starting_stock": {
         "travel_ration": 20,
         "bread": 10
-      }
+      },
+      "hires_for_pay": true
     },
     "healer_hut_0": {
       "hp": 450,
@@ -1225,7 +1227,8 @@
       "starting_stock": {
         "travel_ration": 20,
         "bread": 10
-      }
+      },
+      "hires_for_pay": true
     }
   },
   "resources": {

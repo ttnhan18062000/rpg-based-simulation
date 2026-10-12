@@ -1302,6 +1302,12 @@ class BuildingState:
     # region/place containment tracking as a state field at all -- this is new,
     # not a mirror of a pre-existing region_id (none existed).
     place_id: Optional[str] = None
+    # EXCH-02, ruling 61 (upkeep in work): the shifts of maintenance work the building needs each upkeep period (copied from its content
+    # declaration at compile) and the shifts done in the current period (reset at each upkeep period, ``TownResolutionSystem``).
+    maintenance_shifts_needed: int = 0
+    maintenance_shifts_done: int = 0
+    # Commercial paid work (content ``hires_for_pay``, ruling 66): a shift is paid from the building's own purse only.
+    hires_for_pay: bool = False
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -1317,6 +1323,9 @@ class BuildingState:
             "inventory": self.inventory.to_canonical_dict(),
             "price_modifiers": dict(sorted(self.price_modifiers.items())),
             "place_id": self.place_id,
+            "maintenance_shifts_needed": self.maintenance_shifts_needed,
+            "maintenance_shifts_done": self.maintenance_shifts_done,
+            "hires_for_pay": self.hires_for_pay,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res

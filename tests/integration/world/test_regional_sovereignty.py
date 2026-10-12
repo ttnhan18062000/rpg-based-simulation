@@ -106,7 +106,8 @@ def test_governance_taxation_and_vaults():
         id=1,
         kind="inn",
         position=(5, 5),
-        functional=True
+        functional=True,
+        maintenance_shifts_needed=1,  # one shift a period: upkeep is 1 x WAGE_GOLD (6), EXCH-02 ruling 66
     )
     
     state = AuthoritativeState(
@@ -127,10 +128,10 @@ def test_governance_taxation_and_vaults():
     next_state = ApplyPath.apply_generation(state, refined_update, next_tick=101, cadence=cadence)
     
     # EXCH-02, decisions 51 and 58: no per-head levy (the other-faction peasant pays nothing), no +10 mint for a functional building. The vault pays
-    # the building's 5 upkeep INTO THE BUILDING'S OWN PURSE: 500 - 5 = 495, and the building holds the 5.
+    # the building's 6 upkeep (one shift's wage) INTO THE BUILDING'S OWN PURSE: 500 - 6 = 494, and the building holds the 6.
     assert next_state.entities[2].inventory.gold == 100
-    assert next_state.global_resources["faction_hero_guild_gold"] == 495.0
-    assert next_state.buildings[1].inventory.gold == 5
+    assert next_state.global_resources["faction_hero_guild_gold"] == 494.0
+    assert next_state.buildings[1].inventory.gold == 6
 
 def test_governance_maintenance_and_degradation():
     """
@@ -150,7 +151,8 @@ def test_governance_maintenance_and_degradation():
         id=1,
         kind="inn",
         position=(5, 5),
-        functional=True
+        functional=True,
+        maintenance_shifts_needed=1,  # one shift a period: upkeep is 1 x WAGE_GOLD (6), EXCH-02 ruling 66
     )
     
     # Case 1: Sufficient funds
@@ -167,9 +169,9 @@ def test_governance_maintenance_and_degradation():
     
     refined_ok = AuthoritativeApplyPipeline.refine(state_ok, StateUpdate(), cadence=cadence)
     next_state_ok = ApplyPath.apply_generation(state_ok, refined_ok, next_tick=101, cadence=cadence)
-    # Upkeep is 5.0, paid from the vault into the building's own purse (no +10 mint any more)
-    assert next_state_ok.global_resources["faction_hero_guild_gold"] == 100.0 - 5.0
-    assert next_state_ok.buildings[1].inventory.gold == 5
+    # Upkeep is 6.0 (one shift's wage), paid from the vault into the building's own purse (no +10 mint any more)
+    assert next_state_ok.global_resources["faction_hero_guild_gold"] == 100.0 - 6.0
+    assert next_state_ok.buildings[1].inventory.gold == 6
     assert next_state_ok.buildings[1].functional is True
     
     from src.core.updates import BuildingUpdate

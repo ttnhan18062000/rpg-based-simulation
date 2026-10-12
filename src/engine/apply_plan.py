@@ -233,7 +233,10 @@ class ApplyPlanBuilder:
                         new_inv = InventoryService.apply_update(new_inv, b_upd.inventory)
                     new_prc = b_upd.price_modifiers_set if b_upd.price_modifiers_set is not None else bld.price_modifiers
                     is_death = bld.functional and new_hp == 0 and is_violent_building_destruction(b_upd.hp_delta)  # ENV-07: only violent destruction is unrest
-                    new_buildings[b_id] = replace(bld, hp=new_hp, functional=False if new_hp == 0 else new_func, inventory=new_inv, price_modifiers=new_prc)
+                    base_done = b_upd.maintenance_shifts_done_set if b_upd.maintenance_shifts_done_set is not None else bld.maintenance_shifts_done
+                    new_done = base_done + b_upd.maintenance_shifts_done_delta  # the period reset first, then the shifts paid this tick
+                    new_buildings[b_id] = replace(bld, hp=new_hp, functional=False if new_hp == 0 else new_func, inventory=new_inv, price_modifiers=new_prc,
+                                                  maintenance_shifts_done=new_done)
                     if is_death:
                         cols.add("regions")
                         if plan.world_collection_changes["regions"] is prior_state.regions:

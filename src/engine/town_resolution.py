@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Dict
 
 from src.core.enums import Faction
 from src.core.treasury import treasury_key
+from src.engine.work_shift import WAGE_GOLD
 from src.core.updates import (
     BuildingUpdate,
     CombatUpdate,
@@ -139,6 +140,10 @@ class TownResolutionSystem:
 
             for b_id in sorted(state.buildings):
                 building = state.buildings[b_id]
+                if building.maintenance_shifts_done:  # a new upkeep period: the count of maintenance shifts starts again (EXCH-02, ruling 61)
+                    reset = BuildingUpdate(building_id=b_id, maintenance_shifts_done_set=0)
+                    held = refined_building_updates.get(b_id)
+                    refined_building_updates[b_id] = held.merge(reset) if held is not None else reset
                 if not building.functional and building.hp <= 0:
                     continue  # wrecked (sabotage), not merely unpaid: upkeep does not reopen a ruin
                 region = SpatialQueryService.get_building_region(state, b_id)
@@ -157,14 +162,11 @@ class TownResolutionSystem:
         )
 
 
-MAINTENANCE_COST = 5
-
-
 def _meet_upkeep(building: "BuildingState", key: str, treasury_balances: Dict[str, float], resource_updates: Dict[str, float],
                  building_updates: Dict[int, BuildingUpdate]) -> None:
     """One building's upkeep (decision 58, ruling 61): met from its OWN purse, which is only checked (nothing is paid out to a payee); the owning
     treasury (`key`) tops up ONLY a shortfall; a building neither can pay is closed, and it reopens when it can."""
-    shortfall = max(0, MAINTENANCE_COST - building.inventory.gold)
+    shortfall = max(0, building.maintenance_shifts_needed * WAGE_GOLD - building.inventory.gold)  # upkeep is shifts times the wage (ruling 66)
     b_upd = building_updates.get(building.id, BuildingUpdate(building_id=building.id))
     if shortfall and treasury_balances.get(key, 0.0) + resource_updates.get(key, 0.0) < shortfall:
         building_updates[building.id] = replace(b_upd, functional_set=False)

@@ -816,6 +816,10 @@ class BuildingUpdate:
     functional_set: Optional[bool] = None
     inventory: Optional[InventoryUpdate] = None
     price_modifiers_set: Optional[Dict[str, float]] = None
+    # Maintenance shifts done this upkeep period (EXCH-02, ruling 61): a paid shift adds to the counter (``delta``) and the period reset sets it
+    # to 0 (``set``). The apply path applies the set first, then the delta, so a reset on the tick a shift is paid cannot lose that shift.
+    maintenance_shifts_done_delta: int = 0
+    maintenance_shifts_done_set: Optional[int] = None
 
     def merge(self, other: BuildingUpdate) -> BuildingUpdate:
         if self.building_id != other.building_id:
@@ -831,7 +835,9 @@ class BuildingUpdate:
             hp_delta=self.hp_delta + other.hp_delta,
             functional_set=other.functional_set if other.functional_set is not None else self.functional_set,
             inventory=merged_inventory,
-            price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set
+            price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set,
+            maintenance_shifts_done_delta=self.maintenance_shifts_done_delta + other.maintenance_shifts_done_delta,
+            maintenance_shifts_done_set=other.maintenance_shifts_done_set if other.maintenance_shifts_done_set is not None else self.maintenance_shifts_done_set,
         )
 
 
