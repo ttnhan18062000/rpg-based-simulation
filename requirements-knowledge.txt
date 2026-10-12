@@ -5,7 +5,9 @@
 # torch must be installed first, from the CPU-only wheel index (not resolvable from
 # public PyPI as a plain `pip install`):
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
-# All environments for this project use CPU-only PyTorch (no CUDA/GPU).
+# All environments for this project use CPU-only PyTorch (no CUDA/GPU). uv.lock does NOT carry this build (it
+# resolves torch from PyPI), so `uv sync --extra knowledge` is not the way to build this venv.
+# `make` picks its interpreter via KNOWLEDGE_PYTHON, else the main checkout's .venv-knowledge (see PYTHON_KNOWLEDGE).
 torch==2.12.1+cpu
 sentence-transformers==5.6.0
 sqlite-vec==0.1.9
