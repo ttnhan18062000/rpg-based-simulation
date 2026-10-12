@@ -55,7 +55,9 @@ dev = [
     "httpx>=0.27.0",
     "hypothesis>=6.0.0",
     "coverage>=7.0.0",
-    "mypy",
+    # Exact, equal to the version uv.lock resolves (TCK-20261012-MYPY-DEV-PIN): a new mypy release can add errors
+    # and move the mypy baseline without a code change. Bump here and in uv.lock together.
+    "mypy==2.1.0",
     "jsonschema>=4.0.0",
     # Also declared as the `search-mcp` extra, which existing tests pin; the dev group makes
     # the default install reach it for tests/tools/test_search_mcp.py.
