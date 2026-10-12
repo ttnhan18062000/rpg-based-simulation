@@ -334,3 +334,35 @@ class TestResolveIndexDir:
 
     def test_main_checkout_root_outside_git_is_none(self, tmp_path: Path) -> None:
         assert _mod._main_checkout_root(tmp_path) is None
+
+
+# --- TCK-20261012-SEARCH-MCP-SHARED-MODEL: _run_search asks the shared server first, else searches in-process ---
+
+
+class TestSharedServerWiring:
+    def test_a_shared_answer_is_used_and_the_local_search_is_not_run(self, monkeypatch):
+        shared = [{"doc_id": "from-server"}]
+        monkeypatch.setattr(_mod._ss, "try_search", lambda *a, **k: shared)
+        monkeypatch.setattr(_mod, "_search", lambda *a, **k: pytest.fail("must not search in-process"))
+        assert _mod._run_search("q") == shared
+
+    def test_no_shared_answer_falls_back_to_the_in_process_search(self, monkeypatch):
+        monkeypatch.setattr(_mod._ss, "try_search", lambda *a, **k: None)
+        monkeypatch.setattr(_mod, "_search", lambda *a, **k: [{"doc_id": "local"}])
+        assert _mod._run_search("q") == [{"doc_id": "local"}]
+
+    def test_the_request_carries_the_query_arguments_and_this_index(self, monkeypatch):
+        seen: dict = {}
+
+        def fake(db, query, top_k, section, mode):
+            seen.update(db=db, query=query, top_k=top_k, section=section, mode=mode)
+
+        monkeypatch.setattr(_mod._ss, "try_search", fake)
+        monkeypatch.setattr(_mod, "_search", lambda *a, **k: [])
+        _mod._run_search("damage", top_k=3, section="mechanics", mode="vector")
+        assert seen == {"db": _mod._DB_PATH, "query": "damage", "top_k": 3, "section": "mechanics", "mode": "vector"}
+
+    def test_the_server_runs_the_same_function_the_in_process_path_runs(self):
+        """By construction: search_shared serves `search_mcp._search`, never a second search path."""
+        text = (_REPO_ROOT / "tools" / "search_shared.py").read_text(encoding="utf-8")
+        assert "return mcp._search(query, **kwargs)" in text and "serve(_reloading(mcp)" in text

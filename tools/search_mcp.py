@@ -36,6 +36,15 @@ if "knowledge_search" not in sys.modules:
     spec.loader.exec_module(_ks)
 _ks = sys.modules["knowledge_search"]
 
+_SS_PATH = _TOOLS_DIR / "search_shared.py"
+
+if "search_shared" not in sys.modules:
+    spec = importlib.util.spec_from_file_location("search_shared", _SS_PATH)
+    _ss = importlib.util.module_from_spec(spec)
+    sys.modules["search_shared"] = _ss
+    spec.loader.exec_module(_ss)
+_ss = sys.modules["search_shared"]
+
 _HR_PATH = _TOOLS_DIR / "hybrid_retrieval.py"
 
 if "hybrid_retrieval" not in sys.modules:
@@ -123,11 +132,19 @@ def _run_search(query: str, top_k: int = 8, section: str | None = None,
     `{"results": [...], "stale": {"changed": n, "new": n, "removed": n}}` instead of the bare list, and an index whose
     manifest cannot be read gets `"stale": {"unknown": true}`; a current index still returns the bare list
     (TCK-20261006-KNOWLEDGE-INDEX-STALE-WARNING). The results are returned either way; the warning never blocks."""
-    results = _search(query, top_k=top_k, section=section, mode=mode)
+    results = _search_shared_or_local(query, top_k=top_k, section=section, mode=mode)
     if not with_staleness or not isinstance(results, list):
         return results
     stale = _ks.index_staleness(_DB_PATH)
     return {"results": results, "stale": stale} if stale else results
+
+
+def _search_shared_or_local(query: str, top_k: int = 8, section: str | None = None,
+                            mode: str = "hybrid") -> list[dict] | dict:
+    """The shared server's answer when one is available, else this process's own `_search`
+    (TCK-20261012-SEARCH-MCP-SHARED-MODEL). The server runs `_search` itself, so both give the same results."""
+    shared = _ss.try_search(_DB_PATH, query, top_k, section, mode)
+    return shared if shared is not None else _search(query, top_k=top_k, section=section, mode=mode)
 
 
 def _search(query: str, top_k: int = 8, section: str | None = None,
