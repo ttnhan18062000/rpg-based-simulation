@@ -89,6 +89,24 @@ a standing requirement for whichever future mechanism eventually closes this gap
   parentless shape; it stays off and is retired when births land. **Alternatives not taken:**
   keeping the spawn in baseline v1 as a reported exception; charging camp stock for a
   parentless spawn.
+  - **Every other mid-run add, classified (rpg-designer applying decisions 14, 67 and 70,
+    2026-10-13, for validity check V8: every body added mid-run declares its source, initial,
+    birth with parents, or a declared arrival).**
+    - **Regional density top-up** (`SpawnService.process_spawns`, `src/world/spawn.py`, live):
+      every 50 ticks, it fills each region's monster count up to a density target from a pool
+      by region kind. That is topping up by spawning to a target, from nothing, so it is removed
+      before baseline v1 as its own measured step.
+    - **Camp raids** (`RaidService.spawn_raid`, called by the camp's raid trigger, live): new
+      raiders appear at the camp for a maturity cost. It is the same family as camp spawning,
+      so it is removed with it. A raid made of a camp's existing members setting out together is
+      a later direction, not yet ruled.
+    - **Off by default, staying off:**
+      - creature territory spawns, which are parentless and retired with births;
+      - world-boss and lair spawns (decision 14);
+      - a calamity's boss or magical entity (a calamity bringing creatures would need a declared
+        origin first).
+    - **A birth:** humanoid reproduction (off) makes a tracked two-parent birth, a base for
+      milestone 1's births. Displacement moves existing bodies and adds none.
 
 **Scenarios:** [LB-S12](../scenarios/life-body-batch-05.md#lb-s12) (population decline —
 scored against this finding, not assumed to pass).
