@@ -2,8 +2,8 @@
 - id: "wolf_den_ecology"
   display_name: "Wolf Den Ecology"
   biomes: ["wolf_den", "near_forest"]
-  dominant_factions: ["wild_beast_pack"]
-  populations: ["wolf_pack_small"]
+  dominant_factions: ["wild_beast_pack", "wild_fauna"]
+  populations: ["wolf_pack_small", "small_plant_eater_herd"]
   resources: ["wood_node", "herb_patch", "healing_flower_patch", "berry_thicket"]
   relationship_models: ["territorial_animal"]
 

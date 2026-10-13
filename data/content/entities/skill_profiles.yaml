@@ -38,3 +38,7 @@
 # STATE: ADDITIONAL
 - id: "undead_sentinel_skills"
   skills: ["relentless_advance"]
+
+# STATE: ADDITIONAL
+- id: "evasion_skills"
+  skills: ["scatter"]

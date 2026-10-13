@@ -1,7 +1,7 @@
 # Compliance IDs: WORLD-CAT-001, WORLD-CAT-002, WORLD-CAT-003
 from __future__ import annotations
 
-from typing import Optional, Any, Dict, List, Tuple
+from typing import Optional, Any, Dict, List, Literal, Tuple
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 
@@ -65,6 +65,12 @@ class ElementDefinition(CatalogBaseDefinition):
 MODELLED_BIOLOGICAL_NEEDS = ("hunger", "sleep")
 # KNOW-04: the levels a species' declared common knowledge may name for how dangerous the kind is.
 COMMON_KNOWLEDGE_DANGER_LEVELS = ("low", "medium", "high", "extreme")
+# Decisions 46 and 50: a kind declares PROPERTIES in coarse bands, never a label (no predator/prey/grazer/hunter flag).
+PROPERTY_BANDS = ("small", "medium", "large")
+# Decision 44: food classes name what a body can eat (diet) and what its own body feeds (edibility). Behaviour derives
+# hunting, grazing and fleeing from these properties; no module may read a role or trait list for it.
+FOOD_CLASSES = ("plant", "meat", "prepared", "graze")
+FERTILITY_BANDS = ("low", "medium", "high")  # coarse land fertility (decision 50: bands, no exact figures in the vocabulary)
 
 
 class NeedProfileDefinition(CatalogBaseDefinition):
@@ -88,6 +94,27 @@ class BodyModelDefinition(CatalogBaseDefinition):
     traits: List[str] = Field(default_factory=list)
     movement_modes: List[str] = Field(default_factory=list)
     equipment_slots: List[str] = Field(default_factory=list)
+    size: Optional[str] = Field(None, description="Coarse body size band: small, medium or large (absent = undeclared)")
+    diet: Optional[List[str]] = Field(None, description="Food classes this body can eat; [] declares none, absent is undeclared (decision 44)")
+    edible_as: Optional[List[str]] = Field(None, description="Food classes this body feeds when eaten; [] declares none, absent is undeclared (decision 44)")
+    meat_yield: int = Field(0, ge=0, description="Raw meat units a dead body of this kind leaves (0 for a body that does not feed meat)")
+
+    @field_validator("size")
+    @classmethod
+    def validate_size(cls, v: Optional[str]) -> Optional[str]:
+        """Reject a size outside the coarse band vocabulary."""
+        if v is not None and v not in PROPERTY_BANDS:
+            raise ValueError(f"size must be one of {PROPERTY_BANDS}")
+        return v
+
+    @field_validator("diet", "edible_as")
+    @classmethod
+    def validate_food_classes(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        """Reject a food class outside the declared vocabulary."""
+        bad = [c for c in (v or []) if c not in FOOD_CLASSES]
+        if bad:
+            raise ValueError(f"food classes must be drawn from {FOOD_CLASSES}, got {bad}")
+        return v
 
 
 class DriveProfileDefinition(CatalogBaseDefinition):
@@ -165,8 +192,19 @@ class SpeciesDefinition(CatalogBaseDefinition):
     natural_traits: List[str] = Field(default_factory=list)
     attribute_tendencies: Dict[str, str] = Field(default_factory=dict)
     compatible_roles: List[str] = Field(default_factory=list)
+    camp_spawn_kind: Optional[str] = Field(None, min_length=1, description="The spawn kind a camp or nest of this species spawns; absent means the species itself (checked against the spawn catalogue by a test)")
+    power: Optional[str] = Field(None, description="Coarse power band of the kind: small, medium or large (absent = undeclared)")
+    wits: Optional[str] = Field(None, description="Coarse wits band of the kind: small, medium or large (absent = undeclared)")
     common_knowledge: Optional[CommonKnowledgeDefinition] = Field(
         None, description="KNOW-04: declared folk belief about this kind; absent means nothing is commonly believed")
+
+    @field_validator("power", "wits")
+    @classmethod
+    def validate_band(cls, v: Optional[str]) -> Optional[str]:
+        """Reject a power or wits band outside the coarse vocabulary."""
+        if v is not None and v not in PROPERTY_BANDS:
+            raise ValueError(f"band must be one of {PROPERTY_BANDS}")
+        return v
 
     @field_validator("intelligence_tier")
     @classmethod
@@ -286,6 +324,17 @@ class ResourceDefinition(CatalogBaseDefinition):
     runtime_kind: Optional[str] = Field(None, description="Explicit runtime resource type")
     legacy_id: Optional[str] = Field(None, description="Explicit legacy ID mapping")
     required_tool: Optional[str] = Field(None, description="Explicit required tool")
+    regrowth_mode: Literal["none", "regrow"] = Field(
+        "none",
+        description=(
+            "'none' (the default for every existing kind): the legacy rules, no wait is started when the node is emptied. 'regrow': the harvest that "
+            "empties the node starts a bare wait of ``bare_wait_ticks``; the wait ends with no charges added and the ecology regrowth resumes from zero."
+        ),
+    )
+    bare_wait_ticks: int = Field(0, ge=0, description="Ticks a 'regrow' node stays bare after being emptied (the land's fertility band); 0 for 'none'")
+    fertility: Optional[str] = Field(None, description="Land fertility band this kind of plant cover belongs to (low, medium, high); set on cover kinds only")
+    density_per_1000_tiles: Optional[int] = Field(None, gt=0, description="Patches of this kind a biome places per 1,000 tiles of a region's bounds (a cover kind a biome names)")
+    regen_per_check: Optional[int] = Field(None, ge=0, description="Charges restored per ecology check; None keeps the node spec's own default")
     placement: Optional[str] = Field(
         None,
         description=(
@@ -304,6 +353,8 @@ class BuildingDefinition(CatalogBaseDefinition):
     themes: List[str] = Field(default_factory=list, description="Aesthetic/functional themes of the building")
     starting_gold: int = Field(0, ge=0, description="The building's till at world creation: coin the place holds (EXCH-02, owner decision 37)")
     starting_stock: Dict[str, int] = Field(default_factory=dict, description="Items the building holds for sale at world creation (item id to quantity)")
+    hires_for_pay: bool = Field(False, description="The building offers commercial paid work, paid from its OWN purse only, no treasury top-up (EXCH-02, owner decision 34 and ruling 66)")
+    maintenance_shifts: int = Field(1, ge=0, description="Maintenance shifts the building needs each upkeep period (EXCH-02, ruling 61: upkeep in work, shifts times the wage; a coarse band, D50). 0 = no upkeep")
 
 
 class ServiceProfileDefinition(CatalogBaseDefinition):
@@ -343,6 +394,7 @@ class DefaultCompileProfile(CatalogBaseDefinition):
     default_resource_required_ticks: int = Field(10, gt=0)
     default_building_hp: int = Field(500, gt=0)
     default_faction_starting_gold: float = Field(1000.0, ge=0.0)
+    default_tax_share: float = Field(0.0, ge=0.0, le=1.0, description="Share of a sale or a wage paid to the treasury of the faction holding the place, rounded down per transaction (decision 51)")
 
 
 class ItemDefinition(CatalogBaseDefinition):
@@ -354,6 +406,16 @@ class ItemDefinition(CatalogBaseDefinition):
     use_kind: Optional[str] = Field(None, description="Explicit runtime usage kind")
     class_fit: List[str] = Field(default_factory=list, description="Explicit class fit tags")
     equipment_slot: Optional[str] = Field(None, description="Explicit equipment slot")
+    food_class: Optional[str] = Field(None, description="Food class of an edible item: plant, meat or prepared (decision 44); a food item that omits it counts as prepared")
+    hunger_recovery: Optional[float] = Field(None, ge=0.0, description="Hunger this item removes when eaten; a food item that omits it removes the default meal")
+
+    @field_validator("food_class")
+    @classmethod
+    def validate_food_class(cls, v: Optional[str]) -> Optional[str]:
+        """Reject a food class outside the declared vocabulary."""
+        if v is not None and v not in FOOD_CLASSES:
+            raise ValueError(f"food_class must be one of {FOOD_CLASSES}")
+        return v
 
 
 class RecipeDefinition(CatalogBaseDefinition):
@@ -382,6 +444,15 @@ class BiomeDefinition(CatalogBaseDefinition):
     common_materials: List[str] = Field(default_factory=list)
     default_factions: List[str] = Field(default_factory=list)
     danger_level: int = Field(0, ge=0)
+    fertility: Optional[str] = Field(None, description="Land fertility band of the biome's wild land (low, medium, high); None declares none")
+    grazing_cover: Optional[str] = Field(None, description="The resource kind of plant cover this biome's open land carries (a 'regrow' kind of the same fertility band); None: none")
+
+    @field_validator("fertility")
+    @classmethod
+    def _fertility_is_a_band(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in FERTILITY_BANDS:
+            raise ValueError(f"fertility must be one of {FERTILITY_BANDS}, got {v!r}")
+        return v
 
 
 class EcologyDefinition(CatalogBaseDefinition):

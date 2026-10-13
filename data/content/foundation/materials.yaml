@@ -18,6 +18,13 @@
   categories: ["organic", "food"]
   common_regions: ["village", "forest"]
 
+# STATE: REDESIGNED-CORE
+# Owner row 59 (grazing): plant cover on wild land, a material of its own (people's diet does not take the food class it yields).
+- id: "grass_cover"
+  display_name: "Grass and Browse"
+  categories: ["organic", "food"]
+  common_regions: ["forest", "swamp", "sacred_grove"]
+
 # STATE: LEGACY-EXPORT
 - id: "healing_flower"
   display_name: "Healing Flower"

@@ -4,7 +4,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Dict, Optional
 
 from src.core.quests import QuestState, QuestKind, QuestStatus
-from src.core.updates import QuestUpdate
+from src.core.updates import QuestUpdate, ResourceTransferIntent
+from src.engine.place_tax import reward_payer
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -157,7 +158,7 @@ class QuestResolutionSystem:
         Enforces quest completion rules and emits authoritative reward intents.
         Ensures that quest rewards are capacity-aware.
         """
-        from src.core.updates import ResourceTransferIntent, EntityUpdate
+        from src.core.updates import EntityUpdate
         from src.core.cognition_write import read_through_cognition
         from dataclasses import replace
         from src.core.quests import QuestStatus
@@ -201,22 +202,8 @@ class QuestResolutionSystem:
                 is_retry_pending = (project.quest_status == QuestStatus.REWARD_PENDING)
                 
                 if is_newly_completed or is_retry_pending:
-                    from src.core.state import ItemStack
-                    items = [ItemStack(item_id=tid, quantity=1) for tid in updated_quest.reward.items]
-                    
-                    from src.core.updates import RewardUpdate
-                    reward_intent = ResourceTransferIntent(
-                        source_id=q_id,
-                        source_kind="QUEST",
-                        items_add=items,
-                        gold_delta=updated_quest.reward.gold,
-                        reward_upd=RewardUpdate(xp_gain=updated_quest.reward.xp),
-                        transfer_kind="QUEST_REWARD",
-                        transaction_id=f"quest:{q_id}:reward",
-                        group_id=f"quest:{q_id}:reward",
-                        is_group_required=True
-                    )
-                    
+                    reward_intent = _reward_intent(state, q_id, project, updated_quest)
+
                     # Transition to REWARD_PENDING (if not already)
                     current_resource_transfers.append(reward_intent)
                     current_quest_updates.append(replace(qu, status_set=QuestStatus.REWARD_PENDING))
@@ -257,3 +244,16 @@ class QuestResolutionSystem:
             refined_entity_updates[e_id] = replace(ent_upd, **replace_kwargs)
                 
         return replace(update, entity_updates=refined_entity_updates, information_providers_update=providers_update)
+
+
+def _reward_intent(state: "AuthoritativeState", q_id: str, project: QuestState, updated_quest: QuestState) -> ResourceTransferIntent:
+    """The reward transfer for a finished quest, funded by its one real giver (ruling 61): the treasury of the faction holding the ground of the
+    building it was posted at. A quest with no identifiable giver pays experience only: no coin and no item."""
+    from src.core.state import ItemStack
+    from src.core.updates import RewardUpdate
+    payer = reward_payer(state, project.source_building_id)
+    funded = payer is not None
+    return ResourceTransferIntent(
+        source_id=q_id, source_kind="QUEST", items_add=[ItemStack(item_id=tid, quantity=1) for tid in updated_quest.reward.items] if funded else [],
+        gold_delta=updated_quest.reward.gold if funded else 0, reward_upd=RewardUpdate(xp_gain=updated_quest.reward.xp), transfer_kind="QUEST_REWARD",
+        transaction_id=f"quest:{q_id}:reward", group_id=f"quest:{q_id}:reward", is_group_required=True, treasury_faction=payer, treasury_pays=funded)

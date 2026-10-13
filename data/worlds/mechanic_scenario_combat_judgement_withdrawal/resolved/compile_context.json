@@ -155,6 +155,9 @@
     },
     "spirit_court": {
       "starting_gold": 1000.0
+    },
+    "wild_fauna": {
+      "starting_gold": 1000.0
     }
   },
   "region_ownership": {},
@@ -166,5 +169,6 @@
     "scout": 5,
     "leader": 2
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

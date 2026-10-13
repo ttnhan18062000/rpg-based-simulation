@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_dd791ef0fd840f07",
+  "manifest_id": "prov_25dfd398c80f1e5c",
   "world_id": "unit_information_routing_pilot",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
+  "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837"
   },
   "composition_fingerprint": "860a4adaa2d7b71d4b478ebc80b14a50bab85859ad2d265143b8d26533663085",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "dd791ef0fd840f07679f343fc82fe55c923f5a4c8a9dfe3ccc2e3a5a2e979060",
-  "created_at": "2026-10-09T03:58:57.063143Z",
+  "content_fingerprint": "25dfd398c80f1e5cb2c0ed6ad9e69f056900bb934b643ce8d44820e2346087aa",
+  "created_at": "2026-10-12T14:35:50.216622Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -202,6 +202,18 @@
       },
       "details": {
         "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
       }
     },
     "hometown": {

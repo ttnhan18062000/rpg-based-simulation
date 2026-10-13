@@ -16,11 +16,13 @@ from src.core.updates import StateUpdate, EntityUpdate
 from src.core.governance import RuntimeMode
 from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
-from src.core.enums import Domain
 
 from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_source, signal_contract_record
+from src.engine.run_identity import create_run_directory, new_run_id
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
+from src.engine.cadence import should_run
+from src.engine.need_pull import ESCALATION_ONSET, HUNGER_LINE
 
 if TYPE_CHECKING:
     from src.config.profiles import RuntimeProfile
@@ -48,7 +50,7 @@ class Kernel:
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
         "_pending_grief_triggers",
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
-        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer", "_personality_recorder",
+        "_run_id", "_run_id_is_default", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer", "_personality_recorder",
         "_workers_started", "_last_shutdown_report",
         "_quality_hub", "_quality_feed",
     )
@@ -139,9 +141,9 @@ class Kernel:
         obs_mode = ObservabilityConfig.get_mode()
 
         self._run_id = run_id
+        self._run_id_is_default = run_id is None
         if self._run_id is None:
-            _run_suffix = self._rng.get_int(Domain.INIT, 0, 0, 1000, 9999)
-            self._run_id = f"run_{int(time.time())}_{_run_suffix}"
+            self._run_id = new_run_id(self._rng)
 
         self._artifact_repo = None
         if obs_mode != ObservabilityMode.OFF:
@@ -177,7 +179,7 @@ class Kernel:
                 state_hash=None,
                 signal_contract=signal_contract_record(profile, self._audit_mode),
             )
-            self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
+            self._run_id = create_run_directory(self._artifact_repo, str(self._run_id), manifest, is_default=self._run_id_is_default, rng=self._rng)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
 
         self._replay = self._init_replay(profile, replay, self._run_id)
@@ -218,7 +220,7 @@ class Kernel:
         self._no_replay = flags.get("no_replay", False) if flags else False
         self._event_listeners = []
 
-        from src.observability.event_recorder import EventRecorder
+        from src.observability.event_recorder import EventRecorder, reset_run_state
         from src.observability.entity_timeline import EntityTimelineStore
 
         run_dir_str = None
@@ -310,13 +312,7 @@ class Kernel:
         self._workers_started = 2 if (obs_mode != ObservabilityMode.OFF) else 0
         self._last_shutdown_report = None
 
-        from src.observability.event_extractor import EventExtractor
-        EventExtractor.reset_run_state()
-        from src.observability.event_shapers import StrategyShaper, ProgressionShaper, SocialShaper, FactionShaper
-        StrategyShaper.reset_run_state()
-        ProgressionShaper.reset_run_state()
-        SocialShaper.reset_run_state()
-        FactionShaper.reset_run_state()
+        reset_run_state(profile.cadence.strategic_intelligence, ESCALATION_ONSET * HUNGER_LINE, should_run, profile.max_observability_budget_percent > 0)
 
         self.validate(flags)
 
@@ -964,13 +960,13 @@ class Kernel:
         if obs_mode == ObservabilityMode.OFF:
             return
 
-        from src.observability.event_extractor import EventExtractor
+        from src.observability.event_recorder import EventExtractor, extract_events
         from src.observability.events import SimulationEvent
 
         tick = self._state.tick
         
         # 1. Extract domain events
-        generated_events = EventExtractor.extract(prior_state, self._state, update, obs_mode)
+        generated_events = extract_events(prior_state, self._state, update, obs_mode)
 
         # 1a. Mid-tick grief triggers (TCK-20260824-GRIEF-NEMESIS-REACHABILITY): a live
         # ally's death detected this tick. This phase runs after this tick's ApplyPath

@@ -4,6 +4,10 @@
   traits: ["humanoid", "tool_user"]
   movement_modes: ["walk"]
   equipment_slots: ["weapon", "armor", "tool", "trinket"]
+  size: "medium"
+  diet: ["plant", "meat", "prepared"]
+  edible_as: ["meat"]
+  meat_yield: 5
 
 # STATE: REDESIGNED-CORE
 - id: "small_humanoid"
@@ -11,6 +15,10 @@
   traits: ["humanoid", "tool_user", "small_body"]
   movement_modes: ["walk", "scramble"]
   equipment_slots: ["weapon", "armor", "tool", "trinket"]
+  size: "small"
+  diet: ["plant", "meat", "prepared"]
+  edible_as: ["meat"]
+  meat_yield: 2
 
 # STATE: REDESIGNED-CORE
 - id: "quadruped_predator"
@@ -18,6 +26,10 @@
   traits: ["quadruped"]
   movement_modes: ["walk", "run", "pounce"]
   equipment_slots: []
+  size: "medium"
+  diet: ["meat"]
+  edible_as: ["meat"]
+  meat_yield: 5
 
 # STATE: ADDITIONAL
 - id: "arachnid_body"
@@ -25,6 +37,10 @@
   traits: ["venomous"]
   movement_modes: ["crawl", "climb"]
   equipment_slots: []
+  size: "small"
+  diet: ["meat"]
+  edible_as: ["meat"]
+  meat_yield: 2
 
 # STATE: ADDITIONAL
 - id: "large_humanoid"
@@ -32,6 +48,10 @@
   traits: ["humanoid", "large_body", "tool_user"]
   movement_modes: ["walk"]
   equipment_slots: ["weapon", "armor", "tool"]
+  size: "large"
+  diet: ["plant", "meat", "prepared"]
+  edible_as: ["meat"]
+  meat_yield: 12
 
 # STATE: ADDITIONAL
 - id: "spirit_body"
@@ -39,6 +59,9 @@
   traits: ["spiritual"]
   movement_modes: ["float"]
   equipment_slots: ["trinket"]
+  size: "medium"
+  diet: []
+  edible_as: []
 
 # STATE: ADDITIONAL
 - id: "amorphous_body"
@@ -46,6 +69,9 @@
   traits: []
   movement_modes: ["slither"]
   equipment_slots: []
+  size: "small"
+  diet: []
+  edible_as: []
 
 # STATE: ADDITIONAL
 - id: "winged_reptilian"
@@ -53,3 +79,18 @@
   traits: ["flying", "large_body"]
   movement_modes: ["walk", "fly"]
   equipment_slots: ["trinket"]
+  size: "large"
+  diet: ["meat"]
+  edible_as: ["meat"]
+  meat_yield: 15
+
+# STATE: ADDITIONAL
+- id: "small_quadruped"
+  display_name: "Small Quadruped"
+  traits: ["quadruped", "small_body"]
+  movement_modes: ["walk", "run"]
+  equipment_slots: []
+  size: "small"
+  diet: ["plant", "graze"]
+  edible_as: ["meat"]
+  meat_yield: 2

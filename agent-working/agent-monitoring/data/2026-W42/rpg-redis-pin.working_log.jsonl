@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-13T02:59:23.678964Z", "ticket_id": "TCK-20261013-PIN-THE-REDIS-IMAGE-IN-COMPOSE", "title": "Pin the redis image in compose.yaml", "status": "DONE", "summary": "redis:7.4.11-alpine by digest; issue 515", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}
