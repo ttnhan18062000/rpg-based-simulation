@@ -165,6 +165,19 @@ A key of the real icon shape (a description of about 200 characters and a label)
 | the 14 variant sources | 360 to 406 each | 0.4 % of `MAX_SOURCE_BYTES` 102,400 | |
 | the committed sample-map crops | 237,953 | 90.8 % of the 262,144 B cap | three crop boxes shrunk, since the exact view now draws terrain everywhere |
 
+## Registry re-measurement for the map-markers batch (2026-10-13)
+
+`TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN`, the review the standing rule asks for before the key set grows. No bound is changed and no committed registry file is edited by this step. Measured with the real `load_registry` on a scratch registry in a temporary directory: the committed `visual_keys.yaml` (65 keys, 3 aliases, 6 detail axes) plus new keys of the real shape (a description of about 200 characters, `safety_class`, a structured `glyph_and_text` fallback, `label_key`, `label`) and 5 new aliases, median of 5 loads.
+
+| What | Keys | Bytes | Of `MAX_REGISTRY_BYTES` 458,752 | Load (median) |
+|---|---|---|---|---|
+| the committed registry (control) | 65 | 30,943 | 6.7 % | 0.062 s |
+| markers, option (a) per-kind nodes + 11 role entities: 4 buildings, 2 places, 13 nodes, 11 entities, 5 aliases | 95 | 47,231 | 10.3 % | 0.102 s |
+| markers, option (c) 5 grouped nodes + 11 role entities | 87 | 42,493 | 9.3 % | 0.089 s |
+| markers, option (a) nodes + 5 property entities | 89 | 44,087 | 9.6 % | 0.089 s |
+
+A new key of the real shape costs about 543 B (30 new keys and 5 aliases added 16,288 B), more than the 450 B recorded on 2026-10-12. Keys: 95 of `MAX_VISUAL_KEYS` 1,024 (9.3 %). Aliases: 8 of `MAX_ALIASES` 1,024 (0.8 %). The 2 s line holds with a factor of about 20. The candidate manifest of about 120 entries, from rc-0010's real per-entry size (14,920 B / 87 = 171 B), is about 20,600 B (3.9 % of `MAX_MANIFEST_BYTES` 524,288), and the runtime manifest (22,793 B / 87 = 262 B per entry) about 31,500 B (6.0 %): these two are an extrapolation from the real per-entry size, not an export (no art exists yet; the real figures are recorded when the candidate is built). Nothing exceeds a bound or the 2 s line.
+
 ## Rulings and flags
 
 The planner's rulings (2026-10-03) on the first draft of this record, and what changed.

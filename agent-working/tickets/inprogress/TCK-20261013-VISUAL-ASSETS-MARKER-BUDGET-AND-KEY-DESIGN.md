@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN
-phase: open
+phase: inprogress
 date: 2026-10-13
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Map markers: MAX_REGISTRY_BYTES budget review and the marker key design
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -71,6 +71,7 @@ Child 1 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. budgets.md's standing r
 
 
 ## Implementation Notes
+Measurements in `docs/assets/budgets.md` (section 2026-10-13); the design note, points 1-7, is `agent-working/staging_artifacts/TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN/investigation.md`. No bound, registry file, store code, `src/` or `frontend/` file changed. Finding: option (b) (a detail axis per resource kind) is not possible with `pickDetail` (the pick is by cell, not kind): a pick-contract change, so an owner question.
 
 
 ## Test Summary
