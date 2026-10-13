@@ -888,7 +888,8 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 65. whether bodies heal outside towns (decided 2026-10-11: slowly everywhere, twice as fast at rest, none while starving; placeholders until milestone 1, SURV-02);
 66. how upkeep work is capped (decided 2026-10-11: upkeep shifts capped at need and the only ones the treasury tops up; business shifts from the building's own purse; 1 shift a period, 3 for the town hall, EXCH-02);
 67. why wild herds die out (decided 2026-10-13: nothing is born; reported in milestone 0, basic wild births in milestone 1, ECOL-03);
-68. what a town refuses service on (decided 2026-10-13: the trade trait only in milestone 0; later, a record the place holds or a mark it can see, never a faction label; strangers are served, EXCH-02).
+68. what a town refuses service on (decided 2026-10-13: the trade trait only in milestone 0; later, a record the place holds or a mark it can see, never a faction label; strangers are served, EXCH-02);
+69. what the live map shows (decided 2026-10-13: the same authored world the gate runs, no hard-coded spawns; places shown through a presenter read-model).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
