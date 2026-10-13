@@ -79,6 +79,7 @@ def test_evaluate_simq_passes_audit_mode_for_every_run_key_it_builds(monkeypatch
 
 
 def test_every_grade_stability_test_runs_its_engine_under_audit_mode():
+    # A line-based guard: a call split over several lines would get past it, so keep each `_run_engine(...)` call on one line.
     lines = [ln for ln in CORPUS_TEST.read_text(encoding="utf-8").splitlines() if re.search(r"\b_run_engine\(\w", ln) and not ln.lstrip().startswith(("#", '"', "`"))]
     assert len(lines) >= 13 and all("audit_mode=True" in ln for ln in lines), [ln for ln in lines if "audit_mode=True" not in ln]
 

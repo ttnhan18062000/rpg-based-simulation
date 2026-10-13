@@ -7,6 +7,9 @@ Location: ``tests/unit/worldassembly/`` next to the population-stability tests (
 """
 from __future__ import annotations
 
+import os
+import shutil
+import uuid
 from pathlib import Path
 
 import pytest
@@ -26,7 +29,8 @@ def test_throttled_kernel_does_not_stall_or_crash_and_keeps_a_population() -> No
     from src.worldbuilding.repository import WorldRepository
 
     state, report = WorldCompiler.compile(WorldRepository(str(WORLDS_ROOT)).load_world(WORLD), SEED)
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(SEED), flags={"no_frame_pacing": True})  # deliberately no audit_mode
+    run_id = f"throttled_smoke_{os.getpid()}_{uuid.uuid4().hex[:8]}"  # unique, so the run directory is this test's own and can be removed
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(SEED), flags={"no_frame_pacing": True}, run_id=run_id)  # deliberately no audit_mode
     assert kernel._audit_mode is False
     events = 0
     try:
@@ -40,6 +44,7 @@ def test_throttled_kernel_does_not_stall_or_crash_and_keeps_a_population() -> No
             kernel.shutdown()
         except Exception:
             pass
+        shutil.rmtree(Path("data") / "runs" / run_id, ignore_errors=True)  # exactly the directory this test created
     assert reached == TICKS, f"stalled: reached tick {reached} of {TICKS}"
     assert events > 0, "no decisions or events were made in the whole run"
     assert alive > 0, f"population is gone: 0 of {report['entity_count']} alive"

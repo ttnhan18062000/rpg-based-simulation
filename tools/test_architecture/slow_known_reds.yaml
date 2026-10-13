@@ -16,13 +16,6 @@ known_reds:
     expires_on: "2026-11-15"
     kind: broken
     note: "#407 closed the attribution ticket (measurement only); rebaseline after SURV-07 and decision 25; rpg-planner warns before 11-15 if it slips"
-  - match: "tests.integration.world.test_living_world_ph9*"
-    ticket: TCK-20261006-TWO-WORLD-INTEGRATION-TESTS-FAIL-ON-MAIN-PH9-ASSERTS-A-BOSS-AND-TRAUMA-LONG-RUN-HITS-THE-60S-LIMIT
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-10-28"
-    kind: broken
-    note: "remaining half is the boss assertion, stale against #356 (world-boss off by default); class (a) test update after KNOW-04; rpg-planner warns before 10-28 if it slips"
   - match: "tests.integration.campaigns.test_catalog_entity_spawn_wiring::test_real_campaign_episode_event_mix_is_not_dominated_by_cooperation"
     ticket: TCK-20261010-CAMPAIGN-EPISODE-COOPERATION-SHARE-CROSSES-HALF-ON-MAIN-AFTER-BATCH-2
     owner: rpg-planner
@@ -169,4 +162,4 @@ known_reds:
     added_on: "2026-10-07"
     expires_on: "2026-11-04"
     kind: flaky
-    note: "catch-all, keep LAST; now covers only the 3 class-(c) COGNITION anchors from the #408 measurement (simq_routing 500t and 1000t, hero_guild_routing 1000t), which the audit_mode ticket makes deterministic; the 3 population_stability entries above are specific; superseded TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED (issue #511)"
+    note: "catch-all, keep LAST; covers the stale-anchor reds until the re-anchor commit lands, and after it only the 3 class-(c) COGNITION anchors from the #408 measurement (simq_routing 500t and 1000t, hero_guild_routing 1000t), which the audit_mode ticket makes deterministic; the 3 population_stability entries above are specific; superseded TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED (issue #511)"

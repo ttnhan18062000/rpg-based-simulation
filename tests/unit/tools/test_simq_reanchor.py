@@ -39,6 +39,7 @@ def test_a_moved_row_takes_the_audit_value_and_an_in_band_row_is_not_moved():
     by = {(r["run_key"], r["pillar"]): r for r in table}
     assert by[("w_seed1_200t", "FACTION")]["moved"] and not by[("w_seed1_200t", "FACTION")]["in_band_before"] and by[("w_seed1_200t", "FACTION")]["in_band_after"]
     assert not by[("w_seed2_200t", "FACTION")]["moved"] and new["_note"] == "meta"  # 1.0 -> 1.02 is inside max(0.05, 20%)
+    assert new["w_seed2_200t"]["FACTION"] == {"grade": "A", "score": 1.02}  # an in-band row still takes the audit value (policy: one measured value per row)
 
 
 def test_an_excluded_row_keeps_its_committed_anchor_and_stays_out_of_band():

@@ -16,7 +16,7 @@ The SimQ grade anchors are measured under audit_mode, so an anchor grades the ru
 speed; the whole anchor family is re-anchored once from deterministic runs, with provenance
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
