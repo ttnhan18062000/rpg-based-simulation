@@ -891,7 +891,8 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 68. what a town refuses service on (decided 2026-10-13: the trade trait only in milestone 0; later, a record the place holds or a mark it can see, never a faction label; strangers are served, EXCH-02);
 69. what the live map shows (decided 2026-10-13: the same authored world the gate runs, no hard-coded spawns; places shown through a presenter read-model);
 70. camps that spawn members from nothing (decided 2026-10-13: removed before baseline v1 as its own measured step; camps refill only by births in milestone 1 and later by recruits, ECOL-03);
-71. the conquest stronghold (decided 2026-10-13: the body built from nothing is removed before baseline v1; a region still changes hands and is freed as its influence recovers; conquest's causes wait for caused war and peace, ECOL-03).
+71. the conquest stronghold (decided 2026-10-13: the body built from nothing is removed before baseline v1; a region still changes hands and is freed as its influence recovers; conquest's causes wait for caused war and peace, ECOL-03);
+72. terrain movement cost (decided 2026-10-13: declared per terrain in content, a missing one is an error; fixed before baseline v1 as its own measured step, MOV-04).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
