@@ -72,6 +72,19 @@ a standing requirement for whichever future mechanism eventually closes this gap
   starting with the wild. **Alternatives not taken:** births before the gate (every population
   number moves and the gate waits); topping herds up by spawning, which makes animals from
   nothing (validity check V1).
+- **Camps stop conjuring members (decided by the owner directly, 2026-10-13; row 70 of the
+  memo):** a goblin or orc camp spawned a new warrior every 30 ticks whenever fewer than
+  max(2, maturity / 10) monsters stood within 10 tiles, with no parent, no cost and no food
+  (`CampService.process_camps`, `src/world/camp.py`; found by Lane C while tracing the live map).
+  That is a validity check V1 violation, in the simulation and the gate. It is removed before
+  baseline v1, as its own measured step, so the baseline counts only real arrivals. Camps then
+  shrink as members die, which is reported in milestone 0 and not graded, as for herds above.
+  They refill later only by real ways: milestone 1's births, extended to every living kind
+  including people-kinds (a fed adult with a mate of its kind has young), and recruits who join,
+  later still. The nest-spread branch (`ENABLE_CAMP_NEST_SPREAD`, off by default) has the same
+  parentless shape; it stays off and is retired when births land. **Alternatives not taken:**
+  keeping the spawn in baseline v1 as a reported exception; charging camp stock for a
+  parentless spawn.
 
 **Scenarios:** [LB-S12](../scenarios/life-body-batch-05.md#lb-s12) (population decline —
 scored against this finding, not assumed to pass).
