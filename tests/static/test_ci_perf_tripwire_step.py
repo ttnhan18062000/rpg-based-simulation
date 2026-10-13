@@ -15,7 +15,7 @@ _TRIPWIRE = _STEPS["Perf tripwire (paired, report-only)"]
 
 
 def test_the_job_has_a_timeout_sized_from_its_p95() -> None:
-    assert _JOB["timeout-minutes"] == 15
+    assert _JOB["timeout-minutes"] == 10
     assert "p95" in _WORKFLOW.read_text(encoding="utf-8")
 
 
