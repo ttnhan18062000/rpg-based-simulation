@@ -1737,6 +1737,16 @@
   test_path: tests/unit/engine/test_building_services_serve_only_people.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.119.
   support_boundary: 'Trait only (D68); the relationship half is a later ticket. A person who holds less than a service costs is still served with the charge clamped to what it holds (free meal or bed) until M0 step 4 (TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL).'
+- id: PROG-134
+  text: "TCK-20261012-A-HELD-GATHERER-ON-A-REGROWING-PATCH-IS-NEVER-RELEASED-TO-EAT: a held INTERACT whose subject is at or past the SURV-07 hunger onset and carries food its diet can eat is woken for the brain on the strategic cadence, so a grazer held on a regrowing patch is released to eat (SURV-06, SURV-07)."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/engine/scheduler.py (_is_need_woken, _carries_edible_food). Measured in docs/guidelines/intentional_divergences.md Section 2.120; docs/mechanics/04_strategic_cognition.md."
+  proof_type: regression
+  test_path: tests/unit/engine/test_pressing_hunger_releases_a_held_gatherer.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.120.
+  support_boundary: "Only a gatherer that carries edible food is woken; a held gather making no progress with an empty pocket is a later ticket (typed progress signal)."
 - id: PROG-135
   text: "TCK-20261014-A-CONQUEST-STRONGHOLD-OVERWRITES-ENTITY-1: a mid-run entity add never reuses an existing id. Every mid-run generator comes from EntityGenerator.for_state, the apply raises DuplicateEntityIdError for a duplicate-id add, and next_entity_id advances past every added id."
   status: verified
