@@ -1,9 +1,10 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { ZoomIn, ZoomOut, Maximize2, ChevronDown, ChevronRight, MapPin } from 'lucide-react';
-import type { Entity, EntitySlim, GroundItem, Building, ResourceNode, Region } from '@/types/api';
+import type { Entity, EntitySlim, GroundItem, Building, ResourceNode, Region, Manifest } from '@/types/api';
 import type { DecodedMapData } from '@/hooks/useSimulation';
 import { useCanvas } from '@/hooks/useCanvas';
-import { CELL_SIZE, TILE_COLORS, TILE_COLORS_DIM, KIND_COLORS } from '@/constants/colors';
+import { CELL_SIZE, KIND_COLORS } from '@/constants/colors';
+import { buildTerrainPalette } from '@/constants/terrainPalette';
 import { useDevicePixelRatio } from '@/hooks/useDevicePixelRatio';
 import { WORLD_DEFAULT_ZOOM, WORLD_MAX_ZOOM, WORLD_MIN_ZOOM, snapToDevicePixel, snapZoom, stepZoom, zoomLevels } from '@/lib/pixelScale';
 
@@ -15,6 +16,8 @@ interface GameCanvasProps {
   buildings: Building[];
   resourceNodes: ResourceNode[];
   regions: Region[];
+  /** The world's manifest: terrain codes resolve through it to a terrain meaning (null until it loads: tiles then draw as the unknown swatch). */
+  manifest?: Manifest | null;
   selectedEntityId: number | null;
   onEntityClick: (id: number | null) => void;
   onGroundItemClick?: (x: number, y: number) => void;
@@ -84,7 +87,7 @@ const LOCATION_TYPE_ICONS: Record<string, { label: string; color: string }> = {
   boss_arena: { label: '💀', color: '#f59e0b' },
 };
 
-export function GameCanvas({ mapData, entities, selectedEntity, groundItems, buildings, resourceNodes, regions, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick }: GameCanvasProps) {
+export function GameCanvas({ mapData, entities, selectedEntity, groundItems, buildings, resourceNodes, regions, manifest, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const minimapRef = useRef<HTMLCanvasElement>(null);
   const mmContainerRef = useRef<HTMLDivElement>(null);
@@ -106,11 +109,13 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
   const isDraggingRef = useRef(false);
   const mmResizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
 
+  const palette = useMemo(() => buildTerrainPalette(manifest), [manifest]);
+
   const {
     gridRef, entityRef, overlayRef,
     handleCanvasClick, handleCanvasHover, handleCanvasLeave,
     hoverInfo,
-  } = useCanvas(mapData, entities, selectedEntity, groundItems, buildings, resourceNodes, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick, zoom, isDraggingRef);
+  } = useCanvas(mapData, entities, selectedEntity, groundItems, buildings, resourceNodes, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick, zoom, isDraggingRef, palette);
 
   const width = mapData ? mapData.width * CELL_SIZE : 0;
   const height = mapData ? mapData.height * CELL_SIZE : 0;
@@ -283,9 +288,9 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
         if (exploredSet && !exploredSet.has(`${x},${y}`)) {
           tctx.fillStyle = '#000000'; // unseen — completely dark
         } else if (exploredSet) {
-          tctx.fillStyle = TILE_COLORS_DIM[tile] || TILE_COLORS_DIM[0]; // explored fog — dimmed
+          tctx.fillStyle = palette.dim(tile); // explored fog — dimmed
         } else {
-          tctx.fillStyle = TILE_COLORS[tile] || TILE_COLORS[0]; // no spectating — full brightness
+          tctx.fillStyle = palette.fill(tile); // no spectating — full brightness
         }
         tctx.fillRect(x * MINIMAP_SCALE, y * MINIMAP_SCALE, MINIMAP_SCALE, MINIMAP_SCALE);
       }
@@ -312,7 +317,7 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
         tctx.fillText(`Tier ${region.difficulty}`, rx, ry + Math.max(8, Math.round(region.radius * MINIMAP_SCALE * 0.18)));
       }
     }
-  }, [mapData, mmTerrainKey, mmW, mmH, buildings, regions]);
+  }, [mapData, mmTerrainKey, mmW, mmH, buildings, regions, palette]);
 
   // Draw dynamic minimap content (cheap: blit cached terrain + entity dots + viewport)
   useEffect(() => {
@@ -349,7 +354,7 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
         const [vx, vy] = key.split(',').map(Number);
         if (vx >= 0 && vx < mapData.width && vy >= 0 && vy < mapData.height) {
           const tile = mapData.grid[vy][vx];
-          ctx.fillStyle = TILE_COLORS[tile] || TILE_COLORS[0];
+          ctx.fillStyle = palette.fill(tile);
           ctx.fillRect(vx * MINIMAP_SCALE, vy * MINIMAP_SCALE, MINIMAP_SCALE, MINIMAP_SCALE);
         }
       }
@@ -388,7 +393,7 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
       ctx.lineWidth = 1;
       ctx.strokeRect(vx, vy, vWidth, vHeight);
     }
-  }, [mapData, entities, resourceNodes, selectedEntityId, pan, zoom, mmW, mmH]);
+  }, [mapData, entities, resourceNodes, selectedEntityId, pan, zoom, mmW, mmH, palette]);
 
   // Minimap click → jump to location (accounts for minimap zoom + pan offset)
   const handleMinimapClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {

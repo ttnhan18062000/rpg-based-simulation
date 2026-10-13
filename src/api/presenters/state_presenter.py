@@ -199,12 +199,16 @@ class StatePresenter:
         """Deterministic terrain-type-string -> int code, for the live map's RLE grid.
 
         No terrain-type enum exists in this codebase (recipe-declared free-form strings). Codes are
-        assigned 0..n-1 over the alphabetically-sorted distinct values actually present in
+        assigned 0..n-1 over the alphabetically-sorted, case-folded distinct values actually present in
         state.terrain, so the same terrain-type set always maps to the same codes regardless of dict
         insertion order. Computed fresh per call (never cached/stored) since terrain can change
         between calls.
         """
-        return {t: i for i, t in enumerate(sorted(set(state.terrain.values())))}
+        # One terrain, one code: the engine carries both 'PLAIN' (the compiler's fill) and 'plain' (content), a known casing fragmentation upstream
+        # that changes pathing and hashes if touched, so the presenter folds case here. Every raw string keeps its own key and shares its meaning's code.
+        meanings = sorted({t.lower() for t in state.terrain.values()})
+        code_of = {m: i for i, m in enumerate(meanings)}
+        return {t: code_of[t.lower()] for t in sorted(set(state.terrain.values()))}
 
     @staticmethod
     def present_map(state: AuthoritativeState) -> Dict[str, Any]:
