@@ -64,6 +64,9 @@ SYNTHETIC: Dict[str, Tuple[str, int, str]] = {
     "combat_10_concurrent": ("combat", 10, "PERF_2GB_CONC"),
     "strategic_100_local": ("strategic", 100, "PERF_2GB_LOCAL"),
     "strategic_100_concurrent": ("strategic", 100, "PERF_2GB_CONC"),
+    # waited for TCK-20261004-PERF-SCENARIO-MIXED-STATE-SPAWN-COLLISION (#544): the old mixed_200 records measured a state with two objects on one tile
+    "mixed_200_local": ("mixed", 200, "PERF_1GB_LOCAL"),
+    "mixed_200_concurrent": ("mixed", 200, "PERF_2GB_CONC"),
 }
 
 

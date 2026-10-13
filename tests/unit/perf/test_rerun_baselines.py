@@ -21,12 +21,18 @@ def run(avg: float, load: float = 1.0) -> rr.Run:
     return rr.Run("p.json", avg, load, 0.0, 100.0, 3.0)
 
 
-def test_every_synthetic_baseline_is_a_legacy_file_or_a_promoted_version_and_the_mixed_ones_stay_pending() -> None:
+def test_every_synthetic_baseline_is_a_legacy_file_or_a_promoted_version() -> None:
     baselines = Path(baseline_lifecycle.DEFAULT_BASELINES_DIR)
     legacy = {f[:-5] for f in baseline_lifecycle.LEGACY_TRIPWIRE_REFERENCES}
     promoted = {m.group("name") for f in baselines.glob("*.json") if (m := baseline_lifecycle._VERSIONED_RE.match(f.name))}
     assert {n for n in rr.known_names() if not n.startswith("simq_corpus_")} <= legacy | promoted
-    assert {"mixed_200_local", "mixed_200_concurrent"} <= legacy - set(rr.known_names())  # pending until the spawn-collision fix lands
+
+
+def test_the_mixed_records_are_known_now_that_the_spawn_collision_fix_is_on_main() -> None:
+    assert rr.SYNTHETIC["mixed_200_local"][2] == "PERF_1GB_LOCAL" and rr.SYNTHETIC["mixed_200_concurrent"][2] == "PERF_2GB_CONC"
+    state = rr.build_state("mixed", 200, 42)
+    positions = [tuple(e.navigation.position) for e in state.entities.values()]
+    assert len(positions) == len(set(positions))  # no two entities on one tile (LAW-SPAWN-OCCUPANCY)
 
 
 def test_the_profiles_and_scenarios_exist_and_have_a_canonical_variant() -> None:
