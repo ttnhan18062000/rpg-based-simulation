@@ -5,6 +5,7 @@ authority: P1
 audience: agent
 ticket_id: TCK-20261013-HEALTH-NEVER-RISES-ABOVE-MAX-HP-AT-THE-PATCH-WRITER
 phase: done
+artifact_type: investigation
 date: 2026-10-13
 tags: []
 ---
