@@ -12,7 +12,13 @@ import pytest
 from src.ai.goals.kind_group import NO_DIET, UNDECLARED, kind_group, species_kind_group
 from src.core.builder import V2EntityBuilder
 from src.core.spawn_source import SpawnKind, SpawnSource
-from src.observability.run_ledger import (LEDGER_LIVE_EVENT, LEDGER_TALLY_EVENT, POPULATION_SAMPLE_EVERY, UNSOURCED, RunLedger)
+from src.observability.run_ledger import (
+    LEDGER_LIVE_EVENT,
+    LEDGER_TALLY_EVENT,
+    POPULATION_SAMPLE_EVERY,
+    UNSOURCED,
+    RunLedger,
+)
 from tests.unit.observability.test_starvation_death_record import WHO, _at_tick, _world
 
 
