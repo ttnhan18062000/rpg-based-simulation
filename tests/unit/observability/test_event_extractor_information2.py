@@ -338,3 +338,22 @@ class TestRouteNewQuery:
         curr = _state({1: entity}, tick=100)
         events = EventExtractor.extract(prior, curr, _update(1), ObservabilityMode.NORMAL)
         assert "route_new_query" not in _types(events)
+
+
+class TestDivergenceEpisodes:
+    """The rollback extractor path keeps parity with the live shaper: one decision_diverged_by_belief per episode."""
+
+    def _step(self, entity, tick):
+        events = EventExtractor.extract(_state({1: entity}, tick=tick), _state({1: entity}, tick=tick), _update(1), ObservabilityMode.NORMAL)
+        return [e for e in events if e.event_type == "decision_diverged_by_belief"]
+
+    def test_a_held_divergence_emits_once_and_a_new_episode_emits_again(self):
+        EventExtractor.reset_run_state()
+        lead = _lead("VAGUE", discovered_tick=0)
+        proj = MagicMock(); proj.kind = MagicMock(); proj.kind.value = "harvesting"
+        info = MagicMock(); info.kind = MagicMock(); info.kind.value = "information"
+        diverged = _entity(leads={"l1": lead}, current_project_id="p1", projects={"p1": proj})
+        resolved = _entity(leads={"l1": lead}, current_project_id="p1", projects={"p1": info})
+        counts = [len(self._step(diverged, t)) for t in (10, 11, 12)]
+        counts += [len(self._step(resolved, 13)), len(self._step(diverged, 14))]
+        assert counts == [1, 0, 0, 0, 1]
