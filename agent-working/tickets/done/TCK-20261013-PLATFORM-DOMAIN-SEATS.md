@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261013-PLATFORM-DOMAIN-SEATS
-phase: open
+phase: done
 date: 2026-10-13
 tags: [ai, governance, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance, process-improvement]
 Register a `platform` domain (deployment and runtime) with two seats, platform-planner and platform-implementer
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -50,18 +50,9 @@ registered; they go to platform instead.
           - dashboard-frontend/**
    @@ after domains.lead.routes
    +  platform:   # deployment and runtime; spec in docs/architecture/devops_plan_amendment_proposal.md (PR #537), owner 2026-10-13
-   +    owns:     # compose.yaml and docker/** moved from lead; the DevOps ADR's D8 paths were never registered
+   +    owns:     # compose.yaml and docker/** moved from lead; each DevOps step adds the globs it creates (infra/**, deploy/k8s/**, charts/**, docs/runbooks/**, tools/loadtest/**, publish-images.yml, iac.yml, k8s-validate.yml, dependabot.yml) in its own PR
    +      - compose.yaml
    +      - docker/**
-   +      - infra/**
-   +      - deploy/k8s/**
-   +      - charts/**
-   +      - docs/runbooks/**
-   +      - tools/loadtest/**
-   +      - .github/workflows/publish-images.yml
-   +      - .github/workflows/iac.yml
-   +      - .github/workflows/k8s-validate.yml
-   +      - .github/dependabot.yml
    +    owns_not: []
    +    routes:
    +      "src/**": rpg-planner                   # the engine stays one process
@@ -91,6 +82,7 @@ registered; they go to platform instead.
    +  platform: {writer: platform-implementer}
    +  platform-planner: {writer: platform-planner}
    ```
+   (Amended 2026-10-13 on the owner's choice, see Implementation Notes: `owns` lists only the two paths that exist.)
    If the validator rejects any line (for example a route key form it does not accept, such as a single-file route or
    a route to a path the domain also matches), stop and report it; do not reshape the diff silently. A change the
    owner has not seen goes back to the planner, and the owner re-confirms it on the PR.
@@ -115,7 +107,7 @@ registered; they go to platform instead.
 - Launching the platform seats or creating their worktrees (the owner launches on demand).
 
 ## Acceptance Criteria
-- AC1: `python3 tools/sessions/validate.py` reports 0 findings with 20 roles; no ownership overlap between platform and
+- AC1: `python3 -m tools.sessions.validate` reports 0 findings with 20 roles; no ownership overlap between platform and
   lead (or any other domain) without a split.
 - AC2: `generate_agents.py --check` is clean; both platform cards exist and every card is within 400 tokens.
 - AC3: the routing tests in Scope 5 pass; `compose.yaml` and `docker/**` resolve to platform.
@@ -134,7 +126,7 @@ registered; they go to platform instead.
   docs/guidelines/session_roles/domains/; docs/guides/cross_session_messages.md.
 
 ## Related Stored Artifacts
-- agent-working/stored_artifacts/TCK-20261013-PLATFORM-DOMAIN-SEATS/ (plan, investigation, test_plan; created at close)
+- agent-working/stored_artifacts/TCK-20261013-PLATFORM-DOMAIN-SEATS/ (plan, investigation, test_plan)
 
 ## Related Code Areas
 - registries/session_roles.yaml, tools/sessions/{roster,validate,route,boundary,generate_agents}.py, .claude/agents/**,
@@ -146,9 +138,26 @@ registered; they go to platform instead.
 - Only `compose.yaml` and `docker/**` exist today; the other owned paths are created by later DevOps steps.
 
 ## Implementation Notes
+- Deviation from Scope 1, by the owner's decision (relayed by agent-working-planner, option (a)): the diff as first
+  confirmed failed `validate` with 9 `glob-matches-nothing` findings, because `validate.py` requires every `owns` glob to
+  match an existing file and only `compose.yaml` and `docker/**` exist. `platform.owns` therefore lists those two; the
+  other nine (infra/**, deploy/k8s/**, charts/**, docs/runbooks/**, tools/loadtest/**, publish-images.yml, iac.yml,
+  k8s-validate.yml, dependabot.yml) are added later by the DevOps step that creates each file, and stay visible in the
+  `owns` comment. Everything else in Scope 1 applied as confirmed.
+- Scope 3 was a no-op: the lead domain card never named compose or Docker. The `lead-planner` role line lost
+  `compose.yaml, docker/**` from its generated Owns list, so `session-lead-planner.md` was regenerated.
+- Scope 6 was a no-op: the working-process doc does not enumerate domains.
+- Role-count assertions 18 -> 20 in test_session_roster.py (count and the seat-set test), test_session_agent_generator.py,
+  test_session_host_lead.py. New tests/tools/test_session_platform_domain.py (5 behaviours, 7 cases).
 
 ## Test Summary
+`pytest tests/tools/test_session_*.py` (venv python): 665 passed. `python3 -m tools.sessions.validate`: 0 findings, 20 roles.
+`generate_agents --check`: clean.
 
 ## Files Changed
+registries/session_roles.yaml; docs/guidelines/session_roles/domains/platform.md; .claude/agents/session-platform-{planner,implementer}.md
+(new) and session-lead-planner.md; tests/tools/test_session_{roster,agent_generator,host_lead}.py; tests/tools/test_session_platform_domain.py (new).
 
 ## Completion Summary
+`platform` domain registered with platform-planner and platform-implementer (no designer). compose.yaml and docker/**
+moved from lead to platform. The nine not-yet-existing DevOps paths are registered by the steps that create them.

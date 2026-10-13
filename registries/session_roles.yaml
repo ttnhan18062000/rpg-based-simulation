@@ -124,8 +124,6 @@ domains:
       - pyproject.toml
       - uv.lock
       - Makefile
-      - compose.yaml
-      - docker/**
       - dashboard-frontend/**
       - website/**
       - .mcp.json
@@ -139,6 +137,17 @@ domains:
       "visual_assets/**": asset-planner
       "tools/**": agent-working-designer
       "agent-working/**": agent-working-designer
+  platform:   # deployment and runtime; spec in docs/architecture/devops_plan_amendment_proposal.md (PR #537), owner 2026-10-13
+    owns:     # compose.yaml and docker/** moved from lead; each DevOps step adds the globs it creates (infra/**, deploy/k8s/**, charts/**, docs/runbooks/**, tools/loadtest/**, publish-images.yml, iac.yml, k8s-validate.yml, dependabot.yml) in its own PR
+      - compose.yaml
+      - docker/**
+    owns_not: []
+    routes:
+      "src/**": rpg-planner                   # the engine stays one process
+      "docs/architecture/**": lead-planner    # ADR changes go to lead for review
+      ".github/workflows/test.yml": testing-planner
+      "agent-working/**": agent-working-designer
+      "tools/**": agent-working-designer
 # Intentional overlaps between domains (a path matched by two domains' owns is an error unless a
 # split here names both domains and covers it).
 ownership_splits:
@@ -329,6 +338,24 @@ roles:
     handover: .claude/handover/lead-planner-u24.md
     card_note: "Host lead for u24desktop: status of this host's sessions only, on `agent-working/lead/hosts/u24desktop.md`. Never edits `board.md`. Lead-owned paths: comment only; review authority stays with lead-planner."
 
+  - role: platform-planner   # launched on demand while a DevOps plan step is open; no designer (ADRs go to lead-planner)
+    identity: {domain: platform, function: planner, session_name: platform-planner,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**",
+                             "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
+    placement: {worktree: platform-planner, max_sessions: 1}
+    handover: .claude/handover/platform-planner.md
+  - role: platform-implementer
+    identity: {domain: platform, function: implementer, session_name: platform-implementer,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, platform-planner]
+    capability: {may_write: ["**"]}
+    placement: {worktree: platform, max_sessions: 1}
+    handover: .claude/handover/platform-implementer.md
+
 # Exclusive resources. The writer slot belongs to the worktree; a worktree hosts exactly one role, its
 # writer (every designer, planner and implementer has its own worktree and lands its own PR, except a role
 # with `placement.launch: main-checkout`, which names no worktree and holds no lease). The lease itself is
@@ -349,3 +376,5 @@ worktrees:
   asset: {writer: asset-implementer}
   perf: {writer: perf-implementer}
   perf-planner: {writer: perf-planner}
+  platform: {writer: platform-implementer}
+  platform-planner: {writer: platform-planner}
