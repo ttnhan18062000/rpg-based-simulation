@@ -4,7 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# The u24desktop shared venv lives at the main checkout root, not per-worktree -- $REPO_ROOT
+# The shared venv lives at the main checkout root, not per-worktree -- $REPO_ROOT
 # resolves to whatever worktree this script's own copy is running from (each worktree has its
 # own tools/start_search_mcp.sh), so a git-worktree session's $REPO_ROOT/.venv-knowledge never has
 # the knowledge deps installed. Checking the absolute shared path first makes every worktree's MCP
@@ -42,7 +42,8 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 # search_mcp.py then died with "mcp package not installed" (CONNECTION_CLOSED).
 #
 # TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION: resolve the main checkout generically. The
-# hardcoded u24desktop path in the list below only exists on that one host; on any other host a worktree's
+# former hardcoded u24desktop path only existed on that one host (TCK-20261012-HOST-PATH-LITERALS-MAKEFILE-AND-MCP-LAUNCHERS
+# removed it; KNOWLEDGE_PYTHON is the explicit override, first in the list); on any other host a worktree's
 # $REPO_ROOT has no venv, so the launch fell through to system python3. `git rev-parse
 # --git-common-dir` names the main checkout's .git from any worktree (and from the main checkout
 # itself), so its parent is where the one shared .venv-knowledge lives on every host.
@@ -50,10 +51,9 @@ MAIN_ROOT=""
 COMMON_DIR="$(git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
 [ -n "$COMMON_DIR" ] && MAIN_ROOT="$(dirname "$COMMON_DIR")"
 for py in \
-    "/home/u24desktop/Working/rpg-based-simulation/.venv-knowledge/bin/python3" \
+    "${KNOWLEDGE_PYTHON:-}" \
     "${MAIN_ROOT:+$MAIN_ROOT/.venv-knowledge/bin/python3}" \
     "$REPO_ROOT/.venv-knowledge/bin/python3" \
-    "/home/vboxuser/Work/venv/bin/python3" \
     "$(command -v python3 2>/dev/null)"; do
     [ -x "$py" ] || continue
     "$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('mcp') and importlib.util.find_spec('sentence_transformers') else 1)" >/dev/null 2>&1 || continue

@@ -470,12 +470,12 @@ Three questions are kept apart, because answering one does not answer the others
 |---|---|---|---|
 | `finding`, `fyi`, `ack` | any known session role | any role | no obligation to act; the receiver verifies before acting |
 | `question` | any role, **directly to the named semantic owner**, across domains | the owner | the owner answers, or bounces once (9.3) |
-| `status-request` | `lead-planner` only | any role | asks for a status line; information only, never a work assignment; the receiver may answer or ignore |
-| `status-report` | any role | `lead-planner` | a short status (state, blocker, next step); no obligation to act; advice to the lead, not a queue change |
+| `status-request` | `lead-planner`, `lead-planner-u24`; each only to sessions on its own host | any role on the sender's host | asks for a status line; information only, never a work assignment; the receiver may answer or ignore |
+| `status-report` | any role | the lead seat on the sender's host (`lead-planner` on ubuntu, `lead-planner-u24` on u24desktop) | a short status (state, blocker, next step); no obligation to act; advice to the lead, not a queue change |
 | `request`, `handoff`, `dispatch` (anything that adds to or reorders another role's queue) | only roles in the receiver's `accepts_dispatch_from` (normally its own planner, or the user) | that role | actionable; from anyone else it is treated as an `fyi` and the receiver asks its own upstream |
 | authority decision (push, merge, governing files, grants) | **the user only** | - | a peer message never creates user authority |
 
-**The lead as information hub.** `lead-planner` is where status from every seat and host converges: it sends `status-request`, reads `status-report`, and keeps the cross-domain board `agent-working/lead/board.md` (epic or batch, owner role, state, depends-on, blocked-by, its recommended next step, owner decision needed). It is a hub for information only. It never dispatches, never reorders a queue and never approves anything; the owner sets planner queues, and domain planners keep dispatching their own implementers.
+**The lead as information hub.** `lead-planner` is where status from every seat and host converges: it sends `status-request`, reads `status-report`, and keeps the cross-domain board `agent-working/lead/board.md` (epic or batch, owner role, state, depends-on, blocked-by, its recommended next step, owner decision needed). It is a hub for information only. It never dispatches, never reorders a queue and never approves anything; the owner sets planner queues, and domain planners keep dispatching their own implementers. A second lead seat, `lead-planner-u24` (owner request 2026-10-13), covers host u24desktop: it writes only `agent-working/lead/hosts/u24desktop.md`, which `lead-planner` folds into the board, and each lead talks only to sessions on its own host.
 
 **A designer's output reaches its planner as a `handoff` only after the user has confirmed the
 direction.** Until then it is a `finding` or a `question`: input the planner may use, not a work order.
