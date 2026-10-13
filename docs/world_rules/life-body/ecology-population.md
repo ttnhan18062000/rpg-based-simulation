@@ -73,9 +73,13 @@ a standing requirement for whichever future mechanism eventually closes this gap
   number moves and the gate waits); topping herds up by spawning, which makes animals from
   nothing (validity check V1).
 - **Camps stop conjuring members (decided by the owner directly, 2026-10-13; row 70 of the
-  memo):** a goblin or orc camp spawned a new warrior every 30 ticks whenever fewer than
+  memo):** every camp kind spawned a new member every 30 ticks whenever fewer than
   max(2, maturity / 10) monsters stood within 10 tiles, with no parent, no cost and no food
   (`CampService.process_camps`, `src/world/camp.py`; found by Lane C while tracing the live map).
+  The spawned kind is the species' declared camp spawn kind (goblin and orc warriors) or else the
+  camp's own kind, so a wolf den spawns wolves: a generic monster body, not the authored wolf, at
+  tick 0, because a den holding only its alpha is below the cap of 2. That was the live map's
+  unexplained wolf.
   That is a validity check V1 violation, in the simulation and the gate. It is removed before
   baseline v1, as its own measured step, so the baseline counts only real arrivals. Camps then
   shrink as members die, which is reported in milestone 0 and not graded, as for herds above.
