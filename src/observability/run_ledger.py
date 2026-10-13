@@ -56,6 +56,7 @@ class RunLedger:
     _adds: Dict[str, int] = {}  # group|SpawnKind or unsourced
     _world_events: Dict[str, float] = {}  # FEEDING_KILL / MEAT_DECAYED counts, and meat_decayed_quantity
     _meat: Dict[str, float] = {}  # made (new bodies), taken (off persisting bodies: eaten or looted), vanished (on bodies that left the world)
+    _attacks: Dict[str, int] = {}  # attacker_group|victim_group|hit or kill: genuine entity-vs-entity combat resolutions
     _out_of_world: Dict[str, int] = {}  # group -> entity-ticks of a moved, alive entity outside the world extent
     _out_of_world_examples: List[Dict[str, Any]] = []
 
@@ -74,6 +75,7 @@ class RunLedger:
         cls._adds = {}
         cls._world_events = {}
         cls._meat = {}
+        cls._attacks = {}
         cls._out_of_world = {}
         cls._out_of_world_examples = []
 
@@ -104,6 +106,7 @@ class RunLedger:
         cls._count_world_events(update)
         cls._count_meat(prior, current)
         cls._count_positions(current, update)
+        cls._count_attacks(prior, current, update)
         return events
 
     @staticmethod
@@ -189,6 +192,20 @@ class RunLedger:
                 cls._meat["vanished"] = cls._meat.get("vanished", 0.0) + cls._meat_on(corpse)
 
     @classmethod
+    def _count_attacks(cls, prior: AuthoritativeState, current: AuthoritativeState, update: Any) -> None:
+        for eid, upd in (getattr(update, "entity_updates", None) or {}).items():
+            combat = getattr(upd, "combat", None)
+            attacker_id = getattr(combat, "attacker_id", None)
+            if attacker_id is None or getattr(combat, "hp_delta", 0) >= 0:
+                continue
+            victim, attacker = current.entities.get(eid), prior.entities.get(attacker_id)
+            if victim is None or attacker is None:
+                continue
+            outcome = "kill" if getattr(combat, "outcome_kind", None) == "KILL" else "hit"
+            key = _key(kind_group(attacker), kind_group(victim), outcome)
+            cls._attacks[key] = cls._attacks.get(key, 0) + 1
+
+    @classmethod
     def _count_positions(cls, current: AuthoritativeState, update: Any) -> None:
         for eid in (getattr(update, "entity_updates", None) or {}):
             entity = current.entities.get(eid)
@@ -216,7 +233,7 @@ class RunLedger:
             "transfers": dict(sorted(cls._transfers.items())), "hunger_drops": dict(sorted(cls._hunger_drops.items())),
             "deaths": dict(sorted(cls._deaths.items())), "adds": dict(sorted(cls._adds.items())),
             "world_events": dict(sorted(cls._world_events.items())), "meat": dict(sorted(cls._meat.items())),
-            "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples),
+            "attacks": dict(sorted(cls._attacks.items())), "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples),
         }
         return cls._event(LEDGER_TALLY_EVENT, cls._last_tick, payload)
 

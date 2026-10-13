@@ -217,3 +217,16 @@ def test_a_moved_entity_outside_the_world_extent_is_counted_with_an_example():
     object.__setattr__(out, "entities", {WHO: replace(e, navigation=replace(e.navigation, position=(1.0e6, 1.0e6)))})
     payload = _tally(state, out)
     assert payload["out_of_world"] == {kind_group(e): 1} and payload["out_of_world_examples"][0]["entity_id"] == WHO
+
+
+def test_attacks_and_kills_are_counted_by_attacker_and_victim_group():
+    wolf, villager = _world(species="wolf").entities[WHO], _world().entities[WHO]
+    state = _at_tick(_world(), 10)
+    object.__setattr__(state, "entities", {WHO: villager, 99: replace(wolf, id=99)})
+    hit = SimpleNamespace(attacker_id=99, hp_delta=-3, outcome_kind="SURVIVE")
+    kill = SimpleNamespace(attacker_id=99, hp_delta=-9, outcome_kind="KILL")
+    plain = SimpleNamespace(attacker_id=None, hp_delta=-1, outcome_kind="SURVIVE")  # starvation or hazard: not an attack
+    for combat in (hit, kill, plain):
+        RunLedger.observe(state, state, SimpleNamespace(entity_updates={WHO: SimpleNamespace(intent_results=[], combat=combat)}, entities_add=[], entity_spawn_sources={}, world_events_add=[]))
+    a, v = kind_group(wolf), kind_group(villager)
+    assert RunLedger.tally_event().payload["attacks"] == {f"{a}|{v}|hit": 1, f"{a}|{v}|kill": 1}
