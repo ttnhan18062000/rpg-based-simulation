@@ -203,10 +203,8 @@ class WorldDynamicsSystem:
             from src.world.calamity import CalamityService
             calamity_update = CalamityService.process_world_dynamics(state, generator)
             
-            # 3.1 Standard Monster Replenishment
-            from src.world.spawn import SpawnService
-            spawn_update = SpawnService.process_spawns(state, generator)
-            
+            # 3.1 (retired) Regional monster replenishment to a density target: removed, divergence 2.122 (D67/D70). Nothing comes from nothing.
+
             # 3.2 Resource Ecology (Replenishment)
             from src.world.ecology import ResourceEcologyService
             ecology_update = ResourceEcologyService.process_ecology(state, generator)
@@ -257,7 +255,7 @@ class WorldDynamicsSystem:
             update = update.replace(
                 maturity_set=calamity_update.maturity_set if calamity_update.maturity_set is not None else update.maturity_set,
                 last_calamity_tick_set=calamity_update.last_calamity_tick_set if calamity_update.last_calamity_tick_set is not None else update.last_calamity_tick_set,
-                entities_add=update.entities_add + calamity_update.entities_add + raid_update.entities_add + spawn_update.entities_add + boss_spawn_update.entities_add + camp_state_update.entities_add + lair_spawn_update.entities_add,
+                entities_add=update.entities_add + calamity_update.entities_add + raid_update.entities_add + boss_spawn_update.entities_add + camp_state_update.entities_add + lair_spawn_update.entities_add,
                 camp_updates=camp_state_update.camp_updates,
                 next_entity_id_set=generator._last_id + 1 if (generator._last_id + 1) > state.next_entity_id else None
             )

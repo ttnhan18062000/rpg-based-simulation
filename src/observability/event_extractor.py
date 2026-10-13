@@ -67,7 +67,7 @@ _CAPABILITY_STALL_TICKS = 300
 # Project kinds inconsistent with a high-urgency DANGER concern (decision_divergence_detected)
 _NON_SURVIVAL_PROJECT_KINDS = frozenset(("harvesting", "exploration", "social", "crafting"))
 
-# Spawn interval (must match SpawnService.SPAWN_INTERVAL)
+# Spawn interval (the retired SpawnService's 50-tick interval; kept as this extractor's own cadence for the spawn-density events, 2.122)
 _SPAWN_INTERVAL = 50
 
 

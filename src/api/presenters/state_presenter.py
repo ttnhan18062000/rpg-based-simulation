@@ -1,7 +1,8 @@
 # Compliance IDs: API-001, API-009, API-013, API-018, API-019, API-020, API-021, API-022, API-023, API-024, DATA-023, DATA-041, DATA-045, DATA-129, DATA-130, DATA-131, DATA-132, DATA-133, DATA-134, DATA-135, INFRA-019, INFRA-056, INFRA-057, INFRA-167, INFRA-180, RES-021, STRAT-035, STRAT-044, STRAT-060, STRAT-068, WORLD-015
 from __future__ import annotations
-from typing import Dict, Any, List
-from src.core.state import AuthoritativeState, EntityState, RegionState
+from typing import Dict, Any, List, Optional
+from src.core.state import AuthoritativeState, EntityState, PlaceState, RegionState
+from src.api.schemas import PlaceReadModel, PlaceTiles
 from src.core.enums import Faction
 
 class StatePresenter:
@@ -83,7 +84,7 @@ class StatePresenter:
                 "gold": entity.inventory.gold,
                 "item_count": len(entity.inventory.items),
                 "items": [
-                    {"id": i.item_id, "quantity": i.quantity, "metadata": i.metadata}
+                    {"id": i.item_id, "quantity": i.quantity, "metadata": i.properties}
                     for i in entity.inventory.items
                 ]
             },
@@ -181,6 +182,32 @@ class StatePresenter:
         }
 
     @staticmethod
+    def present_place(place: PlaceState, region: Optional[RegionState] = None) -> PlaceReadModel:
+        """A place as a typed read-model (D69). The owner is the place's own sovereignty override, else its region's holder; a name is the place id
+        read as words (a place has no display name of its own yet)."""
+        owner_id = place.owner_faction_id if place.owner_faction_id is not None else (region.owner_faction_id if region is not None else None)
+        try:
+            owner = Faction(owner_id).name.lower() if owner_id is not None else None
+        except ValueError:
+            owner = str(owner_id)
+        x, y = int(place.position[0]), int(place.position[1])
+        if place.footprint is not None:
+            min_x, min_y, max_x, max_y = place.footprint
+            tiles: PlaceTiles = {"x": min_x, "y": min_y, "width": max_x - min_x + 1, "height": max_y - min_y + 1}
+        else:
+            tiles = {"x": x, "y": y, "width": 1, "height": 1}
+        return {
+            "location_id": place.place_id,
+            "name": place.place_id.replace("_", " ").title(),
+            "location_type": place.kind.value.lower(),
+            "x": x,
+            "y": y,
+            "region_id": place.region_id,
+            "owner": owner,
+            "tiles": tiles,
+        }
+
+    @staticmethod
     def present_region(region: RegionState) -> Dict[str, Any]:
         """Detailed regional model."""
         return {
@@ -199,12 +226,16 @@ class StatePresenter:
         """Deterministic terrain-type-string -> int code, for the live map's RLE grid.
 
         No terrain-type enum exists in this codebase (recipe-declared free-form strings). Codes are
-        assigned 0..n-1 over the alphabetically-sorted distinct values actually present in
+        assigned 0..n-1 over the alphabetically-sorted, case-folded distinct values actually present in
         state.terrain, so the same terrain-type set always maps to the same codes regardless of dict
         insertion order. Computed fresh per call (never cached/stored) since terrain can change
         between calls.
         """
-        return {t: i for i, t in enumerate(sorted(set(state.terrain.values())))}
+        # One terrain, one code: the engine carries both 'PLAIN' (the compiler's fill) and 'plain' (content), a known casing fragmentation upstream
+        # that changes pathing and hashes if touched, so the presenter folds case here. Every raw string keeps its own key and shares its meaning's code.
+        meanings = sorted({t.lower() for t in state.terrain.values()})
+        code_of = {m: i for i, m in enumerate(meanings)}
+        return {t: code_of[t.lower()] for t in sorted(set(state.terrain.values()))}
 
     @staticmethod
     def present_map(state: AuthoritativeState) -> Dict[str, Any]:
@@ -303,7 +334,7 @@ class StatePresenter:
                 "center_y": (min_y + max_y) / 2,
                 "radius": max(max_x - min_x, max_y - min_y) / 2,
                 "difficulty": region.hazard_level,
-                "locations": [],
+                "locations": [StatePresenter.present_place(state.places[pid], region) for pid in region.places if pid in state.places],
             })
 
         return {
