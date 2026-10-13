@@ -1307,24 +1307,14 @@
   test_path: tests/integration/culture/test_culture_drift_acceptance.py::test_two_regions_diverge_after_5_episodes
   divergence_note: null
 - id: WORLD-103
-  text: 'SpawnService two-tier cadence: before late_spawn_threshold_tick (default
-    500) spawn base_spawn_batch_size (default 1) entities per below-density region
-    per 50-tick interval; at or after the threshold spawn late_spawn_batch_size (default
-    2) per region per interval to compensate late-run combat attrition. Batch is always
-    capped by the density deficit (target_count - current_count) so target is never
-    exceeded. Batch index 0 uses original RNG keys (preserving early-game determinism);
-    subsequent batch entries use suffixed keys (e.g. "{r_id}_b1"). Implemented in
-    TCK-20260627-P2B-SPAWN-CADENCE.'
-  status: verified
+  text: 'Regions do not top up monsters to a density target (D67 and D70). The SpawnService two-tier density cadence (batch 1 before tick 500, 2 after, capped by the deficit) was removed: it was dead under every corpus world (no region kind matched its pools; 0 adds in 10 baseline runs) and would have spawned parentless monsters the day a world declared FOREST, PLAINS or MOUNTAIN regions. Implemented in TCK-20260627-P2B-SPAWN-CADENCE; retired in TCK-20261014-REGIONS-STOP-TOPPING-UP-MONSTERS-TO-A-DENSITY-TARGET-D67-D70.'
+  status: divergent
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/world/spawn.py L34-45 (batch_size selection by tick); L58-82 (batch
-    loop with indexed RNG keys); src/world/spawn_config.py (SpawnConfig dataclass
-    with base_spawn_batch_size=1, late_spawn_threshold_tick=500, late_spawn_batch_size=2;
-    DEFAULT_SPAWN_CONFIG instance)
+  v2_evidence: src/engine/world_dynamics.py (no SpawnService call); src/world/spawn_config.py (DIFFICULTY_TIERS and DIFFICULTY_ZONES only)
   proof_type: parity
-  test_path: tests/unit/world/test_spawn_cadence.py::TestLateGameCadence::test_late_game_spawns_two_per_region_at_threshold
-  divergence_note: null
+  test_path: tests/unit/world/test_no_region_sourced_entity_adds.py
+  divergence_note: 'Intentional divergence 2.122 (Intentional Gameplay Change).'
   support_boundary: null
 - id: WORLD-104
   text: "Regional resource scarcity pressure propagates to adjacent regions (E21E).\

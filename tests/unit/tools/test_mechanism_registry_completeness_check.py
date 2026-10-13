@@ -156,7 +156,8 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     (`strategic_systems/town_targeting`). The 8 left are `domains/motivation` (Child B) and seven modules with no
     caller in `src/`, filed for deletion as
     TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE. Taken by running the
-    check."""
+    check.
+    """
     data = _real_registry_data()
     report = build_report(data)
     assert report.total_targets == 65
@@ -259,7 +260,8 @@ def test_wider_scope_numbers_pinned():
     # src/observability/starvation_record.py is outside the scope globs. rpg-planner binds and recomputes at the fold.
     # 335 -> 338 on 2026-10-13 (code-health extractions, behaviour-free): +src/engine/run_identity.py (out of kernel.py),
     # +src/worldassembly/spawn_position.py (out of resolver.py) and +src/core/update_models/buildings.py (BuildingUpdate out of updates.py).
-    assert wider["scope_files"] == 338
+    # 338 -> 337 on 2026-10-14 (D67/D70): -src/world/spawn.py (the density top-up SpawnService, removed; divergence 2.122).
+    assert wider["scope_files"] == 337
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).

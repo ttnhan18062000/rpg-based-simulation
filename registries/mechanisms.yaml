@@ -2754,6 +2754,7 @@ mechanisms:
       - src/core/state.py::CampState
       - src/world/camp.py::CampService
       - src/world/creature_territory.py::CreatureTerritoryService
+      - src/systems/world_systems/generator.py::EntityGenerator  # re-bound 2026-10-14: the retired regional_monster_spawn was its other binding (2.122); camp spawns still go through it until D70
     verified:
       instrument: corpus_run
       verdict: observed
@@ -3159,22 +3160,6 @@ mechanisms:
         `observability/event_extractor.py` respectively; `pressure.py`/`impact.py` are confirmed
         zero-caller. `state: partial` accurately represents the mixed disposition. `mechanism_
         state_caller_check.py`'s own full-registry run raises no contradiction for this entry.
-
-  - id: regional_monster_spawn
-    layer: region
-    systems: [world]
-    depends_on: []
-    state: done
-    implemented_by:
-      - src/world/spawn.py::SpawnService
-      - src/systems/world_systems/generator.py::EntityGenerator
-    verified:
-      instrument: corpus_run
-      verdict: observed
-      date: "2026-09-30"
-      note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `SpawnService.process_spawns` was called 30 times (its per-region cadence) across the three worlds. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
-        Regional monster replenishment and density management (cadence in spawn_config.py). Distinct from `world_boss_spawn` (BossService) and from camp-anchored spawns (`camp`).
 
   - id: resource_ecology_regrowth
     layer: world
