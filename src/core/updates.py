@@ -19,6 +19,7 @@ from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage, 
 from src.core.models.social import RelationshipRole
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode, DiplomaticState
+from src.core.spawn_source import SpawnSource
 from src.core.update_models.buildings import BuildingUpdate  # noqa: F401  (re-exported: updates.py is where callers import it from)
 from src.core.update_models.inventory import InventoryUpdate, ItemInstanceUpdate
 from src.core.update_models.quests import QuestUpdate
@@ -992,6 +993,16 @@ class ClanUpdate:
         )
 
 
+def _merged_spawn_sources(first: "StateUpdate", others: List["StateUpdate"]) -> Dict[int, SpawnSource]:
+    """The union of the declared spawn sources of ``first`` and ``others``; two different sources for one id is a producer error, never a silent drop."""
+    merged = dict(first.entity_spawn_sources)
+    for other in others:
+        for add_id, source in other.entity_spawn_sources.items():
+            if merged.setdefault(add_id, source) != source:
+                raise ValueError(f"entity {add_id} has two different declared spawn sources")
+    return merged
+
+
 @dataclass(frozen=True, slots=True)
 class StateUpdate:
     """
@@ -1000,6 +1011,7 @@ class StateUpdate:
     """
     entity_updates: Dict[int, EntityUpdate] = field(default_factory=dict)
     entities_add: List[EntityState] = field(default_factory=list)
+    entity_spawn_sources: Dict[int, SpawnSource] = field(default_factory=dict)  # the declared source of an add, keyed by the added entity's id (M0 gate V8); an add with none is unsourced
     entities_remove: List[int] = field(default_factory=list)
     nodes_add: List[ResourceNodeState] = field(default_factory=list)
     node_updates: Dict[int, ResourceNodeUpdate] = field(default_factory=dict)
@@ -1094,8 +1106,6 @@ class StateUpdate:
         valid_others = [o for o in others if o and not o.is_noop()]
         if not valid_others:
             return self
-
-        
         # 1. Merge dictionaries
         new_entity_updates = dict(self.entity_updates)
         new_world_updates = dict(self.world_updates)
@@ -1235,6 +1245,7 @@ class StateUpdate:
             rejections_delta=new_rejections_delta,
             resource_updates=new_resource_updates,
             entities_add=new_entities_add,
+            entity_spawn_sources=_merged_spawn_sources(self, valid_others),
             entities_remove=list(new_entities_remove),
             nodes_add=new_nodes_add,
             groups_add_or_update=new_groups_add_or_update,
