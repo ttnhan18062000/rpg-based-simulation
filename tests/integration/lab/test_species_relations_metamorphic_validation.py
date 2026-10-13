@@ -83,78 +83,50 @@ LAB_RUN_BASELINE = "data/lab_runs/species_hostility_baseline"
 LAB_RUN_HIGH = "data/lab_runs/species_hostility_high"
 
 
-def _strip_wolf_human_entries(content: str) -> str:
-    """Removes the wolf_to_human / human_to_wolf blocks, leaving every other authored
-    entry (including every other pair) untouched -- the 'no-entry baseline' variant."""
-    blocks = content.split("\n\n")
-    kept = [
-        b for b in blocks
-        if 'id: "wolf_to_human"' not in b and 'id: "human_to_wolf"' not in b
-    ]
-    return "\n\n".join(kept)
-
-
-def _set_wolf_human_high(content: str) -> str:
-    """The 'compared' variant: wolf<->human hostility overwritten to 'high' both ways."""
-    stripped = _strip_wolf_human_entries(content)
-    addition = (
+def _set_human_pair_high(content: str) -> str:
+    """The 'compared' variant: a human<->human species row of hostility "high" appended. The authored file has no human<->human row, so the baseline is
+    the file as authored; the pair it governs is two different factions of the same people-kind species (town_council and merchant_league)."""
+    return content.rstrip("\n") + (
         "\n\n"
-        '- id: "wolf_to_human"\n'
-        '  source_species: "wolf"\n'
-        '  target_species: "human"\n'
-        '  relationship_model: "predator_prey"\n'
-        "  axes:\n"
-        '    hostility: "high"\n'
-        "\n"
-        '- id: "human_to_wolf"\n'
+        '- id: "human_to_human"\n'
         '  source_species: "human"\n'
-        '  target_species: "wolf"\n'
-        '  relationship_model: "predator_prey"\n'
+        '  target_species: "human"\n'
+        '  relationship_model: "people_pair"\n'
         "  axes:\n"
         '    hostility: "high"\n'
     )
-    return stripped + addition
 
 
-def _contact_rich_load_world(original_load_world):
-    """`WorldRepository.load_world` with the wolf den moved next to the town (ruling (a)); other worlds untouched."""
+def _pair_hostility_input(seed: int) -> bool:
+    """What the kernel's hostility test reads for the chosen pair: the faction semantics verdict (`hostility.faction_hostile`'s own call) of a
+    town_council human toward a merchant_league human, with their species in the context, from the species_relations file as it is on disk now.
+    Neither is a wild creature, so species_relations (not appraisal) governs the pair."""
+    from src.content_semantics.faction import get_faction_semantics_service, reset_faction_semantics_service
+    from src.content_semantics.relation import RelationContext
+    from src.engine.hostility import is_wild_creature
+    from tests.helpers.scenario import compile_world
 
-    def load_world(self, world_id):
-        spec = original_load_world(self, world_id)
-        if world_id != "unit_faction_tension":
-            return spec
-        regions = []
-        for region in spec.regions:
-            if region.id == "wolf_den":
-                places = [
-                    place.model_copy(update={"position": CONTACT_WOLF_DEN_NEST}) if place.id == "wolf_den_nest" else place
-                    for place in region.places
-                ]
-                region = region.model_copy(update={"bounds": CONTACT_WOLF_DEN_BOUNDS, "places": places})
-            regions.append(region)
-        assert any(r.id == "wolf_den" for r in regions), "unit_faction_tension no longer has a wolf_den region"
-        return spec.model_copy(update={"regions": regions})
-
-    return load_world
-
-
-HUNGRY = 90.0  # past the hunt onset (appraisal.HUNT_HUNGER), so a wolf regards a person as prey the moment it perceives one
+    reset_faction_semantics_service()
+    state = compile_world("unit_faction_tension", seed)
+    by_faction = {}
+    for ent in state.entities.values():
+        props = ent.identity.properties or {}
+        if props.get("species_id") == "human":
+            by_faction.setdefault(props.get("faction_id"), ent)
+    council, merchant = by_faction["town_council"], by_faction["merchant_league"]
+    assert not is_wild_creature(council) and not is_wild_creature(merchant), "the chosen pair must not be wild creatures (appraisal would govern it)"
+    context = RelationContext(distance=3.0, combat_engaged=False, source_species="human", target_species="human")
+    return bool(get_faction_semantics_service().is_hostile_compat("town_council", "merchant_league", context))
 
 
-def _hungry_wolves_compile(original_compile):
-    """`WorldCompiler.compile` with every wolf starting hungry. Wolves are wild creatures (hostility.is_wild_creature, decision 47 scope B): the faction
-    and species-relation verdicts no longer decide whether a wolf fights a person, appraisal does, and a sated wolf regards a person as nothing. The
-    layout therefore needs hungry wolves to produce wolf-human contact in the baseline."""
-
-    def compile(spec, seed, *args, **kwargs):
-        state, report = original_compile(spec, seed, *args, **kwargs)
-        entities = {
-            eid: replace(e, biological=replace(e.biological, hunger=HUNGRY)) if (e.identity.properties or {}).get("species_id") == "wolf" else e
-            for eid, e in state.entities.items()
-        }
-        return replace(state, entities=entities), report
-
-    return staticmethod(compile)
+def _is_pair_engagement(event: dict) -> bool:
+    """True for an engagement between a town_council human and a merchant_league human, in either direction (wolf engagements are not counted)."""
+    payload = event.get("payload") or {}
+    pair = set()
+    for key in ("attacker_snapshot", "defender_snapshot"):
+        snap = payload.get(key) or {}
+        pair.add((snap.get("species_id"), snap.get("faction_id")))
+    return pair == {("human", "town_council"), ("human", "merchant_league")}
 
 
 def _engagements_per_seed(lab_run_id: str) -> dict:
@@ -167,7 +139,10 @@ def _engagements_per_seed(lab_run_id: str) -> dict:
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if line and json.loads(line).get("event_type") == "combat_engagement_started":
+                if not line:
+                    continue
+                event = json.loads(line)
+                if event.get("event_type") == "combat_engagement_started" and _is_pair_engagement(event):
                     count += 1
         counts[seed] = count
     return counts
