@@ -312,6 +312,7 @@ class LifecycleSystem:
             update = replace(update,
                 world_updates=new_world_updates,
                 entities_add=list(update.entities_add) + list(inf_update.entities_add),
+                entity_spawn_sources={**update.entity_spawn_sources, **inf_update.entity_spawn_sources},
                 entities_remove=list(update.entities_remove) + list(inf_update.entities_remove),
                 world_events_add=list(update.world_events_add) + list(vac_update.world_events_add),
             )

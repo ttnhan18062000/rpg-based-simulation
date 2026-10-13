@@ -9,6 +9,7 @@ from src.observability.config import ObservabilityMode as _RunObservabilityMode
 from src.observability.event_extractor import EventExtractor
 from src.observability.event_shapers import FactionShaper, ProgressionShaper, SocialShaper, StrategyShaper
 from src.observability.events import SimulationEvent
+from src.observability.run_ledger import RunLedger
 from src.observability.starvation_record import StarvationRecorder
 from src.config.optimization_profiles import SubsystemBudget, SubsystemPressureReport, DEFAULT_OBSERVABILITY_BUDGET
 
@@ -361,7 +362,7 @@ class EventRecorder:
             self._file_handle = None
 
 
-EventRecorder.closing_event_sources.append(StarvationRecorder.closing_event)
+EventRecorder.closing_event_sources.extend([StarvationRecorder.closing_event, RunLedger.closing_event])
 
 
 def reset_run_state(strategic_cadence: int, escalated_hunger: float, cadence_gate: Callable[[int, Optional[int], int], bool], live: bool = True) -> None:
@@ -370,6 +371,8 @@ def reset_run_state(strategic_cadence: int, escalated_hunger: float, cadence_gat
     EventExtractor.reset_run_state()
     StarvationRecorder.reset_run_state()
     StarvationRecorder.configure(strategic_cadence, escalated_hunger, cadence_gate, live)
+    RunLedger.reset_run_state()
+    RunLedger.configure(live)
     StrategyShaper.reset_run_state()
     ProgressionShaper.reset_run_state()
     SocialShaper.reset_run_state()
@@ -377,8 +380,8 @@ def reset_run_state(strategic_cadence: int, escalated_hunger: float, cadence_gat
 
 
 def extract_events(prior: AuthoritativeState, current: AuthoritativeState, update: Any, mode: _RunObservabilityMode = _RunObservabilityMode.LIGHT) -> List[SimulationEvent]:
-    """One tick's curated events plus the starvation-death record channel (silent when observability is OFF: no header, so the channel reads as not live)."""
+    """One tick's curated events plus the starvation-death record channel and the run ledger (silent when observability is OFF: no header, so the channel reads as not live)."""
     events = EventExtractor.extract(prior, current, update, mode)
     if mode != _RunObservabilityMode.OFF:
-        events = events + StarvationRecorder.observe(prior, current, update)
+        events = events + StarvationRecorder.observe(prior, current, update) + RunLedger.observe(prior, current, update)
     return events

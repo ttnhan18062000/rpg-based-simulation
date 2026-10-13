@@ -11,6 +11,10 @@ seeds: [42, 43, 44, 45, 46]
 ticks: 5000
 stale_after_days: 30
 
+# The validity rows the metric module must emit for a run to count (testing-planner's V8 ticket): a dropped row reads as no-data, never as
+# a pass. V1-V7 are the original validity checks; V8 is "every mid-run entity add has a declared source".
+required_validity: [V1, V2, V3, V4, V5, V6, V7, V8]
+
 # Stop lines: M0 gate report-only checks R1-R5 (designer memo rows 52-54, owner-confirmed; roadmap section 12.3). Crossing one does
 # not fail anything; it means a re-baseline needs the owner's ruling ({ref, date}). Outcome rows only. `group` is a property-based kind
 # group (D42), never an EntityRole name.
