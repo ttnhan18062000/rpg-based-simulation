@@ -14,7 +14,7 @@ from pathlib import Path
 
 import yaml
 
-from visual_assets.review.review_sheets import DARK, DIM, GREEN, INK, LIGHT, PAGE, Canvas
+from visual_assets.review.review_sheets import DARK, DIM, GREEN, INK, LIGHT, PAGE, Canvas, wrap
 
 REPO = Path(__file__).resolve().parents[1]
 SILHOUETTES = REPO / "visual_assets" / "icons" / "object_marker_silhouettes.yaml"
@@ -42,14 +42,28 @@ def _draw(c: Canvas, rows: list[str], x: int, y: int, canvas: int, zoom: int, bg
                 c.rect(x + (MARGIN + rx) * zoom, y + (MARGIN + ry) * zoom, zoom, zoom, ink)
 
 
+CHAR_W = 12  # the review font at scale 2: 6 columns of 2 px per character
+HEADER = "One colour, outline included. Left: x4 light on dark. Middle: x4 dark on light. Right: x1 and x2 on grass (the real size)."
+
+
+def layout(entries: list[tuple[str, list[str]]], canvas: int, cols: int = 2) -> dict:
+    """Cell and page sizes; a cell is as wide as its longest label needs (plus a gutter), so no label can run into its neighbour or off the page."""
+    picture = canvas * 4 * 2 + 10 + 10 + canvas + 8 + canvas * 2
+    cell_w = max(picture, max(len(label) for label, _ in entries) * CHAR_W) + 40
+    width = cols * cell_w + 40
+    header = wrap(HEADER, (width - 40) // CHAR_W)
+    return {"cell_w": cell_w, "width": width, "header": header, "row_h": canvas * 4 + 60, "top": 60 + 26 * len(header), "cols": cols}
+
+
 def sheet(entries: list[tuple[str, list[str]]], canvas: int, title: str) -> Canvas:
-    cell_w = canvas * 4 * 2 + 10 + 20 + canvas * 3 + 8 + 40
-    cols, row_h = 2, canvas * 4 + 60
-    c = Canvas(cols * cell_w + 40, 110 + -(-len(entries) // cols) * row_h, PAGE)
+    g = layout(entries, canvas)
+    cols, cell_w, row_h = g["cols"], g["cell_w"], g["row_h"]
+    c = Canvas(g["width"], g["top"] + -(-len(entries) // cols) * row_h + 20, PAGE)
     c.text(20, 20, title, INK, 2)
-    c.text(20, 50, "one colour, outline included. left: x4 light on dark. middle: x4 dark on light. right: x1 and x2 on grass (the real size).", DIM, 2)
+    for n, line in enumerate(g["header"]):
+        c.text(20, 50 + 26 * n, line, DIM, 2)
     for i, (label, rows) in enumerate(entries):
-        x0, y0 = 20 + (i % cols) * cell_w, 100 + (i // cols) * row_h
+        x0, y0 = 20 + (i % cols) * cell_w, g["top"] + (i // cols) * row_h
         c.text(x0, y0, label, GREEN, 2)
         y1 = y0 + 24
         _draw(c, rows, x0, y1, canvas, 4, DARK, LIGHT)
@@ -60,21 +74,26 @@ def sheet(entries: list[tuple[str, list[str]]], canvas: int, title: str) -> Canv
     return c
 
 
+def entries_for(slots: dict, size: int) -> list[tuple[str, list[str]]]:
+    """Labels carry no family prefix (it is in the sheet title), only the option letter where a slot has two."""
+    out = []
+    for key in sorted(slots):
+        if slots[key]["size"] != size:
+            continue
+        options = slots[key]["options"]
+        for option in sorted(options):
+            suffix = f" OPTION {option}" if len(options) > 1 else ""
+            out.append((key.split(".", 2)[2].upper() + suffix, options[option]))
+    return out
+
+
 def build(out_dir: Path, path: Path = SILHOUETTES) -> list[str]:
     slots = load(path)
     out_dir.mkdir(parents=True, exist_ok=True)
     names = {16: "01_nodes_and_nest.png", 24: "02_buildings.png"}
     titles = {16: "OBJECT MARKERS 16X16: RESOURCE NODES AND NEST", 24: "OBJECT MARKERS 24X24: BUILDINGS"}
     for size in (16, 24):
-        entries = []
-        for key in sorted(slots):
-            if slots[key]["size"] != size:
-                continue
-            options = slots[key]["options"]
-            for option in sorted(options):
-                suffix = f" OPTION {option}" if len(options) > 1 else ""
-                entries.append((key.removeprefix("icon.").upper() + suffix, options[option]))
-        (out_dir / names[size]).write_bytes(sheet(entries, size, titles[size]).png())
+        (out_dir / names[size]).write_bytes(sheet(entries_for(slots, size), size, titles[size]).png())
     return sorted(names.values())
 
 

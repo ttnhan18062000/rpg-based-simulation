@@ -46,3 +46,15 @@ def test_a_malformed_row_is_refused(tmp_path):
         assert key in str(exc)
     else:
         raise AssertionError("a short row was accepted")
+
+
+def test_no_label_or_header_line_overflows_its_cell_or_the_page():
+    slots = sheet.load()
+    for size in (16, 24):
+        entries = sheet.entries_for(slots, size)
+        g = sheet.layout(entries, size)
+        for label, _ in entries:
+            assert "." not in label and not label.startswith(("NODE", "BUILDING", "MARKER")), label  # no family prefix
+            assert len(label) * sheet.CHAR_W <= g["cell_w"] - 20, f"{label} runs into the next cell"
+        assert all(len(line) * sheet.CHAR_W <= g["width"] - 40 for line in g["header"])
+        assert " ".join(g["header"]) == sheet.HEADER
