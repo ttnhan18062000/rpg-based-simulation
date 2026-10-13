@@ -31,10 +31,12 @@ def test_the_real_slow_registry_lints_clean():
     assert kr.lint_file(SLOW_FILE, SLOW_SPEC) == []
 
 
-def test_the_real_gate_registry_exists_is_empty_and_lints_clean():
+def test_the_real_gate_registry_exists_lints_clean_and_every_entry_is_an_owned_validity_fail():
+    """It was empty until the metric module measured its first validity reds (V1 free meal, V8 unsourced adds); every entry names its ticket."""
     assert GATE_FILE.exists()
-    assert kr.load_known_reds(GATE_FILE, RPG_GATE_SPEC) == []
     assert kr.lint_file(GATE_FILE, RPG_GATE_SPEC) == []
+    entries = kr.load_known_reds(GATE_FILE, RPG_GATE_SPEC)
+    assert entries and all(e["state"] == "fail" and e["ticket"].startswith("TCK-") for e in entries)
 
 
 def test_lint_file_reports_a_missing_file_a_wrong_top_key_and_a_non_list(tmp_path):
