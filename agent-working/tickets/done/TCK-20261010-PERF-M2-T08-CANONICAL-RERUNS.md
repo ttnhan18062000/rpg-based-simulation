@@ -103,11 +103,11 @@ Source concern IDs: C6.
 - Every record is measured 3 times in fresh processes and the median avg is promoted; a spread above 15 % is not promoted and is marked NOISY (perf-planner condition, host is loaded).
 
 ## Test Summary
-- `tests/unit/perf/test_rerun_baselines.py` (16) and `tests/unit/perf/test_sweep_gate_baseline.py` (3) new; `tests/unit/perf/test_baseline_lifecycle.py` updated (legacy set 15 to 10). Scoped run (`tests/unit/perf`, `tests/static -k "perf or baseline or ci_"`, paths guard, `test_corpus_perf_baseline`, `tests/perf/test_perf_regression_baseline.py`): 304 passed. `-k parity_ledger`: 100 passed.
+- `tests/unit/perf/test_rerun_baselines.py` (17) and `tests/unit/perf/test_sweep_gate_baseline.py` (3) new; `tests/unit/perf/test_baseline_lifecycle.py` updated (legacy set 15 to 10). Scoped run (`tests/unit/perf`, `tests/static -k "perf or baseline or ci_"`, paths guard, `test_corpus_perf_baseline`, `tests/perf/test_perf_regression_baseline.py`): 304 passed. `-k parity_ledger`: 100 passed.
 - `tests/perf/test_perf_regression_baseline.py -m slow` against the old files (policy 2.2 step 4): INCONCLUSIVE "legacy tripwire reference" for both declared scenarios (the old files have no identity); output in `commands/old_file_slow_test.txt`.
 - FAIL on this host only: `tests/integration/observability/test_baseline_comparison_flow.py::test_baseline_comparison_and_cli_flow` (3 of 3 here, 1 of 1 on a clean `origin/main`; host-timing comparison); passes in CI on main (run 38434570715, job `Integration` 115425246123). Not changed; this branch's PR run is the acceptance evidence.
 - FAIL (reported, not a defect of this ticket): `tools/evaluate_simq.py` exit 1, 130 of 630 pillars REGRESS vs the committed anchors; nothing committed.
-- Measurements: 13 records x 3 fresh-process runs, plus the quiet-window retry of 6; peak RSS and wall per run in `evidence.md`; `compare-sweep` and `gate` outputs in `commands/`.
+- Measurements: 15 records x 3 fresh-process runs (the two mixed_200 after #544), plus the quiet-window retry of 6; peak RSS and wall per run in `evidence.md`; `compare-sweep` and `gate` outputs in `commands/`.
 
 ## Files Changed
 - New: `tools/perf/rerun_baselines.py`, `tests/unit/perf/test_rerun_baselines.py`, `tests/unit/perf/test_sweep_gate_baseline.py`, `docs/observability/baselines/README.md`, `tests/perf/baselines/{resource_100_local,idle_100_concurrent,movement_100_concurrent,combat_10_concurrent,resource_100_concurrent}.v0001.json`.
