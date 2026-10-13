@@ -106,26 +106,41 @@ def decode_at_decoded_bytes_bound() -> dict:
     }
 
 
+def _legal_keys(keys: int, *, detail_keys: int = 0, detail_values: int = 0, detail_value_len: int = 8) -> list[dict]:
+    """Registry entries in the shape today's loader accepts (D17: no `variant_axes`; AM1-W02.7: a class and a structured fallback on every key; an optional `detail` axis).
+
+    The generators of 2026-10-03 used `variant_axes` and no class or fallback, which the loader refuses since `TCK-20261008-VISUAL-ASSETS-REGISTRY-SAFETY-AND-LABEL-FIELDS`;
+    they were brought to today's shape by `TCK-20261012-VISUAL-ASSETS-REGISTRY-BUDGET-AND-DETAIL-DESIGN` (the numbers in `docs/assets/budgets.md` rows dated earlier are the old shape's)."""
+    entries = []
+    for i in range(keys):
+        entry = {
+            "key": f"ui.family{i % 40}.entry{i}", "family": f"family{i % 40}", "description": "A realistic one-line description of what this visual key is for",
+            "variant_axes": [], "optional": True, "safety_class": "identifying", "fallback": {"kind": "glyph_and_text", "glyph": "lucide:Hammer", "text": "the item type as text"},
+        }
+        if i < detail_keys:
+            values = [("v" + str(v)).ljust(detail_value_len, "x")[:detail_value_len] if v else "base" for v in range(detail_values)]
+            entry["detail"] = {"values": values, "default": "base"}
+        entries.append(entry)
+    return entries
+
+
 def registry_scaling() -> dict:
-    """Real `load_registry` path (no bound lifted) at growing key counts, realistic keys (2 axes x 4 values) and no-axis keys."""
+    """Real `load_registry` path (no bound lifted) at growing key counts, today's legal key shape: `axes` is the number of keys that declare a detail axis of MAX_DETAIL_VALUES values (0 or MAX_DETAIL_KEYS)."""
     import yaml
 
     from visual_assets.store import config
     from visual_assets.store.catalog.registry import load_registry
+    from visual_assets.store.contracts.definitions import MAX_DETAIL_VALUES
 
     def build(keys: int, aliases: int, axes: int) -> bytes:
-        entries = [
-            {"key": f"ui.family{i % 40}.entry{i}", "family": f"family{i % 40}", "description": "A realistic one-line description of what this visual key is for",
-             "variant_axes": [{"name": f"axis{a}", "values": [f"value{v}" for v in range(4)]} for a in range(axes)], "optional": False}
-            for i in range(keys)
-        ]
+        entries = _legal_keys(keys, detail_keys=min(axes, config.MAX_DETAIL_KEYS), detail_values=MAX_DETAIL_VALUES if axes else 0)
         links = [{"alias": f"ui.old{i}.entry{i}", "target": f"ui.family{i % 40}.entry{i}"} for i in range(aliases)]
         return yaml.safe_dump({"record_type": "visual_key_registry", "schema_version": 1, "keys": entries, "aliases": links}).encode()
 
     rows = []
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "registry.yaml"
-        for axes in (2, 0):
+        for axes in (config.MAX_DETAIL_KEYS, 0):
             for keys in (256, 512, 1024):  # MAX_VISUAL_KEYS is 1024: the count at which cost was measured under 2 s
                 data = build(keys, min(keys, config.MAX_ALIASES), axes)
                 path.write_bytes(data)
@@ -148,9 +163,9 @@ def manifest_scaling() -> dict:
 
     config.MAX_MANIFEST_BYTES = 1 << 30  # measure what the contract allows
     rows = []
-    for n in (1024, 2048, 3072, 4096):
+    for n in (256, 512, 768, 1024):  # MAX_VISUAL_KEYS: the count a legal manifest can reach
         entries = [
-            {"visual_key": f"a{i:05d}" + "x" * 26 + ".b" + "y" * 31 + ".c" + "z" * 29, "artifact_id": "x" * 62 + f"{i % 100:02d}", "pixel_hash": "pixels-v1:" + f"{i:064x}"}
+            {"visual_key": f"a{i:05d}" + "x" * 26 + ".b" + "y" * 31 + ".c" + "z" * 29, "detail": "d" * 32, "artifact_id": "x" * 62 + f"{i % 100:02d}", "pixel_hash": "pixels-v1:" + f"{i:064x}"}
             for i in range(n)
         ]
         data = json.dumps({"record_type": "release_candidate_manifest", "schema_version": 1, "catalog_id": "catalog", "release_id": "rc-0001", "registry_hash": "sha256:" + "0" * 64, "entries": entries, "status": "CANDIDATE"}).encode()
@@ -234,18 +249,14 @@ def record_sizes() -> dict:
 
 
 def registry_at_byte_bound() -> dict:
-    """Load time of a realistic registry (2 axes x 4 values per key) grown to just under MAX_REGISTRY_BYTES, best of 3."""
+    """Load time of a registry in today's legal key shape (a class and a glyph-and-text fallback on every key, no axis) grown to just under MAX_REGISTRY_BYTES, best of 3."""
     import yaml
 
     from visual_assets.store import config
     from visual_assets.store.catalog.registry import load_registry
 
     def build(keys: int) -> bytes:
-        entries = [
-            {"key": f"ui.family{i % 40}.entry{i}", "family": f"family{i % 40}", "description": "A realistic one-line description of what this visual key is for",
-             "variant_axes": [{"name": f"axis{a}", "values": [f"value{v}" for v in range(4)]} for a in range(2)], "optional": False}
-            for i in range(keys)
-        ]
+        entries = _legal_keys(keys)
         return yaml.safe_dump({"record_type": "visual_key_registry", "schema_version": 1, "keys": entries, "aliases": []}).encode()
 
     config.MAX_VISUAL_KEYS = 1 << 20  # the byte bound is what is measured here, not the key count

@@ -362,7 +362,7 @@ def rendered_twice(tmp_path_factory):
     export = tmp_path_factory.mktemp("export") / "runtime"
     from visual_assets.store import runtime_export
 
-    runtime_export.export_runtime("pilot", "rc-0009", export)
+    runtime_export.export_runtime("pilot", r.RELEASE_ID, export)
     release = r.Release(export)
     data = sm.build_data("dungeon_crawl")
     first = tmp_path_factory.mktemp("render-a")
@@ -382,8 +382,9 @@ def test_the_real_render_counts_its_gaps_against_the_data_and_every_png_decodes(
     data, stats, first, _ = rendered_twice
     by_name = {row["name"]: row["count"] for row in data["terrain"]}
     exact, alias = stats["views"]["exact"], stats["views"]["alias"]
-    assert exact["terrain_no_key"] == {n: c for n, c in by_name.items() if n in ("PLAIN", "ruin")} and exact["terrain_cells_in_gap"] == by_name["PLAIN"] + by_name["ruin"]
-    assert alias["terrain_cells_in_gap"] == 0 and alias["terrain_drawn"]["terrain.grassland"] == by_name["PLAIN"] and alias["terrain_drawn"]["terrain.ruins"] == by_name["ruin"]
+    # the exact view resolves terrain names through the registry aliases (`PLAIN` -> grassland, `ruin` -> ruins), so the terrain gap is empty in both views
+    assert exact["terrain_no_key"] == {} and exact["terrain_cells_in_gap"] == 0 and alias["terrain_cells_in_gap"] == 0
+    assert exact["terrain_drawn"] == alias["terrain_drawn"] and alias["terrain_drawn"]["terrain.grassland"] == by_name["PLAIN"] and alias["terrain_drawn"]["terrain.ruins"] == by_name["ruin"]
     assert exact["objects_gap"] == {"place:RUIN": 1} and alias["objects_gap"] == {} and alias["objects_drawn"] == {"place:RUIN": 1}
     for view in (exact, alias):
         assert view["cells"] == data["width"] * data["height"]
@@ -415,7 +416,7 @@ def test_the_committed_evidence_is_small_and_is_exactly_what_the_tool_produces(t
     from visual_assets.store import runtime_export
 
     export = tmp_path / "runtime"
-    runtime_export.export_runtime("pilot", "rc-0009", export)
+    runtime_export.export_runtime("pilot", r.RELEASE_ID, export)
     produced = r.evidence_files({w: sm.build_data(w) for w in sm.WORLDS}, r.Release(export))
     committed = {p.name: p.read_bytes() for p in sorted(r.EVIDENCE_DIR.glob("*.png"))}
     assert committed == produced  # regenerate with `python -m tools.visual_assets_sample_map evidence`
