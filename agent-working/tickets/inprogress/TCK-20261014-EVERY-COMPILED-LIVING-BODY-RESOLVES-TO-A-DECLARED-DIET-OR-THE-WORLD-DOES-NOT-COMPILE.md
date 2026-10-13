@@ -15,7 +15,7 @@ tags: []
 Every compiled living body resolves to a declared diet, or the world does not compile (the diet slice of SURV-05 provenance; prerequisite of the free-meal removal).
 
 ## Status
-OPEN (plan; build when rpg-planner says, measured alone, paired)
+INPROGRESS
 
 ## Tier
 standard
@@ -59,13 +59,18 @@ data/content/world_modules/*.yaml (population_recipes), src/worldmodules/schema.
 - The legacy guard builds the body with `kind(profile.species_id or "human")`: after the change the kind name of these bodies may move from role-named to species-named; check what reads `entity.kind` (the gate's kind groups read the diet, not the kind).
 
 ## Implementation Notes
-Measured with compile of all data worlds at seed 42 (kind, species, group): undeclared = hero (species None) in crowded_frontier, frontier_marches, hero_guild_routing and 7 more worlds; merchant in frontier_extended, frontier_living_world, swamp_border_world and 1 more; scout in dungeon_crawl. Declared-empty groups ("none"): guardian/spirit, sentinel/undead.
+Built: `PopulationRecipeSpec.species_id` (typed, optional) carried by the resolver to the resolved profile's `species_id` (an unknown species is a ResolverError); `worldbuilding/diet_declaration.py` (`require_declared_diet`, called by the compiler: a body with no species, an unknown species or a body model with no diet is an InvalidWorldSpecError naming world, population, role, faction; a declared empty diet is valid; `require_known_recipe_species` for the resolver); the hero_adventurers, trading_company_hub and scalable_bandit_camp recipes name `human` (the species of the adventurer_hero, traveling_merchant and bandit_scout archetypes; an archetype was NOT used because it also brings its stat profile and inventory); the 14 worlds that use them are re-resolved (`python -m src.worldbuilding.cli resolve <world>`; the report files reorder terrain warnings, the compile_context.json change is the species). The appraisal fallbacks that read "no body or no diet = eats anything" are marked hand-built-only, and a slow corpus test proves no compiled data world reaches them.
+
+Measured (all scratch, pinned governor, audit mode, seeds 42-46, 1500 ticks):
+- Compile, 51 converted bodies in 14 worlds, seed 42: every canonical field, stats, inventory and need_rates IDENTICAL to main; only identity.properties.species_id moves (None -> human). The "undeclared" kind group is empty in every data world (it was hero in 10 worlds, merchant in 4, scout in 1).
+- Paired runs, main vs branch, 3 worlds x 5 seeds: outcomes (alive, dead, starvation, alive by kind) identical in 9 of 15 (all 5 urban_political, 4 of 5 crowded_frontier); they differ in 6 (crowded_frontier s46 and all 5 frontier_living_world seeds), all worlds with wolves and predators. Starvation 0 in all 30. State digests differ in all 15 (species_id is in the state).
+- Ablation, frontier_living_world s46: with the 3 converted merchants built species-less the run equals main exactly (33 alive, 25 dead); re-enabling all readers equals the branch exactly (30 alive, 32 dead). By reader alone: engine/hostility.py 31/30 and engine/appraisal.py 33/27 CHANGE behaviour; legality, serves.keeps_coin, perception signals, tactical_rest, opening_steps and carcass changed nothing in this run. Both are the readers D46/D47/D63 intend (a person's body is seen and judged as a person's); no role or name path found. Per kind (alive, main -> branch): guard 3 -> 2, worker 6 -> 3, blacksmith 1 -> 0, wild_creature 2 -> 3, wolf 0 -> 1; dead 25 -> 32.
 
 ## Test Summary
-TBD
+tests/unit/worldbuilding/test_every_compiled_body_has_a_declared_diet.py (6, incl. the slow corpus test); worldbuilding, worldassembly, content, worldmodules, engine and world unit suites pass (1941 non-slow); gates: code health 0 new/0 worse, mypy clean, import contracts 17 kept/0 broken, pin test 339/251.
 
 ## Files Changed
-TBD
+src/worldbuilding/{recipe,compiler,diet_declaration}.py; src/worldassembly/resolver.py; src/content/common_knowledge_seed.py (warmed_catalog); src/engine/appraisal.py (comments); data/content/world_modules/{hero_adventurers,trading_company_hub,scalable_bandit_camp}.yaml; data/worlds/*/resolved/* (14 worlds); tests as above and two hand-built profiles that now name a species.
 
 ## Completion Summary
 TBD
