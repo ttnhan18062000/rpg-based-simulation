@@ -32,7 +32,7 @@ Owner ruling D70 (via rpg-designer and rpg-planner, 2026-10-13): `CampService` s
 - V1 in `rpg-regression-metric-set-v1.md` (branch `rpg-gate-metrics`, b2ce29a62) counts food only, and creatures are deferred to the M2 ledger.
 - No row among V1-V7 counts entity adds.
 
-Mid-run adds come from at least six sites: `src/world/{boss,calamity,camp,creature_territory,raid,spawn}.py`. They are merged in `src/engine/world_dynamics.py` (~L260) and applied at one point, `src/engine/apply.py` (~L293, `entities_add`). No event is emitted per add.
+Mid-run adds come from at least seven sites: `src/world/{boss,calamity,camp,creature_territory,raid,spawn}.py`, plus `src/world/influence.py::process_conquest_lifecycle` (called from `lifecycle.py` ~L299). That last one is ON with no flag and spawns a MONSTER_HORDE stronghold on conquest. They are merged in `src/engine/world_dynamics.py` (~L260) and applied at one point, `src/engine/apply.py` (~L293, `entities_add`). No event is emitted per add.
 
 Agreed split (testing-planner and rpg-planner, 2026-10-13). V8 lands BEFORE v1, so v1's harness hash and row set already contain it. Validity is absolute, so V8 needs no recorded value.
 
@@ -59,7 +59,9 @@ Designer classification (D67/D70/D14, relayed by rpg-planner, 2026-10-13):
 - **Stay OFF:** territory, boss, calamity and nest-spread.
 - **OFF:** `reproduction_humanoid`. It is a two-parent BIRTH.
 
-After those steps the only live source is INITIAL. AUTHORED_ARRIVAL has no user yet but stays in the type. An OFF path turned ON without a tag reads red on V8. rpg-implementer-2 builds `SpawnSource` and the observer in the metrics ticket. The stub may assume the tally key `(kind_group, source.kind)` plus `unsourced`.
+- **Still with the designer:** the conquest stronghold (`influence.py`). It is live and unclassified, so V8 shows it red until it is ruled.
+
+After those steps the only live source is INITIAL, unless the conquest stronghold is ruled legitimate. AUTHORED_ARRIVAL has no user yet but stays in the type. An OFF path turned ON without a tag reads red on V8. rpg-implementer-2 builds `SpawnSource` and the observer in the metrics ticket. The stub may assume the tally key `(kind_group, source.kind)` plus `unsourced`.
 
 ## Scope
 1. **Required validity rows (the report guard).**
@@ -78,12 +80,13 @@ After those steps the only live source is INITIAL. AUTHORED_ARRIVAL has no user 
    - (c) BIRTH with empty `parent_ids`: a violation;
    - (d) fully sourced BIRTH and AUTHORED_ARRIVAL adds, and INITIAL at tick 0: 0 violations;
    - (e) the observer emits no tally (silent channel): no-data with `harness_error`, never 0;
-   - (f) the tally counts sum to the number of adds applied.
+   - (f) the tally counts sum to the number of adds applied;
+  - (g) an add whose entity id already exists in state is refused loudly (rpg's fix in TCK-20261014-A-CONQUEST-STRONGHOLD-OVERWRITES-ENTITY-1). The case asserts the refusal is raised, and that neither state nor the tally silently records an overwrite. This is the bug where the stronghold's generator starts at 0 and overwrites entity 1.
 
    This part needs rpg's pieces on main (see Assumptions). Until then it is not merged as a skip: it stays unwritten, and the AC stays open.
 4. **Static spawn-site guard.**
    - `tests/architecture/test_spawn_sites_declare_source.py` (AST) finds every call that puts newly created entities into an update's `entities_add` (direct `entities_add=`/`.append`/`.extend` with a `generator.spawn_*` result in `src/`), and requires a `SpawnSource` to be passed beside it.
-   - Untagged sites that the designer ruled OFF (territory, boss, calamity, nest-spread, and `reproduction_humanoid` if untagged) go in a ratchet allowlist inside the test. Each entry has file:function, the ruling ref (D67/D70/D14) and the state "OFF". The removed sites (camp spawn, camp raid, density top-up) are never allowlisted: once they are gone, the guard has nothing to find there.
+   - Untagged sites that the designer ruled OFF (territory, boss, calamity, nest-spread, and `reproduction_humanoid` if untagged) go in a ratchet allowlist inside the test. Each entry has file:function, the ruling ref (D67/D70/D14) and the state "OFF". The conquest stronghold is live and not yet ruled. Until it is ruled, it is listed with the state "UNRULED (live)" and TCK-20261014-A-CONQUEST-STRONGHOLD-OVERWRITES-ENTITY-1; that entry does not hide the runtime V8 red. The removed sites (camp spawn, camp raid, density top-up) are never allowlisted: once they are gone, the guard has nothing to find there.
    - The allowlist may only shrink. An entry whose site now passes a source fails the test until it is removed.
    - Why: a new spawn site fails at unit-test time instead of after a 5000-tick gate run, which is how the camp path went unseen.
    - Also needs rpg's `SpawnSource` on main.
@@ -101,7 +104,7 @@ After those steps the only live source is INITIAL. AUTHORED_ARRIVAL has no user 
 - [ ] AC1: config `required_validity` format, lint and tests. The report gives no-data `contract_error` "required validity row <id> missing" for each missing id in each world, listed in the markdown. Tests cover: one row missing, all present, a malformed value, a duplicate id.
 - [ ] AC2: the candidate refuses when a required validity row is missing and no owned fail covers it, and accepts when one does. Unit tests cover both.
 - [ ] AC3: the format doc documents V8 (id, scope, group, oracle, the three violation kinds, the example fields, the no-data rule) and the required-row guard. The stub can emit the V8 variants and the report and candidate tests use them.
-- [ ] AC4 (needs rpg's pieces on main): `test_v8_fires.py` cases (a)-(f) pass against the real observer and `compute()`. It is never skipped, never xfailed, and never fed a hand-built tally.
+- [ ] AC4 (needs rpg's pieces on main): `test_v8_fires.py` cases (a)-(g) pass against the real observer and `compute()`. It is never skipped, never xfailed, and never fed a hand-built tally.
 - [ ] AC5 (needs rpg's `SpawnSource` on main): the static spawn-site guard passes on main. Its allowlist holds only the not-yet-ruled sites, each with a ticket. A synthetic unsourced site in a test fixture fails it, and a stale allowlist entry fails it.
 - [ ] AC6: no existing gate is relaxed. A missing row or a silent tally is never read as a pass, and no oracle, k or floor changes.
 - [ ] AC7: `SEQUENCE.md` and the epic are updated. Every testing commit lands on the single testing PR.
@@ -111,7 +114,9 @@ After those steps the only live source is INITIAL. AUTHORED_ARRIVAL has no user 
 - TCK-20261009-RPG-GATE-REPORT-STATES-AND-SAME-SHA-RERUN (report states, contract_error)
 - TCK-20261011-RPG-GATE-BASELINE-CANDIDATE-FROM-HARNESS-DOCS (candidate omission rule)
 - TCK-20261009-RPG-REGRESSION-METRICS-COMPUTED-FROM-TYPED-RECORDS (rpg: metric module, run-ledger observer)
-- The rpg D70 fix ticket (rpg-planner; the CampService parentless spawn and SpawnSource). Fill in its id when it is filed.
+- TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70 (rpg; camp spawn and camp raid; a draft)
+- TCK-20261014-REGIONS-STOP-TOPPING-UP-MONSTERS-TO-A-DENSITY-TARGET-D67-D70 (rpg; spawn.py density top-up; a draft)
+- TCK-20261014-A-CONQUEST-STRONGHOLD-OVERWRITES-ENTITY-1 (rpg; the duplicate-id add, and apply refusing loudly; a draft)
 
 ## Related Docs
 - docs/plans/test_architecture/reference/rpg_gate_baseline_format.md
@@ -127,7 +132,7 @@ After those steps the only live source is INITIAL. AUTHORED_ARRIVAL has no user 
 - tests/helpers/rpg_gate_stub_metrics.py
 - tests/simulation_quality/rpg_gate/ (config.yaml is rpg-owned; the new test file is testing's)
 - tests/architecture/
-- src/engine/apply.py (~L293), src/engine/world_dynamics.py (~L260), src/world/{boss,calamity,camp,creature_territory,raid,spawn}.py: read only
+- src/engine/apply.py (~L293), src/engine/world_dynamics.py (~L260), src/world/{boss,calamity,camp,creature_territory,raid,spawn,influence}.py: read only
 
 ## Assumptions / Open Questions
 - AC4 and AC5 wait for rpg's `SpawnSource` and observer on main. AC1-AC3 can land now.
