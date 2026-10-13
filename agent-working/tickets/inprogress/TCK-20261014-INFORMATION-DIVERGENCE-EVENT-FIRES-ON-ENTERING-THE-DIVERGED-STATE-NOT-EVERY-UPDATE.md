@@ -58,6 +58,8 @@ The per-entity state is run-scoped observer state, like the extractor's other em
 ## Implementation Notes
 Pre-#536 tree c35ebf475, post-#536 b396080cc, this branch; calibrate_simq --audit-mode, 200t. generated_frontier_3_42 s123: INFORMATION 2.3021 / 41.7800 / 3.4315 (events 28 / 296 / 40; divergence events 15 / 279 / 23). frontier_extended s123: 14.945 / 1.13 / 1.13. crowded_frontier s123: 2.39 after.
 
+Disclosure for the divergence entry (rpg-planner, 2026-10-14): INFORMATION moves on EVERY anchored key (the divergence event count falls wherever entities held a vague lead across updates), so the committed anchors go stale until the single re-anchor that follows this fix, the PROGRESSION no-data ticket and testing's harness ticket (TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION), all on main. Rationale class: Bug Fix (the pillar counted entity-updates held, not divergences). Divergence id assigned by rpg-planner at the fold.
+
 ## Test Summary
 tests/unit/observability (1116 passed, 1 skipped, non-slow) incl. 3 new shaper tests and 1 extractor-path test; tests/simulation_quality/test_information_scorer.py green.
 
