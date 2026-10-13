@@ -230,16 +230,20 @@ def cmd_record(name: str, out_root: Path) -> int:
     median = Path(runs[summary.median_index].path)
     candidate = out_dir / "candidate.json"
     candidate.write_text(median.read_text(encoding="utf-8"), encoding="utf-8")
-    cpu = BenchmarkRecord.from_dict(json.loads(candidate.read_text(encoding="utf-8"))).identity.runtime.cpu_model
+    cand = BenchmarkRecord.from_dict(json.loads(candidate.read_text(encoding="utf-8")))
+    cpu = cand.identity.runtime.cpu_model
+    off_normal = sorted({m.mode for m in cand.result.runtime_mode_sequence} - {"NORMAL"})
     host = f"{platform.node()} / {cpu} / {os.cpu_count()} vCPU"
     note = promotion_note(name, summary, host)
-    doc = {"name": name, "spread": summary.spread, "noisy": summary.noisy, "median_run": summary.median_index + 1, "host": host,
+    doc = {"name": name, "spread": summary.spread, "noisy": summary.noisy, "off_normal": off_normal, "median_run": summary.median_index + 1, "host": host,
            "runs": [dataclasses.asdict(r) for r in summary.runs], "note": note}
     (out_dir / "summary.json").write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(note)
+    if off_normal:
+        print(f"NOT A BASELINE: the run left NORMAL ({', '.join(off_normal)}) under the canonical contract; promote would refuse (performance_contract.md 3.1)")
     if summary.noisy:
         print(f"NOISY: spread {summary.spread * 100:.1f} % is above {NOISY_SPREAD * 100:.0f} %: NOT promotable; re-run on a quieter host")
-    else:
+    elif not off_normal:
         print(f"PROMOTE: python3 tools/perf/baseline_lifecycle.py promote --candidate {candidate} --name {name} --cause {CAUSE} --note {json.dumps(note)}")
     return 0
 

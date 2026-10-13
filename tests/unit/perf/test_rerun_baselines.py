@@ -1,6 +1,7 @@
 """The T08 re-record tool (TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS): names, protocol, the median and the NOISY rule. No heavy run."""
 from __future__ import annotations
 
+import dataclasses
 import json
 import subprocess
 from pathlib import Path
@@ -131,3 +132,23 @@ def test_a_noisy_record_is_reported_and_no_promote_command_is_printed(tmp_path, 
 def test_a_failing_run_stops_the_record_with_exit_one(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(rr.subprocess, "run", lambda argv, env=None, check=False, **kw: subprocess.CompletedProcess(argv, 3))
     assert rr.main(["record", "idle_100_local", "--out-root", str(tmp_path)]) == 1
+
+
+def test_a_record_that_left_normal_is_reported_and_no_promote_command_is_printed(tmp_path, monkeypatch, capsys) -> None:
+    from src.perf.benchmark_record import ModeRun
+
+    def fake_run(argv, env=None, check=False, **kw):
+        if "--out" not in argv:
+            return REAL_RUN(argv, env=env, check=check, **kw)
+        out = Path(argv[argv.index("--out") + 1])
+        record = make_record(avg=30.0)
+        record = dataclasses.replace(record, result=dataclasses.replace(record.result, runtime_mode_sequence=(ModeRun("NORMAL", 5), ModeRun("CONSTRAINED", 15))))
+        out.write_text(json.dumps(record.to_dict()), encoding="utf-8")
+        out.with_suffix(".meta.json").write_text(json.dumps({"loadavg_1min": 1.0, "swap_used_mb": 0.0, "wall_s": 1.0, "peak_rss_mb": 90.0}), encoding="utf-8")
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(rr.subprocess, "run", fake_run)
+    assert rr.main(["record", "strategic_100_local", "--out-root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "NOT A BASELINE" in out and "CONSTRAINED" in out and "PROMOTE:" not in out
+    assert json.loads((tmp_path / "strategic_100_local" / "summary.json").read_text(encoding="utf-8"))["off_normal"] == ["CONSTRAINED"]

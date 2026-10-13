@@ -16,7 +16,7 @@ A promotion writes ``<name>.vNNNN.json`` next to the earlier versions and never 
 (cause, note, time, the before identity and the after identity). ``BenchmarkRecord.from_dict`` ignores that key, so the file is still a
 valid record.
 
-``check`` verifies a baselines directory: every ``*.json`` is a valid ``BenchmarkRecord`` or named in ``LEGACY_TRIPWIRE_REFERENCES`` (the 15
+``check`` verifies a baselines directory: every ``*.json`` is a valid ``BenchmarkRecord`` or named in ``LEGACY_TRIPWIRE_REFERENCES`` (the 12
 unlabelled-identity files from before schema 1.0, kept as tripwire references until ``PERF-M2-T08`` re-records them), and the version
 chain of each promoted baseline is intact.
 
@@ -50,19 +50,16 @@ from tools.agent_working_paths import TICKETS  # noqa: E402
 
 DEFAULT_BASELINES_DIR = REPO_ROOT / "tests" / "perf" / "baselines"
 
-#: The 15 files committed before schema 1.0. They are tripwire references with no identity, not records.
+#: The files committed before schema 1.0 and not yet re-recorded (15 at the start of PERF-M2-T08, which promoted three). They are tripwire references with no identity, not records.
 LEGACY_TRIPWIRE_REFERENCES = frozenset(
     {
         "combat_10_concurrent.json",
         "combat_10_local.json",
-        "idle_100_concurrent.json",
         "idle_100_local.json",
         "mixed_200_concurrent.json",
         "mixed_200_local.json",
-        "movement_100_concurrent.json",
         "movement_100_local.json",
         "resource_100_concurrent.json",
-        "resource_100_local.json",
         "simq_corpus_crowded_frontier.json",
         "simq_corpus_frontier_extended.json",
         "simq_corpus_frontier_marches.json",
