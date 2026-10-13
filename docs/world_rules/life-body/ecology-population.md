@@ -107,6 +107,16 @@ a standing requirement for whichever future mechanism eventually closes this gap
         origin first).
     - **A birth:** humanoid reproduction (off) makes a tracked two-parent birth, a base for
       milestone 1's births. Displacement moves existing bodies and adds none.
+    - **Conquest strongholds (decided by the owner directly, 2026-10-13; row 71 of the memo):**
+      when deaths drove an unowned region's influence to -50, the monster horde took it and a
+      "stronghold" appeared at its centre (`FactionInfluenceService.process_conquest_lifecycle`,
+      `src/world/influence.py`, live): a creature-type body of 10,000+ HP with no builders and no
+      cost, whose destruction freed the region. The body is removed before baseline v1 as its
+      own measured step, because a structure needs builders and materials. The region still
+      changes hands, and it is freed when its influence recovers rather than by killing a body.
+      Who conquers what, and why, is re-anchored with caused war and peace (roadmap §12.4).
+      The influence trigger and the horde as taker are disclosed as interim. **Alternatives
+      not taken:** removing conquest entirely; keeping the stronghold as a declared arrival.
 
 **Scenarios:** [LB-S12](../scenarios/life-body-batch-05.md#lb-s12) (population decline —
 scored against this finding, not assumed to pass).
