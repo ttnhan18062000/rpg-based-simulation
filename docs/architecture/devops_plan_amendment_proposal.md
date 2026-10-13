@@ -108,4 +108,9 @@ The lead seats can't dispatch, so the D8 paths have nobody to drive them. The ne
 1. Accept the step order 1-6 in place of S1 → S2 → S2b → S4 → S3 → S5.
 2. Add step 4 (local Kubernetes and Helm) and the optional step 6 (Argo CD).
 3. Allow step 5's short-lived `terraform apply`/`destroy` on AWS under a budget alarm.
-4. Choose who does the work: the `platform` domain (recommended) or `codebase-implementer`.
+4. ~~Choose who does the work~~ **Decided 2026-10-13: the `platform` domain.** The owner confirmed the registry diff ("proceed") in the agent-working-planner session; the change is `TCK-20261013-PLATFORM-DOMAIN-SEATS`.
+
+## D8 supersession
+
+D8 of `devops_baseline_adr.md` gave `infra/**`, `.github/workflows/publish-images.yml`, `.github/workflows/iac.yml`, `docs/runbooks/**` and `tools/loadtest/**` to lead-planner. That is **superseded**: these paths go to the `platform` domain. `compose.yaml` and `docker/**` also move from lead to platform. The source of truth is `registries/session_roles.yaml` once `TCK-20261013-PLATFORM-DOMAIN-SEATS` merges. D8's other half is unchanged: the OTel middleware in `src/api/` stays with rpg-planner. `.github/workflows/rpg-gate-report.yml` is not part of this; rpg agrees on its owner separately.
+
