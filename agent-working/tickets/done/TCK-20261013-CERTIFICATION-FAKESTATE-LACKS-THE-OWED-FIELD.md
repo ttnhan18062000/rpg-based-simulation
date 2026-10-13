@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261013-CERTIFICATION-FAKESTATE-LACKS-THE-OWED-FIELD
-phase: implement
+phase: done
 date: 2026-10-13
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 The certification FakeState mirrors the new AuthoritativeState.owed field.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -63,4 +63,4 @@ tests/certification/test_evidence_levels.py + test_resilience_recovery.py: 15 pa
 tests/certification/test_evidence_levels.py
 
 ## Completion Summary
-Pending PR.
+The certification FakeState gained the owed field the real state carries, so the evidence-level tests run again. Test-only change.

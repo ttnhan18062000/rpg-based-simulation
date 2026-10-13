@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261011-DEFAULT-RUN-ID-CANNOT-COLLIDE-ACROSS-SAME-SEED-PROCESSES
-phase: implement
+phase: done
 date: 2026-10-11
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Two same-seed Kernel runs started in the same wall-clock second write into one run directory; the default run id becomes collision-proof.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -72,4 +72,4 @@ None.
 src/engine/kernel.py; tests/unit/engine/test_default_run_id_cannot_collide.py; tests/unit/engine/test_content_hotpath_guard.py (leak fix)
 
 ## Completion Summary
-TBD
+Default run ids now carry pid and a non-seeded nonce and their directory is created without overwrite (retry on collision), so two same-seed processes never share or rmtree each other's run directory. Explicit ids keep overwrite. Test-order Mock leak in test_content_hotpath_guard fixed at source.
