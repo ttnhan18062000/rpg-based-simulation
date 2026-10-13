@@ -52,7 +52,9 @@ def test_compile_profile_resolver_overrides(base_repo):
     )
 
     resolver = CompileProfileResolver(base_repo)
-    context = resolver.resolve(spec)
+    # the recipe names its body's species: a compiled body must have a declared diet (TCK-20261014-EVERY-COMPILED-LIVING-BODY-...)
+    from src.worldbuilding.recipe import PopulationRecipeSpec
+    context = resolver.resolve(spec, {"pop_custom": PopulationRecipeSpec(role="hero", count=1, faction="villagers", species_id="human")})
 
     # Compile the spec WITH the resolved context
     state, report = WorldCompiler.compile(spec, seed=42, context=context)

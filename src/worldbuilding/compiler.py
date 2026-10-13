@@ -32,6 +32,7 @@ from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
 from src.content.terrain_cost import DEFAULT_TERRAIN_ID, UnknownTerrainError, validate_terrain_ids
 from src.worldassembly.region_precedence import first_region_at
+from src.worldbuilding.diet_declaration import require_declared_diet
 from src.worldbuilding.schema import InvalidWorldSpecError, WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
 from src.core.strategic import ProjectKind
@@ -762,6 +763,7 @@ class WorldCompiler:
                             ent_properties["faction_id"] = resolved.faction_id
                         if hasattr(resolved, "species_id") and resolved.species_id:
                             ent_properties["species_id"] = resolved.species_id
+                        require_declared_diet(spec.world_id, pop_key, pop_spec, ent_properties.get("species_id"))
 
                     builder = (
                         V2EntityBuilder(next_entity_id)
