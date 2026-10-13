@@ -21,9 +21,9 @@ def test_every_new_key_has_a_silhouette_slot_and_a_spec():
     assert all(slot["size"] == icon_specs.load()[key].size for key, slot in slots.items())
 
 
-def test_a_slot_with_two_options_is_a_building_the_owner_chooses_between():
-    slots = sheet.load()
-    assert {k for k, s in slots.items() if len(s["options"]) > 1} == {"icon.building.town_hall", "icon.building.mine_entrance"}
+def test_the_owner_chose_one_shape_per_slot():
+    """2026-10-13: town hall A (scroll) and mine entrance A (pickaxe); the bell and the cart are dropped."""
+    assert all(list(s["options"]) == ["A"] for s in sheet.load().values())
 
 
 def test_the_sheets_are_byte_identical_on_two_runs(tmp_path):

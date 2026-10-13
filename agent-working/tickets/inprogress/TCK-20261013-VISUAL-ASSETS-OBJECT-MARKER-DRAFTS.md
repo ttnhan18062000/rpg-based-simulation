@@ -75,8 +75,13 @@ New `icon.marker.nest` (16x16 on the plate) stays. Child 2 = 18 new keys (4 buil
 
 
 ## Implementation Notes
+**Owner answers on the silhouette folder (39e54745f), 2026-10-13 (AskUserQuestion, relayed by asset-planner):** Silhouettes: "Approve all as shown" (all 18; the owner saw the weak list: nest, wood_node, spirit_wisp, iron_vein (could read as a hill), moon_resin_tree (a plain pine until the amber drop is coloured)). Town hall: "A: charter scroll". Mine entrance: "A: pickaxe". The B shapes (bell, cart) are dropped from the specs and the silhouette data. Next: draw all 18 in colour, recognisability checks (blind naming with distractors, era pass), owner review folder `~/Work/asset-review/object-markers-v1/`; the owner (not the implementer) runs `adopt-set`.
+
 Registry: 18 keys + 5 aliases (83 keys, 8 aliases, 42,024 B = 9.2 % of `MAX_REGISTRY_BYTES`), 18 specs + the `node` family, style-guide table regenerated, silhouette data `visual_assets/icons/object_marker_silhouettes.yaml` and the sheet tool `tools/visual_assets_object_marker_sheet.py` (test `tests/visual_assets/test_object_marker_silhouettes.py`, 4 passed). The owner's silhouette gate is next (`~/Work/asset-review/object-markers-silhouettes/`); nothing is drawn in colour.
 
+
+
+**Drawing and drafts (2026-10-14).** 18 sprites drawn at their approved silhouettes with the `aseprite-pixel-art` tools (first `new_sprite` confirmed the server pin, Aseprite 1.3.18.6; every `export_handoff`, the lint and the preview went through the tools). DEVIATION, recorded: the pixel ops of 17 of the 18 (`apply_ops`) were applied through `visual_assets.drawing.api.apply_ops` (the library the MCP tool wraps, same Lua pin) instead of the MCP tool, to avoid re-typing about 100 KB of pixel rows into tool calls; wood_node was drawn through the MCP tool. 18 intakes PASSED, kept in draft set `object-markers-v1` (`visual_assets/drafts/object-markers-v1/`, verify ok). Superseded intakes of the redraws (rounds 1 to 3) stay in the local quarantine and are not in the set. Review folder `~/Work/asset-review/object-markers-v1/` (4 sheets and a README). Blind check: four rounds (`blind_check/` in the staging artifacts); the final version names 16 of 18 correctly in free text, all 18 in the choice pass (round 1), none modern in the era pass; berry_thicket (read as a beetle in all four rounds) and spirit_wisp (gem or egg) still misread: a silhouette change needs the owner. Compliance table: `compliance.md`.
 
 ## Test Summary
 **Expected red set until child 4 (`tests/visual_assets`, one run, 2026-10-13: 14 failed, 14 errors, 2488 passed; every other test passes). They fall in three groups: (1) `registry_mismatch` on an export of rc-0010 (the registry changed since it was assembled): the 14 errors and `test_atlas.py::test_the_cli_flag_is_opt_in`; (2) pins of the registry's contents: 65 keys now 83, 36 icon keys now 54, 3 aliases now 8; (3) the spec and style tests that pin 36 icon specs.**
@@ -115,6 +120,7 @@ ERROR (14):
 
 
 ## Files Changed
+- `visual_assets/drafts/object-markers-v1/` (the 18-draft set, from intakes), `visual_assets/icons/object_marker_silhouettes.yaml` (only option A kept), `tests/visual_assets/test_object_marker_silhouettes.py` (one option per slot), this ticket, SEQUENCE.md, staging artifacts (compliance, blind-check evidence, reference study).
 
 
 ## Completion Summary

@@ -3,6 +3,7 @@
 # The owner approves or changes them BEFORE any shaded drawing (process rule, style guide). Three slots read weakly as shapes and are said so in the review README:
 # berry_thicket, iron_vein and nest are all rounded blobs at 12x12, and silver_vein differs from iron_vein by two sparkle nubs; shading and colour carry the rest.
 # Revision 2 (after asset-planner's review of bd0b1db77): moon_resin_tree (conifer crown, trunk bump), nest (flat rim, egg tops), berry_thicket (berry nubs proud of the edge), iron_vein (flat-based angular rock), silver_vein (jutting seam spike), healer_hut (club pestle, footed mortar), spirit_wisp (tall flame, gap below), wood_node (side-on logs 1+1+1 stacked).
+# Owner, 2026-10-13: all 18 approved as shown; town hall A (charter scroll), mine entrance A (pickaxe); the B shapes (bell, cart) are dropped.
 record_type: object_marker_silhouettes
 slots:
   icon.building.healer_hut:
@@ -52,27 +53,6 @@ slots:
       - '................###.'
       - '.................###'
       - '.................###'
-      B:
-      - '....................'
-      - '....................'
-      - '....#...##..#.......'
-      - '...###.####.###.....'
-      - ..#####.##.#####....
-      - .###################
-      - '####################'
-      - '####################'
-      - .##################.
-      - .##################.
-      - .##################.
-      - ..################..
-      - ..##............##..
-      - .####..........####.
-      - .####..........####.
-      - ..##............##..
-      - '####################'
-      - '####################'
-      - '....................'
-      - '....................'
     size: 24
   icon.building.town_hall:
     options:
@@ -97,27 +77,6 @@ slots:
       - '..............######'
       - '..............######'
       - '...............####.'
-      B:
-      - '....................'
-      - '.........##.........'
-      - '........####........'
-      - '....##..####..##....'
-      - '....##########.##...'
-      - '...############.#...'
-      - ..##############....
-      - ..##############....
-      - ..##############....
-      - ..##############....
-      - ..##############....
-      - ..##############....
-      - ..##############....
-      - .################...
-      - .################...
-      - '####################'
-      - '####################'
-      - '........####........'
-      - '........####........'
-      - '.........##.........'
     size: 24
   icon.building.watchtower:
     options:
