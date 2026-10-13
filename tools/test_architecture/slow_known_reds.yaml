@@ -57,21 +57,21 @@ known_reds:
     added_on: "2026-10-13"
     expires_on: "2026-11-15"
     kind: broken
-    note: "#536 retired the coin mint (quest coin needs a payer; the levy and the building mint are gone), so this gold assertion predates the treasury rules; first red in slow dispatch 38378565537 at b396080cc; the fix re-stages the arena with a real payer and asserts the conserved flows (or finds a defect), an RPG lane's, whose closer retires this entry (rpg-planner, 2026-10-14)"
+    note: "#536 retired the coin mint (quest coin needs a payer; the levy and the building mint are gone), so this gold assertion predates the treasury rules; first red in slow dispatch 38378565537 at 64f339f98 (src identical to b396080cc); the fix re-stages the arena with a real payer and asserts the conserved flows (or finds a defect), an RPG lane's, whose closer retires this entry (rpg-planner, 2026-10-14)"
   - match: "tests.arena.test_arena_regional_control::test_arena_regional_control"
     ticket: TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES
     owner: rpg-planner
     added_on: "2026-10-13"
     expires_on: "2026-11-15"
     kind: broken
-    note: "#536 retired the coin mint (quest coin needs a payer; the levy and the building mint are gone), so this gold assertion predates the treasury rules; first red in slow dispatch 38378565537 at b396080cc; the fix re-stages the arena with a real payer and asserts the conserved flows (or finds a defect), an RPG lane's, whose closer retires this entry (rpg-planner, 2026-10-14)"
+    note: "#536 retired the coin mint (quest coin needs a payer; the levy and the building mint are gone), so this gold assertion predates the treasury rules; first red in slow dispatch 38378565537 at 64f339f98 (src identical to b396080cc); the fix re-stages the arena with a real payer and asserts the conserved flows (or finds a defect), an RPG lane's, whose closer retires this entry (rpg-planner, 2026-10-14)"
   - match: "tests.arena.test_arena_regional_control::test_arena_conquest_and_debuff"
     ticket: TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES
     owner: rpg-planner
     added_on: "2026-10-13"
     expires_on: "2026-11-15"
     kind: broken
-    note: "#536 retired the coin mint (quest coin needs a payer; the levy and the building mint are gone), so this gold assertion predates the treasury rules; first red in slow dispatch 38378565537 at b396080cc; the fix re-stages the arena with a real payer and asserts the conserved flows (or finds a defect), an RPG lane's, whose closer retires this entry (rpg-planner, 2026-10-14)"
+    note: "#536 retired the coin mint (quest coin needs a payer; the levy and the building mint are gone), so this gold assertion predates the treasury rules; first red in slow dispatch 38378565537 at 64f339f98 (src identical to b396080cc); the fix re-stages the arena with a real payer and asserts the conserved flows (or finds a defect), an RPG lane's, whose closer retires this entry (rpg-planner, 2026-10-14)"
   - match: "tests.perf.test_perf_combat::test_perf_combat*"
     ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
     owner: rpg-implementer-2
