@@ -105,14 +105,14 @@ def test_a_retry_that_disagrees_is_inconclusive_never_a_pass() -> None:
     assert result.outcome.state is OutcomeState.INCONCLUSIVE and "not reproducible" in result.outcome.reason
 
 
-def test_a_side_that_cannot_produce_a_record_is_inconclusive_naming_the_side() -> None:
+def test_a_side_that_cannot_start_is_an_error_naming_the_side_never_inconclusive() -> None:
     def spawn(spec, root):
         if root.name == "base":
             raise capacity_run.CapacityRunError("no module named benchmark_record")
         return make_record(avg=10.0)
 
     result = tw.run_scenario("s", SPEC, BASE, HEAD, spawn=spawn)
-    assert result.outcome.state is OutcomeState.INCONCLUSIVE and "base side" in result.outcome.reason
+    assert result.did_not_run and tw.state_label(result) == "ERROR" and "base side did not run" in result.outcome.reason
     assert result.retry is None and result.first.retryable is False  # a retry would fail the same way: no runtime wasted
 
 
@@ -242,3 +242,23 @@ def test_main_writes_the_summary_file_and_exits_zero_on_a_regression(tmp_path, m
     code = tw.main(["run", "--base", str(tmp_path), "--head", str(tmp_path), "--out-dir", str(tmp_path / "out"), "--summary", str(summary)])
     assert code == 0 and "| slow | REGRESSION |" in summary.read_text(encoding="utf-8")
     assert (tmp_path / "out" / "report.json").exists()
+
+
+def test_an_arm_that_did_not_start_is_reported_as_error_and_the_run_exits_one(tmp_path, monkeypatch, capsys) -> None:
+    broken = [tw.ScenarioResult("idle", tw.Attempt(Outcome(OutcomeState.INCONCLUSIVE, "base side did not run: x"), retryable=False, did_not_run=True), None, Outcome(OutcomeState.INCONCLUSIVE, "base side did not run: x"))]
+    monkeypatch.setattr(tw, "run_all", lambda *a, **k: broken)
+    summary = tmp_path / "summary.md"
+    code = tw.main(["run", "--base", str(tmp_path), "--head", str(tmp_path), "--out-dir", str(tmp_path / "out"), "--summary", str(summary), "--github-annotations"])
+    out = capsys.readouterr()
+    assert code == 1
+    body = json.loads((tmp_path / "out" / "report.json").read_text(encoding="utf-8"))
+    assert body["scenarios"][0]["outcome"]["state"] == "ERROR" and body["scenarios"][0]["did_not_run"] is True
+    assert "| idle | ERROR |" in summary.read_text(encoding="utf-8") and "::error " in out.out and "INCONCLUSIVE" not in out.out.split("REPORT:")[0].split(":")[1]
+
+
+def test_a_relative_root_is_resolved_so_the_worker_imports_that_checkouts_src(tmp_path, monkeypatch) -> None:
+    """The CI shape: ``--base perf-base`` is relative and the worker runs with ``cwd=root``. A real fresh process must still start and emit a record."""
+    monkeypatch.chdir(tw.REPO_ROOT.parent)
+    spec = dataclasses.replace(SPEC, scenario="idle", entities=10, profile="PERF_512MB_LOCAL", warmup=1, ticks=2)
+    record = capacity_run.spawn(spec, Path(tw.REPO_ROOT.name))
+    assert record.result.latency_ms["avg"] > 0

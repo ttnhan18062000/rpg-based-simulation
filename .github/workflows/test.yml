@@ -942,11 +942,14 @@ jobs:
             echo "Skipped: this is a \`${{ github.event_name }}\` run, not a pull_request, so there is no base SHA to pair with (the tripwire never guesses HEAD~1)." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          if [ ! -f perf-base/src/perf/benchmark_record.py ]; then
-            echo "### Perf tripwire" >> "$GITHUB_STEP_SUMMARY"
-            echo "SKIPPED: the base commit predates the benchmark record (PERF-M2-T02b), so its side cannot be measured." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
+          # The worker script is head's tools/perf/capacity_run.py, run under each side's own src/: the base must hold every src/perf module it imports.
+          for needed in benchmark_record bench_harness profiles scenarios; do
+            if [ ! -f "perf-base/src/perf/$needed.py" ]; then
+              echo "### Perf tripwire" >> "$GITHUB_STEP_SUMMARY"
+              echo "SKIPPED: the base commit has no \`src/perf/$needed.py\` (it predates PERF-M2-T02b), so its side cannot be measured." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          done
           python3 tools/perf/tripwire.py run --base perf-base --head . --out-dir reports/perf/tripwire \
                  --summary "$GITHUB_STEP_SUMMARY" --github-annotations
       - name: Perf tripwire artifact
