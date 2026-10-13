@@ -58,3 +58,14 @@ def test_no_label_or_header_line_overflows_its_cell_or_the_page():
             assert len(label) * sheet.CHAR_W <= g["cell_w"] - 20, f"{label} runs into the next cell"
         assert all(len(line) * sheet.CHAR_W <= g["width"] - 40 for line in g["header"])
         assert " ".join(g["header"]) == sheet.HEADER
+
+
+def test_the_review_sheet_01_header_cannot_overlap_the_first_row_or_clip():
+    from tools import visual_assets_object_marker_review as omr
+
+    names = sorted(NEW_KEYS)
+    g = omr.layout_01(names)
+    assert g["title"] and g["header"] and " ".join(g["header"]) == omr.HEADER_01 and " ".join(g["title"]) == omr.TITLE_01
+    assert all(len(line) * omr.CH <= g["width"] - 40 for line in g["title"] + g["header"])
+    assert g["top"] >= 20 + 26 * (len(g["title"]) + len(g["header"])) + 20  # the first row's labels start below the last header line
+    assert all(len(omr.label(k)) * omr.CH <= g["cell"] - 20 for k in names)
