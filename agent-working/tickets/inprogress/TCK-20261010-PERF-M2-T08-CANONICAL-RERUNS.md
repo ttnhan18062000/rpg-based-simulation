@@ -4,7 +4,7 @@ layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS
-phase: open
+phase: implement
 date: 2026-10-10
 tags: [performance, benchmarking, regression]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking, regression]
 PERF-M2-T08: M1 baseline reruns under the canonical variants
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
