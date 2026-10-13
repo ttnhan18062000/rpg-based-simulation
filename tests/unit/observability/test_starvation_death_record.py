@@ -15,7 +15,9 @@ from src.core.enums import PassiveDeathCause
 from src.core.inventory import ItemStack
 from src.engine.need_pull import ESCALATION_ONSET, HUNGER_LINE
 from src.observability.config import ObservabilityConfig, ObservabilityMode
-from src.observability.run_state import EventExtractor, extract_events
+from src.observability.event_extractor import EventExtractor
+from src.observability.event_recorder import extract_events
+from src.engine.cadence import SystemCadence, should_run
 from src.observability.starvation_record import (CHANNEL_LIVE_EVENT, CHANNEL_TALLY_EVENT, RECORD_EVENT, StarvationRecorder, _judged_ways)
 from tests.helpers.scenario import compile_world
 
@@ -25,12 +27,18 @@ HUNGRY = ESCALATION_ONSET * HUNGER_LINE + 5.0
 SAMPLE_TICK = 10 * 7 - WHO % 10  # a strategic re-decision tick for this subject at the default cadence: (tick + id) % 10 == 0
 
 
+def _reset():
+    """Clear the recorder and give it what the kernel gives it (the engine values observability may not import)."""
+    StarvationRecorder.reset_run_state()
+    StarvationRecorder.configure(SystemCadence.model_fields["strategic_intelligence"].default, ESCALATION_ONSET * HUNGER_LINE, should_run)
+
+
 @pytest.fixture(autouse=True)
 def _clean():
-    StarvationRecorder.reset_run_state()
+    _reset()
     EventExtractor.reset_run_state()
     yield
-    StarvationRecorder.reset_run_state()
+    _reset()
 
 
 def _world(carry=(), species=None, hunger=HUNGRY):
@@ -150,7 +158,7 @@ def test_the_judged_set_equals_the_true_map_until_honest_perception_exists():
 def test_the_record_is_deterministic_across_two_runs():
     payloads = []
     for _ in range(2):
-        StarvationRecorder.reset_run_state()
+        _reset()
         prior = _at_tick(_world(carry=["bread"]), SAMPLE_TICK)
         StarvationRecorder.observe(prior, prior, SimpleNamespace(entity_updates={}))
         (rec,) = _records(StarvationRecorder.observe(prior, _dying(prior, SAMPLE_TICK + 3), _update()))
@@ -179,7 +187,7 @@ def test_reset_run_state_clears_the_trail_the_counts_and_the_header():
     prior = _at_tick(_world(carry=["bread"]), SAMPLE_TICK)
     StarvationRecorder.observe(prior, prior, SimpleNamespace(entity_updates={}))
     StarvationRecorder.observe(prior, _dying(prior, SAMPLE_TICK + 3), _update())
-    StarvationRecorder.reset_run_state()
+    _reset()
     assert not StarvationRecorder._union and not StarvationRecorder._attempted and not StarvationRecorder._recorded
     assert StarvationRecorder._deaths_seen == 0 and StarvationRecorder._header_sent is False
 

@@ -4,7 +4,12 @@ import json
 import logging
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
+from src.core.state import AuthoritativeState
+from src.observability.config import ObservabilityMode as _RunObservabilityMode
+from src.observability.event_extractor import EventExtractor
+from src.observability.event_shapers import FactionShaper, ProgressionShaper, SocialShaper, StrategyShaper
 from src.observability.events import SimulationEvent
+from src.observability.starvation_record import StarvationRecorder
 from src.config.optimization_profiles import SubsystemBudget, SubsystemPressureReport, DEFAULT_OBSERVABILITY_BUDGET
 
 logger = logging.getLogger(__name__)
@@ -355,3 +360,25 @@ class EventRecorder:
                 logger.error(f"Error closing simulation_events.jsonl handle: {e}")
             self._file_handle = None
 
+
+EventRecorder.closing_event_sources.append(StarvationRecorder.closing_event)
+
+
+def reset_run_state(strategic_cadence: int, escalated_hunger: float, cadence_gate: Callable[[int, Optional[int], int], bool]) -> None:
+    """Clear every run-scoped observability cache at run start. The three arguments are what the kernel (engine side) tells the starvation-death
+    recorder: the profile's strategic re-decision period, the hunger the pull escalates at, and the cadence's per-subject stagger."""
+    EventExtractor.reset_run_state()
+    StarvationRecorder.reset_run_state()
+    StarvationRecorder.configure(strategic_cadence, escalated_hunger, cadence_gate)
+    StrategyShaper.reset_run_state()
+    ProgressionShaper.reset_run_state()
+    SocialShaper.reset_run_state()
+    FactionShaper.reset_run_state()
+
+
+def extract_events(prior: AuthoritativeState, current: AuthoritativeState, update: Any, mode: _RunObservabilityMode = _RunObservabilityMode.LIGHT) -> List[SimulationEvent]:
+    """One tick's curated events plus the starvation-death record channel (silent when observability is OFF: no header, so the channel reads as not live)."""
+    events = EventExtractor.extract(prior, current, update, mode)
+    if mode != _RunObservabilityMode.OFF:
+        events = events + StarvationRecorder.observe(prior, current, update)
+    return events

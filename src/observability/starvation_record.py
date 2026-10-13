@@ -26,21 +26,23 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from src.ai.goals.ways import WayKind, ways_in_reach
 from src.core.enums import PassiveDeathCause
 from src.core.items import food_hunger_recovery
 from src.core.state import AuthoritativeState, EntityState
-from src.engine.cadence import SystemCadence, should_run
-from src.engine.need_pull import ESCALATION_ONSET, HUNGER_LINE
 from src.observability.events import SimulationEvent
 
 CHANNEL_LIVE_EVENT = "starvation_channel_live"
 CHANNEL_TALLY_EVENT = "starvation_channel_tally"
 RECORD_EVENT = "starvation_death_record"
 _SOURCE = "starvation_record"
-_ESCALATED_HUNGER = ESCALATION_ONSET * HUNGER_LINE
+
+
+def _always(tick: int, entity_id: Optional[int], cadence: int) -> bool:
+    """The unconfigured gate: every tick counts (the kernel replaces it with the cadence's stagger)."""
+    return True
 
 
 @dataclass(frozen=True)
@@ -101,7 +103,9 @@ def _attempted_way(source_kind: str, source_id: Any, state: AuthoritativeState) 
 class StarvationRecorder:
     """Per-run trail of the ways each hungry subject had open and tried; emits the death record, the live header and the tally."""
 
-    _period: int = SystemCadence.model_fields["strategic_intelligence"].default
+    _period: int = 1
+    _escalated_hunger: float = float("inf")  # set by the kernel (configure): the hunger the pull begins to escalate at
+    _gate: Callable[[int, Optional[int], int], bool] = staticmethod(_always)  # set by the kernel: the cadence's per-subject stagger
     _union: Dict[int, Set[WayKind]] = {}
     _attempted: Dict[int, Set[WayKind]] = {}
     _last_meal: Dict[int, int] = {}
@@ -114,7 +118,9 @@ class StarvationRecorder:
     @classmethod
     def reset_run_state(cls) -> None:
         """Clear the trail, the counts and the header flag at run start (and in test teardown)."""
-        cls._period = SystemCadence.model_fields["strategic_intelligence"].default
+        cls._period = 1
+        cls._escalated_hunger = float("inf")
+        cls._gate = _always
         cls._union.clear()
         cls._attempted.clear()
         cls._last_meal.clear()
@@ -125,9 +131,12 @@ class StarvationRecorder:
         cls._last_tick = 0
 
     @classmethod
-    def configure(cls, strategic_cadence: int) -> None:
-        """The kernel profile's strategic re-decision cadence (the ticks on which a subject's pull is re-judged)."""
+    def configure(cls, strategic_cadence: int, escalated_hunger: float, gate: Callable[[int, Optional[int], int], bool]) -> None:
+        """What the kernel (the engine side, which observability may not import) tells the recorder: the profile's strategic re-decision cadence
+        (the ticks on which a subject's pull is re-judged), the hunger at which the pull begins to escalate, and the cadence's per-subject stagger."""
         cls._period = max(1, int(strategic_cadence))
+        cls._escalated_hunger = float(escalated_hunger)
+        cls._gate = gate
 
     @classmethod
     def observe(cls, prior: AuthoritativeState, current: AuthoritativeState, update: Any) -> List[SimulationEvent]:
@@ -165,13 +174,13 @@ class StarvationRecorder:
     @classmethod
     def _sample(cls, prior: AuthoritativeState, tick: int) -> None:
         for eid, entity in prior.entities.items():
-            if (entity.biological.hunger >= _ESCALATED_HUNGER and entity.combat.alive
-                    and should_run(tick, eid, cls._period)):
+            if (entity.biological.hunger >= cls._escalated_hunger and entity.combat.alive
+                    and cls._gate(tick, eid, cls._period)):
                 cls._union.setdefault(eid, set()).update(_judged_ways(entity, prior))
 
     @classmethod
     def _note_attempts(cls, prior: AuthoritativeState, prior_ent: EntityState, entity: EntityState, upd: Any, tick: int) -> None:
-        if prior_ent.biological.hunger < _ESCALATED_HUNGER:
+        if prior_ent.biological.hunger < cls._escalated_hunger:
             return
         ate = entity.biological.hunger < prior_ent.biological.hunger
         for result in (getattr(upd, "intent_results", None) or []):

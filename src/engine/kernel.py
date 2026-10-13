@@ -21,6 +21,8 @@ from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_
 from src.engine.run_identity import create_run_directory, new_run_id
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
+from src.engine.cadence import should_run
+from src.engine.need_pull import ESCALATION_ONSET, HUNGER_LINE
 
 if TYPE_CHECKING:
     from src.config.profiles import RuntimeProfile
@@ -218,7 +220,7 @@ class Kernel:
         self._no_replay = flags.get("no_replay", False) if flags else False
         self._event_listeners = []
 
-        from src.observability.event_recorder import EventRecorder
+        from src.observability.event_recorder import EventRecorder, reset_run_state
         from src.observability.entity_timeline import EntityTimelineStore
 
         run_dir_str = None
@@ -310,8 +312,7 @@ class Kernel:
         self._workers_started = 2 if (obs_mode != ObservabilityMode.OFF) else 0
         self._last_shutdown_report = None
 
-        from src.observability.run_state import reset_run_state
-        reset_run_state(profile.cadence.strategic_intelligence)
+        reset_run_state(profile.cadence.strategic_intelligence, ESCALATION_ONSET * HUNGER_LINE, should_run)
 
         self.validate(flags)
 
@@ -959,7 +960,7 @@ class Kernel:
         if obs_mode == ObservabilityMode.OFF:
             return
 
-        from src.observability.run_state import EventExtractor, extract_events
+        from src.observability.event_recorder import EventExtractor, extract_events
         from src.observability.events import SimulationEvent
 
         tick = self._state.tick
