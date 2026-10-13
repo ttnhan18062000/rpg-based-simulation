@@ -1,8 +1,15 @@
 # Compliance IDs: TOWN-009
 from __future__ import annotations
 from typing import List
-from src.core.state import AuthoritativeState, EntityState, ItemStack
+from src.core.state import AuthoritativeState, EntityState, GroundItemState, ItemStack
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate
+
+def _loot_of(interaction_kind: str, target: object) -> "tuple[str, List[ItemStack]]":
+    """(transfer source kind, items) a finished loot channel hands over; a ground purse holds coin and no item (the resolver grants the coin)."""
+    if interaction_kind == "ground_item":
+        return "GROUND_ITEM", target.stack() if isinstance(target, GroundItemState) else []
+    return "CORPSE", list(getattr(target, "items", []))
+
 
 class LootSystem:
     """Processes looting progress and performs authoritative item handoffs."""
@@ -58,14 +65,7 @@ class LootSystem:
             if new_progress >= required:
                 # Logic ID: TOWN-009 (Looting completion triggers intent)
                 # AUTHORITATIVE HANDOFF (Proposed intent for refinement)
-                items_to_add = []
-                source_kind = ""
-                if interaction_kind == "ground_item":
-                    items_to_add = [ItemStack(target.item_id, target.quantity)]
-                    source_kind = "GROUND_ITEM"
-                else:
-                    items_to_add = target.items
-                    source_kind = "CORPSE"
+                source_kind, items_to_add = _loot_of(interaction_kind, target)
                 
                 from src.core.updates import ResourceTransferIntent
                 entity_updates[entity.id] = EntityUpdate(

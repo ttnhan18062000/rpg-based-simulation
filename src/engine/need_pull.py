@@ -32,6 +32,11 @@ SLEEP_LINE = 98.0
 TICKS_PER_TILE = 1.0
 
 
+def hunger_is_pressing(hunger: float) -> bool:
+    """True when hunger has reached ESCALATION_ONSET of its consequence line: the point at which hunger wakes a sleeper (decision 41 x SURV-07)."""
+    return hunger >= ESCALATION_ONSET * HUNGER_LINE
+
+
 def smoothstep(edge0: float, edge1: float, x: float) -> float:
     """0 at or below `edge0`, 1 at or above `edge1`, and a smooth S between."""
     t = max(0.0, min(1.0, (x - edge0) / (edge1 - edge0)))

@@ -12,6 +12,8 @@ Rules (each has a named `rule` id on its finding):
   duplicate-session-name   two roles share a `session_name`
   worktree-writer          a worktree declares no writer, or a role names a worktree that is not declared
   worktree-shared          a worktree hosts a role other than its writer
+  launch-contradiction     a role launched from the main checkout (no lease) that also names a worktree, writes as a
+                           worktree's writer, or is an implementer
   bad-field                function / seat_status / max_sessions is outside its allowed values
   authority-*              the authority file is not marked governing, names an unknown role, or lacks a
                            default for a function
@@ -34,6 +36,7 @@ from tools.agent_working_paths import TICKETS
 from tools.sessions.card import TEMPLATE_DIR
 from tools.sessions.generate_agents import check_generated
 from tools.sessions.roster import (
+    LAUNCH_MODES,
     AUTHORITY_REL_PATH,
     FUNCTIONS,
     REPO_ROOT,
@@ -85,6 +88,8 @@ def _check_fields(roster: Roster) -> list[Finding]:
             out.append(Finding("bad-field", r.role, f"function {r.function!r} not in {list(FUNCTIONS)}"))
         if r.seat_status not in SEAT_STATUSES:
             out.append(Finding("bad-field", r.role, f"seat_status {r.seat_status!r} not in {list(SEAT_STATUSES)}"))
+        if r.launch not in LAUNCH_MODES:
+            out.append(Finding("bad-field", r.role, f"launch {r.launch!r} not in {list(LAUNCH_MODES)}"))
         if r.max_sessions < 1:
             out.append(Finding("bad-field", r.role, "max_sessions must be >= 1"))
         if r.session_name != r.role:
@@ -140,7 +145,16 @@ def _check_handover(roster: Roster) -> list[Finding]:
 def _check_worktrees(roster: Roster) -> list[Finding]:
     out: list[Finding] = []
     declared = {w.name: w for w in roster.worktrees}
+    writers = {w.writer for w in roster.worktrees if isinstance(w.writer, str) and w.writer}
     for r in roster.roles:
+        if r.launch == "main-checkout":  # TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD
+            if r.worktree:
+                out.append(Finding("launch-contradiction", r.role, f"launches from the main checkout (no lease) yet names worktree {r.worktree!r}"))
+            if r.role in writers:
+                out.append(Finding("launch-contradiction", r.role, "launches from the main checkout (no lease) yet is a worktree's writer"))
+            if r.function == "implementer":
+                out.append(Finding("launch-contradiction", r.role, "an implementer writes: it needs a worktree, not a main-checkout launch"))
+            continue
         if r.worktree not in declared:
             out.append(Finding("worktree-writer", r.role, f"worktree {r.worktree!r} is not declared under worktrees:"))
     for w in roster.worktrees:
@@ -150,6 +164,8 @@ def _check_worktrees(roster: Roster) -> list[Finding]:
         writer = roster.role(w.writer)
         if writer is None:
             out.append(Finding("worktree-writer", w.name, f"writer {w.writer!r} is not a role"))
+        elif writer.launch == "main-checkout":
+            continue  # reported above as launch-contradiction
         elif writer.worktree != w.name:
             out.append(Finding("worktree-writer", w.name, f"writer {w.writer!r} is placed in {writer.worktree!r}"))
         for r in roster.roles:

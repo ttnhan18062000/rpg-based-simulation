@@ -73,22 +73,35 @@ ICON_FIX_ADOPTIONS = {  # source asset id -> (adoption id, intake id, decided_at
 ICON_FIX_SOURCES = sorted(ICON_FIX_ADOPTIONS)
 assert len(ICON_FIX_SOURCES) == 7 and set(ICON_FIX_SOURCES) <= set(ICON_SOURCES + ICON_V2_SOURCES)
 
-ADOPTED_SOURCES = sorted(TERRAIN_ERA_SOURCES + ICON_SOURCES + ICON_V2_SOURCES)
+# The real-art proof sources (`TCK-20261011-VISUAL-ASSETS-REAL-ART-DRAFTS`, owner adopted 2026-10-11): the first sources with animation and slices metadata. Nothing is built or released from them until `TCK-20261011-VISUAL-ASSETS-REAL-ART-RELEASE-PROOF`.
+PROOF_SOURCES = sorted(["ui_panel_frame", "fx_selection_ring", "fx_campfire"])
+PROOF_ANIMATED = sorted(["fx_selection_ring", "fx_campfire"])  # 8 and 16 frames, one tag each; every proof source carries exactly one slice
+PROOF_ANIMATION = {"fx_selection_ring": (8, [("pulse", 0, 7)]), "fx_campfire": (16, [("burn", 0, 15)])}  # frames, then (tag, from_frame, to_frame)
+PROOF_SLICES = {  # name -> [(x, y, w, h, has 9-slice centre, has pivot)] per key
+    "ui_panel_frame": [("panel", [(0, 0, 24, 24, True, False)])],
+    "fx_selection_ring": [("anchor", [(0, 0, 32, 32, False, True)])],
+    "fx_campfire": [("base", [(0, 0, 64, 64, False, True)])],
+}
+ADOPTED_SOURCES = sorted(TERRAIN_ERA_SOURCES + ICON_SOURCES + ICON_V2_SOURCES + PROOF_SOURCES)
 SET_ADOPTION_IDS = sorted([SET_ADOPTION_ID, ICON_SET_ADOPTION_ID, ICON_V2_SET_ADOPTION_ID])
 # Counts under the committed catalog: one adoption per source plus one per revision (7), two intake provenance files (record and review) per adoption.
-ADOPTION_COUNT = 77
-INTAKE_FILE_COUNT = 154
-REVISION_COUNT = 77  # r0001 of each of the 70 sources + r0002 of the 7 revised icons (what `store list --kind source` counts)
-assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (70, 70 + len(ICON_FIX_SOURCES), 2 * 77)
+ADOPTION_COUNT = 80
+INTAKE_FILE_COUNT = 160
+REVISION_COUNT = 80  # r0001 of each of the 73 sources + r0002 of the 7 revised icons (what `store list --kind source` counts)
+assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (73, 73 + len(ICON_FIX_SOURCES), 2 * 80)
 # `build` and `release` (TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN, approved by the user on 2026-10-06): one generated artifact directory per adopted source, and the candidate pilot/rc-0005 holds all 34 slots.
 # rc-0004 still holds the forest's three slots only. rc-0006 (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, approved by the user on 2026-10-06) is rc-0005's 34 slots on the registry that added the 14 `icon.*` keys; rc-0007 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`, approved by the user on 2026-10-07) is the same 34 slots on the registry that added the 22 icon set v2 keys.
 TERRAIN_GENERATED = sorted(f"{source}--x1" for source in TERRAIN_ERA_SOURCES)  # the 34 built by `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`
 ICON_GENERATED = sorted(f"{source}--x1" for source in ICON_SOURCES + ICON_V2_SOURCES)  # the 36 built by `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE`, each at its newest revision
-GENERATED = sorted(TERRAIN_GENERATED + ICON_GENERATED)  # one x1 artifact directory per adopted source (70)
-assert len(ICON_GENERATED) == 36 and len(GENERATED) == 70
-RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json", "rc-0007.json", "rc-0008.json"]
+PROOF_GENERATED = sorted(f"{source}--x1" for source in PROOF_SOURCES)  # the 3 built by `TCK-20261011-VISUAL-ASSETS-REAL-ART-RELEASE-PROOF` (frame 1 only: `build/exportconfig.py`)
+GENERATED = sorted(TERRAIN_GENERATED + ICON_GENERATED + PROOF_GENERATED)  # one x1 artifact directory per adopted source (73)
+assert len(ICON_GENERATED) == 36 and len(GENERATED) == 73
+RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json", "rc-0007.json", "rc-0008.json", "rc-0009.json"]
 # rc-0008 (the owner's answer, 2026-10-09: "Assemble rc-0008"): rc-0007's 34 entries + one entry per icon, 70 in all, on the registry that carries the structured fallbacks.
 RC_0008_ICON_ENTRIES = 36
+# rc-0009 (the owner's answer, 2026-10-11: "Assemble rc-0009"): rc-0008's 70 entries, byte-identical, + one entry per real-art proof key, 73 in all, on the registry that carries the three keys.
+RC_0009_ENTRIES = 73
+PROOF_KEYS = ["fx.campfire", "fx.selection_ring", "ui.panel_frame"]
 
 # The draft sets whose owner decision is recorded are CLOSED gates: their committed preview fixtures are the evidence of what the owner saw, so they are checked against the gate's own record
 # (`tests/visual_assets/closed_draft_fixture.py`), not against the moving store, which grows references whenever art is built after the gate. Set id -> the adoption records that closed it.

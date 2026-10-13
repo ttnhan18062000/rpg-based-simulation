@@ -15,6 +15,8 @@
   common_materials: ["wood", "herb", "healing_flower"]
   default_factions: ["wild_beast_pack", "forest_wardens"]
   danger_level: 1
+  fertility: "high"
+  grazing_cover: "cover_patch_high"
 
 # STATE: REDESIGNED-CORE
 - id: "wolf_den"
@@ -88,6 +90,8 @@
   common_materials: ["healing_flower", "spirit_essence"]
   default_factions: ["forest_wardens", "spirit_court"]
   danger_level: 2
+  fertility: "medium"
+  grazing_cover: "cover_patch_medium"
 
 # STATE: ADDITIONAL
 - id: "volcanic_pass"
@@ -124,6 +128,8 @@
   common_materials: ["herb", "venom_sac", "healing_flower"]
   default_factions: ["swamp_tribe", "wild_beast_pack"]
   danger_level: 3
+  fertility: "low"
+  grazing_cover: "cover_patch_low"
 
 # TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: calibration-only biome, isolated to
 # camp_maturity_calibration_pilot world only.

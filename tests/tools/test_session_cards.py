@@ -120,3 +120,16 @@ def test_designer_and_planner_cards_list_a_push_to_main_under_needs_the_user_now
         card = compose_card(role_id, ROSTER, AUTHORITY, ROOT)
         assert "Never:" not in card and "push_default_branch" in card
     assert "push_default_branch" in compose_card("rpg-implementer", ROSTER, AUTHORITY, ROOT)
+
+
+def test_adjacent_sibling_files_with_a_shared_stem_prefix_share_one_brace_entry():
+    """TCK-20261010-...: `tools/graphify_link.py, tools/graphify_prune.py` -> `tools/graphify_{link,prune}.py`."""
+    from tools.sessions.card import _compact_globs
+
+    assert _compact_globs(["a/**", "tools/graphify_link.py", "tools/graphify_prune.py", "b.md"]) == \
+        "a/**, tools/graphify_{link,prune}.py, b.md"
+    # different directory, extension, or no shared `_`/`-` prefix: left alone
+    assert _compact_globs(["x/a_one.py", "y/a_two.py"]) == "x/a_one.py, y/a_two.py"
+    assert _compact_globs(["x/a_one.py", "x/a_two.md"]) == "x/a_one.py, x/a_two.md"
+    assert _compact_globs(["x/one.py", "x/two.py"]) == "x/one.py, x/two.py"
+    assert _compact_globs(["x/a_one.py"]) == "x/a_one.py"

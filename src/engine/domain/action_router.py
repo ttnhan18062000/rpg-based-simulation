@@ -7,12 +7,29 @@ from src.core.updates import EntityUpdate, NavigationUpdate
 from src.engine.building_services import with_service
 from src.engine.domain.aoe_actions import AoeActions
 from src.engine.domain.combat_actions import CombatActions
-from src.engine.domain.core_actions import CoreActions
+from src.engine.domain.core_actions import CoreActions, eat_at_corpse_update
 from src.engine.domain.skill_actions import SkillActions
+from src.engine.legality import LegalityServiceV2
 from src.engine.work_shift import work_update
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
+def _survival_action(entity: EntityState, action: str, payload: Optional[Dict[str, Any]], current_tick: int, context: Any) -> Dict[int, EntityUpdate]:
+    """A survival action: eating at a corpse (decision 44, the corpse id rides in the payload) or the action with its building service."""
+    corpse_id = (payload or {}).get("corpse_id")
+    if action == "EAT" and corpse_id is not None:
+        return {entity.id: eat_at_corpse_update(entity, corpse_id, context, current_tick)}
+    return with_service(CoreActions.execute_survival(entity, action, current_tick), entity, action, current_tick, context)
+
+
+def _unready(entity: EntityState) -> Optional[Dict[int, EntityUpdate]]:
+    """The failure update for a combat or skill action attempted without readiness, or None when the entity is ready."""
+    ready, r_reason = LegalityServiceV2.verify_readiness(entity)
+    if ready:
+        return None
+    return {entity.id: EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason=r_reason))}
+
+
 class ActionRouter:
     """
     Routes action payloads to specific domain handlers.
@@ -34,19 +51,14 @@ class ActionRouter:
         # Survival actions (biological necessities) bypass combat readiness.
         if action in ("SLEEP", "EAT", "REST", "SELL"):
             # A building service (bed, meal, sale) lands with its action, whichever tick the decision was made on (building_services.py).
-            return with_service(CoreActions.execute_survival(entity, action, current_tick), entity, action, current_tick, context)
+            return _survival_action(entity, action, payload, current_tick, context)
 
         if action == "WORK":
             return work_update(entity, payload or {}, current_tick, context)
 
         # 0. Readiness Check (combat/skill actions only)
-        from src.engine.legality import LegalityServiceV2
-        ready, r_reason = LegalityServiceV2.verify_readiness(entity)
-        if not ready:
-            return {entity.id: EntityUpdate(
-                entity_id=entity.id,
-                navigation=NavigationUpdate(failure_reason=r_reason)
-            )}
+        if (unready := _unready(entity)) is not None:
+            return unready
 
         if action == "RECRUIT":
             return CoreActions.execute_recruit(entity, payload, current_tick, neighbor_view, context)

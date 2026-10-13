@@ -46,6 +46,8 @@ domains:
       - registries/session_*.yaml   # exactly session_roles.yaml and session_authority.yaml today; one glob keeps the card within its token budget
       - .claude/agents/**
       - .graphifyignore
+      - tools/graphify_link.py
+      - tools/graphify_prune.py
       - tests/tools/**
       - tests/docs/**
     owns_not:
@@ -105,13 +107,11 @@ domains:
       - src/perf/**
       - tests/perf/**
       - tools/perf/**
-      - tools/perf_guard.py
       - tools/bench_corpus_world.py
       - docs/performance/**
       - docs/plans/design_enhancement/performance_optimization/**
       - docs/architecture/performance_optimization_decisions.md   # PERF-D records; the owner approves
       - tests/unit/perf/**
-      - perf_baselines.json                  # PerfBudget store (M2-T03 decides absorb or retire)
       - tests/tools/perf_assertions.py       # soft-threshold helper; perf is first reviewer
     owns_not: []
     routes:
@@ -131,7 +131,7 @@ domains:
       - .mcp.json
       - .github/workflows/deploy-docs.yml
       - docs/architecture/**                 # asset's ADR and perf's PERF-D file are split below
-      # agent-working/lead/** joins once its first file is on main (an owns glob must match a file)
+      - agent-working/lead/**
     owns_not: []
     routes:
       "src/**": rpg-planner
@@ -275,7 +275,7 @@ roles:
                              "docs/plans/visual-asset-foundation/**", "docs/plans/visual-asset-management-runtime-integration/**",
                              "agent-working/tickets/**", "agent-working/staging_artifacts/**",
                              "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
-    placement: {worktree: asset-planner, max_sessions: 1}   # ubuntu: proposed ~/Work/rpg-asset-planner (owner decides)
+    placement: {launch: main-checkout, max_sessions: 1}   # owner 2026-10-10: needs no worktree of its own
     handover: .claude/handover/asset-planner.md
   - role: asset-implementer
     identity: {domain: asset, function: implementer, session_name: asset-implementer,
@@ -311,14 +311,28 @@ roles:
                legacy_session_name: null, seat_status: staffed}   # runs on host ubuntu (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user]
+      owns_not: ["agent-working/lead/hosts/u24desktop.md"]   # the u24 lead's page: boundary.py flags a write to it
     capability: {may_write: [".claude/handover/drafts/**", "agent-working/lead/**", "agent-working/tickets/**",
                              "docs/architecture/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
-    placement: {worktree: lead-planner, max_sessions: 1}   # mostly reads from the main checkout
+    placement: {launch: main-checkout, max_sessions: 1}   # reads from the main checkout
     handover: .claude/handover/lead-planner.md
+    card_note: "Folds `agent-working/lead/hosts/u24desktop.md` (written by `lead-planner-u24`) into `board.md`; never edits that page."
+
+  - role: lead-planner-u24   # runs on host u24desktop; never in any accepts_dispatch_from (TCK-20261013-HOST-LEAD-PLANNER-U24)
+    identity: {domain: lead, function: planner, session_name: lead-planner-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+      owns: ["agent-working/lead/hosts/u24desktop.md"]   # only its host page; the lead domain's other paths are lead-planner's
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
+    placement: {launch: main-checkout, max_sessions: 1}   # reads from the main checkout
+    handover: .claude/handover/lead-planner-u24.md
+    card_note: "Host lead for u24desktop: status of this host's sessions only, on `agent-working/lead/hosts/u24desktop.md`. Never edits `board.md`. Lead-owned paths: comment only; review authority stays with lead-planner."
 
 # Exclusive resources. The writer slot belongs to the worktree; a worktree hosts exactly one role, its
-# writer (every designer, planner and implementer has its own worktree and lands its own PR). The lease
-# itself is taken at SessionStart by M2 and is runtime state.
+# writer (every designer, planner and implementer has its own worktree and lands its own PR, except a role
+# with `placement.launch: main-checkout`, which names no worktree and holds no lease). The lease itself is
+# taken at SessionStart by M2 and is runtime state.
 worktrees:
   rpg: {writer: rpg-implementer}
   agent-working: {writer: agent-working-implementer}
@@ -333,7 +347,5 @@ worktrees:
   codebase-designer: {writer: codebase-designer}
   codebase-planner: {writer: codebase-planner}
   asset: {writer: asset-implementer}
-  asset-planner: {writer: asset-planner}
   perf: {writer: perf-implementer}
   perf-planner: {writer: perf-planner}
-  lead-planner: {writer: lead-planner}

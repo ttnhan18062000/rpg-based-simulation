@@ -77,6 +77,9 @@ def check_edit(payload: dict, role, roster):
         return None
     # `may_write: ["**"]` (every implementer) says nothing about which domain a path belongs to, so it never exempts
     granted = (*(g for g in role.may_write if g != "**"), *role.owns)
+    sibling = _sibling_crossing(role, rel, roster, granted)
+    if sibling is not None:
+        return sibling
     if any(_matches(g, rel) for g in granted):
         return None
     result = route(rel, roster, from_domain=role.domain)
@@ -84,6 +87,33 @@ def check_edit(payload: dict, role, roster):
         return None
     return KIND_EDIT, _path_class(result.domains, rel), {
         "path": rel, "owner_domains": list(result.domains), "owner_seats": list(result.seats),
+    }
+
+
+def _sibling_crossing(role, rel: str, roster, granted: tuple[str, ...]):
+    """A seat that narrows its domain (a role-level `owns` or `owns_not`) is one of several seats in that domain, so the
+    domain-wide exemption does not apply to it (TCK-20261013-HOST-LEAD-PLANNER-U24).
+
+    - `owns_not` on the role: the path is the sibling's, whatever the role's own grants say.
+    - `owns` on the role: a path its domain owns but its own grants do not cover is a sibling's.
+    The owner seats are the other roles of the domain whose grants cover the path. `(kind, path_class, fields)` or None."""
+    from tools.sessions.route import _matches, route
+
+    excluded = "owns_not" in role.overrides and any(_matches(g, rel) for g in role.owns_not)
+    if not excluded:
+        if "owns" not in role.overrides or any(_matches(g, rel) for g in granted):
+            return None
+        result = route(rel, roster, from_domain=role.domain)
+        if role.domain not in result.domains:
+            return None
+    owners = tuple(
+        other.role for other in roster.roles
+        if other.domain == role.domain and other.role != role.role
+        and any(_matches(g, rel) for g in (*(g for g in other.may_write if g != "**"), *other.owns))
+        and not ("owns_not" in other.overrides and any(_matches(g, rel) for g in other.owns_not))
+    )
+    return KIND_EDIT, _path_class((role.domain,), rel), {
+        "path": rel, "owner_domains": [role.domain], "owner_seats": list(owners),
     }
 
 

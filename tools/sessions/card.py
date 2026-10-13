@@ -12,6 +12,7 @@ at roughly 3 to 4 characters per token, so this over-counts prose and is about r
 from __future__ import annotations
 
 import math
+import os
 import re
 from pathlib import Path
 
@@ -39,7 +40,43 @@ _DIR_GLOB = re.compile(r"^(?P<parent>.+)/(?P<leaf>[^/*]+)/\*\*$")
 _FIRST_SEGMENT_GLOB = re.compile(r"^(?P<parent>[^/*]+)/(?P<leaf>[^*]+?)/\*\*$")
 
 
+_PLAIN_FILE = re.compile(r"^(?P<dir>(?:[^/*{},]+/)*)(?P<stem>[^/*{},]+)\.(?P<ext>[A-Za-z0-9]+)$")
+
+
+def _merge_sibling_files(items: list[str]) -> list[str]:
+    """Adjacent plain files in one directory with one extension and a shared stem prefix ending in `_` or `-` become
+    one brace entry: `tools/graphify_link.py, tools/graphify_prune.py` -> `tools/graphify_{link,prune}.py`."""
+    out: list[str] = []
+    i = 0
+    while i < len(items):
+        m = _PLAIN_FILE.match(items[i])
+        run = [m] if m else []
+        j = i + 1
+        while m and j < len(items):
+            n = _PLAIN_FILE.match(items[j])
+            if not n or (n.group("dir"), n.group("ext")) != (m.group("dir"), m.group("ext")):
+                break
+            run.append(n)
+            j += 1
+        if len(run) > 1:
+            stems = [r.group("stem") for r in run]
+            prefix = os.path.commonprefix(stems)
+            cut = max(prefix.rfind("_"), prefix.rfind("-")) + 1
+            if cut >= 3:
+                leaves = ",".join(s[cut:] for s in stems)
+                out.append(f"{m.group('dir')}{prefix[:cut]}{{{leaves}}}.{m.group('ext')}")
+                i = j
+                continue
+        out.append(items[i])
+        i += 1
+    return out
+
+
 def _group_globs(globs: list[str] | tuple[str, ...], pattern: re.Pattern[str]) -> str:
+    return ", ".join(_group_glob_items(globs, pattern))
+
+
+def _group_glob_items(globs: list[str] | tuple[str, ...], pattern: re.Pattern[str]) -> list[str]:
     groups: dict[str, list[str]] = {}
     order: list[str] = []
     for g in globs:
@@ -58,7 +95,7 @@ def _group_globs(globs: list[str] | tuple[str, ...], pattern: re.Pattern[str]) -
             out.append(f"{key}/{leaves[0]}/**")
         else:
             out.append(f"{key}/{{{','.join(leaves)}}}/**")
-    return ", ".join(out)
+    return out
 
 
 def _compact_globs(globs: list[str] | tuple[str, ...]) -> str:
@@ -68,8 +105,8 @@ def _compact_globs(globs: list[str] | tuple[str, ...]) -> str:
     (`docs/{a,b/c}/**`); the shorter string wins, the full-parent one on a tie, so
     no card grows against the older grouping.
     """
-    by_parent = _group_globs(globs, _DIR_GLOB)
-    by_first = _group_globs(globs, _FIRST_SEGMENT_GLOB)
+    by_parent = ", ".join(_merge_sibling_files(_group_glob_items(globs, _DIR_GLOB)))
+    by_first = ", ".join(_merge_sibling_files(_group_glob_items(globs, _FIRST_SEGMENT_GLOB)))
     return by_first if len(by_first) < len(by_parent) else by_parent
 
 
@@ -89,7 +126,8 @@ def _role_line(role: Role, roster: Roster) -> str:
         f"You are `{role.role}`{seat}. Owns: {_compact_globs(role.owns)}.",
         _routes_text(role),
         f"Dispatch from: {', '.join(role.accepts_dispatch_from)}." if role.accepts_dispatch_from else "",
-        f"Worktree {role.worktree}; main-checkout `{role.handover}`" + (
+        (f"Launches from the main checkout, no lease; `{role.handover}`" if role.launch == "main-checkout"
+         else f"Worktree {role.worktree}; main-checkout `{role.handover}`") + (
             f" (instance N of `{role.role}` reads `{handover_rel(role, role.role + '-N')}`)." if role.max_sessions > 1 else "."),
     ]
     return " ".join(p for p in parts if p)
@@ -120,4 +158,8 @@ def compose_card(role_id: str, roster: Roster, authority: Authority, root: Path 
         raise KeyError(role_id)
     function = _card_section(root / TEMPLATE_DIR / "functions" / f"{role.function}.md")
     domain = _card_section(root / TEMPLATE_DIR / "domains" / f"{role.domain}.md")
-    return "\n\n".join([_role_line(role, roster), function, domain, _authority_line(role, authority)])
+    parts = [_role_line(role, roster), function, domain]
+    if role.card_note:
+        parts.append(role.card_note)
+    parts.append(_authority_line(role, authority))
+    return "\n\n".join(parts)

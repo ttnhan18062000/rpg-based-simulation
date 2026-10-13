@@ -76,7 +76,7 @@ def deterministic_observation_noise(seed: int, tick: int, observer_id: int, obse
     """
     A pure function of `(seed, tick, observer_id, observed_id)` mapped into `[-1.0, 1.0)` -- the
     same seed/tick/observer/observed always produces the same value, following
-    `_hash_point_in_bounds()`'s own precedent (src/worldassembly/resolver.py:947): a stable key
+    `hash_point_in_bounds()`'s own precedent (src/worldassembly/spawn_position.py): a stable key
     hashed via hashlib.sha256, never a call into DeterministicRNG or any other seeded-but-stateful
     generator (Sec 13.9).
     """

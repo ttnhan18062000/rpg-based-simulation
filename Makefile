@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks install-prek-hooks uninstall-prek-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py typecheck-baseline-sync lint-py code-health-size code-health-complexity code-health-dup code-health parity-ledger-schema-check perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate premise-staleness-check tools-orphan-check planning-doc-staleness-check
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks install-prek-hooks uninstall-prek-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py typecheck-baseline-sync lint-py code-health-size code-health-complexity code-health-dup code-health parity-ledger-schema-check dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate premise-staleness-check tools-orphan-check planning-doc-staleness-check
 
 # Default
 help: ## Show available commands
@@ -27,8 +27,7 @@ build: ## Build frontend for production
 # ── Development ──────────────────────────────────────────
 
 # Auto-discovers a pydantic-capable python3: a local .venv (relative, works from the main
-# checkout), then worktree-independent absolute paths for known dev machines (u24desktop,
-# vboxuser), then bare python3 last. Needed because git worktrees don't get their own .venv/ --
+# checkout), then the main checkout's `.venv` (KNOWLEDGE_MAIN_ROOT, no host path), then bare python3 last. Needed because git worktrees don't get their own .venv/ --
 # bare python3 lacks pydantic there, so `serve`/`dev` would silently crash at backend startup
 # with no indication other than every API call refusing to connect (TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX's
 # own Playwright e2e webServer hit exactly this while starting `make dev` as a subprocess).
@@ -45,7 +44,11 @@ build: ## Build frontend for production
 # the shell launchers' original probe shape, this runs on *every* `make` invocation (`:=` is
 # immediate, not deferred to first use), so a full import's cost would tax every unrelated target
 # too; find_spec keeps that cost negligible regardless of what's chosen for capability.
-PYTHON3 := $(shell for py in .venv/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && "$$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('pydantic') else 1)" >/dev/null 2>&1 && echo "$$py" && break; done)
+# TCK-20261012-HOST-PATH-LITERALS-MAKEFILE-AND-MCP-LAUNCHERS: no host-specific absolute path. The main checkout's
+# shared `.venv` is found through KNOWLEDGE_MAIN_ROOT (git common dir, so a worktree on any host reaches it); the former
+# u24desktop and vboxuser literals are gone. Defined once here and reused by PYTHON_KNOWLEDGE below.
+KNOWLEDGE_MAIN_ROOT := $(patsubst %/.git,%,$(shell git rev-parse --path-format=absolute --git-common-dir 2>/dev/null))
+PYTHON3 := $(shell for py in .venv/bin/python3 "$(KNOWLEDGE_MAIN_ROOT)/.venv/bin/python3" python3; do command -v "$$py" >/dev/null 2>&1 && "$$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('pydantic') else 1)" >/dev/null 2>&1 && echo "$$py" && break; done)
 
 # TCK-20260914-VENV-NAMING-CI-PARITY-SWAP: dedicated interpreter resolution for the knowledge-stack
 # targets (torch/sentence-transformers), independent of $(PYTHON3) -- `.venv` is now the CI-matching
@@ -60,7 +63,19 @@ PYTHON3 := $(shell for py in .venv/bin/python3 /home/u24desktop/Working/rpg-base
 # at ~5.66s (this same ticket's own part (b) finding for tools/start_search_mcp.sh) -- paying that
 # on every `make` invocation, including targets that never touch the knowledge stack, would be a
 # regression on its own, not just an inconsistency fix.
-PYTHON_KNOWLEDGE := $(shell for py in .venv-knowledge/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv-knowledge/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && "$$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('sentence_transformers') else 1)" >/dev/null 2>&1 && echo "$$py" && break; done)
+#
+# TCK-20261011-KNOWLEDGE-TORCH-CPU-INDEX-IN-LOCK: no host-specific absolute path. `KNOWLEDGE_PYTHON` (env or
+# `make KNOWLEDGE_PYTHON=...`) is used verbatim when set; otherwise the main checkout's shared `.venv-knowledge`
+# (found through `git rev-parse --git-common-dir`, so a worktree on any host reaches it, same as
+# tools/start_search_mcp.sh), then this checkout's own `.venv-knowledge`, then `python3`. Each candidate must still
+# pass the sentence_transformers probe.
+# Kept out of the shell loop below so tests/tools/test_makefile_interpreter_selection.py can still extract and
+# exercise that one-line selection command.
+ifdef KNOWLEDGE_PYTHON
+PYTHON_KNOWLEDGE := $(KNOWLEDGE_PYTHON)
+else
+PYTHON_KNOWLEDGE := $(shell for py in "$(KNOWLEDGE_MAIN_ROOT)/.venv-knowledge/bin/python3" .venv-knowledge/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && "$$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('sentence_transformers') else 1)" >/dev/null 2>&1 && echo "$$py" && break; done)
+endif
 
 dev: ## Start backend + frontend dev server with live map (hot reload)
 	@echo "Starting backend on :8000 and frontend on :5173..."
@@ -211,9 +226,6 @@ test-cov: ## Run tests with coverage report (V2)
 
 test-collect: ## List and count collected Python test nodes (tests/ only; does not run tests)
 	python3 -m pytest tests/ --collect-only -q
-
-perf-measure: ## Re-measure perf tests and print proposed perf_baselines.json diff
-	python3 tools/perf_guard.py measure
 
 # ── Migration CI Lanes ────────────────────────────────────
 # Targeted test lanes for content migration work. Each lane selects a
@@ -486,7 +498,7 @@ codebase-health-pr-impact: ## Print a batched PR/AI change-impact report for one
 	python3 -m codebase.reports.pr_impact_report $(ARGS)
 
 agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
-	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
+	$(shell for py in .venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
 	  tools/agent-monitoring/build_index.py
 
 parity-index: ## Rebuild the derived read-only SQLite index over docs/parity_ledger/*.yaml (on-demand only — not CI)
@@ -556,11 +568,11 @@ eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires kno
 # [ -x "$$py" ] only resolves an absolute/relative path to a literal file -- it never does a
 # PATH lookup for a bare command name, so "python3" alone always failed this check even when a
 # real python3 was on PATH (confirmed: CI has no .venv/bin/python3 and no
-# /home/vboxuser/... path, so this loop silently produced an EMPTY PYTHON on every CI runner,
+# host-specific venv path, so this loop silently produced an EMPTY PYTHON on every CI runner,
 # breaking every $(PYTHON)-using target with "sh: 1: -m: not found" -- masked until now because
 # the "slow" CI job's own `needs:` gate had never let it run to completion before).
 # command -v correctly resolves bare "python3" via PATH as well as absolute/relative paths.
-PYTHON := $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done)
+PYTHON := $(shell for py in .venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done)
 
 evaluate: ## Diff current calibration data against grade anchors (no engine re-run)
 	$(PYTHON) tools/evaluate_simq.py --dry-run

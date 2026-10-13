@@ -124,7 +124,7 @@ class InteractionSystem:
                 if node:
                     proposed_items = [ItemStack(node.yields_item, 1)]
                 elif ground_item:
-                    proposed_items = [ItemStack(ground_item.item_id, ground_item.quantity)]
+                    proposed_items = ground_item.stack()  # a coin purse holds no item
                 elif corpse:
                     proposed_items = list(corpse.items)
                 elif chest:
@@ -166,7 +166,7 @@ class InteractionSystem:
                         source_kind = "NODE"
                     elif ground_item:
                         # Logic ID: TOWN-007 (Resource transfer intent for ground item)
-                        items = [ItemStack(ground_item.item_id, ground_item.quantity)]
+                        items = ground_item.stack()
                         source_kind = "GROUND_ITEM"
                     elif corpse:
                         # Logic ID: TOWN-007 (Resource transfer intent for corpse)

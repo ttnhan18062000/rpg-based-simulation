@@ -65,6 +65,7 @@ class SeatInfo:
     seat_status: str
     instance: str  # live | orphaned | released | none | INSTANCE_UNKNOWN
     session_id: str | None
+    writing_in: str | None = None  # the recorded batch worktree (launch.py --worktree), shown per seat
 
 
 def _git(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -146,8 +147,10 @@ def seat_infos(roster: Roster, state_root: Path) -> list[SeatInfo]:
     have_state = state_root.is_dir()
     seats = []
     for role in roster.roles:
-        instance, session = INSTANCE_UNKNOWN, None
+        instance, session, writing_in = INSTANCE_UNKNOWN, None, None
         if have_state:
+            bound = st.read_bound_worktree(state_root, role.role)
+            writing_in = bound[0] if bound and bound[1] else None
             try:
                 recorded = st.read_instance(state_root, role.role)
             except st.StateError:
@@ -156,7 +159,7 @@ def seat_infos(roster: Roster, state_root: Path) -> list[SeatInfo]:
             else:
                 instance = INSTANCE_NONE if recorded is None else st.liveness(recorded)
                 session = recorded.holder.session_id if recorded else None
-        seats.append(SeatInfo(role.role, role.worktree, role.seat_status, instance, session))
+        seats.append(SeatInfo(role.role, role.worktree or "(main checkout)", role.seat_status, instance, session, writing_in))
     return seats
 
 
@@ -164,6 +167,9 @@ def _worktree_for(role: Role, infos: list[WorktreeInfo], main: Path, state_root:
     """The physical worktree of a manifest worktree: the default path, else where the seat's instance last ran."""
     default = default_worktree_path(role, main).resolve()
     by_path = {i.path.resolve(): i for i in infos}
+    bound = st.read_bound_worktree(state_root, role.role) if state_root.is_dir() else None
+    if bound and bound[1] and Path(bound[0]).resolve() in by_path:
+        return by_path[Path(bound[0]).resolve()]  # the launcher recorded a batch worktree: the lease sits there
     if default in by_path:
         return by_path[default]
     if state_root.is_dir():
@@ -249,7 +255,8 @@ def render(infos: list[WorktreeInfo], seats: list[SeatInfo], warn: list[str], no
         unique = "unknown" if i.unique_commits is None else str(i.unique_commits)
         lines.append(f"  last commit {i.last_commit or 'unknown'} {i.last_subject}; last activity {idle}; commits not in main: {unique}")
     lines.append("seats:")
-    lines += [f"  {s.role}: worktree {s.worktree}, {s.seat_status}, instance {s.instance}" for s in seats]
+    lines += [f"  {s.role}: worktree {s.worktree}, {s.seat_status}, instance {s.instance}"
+              + (f", writing in: {s.writing_in}" if s.writing_in else "") for s in seats]
     lines += [f"flag: {n}" for n in notes]
     if removal:
         lines.append(f"removable (report only; run yourself if you agree; idle threshold {RETIRE_IDLE_DAYS}d):")

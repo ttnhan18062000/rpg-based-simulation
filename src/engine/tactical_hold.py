@@ -83,7 +83,7 @@ def notice_unengaged_hostile(
 
     It follows the entity's own combat-engagement verdict toward that target (``identity.properties["last_combat_posture"]``): ``ignore``
     keeps the walk, re-issued as an ``ENTITY_MOVE`` decision (``KEEP_WALKING``) when it has a stored target; ``avoid`` steps away
-    (``AVOID_HOSTILE``, a decided flight); ``watch`` stands and observes (a typed ``HOLD`` wait, ``WATCH_HOSTILE``). Any other verdict, or none, returns None and the tactical pass goes on to fight as it always has."""
+    (``AVOID_HOSTILE``, a decided flight); ``watch`` stands and observes (a typed ``HOLD`` wait, ``WATCH_HOSTILE``); ``avoid`` with no route away holds (``AVOID_NO_ROUTE``). Any other verdict, or none, returns None and the tactical pass goes on to fight as it always has."""
     if is_engaged(entity, target) or not LegalityServiceV2.is_adjacent(entity.navigation.position, target.navigation.position):
         return None
     props = entity.identity.properties or {}
@@ -110,7 +110,12 @@ def notice_unengaged_hostile(
     if posture == "avoid":
         away = retreat_destination(state, entity, hostiles)
         if away is None:
-            return None
+            # No route away: a typed wait, not a fall-through to an attack the verdict refused (same record shape as WATCH_HOSTILE).
+            return EntityUpdate(
+                entity_id=entity.id, strategic=strat_up,
+                navigation=NavigationUpdate(movement_mode_set=MovementMode.HOLD),
+                task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "HOLD", "reason": "AVOID_NO_ROUTE", "target_id": target.id}),
+            )
         return EntityUpdate(
             entity_id=entity.id, strategic=strat_up,
             navigation=NavigationUpdate(target_set=away, movement_mode_set=MovementMode.RETREAT),

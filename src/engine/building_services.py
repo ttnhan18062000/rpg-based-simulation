@@ -17,41 +17,52 @@ from src.core.updates import (
     EntityUpdate,
     ResourceTransferIntent,
 )
-from src.engine.serves import serves
+from src.engine.appraisal import can_use_inn_meal
+from src.engine.serves import keeps_coin, serves
 from src.engine.service_prices import EAT_PRICE_GOLD, INN_MEAL_HUNGER, REST_PRICE_GOLD
-from src.engine.service_reach import service_tile
+from src.engine.service_reach import service_building_where, service_tile
 from src.engine.shop_sale import plan_sale
 from src.engine.spatial_query import SpatialQueryService
 
-# The building kinds that serve an action.
-SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"}), "SELL": frozenset({"shop"}), "WORK": frozenset({"inn"}), "REPAIR": frozenset({"blacksmith"})}
+# The building kinds that serve an action. WORK is not here: the work a building offers is declared by its state (content ``hires_for_pay`` and
+# ``maintenance_shifts``, EXCH-02 ruling 66), see ``offers_work``; no building name is in code (D56).
+SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"}), "SELL": frozenset({"shop"}), "REPAIR": frozenset({"blacksmith"})}
+
+
+def maintenance_open(building: Any) -> bool:
+    """True when `building` still needs maintenance shifts this upkeep period (EXCH-02, ruling 66)."""
+    return bool(building.maintenance_shifts_done < building.maintenance_shifts_needed)
+
+
+def offers_work(building: Any) -> bool:
+    """True when `building` offers a shift now: maintenance it still needs, or commercial work it declares (``hires_for_pay``). No building name."""
+    return bool(building.functional and (maintenance_open(building) or building.hires_for_pay))
 
 
 def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
     """The functional building (of the kinds that serve `action`) the subject stands on or orthogonally beside, or None."""
+    if action == "WORK":
+        found = service_building_where(context, (int(entity.navigation.position[0]), int(entity.navigation.position[1])), offers_work)
+        return found if found is not None and found.functional else None
     kinds = SERVICE_KINDS.get(action)
     if kinds is None:
         return None
     tile = service_tile(context, (int(entity.navigation.position[0]), int(entity.navigation.position[1])), kinds)
     building = SpatialQueryService.get_building_at(context, tile) if tile is not None else None
-    return building if building is not None and building.functional else None
-
-
-def repair_source(context: Any, entity: Any) -> Any:
-    """The payee of a repair: the blacksmith in reach, so the resolver credits its purse with what was actually paid (EXCH-02: no coin
-    vanishes); with none in reach the repair keeps its old unnamed payee, as on main (repair needs no building today)."""
-    smith = service_building(context, entity, "REPAIR") if context is not None else None
-    return "BLACKSMITH" if smith is None else smith.id
+    if building is None or not building.functional or not (serves(context, entity, building) if action == "SELL" else keeps_coin(entity)):
+        return None  # rest, meal, repair: the trait only (decision 43), never a kind name; the sale keeps its relationship rule as on main
+    return building
 
 
 def service_delta(context: Any, entity: Any, action: str, tick: int) -> Optional[EntityUpdate]:
     """What the building service for `action` adds to the subject's update, or None (no such building in reach, or nothing to deliver).
 
-    A bed and an inn meal are as they were on main (free meals stay on, owner decision 44): the effects are on the update, the price is a
-    charge the resolver clamps at what the subject holds, and the building's purse is credited with what was actually paid."""
+    A bed and an inn meal are as they were on main (free meals stay on until M0 step 4, owner decision 44): the effects are on the update, the price is a
+    charge the resolver clamps at what the subject holds, and the building's purse is credited with what was actually paid. The building is found only
+    for a subject it serves (`service_building`)."""
     building = service_building(context, entity, action)
-    if building is None or (action == "SELL" and not serves(context, entity, building)):
-        return None
+    if building is None or (action == "EAT" and not can_use_inn_meal(entity)):
+        return None  # an inn does not serve a meal to a diet without prepared food (decision 44), however the subject came to stand there
     if action == "REST":
         charge = ResourceTransferIntent(source_id=building.id, source_kind="TOWN_SERVICE", gold_delta=-REST_PRICE_GOLD, transfer_kind="REST",
                                         is_group_required=True)

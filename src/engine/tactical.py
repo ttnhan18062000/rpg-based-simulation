@@ -26,7 +26,8 @@ from src.engine.building_arrival import building_arrival_update
 from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
 from src.engine.sleep_debt import collapse_update, must_collapse
 from src.engine.tactical_hold import held_swing_update, leash_return_update, notice_unengaged_hostile, stalemate_break_update
-from src.engine.hostility import perceived_hostile, source_identity
+from src.engine.hostility import source_identity
+from src.engine.tactical_avoid import avoid_what_can_eat_me, classify_neighbours, eat_at_hunger_corpse
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -195,12 +196,11 @@ class TacticalDecisionSystem:
             social_context=entity.social
         )
         
-        if emotion.is_fleeing:
+        threats = _perceived_threats(entity, neighbors)
+        if emotion.is_fleeing and threats:  # no threat in sight, no flight: low HP, dread and grudge feed the panic but never flee alone (divergence 2.114)
              # PANIC: Move away from the perceived threats, inside the current region
              # (MOV-01 / LOC-01); hold position when no valid destination exists (MOV-03).
-             retreat_to = _destination_or_hold(
-                 entity, retreat_destination(state, entity, _perceived_threats(entity, neighbors))
-             )
+             retreat_to = _destination_or_hold(entity, retreat_destination(state, entity, threats))
              return EntityUpdate(
                  entity_id=entity.id,
                  navigation=NavigationUpdate(target_set=retreat_to, movement_mode_set=MovementMode.RETREAT),
@@ -223,14 +223,9 @@ class TacticalDecisionSystem:
         except Exception:
             entity_pressures = MotivationPressureSet.empty()
 
-        hostiles = []
-        hostile_identity_sources: dict = {}
         _src_faction_id, _src_identity_source = source_identity(entity)
-
-        for n in neighbors:
-            if perceived_hostile(entity, n, (_src_faction_id, _src_identity_source)):
-                hostiles.append(n)
-                hostile_identity_sources[n.id] = _src_identity_source
+        hood = classify_neighbours(entity, neighbors, (_src_faction_id, _src_identity_source))
+        hostiles, hostile_identity_sources = hood.hostiles, hood.hostile_identity_sources
 
         # 4. Strategic Persistence (Pillar 5.1)
         strat_up = _suspend_project_for_threat(entity, hostiles)
@@ -247,6 +242,9 @@ class TacticalDecisionSystem:
                     payload_set={"target_position": retreat_to, "reason": "SAFETY_PRESSURE_RETREAT"}
                 )
             )
+
+        if (avoid_update := avoid_what_can_eat_me(state, entity, hood, strat_up)) is not None:
+            return avoid_update
 
         rest_update = in_place_survival_update(state, entity, hostiles)
         if rest_update is not None:
@@ -279,7 +277,8 @@ class TacticalDecisionSystem:
                                 elif building_id is not None:
                                     return building_arrival_update(state, entity, project, building_id)
                                 else:
-                                    return EntityUpdate(entity_id=entity.id)
+                                    # Arrived at a carcass the hunger goal pointed at (decision 44): eat where it lies.
+                                    return eat_at_hunger_corpse(entity, state, project, obj) or EntityUpdate(entity_id=entity.id)
                             else:
                                 # Still en-route — update nav target and stay idle
                                 # so the brain re-evaluates on each cadence tick.
@@ -367,7 +366,7 @@ class TacticalDecisionSystem:
                         navigation=NavigationUpdate(target_set=group.anchor, movement_mode_set=MovementMode.REGROUP),
                         task=TaskUpdate(
                             work_kind_set="ENTITY_MOVE",
-                            payload_set={"target_position": group.anchor, "reason": "REGROUP"}
+                            payload_set={"target_position": group.anchor, "reason": "REGROUP", "arrival_radius": group.cohesion_radius}
                         )
                     )
             

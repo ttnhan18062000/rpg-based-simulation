@@ -98,8 +98,17 @@ and the approval is the review of the PR that adds the file.
 - `PERF-M2-T08` re-records them as schema records under the canonical variants, through `promote`, and then retires the legacy list.
 - No capacity-run baseline exists (`PERF-M2-T04`).
 
-The **known-debt ledger** (a baseline lane that is already red, with an owner and an expiry) is `PERF-M2-T05b`
-(`TCK-20261010-PERF-M2-T05B-KNOWN-DEBT-LEDGER`). It waits for the shared known-reds module and is not part of this policy yet.
+The **known-debt ledger** (a baseline lane that is already red, with an owner and an expiry) is `docs/performance/known_debt_ledger.yaml`
+(`PERF-M2-T05b`). It is the second user of the shared known-reds module (`tools/test_architecture/known_reds.py`): perf declares its own
+`RegistrySpec` (`tools/perf/known_debt.py`, top key `known_debt`, `strict_fields`) and the shared rules apply unchanged: the required fields are
+`match`, `ticket`, `owner`, `added_on`, `expires_on` and `kind` (`broken` or `flaky`); the first matching entry owns a lane; a later entry that an
+earlier one also covers is shadowed and rejected; an expired entry is expired, not owned. `match` is an `fnmatch` pattern on the scenario id.
+
+`expected_signature` (optional) is what the lane is known to report, written `<STATE>:<check>`: `STATE` is `REGRESSION`, `INCONCLUSIVE` or
+`NOT_APPLICABLE`; `check` is the `compare()` check that produced it (`schema`, `each_side`, `blocking_fields`, `hash_scheme`, `mode_sequences`
+or `latency`). A different outcome in the same lane is new drift, not the known debt. A malformed signature is a lint error, not a pattern that never
+matches. Lint: `python3 -m tools.perf.known_debt` (and `tests/unit/perf/test_known_debt.py`). An entry is added with a ticket and never to make a
+build pass; the ledger is empty until a lane has an owned red.
 
 ---
 

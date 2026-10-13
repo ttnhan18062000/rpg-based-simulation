@@ -16,7 +16,7 @@
 - id: "carnivore_survival"
   display_name: "Carnivore Survival"
   needs:
-    hunger: "high"
+    hunger: "very_low"
     sleep: "medium"
     safety: "medium"
     territory: "high"
@@ -61,3 +61,11 @@
     safety: "medium"
     elemental_charge: "high"
     environment_alignment: "high"
+
+# STATE: ADDITIONAL
+- id: "plant_eater_survival"
+  display_name: "Plant-Eater Survival"
+  needs:
+    hunger: "medium"
+    sleep: "medium"
+    safety: "high"

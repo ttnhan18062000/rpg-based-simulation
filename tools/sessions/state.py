@@ -239,6 +239,28 @@ def read_role_file(root: Path, role: str, name: str) -> Any | None:
     return _read_json(path) if path.is_file() else None
 
 
+# ---- the worktree an instance is bound to (TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD) ----
+
+BOUND_WORKTREE_FILE = "worktree.json"
+
+
+def write_bound_worktree(root: Path, instance: str, path: Path | str, explicit: bool) -> None:
+    """Record the physical worktree the launcher started `instance` in; `explicit` is true for a `--worktree` override
+    (a batch worktree), false for the role's default path."""
+    write_role_file(root, instance, BOUND_WORKTREE_FILE, {"path": str(path), "explicit": bool(explicit), "ts": _now()})
+
+
+def read_bound_worktree(root: Path, instance: str) -> tuple[str, bool] | None:
+    """(path, explicit) of the recorded worktree, or None when absent or unreadable (never raises)."""
+    try:
+        raw = read_role_file(root, instance, BOUND_WORKTREE_FILE)
+    except Exception:
+        return None
+    if not isinstance(raw, dict) or not isinstance(raw.get("path"), str) or not raw["path"]:
+        return None
+    return raw["path"], bool(raw.get("explicit"))
+
+
 # ---- bindings and instance ---------------------------------------------------------------------
 
 def append_binding(root: Path, binding: Binding) -> None:

@@ -59,7 +59,7 @@ class RoleSemanticsService:
 
     def is_combatant(self, role_id: str) -> bool:
         family = self.get_role_family(role_id)
-        if family in ("combatant", "adventurer", "recon", "attacker", "ecological_predator", "ecological_leader"):
+        if family in ("combatant", "adventurer", "recon", "attacker", "ecological_leader"):
             return True
         legacy = self.get_legacy_entity_role(role_id)
         return legacy in (EntityRole.HERO, EntityRole.MONSTER, EntityRole.GUARD)

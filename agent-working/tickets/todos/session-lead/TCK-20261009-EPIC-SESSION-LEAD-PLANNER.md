@@ -85,7 +85,8 @@ Evidence that the gap is real (lead-planner's first survey, 2026-10-09):
   (host, role, session id, branch, ticket, state, timestamp; no transcript content). The
   committed-transit path carries it to the other host, and `fleet.py` merges it in. A failed write
   never blocks the session (same rule as monitoring). Records older than a threshold show as
-  `stale`, never as `live`.
+  `stale`, never as `live`. Until it exists, `agent-working/lead/hosts/u24desktop.md` (written by the u24 lead seat,
+  `TCK-20261013-HOST-LEAD-PLANNER-U24`) is its first manual stand-in for host u24desktop.
 - **E4 — Lead protocol and board.** Two message types: `status-request` (lead → any role,
   information only, no obligation to act) and `status-report`. Plus a durable cross-domain board,
   `agent-working/lead/board.md`, with one row per active epic or batch: owner role, state,
@@ -101,6 +102,12 @@ Evidence that the gap is real (lead-planner's first survey, 2026-10-09):
   `question`; closing it means "absorbed into a ticket" or "answered", with a link. Acceptance: a seeded
   issue for the role appears and one for another role does not; with `gh` failing or slow the output is
   unchanged apart from the missing list, within the timeout; the guide carries the convention.
+  **Children (filed 2026-10-11):** E4a `TCK-20261011-SESSION-START-FOR-ROLE-ISSUES` (the issue list; the
+  `fleet.py` count waits for E2), E4b `TCK-20261011-LEAD-STATUS-MESSAGES-AND-BOARD` (message classes, board
+  skeleton, `agent-working/lead/**` ownership). Order in `session-lead/SEQUENCE.md`.
+  **E4 addition (2026-10-13, owner request):** a second lead seat, `lead-planner-u24`, leads the sessions on host
+  u24desktop and writes only `agent-working/lead/hosts/u24desktop.md`; `lead-planner` keeps the board and folds that page in
+  (`TCK-20261013-HOST-LEAD-PLANNER-U24`, PR #522).
 - **E5 — Measurement hook-in.** Lead actions (status requests, recommendations, escalations to the
   owner) are recorded with `session_role: lead-planner`. The Epic D M7 review evaluates whether the
   lead lowers the headline metric (manual orchestration actions per completed batch).

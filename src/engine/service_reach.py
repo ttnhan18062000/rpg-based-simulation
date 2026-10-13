@@ -43,6 +43,16 @@ def service_tile(state: Any, tile: Tile, kinds: Optional[Collection[str]] = None
     return None
 
 
+def service_building_where(state: Any, tile: Tile, accept: Any) -> Optional[Any]:
+    """The first building in reach of `tile` (same offsets and order as :func:`service_tile`) that passes `accept`, or None. A service whose set of
+    buildings is declared by their state, not by a kind list (the work a building offers, EXCH-02 ruling 66), asks here."""
+    for dx, dy in _REACH_OFFSETS:
+        building = SpatialQueryService.get_building_at(state, (tile[0] + dx, tile[1] + dy))
+        if building is not None and accept(building):
+            return building
+    return None
+
+
 def service_at(state: Any, tile: Tile, kinds: Optional[Collection[str]] = None) -> Tuple[Tile, Optional[str]]:
     """(building tile, kind) of the building (of one of `kinds`, when given) whose service `tile` can use; (`tile`, None) when none is in reach."""
     found = service_tile(state, tile, kinds)
