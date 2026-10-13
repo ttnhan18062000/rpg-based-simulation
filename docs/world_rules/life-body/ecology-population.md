@@ -95,7 +95,9 @@ a standing requirement for whichever future mechanism eventually closes this gap
     - **Regional density top-up** (`SpawnService.process_spawns`, `src/world/spawn.py`, live):
       every 50 ticks, it fills each region's monster count up to a density target from a pool
       by region kind. That is topping up by spawning to a target, from nothing, so it is removed
-      before baseline v1 as its own measured step.
+      before baseline v1. Lane C counted 0 adds in all 10 baseline runs: its pools are keyed by
+      FOREST, PLAINS and MOUNTAIN, and no corpus world has those region kinds. It is removed as
+      dead code, so it cannot wake when a world declares them, with nothing to measure.
     - **Camp raids** (`RaidService.spawn_raid`, called by the camp's raid trigger, live): new
       raiders appear at the camp for a maturity cost. It is the same family as camp spawning,
       so it is removed with it. A raid made of a camp's existing members setting out together is
