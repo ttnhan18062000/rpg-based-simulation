@@ -334,3 +334,68 @@ class TestResolveIndexDir:
 
     def test_main_checkout_root_outside_git_is_none(self, tmp_path: Path) -> None:
         assert _mod._main_checkout_root(tmp_path) is None
+
+
+# --- TCK-20261012-SEARCH-MCP-SHARED-MODEL: _run_search asks the shared server first, else searches in-process ---
+
+
+class TestSharedServerWiring:
+    def test_a_shared_answer_is_used_and_the_local_search_is_not_run(self, monkeypatch):
+        shared = [{"doc_id": "from-server"}]
+        monkeypatch.setattr(_mod._ss, "try_search", lambda *a, **k: shared)
+        monkeypatch.setattr(_mod, "_search", lambda *a, **k: pytest.fail("must not search in-process"))
+        assert _mod._run_search("q") == shared
+
+    def test_no_shared_answer_falls_back_to_the_in_process_search(self, monkeypatch):
+        monkeypatch.setattr(_mod._ss, "try_search", lambda *a, **k: None)
+        monkeypatch.setattr(_mod, "_search", lambda *a, **k: [{"doc_id": "local"}])
+        assert _mod._run_search("q") == [{"doc_id": "local"}]
+
+    def test_the_request_carries_the_query_arguments_and_this_index(self, monkeypatch):
+        seen: dict = {}
+
+        def fake(db, query, top_k, section, mode):
+            seen.update(db=db, query=query, top_k=top_k, section=section, mode=mode)
+
+        monkeypatch.setattr(_mod._ss, "try_search", fake)
+        monkeypatch.setattr(_mod, "_search", lambda *a, **k: [])
+        _mod._run_search("damage", top_k=3, section="mechanics", mode="vector")
+        assert seen == {"db": _mod._DB_PATH, "query": "damage", "top_k": 3, "section": "mechanics", "mode": "vector"}
+
+    def test_the_server_runs_the_same_function_the_in_process_path_runs(self):
+        """By construction: search_shared serves `search_mcp._search`, never a second search path."""
+        text = (_REPO_ROOT / "tools" / "search_shared.py").read_text(encoding="utf-8")
+        assert "return mcp._search(query, **kwargs)" in text and "serve(_reloading(mcp)" in text
+
+
+class TestSearchReadsOneLexicalGeneration:
+    """`_search` reads `_STATE.lexical` once, so a reload published between its reads cannot mix generations."""
+
+    def test_a_swap_between_the_bm25_and_doc_id_reads_is_never_seen(self, tmp_path, monkeypatch):
+        fake_db = tmp_path / "knowledge.db"
+        fake_db.write_bytes(b"x")
+        monkeypatch.setattr(_mod, "_DB_PATH", fake_db)
+        monkeypatch.setitem(sys.modules, "sqlite_vec", MagicMock())
+        monkeypatch.setattr(_mod, "sqlite3", MagicMock())
+        model = MagicMock()
+        model.encode.return_value.tolist.return_value = [0.0] * 8
+        _mod._STATE.model = model
+        _mod._STATE.lexical = ("bm25-gen1", ["ids-gen1"])
+        _mod._STATE.ready = True
+
+        def swapping_bm25(self):
+            value = self.lexical[0]
+            self.lexical = ("bm25-gen2", ["ids-gen2"])  # a reload lands right after the first read
+            return value
+
+        monkeypatch.setattr(_mod._State, "bm25", property(swapping_bm25), raising=True)
+        captured: dict = {}
+
+        def fake_fuse(**kwargs):
+            captured.update(bm25=kwargs["bm25_obj"], ids=kwargs["bm25_doc_ids"])
+            return []
+
+        monkeypatch.setattr(_mod._hr, "hybrid_fuse_and_filter", fake_fuse)
+        _mod._search("anything", top_k=3)
+        assert (captured["bm25"], captured["ids"][0]) in {("bm25-gen1", "ids-gen1"), ("bm25-gen2", "ids-gen2")}
+        assert captured["bm25"].split("-")[1] == captured["ids"][0].split("-")[1]

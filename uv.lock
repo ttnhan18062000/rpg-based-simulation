@@ -2156,7 +2156,7 @@ dev = [
     { name = "hypothesis", specifier = ">=6.0.0" },
     { name = "jsonschema", specifier = ">=4.0.0" },
     { name = "mcp", specifier = ">=1.0.0" },
-    { name = "mypy" },
+    { name = "mypy", specifier = "==2.1.0" },
     { name = "mypy-baseline", specifier = "==0.7.4" },
     { name = "prek", specifier = "==0.5.4" },
     { name = "pytest", specifier = ">=8.0.0" },

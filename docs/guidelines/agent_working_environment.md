@@ -384,11 +384,7 @@ python3 tools/knowledge_search.py query "stamina pressure combat" --top-k 5 --mo
 }
 ```
 
-Claude Code spawns `tools/search_mcp.py` on startup. The MCP server loads the model on the first query and does **not** require the HTTP server.
-
-Several sessions on one host should share one server (`TCK-20261012-SEARCH-MCP-SHARED-SERVER-AND-IDLE-UNLOAD`, issue #520). Every session's own copy of the model is about 600 MB resident, so N sessions cost N times that. Start `make search-server-docker` (or `make search-server` where Docker is unavailable) and each `search_docs` call is forwarded to `127.0.0.1:8765` when, and only when, the server's `/api/health` reports the same index file this session would query (`index_fingerprint`: size and mtime of `knowledge.db` and `bm25.pkl`, as the server loaded them; after `make knowledge-index-update` the running server no longer matches and sessions search in-process until it is restarted). Otherwise the call runs in-process exactly as before, with no error: server down, slow (0.5 s health timeout), a 503, or another index. The server and the MCP rank through one function (`tools/search_core.py`), so the answers are the same; the `stale` block is always computed by the session against its own corpus. `.mcp.json` is unchanged. `search_health` reports `path` (`shared-server` or `in-process`) and `model_loaded`.
-
-In-process, the model is released after 10 idle minutes (`SEARCH_MCP_IDLE_UNLOAD_S`, seconds; `0` never unloads) and reloaded by the next query. Measured on `u24desktop-Virtual-Machine`: about 598 MB after the first query, about 434 MB after the unload (the imported torch libraries stay resident), 30 MB on the shared-server path, where the model is never loaded. Other variables: `SEARCH_SERVER_URL` (default `http://127.0.0.1:8765`), `SEARCH_MCP_SHARED_SERVER=off` (never forward).
+Claude Code spawns `tools/search_mcp.py` on startup. The MCP server loads the index once and stays resident — it does **not** require the Docker HTTP server to be running.
 
 ### Verify MCP is working
 
@@ -409,6 +405,17 @@ search_health()
 
 No curl. No bash. Results arrive as a structured tool response directly in context.
 
+### One shared search model for the whole fleet (`TCK-20261012-SEARCH-MCP-SHARED-MODEL`)
+
+Every session's `search_mcp.py` used to load its own embedding model on its first query (about 600 MB each). The first session now starts one local server (`tools/search_shared.py serve`) and every later session asks it, so nine sessions hold about 1.2 GB instead of about 5.7 GB. Nothing to set up and nothing breaks without it:
+
+- **Same answers.** The server runs `search_mcp._search`, the very function the in-process path runs; the client also compares a hash of the result-deciding files (`search_mcp.py`, `search_shared.py`, `knowledge_search.py`, `hybrid_retrieval.py`) with the server's and searches in-process on a mismatch, so a server started from older code never answers.
+- **Fallback.** Any failure (no server, timeout, a bad answer, a state directory that is not private to your user) makes that call search in-process, as before. The staleness warning and the worktree index fallback do not depend on the server.
+- **Where it lives.** `$XDG_RUNTIME_DIR/rpg-search/<key>/` (outside the repo, `0700`; `<key>` is the sha256 of the index database's resolved path, so every worktree of a checkout shares one server): `server.json` (pid, port, token; `0600`), `lock`, `server.log`. It binds `127.0.0.1` on an OS-assigned port, requires the token, and exits after 30 idle minutes (`RPG_SEARCH_IDLE_SECONDS`), removing its state.
+- **Kill switch.** `RPG_SEARCH_SHARED=0` forces in-process search. `tests/tools` sets it for every test; no test starts a real detached server without `RPG_SEARCH_SHARED_ALLOW_TEST_SPAWN=1` and a tmp `XDG_RUNTIME_DIR`.
+- **Stopping one by hand:** `kill $(python3 -c 'import json,glob;print(json.load(open(glob.glob("'$XDG_RUNTIME_DIR'/rpg-search/*/server.json")[0]))["pid"])')`; the next search starts a fresh one.
+- The FastAPI `tools/search_server.py` (Docker, `make search-server-docker`) is a separate server with its own search path and different results; it is unchanged. Pointing it at the same core is an agent-working follow-up.
+
 ### When the index is stale
 
 Each worktree searches its own index (`agent-working/.index/knowledge-index/`), so a worktree on another branch, or one whose docs
@@ -427,7 +434,7 @@ A file that yields no document (an empty body, a ticket without a Request Summar
 | Priority | Method | When |
 |---|---|---|
 | 1 | `search_docs` MCP tool | MCP server registered (normal case) |
-| 2 | `curl POST http://localhost:8765/api/search` | HTTP server running, MCP not registered |
+| 2 | `curl POST http://localhost:8765/api/search` | Docker HTTP server running, MCP not registered |
 | 3 | `python3 tools/knowledge_search.py query "..." --top-k 5` | No server, no MCP — CLI fallback |
 
 ---

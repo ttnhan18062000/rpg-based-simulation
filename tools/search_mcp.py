@@ -11,17 +11,12 @@ Smoke-test mode (no MCP client needed):
 """
 from __future__ import annotations
 
-import gc
 import importlib.util
 import json
 import os
 import sqlite3
+import subprocess
 import sys
-import threading
-import time
-import urllib.error
-import urllib.request
-from dataclasses import dataclass, field
 from pathlib import Path
 
 # Use locally cached HuggingFace models — avoids SSL cert failures on networks
@@ -40,6 +35,15 @@ if "knowledge_search" not in sys.modules:
     spec.loader.exec_module(_ks)
 _ks = sys.modules["knowledge_search"]
 
+_SS_PATH = _TOOLS_DIR / "search_shared.py"
+
+if "search_shared" not in sys.modules:
+    spec = importlib.util.spec_from_file_location("search_shared", _SS_PATH)
+    _ss = importlib.util.module_from_spec(spec)
+    sys.modules["search_shared"] = _ss
+    spec.loader.exec_module(_ss)
+_ss = sys.modules["search_shared"]
+
 _HR_PATH = _TOOLS_DIR / "hybrid_retrieval.py"
 
 if "hybrid_retrieval" not in sys.modules:
@@ -51,17 +55,35 @@ _hr = sys.modules["hybrid_retrieval"]
 
 
 
-if "search_core" not in sys.modules:
-    spec = importlib.util.spec_from_file_location("search_core", _TOOLS_DIR / "search_core.py")
-    _core_mod = importlib.util.module_from_spec(spec)
-    sys.modules["search_core"] = _core_mod
-    spec.loader.exec_module(_core_mod)
-_core = sys.modules["search_core"]
+def _main_checkout_root(start: Path) -> Path | None:
+    """The main checkout's root, from any worktree of it (or from the main checkout itself)."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(start), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    common_dir = proc.stdout.strip()
+    return Path(common_dir).parent if proc.returncode == 0 and common_dir else None
 
-# The ranking, the worktree index fallback and the title rule live in search_core, shared with search_server.py.
-_main_checkout_root = _core.main_checkout_root
-_resolve_index_dir = _core.resolve_index_dir
-_derive_title = _core.derive_title
+
+def _resolve_index_dir(own_index_dir: Path, own_root: Path, main_root: Path | None) -> Path:
+    """This checkout's own knowledge index, or the main checkout's when this one has none.
+
+    The index is generated and gitignored, so a fresh git worktree has none and every
+    search_docs call there answered "index not found"
+    (TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION). Querying reads the main checkout's index
+    instead; building one (`make knowledge-index`) still writes only to the checkout it runs in.
+    """
+    db_name = _ks._DEFAULT_DB.name
+    if (own_index_dir / db_name).exists() or main_root is None:
+        return own_index_dir
+    try:
+        main_index_dir = main_root / own_index_dir.relative_to(own_root)
+    except ValueError:
+        return own_index_dir
+    return main_index_dir if (main_index_dir / db_name).exists() else own_index_dir
 
 
 _INDEX_DIR = _resolve_index_dir(
@@ -72,166 +94,51 @@ _BM25_PATH = _INDEX_DIR / "bm25.pkl"
 _MODEL_NAME: str = _ks._MODEL_NAME
 
 
-# ── Lazy-loaded state (model loaded on first in-process search_docs call, released when idle) ──
-@dataclass
+# ── Lazy-loaded state (model loaded on first search_docs call) ────────────────
 class _State:
-    model: object = None
-    bm25: object = None
-    doc_ids: list = field(default_factory=list)
-    ready: bool = False
+    """Lazy-loaded search state. The lexical index is ONE immutable `(bm25, doc_ids)` pair published by a single
+    reference swap, and a search reads it once at entry, so a reload (the shared server rebuilds it when the index
+    changes) can never give a search the new BM25 with the old document ids (TCK-20261012-SEARCH-MCP-SHARED-MODEL)."""
+
+    def __init__(self) -> None:
+        self.model: object = None
+        self.lexical: tuple[object, list] = (None, [])
+        self.ready: bool = False
+
+    @property
+    def bm25(self) -> object:
+        return self.lexical[0]
+
+    @bm25.setter
+    def bm25(self, value: object) -> None:
+        self.lexical = (value, self.lexical[1])
+
+    @property
+    def doc_ids(self) -> list:
+        return self.lexical[1]
+
+    @doc_ids.setter
+    def doc_ids(self, value: list) -> None:
+        self.lexical = (self.lexical[0], value)
+
 
 _STATE = _State()
-
-# Guards _STATE: a search holds it while it uses the model, so the idle timer never unloads mid-query.
-_LOCK = threading.RLock()
-
-# TCK-20261012-SEARCH-MCP-SHARED-SERVER-AND-IDLE-UNLOAD: seconds without a query before the in-process model is
-# released; 0 never unloads. A daemon Timer reset on every query does the unloading, because checking the idle
-# time only when the next query arrives would never free memory while no query comes.
-IDLE_UNLOAD_ENV = "SEARCH_MCP_IDLE_UNLOAD_S"
-IDLE_UNLOAD_DEFAULT_S = 600.0
-_CLOCK = time.monotonic          # injectable
-_TIMER_FACTORY = threading.Timer  # injectable
-_idle = {"timer": None, "last_used": 0.0}
-
-
-def _idle_unload_seconds() -> float:
-    raw = os.environ.get(IDLE_UNLOAD_ENV)
-    if raw is None or not raw.strip():
-        return IDLE_UNLOAD_DEFAULT_S
-    try:
-        return max(0.0, float(raw))
-    except ValueError:
-        return IDLE_UNLOAD_DEFAULT_S
-
-
-def _release_memory() -> None:
-    """Hand freed pages back to the OS. Dropping the references frees the weights (large blocks are mmap'd and unmapped at
-    once), but glibc keeps freed small-block arenas, so `malloc_trim` is asked to return those too. Best effort."""
-    gc.collect()
-    try:
-        import ctypes
-        ctypes.CDLL("libc.so.6").malloc_trim(0)
-    except Exception:
-        pass
-
-
-def _unload() -> None:
-    with _LOCK:
-        _STATE.model = None
-        _STATE.bm25 = None
-        _STATE.doc_ids = []
-        _STATE.ready = False
-    _release_memory()
-
-
-def _unload_if_idle() -> bool:
-    """Timer callback: unload when no query arrived for the whole idle period (a query that raced the timer wins)."""
-    idle = _idle_unload_seconds()
-    with _LOCK:
-        if not _STATE.ready or idle <= 0:
-            return False
-        if _CLOCK() - _idle["last_used"] < idle:
-            _schedule_unload(idle - (_CLOCK() - _idle["last_used"]))
-            return False
-        _unload()
-        return True
-
-
-def _schedule_unload(delay: float) -> None:
-    with _LOCK:
-        if _idle["timer"] is not None:
-            _idle["timer"].cancel()
-        timer = _TIMER_FACTORY(delay, _unload_if_idle)
-        timer.daemon = True
-        _idle["timer"] = timer
-        timer.start()
-
-
-def _touch() -> None:
-    """Record a query and (re)arm the idle timer."""
-    idle = _idle_unload_seconds()
-    with _LOCK:
-        _idle["last_used"] = _CLOCK()
-        if idle > 0 and _STATE.ready:
-            _schedule_unload(idle)
 
 
 def _ensure_loaded() -> bool:
     """Load model and BM25 index on first call. Returns True if ready."""
-    with _LOCK:
-        if _STATE.ready:
-            return True
-        if not _DB_PATH.exists():
-            return False
-        try:
-            from sentence_transformers import SentenceTransformer
-            _STATE.model = SentenceTransformer(_MODEL_NAME)
-            _STATE.bm25, _STATE.doc_ids = _ks._load_bm25(_BM25_PATH)
-            _STATE.ready = True
-            return True
-        except Exception:
-            return False
-
-
-# ── Shared search server (TCK-20261012-SEARCH-MCP-SHARED-SERVER-AND-IDLE-UNLOAD) ─────────────────────────────────────
-# When tools/search_server.py is running on :8765 AND serves the same index file this session would query, forward to
-# it: the model then lives once on the host instead of once per session. Any doubt falls back in-process, silently.
-SERVER_URL_ENV = "SEARCH_SERVER_URL"
-SERVER_URL_DEFAULT = "http://127.0.0.1:8765"
-SHARED_OFF_ENV = "SEARCH_MCP_SHARED_SERVER"   # "off" disables the proxy
-HEALTH_TIMEOUT_S = 0.5
-SEARCH_TIMEOUT_S = 10.0
-HEALTH_TTL_S = 15.0
-_server_check = {"at": None, "usable": False}
-
-
-def _server_url() -> str:
-    return os.environ.get(SERVER_URL_ENV, SERVER_URL_DEFAULT).rstrip("/")
-
-
-def _http_json(method: str, url: str, timeout: float, payload: dict | None = None) -> dict | None:
-    """One JSON request; None on any failure (refused, timeout, non-200, bad body)."""
-    data = None if payload is None else json.dumps(payload).encode()
-    req = urllib.request.Request(url, data=data, method=method, headers={"Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 - fixed http://127.0.0.1 default
-            if resp.status != 200:
-                return None
-            body = json.loads(resp.read().decode())
-    except (urllib.error.URLError, OSError, ValueError, TimeoutError):
-        return None
-    return body if isinstance(body, dict) else None
-
-
-def _shared_server_usable() -> bool:
-    """True when the server answers `ok` and serves the same index file as this session. Cached for HEALTH_TTL_S."""
-    if os.environ.get(SHARED_OFF_ENV, "").strip().lower() == "off":
+    if _STATE.ready:
+        return True
+    if not _DB_PATH.exists():
         return False
-    now = _CLOCK()
-    at = _server_check["at"]
-    if at is not None and now - at < HEALTH_TTL_S:
-        return bool(_server_check["usable"])
-    local = _core.index_fingerprint(_DB_PATH)
-    health = _http_json("GET", f"{_server_url()}/api/health", HEALTH_TIMEOUT_S) if local else None
-    usable = bool(health and health.get("status") == "ok" and health.get("index_fingerprint") == local)
-    _server_check["at"], _server_check["usable"] = now, usable
-    return usable
-
-
-def _proxy_search(query: str, top_k: int, section: str | None) -> list[dict] | None:
-    """Results from the shared server, or None to search in-process (also drops the cached health verdict)."""
-    if not _shared_server_usable():
-        return None
-    body = _http_json(
-        "POST", f"{_server_url()}/api/search", SEARCH_TIMEOUT_S,
-        {"query": query, "top_k": top_k, "filters": {"section": section} if section else {}},
-    )
-    results = body.get("results") if body else None
-    if not isinstance(results, list):
-        _server_check["at"] = None
-        return None
-    return [{k: v for k, v in r.items() if k != "text"} for r in results if isinstance(r, dict)]
+    try:
+        from sentence_transformers import SentenceTransformer
+        _STATE.model = SentenceTransformer(_MODEL_NAME)
+        _STATE.lexical = tuple(_ks._load_bm25(_BM25_PATH))
+        _STATE.ready = True
+        return True
+    except Exception:
+        return False
 
 
 # ── Core search logic (shared by MCP tools and --test mode) ──────────────────
@@ -244,30 +151,84 @@ def _run_search(query: str, top_k: int = 8, section: str | None = None,
     `{"results": [...], "stale": {"changed": n, "new": n, "removed": n}}` instead of the bare list, and an index whose
     manifest cannot be read gets `"stale": {"unknown": true}`; a current index still returns the bare list
     (TCK-20261006-KNOWLEDGE-INDEX-STALE-WARNING). The results are returned either way; the warning never blocks."""
-    results = None
-    if query.strip():
-        results = _proxy_search(query, top_k, section)
-    if results is None:
-        results = _search(query, top_k=top_k, section=section, mode=mode)
+    results = _search_shared_or_local(query, top_k=top_k, section=section, mode=mode)
     if not with_staleness or not isinstance(results, list):
         return results
-    # Staleness is computed here, against this session's own corpus and index, on both paths.
     stale = _ks.index_staleness(_DB_PATH)
     return {"results": results, "stale": stale} if stale else results
 
 
+def _search_shared_or_local(query: str, top_k: int = 8, section: str | None = None,
+                            mode: str = "hybrid") -> list[dict] | dict:
+    """The shared server's answer when one is available, else this process's own `_search`
+    (TCK-20261012-SEARCH-MCP-SHARED-MODEL). The server runs `_search` itself, so both give the same results."""
+    shared = _ss.try_search(_DB_PATH, query, top_k, section, mode)
+    return shared if shared is not None else _search(query, top_k=top_k, section=section, mode=mode)
+
+
 def _search(query: str, top_k: int = 8, section: str | None = None,
             mode: str = "hybrid") -> list[dict] | dict:
-    """The in-process path: loads the model on first use and rearms the idle unload timer."""
-    with _LOCK:
-        if not _ensure_loaded():
-            return {"error": "index not found", "action": "run make knowledge-index"}
-        results = _core.rank(
-            query, top_k=top_k, section=section, model=_STATE.model, bm25=_STATE.bm25,
-            doc_ids=_STATE.doc_ids, db_path=_DB_PATH, connect=sqlite3.connect,
+    if not _ensure_loaded():
+        return {"error": "index not found", "action": "run make knowledge-index"}
+
+    if not query.strip():
+        return []
+
+    bm25, doc_ids = _STATE.lexical  # read once: one generation for the whole search
+    query_tokens = _ks._tokenize(query)
+    try:
+        q_vec = _STATE.model.encode(query).tolist()
+        q_bytes = _ks._serialize_f32(q_vec)
+    except Exception as exc:
+        return {"error": f"embed failed: {exc}"}
+
+    hybrid_results = []
+    con = None
+    try:
+        import sqlite_vec
+        con = sqlite3.connect(str(_DB_PATH))
+        con.enable_load_extension(True)
+        sqlite_vec.load(con)
+        con.enable_load_extension(False)
+        hybrid_results = _hr.hybrid_fuse_and_filter(
+            conn=con,
+            query_vec_bytes=q_bytes,
+            query_tokens=query_tokens,
+            bm25_obj=bm25,
+            bm25_doc_ids=doc_ids,
+            top_k=top_k,
         )
-        _touch()
-        return results
+    except Exception:
+        hybrid_results = []
+    finally:
+        if con is not None:
+            try:
+                con.close()
+            except Exception:
+                pass
+
+    # `section` narrows the CLI-facing result set by exact match -- orthogonal to the
+    # authority/freshness metadata filter, so it stays a post-fusion filter here rather than
+    # folding into filter_candidates()'s pre-fusion logic.
+    if section:
+        hybrid_results = [r for r in hybrid_results if r.section == section]
+
+    results = []
+    for r in hybrid_results[:top_k]:
+        results.append({
+            "doc_id": r.doc_id,
+            "title": _derive_title(r.doc_id),
+            "heading": r.heading or "",
+            "source_path": r.path,
+            "section": r.section or "",
+            "score": round(r.rrf_score, 4),
+            "semantic_score": round(r.semantic_score or 0.0, 4),
+            "keyword_score": round(r.keyword_score or 0.0, 4),
+            "excerpt": r.text[:200].replace("\n", " "),
+        })
+
+    results.sort(key=lambda r: r["score"], reverse=True)
+    return results
 
 
 def _run_health() -> dict:
@@ -286,12 +247,16 @@ def _run_health() -> dict:
             "index_version": index_version,
             "chunks": chunk_count,
             "model": _MODEL_NAME,
-            # Which path search_docs takes now, and whether this process holds the model.
-            "path": "shared-server" if _shared_server_usable() else "in-process",
-            "model_loaded": bool(_STATE.ready),
         }
     except Exception as exc:
         return {"status": "error", "error": str(exc)}
+
+
+def _derive_title(doc_id: str) -> str:
+    import re
+    stem = doc_id.split("/")[-1]
+    stem = re.sub(r"^\d+_", "", stem)
+    return stem.replace("_", " ").title()
 
 
 # ── --test mode (smoke test without MCP client) ───────────────────────────────
