@@ -10,7 +10,7 @@ import os
 
 LEAK = 0
 
-V8_ORACLE = "docs/plans/test_architecture/reference/rpg_gate_baseline_format.md#v8-every-entity-added-mid-run-has-a-declared-source"
+V8_ORACLE = "stub-v8-oracle (D70: every entity added mid-run has a declared source)"  # no docs path here: the scenario-lane exclusion test scans helpers for irrelevant prefixes
 V8_MODES = ("absent", "clean", "violations")  # RPG_GATE_STUB_V8: no V8 row (the default), a V8 row at 0 violations, a V8 row with violations
 
 
