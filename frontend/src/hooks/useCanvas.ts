@@ -1,10 +1,11 @@
 import { useRef, useEffect, useCallback, useState, useMemo } from 'react';
-import type { Entity, EntitySlim, GroundItem, Building, ResourceNode } from '@/types/api';
+import type { Entity, EntitySlim, GroundItem, Building, ResourceNode, Location } from '@/types/api';
 import type { DecodedMapData } from '@/hooks/useSimulation';
 import {
   KIND_COLORS, STATE_COLORS, CELL_SIZE, LOOT_COLOR, RESOURCE_COLORS,
 } from '@/constants/colors';
 import { buildTerrainPalette, type TerrainPalette } from '@/constants/terrainPalette';
+import { drawPlaces } from '@/lib/placeMarks';
 
 export interface HoverInfo {
   screenX: number;
@@ -26,6 +27,7 @@ export function useCanvas(
   zoom: number = 1.0,
   isDraggingRef?: React.RefObject<boolean>,
   palette: TerrainPalette = buildTerrainPalette(null),
+  places: ReadonlyArray<Location> = [],
 ) {
   const gridRef = useRef<HTMLCanvasElement>(null);
   const entityRef = useRef<HTMLCanvasElement>(null);
@@ -90,8 +92,10 @@ export function useCanvas(
       ctx.stroke();
     }
 
+    drawPlaces(ctx, places); // the world's places, outlined over their tiles and labelled (D69)
+
     gridDrawnRef.current = true;
-  }, [mapData, palette]); // redrawn when the manifest arrives or changes: a tile's colour follows its terrain's meaning
+  }, [mapData, palette, places]); // redrawn when the manifest arrives or changes: a tile's colour follows its terrain's meaning
 
   // Draw entities + ground items every update
   useEffect(() => {

@@ -79,6 +79,13 @@ const DIFFICULTY_BADGES: Record<number, { label: string; color: string }> = {
 };
 
 const LOCATION_TYPE_ICONS: Record<string, { label: string; color: string }> = {
+  city: { label: '🏘', color: '#fbbf24' },
+  camp: { label: '⚔', color: '#f87171' },
+  nest: { label: '🐾', color: '#fb7185' },
+  lair: { label: '💀', color: '#f43f5e' },
+  ruin: { label: '🏛', color: '#a0906a' },
+  dungeon: { label: '🚪', color: '#e06080' },
+  landmark: { label: '✦', color: '#60a5fa' },
   enemy_camp: { label: '⚔', color: '#f87171' },
   resource_grove: { label: '🌿', color: '#4ade80' },
   ruins: { label: '🏛', color: '#a0906a' },
@@ -110,12 +117,13 @@ export function GameCanvas({ mapData, entities, selectedEntity, groundItems, bui
   const mmResizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
 
   const palette = useMemo(() => buildTerrainPalette(manifest), [manifest]);
+  const places = useMemo(() => regions.flatMap((r) => r.locations), [regions]);
 
   const {
     gridRef, entityRef, overlayRef,
     handleCanvasClick, handleCanvasHover, handleCanvasLeave,
     hoverInfo,
-  } = useCanvas(mapData, entities, selectedEntity, groundItems, buildings, resourceNodes, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick, zoom, isDraggingRef, palette);
+  } = useCanvas(mapData, entities, selectedEntity, groundItems, buildings, resourceNodes, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick, zoom, isDraggingRef, palette, places);
 
   const width = mapData ? mapData.width * CELL_SIZE : 0;
   const height = mapData ? mapData.height * CELL_SIZE : 0;
