@@ -119,6 +119,9 @@ a standing requirement for whichever future mechanism eventually closes this gap
       the existing liberation line (+50, `process_influence_shift`), against conquest at -50,
       with influence moving 5 per protector or invader death. The 100-point band is the existing
       hysteresis, so nothing flaps.
+      Dormant at the baseline horizon: 0 conquests, liberations or strongholds in 10 runs (2
+      worlds, 5 seeds, 5,000 ticks; the lowest influence was -15), so the removal ships with
+      forced-conquest kernel tests rather than a paired measurement.
       Who conquers what, and why, is re-anchored with caused war and peace (roadmap §12.4).
       The influence trigger and the horde as taker are disclosed as interim. **Alternatives
       not taken:** removing conquest entirely; keeping the stronghold as a declared arrival.
