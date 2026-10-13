@@ -74,3 +74,7 @@ src/worldbuilding/{recipe,compiler,diet_declaration}.py; src/worldassembly/resol
 
 ## Completion Summary
 TBD
+
+## Designer ruling D74 (SURV-06, memo row 74)
+
+G1 hero_adventurers, G2 trading_company_hub merchants and G3 scalable_bandit_camp scouts each take their role archetype species, `human`; one species per recipe, no distribution, no per-body draw; other species come later as separate recipes. Paired runs with the per-kind cause-of-death split: `agent-working/stored_artifacts/TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE/paired_cause_of_death_1500t.tsv`. Divergence 2.120 records the drift (ungraded, untuned).
