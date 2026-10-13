@@ -15,7 +15,7 @@ tags: [testing, regression, simulation-quality]
 The rpg gate gets V8, "every entity added mid-run has a declared source". A validity row the metric module leaves out reads as no-data, not as a pass. A gate self-test proves V8 fires.
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -101,9 +101,9 @@ After those steps the only live source is INITIAL, unless the conquest stronghol
 - The M2 creature ledger, which is a different, wider V1.
 
 ## Acceptance Criteria
-- [ ] AC1: config `required_validity` format, lint and tests. The report gives no-data `contract_error` "required validity row <id> missing" for each missing id in each world, listed in the markdown. Tests cover: one row missing, all present, a malformed value, a duplicate id.
-- [ ] AC2: the candidate refuses when a required validity row is missing and no owned fail covers it, and accepts when one does. Unit tests cover both.
-- [ ] AC3: the format doc documents V8 (id, scope, group, oracle, the three violation kinds, the example fields, the no-data rule) and the required-row guard. The stub can emit the V8 variants and the report and candidate tests use them.
+- [x] AC1: config `required_validity` format, lint and tests. The report gives no-data `contract_error` "required validity row <id> missing" for each missing id in each world, listed in the markdown. Tests cover: one row missing, all present, a malformed value, a duplicate id.
+- [x] AC2: the candidate refuses when a required validity row is missing and no owned fail covers it, and accepts when one does. Unit tests cover both.
+- [x] AC3: the format doc documents V8 (id, scope, group, oracle, the three violation kinds, the example fields, the no-data rule) and the required-row guard. The stub can emit the V8 variants and the report and candidate tests use them.
 - [ ] AC4 (needs rpg's pieces on main): `test_v8_fires.py` cases (a)-(g) pass against the real observer and `compute()`. It is never skipped, never xfailed, and never fed a hand-built tally.
 - [ ] AC5 (needs rpg's `SpawnSource` on main): the static spawn-site guard passes on main. Its allowlist holds only the not-yet-ruled sites, each with a ticket. A synthetic unsourced site in a test fixture fails it, and a stale allowlist entry fails it.
 - [ ] AC6: no existing gate is relaxed. A missing row or a silent tally is never read as a pass, and no oracle, k or floor changes.
@@ -141,13 +141,17 @@ After those steps the only live source is INITIAL, unless the conquest stronghol
 - A spawn site the designer rules "not legitimate" is removed by rpg. Its allowlist entry then goes stale and must be deleted, which is the ratchet working as intended.
 
 ## Implementation Notes
-(implementer)
+AC1-AC3 are done on the single testing PR (#531); AC4 and AC5 wait for rpg's `SpawnSource` and observer on main, so the ticket stays open.
+- `GateConfig.required_validity` (tuple, default empty); `load_config` refuses a non-list, a duplicate and an id not of the form `V<n>`. The report (`rpg_gate_report.evaluate`) gives each required id missing from a seed or pooled document `no-data` / `contract_error` / "required validity row <id> missing", and the markdown carries a banner naming the ids. The candidate (`rpg_gate_candidate._missing_required`) refuses while a document lacks a required row unless a current, unexpired `state: fail` entry owns the id (then one `omitted_validity` row per world, `<id>:run:<world>:*`, so the `--known` re-check covers it).
+- `rpg_gate_baseline_format.md` documents the required-row guard and V8 (id, class, scope, group, oracle, the three violation kinds, the example fields, the no-data rule). The stub (`tests/helpers/rpg_gate_stub_metrics.py`) emits V8 through `RPG_GATE_STUB_V8` (`absent` default, `clean`, `violations`); the report and candidate tests use it.
+- No oracle, k or floor changes; the verdict rule is unchanged (no-data is not red by itself). The harness hash is not touched (the config file is rpg's and is not edited here).
+
 
 ## Test Summary
-(implementer)
+`tests/unit/tools/test_rpg_gate_baseline.py`, `test_rpg_gate_report.py`, `test_rpg_gate_candidate.py`, `test_rpg_gate_harness.py`, `test_rpg_gate_workflow_support.py`: 136 passed (new: config lint, one row missing, all present, a seed-only gap, the markdown banner, the candidate refusal and the owned-fail acceptance, stub V8 modes).
 
 ## Files Changed
-(implementer)
+`tools/test_architecture/rpg_gate_baseline.py`, `rpg_gate_report.py`, `rpg_gate_candidate.py`; `tests/helpers/rpg_gate_stub_metrics.py`; the three rpg_gate unit test files; `docs/plans/test_architecture/reference/rpg_gate_baseline_format.md`.
 
 ## Completion Summary
 (implementer)
