@@ -1,0 +1,103 @@
+"""Builds the owner review folder for the terrain variants (run with the project venv python from the worktree, PYTHONPATH=.)."""
+import json, sys, os, random
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont
+from visual_assets.store import pixels
+from tools import visual_assets_sample_map_render as r
+
+OUT = Path(os.path.expanduser("~/Work/asset-review/terrain-variants-v1")); OUT.mkdir(parents=True, exist_ok=True)
+Q = Path("visual_assets/catalog/.quarantine")
+INTAKES = {  # (key, detail) -> intake id
+ ("terrain.grassland","tufts"):"in-65c05a4883b85475",("terrain.grassland","flowers"):"in-89cc0d2840d4ffcc",("terrain.grassland","clover"):"in-fc507b5f0a392e56",("terrain.grassland","bare"):"in-7d9d12e1710c976c",
+ ("terrain.mountain","crag"):"in-e9bc4952cd35a949",("terrain.mountain","scree"):"in-520e785806ae7283",("terrain.cave","stalagmite"):"in-e22daabccc89b641",("terrain.cave","rubble"):"in-1ebc360e5d0e2640",
+ ("terrain.ruins","moss"):"in-210c87fe60a73e2e",("terrain.ruins","fallen"):"in-c3717bbe699dddba",("terrain.swamp","reeds"):"in-5bb43e1bfa5bf6bb",("terrain.swamp","puddle"):"in-b96287b353ee54dc",
+ ("terrain.shallow_water","ripple"):"in-74b31b522a46310c",("terrain.shallow_water","pebbles"):"in-2e64e51314b373ce"}
+AXES = {"terrain.grassland":["base","tufts","flowers","clover","bare"],"terrain.mountain":["base","crag","scree"],"terrain.cave":["base","stalagmite","rubble"],
+        "terrain.ruins":["base","moss","fallen"],"terrain.swamp":["base","reeds","puddle"],"terrain.shallow_water":["base","ripple","pebbles"]}
+def sample8(png: bytes) -> bytes:
+    img = pixels.decode_png(png); assert (img.width, img.height) == (128, 128)
+    out = bytearray()
+    for y in range(16):
+        for x in range(16):
+            i = ((y*8)*128 + x*8)*4; out += img.rgba[i:i+4]
+    return bytes(out)
+class Rel:
+    release_id = "review"
+    def __init__(self, with_variants: bool):
+        self.base = r.Release(r.EXPORT_DIR)
+        self.var = {}
+        if with_variants:
+            for (k, d), iid in INTAKES.items(): self.var[(k, d)] = sample8((Q/iid/"preview.png").read_bytes())
+        self.axes = dict(self.base.axes)
+        if with_variants:
+            for k, vals in AXES.items(): self.axes[k] = {"values": vals, "default": "base"}
+    def image(self, key, detail):
+        if (key, detail) in self.var: return (16, 16, self.var[(key, detail)])
+        if key in AXES and detail == "base": return self.base.image(key, None)
+        return self.base.image(key, detail)
+    def tile(self, key, x, y):
+        axis = self.axes.get(key)
+        if axis is None:
+            img = self.image(key, None); return (img[2], None) if img else (None, None)
+        picked = r.pick_detail(key, x, y, r.DETAIL_SEED, axis["values"])
+        for d in (picked, axis["default"]):
+            img = self.image(key, d)
+            if img: return img[2], d
+        return None, picked
+    def variants(self, k): return self.base.variants(k)
+    def mask(self, k, d): return self.base.mask(k, d)
+def world(grid):  # grid of key names -> data dict for draw_world
+    names = sorted({n for row in grid for n in row}); flat = [names.index(n) for row in grid for n in row]
+    from tools import visual_assets_sample_map as sm
+    return {"world_id": "review", "role": "", "width": len(grid[0]), "height": len(grid), "terrain_names": names, "terrain_rle": sm.rle(flat),
+            "terrain": [{"name": n, "count": 1, "key": f"terrain.{n}", "near": []} for n in names], "buildings": [], "places": [], "resource_nodes": [],
+            "kinds": {"building": [], "place": [], "resource_node": [], "entity": []}, "proposed_aliases": {"label": "x"}}
+def png_of(canvas, w, h, scale):
+    from PIL import Image
+    im = Image.frombytes("RGBA", (w, h), b"".join(bytes(row) for row in canvas)).resize((w*scale, h*scale), Image.NEAREST); return im
+def draw_map(grid, rel, scale):
+    canvas, stats = r.draw_world(world(grid), rel, "exact"); return png_of(canvas, len(grid[0])*16, len(grid)*16, scale), stats
+FONT = ImageFont.load_default()
+def labelled(tiles, labels, scale=16, cols=None, title=""):
+    cols = cols or len(tiles); pad = 14; lab = 28
+    W = cols*(16*scale+pad)+pad; H = (len(tiles)+cols-1)//cols*(16*scale+pad+lab)+pad+24
+    im = Image.new("RGB", (W, H), (60, 66, 60)); d = ImageDraw.Draw(im); d.text((pad, 6), title, fill=(235, 235, 220), font=FONT)
+    for i, (t, l) in enumerate(zip(tiles, labels)):
+        x = pad + (i % cols)*(16*scale+pad); y = 24 + (i//cols)*(16*scale+pad+lab)
+        tile = Image.frombytes("RGBA", (16, 16), t).resize((16*scale, 16*scale), Image.NEAREST); im.paste(tile, (x, y), tile)
+        d.text((x, y+16*scale+6), l, fill=(235, 235, 220), font=FONT)
+    return im
+var_rel = Rel(True); base_rel = Rel(False)
+# 1. per key: base + variants at x16
+for k, vals in AXES.items():
+    tiles = [var_rel.image(k, v)[2] for v in vals]
+    labelled(tiles, [f"{k.split('.')[1]} / {v}" for v in vals], title=f"{k}: the adopted base tile and its variants (16 x 16, shown x16)").save(OUT/f"01_{k.split('.')[1]}_base_and_variants.png")
+# 2. the G4 repetition check: 16x16 cells of grassland, base only vs the client's pick
+g = [["grassland"]*16 for _ in range(16)]
+a, sa = draw_map(g, base_rel, 4); b, sb = draw_map(g, var_rel, 4)
+W = a.width*2+60; im = Image.new("RGB", (W, a.height+50), (60, 66, 60)); dr = ImageDraw.Draw(im)
+im.paste(a, (20, 40)); im.paste(b, (a.width+40, 40))
+dr.text((20, 12), "grassland, 16 x 16 cells, base tile only (today)", fill=(235,235,220), font=FONT); dr.text((a.width+40, 12), "grassland, 16 x 16 cells, the client's pick over base + 4 variants", fill=(235,235,220), font=FONT)
+im.save(OUT/"02_repetition_check_grassland.png")
+# 3. mixed landscape with borders: with the variants and base only
+rows = []
+random.seed(5)
+for y in range(20):
+    row = []
+    for x in range(28):
+        if y < 6: n = "mountain" if x < 12 else "cave" if x < 20 else "ruins"
+        elif y < 13: n = "grassland" if x < 18 else "forest"
+        else: n = "swamp" if x < 10 else "shallow_water" if x < 20 else "grassland"
+        row.append(n)
+    rows.append(row)
+a, _ = draw_map(rows, base_rel, 3); b, st = draw_map(rows, var_rel, 3)
+im = Image.new("RGB", (a.width*2+60, a.height+50), (60, 66, 60)); dr = ImageDraw.Draw(im); im.paste(a, (20, 40)); im.paste(b, (a.width+40, 40))
+dr.text((20, 12), "mixed landscape, base tiles only, with the border fringes", fill=(235,235,220), font=FONT); dr.text((a.width+40, 12), "the same landscape with the variants (the client's pick) and the same fringes", fill=(235,235,220), font=FONT)
+im.save(OUT/"03_mixed_landscape_with_fringes.png"); print("fringed cells", st["bordered_cells"])
+# 4. the blind sheet: all 6 bases + 14 variants shuffled, unlabelled, at x4 (written to scratch, not to the folder)
+tl = [(k, v, var_rel.image(k, v)[2]) for k, vals in AXES.items() for v in vals]
+random.seed(11); random.shuffle(tl)
+sheet = labelled([t for _, _, t in tl], [str(i+1) for i in range(len(tl))], scale=6, cols=5, title="")
+sheet.save("/tmp/claude-1000/-data-vboxuser-Work-rpg-based-simulation/9ee6d98f-ed72-4a08-923f-3e560e395134/scratchpad/tv/blind_sheet.png")
+json.dump([[i+1, k, v] for i, (k, v, _) in enumerate(tl)], open("/tmp/claude-1000/-data-vboxuser-Work-rpg-based-simulation/9ee6d98f-ed72-4a08-923f-3e560e395134/scratchpad/tv/blind_key.json", "w"))
+print("done", sorted(p.name for p in OUT.iterdir()))
