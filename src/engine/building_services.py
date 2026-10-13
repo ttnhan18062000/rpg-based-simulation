@@ -18,7 +18,7 @@ from src.core.updates import (
     ResourceTransferIntent,
 )
 from src.engine.appraisal import can_use_inn_meal
-from src.engine.serves import serves
+from src.engine.serves import keeps_coin, serves
 from src.engine.service_prices import EAT_PRICE_GOLD, INN_MEAL_HUNGER, REST_PRICE_GOLD
 from src.engine.service_reach import service_building_where, service_tile
 from src.engine.shop_sale import plan_sale
@@ -49,8 +49,8 @@ def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
         return None
     tile = service_tile(context, (int(entity.navigation.position[0]), int(entity.navigation.position[1])), kinds)
     building = SpatialQueryService.get_building_at(context, tile) if tile is not None else None
-    if building is None or not building.functional or not serves(context, entity, building):
-        return None  # one predicate for every route (rest, meal, sale, repair): the trait and the place's relationship, never a kind name (decision 43)
+    if building is None or not building.functional or not (serves(context, entity, building) if action == "SELL" else keeps_coin(entity)):
+        return None  # rest, meal, repair: the trait only (decision 43), never a kind name; the sale keeps its relationship rule as on main
     return building
 
 

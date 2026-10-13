@@ -21,6 +21,7 @@ def make_entity(eid=1, hp=100, gold=100, slots=None, durability=None, faction=Fa
                .kind("hero")
                .location(0, 0)
                .identity(role=role, faction=faction)
+               .properties({"species_id": "human"})  # a person: building services serve the coin-and-trade trait (decision 43)
                .combat(hp=hp, max_hp=100, atk=10, def_stat=5, alive=hp > 0)
                .inventory(gold=gold)
                .attributes(strength=10, vitality=10, agility=10, endurance=10)

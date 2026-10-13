@@ -19,7 +19,7 @@ KEY = treasury_key(HERO)
 
 
 def _hero(eid=1, gold=0, items=None):
-    return V2EntityBuilder(eid).kind("hero").location(2.0, 2.0).combat(alive=True, hp=10).inventory(gold=gold, items=items or []).build()
+    return V2EntityBuilder(eid).kind("hero").properties({"species_id": "human"}).location(2.0, 2.0).combat(alive=True, hp=10).inventory(gold=gold, items=items or []).build()
 
 
 def _quest_intent(gold):
