@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261013-MONITORING-DUCKDB-VIEW
-phase: open
+phase: done
 date: 2026-10-13
 tags: [ai, agent-monitoring, performance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring, performance]
 A DuckDB view over the agent-monitoring JSONL shards (runs, events, gate verdicts), with EXPLAIN ANALYZE on the main retro queries
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -78,7 +78,7 @@ builds a read-only SQLite index from the old top-level `runs/events/tools.jsonl`
 - docs/agent-monitoring/schema.md; docs/guides/agent_monitoring.md.
 
 ## Related Stored Artifacts
-- agent-working/stored_artifacts/TCK-20261013-MONITORING-DUCKDB-VIEW/ (created at close)
+- agent-working/stored_artifacts/TCK-20261013-MONITORING-DUCKDB-VIEW/ 
 
 ## Related Code Areas
 - tools/agent-monitoring/{build_index,query,generate_retro,monitoring_shard_paths,gate_verdicts}.py, tests/tools/
@@ -87,9 +87,17 @@ builds a read-only SQLite index from the old top-level `runs/events/tools.jsonl`
 - Host: u24desktop. Timings are for this host only and are a dated record, not a gate.
 
 ## Implementation Notes
+- New `tools/agent-monitoring/duckdb_view.py` (in-memory DuckDB; views `runs`, `events`, `tools`, `gate_verdicts`; CLI `list`, `query`, `explain`; named queries) and `docs/agent-monitoring/duckdb_view.md` (relation to the SQLite index, host spec, timings, EXPLAIN ANALYZE per named query).
+- Premise corrections found while investigating: `build_index.py` already reads the per-week shards (via `validate.load_data_glob` -> `shard_paths`); duckdb 1.5.3 is already installed in the main checkout's `.venv`, so nothing was installed; the worktree has no `.venv` of its own.
+- A DuckDB scalar UDF could not be used to call `_resolve_status` / `infer_workflow`: it needs numpy, which is not a declared dependency. The helpers are applied in Python to the distinct input values and joined in, so they are still imported, not re-implemented.
+- `query` accepts one read statement only (SELECT/WITH/EXPLAIN/DESCRIBE/SHOW/SUMMARIZE), so the in-memory database cannot COPY or ATTACH anything.
+- Only an in-memory database is used; no `.duckdb` file is written.
 
 ## Test Summary
+`pytest tests/tools/test_duckdb_view.py` (main-checkout venv): 15 passed (counts vs loaders, resolved_status parity, week from path, named queries, empty root, no writes to the data root, refused statements, EXPLAIN, missing duckdb, list). Counts and Counter parity also checked on the real data (see the doc).
 
 ## Files Changed
+tools/agent-monitoring/duckdb_view.py (new); docs/agent-monitoring/duckdb_view.md (new); tests/tools/test_duckdb_view.py (new).
 
 ## Completion Summary
+A read-only DuckDB view over the monitoring shards with named queries and recorded EXPLAIN ANALYZE timings on u24desktop. The SQLite index stays; recommendation recorded in the doc.

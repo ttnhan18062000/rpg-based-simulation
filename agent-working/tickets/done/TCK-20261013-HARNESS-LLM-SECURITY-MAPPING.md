@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261013-HARNESS-LLM-SECURITY-MAPPING
-phase: open
+phase: done
 date: 2026-10-13
 tags: [ai, security, mcp, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [ai, security, mcp, documentation]
 Map the agent harness against the OWASP LLM Top 10 (2025), with a threat model and a search MCP hardening checklist (docs only)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -71,7 +71,7 @@ Link the doc from `docs/plans/agent_infrastructure/` index if one lists docs. Ru
 - docs/plans/agent_infrastructure/; docs/agent-monitoring/; docs/guides/delivery_process.md (handover-transit rule, public repo).
 
 ## Related Stored Artifacts
-- agent-working/stored_artifacts/TCK-20261013-HARNESS-LLM-SECURITY-MAPPING/ (created at close)
+- agent-working/stored_artifacts/TCK-20261013-HARNESS-LLM-SECURITY-MAPPING/ 
 
 ## Related Code Areas
 - tools/agent-monitoring/{pre_tool_hook,post_tool_hook,gate_ledger}.py, tools/write_path_guard.py, tools/retrieval_cache.py,
@@ -82,9 +82,16 @@ Link the doc from `docs/plans/agent_infrastructure/` index if one lists docs. Ru
   source and records the URL and access date.
 
 ## Implementation Notes
+- Docs only. New `docs/plans/agent_infrastructure/llm_security_mapping.md`: 10-row OWASP LLM Top 10 (2025) table (titles confirmed from genai.owasp.org on 2026-10-13), a table of what each candidate control turned out to be, a four-threat model, the search MCP checklist and an 11-item proposed follow-ups list.
+- Findings that differ from the ticket's candidate list: `pre_tool_hook.py` is a timestamp recorder, not a control; `retrieval_cache.py` does not call any redaction or secret-scan function; the Codex adapter's "redaction" is truncation to 80-120 characters and does not scrub secrets; monitoring hooks store the first 80 characters of a Bash command unscrubbed and shards are committed to a public repo.
+- Every control marked present has a line or a test cited that was read. The aseprite MCP's sandbox is cited from its `.mcp.json` description only and is flagged as not read further.
+- No docs index in `docs/plans/agent_infrastructure/` lists documents, so no link was added.
 
 ## Test Summary
+Frontmatter validated with tools/validate_frontmatter.py. No code changed, so no tests were added; claims were checked by reading the cited files and tests (not by running the controls).
 
 ## Files Changed
+docs/plans/agent_infrastructure/llm_security_mapping.md (new).
 
 ## Completion Summary
+The harness is mapped against the OWASP LLM Top 10 (2025) with evidence, a threat model and a search MCP checklist; gaps are listed as proposed follow-ups, nothing is filed or fixed.
