@@ -68,6 +68,7 @@ class FakeState:
     buildings: dict = {}
     corpses: dict = {}
     ground_items: dict = {}
+    owed: dict = {}  # EXCH-02: debts a treasury could not pay (AuthoritativeState.owed)
 
     # Fields required by CanonicalStateHasher.to_canonical_data() for TC-11.
     world_time: float = 0.0

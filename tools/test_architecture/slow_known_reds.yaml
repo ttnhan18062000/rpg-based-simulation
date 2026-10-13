@@ -22,7 +22,7 @@ known_reds:
     added_on: "2026-10-09"
     expires_on: "2026-10-31"
     kind: broken
-    note: "first red in slow run 37952552217 (20af2959a); probable cause: cooperation_event fires for any help need and hunger creates one; the ticket bisects 2364b058a..20af2959a and rules out the module-fixture leak first; the 0.5 line is not moved"
+    note: "first red in slow run 37952552217 (20af2959a); probable cause: cooperation_event fires for any help need and hunger creates one; the ticket bisects 2364b058a..20af2959a and rules out the module-fixture leak first; the 0.5 line is not moved. Since the episode runs under audit_mode (TCK-20261009-CAMPAIGN-EPISODE-DELIBERATE-ATTACKS-STRICT-XFAIL-DEPENDS-ON-TEST-ORDER) the value is deterministic: pooled 0.5050 (801 of 1586; seed 42 0.4949, seed 1337 0.5151), was 0.5167 outside audit_mode (seed 42 0.5180). Still red"
   - match: "tests.perf.test_perf_movement*"
     ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
     owner: rpg-implementer-2

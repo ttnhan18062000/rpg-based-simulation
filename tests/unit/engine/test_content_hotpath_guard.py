@@ -18,11 +18,16 @@ def reset_content_singletons():
     """Reset all content singletons before and after each test."""
     import src.content_semantics.faction as faction_mod
     from src.content.repository import _tick_context_active
+    from src.engine.behavior_consumers import reset_behavior_consumers
     faction_mod._semantics_service_cache = None
     _tick_context_active.active = False
+    reset_behavior_consumers()
     yield
     faction_mod._semantics_service_cache = None
     _tick_context_active.active = False
+    # warmup(repo=<mock>) also configures the behavior consumers with that mock; without this reset the mock catalog outlives the test and the next
+    # kernel built in the same process fails in common_knowledge_seed ("Mock object has no attribute 'species'")
+    reset_behavior_consumers()
 
 
 # ---------------------------------------------------------------------------

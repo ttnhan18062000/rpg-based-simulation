@@ -338,11 +338,6 @@ class AuthoritativeApplyPipeline:
         t_start = time.perf_counter_ns()
         update = run_phase("town_resolution", update, lambda u: TownResolutionSystem.resolve(state, u, cadence=cadence))
 
-        # Gold Sink (E33C): inject fee/tax intents on INFLATION_SPIRAL windows.
-        # Runs after town_resolution so shop-service context is already resolved.
-        from src.engine.gold_sink import GoldSinkSystem
-        update = run_phase("gold_sink", update, lambda u: GoldSinkSystem.apply(state, u, cadence))
-
         generator = EntityGenerator(state.seed + state.tick)
         generator._last_id = state.next_entity_id - 1
         update = run_phase("world_dynamics", update, lambda u: WorldDynamicsSystem.resolve_dynamics(state, u, generator, cadence=cadence, faction_directives=faction_directives))
@@ -411,7 +406,7 @@ class AuthoritativeApplyPipeline:
         t3 = time.perf_counter_ns()
         update = run_phase("occupancy_resolution", update, lambda u: AuthoritativeApplyPipeline._resolve_occupancy_conflicts(state, u))
         t4 = time.perf_counter_ns()
-        update = run_phase("lifecycle", update, lambda u: LifecycleSystem.resolve_lifecycle(state, u))
+        update = run_phase("lifecycle", update, lambda u: _resolve_death_transfers(state, LifecycleSystem.resolve_lifecycle(state, u)))  # see _resolve_death_transfers
         t5 = time.perf_counter_ns()
         update = run_phase("groups", update, lambda u: AuthoritativeApplyPipeline._resolve_groups(state, u))
         t6 = time.perf_counter_ns()
@@ -570,3 +565,14 @@ class AuthoritativeApplyPipeline:
     ) -> StateUpdate:
         from src.engine.pipeline_phases.occupancy import OccupancyPhase
         return OccupancyPhase.resolve(state, update)
+
+
+def _resolve_death_transfers(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
+    """Resolve the transfers the lifecycle phase just emitted (an heir's INHERIT, the heirloom grant; none, almost always, so the check is the whole cost).
+
+    The lifecycle phase runs after resource_transactions, so without this second resolution they were applied unresolved (no capacity check, no
+    source debit; EXCH-02). Resolving them inside the lifecycle phase, before the apply step builds the body, makes an inheritance a move: the body
+    holds only what no heir took. It is not a phase of its own because the golden live-signal fixture counts the clock reads of every run_phase."""
+    if not any(e.resource_transfers for e in update.entity_updates.values()):
+        return update
+    return AuthoritativeApplyPipeline._resolve_resource_transactions(state, update)

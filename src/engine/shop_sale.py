@@ -17,6 +17,7 @@ from typing import Any, List, Optional, Tuple
 from src.core.items import ItemRegistry, food_hunger_recovery
 from src.core.models.inventory import ItemKind, ItemStack
 from src.core.updates import ResourceTransferIntent
+from src.engine.place_tax import tax_on
 from src.engine.serves import serves
 from src.engine.shop import shop_price
 
@@ -61,8 +62,9 @@ def plan_sale(state: Any, entity: Any, shop: Any) -> Optional[ResourceTransferIn
             purse -= units * price
     if not stacks:
         return None
+    holder, tax = tax_on(state, shop, total)
     return ResourceTransferIntent(source_id=shop.id, source_kind="SHOP_SELL", items_remove=stacks, gold_delta=total,
-                                  price_multiplier=1.0, transfer_kind="SELL")
+                                  price_multiplier=1.0, transfer_kind="SELL", treasury_faction=holder, treasury_gold=tax)
 
 
 def nearest_sale(state: Any, entity: Any) -> Optional[Tuple[Any, ResourceTransferIntent]]:

@@ -4,9 +4,14 @@
 from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
-from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
+from src.core.resource_regrowth import REGROW_MODE
+from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate, ResourceNodeUpdate
 from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
 from src.core.violent_cause import is_violent_death_cause
+from src.core.state import GroundItemState
+from src.domains.world_emergence.schema import WorldEvent as _WorldEvent, WorldEventCategory as _WorldEventCategory
+from src.engine.carcass import RAW_MEAT_ITEM
+from src.engine.hostility import is_feeding_kill
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState, EntityState
@@ -18,6 +23,46 @@ if TYPE_CHECKING:
 HAZARD_GROWTH_TRAUMA_THRESHOLD = 50.0
 # Hazard added per application while trauma stays above the threshold (LEG-RPG-139).
 HAZARD_GROWTH_STEP = 0.01
+
+
+def _feeding_kill_event(state: "AuthoritativeState", victim_id: int, victim: "EntityState | None", combat: "CombatUpdate") -> "_WorldEvent | None":
+    """The FEEDING_KILL record (killer, victim and corpse ids) when a violent death was a kill to eat (decision 48: not unrest, derived from the
+    killer's PREDATION relation, the cause stays COMBAT), else None. Evaluated from the prior, kill-time state, so it never depends on
+    perceiving a dead victim."""
+    killer_id = combat.attacker_id
+    if victim is None or killer_id is None or not is_feeding_kill(state, killer_id, victim):
+        return None
+    return _WorldEvent(category=_WorldEventCategory.FEEDING_KILL, tick=state.tick, subject=str(victim_id),
+                       payload={"killer": float(killer_id), "victim": float(victim_id), "corpse": float(1000000 + victim_id)})
+
+
+def _meat_decayed_events(state: "AuthoritativeState") -> list:
+    """The MEAT_DECAYED events of this tick: a body the decay step removes (the same tick+1 rule as ``WorldDynamicsSystem._decay_corpses``) that
+    still holds raw meat sends that meat out of the world through a typed sink (decision 44), so conservation balances from records."""
+    return [
+        _WorldEvent(category=_WorldEventCategory.MEAT_DECAYED, tick=state.tick, subject=str(corpse_id), payload={"quantity": float(meat_left)})
+        for corpse_id, corpse in state.corpses.items()
+        if state.tick + 1 >= corpse.decay_tick
+        for meat_left in [sum(s.quantity for s in corpse.items if s.item_id == RAW_MEAT_ITEM)]
+        if meat_left > 0
+    ]
+
+
+def _node_cooldown_updates(state: "AuthoritativeState", node_updates: dict) -> dict:
+    """``node_updates`` with every cooling node's cooldown ticked down (LEG-RPG-002/005). A finished cooldown recharges the node to full, except a
+    node of the declared ``regrow`` mode, whose bare wait ends with nothing added (the ecology regrowth resumes from empty: owner row 59)."""
+    refined = dict(node_updates)
+    for n_id, node in state.resource_nodes.items():
+        if node.cooldown_remaining <= 0:
+            continue
+        upd = refined.get(n_id, ResourceNodeUpdate(node_id=n_id))
+        if node.cooldown_remaining > 1:
+            refined[n_id] = replace(upd, cooldown_set=node.cooldown_remaining - 1)
+        elif node.regrowth_mode == REGROW_MODE:
+            refined[n_id] = replace(upd, cooldown_set=0)
+        else:
+            refined[n_id] = replace(upd, cooldown_set=0, charges_delta=node.max_charges)
+    return refined
 
 
 class WorldDynamicsSystem:
@@ -66,10 +111,13 @@ class WorldDynamicsSystem:
 
         # 2.1 Death-triggered Trauma & Sovereignty (LEG-RPG-071/139)
         from src.core.enums import Faction
+        record_events: list = []  # decision 44: feeding kills and decayed meat are recorded
         for e_id, ent_upd in update.entity_updates.items():
             if ent_upd.combat and ent_upd.combat.alive_set is False and is_violent_death_cause(ent_upd.combat.outcome_kind):  # ENV-07
                 entity = state.entities.get(e_id)
-                if entity:
+                if (feeding_kill := _feeding_kill_event(state, e_id, entity, ent_upd.combat)) is not None:
+                    record_events.append(feeding_kill)
+                elif entity:
                     region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
                     if region:
                         world_upd = update.world_updates.get(region.id, WorldUpdate(region_id=region.id))
@@ -271,21 +319,10 @@ class WorldDynamicsSystem:
                 refined_world_updates[r_id] = replace(world_upd, kind_set=new_kind)
         
         # 5. Global Object Lifecycle (LEG-RPG-002/005)
-        from src.core.updates import ResourceNodeUpdate, ChestUpdate
+        from src.core.updates import ChestUpdate
         
         # 5.1 Nodes
-        refined_node_updates = dict(update.node_updates)
-        for n_id, node in state.resource_nodes.items():
-            if node.cooldown_remaining > 0:
-                n_upd = refined_node_updates.get(n_id, ResourceNodeUpdate(node_id=n_id))
-                # If finished cooldown, recharge
-                if node.cooldown_remaining == 1:
-                     refined_node_updates[n_id] = replace(n_upd, 
-                        cooldown_set=0,
-                        charges_delta=node.max_charges
-                    )
-                else:
-                     refined_node_updates[n_id] = replace(n_upd, cooldown_set=node.cooldown_remaining - 1)
+        refined_node_updates = _node_cooldown_updates(state, update.node_updates)
 
         # 5.2 Chests
         refined_chest_updates = dict(update.chest_updates)
@@ -295,17 +332,35 @@ class WorldDynamicsSystem:
                 refined_chest_updates[c_id] = replace(c_upd, cooldown_set=chest.cooldown_remaining - 1)
         
         # 5.3 Corpses & Ground Items (Decay)
-        corpses_remove = list(update.corpses_remove)
-        for cp_id, corpse in state.corpses.items():
-            if state.tick >= corpse.decay_tick:
-                corpses_remove.append(cp_id)
+        corpses_remove, resource_updates, purses = WorldDynamicsSystem._decay_corpses(state, update)
+        record_events.extend(_meat_decayed_events(state))  # decision 44: meat still on a decaying body leaves the world through a recorded sink
 
         return update.replace(
+            ground_items_add_or_update=[*update.ground_items_add_or_update, *purses],
             world_updates=refined_world_updates,
             node_updates=refined_node_updates,
             chest_updates=refined_chest_updates,
-            corpses_remove=corpses_remove
+            corpses_remove=corpses_remove,
+            world_events_add=list(update.world_events_add) + record_events,
+            resource_updates=resource_updates
         )
+
+    @staticmethod
+    def _decay_corpses(state: AuthoritativeState, update: StateUpdate) -> tuple:
+        """(bodies to remove, resource updates, purses left on the ground) after decay. The apply step (next tick) removes a body whose decay tick
+        it has reached, so this does too. A decayed body's coin is not lost (EXCH-02, ruling 61): it stays where it fell, as a purse on the ground
+        that carries whose body it fell from and when, and it is lootable (found, not sought)."""
+        corpses_remove = list(update.corpses_remove)
+        resource_updates = dict(update.resource_updates)
+        purses = []
+        for cp_id, corpse in state.corpses.items():
+            if state.tick + 1 >= corpse.decay_tick:
+                corpses_remove.append(cp_id)
+                if corpse.gold > 0:
+                    # The body is gone this tick, so its id is free: the purse takes it (deterministic, no second id space).
+                    purses.append(GroundItemState(id=cp_id, item_id="", quantity=0, position=corpse.position, gold=corpse.gold,
+                                                  source_entity_id=corpse.original_entity_id, dropped_tick=state.tick + 1))
+        return corpses_remove, resource_updates, purses
 
     @staticmethod
     def _get_region_for_pos(state: AuthoritativeState, pos: tuple[float, float]) -> RegionState | None:

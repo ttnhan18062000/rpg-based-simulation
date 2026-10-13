@@ -10,6 +10,7 @@ from src.core.builder import V2EntityBuilder
 def create_mock_entity(eid, pos=(10, 10), hp=50):
     return (V2EntityBuilder(eid)
         .kind("hero")
+        .properties({"species_id": "human"})  # a person: the services serve a kind with the coin-and-trade trait (decision 43)
         .location(*pos)
         .combat(hp=hp)
         .build())

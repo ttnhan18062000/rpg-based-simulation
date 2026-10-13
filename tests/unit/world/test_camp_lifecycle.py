@@ -409,3 +409,27 @@ def test_authoritative_state_to_readonly_wraps_world_gen_seeded_camps():
 
     assert type(readonly_state.camps) is ReadOnlyDict
     assert "camp_1" in readonly_state.camps
+
+
+@pytest.mark.parametrize("camp_kind, spawned", [("goblin", "goblin_warrior"), ("orc", "orc_warrior"), ("wolf", "wolf")])
+def test_a_camp_spawns_the_kind_it_declares_not_an_orc_warrior(camp_kind, spawned):
+    state = AuthoritativeState(
+        tick=30, seed=42,
+        regions={"forest": RegionState(id="forest", name="The Deep Woods", kind="forest", bounds=(0, 0, 100, 100), trauma_score=60.0)},
+        camps={"camp_1": CampState(id="camp_1", kind=camp_kind, position=(50, 50), maturity=10.0)},
+    )
+    from src.engine.cadence import SystemCadence
+    update = WorldDynamicsSystem.resolve_dynamics(state, StateUpdate(), EntityGenerator(seed=42), cadence=SystemCadence(world_dynamics=30))
+    assert {e.kind for e in update.entities_add} == {spawned}
+
+
+def test_every_declared_camp_spawn_kind_resolves_to_a_spawn_kind_the_generator_knows():
+    """Content declares the form a camp spawns (`SpeciesDefinition.camp_spawn_kind`); it must be a kind the generator maps to a catalogue faction."""
+    from src.content.repository import CatalogRepository
+    from src.systems.world_systems.generator import SPAWN_KIND_CATALOG_FACTION
+
+    repo = CatalogRepository("data/content")
+    repo.load_all()
+    declared = {sid: sp.camp_spawn_kind for sid, sp in repo.species.items() if sp.camp_spawn_kind}
+    assert declared == {"goblin": "goblin_warrior", "orc": "orc_warrior"}
+    assert all(kind in SPAWN_KIND_CATALOG_FACTION for kind in declared.values())

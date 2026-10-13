@@ -21,6 +21,8 @@
     willpower: "medium"
     charisma: "medium"
   compatible_roles: ["hero", "worker", "citizen", "guard", "merchant", "blacksmith", "healer", "hunter", "mage", "ranger", "priest", "leader"]
+  power: "medium"
+  wits: "medium"
   common_knowledge:
     danger: "medium"
 
@@ -44,6 +46,8 @@
     willpower: "medium"
     charisma: "none"
   compatible_roles: ["predator_hunter", "alpha"]
+  power: "medium"
+  wits: "small"
   common_knowledge:
     danger: "medium"
 
@@ -67,6 +71,9 @@
     willpower: "low_medium"
     charisma: "low"
   compatible_roles: ["scout", "raider", "shaman", "leader"]
+  camp_spawn_kind: "goblin_warrior"
+  power: "small"
+  wits: "medium"
   common_knowledge:
     danger: "low"
 
@@ -90,6 +97,8 @@
     willpower: "low"
     charisma: "none"
   compatible_roles: ["predator_hunter"]
+  power: "small"
+  wits: "small"
   common_knowledge:
     danger: "medium"
 
@@ -113,6 +122,9 @@
     willpower: "medium_high"
     charisma: "medium_low"
   compatible_roles: ["raider", "guard", "leader", "shaman"]
+  camp_spawn_kind: "orc_warrior"
+  power: "large"
+  wits: "medium"
   common_knowledge:
     danger: "high"
 
@@ -137,6 +149,8 @@
     charisma: "medium"
     magic_affinity: "high"
   compatible_roles: ["ranger", "mage", "healer", "guard", "leader"]
+  power: "medium"
+  wits: "medium"
 
 # STATE: ADDITIONAL
 - id: "dwarf"
@@ -157,6 +171,8 @@
     willpower: "high"
     craftsmanship: "high"
   compatible_roles: ["miner", "blacksmith", "guard", "merchant", "leader"]
+  power: "medium"
+  wits: "medium"
 
 # STATE: ADDITIONAL
 - id: "undead"
@@ -176,6 +192,8 @@
     perception: "medium"
     willpower: "high"
   compatible_roles: ["sentinel", "raider", "leader"]
+  power: "medium"
+  wits: "small"
   common_knowledge:
     danger: "high"
 
@@ -197,6 +215,8 @@
     perception: "low_medium"
     instinct: "high"
   compatible_roles: ["brute", "leader"]
+  power: "large"
+  wits: "small"
 
 # STATE: ADDITIONAL
 - id: "lizardfolk"
@@ -216,6 +236,8 @@
     perception: "medium"
     instinct: "medium_high"
   compatible_roles: ["hunter", "guard", "shaman", "leader"]
+  power: "medium"
+  wits: "medium"
   common_knowledge:
     danger: "medium"
 
@@ -238,6 +260,8 @@
     willpower: "high"
     magic_affinity: "high"
   compatible_roles: ["dragon_champion", "mage", "leader"]
+  power: "large"
+  wits: "large"
 
 # STATE: ADDITIONAL
 - id: "slime"
@@ -257,6 +281,8 @@
     perception: "low"
     instinct: "high"
   compatible_roles: ["predator_hunter"]
+  power: "small"
+  wits: "small"
 
 # STATE: ADDITIONAL
 - id: "spirit"
@@ -274,3 +300,32 @@
     willpower: "high"
     magic_affinity: "high"
   compatible_roles: ["guardian", "healer", "leader"]
+  power: "medium"
+  wits: "medium"
+
+# STATE: ADDITIONAL
+# Decision 45 (generic, decision 50): a small wild creature that eats plants. Properties only: it is edible to meat diets by its body model and is
+# believed low danger, so a medium meat-eater can overcome it and nothing else here is claimed about it.
+- id: "small_plant_eater"
+  display_name: "Small Plant-Eater"
+  body_model: "small_quadruped"
+  need_profile: "plant_eater_survival"
+  sense_profile: "keen_hearing_senses"
+  cognition_profile: "instinctive_animal"
+  intelligence_tier: "low"
+  drive_profile: "cautious_forager"
+  natural_traits: ["quadruped", "small_body"]
+  attribute_tendencies:
+    strength: "low"
+    agility: "high"
+    endurance: "low"
+    intelligence: "low"
+    perception: "high"
+    instinct: "high"
+    willpower: "low"
+    charisma: "low"
+  compatible_roles: ["wild_creature"]
+  power: "small"
+  wits: "small"
+  common_knowledge:
+    danger: "low"

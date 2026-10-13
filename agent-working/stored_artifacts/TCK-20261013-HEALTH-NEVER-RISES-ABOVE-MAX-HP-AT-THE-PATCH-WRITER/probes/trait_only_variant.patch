@@ -1,0 +1,41 @@
+diff --git a/src/engine/building_services.py b/src/engine/building_services.py
+index 80d5d115b..dce5403c1 100644
+--- a/src/engine/building_services.py
++++ b/src/engine/building_services.py
+@@ -18,7 +18,7 @@ from src.core.updates import (
+     ResourceTransferIntent,
+ )
+ from src.engine.appraisal import can_use_inn_meal
+-from src.engine.serves import serves
++from src.engine.serves import keeps_coin, serves
+ from src.engine.service_prices import EAT_PRICE_GOLD, INN_MEAL_HUNGER, REST_PRICE_GOLD
+ from src.engine.service_reach import service_tile
+ from src.engine.shop_sale import plan_sale
+@@ -40,8 +40,8 @@ def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
+         return None
+     tile = service_tile(context, (int(entity.navigation.position[0]), int(entity.navigation.position[1])), kinds)
+     building = SpatialQueryService.get_building_at(context, tile) if tile is not None else None
+-    if building is None or not building.functional or not serves(context, entity, building):
+-        return None  # one predicate for every route (rest, meal, sale, repair): the trait and the place's relationship, never a kind name (decision 43)
++    if building is None or not building.functional or not (serves(context, entity, building) if action == "SELL" else keeps_coin(entity)):
++        return None  # rest, meal, repair: the trait only (decision 43), never a kind name; the sale keeps its relationship rule as on main
+     return building
+ 
+ 
+diff --git a/tests/unit/engine/test_building_services_serve_only_people.py b/tests/unit/engine/test_building_services_serve_only_people.py
+index 3a9dc01c2..be3944dd1 100644
+--- a/tests/unit/engine/test_building_services_serve_only_people.py
++++ b/tests/unit/engine/test_building_services_serve_only_people.py
+@@ -50,9 +50,7 @@ def test_an_animal_is_refused_every_service_route(action):
+     assert service_building(person, pent, action) is not None  # the same building serves a person
+ 
+ 
+-def test_a_person_the_place_refuses_by_relationship_is_not_served():
++def test_the_place_relationship_is_not_read_by_rest_or_meal():
++    """Trait-only variant: a person in a hostile-owned region is still served rest and meals (the relationship half is its own ticket)."""
+     state, ent = _world("human", faction_id="town_council", region_owner=Faction.MONSTER_HORDE)
+-    assert service_building(state, ent, "REST") is None
+-    assert service_delta(state, ent, "REST", 1) is None
+-    free, ent = _world("human", faction_id="town_council", region_owner=None)
+-    assert service_building(free, ent, "REST") is not None  # a region with no owner serves anyone with the trait
++    assert service_building(state, ent, "REST") is not None

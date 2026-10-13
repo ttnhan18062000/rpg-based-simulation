@@ -1,4 +1,4 @@
-"""The one test for "this neighbour is a perceived, hostile-compatible entity" (CONFLICT-04).
+"""The one test for "this neighbour is a perceived hostile or appraised as prey, threat or danger" (CONFLICT-04, decisions 44-49).
 
 The tactical pass builds its ``hostiles`` list with it and the movement layer asks it for the engaged adjacent hostile that makes a
 stored-target step a non-decision, so the decision layer and the movement layer cannot disagree about who is a hostile.
@@ -13,15 +13,20 @@ from src.content_semantics.faction import (
     get_species_id_str,
 )
 from src.content_semantics.relation import RelationContext
-from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
-from src.engine.legality import LegalityServiceV2
+from src.engine.appraisal import Relation, appraise, perceives
+from src.engine.behavior_consumers import get_kind_properties
+from src.engine.tile_distance import manhattan_tile_distance
 from src.entities.identity_resolver import (
     EntityIdentityResolver,
     IdentityResolutionError,
 )
 
 if TYPE_CHECKING:
-    from src.core.state import EntityState
+    from src.core.state import AuthoritativeState, EntityState
+
+
+ATTACK_RELATIONS = frozenset({Relation.FACTION_HOSTILE, Relation.PREDATION})
+WILD_ALIGNMENT = "wild"  # the alignment bucket of the factions animals belong to (wild_beast_pack, wild_fauna)
 
 
 def source_identity(entity: "EntityState") -> Tuple[str, str]:
@@ -38,20 +43,26 @@ def is_engaged(entity: "EntityState", other: "EntityState") -> bool:
     return entity.task.payload.get("target_id") == other.id or other.task.payload.get("target_id") == entity.id
 
 
-def perceived_hostile(entity: "EntityState", other: "EntityState", source: Optional[Tuple[str, str]] = None) -> bool:
+def is_wild_creature(entity: "EntityState") -> bool:
+    """True for a creature that eats and belongs to a faction of the wild alignment (an animal, not a people or a monster).
+
+    Properties only: a body diet and the faction's alignment bucket, read from content; no kind list and no predator label."""
+    _, body = get_kind_properties(get_species_id_str(entity))
+    if body is None or not body.diet:
+        return False
+    return get_faction_semantics_service().get_alignment_bucket(source_identity(entity)[0]) == WILD_ALIGNMENT
+
+
+def faction_hostile(entity: "EntityState", other: "EntityState", source: Optional[Tuple[str, str]] = None) -> bool:
     """True when ``entity`` perceives ``other`` (alive, passes the perception gate) and the faction semantics rate it hostile.
 
     ``source`` is ``source_identity(entity)`` when the caller tests many neighbours of one entity."""
-    if not other.combat.alive:
+    if not perceives(entity, other):
         return False
-    dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, other.navigation.position)
-    try:
-        perceived = get_perception_gate().can_perceive(entity, get_entity_signals(other), {"distance": float(dist)}).perceived
-    except (AttributeError, KeyError, TypeError, ValueError, RuntimeError):
-        perceived = True  # gate failure: permissive fallback, as the tactical pass has always done
-    if not perceived:
-        return False
-    # `intruding` is left unset (None): see the note in LegalityServiceV2.verify_attack_legality.
+    if is_wild_creature(entity) or is_wild_creature(other):
+        return False  # decision 47: a wild creature is regarded by appraisal, never by faction verdict
+    dist = manhattan_tile_distance(entity.navigation.position, other.navigation.position)
+    # `intruding` is left unset (None): see the note in LegalityServiceV2.verify_attack_legality (engine/legality.py).
     context = RelationContext(
         distance=float(dist),
         combat_engaged=is_engaged(entity, other),
@@ -64,3 +75,42 @@ def perceived_hostile(entity: "EntityState", other: "EntityState", source: Optio
     except IdentityResolutionError:
         target_faction = get_faction_id_str(other)
     return bool(get_faction_semantics_service().is_hostile_compat(source_faction, target_faction, context))
+
+
+def relation(entity: "EntityState", other: "EntityState", source: Optional[Tuple[str, str]] = None) -> Relation:
+    """How ``entity`` regards ``other`` (decisions 47 and 49): faction hostility first, then the appraisal from properties.
+
+    "Appraisal for all, faction for people": a faction verdict wins; otherwise PREDATION, THREATENING, WARY or NONE."""
+    if faction_hostile(entity, other, source):
+        return Relation.FACTION_HOSTILE
+    if get_species_id_str(entity) == get_species_id_str(other):
+        return Relation.NONE  # a kind regards its own as neither prey nor danger (no cannibalism in M0)
+    appraised = appraise(entity, other)
+    if appraised is Relation.PREDATION and get_faction_id_str(entity) == get_faction_id_str(other):
+        return Relation.NONE  # a faction does not hunt its own members
+    return appraised
+
+
+def perceived_hostile(entity: "EntityState", other: "EntityState", source: Optional[Tuple[str, str]] = None) -> bool:
+    """True when ``other`` is an attack target of ``entity``: a faction hostile or prey it hunts. WARY and THREATENING are not (they are
+    avoided, never engaged), so they never enter the hostile list."""
+    return relation(entity, other, source) in ATTACK_RELATIONS
+
+
+def is_feeding_kill(state: "AuthoritativeState", attacker_id: Optional[int], victim: "EntityState") -> bool:
+    """True when the death of ``victim`` was a kill to eat (decision 48): its killer appraised it as PREDATION, and no faction verdict made it a
+    fight between peoples. Killing a person a faction rates hostile, slaughter beyond need and group fights are not feeding kills and still count
+    toward trauma (ENV-07)."""
+    killer = state.entities.get(attacker_id) if attacker_id is not None else None
+    return killer is not None and relation(killer, victim) is Relation.PREDATION
+
+
+def attack_allowed(attacker: "EntityState", target: "EntityState", faction_verdict: bool) -> bool:
+    """Decisions 44 and 47: an attack the factions refuse (``faction_verdict`` False) is still permitted when the attacker is hunting the target
+    (PREDATION), or when the target is attacking the attacker and holds an attack relation to it (a creature may fight back against whatever
+    is hunting it)."""
+    if is_wild_creature(attacker) or is_wild_creature(target):
+        faction_verdict = False  # decision 47: appraisal decides alone when a wild creature is on either side
+    if faction_verdict or relation(attacker, target) is Relation.PREDATION:
+        return True
+    return target.task.payload.get("target_id") == attacker.id and relation(target, attacker) in ATTACK_RELATIONS

@@ -6,7 +6,8 @@ from src.core.state import AuthoritativeState
 from src.core.work import WorkItem, WorkClass
 from src.engine.candidate_selector import MovementCandidateSelector
 from src.engine.cadence import SystemCadence, should_run
-from src.engine.need_pull import need_is_pressing
+from src.engine.need_pull import hunger_is_pressing, need_is_pressing
+from src.engine.sleep_debt import is_asleep
 
 # Ticks between the brain wakes of an entity beside an unengaged hostile (decision 32); the decision comes within this bound.
 ADJACENCY_WAKE_COOLDOWN = 2
@@ -66,6 +67,10 @@ class DeterministicScheduler:
         Waking is only a re-decision: a present threat to life (the only thing that outranks a pressing need, SURV-07) is seen again by
         that decision and re-issues the flight, so a held flight is woken too; one whose threat is gone (a retreat that never completes)
         is no longer held."""
+        if work_kind == "ENTITY_ACT" and is_asleep(ent):
+            # A sleeper's debt is high by nature, so only hunger wakes it (decision 41 x SURV-07, owner ruling 2026-10-11). Waking is a re-decision: while
+            # the debt is at the collapse line the decision is the collapse again (it holds), below it the hunger goal decides: eat if a way is open, else sleep.
+            return hunger_is_pressing(ent.biological.hunger) and should_run(state.tick, ent.id, NEED_WAKE_CADENCE)
         return (
             work_kind == "ENTITY_MOVE"
             and need_is_pressing(ent.biological.hunger, ent.biological.sleep_debt)

@@ -9,6 +9,7 @@ import os
 
 import pytest
 
+from src.engine.appraisal import kind_can_eat_item
 from src.worldbuilding.camp_food import CAMP_SPAWN_RANGE, camp_food_gaps, camp_food_sources
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
@@ -26,7 +27,7 @@ def _worlds():
 def test_every_camp_has_a_food_way_in_range_except_the_named_meat_only_nests(world):
     spec, ctx = WorldRepository(WORLDS).load_world_with_context(world)
     state, _ = WorldCompiler.compile(spec, 42, context=ctx)
-    assert set(camp_food_gaps(state)) <= MEAT_ONLY_GAPS
+    assert set(camp_food_gaps(state, kind_can_eat_item)) <= MEAT_ONLY_GAPS
 
 
 def test_the_goblin_camp_berries_lie_inside_the_smallest_spawn_leash():
@@ -40,4 +41,4 @@ def test_the_goblin_camp_berries_lie_inside_the_smallest_spawn_leash():
 def test_the_report_names_the_land_that_supplies_each_camps_food():
     spec, ctx = WorldRepository(WORLDS).load_world_with_context("frontier_living_world")
     state, _ = WorldCompiler.compile(spec, 42, context=ctx)
-    assert camp_food_sources(state) == {"goblin_camp_place": "goblin_camp_edge"}  # the wolf nest has none: a reported gap
+    assert camp_food_sources(state, kind_can_eat_item) == {"goblin_camp_place": "goblin_camp_edge"}  # the wolf nest has none: a reported gap

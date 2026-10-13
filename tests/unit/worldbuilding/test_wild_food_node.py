@@ -15,6 +15,7 @@ from src.core.models.inventory import ItemStack
 from src.core.update_models.resources import ResourceTransferIntent
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.engine import behavior_consumers
+from src.engine.appraisal import kind_can_eat_item
 from src.engine.legality import LegalityServiceV2
 from src.engine.need_paths import need_path_report
 from src.engine.pipeline import AuthoritativeApplyPipeline
@@ -39,7 +40,8 @@ def _state(world: str, seed: int = 42):
 
 
 def _food_nodes(state):
-    return [n for n in state.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0]
+    """The wild food a person can eat; plant cover (a grazing diet's food, owner row 59) is the grazer's and is counted in its own tests."""
+    return [n for n in state.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0 and kind_can_eat_item("human", n.yields_item)]
 
 
 def _forest_food_nodes(state):
@@ -75,8 +77,14 @@ def test_no_food_node_is_declared_in_the_home_town_region():
 
 def test_the_need_path_report_counts_the_wild_food_node():
     behavior_consumers._auto_init()
-    rows = need_path_report(_state(WILD_WORLD), behavior_consumers._catalog)
-    assert rows and all(row["food_nodes_in_world"] == 2 for row in rows)  # the forest's patch and the goblin camp's (D57)
+    state = _state(WILD_WORLD)
+    rows = need_path_report(state, behavior_consumers._catalog)
+    everything = [n for n in state.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0]
+    assert len(_food_nodes(state)) == 2  # the forest's patch and the goblin camp's (D57): what a person can eat
+    assert len(everything) > 2  # the plant cover (owner row 59) is food too, for a grazing diet
+    assert rows and all(row["food_nodes_in_world"] == len(everything) for row in rows)  # the report counts every food node in the world
+    person = next(row for row in rows if row["kind"] in ("human", "person"))
+    assert person["hunger_path"] is True
     assert any(row["hunger_path"] is True for row in rows)
     rows_without = need_path_report(_state("urban_political"), behavior_consumers._catalog)
     assert all(row["food_nodes_in_world"] == 0 for row in rows_without)

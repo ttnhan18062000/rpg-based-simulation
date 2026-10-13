@@ -66,3 +66,11 @@
     fear: "none"
     hunger: "none"
     aggression: "medium"
+
+# STATE: ADDITIONAL
+- id: "cautious_forager"
+  display_name: "Cautious Forager"
+  drives:
+    hunger: "medium"
+    safety: "high"
+    aggression: "none"
