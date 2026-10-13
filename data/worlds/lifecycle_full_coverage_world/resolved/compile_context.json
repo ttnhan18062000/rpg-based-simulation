@@ -813,6 +813,69 @@
       "sense_profile_id": "predator_smell_senses",
       "inventory_profile_id": "empty_animal_inventory",
       "skill_profile_id": "predator_skills"
+    },
+    "small_plant_eater_herd_wild_small_plant_eater": {
+      "legacy_role": 2,
+      "legacy_faction": 3,
+      "hp": 20,
+      "max_hp": 20,
+      "atk": 3,
+      "def": 1,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "empty_animal_inventory",
+      "cognition_seed": "instinctive_animal",
+      "spawn_position": [
+        81.0,
+        16.0
+      ],
+      "spawn_region": "near_forest",
+      "count": 6,
+      "spawn_positions": [
+        [
+          81.0,
+          16.0
+        ],
+        [
+          71.0,
+          51.0
+        ],
+        [
+          70.0,
+          50.0
+        ],
+        [
+          79.0,
+          10.0
+        ],
+        [
+          62.0,
+          51.0
+        ],
+        [
+          57.0,
+          54.0
+        ]
+      ],
+      "archetype_id": "wild_small_plant_eater",
+      "species_id": "small_plant_eater",
+      "role_id": "wild_creature",
+      "faction_id": "wild_fauna",
+      "traits": [
+        "quadruped",
+        "small_body"
+      ],
+      "themes": [
+        "forest"
+      ],
+      "stat_profile_id": "small_plant_eater_base",
+      "combat_profile_id": "glancing_melee",
+      "cognition_profile_id": "instinctive_animal",
+      "drive_profile_id": "cautious_forager",
+      "need_profile_id": "plant_eater_survival",
+      "sense_profile_id": "keen_hearing_senses",
+      "inventory_profile_id": "empty_animal_inventory",
+      "skill_profile_id": "evasion_skills"
     }
   },
   "buildings": {
@@ -820,7 +883,8 @@
       "hp": 1000,
       "max_hp": 1000,
       "service_profile_id": null,
-      "owner_faction": null
+      "owner_faction": null,
+      "maintenance_shifts": 3
     },
     "shop_0": {
       "hp": 500,
@@ -849,7 +913,8 @@
       "starting_stock": {
         "travel_ration": 20,
         "bread": 10
-      }
+      },
+      "hires_for_pay": true
     },
     "healer_hut_0": {
       "hp": 450,
@@ -869,73 +934,201 @@
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null,
-      "yield_item": "wood"
+      "yield_item": "wood",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "res_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "goblin_camp_forage__berry_thicket_0": {
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries"
+      "yield_item": "wild_berries",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "mountain_pass__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
       "yield_policy": null,
-      "yield_item": "iron_ore"
+      "yield_item": "iron_ore",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "mountain_pass__frost_shard_cluster_1": {
       "required_ticks": 24,
       "resource_type": "frost_shard_cluster",
       "yield_policy": null,
-      "yield_item": "frost_shard"
+      "yield_item": "frost_shard",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "orc_clan_territory__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
       "yield_policy": null,
-      "yield_item": "iron_ore"
+      "yield_item": "iron_ore",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "orc_clan_territory__wood_node_1": {
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null,
-      "yield_item": "wood"
+      "yield_item": "wood",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "river_crossing__herb_patch_0": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "wolf_den_near_forest__wood_node_0": {
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null,
-      "yield_item": "wood"
+      "yield_item": "wood",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "wolf_den_near_forest__herb_patch_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "wolf_den_near_forest__healing_flower_patch_2": {
       "required_ticks": 12,
       "resource_type": "healing_flower_patch",
       "yield_policy": null,
-      "yield_item": "healing_flower"
+      "yield_item": "healing_flower",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "wolf_den_near_forest__berry_thicket_3": {
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries"
+      "yield_item": "wild_berries",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
+    },
+    "cover__river_ford__0": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__1": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__2": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__3": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__4": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__0": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__1": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__2": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__3": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__4": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__5": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__6": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__near_forest__7": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
     }
   },
   "factions": {
@@ -986,6 +1179,9 @@
     },
     "spirit_court": {
       "starting_gold": 1000.0
+    },
+    "wild_fauna": {
+      "starting_gold": 1000.0
     }
   },
   "region_ownership": {
@@ -998,7 +1194,8 @@
     "hero_guild": 0,
     "orc_clan": 1,
     "undead_remnants": 1,
-    "wild_beast_pack": 1
+    "wild_beast_pack": 1,
+    "wild_fauna": 3
   },
   "legacy_roles": {
     "worker": 4,
@@ -1011,7 +1208,9 @@
     "hero": 0,
     "sentinel": 2,
     "predator_hunter": 2,
-    "alpha": 2
+    "alpha": 2,
+    "wild_creature": 2
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

@@ -246,7 +246,8 @@
       "hp": 1000,
       "max_hp": 1000,
       "service_profile_id": null,
-      "owner_faction": null
+      "owner_faction": null,
+      "maintenance_shifts": 3
     },
     "shop_0": {
       "hp": 500,
@@ -275,7 +276,8 @@
       "starting_stock": {
         "travel_ration": 20,
         "bread": 10
-      }
+      },
+      "hires_for_pay": true
     },
     "healer_hut_0": {
       "hp": 450,
@@ -289,19 +291,25 @@
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null,
-      "yield_item": "wood"
+      "yield_item": "wood",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "res_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null,
-      "yield_item": "herb"
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "camp_maturity_calibration_pilot__berry_thicket_0": {
       "required_ticks": 8,
       "resource_type": "berry_thicket",
       "yield_policy": null,
-      "yield_item": "wild_berries"
+      "yield_item": "wild_berries",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     }
   },
   "factions": {
@@ -352,6 +360,9 @@
     },
     "spirit_court": {
       "starting_gold": 1000.0
+    },
+    "wild_fauna": {
+      "starting_gold": 1000.0
     }
   },
   "region_ownership": {
@@ -367,5 +378,6 @@
     "merchant": 1,
     "blacksmith": 4
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

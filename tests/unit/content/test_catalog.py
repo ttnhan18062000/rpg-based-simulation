@@ -353,10 +353,11 @@ EXPECTED_INTELLIGENCE_TIER = {
     "slime": "low",
     "dragonkin": "high",
     "spirit": "high",
+    "small_plant_eater": "low",
 }
 
 
-def test_all_13_species_have_documented_intelligence_tier():
+def test_all_species_have_documented_intelligence_tier():
     """Every species in the real catalog carries an authored intelligence_tier matching the
     documented anchor rule (tool_user in natural_traits <-> "high"), with dragonkin/spirit
     as explicitly reviewed and justified exceptions (see ticket TCK-20260831-SPECIES-INTELLIGENCE-TIER)."""

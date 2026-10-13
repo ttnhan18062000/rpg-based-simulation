@@ -118,3 +118,10 @@
     goblin_scout: 1
     orc_warchief: 1
   preferred_regions: ["judgement_arena"]
+
+# STATE: ADDITIONAL
+- id: "small_plant_eater_herd"
+  display_name: "Small Plant-Eater Herd"
+  members:
+    wild_small_plant_eater: 6
+  preferred_regions: ["near_forest"]

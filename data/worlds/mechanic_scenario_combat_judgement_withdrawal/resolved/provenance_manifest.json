@@ -1,15 +1,15 @@
 {
-  "manifest_id": "prov_54e03f4276b42393",
+  "manifest_id": "prov_e2b291333863d124",
   "world_id": "mechanic_scenario_combat_judgement_withdrawal",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
+  "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
   "module_fingerprints": {
     "combat_judgement_arena": "0d4f5ef54b7930467913f05203c87f544fbb24067edbf4e54580bb8074c0d8d3"
   },
   "composition_fingerprint": "5734e14e7dcf27c601c1bc085d49acd7a8fc0cb3eff14053d167382041d69e09",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "54e03f4276b423931a0498c6cdc6e0d3a0181fd95eaae8ef194dd3197fdc8ef3",
-  "created_at": "2026-10-09T03:58:42.577678Z",
+  "content_fingerprint": "e2b291333863d124563a44bb52318160588cec475658a60d0e416a89dd67a04d",
+  "created_at": "2026-10-12T14:35:36.257608Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -201,6 +201,18 @@
       },
       "details": {
         "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
       }
     },
     "judgement_arena": {

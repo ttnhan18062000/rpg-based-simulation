@@ -76,8 +76,8 @@ def test_hunger_death_records_starvation_with_zeroing_tick_then_classifies_next_
 def test_sleep_debt_at_the_collapse_line_costs_no_health_and_records_no_passive_cause():
     """Decision 41 (replaces the sleep-deprivation drain): lack of sleep ends in collapse, never in lost health or a death. The enum value stays."""
     n, n1 = _kernel_ticks(_starving(hp=1, sleep_debt=98.0), 2)
-    assert n.combat.hp == 1 and n.combat.alive is True and n.lifecycle.passive_death_cause is None
-    assert n1.combat.hp == 1 and n1.lifecycle.death_reason is None
+    assert n.combat.hp >= 1 and n.combat.alive is True and n.lifecycle.passive_death_cause is None  # >=: a body also heals naturally (decision 42); none is lost
+    assert n1.combat.hp >= 1 and n1.lifecycle.death_reason is None
     assert PassiveDeathCause.SLEEP_DEPRIVATION.value != PassiveDeathCause.STARVATION.value
 
 

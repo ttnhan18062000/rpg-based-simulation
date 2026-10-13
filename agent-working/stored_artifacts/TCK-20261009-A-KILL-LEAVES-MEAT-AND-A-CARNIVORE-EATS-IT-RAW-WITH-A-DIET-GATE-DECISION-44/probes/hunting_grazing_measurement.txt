@@ -1,0 +1,288 @@
+Hunting + grazing measurement. Base: origin/main fc0bf4fbb. Arm: 394314b74 (before the fold). Worlds frontier_extended, frontier_living_world, swamp_border_world; seeds 42-44 (n=3); 5000 ticks; pinned NORMAL; 3 runs in parallel.
+
+== frontier_extended
+  wolf: alive@1500                               base      0.0 (  0.0)  new      4.0 (  0.6)  diff     +4.0 (SE   0.6)  n=3
+  wolf: alive@5000                               base      0.0 (  0.0)  new      1.3 (  0.9)  diff     +1.3 (SE   0.9)  n=3
+  wolf: deaths total                             base      5.0 (  0.0)  new      3.7 (  0.9)  diff     -1.3 (SE   0.9)  n=3
+  wolf: starvation deaths                        base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: COMBAT+DEFEAT deaths                     base      5.0 (  0.0)  new      3.7 (  0.9)  diff     -1.3 (SE   0.9)  n=3
+  wolf: HAZARD deaths                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: ever ate                                 base      2.0 (  1.5)  new      1.7 (  0.7)  diff     -0.3 (SE   2.0)  n=3
+  spider: alive@1500                             base      0.3 (  0.3)  new      5.0 (  0.0)  diff     +4.7 (SE   0.3)  n=3
+  spider: alive@5000                             base      0.0 (  0.0)  new      4.3 (  0.7)  diff     +4.3 (SE   0.7)  n=3
+  spider: deaths total                           base      5.0 (  0.0)  new      0.7 (  0.7)  diff     -4.3 (SE   0.7)  n=3
+  spider: starvation deaths                      base      0.3 (  0.3)  new      0.0 (  0.0)  diff     -0.3 (SE   0.3)  n=3
+  spider: COMBAT+DEFEAT deaths                   base      4.7 (  0.3)  new      0.7 (  0.7)  diff     -4.0 (SE   1.0)  n=3
+  spider: HAZARD deaths                          base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: ever ate                               base      2.7 (  0.9)  new      0.3 (  0.3)  diff     -2.3 (SE   1.2)  n=3
+  small_plant_eater: alive@1500                  base      0.0 (  0.0)  new      3.0 (  1.2)  diff     +3.0 (SE   1.2)  n=3
+  small_plant_eater: alive@5000                  base      0.0 (  0.0)  new      0.3 (  0.3)  diff     +0.3 (SE   0.3)  n=3
+  small_plant_eater: deaths total                base      0.0 (  0.0)  new      5.7 (  0.3)  diff     +5.7 (SE   0.3)  n=3
+  small_plant_eater: starvation deaths           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  small_plant_eater: COMBAT+DEFEAT deaths        base      0.0 (  0.0)  new      5.3 (  0.3)  diff     +5.3 (SE   0.3)  n=3
+  small_plant_eater: HAZARD deaths               base      0.0 (  0.0)  new      0.3 (  0.3)  diff     +0.3 (SE   0.3)  n=3
+  small_plant_eater: ever ate                    base      0.0 (  0.0)  new      2.7 (  1.3)  diff     +2.7 (SE   1.3)  n=3
+  human: alive@1500                              base      4.0 (  0.6)  new      5.7 (  1.9)  diff     +1.7 (SE   2.4)  n=3
+  human: alive@5000                              base      1.0 (  0.6)  new      0.7 (  0.7)  diff     -0.3 (SE   1.2)  n=3
+  human: deaths total                            base     20.0 (  0.6)  new     20.3 (  0.7)  diff     +0.3 (SE   1.2)  n=3
+  human: starvation deaths                       base      0.3 (  0.3)  new      1.0 (  0.6)  diff     +0.7 (SE   0.7)  n=3
+  human: COMBAT+DEFEAT deaths                    base     15.0 (  2.3)  new     12.7 (  3.5)  diff     -2.3 (SE   3.3)  n=3
+  human: HAZARD deaths                           base      4.7 (  2.6)  new      6.7 (  2.6)  diff     +2.0 (SE   2.9)  n=3
+  human: ever ate                                base      2.3 (  0.3)  new      7.3 (  1.2)  diff     +5.0 (SE   1.0)  n=3
+  goblin: alive@1500                             base      1.7 (  0.3)  new      1.0 (  0.6)  diff     -0.7 (SE   0.3)  n=3
+  goblin: alive@5000                             base      0.7 (  0.3)  new      0.0 (  0.0)  diff     -0.7 (SE   0.3)  n=3
+  goblin: deaths total                           base      8.3 (  0.3)  new      9.0 (  0.0)  diff     +0.7 (SE   0.3)  n=3
+  goblin: starvation deaths                      base      0.3 (  0.3)  new      0.3 (  0.3)  diff     +0.0 (SE   0.6)  n=3
+  goblin: COMBAT+DEFEAT deaths                   base      7.0 (  0.6)  new      7.0 (  0.6)  diff     +0.0 (SE   1.0)  n=3
+  goblin: HAZARD deaths                          base      1.0 (  0.6)  new      1.7 (  0.3)  diff     +0.7 (SE   0.7)  n=3
+  goblin: ever ate                               base      1.7 (  0.7)  new      2.7 (  0.3)  diff     +1.0 (SE   1.0)  n=3
+  undead: alive@1500                             base      5.0 (  0.6)  new      5.0 (  0.6)  diff     +0.0 (SE   0.0)  n=3
+  undead: alive@5000                             base      5.0 (  0.6)  new      5.0 (  0.6)  diff     +0.0 (SE   0.0)  n=3
+  undead: deaths total                           base      1.0 (  0.6)  new      1.0 (  0.6)  diff     +0.0 (SE   0.0)  n=3
+  undead: starvation deaths                      base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: COMBAT+DEFEAT deaths                   base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: HAZARD deaths                          base      1.0 (  0.6)  new      1.0 (  0.6)  diff     +0.0 (SE   0.0)  n=3
+  undead: ever ate                               base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: attack starts on humans                  base      5.7 (  1.7)  new      0.0 (  0.0)  diff     -5.7 (SE   1.7)  n=3
+  wolf: berries gathered (hard zero)             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: berry-hold ticks (hard zero)             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: inn meals (hard zero)                    base      3.7 (  3.7)  new      0.0 (  0.0)  diff     -3.7 (SE   3.7)  n=3
+  wolf: corpse meals                             base      0.0 (  0.0)  new      2.7 (  0.9)  diff     +2.7 (SE   0.9)  n=3
+  wolf: other meals                              base      0.7 (  0.7)  new      0.0 (  0.0)  diff     -0.7 (SE   0.7)  n=3
+  wolf: leash-return ticks                       base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: attack starts on humans                base      5.3 (  1.2)  new      0.0 (  0.0)  diff     -5.3 (SE   1.2)  n=3
+  spider: berries gathered (hard zero)           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: berry-hold ticks (hard zero)           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: inn meals (hard zero)                  base      5.0 (  1.0)  new      0.3 (  0.3)  diff     -4.7 (SE   0.9)  n=3
+  spider: corpse meals                           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: other meals                            base      0.0 (  0.0)  new      1.3 (  1.3)  diff     +1.3 (SE   1.3)  n=3
+  spider: leash-return ticks                     base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  feeding kills (all)                            base      0.0 (  0.0)  new     11.0 (  1.7)  diff    +11.0 (SE   1.7)  n=3
+  feeding kills eaten (joined by corpse id)      base      0.0 (  0.0)  new      6.3 (  1.2)  diff     +6.3 (SE   1.2)  n=3
+  feeding kills by wolf                          base      0.0 (  0.0)  new      1.3 (  0.9)  diff     +1.3 (SE   0.9)  n=3
+  feeding kills by spider                        base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  feeding kills by human                         base      0.0 (  0.0)  new      2.3 (  1.5)  diff     +2.3 (SE   1.5)  n=3
+  people: corpse meals                           base      0.0 (  0.0)  new      4.0 (  2.1)  diff     +4.0 (SE   2.1)  n=3
+  berries gathered: people                       base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  berries gathered: plant-eaters                 base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  small_plant_eater: grass gathered              base      0.0 (  0.0)  new     56.0 ( 18.5)  diff    +56.0 (SE  18.5)  n=3
+  small_plant_eater: grass meals                 base      0.0 (  0.0)  new     12.0 (  6.2)  diff    +12.0 (SE   6.2)  n=3
+  human: grass gathered                          base      0.0 (  0.0)  new     27.3 ( 14.8)  diff    +27.3 (SE  14.8)  n=3
+  human: grass meals                             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: grass gathered                           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: grass meals                              base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: grass gathered                         base      0.0 (  0.0)  new      4.7 (  4.7)  diff     +4.7 (SE   4.7)  n=3
+  spider: grass meals                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: grass gathered                         base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: grass meals                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  plant-eaters: grass meals outside leash (must be 0) base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  human attack starts on wolf                    base      6.0 (  0.6)  new      0.0 (  0.0)  diff     -6.0 (SE   0.6)  n=3
+  goblin attack starts on small_plant_eater      base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin attack starts on wolf                   base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  cover patches in world                         base      0.0 (  0.0)  new     20.0 (  0.0)  diff    +20.0 (SE   0.0)  n=3
+  bare cover patches every 250 ticks, seed 42: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] of 20
+  bare cover patches every 250 ticks, seed 43: [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0] of 20
+  bare cover patches every 250 ticks, seed 44: [0, 0, 0, 2, 3, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] of 20
+  meat balance residual (must be 0)              base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  meat source                                    base      0.0 (  0.0)  new    173.7 ( 10.1)  diff   +173.7 (SE  10.1)  n=3
+  meat eaten                                     base      0.0 (  0.0)  new     19.7 (  1.2)  diff    +19.7 (SE   1.2)  n=3
+  meat looted                                    base      0.0 (  0.0)  new      5.0 (  0.0)  diff     +5.0 (SE   0.0)  n=3
+  meat decayed                                   base      0.0 (  0.0)  new    149.0 (  9.0)  diff   +149.0 (SE   9.0)  n=3
+  tick ms (mean per tick)                        base    196.6 ( 50.1)  new    160.2 ( 22.0)  diff    -36.4 (SE  69.0)  n=3
+  plant-eater alive every 250 ticks, seed 42: [6, 6, 6, 6, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  plant-eater alive every 250 ticks, seed 43: [6, 6, 6, 6, 6, 3, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  plant-eater alive every 250 ticks, seed 44: [6, 6, 6, 6, 6, 5, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+== frontier_living_world
+  wolf: alive@1500                               base      0.7 (  0.7)  new      5.0 (  0.0)  diff     +4.3 (SE   0.7)  n=3
+  wolf: alive@5000                               base      0.3 (  0.3)  new      5.0 (  0.0)  diff     +4.7 (SE   0.3)  n=3
+  wolf: deaths total                             base      4.7 (  0.3)  new      0.0 (  0.0)  diff     -4.7 (SE   0.3)  n=3
+  wolf: starvation deaths                        base      0.3 (  0.3)  new      0.0 (  0.0)  diff     -0.3 (SE   0.3)  n=3
+  wolf: COMBAT+DEFEAT deaths                     base      4.3 (  0.7)  new      0.0 (  0.0)  diff     -4.3 (SE   0.7)  n=3
+  wolf: HAZARD deaths                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: ever ate                                 base      0.7 (  0.3)  new      2.7 (  0.3)  diff     +2.0 (SE   0.6)  n=3
+  spider: alive@1500                             base      0.7 (  0.3)  new      5.0 (  0.0)  diff     +4.3 (SE   0.3)  n=3
+  spider: alive@5000                             base      0.3 (  0.3)  new      5.0 (  0.0)  diff     +4.7 (SE   0.3)  n=3
+  spider: deaths total                           base      4.7 (  0.3)  new      0.0 (  0.0)  diff     -4.7 (SE   0.3)  n=3
+  spider: starvation deaths                      base      0.3 (  0.3)  new      0.0 (  0.0)  diff     -0.3 (SE   0.3)  n=3
+  spider: COMBAT+DEFEAT deaths                   base      4.3 (  0.3)  new      0.0 (  0.0)  diff     -4.3 (SE   0.3)  n=3
+  spider: HAZARD deaths                          base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: ever ate                               base      2.7 (  0.7)  new      0.3 (  0.3)  diff     -2.3 (SE   0.3)  n=3
+  small_plant_eater: alive@1500                  base      0.0 (  0.0)  new      4.3 (  0.9)  diff     +4.3 (SE   0.9)  n=3
+  small_plant_eater: alive@5000                  base      0.0 (  0.0)  new      1.0 (  0.6)  diff     +1.0 (SE   0.6)  n=3
+  small_plant_eater: deaths total                base      0.0 (  0.0)  new      5.0 (  0.6)  diff     +5.0 (SE   0.6)  n=3
+  small_plant_eater: starvation deaths           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  small_plant_eater: COMBAT+DEFEAT deaths        base      0.0 (  0.0)  new      4.7 (  0.7)  diff     +4.7 (SE   0.7)  n=3
+  small_plant_eater: HAZARD deaths               base      0.0 (  0.0)  new      0.3 (  0.3)  diff     +0.3 (SE   0.3)  n=3
+  small_plant_eater: ever ate                    base      0.0 (  0.0)  new      2.0 (  1.0)  diff     +2.0 (SE   1.0)  n=3
+  human: alive@1500                              base      6.3 (  2.8)  new      4.3 (  1.8)  diff     -2.0 (SE   3.2)  n=3
+  human: alive@5000                              base      4.0 (  1.2)  new      3.3 (  1.5)  diff     -0.7 (SE   2.3)  n=3
+  human: deaths total                            base     17.0 (  1.2)  new     17.7 (  1.5)  diff     +0.7 (SE   2.3)  n=3
+  human: starvation deaths                       base      0.3 (  0.3)  new      0.3 (  0.3)  diff     +0.0 (SE   0.0)  n=3
+  human: COMBAT+DEFEAT deaths                    base     12.7 (  1.3)  new     13.0 (  0.6)  diff     +0.3 (SE   1.9)  n=3
+  human: HAZARD deaths                           base      4.0 (  0.6)  new      4.3 (  1.3)  diff     +0.3 (SE   1.9)  n=3
+  human: ever ate                                base      4.0 (  2.0)  new      4.7 (  0.7)  diff     +0.7 (SE   2.4)  n=3
+  goblin: alive@1500                             base      0.7 (  0.3)  new      0.3 (  0.3)  diff     -0.3 (SE   0.7)  n=3
+  goblin: alive@5000                             base      0.7 (  0.3)  new      0.0 (  0.0)  diff     -0.7 (SE   0.3)  n=3
+  goblin: deaths total                           base      8.3 (  0.3)  new      9.0 (  0.0)  diff     +0.7 (SE   0.3)  n=3
+  goblin: starvation deaths                      base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: COMBAT+DEFEAT deaths                   base      7.3 (  0.7)  new      7.0 (  1.0)  diff     -0.3 (SE   0.3)  n=3
+  goblin: HAZARD deaths                          base      1.0 (  0.6)  new      2.0 (  1.0)  diff     +1.0 (SE   0.6)  n=3
+  goblin: ever ate                               base      1.3 (  0.3)  new      1.3 (  0.7)  diff     +0.0 (SE   0.6)  n=3
+  undead: alive@1500                             base      5.3 (  0.3)  new      5.0 (  0.0)  diff     -0.3 (SE   0.3)  n=3
+  undead: alive@5000                             base      5.3 (  0.3)  new      5.0 (  0.0)  diff     -0.3 (SE   0.3)  n=3
+  undead: deaths total                           base      0.7 (  0.3)  new      1.0 (  0.0)  diff     +0.3 (SE   0.3)  n=3
+  undead: starvation deaths                      base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: COMBAT+DEFEAT deaths                   base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: HAZARD deaths                          base      0.7 (  0.3)  new      1.0 (  0.0)  diff     +0.3 (SE   0.3)  n=3
+  undead: ever ate                               base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: attack starts on humans                  base      3.0 (  0.6)  new      0.0 (  0.0)  diff     -3.0 (SE   0.6)  n=3
+  wolf: berries gathered (hard zero)             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: berry-hold ticks (hard zero)             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: inn meals (hard zero)                    base      5.0 (  4.0)  new      0.0 (  0.0)  diff     -5.0 (SE   4.0)  n=3
+  wolf: corpse meals                             base      0.0 (  0.0)  new      4.3 (  1.5)  diff     +4.3 (SE   1.5)  n=3
+  wolf: other meals                              base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: leash-return ticks                       base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: attack starts on humans                base      3.0 (  0.0)  new      0.0 (  0.0)  diff     -3.0 (SE   0.0)  n=3
+  spider: berries gathered (hard zero)           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: berry-hold ticks (hard zero)           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: inn meals (hard zero)                  base      4.7 (  3.2)  new      0.0 (  0.0)  diff     -4.7 (SE   3.2)  n=3
+  spider: corpse meals                           base      0.3 (  0.3)  new      0.3 (  0.3)  diff     +0.0 (SE   0.6)  n=3
+  spider: other meals                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: leash-return ticks                     base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  feeding kills (all)                            base      0.0 (  0.0)  new      5.0 (  0.6)  diff     +5.0 (SE   0.6)  n=3
+  feeding kills eaten (joined by corpse id)      base      0.0 (  0.0)  new      3.7 (  0.9)  diff     +3.7 (SE   0.9)  n=3
+  feeding kills by wolf                          base      0.0 (  0.0)  new      3.0 (  1.5)  diff     +3.0 (SE   1.5)  n=3
+  feeding kills by spider                        base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  feeding kills by human                         base      0.0 (  0.0)  new      2.0 (  1.2)  diff     +2.0 (SE   1.2)  n=3
+  people: corpse meals                           base      0.3 (  0.3)  new      2.7 (  0.9)  diff     +2.3 (SE   1.2)  n=3
+  berries gathered: people                       base      2.3 (  2.3)  new      0.0 (  0.0)  diff     -2.3 (SE   2.3)  n=3
+  berries gathered: plant-eaters                 base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  small_plant_eater: grass gathered              base      0.0 (  0.0)  new    104.7 ( 49.2)  diff   +104.7 (SE  49.2)  n=3
+  small_plant_eater: grass meals                 base      0.0 (  0.0)  new     17.7 (  9.1)  diff    +17.7 (SE   9.1)  n=3
+  human: grass gathered                          base      0.0 (  0.0)  new      3.7 (  3.7)  diff     +3.7 (SE   3.7)  n=3
+  human: grass meals                             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: grass gathered                           base      0.0 (  0.0)  new     19.0 ( 11.9)  diff    +19.0 (SE  11.9)  n=3
+  wolf: grass meals                              base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: grass gathered                         base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: grass meals                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: grass gathered                         base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: grass meals                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  plant-eaters: grass meals outside leash (must be 0) base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  human attack starts on wolf                    base      6.0 (  1.5)  new      0.0 (  0.0)  diff     -6.0 (SE   1.5)  n=3
+  goblin attack starts on small_plant_eater      base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin attack starts on wolf                   base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  cover patches in world                         base      0.0 (  0.0)  new      8.0 (  0.0)  diff     +8.0 (SE   0.0)  n=3
+  bare cover patches every 250 ticks, seed 42: [0, 0, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] of 8
+  bare cover patches every 250 ticks, seed 43: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] of 8
+  bare cover patches every 250 ticks, seed 44: [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] of 8
+  meat balance residual (must be 0)              base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  meat source                                    base      0.0 (  0.0)  new    116.3 (  6.9)  diff   +116.3 (SE   6.9)  n=3
+  meat eaten                                     base      0.0 (  0.0)  new      8.0 (  2.1)  diff     +8.0 (SE   2.1)  n=3
+  meat looted                                    base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  meat decayed                                   base      0.0 (  0.0)  new    108.3 (  5.2)  diff   +108.3 (SE   5.2)  n=3
+  tick ms (mean per tick)                        base    104.8 (  4.1)  new    122.8 (  5.4)  diff    +17.9 (SE   9.3)  n=3
+  plant-eater alive every 250 ticks, seed 42: [6, 6, 6, 6, 5, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  plant-eater alive every 250 ticks, seed 43: [6, 6, 6, 5, 5, 4, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  plant-eater alive every 250 ticks, seed 44: [6, 6, 6, 6, 6, 6, 6, 5, 5, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2]
+== swamp_border_world
+  wolf: alive@1500                               base      0.7 (  0.3)  new      5.0 (  0.0)  diff     +4.3 (SE   0.3)  n=3
+  wolf: alive@5000                               base      0.7 (  0.3)  new      5.0 (  0.0)  diff     +4.3 (SE   0.3)  n=3
+  wolf: deaths total                             base      4.3 (  0.3)  new      0.0 (  0.0)  diff     -4.3 (SE   0.3)  n=3
+  wolf: starvation deaths                        base      0.3 (  0.3)  new      0.0 (  0.0)  diff     -0.3 (SE   0.3)  n=3
+  wolf: COMBAT+DEFEAT deaths                     base      4.0 (  0.6)  new      0.0 (  0.0)  diff     -4.0 (SE   0.6)  n=3
+  wolf: HAZARD deaths                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: ever ate                                 base      2.3 (  0.7)  new      0.7 (  0.3)  diff     -1.7 (SE   0.9)  n=3
+  spider: alive@1500                             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: alive@5000                             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: deaths total                           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: starvation deaths                      base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: COMBAT+DEFEAT deaths                   base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: HAZARD deaths                          base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: ever ate                               base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  small_plant_eater: alive@1500                  base      0.0 (  0.0)  new      2.0 (  0.6)  diff     +2.0 (SE   0.6)  n=3
+  small_plant_eater: alive@5000                  base      0.0 (  0.0)  new      0.7 (  0.3)  diff     +0.7 (SE   0.3)  n=3
+  small_plant_eater: deaths total                base      0.0 (  0.0)  new      5.3 (  0.3)  diff     +5.3 (SE   0.3)  n=3
+  small_plant_eater: starvation deaths           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  small_plant_eater: COMBAT+DEFEAT deaths        base      0.0 (  0.0)  new      5.3 (  0.3)  diff     +5.3 (SE   0.3)  n=3
+  small_plant_eater: HAZARD deaths               base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  small_plant_eater: ever ate                    base      0.0 (  0.0)  new      1.7 (  1.7)  diff     +1.7 (SE   1.7)  n=3
+  human: alive@1500                              base      8.3 (  0.9)  new     10.0 (  0.6)  diff     +1.7 (SE   0.3)  n=3
+  human: alive@5000                              base      8.0 (  1.0)  new      9.0 (  0.0)  diff     +1.0 (SE   1.0)  n=3
+  human: deaths total                            base      5.0 (  1.0)  new      4.0 (  0.0)  diff     -1.0 (SE   1.0)  n=3
+  human: starvation deaths                       base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  human: COMBAT+DEFEAT deaths                    base      1.7 (  0.3)  new      1.0 (  0.0)  diff     -0.7 (SE   0.3)  n=3
+  human: HAZARD deaths                           base      3.3 (  1.2)  new      3.0 (  0.0)  diff     -0.3 (SE   1.2)  n=3
+  human: ever ate                                base      4.0 (  0.6)  new      8.3 (  0.7)  diff     +4.3 (SE   0.9)  n=3
+  goblin: alive@1500                             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: alive@5000                             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: deaths total                           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: starvation deaths                      base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: COMBAT+DEFEAT deaths                   base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: HAZARD deaths                          base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: ever ate                               base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: alive@1500                             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: alive@5000                             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: deaths total                           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: starvation deaths                      base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: COMBAT+DEFEAT deaths                   base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: HAZARD deaths                          base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  undead: ever ate                               base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: attack starts on humans                  base      4.0 (  1.5)  new      0.0 (  0.0)  diff     -4.0 (SE   1.5)  n=3
+  wolf: berries gathered (hard zero)             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: berry-hold ticks (hard zero)             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: inn meals (hard zero)                    base      2.3 (  0.7)  new      0.0 (  0.0)  diff     -2.3 (SE   0.7)  n=3
+  wolf: corpse meals                             base      0.7 (  0.7)  new      1.0 (  0.6)  diff     +0.3 (SE   0.9)  n=3
+  wolf: other meals                              base      1.0 (  1.0)  new      0.0 (  0.0)  diff     -1.0 (SE   1.0)  n=3
+  wolf: leash-return ticks                       base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: attack starts on humans                base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: berries gathered (hard zero)           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: berry-hold ticks (hard zero)           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: inn meals (hard zero)                  base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: corpse meals                           base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: other meals                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: leash-return ticks                     base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  feeding kills (all)                            base      0.0 (  0.0)  new      5.3 (  0.3)  diff     +5.3 (SE   0.3)  n=3
+  feeding kills eaten (joined by corpse id)      base      0.0 (  0.0)  new      4.0 (  0.6)  diff     +4.0 (SE   0.6)  n=3
+  feeding kills by wolf                          base      0.0 (  0.0)  new      1.3 (  0.3)  diff     +1.3 (SE   0.3)  n=3
+  feeding kills by spider                        base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  feeding kills by human                         base      0.0 (  0.0)  new      2.0 (  0.6)  diff     +2.0 (SE   0.6)  n=3
+  people: corpse meals                           base      0.0 (  0.0)  new      2.7 (  0.9)  diff     +2.7 (SE   0.9)  n=3
+  berries gathered: people                       base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  berries gathered: plant-eaters                 base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  small_plant_eater: grass gathered              base      0.0 (  0.0)  new     80.3 ( 19.7)  diff    +80.3 (SE  19.7)  n=3
+  small_plant_eater: grass meals                 base      0.0 (  0.0)  new      5.7 (  5.7)  diff     +5.7 (SE   5.7)  n=3
+  human: grass gathered                          base      0.0 (  0.0)  new      1.7 (  1.7)  diff     +1.7 (SE   1.7)  n=3
+  human: grass meals                             base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  wolf: grass gathered                           base      0.0 (  0.0)  new     31.0 (  4.2)  diff    +31.0 (SE   4.2)  n=3
+  wolf: grass meals                              base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: grass gathered                         base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  spider: grass meals                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: grass gathered                         base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin: grass meals                            base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  plant-eaters: grass meals outside leash (must be 0) base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  human attack starts on wolf                    base      7.3 (  2.7)  new      0.0 (  0.0)  diff     -7.3 (SE   2.7)  n=3
+  goblin attack starts on small_plant_eater      base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  goblin attack starts on wolf                   base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  cover patches in world                         base      0.0 (  0.0)  new     10.0 (  0.0)  diff    +10.0 (SE   0.0)  n=3
+  bare cover patches every 250 ticks, seed 42: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] of 10
+  bare cover patches every 250 ticks, seed 43: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] of 10
+  bare cover patches every 250 ticks, seed 44: [0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] of 10
+  meat balance residual (must be 0)              base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  meat source                                    base      0.0 (  0.0)  new     30.7 (  0.7)  diff    +30.7 (SE   0.7)  n=3
+  meat eaten                                     base      0.0 (  0.0)  new      9.3 (  0.7)  diff     +9.3 (SE   0.7)  n=3
+  meat looted                                    base      0.0 (  0.0)  new      0.0 (  0.0)  diff     +0.0 (SE   0.0)  n=3
+  meat decayed                                   base      0.0 (  0.0)  new     21.3 (  1.3)  diff    +21.3 (SE   1.3)  n=3
+  tick ms (mean per tick)                        base    173.6 ( 40.2)  new    146.4 ( 16.2)  diff    -27.2 (SE  28.3)  n=3
+  plant-eater alive every 250 ticks, seed 42: [6, 6, 6, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  plant-eater alive every 250 ticks, seed 43: [6, 6, 6, 5, 5, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  plant-eater alive every 250 ticks, seed 44: [6, 6, 6, 5, 4, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0]
+
+== paired serial tick time (frontier_living_world seed 42, alternating base/new, nothing else running)
+base frontier_living_world seed 42: 89.52 ms/tick over 1500 ticks, 17 alive at end, 53 entities
+new frontier_living_world seed 42: 119.83 ms/tick over 1500 ticks, 28 alive at end, 58 entities
+base frontier_living_world seed 42: 88.64 ms/tick over 1500 ticks, 17 alive at end, 53 entities
+new frontier_living_world seed 42: 119.21 ms/tick over 1500 ticks, 28 alive at end, 58 entities
+base frontier_living_world seed 42: 57.43 ms/tick over 300 ticks, 39 alive at end, 51 entities
+new frontier_living_world seed 42: 76.95 ms/tick over 300 ticks, 48 alive at end, 56 entities
+base frontier_living_world seed 42: 57.24 ms/tick over 300 ticks, 39 alive at end, 51 entities
+new frontier_living_world seed 42: 77.01 ms/tick over 300 ticks, 48 alive at end, 56 entities

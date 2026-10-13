@@ -212,3 +212,15 @@
   def: 4
   attack_range: 1
   readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "small_plant_eater_base"
+  hp: 20
+  max_hp: 20
+  atk: 3
+  def: 1
+  attack_range: 1
+  readiness: 100.0
+  attribute_bias:
+    agility: "high"
+    perception: "high"

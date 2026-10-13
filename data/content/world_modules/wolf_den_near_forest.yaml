@@ -61,8 +61,8 @@ regions:
 region_precedence:
   - winner: "wolf_den"
     over: ["near_forest"]
-factions: ["wild_beast_pack"]
-populations: ["wolf_pack_small"]
+factions: ["wild_beast_pack", "wild_fauna"]
+populations: ["wolf_pack_small", "small_plant_eater_herd"]
 relationships: ["town_to_wild_beasts", "wild_beasts_to_town"]
 resources:
   wood_node: 8

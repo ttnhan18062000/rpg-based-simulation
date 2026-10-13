@@ -67,13 +67,13 @@ def test_search_launcher_final_error_message_preserved():
     )
 
 
-def test_search_launcher_knowledge_venv_candidates_come_before_vboxuser():
+def test_search_launcher_explicit_override_then_knowledge_venv_then_system_python():
+    """TCK-20261012-HOST-PATH-LITERALS-MAKEFILE-AND-MCP-LAUNCHERS: no host path; KNOWLEDGE_PYTHON first."""
     text = _text(_SEARCH_LAUNCHER)
+    override = text.index("${KNOWLEDGE_PYTHON:-}")
     knowledge_pos = text.index(".venv-knowledge/bin/python3")
-    vboxuser_pos = text.index("/home/vboxuser/Work/venv/bin/python3")
-    assert knowledge_pos < vboxuser_pos, (
-        "expected .venv-knowledge candidates to be tried before the vboxuser fallback path"
-    )
+    system = text.index("command -v python3")
+    assert override < knowledge_pos < system
 
 
 
@@ -139,13 +139,11 @@ def test_headroom_launcher_final_error_message_preserved():
     )
 
 
-def test_headroom_launcher_knowledge_venv_candidates_come_before_vboxuser():
+def test_headroom_launcher_workspace_comes_from_the_main_root_and_respects_an_override():
+    """TCK-20261012-HOST-PATH-LITERALS-MAKEFILE-AND-MCP-LAUNCHERS: no host path in the workspace dir."""
     text = _text(_HEADROOM_LAUNCHER)
-    knowledge_pos = text.index(".venv-knowledge/bin/python3")
-    vboxuser_pos = text.index("/home/vboxuser/Work/venv/bin/python3")
-    assert knowledge_pos < vboxuser_pos, (
-        "expected .venv-knowledge candidates to be tried before the vboxuser fallback path"
-    )
+    assert "${HEADROOM_WORKSPACE_DIR:-${MAIN_ROOT:-$REPO_ROOT}/.headroom-workspace}" in text
+    assert "/home/vboxuser" not in text
 
 
 def test_headroom_launcher_still_sets_isolated_workspace_dir():

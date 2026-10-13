@@ -200,10 +200,10 @@ def test_resources_real_fields_from_catalog():
     catalog = _catalog()
     result = MetadataPresenter.present_resources(catalog)
     assert len(result["resource_types"]) == len(catalog.resources)
-    by_type = {r["resource_type"]: r for r in result["resource_types"]}
-    for real_resource in catalog.resources.values():
-        key = real_resource.resource_type or real_resource.id
-        presented = by_type[key]
+    # One row per catalog definition, in catalog order: several definitions can share a resource_type (the three cover patches, one per fertility,
+    # are all `grass_cover`), so a lookup by resource_type alone would compare a row with another definition's charges.
+    for real_resource, presented in zip(catalog.resources.values(), result["resource_types"]):
+        assert presented["resource_type"] == (real_resource.resource_type or real_resource.id)
         assert presented["max_harvests"] == real_resource.default_charges
         assert presented["harvest_ticks"] == real_resource.required_ticks
         assert presented["respawn_cooldown"] == 0

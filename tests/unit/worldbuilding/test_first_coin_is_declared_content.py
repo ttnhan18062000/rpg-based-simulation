@@ -7,6 +7,7 @@ from functools import lru_cache
 import pytest
 
 from src.core.items import food_hunger_recovery
+from src.engine.appraisal import kind_can_eat_item
 from tests.helpers.scenario import compile_world
 
 pytestmark = [pytest.mark.domain("economy"), pytest.mark.level("unit")]
@@ -66,7 +67,7 @@ def test_crowded_frontier_has_a_forage_node_owned_by_a_hazard_free_near_edge_reg
     """Decision 35: crowded_frontier's lack of wild land was an oversight; the forest edge beside its settlement holds a thicket."""
     from src.engine.legality import LegalityServiceV2
     state = _state("crowded_frontier")
-    food = [n for n in state.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0]
+    food = [n for n in state.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0 and kind_can_eat_item("human", n.yields_item)]
     # D57: the goblin camp's own berries (module goblin_camp_forage) are the other food node; the forest edge holds exactly one thicket.
     owners = {n.id: LegalityServiceV2.get_region_for_position(n.position, state).id for n in food}
     assert sorted(owners.values()) == ["forest_edge", "goblin_camp_edge"]

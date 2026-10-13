@@ -460,3 +460,59 @@ def test_process_ecology_never_emits_unregistered_kind(region_kind):
     assert len(result.nodes_add) == 1
     for node in result.nodes_add:
         assert ResourceRegistry.contains(node.kind)
+
+
+# ---------------------------------------------------------------------------
+# Group D - the declared ``regrow`` mode: emptied, a bare wait, then regrowth from zero (owner row 59)
+# ---------------------------------------------------------------------------
+
+WAIT = 300
+
+
+def _regrow_node(node_id=10, charges=1, max_charges=6, regen=2, cooldown=0):
+    return replace(_make_node(node_id=node_id, remaining_charges=charges, max_charges=max_charges, regen_rate_per_tick=regen, cooldown_remaining=cooldown),
+                   regrowth_mode="regrow", respawn_cooldown=WAIT)
+
+
+def _harvest(node):
+    state = AuthoritativeState(tick=1, seed=42, entities={1: _make_actor(1)}, resource_nodes={node.id: node})
+    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, resource_transfers=[_make_harvest_intent(node.id)])})
+    return AuthoritativeApplyPipeline.refine(state, update)
+
+
+def test_a_regrow_node_emptied_by_a_harvest_starts_its_bare_wait():
+    refined = _harvest(_regrow_node(charges=1))
+    assert refined.node_updates[10].cooldown_set == WAIT
+
+
+def test_a_regrow_node_not_emptied_starts_no_wait():
+    refined = _harvest(_regrow_node(charges=3))
+    assert refined.node_updates[10].cooldown_set is None
+
+
+def test_a_default_node_emptied_starts_no_wait():
+    refined = _harvest(_make_node(node_id=10, remaining_charges=1, max_charges=5))
+    assert refined.node_updates[10].cooldown_set is None
+
+
+def test_the_bare_wait_ends_with_no_charges_added_and_a_default_node_still_refills():
+    from src.engine.world_dynamics import WorldDynamicsSystem
+
+    for node, expected_delta in ((_regrow_node(charges=0, cooldown=1), 0), (replace(_make_node(node_id=10, remaining_charges=0, max_charges=5), cooldown_remaining=1), 5)):
+        state = AuthoritativeState(tick=2, seed=42, resource_nodes={10: node}, regions={})
+        out = WorldDynamicsSystem.resolve_dynamics(state, StateUpdate(), _FakeGenerator())
+        upd = out.node_updates[10]
+        assert upd.cooldown_set == 0 and upd.charges_delta == expected_delta
+
+
+def test_ecology_does_not_regrow_a_node_during_its_bare_wait_and_regrows_from_zero_after():
+    waiting = _regrow_node(charges=0, cooldown=50)
+    assert 10 not in ResourceEcologyService.process_ecology(_ecology_tick_state(200, {10: waiting}), _FakeGenerator()).node_updates
+    after = _regrow_node(charges=0, cooldown=0, regen=2)
+    assert ResourceEcologyService.process_ecology(_ecology_tick_state(200, {10: after}), _FakeGenerator()).node_updates[10].charges_delta == 2
+
+
+def test_the_mode_is_in_the_canonical_form_only_when_declared():
+    assert "regrowth_mode" not in _make_node().to_canonical_dict()
+    assert _regrow_node().to_canonical_dict()["regrowth_mode"] == "regrow"
+    assert _regrow_node().to_canonical_dict()["respawn_cooldown"] == WAIT

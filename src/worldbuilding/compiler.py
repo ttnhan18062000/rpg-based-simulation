@@ -27,6 +27,7 @@ from src.core.state import (
 from src.core.builder import V2EntityBuilder
 from src.core.registries import ResourceRegistry
 from src.core.enums import EntityRole, Faction
+from src.core.treasury import treasury_key
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
 from src.worldassembly.region_precedence import first_region_at
@@ -129,12 +130,18 @@ def _draw_tile_owned_by(rng: Any, node_id: int, ordered_regions: Any, region_id:
     Attempt 0 is the same draw every kind makes (sub ids 0 and 1 of the node's seeded stream), so a tile that is owned from the start is
     the tile the uniform rule would have picked; later attempts use the next sub ids of the same stream.
     """
-    min_x, min_y, max_x, max_y = bounds
+    return _draw_free_tile(rng, node_id, ordered_regions, (region_id, bounds), ())
+
+
+def _draw_free_tile(rng: Any, node_id: int, ordered_regions: Any, owner_region: tuple, taken: Any) -> Optional[tuple]:
+    """``_draw_tile_owned_by`` for ``owner_region`` = (region id, bounds), also skipping a draw on a tile a node already stands on (``taken``), like a
+    draw the region does not own, so two nodes never share a tile (LAW-SPAWN-OCCUPANCY); a draw that does not collide is the same draw as before."""
+    region_id, (min_x, min_y, max_x, max_y) = owner_region
     for attempt in range(RESOURCE_PLACEMENT_ATTEMPTS):
         x = rng.get_int(Domain.WORLD, 0, node_id, min_x, max_x, sub_id=2 * attempt)
         y = rng.get_int(Domain.WORLD, 0, node_id, min_y, max_y, sub_id=2 * attempt + 1)
         owner = first_region_at(ordered_regions, x, y)
-        if owner is not None and owner.id == region_id:
+        if owner is not None and owner.id == region_id and (x, y) not in taken:
             return x, y
     return None
 
@@ -169,6 +176,14 @@ def _resource_profile(res_spec: Any, context: Any) -> tuple:
         required_ticks, placement = profile.required_ticks, profile.placement
         return required_ticks, profile.yield_item or registered or yields_item, placement
     return required_ticks, registered or yields_item, placement
+
+
+def _resource_regrowth(res_spec: Any, context: Any) -> dict:
+    """The node fields a ``regrow`` kind adds (the wait is the node's ``respawn_cooldown``); nothing for the default kind."""
+    profile = context.resources.get(res_spec.id) if context is not None else None
+    if profile is None or profile.regrowth_mode == "none":
+        return {}
+    return {"regrowth_mode": profile.regrowth_mode, "respawn_cooldown": profile.bare_wait_ticks}
 
 
 def _resolve_entity_spawn_tile(
@@ -308,6 +323,34 @@ def _assert_region_references_resolve(spec: WorldSpec) -> None:
             f"World '{spec.world_id}' references regions it does not define "
             f"(defined: {sorted(region_ids)}): " + "; ".join(dangling)
         )
+
+
+def _compile_factions(spec: WorldSpec, context: Optional[Any]) -> tuple[Dict[str, FactionState], Dict[str, float]]:
+    """Compile the declared factions. One treasury per region-owner bucket (src/core/treasury.py), started with each member faction's declared
+    starting gold once (EXCH-02: the per-faction keys that no phase read are gone, and catalog factions sharing a bucket no longer overwrite each
+    other). Returns the faction states by id and the treasury balances by bucket key."""
+    global_resources: Dict[str, float] = {}
+    factions: Dict[str, FactionState] = {}
+    bucket_gold: Dict[int, float] = {}
+    for f_spec in spec.factions:
+        faction_enum = get_faction_enum(f_spec.id, context=context)
+        starting_gold = 1000.0
+
+        # Context-backed Faction starting gold override
+        if context is not None and f_spec.id in context.factions:
+            starting_gold = context.factions[f_spec.id].starting_gold
+
+        bucket_gold[int(faction_enum)] = bucket_gold.get(int(faction_enum), 0.0) + starting_gold
+
+        factions[f_spec.id] = FactionState(
+            faction_id=f_spec.id,
+            tension_level=f_spec.initial_tension_level,
+        )
+
+    for bucket, gold in sorted(bucket_gold.items()):
+        global_resources[treasury_key(bucket)] = gold
+    return factions, global_resources
+
 
 
 class WorldCompiler:
@@ -532,6 +575,7 @@ class WorldCompiler:
                 kind=r_spec.type.upper(),
                 influence=100.0 if r_spec.type == "town" else 0.0,
                 owner_faction_id=owner_faction,
+                tax_share=(float(context.tax_share) if context is not None and owner_faction is not None else 0.0),
                 hazard_level=getattr(r_spec, "hazard_level", 0.0),
                 hazard_kind=getattr(r_spec, "hazard_kind", "PHYSICAL"),
                 population_cohorts=_seed_population_cohorts(region_declared_population.get(r_spec.id, 0)),
@@ -548,30 +592,8 @@ class WorldCompiler:
                 town_center = ((min_x + max_x) / 2.0, (min_y + max_y) / 2.0)
                 break
 
-        # 3. Compile factions (Initialize starting vaults in global_resources)
-        global_resources: Dict[str, float] = {}
-        factions: Dict[str, FactionState] = {}
-        for f_spec in spec.factions:
-            faction_enum = get_faction_enum(f_spec.id, context=context)
-            starting_gold = 1000.0
-
-            # Context-backed Faction starting gold override
-            if context is not None and f_spec.id in context.factions:
-                starting_gold = context.factions[f_spec.id].starting_gold
-
-            if faction_enum == Faction.HERO_GUILD:
-                global_resources["faction_hero_guild_gold"] = starting_gold
-            elif faction_enum == Faction.MONSTER_HORDE:
-                global_resources["faction_monster_horde_gold"] = starting_gold
-            elif faction_enum == Faction.TOWN_COUNCIL:
-                global_resources["faction_town_council_gold"] = starting_gold
-            else:
-                global_resources[f"faction_{f_spec.id.lower()}_gold"] = starting_gold
-
-            factions[f_spec.id] = FactionState(
-                faction_id=f_spec.id,
-                tension_level=f_spec.initial_tension_level,
-            )
+        # 3. Compile factions and their treasuries
+        factions, global_resources = _compile_factions(spec, context)
 
         # Collected across steps 4-7; step 6 also appends LAW-SPAWN-OCCUPANCY
         # region-exhaustion warnings (see _resolve_entity_spawn_tile).
@@ -590,7 +612,7 @@ class WorldCompiler:
 
                 required_ticks, yields_item, placement = _resource_profile(res_spec, context)
                 if placement != RESOURCE_PLACEMENT_UNIFORM:
-                    owned = _draw_tile_owned_by(rng, next_resource_id, spec.regions, region_id, region.bounds)
+                    owned = _draw_free_tile(rng, next_resource_id, spec.regions, (region_id, region.bounds), {(int(n.position[0]), int(n.position[1])) for n in resource_nodes.values()})
                     if owned is None:
                         warnings.append(f"resource '{res_spec.id}' ({res_spec.resource_type}) found no tile owned by region '{region_id}' "
                                         f"in {RESOURCE_PLACEMENT_ATTEMPTS} draws (bounds {region.bounds}); node not placed")
@@ -606,7 +628,7 @@ class WorldCompiler:
                     max_charges=res_spec.count,
                     required_ticks=required_ticks,
                     cooldown_remaining=0,
-                    regen_rate_per_tick=res_spec.regen_rate,
+                    regen_rate_per_tick=res_spec.regen_rate, **_resource_regrowth(res_spec, context),
                 )
                 next_resource_id += 1
 
@@ -624,9 +646,13 @@ class WorldCompiler:
 
                 hp = 500
                 max_hp = 500
+                maintenance_shifts = 0
+                hires_for_pay = False
                 if context is not None and bld_spec.id in context.buildings:
                     hp = context.buildings[bld_spec.id].hp
                     max_hp = context.buildings[bld_spec.id].max_hp
+                    maintenance_shifts = context.buildings[bld_spec.id].maintenance_shifts
+                    hires_for_pay = context.buildings[bld_spec.id].hires_for_pay
 
                 buildings[next_building_id] = BuildingState(
                     id=next_building_id,
@@ -636,6 +662,8 @@ class WorldCompiler:
                     max_hp=max_hp,
                     functional=True,
                     inventory=_building_till(context, bld_spec.id),
+                    maintenance_shifts_needed=maintenance_shifts,
+                    hires_for_pay=hires_for_pay,
                 )
                 blocked_tiles.add((x, y))
                 next_building_id += 1

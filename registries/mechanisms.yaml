@@ -265,6 +265,10 @@ mechanisms:
         and `tactical_hold.notice_unengaged_hostile` follows the entity's own combat-engagement verdict (ignore keeps walking, avoid steps away).
         `ignore` is unreachable in the corpus today (0 firings); `watch` stands and observes (a typed HOLD wait, WATCH_HOSTILE). Pinned 5x3: opportunity-attack hits down 33 to 67 percent.
         **Note, added 2026-10-11 (#500, D57, TCK-20261009-HEROES-ON-A-LEASH-NEVER-SEEK-FOOD-AND-STARVE-WITHOUT-ONE-EAT-ATTEMPT):** a leashed subject's range (LeashService) bounds both the tactical leash return and which food ways count as in range (way_in_range). `LeashService` is cited above because the hunger and fatigue goals and the opening steps now call `way_in_range`, which made it a wired mechanism-shaped class.
+
+        **Note, added 2026-10-11 (TCK-20261011-A-HELD-MOVE-STANDS-FROZEN-AFTER-ARRIVING-IN-ITS-AREA, divergence 2.113):** a held move now ends on arriving in the area it was issued for: `LeashService.in_home_area` (a LEASH_RETURN ends inside the leash radius) and the REGROUP move's `arrival_radius` (set in `tactical.py`, read by `MovementCandidateSelector.arrived_in_area`).
+
+        **Note, added 2026-10-11 (TCK-20261011-A-PANIC-RETREAT-TO-ITS-OWN-TILE-IS-HELD-WITH-NO-THREAT-IN-SIGHT, divergence 2.114):** the tactical panic gate (`emotion.is_fleeing`) now flees only with a perceived threat; low hit points, regional dread and a grudge feed the panic but no longer flee alone.
   - id: combat_engagement
     layer: entity
     systems: [combat]
@@ -459,6 +463,7 @@ mechanisms:
       - src/engine/apply.py::ApplyPath::_compute_entity_changes
       - src/engine/biological_needs.py::need_rates
       - src/engine/starvation.py::hp_loss
+      - src/engine/natural_healing.py::hp_gain
     verified:
       instrument: code_trace
       verdict: observed
@@ -501,6 +506,7 @@ mechanisms:
         (stamina and readiness recover at half rate, attack x0.8), then 1 HP lost every round(6000 / max_hp) ticks at hunger 95, death about
         6000 ticks (2.5 days) after the line instead of about 50. Implemented by TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02:
         `src/engine/starvation.py` (the one tuning table), `apply.py` (the HP term and the recovery scale), `combat.py` (the attack scale).
+        **Rule ratified 2026-10-11 (owner decision 42, memo row 65):** every living body heals naturally, 1 HP every round(9600 / max_hp) life-due ticks awake and round(4800 / max_hp) asleep or resting, none at the starving line and half speed while weakened. Implemented by TCK-20261011-EVERY-LIVING-KIND-HEALS-NATURALLY-FASTER-AT-REST-ROW-65: `src/engine/natural_healing.py` (the table and `hp_gain`), `apply.py` (the HP term).
   - id: derived_stats
     layer: entity
     systems: [progression]
@@ -2689,6 +2695,12 @@ mechanisms:
         the people-only trait plus non-hostile-controller gate (decision 43). Decision 34 removed
         ShopSystem's auto-sell; `ShopSystem.enforce` stays bound because it still sanitises SHOP_BUY
         intents. `src/town/inn.py`/`home.py` remain dead (deleted in this PR).
+        **Noted 2026-10-12** (TCK-20261011-NEAREST-WORK-READS-THE-DECLARED-WORK-BUILDINGS-NOT-ONLY-THE-INN,
+        rpg-implementer-3; divergence 2.117, TOWN-210): the work a building offers is declared by
+        its content (`maintenance_shifts`, `hires_for_pay`), read from `BuildingState` by
+        `work_shift.offers_work`/`nearest_work` with no building name in code; a maintenance shift
+        is counted and treasury-backed in `conservation._wage_result`, a commercial shift is paid
+        from the purse only; upkeep is shifts times the wage.
   - id: building_sabotage
     layer: world
     systems: [economy]

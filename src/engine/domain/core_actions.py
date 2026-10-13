@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from src.core.enums import ReasonCode
 from src.core.items import food_hunger_recovery
 from src.core.models.inventory import ItemStack
-from src.engine.building_services import repair_source
+from src.engine.appraisal import can_eat_item, can_use_inn_meal
+from src.engine.repair import repair_update
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
     InteractionUpdate, NavigationUpdate, ResourceTransferIntent, StaminaUpdate
@@ -46,7 +47,7 @@ def carried_meal(entity: EntityState, current_tick: int) -> List[ResourceTransfe
     """One transfer that consumes the first carried food item and applies its hunger recovery, or none when nothing edible is carried."""
     for stack in entity.inventory.items:
         recovery = food_hunger_recovery(stack.item_id)
-        if recovery > 0.0 and stack.quantity > 0:
+        if recovery > 0.0 and stack.quantity > 0 and can_eat_item(entity, stack.item_id):
             return [ResourceTransferIntent(
                 source_id=entity.id, source_kind="CARRIED_FOOD", transfer_kind="EAT", is_group_required=False,
                 items_remove=[ItemStack(item_id=stack.item_id, quantity=1)],
@@ -60,8 +61,42 @@ def eat_update(entity: EntityState, current_tick: int) -> EntityUpdate:
     carried = carried_meal(entity, current_tick)
     if carried:
         return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0, resource_transfers=carried)
+    if not can_use_inn_meal(entity):  # decision 44: the free meal is a prepared meal; a diet without prepared food gets none, wherever it stands
+        return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0)
     return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0,
                         biological=BiologicalUpdate(hunger_delta=-40.0, last_meal_tick_set=current_tick))
+
+
+# How close (Manhattan tiles) an eater must be to a carcass to eat from it: within a stride of where its kill fell (a body is displaced a tile
+# or two as it falls and the killer holds still), a little farther than the reach for looting one.
+EAT_AT_CORPSE_REACH = 2.0
+
+
+def corpse_meal(entity: EntityState, corpse: Any, current_tick: int) -> List[ResourceTransferIntent]:
+    """One transfer that eats a unit of food from ``corpse`` where it lies (decision 44), or none when the eater is out of reach or the
+    carcass holds nothing its diet can eat. The corpse id is the transfer's source id: the meal is traceable to that body."""
+    if corpse is None:
+        return []
+    px, py = entity.navigation.position
+    if abs(px - corpse.position[0]) + abs(py - corpse.position[1]) > EAT_AT_CORPSE_REACH:
+        return []
+    for stack in corpse.items:
+        recovery = food_hunger_recovery(stack.item_id)
+        if recovery > 0.0 and stack.quantity > 0 and can_eat_item(entity, stack.item_id):
+            return [ResourceTransferIntent(
+                source_id=corpse.id, source_kind="CORPSE_FOOD", transfer_kind="EAT", is_group_required=False,
+                items_remove=[ItemStack(item_id=stack.item_id, quantity=1)],
+                biological_upd=BiologicalUpdate(hunger_delta=-recovery, last_meal_tick_set=current_tick))]
+    return []
+
+
+def eat_at_corpse_update(entity: EntityState, corpse_id: Any, context: Any, current_tick: int) -> EntityUpdate:
+    """EAT aimed at a corpse: the meal when it can be had, else a typed failure that ends the task so the brain re-decides."""
+    corpse = (getattr(context, "corpses", None) or {}).get(corpse_id)
+    meal = corpse_meal(entity, corpse, current_tick)
+    if not meal:
+        return EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason=ReasonCode.SOURCE_MISSING if corpse is None else ReasonCode.SOURCE_DEPLETED))
+    return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0, resource_transfers=meal)
 
 
 class CoreActions:
@@ -613,21 +648,7 @@ class CoreActions:
         if not repair_deltas:
             return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
             
-        from src.core.updates import EquipmentUpdate, ResourceTransferIntent
-        intent = ResourceTransferIntent(
-            source_id=repair_source(context, entity),
-            source_kind="TOWN_SERVICE",
-            gold_delta=-total_cost,
-            gold_cost=total_cost,
-            transfer_kind="REPAIR",
-            equipment_upd=EquipmentUpdate(durability_set=repair_deltas)
-        )
-        
-        return {entity.id: EntityUpdate(
-            entity_id=entity.id,
-            readiness_delta=-100.0,
-            resource_transfers=[intent]
-        )}
+        return repair_update(entity, repair_deltas, total_cost, context)
 
     @staticmethod
     def execute_interact(

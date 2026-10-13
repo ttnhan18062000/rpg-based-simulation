@@ -1,4 +1,4 @@
-"""A shift of work at an inn for a wage (EXCH-02, owner decision 34: a wage for work at a shop, inn or smithy, paid from the payer's own purse).
+"""A shift of work at a building for a wage (EXCH-02, owner decision 34: a wage for work at a shop, inn or smithy, paid from the payer's own purse).
 
 A subject that cannot afford a meal and has nothing a shop would buy can work a shift at the inn: the WORK action, held tick after tick beside a
 functional inn, counts up the interaction progress the node harvest already uses (``kind="work"``, no new state). Walking away, taking damage or
@@ -13,18 +13,37 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from src.core.treasury import can_pay
 from src.core.updates import EntityUpdate, InteractionUpdate, ResourceTransferIntent
-from src.engine.building_services import service_building
-from src.engine.serves import nearest_serving, serves
+from src.engine.building_services import maintenance_open, offers_work, service_building
+from src.engine.place_tax import building_holder, tax_on
+from src.engine.serves import serves
 
 SHIFT_TICKS = 200
 WAGE_GOLD = 6
 SHIFT_START = "shift_start"  # the tick the shift began, carried by the held WORK task's payload
 
 
+def _can_pay_shift(state: Any, building: Any) -> bool:
+    """Whether `building` can pay one wage now. Maintenance is paid first, from the purse and topped up from the holding treasury; commercial work
+    from the purse alone (ruling 66)."""
+    if building.inventory.gold >= WAGE_GOLD:
+        return True
+    holder = building_holder(state, building) if maintenance_open(building) else None
+    return holder is not None and can_pay(state.global_resources, holder, WAGE_GOLD - building.inventory.gold)
+
+
 def nearest_work(state: Any, entity: Any) -> Optional[Any]:
-    """The nearest functional inn that hires `entity` (it serves it, owner decision 43) and whose purse covers one wage, or None."""
-    return nearest_serving(state, entity, state.buildings.values(), "inn", accept=lambda inn: inn.inventory.gold >= WAGE_GOLD)
+    """The nearest functional building that offers `entity` a shift (it serves it, owner decision 43) and can pay one wage, or None. Ties keep the lower id."""
+    px, py = entity.navigation.position
+    best, best_key = None, None
+    for building in state.buildings.values():
+        if not offers_work(building) or not _can_pay_shift(state, building) or not serves(state, entity, building):
+            continue
+        key = (abs(building.position[0] - px) + abs(building.position[1] - py), building.id)
+        if best_key is None or key < best_key:
+            best, best_key = building, key
+    return best
 
 
 def shift_done(update: Optional[EntityUpdate]) -> bool:
@@ -41,5 +60,10 @@ def work_update(entity: Any, payload: Dict[str, Any], tick: int, context: Any) -
         return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
     # A held action runs twice a tick (the worker, then the routing phase); one shift is paid once, by its transaction id.
     shift = f"wage:{entity.id}:{inn.id}:{payload.get(SHIFT_START, tick)}"
-    wage = ResourceTransferIntent(source_id=inn.id, source_kind="WAGE", gold_delta=WAGE_GOLD, transfer_kind="WAGE", transaction_id=shift)
+    holder, tax = tax_on(context, inn, WAGE_GOLD)
+    maintenance = maintenance_open(inn)  # maintenance first: the capped, counted, treasury-backed shift; else commercial, from the purse alone
+    backer = building_holder(context, inn) if maintenance else None
+    holder = backer if backer is not None else holder
+    wage = ResourceTransferIntent(source_id=inn.id, source_kind="WAGE", gold_delta=WAGE_GOLD, transfer_kind="WAGE", transaction_id=shift,
+                                  treasury_faction=holder, treasury_gold=tax, treasury_pays=backer is not None, maintenance_shift=maintenance)
     return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0, resource_transfers=[wage], interaction=InteractionUpdate(reset=True))}

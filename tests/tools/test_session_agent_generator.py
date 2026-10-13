@@ -34,7 +34,7 @@ def test_generates_one_file_per_seat_with_launcher_only_description():
     roster = load_roster(ROOT)
     # 17 seats: the codebase domain (three seats) was registered with the owner's approval; the asset and perf
     # planner/implementer seats and lead-planner on the owner's request of 2026-10-09 (TCK-20261009-REGISTER-OTHER-HOST-SEATS).
-    assert len(files) == len(roster.roles) == 17
+    assert len(files) == len(roster.roles) == 20
     for role in roster.roles:
         content = files[gen.AGENT_DIR / f"session-{role.role}.md"]
         assert f"name: session-{role.role}\n" in content

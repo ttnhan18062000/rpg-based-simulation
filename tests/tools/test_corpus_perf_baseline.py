@@ -13,7 +13,9 @@ COMMITTED_WORLDS = ["frontier_extended", "frontier_marches", "crowded_frontier"]
 def test_bench_corpus_world_loads_real_state():
     result = bench_corpus_world("frontier_extended", seed=42, warmup_ticks=5, sample_ticks=10)
     assert result["source_world"] == "frontier_extended"
-    assert result["source_entity_count"] == 59
+    # 59 -> 65 (2026-10-14, #536): +6 small_plant_eater bodies (faction wild_fauna) from the generic plant-eater archetype
+    # (owner decisions 45-50); the same +6 the corpus registry regeneration shows for frontier_extended.
+    assert result["source_entity_count"] == 65
     assert result["avg_tick_compute_ms"] > 0
 
 

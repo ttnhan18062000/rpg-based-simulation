@@ -167,3 +167,16 @@
   themes: ["spirit", "sacred"]
   legacy_engine_bucket: "NEUTRAL"
   hazard_immunities: ["NATURAL_TERRAIN"]
+
+# STATE: ADDITIONAL
+# Decision 45: wild creatures that eat plants. Alignment "wild" (not "invader"), so no faction is hostile to them and they are hostile to none:
+# a meat-eater's hunt of them is the appraisal's PREDATION, never a faction verdict. A kind must not share a faction with whatever eats it.
+- id: "wild_fauna"
+  display_name: "Wild Fauna"
+  description: "Unaffiliated wild creatures. No faction verdict toward anyone."
+  alignment_bucket: "wild"
+  influence_role: "none"
+  common_species: ["small_plant_eater"]
+  themes: ["forest"]
+  legacy_engine_bucket: "NEUTRAL"
+  hazard_immunities: ["NATURAL_TERRAIN"]
