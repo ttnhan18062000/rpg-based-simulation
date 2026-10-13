@@ -400,7 +400,7 @@ def _docs_with_pooled_v1():
 
 
 def _missing_required(report):
-    return [f for f in report["findings"] if str(f.get("detail", "")).startswith("required validity row")]
+    return [f for f in report["findings"] if f.get("required_missing")]
 
 
 def test_a_required_validity_row_that_every_document_has_adds_nothing():

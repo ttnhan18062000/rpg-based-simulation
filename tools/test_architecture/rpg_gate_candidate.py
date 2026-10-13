@@ -190,7 +190,7 @@ def _omissions(docs: Mapping[Any, dict], config: GateConfig, known: Sequence[dic
 
 def _missing_required(docs: Mapping[Any, dict], config: GateConfig, known: Sequence[dict], today: dt.date) -> List[Tuple[str, str, dict]]:
     """``(world, id, owner)`` for each required validity row a document leaves out. A baseline can not be recorded from a run whose metric module dropped a
-    required check, unless a current ``state: fail`` entry owns that row (then it is listed in ``omitted_validity``, as an owned fail is)."""
+    required check, unless a current ``state: fail`` entry owns that row (then it is listed in ``omitted_validity``, as an owned fail is). The listed row is labelled ``<id>:run:<world>:*`` once per world, even when only the pooled document lacks it."""
     covered: List[Tuple[str, str, dict]] = []
     for key, doc in sorted(docs.items(), key=lambda kv: (kv[0][0], -1 if kv[0][1] is None else kv[0][1])):
         name = f"{key[0]}__s{key[1]}.json" if key[1] is not None else f"{key[0]}__pooled.json"
