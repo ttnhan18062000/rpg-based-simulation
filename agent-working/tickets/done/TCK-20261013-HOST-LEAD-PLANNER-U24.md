@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261013-HOST-LEAD-PLANNER-U24
-phase: open
+phase: done
 date: 2026-10-13
 tags: [ai, governance, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance, process-improvement]
 A second lead seat, lead-planner-u24, that leads the sessions on host u24desktop without colliding with lead-planner
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -112,6 +112,7 @@ The work split, which is the core of this ticket:
   docs/plans/agent_infrastructure/ (session layer plan §9.0 if it names the lead's messages).
 
 ## Related Stored Artifacts
+- agent-working/stored_artifacts/TCK-20261013-HOST-LEAD-PLANNER-U24/ (plan, investigation, test_plan)
 
 ## Related Code Areas
 - registries/session_roles.yaml, tools/sessions/{roster,validate,boundary,generate_agents,launch}.py, .claude/agents/**,
@@ -125,8 +126,13 @@ The work split, which is the core of this ticket:
 ## Implementation Notes
 Planner (2026-10-13): owner asked for this to ride on PR #522 (batch 3) rather than a new PR.
 
+Implementer (2026-10-13): `boundary.check_edit` never read a role-level `owns_not` and exempts every path owned by the caller's own domain, so with both leads in domain `lead` the ticket's mechanism alone flagged nothing. Added `_sibling_crossing` (a role that overrides `owns` or `owns_not` is a sibling seat; the exemption does not apply to it); no other role overrides either. `card_note` is a string on the role entry, appended after the domain text. lead-planner: `owns_not: [agent-working/lead/hosts/u24desktop.md]` and a note naming the page. Dry run: `launch.py lead-planner-u24 --dry-run --allow-stale` prints `SESSION_ROLE=lead-planner-u24 claude --name lead-planner-u24 --agent session-lead-planner-u24` with cwd the main checkout, no worktree, no lease (`--allow-stale` only because this worktree's `.claude` differs from origin/main mid-change).
+
 ## Test Summary
+`tests/tools/test_session_host_lead.py` (11 cases); `test_session_*.py` all pass (273 + 454), `tests/docs` passes; validator OK 0 findings, 18 roles; `generate_agents --check` clean; max card 399 tokens.
 
 ## Files Changed
+registries/session_roles.yaml (governing), tools/sessions/{roster,card,boundary}.py, agent-working/lead/hosts/u24desktop.md, docs/guides/cross_session_messages.md, docs/plans/agent_infrastructure/session_layer_working_process.md, .claude/agents/session-lead-planner{,-u24}.md, epic ticket lines, tests/tools/test_session_host_lead.py, role counts in test_session_roster.py and test_session_agent_generator.py.
 
 ## Completion Summary
+A second lead seat, `lead-planner-u24`, leads host u24desktop and writes only `agent-working/lead/hosts/u24desktop.md`; `lead-planner` can no longer write that page without a boundary warning, and the u24 seat cannot write the board or any lead-owned path. AC1-AC5 met; AC7: issue for the ubuntu lead (see the PR). AC6: the owner confirms the `session_roles.yaml` diff quoted in PR #522. Gap: the boundary check is advisory (a warning), not a block.
