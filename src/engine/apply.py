@@ -66,6 +66,10 @@ def shallow_freeze(obj: Any) -> Any:
         return tuple(obj)
     return obj
 
+class DuplicateEntityIdError(ValueError):
+    """An ``entities_add`` carried an id that already exists: an add never replaces an entity, so the apply refuses it loudly."""
+
+
 class ApplyPath:
     """
     The authoritative state application pipeline.
@@ -295,6 +299,8 @@ class ApplyPath:
                 new_entities = dict(new_entities)
                 any_entity_changed = True
             for ent in update.entities_add:
+                if ent.id in new_entities:
+                    raise DuplicateEntityIdError(f"entities_add reuses id {ent.id} at tick {prior_state.tick}: an add never replaces an existing entity")
                 new_entities[ent.id] = ent
 
         # TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS: built unconditionally (the tags are
@@ -330,6 +336,8 @@ class ApplyPath:
         new_mode = update.current_mode_set if update.current_mode_set is not None else getattr(prior_state, "current_mode", 0)
         new_next_node = update.next_node_id_set if update.next_node_id_set is not None else getattr(prior_state, "next_node_id", 1000)
         new_next_entity = update.next_entity_id_set if update.next_entity_id_set is not None else getattr(prior_state, "next_entity_id", 1)
+        if update.entities_add:
+            new_next_entity = max(new_next_entity, max(ent.id for ent in update.entities_add) + 1)  # every add advances the counter, whoever added it
         new_next_item_instance = update.next_item_instance_id_set if update.next_item_instance_id_set is not None else getattr(prior_state, "next_item_instance_id", 1)
         new_maturity = update.maturity_set if update.maturity_set is not None else prior_state.maturity
         new_last_calamity = update.last_calamity_tick_set if update.last_calamity_tick_set is not None else prior_state.last_calamity_tick

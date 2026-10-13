@@ -296,7 +296,7 @@ class LifecycleSystem:
             inf_update = FactionInfluenceService.process_influence_shift(state, recent_deaths)
             # Conquest/Stronghold Lifecycle (Requires generator)
             from src.systems.world_systems.generator import EntityGenerator
-            generator = EntityGenerator(state.seed + state.tick)
+            generator = EntityGenerator.for_state(state, update)
             inf_update = FactionInfluenceService.process_conquest_lifecycle(state, inf_update, generator)
             # Economic Vacancy Signal (TCK-20260903-ECONOMIC-VACANCY-SIGNAL)
             vac_update = EconomicVacancyService.check_and_emit(state, recent_deaths)
