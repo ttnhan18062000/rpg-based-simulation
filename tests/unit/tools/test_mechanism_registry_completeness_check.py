@@ -292,7 +292,9 @@ def test_wider_scope_numbers_pinned():
     # already unbound in its old module, and candidates are unchanged.
     # 250 -> 251 on 2026-10-13 (M0 gate V8): +src/core/spawn_source.py is unbound (two names, a record of where an add came from); rpg-planner binds it.
     # 251 -> 252 (run ledger): +src/ai/goals/kind_group.py is unbound (a lookup, functions only); rpg-planner binds it.
-    assert wider["unbound_files"] == 252
+    # 252 -> 250 on 2026-10-14 (rpg-planner binding): src/ai/goals/kind_group.py::kind_group is bound under `attributes_biology` (the kind group
+    # read from the declared diet), and src/core/spawn_source.py::SpawnSource under `humanoid_reproduction` (its one live BIRTH producer).
+    assert wider["unbound_files"] == 250
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.

@@ -464,6 +464,7 @@ mechanisms:
       - src/engine/biological_needs.py::need_rates
       - src/engine/starvation.py::hp_loss
       - src/engine/natural_healing.py::hp_gain
+      - src/ai/goals/kind_group.py::kind_group
     verified:
       instrument: code_trace
       verdict: observed
@@ -3266,7 +3267,9 @@ mechanisms:
     systems: [world]
     depends_on: []
     state: gated
-    implemented_by: [src/world/reproduction_humanoid.py::HumanoidReproductionService]
+    implemented_by:
+      - src/world/reproduction_humanoid.py::HumanoidReproductionService
+      - src/core/spawn_source.py::SpawnSource
     verified:
       instrument: corpus_run
       verdict: observed
