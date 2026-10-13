@@ -6,9 +6,9 @@ For each kind populated in a compiled world, reports whether the kind's declared
   the farthest subject of the kind is from the nearest one. Eating carried food needs no building, so
   the meal place is the declared PLACE path.
 - hunger, forage: a food node, i.e. a resource node whose yield is food (``hunger_recovery`` above zero),
-  harvested through the ordinary harvest path and eaten as carried food. It counts as a path for every
-  hungering kind in a world that has one (the harvest path is open to every subject; which kinds are
-  declared to forage is prose in SURV-06, not data, so the report does not narrow it).
+  harvested through the ordinary harvest path and eaten as carried food. It counts as a path for a
+  hungering kind only for the food its body diet can eat (decision 44: a person has no path from plant cover,
+  a grazer has none from raw meat); an undeclared diet eats any food.
 - rest: rough sleep in place needs no building (SURV-06), so every kind with a sleep need always has a
   path; the report records it for completeness.
 
@@ -20,6 +20,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.core.items import food_hunger_recovery
+from src.engine.appraisal import kind_can_eat_item
 from src.engine.biological_needs import PERSON_FALLBACK_PROFILE_ID, profile_id_for
 
 _HUNGERLESS = ("none", "undeclared")
@@ -48,13 +49,14 @@ def _new_row(kind: str, profile_id: Optional[str], profile: Any) -> Dict[str, An
     needs = profile.needs if profile else {}
     level = (lambda key: needs.get(key, "none")) if profile else (lambda key: "undeclared")
     return {"kind": kind, "subjects": 0, "need_profile": profile_id, "hunger": level("hunger"),
-            "sleep": level("sleep"), "max_inn_distance": None, "max_food_node_distance": None}
+            "sleep": level("sleep"), "max_inn_distance": None, "max_food_node_distance": None, "food_nodes": 0}
 
 
-def _finish_row(row: Dict[str, Any], inns: int, food_nodes: int) -> Dict[str, Any]:
+def _finish_row(row: Dict[str, Any], inns: int, world_food_nodes: int) -> Dict[str, Any]:
+    food_nodes = row.pop("food_nodes")  # the nodes this kind can eat
     hungers = row["hunger"] not in _HUNGERLESS
     row["inns_in_world"] = inns
-    row["food_nodes_in_world"] = food_nodes
+    row["food_nodes_in_world"] = world_food_nodes
     row["hunger_path"] = (inns > 0 or food_nodes > 0) if hungers else "not_needed"
     row["rest_path"] = "rough_sleep" if row["sleep"] not in _HUNGERLESS else "not_needed"
     row["advisory"] = (
@@ -82,7 +84,9 @@ def need_path_report(state: Any, catalog: Any) -> List[Dict[str, Any]]:
         row = groups.setdefault(kind, _new_row(kind, profile_id, profile))
         row["subjects"] += 1
         if row["hunger"] not in _HUNGERLESS:
+            eatable = [n for n in food_nodes if kind_can_eat_item(props.get("species_id"), n.yields_item)]
+            row["food_nodes"] = len(eatable)
             _widen(row, "max_inn_distance", _nearest_inn_distance(state, entity.navigation.position))
-            _widen(row, "max_food_node_distance", _nearest_food_node_distance(food_nodes, entity.navigation.position))
+            _widen(row, "max_food_node_distance", _nearest_food_node_distance(eatable, entity.navigation.position))
     inns = sum(1 for b in state.buildings.values() if b.kind == "inn")
     return [_finish_row(groups[kind], inns, len(food_nodes)) for kind in sorted(groups)]

@@ -136,3 +136,47 @@
   preferred_biomes: ["frozen_peak"]
   metadata:
     source_region_tags: ["mountain_pass_zone"]
+
+# STATE: REDESIGNED-CORE
+# Owner row 59 (grazing, moderate bands): plant cover on wild land, one kind per fertility band; a biome names its kind (``grazing_cover``). A
+# patch regrows by the band (``regen_per_check`` charges per ecology check, so a patch with regen r feeds r grazers indefinitely and a bigger herd
+# strips it), and an emptied patch stays bare for ``bare_wait_ticks`` before regrowing from zero (``regrowth_mode: regrow``). The numbers are the
+# owner's moderate bands (decision 33), not measured outcomes. Patches per 1,000 tiles of the region's bounds, rounded per region, at least 1.
+- id: "cover_patch_low"
+  material: "grass_cover"
+  display_name: "Sparse Cover"
+  resource_type: "grass_cover"
+  required_ticks: 8
+  default_charges: 6
+  regrowth_mode: "regrow"
+  bare_wait_ticks: 4800
+  fertility: "low"
+  density_per_1000_tiles: 1
+  regen_per_check: 1
+  preferred_biomes: ["sunken_swamp"]
+
+- id: "cover_patch_medium"
+  material: "grass_cover"
+  display_name: "Meadow Cover"
+  resource_type: "grass_cover"
+  required_ticks: 8
+  default_charges: 12
+  regrowth_mode: "regrow"
+  bare_wait_ticks: 2400
+  fertility: "medium"
+  density_per_1000_tiles: 2
+  regen_per_check: 2
+  preferred_biomes: ["sacred_grove"]
+
+- id: "cover_patch_high"
+  material: "grass_cover"
+  display_name: "Lush Cover"
+  resource_type: "grass_cover"
+  required_ticks: 8
+  default_charges: 20
+  regrowth_mode: "regrow"
+  bare_wait_ticks: 1200
+  fertility: "high"
+  density_per_1000_tiles: 4
+  regen_per_check: 3
+  preferred_biomes: ["near_forest"]

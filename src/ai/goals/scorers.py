@@ -2,6 +2,9 @@ from __future__ import annotations
 from typing import Tuple
 from src.ai.goals.base import GoalScorer, GoalScore, NeedAccess
 from src.ai.goals.opening_steps import first_open_step
+from src.core.items import food_hunger_recovery
+from src.engine.appraisal import can_eat_item, can_use_inn_meal
+from src.ai.goals.ways import inn_in_reach
 from src.engine.need_pull import hunger_pull, sleep_pull
 from src.engine.sleep_debt import SLEEP_DEBT
 from src.engine.way_in_range import way_in_range
@@ -36,12 +39,19 @@ class HarvestScorer(GoalScorer):
 
         from src.engine.spatial_query import SpatialQueryService
         best_node = SpatialQueryService.nearest_resource_node(state, entity.navigation.position)
+        if best_node and not _may_gather(entity, best_node.yields_item):
+            return GoalScore(kind=GoalKind.HARVESTING, utility=0.0)  # decision 44: a diet that cannot eat the food does not gather it
         if best_node:
             dist = max(1.0, abs(best_node.position[0] - entity.navigation.position[0]) + abs(best_node.position[1] - entity.navigation.position[1]))
             best_score = 50.0 / dist
             return GoalScore(kind=GoalKind.HARVESTING, utility=best_score, target_id=str(best_node.id), target_pos=best_node.position)
         
         return GoalScore(kind=GoalKind.HARVESTING, utility=0.0)
+
+def _may_gather(entity: EntityState, item_id: str) -> bool:
+    """False for a food item the subject's diet cannot eat (a meat-only kind does not gather berries); anything that is not food is gathered as before."""
+    return food_hunger_recovery(item_id) <= 0.0 or can_eat_item(entity, item_id)
+
 
 def _travel_tiles(entity: EntityState, target_pos: Tuple[float, float]) -> float:
     """Manhattan walk, in tiles, from the entity to `target_pos` (positions are whole tiles, MOV-07)."""
@@ -91,7 +101,7 @@ def _hunger_without_open_way(entity: EntityState, state: AuthoritativeState, uti
     pull = hunger_pull(utility, entity.biological.hunger, need_rates(entity)[0], _travel_tiles(entity, step.target_pos))
     return GoalScore(
         kind=GoalKind.HUNGER, utility=_escalated_unless_threatened(entity, state, utility, pull), target_id=step.target_id,
-        target_pos=step.target_pos, need_access=access, opening_step=step.kind)
+        target_pos=step.target_pos, target_entity_id=step.target_entity_id, need_access=access, opening_step=step.kind)
 
 
 class EatScorer(GoalScorer):
@@ -103,14 +113,11 @@ class EatScorer(GoalScorer):
 
         utility = bio.hunger
 
-        from src.engine.spatial_query import SpatialQueryService
-        best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
-        if best_bldg is not None and not way_in_range(entity, best_bldg.position):
-            best_bldg = None  # a range-bound subject's ways are inside its range (owner decision D57)
+        best_bldg = inn_in_reach(entity, state)  # a range-bound subject's ways are inside its range (owner decision D57)
         # Decision 27: with no inn within reach there is nothing for the pull to point at, so it goes to the step that opens a way
         # (forage); with no step the goal keeps the hunger value and says `no_open_step`. (Free meals stay on: an inn within reach is a
         # way to eat whether or not the subject can pay, for every kind, a recorded flaw until the animals' own ways exist: owner decision 44.)
-        if best_bldg is None:
+        if best_bldg is None or not can_use_inn_meal(entity):  # decision 44: a diet without prepared food has no inn meal
             return _hunger_without_open_way(entity, state, utility, NeedAccess.NO_WAY_WITHIN_REACH)
         # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn.
         rate = need_rates(entity)[0]

@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_77f755ba5fdd10ab",
+  "manifest_id": "prov_60c5f87d49bb4cd0",
   "world_id": "highland_traverse",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "fd251c46f27e8c0a2205d5954b3013766bca7bba2edb0d4c6ed340228dfbf413",
+  "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
   "module_fingerprints": {
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
     "nomadic_herd": "e0b53d7425fadb99628787a2dd1ff809a8053ad29243fc8c299c5c5de101ddec",
@@ -11,8 +11,8 @@
   },
   "composition_fingerprint": "089dca6802681b8f1e10e3d2a64831d5d49327d41d6549f8113c11e18e9aef41",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "77f755ba5fdd10abfd929f5571e5b3b8d582e7ddfc70c6367c49b3511d1415e4",
-  "created_at": "2026-10-09T03:58:39.460606Z",
+  "content_fingerprint": "60c5f87d49bb4cd0979451cabc0777ab96494e316c4840d68e864e079029f8b3",
+  "created_at": "2026-10-12T14:35:33.165528Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -204,6 +204,18 @@
       },
       "details": {
         "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
       }
     },
     "mountain_pass_zone": {
@@ -671,6 +683,174 @@
           "trade"
         ],
         "reward_budget": 110
+      }
+    },
+    "cover__near_forest__0": {
+      "element_id": "cover__near_forest__0",
+      "element_type": "resource",
+      "source_module": "nomadic_herd",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__1": {
+      "element_id": "cover__near_forest__1",
+      "element_type": "resource",
+      "source_module": "nomadic_herd",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__2": {
+      "element_id": "cover__near_forest__2",
+      "element_type": "resource",
+      "source_module": "nomadic_herd",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__3": {
+      "element_id": "cover__near_forest__3",
+      "element_type": "resource",
+      "source_module": "nomadic_herd",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__4": {
+      "element_id": "cover__near_forest__4",
+      "element_type": "resource",
+      "source_module": "nomadic_herd",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__5": {
+      "element_id": "cover__near_forest__5",
+      "element_type": "resource",
+      "source_module": "nomadic_herd",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__near_forest__6": {
+      "element_id": "cover__near_forest__6",
+      "element_type": "resource",
+      "source_module": "nomadic_herd",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "near_forest"
+      }
+    },
+    "cover__river_ford__0": {
+      "element_id": "cover__river_ford__0",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "river_ford"
+      }
+    },
+    "cover__river_ford__1": {
+      "element_id": "cover__river_ford__1",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "river_ford"
+      }
+    },
+    "cover__river_ford__2": {
+      "element_id": "cover__river_ford__2",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "river_ford"
+      }
+    },
+    "cover__river_ford__3": {
+      "element_id": "cover__river_ford__3",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "river_ford"
+      }
+    },
+    "cover__river_ford__4": {
+      "element_id": "cover__river_ford__4",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "river_ford"
       }
     }
   }

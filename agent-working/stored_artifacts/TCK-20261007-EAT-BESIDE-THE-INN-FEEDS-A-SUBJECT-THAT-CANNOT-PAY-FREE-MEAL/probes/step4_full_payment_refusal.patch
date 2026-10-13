@@ -1,0 +1,29 @@
+diff --git a/src/engine/building_services.py b/src/engine/building_services.py
+index 80d5d115b..cc7de2287 100644
+--- a/src/engine/building_services.py
++++ b/src/engine/building_services.py
+@@ -45,6 +45,15 @@ def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
+     return building
+ 
+ 
++# What a service costs the subject up front: it is refused unless the subject holds the full price (nothing is free, no clamped charge).
++SERVICE_PRICES = {"REST": REST_PRICE_GOLD, "EAT": EAT_PRICE_GOLD}
++
++
++def can_pay_for(entity: Any, action: str) -> bool:
++    """True when the subject holds the full price of the service for `action` (a service with no price is always affordable)."""
++    return entity.inventory.gold >= SERVICE_PRICES.get(action, 0)
++
++
+ def service_delta(context: Any, entity: Any, action: str, tick: int) -> Optional[EntityUpdate]:
+     """What the building service for `action` adds to the subject's update, or None (no such building in reach, or nothing to deliver).
+ 
+@@ -52,7 +61,7 @@ def service_delta(context: Any, entity: Any, action: str, tick: int) -> Optional
+     charge the resolver clamps at what the subject holds, and the building's purse is credited with what was actually paid. The building is found only
+     for a subject it serves (`service_building`)."""
+     building = service_building(context, entity, action)
+-    if building is None or (action == "EAT" and not can_use_inn_meal(entity)):
++    if building is None or not can_pay_for(entity, action) or (action == "EAT" and not can_use_inn_meal(entity)):
+         return None  # an inn does not serve a meal to a diet without prepared food (decision 44), however the subject came to stand there
+     if action == "REST":
+         charge = ResourceTransferIntent(source_id=building.id, source_kind="TOWN_SERVICE", gold_delta=-REST_PRICE_GOLD, transfer_kind="REST",

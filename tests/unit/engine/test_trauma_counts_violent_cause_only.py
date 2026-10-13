@@ -68,3 +68,48 @@ def test_a_sabotaged_building_destroyed_adds_two_trauma() -> None:
 def test_a_destruction_without_a_damaging_delta_adds_no_trauma() -> None:
     """Not violent by cause: a functional building already at 0 hp with no damage this tick."""
     assert _building_trauma(hp=0, hp_delta=0) < 0.01
+
+
+def _kill_trauma(killer_species: str, victim_species: str, killer_hunger: float, events: list | None = None) -> float:
+    """Trauma from one lethal KILL by a staged killer of ``killer_species`` beside a victim of ``victim_species``; ``events`` (if given) receives
+    the refined update's world events."""
+    state = compile_world("frontier_living_world", DEFAULT_SEED)
+    killer = next(e for e in state.entities.values() if (e.identity.properties or {}).get("species_id") == killer_species)
+    victim = next(e for e in state.entities.values() if (e.identity.properties or {}).get("species_id") == victim_species and e.id != killer.id)
+    region = next(iter(state.regions.values()))
+    x0, y0, x1, y1 = region.bounds
+    spot = ((x0 + x1) // 2, (y0 + y1) // 2)
+    killer = replace(killer, navigation=replace(killer.navigation, position=spot), biological=replace(killer.biological, hunger=killer_hunger))
+    victim = replace(victim, navigation=replace(victim.navigation, position=(spot[0] + 1, spot[1])))
+    state = replace(state, entities={**state.entities, killer.id: killer, victim.id: victim})
+    update = StateUpdate(entity_updates={victim.id: EntityUpdate(
+        entity_id=victim.id, combat=CombatUpdate(alive_set=False, outcome_kind="KILL", attacker_id=killer.id))})
+    refined = WorldDynamicsSystem.resolve_dynamics(state, update, EntityGenerator(DEFAULT_SEED))
+    if events is not None:
+        events.extend(refined.world_events_add)
+        events.append(("ids", killer.id, victim.id))
+    return sum(w.trauma_delta for w in refined.world_updates.values())
+
+
+def test_a_kill_to_eat_adds_no_trauma_but_the_same_kill_when_not_hungry_does() -> None:
+    """Decision 48: a hungry meat-eater's kill of a creature it appraises as prey is feeding, not unrest. The same kill by a fed killer is
+    not a kill to eat (no PREDATION relation), so it counts."""
+    assert _kill_trauma("wolf", "goblin", killer_hunger=80.0) == 0.0
+    assert _kill_trauma("wolf", "goblin", killer_hunger=0.0) == 1.0
+
+
+def test_killing_a_person_a_faction_rates_hostile_still_adds_trauma() -> None:
+    assert _kill_trauma("goblin", "human", killer_hunger=80.0) == 1.0
+
+
+def test_a_feeding_kill_leaves_a_typed_record_that_joins_the_carcass_by_corpse_id() -> None:
+    from src.domains.world_emergence.schema import WorldEventCategory
+    events: list = []
+    assert _kill_trauma("wolf", "goblin", killer_hunger=80.0, events=events) == 0.0
+    _, killer_id, victim_id = next(e for e in events if isinstance(e, tuple))
+    (record,) = [e for e in events if not isinstance(e, tuple) and e.category == WorldEventCategory.FEEDING_KILL]
+    assert record.subject == str(victim_id) and record.payload == {
+        "killer": float(killer_id), "victim": float(victim_id), "corpse": float(1000000 + victim_id)}
+    fed: list = []
+    _kill_trauma("wolf", "goblin", killer_hunger=0.0, events=fed)
+    assert not any(not isinstance(e, tuple) and e.category == WorldEventCategory.FEEDING_KILL for e in fed)

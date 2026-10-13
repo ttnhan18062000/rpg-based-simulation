@@ -67,6 +67,11 @@ class DefaultSemanticsService:
             "starting_gold": defn.default_faction_starting_gold
         }
 
+    def get_tax_share(self) -> float:
+        """The declared share of a sale or a wage paid to the treasury of the faction holding the place (0.0 when no profile declares one)."""
+        defn = self._get_default_definition()
+        return float(defn.default_tax_share) if defn else 0.0
+
     def _get_default_definition(self) -> Any:
         """Finds the first available compile defaults definition in the loaded catalog repository."""
         if not self.repo.defaults:
