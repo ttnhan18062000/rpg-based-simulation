@@ -85,6 +85,21 @@ wealth, but no Rule said how a person comes to hold money at all.
     covers human, goblin, orc, elf, dwarf, lizardfolk, dragonkin and spirit. A spirit is "high"
     but uses no tools, and a troll is "low" but carries the humanoid hunger profile.
   - **Alternatives not taken:** the `intelligence_tier` flag; humans only for now.
+  - **What a place refuses on (decided by the owner directly, 2026-10-13; row 68 of the memo):**
+    the relationship is what the server or its town actually knows about this person, not a
+    faction table. A place refuses someone it has a record against (they stole here, attacked
+    here, left unpaid) or someone carrying a mark it can perceive (a wanted notice, a visible
+    sign). A stranger is served, even one whose faction is hostile, because nobody in town can
+    see a label. Sequencing: the predicate in 2.119 carries only the trait half (animals are
+    refused, every trading person is served). The relationship half is its own ticket, measured
+    against baseline v1, and likely belongs with milestone 1's per-subject records.
+    - **Evidence for the split:** the first build refused by the region owner's faction
+      hostility. At tick 0 on urban (seeds 42-44) it turned away 28 of 147 trading-person x
+      building pairs, all of them bandit_company people at hero_guild buildings, and human hazard
+      deaths rose from 11 to 18 (5 seeds). That was two changes in one measured step, judging a
+      stranger by a label.
+    - **Alternatives not taken:** the region owner's faction stance (the built version); keeping
+      both halves in baseline v1.
 - **The ways are plural:** no single one is required. Being paid by fellow townsfolk for small
   jobs (social contracts) is a further way, left for later.
 - **Conservation:** a sale moves coins from the buyer to the seller and goods the other way. A
