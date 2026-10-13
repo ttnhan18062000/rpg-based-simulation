@@ -4,7 +4,7 @@ sandbox_world_seed42_200t	AGENCY	C	0.0	C	0.0	C	0.0	False	False	True	True	False	F
 sandbox_world_seed42_200t	COMBAT	B	0.0748663101604278	B	0.15555555555555556	C	0.0	True	True	False	True	True	False
 sandbox_world_seed42_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	True	False
 sandbox_world_seed42_200t	ECONOMY	B	0.18	S	3.5801104972375692	A	0.5628140703517588	True	True	False	True	True	False
-sandbox_world_seed42_200t	PROGRESSION	B	0.185	A	0.5588235294117647	C	-0.1568627450980392	True	True	False	True	True	False
+sandbox_world_seed42_200t	PROGRESSION	B	0.185	A	0.5588235294117647	C	-0.1568627450980392	True	True	False	False	True	True
 sandbox_world_seed42_200t	SOCIAL	A	1.335	S	6.965	S	7.3	False	True	False	True	True	False
 sandbox_world_seed42_200t	INFORMATION	B	0.2	B	0.2	B	0.2	False	False	True	True	False	False
 sandbox_world_seed42_200t	WORLD	B	0.15	B	0.17	B	0.11	False	True	True	True	False	False
@@ -14,7 +14,7 @@ sandbox_world_seed137_200t	AGENCY	C	0.0	C	0.0	C	0.0	False	False	True	True	False	
 sandbox_world_seed137_200t	COMBAT	C	0.0	B	0.14583333333333334	C	0.0	True	True	True	True	False	False
 sandbox_world_seed137_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	True	False
 sandbox_world_seed137_200t	ECONOMY	C	0.0	S	3.005524861878453	C	-0.10362694300518134	True	True	False	True	True	False
-sandbox_world_seed137_200t	PROGRESSION	C	-0.1568627450980392	B	0.3854166666666667	C	-0.1568627450980392	True	True	True	True	False	False
+sandbox_world_seed137_200t	PROGRESSION	C	-0.1568627450980392	B	0.3854166666666667	C	-0.1568627450980392	True	True	True	True	False	True
 sandbox_world_seed137_200t	SOCIAL	C	0.0	A	1.6867469879518073	S	7.33	True	True	False	True	True	False
 sandbox_world_seed137_200t	INFORMATION	B	0.2	B	0.2	B	0.2	False	False	True	True	False	False
 sandbox_world_seed137_200t	WORLD	B	0.09	B	0.15	B	0.09	False	True	True	True	False	False
@@ -24,7 +24,7 @@ sandbox_world_seed999_200t	AGENCY	C	0.0	C	0.0	C	0.0	False	False	True	True	False	
 sandbox_world_seed999_200t	COMBAT	C	0.0	B	0.11235955056179775	C	0.0	True	True	True	True	False	False
 sandbox_world_seed999_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	True	False
 sandbox_world_seed999_200t	ECONOMY	C	0.0	S	3.076923076923077	A	1.2340425531914894	True	True	False	True	True	False
-sandbox_world_seed999_200t	PROGRESSION	C	-0.1568627450980392	B	0.16666666666666666	C	-0.1568627450980392	True	True	True	True	False	False
+sandbox_world_seed999_200t	PROGRESSION	C	-0.1568627450980392	B	0.16666666666666666	C	-0.1568627450980392	True	True	True	True	False	True
 sandbox_world_seed999_200t	SOCIAL	A	1.3235294117647058	S	8.545	A	1.9042553191489362	True	True	False	True	True	False
 sandbox_world_seed999_200t	INFORMATION	B	0.2	B	0.2	B	0.2	False	False	True	True	False	False
 sandbox_world_seed999_200t	WORLD	B	0.21	B	0.13	B	0.09	False	True	False	True	True	False
@@ -256,7 +256,7 @@ frontier_extended_seed42_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	T
 frontier_extended_seed42_200t	ECONOMY	B	0.24	S	8.220994475138122	A	0.9214659685863874	True	True	False	True	True	False
 frontier_extended_seed42_200t	PROGRESSION	A	0.56	A	1.0837696335078535	A	0.6298701298701299	False	True	True	True	False	False
 frontier_extended_seed42_200t	SOCIAL	S	16.74	S	32.51	S	74.155	False	True	False	True	True	False
-frontier_extended_seed42_200t	INFORMATION	B	0.2	S	38.81	S	28.145	False	True	False	True	True	False
+frontier_extended_seed42_200t	INFORMATION	B	0.2	S	38.81	S	28.145	False	True	False	False	True	True
 frontier_extended_seed42_200t	WORLD	B	0.45	A	0.58	B	0.47	True	True	True	True	False	False
 frontier_extended_seed42_200t	NARRATIVE	C	0.0	S	3.3141361256544504	A	1.707070707070707	True	True	False	True	True	False
 frontier_extended_seed123_200t	COGNITION	B	0.06	B	0.06	B	0.06	False	False	True	True	False	False
@@ -266,7 +266,7 @@ frontier_extended_seed123_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	
 frontier_extended_seed123_200t	ECONOMY	B	0.36	S	6.530612244897959	B	0.24870466321243523	True	True	False	True	True	False
 frontier_extended_seed123_200t	PROGRESSION	A	0.835	A	0.9894179894179894	A	0.5473684210526316	False	True	False	True	True	False
 frontier_extended_seed123_200t	SOCIAL	S	21.145	S	50.185	S	37.755	False	True	False	True	True	False
-frontier_extended_seed123_200t	INFORMATION	B	0.2	S	14.945	A	1.13	True	True	False	True	True	False
+frontier_extended_seed123_200t	INFORMATION	B	0.2	S	14.945	A	1.13	True	True	False	False	True	True
 frontier_extended_seed123_200t	WORLD	A	0.97	A	0.7	A	0.58	False	True	False	True	True	False
 frontier_extended_seed123_200t	NARRATIVE	C	0.0	S	2.94	A	1.2131979695431472	True	True	False	True	True	False
 frontier_extended_seed456_200t	COGNITION	B	0.06	B	0.06	B	0.06	False	False	True	True	False	False
@@ -276,7 +276,7 @@ frontier_extended_seed456_200t	FACTION	S	2.9	B	0.04	C	0.0	True	True	False	True	T
 frontier_extended_seed456_200t	ECONOMY	A	0.8043478260869565	S	6.967032967032967	A	0.6054054054054054	True	True	False	True	True	False
 frontier_extended_seed456_200t	PROGRESSION	A	1.8282828282828283	A	0.7527472527472527	B	0.49044585987261147	True	True	False	True	True	False
 frontier_extended_seed456_200t	SOCIAL	S	25.7	S	23.26984126984127	S	53.69	False	True	False	True	True	False
-frontier_extended_seed456_200t	INFORMATION	B	0.2	A	0.8622448979591837	S	34.985	True	True	False	True	True	False
+frontier_extended_seed456_200t	INFORMATION	B	0.2	A	0.8622448979591837	S	34.985	True	True	False	False	True	True
 frontier_extended_seed456_200t	WORLD	A	0.74	A	0.82	A	0.68	False	True	True	True	False	False
 frontier_extended_seed456_200t	NARRATIVE	C	0.0	S	2.0406091370558377	A	1.855	True	True	False	True	True	False
 frontier_living_world_seed42_200t	COGNITION	B	0.06	B	0.06	B	0.14	False	True	False	True	True	False
@@ -286,7 +286,7 @@ frontier_living_world_seed42_200t	FACTION	S	2.9	C	0.0	B	0.032467532467532464	Tru
 frontier_living_world_seed42_200t	ECONOMY	B	0.25806451612903225	S	5.98	A	0.8043478260869565	True	True	False	True	True	False
 frontier_living_world_seed42_200t	PROGRESSION	B	0.3870967741935484	A	0.7208121827411168	B	0.36470588235294116	True	True	True	True	False	False
 frontier_living_world_seed42_200t	SOCIAL	S	33.7	S	33.13	S	49.925	False	True	False	True	True	False
-frontier_living_world_seed42_200t	INFORMATION	B	0.2	S	58.97	S	58.1	False	True	False	True	True	False
+frontier_living_world_seed42_200t	INFORMATION	B	0.2	S	58.97	S	58.1	False	True	False	False	True	True
 frontier_living_world_seed42_200t	WORLD	B	0.46	A	0.64	A	0.51	False	True	True	True	False	False
 frontier_living_world_seed42_200t	NARRATIVE	A	0.5454545454545454	S	2.299492385786802	A	1.935	True	True	False	True	True	False
 frontier_living_world_seed123_200t	COGNITION	B	0.06	B	0.06	B	0.06	False	False	True	True	False	False
@@ -296,7 +296,7 @@ frontier_living_world_seed123_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	T
 frontier_living_world_seed123_200t	ECONOMY	B	0.21505376344086022	S	5.78	A	0.6918918918918919	True	True	False	True	True	False
 frontier_living_world_seed123_200t	PROGRESSION	A	0.521505376344086	A	0.8134715025906736	B	0.47058823529411764	True	True	True	True	False	False
 frontier_living_world_seed123_200t	SOCIAL	S	17.57	S	52.87	S	73.36	False	True	False	True	True	False
-frontier_living_world_seed123_200t	INFORMATION	B	0.2	B	0.2	S	25.07	True	True	False	True	True	False
+frontier_living_world_seed123_200t	INFORMATION	B	0.2	B	0.2	S	25.07	True	True	False	False	True	True
 frontier_living_world_seed123_200t	WORLD	A	0.59	A	0.62	A	0.56	False	True	True	True	False	False
 frontier_living_world_seed123_200t	NARRATIVE	C	0.0	S	2.71356783919598	S	2.1717171717171717	False	True	False	True	True	False
 frontier_living_world_seed456_200t	COGNITION	B	0.06	B	0.06	B	0.06	False	False	True	True	False	False
@@ -306,7 +306,7 @@ frontier_living_world_seed456_200t	FACTION	S	2.9	B	0.026881720430107527	C	0.0	Tr
 frontier_living_world_seed456_200t	ECONOMY	A	0.6326530612244898	S	5.8121546961325965	A	1.14	True	True	False	True	True	False
 frontier_living_world_seed456_200t	PROGRESSION	A	0.7244897959183674	A	0.7638190954773869	A	0.6256410256410256	False	True	True	True	False	False
 frontier_living_world_seed456_200t	SOCIAL	S	25.26	S	26.755	S	45.665	False	True	False	True	True	False
-frontier_living_world_seed456_200t	INFORMATION	B	0.2	S	25.13	S	6.71	False	True	False	True	True	False
+frontier_living_world_seed456_200t	INFORMATION	B	0.2	S	25.13	S	6.71	False	True	False	False	True	True
 frontier_living_world_seed456_200t	WORLD	B	0.48	A	0.57	A	0.61	False	True	False	True	True	False
 frontier_living_world_seed456_200t	NARRATIVE	B	0.30927835051546393	S	2.31	A	1.564102564102564	True	True	False	True	True	False
 wilderness_survival_seed42_200t	COGNITION	C	0.0	C	0.0	C	0.0	False	False	True	True	False	False
@@ -334,7 +334,7 @@ wilderness_survival_seed456_200t	AGENCY	C	0.0	C	0.0	C	0.0	False	False	True	True	
 wilderness_survival_seed456_200t	COMBAT	C	0.0	B	0.0759493670886076	C	0.0	True	True	True	True	False	False
 wilderness_survival_seed456_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	True	False
 wilderness_survival_seed456_200t	ECONOMY	C	0.0	B	0.15841584158415842	C	0.0	True	True	True	True	False	False
-wilderness_survival_seed456_200t	PROGRESSION	C	-0.1568627450980392	B	0.08860759493670886	C	-0.1568627450980392	True	True	True	True	False	False
+wilderness_survival_seed456_200t	PROGRESSION	C	-0.1568627450980392	B	0.08860759493670886	C	-0.1568627450980392	True	True	True	True	False	True
 wilderness_survival_seed456_200t	SOCIAL	A	0.9776119402985075	S	2.955	S	2.07	False	True	False	True	True	False
 wilderness_survival_seed456_200t	INFORMATION	C	0.0	C	0.0	C	0.0	False	False	True	True	False	False
 wilderness_survival_seed456_200t	WORLD	B	0.38	B	0.21	B	0.21	False	False	False	True	True	False
@@ -374,9 +374,9 @@ swamp_border_world_seed42_200t	AGENCY	C	0.0	C	0.0	C	0.0	False	False	True	True	Fa
 swamp_border_world_seed42_200t	COMBAT	B	0.24	B	0.11557788944723618	C	0.0	True	True	False	True	True	False
 swamp_border_world_seed42_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	True	False
 swamp_border_world_seed42_200t	ECONOMY	B	0.11049723756906077	S	3.2160804020100504	A	0.6526315789473685	True	True	False	True	True	False
-swamp_border_world_seed42_200t	PROGRESSION	C	-0.018867924528301886	B	0.24607329842931938	C	-0.1568627450980392	True	True	False	True	True	False
+swamp_border_world_seed42_200t	PROGRESSION	C	-0.018867924528301886	B	0.24607329842931938	C	-0.1568627450980392	True	True	False	False	True	True
 swamp_border_world_seed42_200t	SOCIAL	S	2.3	S	12.545	S	23.97	False	True	False	True	True	False
-swamp_border_world_seed42_200t	INFORMATION	B	0.2	S	17.69	S	34.625	False	True	False	True	True	False
+swamp_border_world_seed42_200t	INFORMATION	B	0.2	S	17.69	S	34.625	False	True	False	False	True	True
 swamp_border_world_seed42_200t	WORLD	B	0.15	B	0.21	B	0.17	False	True	True	True	False	False
 swamp_border_world_seed42_200t	NARRATIVE	B	0.11612903225806452	A	1.4450261780104712	B	0.26424870466321243	True	True	False	True	True	False
 swamp_border_world_seed123_200t	COGNITION	B	0.06	B	0.06	B	0.06	False	False	True	True	False	False
@@ -386,7 +386,7 @@ swamp_border_world_seed123_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True
 swamp_border_world_seed123_200t	ECONOMY	C	0.0	S	3.5138121546961325	A	0.6336633663366337	True	True	False	True	True	False
 swamp_border_world_seed123_200t	PROGRESSION	C	-0.1568627450980392	C	-0.1568627450980392	C	-0.1568627450980392	False	False	True	True	False	False
 swamp_border_world_seed123_200t	SOCIAL	S	5.715	S	14.065	S	23.12	False	True	False	True	True	False
-swamp_border_world_seed123_200t	INFORMATION	B	0.2	A	0.9576719576719577	S	4.552631578947368	True	True	False	True	True	False
+swamp_border_world_seed123_200t	INFORMATION	B	0.2	A	0.9576719576719577	S	4.552631578947368	True	True	False	False	True	True
 swamp_border_world_seed123_200t	WORLD	B	0.15	B	0.15	B	0.15	False	False	True	True	False	False
 swamp_border_world_seed123_200t	NARRATIVE	B	0.3316582914572864	B	0.1984732824427481	B	0.24083769633507854	False	True	False	True	True	False
 swamp_border_world_seed456_200t	COGNITION	B	0.06	B	0.06	B	0.06	False	False	True	True	False	False
@@ -396,7 +396,7 @@ swamp_border_world_seed456_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True
 swamp_border_world_seed456_200t	ECONOMY	B	0.17391304347826086	S	3.314917127071823	B	0.0213903743315508	True	True	False	True	True	False
 swamp_border_world_seed456_200t	PROGRESSION	B	0.10084033613445378	C	-0.1568627450980392	C	-0.1568627450980392	False	False	False	True	True	False
 swamp_border_world_seed456_200t	SOCIAL	S	4.02	S	8.89	S	24.65	False	True	False	True	True	False
-swamp_border_world_seed456_200t	INFORMATION	B	0.2	S	8.417085427135678	S	47.51	False	True	False	True	True	False
+swamp_border_world_seed456_200t	INFORMATION	B	0.2	S	8.417085427135678	S	47.51	False	True	False	False	True	True
 swamp_border_world_seed456_200t	WORLD	B	0.17	B	0.15	B	0.15	False	False	True	True	False	False
 swamp_border_world_seed456_200t	NARRATIVE	B	0.05357142857142857	B	0.32941176470588235	B	0.35714285714285715	False	True	False	True	True	False
 unit_faction_tension_seed42_200t	COGNITION	C	0.0	C	0.0	C	0.0	False	False	True	True	False	False
@@ -404,7 +404,7 @@ unit_faction_tension_seed42_200t	AGENCY	C	0.0	C	0.0	C	0.0	False	False	True	True	
 unit_faction_tension_seed42_200t	COMBAT	B	0.0748663101604278	B	0.15555555555555556	C	0.0	True	True	False	True	True	False
 unit_faction_tension_seed42_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	True	False
 unit_faction_tension_seed42_200t	ECONOMY	B	0.18	S	3.5801104972375692	A	0.5628140703517588	True	True	False	True	True	False
-unit_faction_tension_seed42_200t	PROGRESSION	B	0.185	A	0.5588235294117647	C	-0.1568627450980392	True	True	False	True	True	False
+unit_faction_tension_seed42_200t	PROGRESSION	B	0.185	A	0.5588235294117647	C	-0.1568627450980392	True	True	False	False	True	True
 unit_faction_tension_seed42_200t	SOCIAL	A	1.335	S	6.965	S	7.3	False	True	False	True	True	False
 unit_faction_tension_seed42_200t	INFORMATION	C	0.0	C	0.0	C	0.0	False	False	True	True	False	False
 unit_faction_tension_seed42_200t	WORLD	B	0.15	B	0.17	B	0.11	False	True	True	True	False	False
@@ -414,7 +414,7 @@ unit_faction_tension_seed123_200t	AGENCY	C	0.0	C	0.0	C	0.0	False	False	True	True
 unit_faction_tension_seed123_200t	COMBAT	C	0.0	B	0.059782608695652176	C	0.0	True	True	True	True	False	False
 unit_faction_tension_seed123_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	True	False
 unit_faction_tension_seed123_200t	ECONOMY	C	0.0	S	2.9130434782608696	A	0.7	True	True	False	True	True	False
-unit_faction_tension_seed123_200t	PROGRESSION	C	-0.1568627450980392	B	0.06521739130434782	C	-0.1568627450980392	True	True	True	True	False	False
+unit_faction_tension_seed123_200t	PROGRESSION	C	-0.1568627450980392	B	0.06521739130434782	C	-0.1568627450980392	True	True	True	True	False	True
 unit_faction_tension_seed123_200t	SOCIAL	A	1.8	S	9.815	S	10.875647668393782	False	True	False	True	True	False
 unit_faction_tension_seed123_200t	INFORMATION	C	0.0	C	0.0	C	0.0	False	False	True	True	False	False
 unit_faction_tension_seed123_200t	WORLD	B	0.09	B	0.11	B	0.09	False	True	True	True	False	False
@@ -536,7 +536,7 @@ crowded_frontier_seed42_200t	FACTION	C	0.0	C	0.0	C	0.0	False	False	True	True	Fal
 crowded_frontier_seed42_200t	ECONOMY	B	0.0718562874251497	S	6.442105263157894	A	0.967741935483871	True	True	False	True	True	False
 crowded_frontier_seed42_200t	PROGRESSION	B	0.41414141414141414	A	1.0368421052631578	A	0.9516129032258065	False	True	False	True	True	False
 crowded_frontier_seed42_200t	SOCIAL	S	8.995	S	31.985	S	43.375	False	True	False	True	True	False
-crowded_frontier_seed42_200t	INFORMATION	C	0.0	S	34.14	S	39.975	False	True	False	True	True	False
+crowded_frontier_seed42_200t	INFORMATION	C	0.0	S	34.14	S	39.975	False	True	False	False	True	True
 crowded_frontier_seed42_200t	WORLD	B	0.24	B	0.44	B	0.4	False	True	False	True	True	False
 crowded_frontier_seed42_200t	NARRATIVE	C	0.0	S	2.484375	S	2.4673366834170856	False	True	False	True	True	False
 crowded_frontier_seed123_200t	COGNITION	C	0.0	C	0.0	C	0.0	False	False	True	True	False	False
@@ -546,7 +546,7 @@ crowded_frontier_seed123_200t	FACTION	C	0.0	C	0.0	C	0.0	False	False	True	True	Fa
 crowded_frontier_seed123_200t	ECONOMY	B	0.22099447513812154	S	5.384615384615385	A	0.54421768707483	True	True	False	True	True	False
 crowded_frontier_seed123_200t	PROGRESSION	B	0.01680672268907563	A	0.5054945054945055	B	0.10619469026548672	True	True	False	True	True	False
 crowded_frontier_seed123_200t	SOCIAL	S	19.7	S	43.955	S	25.53	False	True	False	True	True	False
-crowded_frontier_seed123_200t	INFORMATION	C	0.0	S	53.64	S	25.905	False	True	False	True	True	False
+crowded_frontier_seed123_200t	INFORMATION	C	0.0	S	53.64	S	25.905	False	True	False	False	True	True
 crowded_frontier_seed123_200t	WORLD	B	0.24	B	0.44	B	0.32	False	True	False	True	True	False
 crowded_frontier_seed123_200t	NARRATIVE	C	0.0	S	2.085	A	0.7098445595854922	True	True	False	True	True	False
 crowded_frontier_seed456_200t	COGNITION	C	0.0	C	0.0	C	0.0	False	False	True	True	False	False
@@ -556,7 +556,7 @@ crowded_frontier_seed456_200t	FACTION	C	0.0	C	0.0	C	0.0	False	False	True	True	Fa
 crowded_frontier_seed456_200t	ECONOMY	B	0.3076923076923077	S	5.502762430939226	A	0.6956521739130435	True	True	False	True	True	False
 crowded_frontier_seed456_200t	PROGRESSION	B	0.46153846153846156	A	0.5897435897435898	A	0.717391304347826	False	True	False	True	True	False
 crowded_frontier_seed456_200t	SOCIAL	S	32.41	S	24.11	S	22.535	False	True	False	True	True	False
-crowded_frontier_seed456_200t	INFORMATION	C	0.0	A	2.0	S	2.609375	True	True	False	True	True	False
+crowded_frontier_seed456_200t	INFORMATION	C	0.0	A	2.0	S	2.609375	True	True	False	False	True	True
 crowded_frontier_seed456_200t	WORLD	B	0.3	B	0.34	B	0.4	False	True	False	True	True	False
 crowded_frontier_seed456_200t	NARRATIVE	C	0.0	A	1.158974358974359	A	1.8090452261306533	False	True	False	True	True	False
 resource_dense_basin_seed42_200t	COGNITION	C	0.0	C	0.0	C	0.0	False	False	True	True	False	False
@@ -574,7 +574,7 @@ resource_dense_basin_seed123_200t	AGENCY	C	0.0	C	0.0	C	0.0	False	False	True	True
 resource_dense_basin_seed123_200t	COMBAT	C	0.0	B	0.06282722513089005	B	0.03	False	True	True	True	False	False
 resource_dense_basin_seed123_200t	FACTION	C	0.0	C	0.0	C	0.0	False	False	True	True	False	False
 resource_dense_basin_seed123_200t	ECONOMY	C	0.0	S	3.392670157068063	A	0.5365853658536586	True	True	False	True	True	False
-resource_dense_basin_seed123_200t	PROGRESSION	C	-0.1568627450980392	B	0.06282722513089005	C	-0.1568627450980392	True	True	True	True	False	False
+resource_dense_basin_seed123_200t	PROGRESSION	C	-0.1568627450980392	B	0.06282722513089005	C	-0.1568627450980392	True	True	True	True	False	True
 resource_dense_basin_seed123_200t	SOCIAL	S	2.58	S	19.865	S	18.175	False	True	False	True	True	False
 resource_dense_basin_seed123_200t	INFORMATION	C	0.0	S	17.01	S	11.76	False	True	False	True	True	False
 resource_dense_basin_seed123_200t	WORLD	B	0.09	B	0.11	B	0.09	False	True	True	True	False	False
@@ -596,7 +596,7 @@ frontier_marches_seed42_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	Tr
 frontier_marches_seed42_200t	ECONOMY	B	0.3673469387755102	S	6.0	A	1.0869565217391304	True	True	False	True	True	False
 frontier_marches_seed42_200t	PROGRESSION	A	1.0561224489795917	A	1.21	A	1.2608695652173914	False	True	True	True	False	False
 frontier_marches_seed42_200t	SOCIAL	S	21.38	S	71.415	S	74.09	False	True	False	True	True	False
-frontier_marches_seed42_200t	INFORMATION	B	0.2	S	45.95	S	44.6	False	True	False	True	True	False
+frontier_marches_seed42_200t	INFORMATION	B	0.2	S	45.95	S	44.6	False	True	False	False	True	True
 frontier_marches_seed42_200t	WORLD	B	0.48	A	0.77	A	0.7	False	True	False	True	True	False
 frontier_marches_seed42_200t	NARRATIVE	A	0.7989690721649485	S	3.75	S	3.487309644670051	False	True	False	True	True	False
 frontier_marches_seed123_200t	COGNITION	B	0.06	B	0.06	B	0.06	False	False	True	True	False	False
@@ -606,7 +606,7 @@ frontier_marches_seed123_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	T
 frontier_marches_seed123_200t	ECONOMY	B	0.18274111675126903	S	5.6353591160221	A	0.5685279187817259	True	True	False	True	True	False
 frontier_marches_seed123_200t	PROGRESSION	B	0.39086294416243655	A	1.015075376884422	A	0.7715736040609137	False	True	False	True	True	False
 frontier_marches_seed123_200t	SOCIAL	S	25.035	S	65.85	S	82.285	False	True	False	True	True	False
-frontier_marches_seed123_200t	INFORMATION	B	0.2	S	42.53	S	45.02	False	True	False	True	True	False
+frontier_marches_seed123_200t	INFORMATION	B	0.2	S	42.53	S	45.02	False	True	False	False	True	True
 frontier_marches_seed123_200t	WORLD	A	0.6	A	0.78	A	0.6	False	True	True	True	False	False
 frontier_marches_seed123_200t	NARRATIVE	C	0.0	S	4.23	S	2.745	False	True	False	True	True	False
 frontier_marches_seed456_200t	COGNITION	B	0.06	B	0.06	B	0.06	False	False	True	True	False	False
@@ -616,7 +616,7 @@ frontier_marches_seed456_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	True	T
 frontier_marches_seed456_200t	ECONOMY	A	0.7446808510638298	S	5.569060773480663	B	0.4419889502762431	True	True	False	True	True	False
 frontier_marches_seed456_200t	PROGRESSION	A	1.047872340425532	A	0.7134146341463414	A	0.8010204081632653	False	True	False	True	True	False
 frontier_marches_seed456_200t	SOCIAL	S	22.975	S	17.975	S	53.66	False	True	False	True	True	False
-frontier_marches_seed456_200t	INFORMATION	B	0.2	S	2.1020408163265305	S	11.6	False	True	False	True	True	False
+frontier_marches_seed456_200t	INFORMATION	B	0.2	S	2.1020408163265305	S	11.6	False	True	False	False	True	True
 frontier_marches_seed456_200t	WORLD	A	0.6	A	0.68	A	0.7	False	True	True	True	False	False
 frontier_marches_seed456_200t	NARRATIVE	B	0.20238095238095238	A	1.949748743718593	S	2.150753768844221	True	True	False	True	True	False
 unit_selfmodel_pilot_seed42_1000t	COGNITION	S	13.561	S	16.0	S	16.0	False	False	True	True	False	False
@@ -686,7 +686,7 @@ generated_frontier_3_42_seed42_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False	
 generated_frontier_3_42_seed42_200t	ECONOMY	B	0.11049723756906077	S	7.053763440860215	A	1.0208333333333333	True	True	False	True	True	False
 generated_frontier_3_42_seed42_200t	PROGRESSION	A	0.5082872928176796	A	1.0068493150684932	A	0.6666666666666666	False	True	False	True	True	False
 generated_frontier_3_42_seed42_200t	SOCIAL	S	18.135	S	39.0	S	31.165	False	True	False	True	True	False
-generated_frontier_3_42_seed42_200t	INFORMATION	B	0.2	S	55.43	S	45.56	False	True	False	True	True	False
+generated_frontier_3_42_seed42_200t	INFORMATION	B	0.2	S	55.43	S	45.56	False	True	False	False	True	True
 generated_frontier_3_42_seed42_200t	WORLD	B	0.3	A	0.63	A	0.51	False	True	False	True	True	False
 generated_frontier_3_42_seed42_200t	NARRATIVE	C	0.0	A	1.994949494949495	A	1.7384615384615385	False	True	False	True	True	False
 generated_frontier_3_42_seed123_200t	COGNITION	B	0.06	B	0.06	B	0.06	False	False	True	True	False	False
@@ -696,7 +696,7 @@ generated_frontier_3_42_seed123_200t	FACTION	S	2.9	B	0.030864197530864196	C	0.0	
 generated_frontier_3_42_seed123_200t	ECONOMY	B	0.11049723756906077	S	5.94475138121547	A	0.5569620253164557	True	True	False	True	True	False
 generated_frontier_3_42_seed123_200t	PROGRESSION	B	0.14361702127659576	B	0.4161490683229814	B	0.37410071942446044	False	True	False	True	True	False
 generated_frontier_3_42_seed123_200t	SOCIAL	S	19.815	S	20.35	S	32.785	False	True	False	True	True	False
-generated_frontier_3_42_seed123_200t	INFORMATION	B	0.2	S	2.3020833333333335	S	41.78	False	True	False	True	True	False
+generated_frontier_3_42_seed123_200t	INFORMATION	B	0.2	S	2.3020833333333335	S	41.78	False	True	False	False	True	True
 generated_frontier_3_42_seed123_200t	WORLD	B	0.3	A	0.51	B	0.37	True	True	False	True	True	False
 generated_frontier_3_42_seed123_200t	NARRATIVE	C	0.0	A	1.535	A	0.9222797927461139	False	True	False	True	True	False
 generated_frontier_3_42_seed456_200t	COGNITION	B	0.06	B	0.06	B	0.06	False	False	True	True	False	False
@@ -706,7 +706,7 @@ generated_frontier_3_42_seed456_200t	FACTION	S	2.9	C	0.0	C	0.0	False	False	False
 generated_frontier_3_42_seed456_200t	ECONOMY	B	0.2857142857142857	S	5.923497267759563	A	0.7529411764705882	True	True	False	True	True	False
 generated_frontier_3_42_seed456_200t	PROGRESSION	A	0.5132275132275133	A	0.6	B	0.3941176470588235	True	True	False	True	True	False
 generated_frontier_3_42_seed456_200t	SOCIAL	S	27.715	S	25.3	S	26.825	False	True	True	True	False	False
-generated_frontier_3_42_seed456_200t	INFORMATION	B	0.2	A	1.8645833333333333	S	17.15897435897436	True	True	False	True	True	False
+generated_frontier_3_42_seed456_200t	INFORMATION	B	0.2	A	1.8645833333333333	S	17.15897435897436	True	True	False	False	True	True
 generated_frontier_3_42_seed456_200t	WORLD	B	0.38	A	0.51	A	0.53	False	True	False	True	True	False
 generated_frontier_3_42_seed456_200t	NARRATIVE	C	0.0	A	1.323076923076923	A	1.85	False	True	False	True	True	False
 generated_frontier_3_42_seed42_1000t	COGNITION	B	0.038	B	0.412	A	0.812	True	True	False	True	True	False
@@ -804,7 +804,7 @@ lifecycle_full_coverage_world_seed42_200t	AGENCY	B	0.07216494845360824	B	0.19827
 lifecycle_full_coverage_world_seed42_200t	COMBAT	B	0.023668639053254437	B	0.1319796954314721	B	0.06060606060606061	False	True	True	True	False	False
 lifecycle_full_coverage_world_seed42_200t	FACTION	S	7.5	C	0.0	C	0.0	False	False	False	True	True	False
 lifecycle_full_coverage_world_seed42_200t	ECONOMY	C	0.0	S	4.588832487309645	A	0.8040201005025126	True	True	False	True	True	False
-lifecycle_full_coverage_world_seed42_200t	PROGRESSION	C	-0.1568627450980392	B	0.16243654822335024	C	-0.1568627450980392	True	True	True	True	False	False
+lifecycle_full_coverage_world_seed42_200t	PROGRESSION	C	-0.1568627450980392	B	0.16243654822335024	C	-0.1568627450980392	True	True	True	True	False	True
 lifecycle_full_coverage_world_seed42_200t	SOCIAL	S	6.19	S	15.46	S	19.96	False	True	False	True	True	False
 lifecycle_full_coverage_world_seed42_200t	INFORMATION	C	0.0	S	52.17	S	17.13	False	True	False	True	True	False
 lifecycle_full_coverage_world_seed42_200t	WORLD	A	0.72	A	0.64	B	0.37	True	True	False	True	True	False

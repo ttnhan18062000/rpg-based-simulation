@@ -120,3 +120,12 @@ def test_the_ruling_table_groups_rows_by_value_comparison_only():
 def test_the_ruling_table_cli_needs_the_prior_rows(tmp_path):
     with pytest.raises(SystemExit):
         ra.main(["--rows", "x", "--fixture", "y", "--out", "z", "--table", "t", "--ruling-table", str(tmp_path / "r.tsv")])
+
+
+def test_a_row_the_owner_holds_stays_at_its_committed_anchor_and_is_listed_in_its_own_group():
+    fixture = {"w_seed1_200t": {"FACTION": {"grade": "S", "score": 2.9}, "ECONOMY": {"grade": "B", "score": 0.18}}}
+    now = {"w_seed1_200t": _pair("w_seed1_200t", faction=(0.0, "C"), economy=(3.0, "A"))}
+    new, table = ra.reanchor(fixture, now, excluded={("w_seed1_200t", "ECONOMY")}, prior_rows={"w_seed1_200t": _pair("w_seed1_200t")})
+    assert new["w_seed1_200t"]["ECONOMY"] == {"grade": "B", "score": 0.18} and new["w_seed1_200t"]["FACTION"] == {"grade": "C", "score": 0.0}
+    groups = {(r["run_key"], r["pillar"]): r["group"] for r in ra.ruling_rows(table)}
+    assert groups[("w_seed1_200t", "ECONOMY")] == ra.GROUP_HELD and groups[("w_seed1_200t", "FACTION")] == ra.GROUP_UNCHANGED

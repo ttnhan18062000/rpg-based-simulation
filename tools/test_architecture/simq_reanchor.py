@@ -148,30 +148,34 @@ def table_tsv(table: Iterable[Mapping[str, Any]]) -> str:
 
 GROUP_CHANGED = "#536, cause not isolated by measurement"
 GROUP_UNCHANGED = "unchanged since the 2026-10-12 ruling"
+GROUP_HELD = "held as a finding: kept at the committed anchor (excluded)"
 
 
 def ruling_rows(table: Iterable[Mapping[str, Any]]) -> List[dict]:
     """The rows an owner rules on after the code moved again, grouped by value comparison only (never by pillar name or a guessed cause).
 
     Needs the ``prior_*`` columns (an earlier measurement the owner ruled on). A row whose post value differs from the prior (ruled) value is
-    :data:`GROUP_CHANGED` (the code change that moved it is not isolated by measurement); a row whose post value equals the prior one but differs from the
+    :data:`GROUP_CHANGED` (the code change that moved it is not isolated by measurement); an excluded row (held by the owner as a finding) is :data:`GROUP_HELD`; a row whose post value equals the prior one but differs from the
     committed anchor is :data:`GROUP_UNCHANGED` (already covered by the earlier ruling). A row equal to its committed anchor is not listed."""
     out: List[dict] = []
     for row in table:
         committed = (row["committed_grade"], row["committed_score"])
         before, after = (row["prior_grade"], row["prior_score"]), (row["audit_grade"], row["audit_score"])
-        if before != after:
+        if row.get("excluded"):
+            group = GROUP_HELD
+        elif before != after:
             group = GROUP_CHANGED
         elif after != committed:
             group = GROUP_UNCHANGED
         else:
             continue
-        reference = before if group == GROUP_CHANGED else committed
+        reference = before if group in (GROUP_CHANGED, GROUP_HELD) else committed
         step = GRADE_ORDER.index(after[0]) - GRADE_ORDER.index(reference[0]) if after[0] in GRADE_ORDER and reference[0] in GRADE_ORDER else 0
         direction = "up" if step > 0 or (step == 0 and after[1] > reference[1]) else "down"
         out.append({"run_key": row["run_key"], "pillar": row["pillar"], "committed": f"{committed[0]}/{committed[1]:.4g}", "pre_536": f"{before[0]}/{before[1]:.4g}",
                     "post_536": f"{after[0]}/{after[1]:.4g}", "direction": direction, "group": group})
-    return sorted(out, key=lambda r: (r["group"] != GROUP_CHANGED, r["run_key"], r["pillar"]))
+    order = (GROUP_HELD, GROUP_CHANGED, GROUP_UNCHANGED)
+    return sorted(out, key=lambda r: (order.index(r["group"]), r["run_key"], r["pillar"]))
 
 
 def ruling_tsv(rows: Iterable[Mapping[str, Any]]) -> str:
