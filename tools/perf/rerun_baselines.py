@@ -107,8 +107,8 @@ def build_state(scenario: str, entities: int, seed: int) -> Any:
     return builder(entity_count=entities, seed=seed)
 
 
-def measure_record(name: str) -> BenchmarkRecord:
-    """One measured record of ``name`` in this process."""
+def measure_record(name: str, samples_dir: Optional[Path] = None) -> BenchmarkRecord:
+    """One measured record of ``name`` in this process. ``samples_dir`` keeps every sampled tick's latency in a file the record points to (OD-6)."""
     from src.perf.bench_harness import BenchHarness
 
     spec = spec_for(name)
@@ -127,7 +127,7 @@ def measure_record(name: str) -> BenchmarkRecord:
         state = build_state(spec.scenario, spec.entities, spec.seed)
         scenario_id = f"{spec.scenario}_{spec.entities}"
         region_count = None
-    options = RecordOptions(GateTier(spec.gate_tier), spec.gate_projection, None, Runner(controlled=False, name=platform.node() or "unknown"))
+    options = RecordOptions(GateTier(spec.gate_tier), spec.gate_projection, samples_dir, Runner(controlled=False, name=platform.node() or "unknown"))
     harness = BenchHarness(capacity_run._profile(spec))
     harness.run_benchmark(scenario_id, state, spec.warmup, spec.ticks, record_options=options)
     record = harness.last_record
@@ -201,10 +201,10 @@ def _child_env() -> Dict[str, str]:
     return {**os.environ, "PYTHONHASHSEED": os.environ.get("PYTHONHASHSEED", "0")}
 
 
-def cmd_measure(name: str, out: Path) -> int:
+def cmd_measure(name: str, out: Path, samples_dir: Optional[Path] = None) -> int:
     started = host_load()
     t0 = time.perf_counter()
-    record = measure_record(name)
+    record = measure_record(name, samples_dir)
     wall = time.perf_counter() - t0
     out.write_text(json.dumps(record.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
     meta = {**started, "wall_s": round(wall, 2), "peak_rss_mb": round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0, 1)}
@@ -212,14 +212,17 @@ def cmd_measure(name: str, out: Path) -> int:
     return 0
 
 
-def cmd_record(name: str, out_root: Path) -> int:
+def cmd_record(name: str, out_root: Path, keep_samples: bool = False) -> int:
     spec_for(name)  # raises RerunError for an unknown name before anything runs
     out_dir = out_root / name
     out_dir.mkdir(parents=True, exist_ok=True)
     runs: List[Run] = []
     for index in range(1, RUNS + 1):
         path = out_dir / f"run{index}.json"
-        done = subprocess.run([sys.executable, str(Path(__file__).resolve()), "measure", "--name", name, "--out", str(path)], env=_child_env(), check=False)
+        argv = [sys.executable, str(Path(__file__).resolve()), "measure", "--name", name, "--out", str(path)]
+        if keep_samples:
+            argv += ["--samples-dir", str(out_dir / "samples")]
+        done = subprocess.run(argv, env=_child_env(), check=False)
         if done.returncode != 0 or not path.exists():
             print(f"cannot run: run {index} of {name} exited {done.returncode}", file=sys.stderr)
             return 1
@@ -254,9 +257,11 @@ def _parser() -> argparse.ArgumentParser:
     rec = sub.add_parser("record", help="measure a baseline 3 times in fresh processes and pick the median")
     rec.add_argument("name", choices=known_names())
     rec.add_argument("--out-root", type=Path, default=OUT_ROOT)
+    rec.add_argument("--keep-samples", action="store_true", help="keep every sampled tick's latency of each run under <out>/<name>/samples/ (for a noise diagnosis)")
     mea = sub.add_parser("measure", help="one measured record in this process (the worker of ``record``)")
     mea.add_argument("--name", required=True, choices=known_names())
     mea.add_argument("--out", required=True, type=Path)
+    mea.add_argument("--samples-dir", type=Path)
     sub.add_parser("list", help="the baseline names this tool knows")
     return parser
 
@@ -268,8 +273,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             print("\n".join(known_names()))
             return 0
         if args.command == "measure":
-            return cmd_measure(args.name, args.out)
-        return cmd_record(args.name, args.out_root)
+            return cmd_measure(args.name, args.out, args.samples_dir)
+        return cmd_record(args.name, args.out_root, args.keep_samples)
     except (RerunError, CapacityRunError) as exc:
         print(f"cannot run: {exc}", file=sys.stderr)
         return 1

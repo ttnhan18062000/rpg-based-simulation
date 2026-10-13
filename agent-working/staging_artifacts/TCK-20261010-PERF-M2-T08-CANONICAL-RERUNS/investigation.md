@@ -35,3 +35,38 @@ Search: `grep -rIn -F "observability/baselines"` over `src/ tools/ tests/ .githu
 
 ### D. Where the expected RSS and wall come from (condition 4)
 All from the old committed record of the same name: peak RSS = `mem_rss_mb.max` and wall = `wall_clock_s` (the sampled window only; the process also builds the state and warms up). Scenario files: `mem_rss_mb.max` 38.4 to 48.5 MB, `wall_clock_s` about 2.0 s (20 sampled ticks). Corpus: `simq_corpus_crowded_frontier` 696.3 MB / 8.25 s, `simq_corpus_frontier_extended` 1505.6 MB / 13.12 s, `simq_corpus_frontier_marches` 1405.1 MB / 11.77 s (1000 sampled ticks each). **Those exceeded their own profile**: `PERF_512MB_LOCAL` declares `ram_mb=512`, so 696 to 1506 MB is 1.4x to 2.9x of it. The profile's `ram_mb` is the modelled class used for the governor's memory guard, not an enforced process limit (memory guards exist only in LIVE; `performance_contract.md`), so the run was not killed; the old records are evidence of this, and the new ones will show whether the same holds. The measured max-RSS (from `mem_rss_mb.max` and the cgroup's `memory.peak`) and wall of each new run are stored beside its record.
+
+## E. Measured results and the off-NORMAL evidence (2026-10-13; main 06aa3a20c, host `ubuntu`, i5-11400H 6 vCPU, loaded: 1-min load 0.6 to 5.3, swap 5.7 to 6.8 GB)
+Each record: 3 fresh-process runs, median avg promoted, spread = max/min - 1, NOISY above 15 %. Raw files and summaries: `reports/perf/t08/` (first attempt) and `reports/perf/t08_retry/` (the one quiet-window retry of the 6 NOISY ones, load 0.6 to 1.2 at each start).
+
+**Records that leave NORMAL under the canonical contract (not a baseline, contract 3.1; identical in all 3 runs, because the modelled cost does not depend on the host):**
+
+| record | profile (canonical) | mode counts (ticks) | avg tick (median run) | top phases (avg ms) |
+|---|---|---|---|---|
+| `strategic_100_local` | PERF_2GB_LOCAL | CONSTRAINED 20 | 495.8 ms | cooperation 260.0, resolution_overhead 101.3, advancement 83.9, combat_engagement 28.3 |
+| `strategic_100_concurrent` | PERF_2GB_CONC | SURVIVAL 20 | 398.9 ms | cooperation 197.9, resolution_overhead 95.3, advancement 63.9, combat_engagement 26.1 |
+| `simq_corpus_frontier_extended` | PERF_512MB_LOCAL | NORMAL 40, CONSTRAINED 44, DEGRADED 14, SURVIVAL 902 | 165.9 ms | advancement 69.9, resolution_overhead 35.7, cooperation 32.0, combat_engagement 10.8 |
+| `simq_corpus_frontier_marches` | PERF_512MB_LOCAL | NORMAL 10, CONSTRAINED 876, NORMAL 114 | 97.9 ms | advancement 37.3, resolution_overhead 22.3, cooperation 17.2, combat_engagement 6.1 |
+
+`baseline_lifecycle promote` refused `strategic_100_local` and `simq_corpus_frontier_extended` with `mode_not_normal`; the other two were not offered. The old May files read 13.2 ms (`strategic_100_local`), 13.3 ms (`frontier_extended`) and 16.0 ms (`frontier_marches`), so the tick cost of these scenarios has grown by about 12x to 38x since (the May pipeline had 5 buckets; the tick now has 30 phases, with `cooperation` and `advancement` the largest). This is evidence for the owner decision on a larger-budget canonical profile (not made here). The old numbers are not a regression measurement: they predate DEV-017 and the 30-phase tick.
+
+**Memory vs the profile's declared RAM.** `simq_corpus_frontier_extended` peaked at `memory_mb.rss_high_water` 1688.7 MB (cgroup run: 1703 MB process peak) and `frontier_marches` at 1554.7 MB (1568 MB), on `PERF_512MB_LOCAL` (declares `ram_mb=512`); `crowded_frontier` 797 MB. **Nothing flags it:** `BenchHarness` records `rss_high_water` but never compares it with the profile's `ram_mb`, `compare()` does not read memory, and the governor's memory guard exists only under LIVE (`performance_contract.md` section 3.1), not under the canonical contract these runs use. The old records already exceeded the profile the same way (696 to 1506 MB).
+
+**Retry in the quiet window (one, as approved):** `combat_10_concurrent` 9.6 % and `resource_100_concurrent` 12.5 % became promotable and were promoted; `idle_100_local` 22.1 %, `movement_100_local` 28.8 %, `combat_10_local` 96.9 % and `simq_corpus_crowded_frontier` 32.8 % stayed above 15 % and are PENDING-NOISY in the ledger.
+
+## F. The four PENDING-NOISY records: what the stored data shows (input for the follow-up ticket)
+**Per-tick series were not kept.** The 26 measured runs were made with `samples_dir=None`, so a record holds only `latency_ms` {min, p50, avg, p95, max}, not the per-tick list; the claim "the first ticks after warm-up dominate" cannot be tested from these files. `rerun_baselines.py record --keep-samples` now keeps every sampled tick of each run under `<out>/<name>/samples/` (OD-6 pointer), for the follow-up. Per run (first window = load 2.2 to 2.7, retry = quiet window, load 0.6 to 1.3 at start); values in ms:
+
+| record | window | run 1 min / p50 / avg / p95 / max | run 2 | run 3 | spread |
+|---|---|---|---|---|---|
+| idle_100_local | first | 49.4 / 63.1 / 62.4 / 71.9 / 74.0 | 49.3 / 60.4 / 61.0 / 70.4 / 72.2 | 31.1 / 44.2 / 46.1 / 60.7 / 67.1 | 35.3 % |
+| idle_100_local | retry | 30.0 / 31.8 / 32.2 / 35.9 / 37.3 | 30.4 / 32.6 / 35.8 / 56.7 / 57.8 | 33.8 / 37.8 / 39.3 / 47.2 / 61.8 | 22.1 % |
+| movement_100_local | first | 92.7 / 125.6 / 126.6 / 154.1 / 232.6 | 62.6 / 108.3 / 108.6 / 165.5 / 177.2 | 65.5 / 117.2 / 109.9 / 148.5 / 171.9 | 16.6 % |
+| movement_100_local | retry | 89.1 / 133.6 / 134.9 / 161.2 / 166.8 | 101.3 / 125.8 / 126.8 / 146.0 / 155.1 | 65.0 / 112.4 / 104.8 / 151.4 / 156.3 | 28.8 % |
+| combat_10_local | first | 31.9 / 40.3 / 47.3 / 73.4 / 97.3 | 49.3 / 65.2 / 67.8 / 80.4 / 93.1 | 51.4 / 64.8 / 64.5 / 72.5 / 81.7 | 43.3 % |
+| combat_10_local | retry | 24.7 / 30.6 / 30.7 / 34.6 / 35.5 | 41.5 / 58.3 / 59.8 / 71.4 / 77.2 | 25.0 / 29.7 / 30.4 / 34.6 / 35.0 | 96.9 % |
+| simq_corpus_crowded_frontier | first | 25.9 / 61.8 / 69.7 / 119.2 / 570.4 | 20.1 / 52.1 / 58.8 / 99.4 / 564.4 | 22.3 / 40.6 / 51.3 / 113.5 / 866.6 | 35.8 % |
+| simq_corpus_crowded_frontier | retry | 22.4 / 80.4 / 91.5 / 178.4 / 411.3 | 25.9 / 70.3 / 83.9 / 158.3 / 451.2 | 20.9 / 71.5 / 68.9 / 108.3 / 226.1 | 22.9 % (see note) |
+(crowded_frontier retry spread from the stored summary is 32.8 %; the avg column is 91.5 / 83.9 / 68.9.)
+
+Reading, from these numbers only: (1) inside a run, avg and p50 agree for the three synthetic records (for example combat_10_local retry 30.7 vs 30.6, 59.8 vs 58.3, 30.4 vs 29.7), so the spread comes from **between processes**, not from a few slow ticks; (2) `combat_10_local` in the quiet window is **bimodal across processes**: two runs at about 30 ms and one at about 60 ms (a 2x step, p50 and the whole distribution shifted), which a longer sample would not average away; a per-process cause (CPU frequency or core placement on the VM, allocator or hash layout) is plausible and untested; (3) `crowded_frontier` has real tail ticks (max 226 to 867 ms against p50 41 to 80 ms), so there a few slow ticks do widen the average; (4) the quiet window cut the idle and combat variance but not the movement one. The follow-up should start from `--keep-samples` data (does a warm-up drop or a longer run narrow it, and is the 2x step per process), before another window.
