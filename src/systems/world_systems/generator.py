@@ -79,6 +79,22 @@ class EntityGenerator:
         self._last_id = 0
         self._claimed_tiles: tuple[int, set[tuple[int, int]]] = (-1, set())
 
+    @classmethod
+    def for_state(cls, state: AuthoritativeState, update: Any = None) -> "EntityGenerator":
+        """The one factory for a mid-run generator: seeded from the tick, its id counter starts past every id already taken.
+
+        Taken ids are the world's ``next_entity_id`` ceiling, every live id, and (when ``update`` is given) every id an earlier phase of this tick has
+        already added or reserved, so a spawn site cannot forget to set its id base and two sites in one tick cannot hand out the same id
+        (TCK-20261014-A-CONQUEST-STRONGHOLD-OVERWRITES-ENTITY-1)."""
+        generator = cls(state.seed + state.tick)
+        taken = max([getattr(state, "next_entity_id", 1) - 1, *state.entities])
+        if update is not None:
+            if update.next_entity_id_set is not None:
+                taken = max(taken, update.next_entity_id_set - 1)
+            taken = max([taken, *(entity.id for entity in update.entities_add)])
+        generator._last_id = taken
+        return generator
+
     def free_spawn_position(self, pos: tuple[float, float], state: AuthoritativeState | None) -> tuple[float, float]:
         """LAW-OCCUPANCY-COLLISION: `pos` itself when its tile is clear, else the nearest clear tile (ring order,
         then y, then x: deterministic, no RNG). A tile is clear when no live entity is within `_SPAWN_REACH` tiles and no spawn

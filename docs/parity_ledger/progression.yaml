@@ -1737,3 +1737,14 @@
   test_path: tests/unit/engine/test_building_services_serve_only_people.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.119.
   support_boundary: 'Trait only (D68); the relationship half is a later ticket. A person who holds less than a service costs is still served with the charge clamped to what it holds (free meal or bed) until M0 step 4 (TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL).'
+- id: PROG-135
+  text: "TCK-20261014-A-CONQUEST-STRONGHOLD-OVERWRITES-ENTITY-1: a mid-run entity add never reuses an existing id. Every mid-run generator comes from EntityGenerator.for_state, the apply raises DuplicateEntityIdError for a duplicate-id add, and next_entity_id advances past every added id."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/systems/world_systems/generator.py (for_state), src/engine/apply.py (DuplicateEntityIdError, the next_entity_id advance), src/systems/lifecycle_systems/lifecycle.py and src/engine/pipeline.py (the call sites). docs/guidelines/intentional_divergences.md Section 2.121; docs/core/entities.md."
+  proof_type: regression
+  test_path: tests/unit/engine/test_mid_run_adds_never_reuse_an_entity_id.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.121.
+  support_boundary: "The refusal is a raised exception. Whether a monster conquest should spawn a stronghold is a designer question (V1/V8)."
+

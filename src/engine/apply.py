@@ -66,6 +66,23 @@ def shallow_freeze(obj: Any) -> Any:
         return tuple(obj)
     return obj
 
+class DuplicateEntityIdError(ValueError):
+    """An ``entities_add`` carried an id that already exists: an add never replaces an entity, so the apply refuses it loudly."""
+
+
+def _add_entities(entities: dict, adds: Any, tick: int) -> None:
+    """Insert each added entity; an id already present (or repeated in ``adds``) is refused, never overwritten."""
+    for ent in adds:
+        if ent.id in entities:
+            raise DuplicateEntityIdError(f"entities_add reuses id {ent.id} at tick {tick}: an add never replaces an existing entity")
+        entities[ent.id] = ent
+
+
+def _counter_past_adds(counter: int, adds: Any) -> int:
+    """Every add advances ``next_entity_id`` past its id, whoever added it."""
+    return max([counter, *(ent.id + 1 for ent in adds)]) if adds else counter
+
+
 class ApplyPath:
     """
     The authoritative state application pipeline.
@@ -294,8 +311,7 @@ class ApplyPath:
             if not any_entity_changed:
                 new_entities = dict(new_entities)
                 any_entity_changed = True
-            for ent in update.entities_add:
-                new_entities[ent.id] = ent
+            _add_entities(new_entities, update.entities_add, prior_state.tick)
 
         # TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS: built unconditionally (the tags are
         # already fully computed by ApplyPlanBuilder; this is cheap) rather than only when an
@@ -330,6 +346,7 @@ class ApplyPath:
         new_mode = update.current_mode_set if update.current_mode_set is not None else getattr(prior_state, "current_mode", 0)
         new_next_node = update.next_node_id_set if update.next_node_id_set is not None else getattr(prior_state, "next_node_id", 1000)
         new_next_entity = update.next_entity_id_set if update.next_entity_id_set is not None else getattr(prior_state, "next_entity_id", 1)
+        new_next_entity = _counter_past_adds(new_next_entity, update.entities_add)
         new_next_item_instance = update.next_item_instance_id_set if update.next_item_instance_id_set is not None else getattr(prior_state, "next_item_instance_id", 1)
         new_maturity = update.maturity_set if update.maturity_set is not None else prior_state.maturity
         new_last_calamity = update.last_calamity_tick_set if update.last_calamity_tick_set is not None else prior_state.last_calamity_tick
