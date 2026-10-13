@@ -555,6 +555,17 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     - A starvation wave after the removal is measured with the earn path live and brought to
       the owner with the H6 records. It is neither pre-accepted nor an automatic blocker.
   - **Alternatives not taken:** 40, or 20 (the paid part only).
+- **Which species the species-less people get (decided by the owner directly, 2026-10-13; row 74
+  of the memo):** 51 bodies had no species, so the hostility and appraisal readers could not see
+  them. They are the hero_adventurers trio (30), the trading_company_hub merchants (15) and the
+  scalable_bandit_camp scouts (6). Giving them a species, and with it a diet, lands before
+  baseline v1 as its own measured step. No body's own description named a species.
+  - **Ruling:** one species per recipe, human, from each role's own archetype (adventurer_hero,
+    traveling_merchant, bandit_scout).
+  - **Later:** the factions' other common peoples (elf and dwarf heroes and merchants, goblin and
+    orc scouts) come as extra content recipes, each measured on its own.
+  - **Alternatives not taken:** one recipe per common species now; a seeded per-body draw from the
+    faction's species list.
 - **Animals first: the removal waits for the animals' own ways (decided by the owner directly,
   2026-10-09; row 44 of the memo).** Under decision 42, the free-meal removal must leave every
   living kind with a working way to eat, not only people. It lands for everyone at once, after
