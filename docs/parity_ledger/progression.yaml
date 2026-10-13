@@ -1758,3 +1758,13 @@
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.121.
   support_boundary: "The refusal is a raised exception. Whether a monster conquest should spawn a stronghold is a designer question (V1/V8)."
 
+- id: PROG-136
+  text: "TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71: a monster conquest flips region ownership at influence <= -50 and adds no entity; an invader-owned region is freed at influence >= +50. No stronghold body is spawned."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/world/influence.py (process_influence_shift unchanged; process_conquest_lifecycle removed), src/systems/lifecycle_systems/lifecycle.py (no conquest entity merge), src/systems/world_systems/generator.py (spawn_stronghold removed). docs/guidelines/intentional_divergences.md Section 2.123; docs/mechanics/05_world_evolution.md Section 3."
+  proof_type: regression
+  test_path: tests/unit/world/test_conquest_adds_no_entity.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.123.
+  support_boundary: "Dormant in the baseline (0 conquests in 10 runs of 5000 ticks); proved by forced-conquest tests. The influence trigger and MONSTER_HORDE as a taker are label-driven until caused war and peace (not before M3)."

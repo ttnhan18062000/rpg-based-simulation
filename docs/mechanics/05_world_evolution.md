@@ -88,6 +88,14 @@ Conquest and liberation trigger at `CONQUEST_THRESHOLD = -50.0` / `LIBERATION_TH
 
 **Impact of Ownership**: Faction-owned regions may provide safe zones for allies, trigger reinforcement spawns, or apply special economic modifiers to local trade.
 
+**A conquest adds no body (owner ruling D71, TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71).**
+A region taken by the Monster Horde changes owner and nothing else: no stronghold entity is created, so a conquest adds no
+entity and does not move `next_entity_id`. The one recovery path is unchanged: an invader-owned region is freed when its
+influence climbs back to `LIBERATION_THRESHOLD = +50.0`, and influence moves only on deaths. The "Aura of Despair" read
+(`world/environment.py`) still looks for stronghold-kind entities, so it applies only where a world authors one. Interim: the
+influence-from-deaths trigger and the Monster Horde as a taker are label-driven; they are re-anchored with caused war and
+peace (not before M3).
+
 ### Hazard Impacts
 As `Hazard Level` increases, entities within the region suffer (`Hazard Level` is open-ended: authored values run to 4.0 and the generator authors above 1.0; owner decision 12):
 *   **Passive HP Drain**: Health is lost every tick based on the hazard's intensity.

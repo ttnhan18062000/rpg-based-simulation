@@ -326,20 +326,3 @@ class EntityGenerator:
             .inventory(gold=int(base_gold))
             .spawn_combat_stats_are_final()
             .build())
-
-    def spawn_stronghold(self, state: AuthoritativeState, pos: tuple[float, float]) -> EntityState:
-        """Spawn a static stronghold building-entity."""
-        entity_id = self.get_next_id()
-        
-        # Strongholds are very tough buildings
-        hp = 10000 * (1.0 + state.maturity * 0.5)
-        def_val = 50 * (1.0 + state.maturity * 0.2)
-        
-        from src.core.builder import V2EntityBuilder
-        return (V2EntityBuilder(entity_id)
-            .kind("stronghold")
-            .location(*pos)
-            .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
-            .combat(hp=int(hp), max_hp=int(hp), atk=0, def_stat=int(def_val), readiness=100.0)
-            .spawn_combat_stats_are_final()
-            .build())
