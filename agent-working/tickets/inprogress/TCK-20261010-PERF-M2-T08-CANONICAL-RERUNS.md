@@ -89,6 +89,7 @@ None.
 - docs/observability/baselines/matrix_full.json
 
 ## Assumptions / Open Questions
+- Step 6 deviates from the ticket text (T03-format records): see Implementation Notes.
 - Lift boundary (roadmap RPG-core gate item 8, owner 2026-10-09): `src/` edits are limited to `src/perf/bench_harness.py`, `src/perf/profiles.py`, `src/perf/long_run_harness.py`, new `src/perf/benchmark_record.py`, `src/observability/reporting/baseline_comparator.py` and `sweep_report.py`. Any other `src/` path listed under Related Code Areas is read-only here; editing it needs a new owner lift.
 - Blocked until PERF-M2-T07 (canonical profiles), PERF-M2-T05 (baseline_lifecycle.py), PERF-M2-T03 (record format) and X1 (TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE) land
 - The mixed_200_* reruns need a partial-completion path or a follow-up split, because the spawn-collision ticket is open
@@ -98,6 +99,8 @@ None.
 - T06 depends on this ticket, so delays block P1 publication
 
 ## Implementation Notes
+- **Deviation from the ticket text (step 6), 2026-10-13, approved in perf-planner's review of plan.md:** the ticket says the matrix files and `latest.json` are replaced "by T03-format records". `python3 -m src gate` and `compare-sweep` model-validate a `BaselineConfig` (`baseline_v1`, written by `generate-baseline` from a sweep), which a schema-1.1 `BenchmarkRecord` is not, so `latest.json` is replaced by a generated `BaselineConfig` carrying the current `cost_accounting_version`, and the per-profile matrix files (no consumer, investigation.md section A) are deleted. The acceptance criterion's actual test (the CLI gives a tick-cost verdict, not 'baseline incomparable') is kept.
+- Every record is measured 3 times in fresh processes and the median avg is promoted; a spread above 15 % is not promoted and is marked NOISY (perf-planner condition, host is loaded).
 
 ## Test Summary
 
