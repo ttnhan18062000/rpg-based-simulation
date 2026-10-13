@@ -14,3 +14,4 @@ SimQ needs/livelihood pillar) are rpg-planner's and live elsewhere. Child 3's re
 4. TCK-20261009-RPG-GATE-REPORT-STATES-AND-SAME-SHA-RERUN  (depends on: 1, 2, 3)
 5. TCK-20261009-RPG-GATE-SCHEDULED-AND-DISPATCH-WORKFLOW  (depends on: 4)
 6. TCK-20261011-RPG-GATE-BASELINE-CANDIDATE-FROM-HARNESS-DOCS  (depends on: 2, 3, 4, 5; added 2026-10-11: no code built the candidate that `rebaseline()` reads)
+7. TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK  (depends on: 4, 6; AC4/AC5 also wait for rpg's SpawnSource and observer from the metrics ticket; added 2026-10-13 for D70: no row counted entity adds)
