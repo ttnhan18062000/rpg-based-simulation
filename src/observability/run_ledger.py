@@ -19,6 +19,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from src.ai.goals.kind_group import kind_group
+from src.core.region_resolution import is_inside_world
 from src.core.spawn_source import SpawnKind
 from src.core.state import AuthoritativeState
 from src.core.treasury import total_coin
@@ -30,6 +31,8 @@ UNSOURCED = "unsourced"
 POPULATION_SAMPLE_EVERY = 500  # ticks between population samples (the first observed tick is always sampled): ten samples over a 5000-tick run
 _SOURCE = "run_ledger"
 _WORLD_EVENT_KEYS = ("FEEDING_KILL", "MEAT_DECAYED")
+_RAW_MEAT = "raw_meat"  # engine.carcass.RAW_MEAT_ITEM (observability may not import the engine; a test pins the two equal)
+MAX_EXAMPLES = 5
 
 
 def _key(*parts: Any) -> str:
@@ -52,6 +55,9 @@ class RunLedger:
     _deaths: Dict[str, int] = {}  # group|cause
     _adds: Dict[str, int] = {}  # group|SpawnKind or unsourced
     _world_events: Dict[str, float] = {}  # FEEDING_KILL / MEAT_DECAYED counts, and meat_decayed_quantity
+    _meat: Dict[str, float] = {}  # made (new bodies), taken (off persisting bodies: eaten or looted), vanished (on bodies that left the world)
+    _out_of_world: Dict[str, int] = {}  # group -> entity-ticks of a moved, alive entity outside the world extent
+    _out_of_world_examples: List[Dict[str, Any]] = []
 
     @classmethod
     def reset_run_state(cls) -> None:
@@ -67,6 +73,9 @@ class RunLedger:
         cls._deaths = {}
         cls._adds = {}
         cls._world_events = {}
+        cls._meat = {}
+        cls._out_of_world = {}
+        cls._out_of_world_examples = []
 
     @classmethod
     def configure(cls, live: bool) -> None:
@@ -93,6 +102,8 @@ class RunLedger:
         cls._count_deaths(prior, current)
         cls._count_adds(update)
         cls._count_world_events(update)
+        cls._count_meat(prior, current)
+        cls._count_positions(current, update)
         return events
 
     @staticmethod
@@ -160,6 +171,36 @@ class RunLedger:
                     qty = (getattr(event, "payload", None) or {}).get("quantity", 0.0)
                     cls._world_events["meat_decayed_quantity"] = cls._world_events.get("meat_decayed_quantity", 0.0) + float(qty)
 
+    @staticmethod
+    def _meat_on(corpse: Any) -> float:
+        return float(sum(st.quantity for st in getattr(corpse, "items", ()) if st.item_id == _RAW_MEAT))
+
+    @classmethod
+    def _count_meat(cls, prior: AuthoritativeState, current: AuthoritativeState) -> None:
+        before, after = prior.corpses or {}, current.corpses or {}
+        for cid, corpse in after.items():
+            now = cls._meat_on(corpse)
+            if cid not in before:
+                cls._meat["made"] = cls._meat.get("made", 0.0) + now
+            else:
+                cls._meat["taken"] = cls._meat.get("taken", 0.0) + max(0.0, cls._meat_on(before[cid]) - now)
+        for cid, corpse in before.items():
+            if cid not in after:
+                cls._meat["vanished"] = cls._meat.get("vanished", 0.0) + cls._meat_on(corpse)
+
+    @classmethod
+    def _count_positions(cls, current: AuthoritativeState, update: Any) -> None:
+        for eid in (getattr(update, "entity_updates", None) or {}):
+            entity = current.entities.get(eid)
+            if entity is None or not entity.combat.alive:
+                continue
+            pos = entity.navigation.position
+            if not is_inside_world(current, pos):
+                group = kind_group(entity)
+                cls._out_of_world[group] = cls._out_of_world.get(group, 0) + 1
+                if len(cls._out_of_world_examples) < MAX_EXAMPLES:
+                    cls._out_of_world_examples.append({"entity_id": eid, "tick": current.tick, "position": [pos[0], pos[1]]})
+
     @classmethod
     def closing_event(cls, event_counts: Dict[str, int]) -> Optional[SimulationEvent]:
         """The tally for a recorder that recorded this run's live header, else nothing: a ledger that never opened must not look live."""
@@ -174,7 +215,8 @@ class RunLedger:
             "population": {str(t): dict(sorted(g.items())) for t, g in sorted(cls._population.items())},
             "transfers": dict(sorted(cls._transfers.items())), "hunger_drops": dict(sorted(cls._hunger_drops.items())),
             "deaths": dict(sorted(cls._deaths.items())), "adds": dict(sorted(cls._adds.items())),
-            "world_events": dict(sorted(cls._world_events.items())),
+            "world_events": dict(sorted(cls._world_events.items())), "meat": dict(sorted(cls._meat.items())),
+            "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples),
         }
         return cls._event(LEDGER_TALLY_EVENT, cls._last_tick, payload)
 

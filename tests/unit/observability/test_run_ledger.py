@@ -181,3 +181,39 @@ def test_a_real_kernel_run_writes_the_header_and_the_shutdown_tally_with_the_sta
     assert all(e.severity == "WARNING" for e in seen if e.source_system == "run_ledger")
     assert sum(tally.payload["population"][str(tally.payload["first_tick"])].values()) == 1
     assert kernel._event_recorder.event_count_by_type.get(LEDGER_TALLY_EVENT) == 1, "shutdown must close the ledger with its tally"
+
+
+def _with_corpses(state, corpses, tick=11):
+    cur = replace(state, tick=tick)
+    object.__setattr__(cur, "corpses", corpses)
+    return cur
+
+
+def _corpse(cid, meat):
+    from src.core.state import CorpseState, ItemStack
+    return CorpseState(id=cid, original_entity_id=cid, position=(0.0, 0.0), decay_tick=10**6, items=[ItemStack(item_id="raw_meat", quantity=meat)] if meat else [])
+
+
+def test_the_ledgers_raw_meat_name_is_the_engines():
+    from src.engine.carcass import RAW_MEAT_ITEM
+    from src.observability import run_ledger
+    assert run_ledger._RAW_MEAT == RAW_MEAT_ITEM
+
+
+def test_meat_is_counted_as_made_taken_and_vanished_across_ticks():
+    base = _at_tick(_world(), 10)
+    RunLedger.observe(base, _with_corpses(base, {1: _corpse(1, 6)}), _update())  # a body appears with 6 meat
+    one = _with_corpses(base, {1: _corpse(1, 6)})
+    RunLedger.observe(one, _with_corpses(base, {1: _corpse(1, 4)}, 12), _update())  # 2 taken (eaten or looted)
+    two = _with_corpses(base, {1: _corpse(1, 4)}, 12)
+    RunLedger.observe(two, _with_corpses(base, {}, 13), _update())  # the body leaves the world holding 4
+    assert RunLedger.tally_event().payload["meat"] == {"made": 6.0, "taken": 2.0, "vanished": 4.0}
+
+
+def test_a_moved_entity_outside_the_world_extent_is_counted_with_an_example():
+    state = _at_tick(_world(), 10)
+    e = state.entities[WHO]
+    out = replace(state)
+    object.__setattr__(out, "entities", {WHO: replace(e, navigation=replace(e.navigation, position=(1.0e6, 1.0e6)))})
+    payload = _tally(state, out)
+    assert payload["out_of_world"] == {kind_group(e): 1} and payload["out_of_world_examples"][0]["entity_id"] == WHO
