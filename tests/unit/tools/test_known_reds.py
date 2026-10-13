@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import re
 from pathlib import Path
 
 import pytest
@@ -31,12 +32,25 @@ def test_the_real_slow_registry_lints_clean():
     assert kr.lint_file(SLOW_FILE, SLOW_SPEC) == []
 
 
-def test_the_real_gate_registry_exists_lints_clean_and_every_entry_is_an_owned_validity_fail():
-    """It was empty until the metric module measured its first validity reds (V1 free meal, V8 unsourced adds); every entry names its ticket."""
+def test_the_real_gate_registry_lints_clean_and_every_entry_is_owned():
+    """Every entry has a live owner ticket (todos/ or inprogress/; a done ticket means the entry is stale and must be retired), a match of the right shape
+    for its state, and an expiry within 90 days of when it was added. No exact entry is pinned: the registry is data."""
     assert GATE_FILE.exists()
     assert kr.lint_file(GATE_FILE, RPG_GATE_SPEC) == []
-    entries = kr.load_known_reds(GATE_FILE, RPG_GATE_SPEC)
-    assert entries and all(e["state"] == "fail" and e["ticket"].startswith("TCK-") for e in entries)
+    tickets = ARCH.parents[1] / "agent-working" / "tickets"
+    validity_id = re.compile(r"^V\d+(:.+)?$")
+    for entry in kr.load_known_reds(GATE_FILE, RPG_GATE_SPEC):
+        name = f"{entry['match']} ({entry['ticket']})"
+        live = [tickets / folder / f"{entry['ticket']}.md" for folder in ("todos", "inprogress")]
+        in_done = (tickets / "done" / f"{entry['ticket']}.md").exists()
+        assert not in_done, f"{name}: the owning ticket is done, so the entry is stale and must be retired"
+        assert any(path.exists() or any(path.parent.glob(f"**/{path.name}")) for path in live), f"{name}: no such ticket under todos/ or inprogress/"
+        if entry["state"] == "fail":
+            assert validity_id.match(entry["match"]) and "*" not in entry["match"].split(":")[0], f"{name}: a fail entry matches a validity id (V<n> or V<n>:<group>), never a wildcard"
+        else:
+            assert not validity_id.match(entry["match"]), f"{name}: a drift entry must not match a validity id"
+        added = dt.date.fromisoformat(str(entry["added_on"]))
+        assert dt.date.fromisoformat(str(entry["expires_on"])) <= added + dt.timedelta(days=90), f"{name}: expires more than 90 days after it was added"
 
 
 def test_lint_file_reports_a_missing_file_a_wrong_top_key_and_a_non_list(tmp_path):
