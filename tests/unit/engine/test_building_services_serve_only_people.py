@@ -50,9 +50,7 @@ def test_an_animal_is_refused_every_service_route(action):
     assert service_building(person, pent, action) is not None  # the same building serves a person
 
 
-def test_a_person_the_place_refuses_by_relationship_is_not_served():
+def test_the_place_relationship_is_not_read_by_rest_or_meal():
+    """Trait-only variant: a person in a hostile-owned region is still served rest and meals (the relationship half is its own ticket)."""
     state, ent = _world("human", faction_id="town_council", region_owner=Faction.MONSTER_HORDE)
-    assert service_building(state, ent, "REST") is None
-    assert service_delta(state, ent, "REST", 1) is None
-    free, ent = _world("human", faction_id="town_council", region_owner=None)
-    assert service_building(free, ent, "REST") is not None  # a region with no owner serves anyone with the trait
+    assert service_building(state, ent, "REST") is not None

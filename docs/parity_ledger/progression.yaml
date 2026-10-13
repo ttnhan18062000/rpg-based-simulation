@@ -1728,12 +1728,12 @@
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.118.
   support_boundary: 'The bound is enforced at the single patch writer every CombatUpdate goes through. The legacy town_service INN_REST writer is dead code in src (removal follow-up).'
 - id: PROG-133
-  text: 'TCK-20261013-HEALTH-NEVER-RISES-ABOVE-MAX-HP-AT-THE-PATCH-WRITER (companion): building services (eat, rest, sell, buy, hire) serve only a subject whose species declares keeps_coin_and_trades and only where the controlling faction is not hostile to it, through one shared predicate on every route (EXCH-02, owner decision 43).'
+  text: 'TCK-20261013-HEALTH-NEVER-RISES-ABOVE-MAX-HP-AT-THE-PATCH-WRITER (companion): rest, meal and repair building services serve only a subject whose species declares keeps_coin_and_trades (EXCH-02, owner decisions 43 and 68). Known gap: decision 43's 'where the relationship allows it' is not applied to these routes; it is a later ticket (D68). The sale and the shift keep the controlling-faction rule.'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/engine/building_services.py (service_building gate), src/engine/serves.py (the predicate). Measured in docs/guidelines/intentional_divergences.md Section 2.119.'
+  v2_evidence: 'src/engine/building_services.py (service_building gate), src/engine/serves.py (keeps_coin). Measured in docs/guidelines/intentional_divergences.md Section 2.119.'
   proof_type: regression
   test_path: tests/unit/engine/test_building_services_serve_only_people.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.119.
-  support_boundary: 'Trait plus relationship only. A person who holds less than a service costs is still served with the charge clamped to what it holds (free meal or bed) until M0 step 4 (TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL).'
+  support_boundary: 'Trait only (D68); the relationship half is a later ticket. A person who holds less than a service costs is still served with the charge clamped to what it holds (free meal or bed) until M0 step 4 (TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL).'
