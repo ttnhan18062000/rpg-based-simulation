@@ -253,6 +253,7 @@ def test_an_arm_that_did_not_start_is_reported_as_error_and_the_run_exits_one(tm
     assert code == 1
     body = json.loads((tmp_path / "out" / "report.json").read_text(encoding="utf-8"))
     assert body["scenarios"][0]["outcome"]["state"] == "ERROR" and body["scenarios"][0]["did_not_run"] is True
+    assert body["scenarios"][0]["first"]["state"] == "ERROR"
     assert "| idle | ERROR |" in summary.read_text(encoding="utf-8") and "::error " in out.out and "INCONCLUSIVE" not in out.out.split("REPORT:")[0].split(":")[1]
 
 

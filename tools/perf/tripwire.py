@@ -152,7 +152,7 @@ def _attempt_dict(attempt: Optional[Attempt]) -> Optional[Dict[str, Any]]:
     if attempt is None:
         return None
     return {
-        "state": attempt.outcome.state.value,
+        "state": "ERROR" if attempt.did_not_run else attempt.outcome.state.value,
         "reason": attempt.outcome.reason,
         "base_avg_ms": attempt.base_avg_ms,
         "head_avg_ms": attempt.head_avg_ms,
