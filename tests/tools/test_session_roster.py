@@ -100,7 +100,7 @@ def test_real_registry_has_seventeen_seats_three_unstaffed():
     # no designer seat (their planners take dispatch from the user). lead-planner is the lead domain's only seat, and
     # no role accepts dispatch from it (owner: advisory and sequencing only).
     roster = load_roster(REAL_ROOT)
-    assert len(roster.roles) == 17
+    assert len(roster.roles) == 18
     assert not any("lead-planner" in r.accepts_dispatch_from for r in roster.roles)
     assert {r.role for r in roster.roles if r.seat_status == "unstaffed"} == {
         "agent-working-planner", "testing-designer", "codebase-designer",

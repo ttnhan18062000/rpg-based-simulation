@@ -65,6 +65,7 @@ class Role:
     handover: str
     overrides: tuple[str, ...]  # which of owns / owns_not / routes this entry overrides
     launch: str = "worktree"  # "main-checkout": read-mostly seat, launched from the main checkout, no worktree and no lease
+    card_note: str = ""  # one role-level line appended to the card after the domain text (TCK-20261013-HOST-LEAD-PLANNER-U24)
 
 
 def handover_rel(role: "Role", instance_id: str | None = None) -> str:
@@ -183,6 +184,9 @@ def _parse_role(entry: Any, domains: dict[str, Domain]) -> Role:
     overrides = tuple(k for k in ("owns", "owns_not", "routes") if k in responsibility)
     tools = capability.get("tools")
     launch = str(placement.get("launch", "worktree"))
+    card_note = entry.get("card_note", "")
+    if not isinstance(card_note, str):
+        raise RosterError(f"{where}: card_note must be a string")
     return Role(
         role=role_id,
         domain=domain_name,
@@ -204,6 +208,7 @@ def _parse_role(entry: Any, domains: dict[str, Domain]) -> Role:
         handover=_require(entry, "handover", where),
         overrides=overrides,
         launch=launch,
+        card_note=card_note.strip(),
     )
 
 

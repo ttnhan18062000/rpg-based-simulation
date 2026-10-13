@@ -158,4 +158,8 @@ def compose_card(role_id: str, roster: Roster, authority: Authority, root: Path 
         raise KeyError(role_id)
     function = _card_section(root / TEMPLATE_DIR / "functions" / f"{role.function}.md")
     domain = _card_section(root / TEMPLATE_DIR / "domains" / f"{role.domain}.md")
-    return "\n\n".join([_role_line(role, roster), function, domain, _authority_line(role, authority)])
+    parts = [_role_line(role, roster), function, domain]
+    if role.card_note:
+        parts.append(role.card_note)
+    parts.append(_authority_line(role, authority))
+    return "\n\n".join(parts)
