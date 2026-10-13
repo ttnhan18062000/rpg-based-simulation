@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS
-phase: inprogress
+phase: done
 date: 2026-10-10
 tags: [performance, benchmarking, regression]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking, regression]
 PERF-M2-T08: M1 baseline reruns under the canonical variants
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -53,7 +53,7 @@ Source concern IDs: C6.
 - [ ] **Partly met.** 5 of the 13 non-mixed records are benchmark-identity schema records (canonical, provisional, all-NORMAL, promoted through `baseline_lifecycle`, before/after identities in each `promotion`): `resource_100_local`, `idle_100_concurrent`, `movement_100_concurrent`, `combat_10_concurrent`, `resource_100_concurrent`. The other 8 are not: 4 PENDING-NOISY (`idle_100_local`, `movement_100_local`, `combat_10_local`, `simq_corpus_crowded_frontier`: spread above 15 % in both windows) and 4 leave NORMAL under canonical (`strategic_100_local`, `strategic_100_concurrent`, `simq_corpus_frontier_extended`, `simq_corpus_frontier_marches`), so `promote` refuses them (contract 3.1). Each is named in the ledger with its measurement. perf-planner accepted this outcome (2026-10-13) and files a follow-up for the leftovers.
 - [x] Records carry `WORK_MODEL_V1` (`contract.work_model_version`, set for every record); no pre-hunting label because the hunting batch (#536) is on the measured main (06aa3a20c).
 - [x] `mixed_200_local.json` and `mixed_200_concurrent.json` are unchanged and the ledger lists them as PENDING until `TCK-20261004-PERF-SCENARIO-MIXED-STATE-SPAWN-COLLISION` (#544, approved) merges.
-- [ ] **Partly met.** `docs/observability/baselines/latest.json` is replaced by a generated `BaselineConfig` and the 14 matrix files and `matrix_full.json` are deleted (deviation from "T03-format records", see Implementation Notes): `python3 -m src compare-sweep` and `python3 -m src gate` exit 0 on it with a tick-cost verdict, not 'baseline incomparable'. **Not met:** `tests/integration/observability/test_baseline_comparison_flow.py` does not pass: it fails on a clean `origin/main` (06aa3a20c, scratch worktree) as well as here (`WARNING != PASS` at line 55), so it is a pre-existing failure, not edited by this ticket.
+- [ ] **Partly met.** `docs/observability/baselines/latest.json` is replaced by a generated `BaselineConfig` and the 14 matrix files and `matrix_full.json` are deleted (deviation from "T03-format records", see Implementation Notes): `python3 -m src compare-sweep` and `python3 -m src gate` exit 0 on it with a tick-cost verdict, not 'baseline incomparable'. `tests/integration/observability/test_baseline_comparison_flow.py` **fails on this loaded VM** (3 of 3 here, and on a clean `origin/main` 06aa3a20c in a scratch worktree: `WARNING != PASS` at line 55, a comparison of real tick timings), but CI collects it (`pytest tests/integration -m "not slow and not extra_slow"`, job `Integration`) and passes on main: run 38434570715, job 115425246123, `1075 passed, 6 skipped, 59 deselected`; it reads neither `latest.json` nor any deleted file (no `docs/observability` path in it). So the acceptance evidence is the Integration job of this branch's own PR run, not a local run (the PR body says so); it is not edited.
 - [x] `baseline_invalidation_ledger.md` sections 3.1 to 3.3 and 5 carry the status of steps 1, 2, 3, 5 and 6; step 4 names `TCK-20261007-BEHAVIORAL-5K-REBASELINE-AFTER-THE-STARVATION-CHAIN-LANDS`; the step 5 `evaluate_simq` result is recorded (130 of 630 pillars REGRESS, diff not empty, nothing committed). DEV-020 consequences (1) and (3) are corrected.
 
 ## Related Tickets
@@ -73,7 +73,7 @@ Source concern IDs: C6.
 - docs/engine/performance_contract.md
 
 ## Related Stored Artifacts
-None.
+- agent-working/stored_artifacts/TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS/ (plan, investigation, test_plan, evidence, commands/)
 
 ## Related Code Areas
 - src/perf/profiles.py
@@ -105,7 +105,7 @@ None.
 ## Test Summary
 - `tests/unit/perf/test_rerun_baselines.py` (16) and `tests/unit/perf/test_sweep_gate_baseline.py` (3) new; `tests/unit/perf/test_baseline_lifecycle.py` updated (legacy set 15 to 10). Scoped run (`tests/unit/perf`, `tests/static -k "perf or baseline or ci_"`, paths guard, `test_corpus_perf_baseline`, `tests/perf/test_perf_regression_baseline.py`): 304 passed. `-k parity_ledger`: 100 passed.
 - `tests/perf/test_perf_regression_baseline.py -m slow` against the old files (policy 2.2 step 4): INCONCLUSIVE "legacy tripwire reference" for both declared scenarios (the old files have no identity); output in `commands/old_file_slow_test.txt`.
-- FAIL: `tests/integration/observability/test_baseline_comparison_flow.py::test_baseline_comparison_and_cli_flow` fails (3 of 3 here, 1 of 1 on a clean `origin/main`); pre-existing, not changed.
+- FAIL on this host only: `tests/integration/observability/test_baseline_comparison_flow.py::test_baseline_comparison_and_cli_flow` (3 of 3 here, 1 of 1 on a clean `origin/main`; host-timing comparison); passes in CI on main (run 38434570715, job `Integration` 115425246123). Not changed; this branch's PR run is the acceptance evidence.
 - FAIL (reported, not a defect of this ticket): `tools/evaluate_simq.py` exit 1, 130 of 630 pillars REGRESS vs the committed anchors; nothing committed.
 - Measurements: 13 records x 3 fresh-process runs, plus the quiet-window retry of 6; peak RSS and wall per run in `evidence.md`; `compare-sweep` and `gate` outputs in `commands/`.
 
@@ -115,4 +115,4 @@ None.
 - Deleted: the 5 promoted legacy files under `tests/perf/baselines/`; under `docs/observability/baselines/`: 13 per-profile files, `matrix_full.json`, `test_perf_idle_baseline.json`.
 
 ## Completion Summary
-Measured every non-mixed baseline under the canonical variants (3 fresh-process runs each, median promoted, NOISY above 15 % spread) and replaced 5 of the 15 legacy files with schema records through `baseline_lifecycle promote`. 4 records are PENDING-NOISY (still above 15 % in the one quiet-window retry) and 4 leave NORMAL under the canonical contract (the tick has grown about 12x to 38x since May; a larger-budget canonical profile is an owner decision, not made); the ledger names each and perf-planner files a follow-up. `mixed_200_*` stay PENDING on #544. The sweep-gate baseline `latest.json` is now a generated `BaselineConfig` that `src gate` and `compare-sweep` parse (both exit 0); the 14 consumer-less matrix files are deleted. Step 5 found 130 of 630 SimQ pillars REGRESS (nothing committed). **Known gaps:** `test_baseline_comparison_flow.py` fails on a clean `origin/main` (not mine); per-tick latencies of the noisy runs were not kept (`--keep-samples` now exists); all numbers are provisional, from one loaded host, and claim nothing about capacity. Owner gate: new baselines and the deletions need the owner's approval before the push.
+Measured every non-mixed baseline under the canonical variants (3 fresh-process runs each, median promoted, NOISY above 15 % spread) and replaced 5 of the 15 legacy files with schema records through `baseline_lifecycle promote`. 4 records are PENDING-NOISY (still above 15 % in the one quiet-window retry) and 4 leave NORMAL under the canonical contract (the tick has grown about 12x to 38x since May; a larger-budget canonical profile is an owner decision, not made); the ledger names each and perf-planner files a follow-up. `mixed_200_*` stay PENDING on #544. The sweep-gate baseline `latest.json` is now a generated `BaselineConfig` that `src gate` and `compare-sweep` parse (both exit 0); the 14 consumer-less matrix files are deleted. Step 5 found 130 of 630 SimQ pillars REGRESS (nothing committed). **Known gaps:** `test_baseline_comparison_flow.py` fails on this loaded VM (also on a clean `origin/main`) but passes in CI on main, so its acceptance evidence is the PR's CI run; per-tick latencies of the noisy runs were not kept (`--keep-samples` now exists); all numbers are provisional, from one loaded host, and claim nothing about capacity. Owner gate: new baselines and the deletions need the owner's approval before the push.

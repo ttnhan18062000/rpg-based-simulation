@@ -12979,5 +12979,5 @@
   proof_type: contract
   test_path: tests/unit/perf/test_rerun_baselines.py
   divergence_note: null
-  support_boundary: 'Report-only (OD-8). 10 of 15 baselines stay legacy references: 4 PENDING-NOISY, 4 leave NORMAL under canonical, 2 PENDING the spawn-collision fix; the ledger names each. The sweep-gate baseline is one idle sweep on one loaded host; tests/integration/observability/test_baseline_comparison_flow.py fails on a clean origin/main too and is not covered here.'
+  support_boundary: 'Report-only (OD-8). 10 of 15 baselines stay legacy references: 4 PENDING-NOISY, 4 leave NORMAL under canonical, 2 PENDING the spawn-collision fix; the ledger names each. The sweep-gate baseline is one idle sweep on one loaded host; tests/integration/observability/test_baseline_comparison_flow.py is host-timing sensitive (fails on a loaded VM, passes in CI on main) and is not covered here.'
 

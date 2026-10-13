@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
@@ -16,3 +16,7 @@ tags: [performance, benchmarking, regression]
 - `tests/perf/test_perf_regression_baseline.py -m slow` run before (INCONCLUSIVE, legacy) and after (a real head run against the promoted record) and kept.
 - `tests/integration/observability/test_baseline_comparison_flow.py` passes; `python3 -m src compare-sweep` and `python3 -m src gate` exit 0 on the new `docs/observability/baselines/latest.json` (output kept); a unit test asserts `latest.json` parses as `BaselineConfig` and carries the current `cost_accounting_version`.
 - Guards: `tests/tools/test_agent_working_paths_guard.py`, docs frontmatter/registry tests, `codebase.health check`.
+
+## Proof Plan
+- **Level:** unit and tool-level, plus measured runs. **Proof kind:** deterministic unit tests for the tool's selection, median and NOISY rules (fake subprocesses), a committed-file test that the sweep-gate baseline parses as `BaselineConfig` and is comparable, and real measurements (13 records x 3 fresh-process runs) recorded in `evidence.md`.
+- **Oracle:** `baseline_lifecycle promote` (refuses a non-NORMAL run, a dirty `src/`, a missing cause), `baseline_lifecycle check`, `python3 -m src compare-sweep` and `gate` exit codes, and the 15 % spread rule from perf-planner's review. A measured number is evidence about one loaded host on one day, never a capacity claim.
