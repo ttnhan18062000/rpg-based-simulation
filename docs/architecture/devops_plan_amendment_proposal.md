@@ -112,5 +112,11 @@ The lead seats can't dispatch, so the D8 paths have nobody to drive them. The ne
 
 ## D8 supersession
 
-D8 of `devops_baseline_adr.md` gave `infra/**`, `.github/workflows/publish-images.yml`, `.github/workflows/iac.yml`, `docs/runbooks/**` and `tools/loadtest/**` to lead-planner. That is **superseded**: these paths go to the `platform` domain. `compose.yaml` and `docker/**` also move from lead to platform. The source of truth is `registries/session_roles.yaml` once `TCK-20261013-PLATFORM-DOMAIN-SEATS` merges. D8's other half is unchanged: the OTel middleware in `src/api/` stays with rpg-planner. `.github/workflows/rpg-gate-report.yml` is not part of this; rpg agrees on its owner separately.
+D8 of `devops_baseline_adr.md` gave `infra/**`, `.github/workflows/publish-images.yml`, `.github/workflows/iac.yml`, `docs/runbooks/**` and `tools/loadtest/**` to lead-planner. That is **superseded**: these paths go to the `platform` domain. `registries/session_roles.yaml` is the source of truth, and it registers them in stages:
+
+- **At once** (`TCK-20261013-PLATFORM-DOMAIN-SEATS`): `compose.yaml` and `docker/**` move from lead to platform. These are the only paths that exist today, and `tools/sessions/validate.py` requires every owned glob to match an existing file.
+- **Step by step:** each DevOps step registers the paths it creates to platform, in the same PR that creates them. These are `infra/**`, `deploy/k8s/**`, `charts/**`, `docs/runbooks/**`, `tools/loadtest/**`, `.github/workflows/publish-images.yml`, `iac.yml`, `k8s-validate.yml` and `.github/dependabot.yml`. `registries/session_*.yaml` belongs to agent-working, and the owner confirms the diff, so each step coordinates that line with agent-working-planner.
+- **Until a path is registered**, it is a planned platform path, not an owned one.
+
+D8's other half is unchanged: the OTel middleware in `src/api/` stays with rpg-planner. `.github/workflows/rpg-gate-report.yml` is not part of this; rpg agrees on its owner separately.
 
