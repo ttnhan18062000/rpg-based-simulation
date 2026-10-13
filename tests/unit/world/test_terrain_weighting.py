@@ -1,7 +1,6 @@
 import pytest
 from src.core.state import (
     AuthoritativeState, EntityState, CombatComponent, NavigationComponent,
-    TERRAIN_COST
 )
 from src.engine.movement import MovementSystem
 from src.core.enums import ReasonCode
@@ -14,7 +13,7 @@ def test_terrain_readiness_rejection():
     Entity with 20.0 readiness should fail.
     """
     # 1. Setup State with a Mountain tile
-    terrain = {(1, 1): "MOUNTAIN"}
+    terrain = {(1, 1): "mountain"}
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
@@ -55,7 +54,7 @@ def test_terrain_readiness_success():
     move_cost, exercised by test_terrain_readiness_rejection above) was left untouched, but the
     real hp_delta-equivalent readiness COST on a successful move was removed.
     """
-    terrain = {(1, 1): "MOUNTAIN"}
+    terrain = {(1, 1): "mountain"}
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")

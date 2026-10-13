@@ -370,7 +370,7 @@ class ServiceProfileDefinition(CatalogBaseDefinition):
 
 class TerrainDefinition(CatalogBaseDefinition):
     """Schema for ground terrain speed, hazard multipliers and descriptions."""
-    move_cost_multiplier: float = Field(1.0, gt=0.0, description="Cost factor for movement speed through this terrain")
+    move_cost_multiplier: float = Field(..., gt=0.0, description="Readiness cost factor for one step onto this terrain (D72). Required: a terrain without a declared cost is a content error, never a silent 1.0")
     hazard_multiplier: float = Field(1.0, ge=0.0, description="Scaling factor for hazard damage")
 
 

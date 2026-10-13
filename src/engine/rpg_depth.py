@@ -16,7 +16,7 @@ checklist's sections:
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Dict, Any, List, Set, Tuple
-from src.core.state import TERRAIN_COST
+from src.engine.terrain_cost import DEFAULT_TERRAIN_ID, terrain_cost
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState, StaminaComponent
@@ -276,8 +276,7 @@ class TerrainCostService:
         terrain = getattr(state, 'terrain', {})
         if not terrain:
             return 1.0
-        terrain_type = terrain.get(pos, "PLAIN")
-        return TERRAIN_COST.get(terrain_type, 1.0)
+        return terrain_cost(terrain.get(pos, DEFAULT_TERRAIN_ID))
 
     @staticmethod
     def get_path_cost(path: List[Tuple[int, int]], state: AuthoritativeState) -> float:

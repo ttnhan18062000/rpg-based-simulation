@@ -43,8 +43,8 @@ def test_multi_seed_flow_all_succeed(temp_repos_dir):
         "name": "Test Valley",
         "topology": {"width": 50, "height": 50, "coordinate_system": "grid"},
         "regions": [
-            {"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "GRASS"},
-            {"id": "wilds", "type": "wilderness", "bounds": (15, 15, 40, 40), "terrain": "FOREST"}
+            {"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "grass"},
+            {"id": "wilds", "type": "wilderness", "bounds": (15, 15, 40, 40), "terrain": "forest"}
         ],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [{"id": "pop1", "count": 2, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],
@@ -123,8 +123,8 @@ def test_multi_seed_flow_partial_failure(temp_repos_dir):
         "name": "Test Valley",
         "topology": {"width": 50, "height": 50, "coordinate_system": "grid"},
         "regions": [
-            {"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "GRASS"},
-            {"id": "wilds", "type": "wilderness", "bounds": (15, 15, 40, 40), "terrain": "FOREST"}
+            {"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "grass"},
+            {"id": "wilds", "type": "wilderness", "bounds": (15, 15, 40, 40), "terrain": "forest"}
         ],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [{"id": "pop1", "count": 2, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],

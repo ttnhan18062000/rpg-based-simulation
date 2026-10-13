@@ -94,7 +94,7 @@ class WorldProceduralGenerator:
             id="town_center",
             type="town",
             bounds=(town_min_x, town_min_y, town_max_x, town_max_y),
-            terrain="GRASS",
+            terrain="grass",
             hazard_level=0.0
         )
         
@@ -103,14 +103,14 @@ class WorldProceduralGenerator:
             id="wilderness_forest",
             type="wilderness",
             bounds=(0, 0, town_min_x - 1, height - 1),
-            terrain="FOREST",
+            terrain="forest",
             hazard_level=1.2 * intent.danger_level
         )
         regions["wilderness_hills"] = RegionSpec(
             id="wilderness_hills",
             type="wilderness",
             bounds=(town_max_x + 1, 0, width - 1, height - 1),
-            terrain="GRASS",
+            terrain="grass",
             hazard_level=1.5 * intent.danger_level
         )
 

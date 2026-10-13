@@ -259,7 +259,8 @@ def test_wider_scope_numbers_pinned():
     # src/observability/starvation_record.py is outside the scope globs. rpg-planner binds and recomputes at the fold.
     # 335 -> 338 on 2026-10-13 (code-health extractions, behaviour-free): +src/engine/run_identity.py (out of kernel.py),
     # +src/worldassembly/spawn_position.py (out of resolver.py) and +src/core/update_models/buildings.py (BuildingUpdate out of updates.py).
-    assert wider["scope_files"] == 338
+    # 338 -> 339 on 2026-10-14 (D72): +src/engine/terrain_cost.py (the content-declared terrain cost accessor).
+    assert wider["scope_files"] == 339
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -286,7 +287,9 @@ def test_wider_scope_numbers_pinned():
     # 246 -> 247 on 2026-10-13 (H6): src/ai/goals/ways.py is an unbound helper (a pure read); rpg-planner binds and recomputes at the fold.
     # 247 -> 250 on 2026-10-13 (code-health extractions): the three moved-out modules above are unbound helpers; the code they hold was
     # already unbound in its old module, and candidates are unchanged.
-    assert wider["unbound_files"] == 250
+    # 250 -> 251 on 2026-10-14 (D72): src/engine/terrain_cost.py is an unbound helper (a content-backed lookup; the cost it serves is
+    # read by the already-bound movement readiness path). rpg-planner binds it at the fold if it wants a mechanism entry.
+    assert wider["unbound_files"] == 251
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.

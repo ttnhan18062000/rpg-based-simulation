@@ -4849,3 +4849,13 @@
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.114.
   support_boundary: 'Panic hold ticks fall (urban 1357 to 1, frontier 2181 to 115 per run, seeds 42 to 46, 5000 ticks). There is no natural hit-point regeneration outside a town tile, an inn rest or a level-up; a disclosed gap, not fixed here.'
 
+- id: COMB-347
+  text: 'TCK-20261013-TERRAIN-COST-IS-KEYED-BY-UPPER-CASE-NAMES-SO-LOWER-CASE-TERRAIN-GETS-COST-1: each terrain declares its movement cost in content (TerrainDefinition.move_cost_multiplier, required); TERRAIN_COST in state.py is retired; a terrain without a declared cost is a compile-time error. Ruled values (D72): forest 1.5, swamp 3.0, mountain 4.0, road 0.5, plain/grass 1.0, cave/ruin 1.5, river 3.0.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: data/content/world/terrain.yaml, src/content/schema.py (TerrainDefinition.move_cost_multiplier), src/engine/terrain_cost.py (terrain_cost, validate_terrain_ids), src/engine/rpg_depth.py (TerrainCostService.get_tile_cost), src/worldbuilding/compiler.py (terrain id validation, plain base fill).
+  proof_type: regression
+  test_path: tests/unit/engine/test_terrain_cost_from_content.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.122.
+  support_boundary: Only the readiness cost of a step reads the factor. Pathfinding weights, per-body movement styles (M1) and the wall and line-of-sight terrain checks in legality.py, positioning.py and movement.py (they compare raw terrain to upper-case names and never match lower-case content terrain) are not covered.

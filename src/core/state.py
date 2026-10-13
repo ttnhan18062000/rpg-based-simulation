@@ -472,18 +472,7 @@ class CombatComponent:
 
 
 
-# Terrain cost weights for pathfinding
-TERRAIN_COST: Dict[str, float] = {
-    "ROAD": 0.5,
-    "PLAIN": 1.0,
-    "FLOOR": 1.0,
-    "GRASS": 1.0,
-    "FOREST": 1.5,
-    "SWAMP": 3.0,
-    "HILL": 2.0,
-    "MOUNTAIN": 4.0,
-    "SAND": 1.5,
-}
+# (The terrain move-cost table that lived here was retired by D72: each terrain declares its cost in content, read through src/engine/terrain_cost.py.)
 
 
 @dataclass(frozen=True, slots=True)

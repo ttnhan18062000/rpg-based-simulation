@@ -238,7 +238,7 @@ def test_town_return_navigates_to_real_compiled_town_center():
         "name": "Town Nav Test",
         "topology": {"width": 100, "height": 100, "coordinate_system": "grid"},
         "regions": [
-            {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "GRASS"},
+            {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "grass"},
         ],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [],
