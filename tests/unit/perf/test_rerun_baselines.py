@@ -21,11 +21,12 @@ def run(avg: float, load: float = 1.0) -> rr.Run:
     return rr.Run("p.json", avg, load, 0.0, 100.0, 3.0)
 
 
-def test_every_legacy_baseline_name_is_known_except_the_pending_mixed_ones() -> None:
+def test_every_synthetic_baseline_is_a_legacy_file_or_a_promoted_version_and_the_mixed_ones_stay_pending() -> None:
+    baselines = Path(baseline_lifecycle.DEFAULT_BASELINES_DIR)
     legacy = {f[:-5] for f in baseline_lifecycle.LEGACY_TRIPWIRE_REFERENCES}
-    known = set(rr.known_names())
-    assert {n for n in known if not n.startswith("simq_corpus_")} <= legacy
-    assert {"mixed_200_local", "mixed_200_concurrent"} <= legacy - known  # pending until the spawn-collision fix lands
+    promoted = {m.group("name") for f in baselines.glob("*.json") if (m := baseline_lifecycle._VERSIONED_RE.match(f.name))}
+    assert {n for n in rr.known_names() if not n.startswith("simq_corpus_")} <= legacy | promoted
+    assert {"mixed_200_local", "mixed_200_concurrent"} <= legacy - set(rr.known_names())  # pending until the spawn-collision fix lands
 
 
 def test_the_profiles_and_scenarios_exist_and_have_a_canonical_variant() -> None:
