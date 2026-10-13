@@ -25,6 +25,25 @@ class LifecycleSystem:
     INHERITED_NEMESIS_SEVERITY_MULTIPLIER = 0.5
 
     @staticmethod
+    def _estate_transfers(entity: EntityState) -> list:
+        """The transfers that settle a dead entity's estate on its heir (EXCH-02). INHERIT moves the items and coin it carries, atomically: it
+        debits the dead entity's inventory with the heir's receipt, so the body built afterwards holds only what no heir took and nothing is
+        copied. entity.inventory.items is a list on a live/authoritative entity but a tuple on a to_readonly() view (src/core/state.py's
+        immutability optimization), hence the list() (TCK-20260829-LIFECYCLE-HEIRLOOM-INVENTORY-TUPLE-TYPEERROR). The named heirlooms are the
+        entity's declared heirloom list, not inventory: they keep their own CHEST grant, unchanged."""
+        from src.core.state import ItemStack
+        from src.core.updates import ResourceTransferIntent
+        carried = [s for s in entity.inventory.items if s.quantity > 0]
+        transfers = []
+        if carried or entity.inventory.gold > 0:
+            transfers.append(ResourceTransferIntent(source_id=entity.id, source_kind="INHERIT", items_add=list(carried), gold_delta=entity.inventory.gold,
+                                                    transfer_kind="INHERIT", transaction_id=f"inherit:{entity.id}"))
+        heirlooms = [ItemStack(item_id=hid, quantity=1) for hid in entity.lifecycle.heirlooms]
+        if heirlooms:
+            transfers.append(ResourceTransferIntent(source_id=entity.id, source_kind="CHEST", items_add=heirlooms, transfer_kind="AUTO"))
+        return transfers
+
+    @staticmethod
     def _transfer_inherited_feud(deceased: EntityState, heir_upd: EntityUpdate) -> EntityUpdate:
         """Idea 55 (Feuds Outlive the Feuders, TCK-20260904-LINEAGE-DEATH-DISPATCH):
         transfer a weakened version of the deceased's active Campaign-mode Nemesis
@@ -264,29 +283,8 @@ class LifecycleSystem:
                         heir_upd = LifecycleSystem._transfer_inherited_feud(entity, heir_upd)
                         heir_upd = LifecycleSystem._seed_dying_wish(entity, heir, heir_upd, state.tick)
 
-                        # Transactional Heirloom Transfer
-                        from src.core.updates import ResourceTransferIntent
-                        from src.core.state import ItemStack
-
-                        # Combine inventory and specific heirlooms. entity.inventory.items is a
-                        # list on a live/authoritative entity but a tuple when entity is a
-                        # to_readonly() view (src/core/state.py's immutability optimization) --
-                        # normalize to list before concatenating with heirloom_stacks (always a
-                        # list) so this works for either source (TCK-20260829-LIFECYCLE-HEIRLOOM-
-                        # INVENTORY-TUPLE-TYPEERROR).
-                        heirloom_stacks = [ItemStack(item_id=hid, quantity=1) for hid in entity.lifecycle.heirlooms]
-                        all_transfer_items = list(entity.inventory.items) + heirloom_stacks
-
-                        if all_transfer_items:
-                            intent = ResourceTransferIntent(
-                                source_id=entity.id,
-                                source_kind="CHEST", # Use CHEST or similar source kind that allows items
-                                items_add=all_transfer_items,
-                                transfer_kind="AUTO"
-                            )
-                            heir_upd = replace(heir_upd,
-                                resource_transfers=heir_upd.resource_transfers + [intent]
-                            )
+                        # The estate: what the dead entity carries MOVES to the heir (INHERIT), and the named heirlooms arrive as before.
+                        heir_upd = replace(heir_upd, resource_transfers=heir_upd.resource_transfers + LifecycleSystem._estate_transfers(entity))
 
                         refined_entity_updates[heir_id] = heir_upd
 

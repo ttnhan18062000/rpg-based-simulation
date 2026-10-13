@@ -5,13 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from src.core.models.world_records import OwedRecord
+from src.core.treasury import TreasuryTransfer, can_pay
 from src.core.enums import ReasonCode
 from src.core.inventory import InventoryService
 from src.core.quests import QuestStatus
 from src.core.updates import (
     AttributeUpdate,
-    BuildingUpdate,
     BiologicalUpdate,
+    BuildingUpdate,
     CombatUpdate,
     EquipmentUpdate,
     IdentityUpdate,
@@ -24,8 +26,20 @@ from src.core.updates import (
 )
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState, EntityState, InventoryComponent
+    from src.core.state import (
+        AuthoritativeState,
+        CorpseState,
+        EntityState,
+        InventoryComponent,
+    )
     from src.core.updates import ResourceTransferIntent
+
+@dataclass(frozen=True, slots=True)
+class SourceDebit:
+    """What a transfer takes from another entity's own inventory (an inheritance), applied with the receipt or not at all."""
+    entity_id: int
+    inventory_update: InventoryUpdate
+
 
 @dataclass(frozen=True, slots=True)
 class TransactionResult:
@@ -45,19 +59,75 @@ class TransactionResult:
     building_update: Optional[BuildingUpdate] = None
     ground_item_remove: Optional[int] = None
     corpse_remove: Optional[int] = None
+    corpse_update: Optional[CorpseState] = None
+    source_debit: Optional[SourceDebit] = None
+    treasury_update: Optional[TreasuryTransfer] = None
+    owed: Optional[Any] = None  # an OwedRecord: the coin a short treasury could not pay now and owes instead
     reason: ReasonCode = ReasonCode.UNKNOWN
 
-def _wage_result(state: Any, intent: ResourceTransferIntent) -> TransactionResult:
-    """EXCH-02: a wage is a transfer from the employer's own purse. A short purse pays nothing (the worker is unpaid, no coin appears)."""
+def _tax_credit(intent: ResourceTransferIntent) -> Optional[TreasuryTransfer]:
+    """The share of a sale's or a wage's proceeds that goes to the treasury of the faction holding the place (the intent names it)."""
+    if intent.treasury_faction is None or intent.treasury_gold <= 0:
+        return None
+    return TreasuryTransfer(faction=intent.treasury_faction, gold_delta=min(intent.treasury_gold, intent.gold_delta))
+
+
+def _pending(building_pending: Optional[Dict[int, Any]], building_id: int) -> Any:
+    """What this tick's accepted transactions have already staged on a building (the economy loop's running ``new_building_updates``), or None."""
+    return building_pending.get(building_id) if building_pending else None
+
+
+def _purse_now(building: Any, building_pending: Optional[Dict[int, Any]]) -> int:
+    """The building's coin as this tick stands so far: its start-of-tick purse plus what accepted transactions already staged. Every debit of a
+    purse reads this, not the start-of-tick balance, so a second transaction in one tick cannot spend coin a first one already took."""
+    staged = _pending(building_pending, building.id)
+    return int(building.inventory.gold + (staged.inventory.gold_delta if staged is not None and staged.inventory else 0))
+
+
+def _stock_now(building: Any, item_id: str, building_pending: Optional[Dict[int, Any]]) -> int:
+    """Units of `item_id` the building holds as this tick stands so far (start-of-tick stock plus what accepted transactions already staged)."""
+    have = sum(s.quantity for s in building.inventory.items if s.item_id == item_id)
+    staged = _pending(building_pending, building.id)
+    if staged is not None and staged.inventory:
+        have += sum(s.quantity for s in staged.inventory.items_add if s.item_id == item_id) - sum(s.quantity for s in staged.inventory.items_remove if s.item_id == item_id)
+    return int(have)
+
+
+def _shifts_done_now(building: Any, building_pending: Optional[Dict[int, Any]]) -> int:
+    """Maintenance shifts counted this period as this tick stands so far (a staged period reset first, then the staged shifts)."""
+    staged = _pending(building_pending, building.id)
+    if staged is None:
+        return int(building.maintenance_shifts_done)
+    base = staged.maintenance_shifts_done_set if staged.maintenance_shifts_done_set is not None else building.maintenance_shifts_done
+    return int(base + staged.maintenance_shifts_done_delta)
+
+
+def _wage_result(state: Any, intent: ResourceTransferIntent, treasury_pending: Optional[Dict[str, float]] = None,
+                 building_pending: Optional[Dict[int, Any]] = None) -> TransactionResult:
+    """EXCH-02: a wage is a transfer from the employer's own purse. A short purse pays nothing (the worker is unpaid, no coin appears), unless the
+    intent says the owning treasury funds a shortfall (``treasury_pays``, a maintenance shift, ruling 66): then the treasury tops the purse up by
+    exactly the shortfall first, and the treasury's net change (the top-up less any tax share) is one typed transfer. A maintenance shift is counted
+    on the building in the same transfer and is refused once the building has had the shifts it needs this period. The purse, the treasury and the
+    shift count are all read as this tick stands so far (``building_pending``, ``treasury_pending``), so wages granted earlier in the tick are spent."""
     employer = state.buildings.get(intent.source_id)
     if employer is None or not employer.functional:
         return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
-    if intent.gold_delta <= 0 or employer.inventory.gold < intent.gold_delta:
+    if intent.gold_delta <= 0:
         return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
+    if intent.maintenance_shift and _shifts_done_now(employer, building_pending) >= employer.maintenance_shifts_needed:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)  # the period's maintenance is done: no more shifts are counted or paid
+    shortfall = max(0, intent.gold_delta - _purse_now(employer, building_pending))
+    faction = intent.treasury_faction
+    if shortfall > 0 and not (intent.treasury_pays and faction is not None and can_pay(state.global_resources, faction, shortfall, treasury_pending)):
+        return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
+    tax = _tax_credit(intent)
+    net = (tax.gold_delta if tax else 0) - shortfall
     return TransactionResult(
         accepted=True,
-        inventory_update=InventoryUpdate(gold_delta=intent.gold_delta),
-        building_update=BuildingUpdate(building_id=employer.id, inventory=InventoryUpdate(gold_delta=-intent.gold_delta)))
+        inventory_update=InventoryUpdate(gold_delta=intent.gold_delta - (tax.gold_delta if tax else 0)),
+        building_update=BuildingUpdate(building_id=employer.id, inventory=InventoryUpdate(gold_delta=shortfall - intent.gold_delta),
+                                       maintenance_shifts_done_delta=1 if intent.maintenance_shift else 0),
+        treasury_update=TreasuryTransfer(faction=faction, gold_delta=net) if net and faction is not None else None)
 
 
 def _service_credit(state: Any, intent: ResourceTransferIntent, price: int) -> Optional[Any]:
@@ -68,12 +138,66 @@ def _service_credit(state: Any, intent: ResourceTransferIntent, price: int) -> O
     return BuildingUpdate(building_id=intent.source_id, inventory=InventoryUpdate(gold_delta=price))
 
 
+def _inherit_result(state: Any, intent: ResourceTransferIntent, inventory_full: bool) -> TransactionResult:
+    """EXCH-02: what the dead entity carried, items and coin, moves to its heir, once. The dead entity is debited with the heir's receipt, so
+    a receipt the heir cannot take (a full inventory) leaves the goods where they were and nothing is copied."""
+    dead = state.entities.get(intent.source_id) if isinstance(intent.source_id, int) else None
+    if dead is None:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
+    if inventory_full:
+        return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
+    for item in intent.items_add:
+        if sum(s.quantity for s in dead.inventory.items if s.item_id == item.item_id) < item.quantity:
+            return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+    if intent.gold_delta < 0 or dead.inventory.gold < intent.gold_delta:
+        return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+    return TransactionResult(
+        accepted=True,
+        inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
+        source_debit=SourceDebit(entity_id=dead.id, inventory_update=InventoryUpdate(items_remove=intent.items_add, gold_delta=-intent.gold_delta)))
+
+
 def _carried_food_result(intent: ResourceTransferIntent, inventory: InventoryComponent) -> TransactionResult:
     """Eating what the subject carries: the item is consumed together with the meal, or nothing happens."""
     for item in intent.items_remove:
         if sum(s.quantity for s in inventory.items if s.item_id == item.item_id) < item.quantity:
             return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
     return TransactionResult(accepted=True, inventory_update=InventoryUpdate(items_remove=intent.items_remove), biological_update=intent.biological_upd)
+
+
+def _corpse_food_result(
+    state: AuthoritativeState, intent: ResourceTransferIntent, reservations: Optional[Dict[Any, int]]
+) -> TransactionResult:
+    """Eating AT a corpse (decision 44): the meat leaves the carcass together with the meal, or nothing happens. The corpse id is the
+    source id, so every meal is traceable to the body it came from. The corpse stays (possibly empty) until it decays."""
+    corpse = state.corpses.get(int(intent.source_id))
+    if corpse is None:
+        return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)
+    if reservations and reservations.get(("CORPSE", intent.source_id), 0) > 0:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)
+    remaining = list(corpse.items)
+    for item in intent.items_remove:
+        left = item.quantity
+        for index, stack in enumerate(remaining):
+            if stack.item_id == item.item_id and left > 0:
+                taken = min(stack.quantity, left)
+                left -= taken
+                remaining[index] = replace(stack, quantity=stack.quantity - taken)
+        if left > 0:
+            return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+    remaining = [stack for stack in remaining if stack.quantity > 0]
+    return TransactionResult(
+        accepted=True, biological_update=intent.biological_upd,
+        corpse_update=replace(corpse, items=remaining))
+
+
+def _food_result(
+    state: AuthoritativeState, intent: ResourceTransferIntent, inventory: InventoryComponent, reservations: Optional[Dict[Any, int]]
+) -> TransactionResult:
+    """Eating food the subject carries, or food at a corpse (decision 44)."""
+    if intent.source_kind == "CORPSE_FOOD":
+        return _corpse_food_result(state, intent, reservations)
+    return _carried_food_result(intent, inventory)
 
 
 def _reward_result(intent: ResourceTransferIntent, inventory_full: bool, reservations: Optional[Dict[Any, int]]) -> TransactionResult:
@@ -93,6 +217,57 @@ def _reward_result(intent: ResourceTransferIntent, inventory_full: bool, reserva
     )
 
 
+def _fund_reward(result: TransactionResult, intent: ResourceTransferIntent, state: Any, entity: Any,
+                 treasury_pending: Optional[Dict[str, float]]) -> TransactionResult:
+    """EXCH-02, decision 38: a reward whose coin is funded by a treasury is paid from it when it holds the coin; a short treasury grants the rest of
+    the reward and OWES the coin (an OwedRecord, paid oldest first). A reward with no treasury named is left as it was."""
+    gold = intent.gold_delta
+    if not (result.accepted and intent.treasury_pays and intent.treasury_faction is not None and gold > 0):
+        return result
+    if can_pay(state.global_resources, intent.treasury_faction, gold, treasury_pending):
+        return replace(result, treasury_update=TreasuryTransfer(faction=intent.treasury_faction, gold_delta=-int(gold)))
+    owed = OwedRecord(id=f"owed:{intent.source_id}:{entity.id}", creditor_id=entity.id, debtor_faction=intent.treasury_faction,
+                      amount=int(gold), posted_tick=state.tick, reason=f"{intent.source_kind}_REWARD")
+    unpaid = InventoryUpdate(items_add=intent.items_add)  # the items and experience are granted; only the coin is owed
+    return replace(result, inventory_update=unpaid, owed=owed)
+
+
+def _shop_sell_result(state: Any, intent: ResourceTransferIntent, target_inventory: InventoryComponent,
+                      building_pending: Optional[Dict[int, Any]] = None) -> TransactionResult:
+    """A sale at a shop (RPG-ECON-201): the shop pays the full price out of its own purse; the seller receives it minus the place holder's share."""
+    building = state.buildings.get(intent.source_id)
+    if not building or not building.functional:
+        return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
+    if _purse_now(building, building_pending) < intent.gold_delta:
+        return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
+    for item in intent.items_remove:
+        if sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id) < item.quantity:
+            return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
+    tax = _tax_credit(intent)
+    return TransactionResult(
+        accepted=True,
+        inventory_update=InventoryUpdate(items_remove=intent.items_remove, gold_delta=intent.gold_delta - (tax.gold_delta if tax else 0)),
+        building_update=BuildingUpdate(building_id=intent.source_id, inventory=InventoryUpdate(items_add=intent.items_remove, gold_delta=-intent.gold_delta)),
+        treasury_update=tax)
+
+
+def _service_result(state: Any, intent: ResourceTransferIntent, target_inventory: InventoryComponent) -> TransactionResult:
+    """A paid service or fee. The payee is the service building's purse, else the treasury the intent names, else (an unnamed payee) nobody."""
+    if target_inventory.gold < intent.gold_cost:
+        return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)
+    paid = min(target_inventory.gold, max(0, intent.gold_cost - intent.gold_delta))
+    credit = _service_credit(state, intent, paid)
+    holder = intent.treasury_faction
+    to_treasury = credit is None and holder is not None and paid > 0
+    return TransactionResult(
+        accepted=True,
+        building_update=credit,
+        treasury_update=TreasuryTransfer(faction=holder, gold_delta=int(paid)) if holder is not None and to_treasury else None,
+        inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta - intent.gold_cost),
+        identity_update=intent.identity_upd, biological_update=intent.biological_upd, attributes_update=intent.attributes_upd,
+        combat_update=intent.combat_upd, strategic_update=intent.strategic_upd, equipment_update=intent.equipment_upd, reward_update=intent.reward_upd)
+
+
 class ResourceTransactionResolver:
     """
     Authoritative layer for resolving resource transfer intents.
@@ -108,7 +283,9 @@ class ResourceTransactionResolver:
         intent: ResourceTransferIntent,
         inventory_override: Optional[InventoryComponent] = None,
         node_overrides: Optional[Dict[int, ResourceNodeUpdate]] = None,
-        reservations: Optional[Dict[tuple[str, str|int], int]] = None
+        reservations: Optional[Dict[tuple[str, str|int], int]] = None,
+        treasury_pending: Optional[Dict[str, float]] = None,
+        building_pending: Optional[Dict[int, Any]] = None
     ) -> TransactionResult:
         """
         Validates an intent and produces the necessary updates.
@@ -157,7 +334,7 @@ class ResourceTransactionResolver:
             # VERIFIED v2: loot_harvest_side_effects
 
         elif intent.source_kind == "GROUND_ITEM":
-            if inventory_full:
+            if inventory_full and intent.items_add:
                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)
             ground_item = state.ground_items.get(intent.source_id)
             if not ground_item:
@@ -169,7 +346,7 @@ class ResourceTransactionResolver:
             
             return TransactionResult(
                 accepted=True,
-                inventory_update=InventoryUpdate(items_add=intent.items_add),
+                inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=ground_item.gold),
                 ground_item_remove=intent.source_id
             )
 
@@ -184,9 +361,10 @@ class ResourceTransactionResolver:
             if reservations and reservations.get(("CORPSE", intent.source_id), 0) > 0:
                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)
             
+            # The body's coin is the body's own (EXCH-02): the looter takes what the corpse holds, whatever the intent says.
             return TransactionResult(
                 accepted=True,
-                inventory_update=InventoryUpdate(items_add=intent.items_add),
+                inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=corpse.gold),
                 corpse_remove=intent.source_id
             )
 
@@ -224,8 +402,7 @@ class ResourceTransactionResolver:
             # 1. Capacity/Stock Check
             # RPG-ECON-200
             for item in intent.items_add:
-                have = sum(s.quantity for s in building.inventory.items if s.item_id == item.item_id)
-                if have < item.quantity:
+                if _stock_now(building, item.item_id, building_pending) < item.quantity:
                     return TransactionResult(accepted=False, reason=ReasonCode.OUT_OF_STOCK)
             
             # 2. Gold Check
@@ -250,66 +427,23 @@ class ResourceTransactionResolver:
             )
 
         elif intent.source_kind == "SHOP_SELL":
-            # RPG-ECON-201: Shop liquidity check
-            # Selling doesn't need capacity check for entity (it removes items)
-            # But shop needs enough gold
-            building = state.buildings.get(intent.source_id)
-            if not building or not building.functional:
-                return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)
-
-            if building.inventory.gold < intent.gold_delta:
-                return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)
-
-            for item in intent.items_remove:
-                have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)
-                if have < item.quantity:
-                    return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)
-            
-            from src.core.updates import BuildingUpdate
-            return TransactionResult(
-                accepted=True,
-                inventory_update=InventoryUpdate(
-                    items_remove=intent.items_remove,
-                    gold_delta=intent.gold_delta
-                ),
-                building_update=BuildingUpdate(
-                    building_id=intent.source_id,
-                    inventory=InventoryUpdate(
-                        items_add=intent.items_remove,
-                        gold_delta=-intent.gold_delta
-                    )
-                )
-            )
+            return _shop_sell_result(state, intent, target_inventory, building_pending)
 
         elif intent.source_kind == "WAGE":
-            return _wage_result(state, intent)
+            return _wage_result(state, intent, treasury_pending, building_pending)
+
+        elif intent.source_kind == "INHERIT":
+            return _inherit_result(state, intent, inventory_full)
 
         elif intent.source_kind in ("COMBAT", "QUEST"):
-            return _reward_result(intent, inventory_full, reservations)
+            return _fund_reward(_reward_result(intent, inventory_full, reservations), intent, state, entity, treasury_pending)
 
         # VERIFIED v2: authoritative_side_effects
         if intent.source_kind in ("TOWN_SERVICE", "TAX", "REPAIR_FEE", "SERVICE_FEE", "INFORMATION_PURCHASE"):
-             if target_inventory.gold < intent.gold_cost:
-                 return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)
-                 
-             return TransactionResult(
-                 accepted=True,
-                 building_update=_service_credit(state, intent, min(target_inventory.gold, max(0, intent.gold_cost - intent.gold_delta))),
-                 inventory_update=InventoryUpdate(
-                      items_add=intent.items_add,
-                      gold_delta=intent.gold_delta - intent.gold_cost
-                 ),
-                 identity_update=intent.identity_upd,
-                 biological_update=intent.biological_upd,
-                 attributes_update=intent.attributes_upd,
-                 combat_update=intent.combat_upd,
-                 strategic_update=intent.strategic_upd,
-                 equipment_update=intent.equipment_upd,
-                 reward_update=intent.reward_upd
-             )
+             return _service_result(state, intent, target_inventory)
         
-        elif intent.source_kind == "CARRIED_FOOD":
-             return _carried_food_result(intent, target_inventory)
+        elif intent.source_kind in ("CARRIED_FOOD", "CORPSE_FOOD"):
+             return _food_result(state, intent, target_inventory, reservations)
 
         elif intent.source_kind in ("RECRUIT", "CHEST"):
              # P0.1 Refinement: Source-level locks for world sources

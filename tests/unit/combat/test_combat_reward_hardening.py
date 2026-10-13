@@ -50,7 +50,7 @@ def test_combat_reward_consolidation_xp_gold():
         
     # Rewards should have been processed into component updates
     assert attacker_upd.identity.evolution_points_delta == 50
-    assert attacker_upd.inventory.gold_delta == 25
+    assert attacker_upd.inventory is None or attacker_upd.inventory.gold_delta == 0  # a kill mints no coin (EXCH-02, decision 38)
     
     # Check that they came from a successful COMBAT intent
     assert any(res.source_kind == "COMBAT" and res.accepted for res in attacker_upd.intent_results)
@@ -60,7 +60,7 @@ def test_combat_reward_consolidation_xp_gold():
     
     # 4. Verify results
     final_attacker = final_state.entities[1]
-    assert final_attacker.inventory.gold == 25
+    assert final_attacker.inventory.gold == 0  # a kill mints no coin (EXCH-02, decision 38)
     assert final_attacker.identity.evolution_points == 50
     assert final_state.entities[2].combat.alive is False
 

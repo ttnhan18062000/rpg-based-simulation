@@ -103,3 +103,48 @@ def test_all_broken_candidates_resolve_to_empty(tmp_path, selection_command):
     )
 
     assert selected == ""
+
+
+def test_python3_candidate_list_names_the_main_root_not_a_host_path():
+    text = _MAKEFILE.read_text(encoding="utf-8")
+    match = re.search(r"^PYTHON3 := \$\(shell for py in (.+?); do", text, re.MULTILINE)
+    assert match is not None
+    assert match.group(1).split() == [
+        ".venv/bin/python3",
+        '"$(KNOWLEDGE_MAIN_ROOT)/.venv/bin/python3"',
+        "python3",
+    ]
+
+
+def test_python3_resolves_to_the_main_checkout_venv_from_a_worktree(tmp_path):
+    """TCK-20261012-HOST-PATH-LITERALS-MAKEFILE-AND-MCP-LAUNCHERS: a worktree has no `.venv`; the
+    main checkout's is found through the git common dir, on any host."""
+    import os
+    import shutil
+
+    if shutil.which("make") is None or shutil.which("git") is None:
+        pytest.skip("make and git are required")
+    main = tmp_path / "main"
+    main.mkdir()
+    env = {
+        **os.environ,
+        "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
+        "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
+    }
+
+    def git(*args: str, cwd: Path = main) -> None:
+        subprocess.run(["git", *args], cwd=cwd, env=env, check=True, capture_output=True)
+
+    git("init", "-q")
+    git("commit", "-q", "--allow-empty", "-m", "init")
+    (main / ".venv" / "bin").mkdir(parents=True)
+    _write_shim(main / ".venv" / "bin" / "python3", _WORKING_SHIM)
+    worktree = tmp_path / "wt"
+    git("worktree", "add", "-q", str(worktree))
+
+    result = subprocess.run(
+        ["make", "-f", str(_MAKEFILE.resolve()), "-pn"],
+        cwd=worktree, env=env, capture_output=True, text=True, timeout=60,
+    )
+    line = next((l for l in result.stdout.splitlines() if l.startswith("PYTHON3 :=")), "")
+    assert line.split(":=", 1)[1].strip() == os.path.realpath(main) + "/.venv/bin/python3"

@@ -20,6 +20,8 @@ class OpeningStepKind(str, Enum):
     """The steps that open a way to meet a need when none is open (decision 27); only steps the subject can actually take count."""
 
     FORAGE = "forage"
+    SCAVENGE = "scavenge"
+    HUNT = "hunt"
     EARN_THEN_BUY = "earn_then_buy"
     ASK = "ask"
 

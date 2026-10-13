@@ -51,3 +51,12 @@
   smell: "none"
   life_sense: "medium"
   magic_sense: "medium"
+
+# STATE: ADDITIONAL
+- id: "keen_hearing_senses"
+  display_name: "Keen Hearing Senses"
+  vision: "medium"
+  hearing: "high"
+  smell: "medium"
+  magic_sense: "none"
+  social_reading: "low"

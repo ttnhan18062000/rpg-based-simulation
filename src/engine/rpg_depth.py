@@ -194,6 +194,12 @@ class LeashService:
         return dist > nav.leash_radius
 
     @staticmethod
+    def in_home_area(entity: EntityState) -> bool:
+        """True for a leashed entity inside its leash radius: the area a ``LEASH_RETURN`` move is sent to reach (it ends there, not on the home tile)."""
+        nav = entity.navigation
+        return nav.leash_radius > 0 and nav.home_position is not None and not LeashService.is_beyond_leash(entity)
+
+    @staticmethod
     def way_in_range(entity: EntityState, target_pos: Optional[Tuple[float, float]]) -> bool:
         """True when a way to meet a need at ``target_pos`` is inside the entity's range.
 

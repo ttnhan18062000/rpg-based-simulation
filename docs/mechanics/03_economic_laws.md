@@ -58,6 +58,10 @@ fixed cadence:
 3. Skip if `cooldown_remaining > 0`.
 4. Otherwise: `new_charges = min(max_charges, remaining_charges + regen_rate_per_tick)`.
 
+**Bare wait** (declared `regrowth_mode: regrow`, memo row 59): the harvest that empties such a node starts `respawn_cooldown` ticks of waiting
+(the typed `RESOURCE_DEPLETED` record site, `economy._record_depletion`); the wait ends with no charges added and rules 1 to 4 resume from zero.
+The default mode `none` starts no wait. (A finished wait on a `none` node adds `max_charges`, a latent path no kind reaches today.)
+
 **Events emitted** (via `StateUpdate.world_events_add` → `recent_world_events`):
 
 | Event | When |
@@ -72,6 +76,30 @@ naturally deprioritize exhausted nodes. See `docs/mechanics/04_strategic_cogniti
 *Sources: `src/world/ecology.py` (`ResourceEcologyService.process_ecology`),
 `src/engine/economy.py` (RESOURCE_DEPLETED emitter),
 `src/domains/world_emergence/schema.py` (`WorldEventCategory`).*
+
+### 3.2 Meat from Bodies (Decision 44)
+A dead body is a source of food, and the only one that is not a resource node.
+
+*   **Source**: at death, whatever the cause, a body whose kind declares `edible_as: [meat]` leaves `meat_yield` units of `raw_meat` on its corpse
+    (the typed source `BODY_AT_DEATH`; `src/engine/carcass.py`). A kind that feeds nobody leaves none.
+*   **Sink**: meat leaves a corpse only by being eaten there (an `EAT` transfer whose source kind is `CORPSE_FOOD` and whose source id is the
+    corpse id, so every meal is traceable to the body it came from), by being looted (`CORPSE`), or when the corpse decays (the typed sink
+    `CORPSE_DECAY`).
+*   **Diet gate**: an eater may eat an item only if the item's `food_class` (`plant`, `meat`, `prepared`) is in its body's `diet`. An undeclared
+    diet keeps the legacy "eats any food". Raw meat fills less than a prepared meal (20 against 30: raw flesh is harder to digest).
+*   **Exclusions**: a kind never regards its own species as food, and a faction never hunts its own members.
+*   **Yield by size** (owner row 60, band anchors not targets): small 2, medium 5, large 12 to 15 units of 20 hunger each: a small body is one meal
+    for a meat-eater, a medium one about a day's food for a same-size meat-eater, a large one several days or a pack's day. A meat-eater's hunger
+    rate is the `very_low` need level (0.3 of the base, 0.03 per tick), so a full meal lasts at least a day to the starvation line. With no
+    spoilage until M3 a carcass keeps until it decays (`CORPSE_DECAY`).
+*   **Plant cover** (memo row 59): wild land of a biome that declares `grazing_cover` carries patches of a `regrow` resource kind (one kind per
+    fertility band: 6 / 12 / 20 charges, regrowing 1 / 2 / 3 per ecology check, a patch emptied stays bare 4800 / 2400 / 1200 ticks and regrows
+    from zero). It yields `grass_cover`, food class `graze` (20 hunger), eaten only by a diet that includes `graze`.
+*   **Wild creatures and factions** (decision 47): a faction verdict never decides a fight with a wild creature (a body with a diet whose faction
+    has the `wild` alignment). Appraisal decides, in both directions: hunt if hungry and able to overcome, defend or flee if threatened.
+
+*Sources: `src/engine/carcass.py`, `src/core/conservation.py` (`_corpse_food_result`), `src/engine/domain/core_actions.py` (`corpse_meal`),
+`src/engine/appraisal.py` (`can_eat_item`), `data/content/living/body_models.yaml`, `data/content/world/items.yaml`.*
 
 ---
 
@@ -95,8 +123,16 @@ See that section for the full formula, notes, and reference — not duplicated h
 *   **Rule**: The building must have enough **Gold (Liquidity)** to pay the entity.
 *   **Benefit**: one sell law (EXCH-01/EXCH-02, `TCK-20261009-SELL-IS-A-CHOSEN-ACT-PRICED-BY-MARKET-SYSTEM-EXCH-02`): `Price = MarketSystem.calculate_price(is_buy=False)` per UNIT, i.e. base value x region modifier x building modifier x 0.8 (the sell factor; a buy uses 1.2), at least 1 gold, times the quantity sold. The base value is `MarketSystem`'s table, else the item's catalog value. Regional trauma no longer moves the sell price (the old `ShopSystem.get_sell_price` surcharge `base * (1 + trauma / 10)` is gone ON PURPOSE: one law; EXCH-01 allows more price factors, so trauma can return later as a declared factor). The shop pays only out of its own purse, so a sale never takes more units than the purse covers.
 *   **Who sells**: selling is a chosen act (AGENCY-01): a subject whose task is the SELL action at a shop sells what it can spare; standing beside a shop sells nothing. The gathered materials (wood, ore, iron ore, fish, leather, fiber, herb) sell; the last unit of a weapon or armor stack and any item an equipment slot names stay with their owner; food sells only as surplus, keeping at least one meal's worth (60 hunger of recovery).
-*   **Paid work** (EXCH-02, owner decision 34): a subject that cannot afford a meal and has nothing to sell works a shift at an inn: the `WORK` action is held for 200 ticks (a two-hour kitchen and yard shift at 36 seconds a tick) beside the inn, then the inn pays 6 gold (a meal and a coin) out of its OWN purse as one typed `WAGE` transfer, once per shift. A short purse pays nothing: the worker is unpaid and no coin appears. Only a kind authored with the `keeps_coin_and_trades` trait sells or works for a wage, and only while the controlling faction of the building's region is not hostile to it (owner decisions 42 and 43). While the free meal stands (owner decision 44) the sale and the shift are dormant in the measured worlds. The public wage the town treasury owes for town work (decision 37) is not built yet.
+*   **Paid work** (EXCH-02, owner decision 34): a subject that cannot afford a meal and has nothing to sell works a shift at an inn: the `WORK` action is held for 200 ticks (a two-hour kitchen and yard shift at 36 seconds a tick) beside the inn, then the inn pays 6 gold (a meal and a coin) out of its OWN purse as one typed `WAGE` transfer, once per shift. A short purse pays nothing: the worker is unpaid and no coin appears. Only a kind authored with the `keeps_coin_and_trades` trait sells or works for a wage, and only while the controlling faction of the building's region is not hostile to it (owner decisions 42 and 43). While the free meal stands (owner decision 44) the sale and the shift are dormant in the measured worlds. The work a building offers is declared by its content: commercial work (`hires_for_pay`, the inn), paid from its own purse only, and maintenance work (see Section 4.1), paid with the treasury's backing.
 *   **Outcome**: Item is transferred from Entity to Building; Gold is transferred from Building to Entity.
+
+### 4.1 Treasuries, Tax and Rewards (EXCH-02, owner decisions 37, 38, 51 and 58)
+*   **Treasury**: each region-owner bucket has one treasury (`global_resources`, key via `src/core/treasury.py`), started with the sum of its member factions' declared starting gold. It is coin like any purse: it pays only what it holds and never goes negative by a transfer.
+*   **Tax**: there is no periodic levy. A sale or a wage pays a tenth of the proceeds (declared content, rounded down per transaction, the same for outsiders) to the treasury of the faction holding the building's region, in the same transaction.
+*   **Upkeep**: on the upkeep tick each functional building meets its upkeep, its maintenance shifts times the 6-gold wage (6 for an ordinary building, 18 for the town hall), from its OWN purse (nothing is paid out to a payee: coin leaves a building only as wages and tax); the holder's treasury pays its debts oldest first, then tops up only a building's shortfall; a building neither can pay is disabled and reopens when it can. No coin is minted. Upkeep is paid in work: a subject can work a maintenance shift at any building that still needs shifts this period (`maintenance_shifts`; the count resets each upkeep period and a shift past the need is refused), paid the wage from the building's purse with the treasury topping up only a shortfall. Maintenance is taken before commercial work while the count is below the need.
+*   **Rewards**: a kill grants experience only; the dead entity's coin and goods move to its body and a looter takes them; a body that decays leaves its coin where it fell, as a purse on the ground (with the body it fell from and the tick) that a looter can take. A quest reward's gold is paid by its one real giver (the posting building's ground holder or the offering faction); a short giver records an owed debt, paid oldest first; a quest with no giver pays experience only. There is no gold sink: no wealth levy, surcharge or repair fee.
+*   **Inheritance and repair**: an heir takes the dead entity's items and coin atomically; a repair is charged once into the smith's purse, or uses a carried repair kit away from one.
+*   **Conservation**: the total of entity purses, building purses, bodies, purses on the ground and treasuries changes only by declared world-creation coin.
 
 ---
 

@@ -4,7 +4,7 @@ TCK-20260821-VISUAL-DENSITY-METRIC. Synthetic-fixture tests use minimal EntitySt
 instances (or plain terrain dicts) directly -- both compute_density_cv and
 compute_terrain_histogram are pure geometry/counting over raw dict input, no
 AuthoritativeState construction needed. The real-corpus tests load sandbox_world and
-dungeon_crawl to reproduce the documented evidence (~0.648 / ~0.678), same
+dungeon_crawl to reproduce the documented evidence (~0.554 / ~0.678), same
 WorldRepository -> WorldCompiler.compile(spec, seed=42) invocation pattern
 test_connectivity.py's own real-corpus test uses.
 """
@@ -39,7 +39,9 @@ def test_sandbox_world_reproduces_documented_cv():
 
     result = compute_density_cv(state.entities)
 
-    assert round(result.cv, 3) == 0.648
+    # 0.648 -> 0.554 on 2026-10-09 (hunting batch): sandbox_world composes wolf_den_near_forest, which now also places a herd of six plant-eaters,
+    # so the same density measure runs over 24 entities (not 18) and the documented value moves with the content, not with the measure.
+    assert round(result.cv, 3) == 0.554
 
 
 def test_dungeon_crawl_reproduces_documented_cv():

@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_50a789ca2b66e209",
+  "manifest_id": "prov_a9861e0eff1c2cba",
   "world_id": "simq_routing_test",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "cf283514caed0a1d59ac9a263f89149a33ba028a730d6172ddb64542cb49ac9a",
+  "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
@@ -12,8 +12,8 @@
   },
   "composition_fingerprint": "8d1c517e34b3f2f1325f4ecc921a5ea9c10427e7d7c91846e5c0d915a1be16ad",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "50a789ca2b66e209001ab11432dec016e62b7bbd6d37cdf7a638465b37b01879",
-  "created_at": "2026-10-09T17:40:24.059587Z",
+  "content_fingerprint": "a9861e0eff1c2cba5d9ce569c5dda5acc4b7dd48676c06f9b63e3df810351429",
+  "created_at": "2026-10-12T14:35:42.384125Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -205,6 +205,18 @@
       },
       "details": {
         "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
       }
     },
     "hometown": {

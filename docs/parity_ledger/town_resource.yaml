@@ -1944,50 +1944,25 @@
     keeps Gini well below INFLATION_SPIRAL_GINI_THRESHOLD (0.7); no merchant NPC accumulates
     disproportionate gold'
 - id: TOWN-179
-  text: "GoldSinkSystem injects REPAIR_FEE, SERVICE_FEE, and TAX ResourceTransferIntents\
-    \ at WINDOW_SIZE tick boundaries when Gini > 0.7 (INFLATION_SPIRAL threshold).\
-    \ All intents are resolved through ResourceTransactionSystem (authoritative pipeline)\
-    \ \u2014 no direct state mutation. REPAIR_FEE: 1 gold per degraded (<50% durability)\
-    \ equipment slot. SERVICE_FEE: flat 1 gold per alive entity with gold > 0. TAX:\
-    \ 5% of entity gold for entities above 1.5\xD7 mean, clamped [1, 50] gold.\n"
-  status: verified
+  text: 'Retired: GoldSinkSystem (REPAIR_FEE, SERVICE_FEE and the Gini > 0.7 wealth tax) is removed; a periodic wealth levy, a per-head surcharge and a repair fee are not income-based and are not coin transfers to a payee.'
+  status: divergent
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/engine/gold_sink.py \u2014 GoldSinkSystem.apply() reads EconomyHealthMonitor\
-    \ snapshot, emits ResourceTransferIntents for REPAIR_FEE/SERVICE_FEE/TAX; src/core/conservation.py\
-    \ \u2014 REPAIR_FEE and SERVICE_FEE added to existing TOWN_SERVICE/TAX resolver\
-    \ block (L255); src/engine/pipeline.py \u2014 gold_sink run_phase wired in Phase\
-    \ 5 after town_resolution.\n"
+  v2_evidence: '`src/engine/pipeline.py` (the gold_sink phase is removed), `src/engine/gold_sink.py` deleted'
   proof_type: parity
-  test_path: tests/unit/economy/test_gold_sink.py; tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
-  divergence_note: null
-  support_boundary: 'archetype-blocked in dungeon_crawl: gold_sink_fired calibration_hits=0
-    across all runs; no service buildings (blacksmith/inn/healer_hut) and no traveling_merchant
-    entity exist in this world archetype'
+  test_path: tests/unit/resource/test_rewards_repair_and_fees.py::test_the_gold_sink_is_retired_and_no_phase_proposes_a_fee; tests/integration/scenarios/test_macro_economy.py::test_an_inflation_spiral_draws_no_wealth_levy_and_no_surcharge
+  divergence_note: 'Intentional divergence 2.112 (Intentional Gameplay Change).'
+  support_boundary: null
 - id: TOWN-180
-  text: 'Gold sink conservation invariant: gold drained from entities via REPAIR_FEE,
-    SERVICE_FEE, and TAX intents uses gold_cost only (gold_delta=0). The resolver
-    rejects intents where entity gold < gold_cost (ACTION_EXHAUSTION), ensuring no
-    gold is created or destroyed. Sink cycles tracked in global_resources["metric_gold_sink_ticks"].
-
-    '
-  status: verified
+  text: 'Retired with TOWN-179: there is no gold sink; coin leaves an entity only by a transfer to a payee, and total coin is conserved over a run (TOWN-208).'
+  status: divergent
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/engine/gold_sink.py \u2014 all intents set gold_delta=0, gold_cost=fee_amount;\
-    \ src/core/conservation.py L255-272 \u2014 resolver returns gold_delta=-gold_cost\
-    \ net for REPAIR_FEE/SERVICE_FEE/TAX; rejects on ACTION_EXHAUSTION when insufficient.\
-    \ src/engine/apply.py L288-289 \u2014 resource_updates[\"metric_gold_sink_ticks\"\
-    ] accumulated into state.global_resources.\n"
+  v2_evidence: '`src/engine/pipeline.py` (the gold_sink phase is removed), `src/engine/gold_sink.py` deleted'
   proof_type: parity
-  test_path: 'tests/unit/economy/test_gold_sink.py::test_conservation_invariant; tests/unit/economy/test_gold_sink.py::test_conservation_resolver_handles_repair_fee_rejected;
-    tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
-
-    '
-  divergence_note: null
-  support_boundary: 'archetype-blocked in dungeon_crawl: upstream gold_sink_fired
-    trigger archetype-blocked (see TOWN-179); conservation invariant vacuously holds
-    (no gold sink transactions occur)'
+  test_path: tests/unit/resource/test_rewards_repair_and_fees.py::test_the_gold_sink_is_retired_and_no_phase_proposes_a_fee; tests/integration/scenarios/test_macro_economy.py::test_an_inflation_spiral_draws_no_wealth_levy_and_no_surcharge
+  divergence_note: 'Intentional divergence 2.112 (Intentional Gameplay Change).'
+  support_boundary: null
 - id: TOWN-181
   text: 'Shop purchases apply a reputation-based discount: up to 20% off at maximum
     public_reputation (2.0), scaling linearly from 0% at rep=0.0, floored to 1 gold
@@ -2515,4 +2490,72 @@
   proof_type: parity
   test_path: tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py
   divergence_note: 'Intentional divergence 2.102 (Intentional Gameplay Change).'
-  support_boundary: 'Dormant in the measured worlds while the free meal stands; ME-S20 is on the parked removal stack. Held out: the treasury wage for public town work (decision 37). People only (decisions 42 and 43): see 2.103.'
+  support_boundary: 'Dormant in the measured worlds while the free meal stands; ME-S20 is on the parked removal stack. The treasury-backed maintenance shift and the content-declared work set are TOWN-210. People only (decisions 42 and 43): see 2.103.'
+- id: TOWN-205
+  text: 'A dead body leaves food (decision 44): at death, whatever the cause, a body whose kind declares meat in `edible_as` leaves `meat_yield`
+    units of raw meat on its corpse. An eater eats an item only if its food class (plant, meat, prepared) is in its body diet (an undeclared
+    diet eats any food); raw meat fills 20 against 30 for a prepared meal. A hungry subject whose diet includes meat opens a way to eat by
+    scavenging a carcass (eating where it lies, a CORPSE_FOOD transfer keyed by the corpse id) or hunting a creature it appraises as prey. Wild land
+    carries plant cover (memo row 59): a biome declares a fertility band and cover patches (nodes of a `regrow` kind that wait bare once emptied and regrow
+    from zero) that only a diet with the food class `graze` eats.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/carcass.py` (`body_meat`), `src/engine/apply_plan.py` (corpse creation), `src/core/conservation.py` (`_corpse_food_result`),
+    `src/engine/domain/core_actions.py` (`corpse_meal`, `eat_at_corpse_update`), `src/engine/appraisal.py` (`can_eat_item`, `can_use_inn_meal`),
+    `src/ai/goals/opening_steps.py` (`_scavenge_step`, `_hunt_step`), `src/engine/tactical.py` (`_hunger_corpse`), `data/content/living/body_models.yaml`,
+    `data/content/world/items.yaml`; grazing (memo row 59): `src/worldassembly/cover.py`, `src/engine/economy.py` (`_record_depletion`), `src/engine/world_dynamics.py` (`_node_cooldown_updates`), `data/content/world/resources.yaml` (`cover_patch_*`) and `biomes.yaml`; `docs/mechanics/03_economic_laws.md` sections 3.1 and 3.2'
+  proof_type: parity
+  test_path: tests/mechanic_scenarios/test_hunting_kill_to_meat.py
+  divergence_note: 'Intentional divergence 2.107 (Intentional Gameplay Change).'
+  support_boundary: 'Held out: cooking (a cooked equivalent of raw meat), people hunting for sale, and individual births of game (ECOL-03).'
+- id: TOWN-206
+  text: 'A sale at a shop and a wage at an inn pay a tenth of the proceeds, rounded down per transaction, to the treasury of the faction holding the building''s region, in the same transaction; there is no periodic levy.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/place_tax.py`, `src/engine/shop_sale.py`, `src/engine/work_shift.py`, `src/core/conservation.py` (`_tax_credit`), `src/engine/town_resolution.py`, `data/content/defaults.yaml` (`default_tax_share`), `RegionState.tax_share`'
+  proof_type: parity
+  test_path: tests/unit/resource/test_tax_and_upkeep.py
+  divergence_note: 'Intentional divergence 2.108 (Intentional Gameplay Change).'
+  support_boundary: 'Only HERO_GUILD owns regions in the shipped worlds. The account unit is the four-value legacy bucket.'
+- id: TOWN-207
+  text: 'Each functional building meets its upkeep (its maintenance shifts times the 6-gold wage, 6 for an ordinary building and 18 for the town hall) from its own purse on the upkeep tick (nothing is paid out to a payee); the holder''s treasury tops up only a shortfall; a building neither can pay is disabled and reopens when it can; no building tax is minted.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/town_resolution.py` (section 4), `src/core/treasury.py`'
+  proof_type: parity
+  test_path: tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py
+  divergence_note: 'Intentional divergence 2.109 (Intentional Gameplay Change, Bug Fix).'
+  support_boundary: 'A wrecked building (hp 0) is not reopened by upkeep.'
+- id: TOWN-208
+  text: 'A kill grants experience and no coin; a dead entity''s coin and goods move to its body (CorpseState.gold), a looter takes the body''s coin, a decayed body''s coin lies where it fell as a purse on the ground (gold, source entity, drop tick) that is lootable; a quest reward is paid by its one real giver (the posting building''s ground holder, or the offering faction) or recorded as an OwedRecord paid oldest first, and a quest with no giver pays experience only.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/combat.py`, `src/engine/apply_plan.py`, `src/core/conservation.py` (`_reward_result`, CORPSE), `src/engine/world_dynamics.py`, `src/engine/quests.py`, `src/engine/town_resolution.py`, `src/core/state.py` (`CorpseState.gold`, `OwedRecord`)'
+  proof_type: parity
+  test_path: tests/unit/resource/test_rewards_repair_and_fees.py
+  divergence_note: 'Intentional divergence 2.110 (Intentional Gameplay Change, Bug Fix).'
+  support_boundary: 'No bounty system exists, so no bounty is posted.'
+- id: TOWN-209
+  text: 'An inheritance moves the dead entity''s items and coin to the heir once, atomically; a repair is charged once to the smith, or uses a carried repair kit away from one; the world has one treasury per region-owner bucket; total coin is conserved over a run.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/core/conservation.py` (`_inherit_result`), `src/systems/lifecycle_systems/lifecycle.py`, `src/engine/pipeline.py`, `src/engine/domain/core_actions.py`, `src/worldbuilding/compiler.py`'
+  proof_type: parity
+  test_path: tests/unit/resource/test_total_coin_is_conserved.py
+  divergence_note: 'Intentional divergence 2.111 (Bug Fix, Intentional Gameplay Change).'
+  support_boundary: 'Named heirlooms keep their separate CHEST grant.'
+- id: TOWN-210
+  text: 'The work a building offers is declared by its content, not by its kind in code: a maintenance shift while the building still needs shifts this upkeep period (`maintenance_shifts`, 1 for an ordinary building, 3 for the town hall), and commercial work (`hires_for_pay`, the inn). A maintenance shift pays the 6-gold wage from the building''s purse, the holding treasury topping up only a shortfall, and is counted on the building and refused past the need; a commercial shift is paid from the building''s own purse only. Maintenance is taken first while the count is below the need. The count resets each upkeep period. A subject looking for work is sent to the nearest building that offers a shift and can pay one.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/work_shift.py` (`offers_work`, `nearest_work`, `work_update`), `src/core/conservation.py` (`_wage_result`), `src/engine/town_resolution.py`, `src/core/state.py` (`BuildingState.maintenance_shifts_needed`, `maintenance_shifts_done`, `hires_for_pay`), `src/core/updates.py`, `src/engine/apply_plan.py`, `data/content/world/buildings.yaml`'
+  proof_type: parity
+  test_path: tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py
+  divergence_note: 'Intentional divergence 2.117 (Intentional Gameplay Change).'
+  support_boundary: 'The need, the purse and the treasury are checked as the tick stands so far, in entity-id order, so simultaneous finishers are exact; intents inside one group_id do not see each other''s staged purse, and no wage uses a group today. People only (decisions 42 and 43).'

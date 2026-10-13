@@ -23,13 +23,15 @@ F, H = 2, 1
 DAY = 2400  # ticks (1 tick = 36 s)
 
 
-def _state(hunger=94.0, who=F, hp=100, need_profile=None):
+def _state(hunger=94.0, who=F, hp=100, need_profile=None, species=None):
     state = compile_world(WORLD_ID)
     entities = {who: state.entities[who]}  # the subject alone: nothing to fight
     e = entities[who]
     props = dict(e.identity.properties)
     if need_profile:
         props["need_profile_id"] = need_profile
+    if species:
+        props["species_id"] = species
     entities[who] = replace(e, biological=replace(e.biological, hunger=hunger, sleep_debt=0.0), identity=replace(e.identity, properties=props),
                             combat=replace(e.combat, hp=hp, max_hp=hp, atk=1))
     object.__setattr__(state, "entities", entities)
@@ -105,18 +107,19 @@ def test_control_a_person_who_eats_stops_losing_health_and_survives(monkeypatch)
         assert not sv.is_weakened(final.biological.hunger)
     finally:
         kernel2.shutdown()
-    assert final.combat.alive and final.combat.hp == hp_after_meal, "health kept falling after the meal"
+    assert final.combat.alive and final.combat.hp >= hp_after_meal, "health kept falling after the meal"  # >=: a fed body also heals (decision 42)
     assert crossed > 0
 
 
 def test_main_second_kind_a_non_people_kind_with_its_own_need_profile_and_max_hp_dies_in_the_same_window(monkeypatch):
-    """Owner decision 42: the rules cover every living kind. A goblin (35 max HP) on the carnivore need profile (hunger "high", 0.15 a tick):
-    the profile sizes its hunger rate (real ``need_rates``, sleep debt held at zero) and its max HP sizes the loss period (round(6000 / 35) = 171),
+    """Owner decision 42: the rules cover every living kind. A wolf (the corpus's meat-only kind, 45 max HP) on the carnivore need profile (hunger
+    "high", 0.15 a tick; goblins are people): the profile sizes its hunger rate (real ``need_rates``, sleep debt held at zero) and its max HP sizes
+    the loss period (round(6000 / 45) = 133),
     so it is weakened before the line with full health and dies 4800 to 7200 ticks after it."""
     from src.engine.biological_needs import need_rates as real_need_rates
 
     monkeypatch.setattr("src.engine.apply.need_rates", lambda entity: (real_need_rates(entity)[0], 0.0))
-    kernel = _kernel(_state(who=H, hp=35, need_profile="carnivore_survival"))
+    kernel = _kernel(_state(who=H, hp=45, need_profile="carnivore_survival", species="wolf"))
     try:
         rows = _run(kernel, 7500, who=H)
     finally:
@@ -125,6 +128,6 @@ def test_main_second_kind_a_non_people_kind_with_its_own_need_profile_and_max_hp
     line_tick = next(t for t, h, hp, a in rows if h >= sv.STARVING_LINE)
     death_tick = next((t for t, h, hp, a in rows if not a), None)
     assert weakened_tick < line_tick
-    assert all(hp == 35 for t, h, hp, a in rows if t < line_tick)
-    assert 0 < next(hp for t, h, hp, a in rows if t == line_tick + DAY) < 35
+    assert all(hp == 45 for t, h, hp, a in rows if t < line_tick)
+    assert 0 < next(hp for t, h, hp, a in rows if t == line_tick + DAY) < 45
     assert death_tick is not None and 4800 <= death_tick - line_tick <= 7200, f"died {None if death_tick is None else death_tick - line_tick} ticks after the line"

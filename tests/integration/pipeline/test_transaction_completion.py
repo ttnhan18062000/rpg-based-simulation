@@ -619,6 +619,7 @@ class TestQuestRewardAtomicity:
                 xp=50,
                 items=["wood"],
             ),
+            source_building_id=1,  # posted at a building on ground a faction holds: the one real giver (ruling 61)
         )
 
         e = (
@@ -637,11 +638,16 @@ class TestQuestRewardAtomicity:
             .build()
         )
 
+        from src.core.enums import Faction
+        from src.core.state import BuildingState, RegionState
         state = replace(
             base_state,
             entities={
                 1: e,
             },
+            buildings={1: BuildingState(id=1, kind="shop", position=(1.0, 1.0), functional=True)},
+            regions={"r": RegionState(id="r", name="R", bounds=(0, 0, 100, 100), owner_faction_id=int(Faction.NEUTRAL))},
+            global_resources={"faction_neutral_gold": 10000.0},
         )
 
         raw_update = StateUpdate(

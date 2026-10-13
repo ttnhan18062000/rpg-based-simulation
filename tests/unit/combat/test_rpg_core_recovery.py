@@ -35,7 +35,7 @@ def test_combat_progression_rewards():
     
     # Verify Hero (ID 1) rewards
     hero = new_state.entities[1]
-    assert hero.inventory.gold > 0
+    assert hero.inventory.gold == 0  # a kill mints no coin (EXCH-02, decision 38)
     # Base rewards: 10 XP. 
     assert hero.identity.evolution_points >= 10
     
@@ -200,6 +200,7 @@ def test_quest_lifecycle():
             xp=100,
             gold=50,
         ),
+        source_building_id=1,  # posted at a building on ground the neutral faction holds: the one real giver (ruling 61)
         metadata={
             "target_kind": "MONSTER",
         },
@@ -251,6 +252,7 @@ def test_quest_lifecycle():
         .build()
     )
 
+    from src.core.state import BuildingState, RegionState
     state = AuthoritativeState(
         tick=1,
         seed=42,
@@ -258,6 +260,8 @@ def test_quest_lifecycle():
             1: hero,
             2: monster,
         },
+        buildings={1: BuildingState(id=1, kind="shop", position=(1.0, 1.0), functional=True)},
+        regions={"r": RegionState(id="r", name="R", bounds=(0, 0, 100, 100), owner_faction_id=int(Faction.NEUTRAL))},
     )
 
     raw_update = StateUpdate(
@@ -295,5 +299,7 @@ def test_quest_lifecycle():
     assert new_hero.identity.evolution_level == 2
     assert new_hero.identity.evolution_points == 10
 
-    # Quest gold 50 + combat gold 5 = 55.
-    assert new_hero.inventory.gold == 55
+    # A kill mints no coin and the quest's 50 gold comes out of a treasury (EXCH-02, decisions 38 and 58). This world funds none, so the
+    # reward is OWED: the hero holds no coin and a debt of 50 stands in its name.
+    assert new_hero.inventory.gold == 0
+    assert [(o.creditor_id, o.amount) for o in new_state.owed.values()] == [(1, 50)]
