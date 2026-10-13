@@ -103,6 +103,7 @@ def _attempted_way(source_kind: str, source_id: Any, state: AuthoritativeState) 
 class StarvationRecorder:
     """Per-run trail of the ways each hungry subject had open and tried; emits the death record, the live header and the tally."""
 
+    _live: bool = False  # set by the kernel (configure): False under a profile with no observability budget, where the channel writes nothing (not even its header)
     _period: int = 1
     _escalated_hunger: float = float("inf")  # set by the kernel (configure): the hunger the pull begins to escalate at
     _gate: Callable[[int, Optional[int], int], bool] = staticmethod(_always)  # set by the kernel: the cadence's per-subject stagger
@@ -118,6 +119,7 @@ class StarvationRecorder:
     @classmethod
     def reset_run_state(cls) -> None:
         """Clear the trail, the counts and the header flag at run start (and in test teardown)."""
+        cls._live = False
         cls._period = 1
         cls._escalated_hunger = float("inf")
         cls._gate = _always
@@ -131,9 +133,10 @@ class StarvationRecorder:
         cls._last_tick = 0
 
     @classmethod
-    def configure(cls, strategic_cadence: int, escalated_hunger: float, gate: Callable[[int, Optional[int], int], bool]) -> None:
+    def configure(cls, strategic_cadence: int, escalated_hunger: float, gate: Callable[[int, Optional[int], int], bool], live: bool = True) -> None:
         """What the kernel (the engine side, which observability may not import) tells the recorder: the profile's strategic re-decision cadence
-        (the ticks on which a subject's pull is re-judged), the hunger at which the pull begins to escalate, and the cadence's per-subject stagger."""
+        (the ticks on which a subject's pull is re-judged), the hunger at which the pull begins to escalate, and the cadence's per-subject stagger; ``live`` is whether the profile has an observability budget at all (a zero-budget profile, e.g. the scale test, accumulates no telemetry, so the channel stays silent and reads as not live)."""
+        cls._live = live
         cls._period = max(1, int(strategic_cadence))
         cls._escalated_hunger = float(escalated_hunger)
         cls._gate = gate
@@ -141,6 +144,8 @@ class StarvationRecorder:
     @classmethod
     def observe(cls, prior: AuthoritativeState, current: AuthoritativeState, update: Any) -> List[SimulationEvent]:
         """Advance the trail by one tick and return the events it owes (the live header once, a record per starvation death)."""
+        if not cls._live:
+            return []
         tick = current.tick
         cls._last_tick = tick
         events: List[SimulationEvent] = []

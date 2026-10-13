@@ -236,3 +236,12 @@ def test_a_meat_eater_with_prey_and_a_carcass_in_reach_lists_hunt_and_scavenge_a
     ways = ways_in_reach(wolf, state)
     assert WayKind.HUNT_EAT_RAW in ways and WayKind.SCAVENGE in ways
     assert WayKind.INN_MEAL not in ways and WayKind.FORAGE not in ways
+
+
+def test_a_profile_with_no_observability_budget_writes_nothing_so_the_channel_reads_as_not_live():
+    """The scale profile (zero observability budget) must accumulate no telemetry, not even the header; the channel then reads as not live (no-data)."""
+    StarvationRecorder.configure(10, ESCALATION_ONSET * HUNGER_LINE, should_run, live=False)
+    prior = _at_tick(_world(carry=["bread"]), SAMPLE_TICK)
+    assert StarvationRecorder.observe(prior, prior, SimpleNamespace(entity_updates={})) == []
+    assert StarvationRecorder.observe(prior, _dying(prior, SAMPLE_TICK + 3), _update()) == []
+    assert StarvationRecorder.closing_event({}) is None

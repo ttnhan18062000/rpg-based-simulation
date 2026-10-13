@@ -364,12 +364,12 @@ class EventRecorder:
 EventRecorder.closing_event_sources.append(StarvationRecorder.closing_event)
 
 
-def reset_run_state(strategic_cadence: int, escalated_hunger: float, cadence_gate: Callable[[int, Optional[int], int], bool]) -> None:
+def reset_run_state(strategic_cadence: int, escalated_hunger: float, cadence_gate: Callable[[int, Optional[int], int], bool], live: bool = True) -> None:
     """Clear every run-scoped observability cache at run start. The three arguments are what the kernel (engine side) tells the starvation-death
-    recorder: the profile's strategic re-decision period, the hunger the pull escalates at, and the cadence's per-subject stagger."""
+    recorder: the profile's strategic re-decision period, the hunger the pull escalates at, and the cadence's per-subject stagger (``live`` False when the profile has no observability budget)."""
     EventExtractor.reset_run_state()
     StarvationRecorder.reset_run_state()
-    StarvationRecorder.configure(strategic_cadence, escalated_hunger, cadence_gate)
+    StarvationRecorder.configure(strategic_cadence, escalated_hunger, cadence_gate, live)
     StrategyShaper.reset_run_state()
     ProgressionShaper.reset_run_state()
     SocialShaper.reset_run_state()

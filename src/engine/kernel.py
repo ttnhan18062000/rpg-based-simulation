@@ -312,7 +312,7 @@ class Kernel:
         self._workers_started = 2 if (obs_mode != ObservabilityMode.OFF) else 0
         self._last_shutdown_report = None
 
-        reset_run_state(profile.cadence.strategic_intelligence, ESCALATION_ONSET * HUNGER_LINE, should_run)
+        reset_run_state(profile.cadence.strategic_intelligence, ESCALATION_ONSET * HUNGER_LINE, should_run, profile.max_observability_budget_percent > 0)
 
         self.validate(flags)
 
