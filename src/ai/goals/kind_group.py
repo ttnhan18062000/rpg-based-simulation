@@ -1,0 +1,29 @@
+"""The kind group of an entity: what its kind DECLARES it can eat, never its role (decision 42, D46: no predator/prey labels).
+
+``kind_group`` is the sorted food classes of the entity's body diet joined with ``+`` (``meat``, ``plant+prepared``), ``undeclared`` when the
+kind declares no diet. The run ledger and the gate's metric module group by it, so a new kind lands in a group by its content properties alone.
+"""
+from __future__ import annotations
+
+from typing import Optional
+
+from src.content_semantics.faction import get_species_id_str
+from src.core.state import EntityState
+from src.engine.behavior_consumers import get_kind_properties
+
+UNDECLARED = "undeclared"
+NO_DIET = "none"
+
+
+def species_kind_group(species_id: Optional[str]) -> str:
+    """The group of a species id: its declared diet's food classes, ``none`` for a declared empty diet, ``undeclared`` when absent."""
+    _, body = get_kind_properties(species_id)
+    diet = getattr(body, "diet", None)
+    if diet is None:
+        return UNDECLARED
+    return "+".join(sorted(diet)) if diet else NO_DIET
+
+
+def kind_group(entity: EntityState) -> str:
+    """The group of an entity (see the module docstring)."""
+    return species_kind_group(get_species_id_str(entity))

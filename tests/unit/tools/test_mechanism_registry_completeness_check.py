@@ -260,7 +260,8 @@ def test_wider_scope_numbers_pinned():
     # 335 -> 338 on 2026-10-13 (code-health extractions, behaviour-free): +src/engine/run_identity.py (out of kernel.py),
     # +src/worldassembly/spawn_position.py (out of resolver.py) and +src/core/update_models/buildings.py (BuildingUpdate out of updates.py).
     # 338 -> 339 on 2026-10-13 (M0 gate V8): +src/core/spawn_source.py (SpawnKind, SpawnSource: a record of where an add came from).
-    assert wider["scope_files"] == 339
+    # 339 -> 340 (run ledger): +src/ai/goals/kind_group.py (the kind group from the declared diet; functions only). src/observability/run_ledger.py is outside the scope globs.
+    assert wider["scope_files"] == 340
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -288,7 +289,8 @@ def test_wider_scope_numbers_pinned():
     # 247 -> 250 on 2026-10-13 (code-health extractions): the three moved-out modules above are unbound helpers; the code they hold was
     # already unbound in its old module, and candidates are unchanged.
     # 250 -> 251 on 2026-10-13 (M0 gate V8): +src/core/spawn_source.py is unbound (two names, a record of where an add came from); rpg-planner binds it.
-    assert wider["unbound_files"] == 251
+    # 251 -> 252 (run ledger): +src/ai/goals/kind_group.py is unbound (a lookup, functions only); rpg-planner binds it.
+    assert wider["unbound_files"] == 252
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
