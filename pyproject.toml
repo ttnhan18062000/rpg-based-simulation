@@ -31,8 +31,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# torch must be installed separately from the CPU wheel before this extra:
+# torch is not pinned here, and uv.lock resolves it from PyPI (the CUDA build). `.venv-knowledge` (3.12) is built by a
+# manual CPU-wheel step instead:
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# so that venv is NOT reproducible from the lock: do not `uv sync --extra knowledge` expecting the CPU env. The lock
+# stays index-free because download.pytorch.org is blocked on u24desktop-Virtual-Machine (see "Why the knowledge stack
+# is stuck on 3.12" in docs/guidelines/agent_working_environment.md); revisit once it is reachable from every host.
 knowledge = [
     "sentence-transformers>=2.7.0",
     "sqlite-vec>=0.1.1",
@@ -51,7 +55,9 @@ dev = [
     "httpx>=0.27.0",
     "hypothesis>=6.0.0",
     "coverage>=7.0.0",
-    "mypy",
+    # Exact, equal to the version uv.lock resolves (TCK-20261012-MYPY-DEV-PIN): a new mypy release can add errors
+    # and move the mypy baseline without a code change. Bump here and in uv.lock together.
+    "mypy==2.1.0",
     "jsonschema>=4.0.0",
     # Also declared as the `search-mcp` extra, which existing tests pin; the dev group makes
     # the default install reach it for tests/tools/test_search_mcp.py.

@@ -3,16 +3,17 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-10
+date: 2026-10-12
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-10 at the close of the slices batch (the planner's live handover is authoritative) (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261010-VISUAL-ASSETS-SLICES-DOCS-AND-CLOSE`.
-Updated: 2026-10-10 (store-tooling MERGED as PR #487 `231e35f77`; slices batch built on `visual-asset-slices`, awaiting the user's push/PR decision)
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-12 at the close of the sample-map batch (the planner's live handover is authoritative) (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261011-VISUAL-ASSETS-SAMPLE-MAP-GAP-REPORT`.
+Updated: 2026-10-12 (real-art proof MERGED as PR #521 `5951fdb71`; sample-map batch `TCK-20261011-EPIC-VISUAL-ASSET-SAMPLE-MAP` complete on `visual-asset-sample-map`, awaiting the user's push/PR decision)
 
 ## Open
+- 2026-10-12 SAMPLE-MAP COMPLETE, NOT PUSHED: epic `TCK-20261011-EPIC-VISUAL-ASSET-SAMPLE-MAP` (3 children, `done/visual-asset-sample-map/`), branch `visual-asset-sample-map` off `5951fdb71`, upstream unset: read-only data for three worlds, an offline renderer (exact view primary, alias view UNCONFIRMED), `docs/assets/sample_map/` with the gap report (11 gaps sized, needed-by, the #523 evidence table, the owner's art-priority question drafted for me to ask, the input list for A). Real-art proof is MERGED (PR #521, `5951fdb71`): rc-0009, Git LFS (D2) kept closed, no bound raised. rpg owns #519 (answered) and #523 (colour-code bug and terrain vocabulary). NEXT: ask the owner the art-priority question after this merges; candidate A starts with the `MAX_REGISTRY_BYTES` budget review and waits on #523.
 - 2026-10-10 slices batch (`TCK-20261010-EPIC-VISUAL-ASSET-SLICES`, branch `visual-asset-slices`): all four children committed and reviewed (SLICE-SOURCE-FIELDS `20c146af4`, SLICE-RUNTIME-EXPORT `76418d7a5`, SLICE-DRAWING-TOOL `b30ae1663`, then docs and close). Owner decisions: store + drawing tool; 16 slices / 16 keys; ADR D25 approved as written (with the handoff `slice_count` and export scaling sentences). Store-tooling (below) is MERGED as PR #487 (`231e35f77`); its notes are kept for the record.
 - 2026-10-10 IN FLIGHT: batch visual-asset-store-tooling FILED + DISPATCHED to asset-implementer (msg). Epic
   TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING + 9 children (todos/visual-asset-store-tooling/SEQUENCE.md), branch

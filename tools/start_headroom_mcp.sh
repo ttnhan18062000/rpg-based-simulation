@@ -25,15 +25,18 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 # rename or a stale venv falls through to a working candidate instead of failing silently (the
 # probe result is quiet on stdout+stderr; only the final "nothing worked" message is visible).
 # TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION: resolve the main checkout generically. The
-# hardcoded u24desktop path in the list below only exists on that one host; on any other host a worktree's
-# $REPO_ROOT has no venv, so the launch fell through to system python3. `git rev-parse
-# --git-common-dir` names the main checkout's .git from any worktree (and from the main checkout
-# itself), so its parent is where the one shared .venv-knowledge lives on every host.
+# hardcoded u24desktop path that used to sit in the list below only existed on that one host; on
+# any other host a worktree's $REPO_ROOT has no venv, so the launch fell through to system python3.
+# `git rev-parse --git-common-dir` names the main checkout's .git from any worktree (and from the
+# main checkout itself), so its parent is where the one shared .venv-knowledge lives on every host.
+# TCK-20261011-KNOWLEDGE-TORCH-CPU-INDEX-IN-LOCK: an explicit KNOWLEDGE_PYTHON override comes first;
+# the former hard-coded u24desktop candidate is gone, because on that host MAIN_ROOT resolves to
+# the same path.
 MAIN_ROOT=""
 COMMON_DIR="$(git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
 [ -n "$COMMON_DIR" ] && MAIN_ROOT="$(dirname "$COMMON_DIR")"
 for py in \
-    "/home/u24desktop/Working/rpg-based-simulation/.venv-knowledge/bin/python3" \
+    "${KNOWLEDGE_PYTHON:-}" \
     "${MAIN_ROOT:+$MAIN_ROOT/.venv-knowledge/bin/python3}" \
     "$REPO_ROOT/.venv-knowledge/bin/python3" \
     "/home/vboxuser/Work/venv/bin/python3"; do
