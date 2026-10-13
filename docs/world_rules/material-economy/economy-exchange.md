@@ -95,9 +95,11 @@ wealth, but no Rule said how a person comes to hold money at all.
     against baseline v1, and likely belongs with milestone 1's per-subject records.
     - **Evidence for the split:** the first build refused by the region owner's faction
       hostility. At tick 0 on urban (seeds 42-44) it turned away 28 of 147 trading-person x
-      building pairs, all of them bandit_company people at hero_guild buildings, and human hazard
-      deaths rose from 11 to 18 (5 seeds). That was two changes in one measured step, judging a
-      stranger by a label.
+      building pairs, all of them bandit_company people at hero_guild buildings. Human hazard
+      deaths rose from 11 to 18 (5 seeds), but Lane A found the bandits' deaths identical with and
+      without the refusal. The rise was one seed diverging (seed 42, a town_council HAZARD death),
+      not the refusal. The split stands on its own grounds: two changes in one measured step, and
+      a stranger judged by a label.
     - **Alternatives not taken:** the region owner's faction stance (the built version); keeping
       both halves in baseline v1.
 - **The ways are plural:** no single one is required. Being paid by fellow townsfolk for small
