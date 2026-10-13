@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261012-A-HELD-GATHERER-ON-A-REGROWING-PATCH-IS-NEVER-RELEASED-TO-EAT
-phase: open
+phase: done
 date: 2026-10-12
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 A subject holding a HARVEST/INTERACT on a node that still has charges is never released to decide EAT, so a grazer gathers grass while its hunger climbs.
 
 ## Status
-OPEN (disclosed in divergence 2.107; found by Lane A's measurement)
+DONE
 
 ## Tier
 hotfix
@@ -60,13 +60,13 @@ Lane A probes/hunting_grazing_measurement.txt.
 None.
 
 ## Implementation Notes
-TBD
+The release is in the scheduler's need wake (_is_need_woken), not _survival_action_ends: a held INTERACT is not a survival action. Divergence 2.120, PROG-134, Bible 04 paragraph. The no-progress hold is a separate draft ticket.
 
 ## Test Summary
-TBD
+tests/unit/engine/test_pressing_hunger_releases_a_held_gatherer.py (4); wake and eat tests (140 passed). Paired 20-run measurement in 2.120.
 
 ## Files Changed
-TBD
+src/engine/scheduler.py; tests/unit/engine/test_pressing_hunger_releases_a_held_gatherer.py; docs 2.120, Bible 04, PROG-134.
 
 ## Completion Summary
-TBD
+Grazers held on a regrowing patch are released to eat once they carry grass (held-INTERACT ticks of plant-eaters 8177 to 4442). Empty-pocket no-progress holds remain, as a later ticket.
