@@ -1,7 +1,7 @@
 # Compliance IDs: PERF-011
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Sequence
 
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
@@ -294,6 +294,11 @@ def _first_free_tile(wanted: tuple[float, float], occupied: set[tuple[float, flo
     return x, y
 
 
+def _tile(position: Sequence[float]) -> tuple[float, float]:
+    """A position as the two-float tile ``_first_free_tile`` works on (``tuple(position)`` is typed ``tuple[float, ...]``)."""
+    return (float(position[0]), float(position[1]))
+
+
 def build_mixed_state(
     *,
     entity_count: int,
@@ -314,12 +319,12 @@ def build_mixed_state(
     entities = {**state_idle.entities}
     # The three builders use independent coordinate schemes, so a monster can land on a hero's or a resource node's tile (LAW-SPAWN-OCCUPANCY,
     # TCK-20261004-PERF-SCENARIO-MIXED-STATE-SPAWN-COLLISION). Heroes and nodes keep their tiles; a monster on a taken tile moves along y to the first free one.
-    occupied = {tuple(h.navigation.position) for h in entities.values()}
-    occupied |= {tuple(node.position) for node in state_res.resource_nodes.values()}
+    occupied: set[tuple[float, float]] = {_tile(h.navigation.position) for h in entities.values()}
+    occupied |= {_tile(node.position) for node in state_res.resource_nodes.values()}
     # Offset monster IDs to avoid collision
     for eid, monster in state_combat.entities.items():
         new_id = hero_count + eid
-        x, y = _first_free_tile(tuple(monster.navigation.position), occupied)
+        x, y = _first_free_tile(_tile(monster.navigation.position), occupied)
         occupied.add((x, y))
         entities[new_id] = (
             V2EntityBuilder(new_id)

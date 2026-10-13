@@ -79,7 +79,8 @@ _(none)_
 - `test_perf_mixed_stress` times out on a clean `origin/main` too (this VM); it is not caused by this change.
 
 ## Test Summary
-- `tests/tools/test_perf_scenarios_placement.py`: 4 new tests (zero violations at 100/200/1000, only colliding monsters move, determinism with an identical ProofDigest, the helper); the file passes. `test_perf_stress.py::test_perf_mixed_stress` times out on this VM both before and after (verified on a clean main worktree), so the 'passes unmodified' criterion could not be shown here.
+- `tests/tools/test_perf_scenarios_placement.py`: 4 new tests (zero violations at 100/200/1000, only colliding monsters move, determinism with an identical ProofDigest, the helper); the file passes.
+- FAIL (not proven): `test_perf_stress.py::test_perf_mixed_stress` times out on this VM both before and after (verified on a clean main worktree) and is marked `slow`, so CI (`-m "not slow and not extra_slow"`) does not run it; the 'passes unmodified' criterion is not shown.
 
 ## Files Changed
 - `src/perf/scenarios.py`, `tests/tools/test_perf_scenarios_placement.py`, `docs/performance/baseline_invalidation_ledger.md`, this ticket.
