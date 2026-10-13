@@ -15,7 +15,7 @@ tags: []
 EAT beside the inn feeds a subject that cannot pay: `CoreActions.execute_survival("EAT")` cuts hunger by 40 with no building and no gold, and the inn's 5-gold charge clamps at zero, so the meal is free.
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
