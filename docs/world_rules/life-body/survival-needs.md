@@ -537,6 +537,24 @@ not hold. Per divergence 2.80, measured on `frontier_living_world`, seed 42, 1,3
 main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
 - **Eating and resting now complete:** eat events go from 0 to 24 and sleep events from 0 to 17.
   Alive at t=1100 goes from 3 to 10. These figures include the free meals below.
+- **What a paid meal gives once the free part goes (decided by the owner directly, 2026-10-13;
+  row 73 of the memo):** rpg-implementer-2's plan for the removal (milestone 0, step 4, after
+  baseline v1) found two free paths. Eating with nothing carried removed 40 hunger with no
+  transfer, and the inn's 20-hunger meal charged its 5 gold as a separate transfer clamped to
+  what the subject held. A broke subject got 60 hunger at an inn for at most 5 gold, and a rest
+  (10 gold, +10 readiness, +5 HP) had the same shape.
+  - **Values:** after the removal, a paid inn meal (5 gold) removes 60 hunger, today's total, so
+    a paying subject's economy does not move. A cooked meal fills more than raw food (berry 30,
+    graze 20). Rest keeps its effects at its full 10 gold.
+  - **Payment is atomic:** the meal or rest and its price move together, and the service is
+    refused unless the full price is held. There is no clamp.
+  - **Applied the same day (rpg-designer):**
+    - A body whose diet is undeclared (merchants today) gets its kind's diet in content before
+      the removal lands, and an undeclared diet becomes a content error at compile. This is the
+      SURV-05 provenance gap, a prerequisite of step 4.
+    - A starvation wave after the removal is measured with the earn path live and brought to
+      the owner with the H6 records. It is neither pre-accepted nor an automatic blocker.
+  - **Alternatives not taken:** 40, or 20 (the paid part only).
 - **Animals first: the removal waits for the animals' own ways (decided by the owner directly,
   2026-10-09; row 44 of the memo).** Under decision 42, the free-meal removal must leave every
   living kind with a working way to eat, not only people. It lands for everyone at once, after

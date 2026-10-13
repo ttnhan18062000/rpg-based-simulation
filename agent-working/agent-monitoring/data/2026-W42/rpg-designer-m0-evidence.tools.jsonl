@@ -1,0 +1,1 @@
+{"session_id":"5b66adc4-3727-4d7a-b0f6-10b104859f43","run_id":null,"seq":null,"phase":null,"agent":null,"ts":"2026-10-13T10:17:27.751218Z","tool":"Bash","input_summary":"git switch -q -c rpg-designer-m0-evidence && sed -n 540,548p docs/world_rules/li","read_ranged":null,"status":"ok","duration_ms":210,"execution_id":null,"provider":null,"ticket_id":null}
