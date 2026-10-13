@@ -17,7 +17,7 @@ per-(run_key, pillar) overrides in ``test_grade_regression``); ``in_band_after``
 
 CLI::
 
-    python -m tools.test_architecture.simq_reanchor --rows rows.jsonl --fixture grade_anchors.json --out new.json --table table.tsv [--exclude exclude.tsv]
+    python -m tools.test_architecture.simq_reanchor --rows rows.jsonl --fixture grade_anchors.json --out new.json --table table.tsv [--exclude exclude.tsv] [--prior-rows earlier_rows.jsonl]
 
 ``exclude.tsv`` has one ``run_key<TAB>pillar`` per line (``#`` comments allowed). Exit 2 when a key is missing, incomplete or not identical (nothing written).
 """
@@ -87,8 +87,12 @@ def reanchor(
     excluded: Iterable[Tuple[str, str]] = (),
     score_overrides: Optional[Mapping[Tuple[str, str], float]] = None,
     band_overrides: Optional[Mapping[Tuple[str, str], int]] = None,
+    prior_rows: Optional[Mapping[str, Mapping[int, dict]]] = None,
 ) -> Tuple[Dict[str, Any], List[dict]]:
-    """``(new fixture, provenance rows)``. Every run key of the fixture must have an identical pair; excluded rows keep their committed anchor."""
+    """``(new fixture, provenance rows)``. Every run key of the fixture must have an identical pair; excluded rows keep their committed anchor.
+
+    ``prior_rows`` (an earlier measurement, for example the one an owner ruled on before the code moved again) adds ``prior_grade``, ``prior_score``,
+    ``grade_changed`` and ``changed_since_ruling`` to every table row, so a value that differs from what was ruled can be put back to the owner (rule 5)."""
     excluded = set(excluded)
     score_overrides, band_overrides = score_overrides or {}, band_overrides or {}
     new: Dict[str, Any] = {}
@@ -98,6 +102,7 @@ def reanchor(
             new[run_key] = pillars
             continue
         audit = audit_values(run_key, rows.get(run_key, {}))
+        prior = audit_values(run_key, prior_rows.get(run_key, {})) if prior_rows is not None else None
         new[run_key] = {}
         for pillar, anchor in pillars.items():
             actual = audit.get(pillar)
@@ -107,8 +112,15 @@ def reanchor(
             before = within_band(actual["grade"], anchor["grade"], band_overrides.get((run_key, pillar), 1)) and within_score(actual["norm"], anchor["score"], floor)
             skip = (run_key, pillar) in excluded
             new[run_key][pillar] = dict(anchor) if skip else {"grade": actual["grade"], "score": actual["norm"]}
+            extra = {}
+            if prior is not None:
+                before_value = prior.get(pillar)
+                if before_value is None:
+                    raise ReanchorRefused(f"{run_key}: the prior measurement has no {pillar} pillar")
+                extra = {"prior_grade": before_value["grade"], "prior_score": before_value["norm"], "grade_changed": before_value["grade"] != actual["grade"],
+                         "changed_since_ruling": (before_value["grade"], before_value["norm"]) != (actual["grade"], actual["norm"])}
             table.append({
-                "run_key": run_key, "pillar": pillar, "committed_grade": anchor["grade"], "committed_score": anchor["score"],
+                **extra, "run_key": run_key, "pillar": pillar, "committed_grade": anchor["grade"], "committed_score": anchor["score"],
                 "audit_grade": actual["grade"], "audit_score": actual["norm"], "in_band_before": before,
                 "in_band_after": before if skip else True, "moved": not before, "excluded": skip,
             })
@@ -123,8 +135,48 @@ def dump_fixture(fixture: Mapping[str, Any]) -> str:
 
 
 def table_tsv(table: Iterable[Mapping[str, Any]]) -> str:
-    cols = ("run_key", "pillar", "committed_grade", "committed_score", "audit_grade", "audit_score", "in_band_before", "in_band_after", "moved", "excluded")
+    table = list(table)
+    cols = ["run_key", "pillar", "committed_grade", "committed_score"]
+    if table and "prior_grade" in table[0]:
+        cols += ["prior_grade", "prior_score"]
+    cols += ["audit_grade", "audit_score"]
+    if table and "prior_grade" in table[0]:
+        cols += ["grade_changed", "changed_since_ruling"]
+    cols += ["in_band_before", "in_band_after", "moved", "excluded"]
     return "\t".join(cols) + "\n" + "".join("\t".join(str(row[c]) for c in cols) + "\n" for row in table)
+
+
+GROUP_CHANGED = "#536, cause not isolated by measurement"
+GROUP_UNCHANGED = "unchanged since the 2026-10-12 ruling"
+
+
+def ruling_rows(table: Iterable[Mapping[str, Any]]) -> List[dict]:
+    """The rows an owner rules on after the code moved again, grouped by value comparison only (never by pillar name or a guessed cause).
+
+    Needs the ``prior_*`` columns (an earlier measurement the owner ruled on). A row whose post value differs from the prior (ruled) value is
+    :data:`GROUP_CHANGED` (the code change that moved it is not isolated by measurement); a row whose post value equals the prior one but differs from the
+    committed anchor is :data:`GROUP_UNCHANGED` (already covered by the earlier ruling). A row equal to its committed anchor is not listed."""
+    out: List[dict] = []
+    for row in table:
+        committed = (row["committed_grade"], row["committed_score"])
+        before, after = (row["prior_grade"], row["prior_score"]), (row["audit_grade"], row["audit_score"])
+        if before != after:
+            group = GROUP_CHANGED
+        elif after != committed:
+            group = GROUP_UNCHANGED
+        else:
+            continue
+        reference = before if group == GROUP_CHANGED else committed
+        step = GRADE_ORDER.index(after[0]) - GRADE_ORDER.index(reference[0]) if after[0] in GRADE_ORDER and reference[0] in GRADE_ORDER else 0
+        direction = "up" if step > 0 or (step == 0 and after[1] > reference[1]) else "down"
+        out.append({"run_key": row["run_key"], "pillar": row["pillar"], "committed": f"{committed[0]}/{committed[1]:.4g}", "pre_536": f"{before[0]}/{before[1]:.4g}",
+                    "post_536": f"{after[0]}/{after[1]:.4g}", "direction": direction, "group": group})
+    return sorted(out, key=lambda r: (r["group"] != GROUP_CHANGED, r["run_key"], r["pillar"]))
+
+
+def ruling_tsv(rows: Iterable[Mapping[str, Any]]) -> str:
+    cols = ("run_key", "pillar", "committed", "pre_536", "post_536", "direction", "group")
+    return "\t".join(cols) + "\n" + "".join("\t".join(str(r[c]) for c in cols) + "\n" for r in rows)
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -134,19 +186,25 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--table", type=Path, required=True)
     parser.add_argument("--exclude", type=Path)
+    parser.add_argument("--prior-rows", type=Path, help="rows.jsonl of an earlier measurement (the one an owner ruled on); adds the prior columns and the changed-since-ruling flags")
     parser.add_argument("--score-overrides", type=Path, help="JSON [[run_key, pillar, abs_floor], ...]: the COMMITTED per-row tolerance widenings, so in_band_before is judged the way the committed anchor was")
+    parser.add_argument("--ruling-table", type=Path, help="write the table for the owner's ruling (needs --prior-rows): the rows the owner rules on, in two groups (changed since the ruling, unchanged since it)")
     args = parser.parse_args(argv)
+    if args.ruling_table and not args.prior_rows:
+        parser.error("--ruling-table needs --prior-rows")
     overrides = {(k, p): float(f) for k, p, f in json.loads(args.score_overrides.read_text(encoding="utf-8"))} if args.score_overrides else {}
     try:
         new, table = reanchor(
             json.loads(args.fixture.read_text(encoding="utf-8")), load_rows(args.rows), load_exclusions(args.exclude), overrides,
-            {("urban_political_seed123_500t", "COGNITION"): 2},
+            {("urban_political_seed123_500t", "COGNITION"): 2}, load_rows(args.prior_rows) if args.prior_rows else None,
         )
     except ReanchorRefused as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 2
     args.out.write_text(dump_fixture(new), encoding="utf-8")
     args.table.write_text(table_tsv(table), encoding="utf-8")
+    if args.ruling_table:
+        args.ruling_table.write_text(ruling_tsv(ruling_rows(table)), encoding="utf-8")
     moved = sum(1 for r in table if r["moved"])
     print(f"wrote {args.out} ({len(table)} pillar rows, {moved} moved, {sum(1 for r in table if r['excluded'])} excluded)")
     return 0
