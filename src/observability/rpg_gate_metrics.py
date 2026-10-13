@@ -16,7 +16,8 @@ are KIND GROUPS (what a kind's declared diet allows: ``meat``, ``plant+prepared`
 Validity (permanent, exact; each names its rule): V1 food from nothing, V2 conservation (meat), V3 no death beside a known untried way, V4 diet gates,
 V5 in-world positions, V6 no minted coin, V7 liveness of declared ways (pooled over a world's seeds), V8 every mid-run add has a declared source.
 Outcome (what the world did; paired against a baseline, never graded alone): O1 starvation share, O2 population and deaths by cause (and survivors),
-O3 attacks on people by meat-eaters, O4 ways mix, O5 coin, O6 kills not eaten. O7 (tick time) is the harness's cost document, not a metric row here.
+O3 attacks on people by wild meat-eaters (a diet with meat, a species without the trade trait), O4 ways mix, O5 per-group coin flows (no producer yet:
+the world's net coin is validity V6), O6 kills not eaten. An outcome row never grades: only a validity row can fail. O7 (tick time) is the harness's cost document, not a metric row here.
 
 Floors and k are practical thresholds with a fiction reason each (``OUTCOME_THRESHOLDS``), never fitted to a measured baseline.
 """
@@ -40,7 +41,7 @@ from src.observability.starvation_record import (
 
 MAX_EXAMPLES = 5
 COIN_EPSILON = 1e-6
-PEOPLE_CLASS = "prepared"  # a kind whose diet includes prepared food (the inn's free meal): the people of the world (a property, not a role)
+PEOPLE_CLASS = "prepared"  # the diet class of the inn's free meal (D44): the V4 diet gate. Personhood is NOT this: it is the trade trait (D43), carried as a 0/1 flag
 MEAT_CLASS = "meat"
 FOOD_NODE_SOURCE, INN_SOURCE, BODY_SOURCE = "NODE", "TOWN_SERVICE", "CORPSE_FOOD"
 
@@ -54,12 +55,11 @@ class GateDataMissingError(RuntimeError):
 OUTCOME_THRESHOLDS: Dict[str, Tuple[float, float, str]] = {
     "O1.starvation_share": (2.0, 0.05, "a settlement notices when one more in twenty of a kind starves"),
     "O2.deaths": (2.0, 2.0, "two more deaths of one cause in a run is a story; one is noise"),
-    "O2.population": (2.0, 3.0, "three more or fewer of a kind alive is a visible crowd change"),
+    "O2.population": (2.0, 3.0, "a tenth more or fewer of a kind alive, and never under three, is a visible crowd change"),
     "O2.survivors": (2.0, 1.0, "a kind alive or gone in a seed is the whole difference"),
     "O3.attacks_on_people": (2.0, 3.0, "three more bites on villagers a run is the first sign a hunter stopped judging prey"),
     "O4.accepted": (2.0, 5.0, "five more or fewer uses of a way is a change in how the kind lives"),
-    "O5.coin_net": (2.0, 25.0, "twenty-five coin is a day's wage; less is rounding of the economy"),
-    "O5.coin_declared": (2.0, 25.0, "twenty-five coin of declared world creation is a day's wage"),
+    "O5.coin_flow": (2.0, 25.0, "twenty-five coin is about five meals; less is rounding in the economy"),  # per-group flows only: no producer yet; the world's net coin is the V6 validity check
     "O6.kills_not_eaten": (2.0, 2.0, "two more kills left uneaten in a run is waste a kind would notice"),
     "O6.feeding_kills": (2.0, 2.0, "two more kills made to eat in a run is a change in how it hunts"),
 }
@@ -67,11 +67,11 @@ POOLED_THRESHOLDS: Dict[str, float] = {"O2.seeds_with_survivors": 1.0}  # a seed
 
 ORACLES: Dict[str, str] = {
     "V1": "Bible 03 atomic conservation, gate H3: a hunger drop has an accepted transfer from a source behind it",
-    "V2": "Bible 03 conservation, gate H7: the meat leaving the world through bodies leaving equals the MEAT_DECAYED sink, and made = taken + vanished + remaining",
+    "V2": "Bible 03 conservation, gate H7: meat leaves a body only by being taken, by the whole body being looted, or through the MEAT_DECAYED sink, and made = taken + looted + vanished + remaining",
     "V3": "SURV-06/07, gate H6, memo rows 54/56: no starvation death with a way the subject judged open and never attempted",
     "V4": "D43, D44, gate H4: a kind whose diet lacks a food class never takes it (inn meals need prepared; meat-only kinds take no node food)",
     "V5": "LAW-POSITION-IN-WORLD, Bible 06 topology: a moved, alive entity stays inside the world extent",
-    "V6": "EXCH-02, D38: coin created outside declared world creation (an added entity's starting purse) is minted coin",
+    "V6": "EXCH-02, D38, gate H7: total coin changes only by declared world creation (an added entity's starting purse), so the net change beyond it is exactly 0",
     "V7": "SURV-06, D44/D48, gate H5: a declared way is used at least once in a world where it can be (the hunt instance: every feeding kill is eaten from somewhere)",
     "V8": "D67/D70: every mid-run entity add carries a declared, well-formed spawn source",
 }
@@ -82,9 +82,9 @@ def _group_has(group: str, food_class: str) -> bool:
     return food_class in group.split("+")
 
 
-def _is_wild_meat_eater(group: str) -> bool:
-    """A kind that eats meat and is not the people of the world: a property test on the diet, never a role or a name."""
-    return _group_has(group, MEAT_CLASS) and not _group_has(group, PEOPLE_CLASS)
+def _is_wild_meat_eater(group: str, person: str) -> bool:
+    """A kind whose diet has meat and whose species lacks the coin-and-trade trait: a person who hunts is a person (D43)."""
+    return _group_has(group, MEAT_CLASS) and person != "1"
 
 
 def _read_events(run: Any) -> List[Dict[str, Any]]:
@@ -138,9 +138,14 @@ def _validity(vid: str, world: str, violations: int, examples: Optional[List[Any
 
 
 def _outcome(oid: str, world: str, group: str, value: float, **where: Any) -> Dict[str, Any]:
-    """A run outcome row; ``where`` may set ``key`` (a cause or a source) and ``tick``."""
+    """A run outcome row; ``where`` may set ``key`` (a cause or a source), ``tick`` and ``floor`` (a row whose floor scales with its group)."""
     k, floor, _ = OUTCOME_THRESHOLDS[oid]
     return {"id": oid, "class": "outcome", "scope": "run", "world": world, "group": group, "value": float(value), "k": k, "floor": floor, **where}
+
+
+def population_floor(first_tick_population: int) -> float:
+    """O2.population's floor: a tenth of the group's first-tick population, and never under the base floor (three)."""
+    return max(OUTCOME_THRESHOLDS["O2.population"][1], 0.10 * first_tick_population)
 
 
 def _check_food_source(ledger: Mapping[str, Any]) -> Tuple[int, List[Any]]:
@@ -152,12 +157,12 @@ def _check_food_source(ledger: Mapping[str, Any]) -> Tuple[int, List[Any]]:
 def _check_meat_books(ledger: Mapping[str, Any], state: Any, decayed_quantity: float) -> Tuple[int, List[Any]]:
     """Meat leaves the world only through the MEAT_DECAYED sink, and made = taken + vanished + remaining."""
     meat = ledger.get("meat", {})
-    made, taken, vanished = meat.get("made", 0.0), meat.get("taken", 0.0), meat.get("vanished", 0.0)
+    made, taken, looted, vanished = meat.get("made", 0.0), meat.get("taken", 0.0), meat.get("looted", 0.0), meat.get("vanished", 0.0)
     found: List[Any] = []
     if abs(vanished - decayed_quantity) > COIN_EPSILON:
         found.append({"vanished_with_bodies": vanished, "meat_decayed_events": decayed_quantity})
-    if abs(made - taken - vanished - _final_meat(state)) > COIN_EPSILON:
-        found.append({"made": made, "taken": taken, "vanished": vanished, "remaining_final": _final_meat(state)})
+    if abs(made - taken - looted - vanished - _final_meat(state)) > COIN_EPSILON:
+        found.append({"made": made, "taken": taken, "looted_whole": looted, "vanished": vanished, "remaining_final": _final_meat(state)})
     return len(found), found
 
 
@@ -219,8 +224,9 @@ def _population_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: A
     for group in sorted(set(first) | set(final) | {g for t in population.values() for g in t}):
         rows.append(_outcome("O1.starvation_share", world, group, starved[group] / max(1, first.get(group, 0))))
         rows.append(_outcome("O2.survivors", world, group, 1.0 if final.get(group, 0) > 0 else 0.0))
-        rows += [_outcome("O2.population", world, group, at.get(group, 0), tick=int(t)) for t, at in sorted(population.items(), key=lambda kv: int(kv[0]))]
-        rows.append(_outcome("O2.population", world, group, final.get(group, 0), tick=ticks))
+        floor = population_floor(first.get(group, 0))
+        rows += [_outcome("O2.population", world, group, at.get(group, 0), tick=int(t), floor=floor) for t, at in sorted(population.items(), key=lambda kv: int(kv[0]))]
+        rows.append(_outcome("O2.population", world, group, final.get(group, 0), tick=ticks, floor=floor))
     return rows
 
 
@@ -236,10 +242,10 @@ def _combat_rows(world: str, ledger: Mapping[str, Any]) -> List[Dict[str, Any]]:
     on_people: Dict[str, int] = defaultdict(int)
     kills = 0
     for key, n in ledger["attacks"].items():
-        attacker, victim, outcome = _split(key, 3)
-        if not _is_wild_meat_eater(attacker):
+        attacker, attacker_person, victim_person, outcome = _split(key, 4)
+        if not _is_wild_meat_eater(attacker, attacker_person):
             continue
-        if _group_has(victim, PEOPLE_CLASS):
+        if victim_person == "1":
             on_people[attacker] += n
         if outcome == "kill":
             kills += n
@@ -254,9 +260,7 @@ def _way_rows(world: str, ledger: Mapping[str, Any]) -> List[Dict[str, Any]]:
         group, source, outcome = _split(key, 3)
         if outcome == "accepted":
             ways[(group, source)] += n
-    rows = [_outcome("O4.accepted", world, group, n, key=source) for (group, source), n in sorted(ways.items())]
-    net = float(ledger["coin_last"]) - float(ledger["coin_first"])
-    return rows + [_outcome("O5.coin_net", world, "*", net), _outcome("O5.coin_declared", world, "*", float(ledger["declared_coin"]))]
+    return [_outcome("O4.accepted", world, group, n, key=source) for (group, source), n in sorted(ways.items())]
 
 
 def _outcome_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: Any) -> List[Dict[str, Any]]:

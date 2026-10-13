@@ -10,6 +10,7 @@ from typing import Optional
 from src.content_semantics.faction import get_species_id_str
 from src.core.state import EntityState
 from src.engine.behavior_consumers import get_kind_properties
+from src.engine.serves import keeps_coin
 
 UNDECLARED = "undeclared"
 NO_DIET = "none"
@@ -27,3 +28,8 @@ def species_kind_group(species_id: Optional[str]) -> str:
 def kind_group(entity: EntityState) -> str:
     """The group of an entity (see the module docstring)."""
     return species_kind_group(get_species_id_str(entity))
+
+
+def is_person(entity: EntityState) -> bool:
+    """True when the entity's species declares the coin-and-trade trait (D43: personhood is that trait, never inferred from a diet or a role)."""
+    return bool(keeps_coin(entity))

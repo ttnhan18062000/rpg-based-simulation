@@ -18,7 +18,7 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional
 
-from src.ai.goals.kind_group import kind_group
+from src.ai.goals.kind_group import is_person, kind_group
 from src.core.region_resolution import is_inside_world
 from src.core.spawn_source import SpawnKind
 from src.core.state import AuthoritativeState
@@ -55,8 +55,8 @@ class RunLedger:
     _deaths: Dict[str, int] = {}  # group|cause
     _adds: Dict[str, int] = {}  # group|SpawnKind or unsourced
     _world_events: Dict[str, float] = {}  # FEEDING_KILL / MEAT_DECAYED counts, and meat_decayed_quantity
-    _meat: Dict[str, float] = {}  # made (new bodies), taken (off persisting bodies: eaten or looted), vanished (on bodies that left the world)
-    _attacks: Dict[str, int] = {}  # attacker_group|victim_group|hit or kill: genuine entity-vs-entity combat resolutions
+    _meat: Dict[str, float] = {}  # made (new bodies), taken (off persisting bodies: eaten or looted a part), looted (a body taken whole by a CORPSE transfer), vanished (left with no transfer: the decay sink)
+    _attacks: Dict[str, int] = {}  # attacker_group|attacker_person|victim_person|hit or kill (person = 1 when the species keeps coin and trades, D43): genuine entity-vs-entity combat resolutions
     _out_of_world: Dict[str, int] = {}  # group -> entity-ticks of a moved, alive entity outside the world extent
     _out_of_world_examples: List[Dict[str, Any]] = []
 
@@ -104,7 +104,7 @@ class RunLedger:
         cls._count_deaths(prior, current)
         cls._count_adds(update)
         cls._count_world_events(update)
-        cls._count_meat(prior, current)
+        cls._count_meat(prior, current, update)
         cls._count_positions(current, update)
         cls._count_attacks(prior, current, update)
         return events
@@ -178,9 +178,16 @@ class RunLedger:
     def _meat_on(corpse: Any) -> float:
         return float(sum(st.quantity for st in getattr(corpse, "items", ()) if st.item_id == _RAW_MEAT))
 
+    @staticmethod
+    def _corpses_looted_whole(update: Any) -> set:
+        """The ids of bodies an accepted CORPSE transfer took whole this tick (the looter receives their items, meat included)."""
+        results = (r for u in (getattr(update, "entity_updates", None) or {}).values() for r in (getattr(u, "intent_results", None) or []))
+        return {r.source_id for r in results if getattr(r, "source_kind", "") == "CORPSE" and getattr(r, "accepted", False)}
+
     @classmethod
-    def _count_meat(cls, prior: AuthoritativeState, current: AuthoritativeState) -> None:
+    def _count_meat(cls, prior: AuthoritativeState, current: AuthoritativeState, update: Any) -> None:
         before, after = prior.corpses or {}, current.corpses or {}
+        looted_whole = cls._corpses_looted_whole(update)
         for cid, corpse in after.items():
             now = cls._meat_on(corpse)
             if cid not in before:
@@ -189,7 +196,8 @@ class RunLedger:
                 cls._meat["taken"] = cls._meat.get("taken", 0.0) + max(0.0, cls._meat_on(before[cid]) - now)
         for cid, corpse in before.items():
             if cid not in after:
-                cls._meat["vanished"] = cls._meat.get("vanished", 0.0) + cls._meat_on(corpse)
+                kind = "looted" if cid in looted_whole else "vanished"
+                cls._meat[kind] = cls._meat.get(kind, 0.0) + cls._meat_on(corpse)
 
     @classmethod
     def _count_attacks(cls, prior: AuthoritativeState, current: AuthoritativeState, update: Any) -> None:
@@ -202,7 +210,7 @@ class RunLedger:
             if victim is None or attacker is None:
                 continue
             outcome = "kill" if getattr(combat, "outcome_kind", None) == "KILL" else "hit"
-            key = _key(kind_group(attacker), kind_group(victim), outcome)
+            key = _key(kind_group(attacker), int(is_person(attacker)), int(is_person(victim)), outcome)
             cls._attacks[key] = cls._attacks.get(key, 0) + 1
 
     @classmethod

@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.ai.goals.kind_group import NO_DIET, UNDECLARED, kind_group, species_kind_group
+from src.ai.goals.kind_group import UNDECLARED, is_person, kind_group, species_kind_group
 from src.core.builder import V2EntityBuilder
 from src.core.spawn_source import SpawnKind, SpawnSource
 from src.observability.run_ledger import (
@@ -234,5 +234,17 @@ def test_attacks_and_kills_are_counted_by_attacker_and_victim_group():
     plain = SimpleNamespace(attacker_id=None, hp_delta=-1, outcome_kind="SURVIVE")  # starvation or hazard: not an attack
     for combat in (hit, kill, plain):
         RunLedger.observe(state, state, SimpleNamespace(entity_updates={WHO: SimpleNamespace(intent_results=[], combat=combat)}, entities_add=[], entity_spawn_sources={}, world_events_add=[]))
-    a, v = kind_group(wolf), kind_group(villager)
-    assert RunLedger.tally_event().payload["attacks"] == {f"{a}|{v}|hit": 1, f"{a}|{v}|kill": 1}
+    a, pa, pv = kind_group(wolf), int(is_person(wolf)), int(is_person(villager))
+    assert RunLedger.tally_event().payload["attacks"] == {f"{a}|{pa}|{pv}|hit": 1, f"{a}|{pa}|{pv}|kill": 1}
+    assert (pa, pv) == (0, 1)  # the wolf keeps no coin, the villager does (D43)
+
+
+def test_a_body_looted_whole_is_looted_not_vanished():
+    base = _at_tick(_world(), 10)
+    RunLedger.observe(base, _with_corpses(base, {1: _corpse(1, 6)}), _update())
+    one = _with_corpses(base, {1: _corpse(1, 6)})
+    loot = SimpleNamespace(source_kind="CORPSE", accepted=True, source_id=1)
+    RunLedger.observe(one, _with_corpses(base, {}, 12), _update([loot]))
+    two = _with_corpses(base, {2: _corpse(2, 3)}, 12)
+    RunLedger.observe(two, _with_corpses(base, {}, 13), _update())  # no transfer: it left through the decay sink
+    assert RunLedger.tally_event().payload["meat"] == {"made": 6.0, "looted": 6.0, "vanished": 3.0}

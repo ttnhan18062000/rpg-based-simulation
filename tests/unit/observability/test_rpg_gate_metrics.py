@@ -77,8 +77,8 @@ def test_v1_a_hunger_drop_with_no_accepted_transfer_is_food_from_nothing(tmp_pat
 
 
 def test_v2_meat_may_leave_the_world_only_through_the_decay_sink_and_the_books_must_balance(tmp_path):
-    ok = _ledger(meat={"made": 6.0, "taken": 2.0, "vanished": 4.0}, world_events={"MEAT_DECAYED": 1, "meat_decayed_quantity": 4.0})
-    assert _row(m.compute(_run(tmp_path, ok)), "V2")["violations"] == 0
+    ok = _ledger(meat={"made": 8.0, "taken": 2.0, "looted": 2.0, "vanished": 4.0}, world_events={"MEAT_DECAYED": 1, "meat_decayed_quantity": 4.0})
+    assert _row(m.compute(_run(tmp_path, ok)), "V2")["violations"] == 0  # a body looted whole is not meat vanishing
     leak = _ledger(meat={"made": 6.0, "taken": 2.0, "vanished": 4.0}, world_events={})
     assert _row(m.compute(_run(tmp_path, leak)), "V2")["violations"] >= 1
     unbalanced = _ledger(meat={"made": 9.0, "taken": 2.0, "vanished": 4.0}, world_events={"meat_decayed_quantity": 4.0})
@@ -128,13 +128,14 @@ def test_silence_is_no_data_never_zero_violations(tmp_path):
 
 
 def test_outcome_rows_carry_their_thresholds_and_group_by_kind_property(tmp_path):
-    ledger = _ledger(deaths={f"{DEER}|STARVATION": 3}, attacks={f"{WOLF}|{PEOPLE}|hit": 4, f"{PEOPLE}|{PEOPLE}|hit": 9, f"{WOLF}|{PEOPLE}|kill": 1},
+    ledger = _ledger(deaths={f"{DEER}|STARVATION": 3}, attacks={f"{WOLF}|0|1|hit": 4, f"{PEOPLE}|1|1|hit": 9, f"{WOLF}|0|1|kill": 1},
                      transfers={f"{PEOPLE}|CARRIED_FOOD|accepted": 5, f"{PEOPLE}|CARRIED_FOOD|rejected": 7}, world_events={"FEEDING_KILL": 1})
     rows = m.compute(_run(tmp_path, ledger))["metrics"]
     outcome = [r for r in rows if r["class"] == "outcome"]
     assert all(r["k"] > 0 and r["floor"] > 0 for r in outcome)
     assert _row({"metrics": rows}, "O1.starvation_share", DEER)["value"] == 0.5  # 3 of the 6 at the first tick
     assert _row({"metrics": rows}, "O3.attacks_on_people", WOLF)["value"] == 5  # people attacking people is not O3
+    assert not [r for r in rows if r["id"].startswith("O5")], "net coin is the V6 validity check; O5 is per-group flows only"
     (ways,) = [r for r in rows if r["id"] == "O4.accepted"]
     assert ways["value"] == 5 and ways["key"] == "CARRIED_FOOD"  # only accepted transfers
     assert _row({"metrics": rows}, "O6.kills_not_eaten")["value"] == 0.0  # the one kill was a feeding kill
@@ -168,3 +169,27 @@ def test_the_module_imports_no_engine_decision_logic_and_no_live_kernel():
     imported = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
     assert not any(mod.startswith(("src.engine", "src.systems", "src.domains")) for mod in imported), imported
     assert "Kernel" not in Path(m.__file__).read_text(encoding="utf-8").replace("no live kernel", "")
+
+
+def test_a_person_who_hunts_is_a_person_and_a_wild_meat_eater_has_no_trade_trait(tmp_path):
+    """D43: personhood is the coin-and-trade trait, never the diet. A trading meat-eater's attacks are not O3; a non-trading one's are."""
+    trading_meat_eater = f"{WOLF}|1|1|hit"  # a diet with meat, and the trait: a person who hunts
+    ledger = _ledger(attacks={trading_meat_eater: 6, f"{WOLF}|0|1|hit": 2, f"{WOLF}|0|0|hit": 8})  # the last one hits a non-person: not an attack on people
+    rows = m.compute(_run(tmp_path, ledger))["metrics"]
+    assert _row({"metrics": rows}, "O3.attacks_on_people", WOLF)["value"] == 2
+
+
+def test_the_population_floor_is_a_tenth_of_the_first_tick_population_and_never_under_three(tmp_path):
+    assert m.population_floor(10) == 3.0 and m.population_floor(29) == 3.0  # small: the base floor holds
+    assert m.population_floor(100) == 10.0 and m.population_floor(250) == 25.0  # large: a tenth
+    rows = m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 200, WOLF: 4}})))["metrics"]
+    assert {r["floor"] for r in rows if r["id"] == "O2.population" and r["group"] == PEOPLE} == {20.0}
+    assert {r["floor"] for r in rows if r["id"] == "O2.population" and r["group"] == WOLF} == {3.0}
+
+
+def test_an_outcome_row_never_carries_a_verdict_and_pooled_outcomes_are_values_only(tmp_path):
+    """Outcome drift is reported to the owner and never auto-fails (section 12.3): only validity rows carry violations."""
+    rows = m.compute(_run(tmp_path, _ledger(deaths={f"{DEER}|STARVATION": 9})))["metrics"]
+    assert all("violations" not in r and "oracle" not in r for r in rows if r["class"] == "outcome")
+    docs = [{"world": "w", "metrics": [{"id": "O2.survivors", "group": WOLF, "value": 0.0}]}]
+    assert all("violations" not in r for r in m.pool(docs) if r["class"] == "outcome")
