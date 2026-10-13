@@ -10,6 +10,7 @@ from src.core.updates import StateUpdate, decode_owner_faction_id_set
 from src.domains.commitment.abandonment import AbandonmentEvaluator, AbandonmentCategory
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.observability.config import ObservabilityConfig, ObservabilityMode
+from src.observability.divergence_episode import DivergenceEpisodes
 from src.observability.entity_kind_constants import BOSS_ENTITY_KINDS, SPAWN_CADENCE_EXCLUDED_KINDS
 from src.observability.events import (
     SimulationEvent, CombatDamageEvent, CombatKillEvent,
@@ -109,6 +110,7 @@ class EventExtractor:
         cls._emitted_contract_milestones.clear()
         cls._last_capability_growth_tick.clear()
         cls._emitted_capability_stalled.clear()
+        DivergenceEpisodes.reset_run_state()
 
     @staticmethod
     def extract(
@@ -877,21 +879,14 @@ class EventExtractor:
                 # decision_diverged_by_belief: entity pursuing non-information project while
                 # holding VAGUE/EXHAUSTED leads — indicates stale belief driving sub-optimal choice
                 _curr_proj_id = entity.strategic.current_project_id
-                _has_vague_lead = any(
-                    getattr(l.certainty, "value", str(l.certainty)) in ("VAGUE", "EXHAUSTED")
-                    for l in curr_leads.values()
-                )
-                if _curr_proj_id and _has_vague_lead:
-                    _curr_proj = entity.strategic.projects.get(_curr_proj_id)
-                    _proj_kind = getattr(getattr(_curr_proj, "kind", None), "value",
-                                         str(getattr(_curr_proj, "kind", ""))) if _curr_proj else ""
-                    if _proj_kind and _proj_kind not in ("information", "information_seeking"):
-                        events.append(SimulationEvent(
-                            event_type="decision_diverged_by_belief", event_category="strategy",
-                            tick=tick, entity_id=eid, severity="INFO",
-                            source_system="event_extractor", message="",
-                            payload={"project_kind": _proj_kind},
-                        ))
+                _proj_kind = DivergenceEpisodes.project_kind(_curr_proj_id, entity.strategic.projects, curr_leads)
+                if DivergenceEpisodes.started(eid, _proj_kind):
+                    events.append(SimulationEvent(
+                        event_type="decision_diverged_by_belief", event_category="strategy",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"project_kind": _proj_kind},
+                    ))
 
                 # decision_divergence_detected (COGNITION): active project kind inconsistent with
                 # top-urgency concern — e.g., harvesting while DANGER concern is critical
