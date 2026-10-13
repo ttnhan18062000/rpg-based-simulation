@@ -237,6 +237,12 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
         problem = problems.get((row["id"], row.get("group", "*")))
         return _contract_no_data(world, row, seed, problem) if problem else _validity(row, world, seed, config)
 
+    def missing_required(doc: Mapping[str, Any], world: str, seed: Optional[int]) -> List[dict]:
+        """A validity row the config requires but the document leaves out is ``no-data``, never a pass: a metric module that drops a check must not look clean."""
+        present = {r.get("id") for r in doc["metrics"] if r.get("class") == "validity"}
+        return [_contract_no_data(world, {"id": rid, "class": "validity", "scope": "pooled" if seed is None else "run", "group": "*"}, seed, f"required validity row {rid} missing")
+                for rid in config.required_validity if rid not in present]
+
     for world in config.worlds:
         seed_docs = {seed: docs.get((world, seed)) for seed in config.seeds}
         all_ok = True
@@ -246,11 +252,13 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
                 findings.append(_no_data(world, seed, (doc or {}).get("error", "no document"), (doc or {}).get("reason", "harness_error")))
                 continue
             findings.extend(validity(r, world, seed) for r in doc["metrics"] if r.get("class") == "validity")  # judged from the seeds that have data
+            findings.extend(missing_required(doc, world, seed))
         pooled = docs.get((world, None))
         if pooled is None or pooled.get("status") != "ok":
             findings.append(_no_data(world, None, (pooled or {}).get("error", "no pooled document"), (pooled or {}).get("reason", "harness_error")))
         else:
             findings.extend(validity(r, world, None) for r in pooled["metrics"] if r.get("class") == "validity")
+            findings.extend(missing_required(pooled, world, None))
             for r in pooled["metrics"]:
                 if r.get("class") == "outcome":
                     problem = problems.get((r["id"], r.get("group", "*")))
@@ -396,6 +404,9 @@ def render_markdown(report: Mapping[str, Any]) -> str:
     if report["run_errors"]:
         lines += ["", f"### RUN ERRORS ({len(report['run_errors'])}): an exception in the simulation, an rpg defect (does not turn the job red in the advisory phase)"]
         lines += [f"- **{e['world']}{'/' + str(e['seed']) if e['seed'] is not None else ''}**: {e['error']}" for e in report["run_errors"]]
+    required_missing = sorted({f["id"] for f in report["findings"] if f["state"] == NO_DATA and str(f.get("detail", "")).startswith("required validity row")})
+    if required_missing:
+        lines += ["", f"> **Required validity row(s) missing: {', '.join(required_missing)}.** The metric module did not emit them, so they are `no-data` (`contract_error`), not a pass."]
     reasons_seen = {k: v for k, v in report["no_data_reasons"].items() if v}
     if reasons_seen:
         lines.append("No-data reasons: " + ", ".join(f"{k}: {v}" for k, v in reasons_seen.items()))

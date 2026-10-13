@@ -389,3 +389,66 @@ def test_documents_from_another_harness_version_are_no_data():
     assert {f["detail"] for f in _build(all_old)["findings"] if f["state"] == "no-data"} == {"documents from another harness version"}
     disagree = rep.build_report(_config(), docs, _refs(), {}, [], TODAY, harness_hash="")  # no current hash known: disagreement alone is enough
     assert all(f["state"] == "no-data" for f in disagree["findings"])
+
+
+# ---- TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK: a required validity row the metric module leaves out is no-data, never a pass
+
+def _docs_with_pooled_v1():
+    docs = _docs()
+    docs[("w", None)] = {**docs[("w", None)], "metrics": [*docs[("w", None)]["metrics"], {"id": "V1", "class": "validity", "scope": "pooled", "group": "*", "violations": 0, "examples": [], "oracle": ORACLE}]}
+    return docs
+
+
+def _missing_required(report):
+    return [f for f in report["findings"] if str(f.get("detail", "")).startswith("required validity row")]
+
+
+def test_a_required_validity_row_that_every_document_has_adds_nothing():
+    report = _build(_docs_with_pooled_v1(), config=_config(required_validity=("V1",)))
+    assert _missing_required(report) == []
+
+
+def test_a_required_validity_row_missing_is_no_data_contract_error_in_every_document():
+    report = _build(_docs_with_pooled_v1(), config=_config(required_validity=("V1", "V8")))
+    missing = _missing_required(report)
+    assert len(missing) == len(SEEDS) + 1  # each seed document and the pooled one
+    assert all(f["state"] == "no-data" and f["reason"] == "contract_error" and f["id"] == "V8" and f["class"] == "validity" for f in missing)
+    assert all(f["detail"] == "required validity row V8 missing" for f in missing)
+    assert {f.get("seed") for f in missing} == {*SEEDS, None}
+    assert report["no_data_reasons"]["contract_error"] >= len(missing)
+    assert report["verdict"] != "red"  # advisory: no-data never turns the job red by itself
+
+
+def test_the_markdown_lists_the_missing_required_row_prominently():
+    text = rep.render_markdown(_build(_docs(), config=_config(required_validity=("V8",))))
+    assert "Required validity row(s) missing: V8" in text and "no-data" in text and "required validity row V8 missing" in text
+
+
+def test_a_required_row_missing_in_one_seed_only_is_named_for_that_seed():
+    docs = _docs_with_pooled_v1()
+    docs[("w", 3)] = {**docs[("w", 3)], "metrics": [m for m in docs[("w", 3)]["metrics"] if m["id"] != "V1"]}
+    missing = _missing_required(_build(docs, config=_config(required_validity=("V1",))))
+    assert [(f["id"], f.get("seed")) for f in missing] == [("V1", 3)]
+
+
+def _v8_docs(mode):
+    from tests.helpers import rpg_gate_stub_metrics as stub
+
+    docs = _docs_with_pooled_v1()
+    for key, doc in docs.items():
+        docs[key] = {**doc, "metrics": [*doc["metrics"], *({**r, "scope": "pooled" if key[1] is None else "run"} for r in stub.v8_rows(mode))]}
+    return docs
+
+
+@pytest.mark.parametrize("mode, expected", [("clean", "pass"), ("violations", "fail")])
+def test_the_stub_v8_row_is_judged_absolutely(mode, expected):
+    report = _build(_v8_docs(mode), config=_config(required_validity=("V8",)))
+    states = {f["state"] for f in report["findings"] if f["id"] == "V8"}
+    assert states == {expected} and _missing_required(report) == []
+    if mode == "violations":
+        assert any(f["examples"][0]["check"] == "unsourced" and f["examples"][0]["entity_id"] == 91 for f in report["findings"] if f["id"] == "V8")
+
+
+def test_a_module_without_the_required_v8_row_is_no_data_not_a_pass():
+    report = _build(_v8_docs("absent"), config=_config(required_validity=("V8",)))
+    assert {f["state"] for f in _missing_required(report)} == {"no-data"} and not [f for f in report["findings"] if f["id"] == "V8" and f["state"] == "pass"]
