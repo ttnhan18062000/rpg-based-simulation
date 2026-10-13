@@ -55,7 +55,7 @@ def test_kinds_without_hunger_never_hunger(catalog, species):
 def test_kinds_with_different_profiles_build_needs_at_different_rates(catalog):
     wolf = need_rates(_entity(role=EntityRole.MONSTER, species_id="wolf"))
     human = need_rates(_entity(species_id="human"))
-    assert wolf[0] > human[0]  # carnivore hunger is high
+    assert wolf[0] < human[0]  # a meat-eater's full meal lasts a day or more (owner row 60: very_low, 0.03 against 0.05)
     assert wolf[1] == pytest.approx(0.05)  # carnivore_survival declares sleep: medium (content gap closed 2026-10-07)
 
 

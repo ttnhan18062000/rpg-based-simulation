@@ -14,7 +14,7 @@ docs/performance/perf_baseline_policy.md Section 2.1's minimums):
       subprocess; requires a running Redis instance. Provision manually before
       running this file's broker-dependent tests:
 
-          docker run -d --name simq-isolation-proof-redis -p 6379:6379 redis:7-alpine
+          docker run -d --name simq-isolation-proof-redis -p 6379:6379 redis:7.4.11-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
           REDIS_AVAILABLE=1 pytest tests/perf/test_simq_isolation_overhead.py -m slow
           docker rm -f simq-isolation-proof-redis
 

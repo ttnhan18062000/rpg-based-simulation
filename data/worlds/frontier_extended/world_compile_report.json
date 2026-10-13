@@ -1,15 +1,15 @@
 {
   "world_id": "frontier_extended",
   "seed": 42,
-  "entity_count": 59,
+  "entity_count": 65,
   "region_count": 12,
-  "resource_node_count": 17,
+  "resource_node_count": 37,
   "building_count": 8,
   "quest_count": 25,
-  "distinct_populated_factions": 9,
+  "distinct_populated_factions": 10,
   "warnings": [],
-  "compile_duration_ms": 454.39486810937524,
-  "state_hash": "9961f9349ce23186e313d45fad02eab8",
-  "canonical_state_hash": "95801369a651693ba795895541f50543a6ab361350b9c19e95a5f8a77cf7a96c",
+  "compile_duration_ms": 872.718726284802,
+  "state_hash": "ecf60add3ce052a49e4eb81519d5975c",
+  "canonical_state_hash": "f5dfa90b9b862bec6ee78820802190847cf1e1acb8666388a630aa7b26d96395",
   "place_count": 4
 }

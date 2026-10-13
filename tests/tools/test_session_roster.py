@@ -100,14 +100,14 @@ def test_real_registry_has_seventeen_seats_three_unstaffed():
     # no designer seat (their planners take dispatch from the user). lead-planner is the lead domain's only seat, and
     # no role accepts dispatch from it (owner: advisory and sequencing only).
     roster = load_roster(REAL_ROOT)
-    assert len(roster.roles) == 17
+    assert len(roster.roles) == 20
     assert not any("lead-planner" in r.accepts_dispatch_from for r in roster.roles)
     assert {r.role for r in roster.roles if r.seat_status == "unstaffed"} == {
         "agent-working-planner", "testing-designer", "codebase-designer",
     }
     assert {(r.domain, r.function) for r in roster.roles} == {
         (d, f) for d in ("rpg", "agent-working", "testing", "codebase") for f in ("designer", "planner", "implementer")
-    } | {(d, f) for d in ("asset", "perf") for f in ("planner", "implementer")} | {("lead", "planner")}
+    } | {(d, f) for d in ("asset", "perf", "platform") for f in ("planner", "implementer")} | {("lead", "planner")}
 
 
 def test_glob_matches_nothing(fixture_root):

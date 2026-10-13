@@ -67,3 +67,10 @@
   crit_chance: 0.1
   crit_multiplier: 1.8
   damage_tags: ["fire", "arcane"]
+
+# STATE: ADDITIONAL
+- id: "glancing_melee"
+  accuracy: 0.6
+  crit_chance: 0.02
+  crit_multiplier: 1.2
+  damage_tags: ["physical"]

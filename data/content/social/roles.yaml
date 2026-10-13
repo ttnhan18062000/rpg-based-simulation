@@ -205,3 +205,12 @@
   default_cognition_profile: "arcane_scholar"
   compatible_traits: ["large_body"]
   legacy_engine_role: "MONSTER"
+
+# STATE: ADDITIONAL
+- id: "wild_creature"
+  display_name: "Wild Creature"
+  role_family: "ecological_forager"
+  default_stats_profile: "small_plant_eater_base"
+  default_cognition_profile: "instinctive_animal"
+  compatible_traits: ["quadruped"]
+  legacy_engine_role: "MONSTER"

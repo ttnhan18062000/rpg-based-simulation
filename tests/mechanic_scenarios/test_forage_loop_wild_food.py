@@ -27,6 +27,7 @@ import pytest
 from src.config.profiles import PROD_SMALL
 from src.core.enums import EntityRole
 from src.core.items import food_hunger_recovery
+from src.engine.appraisal import kind_can_eat_item
 from src.core.state import AuthoritativeState
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.engine.kernel import Kernel
@@ -66,7 +67,10 @@ def _stage(state: AuthoritativeState, *, wild_food: bool) -> Tuple[Authoritative
     forest_patches = {i: n for i, n in state.resource_nodes.items() if n.kind == FOOD_KIND and not (106 <= n.position[0] <= 114 and 34 <= n.position[1] <= 42)}
     if wild_food:
         nodes.update({i: replace(n, remaining_charges=STAGED_CHARGES) for i, n in forest_patches.items()})
-    buildings = {i: b for i, b in state.buildings.items() if b.kind != "inn"}
+    # No inn, and no building offering paid work either: since ruling 66 every building with a maintenance need offers a shift, and a broke worker
+    # sent to one by the earn step takes the free core meal on arrival (decision 44), which would end the scenario's premise (no way within reach).
+    # (The staging keeps the "no way within reach" premise now that maintenance shifts exist.)
+    buildings = {i: replace(b, maintenance_shifts_needed=0, hires_for_pay=False) for i, b in state.buildings.items() if b.kind != "inn"}
     tiles = {t: kind for t, kind in state.building_tiles.items() if kind != "inn"}
     return replace(state, entities={worker.id: worker}, resource_nodes=nodes, buildings=buildings, building_tiles=tiles), worker.id
 
@@ -81,7 +85,7 @@ def _run(*, wild_food: bool) -> Trace:
             kernel.tick_once()
             now = kernel._state
             worker = now.entities[worker_id]
-            food = sorted(n.remaining_charges for n in now.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0)
+            food = sorted(n.remaining_charges for n in now.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0 and kind_can_eat_item("human", n.yields_item))  # the worker's food; plant cover is the grazer's (owner row 59)
             trace.ticks.append((now.tick, worker.biological.hunger, worker.inventory.gold, _carried(worker), tuple(food)))
             trace.events.update((e.category, e.subject) for e in now.recent_world_events)
         trace.final = kernel._state

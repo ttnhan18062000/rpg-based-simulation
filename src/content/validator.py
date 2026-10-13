@@ -126,6 +126,66 @@ def need_profile_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
     ]
 
 
+def kind_property_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
+    """A kind that omits a coarse property (size, power, wits, diet, edibility) declares nothing: a content gap (decisions 46, 50)."""
+    return [
+        ValidationIssue(
+            severity="WARNING", rule_id="CAT-PROP-001", target_id=species_id, filename="living/species.yaml",
+            message=f"Species '{species_id}' does not declare property '{key}' (declare a band or food-class set)",
+        )
+        for species_id, species in repo.species.items()
+        for key in _missing_kind_properties(species, repo.body_models.get(species.body_model))
+    ]
+
+
+def _missing_kind_properties(species: Any, body: Any) -> List[str]:
+    """The properties a species and its body model leave undeclared (an empty food-class list declares none; an absent one declares nothing)."""
+    missing = [k for k in ("power", "wits") if getattr(species, k) is None]
+    if body is None:
+        return missing + ["size", "diet", "edible_as"]
+    missing += [k for k in ("size", "diet", "edible_as") if getattr(body, k) is None]
+    if "meat" in (body.edible_as or ()) and body.meat_yield <= 0:
+        missing.append("meat_yield")
+    return missing
+
+
+def cover_gap_issues(repo: CatalogRepository) -> List[ValidationIssue]:
+    """Plant cover (owner row 59): a biome's cover kind must be a declared ``regrow`` kind of the biome's own fertility band, and a grazing kind
+    placed in an ecology none of whose biomes carries cover is a gap reported by name (its food would be berries alone)."""
+    return _biome_cover_issues(repo) + _grazer_without_cover_issues(repo)
+
+
+def _biome_cover_issues(repo: CatalogRepository) -> List[ValidationIssue]:
+    issues: List[ValidationIssue] = []
+    for biome_id, biome in repo.biomes.items():
+        kind = repo.get_resource(biome.grazing_cover) if biome.grazing_cover else None
+        if biome.grazing_cover and (kind is None or kind.regrowth_mode != "regrow" or kind.density_per_1000_tiles is None or kind.fertility != biome.fertility):
+            issues.append(ValidationIssue(
+                severity="ERROR", rule_id="CAT-COVER-001", target_id=biome_id, filename="world/biomes.yaml",
+                message=f"Biome '{biome_id}' names cover '{biome.grazing_cover}', which is not a 'regrow' resource with a density and the biome's fertility '{biome.fertility}'",
+            ))
+    return issues
+
+
+def _ecology_grazers(repo: CatalogRepository, eco: Any) -> List[str]:
+    """The species ids of the grazing bodies (diet includes the food class ``graze``) the ecology's populations place."""
+    archetypes = (repo.entity_archetypes.get(a) for pop_id in eco.populations for a in (getattr(repo.get_population_recipe(pop_id), "members", None) or {}))
+    species = [repo.species.get(a.species) for a in archetypes if a is not None]
+    return [s.id for s in species if s is not None and "graze" in (getattr(repo.body_models.get(s.body_model), "diet", None) or ())]
+
+
+def _grazer_without_cover_issues(repo: CatalogRepository) -> List[ValidationIssue]:
+    return [
+        ValidationIssue(
+            severity="WARNING", rule_id="CAT-COVER-002", target_id=eco_id, filename="world/ecologies.yaml",
+            message=f"Ecology '{eco_id}' places grazer '{species_id}' but none of its biomes {sorted(eco.biomes)} declares grazing_cover",
+        )
+        for eco_id, eco in repo.ecologies.items()
+        if not any(repo.biomes[b].grazing_cover for b in eco.biomes if b in repo.biomes)
+        for species_id in _ecology_grazers(repo, eco)
+    ]
+
+
 class CatalogValidator:
     """
     Independent validator for the static Content Catalog.
@@ -181,7 +241,7 @@ class CatalogValidator:
         self._validate_recipe_relations(issues)
         self._validate_region_relations(issues)
         self._validate_species_relations(issues)
-        issues.extend(need_profile_gap_issues(self.repo))
+        issues.extend(need_profile_gap_issues(self.repo) + kind_property_gap_issues(self.repo) + cover_gap_issues(self.repo))
         self._validate_biome_relations(issues)
         self._validate_ecology_relations(issues)
         self._validate_defaults(issues)

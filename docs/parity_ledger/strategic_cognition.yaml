@@ -4550,4 +4550,15 @@
   proof_type: regression
   test_path: tests/unit/engine/test_pressing_need_wakes_a_held_move.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.106.
-  support_boundary: A range-bound subject (leash above 0) targets only ways inside its range (way_in_range) and stays honestly hungry with none; goblin camps have berries in range (goblin_camp_forage), wolf nests are a reported meat-only gap. The held-move completion rule is a separate ticket. Measured on urban_political, frontier_living_world and crowded_frontier, seeds 42 to 46, 5000 ticks.
+  support_boundary: A range-bound subject (leash above 0) targets only ways inside its range (way_in_range) and stays honestly hungry with none; goblin camps have berries in range (goblin_camp_forage), wolf nests are a reported meat-only gap. The held-move completion rule is COMB-345 (divergence 2.113). Measured on urban_political, frontier_living_world and crowded_frontier, seeds 42 to 46, 5000 ticks.
+- id: STRAT-283
+  text: 'TCK-20261011-HUNGER-WAKES-A-SLEEPER: hunger at or past ESCALATION_ONSET of its line (need_pull.hunger_is_pressing) wakes the brain of a held SLEEP or REST on the strategic cadence (staggered by id), so a chosen sleep ends and the subject decides again (eat if a way is open, else sleep again); a collapse is woken too, but the decision is the collapse again until the debt is below the collapse line. Only hunger wakes a sleeper.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/scheduler.py (_is_need_woken), src/engine/need_pull.py (hunger_is_pressing), src/engine/sleep_debt.py (is_asleep).
+  proof_type: regression
+  test_path: tests/unit/engine/test_hunger_wakes_a_sleeper.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.115.
+  support_boundary: 'On the current code the measured effect is within noise (seeds 42 to 46, 5000 ticks); a woken sleeper with no open way to eat sleeps again, and a re-decided sleep at an inn charges a new bed.'
+

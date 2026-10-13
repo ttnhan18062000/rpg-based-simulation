@@ -8,6 +8,17 @@ from src.engine.apply import ApplyPath
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole
 
+from src.core.enums import Faction as _F
+from src.core.treasury import treasury_key as _tk
+
+FUNDED = {_tk(_F.NEUTRAL): 10000.0}  # a world whose neutral treasury funds a reward (EXCH-02: a reward is paid by a treasury or owed)
+
+# The one real giver (EXCH-02, ruling 61): the quest was posted at building 1, which stands on ground the neutral faction holds, so the neutral
+# treasury (FUNDED) is the payer. A quest posted nowhere pays experience only.
+from src.core.state import BuildingState as _BS, RegionState as _RS
+QUEST_TOWN = dict(buildings={1: _BS(id=1, kind="shop", position=(1.0, 1.0), functional=True)},
+                  regions={"r": _RS(id="r", name="R", bounds=(0, 0, 100, 100), owner_faction_id=int(_F.NEUTRAL))})
+
 @pytest.fixture
 def base_entity():
     return V2EntityBuilder(entity_id=1).identity(role=EntityRole.HERO).build()
@@ -21,7 +32,7 @@ def active_quest():
         quest_status=QuestStatus.ACTIVE,
         goal_value=5.0,
         current_value=0.0,
-        reward=RewardState(xp=100, gold=50, items=["iron_sword"])
+        reward=RewardState(xp=100, gold=50, items=["iron_sword"]), source_building_id=1
     )
 
 def test_quest_initialization(active_quest):
@@ -35,7 +46,7 @@ def test_quest_progress_authoritative(base_entity, active_quest):
     entity = replace(base_entity, strategic=strat)
     
     # Setup state
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity})
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED, **QUEST_TOWN)
     
     # Apply progress update
     update = EntityUpdate(
@@ -55,7 +66,7 @@ def test_quest_completion_and_reward_emission(base_entity, active_quest):
     # Setup entity with quest
     strat = StrategicComponent(projects={"q1": active_quest})
     entity = replace(base_entity, strategic=strat)
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity})
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED, **QUEST_TOWN)
     
     # Apply progress update that completes the quest
     update = EntityUpdate(
@@ -85,7 +96,7 @@ def test_no_double_completion(base_entity, active_quest):
     # Setup entity with quest
     strat = StrategicComponent(projects={"q1": active_quest})
     entity = replace(base_entity, strategic=strat)
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity})
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED, **QUEST_TOWN)
     
     # 1. Complete quest
     update1 = EntityUpdate(
@@ -247,3 +258,36 @@ def test_entity_quest_status_unaffected_by_e23b():
     assert QS.COMPLETED
     assert QS.REWARDED.value == 3
     assert QS.REWARD_PENDING.value == 4
+
+
+def _finish(entity, state):
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    upd = StateUpdate(entity_updates={entity.id: EntityUpdate(entity_id=entity.id, quest=QuestUpdate(quest_id="q1", progress_delta=5.0))})
+    return ApplyPath.apply_generation(state, AuthoritativeApplyPipeline.refine(state, upd))
+
+
+def test_a_quest_posted_nowhere_pays_experience_only_no_coin_and_no_item(base_entity, active_quest):
+    """No identifiable giver, no coin and no minted item (ruling 61)."""
+    orphan = replace(active_quest, source_building_id=None)
+    entity = replace(base_entity, strategic=StrategicComponent(projects={"q1": orphan}))
+    state = AuthoritativeState(tick=1, seed=123, entities={entity.id: entity}, global_resources=FUNDED, **QUEST_TOWN)
+    after = _finish(entity, state)
+    got = after.entities[entity.id]
+    assert got.inventory.gold == entity.inventory.gold and not got.inventory.items
+    assert got.identity.evolution_level == 2                                           # the experience is granted
+    assert after.global_resources == state.global_resources and not after.owed        # nobody paid, nobody owes
+
+
+def test_a_quest_posted_on_unheld_ground_has_no_giver(base_entity, active_quest):
+    entity = replace(base_entity, strategic=StrategicComponent(projects={"q1": active_quest}))
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED, buildings=QUEST_TOWN["buildings"])
+    assert _finish(entity, state).entities[entity.id].inventory.gold == entity.inventory.gold
+
+
+def test_a_giver_that_cannot_pay_now_owes_the_reward(base_entity, active_quest):
+    entity = replace(base_entity, strategic=StrategicComponent(projects={"q1": active_quest}))
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources={}, **QUEST_TOWN)
+    after = _finish(entity, state)
+    assert after.entities[entity.id].inventory.gold == entity.inventory.gold
+    owed, = after.owed.values()
+    assert (owed.creditor_id, owed.amount, owed.debtor_faction) == (entity.id, 50, int(_F.NEUTRAL))

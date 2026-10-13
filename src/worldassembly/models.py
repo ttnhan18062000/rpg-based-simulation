@@ -73,6 +73,10 @@ class ResolvedBuildingProfile(BaseModel):
     # The building's till and stock at world creation (BuildingDefinition); zero and empty are left out of the serialized context.
     starting_gold: int = 0
     starting_stock: Dict[str, int] = Field(default_factory=dict)
+    # The maintenance shifts the building needs each upkeep period (BuildingDefinition, EXCH-02 ruling 61); the ordinary 1 is left out of the serialized context.
+    maintenance_shifts: int = 1
+    # The building hires for pay from its own purse (BuildingDefinition.hires_for_pay, EXCH-02 ruling 66); false is left out of the serialized context.
+    hires_for_pay: bool = False
 
 
 class ResolvedResourceProfile(BaseModel):
@@ -86,6 +90,14 @@ class ResolvedResourceProfile(BaseModel):
     yield_item: Optional[str] = None
     # Compile-time placement rule of the kind (``ResourceDefinition.placement``); None is the default (owned by the declared region) and is left out of the serialized context; "uniform" opts out.
     placement: Optional[str] = None
+    # Regrowth of the kind (``ResourceDefinition.regrowth_mode`` and ``bare_wait_ticks``); the default is the legacy rules.
+    regrowth_mode: str = "none"
+    bare_wait_ticks: int = 0
+
+    @staticmethod
+    def regrowth_of(res_def: Optional[Any]) -> Dict[str, Any]:
+        """The regrowth fields of a catalog resource definition (the legacy rules when there is none)."""
+        return {"regrowth_mode": res_def.regrowth_mode, "bare_wait_ticks": res_def.bare_wait_ticks} if res_def else {}
 
 
 class ResolvedFactionEconomyProfile(BaseModel):
