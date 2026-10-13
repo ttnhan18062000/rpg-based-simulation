@@ -33,7 +33,7 @@ With no XP in 200 ticks the only PROGRESSION event is the plateau penalty (weigh
 `quality_report.json`, EVERY pillar always present:
 `{"status": "ok"|"no-data", "grade": <GRADE_ORDER letter>|null, "normalized_score": <float>|null, "event_count": n, "min_events": k, "reason": "below_min_events"}`
 - `reason` appears only on no-data. On no-data, grade and score are null: never a placeholder number, never an invented grade string.
-- `min_events` is a named, typed per-pillar table in the scoring contract module (`src/simulation_quality/`, symbol to be named at build; default 3 for every pillar).
+- `min_events` is `PILLAR_MIN_EVENTS: Mapping[PillarId, int]` in `src/simulation_quality/pillars.py`, beside `PillarId` and away from the weights (rpg-planner, 2026-10-14); default 3 for every pillar.
 - Overall is computed only over status-ok pillars with the existing aggregation, and emits `pillars_scored` and `pillars_no_data` beside it. With fewer than half the pillars scored, overall is `{"status": "no-data", "grade": null, "normalized_score": null, "reason": "too_few_pillars_scored"}`.
 - Anchors are testing's: `simq_reanchor` writes `{"status": "no-data", ...}`; `grade_anchors.json` is not touched here.
 
@@ -59,7 +59,7 @@ None yet.
 src/simulation_quality/quality_report.py (QualityReportBuilder.build, PillarSnapshot), the scoring contract module (weights.py or its neighbour), tools/calibrate_simq.py.
 
 ## Assumptions / Open Questions
-Which module holds the typed min_events table (weights.py, pillars.py or a new contract module) is chosen at build and reported to rpg-planner; consumers to audit before build: grep for normalized_score and "grade" readers.
+The min_events table's home is ruled (pillars.py, PILLAR_MIN_EVENTS); the consumer audit is in Implementation Notes.
 
 ## Implementation Notes
 Plan only; build held for testing's harness ticket TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION, which lands with it, and the single re-anchor follows both and (a).
