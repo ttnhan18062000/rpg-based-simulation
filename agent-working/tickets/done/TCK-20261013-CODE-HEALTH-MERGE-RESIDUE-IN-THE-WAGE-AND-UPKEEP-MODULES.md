@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261013-CODE-HEALTH-MERGE-RESIDUE-IN-THE-WAGE-AND-UPKEEP-MODULES
-phase: implement
+phase: done
 date: 2026-10-13
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Clear the four new code-health violations that the batch-3 merge left on the combined RPG branch.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -63,4 +63,4 @@ tests/unit/world + tests/unit/economy + treasury upkeep scenario: 471 passed.
 src/engine/{building_services,work_shift,town_resolution}.py; tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py (import path)
 
 ## Completion Summary
-Pending PR.
+offers_work and maintenance_open moved into building_services.py (bool-wrapped) and the town_resolution variable renamed, clearing the merge residue so the code-health ratchet reports 0 new and 0 worse. No behaviour change.

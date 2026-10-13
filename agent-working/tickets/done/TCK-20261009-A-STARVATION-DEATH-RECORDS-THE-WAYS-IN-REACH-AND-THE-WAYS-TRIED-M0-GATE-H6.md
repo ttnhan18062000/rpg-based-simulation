@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-A-STARVATION-DEATH-RECORDS-THE-WAYS-IN-REACH-AND-THE-WAYS-TRIED-M0-GATE-H6
-phase: planning
+phase: done
 date: 2026-10-09
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 A starvation death writes a typed record of the food ways the subject's last decisions judged open and in reach, and the ways it attempted (M0 gate H6).
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -77,4 +77,4 @@ Owner lane: Lane B (rpg-implementer-2), with the removal stack. Built as Option 
 src/ai/goals/{ways,opening_steps,scorers}.py; src/observability/{starvation_record,run_state,event_recorder}.py; src/engine/kernel.py; tests/unit/observability/test_starvation_death_record.py; tests/unit/tools/test_mechanism_registry_completeness_check.py (pins)
 
 ## Completion Summary
-TBD
+A starvation death now writes one typed StarvationDeathRecord (ways judged open and in reach, ways tried, per kind) from a run-scoped recorder keyed off the STARVATION passive-death cause; WayKind and ways_in_reach are pure; the live header and closing tally let the gate tell no-data from zero. Observational only: no need-pull or way-selection change. Known gap: until M1 honest perception, column (a) equals (b). Import-linter advisory contract 'observability reaches engine only through the kernel facade' is broken by starvation_record importing engine.cadence and engine.need_pull (reported to rpg-planner).
