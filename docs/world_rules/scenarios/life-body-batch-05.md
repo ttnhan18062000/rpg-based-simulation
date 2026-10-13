@@ -380,6 +380,13 @@ overcome. Beside a berry thicket it does not forage the berries. With no kill th
   eat-corpse action. Carnivores take decision 27's forage step on berry thickets because no diet
   gate exists (SURV-06's decision-44 evidence). Expected to be **covered** with the hunting and
   diet-gate tickets.
+- **Result (#536, 2026-10-13): covered, with the M0 tie disclosed.** A hungry meat-eater
+  scavenges a carcass before it hunts, hunts only what it appraises it can overcome, eats raw meat
+  at the corpse, and takes no berries or inn meal (`tests/unit/ai/test_hunt_steps.py`,
+  `tests/unit/engine/test_carcass_and_meat.py`,
+  `tests/unit/engine/test_hungry_wolf_hunts_prey_it_out_bands.py`). A wolf and a person tie in kind
+  bands, so the wolf does not hunt the person in M0; a strict xfail names milestone 1's
+  single-appraisal child.
 
 ---
 
@@ -424,6 +431,11 @@ nowhere. It flees because of the danger it perceives, not because it is labelled
   statistical (`DemographicCycleService.process_demographics()`, ECOL-03), not tied to
   individual births and deaths. Expected to be **covered** with
   `TCK-20261009-SMALL-PREY-KINDS-GRAZE-BREED-AND-FLEE-PREDATORS-DECISION-45`.
+- **Result (#536, 2026-10-13): covered for grazing and flight; births MISSING.** A hungry
+  plant-eater grazes the land's cover, flees a hungry wolf it perceives, and ignores one beyond
+  perception (`tests/mechanic_scenarios/test_plant_eater_graze_and_avoid.py`,
+  `tests/mechanic_scenarios/test_grazing_on_plant_cover.py`). Nothing is born, so hunted herds die
+  out; that is reported in M0, and births come in milestone 1 (decision 67).
 
 ---
 

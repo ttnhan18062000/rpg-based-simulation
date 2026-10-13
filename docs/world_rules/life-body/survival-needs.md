@@ -193,6 +193,13 @@ Catalog has found.
   - It lands before the milestone 0 gate's baseline, because wounded subjects that never heal
     distort its deaths. **Disclosed for milestone 3:** healing by standing on a town tile (1 HP a
     tick, unpaid) is healing given free by place, against "nothing free".
+  - **SUPPORTED since #536 (2.116, healing; 2.118, the health cap):** an awake body gains 1 HP
+    per period and a resting one twice as fast; nothing heals at or past the starving line; a
+    weakened body heals at half speed, the worse stage deciding; bodies of different size are
+    whole in about the same time, staggered by entity id, through the apply path
+    (`tests/unit/engine/test_natural_healing.py`). No path raises health above max HP, a rest at
+    full health stays there, a lowered max HP pulls health down with it, and no living body ends
+    a kernel run above max HP (`tests/unit/engine/test_health_never_exceeds_max_hp.py`).
   - **Alternatives not taken:** healing only at rest (an awake, wounded creature never
     improves); leaving it to milestone 1 (old wounds keep killing, which skews the gate).
 
@@ -538,11 +545,30 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
   recorded as known flaws:
   - **CONFLICTING: animals reach the inn.** `EatScorer`'s inn route has no kind check, so a
     hungry wolf or goblin walks to a town inn for the free meal.
+    **Resolved by #536 (2.119, decision 43 trait half, as ruled in decision 68):** every building
+    service route (meal, bed, sale, repair) serves only a subject whose species keeps coin and
+    trades; an animal on an inn tile is refused, and the inn serves no meal to a diet without
+    prepared food however it came to stand there
+    (`tests/unit/engine/test_building_services_serve_only_people.py`,
+    `tests/unit/engine/test_carcass_and_meat.py`). The relationship half (who a place refuses)
+    is its own ticket (decision 68). Until it lands, every trading person is served rest, meals
+    and repair.
   - **CONFLICTING: carnivores forage berries.** Wolves and spiders (`carnivore_survival`) take
     decision 27's forage step on a berry thicket, because no diet gate exists. That is against
     this Rule's per-kind ways.
+    **Resolved by #536 (2.107, decision 44's diet gate):** a meat-only body takes neither the
+    forage way nor the generic harvest goal on a berry thicket, and eats no inn meal
+    (`tests/unit/ai/test_hunt_steps.py`, `tests/unit/engine/test_carcass_and_meat.py`).
   - **MISSING: hunting.** A kill pays gold and XP only. No meat, carcass or hide item exists in
     the catalog, a corpse holds loot and not food, and there is no eat-corpse action.
+    **SUPPORTED since #536 (2.107):** a body leaves meat sized by its kind; a hungry meat-eater
+    scavenges a carcass before it hunts, and hunts only a creature it appraises it can overcome,
+    never its own species; eating at a corpse is a typed, traceable record, and body meat
+    balances against eaten, looted and decayed meat (`tests/unit/engine/test_carcass_and_meat.py`,
+    `tests/unit/ai/test_hunt_steps.py`, `tests/unit/engine/test_hungry_wolf_hunts_prey_it_out_bands.py`).
+    A wolf does not take a person as prey while their kind bands tie; that is the M0 shortcut,
+    closed by milestone 1's single-appraisal child (a strict xfail names it). Herds die out with
+    no births (decision 67, reported, not graded).
   - **MISSING: small, edible, plant-eating animals.** The corpus has 13 species and no herbivore
     or small game, so the only creatures a wolf could hunt are people, goblins or other
     meat-eaters. **Decided by the owner directly, 2026-10-09 (rows 45 and 50 of the memo): add a few generic
@@ -555,6 +581,12 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     ECOL's population rules, never a target.
     Scenario: [LB-S21](../scenarios/life-body-batch-05.md#lb-s21) (grazes, flees a noticed
     predator, numbers change only by births and deaths).
+    **SUPPORTED since #536 (2.107):** generic plant-eating archetypes exist, every species
+    declares its properties from a closed vocabulary, a missing property is a gap rather than a
+    default, and no behaviour module reads a label list
+    (`tests/unit/content/test_kind_properties.py`). A hungry plant-eater grazes; it flees a
+    hungry wolf it perceives, keeps distance from a sated one, and ignores one it cannot perceive
+    (`tests/mechanic_scenarios/test_plant_eater_graze_and_avoid.py`, LB-S21).
   - **Grazing is the land's plant cover (decided by the owner directly, 2026-10-10; row 59 of
     the memo):** wild land carries plant cover (grass, browse) that a grazing diet can eat and a
     person's cannot. It regrows by the land's fertility band and runs down when overgrazed. Each
@@ -580,6 +612,10 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
     berry thicket picked bare waits about a day before fruiting again, an herb about half a day
     (it regrows from the root), and a felled tree the longest. Until that ticket lands, only
     grazing cover waits.
+    **SUPPORTED since #536 (2.107):** every cover region compiles its patches with the declared
+    charges and regrowth; a hungry plant-eater eats the cover and a person takes none; a patch
+    eaten to zero waits bare, then regrows from zero and never refills at once
+    (`tests/mechanic_scenarios/test_grazing_on_plant_cover.py`).
   - **Meat follows body size, and meat-eaters feast and fast (decided by the owner directly,
     2026-10-10; row 60 of the memo; a decision-33 pass, before and after recorded):** a small
     body is about one meal for a meat-eater, a medium carcass about a day's food for a
@@ -742,6 +778,12 @@ others, not a reflex.
   - **Alternatives not taken:** waking every sleep, collapse included (a collapse loop, so
     collapse would mean nothing to the hungry); keeping sleep unbroken and only refusing to fall
     asleep hungry (it does not help a collapse, which is how both died).
+  - **SUPPORTED since #536 (2.115):** the trigger is hunger at the escalation onset, with no new
+    constant; a chosen sleep or rest is woken once per cadence while hunger presses, staggered by
+    entity id; a sated sleeper is not woken by a high sleep debt alone; a collapse is woken but
+    decides the collapse again until the debt is below the line, and the brain runs once per
+    cadence, not every tick, so there is no wake/collapse loop
+    (`tests/unit/engine/test_hunger_wakes_a_sleeper.py`).
 
 - **Amendment, providing for a coming need (decided by the owner directly, 2026-10-09; row 55 of
   the memo):**
@@ -865,6 +907,22 @@ the escalation and the present-threat gate shipped in #414 (`c2e18b182`).** Lane
     `tests/unit/ai/test_way_in_range.py`. **Still open:** the inn-first `EatScorer` and the
     true-map search above; a group does not yet wait for a member who leaves to eat; and
     people who starve without holding a move are not yet diagnosed.
+  - **A held move ends on arriving in its area (#536, 2.113):** a step away ends within a tile of
+    its point, a leash return ends inside the home area (not on the home tile), and a regroup
+    ends within the cohesion radius it was issued with; a keep-walking move still ends only on its
+    exact tile, and the worker dispatcher follows the same rule
+    (`tests/unit/engine/test_move_completes_on_arriving_in_its_area.py`). Measured by Lane C on
+    urban: frozen REGROUP moves fell from 10,119 to 61 and AVOID_HOSTILE from 1,923 to 8.
+    LEASH_RETURN issues rose from 22 to 1,665 as subjects hover at the leash edge; that is an
+    outcome count only, and the hover goes when milestone 1 retires the tether for a home-range
+    pull (decision 57).
+  - **People who starve are now diagnosed (#536, the H6 starvation-death record):** each
+    starvation death writes exactly one typed record of the ways judged open or in reach since the
+    last meal and the ways tried, listing only ways the kind's diet allows; a run opens with a
+    header and closes with a tally that matches its records; it is deterministic across runs
+    (`tests/unit/observability/test_starvation_death_record.py`). Until honest perception exists
+    the judged set equals the true map, which the record discloses. This is what milestone 0's
+    gate check H6 reads.
 
 **Scenarios:** none traced yet. Four are owed when implemented:
 - a tired worker heading to the inn keeps going when a routine blocker reappears;
