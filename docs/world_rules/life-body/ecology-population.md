@@ -113,7 +113,10 @@ a standing requirement for whichever future mechanism eventually closes this gap
       `src/world/influence.py`, live): a creature-type body of 10,000+ HP with no builders and no
       cost, whose destruction freed the region. The body is removed before baseline v1 as its
       own measured step, because a structure needs builders and materials. The region still
-      changes hands, and it is freed when its influence recovers rather than by killing a body.
+      changes hands, and it is freed when its influence recovers rather than by killing a body:
+      the existing liberation line (+50, `process_influence_shift`), against conquest at -50,
+      with influence moving 5 per protector or invader death. The 100-point band is the existing
+      hysteresis, so nothing flaps.
       Who conquers what, and why, is re-anchored with caused war and peace (roadmap §12.4).
       The influence trigger and the horde as taker are disclosed as interim. **Alternatives
       not taken:** removing conquest entirely; keeping the stronghold as a declared arrival.
