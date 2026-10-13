@@ -83,7 +83,7 @@ class StatePresenter:
                 "gold": entity.inventory.gold,
                 "item_count": len(entity.inventory.items),
                 "items": [
-                    {"id": i.item_id, "quantity": i.quantity, "metadata": i.metadata}
+                    {"id": i.item_id, "quantity": i.quantity, "metadata": i.properties}
                     for i in entity.inventory.items
                 ]
             },

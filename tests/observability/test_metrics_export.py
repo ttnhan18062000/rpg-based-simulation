@@ -30,7 +30,7 @@ def test_prometheus_metrics_registry_and_structure():
         max_observability_budget_percent=5.0
     )
     
-    manager = V2EngineManager(profile, seed=42, entities_count=5)
+    manager = V2EngineManager(profile, seed=42)
     try:
         # Assert collector and registry are initialized
         assert manager.metrics_registry is not None
@@ -39,7 +39,8 @@ def test_prometheus_metrics_registry_and_structure():
         # Assert initial snapshot values
         snapshot = manager.get_metrics_snapshot()
         assert snapshot["tick"] == 0
-        assert snapshot["active_entities"] == 5
+        from tests.helpers.scenario import compile_world
+        assert snapshot["active_entities"] == len(compile_world("dungeon_crawl", 42).entities)  # the live world is the authored world (D69)
         assert snapshot["tps"] == 0.0
         assert snapshot["governor_mode"] == int(RuntimeMode.NORMAL)
 
@@ -82,7 +83,7 @@ def test_prometheus_hard_law_violation_metrics_export():
         max_observability_budget_percent=5.0
     )
     
-    manager = V2EngineManager(profile, seed=42, entities_count=5)
+    manager = V2EngineManager(profile, seed=42)
     try:
         # Manually inject a hard law violation to status
         kernel_status = manager._kernel.status
@@ -155,7 +156,7 @@ async def test_metrics_endpoint_direct():
 def test_metrics_endpoint_integration():
     """Verify the /metrics API endpoint over HTTP using a background server subprocess."""
     port = 8011
-    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--world", "sandbox_world", "--log-level", "ERROR"]  # an authored world whose entities hold coin (D69: the live world is the authored world)
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
 
