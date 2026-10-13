@@ -13,3 +13,8 @@ TCK-20261011-GRAPHIFY-SHARED-GRAPH-FROM-WORKTREES. Batch 2 (2026-10-11) is the t
 
 1. TCK-20261011-GRAPHIFY-TOOLS-OWNED  (no deps; hotfix; manifest edit)
 2. TCK-20261010-SESSION-MAIN-CHECKOUT-LAUNCH-AND-BATCH-WORKTREE-RECORD  (no deps now; standard; includes placements outside .claude/worktrees)
+
+Batch 3 (2026-10-12, issues #520 and #517), one batch PR:
+
+3. TCK-20261012-HOST-PATH-LITERALS-MAKEFILE-AND-MCP-LAUNCHERS  (no deps; hotfix; verify on u24desktop; lead reviews the Makefile diff)
+4. TCK-20261012-SEARCH-MCP-SHARED-SERVER-AND-IDLE-UNLOAD  (no deps; standard; .mcp.json unchanged)

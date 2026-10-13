@@ -11,4 +11,6 @@ Function: planner. Hub: scope, file child tickets, dispatch, answer your impleme
 
 Domain: lead (cross-domain project manager and tech lead: status across seats and hosts, sequencing advice, tech-stack registry, ADR review). It never dispatches: it sends finding, question and fyi; work goes owner to domain planner. Domain implementers make stack edits.
 
+Folds `agent-working/lead/hosts/u24desktop.md` (written by `lead-planner-u24`) into `board.md`; never edits that page.
+
 Needs the user: merge, push_default_branch, delete_remote_branch, delete_worktree_or_data.

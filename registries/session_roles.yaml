@@ -311,10 +311,23 @@ roles:
                legacy_session_name: null, seat_status: staffed}   # runs on host ubuntu (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user]
+      owns_not: ["agent-working/lead/hosts/u24desktop.md"]   # the u24 lead's page: boundary.py flags a write to it
     capability: {may_write: [".claude/handover/drafts/**", "agent-working/lead/**", "agent-working/tickets/**",
                              "docs/architecture/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
     placement: {launch: main-checkout, max_sessions: 1}   # reads from the main checkout
     handover: .claude/handover/lead-planner.md
+    card_note: "Folds `agent-working/lead/hosts/u24desktop.md` (written by `lead-planner-u24`) into `board.md`; never edits that page."
+
+  - role: lead-planner-u24   # runs on host u24desktop; never in any accepts_dispatch_from (TCK-20261013-HOST-LEAD-PLANNER-U24)
+    identity: {domain: lead, function: planner, session_name: lead-planner-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+      owns: ["agent-working/lead/hosts/u24desktop.md"]   # only its host page; the lead domain's other paths are lead-planner's
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
+    placement: {launch: main-checkout, max_sessions: 1}   # reads from the main checkout
+    handover: .claude/handover/lead-planner-u24.md
+    card_note: "Host lead for u24desktop: status of this host's sessions only, on `agent-working/lead/hosts/u24desktop.md`. Never edits `board.md`. Lead-owned paths: comment only; review authority stays with lead-planner."
 
 # Exclusive resources. The writer slot belongs to the worktree; a worktree hosts exactly one role, its
 # writer (every designer, planner and implementer has its own worktree and lands its own PR, except a role
