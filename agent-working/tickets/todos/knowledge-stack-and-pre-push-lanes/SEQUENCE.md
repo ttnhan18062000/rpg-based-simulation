@@ -7,3 +7,5 @@ One batch, one PR (owner policy). Dispatched 2026-10-14 by the user.
    light, after a disk headroom check. Independent of item 1.
 
 If both are ready together with rpg-next, this PR merges after rpg-next.
+3. TCK-20261014-KNOWLEDGE-STACK-FILES-OWNED (hotfix, added 2026-10-14 on the user's yes): roster owns lines for the
+   knowledge stack; the owner confirms the session_roles.yaml diff on the PR. Independent of 1 and 2.
