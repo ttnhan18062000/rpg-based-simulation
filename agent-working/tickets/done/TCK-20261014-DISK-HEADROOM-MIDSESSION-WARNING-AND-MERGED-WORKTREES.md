@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-DISK-HEADROOM-MIDSESSION-WARNING-AND-MERGED-WORKTREES
-phase: open
+phase: done
 date: 2026-10-14
 tags: [ai, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement]
 Warn about low disk space mid-session, not only at SessionStart, and list worktrees whose branch is merged in the disk report
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -81,7 +81,7 @@ Most of the space was held by worktrees whose branch had already merged.
 - docs/guides/ (session layer and environment guide, disk-headroom section).
 
 ## Related Stored Artifacts
-- agent-working/stored_artifacts/TCK-20261014-DISK-HEADROOM-MIDSESSION-WARNING-AND-MERGED-WORKTREES/ (created at close)
+- agent-working/stored_artifacts/TCK-20261014-DISK-HEADROOM-MIDSESSION-WARNING-AND-MERGED-WORKTREES/ 
 
 ## Related Code Areas
 - tools/sessions/{disk_headroom,prune_branches,session_start_hook}.py, tools/agent-monitoring/post_tool_hook.py, tests/tools/
@@ -90,9 +90,15 @@ Most of the space was held by worktrees whose branch had already merged.
 - post_tool_hook.py runs on every tool call in every session, so the throttle is the main design constraint.
 
 ## Implementation Notes
+- New `tools/sessions/disk_warning.py`; `post_tool_hook.py` calls it from its existing settings entry, so settings.json is unchanged. State file `.claude/.disk_warn.<session_id>`; `.gitignore` gained `.claude/.disk_warn.*` (a root file outside agent-working's owns list; one line).
+- `disk_headroom.py` gained `removable_worktrees()` / `render_removable()` and a `removable_worktrees` key in `--json`. `measure()` and the launcher are unchanged on purpose: a launch must not wait on `gh`.
+- `prune_branches.py`: constant `DETACHED_REASON` replaces a repeated string; no behaviour change.
 
 ## Test Summary
+`tests/tools/test_disk_warning.py` (16 tests) plus the existing disk_headroom, post_tool_hook and prune_branches tests pass. A real hand run on u24desktop listed 1 removable and 6 detached worktrees, removing nothing; it took about 40 s.
 
 ## Files Changed
+`tools/sessions/{disk_warning,disk_headroom,prune_branches}.py`; `tools/agent-monitoring/post_tool_hook.py`; `.gitignore`; `docs/guides/agent_session_reset_boundaries.md`; `tests/tools/test_disk_warning.py`.
 
 ## Completion Summary
+A running session now gets a throttled low-disk line, and the disk report lists removable worktrees. Report only. AC1 is shown by the hook subprocess test, not by watching a real disk fill; nothing verified on host ubuntu.
