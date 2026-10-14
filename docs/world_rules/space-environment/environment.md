@@ -275,6 +275,10 @@ need, and fights between groups still count.
   deaths, while its cause is still recorded as combat.
 - **Alternatives not taken:** predation counts at a reduced weight; predation counts like any
   violence.
+- **SUPPORTED since #536 (2.107):** a kill made by a hungry killer whose diet can eat the victim
+  adds no trauma, while the same kill when not hungry does; killing a person a faction rates
+  hostile still adds trauma; a feeding kill leaves a typed record that joins its carcass by
+  corpse id (`tests/unit/engine/test_trauma_counts_violent_cause_only.py`).
 
 **Disposition: ACCEPT — ratified by the owner, 2026-10-05.** Passes the admission test: no
 earlier Rule said which deaths trauma counts.

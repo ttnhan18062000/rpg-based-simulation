@@ -21,6 +21,11 @@ Fast tests (200t / 500t runs) run in the standard suite.
 Slow tests (1000t runs) require ``pytest -m slow`` or omit ``-m "not slow"``.
 
 To update anchors after an intentional scoring change:
+  0. Anchors are MEASURED UNDER ``audit_mode`` (``evaluate_simq`` and ``calibrate_simq --audit-mode``), so a value does not depend on host speed. Never
+     re-anchor from a throttled run. Record them with ``python -m tools.test_architecture.simq_reanchor`` from two isolated audit_mode runs per key that are
+     identical on every pillar (a non-identical pair is a determinism finding, not an anchor); it writes the fixture and the before/after table, and the
+     change needs an owner ruling and a provenance file (docs/plans/test_architecture/reference/baseline_change_policy.md; the worked record is
+     agent-working/stored_artifacts/TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE/reanchor_provenance.md). The steps below are the manual equivalent.
   1. Re-run calibration: ``make evaluate-full`` (re-runs the engine for all fast/<=500t
      scenarios and populates ``data/calibration/``; add ``--include-slow`` via
      ``tools/evaluate_simq.py --include-slow`` for the 1000t/2000t anchors too), or
@@ -59,54 +64,12 @@ GRADE_ORDER = ["F", "D", "C", "B", "A", "S"]  # ascending quality; index distanc
 SCORE_TOLERANCE_ABS_FLOOR = 0.05
 SCORE_TOLERANCE_REL_PCT = 0.20
 
-# Evidence-derived per-(run_key, pillar) score-tolerance overrides for anchors with
-# confirmed real-world single-draw variance exceeding the global default width.
-# The first two entries' values are reused verbatim from the corresponding
-# tests/unit/worldassembly/test_corpus_diversity.py `*_grade_stability` guard's own
-# `abs_floor` — see agent-working/stored_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/
-# repro_sweep.md Section 8 for derivation. Section 8 shows both floors were widened
-# against independent single fresh-draw samples (not only 3-trial means: e.g. ECONOMY's
-# floor was set after two independent single-draw evaluate_simq.py runs, not a trial
-# mean), so no additional single-draw safety multiplier is applied on top of the guards'
-# committed value — TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE investigation.
-#
-# urban_political_seed123_1000t/NARRATIVE has no corresponding grade_stability guard to
-# reuse a floor from (it was never in that anchor's originally-scoped pillar set). Its
-# abs_floor=0.3197 is instead derived directly from 6 independent fresh calibration
-# draws (3 from TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE, 3 fresh this
-# session) using the same 1.3x max-observed-deviation formula: max deviation 0.2459,
-# round(1.3 * 0.2459, 4) = 0.3197. The anchor is NOT re-centered (matches the ECONOMY
-# precedent, not the frontier_marches-NARRATIVE re-centered precedent) — see
-# agent-working/staging_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE/investigation.md
-# for the full 6-draw table and derivation.
-#
-# urban_political_seed123_1000t/SOCIAL: abs_floor=5.003 is derived from 11 independent
-# fresh draws combined across two sessions (3 historical from
-# TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE, 8 fresh from
-# TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP), not this latter session's 8 draws
-# alone (which alone would show max deviation 3.2135, under the then-and-now-unchanged
-# default width of 3.5931). The max deviation across the combined 11 draws is 3.8485,
-# from one of the 3 historical draws: round(1.3 * 3.8485, 4) = 5.003. The anchor is NOT
-# re-centered (matches the ECONOMY/NARRATIVE precedent on this same anchor) — see
-# agent-working/stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md
-# for the full 8-draw table and combined-evidence derivation.
-#
-# urban_political_seed123_1000t/COGNITION: abs_floor=2.0435 is derived from 8 independent
-# fresh draws this session (TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP), max
-# observed deviation 1.5719 (draw6): round(1.3 * 1.5719, 4) = 2.0435. The anchor is NOT
-# re-centered. This floor is wide relative to the anchor (0.0440) because COGNITION's
-# `decision_divergence_detected` event has no dedup gate and can refire every tick
-# (src/observability/event_extractor.py:477-496), so the floor bounds this session's
-# observed spikes but is not a hard ceiling on the mechanism's worst case — see
-# agent-working/stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md
-# Risks and Open Questions #1 for the full reasoning.
-SCORE_TOLERANCE_OVERRIDES: dict[tuple[str, str], float] = {
-    ("urban_political_seed123_1000t", "ECONOMY"): 0.2878,
-    ("frontier_marches_seed42_200t", "NARRATIVE"): 0.3351,
-    ("urban_political_seed123_1000t", "NARRATIVE"): 0.3197,
-    ("urban_political_seed123_1000t", "COGNITION"): 2.0435,
-    ("urban_political_seed123_1000t", "SOCIAL"): 5.003,
-}
+# Per-(run_key, pillar) score-tolerance overrides. Empty since TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE: the anchors are measured under
+# audit_mode, where two isolated runs are identical, so no anchor needs a tolerance widened to absorb host speed. The five widenings that stood here
+# (urban_political_seed123_1000t ECONOMY/NARRATIVE/COGNITION/SOCIAL and frontier_marches_seed42_200t NARRATIVE) were each derived from independent
+# throttled draws (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP, TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP); their derivation stays in those stored
+# artifacts. Add an entry only with a stated audit_mode reason.
+SCORE_TOLERANCE_OVERRIDES: dict[tuple[str, str], float] = {}
 
 
 def _score_tolerance_kwargs(run_key: str, pillar: str) -> dict[str, float]:
@@ -698,27 +661,12 @@ def test_grade_anchors_entry_count_unchanged(grade_anchors: dict) -> None:
     )
 
 
-def test_score_tolerance_override_table_scoped_to_named_pillars() -> None:
-    """Anti-drift guard: the override table contains exactly the 5 evidence-derived
-    entries and each entry widens -- never narrows -- the tolerance relative to the
-    global default for that anchor's committed score."""
-    assert set(SCORE_TOLERANCE_OVERRIDES.keys()) == {
-        ("urban_political_seed123_1000t", "ECONOMY"),
-        ("frontier_marches_seed42_200t", "NARRATIVE"),
-        ("urban_political_seed123_1000t", "NARRATIVE"),
-        ("urban_political_seed123_1000t", "COGNITION"),
-        ("urban_political_seed123_1000t", "SOCIAL"),
-    }
+def test_score_tolerance_override_table_is_empty_because_anchors_are_measured_under_audit_mode() -> None:
+    """Anti-drift guard (TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE): the five throttle-absorbing widenings are gone, because two isolated audit_mode runs
+    are identical. An entry may come back only with a stated audit_mode reason, and then this test is changed with it, in review."""
+    assert SCORE_TOLERANCE_OVERRIDES == {}
     anchors = json.loads(FIXTURE_PATH.read_text())
-    for (run_key, pillar), abs_floor in SCORE_TOLERANCE_OVERRIDES.items():
-        anchor_score = anchors[run_key][pillar]["score"]
-        default_width = max(
-            SCORE_TOLERANCE_ABS_FLOOR, SCORE_TOLERANCE_REL_PCT * abs(anchor_score)
-        )
-        assert abs_floor > default_width, (
-            f"{run_key}/{pillar}: override abs_floor {abs_floor} does not widen the "
-            f"default tolerance {default_width}"
-        )
+    assert _score_tolerance_kwargs(next(iter(k for k in anchors if not k.startswith("_"))), "COGNITION") == {}
 
 
 def test_score_tolerance_overrides_do_not_affect_unlisted_anchors(grade_anchors: dict) -> None:

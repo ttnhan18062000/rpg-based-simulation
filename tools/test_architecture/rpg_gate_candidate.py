@@ -188,6 +188,26 @@ def _omissions(docs: Mapping[Any, dict], config: GateConfig, known: Sequence[dic
     return omitted
 
 
+def _missing_required(docs: Mapping[Any, dict], config: GateConfig, known: Sequence[dict], today: dt.date) -> List[Tuple[str, str, dict]]:
+    """``(world, id, owner)`` for each required validity row a document leaves out. A baseline can not be recorded from a run whose metric module dropped a
+    required check, unless a current ``state: fail`` entry owns that row (then it is listed in ``omitted_validity``, as an owned fail is). The listed row is labelled ``<id>:run:<world>:*`` once per world, even when only the pooled document lacks it."""
+    covered: List[Tuple[str, str, dict]] = []
+    for key, doc in sorted(docs.items(), key=lambda kv: (kv[0][0], -1 if kv[0][1] is None else kv[0][1])):
+        name = f"{key[0]}__s{key[1]}.json" if key[1] is not None else f"{key[0]}__pooled.json"
+        present = {r.get("id") for r in doc["metrics"] if r.get("class") == "validity"}
+        for rid in config.required_validity:
+            if rid in present:
+                continue
+            entry = known_reds.owner_of(rid, known, state="fail")
+            if entry is None:
+                raise CandidateRefused(f"{name}: required validity row {rid} is missing and has no owner in rpg_gate_known.yaml (state: fail); a baseline can not be recorded without it")
+            if known_reds.is_expired(entry, today):
+                raise CandidateRefused(f"{name}: required validity row {rid} is missing and its owner entry {entry['match']!r} expired on {entry['expires_on']}")
+            if not any(w == key[0] and r == rid for w, r, _ in covered):
+                covered.append((key[0], rid, entry))
+    return covered
+
+
 def _sort_key(row: Mapping[str, Any]) -> Tuple[Any, ...]:
     return (row["world"], row["scope"], row["id"], row["group"], str(row.get("key", "")), -1 if row.get("tick") is None else row["tick"])
 
@@ -216,6 +236,9 @@ def build_candidate(
     _thresholds(docs)
     omitted = _omissions(docs, config, known, today)
     omitted_rows: List[dict] = []
+    for world, rid, entry in _missing_required(docs, config, known, today):
+        label = row_label({"id": rid, "scope": "run", "world": world, "group": "*"})
+        omitted_rows.append({"row": label, "known_match": entry["match"], "ticket": entry["ticket"]})
 
     def omit(row: Mapping[str, Any], world: str, scope: str) -> bool:
         entry = omitted.get((world, row["id"], row.get("group", "*")))
