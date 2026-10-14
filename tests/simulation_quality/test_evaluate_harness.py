@@ -287,3 +287,15 @@ class TestQueueOverflowGuardIntegration:
 
         err = capsys.readouterr().err
         assert "guard FAILED" not in err
+
+
+def test_compare_reads_no_data_pillars_instead_of_crashing_or_passing_them_silently() -> None:
+    """TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION: the informational drift table shows no-data, and a lost or gained data status is a REGRESS."""
+    from tools.evaluate_simq import _extract_pillar_grades
+
+    report = {"pillars": {"A": {"grade": "B", "normalized_score": 1.0}, "B": {"status": "no-data", "grade": None, "normalized_score": None, "min_events": 3}}}
+    assert _extract_pillar_grades(report) == {"A": "B", "B": "no-data"}
+    rows = {r["pillar"]: r["status"] for r in _compare("k", {"A": "B", "B": "no-data"}, {"A": "B", "B": "no-data"})}
+    assert rows == {"A": "PASS", "B": "PASS"}
+    assert [r["status"] for r in _compare("k", {"A": "no-data"}, {"A": "B"})] == ["REGRESS"]
+    assert [r["status"] for r in _compare("k", {"A": "B"}, {"A": "no-data"})] == ["REGRESS"]

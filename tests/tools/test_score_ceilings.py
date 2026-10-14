@@ -53,12 +53,12 @@ def test_corrected_narrative_entry_present():
 
 def test_grade_regression_failure_message_includes_ceiling_when_known():
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests" / "simulation_quality"))
-    from test_grade_regression import _format_score_failures  # noqa: E402
+    from test_grade_regression import _pillar_failures  # noqa: E402
 
     run_key = "dungeon_crawl_seed42_1000t"
     anchors = {"COMBAT": {"grade": "C", "score": 0.0}}
-    actual_scores = {"COMBAT": 5.0}  # far outside tolerance, forces a failure line
-    lines = _format_score_failures(run_key, anchors, actual_scores)
+    report = {"pillars": {"COMBAT": {"grade": "C", "normalized_score": 5.0}}}  # score far outside tolerance, same band: forces a score failure line
+    _band, lines, _other = _pillar_failures(run_key, anchors, report)
     assert len(lines) == 1
     assert "known flag_gated" in lines[0]
     assert "TCK-20260806-SIMQ-COMBAT-ENGAGEMENT-GATE-CORPUS-VALIDITY" in lines[0]

@@ -42,6 +42,37 @@ the two files and stored in the record.
 - `owner_ruling` is `{ref, date}`; only the owner's ruling counts (a peer's or designer's message does not; a designer-recorded memo row the owner confirmed does).
 - Stop lines are checked on every candidate row, so a ruling is needed at each re-baseline while a value stays past the line.
 
+## Required validity rows
+
+The config may carry `required_validity: [V1, V8, ...]`, ids of the form `V<n>` (a non-list, a duplicate or another shape is refused by `load_config`). The values are rpg's; the format and behaviour are testing's. A metric module that leaves a required row out would otherwise pass silently, so:
+
+- the report gives each required id missing from a document (every seed document and the pooled one, in every world) the state `no-data`, reason `contract_error`, detail `required validity row <id> missing`, and the markdown names the missing ids in a banner. It never reads as a pass; the job's verdict rule is unchanged (no-data is not red by itself);
+- the candidate refuses while any required row is missing from any document, unless a current, unexpired `state: fail` entry in `rpg_gate_known.yaml` owns that id (then the row is listed in `omitted_validity`, once per world, as `<id>:run:<world>:*`).
+
+## V8: every entity added mid-run has a declared source
+
+Owner ruling D70: a monster spawner with no parent and no cost is nothing-from-nothing, and no V1-V7 row counted entity adds. V8 lands before baseline v1, so v1's row set contains it. Validity is absolute (rule 8 of `baseline_change_policy.md`): it records no value.
+
+| field | value |
+|---|---|
+| id | `V8` |
+| class | `validity` |
+| scope | `run` and `pooled` (the pooled row sums the seeds' violations) |
+| group | the kind group (D42, property-based), or `*` for the whole run |
+| oracle | `docs/plans/test_architecture/reference/rpg_gate_baseline_format.md#v8-every-entity-added-mid-run-has-a-declared-source` (this section), and D70 |
+
+Every entity put into the world after tick 0 through the authoritative apply path (`entities_add`) must carry a `SpawnSource` (rpg's frozen type, carried beside the entry, not on the entity). A violation is one of:
+
+1. **unsourced**: an add with no SpawnSource;
+2. **AUTHORED_ARRIVAL without a `rule_id`**: an authored arrival that names no declaring definition (`rule_kind` and `rule_id` are both required);
+3. **BIRTH without parents**: a BIRTH whose `parent_ids` is empty.
+
+`INITIAL` (tick-0 worldgen) is not judged. The tally is one closing event per run, keyed `(kind_group, source.kind)` plus an `unsourced` count, with a liveness header. Each example names the entity id, the tick, the site or `rule_kind`, and which check failed (`{entity_id, tick, site, check}`).
+
+No-data rule: a missing or silent tally is `no-data` (`harness_error`), never 0 violations. A required V8 row that the module does not emit is `no-data` (`contract_error`) by the section above.
+
+The stub metric module (`tests/helpers/rpg_gate_stub_metrics.py`) emits a V8-shaped row in three modes through `RPG_GATE_STUB_V8` (`absent`, `clean`, `violations`) so the report and candidate tests can exercise them without rpg's module.
+
 ## Open points for rpg
 
 - Config: `tests/simulation_quality/rpg_gate/config.yaml`, rpg's (agreed by rpg-planner). Stop-line shape: `name`, `metric`/`group` free fnmatch patterns (`group` is a property-based kind group, D42, never an EntityRole name), `min`/`max` on a row's value.
