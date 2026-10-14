@@ -90,6 +90,11 @@ None.
 - Process-global state leaks between tests in one process (the strict-xfail and CONFLICT-04 findings, 2026-10-09), so a fresh process per (world, seed) is required, not optional.
 - Where the config and baselines live: proposed `tests/simulation_quality/rpg_gate/` (rpg-owned content, testing-owned schema). Child 2 confirms the path with rpg-planner.
 
+## Open live proofs
+Both are due on the first scheduled run after rpg's metric module (`src/observability/rpg_gate_metrics.py`, rpg-planner's ticket) merges; testing-planner checks them on that run.
+- Child 5 (`TCK-20261009-RPG-GATE-SCHEDULED-AND-DISPATCH-WORKFLOW`) AC2: the rolling issue created or updated by a scheduled run and untouched by a dispatch.
+- The full-run wall time for 3 worlds x 5 seeds.
+
 ## Implementation Notes
 (implementer)
 

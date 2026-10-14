@@ -72,6 +72,33 @@ def _merge_sibling_files(items: list[str]) -> list[str]:
     return out
 
 
+def _fold_same_dir_files(items: list[str]) -> list[str]:
+    """Adjacent file globs in one plain directory become one brace entry when that is shorter:
+    `tools/graphify_{link,prune}.py, tools/search_*.py` -> `tools/{graphify_{link,prune}.py,search_*.py}`."""
+    def split(item: str) -> tuple[str, str] | None:
+        head, sep, leaf = item.rpartition("/")
+        if not sep or not leaf or leaf.endswith("**") or re.search(r"[*{},]", head):
+            return None
+        return head, leaf
+
+    out: list[str] = []
+    i = 0
+    while i < len(items):
+        first = split(items[i])
+        j = i + 1
+        while first and j < len(items) and (nxt := split(items[j])) and nxt[0] == first[0]:
+            j += 1
+        if first and j - i > 1:
+            folded = f"{first[0]}/{{{','.join(split(it)[1] for it in items[i:j])}}}"
+            if len(folded) < len(", ".join(items[i:j])):
+                out.append(folded)
+                i = j
+                continue
+        out.append(items[i])
+        i += 1
+    return out
+
+
 def _group_globs(globs: list[str] | tuple[str, ...], pattern: re.Pattern[str]) -> str:
     return ", ".join(_group_glob_items(globs, pattern))
 
@@ -105,8 +132,8 @@ def _compact_globs(globs: list[str] | tuple[str, ...]) -> str:
     (`docs/{a,b/c}/**`); the shorter string wins, the full-parent one on a tie, so
     no card grows against the older grouping.
     """
-    by_parent = ", ".join(_merge_sibling_files(_group_glob_items(globs, _DIR_GLOB)))
-    by_first = ", ".join(_merge_sibling_files(_group_glob_items(globs, _FIRST_SEGMENT_GLOB)))
+    by_parent = ", ".join(_fold_same_dir_files(_merge_sibling_files(_group_glob_items(globs, _DIR_GLOB))))
+    by_first = ", ".join(_fold_same_dir_files(_merge_sibling_files(_group_glob_items(globs, _FIRST_SEGMENT_GLOB))))
     return by_first if len(by_first) < len(by_parent) else by_parent
 
 

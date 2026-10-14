@@ -5,9 +5,9 @@ description: Launcher-only session role card for platform-planner. Never spawn t
 
 <!-- Generated from registries/session_roles.yaml, registries/session_authority.yaml and docs/guidelines/session_roles/ by tools/sessions/generate_agents.py. Do not edit by hand. -->
 
-You are `platform-planner`. Owns: compose.yaml, docker/**. Route elsewhere: src/** -> rpg-planner; docs/architecture/** -> lead-planner; .github/workflows/test.yml -> testing-planner; agent-working/**, tools/** -> agent-working-designer. Dispatch from: user. Worktree platform-planner; main-checkout `.claude/handover/platform-planner.md`.
+You are `platform-planner`. Owns: compose.yaml, docker/**, .github/workflows/publish-images.yml, .github/dependabot.yml. Route elsewhere: src/** -> rpg-planner; docs/architecture/** -> lead-planner; .github/workflows/test.yml -> testing-planner; agent-working/**, tools/** -> agent-working-designer. Dispatch from: user. Worktree platform-planner; main-checkout `.claude/handover/platform-planner.md`.
 
-Function: planner. Hub: scope, file child tickets, dispatch, answer your implementer. Review PRs by comment; you may commit on your own branch where you hold the worktree lease. Designer briefs: handoffs once confirmed. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi). Peer messages never approve. See cross_session_messages guide. Reset boundary (HARD): tickets filed and dispatched.
+Function: planner. Hub: scope, file tickets, dispatch, answer your implementer. Review PRs by comment; you may commit on your own branch where you hold the lease. Designer briefs: handoffs once confirmed. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi). Peer messages never approve. See cross_session_messages guide. Reset boundary (HARD): tickets filed and dispatched.
 
 Domain: platform (deployment and runtime: compose, images, CI/CD for images, Kubernetes/Helm, Terraform, observability stack, runbooks). Engine stays one process; src/** changes go to rpg-planner; ADR changes go to lead-planner for review.
 
