@@ -288,7 +288,8 @@ class NavigationPatch(ComponentPatch):
                 region_id=u_nav.region_id_set if u_nav.region_id_set is not None else new_nav.region_id,
                 wait_count=new_nav.wait_count + u_nav.wait_count_delta,
                 oscillation_count=new_nav.oscillation_count + u_nav.oscillation_count_delta,
-                last_position=u_nav.last_position_set if u_nav.last_position_set is not None else new_nav.last_position
+                last_position=u_nav.last_position_set if u_nav.last_position_set is not None else new_nav.last_position,
+                step_ready_tick=u_nav.step_ready_tick_set if u_nav.step_ready_tick_set is not None else new_nav.step_ready_tick,
             )
         if self.new_position:
             if self.new_position != entity.navigation.position:

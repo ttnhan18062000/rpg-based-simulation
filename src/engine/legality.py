@@ -185,12 +185,9 @@ class LegalityServiceV2:
         if not ok:
             return False, reason
 
-        # 2. Terrain Cost Check
-        tile = (int(target_pos[0]), int(target_pos[1]))
-        terrain_cost = TerrainCostService.get_tile_cost(tile, state_or_context)
-        
-        # Combined cost
-        readiness_cost = (entity.combat.move_cost * terrain_cost) / max(0.1, move_speed_mult)
+        # 2. Readiness cost. The terrain's cost is NOT here (D75): it is time, not a readiness charge. A step onto a tile of cost N takes
+        # N ticks (MovementSystem.resolve_move, NavigationComponent.step_ready_tick).
+        readiness_cost = entity.combat.move_cost / max(0.1, move_speed_mult)
         
         if entity.combat.readiness < readiness_cost:
             return False, ReasonCode.ACTION_EXHAUSTION

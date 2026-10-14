@@ -106,6 +106,11 @@ class MovementSystem:
         target_tile = (int(target_pos[0]), int(target_pos[1]))
         current_tick = getattr(state_or_context, "tick", 0)
 
+        # 1b. Terrain cost is time (D75, MOV-04): the step onto the last tile is still taking its time, so this tick the entity
+        # stays where it is. No failure, no wait count: it is walking, not blocked.
+        if current_tick < entity.navigation.step_ready_tick:
+            return {entity.id: EntityUpdate(entity_id=entity.id)}
+
         cache_key = None
         cached_plan = None
         if m_cache is not None:
@@ -323,7 +328,16 @@ class MovementSystem:
              if new_region:
                  new_region_id = new_region.id
 
+        # Terrain cost is time (D75): entering a tile of cost N holds the next step back N ticks. The carried time is kept only while it
+        # is within the last tick, so the entity never takes more than one step per tick (a road, cost 0.5, is no faster than plain).
+        step_ready_tick_set = None
+        if success and effective_target is not None and effective_target != entity.navigation.position:
+            ready = entity.navigation.step_ready_tick
+            base = ready if ready > current_tick - 1 else float(current_tick)
+            step_ready_tick_set = base + TerrainCostService.get_tile_cost((int(effective_target[0]), int(effective_target[1])), state_or_context)
+
         nav_upd = NavigationUpdate(
+            step_ready_tick_set=step_ready_tick_set,
             moved_recently_set=True,
             failure_reason=None if success else reason_code,
             # VERIFIED v2: movement_priority_tiebreak

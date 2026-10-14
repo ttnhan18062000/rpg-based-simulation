@@ -504,6 +504,11 @@ class NavigationComponent:
     # avoids an O(N) scan of PlaceState.entity_ids for fast Place lookup.
     place_id: Optional[str] = None
 
+    # D75 (MOV-04): terrain cost is time. The earliest tick this entity may take its next step: a step onto a tile of cost N sets it to
+    # (the carried previous value, or the step tick) + N, so cost N takes N ticks and the entity never takes more than one step per tick.
+    # 0.0 = never stepped (free to step).
+    step_ready_tick: float = 0.0
+
 
 @dataclass(frozen=True, slots=True)
 class TaskComponent:
@@ -1010,6 +1015,7 @@ class EntityState:
                 "chase_ticks": self.navigation.chase_ticks,
                 "max_chase_ticks": self.navigation.max_chase_ticks,
                 "returning_home": self.navigation.returning_home,
+                **({"step_ready_tick": self.navigation.step_ready_tick} if self.navigation.step_ready_tick else {}),
             },
             "task": {
                 "work_kind": self.task.work_kind,

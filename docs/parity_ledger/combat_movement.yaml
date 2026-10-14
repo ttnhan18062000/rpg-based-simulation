@@ -4859,3 +4859,13 @@
   test_path: tests/unit/engine/test_terrain_cost_from_content.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.124.
   support_boundary: Only the readiness cost of a step reads the factor. Pathfinding weights, per-body movement styles (M1) and the wall and line-of-sight terrain checks in legality.py, positioning.py and movement.py (they compare raw terrain to upper-case names and never match lower-case content terrain) are not covered.
+- id: COMB-348
+  text: 'TCK-20261014-TERRAIN-COST-BECOMES-TIME-A-STEP-COSTING-N-TAKES-N-TIMES-AS-LONG-D75: a step onto a tile of cost N takes N ticks (NavigationComponent.step_ready_tick; one step per tick at most, so cost below 1.0 is no faster than plain). The readiness pre-check no longer multiplies by the terrain cost.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/movement.py (MovementSystem.resolve_move, the step_ready_tick hold and set), src/core/state.py (NavigationComponent.step_ready_tick), src/core/updates.py (NavigationUpdate.step_ready_tick_set), src/engine/patches.py, src/engine/apply.py (_fast_replace_navigation), src/engine/legality.py (verify_movement_legality, terrain factor removed).
+  proof_type: regression
+  test_path: tests/unit/engine/test_terrain_cost_is_time.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.126.
+  support_boundary: Position swaps and yields are not timed. Route choice is not weighted by cost (the next step), so a path may cross slow ground when a faster way exists. Road (0.5) is capped at one tick. Fatigue is not modelled.
