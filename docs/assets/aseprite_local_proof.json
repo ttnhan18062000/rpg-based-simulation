@@ -82,7 +82,7 @@
     },
     {
       "path": "tests/visual_assets/test_release_byte_reproducibility.py",
-      "sha256": "sha256:06e97752dc2ef22a3d211902da8f9408ede933d35c6b3b556109d46d8a74bb51"
+      "sha256": "sha256:2ebd6bf2f46e7eb22a9c73c8ab1a4fcb0575756d59ae5ec0642ebc4ac93cec46"
     },
     {
       "path": "tests/visual_assets/test_strict_aseprite.py",
@@ -254,7 +254,7 @@
     },
     {
       "path": "visual_assets/store/adoption.py",
-      "sha256": "sha256:21785272f3a4351a22d43330b2e2fd6c5b7a8452b3129ad253b108de0bd4b78d"
+      "sha256": "sha256:984979e489b6d7c35425686248733216ea77776e511b4f538aeeb98ff99f9d90"
     },
     {
       "path": "visual_assets/store/animation.py",
@@ -442,7 +442,7 @@
     },
     {
       "path": "visual_assets/store/revoke.py",
-      "sha256": "sha256:01beb240cdfd16ffb5389fba5460d06cbe11ac1e5565b0c82c3937b22d6a71db"
+      "sha256": "sha256:18baef2875ded2ecd29cb4c3a8f532986ff21c37d58911900e4a6ad0b653cdeb"
     },
     {
       "path": "visual_assets/store/runtime_export.py",
@@ -461,17 +461,17 @@
       "sha256": "sha256:273e79ef546f44ef25d9cc94980b1b620aac3cd1b1e35ebff334529e92b8d3b5"
     }
   ],
-  "guarded_hash": "sha256:651d881077f1cb91cc9bca4b2a857b4582380dee4cae749bcc45aa79037ec36f",
+  "guarded_hash": "sha256:85fbf4edae46cf7ddb0abf2ff69af03c63b261279b41c673caf32909f0f8d5a8",
   "make_target": "visual-assets-aseprite-local",
   "record_type": "aseprite_local_proof",
   "release_rebuild": {
     "bytes_differ_pixels_match": 0,
-    "entries": 87,
-    "identical": 87,
-    "release": "pilot/rc-0010"
+    "entries": 105,
+    "identical": 105,
+    "release": "pilot/rc-0011"
   },
-  "run_at_utc": "2026-10-12T17:34:42Z",
-  "run_commit": "e772fca7cde2b47de536d61d337f12dd74fa2d94",
+  "run_at_utc": "2026-10-14T17:23:10Z",
+  "run_commit": "7c072ffdc5a5352987288999febfc8787d75e37f",
   "schema_version": 1,
   "strict": true
 }
