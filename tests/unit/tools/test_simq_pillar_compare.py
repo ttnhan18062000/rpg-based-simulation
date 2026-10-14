@@ -4,7 +4,7 @@ import pytest
 
 from tools.test_architecture import simq_pillar_compare as spc
 from tools.test_architecture.simq_pillar_compare import (
-    PillarContractError as Bad, compare_pillar, compare_report, no_data_sets_equal, parse_anchor, parse_overall, parse_report_pillar, parse_row_pillar,
+    PillarContractError as Bad, compare_pillar, compare_report, no_data_sets_equal, parse_anchor, parse_report_overall, parse_report_pillar, parse_row_pillar,
 )
 
 OK_ANCHOR = {"grade": "B", "score": 1.0}
@@ -127,13 +127,38 @@ def test_overall_is_comparable_only_on_equal_no_data_sets():
     assert no_data_sets_equal({}, {})
 
 
+def test_overall_is_read_from_the_flat_report_keys():
+    ok = parse_report_overall({"overall_grade": "B", "overall_score": 1.2})  # no overall_status: a report from before the field (AC6)
+    assert (ok.status, ok.grade, ok.score) == ("ok", "B", 1.2)
+    assert parse_report_overall({"overall_status": "ok", "overall_grade": "S", "overall_score": 0.0}).grade == "S"
+    nd = parse_report_overall({"overall_status": "no-data", "overall_grade": None, "overall_score": None, "overall_reason": "too_few_pillars_scored"})
+    assert (nd.status, nd.grade, nd.score, nd.min_events) == ("no-data", None, None, None)  # no min_events on an overall
+    for bad in ({}, {"overall_grade": "B"}, {"overall_score": 1.0}, {"overall_grade": "Z", "overall_score": 1.0}, {"overall_status": "maybe", "overall_grade": "B", "overall_score": 1.0},
+                {"overall_status": "no-data", "overall_grade": "B", "overall_score": None, "overall_reason": "too_few_pillars_scored"},
+                {"overall_status": "no-data", "overall_grade": None, "overall_score": 0.0, "overall_reason": "too_few_pillars_scored"},
+                {"overall_status": "no-data", "overall_grade": None, "overall_score": None, "overall_reason": "other"},
+                {"overall_status": "no-data", "overall_grade": None, "overall_score": None}, None):
+        with pytest.raises(Bad):
+            parse_report_overall(bad)
+
+
+def test_overall_counts_must_match_the_pillars_statuses():
+    pillars = {"A": OK_LIVE, "B": ND_LIVE, "C": ND_LIVE}
+    base = {"overall_grade": "B", "overall_score": 1.0, "pillars": pillars}
+    assert parse_report_overall({**base, "pillars_scored": 1, "pillars_no_data": 2}).status == "ok"
+    assert parse_report_overall(base).status == "ok"  # counts absent: nothing to check
+    for bad in ({"pillars_no_data": 1}, {"pillars_scored": 2}, {"pillars_scored": 1, "pillars_no_data": 0}):
+        with pytest.raises(Bad, match="pillars give"):
+            parse_report_overall({**base, **bad})
+
+
 def test_overall_no_data_follows_the_four_way_rule():
-    live_nd = {"status": "no-data", "grade": None, "score": None, "reason": "too_few_pillars_scored", "min_events": 3}
-    anchor_ok, anchor_nd = parse_overall(OK_ANCHOR, anchor=True), parse_overall(ND_ANCHOR, anchor=True)
-    assert compare_pillar("overall", anchor_nd, parse_overall(live_nd)).code == spc.STILL_NO_DATA
-    assert compare_pillar("overall", anchor_ok, parse_overall(live_nd)).code == spc.LOST_DATA
-    assert compare_pillar("overall", anchor_nd, parse_overall({"grade": "B", "score": 1.0})).code == spc.GAINED_DATA
-    assert compare_pillar("overall", anchor_ok, parse_overall({"grade": "B", "score": 1.0})).ok
+    ok_overall = parse_report_overall({"overall_grade": "B", "overall_score": 1.0})
+    nd_overall = parse_report_overall({"overall_status": "no-data", "overall_grade": None, "overall_score": None, "overall_reason": "too_few_pillars_scored"})
+    assert compare_pillar("overall", nd_overall, nd_overall).code == spc.STILL_NO_DATA
+    assert compare_pillar("overall", ok_overall, nd_overall).code == spc.LOST_DATA
+    assert compare_pillar("overall", nd_overall, ok_overall).code == spc.GAINED_DATA
+    assert compare_pillar("overall", ok_overall, ok_overall).ok
 
 
 def test_row_pillars_use_norm_and_labels():

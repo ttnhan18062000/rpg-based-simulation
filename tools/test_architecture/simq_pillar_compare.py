@@ -117,9 +117,38 @@ def parse_anchor(name: str, data: Any) -> Pillar:
     return _parse(name, data, "score")
 
 
-def parse_overall(data: Any, *, anchor: bool = False) -> Pillar:
-    """An overall (``{"status"?, "grade", "score", ...}``); the overall's own no-data follows the same four-way rule."""
-    return parse_anchor("overall", data) if anchor else _parse("overall", data, "score")
+TOO_FEW_PILLARS = "too_few_pillars_scored"
+
+
+def parse_report_overall(report: Any) -> Pillar:
+    """The overall of a report, read from its flat top-level keys: ``overall_grade``, ``overall_score``, ``overall_status`` (ok | no-data),
+    ``overall_reason`` and the integers ``pillars_scored`` / ``pillars_no_data``.
+
+    No ``overall_status`` with a letter grade and a numeric score is ok (a report from before the field). A no-data overall has a null grade and score and the reason
+    ``too_few_pillars_scored``, and no ``min_events``. When ``pillars_no_data`` / ``pillars_scored`` and a ``pillars`` object are present, the counts must match the
+    pillars' own statuses; a mismatch is a contract error. No overall is anchored today, so there is no overall anchor shape here."""
+    if not isinstance(report, Mapping):
+        raise PillarContractError(f"overall: expected a report object, got {report!r}")
+    status, grade, score = report.get("overall_status"), report.get("overall_grade"), report.get("overall_score")
+    if status in (None, OK):
+        if grade not in GRADE_ORDER or not _number(score):
+            raise PillarContractError(f"overall: status {status or '(absent)'!s} needs a letter overall_grade and a numeric overall_score, got {grade!r} / {score!r}")
+        result = Pillar(OK, grade, float(score))
+    elif status == NO_DATA:
+        if grade is not None or score is not None:
+            raise PillarContractError(f"overall: status no-data must carry no grade or score, got overall_grade={grade!r} overall_score={score!r}")
+        if report.get("overall_reason") != TOO_FEW_PILLARS:
+            raise PillarContractError(f"overall: status no-data needs overall_reason {TOO_FEW_PILLARS!r}, got {report.get('overall_reason')!r}")
+        result = Pillar(NO_DATA)
+    else:
+        raise PillarContractError(f"overall: unknown overall_status {status!r} (expected 'ok' or 'no-data')")
+    pillars = report.get("pillars")
+    if isinstance(pillars, Mapping):
+        no_data = sum(1 for v in pillars.values() if isinstance(v, Mapping) and v.get("status") == NO_DATA)
+        for key, expected in (("pillars_no_data", no_data), ("pillars_scored", len(pillars) - no_data)):
+            if key in report and report[key] != expected:
+                raise PillarContractError(f"overall: {key}={report[key]!r} but the report's pillars give {expected}")
+    return result
 
 
 def compare_pillar(

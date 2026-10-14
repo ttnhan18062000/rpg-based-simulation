@@ -116,9 +116,9 @@ AC8: no tolerance, band or override changed (`SCORE_TOLERANCE_OVERRIDES` is stil
 
 Visibility (Scope 4): `_pillar_failures` warns `<run_key>: no-data pillars: anchor=[...] live=[...]` for every run with a no-data pillar, so the pytest warnings summary lists them.
 
-The overall is not anchored in `grade_anchors.json` today (810 = 81 x 10 pillar rows), so AC3 is the helper rule plus its tests (`no_data_sets_equal`, `parse_overall` + `compare_pillar` for an overall that is itself no-data); no test compares an overall yet.
+The overall is not anchored in `grade_anchors.json` today (810 = 81 x 10 pillar rows), so AC3 is the helper rule plus its tests: `no_data_sets_equal`, and `parse_report_overall` (the flat report keys `overall_grade`, `overall_score`, `overall_status`, `overall_reason`, `pillars_scored`, `pillars_no_data`, pinned by rpg-planner 2026-10-14; counts checked against the pillars) with `compare_pillar` for an overall that is itself no-data. No overall anchor shape is invented, and no test compares an overall to an anchor yet.
 
-Pairs with: rpg's (b) PR (the scorer's `no-data` report). AC7 is recorded here when that PR number is known.
+Pairs with: rpg's (b), ticket TCK-20261014-PILLARS-REPORT-NO-DATA-BELOW-A-MINIMUM-EVENT-COUNT (the scorer's `no-data` report; `min_events` from `PILLAR_MIN_EVENTS` in `src/simulation_quality/pillars.py`). AC7: the PR number is recorded here when rpg opens it; this PR is #557.
 
 Not done here: re-anchoring the 27 held rows and the 23 on the -8/51 constant (follow-up after (a) and (b) are on main, under its own rpg ruling).
 
