@@ -9,8 +9,6 @@ authenticated (the terminal check and typed id stop accidents and scripts, not i
 
 from __future__ import annotations
 
-import re
-
 from pydantic import ValidationError
 
 from visual_assets.store import animation as source_animation
@@ -31,7 +29,7 @@ from visual_assets.store.contracts.base import Evidence, IntakeVerdict, LicenceS
 from visual_assets.store.contracts.review import RenderVerdict
 from visual_assets.store.contracts.handoff import SourceFormat
 from visual_assets.store.errors import GateError, IdentityError, IntakeError, PngDecodeError, RegistryError, RenderError, StageError
-from visual_assets.store.identities import IntakeId, SourceAssetId, SourceRevision, UtcTimestamp, check, next_revision
+from visual_assets.store.identities import IntakeId, SourceAssetId, SourceRevision, UtcTimestamp, check, check_not_placeholder, next_revision
 from visual_assets.store.intake import quarantine, service, validator
 
 PREVIEW_WARNING = (
@@ -205,17 +203,6 @@ def check_slot(registry: Registry | None, visual_key: str, detail_value: str | N
     if holders:
         raise _refuse("visual_key_taken", f"{holders[0]} already holds {slot_name}; revoke its revisions first to replace it")
     return definition, slot, slot_name
-
-
-_PLACEHOLDER_SPAN = re.compile(r"<[^<>]*>")
-_PLACEHOLDER_WORDS = frozenset({"todo", "tbd", "xxx", "your name", "your role", "fixme", "changeme"})
-
-
-def check_not_placeholder(**fields: str) -> None:
-    """Refuse a value that is a command-template placeholder: any `<...>` span, or text that is only a placeholder word. Names the field."""
-    for field, value in fields.items():
-        if isinstance(value, str) and (_PLACEHOLDER_SPAN.search(value) or value.strip().lower() in _PLACEHOLDER_WORDS):
-            raise _refuse("placeholder_value", f"{field} looks like a template placeholder ({value!r}); replace every <...> with a real value before running")
 
 
 def check_licence_and_approver(licence_state, licence_evidence_ref, approver: str, approver_role: str) -> None:

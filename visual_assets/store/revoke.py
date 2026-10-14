@@ -13,12 +13,11 @@ import re
 from pydantic import ValidationError
 
 from visual_assets.store import config, records
-from visual_assets.store.adoption import check_not_placeholder
 from visual_assets.store.catalogwrite import Confirm, publish
 from visual_assets.store.contracts import ContractError, RevocationRecord, canonical_json
 from visual_assets.store.contracts.adoption import IntakeTarget, SourceRevisionTarget
 from visual_assets.store.errors import GateError, IdentityError, StageError, StoreError
-from visual_assets.store.identities import IntakeId, SourceAssetId, SourceRevision, UtcTimestamp, check
+from visual_assets.store.identities import IntakeId, SourceAssetId, SourceRevision, UtcTimestamp, check, check_not_placeholder
 from visual_assets.store.intake import quarantine
 
 _REVISION_TARGET = re.compile(r"([a-z0-9][a-z0-9_-]{0,63})/(r[0-9]{4})")
