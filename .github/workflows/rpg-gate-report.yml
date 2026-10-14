@@ -121,7 +121,7 @@ jobs:
             --out gate-docs --only-world "${{ matrix.world }}" \
             --workers 2 --timeout 3000 --sha "$(git rev-parse HEAD)"
       - name: Upload documents
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: rpg-gate-docs-${{ matrix.world }}
@@ -184,7 +184,7 @@ jobs:
             { echo "### Baseline candidate refused"; sed 's/^/- /' candidate.err; } >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Upload report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: rpg-gate-report-${{ github.sha }}

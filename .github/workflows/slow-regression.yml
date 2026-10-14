@@ -136,14 +136,14 @@ jobs:
             --sha "${{ github.sha }}" \
             --known-reds tools/test_architecture/slow_known_reds.yaml
       - name: Upload certification report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: certification-report-${{ github.sha }}
           path: reports/certification/
           retention-days: 30
       - name: Upload slow JUnit reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: slow-junit-${{ github.sha }}

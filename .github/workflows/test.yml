@@ -357,7 +357,7 @@ jobs:
                  --junit-xml=reports/junit/tools-a-e.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tools-a-e-junit-${{ github.sha }}
           path: reports/junit/tools-a-e*.xml
@@ -402,7 +402,7 @@ jobs:
                  --junit-xml=reports/junit/tools-f-z.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tools-f-z-junit-${{ github.sha }}
           path: reports/junit/tools-f-z*.xml
@@ -494,7 +494,7 @@ jobs:
                  reports/junit/api-cli-engine-visual_assets.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-cli-engine-junit-${{ github.sha }}
           path: reports/junit/api-cli-engine*.xml
