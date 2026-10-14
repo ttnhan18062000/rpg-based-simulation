@@ -895,6 +895,7 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 72. terrain movement cost (decided 2026-10-13: declared per terrain in content, a missing one is an error; fixed before baseline v1 as its own measured step, MOV-04);
 73. what a paid inn meal gives once the free part goes (decided 2026-10-13: 60 hunger for 5 gold, paid atomically or refused, SURV-06).
 74. which species the species-less people get (decided 2026-10-13: human, one per recipe, from each role archetype; other peoples later as their own recipes; before v1, SURV-06).
+75. what the terrain cost does (decided 2026-10-14: a step costing N takes N times as long, and routes weigh the cost; before v1, time then route, each measured alone; MOV-04).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,

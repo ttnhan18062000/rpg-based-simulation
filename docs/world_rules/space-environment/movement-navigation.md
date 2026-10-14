@@ -135,6 +135,23 @@ tiles mispriced). Cave, ruin and river had no cost at all.
   as authored.
 - **Alternatives not taken:** after v1 as a change against it; a river that blocks walking,
   which changes which places connect; keeping the code table with the three values added.
+- **What the cost does (decided by the owner directly, 2026-10-14; row 75 of the memo):** with
+  decision 72 built, the only reader is the readiness pre-check (`legality.py`, `readiness <
+  move_cost * terrain_cost`). Movement spends no readiness (chapter 2, section 7), so that check
+  refuses steps on rough ground when readiness is low but charges nothing. On
+  `frontier_living_world` all 5 seeds move both ways; `urban_political` is byte-identical. Route
+  choice ignores the cost.
+  - **Ruling:** rough ground is slower, and routes are chosen by cost. A step on a tile costing
+    N takes N times as long (road 0.5 is half, mountain 4.0 four times). Routes weigh the cost,
+    so roads get used and mountains avoided.
+  - **Sequencing:** before baseline v1, each part its own measured step: time first, then route
+    choice. Decision 72 ships first as built, with its pre-check effect disclosed.
+  - **Applied (rpg-designer):** the cost is paid in time, not gated on readiness. When the time
+    step lands, the terrain multiplier leaves the readiness pre-check; the plain `move_cost`
+    readiness check stays as it is.
+  - **Later:** tiring the body on rough ground (a fatigue cost) can be added on top later.
+  - **Alternatives not taken:** slower only; route choice only; a fatigue cost now; both parts
+    in one step; after v1.
 
 **Scenarios:** [SPC-S08](../scenarios/space-environment-batch-04.md#spc-s08).
 
