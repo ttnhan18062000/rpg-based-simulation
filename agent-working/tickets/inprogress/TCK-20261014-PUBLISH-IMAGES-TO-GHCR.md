@@ -15,7 +15,7 @@ tags: [platform]
 New workflow `publish-images.yml`: build the backend and frontend images and publish them to GHCR
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -69,6 +69,10 @@ None.
 - The "published" evidence can exist only after the user merges. Before that, the PR claims "validated".
 
 ## Implementation Notes
+`.github/workflows/publish-images.yml`: push to main, `v*` tags, `workflow_dispatch`, and path-filtered pull requests. Matrix over backend/frontend, GHA cache, metadata-action tags (sha, branch, semver), OCI labels, actions pinned by full SHA with version comments, per-ref `concurrency`, `contents: read` top-level and `packages: write` on the job only. Digest is exposed as job outputs and as `steps.build.outputs.digest`.
 ## Test Summary
+- **validated:** actionlint passes (rhysd/actionlint docker image); YAML parses.
+- PR run builds without push (`push: false`, `load: true`): to be confirmed on this PR's Actions run (**validated** once green).
+- **published:** to be confirmed after merge (images in GHCR with sha + `main` tags, `docker pull`). The package visibility click is needed by the user after the first publish.
 ## Files Changed
 ## Completion Summary

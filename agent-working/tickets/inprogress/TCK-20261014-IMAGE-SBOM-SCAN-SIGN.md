@@ -15,7 +15,7 @@ tags: [platform, security]
 Published images get an SBOM (syft), a report-only Trivy scan, and a keyless cosign signature
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -70,6 +70,10 @@ None.
 Signature and attestation evidence exists only after the user merges. Before that, the PR shows the PR-run scan only.
 
 ## Implementation Notes
+Steps added to `publish-images.yml` after the build: Trivy (report-only, `exit-code: "0"`, HIGH/CRITICAL counts in the job summary, JSON artifact; also on PRs against the locally built image), then on non-PR events SBOM (`anchore/sbom-action`, SPDX JSON), `cosign attest --type spdxjson` and keyless `cosign sign` by digest, and a how-to-verify block. Job has `id-token: write`; no secrets; all actions SHA-pinned.
 ## Test Summary
+- **validated:** actionlint passes.
+- **published:** to be confirmed after merge: `cosign verify` / `cosign verify-attestation --type spdxjson` for both digests, plus the first Trivy HIGH/CRITICAL counts as the baseline (to be recorded here from the run).
+- Security-Review: no secrets, minimum permissions, SHA pins; Trivy never fails the job.
 ## Files Changed
 ## Completion Summary

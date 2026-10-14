@@ -15,7 +15,7 @@ tags: [platform]
 Add Dependabot, pin every container image by digest, and make the frontend build use `npm ci`
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -67,6 +67,11 @@ None.
   when this lands. No action is asked of them now.
 
 ## Implementation Notes
+All `FROM` lines and `image:` entries pinned `tag@sha256` (multi-arch index digests current 2026-10-14, no version bumps); `npm install` -> `npm ci`; `.github/dependabot.yml` with docker (/docker), docker-compose (/), github-actions (/), npm (/frontend), uv (/): weekly, minor/patch grouped, limit 5. Labels `dependencies`, `platform`, `rpg` do not exist in the repo yet (checked with `gh label list`): Dependabot will skip them with a warning until they are created.
 ## Test Summary
+- **validated (schema):** YAML parses; Dependabot's own check runs after merge.
+- Unpinned-reference grep (`grep -E '^\s*(image:|FROM) ' compose.yaml docker/*.Dockerfile | grep -v @sha256`) returns nothing.
+- **running locally:** the full stack above was built from these Dockerfiles (including `npm ci`) and started.
+- CI build via `publish-images.yml` on this PR to confirm (**validated** once green).
 ## Files Changed
 ## Completion Summary

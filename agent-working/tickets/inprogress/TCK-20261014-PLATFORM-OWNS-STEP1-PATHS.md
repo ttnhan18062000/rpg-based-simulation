@@ -15,7 +15,7 @@ tags: [platform]
 Register step 1's new paths (`publish-images.yml`, `dependabot.yml`) to the platform domain's `owns`
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 hotfix
@@ -60,6 +60,9 @@ None.
 None.
 
 ## Implementation Notes
+`registries/session_roles.yaml` `domains.platform.owns` gains exactly `.github/workflows/publish-images.yml` and `.github/dependabot.yml`; role files regenerated.
 ## Test Summary
+- **validated:** `PYTHONPATH=. python3 tools/sessions/validate.py`: `OK: 0 finding(s), 20 role(s)`; both files exist in this PR.
+- Owner confirmation of the literal two-line diff and agent-working-planner review are requested in the PR body.
 ## Files Changed
 ## Completion Summary
