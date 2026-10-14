@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS
-phase: open
+phase: done
 date: 2026-10-13
 tags: [architecture, planning, live-map]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, planning, live-map]
 Visual asset map markers: buildings, places, resource nodes and entities on the map, keyed on V2 kind names
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -84,4 +84,4 @@ What the three sample worlds hold on main 06aa3a20c (`python -m tools.visual_ass
 
 
 ## Completion Summary
-
+Children 1, 2, 4 and 5 (`TCK-20261014-VISUAL-ASSETS-REFUSE-PLACEHOLDER-APPROVALS`, filed during the batch) DONE; **child 3 moved out on the owner's answer** ("Objects now, entities later", 2026-10-14) to `agent-working/tickets/todos/visual-asset-entity-markers/`, status OPEN. 18 object markers adopted (set adoption `sa-6690e2619d4abb3e`), 5 registry-only aliases, rc-0011 (105 entries) assembled on the owner's answer, sample map draws all objects (0 gaps). The PR lands on the user's own answer.

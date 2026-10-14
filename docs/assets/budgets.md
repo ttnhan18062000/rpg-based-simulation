@@ -165,6 +165,22 @@ A key of the real icon shape (a description of about 200 characters and a label)
 | the 14 variant sources | 360 to 406 each | 0.4 % of `MAX_SOURCE_BYTES` 102,400 | |
 | the committed sample-map crops | 237,953 | 90.8 % of the 262,144 B cap | three crop boxes shrunk, since the exact view now draws terrain everywhere |
 
+## rc-0011 measured (2026-10-14)
+
+`TCK-20261013-VISUAL-ASSETS-MARKERS-RC-AND-CLOSE`. Measured on the committed store after the 18 object markers were adopted and built; no bound changed.
+
+| What | Value | Of the bound | Note |
+|---|---|---|---|
+| the registry `visual_keys.yaml` (83 keys, 8 aliases, 6 detail axes) | 42,024 B | 9.2 % of `MAX_REGISTRY_BYTES` 458,752 | the review of 2026-10-13 estimated 47,231 B for the larger option (a) with 11 entity keys; with objects only the file holds 18 new keys and 5 aliases |
+| keys, aliases | 83, 8 | 8.1 % of `MAX_VISUAL_KEYS` 1,024; 0.8 % of `MAX_ALIASES` 1,024 | |
+| `load_registry` (median of 11 runs, this machine, other sessions running) | 0.153 s | far under the 2 s line | 0.062 s was measured for 65 keys on 2026-10-13 under less load |
+| the candidate manifest `rc-0011.json` (105 entries) | 18,092 B | 3.5 % of `MAX_MANIFEST_BYTES` 524,288 | the estimate for about 120 entries was 20,600 B; 172 B per entry |
+| the runtime manifest of the export (`runtime_manifest.json`, 105 entries) | 27,268 B | 5.2 % | 260 B per entry; the estimate for about 120 entries was about 31,000 B |
+| the 18 marker sources | 308 to 417 B each | 0.4 % of `MAX_SOURCE_BYTES` 102,400 | |
+| the committed sample-map crops (exact view only, 5 files) | 120,273 B | 45.9 % of the 262,144 B cap | the alias crops are no longer committed: no unconfirmed proposal is left and they would equal the exact ones (237,953 B for 10 files on rc-0010) |
+
+A real key costs 543 B in the registry (as measured on 2026-10-13); the 18 keys and 5 aliases added 11,081 B, 616 B per key counting the aliases and the comments of the new `node` family.
+
 ## Registry re-measurement for the map-markers batch (2026-10-13)
 
 `TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN`, the review the standing rule asks for before the key set grows. No bound is changed and no committed registry file is edited by this step. Measured with the real `load_registry` on a scratch registry in a temporary directory: the committed `visual_keys.yaml` (65 keys, 3 aliases, 6 detail axes) plus new keys of the real shape (a description of about 200 characters, `safety_class`, a structured `glyph_and_text` fallback, `label_key`, `label`) and 5 new aliases, median of 5 loads.

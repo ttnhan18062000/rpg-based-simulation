@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261013-VISUAL-ASSETS-MARKERS-RC-AND-CLOSE
-phase: open
+phase: done
 date: 2026-10-13
 tags: [architecture, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation]
 Map markers: build, rc-0011, sample map with markers, gap report and budgets, closure
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -45,9 +45,9 @@ Child 4 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. Closes the batch: a reg
 - No animation. `TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY` stays in the backlog unless a marker is animated.
 
 ## Acceptance Criteria
-- [ ] rc-0011 assembled on the owner's answer; the guard states unchanged entries by equality.
-- [ ] No red test left; the renderer draws the markers and re-runs byte-identical.
-- [ ] Gap report, README, budgets updated; all five tickets closed; REGISTRY in sync from a clean tree.
+- [x] rc-0011 assembled on the owner's answer; the guard states unchanged entries by equality.
+- [x] No red test left; the renderer draws the markers and re-runs byte-identical.
+- [x] Gap report, README, budgets updated; all five tickets closed; REGISTRY in sync from a clean tree.
 
 ## Related Tickets
 - Parent: `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`; needs `TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN`, `TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS` (and `TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS` unless the owner moved it out)
@@ -67,13 +67,18 @@ Child 4 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. Closes the batch: a reg
 
 
 ## Implementation Notes
-
+- rc-0011 assembled on the owner's answer of 2026-10-14 ("Assemble rc-0011 (105)"): `store release --catalog-id pilot` after `store build` of the 18 adopted sources; 87 entries byte-identical to rc-0010 + 18 new, no alias entries (`tests/visual_assets/test_rc_0011_extends_rc_0010.py`, by equality).
+- Re-pointed: `adopted_facts.py` (the 18 sources, set adoption, 112 adoptions, 224 intake files, 105 generated, `RC_0011_ENTRIES`, terrain and object aliases), `test_atlas.py`, `test_release_byte_reproducibility.py` (rc-0011), the registry pins (83 keys, 54 icon keys, 53 labels, 8 aliases), the spec and recognition pins (54), `test_icon_set_adoption.py`, `test_icon_v2_keys.py`, `test_icon_draft_set.py`, `test_icon_release_candidate.py`, `test_key_usage.py`, `test_sample_map_data.py`, `test_v2_terrain_aliases.py`; new `test_object_marker_adoption.py`.
+- Sample map: `tools/visual_assets_sample_map.py` maps nodes to `icon.node.<kind>`, resolves `shop`, `CAMP`, `RUIN` through the registry aliases and marks a CITY `plate_only`; the renderer draws it (CITY = plate alone) on rc-0011; 0 object gaps in the three worlds; the alias view equals the exact view, so only exact crops are committed (120,273 B).
+- Gap report (G6, G8, G9 closed; G10 moved to the entity-marker batch; the 16 px building map glyph recorded as a later owner choice), README, `budgets.md` (rc-0011 measured).
+- Child 3 moved out on the owner's answer to `agent-working/tickets/todos/visual-asset-entity-markers/`.
+- The Aseprite local proof record was refreshed once at the end (guarded files `adoption.py`, `revoke.py`, `test_release_byte_reproducibility.py` changed).
 
 ## Test Summary
-
+Run under `systemd-run --user --scope -p MemoryMax=3G`, one at a time: the 28 ids of the red set from child 2 (all green now), the new rc-0011 and object-adoption tests, the sample-map data (17) and render tests, the atlas and byte-reproducibility tests (27), the store unit tests for the placeholder guard. The final full `tests/visual_assets` run is recorded in the PR.
 
 ## Files Changed
-
+`visual_assets/catalog/manifests/candidates/pilot/rc-0011.json`, `visual_assets/catalog/generated/*--x1/` (18), `tools/visual_assets_sample_map.py`, `tools/visual_assets_sample_map_render.py`, `tests/visual_assets/**` (pins, new tests), `docs/assets/sample_map/**`, `docs/assets/budgets.md`, `docs/assets/aseprite_local_proof.json`, the session-handoff snapshots, the ticket folders.
 
 ## Completion Summary
-
+rc-0011 (105 entries) is a candidate; the sample map draws every building, place and resource node of the three worlds with 0 gaps; the red set is green; gap report, README and budgets are updated. Entities moved to their own batch on the owner's answer.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN
-phase: inprogress
+phase: done
 date: 2026-10-13
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Map markers: MAX_REGISTRY_BYTES budget review and the marker key design
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -50,8 +50,8 @@ Child 1 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. budgets.md's standing r
 - No animation. `TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY` stays in the backlog unless a marker is animated.
 
 ## Acceptance Criteria
-- [ ] Measurements recorded against the bounds and the 2 s line, no bound changed.
-- [ ] The design note answers 1-7 with code citations; asset-planner approved it, and the owner answered the key-set questions taken from it.
+- [x] Measurements recorded against the bounds and the 2 s line, no bound changed.
+- [x] The design note answers 1-7 with code citations; asset-planner approved it, and the owner answered the key-set questions taken from it.
 
 ## Related Tickets
 - Parent: `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`
@@ -75,10 +75,10 @@ Measurements in `docs/assets/budgets.md` (section 2026-10-13); the design note, 
 
 
 ## Test Summary
-
+No code changed; the measurements were re-run by `tools/visual_assets_measure_budgets.py`-style scratch loads of the real `load_registry`; recorded in `docs/assets/budgets.md` (2026-10-13). Nothing red.
 
 ## Files Changed
-
+`docs/assets/budgets.md`, the design note in the staging artifacts (now stored), this ticket, SEQUENCE.md.
 
 ## Completion Summary
-
+Budget measured (about 543 B per real key; nothing near a bound or the 2 s line), design note points 1-7 approved by asset-planner, and the owner answered the key-set questions on 2026-10-13 (13 node keys, 4 building keys as 24 px panel icons, `icon.marker.nest`, 5 registry-only aliases, CITY = plate alone). Option (b), a per-kind detail axis, is impossible (`pickDetail` picks by cell) and was withdrawn.

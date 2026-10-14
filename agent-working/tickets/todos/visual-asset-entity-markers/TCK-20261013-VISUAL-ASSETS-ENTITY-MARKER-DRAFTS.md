@@ -30,7 +30,8 @@ P2
 Child 3 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner's #523 answer: markers follow V2 kind names as the presenter emits them. rpg (#519): M1 moves kinds to properties (diet, size), so markers keyed on properties would outlast role markers; hero retires in M1 (D63). The sample worlds hold 11 entity kinds today, including `wild_creature`, which arrived in #536.
 
 ## Scope
-- **Preconditions (do not start before both):** (1) rpg's #523 is merged; (2) rpg-planner has answered #548 which entity names or properties the presenter will emit after M1, and whether they are stable enough to key art on. If either is missing when child 2's set is adopted, STOP: asset-planner takes the "objects only, entities in their own batch" question to the owner.
+- **Moved out of the map-markers batch (owner, 2026-10-14, "Objects now, entities later").** The object markers (batch A: `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`, rc-0011) shipped without entities. This ticket now waits in its own batch folder, `agent-working/tickets/todos/visual-asset-entity-markers/`; its parent epic's Completion Summary says "child 3 moved out on the owner's answer".
+- **Preconditions (do not start before both):** (1) rpg's #523 is merged; (2) the owner picks role or property markers. #548 is ANSWERED: rpg-planner says key on the role id (`kind`) today; rpg-designer wants the presented `species` plus `size` (not emitted yet). So the choice is between the two, and it is the owner's. The sample worlds hold 11 entity kinds (wild_creature x6 since #536).
 - **Owner-only step 1 (blocking, neutral fixed-order options):** role markers or property markers, from child 1's option table with rpg's answer.
 - Keys per the decision and child 1's design (labels, `safety_class`, `fallback` = today's coloured circle), with the red set listed exactly.
 - Specs, reference study, **owner-approved silhouette sheet** (`~/Work/asset-review/entity-markers-silhouettes/`), drawing with the MCP tools, compliance table, blind naming check: the same process rule as child 2. A marker must read on a 16 px cell next to the object markers and must not be confused with a class icon or a place glyph.
@@ -44,12 +45,12 @@ Child 3 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner's #523 answer
 - No animation. `TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY` stays in the backlog unless a marker is animated.
 
 ## Acceptance Criteria
-- [ ] Both preconditions met and recorded (the #523 merge sha; rpg's answer, linked).
+- [ ] Both preconditions met and recorded (the #523 merge sha; the owner's role-or-property answer; rpg's #548 answer, linked).
 - [ ] The owner chose role or property markers; keys in the registry; the red set listed exactly.
 - [ ] Specs, owner-approved silhouettes, compliance table, blind check; the owner adopted the set with `adopt-set`.
 
 ## Related Tickets
-- Parent: `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`; needs `TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN`; runs after or alongside `TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS`
+- Parent: `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`; needs `TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN`; `TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS` is done (the object set `object-markers-v1` is adopted, rc-0011)
 - GitHub #523 (precondition), #519
 
 ## Related Docs
