@@ -124,7 +124,6 @@ ignore_imports = [
     "src.engine.kernel -> src.observability.cognition.recorder",
     "src.engine.kernel -> src.observability.config",
     "src.engine.kernel -> src.observability.entity_timeline",
-    "src.engine.kernel -> src.observability.event_extractor",
     "src.engine.kernel -> src.observability.event_recorder",
     "src.engine.kernel -> src.observability.event_shapers",
     "src.engine.kernel -> src.observability.events",
