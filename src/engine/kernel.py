@@ -43,7 +43,7 @@ class Kernel:
 
     __slots__ = (
         "_profile", "_state", "_rng", "_phases", 
-        "_scheduler", "_governor", "_status", "_replay", "_collector",
+        "_scheduler", "_governor", "_signals_zeroed", "_status", "_replay", "_collector",
         "_worker_manager", "_executor", "_stopped",
         "_start_perf_ts", "_current_world_time", "_platform_signals",
         "_current_signals", "_current_policy", "_current_work_items",
@@ -128,6 +128,8 @@ class Kernel:
         
         self._scheduler = scheduler or DefaultScheduler()
         self._governor = governor or DefaultGovernor()
+        # audit_mode, or a governor that pins itself (the test pin), feeds the governors zeroed signals: no wall-clock reader can change what a run computes.
+        self._signals_zeroed = bool(self._audit_mode or getattr(self._governor, "zeroes_signals", False))
         self._status = status or DefaultStatus()
         self._status.force_full_scan = self._force_full_scan
         self._collector = SignalCollector(profile.name)
@@ -177,7 +179,9 @@ class Kernel:
                 catalog_fingerprint=actual_catalog_fp,
                 module_fingerprints=module_fps,
                 state_hash=None,
-                signal_contract=signal_contract_record(profile, self._audit_mode),
+                signal_contract=signal_contract_record(profile, self._signals_zeroed),
+                audit_mode=bool(self._audit_mode),
+                signals_zeroed=self._signals_zeroed,
             )
             self._run_id = create_run_directory(self._artifact_repo, str(self._run_id), manifest, is_default=self._run_id_is_default, rng=self._rng)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
@@ -385,7 +389,9 @@ class Kernel:
             run_dir=run_dir,
             profile_name=profile.name,
             buffer_capacity_kb=profile.max_replay_buffer_kb,
-            signal_contract=signal_contract_record(profile, self._audit_mode),
+            signal_contract=signal_contract_record(profile, self._signals_zeroed),
+            audit_mode=bool(self._audit_mode),
+            signals_zeroed=self._signals_zeroed,
         )
 
     def tick_once(self) -> None:
@@ -544,7 +550,7 @@ class Kernel:
             interval_override=self._profile.sampling_interval_ticks
         )
         
-        self._current_signals = select_signal_source(self._profile, self._audit_mode).tick_start_signals(
+        self._current_signals = select_signal_source(self._profile, self._signals_zeroed).tick_start_signals(
             state=self._state, profile=self._profile, status=self._status,
             host=HostReadings(worker_stats, replay_stats, self._platform_signals, self._metrics),
         )
@@ -761,7 +767,7 @@ class Kernel:
     def _record_runtime_signals(self) -> None:
         terminal_worker_stats = self._worker_manager.get_stats()
         terminal_replay_stats = self._replay.get_stats()
-        self._status.record_signals(select_signal_source(self._profile, self._audit_mode).tick_end_signals(
+        self._status.record_signals(select_signal_source(self._profile, self._signals_zeroed).tick_end_signals(
             state=self._state, profile=self._profile, status=self._status,
             measured=MeasuredCosts(self._final_compute_ms, self._phase_costs),
             host=HostReadings(terminal_worker_stats, terminal_replay_stats, self._platform_signals, self._metrics),
