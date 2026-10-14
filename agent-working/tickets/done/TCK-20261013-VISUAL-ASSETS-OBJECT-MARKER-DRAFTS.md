@@ -121,6 +121,8 @@ ERROR (14):
 - `tests/visual_assets/test_sample_map_render.py::test_two_renders_of_a_real_world_are_byte_identical`
 
 
+**Resolved in child 4 (`TCK-20261013-VISUAL-ASSETS-MARKERS-RC-AND-CLOSE`):** every id listed above is green on rc-0011 (the exports re-pointed, the pins moved to 83 keys, 54 icon keys and 8 aliases). The lists are kept as the record of the expected red set.
+
 ## Files Changed
 - `visual_assets/drafts/object-markers-v1/` (the 18-draft set, from intakes), `visual_assets/icons/object_marker_silhouettes.yaml` (only option A kept), `tests/visual_assets/test_object_marker_silhouettes.py` (one option per slot), this ticket, SEQUENCE.md, staging artifacts (compliance, blind-check evidence, reference study).
 
