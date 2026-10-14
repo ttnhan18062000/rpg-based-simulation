@@ -180,9 +180,10 @@ class NavigationUpdate:
     oscillation_count_delta: int = 0
     last_position_set: Optional[tuple[float, float]] = None
     region_id_set: Optional[str] = None
+    step_ready_tick_set: Optional[float] = None  # D75: the earliest tick of the entity's next step
 
     def is_noop(self) -> bool:
-        return (self.target_set is None and not self.target_clear and self.path_set is None and 
+        return (self.target_set is None and not self.target_clear and self.path_set is None and self.step_ready_tick_set is None and 
                 self.moved_recently_set is None and self.movement_mode_set is None and 
                 self.failure_reason is None and not self.clear_target and not self.clear_path and 
                 self.wait_count_delta == 0 and self.oscillation_count_delta == 0 and 
@@ -204,6 +205,7 @@ class NavigationUpdate:
         if other.oscillation_count_delta != 0: changes["oscillation_count_delta"] = self.oscillation_count_delta + other.oscillation_count_delta
         if other.last_position_set is not None: changes["last_position_set"] = other.last_position_set
         if other.region_id_set is not None: changes["region_id_set"] = other.region_id_set
+        if other.step_ready_tick_set is not None: changes["step_ready_tick_set"] = other.step_ready_tick_set
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)

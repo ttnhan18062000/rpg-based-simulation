@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-TERRAIN-COST-BECOMES-TIME-A-STEP-COSTING-N-TAKES-N-TIMES-AS-LONG-D75
-phase: open
+phase: done
 date: 2026-10-14
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Terrain cost becomes TIME: a step onto a tile of cost N takes N times as long (D75, MOV-04). The terrain multiplier leaves the readiness pre-check in the same change.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -60,16 +60,16 @@ None.
 src/engine/movement.py; src/engine/legality.py (verify_movement_legality); src/engine/terrain_cost.py; src/engine/rpg_depth.py (TerrainCostService); src/core/state.py (NavigationComponent).
 
 ## Assumptions / Open Questions
-- Cost below 1.0 (road 0.5) means more than one step per tick; the engine allows one step per entity per tick. Asked of rpg-planner.
+- Cost below 1.0 (road 0.5) would mean more than one step per tick; the engine allows one. Designer ruled option A: keep the cap, road takes 1 tick, its edge comes with route weighting.
 
 ## Implementation Notes
-TBD
+NavigationComponent.step_ready_tick (typed, durable; canonical form only once non-zero), NavigationUpdate.step_ready_tick_set, patches/apply copy; resolve_move holds while tick < step_ready_tick and sets base + cost on a step (base = previous value if later than tick - 1, else tick); the terrain factor leaves verify_movement_legality. Two tests changed for stated reasons (divergence 2.126). Divergence 2.126, parity COMB-348, Bible ch02 section 8.
 
 ## Test Summary
-TBD
+New tests/unit/engine/test_terrain_cost_is_time.py (9). Chunked non-slow suite over every test directory, failing areas fixed and re-run. Paired measurement seeds 42-46, 5000 ticks: urban_political identical; frontier_living_world and highland_traverse differ (drift, see 2.126).
 
 ## Files Changed
-TBD
+src/core/state.py, src/core/updates.py, src/engine/{movement,legality,patches,apply}.py, tests (new unit file, terrain weighting, hunting scenario), docs (Bible ch02, parity COMB-348, divergence 2.126).
 
 ## Completion Summary
-TBD
+Terrain cost is time. One step per tick cap: road equals plain. Route weighting is the next step.
