@@ -82,6 +82,28 @@ class MovementSystem:
         return None
 
     @staticmethod
+    def _yield_update(entity: EntityState, effective_target: Tuple[float, float], state_or_context: Any, current_tick: int) -> Optional[EntityUpdate]:
+        """The displacement of the lower-priority occupant of `effective_target` to a free neighbouring tile, or None (3.2 of the congestion ladder).
+        The occupant pays the step time of the tile it is moved onto (D75), and one that is still taking its previous step is not displaced."""
+        occupant_id = LegalityServiceV2.get_occupant(effective_target, state_or_context, ignore_entity_id=entity.id)
+        occupant = getattr(state_or_context, 'entities', {}).get(occupant_id) if occupant_id else None
+        if not occupant or occupant.navigation.movement_mode == MovementMode.HOLD or current_tick < occupant.navigation.step_ready_tick:
+            return None
+        if LegalityServiceV2.get_entity_priority(entity, state_or_context) <= LegalityServiceV2.get_entity_priority(occupant, state_or_context):
+            return None
+        for dx_y, dy_y in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]:
+            yield_tile = (int(occupant.navigation.position[0]) + dx_y, int(occupant.navigation.position[1]) + dy_y)
+            if yield_tile == entity.navigation.position: continue
+            y_ok, _ = LegalityServiceV2.verify_occupancy(yield_tile, state_or_context, ignore_entity_id=occupant_id)
+            if y_ok:
+                return EntityUpdate(
+                    entity_id=occupant_id, new_position=yield_tile, moved_this_tick=True,
+                    navigation=NavigationUpdate(moved_recently_set=True, failure_reason=ReasonCode.YIELDING,
+                                                step_ready_tick_set=MovementSystem._step_ready_tick(occupant, True, yield_tile, current_tick, state_or_context))
+                )
+        return None
+
+    @staticmethod
     def _step_ready_tick(entity: EntityState, success: bool, effective_target: Optional[Tuple[float, float]], current_tick: int, state_or_context: Any) -> Optional[float]:
         """Terrain cost is time (D75): entering a tile of cost N holds the next step back N ticks. The carried time is kept only while it is
         within the last tick, so the entity never takes more than one step per tick (a road, cost 0.5, is no faster than plain)."""
@@ -174,25 +196,10 @@ class MovementSystem:
             
             # 3.2 Yielding
             if not success:
-                occupant_id = LegalityServiceV2.get_occupant(effective_target, state_or_context, ignore_entity_id=entity.id)
-                if occupant_id:
-                    entities = getattr(state_or_context, 'entities', {})
-                    occupant = entities.get(occupant_id)
-                    if occupant and occupant.navigation.movement_mode != MovementMode.HOLD:
-                        my_prio = LegalityServiceV2.get_entity_priority(entity, state_or_context)
-                        occ_prio = LegalityServiceV2.get_entity_priority(occupant, state_or_context)
-                        if my_prio > occ_prio:
-                            # Search for yield tile
-                            for dx_y, dy_y in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]:
-                                yield_tile = (int(occupant.navigation.position[0]) + dx_y, int(occupant.navigation.position[1]) + dy_y)
-                                if yield_tile == entity.navigation.position: continue
-                                y_ok, _ = LegalityServiceV2.verify_occupancy(yield_tile, state_or_context, ignore_entity_id=occupant_id)
-                                if y_ok:
-                                    updates[occupant_id] = EntityUpdate(
-                                        entity_id=occupant_id, new_position=yield_tile, moved_this_tick=True,
-                                        navigation=NavigationUpdate(moved_recently_set=True, failure_reason=ReasonCode.YIELDING)
-                                    )
-                                    success = True; reason_code = None; break
+                yield_update = MovementSystem._yield_update(entity, effective_target, state_or_context, current_tick)
+                if yield_update is not None:
+                    updates[yield_update.entity_id] = yield_update
+                    success = True; reason_code = None
 
             # 3.3 Reroute (If waiting too long)
             if not success and entity.navigation.wait_count >= 2:

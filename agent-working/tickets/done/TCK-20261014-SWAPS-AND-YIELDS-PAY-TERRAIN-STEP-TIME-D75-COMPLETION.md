@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-SWAPS-AND-YIELDS-PAY-TERRAIN-STEP-TIME-D75-COMPLETION
-phase: open
+phase: done
 date: 2026-10-14
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 A position swap and a yield displacement pay the step time of the tile the entity is moved onto, and an entity still taking its previous step is neither swapped nor displaced (D75 completion; closes the 2.126 disclosure).
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -59,13 +59,13 @@ src/engine/movement.py (_yield_update, _step_ready_tick); src/engine/pipeline_ph
 - The 45 unclassified untimed steps may be a non-stepping path (teleport, spawn); classified in the Investigation.
 
 ## Implementation Notes
-TBD
+MovementPhase._swap_updates (swap pays the cost of the tile each side moves onto), _can_attempt_position_swap_pair (a held entity does not swap), MovementSystem._yield_update (extracted from resolve_move; occupant pays the new tile's cost, a held occupant is not displaced). Divergence 2.126 updated, COMB-348 boundary, Bible ch02 section 8. 78 ordinary steps (0.03%) still carry no step time; writer not identified (left as a named residual).
 
 ## Test Summary
-TBD
+New tests/unit/engine/test_swaps_and_yields_pay_step_time.py (5). 647 affected tests pass (movement, pipeline, world, terrain-time, registry pin, hunting scenario). Code-health 0 new, 0 worse. Paired measurement under audit_mode with base-vs-base: urban identical; frontier drift (2.126).
 
 ## Files Changed
-TBD
+src/engine/movement.py, src/engine/pipeline_phases/movement.py, tests (new unit file), docs (divergence 2.126, parity COMB-348, Bible ch02).
 
 ## Completion Summary
-TBD
+Swaps and yields pay step time and respect the hold; steps taken while held went 26 to 0. A small unattributed untimed residual remains and is disclosed.

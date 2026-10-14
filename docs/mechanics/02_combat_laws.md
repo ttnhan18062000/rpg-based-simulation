@@ -240,7 +240,8 @@ Each terrain declares its own movement cost in content: `move_cost_multiplier` o
 declared cost is a compile-time content error, never a silent 1.0. The factor is TIME (D75): a step
 onto a tile of cost N holds the entity's next step back N ticks (`MovementSystem.resolve_move` sets
 `NavigationComponent.step_ready_tick` to the carried previous value, or the step's tick, plus N, and holds
-the entity, with no failure and no wait count, while the tick is earlier). An entity takes at most one
+the entity, with no failure and no wait count, while the tick is earlier). A position swap and a yield
+displacement pay the cost of the tile they move the entity onto and respect the hold. An entity takes at most one
 step per tick, so a cost below 1.0 (road 0.5) is no faster than plain until route weighting or multi-step
 ticks exist; forest, cave and ruin (1.5) alternate one and two ticks. The legality pre-check no longer
 reads the factor: it stays the plain `move_cost / speed` readiness check. The cost is looked up by exact catalog id through
