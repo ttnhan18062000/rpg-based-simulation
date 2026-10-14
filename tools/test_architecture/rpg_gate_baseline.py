@@ -87,6 +87,7 @@ SCHEMA = "rpg-gate-baseline/v1"
 DEFAULT_DIR = Path("tests/simulation_quality/rpg_gate/baselines")
 FILENAME_RE = re.compile(r"^rpg_gate_v(\d+)\.json$")
 CLASSES = ("outcome", "validity")
+VALIDITY_ID_RE = re.compile(r"^V\d+$")
 PROVENANCE_FIELDS = ("commit_sha", "harness_hash", "worlds", "seeds", "ticks", "recorded_at", "stale_after", "cites")
 SCOPES = ("run", "pooled")
 
@@ -118,6 +119,7 @@ class GateConfig:
     ticks: int
     stale_after_days: int
     stop_lines: Tuple[StopLine, ...] = ()
+    required_validity: Tuple[str, ...] = ()
 
 
 def load_config(path: Path) -> GateConfig:
@@ -128,13 +130,21 @@ def load_config(path: Path) -> GateConfig:
     for name in ("worlds", "seeds"):
         if len(set(data[name])) != len(data[name]):
             raise BaselineError(f"{path}: {name} has a duplicate: {data[name]!r}")
+    required = data.get("required_validity", [])
+    if not isinstance(required, list):
+        raise BaselineError(f"{path}: required_validity must be a list of validity row ids, got {required!r}")
+    for rid in required:
+        if not isinstance(rid, str) or not VALIDITY_ID_RE.match(rid):
+            raise BaselineError(f"{path}: required_validity entry {rid!r} is not a validity row id of the form V<n>")
+    if len(set(required)) != len(required):
+        raise BaselineError(f"{path}: required_validity has a duplicate: {required!r}")
     lines = []
     for raw in data.get("stop_lines") or []:
         if not raw.get("name") or not raw.get("metric"):
             raise BaselineError(f"{path}: a stop line needs a name and a metric: {raw!r}")
         lines.append(StopLine(raw["name"], raw["metric"], raw.get("group", "*"), raw.get("min"), raw.get("max")))
     return GateConfig(
-        tuple(data["worlds"]), tuple(data["seeds"]), int(data["ticks"]), int(data["stale_after_days"]), tuple(lines),
+        tuple(data["worlds"]), tuple(data["seeds"]), int(data["ticks"]), int(data["stale_after_days"]), tuple(lines), tuple(required),
     )
 
 

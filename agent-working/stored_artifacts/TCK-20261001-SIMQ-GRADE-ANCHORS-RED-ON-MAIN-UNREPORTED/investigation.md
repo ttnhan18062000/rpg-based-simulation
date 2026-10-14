@@ -1,11 +1,11 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 artifact_type: investigation
 ticket_id: TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED
-phase: open
+phase: done
 date: 2026-10-01
 tags: [simulation-quality, grade-thresholds]
 ---

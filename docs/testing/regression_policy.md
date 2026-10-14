@@ -215,6 +215,14 @@ A follow-up worked example to §9: `test_urban_political_seed42_1000t_social_gra
 
 ---
 
+## 11b. TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE Re-Anchor (Worked Example)
+
+The grade anchors used to be measured from throttled runs, so a grade depended on host speed: the governor's throttle changed event counts, and §9-§11 re-baselined around that with per-row widened tolerances. The 81 anchors are now measured under `audit_mode` (zeroed pressure signals, governor held at NORMAL), recorded from two isolated runs per key that must be identical on every pillar (81 of 81 were), by `tools/test_architecture/simq_reanchor.py`, with an owner ruling (rpg-planner, 2026-10-12) and a committed before/after table. The shared tolerance (grade +/-1, score `max(0.05, 20%)`) now applies to every row: the five `SCORE_TOLERANCE_OVERRIDES` and the evidence-derived `abs_floor`s in `test_corpus_diversity.py` are gone, and the stability tests run one trial. Each run also gets a unique run id (two same-second same-seed processes used to share one run directory and double events). The record, the table and the cause (PR #536 plus the stale 2026-08-31 anchors; FACTION=0 from b1ab4cc92 / #198) are in `agent-working/stored_artifacts/TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE/`. The policy is `docs/plans/test_architecture/reference/baseline_change_policy.md`.
+
+**Lesson**: a tolerance widened to absorb noise is a measurement problem, not a threshold problem (policy rule 7). Fix the measurement (determinism), then record from it.
+
+---
+
 ## 12. The `-m slow` Lane Is a CI Blind Spot — a Real Crash Sat Unnoticed on `main`
 
 `TCK-20260912-ACTIONINTENT-WRONG-TYPE-IN-LATEST-INTENT-RESULTS-CRASHES-STRATEGIC-WORK-QUEUE` found
