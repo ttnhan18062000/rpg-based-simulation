@@ -86,6 +86,18 @@ VARIANT_DETAILS = {  # source asset id -> (visual key, detail value)
     "terrain_shallow_water_pebbles": ("terrain.shallow_water", "pebbles"),
 }
 VARIANT_SOURCES = sorted(VARIANT_DETAILS)
+# The object markers (`TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS`, the owner's `adopt-set` of 2026-10-14, set-adoption `sa-6690e2619d4abb3e`): 18 new sources, one per key (source asset id = the key with dots as underscores).
+# The records hold the command template's placeholders for approver, role and licence evidence; the owner's erratum is in `docs/assets/store_contract.md` ("Provenance errata").
+OBJECT_SET_ID = "object-markers-v1"
+OBJECT_SET_ADOPTION_ID = "sa-6690e2619d4abb3e"
+OBJECT_DRAFT_SET_HASH = "sha256:bbcbfe333dff03f61d7c469370d64996f46bd33202c08e28d9cdd83c6a1fda6d"
+OBJECT_DECIDED_AT = "2026-10-14T16:08:11Z"
+OBJECT_NODE_KINDS = ("wood_node", "herb_patch", "berry_thicket", "healing_flower_patch", "cover_patch_high", "cover_patch_medium", "cover_patch_low", "iron_vein", "silver_vein",
+                     "crystal_outcrop", "frost_shard_cluster", "spirit_wisp", "moon_resin_tree")
+OBJECT_BUILDINGS = ("healer_hut", "town_hall", "mine_entrance", "watchtower")
+OBJECT_KEYS = sorted([f"icon.node.{k}" for k in OBJECT_NODE_KINDS] + ["icon.marker.nest"] + [f"icon.building.{b}" for b in OBJECT_BUILDINGS])
+OBJECT_SOURCES = sorted(k.replace(".", "_") for k in OBJECT_KEYS)
+assert (len(OBJECT_NODE_KINDS), len(OBJECT_SOURCES)) == (13, 18)
 PROOF_SOURCES = sorted(["ui_panel_frame", "fx_selection_ring", "fx_campfire"])
 PROOF_ANIMATED = sorted(["fx_selection_ring", "fx_campfire"])  # 8 and 16 frames, one tag each; every proof source carries exactly one slice
 PROOF_ANIMATION = {"fx_selection_ring": (8, [("pulse", 0, 7)]), "fx_campfire": (16, [("burn", 0, 15)])}  # frames, then (tag, from_frame, to_frame)
@@ -94,28 +106,31 @@ PROOF_SLICES = {  # name -> [(x, y, w, h, has 9-slice centre, has pivot)] per ke
     "fx_selection_ring": [("anchor", [(0, 0, 32, 32, False, True)])],
     "fx_campfire": [("base", [(0, 0, 64, 64, False, True)])],
 }
-ADOPTED_SOURCES = sorted(TERRAIN_ERA_SOURCES + ICON_SOURCES + ICON_V2_SOURCES + PROOF_SOURCES + VARIANT_SOURCES)
-SET_ADOPTION_IDS = sorted([SET_ADOPTION_ID, ICON_SET_ADOPTION_ID, ICON_V2_SET_ADOPTION_ID, VARIANT_SET_ADOPTION_ID])
+ADOPTED_SOURCES = sorted(TERRAIN_ERA_SOURCES + ICON_SOURCES + ICON_V2_SOURCES + PROOF_SOURCES + VARIANT_SOURCES + OBJECT_SOURCES)
+SET_ADOPTION_IDS = sorted([SET_ADOPTION_ID, ICON_SET_ADOPTION_ID, ICON_V2_SET_ADOPTION_ID, VARIANT_SET_ADOPTION_ID, OBJECT_SET_ADOPTION_ID])
 # Counts under the committed catalog: one adoption per source plus one per revision (7), two intake provenance files (record and review) per adoption.
-ADOPTION_COUNT = 94
-INTAKE_FILE_COUNT = 188
-REVISION_COUNT = 94  # r0001 of each of the 87 sources + r0002 of the 7 revised icons (what `store list --kind source` counts)
-assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (87, 87 + len(ICON_FIX_SOURCES), 2 * 94)
+ADOPTION_COUNT = 112
+INTAKE_FILE_COUNT = 224
+REVISION_COUNT = 112  # r0001 of each of the 105 sources + r0002 of the 7 revised icons (what `store list --kind source` counts)
+assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (105, 105 + len(ICON_FIX_SOURCES), 2 * 112)
 # `build` and `release` (TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN, approved by the user on 2026-10-06): one generated artifact directory per adopted source, and the candidate pilot/rc-0005 holds all 34 slots.
 # rc-0004 still holds the forest's three slots only. rc-0006 (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, approved by the user on 2026-10-06) is rc-0005's 34 slots on the registry that added the 14 `icon.*` keys; rc-0007 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`, approved by the user on 2026-10-07) is the same 34 slots on the registry that added the 22 icon set v2 keys.
 TERRAIN_GENERATED = sorted(f"{source}--x1" for source in TERRAIN_ERA_SOURCES)  # the 34 built by `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`
 ICON_GENERATED = sorted(f"{source}--x1" for source in ICON_SOURCES + ICON_V2_SOURCES)  # the 36 built by `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE`, each at its newest revision
 VARIANT_GENERATED = sorted(f"{source}--x1" for source in VARIANT_SOURCES)  # the 14 built by `TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANTS-RC-AND-CLOSE`
 PROOF_GENERATED = sorted(f"{source}--x1" for source in PROOF_SOURCES)  # the 3 built by `TCK-20261011-VISUAL-ASSETS-REAL-ART-RELEASE-PROOF` (frame 1 only: `build/exportconfig.py`)
-GENERATED = sorted(TERRAIN_GENERATED + ICON_GENERATED + PROOF_GENERATED + VARIANT_GENERATED)  # one x1 artifact directory per adopted source (87)
-assert len(ICON_GENERATED) == 36 and len(GENERATED) == 87
-RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json", "rc-0007.json", "rc-0008.json", "rc-0009.json", "rc-0010.json"]
+OBJECT_GENERATED = sorted(f"{source}--x1" for source in OBJECT_SOURCES)  # the 18 built by `TCK-20261013-VISUAL-ASSETS-MARKERS-RC-AND-CLOSE`
+GENERATED = sorted(TERRAIN_GENERATED + ICON_GENERATED + PROOF_GENERATED + VARIANT_GENERATED + OBJECT_GENERATED)  # one x1 artifact directory per adopted source (105)
+assert len(ICON_GENERATED) == 36 and len(GENERATED) == 105
+RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json", "rc-0007.json", "rc-0008.json", "rc-0009.json", "rc-0010.json", "rc-0011.json"]
 # rc-0008 (the owner's answer, 2026-10-09: "Assemble rc-0008"): rc-0007's 34 entries + one entry per icon, 70 in all, on the registry that carries the structured fallbacks.
 RC_0008_ICON_ENTRIES = 36
 # rc-0009 (the owner's answer, 2026-10-11: "Assemble rc-0009"): rc-0008's 70 entries, byte-identical, + one entry per real-art proof key, 73 in all, on the registry that carries the three keys.
 RC_0009_ENTRIES = 73
 # rc-0010 (the owner's answer, 2026-10-13: "Assemble rc-0010"): rc-0009's 73 entries (67 byte-identical, 6 re-anchored to `detail: base`, the same artifact and pixel hash) + the 14 terrain variants = 87.
 RC_0010_ENTRIES = 87
+# rc-0011 (the owner's answer, 2026-10-14: "Assemble rc-0011 (105)"): rc-0010's 87 entries, byte-identical, + one entry per object marker (13 nodes, the nest, 4 buildings), 105 in all; the five aliases are registry-only and are not entries.
+RC_0011_ENTRIES = 105
 # The V2 terrain aliases (`TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES`, owner answer on #523, 2026-10-12): registry-only, the documented mapping `review key-usage` shows.
 # The terrain detail axes of `TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANT-DRAFTS` (owner decision 2026-10-12): `base` (the art adopted before the axis) is the default; forest keeps plain/bush/tree and road has none.
 TERRAIN_VARIANT_AXES = {
@@ -123,7 +138,11 @@ TERRAIN_VARIANT_AXES = {
     "terrain.ruins": ("base", "moss", "fallen"), "terrain.swamp": ("base", "reeds", "puddle"), "terrain.shallow_water": ("base", "ripple", "pebbles"),
 }
 RC_0010_RE_ANCHORED = sorted(TERRAIN_VARIANT_AXES)  # the six keys whose rc-0009 entry gains `detail: base`
-REGISTRY_ALIASES = {"terrain.plain": "terrain.grassland", "terrain.ruin": "terrain.ruins", "terrain.river": "terrain.shallow_water"}
+TERRAIN_ALIASES = {"terrain.plain": "terrain.grassland", "terrain.ruin": "terrain.ruins", "terrain.river": "terrain.shallow_water"}
+# The five object aliases (`TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS`, the owner's answer of 2026-10-13): registry-only, no art of their own.
+OBJECT_ALIASES = {"icon.building.shop": "icon.building.store", "icon.marker.camp": "icon.marker.enemy_camp", "icon.marker.ruin": "icon.marker.ruins",
+                  "icon.marker.dungeon": "icon.marker.dungeon_entrance", "icon.marker.lair": "icon.marker.boss_arena"}
+REGISTRY_ALIASES = {**TERRAIN_ALIASES, **OBJECT_ALIASES}
 PROOF_KEYS = ["fx.campfire", "fx.selection_ring", "ui.panel_frame"]
 
 # The draft sets whose owner decision is recorded are CLOSED gates: their committed preview fixtures are the evidence of what the owner saw, so they are checked against the gate's own record
