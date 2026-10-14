@@ -896,6 +896,8 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 73. what a paid inn meal gives once the free part goes (decided 2026-10-13: 60 hunger for 5 gold, paid atomically or refused, SURV-06).
 74. which species the species-less people get (decided 2026-10-13: human, one per recipe, from each role archetype; other peoples later as their own recipes; before v1, SURV-06).
 75. what the terrain cost does (decided 2026-10-14: a step costing N takes N times as long, and routes weigh the cost; before v1, time then route, each measured alone; MOV-04).
+76. how the steps before the milestone-0 gate are measured (decided 2026-10-14: once at fold; a cumulative watch with a stop-and-ask trigger; byte-identical proof for neutral steps and reused arms; §12.3).
+77. what SimQ grades once rebuilt (decided 2026-10-14: outcome measures from the paired table; NARRATIVE retired; COGNITION and INFORMATION no-data until milestone 1; after v1).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -1142,6 +1144,17 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    - R3 meat-eater attacks on people, against the free-meal arm and the pre-hunting main.
    - R4 minted kill and quest coin, and treasury balances (decision 38's exception).
    - R5 the mix of ways per world and kind group.
+
+   How the steps before the gate are measured (decision 76, owner, 2026-10-14):
+   - **Once, at fold:** a step is measured once, against its parent, when it lands. A later
+     change of order re-runs it only if the new parent touches the same readers or writers.
+   - **A cumulative watch:** a running table, measured against the pre-milestone base, carries
+     people deaths per seed, extinctions and starvation. Work stops and the owner is asked when
+     the cumulative people-death drift passes 2 SE and its floor, or a kind dies out in every
+     seed of a world. A single step's drift stays report-only.
+   - **Tiered cost:** a step claimed neutral needs byte-identical proof only. A behaviour step
+     keeps 3 worlds, 5 seeds and 5,000 ticks per arm. Step N's child arm is step N+1's parent
+     arm, cached by commit. Runs keep summaries, not full logs.
 1. **Kinds by properties.**
    - The property model in coarse bands, as schema and content.
    - The appraisal.
