@@ -37,6 +37,7 @@ Issue #542 (finding from rpg-planner, relayed by lead-planner-u24, 2026-10-13). 
    - The output name uses the world id: `ws_payload_<world_id>.json`, not `ws_payload_<N>.json`.
    - The `--preflight-entities-threshold` memory gate keys off the measured count after load, or off a pre-load count from the world index if one exists. It must never key off a CLI number.
    - The synthetic full-scan path (`_compute_synthetic_full_scan`) loads the same world.
+3a. **`tools/perf/profile_api_payload.py`** (rewritten by TCK-20260929-PROFILE-API-PAYLOAD-DEAD-API-REFS): its single `build_manager(seed, world_id, entities, profile, factory)` still passes `entities_count`. Re-point that one helper to the D69 world selection, drop `--entities`, and record the measured entity count in its output.
 3. **`turbo_run.py`:** replace the hard-coded `entities_count=25, world_id="dungeon_crawl"` with `--world` (default `dungeon_crawl`) and print the measured entity count.
 4. **Ad-hoc scaling, if still needed:** a run that wants an N-entity point names a corpus world of that size. It does not get a synthetic spawn on the live path. A table in the tool docstring lists the worlds and their measured counts. Synthetic sized states stay in `src/perf/scenarios.py` for the bench harness only.
 5. **Docs:** update every doc that cites `--entities` for these two tools (search `docs/performance/` and the tool docstrings). Add a row to `docs/performance/baseline_invalidation_ledger.md`: every earlier `ws_payload_<N>` / turbo_run number is **incomparable** with post-D69 numbers, because the world differs.
@@ -71,6 +72,7 @@ None.
 ## Related Code Areas
 - tools/perf/live_map_ws_payload_measure.py
 - tools/perf/turbo_run.py
+- tools/perf/profile_api_payload.py (`build_manager`)
 - tools/calibrate_simq.py::_load_world_state (existing corpus-world loader that tools/bench_corpus_world.py reuses; candidate for the load path if D69 does not expose one)
 
 ## Assumptions / Open Questions
