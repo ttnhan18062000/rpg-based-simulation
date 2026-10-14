@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES
-phase: open
+phase: done
 date: 2026-10-14
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Three slow arena tests assert gold payouts from before #536's treasury rules (coin no longer minted). Re-state each one under the new rules, or find a real defect.
 
 ## Status
-OPEN (slow-lane known red, rpg-owned, in slow_known_reds.yaml via #531)
+DONE
 
 ## Tier
 hotfix
@@ -67,13 +67,13 @@ tests/arena/test_arena_quests.py; tests/arena/test_arena_regional_control.py.
 None.
 
 ## Implementation Notes
-TBD
+The quest arena posts the quest at a shop on neutral ground with a funded neutral treasury; a short-treasury variant asserts the OWED record; a no-giver variant asserts experience only. The regional arena gives the monster a real purse and asserts the kill moves it to the corpse (not to the hero), no per-head levy, and conservation. No defect found: with a funded payer the reward is paid. The scenario builders are unchanged.
 
 ## Test Summary
-TBD
+tests/arena: 11 passed (extra_slow, run with -m "").
 
 ## Files Changed
-TBD
+tests/arena/test_arena_quests.py, tests/arena/test_arena_regional_control.py.
 
 ## Completion Summary
-TBD
+Three stale gold assertions re-stated as conserved flows under the 536 treasury rules. The slow_known_reds entry is retired by testing (its file).
