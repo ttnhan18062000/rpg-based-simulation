@@ -43,18 +43,18 @@ Written by `lead-planner-u24` on the owner's request, 2026-10-13.
 
 | # | Step | Tools | What it shows / teaches | ADR link |
 |---|---|---|---|---|
-| 1 | **Containers and delivery** | Docker, Compose, GitHub Actions, GHCR, syft, Trivy, cosign, Dependabot | The observability profile is optional, with memory limits and health checks. Images are published with an SBOM, a scan and a keyless signature, and dependency and image pins are bumped by PR | S1 + S2, plus Dependabot (new) |
+| 1 | **Containers and delivery** | Docker, Compose, GitHub Actions, GHCR, syft, Trivy, cosign, Dependabot | The observability profile is optional, with memory limits and health checks. Images are published with an SBOM, a scan and a keyless signature, and dependency and image pins are bumped by PR. **Starts from the parked `devops-s1` work** (codebase, local `7e604d3fa`): T1 (compose profile) and T2 (`publish-images.yml`) carry over; T3 is redone as a platform `owns` line | S1 + S2, plus Dependabot (new) |
 | 2 | **Observability** | Prometheus, Grafana, Loki, OpenTelemetry, Tempo | One API dashboard (metrics and logs) and one request trace; the engine imports no tracing code | S3, kept small |
 | 3 | **Operate** | Locust, Grafana alerting, ntfy | A measured req/s and p95; one SLO alert; a runbook; one drill (stop Redis under load), recording detection time, recovery time and a short post-mortem | S2b + S4 (Locust instead of k6) |
-| 4 | **Kubernetes locally** | kind, kubectl, Helm, kubeconform | Plain manifests first (Deployment, Service, probes, limits, rollout), then a Helm chart; the chart is checked in CI (kubeconform plus a `kind` smoke test) | **new** (the ADR deferred Kubernetes) |
-| 5 | **Cloud once** | Terraform, AWS, GitHub OIDC | Terraform creates a small AWS setup (IAM through OIDC with no stored keys, one container service, a budget alarm). We apply it, test it, then `terraform destroy` it, and keep the dated evidence | S5 extended: **short-lived apply/destroy** (the ADR said validate only) |
+| 4 | **Kubernetes locally** | kind, kubectl, Helm, kubeconform | Plain manifests first (Deployment, Service, probes, limits, rollout), then a Helm chart; the chart is checked in CI (kubeconform plus a `kind` smoke test). `kind` runs on the CI runner; on a local host it runs only with the observability profile down, under step 1's `mem_limit` values, because `kind` plus the step-2 stack will not fit next to the session fleet | **new** (the ADR deferred Kubernetes) |
+| 5 | **Cloud once** | Terraform, AWS, GitHub OIDC | Terraform creates a small AWS setup (IAM through OIDC with no stored keys, one container service, a budget alarm). We apply it, test it, then `terraform destroy` it. **The spend cap** is a Budgets *action* (deny-all IAM policy) plus a destroy-on-timeout job; a budget alarm alone only alerts. **Evidence** in the step-5 PR: the `terraform destroy` output and an empty-account check (no leftover ENIs, EIPs or log groups) | S5 extended: **short-lived apply/destroy** (the ADR said validate only) |
 | 6 | *(optional)* **GitOps** | Argo CD | Argo CD syncs the step-4 chart into the local cluster | **new** |
 
 Evidence labels follow D7: "running locally", "published", "validated", and "measured" only where a number was recorded.
 After step 5 the label is "deployed to AWS, then torn down". It is never just "deployed".
 
-**Cost:** $0, except step 5, which is a few dollars per apply/destroy cycle and is covered by new-account credits and
-capped by a budget alarm.
+**Cost:** $0, except step 5, which is a few dollars per apply/destroy cycle and is covered by new-account credits. A budget alarm alerts; the Budgets action and the destroy-on-timeout job cap
+the spend (step 5).
 
 **When the project goes live:** steps 4-6 are already the deploy path. Pointing the chart and Terraform at real hosting
 then needs its own ADR, covering hosting choice, budget and secrets.
@@ -107,7 +107,7 @@ The lead seats can't dispatch, so the D8 paths have nobody to drive them. The ne
 
 1. Accept the step order 1-6 in place of S1 → S2 → S2b → S4 → S3 → S5.
 2. Add step 4 (local Kubernetes and Helm) and the optional step 6 (Argo CD).
-3. Allow step 5's short-lived `terraform apply`/`destroy` on AWS under a budget alarm.
+3. Allow step 5's short-lived `terraform apply`/`destroy` on AWS, with a budget alarm (alert), a Budgets action (deny-all cap) and a destroy-on-timeout job.
 4. ~~Choose who does the work~~ **Decided 2026-10-13: the `platform` domain.** The owner confirmed the registry diff ("proceed") in the agent-working-planner session; the change is `TCK-20261013-PLATFORM-DOMAIN-SEATS`.
 
 ## D8 supersession
