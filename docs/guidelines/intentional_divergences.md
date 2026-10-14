@@ -3506,6 +3506,16 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Rationale**: **Intentional Gameplay Change** (owner decision D75, route step).
 - **Verification**: `tests/unit/engine/test_route_weighs_terrain_cost.py` (uniform ground takes the greedy step; a road beside a swamp line is preferred; a wide mountain ridge is walked around; a capped search falls back and is counted; a stored detour is followed without a new search; the greedy verdict is stored; an unknown map stays greedy; determinism; the route never costs more than the greedy walk), `tests/unit/movement`, `tests/integration/pipeline`.
 
+### 2.129 Terrain Declares Cover and High Ground In Content (D33/D56/D72 application) (TCK-20261014-TERRAIN-DECLARES-COVER-AND-HIGH-GROUND-IN-CONTENT)
+
+- **Legacy Behavior**: `LegalityServiceV2.check_cover` gave cover when the tile behind the defender was one of `{"WALL", "FOREST", "MOUNTAIN"}` and `check_high_ground` gave the attacker the edge on `{"HILL", "MOUNTAIN"}` against a defender not on one. Catalog terrain is lower-case (`forest`, `mountain`, ...) and no catalog terrain is `WALL` or `HILL`, so neither check ever fired: cover and high ground had never worked, while Bible 02 Section 2 and COMB-262 described them as working.
+- **New Behavior**: each terrain in `data/content/world/terrain.yaml` declares `gives_cover` and `high_ground`, both required (a terrain missing either fails to load, `TerrainDefinition`). Cover: forest, mountain, ruin and cave. High ground: mountain only. Neither: plain, grass, road, swamp, river, snow and volcanic (D33 placeholders). The two checks read the flags through `src/content/terrain_cost.py` (`terrain_gives_cover`, `terrain_is_high_ground`), the same pattern as the move cost; they name no terrain, and an unknown terrain id raises `UnknownTerrainError`. The modifier sizes (`HIGH_GROUND_BONUS` 0.20, `COVER_REDUCTION` 0.30) are unchanged.
+- **Measured**: TBD.
+- **Disclosed**: (1) The dead `WALL` branches in the walk check and in chokepoint detection (`legality.py`, `positioning.py`) are not touched here; they have their own tickets. (2) The existing test `test_high_ground_bonus` used upper-case `HILL` and `PLAIN`; it now uses catalog ids `mountain` and `plain`.
+- **Rationale**: **Intentional Gameplay Change** (designer application of D33/D56/D72), with a **Bug Fix** for the never-firing checks.
+- **Verification**: `tests/unit/engine/test_terrain_declares_cover_and_high_ground.py` (ruled flags per catalog id, the whole catalog covered, a missing flag fails to load, unknown id raises, cover on both axes, no cover from no tile or an adjacent attacker, high ground against a defender on mountain, no terrain name in either check), `tests/unit/world/test_local_environment_semantics.py::test_high_ground_bonus`, `tests/unit/engine/test_terrain_cost_from_content.py`.
+
+
 ### 2.131 Every Material Item Sells As Spare; The Code Names No Item To Sell (D79 step 1, EXCH-02) (TCK-20261014-EVERY-MATERIAL-ITEM-CAN-BE-SOLD-AS-SPARE-D79)
 
 - **Legacy Behavior**: `src/engine/shop_sale.py` `SELLABLE_MATERIALS` listed eight item names (wood, ore, iron_ore, fish, leather, fiber, herb, iron_sword); an item not on the list could never be sold, however it was categorised in content. Only four of the eight exist in `items.yaml`.

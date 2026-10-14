@@ -39,7 +39,7 @@ def test_a_river_stays_walkable_so_its_cost_is_finite_and_positive():
 def test_the_cost_field_is_required_so_a_terrain_without_one_does_not_load():
     with pytest.raises(ValidationError):
         TerrainDefinition(id="bog", display_name="Bog", hazard_multiplier=1.0)  # no move_cost_multiplier
-    assert TerrainDefinition(id="bog", display_name="Bog", move_cost_multiplier=2.0).move_cost_multiplier == 2.0
+    assert TerrainDefinition(id="bog", display_name="Bog", move_cost_multiplier=2.0, gives_cover=False, high_ground=False).move_cost_multiplier == 2.0
 
 
 def test_an_unknown_terrain_is_an_error_never_a_silent_1_0():

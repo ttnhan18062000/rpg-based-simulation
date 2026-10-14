@@ -280,9 +280,9 @@
   status: legacy_verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: "Corrected 2026-10-14 (divergence 2.129): check_high_ground named upper-case HILL and MOUNTAIN, so on lower-case catalog terrain it never fired. Each terrain now declares high_ground in content (mountain only); the check reads it through src/content/terrain_cost.py. The attacker on mountain against a defender who is not high ground gets the edge."
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/engine/test_terrain_declares_cover_and_high_ground.py
   divergence_note: null
   support_boundary: null
 - id: COMB-022
@@ -2812,9 +2812,9 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: "Corrected 2026-10-14 (divergence 2.129). The earlier 'proven via exhaustive checklist audit' claim was stale: check_cover named upper-case WALL, FOREST and MOUNTAIN, while terrain is lower-case catalog ids, so cover never fired. Each terrain now declares gives_cover in content (forest, mountain, ruin, cave) and LegalityServiceV2.check_cover reads it through src/content/terrain_cost.py; the code names no terrain."
   proof_type: null
-  test_path: null
+  test_path: tests/unit/engine/test_terrain_declares_cover_and_high_ground.py
   divergence_note: null
   support_boundary: null
 - id: COMB-263
