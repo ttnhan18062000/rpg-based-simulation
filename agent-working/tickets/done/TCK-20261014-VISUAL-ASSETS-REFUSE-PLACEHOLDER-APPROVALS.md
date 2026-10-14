@@ -64,6 +64,7 @@ Child 5 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner ran `adopt-se
 - The review-folder command builders (`set_commands`, `owner_commands` in `visual_assets/review/review_sheets.py`) now print a leading line "Replace every <...> below with your own value before running".
 - Closed review docs `docs/assets/icon_set_v2_review.md` and `docs/assets/icon_key_set_review.md` still print the old templates; they are historic and were not changed.
 - Erratum: `docs/assets/store_contract.md` "Provenance errata" and child 2's done ticket.
+- The guard moved from `visual_assets/store/adoption.py` to `visual_assets/store/identities.py` in `b0af3c90d`: `revoke` may not import `adoption` (`test_boundaries.py`), so both now import `check_not_placeholder` from `identities`; the error code and message are unchanged. The stored plan.md still names `adoption.py` as history.
 
 ## Test Summary
 - `tests/visual_assets/store/unit/test_adoption.py`, `test_revoke.py`, `test_drafts.py`, `tests/visual_assets/test_review_sheets.py`: all pass, including 9 adopt placeholder cases, 4 revoke cases, the adopt-set refusals, real values pass, and the committed placeholder set adoption still loads with `verify()` empty. `python -m visual_assets.store verify` exit 0.

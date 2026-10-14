@@ -143,7 +143,7 @@ def test_store_list_and_show_read_the_store_and_change_nothing(world):
     assert shown["verdict"] == "PASSED" and "unverified" in shown["claimed_by_producer"]["note"] and limited["count"] == 1
     for r in results:
         assert "/home/" not in text(r) and "/tmp/" not in text(r) and "pytest-of-" not in text(r)
-        assert len(text(r)) < 30_000  # a listing is capped by `limit` (200 items of about 190 characters); 20,000 held until the 105th artifact
+        assert len(text(r)) < 2_000 + 250 * max(1, data(r).get("count", 1))  # bounded per item (about 190 characters each), so it holds at any catalog size; a show response counts as one
     assert snapshot(world.catalog) == before  # byte-identical
 
 
