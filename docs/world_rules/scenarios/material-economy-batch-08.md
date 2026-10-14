@@ -293,6 +293,10 @@ the shop pays out of its own purse, and the worker spends the coins on a meal.
 - **Result (2026-10-08): revealed missing implementation on main.** No worker is seen selling,
   and every worker starts with 0 gold (EXCH-02's evidence). Expected to be **covered** with Lane
   B's batch 2.
+- **Result (#536, 2026-10-13): partly covered.** The shop's purse pays a sale and cannot be
+  spent twice in one tick, and the treasury's share is taken from the sale
+  (`tests/unit/resource/test_tax_and_upkeep.py`). A broke worker gathering, selling a non-food
+  good and then buying a meal is not exercised as one loop yet.
 
 ## ME-S20 — A broke worker works a shift at the inn, is paid from the inn's purse, and eats (EXCH-02, decision 34) (added 2026-10-08)
 
@@ -320,6 +324,10 @@ inn's purse, then buys a meal.
 - **Result (2026-10-08): revealed missing implementation on main.** No paid-work concept exists.
   Expected to be **covered** once Lane B's wage shape lands (the inn's own purse pays; shape
   relayed by rpg-planner, 2026-10-09).
+- **Result (#536, 2026-10-13): covered in the kernel, dormant in play.** An inn shift is paid
+  from the inn's own purse, and an empty purse pays nothing
+  (`tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py`). In measured runs no
+  wage is paid while the free meal stands; that is retested after the free-meal removal.
 
 ---
 
@@ -359,6 +367,11 @@ pays nobody.
   treasury exists, and the treasury (`global_resources`, `faction_<id>_gold`) is held by no
   building or person. Expected to be **covered** with
   `TCK-20261009-THE-FACTION-TREASURY-PAYS-WAGES-FOR-TOWN-WORK-DECISION-37`.
+- **Result (#536, 2026-10-13): covered, as amended by rulings 61 and 66.** An upkeep shift is
+  paid from the building's purse, with the treasury topping up only a shortfall; an unpaid
+  building offers no work (`tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py`,
+  `tests/unit/resource/test_maintenance_shift_counter.py`). Dormant in play while the free meal
+  stands, as in ME-S20.
 
 ---
 
@@ -391,6 +404,9 @@ that place. A subject who earns and trades nothing pays no tax, however long it 
   ticks from anyone present (`src/engine/town_resolution.py`), so I is taxed while earning
   nothing (decision 51's evidence). Expected to be **covered** with
   `TCK-20261009-TAX-IS-A-SHARE-OF-SALES-AND-WAGES-PAID-TO-THE-PLACE-HOLDERS-TREASURY-DECISION-51`.
+- **Result (#536, 2026-10-13): covered.** The levy is gone, a sale pays the seller the price
+  minus the tenth and the treasury the tenth, and a small sale moves nothing to the treasury
+  (`tests/unit/resource/test_tax_and_upkeep.py`).
 
 ---
 
@@ -428,6 +444,11 @@ because a kill or a quest happened.
   `_reward_result` in `src/core/conservation.py`, which credits and never debits. Spawned bodies,
   wolves included, are given gold at birth (`src/systems/world_systems/generator.py`). Expected to
   be **covered** with `TCK-20261009-MINTED-KILL-AND-QUEST-COIN-IS-PAID-BY-A-PAYER-EXCH-02-B`.
+- **Result (#536, 2026-10-13): covered for the quest reward and for loot; the bounty is not
+  exercised.** A kill mints no coin, a looter takes only the coin the body holds, an unlooted
+  purse stays put, and a quest reward is paid by its giver or owed
+  (`tests/unit/resource/test_corpse_gold.py`, `tests/unit/resource/test_rewards_repair_and_fees.py`,
+  `tests/unit/quest/test_quest_lifecycle.py`). No bounty system exists, so no bounty is posted.
 
 ---
 
@@ -450,6 +471,9 @@ that is used up. No coin leaves without someone receiving it.
 - **Result (2026-10-09): revealed contradiction on main** (relayed by rpg-planner). Repair
   charges `gold_cost` on top of `gold_delta` (twice), and a repair with no smith in reach pays
   nobody. Expected to be **covered** with Lane B's treasury batch.
+- **Result (#536, 2026-10-13): covered.** A repair at the smith is charged once into the smith's
+  purse; away from a smith a carried kit is used up and no coin moves; with neither, nothing is
+  offered (`tests/unit/resource/test_rewards_repair_and_fees.py`).
 
 ---
 

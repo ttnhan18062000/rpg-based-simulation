@@ -119,6 +119,23 @@ occurs) — the earlier cost is never revisited or refunded. This confirms the g
 via this repository's own chosen stage granularity (the step), not evidence that the stage must
 always be a step.
 
+**Amendment, terrain cost is declared by the terrain (decided by the owner directly, 2026-10-13;
+row 72 of the memo):** Lane C found that the terrain cost table (`TERRAIN_COST`,
+`src/core/state.py`) is keyed in upper case while compiled terrain is lower case, so forest,
+swamp, mountain and road all cost 1.0 instead of 1.5, 3.0, 4.0 and 0.5, in 20 of 24 corpus
+worlds. Roads give no advantage (`frontier_living_world`: 1,455 forest, 170 swamp and 947 road
+tiles mispriced). Cave, ruin and river had no cost at all.
+- **The cost lives in content:** each terrain declares its movement cost in terrain content.
+  A terrain without one is a content error at compile, never a silent 1.0, and code reads no
+  terrain names (decision 56).
+- **Values:** the existing values are kept. New placeholders (decision 33): cave 1.5, ruin 1.5
+  (rubble) and river 3.0 (wading, like swamp). A river stays walkable. Movement styles per body
+  (a swimmer, a climber) come with milestone 1's body properties.
+- **Sequencing:** it lands before baseline v1 as its own measured step, so v1 records the world
+  as authored.
+- **Alternatives not taken:** after v1 as a change against it; a river that blocks walking,
+  which changes which places connect; keeping the code table with the three values added.
+
 **Scenarios:** [SPC-S08](../scenarios/space-environment-batch-04.md#spc-s08).
 
 ---
