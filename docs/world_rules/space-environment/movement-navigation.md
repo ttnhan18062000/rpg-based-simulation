@@ -152,6 +152,26 @@ tiles mispriced). Cave, ruin and river had no cost at all.
   - **Later:** tiring the body on rough ground (a fatigue cost) can be added on top later.
   - **Alternatives not taken:** slower only; route choice only; a fatigue cost now; both parts
     in one step; after v1.
+- **Cover, high ground and walls (rpg-designer, 2026-10-14, applying decisions 33, 56 and 72):**
+  Lane C found more terrain checks that compare upper-case names, which never match catalog
+  terrain. Cover (`check_cover`, COMB-262: forest, mountain, "WALL") and high ground
+  (`check_high_ground`: mountain, "HILL") never apply. No terrain is a wall. Walking is already
+  blocked by structures through `blocked_tiles`, so the "WALL" branch of the walk check is dead,
+  and the chokepoint finder (which looks for "WALL" tiles only) never finds one.
+  - **Terrain declares it:** each terrain declares `gives_cover` and `high_ground` in content,
+    and a missing value is a compile error. Code drops its terrain names, and the "HILL" name
+    goes with them.
+  - **Values (placeholders by each terrain's fiction):** forest, mountain, ruin (rubble and
+    broken walls) and cave (rock walls) give cover. Mountain is high ground. Plain, grass, road,
+    swamp, river, snow and volcanic ground give neither.
+  - **Walls are structures:** the walk check reads only `blocked_tiles`, and the dead "WALL"
+    branch is removed. This must be hash-identical.
+  - **Chokepoints:** reading structures' `blocked_tiles` turns on a mechanic that has never run,
+    so it is its own measured step, after cover and high ground.
+  - **Sequencing:** the same reason as decision 72 (v1 records the world as authored). Cover and
+    high ground land before baseline v1 as one measured step after the terrain route step, then
+    chokepoints. Each reports cover and high-ground hits, perception, flight and pursuit counts
+    per world. The rendering checks are a separate presentation cleanup.
 
 **Scenarios:** [SPC-S08](../scenarios/space-environment-batch-04.md#spc-s08).
 
