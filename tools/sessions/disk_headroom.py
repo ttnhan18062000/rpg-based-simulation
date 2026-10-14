@@ -11,6 +11,11 @@ with ~50 of them) and runs only when free space is already below the threshold, 
 Sizes are allocated blocks (`st_blocks * 512`, what `du` reports), without following symlinks.
 
     python3 tools/sessions/disk_headroom.py [--json] [--threshold-gb N]
+
+By hand (not in the launcher, which must not wait on `gh`) the report also lists the worktrees `prune_branches
+--worktrees` classifies as removable, plus detached clean ones to check (TCK-20261014-DISK-HEADROOM-MIDSESSION-
+WARNING-AND-MERGED-WORKTREES). Report only: removing them still needs the user. The mid-session low-disk line
+lives in `disk_warning.py`.
 """
 
 from __future__ import annotations
@@ -130,6 +135,69 @@ def measure(root: Path | str = _REPO_ROOT) -> Headroom:
     return Headroom(usage.free, usage.total, tuple(rows))
 
 
+@dataclass(frozen=True)
+class RemovableWorktrees:
+    """What `prune_branches --worktrees` would remove (merged, clean, no seat, no process inside), and detached clean ones."""
+
+    gh_ok: bool
+    removable: tuple[tuple[str, str, int], ...] = ()  # (path, branch, bytes)
+    detached: tuple[tuple[str, int], ...] = ()  # (path, bytes): detached HEAD, no uncommitted changes
+    error: str = ""
+
+    @property
+    def removable_bytes(self) -> int:
+        return sum(r[2] for r in self.removable)
+
+
+PRUNE_COMMAND = "python3 -m tools.sessions.prune_branches --worktrees --execute --backup <path>"
+
+
+def removable_worktrees(root: Path | str = _REPO_ROOT, classify=None, dirty=None, size=None) -> RemovableWorktrees:
+    """The classification is `prune_branches.classify_worktrees`, never a second copy. `classify`, `dirty` and `size`
+    are seams for tests; any failure is reported as `error` and lists nothing as removable."""
+    root = Path(root)
+    try:
+        if str(_REPO_ROOT) not in sys.path:  # run as a script, sys.path[0] is tools/sessions
+            sys.path.append(str(_REPO_ROOT))
+        from tools.sessions import prune_branches as pb
+
+        if classify is None:
+            from tools.sessions import state as st
+            from tools.sessions.roster import load_roster
+
+            def classify():
+                return pb.classify_worktrees(root, pb.fetch_prs(root), load_roster(root), st.state_root(root))
+        dirty = dirty or pb._dirty_paths
+        size = size or pb._tree_bytes
+        report = classify()
+        if not report.gh_ok:
+            return RemovableWorktrees(False)
+        removable = tuple((r.path, r.branch, r.size_bytes) for r in report.removable())
+        detached = tuple((r.path, size(Path(r.path))) for r in report.rows
+                         if r.reason == pb.DETACHED_REASON and Path(r.path).is_dir() and not dirty(Path(r.path)))
+        return RemovableWorktrees(True, removable, detached)
+    except Exception as exc:  # noqa: BLE001 - a report never fails the caller
+        return RemovableWorktrees(False, error=f"{type(exc).__name__}: {exc}")
+
+
+def render_removable(r: RemovableWorktrees) -> str:
+    lines = ["Removable worktrees (report only; nothing is removed):"]
+    if r.error:
+        lines.append(f"  unavailable ({r.error}); nothing listed as removable")
+        return "\n".join(lines)
+    if not r.gh_ok:
+        lines.append("  gh unavailable: nothing could be proven merged, so none is listed as removable")
+        return "\n".join(lines)
+    lines.append(f"  merged, clean, no seat, no process inside: {len(r.removable)} ({_gb(r.removable_bytes)})")
+    lines += [f"    {_gb(b):>9}  {p} [{br}]" for p, br, b in sorted(r.removable, key=lambda x: -x[2])]
+    if r.detached:
+        lines.append(f"  detached, check (no uncommitted changes, merged state unknown): {len(r.detached)}")
+        lines += [f"    {_gb(b):>9}  {p}" for p, b in sorted(r.detached, key=lambda x: -x[1])]
+    if r.removable:
+        lines.append(f"  remove with the user's yes (delete_worktree_or_data): {PRUNE_COMMAND}")
+    return "\n".join(lines)
+
+
 def _gb(n: int) -> str:
     return f"{n / GB:.1f} GB"
 
@@ -163,8 +231,11 @@ def render_text(h: Headroom) -> str:
     return "\n".join(lines)
 
 
-def to_json(h: Headroom) -> str:
+def to_json(h: Headroom, r: RemovableWorktrees | None = None) -> str:
     return json.dumps({
+        **({"removable_worktrees": {"gh_ok": r.gh_ok, "error": r.error, "removable_bytes": r.removable_bytes,
+                                    "removable": [{"path": p, "branch": b, "bytes": n} for p, b, n in r.removable],
+                                    "detached": [{"path": p, "bytes": n} for p, n in r.detached]}} if r else {}),
         "free_bytes": h.free_bytes,
         "total_bytes": h.total_bytes,
         "total_worktree_bytes": h.total_worktree_bytes,
@@ -181,7 +252,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--root", type=Path, default=_REPO_ROOT)
     a = ap.parse_args(argv)
     h = measure(a.root)
-    print(to_json(h) if a.json else render_text(h))
+    removable = removable_worktrees(a.root)
+    print(to_json(h, removable) if a.json else render_text(h) + "\n\n" + render_removable(removable))
     if not a.json:
         line = warning_line(h, threshold_bytes(a.threshold_gb))
         if line:
