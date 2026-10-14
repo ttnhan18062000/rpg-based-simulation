@@ -32,7 +32,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 OUT_ROOT = REPO / "reports" / "visual_assets" / "sample_map"
-RELEASE_ID = "rc-0010"  # the current release candidate: rc-0009 plus the 14 terrain variants
+RELEASE_ID = "rc-0011"  # the current release candidate: rc-0010 plus the 18 object markers
 EXPORT_DIR = OUT_ROOT / f"{RELEASE_ID}-runtime"
 TILE = 16
 
@@ -381,9 +381,11 @@ def draw_world(data: dict, release: Release, view: str) -> tuple[list[bytearray]
 
     aliases = data["proposed_aliases"]
 
+    def kind_row(family: str, kind: str) -> dict:
+        return {r["name"]: r for r in data["kinds"][family]}.get(kind, {})
+
     def kind_key(family: str, prefix: str, kind: str) -> str | None:
-        rows = {r["name"]: r for r in data["kinds"][family]}
-        row = rows.get(kind, {})
+        row = kind_row(family, kind)
         if row.get("key"):
             return row["key"]
         return row.get("proposed_alias") if view == "alias" else None
@@ -409,11 +411,13 @@ def draw_world(data: dict, release: Release, view: str) -> tuple[list[bytearray]
         if img:
             stamp(int(p["x"]), int(p["y"]), scale_to_cell(img[2], img[0], img[1]))
             count("objects_drawn", f"place:{p['kind']}")
+        elif plate and kind_row("place", p["kind"]).get("plate_only"):
+            count("objects_drawn", f"place:{p['kind']}")  # a CITY is the location plate alone (the owner's answer, 2026-10-13): drawn, not a gap
         else:
             stamp(int(p["x"]), int(p["y"]), mark)
             count("objects_gap", f"place:{p['kind']}")
     for n in data["resource_nodes"]:
-        key = kind_key("resource_node", "icon.marker.", n["kind"])
+        key = kind_key("resource_node", "icon.node.", n["kind"])
         img = release.image(key, None) if key else None
         if img:
             stamp(int(n["x"]), int(n["y"]), scale_to_cell(img[2], img[0], img[1]))
@@ -451,6 +455,12 @@ def render_world(data: dict, release: Release, out_dir: Path) -> dict:
     return result
 
 
+def views_differ(result: dict) -> bool:
+    """True when the alias view's x1 image differs from the exact view's (an unconfirmed proposal still changes the drawing)."""
+    files = {view: result["views"][view]["files"]["%s_x1.png" % view]["sha256"] for view in ("exact", "alias")}
+    return files["exact"] != files["alias"]
+
+
 def write_page(results: list[dict], datas: dict[str, dict], out_root: Path | None = None) -> Path:
     """One static HTML page: per world the exact view (primary evidence) and the alias view (UNCONFIRMED), the numbers of each view, and the legend. Images are referenced relatively."""
     import html
@@ -461,19 +471,22 @@ def write_page(results: list[dict], datas: dict[str, dict], out_root: Path | Non
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Sample map: the adopted art on three compiled worlds</title>",
         "<style>body{font:14px/1.45 system-ui,sans-serif;margin:16px;background:#14161c;color:#e6e6e6}h1,h2,h3{margin:.6em 0 .3em}img{image-rendering:pixelated;max-width:100%;height:auto;border:1px solid #444}",
         "table{border-collapse:collapse;margin:.4em 0}td,th{border:1px solid #444;padding:2px 8px;text-align:left}.alias{outline:2px dashed #d9a441}.note{color:#d9a441}code{background:#222;padding:0 3px}.row{display:flex;flex-wrap:wrap;gap:16px}</style></head><body>",
-        "<h1>Sample map: the adopted art (rc-0010) on three compiled worlds</h1>",
+        "<h1>Sample map: the adopted art (rc-0011) on three compiled worlds</h1>",
         "<p><b>Evidence, not a shipped asset</b>: this picture is never intaken, adopted or put in a release candidate; nothing is wired into the Live Map. Cells are drawn by terrain <i>name</i> (the presenter's own code table), not by <code>present_map</code>'s per-world integer code.</p>",
         "<h2>Legend</h2><ul>",
-        "<li><b>Exact view</b> (primary evidence): a terrain name draws with <code>terrain.&lt;name&gt;</code> when that key is registered, or through a <b>registry alias</b> (<code>plain</code> and <code>PLAIN</code> to grassland, <code>ruin</code> to ruins, <code>river</code> to shallow water), resolved offline with <code>Registry.resolve</code>: <b>the live client does NOT resolve aliases</b> (registry-only; a runtime consumer is needed at activation). A name with no key or alias is a <b>diagonal-striped plum cell</b> (a gap).</li>",
-        "<li><b class=\"note\">Alias view (dashed outline) - unconfirmed: asset-planner proposal for rpg-planner (#519)</b>: an object kind with no key draws with its proposed alias (<code>shop</code>, <code>CAMP</code>, <code>RUIN</code>); its terrain is the same as the exact view. It shows how far the art goes, not a decision.</li>",
-        "<li>A key with no art in the release would be the Live Map flat fill with a white diagonal line (none occurs in rc-0010: all 23 terrain keys have art).</li>",
-        "<li>An object with no art (building, place, resource node) is a <b>checkered magenta and black 10 x 10 marker</b>. Buildings are drawn from their 24 x 24 icon scaled to one 16 x 16 cell (nearest neighbour); places are the location plate with their marker glyph. Entities are counted in the data, not drawn.</li>",
+        "<li><b>Exact view</b> (primary evidence): a name draws with its own key when that key is registered, or through a <b>registry alias</b> (terrain: <code>plain</code> and <code>PLAIN</code> to grassland, <code>ruin</code> to ruins, <code>river</code> to shallow water; objects: <code>shop</code> to store, <code>CAMP</code> to enemy camp, <code>RUIN</code> to ruins), resolved offline with <code>Registry.resolve</code>: <b>the live client does NOT resolve aliases</b> (registry-only; a runtime consumer is needed at activation). A name with no key or alias is a <b>diagonal-striped plum cell</b> (a gap).</li>",
+        "<li><b class=\"note\">Alias view (dashed outline) - unconfirmed: asset-planner proposal for rpg-planner (#519)</b>: an object kind with no key draws with its proposed alias. Every earlier proposal (<code>shop</code>, <code>CAMP</code>, <code>RUIN</code>) is now a registry alias, so the alias view is shown below only for a world where it differs from the exact view.</li>",
+        "<li>A key with no art in the release would be the Live Map flat fill with a white diagonal line (none occurs in rc-0011: all 23 terrain keys have art).</li>",
+        "<li>An object with no art (building, place, resource node) is a <b>checkered magenta and black 10 x 10 marker</b>. Buildings are drawn from their 24 x 24 icon scaled to one 16 x 16 cell (nearest neighbour); places are the location plate with their marker glyph, and a <code>CITY</code> is the plate alone (no key, alias or glyph); resource nodes are their 16 x 16 <code>icon.node.&lt;kind&gt;</code> tile with no plate. Entities are counted in the data, not drawn.</li>",
         "<li>Borders: the composition rule of <code>terrainBorders.ts</code> ported to Python and proven on the rule's own test vectors; only cells whose terrain has a Live Map rank fringe. Scale: 16 px per cell (x1); the x2 files double it.</li></ul>",
     ]
     for res in results:
         data = datas[res["world_id"]]
         parts.append(f"<h2>{esc(res['world_id'])} ({data['width']} x {data['height']} cells)</h2><p>{esc(data['role'])}</p><div class=\"row\">")
         for view, label, css in (("exact", "Exact view (primary evidence)", ""), ("alias", "Alias view - unconfirmed: asset-planner proposal for rpg-planner (#519)", " alias")):
+            if view == "alias" and not views_differ(res):
+                parts.append("<div><h3>Alias view</h3><p>Identical to the exact view: no unconfirmed proposal is left (all are registry aliases).</p></div>")
+                continue
             st = res["views"][view]
             parts.append(f"<div><h3>{esc(label)}</h3><a href=\"{esc(res['world_id'])}/{view}_x2.png\"><img class=\"{css.strip()}\" src=\"{esc(res['world_id'])}/{view}_x1.png\" alt=\"{esc(label)}\" width=\"{min(data['width'] * 4, 640)}\"></a>")
             parts.append(f"<table><tr><th>cells with art</th><td>{sum(st['terrain_drawn'].values())} of {st['cells']}</td></tr><tr><th>cells in the gap (no key)</th><td>{sum(st['terrain_no_key'].values())}</td></tr><tr><th>cells whose key has no art</th><td>{sum(st['terrain_key_without_art'].values())}</td></tr><tr><th>cells with a border fringe</th><td>{st['bordered_cells']}</td></tr><tr><th>objects drawn / in the gap</th><td>{sum(st['objects_drawn'].values())} / {sum(st['objects_gap'].values())}</td></tr></table>")
@@ -510,13 +523,16 @@ def crop_rows(canvas: list[bytearray], box: tuple[int, int, int, int]) -> list[b
 
 
 def evidence_files(datas: dict[str, dict], release: Release) -> dict[str, bytes]:
-    """`<crop>_<view>_x1.png` for every crop and both views, drawn by the same code as the full renders."""
+    """`<crop>_exact_x1.png` for every crop, plus `<crop>_alias_x1.png` only where the alias view differs, drawn by the same code as the full renders."""
     out: dict[str, bytes] = {}
     for name, (world, box) in EVIDENCE_CROPS.items():
+        pngs = {}
         for view in ("exact", "alias"):
             canvas, _ = draw_world(datas[world], release, view)
-            rows = crop_rows(canvas, box)
-            out[f"{name}_{view}_x1.png"] = encode_png((box[2] - box[0]) * TILE, (box[3] - box[1]) * TILE, rows)
+            pngs[view] = encode_png((box[2] - box[0]) * TILE, (box[3] - box[1]) * TILE, crop_rows(canvas, box))
+        out[f"{name}_exact_x1.png"] = pngs["exact"]
+        if pngs["alias"] != pngs["exact"]:  # no unconfirmed proposal is left (all are registry aliases): an identical alias crop is not committed
+            out[f"{name}_alias_x1.png"] = pngs["alias"]
     return out
 
 

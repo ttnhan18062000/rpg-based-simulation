@@ -7,11 +7,12 @@ I/O and reads no clock. The eight opaque ids share one syntax; they are distinct
 
 from __future__ import annotations
 
+import re
 from typing import Annotated, Any, NewType
 
 from pydantic import AfterValidator, StringConstraints, TypeAdapter, ValidationError
 
-from visual_assets.store.errors import IdentityError
+from visual_assets.store.errors import GateError, IdentityError
 
 VISUAL_KEY_PATTERN = r"^[a-z][a-z0-9_]{0,31}(\.[a-z][a-z0-9_]{0,31}){1,3}$"
 ID_PATTERN = r"^[a-z0-9][a-z0-9_-]{0,63}$"
@@ -115,3 +116,14 @@ def next_release_id(existing: list[str]) -> str:
 
 def is_fixture_key(key: str) -> bool:
     return key.split(".", 1)[0] == FIXTURE_NAMESPACE
+
+
+_PLACEHOLDER_SPAN = re.compile(r"<[^<>]*>")
+_PLACEHOLDER_WORDS = frozenset({"todo", "tbd", "xxx", "your name", "your role", "fixme", "changeme"})
+
+
+def check_not_placeholder(**fields: str) -> None:
+    """Refuse a value that is a command-template placeholder: any `<...>` span, or text that is only a placeholder word. Names the field."""
+    for field, value in fields.items():
+        if isinstance(value, str) and (_PLACEHOLDER_SPAN.search(value) or value.strip().lower() in _PLACEHOLDER_WORDS):
+            raise GateError("placeholder_value", f"{field} looks like a template placeholder ({value!r}); replace every <...> with a real value before running")

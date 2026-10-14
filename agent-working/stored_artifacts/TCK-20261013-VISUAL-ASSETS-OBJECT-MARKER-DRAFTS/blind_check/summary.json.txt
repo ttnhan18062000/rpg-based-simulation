@@ -1,0 +1,44 @@
+{
+ "1": {
+  "flagged_free_text": [
+   "marker.nest",
+   "node.berry_thicket",
+   "node.cover_patch_low",
+   "node.frost_shard_cluster",
+   "node.silver_vein"
+  ],
+  "flagged_era": [],
+  "missed_in_choice": []
+ },
+ "2": {
+  "flagged_free_text": [
+   "node.berry_thicket",
+   "node.cover_patch_high",
+   "node.cover_patch_low",
+   "node.frost_shard_cluster",
+   "node.healing_flower_patch",
+   "node.herb_patch",
+   "node.spirit_wisp"
+  ],
+  "flagged_era": [],
+  "missed_in_choice": []
+ },
+ "3": {
+  "flagged_free_text": [
+   "node.berry_thicket",
+   "node.cover_patch_low",
+   "node.healing_flower_patch",
+   "node.spirit_wisp"
+  ],
+  "flagged_era": [],
+  "missed_in_choice": []
+ },
+ "4": {
+  "flagged_free_text": [
+   "node.berry_thicket",
+   "node.spirit_wisp"
+  ],
+  "flagged_era": [],
+  "missed_in_choice": []
+ }
+}

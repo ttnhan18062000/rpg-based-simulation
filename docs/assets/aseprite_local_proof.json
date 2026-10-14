@@ -82,7 +82,7 @@
     },
     {
       "path": "tests/visual_assets/test_release_byte_reproducibility.py",
-      "sha256": "sha256:06e97752dc2ef22a3d211902da8f9408ede933d35c6b3b556109d46d8a74bb51"
+      "sha256": "sha256:2ebd6bf2f46e7eb22a9c73c8ab1a4fcb0575756d59ae5ec0642ebc4ac93cec46"
     },
     {
       "path": "tests/visual_assets/test_strict_aseprite.py",
@@ -254,7 +254,7 @@
     },
     {
       "path": "visual_assets/store/adoption.py",
-      "sha256": "sha256:21785272f3a4351a22d43330b2e2fd6c5b7a8452b3129ad253b108de0bd4b78d"
+      "sha256": "sha256:13aaa34502857df67d074683cebc1e1d752664ab4c50a193f54d4c1a1768951f"
     },
     {
       "path": "visual_assets/store/animation.py",
@@ -390,7 +390,7 @@
     },
     {
       "path": "visual_assets/store/identities.py",
-      "sha256": "sha256:f2cc76d48ec048e061c24d3b4351b5ef900b17d928f4030898641c5cac72b9e9"
+      "sha256": "sha256:4f0331bd811ddf52a4132bab40f63a7254866f5057674e7fe8e244fb501455e2"
     },
     {
       "path": "visual_assets/store/intake/__init__.py",
@@ -442,7 +442,7 @@
     },
     {
       "path": "visual_assets/store/revoke.py",
-      "sha256": "sha256:01beb240cdfd16ffb5389fba5460d06cbe11ac1e5565b0c82c3937b22d6a71db"
+      "sha256": "sha256:9c999a41758b514bb76d030df762d8d4f36287d88c804d4372395d9551788df6"
     },
     {
       "path": "visual_assets/store/runtime_export.py",
@@ -461,17 +461,17 @@
       "sha256": "sha256:273e79ef546f44ef25d9cc94980b1b620aac3cd1b1e35ebff334529e92b8d3b5"
     }
   ],
-  "guarded_hash": "sha256:651d881077f1cb91cc9bca4b2a857b4582380dee4cae749bcc45aa79037ec36f",
+  "guarded_hash": "sha256:322169ac46cf3df67f8fc70d4466735f9795599dfb5398b6ccd17c0d8d484c8c",
   "make_target": "visual-assets-aseprite-local",
   "record_type": "aseprite_local_proof",
   "release_rebuild": {
     "bytes_differ_pixels_match": 0,
-    "entries": 87,
-    "identical": 87,
-    "release": "pilot/rc-0010"
+    "entries": 105,
+    "identical": 105,
+    "release": "pilot/rc-0011"
   },
-  "run_at_utc": "2026-10-12T17:34:42Z",
-  "run_commit": "e772fca7cde2b47de536d61d337f12dd74fa2d94",
+  "run_at_utc": "2026-10-14T17:58:18Z",
+  "run_commit": "b0af3c90d3c0cb69bb9888978d167348038720a3",
   "schema_version": 1,
   "strict": true
 }
