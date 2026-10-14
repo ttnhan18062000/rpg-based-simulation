@@ -12,19 +12,19 @@ Generated from `registries/mechanisms.yaml` + `registries/system_registry.jsonl`
 
 **"Bound, Unverified" is this view's most actionable column.** It splits `unverified` into two problems with different costs that the per-mechanism view doesn't separate: *bound-but-unverified* (a real `implemented_by` binding exists — the expensive part, locating the code, is already done, so this is the cheapest verification target available) versus *unbound-and-unverified* (`unverified` minus this column — we don't even know where to look yet, and investigation has to happen before verification can start).
 
-**Baseline (all 107 mechanisms)**: 97 bound (90.7%), 99 verified (92.5% — 49 runtime, 50 static, 49.5% of verified is runtime), 8 unverified (0 of those bound-but-unverified). State breakdown: done 57, partial 15, gap 10, orphan 15, gated 10, skeleton 0.
+**Baseline (all 107 mechanisms)**: 96 bound (89.7%), 99 verified (92.5% — 49 runtime, 50 static, 49.5% of verified is runtime), 8 unverified (0 of those bound-but-unverified). State breakdown: done 56, partial 15, gap 11, orphan 15, gated 10, skeleton 0.
 
 **Runtime Share is a property of the verification method, not of coverage — track it separately.** `Verified` counts mechanisms confirmed by *any* instrument; `code_trace` (the code says it should work) and `scenario`/`corpus_run` (the simulation actually did it) are not interchangeable evidence, and a batch of code_trace-only re-confirmations can raise `Verified` while silently lowering `Runtime Share` — exactly what happened in `TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN` (batch 3 of the unbound-claims program), whose 20 new `code_trace` verifications moved the registry-wide runtime share from 27% to 49.5% while `Verified` itself grew. Neither number tells the whole story alone.
 
 | System | Mechanisms | Bound (vs baseline) | Verified (vs baseline) | Runtime Share of Verified (vs baseline) | Bound, Unverified | done | partial | gap | orphan | gated | skeleton |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `cognition` | 22 | 21/22 (95.5%, +4.8pt vs baseline) | 22/22 (100.0%, +7.5pt vs baseline) [14 runtime, 8 static] | 14/22 (63.6%, +14.1pt vs baseline) | 0 | 10 | 0 | 1 | 6 | 5 | 0 |
-| `combat` | 8 | 8/8 (100.0%, +9.3pt vs baseline) | 8/8 (100.0%, +7.5pt vs baseline) [4 runtime, 4 static] | 4/8 (50.0%, +0.5pt vs baseline) | 0 | 6 | 1 | 0 | 1 | 0 | 0 |
-| `economy` | 12 | 11/12 (91.7%, +1.0pt vs baseline) | 11/12 (91.7%, -0.9pt vs baseline) [5 runtime, 6 static] | 5/11 (45.5%, -4.0pt vs baseline) | 0 | 8 | 1 | 1 | 2 | 0 | 0 |
-| `faction` | 14 | 12/14 (85.7%, -4.9pt vs baseline) | 12/14 (85.7%, -6.8pt vs baseline) [4 runtime, 8 static] | 4/12 (33.3%, -16.2pt vs baseline) | 0 | 8 | 3 | 2 | 1 | 0 | 0 |
-| `progression` | 15 | 15/15 (100.0%, +9.3pt vs baseline) | 15/15 (100.0%, +7.5pt vs baseline) [8 runtime, 7 static] | 8/15 (53.3%, +3.8pt vs baseline) | 0 | 8 | 5 | 0 | 0 | 2 | 0 |
-| `social` | 12 | 9/12 (75.0%, -15.7pt vs baseline) | 9/12 (75.0%, -17.5pt vs baseline) [2 runtime, 7 static] | 2/9 (22.2%, -27.3pt vs baseline) | 0 | 5 | 3 | 3 | 1 | 0 | 0 |
-| `world` | 37 | 33/37 (89.2%, -1.5pt vs baseline) | 34/37 (91.9%, -0.6pt vs baseline) [19 runtime, 15 static] | 19/34 (55.9%, +6.4pt vs baseline) | 0 | 22 | 3 | 4 | 5 | 3 | 0 |
+| `cognition` | 22 | 21/22 (95.5%, +5.7pt vs baseline) | 22/22 (100.0%, +7.5pt vs baseline) [14 runtime, 8 static] | 14/22 (63.6%, +14.1pt vs baseline) | 0 | 10 | 0 | 1 | 6 | 5 | 0 |
+| `combat` | 8 | 8/8 (100.0%, +10.3pt vs baseline) | 8/8 (100.0%, +7.5pt vs baseline) [4 runtime, 4 static] | 4/8 (50.0%, +0.5pt vs baseline) | 0 | 6 | 1 | 0 | 1 | 0 | 0 |
+| `economy` | 12 | 11/12 (91.7%, +1.9pt vs baseline) | 11/12 (91.7%, -0.9pt vs baseline) [5 runtime, 6 static] | 5/11 (45.5%, -4.0pt vs baseline) | 0 | 8 | 1 | 1 | 2 | 0 | 0 |
+| `faction` | 14 | 11/14 (78.6%, -11.1pt vs baseline) | 12/14 (85.7%, -6.8pt vs baseline) [4 runtime, 8 static] | 4/12 (33.3%, -16.2pt vs baseline) | 0 | 7 | 3 | 3 | 1 | 0 | 0 |
+| `progression` | 15 | 15/15 (100.0%, +10.3pt vs baseline) | 15/15 (100.0%, +7.5pt vs baseline) [8 runtime, 7 static] | 8/15 (53.3%, +3.8pt vs baseline) | 0 | 8 | 5 | 0 | 0 | 2 | 0 |
+| `social` | 12 | 9/12 (75.0%, -14.7pt vs baseline) | 9/12 (75.0%, -17.5pt vs baseline) [2 runtime, 7 static] | 2/9 (22.2%, -27.3pt vs baseline) | 0 | 5 | 3 | 3 | 1 | 0 | 0 |
+| `world` | 37 | 32/37 (86.5%, -3.2pt vs baseline) | 34/37 (91.9%, -0.6pt vs baseline) [19 runtime, 15 static] | 19/34 (55.9%, +6.4pt vs baseline) | 0 | 21 | 3 | 5 | 5 | 3 | 0 |
 | `unassigned` | 0 | 0/0 (n/a) | 0/0 (n/a) | 0/0 (n/a) | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 `unassigned` mechanism count is 0 — a mechanism with no declared system renders here explicitly rather than being silently dropped, same discipline as `mechanisms_by_system()`'s own `"unassigned"` key.

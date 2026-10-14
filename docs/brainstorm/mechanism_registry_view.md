@@ -67,7 +67,7 @@ All 107 mechanisms, one row each, sorted by priority (`layer weight × transitiv
 | `entity_trade` | entity | gap | unverified | unverified | 0 | 0 |
 | `equipment_scoring` | world | orphan | runtime | observed | 0 | 0 |
 | `event_interpretation` | region | done | static | observed | 0 | 0 |
-| `faction_raid` | faction | done | runtime | observed | 0 | 0 |
+| `faction_raid` | faction | gap | runtime | observed | 0 | 0 |
 | `fame` | world | done | static | observed | 0 | 0 |
 | `fidelity_drift` | world | done | static | observed | 0 | 0 |
 | `genetics_aptitude` | entity | gated | static | observed | 0 | 0 |

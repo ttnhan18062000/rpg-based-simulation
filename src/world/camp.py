@@ -2,13 +2,12 @@
 # src/world/camp.py
 from __future__ import annotations
 from dataclasses import replace
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict
 from src.core.updates import StateUpdate, CampUpdate, WorldUpdate
-from src.core.enums import Domain, EntityRole
 from src.engine.behavior_consumers import get_kind_properties
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState, CampState
+    from src.core.state import AuthoritativeState
     from src.systems.world_systems.generator import EntityGenerator
 
 class CampService:
@@ -32,7 +31,7 @@ class CampService:
     @staticmethod
     def process_camps(state: AuthoritativeState, generator: EntityGenerator, faction_directives: list | None = None) -> StateUpdate:
         """
-        Evolve camps and spawn monsters or raids.
+        Evolve camps. A camp no longer spawns monsters or raiders (D70): its members change only by death, until births (M1) or recruits.
         """
         camp_updates: Dict[str, CampUpdate] = {}
         entities_add = []
@@ -66,87 +65,23 @@ class CampService:
                         )
                         break
 
-            # 2. Camp-based Spawning
-            if state.tick % CampService.CAMP_SPAWN_INTERVAL == 0:
-                # Count monsters near camp
-                mobs_near = [e for e in state.entities.values() 
-                             if e.identity.role == EntityRole.MONSTER and e.combat.alive
-                             and abs(e.navigation.position[0] - camp.position[0]) < 10
-                             and abs(e.navigation.position[1] - camp.position[1]) < 10]
-                
-                # Rule: Camp spawns monsters up to maturity/10 (min 2)
-                cap = max(2, int(camp.maturity / 10.0))
-                if len(mobs_near) < cap:
-                    mob = generator.spawn_monster(
+            # 3. Nest Spread (Nest-classified camps with the flag ON; OFF by default and retired with the M1 births).
+            # A camp no longer raids: the raid conjured raiders from nothing (owner ruling D70, TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70).
+            if camp.maturity >= CampService.RAID_MATURITY_THRESHOLD and state.tick - camp.last_raid_tick >= 500:
+                if flags.get("ENABLE_CAMP_NEST_SPREAD", "OFF") == "ON" and camp.kind in CampService.NEST_RACE_KINDS:
+                    offspring = generator.spawn_natural_creature_offspring(
                         camp.position,
                         state=state,
-                        kind=CampService.spawn_kind(camp.kind),
-                        difficulty_tier=int(camp.maturity / 20.0) + 1
+                        kind=camp.kind,
+                        difficulty_tier=int(camp.maturity / 20.0) + 1,
+                        birth_tick=state.tick,
                     )
-                    entities_add.append(mob)
-            
-            # 3. Raid Trigger (or Nest Spread, for Nest-classified camps with the flag ON)
-            if camp.maturity >= CampService.RAID_MATURITY_THRESHOLD:
-                # Check if enough time has passed since last raid
-                if state.tick - camp.last_raid_tick >= 500: # 5 days
-                    is_nest_spread = (
-                        flags.get("ENABLE_CAMP_NEST_SPREAD", "OFF") == "ON"
-                        and camp.kind in CampService.NEST_RACE_KINDS
+                    entities_add.append(offspring)
+                    camp_updates[c_id] = CampUpdate(
+                        id=c_id,
+                        maturity_delta=-20.0,  # the cost the retired raid charged, kept for the nest-spread cadence
+                        last_raid_tick_set=state.tick
                     )
-                    if is_nest_spread:
-                        offspring = generator.spawn_natural_creature_offspring(
-                            camp.position,
-                            state=state,
-                            kind=camp.kind,
-                            difficulty_tier=int(camp.maturity / 20.0) + 1,
-                            birth_tick=state.tick,
-                        )
-                        entities_add.append(offspring)
-                        camp_updates[c_id] = CampUpdate(
-                            id=c_id,
-                            maturity_delta=-20.0,  # same cost as raiding, per ticket's "reuses timing" requirement
-                            last_raid_tick_set=state.tick
-                        )
-                    else:
-                        # Trigger a raid from this camp, anchored at the camp's own position and
-                        # targeting the nearest real settlement (TCK-20260908-CAMP-RAID-ORIGIN-
-                        # SPAWN-FIX). RaidService.check_for_raid() is NOT called here -- its own
-                        # internal tick%raid_interval_ticks gate is a different, unrelated cadence
-                        # that would suppress raiders on ~499/500 of the ticks this branch is
-                        # actually eligible to fire on. The camp's own maturity/last_raid_tick
-                        # cadence (checked above) is the real gate for this path.
-                        from src.core.state import PlaceKind
-                        from src.world.raid import RaidService
-
-                        nearest_city = None
-                        nearest_dist_sq = None
-                        for place in state.places.values():
-                            if place.kind != PlaceKind.CITY:
-                                continue
-                            dist_sq = ((place.position[0] - camp.position[0]) ** 2 +
-                                       (place.position[1] - camp.position[1]) ** 2)
-                            if nearest_dist_sq is None or dist_sq < nearest_dist_sq:
-                                nearest_city = place
-                                nearest_dist_sq = dist_sq
-
-                        if nearest_city is not None:
-                            raid_size = RaidService.RAID_BASE_SIZE + state.maturity
-                            raid_update = RaidService.spawn_raid(
-                                state, generator,
-                                origin=camp.position,
-                                target=nearest_city.position,
-                                raid_size=raid_size,
-                            )
-                            entities_add.extend(raid_update.entities_add)
-                            camp_updates[c_id] = CampUpdate(
-                                id=c_id,
-                                maturity_delta=-20.0, # Cost of raiding
-                                last_raid_tick_set=state.tick
-                            )
-                        # else: no settlement to raid -- skip entirely. Do NOT apply the maturity
-                        # cost or reset last_raid_tick here; that would charge the camp for a raid
-                        # that never happened, rebuilding this exact ticket's own bug. The
-                        # growth-only CampUpdate from step 1 above is left untouched.
 
             # 4. Natural-Creature Reproduction
             if flags.get("ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH", "OFF") == "ON":

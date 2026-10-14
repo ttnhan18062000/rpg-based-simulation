@@ -2755,7 +2755,7 @@ mechanisms:
       - src/core/state.py::CampState
       - src/world/camp.py::CampService
       - src/world/creature_territory.py::CreatureTerritoryService
-      - src/systems/world_systems/generator.py::EntityGenerator  # re-bound 2026-10-14: the retired regional_monster_spawn was its other binding (2.122); camp spawns still go through it until D70
+      - src/systems/world_systems/generator.py::EntityGenerator  # re-bound 2026-10-14: the retired regional_monster_spawn was its other binding (2.122); D70 (2.125) removed the camp spawn; the camp still calls it for the flag-OFF nest-spread offspring, which retires with the M1 births
     verified:
       instrument: corpus_run
       verdict: observed
@@ -3296,8 +3296,8 @@ mechanisms:
     layer: faction
     systems: [faction, world]
     depends_on: [camp]
-    state: done
-    implemented_by: [src/world/raid.py::RaidService]
+    state: gap
+    implemented_by: []
     verified:
       instrument: corpus_run
       verdict: observed
@@ -3305,6 +3305,7 @@ mechanisms:
       note: >-
         TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `RaidService.check_for_raid` was called 30 times and `spawn_raid` 3 times. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         A faction action against a place, launched from camp maturity or its own 500-tick cadence. Kept separate from `camp` (a place, not an action).
+        **Retired 2026-10-14 (D70, divergence 2.125):** `RaidService.spawn_raid` conjured raiders from nothing and is deleted; a camp raids nothing. `src/world/raid.py::RaidService` keeps only its constants for the raid that returns with caused war (M3), so the mechanism is a gap again.
 
   - id: refugee_displacement
     layer: region

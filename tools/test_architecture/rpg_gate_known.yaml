@@ -16,10 +16,3 @@ known:
     expires_on: "2026-12-31"
     state: fail
     note: "core_actions.py eat_update free meal, -40 hunger with no transfer; any undeclared or prepared diet. Measured as merchants (group undeclared) in urban_political and frontier_living_world."
-  - match: "V8"
-    ticket: TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70
-    owner: rpg-planner
-    added_on: "2026-10-13"
-    expires_on: "2026-12-31"
-    state: fail
-    note: "Unsourced mid-run adds: camps and raids (D70), the only remaining source. The conquest stronghold was removed by TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71 (divergence 2.123). D70's closer removes this entry."
