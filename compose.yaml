@@ -45,6 +45,9 @@ services:
     command: python -m src.observability.anomaly.worker
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - AI_WORKER_METRICS_PORT=9108
+    expose:
+      - "9108"
     depends_on:
       redis:
         condition: service_started

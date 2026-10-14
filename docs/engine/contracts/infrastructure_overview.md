@@ -31,7 +31,7 @@ graph TD
     Redis -->|consumer group| AIW["ai_worker<br/>python -m src.observability.anomaly.worker<br/>anomaly rules, alerts"]
 
     %% Metrics and logs
-    API -->|"/metrics, /health"| Prom["Prometheus (scrapes backend:/metrics; does not read Redis)"]
+    API -->|"/metrics, /health"| Prom["Prometheus (scrapes backend:/metrics and ai_worker:9108/metrics; does not read Redis)"]
     Prom --> Grafana["Grafana"]
     Container["Container stdout"] -->|Promtail| Loki["Loki"]
 
@@ -157,6 +157,7 @@ The complete production-grade system is deployed via Docker Compose to manage lo
 *   **`frontend`**: The TypeScript React client served via Nginx.
 *   **`redis`**: Handles live in-memory caching and real-time state broadcasts, and is the sole event-stream transport (`RedisStreamConsumer`).
 *   **`ai_worker`**: Scaling pool executing computationally intense AI predictions.
+    *   **Saturation metrics**: `ai_worker` serves `/metrics` on port `9108` (`AI_WORKER_METRICS_PORT`; compose `expose` only, scraped on the compose network). Per stream and consumer group it reports `sim_stream_consumer_lag` and `sim_stream_pending_messages`, read from Redis (`XINFO GROUPS`) at scrape time, plus `sim_stream_consumer_up` (0 when Redis cannot be read, with no gauges emitted). It never imports the engine (`src/observability/stream/lag_metrics.py`).
 *   **`prometheus`**: Time-series database scraping runtime TPS and performance counters.
 *   **`grafana`**: Provisioned dashboards showing live simulation metrics.
 *   **`loki` & `promtail`**: Multi-container centralized log aggregator.
