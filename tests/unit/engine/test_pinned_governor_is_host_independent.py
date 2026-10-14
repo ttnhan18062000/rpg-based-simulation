@@ -56,9 +56,13 @@ def test_the_pinned_governor_keeps_the_normal_budgets_whatever_the_phases_cost(m
 def test_positive_control_an_unpinned_run_under_the_same_clock_does_switch_its_budgets(monkeypatch):
     from src.engine.governor import ResourceGovernor
 
-    seen, _ = _budgets_seen(monkeypatch, ResourceGovernor())
-    budgets = [b for b, _ in seen]
-    assert any(b != budgets[0] for b in budgets) or any(sig.phase_costs_ms for _, sig in seen), "the fake clock did not put any phase under pressure"
+    pinned, _ = _budgets_seen(monkeypatch, PinnedNormalGovernor())
+    baseline = pinned[0][0]
+    unpinned, _ = _budgets_seen(monkeypatch, ResourceGovernor())
+    # The fake clock must push a phase over a threshold: the scan policy changes or the movement budget falls below what the pinned run keeps.
+    assert any(b.scan_policy != baseline.scan_policy or b.movement_budget < baseline.movement_budget for b, _ in unpinned), (
+        "the fake clock did not move any budget, so the pinned test above proves nothing"
+    )
 
 
 def test_the_kernel_zeroes_the_signals_for_audit_mode_and_for_a_pinning_governor_only(monkeypatch):
