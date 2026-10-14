@@ -75,5 +75,6 @@ Steps added to `publish-images.yml` after the build: Trivy (report-only, `exit-c
 - **validated:** actionlint passes.
 - **published:** to be confirmed after merge: `cosign verify` / `cosign verify-attestation --type spdxjson` for both digests, plus the first Trivy HIGH/CRITICAL counts as the baseline (to be recorded here from the run).
 - Security-Review: no secrets, minimum permissions, SHA pins; Trivy never fails the job.
+- Security-Review note: PR runs also get `packages: write` and `id-token: write` (job-level) although they never push or sign; acceptable for same-repo PRs, and fork PRs receive a read-only token anyway. Trivy steps are `continue-on-error`, so a DB/scan error cannot skip SBOM/attest/sign; `cancel-in-progress` applies to PR runs only, so a main run cannot be cancelled between push and sign.
 ## Files Changed
 ## Completion Summary

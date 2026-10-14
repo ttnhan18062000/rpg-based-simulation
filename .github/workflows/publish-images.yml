@@ -21,7 +21,8 @@ on:
 
 concurrency:
   group: publish-images-${{ github.ref }}
-  cancel-in-progress: true
+  # Only PR runs are cancelled: cancelling a main/tag run between push and `cosign sign` would leave an unsigned image.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -42,9 +43,6 @@ jobs:
             dockerfile: docker/backend.Dockerfile
           - image: frontend
             dockerfile: docker/frontend.Dockerfile
-    outputs:
-      backend-digest: ${{ steps.digest.outputs.backend }}
-      frontend-digest: ${{ steps.digest.outputs.frontend }}
     env:
       PUSH: ${{ github.event_name != 'pull_request' }}
     steps:
@@ -81,9 +79,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
-      - name: Record digest
-        id: digest
-        run: echo "${{ matrix.image }}=${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
       - name: Resolve scan target
         id: target
         env:
@@ -99,6 +94,7 @@ jobs:
           fi
       # --- Trivy: report-only (exit-code 0, ADR D3); runs on PRs against the locally built image too ---
       - name: Trivy scan
+        continue-on-error: true # report-only: a DB download or scan error must not skip SBOM/attest/sign
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
           TRIVY_USERNAME: ${{ github.actor }}
@@ -110,7 +106,13 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "0"
       - name: Trivy summary
+        if: always()
+        continue-on-error: true
         run: |
+          if [ ! -f trivy-${{ matrix.image }}.json ]; then
+            echo "Trivy (${{ matrix.image }}) did not produce a report" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           {
             echo "### Trivy (${{ matrix.image }}) - report only"
             echo "Image: \`${{ steps.target.outputs.ref }}\`"
@@ -123,6 +125,8 @@ jobs:
             done
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload Trivy report
+        if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: trivy-${{ matrix.image }}

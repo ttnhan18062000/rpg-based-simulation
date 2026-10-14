@@ -87,5 +87,6 @@ None.
 - Backend check negative case: `urlopen` raises `HTTP Error 404` on a bad path (exec in the running backend) and on a local HTTP 500 server; a down backend raises `URLError`. All exit non-zero.
 - promtail check: against a promtail with no targets `/ready` returns 500 and the check fails, as intended.
 - Peak table (`docker stats`, ~2 min idle after start, 1 sample; not under load): backend 123 MiB, ai_worker 32, redis 5, frontend 6, prometheus 28, grafana 68, loki 79, promtail 31, watchdog 22. Limits kept at the ticket's starting values (backend 1g, ai_worker 512m, redis 256m, frontend 64m, prometheus 512m, grafana 256m, loki 512m, promtail 128m, watchdog 256m); idle peaks are far below them, but no load run was done, so tightening is deferred to the kind/load steps.
+- The under-load memory measurement moves to step 3 (Locust); the idle-peak check is accepted for step 1.
 ## Files Changed
 ## Completion Summary

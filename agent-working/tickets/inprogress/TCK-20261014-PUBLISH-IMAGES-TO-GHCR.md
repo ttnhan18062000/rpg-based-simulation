@@ -72,6 +72,7 @@ None.
 `.github/workflows/publish-images.yml`: push to main, `v*` tags, `workflow_dispatch`, and path-filtered pull requests. Matrix over backend/frontend, GHA cache, metadata-action tags (sha, branch, semver), OCI labels, actions pinned by full SHA with version comments, per-ref `concurrency`, `contents: read` top-level and `packages: write` on the job only. Digest is exposed as job outputs and as `steps.build.outputs.digest`.
 ## Test Summary
 - **validated:** actionlint passes (rhysd/actionlint docker image); YAML parses.
+- Matrix job-level `outputs` were removed (the last matrix leg to finish would overwrite them and nothing read them); the digest is used within the job via `steps.build.outputs.digest`. `cancel-in-progress` is PR-only.
 - PR run builds without push (`push: false`, `load: true`): to be confirmed on this PR's Actions run (**validated** once green).
 - **published:** to be confirmed after merge (images in GHCR with sha + `main` tags, `docker pull`). The package visibility click is needed by the user after the first publish.
 ## Files Changed

@@ -68,6 +68,7 @@ None.
 
 ## Implementation Notes
 All `FROM` lines and `image:` entries pinned `tag@sha256` (multi-arch index digests current 2026-10-14, no version bumps); `npm install` -> `npm ci`; `.github/dependabot.yml` with docker (/docker), docker-compose (/), github-actions (/), npm (/frontend), uv (/): weekly, minor/patch grouped, limit 5. Labels `dependencies`, `platform`, `rpg` do not exist in the repo yet (checked with `gh label list`): Dependabot will skip them with a warning until they are created.
+- Base images pin the exact tag behind the current digest: `python:3.13.16-slim`, `node:20.20-alpine3.23`, `nginx:1.31.6-alpine3.24` (tags checked against Docker Hub digests), so Dependabot PRs show a real version change. Label decision pending with the user via platform-planner; `dependabot.yml` unchanged until relayed.
 ## Test Summary
 - **validated (schema):** YAML parses; Dependabot's own check runs after merge.
 - Unpinned-reference grep (`grep -E '^\s*(image:|FROM) ' compose.yaml docker/*.Dockerfile | grep -v @sha256`) returns nothing.
