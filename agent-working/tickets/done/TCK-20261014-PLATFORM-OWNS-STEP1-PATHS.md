@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-PLATFORM-OWNS-STEP1-PATHS
-phase: open
+phase: done
 date: 2026-10-14
 tags: [platform]
 ---
@@ -15,7 +15,7 @@ tags: [platform]
 Register step 1's new paths (`publish-images.yml`, `dependabot.yml`) to the platform domain's `owns`
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -65,4 +65,6 @@ None.
 - **validated:** `PYTHONPATH=. python3 tools/sessions/validate.py`: `OK: 0 finding(s), 20 role(s)`; both files exist in this PR.
 - Owner confirmation of the literal two-line diff and agent-working-planner review are requested in the PR body.
 ## Files Changed
+- `registries/session_roles.yaml`, `.claude/agents/*` (generated), `tests/tools/test_layer_registry.py`, `tests/tools/test_validate_frontmatter.py` (anti-drift sets gained `platform`)
 ## Completion Summary
+Platform owns the two new paths. Merged in #561.

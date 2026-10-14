@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-IMAGE-SBOM-SCAN-SIGN
-phase: open
+phase: done
 date: 2026-10-14
 tags: [platform, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, security]
 Published images get an SBOM (syft), a report-only Trivy scan, and a keyless cosign signature
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -76,5 +76,11 @@ Steps added to `publish-images.yml` after the build: Trivy (report-only, `exit-c
 - **published:** to be confirmed after merge: `cosign verify` / `cosign verify-attestation --type spdxjson` for both digests, plus the first Trivy HIGH/CRITICAL counts as the baseline (to be recorded here from the run).
 - Security-Review: no secrets, minimum permissions, SHA pins; Trivy never fails the job.
 - Security-Review note: PR runs also get `packages: write` and `id-token: write` (job-level) although they never push or sign; acceptable for same-repo PRs, and fork PRs receive a read-only token anyway. Trivy steps are `continue-on-error`, so a DB/scan error cannot skip SBOM/attest/sign; `cancel-in-progress` applies to PR runs only, so a main run cannot be cancelled between push and sign.
+- **published (run 38527791050, push to main, success):** both images are anonymously pullable from GHCR (manifest fetch without credentials returns 200), so the packages are public. Digests: backend `sha256:154b5d5f2c0821c1a0a35923f1096c194edf4265d66f0e5c40eefafaebddd8b4`, frontend `sha256:fe94ffbbcb83e03e94cbd6814654cd8e1132acabed476caf498409f6b5684dfb`.
+- **published (cosign v3.1.3, official release binary, run on 2026-10-14):** for each digest above, `cosign verify <image>@<digest> --certificate-identity-regexp '^https://github.com/ttnhan18062000/rpg-based-simulation/' --certificate-oidc-issuer https://token.actions.githubusercontent.com` exited 0 (claims validated, transparency-log entry verified, certificate verified), and `cosign verify-attestation --type spdxjson <same args>` exited 0 and returned the SBOM (backend 3.39 MB, frontend 1.43 MB of attestation JSON).
+- **Trivy baseline (report-only, from run 38527791050 artifacts, HIGH and CRITICAL only):** backend CRITICAL 1, HIGH 55 (44 Debian OS packages, 11 Python); frontend CRITICAL 0, HIGH 3 (Alpine OS packages). The one CRITICAL is anyio 4.12.1, CVE-2026-63374, fixed in 4.14.2, owned by rpg through `uv.lock`.
+
 ## Files Changed
+- `.github/workflows/publish-images.yml`
 ## Completion Summary
+Each published image now has an SPDX SBOM attestation and a keyless cosign signature, verified against both digests; Trivy reports without gating. Baseline recorded above.

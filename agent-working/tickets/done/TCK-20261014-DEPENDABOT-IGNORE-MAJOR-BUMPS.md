@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS
-phase: open
+phase: done
 date: 2026-10-14
 tags: [platform]
 ---
@@ -15,7 +15,7 @@ tags: [platform]
 Dependabot: ignore semver-major version updates and move to a monthly schedule
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -72,4 +72,6 @@ comments `@dependabot ignore this major version` on each one.
 ## Implementation Notes
 ## Test Summary
 ## Files Changed
+- `.github/dependabot.yml`
 ## Completion Summary
+Dependabot ignores semver-major updates and runs monthly, with minor/patch groups and labels kept.

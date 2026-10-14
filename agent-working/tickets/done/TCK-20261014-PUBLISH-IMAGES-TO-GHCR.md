@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-PUBLISH-IMAGES-TO-GHCR
-phase: open
+phase: done
 date: 2026-10-14
 tags: [platform]
 ---
@@ -15,7 +15,7 @@ tags: [platform]
 New workflow `publish-images.yml`: build the backend and frontend images and publish them to GHCR
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -75,5 +75,10 @@ None.
 - Matrix job-level `outputs` were removed (the last matrix leg to finish would overwrite them and nothing read them); the digest is used within the job via `steps.build.outputs.digest`. `cancel-in-progress` is PR-only.
 - PR run builds without push (`push: false`, `load: true`): to be confirmed on this PR's Actions run (**validated** once green).
 - **published:** to be confirmed after merge (images in GHCR with sha + `main` tags, `docker pull`). The package visibility click is needed by the user after the first publish.
+- **published (run 38527791050, push to main, success):** both images are anonymously pullable from GHCR (manifest fetch without credentials returns 200), so the packages are public. Digests: backend `sha256:154b5d5f2c0821c1a0a35923f1096c194edf4265d66f0e5c40eefafaebddd8b4`, frontend `sha256:fe94ffbbcb83e03e94cbd6814654cd8e1132acabed476caf498409f6b5684dfb`.
+- A PR run built both images and pushed nothing (`push: false`, `load: true`, no GHCR login): PR #561 CI, `publish-images` success.
+
 ## Files Changed
+- `.github/workflows/publish-images.yml`
 ## Completion Summary
+Backend and frontend images are built on PRs and published to GHCR from main and `v*` tags only. Merged in #561; first main run 38527791050 passed.
