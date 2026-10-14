@@ -1,0 +1,7 @@
+Executing CI Gate for sweep: t08_check_idle...
+
+CI Gate Evaluation Result: PASS
+Message:                  All validation checks passed successfully.
+Baseline ID:              baseline_t08_baseline_idle
+Markdown Report Generated: /data/vboxuser/Work/rpg-perf/data/run_sets/t08_check_idle/sweep_report.md
+JSON Report Generated:     /data/vboxuser/Work/rpg-perf/data/run_sets/t08_check_idle/sweep_report.json
