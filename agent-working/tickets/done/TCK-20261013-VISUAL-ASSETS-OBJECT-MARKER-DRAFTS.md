@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS
-phase: inprogress
+phase: done
 date: 2026-10-13
 tags: [architecture, testing, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, mcp]
 Map markers: object markers for buildings, places and resource nodes (keys, specs, silhouettes, drafts, owner adopt-set)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -49,7 +49,7 @@ Child 2 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. Lead: art-only drafting
 ## Acceptance Criteria
 - [ ] Keys and aliases in the registry per the approved design; the red set listed exactly.
 - [ ] Specs, reference notes, owner-approved silhouettes, compliance table, blind check results recorded.
-- [ ] The owner adopted the object set with `adopt-set`.
+- [x] The owner adopted the object set with `adopt-set` (2026-10-14, set adoption `sa-6690e2619d4abb3e`).
 
 ## Related Tickets
 - Parent: `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`; needs `TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN`
@@ -127,3 +127,10 @@ ERROR (14):
 
 ## Completion Summary
 
+The 18 object markers (13 `icon.node.*`, `icon.marker.nest`, 4 `icon.building.*`) were drawn, intaken (all PASSED), checked and kept in draft set `object-markers-v1`; the owner reviewed the folder and ran `adopt-set object-markers-v1` themselves in this worktree on 2026-10-14.
+
+- Set adoption: `sa-6690e2619d4abb3e` (draft set hash `sha256:bbcbfe33...a1fda6d`, 18 entries; the record's approver fields carry the tool's placeholders, as in the earlier set adoptions). Confirmed read-only by asset-planner: 18 adoption records, all CLEARED; 18 new sources, 36 intake records; store verify exit 0.
+- Adoption ids: icon.building.healer_hut ad-177499bc714b393a; icon.building.mine_entrance ad-45118652d3ab0b0a; icon.building.town_hall ad-235bf5cff58fa625; icon.building.watchtower ad-fa0cb56e58ea4168; icon.marker.nest ad-bfb14260a221753f; icon.node.berry_thicket ad-96a5c0a8c45b9992; icon.node.cover_patch_high ad-a58aedf744c52d1f; icon.node.cover_patch_low ad-0271bd26479a5321; icon.node.cover_patch_medium ad-9b0a6f1d5f26b8df; icon.node.crystal_outcrop ad-d5bc932ca3aa0f79; icon.node.frost_shard_cluster ad-2871e6be84805ffa; icon.node.healing_flower_patch ad-7f8362591da94c75; icon.node.herb_patch ad-58db448143b52004; icon.node.iron_vein ad-ee1fdaef31d41cc4; icon.node.moon_resin_tree ad-b571cf94d897dd09; icon.node.silver_vein ad-1a67fdbff454c395; icon.node.spirit_wisp ad-4c1f19a7e1cd8e7c; icon.node.wood_node ad-06ae7b0b967eefd5.
+- Committed with this closure: the adoption, set-adoption, intake and source records under `visual_assets/catalog/`.
+- Known and stated: berry_thicket and spirit_wisp still misread in the blind check (kept by the owner); 17 of 18 sprites applied through `visual_assets.drawing.api.apply_ops` (deviation accepted by asset-planner).
+- Open for child 4: the registry edit makes rc-0010 unexportable, so the red set listed under Test Summary stays red until rc-0011 is built and the red tests are re-pointed.

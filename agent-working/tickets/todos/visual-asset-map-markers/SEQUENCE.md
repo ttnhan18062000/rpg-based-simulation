@@ -24,3 +24,5 @@ the user's `--admin`.
 ## Status
 
 OPEN (2026-10-13): filed; child 1 dispatched to asset-implementer.
+
+Update (2026-10-14): child 1 and child 2 DONE (commit below); the owner adopted `object-markers-v1` as set adoption `sa-6690e2619d4abb3e`. Next: child 4 (rc-0011 on the owner's answer). Child 3 stays gated on #523 + #548.
