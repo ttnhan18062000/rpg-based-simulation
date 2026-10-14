@@ -114,6 +114,8 @@ class ItemRegistry:
                     display_name = item_id.replace("_", " ").title()
                 
                 categories = getattr(v, "categories", []) or (v.get("categories", []) if isinstance(v, dict) else [])
+                if not categories:
+                    raise ValueError(f"item {item_id!r} declares no categories; every item needs one (it decides whether a shop buys it)")
                 base_value = getattr(v, "base_value", 0.0) or (v.get("base_value", 0.0) if isinstance(v, dict) else 0.0)
                 
                 # Resolve ItemKind
