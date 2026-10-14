@@ -61,7 +61,7 @@ Fix approved by rpg-planner: the Kernel zeroes the pressure signals (the audit_m
 Four experiments recorded in the investigation, plus `tests/unit/engine/test_pinned_governor_is_host_independent.py` (5 tests). The 22 files that reference the pin: 72 passed, 2 failed before; 82 passed, 1 failed after; the one deterministic red (campaign event mix 0.6991) is the same before and after, the other was a load timeout that now passes. Four concurrent pinned runs under load are identical to tick 220 and equal the audit_mode digest.
 
 ## Files Changed
-src/engine/governor.py; src/engine/kernel.py; src/engine/replay_manager.py; src/observability/reporting/artifact_repository.py; src/observability/reporting/run_determinism.py (new); tests/helpers/kernel_pinning.py; tests/unit/engine/test_pinned_governor_is_host_independent.py (new); this ticket and its stored artifacts.
+src/engine/governor.py; src/engine/kernel.py; src/engine/replay_manager.py; src/engine/signal_source.py; src/observability/reporting/artifact_repository.py; src/observability/reporting/run_determinism.py (new); tests/helpers/kernel_pinning.py; tests/unit/engine/test_pinned_governor_is_host_independent.py (new); this ticket and its stored artifacts.
 
 ## Completion Summary
 Source: `PhaseBudgetGovernor.evaluate` (src/engine/phase_governor.py:107-143) turns measured per-phase milliseconds into scan policy and budgets; `PinnedNormalGovernor` does not pin it. audit_mode removes it. Proposed: measurements use audit_mode; the helper pins phase budgets; CANONICAL as default is a separate decision.

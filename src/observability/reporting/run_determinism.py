@@ -6,7 +6,7 @@ on both is a comparison of host speed as much as of the change.
 """
 from __future__ import annotations
 
-from typing import Iterable, List, Mapping, Optional
+from typing import List, Mapping, Optional
 
 
 class NonAuditRunError(ValueError):

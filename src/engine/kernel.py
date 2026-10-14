@@ -17,7 +17,7 @@ from src.core.governance import RuntimeMode
 from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
 
-from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_source, signal_contract_record
+from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_source, signal_contract_record, signals_are_zeroed
 from src.engine.run_identity import create_run_directory, new_run_id
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
@@ -129,7 +129,7 @@ class Kernel:
         self._scheduler = scheduler or DefaultScheduler()
         self._governor = governor or DefaultGovernor()
         # audit_mode, or a governor that pins itself (the test pin), feeds the governors zeroed signals: no wall-clock reader can change what a run computes.
-        self._signals_zeroed = bool(self._audit_mode or getattr(self._governor, "zeroes_signals", False))
+        self._signals_zeroed = signals_are_zeroed(self._audit_mode, self._governor)
         self._status = status or DefaultStatus()
         self._status.force_full_scan = self._force_full_scan
         self._collector = SignalCollector(profile.name)
