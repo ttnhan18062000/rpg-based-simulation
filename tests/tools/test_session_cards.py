@@ -130,6 +130,30 @@ def test_adjacent_sibling_files_with_a_shared_stem_prefix_share_one_brace_entry(
         "a/**, tools/graphify_{link,prune}.py, b.md"
     # different directory, extension, or no shared `_`/`-` prefix: left alone
     assert _compact_globs(["x/a_one.py", "y/a_two.py"]) == "x/a_one.py, y/a_two.py"
-    assert _compact_globs(["x/a_one.py", "x/a_two.md"]) == "x/a_one.py, x/a_two.md"
-    assert _compact_globs(["x/one.py", "x/two.py"]) == "x/one.py, x/two.py"
     assert _compact_globs(["x/a_one.py"]) == "x/a_one.py"
+
+
+def test_same_directory_file_globs_fold_into_one_brace_group_when_shorter():
+    """Owner-planner decision, 2026-10-14: `tools/graphify_{link,prune}.py, tools/search_*.py, tools/start_*_mcp.sh`
+    -> `tools/{graphify_{link,prune}.py,search_*.py,start_*_mcp.sh}`."""
+    from tools.sessions.card import _compact_globs
+
+    assert _compact_globs(["a/**", "tools/graphify_link.py", "tools/graphify_prune.py", "tools/search_*.py",
+                           "tools/start_*_mcp.sh", "tests/x/**"]) == \
+        "a/**, tools/{graphify_{link,prune}.py,search_*.py,start_*_mcp.sh}, tests/x/**"
+    assert _compact_globs(["x/a_one.py", "x/a_two.md"]) == "x/{a_one.py,a_two.md}"
+    # a lone file, files in different directories, and directory globs are left alone
+    assert _compact_globs(["x/one.py", "y/two.py"]) == "x/one.py, y/two.py"
+    assert _compact_globs(["x/one.py", "z/**"]) == "x/one.py, z/**"
+
+
+def test_search_mcp_files_route_to_agent_working_and_every_card_stays_in_budget():
+    from tools.sessions.route import OWNED, route
+
+    for path in ("tools/search_mcp.py", "tools/search_server.py", "tools/search_shared.py",
+                 "tools/start_search_mcp.sh", "tools/start_headroom_mcp.sh"):
+        result = route(path, ROSTER)
+        assert result.status == OWNED and result.domains == ("agent-working",), path
+    for role in ROSTER.roles:
+        card = compose_card(role.role, ROSTER, AUTHORITY, ROOT)
+        assert estimate_tokens(card) <= CARD_BUDGET_TOKENS, f"{role.role}: {estimate_tokens(card)} tokens"

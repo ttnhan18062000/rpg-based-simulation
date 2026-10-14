@@ -266,6 +266,14 @@ says what trauma does to the people in it.
 - **Tracked:** `TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE`
   (P2 since the re-measure). Bible 04 is flagged "decided, not yet implemented" when that ticket
   lands.
+- **Flight needs a perceived threat (#536, 2.114):** regional dread alone no longer gives flight,
+  even when it trips the panic line; a wounded subject with nothing in sight does not flee, the
+  same subject with a hostile in sight still does, a hostile beyond perception is no threat, and a
+  cornered subject with a threat holds its tile
+  (`tests/unit/combat/test_panic_flight_needs_a_present_threat.py`). That enforces the "never
+  alone" clause at the flee decision. The units mismatch in the consumer (trauma read as if it
+  were 0-1) stays open under the ticket above, so dread still weighs too much when a threat is
+  present.
 
 **Scenarios:** none traced yet. Two are owed when implemented: a full-health subject in a town
 with a little recent bloodshed stays put; the same subject, wounded and facing an enemy there,

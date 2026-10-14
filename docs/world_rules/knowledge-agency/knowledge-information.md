@@ -246,7 +246,28 @@ processes. It follows AGENCY-08's provenance discipline: a default is visible, n
     truth (KNOW-02);
   - keeping the silent hardcoded table.
 
-**Repository evidence: MISSING.** Lane B, on `0a03c2448`
+**Repository evidence: PARTLY SUPPORTED since #412 (`3a9f93c33`, 2026-10-07)**; divergence 2.82;
+seeding moved to the content layer by #420 (`753f98ea9`, no behaviour change). Recorded
+2026-10-11 by rpg-designer; `tests/unit/cognition/test_common_knowledge.py` re-run on main
+`fc0bf4fbb`, 10 passed.
+- **Supported, the declared weak prior:** a species declares folk belief by hand
+  (`SpeciesDefinition.common_knowledge.danger`: low, medium, high or extreme), for human, wolf,
+  goblin, spider, orc, undead and lizardfolk. Every subject is seeded once at spawn, in all three
+  spawn paths (`src/content/common_knowledge_seed.py`), with one `KnowledgeFact` per declared
+  species at certainty 0.3 and `source_id "common_knowledge"`. That is a belief with visible
+  provenance, never truth. `tactical.target_score` reads the acting subject's own fact for the
+  hostile's species, which pulls the danger part of the way from neutral. A kind with no belief,
+  or a hostile with no species, is neutral and recorded as `EstimateBasis.UNINFORMED`. The
+  silent built-in table and its role-name keys are gone.
+- **MISSING: experience outweighing the prior.** Nothing yet revises a kind's danger from what
+  the subject lived through: `TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER` (Lane A,
+  in todos). Until then the prior is the subject's only view of a kind.
+- **Disclosed by 2.82:** all humans share one prior, so a raider and a guard are not told apart
+  (milestone 1's appraisal reads what is seen, decisions 44 and 47). Region `danger_level`
+  stays inert. Target choice changed in 0 of 131 and 0 of 213 decisions on the two measured
+  worlds, because most decisions had one candidate.
+
+**Earlier evidence: MISSING.** Lane B, on `0a03c2448`
 (`TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`):
 - **The target score is given no danger data.** `src/engine/tactical.py:430` (COMB-316) builds
   `CapabilityContext.for_combat(enemy_ids=[h.kind])` without `enemy_data`.
@@ -267,11 +288,14 @@ processes. It follows AGENCY-08's provenance discipline: a default is visible, n
   `TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER` (Lane A, later). Both are under the
   decision-core epic.
 
-**Scenarios:** none traced yet. Two are owed when implemented:
-- a farmhand who has never fought sees a wolf and rates it dangerous at low confidence, then
-  revises the rating after beating one;
+**Scenarios:** two, one covered and one owed:
 - a subject facing a kind with no declared common knowledge records a neutral, uninformed
-  estimate, and the record says so.
+  estimate, and the record says so. **Covered** since #412 by
+  `tests/unit/cognition/test_common_knowledge.py` (folk belief moves the estimate; an uninformed
+  kind is neutral, with basis `UNINFORMED`);
+- a farmhand who has never fought sees a wolf and rates it dangerous at low confidence, then
+  revises the rating after beating one. The first half is covered by the same tests. The
+  revision is **owed** with `TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER`.
 
 ---
 

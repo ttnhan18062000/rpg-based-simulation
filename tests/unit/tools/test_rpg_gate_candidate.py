@@ -259,3 +259,64 @@ def test_rebaseline_rechecks_each_omitted_owner_against_the_current_registry(tmp
     with pytest.raises(base.RebaselineRefused, match="expired on 2026-10-01"):
         base.rebaseline(candidate, _config(), tmp_path / "b2", known=[_entry(expires="2026-10-01")], today=TODAY, **kw)
     assert base.rebaseline(candidate, _config(), tmp_path / "b3", known=[_entry()], today=TODAY, **kw).exists()
+
+
+# ---- TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK: the candidate refuses while a required validity row is missing
+
+def _without(docs, row_id):
+    return {k: {**d, "metrics": [m for m in d["metrics"] if m["id"] != row_id]} for k, d in docs.items()}
+
+
+def _full(directory):
+    return {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_doc()}
+
+
+def test_a_required_validity_row_present_everywhere_does_not_refuse(tmp_path):
+    candidate = _build(_write(tmp_path / "d"), config=_config(required_validity=("V3",)))
+    assert "omitted_validity" not in candidate
+
+
+def test_a_missing_required_validity_row_refuses_without_an_owner(tmp_path):
+    docs = _write(tmp_path / "d", _without(_full(tmp_path), "V3"))
+    _refused(docs, "required validity row V3 is missing and has no owner", config=_config(required_validity=("V3",)))
+
+
+def test_a_missing_required_row_is_accepted_when_an_owned_fail_covers_it_and_is_listed(tmp_path):
+    docs = _write(tmp_path / "d", _without(_full(tmp_path), "V3"))
+    known = [_entry(match="V3", ticket="TCK-OWN-V3")]
+    candidate = _build(docs, known, config=_config(required_validity=("V3",)), milestone="M0")
+    assert candidate["omitted_validity"] == [{"row": "V3:run:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}]
+    assert not [r for r in candidate["metrics"] if r["id"] == "V3"]
+    baselines = tmp_path / "b"
+    base.rebaseline(candidate, _config(required_validity=("V3",)), baselines, pr=None, cites=["TCK-METRIC-SET"], known=known, today=TODAY)
+    assert base.lint_dir(baselines) == []
+
+
+def test_an_expired_or_wrong_state_owner_does_not_cover_a_missing_required_row(tmp_path):
+    docs = _write(tmp_path / "d", _without(_full(tmp_path), "V3"))
+    cfg = _config(required_validity=("V3",))
+    _refused(docs, "expired", [_entry(match="V3", expires="2026-10-01")], config=cfg)
+    _refused(docs, "no owner", [{**_entry(match="V3"), "state": "flaky"}], config=cfg)
+
+
+def test_a_row_missing_from_only_the_pooled_document_refuses_too(tmp_path):
+    docs = _full(tmp_path)
+    docs[("w", None)] = {**docs[("w", None)], "metrics": [m for m in docs[("w", None)]["metrics"] if m["id"] != "V3"]}
+    _refused(_write(tmp_path / "d", docs), r"w__pooled\.json: required validity row V3 is missing", config=_config(required_validity=("V3",)))
+
+
+def _with_stub_v8(mode):
+    from tests.helpers import rpg_gate_stub_metrics as stub
+
+    docs = _full(None)
+    return {k: {**d, "metrics": [*d["metrics"], *({**r, "scope": "pooled" if k[1] is None else "run"} for r in stub.v8_rows(mode))]} for k, d in docs.items()}
+
+
+def test_the_stub_v8_row_clean_is_recorded_and_violating_needs_an_owner(tmp_path):
+    cfg = _config(required_validity=("V8",))
+    candidate = _build(_write(tmp_path / "ok", _with_stub_v8("clean")), config=cfg)
+    assert [r["id"] for r in candidate["metrics"] if r["id"] == "V8"]
+    _refused(_write(tmp_path / "bad", _with_stub_v8("violations")), "validity row V8 has 1 violation", config=cfg)
+    _refused(_write(tmp_path / "gone", _with_stub_v8("absent")), "required validity row V8 is missing", config=cfg)
+    owned = _build(_write(tmp_path / "own", _with_stub_v8("violations")), [_entry(match="V8", ticket="TCK-RPG-V8")], config=cfg)
+    assert [o["known_match"] for o in owned["omitted_validity"]] and not [r for r in owned["metrics"] if r["id"] == "V8"]

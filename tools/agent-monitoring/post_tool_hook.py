@@ -190,5 +190,18 @@ try:
     tools_file.parent.mkdir(parents=True, exist_ok=True)
     write_line(tools_file, json.dumps(record, separators=(",", ":")))
 
+    # TCK-20261014-DISK-HEADROOM-MIDSESSION-WARNING-AND-MERGED-WORKTREES: a throttled low-disk line in this same hook
+    # entry (no settings.json change). It reads one small state file per call and does one statvfs per 10 minutes;
+    # any failure is swallowed so the tool call and the record above are never affected.
+    try:
+        sys.path.append(str(Path(__file__).resolve().parents[2]))
+        from tools.sessions.disk_warning import mid_session_line  # noqa: E402
+
+        disk_line = mid_session_line(session_id, Path(".claude"))
+        if disk_line:
+            print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": disk_line}}))
+    except Exception:
+        pass
+
 except Exception:
     pass

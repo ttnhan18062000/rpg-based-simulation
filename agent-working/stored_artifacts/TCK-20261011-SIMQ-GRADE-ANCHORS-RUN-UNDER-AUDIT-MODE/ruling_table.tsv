@@ -1,0 +1,566 @@
+run_key	pillar	committed	pre_536	post_536	direction	group
+crowded_frontier_seed123_200t	INFORMATION	C/0	S/53.64	S/25.91	down	held as a finding: kept at the committed anchor (excluded)
+crowded_frontier_seed42_200t	INFORMATION	C/0	S/34.14	S/39.98	up	held as a finding: kept at the committed anchor (excluded)
+crowded_frontier_seed456_200t	INFORMATION	C/0	A/2	S/2.609	up	held as a finding: kept at the committed anchor (excluded)
+frontier_extended_seed123_200t	INFORMATION	B/0.2	S/14.95	A/1.13	down	held as a finding: kept at the committed anchor (excluded)
+frontier_extended_seed42_200t	INFORMATION	B/0.2	S/38.81	S/28.14	down	held as a finding: kept at the committed anchor (excluded)
+frontier_extended_seed456_200t	INFORMATION	B/0.2	A/0.8622	S/34.98	up	held as a finding: kept at the committed anchor (excluded)
+frontier_living_world_seed123_200t	INFORMATION	B/0.2	B/0.2	S/25.07	up	held as a finding: kept at the committed anchor (excluded)
+frontier_living_world_seed42_200t	INFORMATION	B/0.2	S/58.97	S/58.1	down	held as a finding: kept at the committed anchor (excluded)
+frontier_living_world_seed456_200t	INFORMATION	B/0.2	S/25.13	S/6.71	down	held as a finding: kept at the committed anchor (excluded)
+frontier_marches_seed123_200t	INFORMATION	B/0.2	S/42.53	S/45.02	up	held as a finding: kept at the committed anchor (excluded)
+frontier_marches_seed42_200t	INFORMATION	B/0.2	S/45.95	S/44.6	down	held as a finding: kept at the committed anchor (excluded)
+frontier_marches_seed456_200t	INFORMATION	B/0.2	S/2.102	S/11.6	up	held as a finding: kept at the committed anchor (excluded)
+generated_frontier_3_42_seed123_200t	INFORMATION	B/0.2	S/2.302	S/41.78	up	held as a finding: kept at the committed anchor (excluded)
+generated_frontier_3_42_seed42_200t	INFORMATION	B/0.2	S/55.43	S/45.56	down	held as a finding: kept at the committed anchor (excluded)
+generated_frontier_3_42_seed456_200t	INFORMATION	B/0.2	A/1.865	S/17.16	up	held as a finding: kept at the committed anchor (excluded)
+lifecycle_full_coverage_world_seed42_200t	PROGRESSION	C/-0.1569	B/0.1624	C/-0.1569	down	held as a finding: kept at the committed anchor (excluded)
+resource_dense_basin_seed123_200t	PROGRESSION	C/-0.1569	B/0.06283	C/-0.1569	down	held as a finding: kept at the committed anchor (excluded)
+sandbox_world_seed137_200t	PROGRESSION	C/-0.1569	B/0.3854	C/-0.1569	down	held as a finding: kept at the committed anchor (excluded)
+sandbox_world_seed42_200t	PROGRESSION	B/0.185	A/0.5588	C/-0.1569	down	held as a finding: kept at the committed anchor (excluded)
+sandbox_world_seed999_200t	PROGRESSION	C/-0.1569	B/0.1667	C/-0.1569	down	held as a finding: kept at the committed anchor (excluded)
+swamp_border_world_seed123_200t	INFORMATION	B/0.2	A/0.9577	S/4.553	up	held as a finding: kept at the committed anchor (excluded)
+swamp_border_world_seed42_200t	INFORMATION	B/0.2	S/17.69	S/34.62	up	held as a finding: kept at the committed anchor (excluded)
+swamp_border_world_seed42_200t	PROGRESSION	C/-0.01887	B/0.2461	C/-0.1569	down	held as a finding: kept at the committed anchor (excluded)
+swamp_border_world_seed456_200t	INFORMATION	B/0.2	S/8.417	S/47.51	up	held as a finding: kept at the committed anchor (excluded)
+unit_faction_tension_seed123_200t	PROGRESSION	C/-0.1569	B/0.06522	C/-0.1569	down	held as a finding: kept at the committed anchor (excluded)
+unit_faction_tension_seed42_200t	PROGRESSION	B/0.185	A/0.5588	C/-0.1569	down	held as a finding: kept at the committed anchor (excluded)
+wilderness_survival_seed456_200t	PROGRESSION	C/-0.1569	B/0.08861	C/-0.1569	down	held as a finding: kept at the committed anchor (excluded)
+crowded_frontier_seed123_200t	COMBAT	B/0.1849	B/0.2363	B/0.07368	down	#536, cause not isolated by measurement
+crowded_frontier_seed123_200t	ECONOMY	B/0.221	S/5.385	A/0.5442	down	#536, cause not isolated by measurement
+crowded_frontier_seed123_200t	NARRATIVE	C/0	S/2.085	A/0.7098	down	#536, cause not isolated by measurement
+crowded_frontier_seed123_200t	PROGRESSION	B/0.01681	A/0.5055	B/0.1062	down	#536, cause not isolated by measurement
+crowded_frontier_seed123_200t	SOCIAL	S/19.7	S/43.95	S/25.53	down	#536, cause not isolated by measurement
+crowded_frontier_seed123_200t	WORLD	B/0.24	B/0.44	B/0.32	down	#536, cause not isolated by measurement
+crowded_frontier_seed42_200t	COMBAT	A/1.055	B/0.4211	B/0.3871	down	#536, cause not isolated by measurement
+crowded_frontier_seed42_200t	ECONOMY	B/0.07186	S/6.442	A/0.9677	down	#536, cause not isolated by measurement
+crowded_frontier_seed42_200t	NARRATIVE	C/0	S/2.484	S/2.467	down	#536, cause not isolated by measurement
+crowded_frontier_seed42_200t	PROGRESSION	B/0.4141	A/1.037	A/0.9516	down	#536, cause not isolated by measurement
+crowded_frontier_seed42_200t	SOCIAL	S/8.995	S/31.98	S/43.38	up	#536, cause not isolated by measurement
+crowded_frontier_seed42_200t	WORLD	B/0.24	B/0.44	B/0.4	down	#536, cause not isolated by measurement
+crowded_frontier_seed456_200t	COMBAT	S/2.285	B/0.24	B/0.375	up	#536, cause not isolated by measurement
+crowded_frontier_seed456_200t	ECONOMY	B/0.3077	S/5.503	A/0.6957	down	#536, cause not isolated by measurement
+crowded_frontier_seed456_200t	NARRATIVE	C/0	A/1.159	A/1.809	up	#536, cause not isolated by measurement
+crowded_frontier_seed456_200t	PROGRESSION	B/0.4615	A/0.5897	A/0.7174	up	#536, cause not isolated by measurement
+crowded_frontier_seed456_200t	SOCIAL	S/32.41	S/24.11	S/22.54	down	#536, cause not isolated by measurement
+crowded_frontier_seed456_200t	WORLD	B/0.3	B/0.34	B/0.4	up	#536, cause not isolated by measurement
+frontier_extended_seed123_200t	COMBAT	A/0.9146	B/0.3819	B/0.2258	down	#536, cause not isolated by measurement
+frontier_extended_seed123_200t	ECONOMY	B/0.36	S/6.531	B/0.2487	down	#536, cause not isolated by measurement
+frontier_extended_seed123_200t	NARRATIVE	C/0	S/2.94	A/1.213	down	#536, cause not isolated by measurement
+frontier_extended_seed123_200t	PROGRESSION	A/0.835	A/0.9894	A/0.5474	down	#536, cause not isolated by measurement
+frontier_extended_seed123_200t	SOCIAL	S/21.14	S/50.19	S/37.76	down	#536, cause not isolated by measurement
+frontier_extended_seed123_200t	WORLD	A/0.97	A/0.7	A/0.58	down	#536, cause not isolated by measurement
+frontier_extended_seed42_200t	COGNITION	B/0.06	A/0.6561	A/1.09	up	#536, cause not isolated by measurement
+frontier_extended_seed42_200t	COMBAT	A/0.675	B/0.41	B/0.3333	down	#536, cause not isolated by measurement
+frontier_extended_seed42_200t	ECONOMY	B/0.24	S/8.221	A/0.9215	down	#536, cause not isolated by measurement
+frontier_extended_seed42_200t	NARRATIVE	C/0	S/3.314	A/1.707	down	#536, cause not isolated by measurement
+frontier_extended_seed42_200t	PROGRESSION	A/0.56	A/1.084	A/0.6299	down	#536, cause not isolated by measurement
+frontier_extended_seed42_200t	SOCIAL	S/16.74	S/32.51	S/74.16	up	#536, cause not isolated by measurement
+frontier_extended_seed42_200t	WORLD	B/0.45	A/0.58	B/0.47	down	#536, cause not isolated by measurement
+frontier_extended_seed456_200t	COMBAT	S/3.065	B/0.3681	B/0.2414	down	#536, cause not isolated by measurement
+frontier_extended_seed456_200t	ECONOMY	A/0.8043	S/6.967	A/0.6054	down	#536, cause not isolated by measurement
+frontier_extended_seed456_200t	FACTION	S/2.9	B/0.04	C/0	down	#536, cause not isolated by measurement
+frontier_extended_seed456_200t	NARRATIVE	C/0	S/2.041	A/1.855	down	#536, cause not isolated by measurement
+frontier_extended_seed456_200t	PROGRESSION	A/1.828	A/0.7527	B/0.4904	down	#536, cause not isolated by measurement
+frontier_extended_seed456_200t	SOCIAL	S/25.7	S/23.27	S/53.69	up	#536, cause not isolated by measurement
+frontier_extended_seed456_200t	WORLD	A/0.74	A/0.82	A/0.68	down	#536, cause not isolated by measurement
+frontier_living_world_seed123_200t	COMBAT	B/0.2637	B/0.3368	B/0.2165	down	#536, cause not isolated by measurement
+frontier_living_world_seed123_200t	ECONOMY	B/0.2151	S/5.78	A/0.6919	down	#536, cause not isolated by measurement
+frontier_living_world_seed123_200t	NARRATIVE	C/0	S/2.714	S/2.172	down	#536, cause not isolated by measurement
+frontier_living_world_seed123_200t	PROGRESSION	A/0.5215	A/0.8135	B/0.4706	down	#536, cause not isolated by measurement
+frontier_living_world_seed123_200t	SOCIAL	S/17.57	S/52.87	S/73.36	up	#536, cause not isolated by measurement
+frontier_living_world_seed123_200t	WORLD	A/0.59	A/0.62	A/0.56	down	#536, cause not isolated by measurement
+frontier_living_world_seed42_200t	COGNITION	B/0.06	B/0.06	B/0.14	up	#536, cause not isolated by measurement
+frontier_living_world_seed42_200t	COMBAT	A/0.905	B/0.3769	B/0.2183	down	#536, cause not isolated by measurement
+frontier_living_world_seed42_200t	ECONOMY	B/0.2581	S/5.98	A/0.8043	down	#536, cause not isolated by measurement
+frontier_living_world_seed42_200t	FACTION	S/2.9	C/0	B/0.03247	up	#536, cause not isolated by measurement
+frontier_living_world_seed42_200t	NARRATIVE	A/0.5455	S/2.299	A/1.935	down	#536, cause not isolated by measurement
+frontier_living_world_seed42_200t	PROGRESSION	B/0.3871	A/0.7208	B/0.3647	down	#536, cause not isolated by measurement
+frontier_living_world_seed42_200t	SOCIAL	S/33.7	S/33.13	S/49.92	up	#536, cause not isolated by measurement
+frontier_living_world_seed42_200t	WORLD	B/0.46	A/0.64	A/0.51	down	#536, cause not isolated by measurement
+frontier_living_world_seed456_200t	COMBAT	A/1.568	B/0.3518	B/0.399	up	#536, cause not isolated by measurement
+frontier_living_world_seed456_200t	ECONOMY	A/0.6327	S/5.812	A/1.14	down	#536, cause not isolated by measurement
+frontier_living_world_seed456_200t	FACTION	S/2.9	B/0.02688	C/0	down	#536, cause not isolated by measurement
+frontier_living_world_seed456_200t	NARRATIVE	B/0.3093	S/2.31	A/1.564	down	#536, cause not isolated by measurement
+frontier_living_world_seed456_200t	PROGRESSION	A/0.7245	A/0.7638	A/0.6256	down	#536, cause not isolated by measurement
+frontier_living_world_seed456_200t	SOCIAL	S/25.26	S/26.75	S/45.66	up	#536, cause not isolated by measurement
+frontier_living_world_seed456_200t	WORLD	B/0.48	A/0.57	A/0.61	up	#536, cause not isolated by measurement
+frontier_marches_seed123_200t	COMBAT	B/0.2368	B/0.4121	B/0.3467	down	#536, cause not isolated by measurement
+frontier_marches_seed123_200t	ECONOMY	B/0.1827	S/5.635	A/0.5685	down	#536, cause not isolated by measurement
+frontier_marches_seed123_200t	NARRATIVE	C/0	S/4.23	S/2.745	down	#536, cause not isolated by measurement
+frontier_marches_seed123_200t	PROGRESSION	B/0.3909	A/1.015	A/0.7716	down	#536, cause not isolated by measurement
+frontier_marches_seed123_200t	SOCIAL	S/25.04	S/65.85	S/82.28	up	#536, cause not isolated by measurement
+frontier_marches_seed123_200t	WORLD	A/0.6	A/0.78	A/0.6	down	#536, cause not isolated by measurement
+frontier_marches_seed42_200t	COGNITION	B/0.06	A/0.5754	B/0.06	down	#536, cause not isolated by measurement
+frontier_marches_seed42_200t	COMBAT	A/1.35	A/0.555	B/0.4975	down	#536, cause not isolated by measurement
+frontier_marches_seed42_200t	ECONOMY	B/0.3673	S/6	A/1.087	down	#536, cause not isolated by measurement
+frontier_marches_seed42_200t	NARRATIVE	A/0.799	S/3.75	S/3.487	down	#536, cause not isolated by measurement
+frontier_marches_seed42_200t	PROGRESSION	A/1.056	A/1.21	A/1.261	up	#536, cause not isolated by measurement
+frontier_marches_seed42_200t	SOCIAL	S/21.38	S/71.42	S/74.09	up	#536, cause not isolated by measurement
+frontier_marches_seed42_200t	WORLD	B/0.48	A/0.77	A/0.7	down	#536, cause not isolated by measurement
+frontier_marches_seed456_200t	AGENCY	C/0	B/0.05385	B/0.04667	down	#536, cause not isolated by measurement
+frontier_marches_seed456_200t	COMBAT	S/2.79	B/0.4043	B/0.3673	down	#536, cause not isolated by measurement
+frontier_marches_seed456_200t	ECONOMY	A/0.7447	S/5.569	B/0.442	down	#536, cause not isolated by measurement
+frontier_marches_seed456_200t	NARRATIVE	B/0.2024	A/1.95	S/2.151	up	#536, cause not isolated by measurement
+frontier_marches_seed456_200t	PROGRESSION	A/1.048	A/0.7134	A/0.801	up	#536, cause not isolated by measurement
+frontier_marches_seed456_200t	SOCIAL	S/22.98	S/17.98	S/53.66	up	#536, cause not isolated by measurement
+frontier_marches_seed456_200t	WORLD	A/0.6	A/0.68	A/0.7	up	#536, cause not isolated by measurement
+generated_frontier_3_42_seed123_200t	COMBAT	B/0.1489	B/0.2191	B/0.1667	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed123_200t	ECONOMY	B/0.1105	S/5.945	A/0.557	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed123_200t	FACTION	S/2.9	B/0.03086	C/0	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed123_200t	NARRATIVE	C/0	A/1.535	A/0.9223	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed123_200t	PROGRESSION	B/0.1436	B/0.4161	B/0.3741	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed123_200t	SOCIAL	S/19.82	S/20.35	S/32.78	up	#536, cause not isolated by measurement
+generated_frontier_3_42_seed123_200t	WORLD	B/0.3	A/0.51	B/0.37	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_1000t	COGNITION	B/0.038	B/0.412	A/0.812	up	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_1000t	COMBAT	B/0.04	B/0.1571	B/0.1512	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_1000t	ECONOMY	B/0.2131	S/3.409	B/0.3823	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_1000t	FACTION	A/0.58	C/-0.05091	C/-0.01726	up	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_1000t	INFORMATION	B/0.04	S/113.5	S/61.13	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_1000t	NARRATIVE	C/0	A/0.8525	A/1.061	up	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_1000t	PROGRESSION	C/-0.246	B/0.145	B/0.07762	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_1000t	SOCIAL	C/0	S/44.56	S/43.06	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_1000t	WORLD	B/0.344	B/0.342	B/0.318	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_200t	COGNITION	A/0.5508	B/0.04	A/1.31	up	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_200t	COMBAT	A/0.544	B/0.3756	B/0.3073	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_200t	ECONOMY	B/0.1105	S/7.054	A/1.021	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_200t	NARRATIVE	C/0	A/1.995	A/1.738	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_200t	PROGRESSION	A/0.5083	A/1.007	A/0.6667	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_200t	SOCIAL	S/18.14	S/39	S/31.16	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed42_200t	WORLD	B/0.3	A/0.63	A/0.51	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed456_200t	COMBAT	A/1.445	B/0.2359	B/0.2618	up	#536, cause not isolated by measurement
+generated_frontier_3_42_seed456_200t	ECONOMY	B/0.2857	S/5.923	A/0.7529	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed456_200t	NARRATIVE	C/0	A/1.323	A/1.85	up	#536, cause not isolated by measurement
+generated_frontier_3_42_seed456_200t	PROGRESSION	A/0.5132	A/0.6	B/0.3941	down	#536, cause not isolated by measurement
+generated_frontier_3_42_seed456_200t	SOCIAL	S/27.71	S/25.3	S/26.82	up	#536, cause not isolated by measurement
+generated_frontier_3_42_seed456_200t	WORLD	B/0.38	A/0.51	A/0.53	up	#536, cause not isolated by measurement
+hero_guild_routing_seed123_500t	AGENCY	C/0	B/0.056	B/0.0309	down	#536, cause not isolated by measurement
+hero_guild_routing_seed123_500t	COMBAT	A/1.502	B/0.1636	B/0.1143	down	#536, cause not isolated by measurement
+hero_guild_routing_seed123_500t	ECONOMY	B/0.09302	S/3.265	A/0.5182	down	#536, cause not isolated by measurement
+hero_guild_routing_seed123_500t	INFORMATION	C/0	S/62.78	S/75.8	up	#536, cause not isolated by measurement
+hero_guild_routing_seed123_500t	NARRATIVE	C/0	A/0.5723	B/0.4328	down	#536, cause not isolated by measurement
+hero_guild_routing_seed123_500t	PROGRESSION	D/-0.5575	C/-0.06667	D/-0.5315	down	#536, cause not isolated by measurement
+hero_guild_routing_seed123_500t	SOCIAL	S/11.01	S/32.56	S/13.38	down	#536, cause not isolated by measurement
+hero_guild_routing_seed123_500t	WORLD	B/0.34	B/0.1939	B/0.19	down	#536, cause not isolated by measurement
+hero_guild_routing_seed42_1000t	AGENCY	A/1.462	B/0.056	B/0.064	up	#536, cause not isolated by measurement
+hero_guild_routing_seed42_1000t	COGNITION	A/1.705	S/3.434	S/2.102	down	#536, cause not isolated by measurement
+hero_guild_routing_seed42_1000t	COMBAT	C/0	B/0.1051	B/0.1821	up	#536, cause not isolated by measurement
+hero_guild_routing_seed42_1000t	ECONOMY	B/0.2039	S/2.649	B/0.3487	down	#536, cause not isolated by measurement
+hero_guild_routing_seed42_1000t	FACTION	C/0	C/0	C/-0.04101	down	#536, cause not isolated by measurement
+hero_guild_routing_seed42_1000t	INFORMATION	C/0	S/39.47	S/58.73	up	#536, cause not isolated by measurement
+hero_guild_routing_seed42_1000t	NARRATIVE	C/-0.001003	A/0.6202	A/0.5936	down	#536, cause not isolated by measurement
+hero_guild_routing_seed42_1000t	PROGRESSION	C/-0.2171	C/-0.05441	B/0.1281	up	#536, cause not isolated by measurement
+hero_guild_routing_seed42_1000t	SOCIAL	C/0	S/47.38	S/36.07	down	#536, cause not isolated by measurement
+hero_guild_routing_seed42_1000t	WORLD	B/0.204	B/0.198	B/0.226	up	#536, cause not isolated by measurement
+hero_guild_routing_seed42_500t	AGENCY	B/0.0236	B/0.112	B/0.06751	down	#536, cause not isolated by measurement
+hero_guild_routing_seed42_500t	COGNITION	C/0	S/3.434	S/2.102	down	#536, cause not isolated by measurement
+hero_guild_routing_seed42_500t	COMBAT	A/0.968	B/0.1079	B/0.2173	up	#536, cause not isolated by measurement
+hero_guild_routing_seed42_500t	ECONOMY	B/0.1498	S/3.568	A/0.7052	down	#536, cause not isolated by measurement
+hero_guild_routing_seed42_500t	FACTION	C/0	C/0	C/-0.06452	down	#536, cause not isolated by measurement
+hero_guild_routing_seed42_500t	INFORMATION	C/0	S/38.99	S/71.84	up	#536, cause not isolated by measurement
+hero_guild_routing_seed42_500t	NARRATIVE	C/0	A/0.5657	A/0.9134	up	#536, cause not isolated by measurement
+hero_guild_routing_seed42_500t	PROGRESSION	C/-0.402	C/-0.4707	C/-0.1066	up	#536, cause not isolated by measurement
+hero_guild_routing_seed42_500t	SOCIAL	S/13.15	S/38.21	S/42.4	up	#536, cause not isolated by measurement
+hero_guild_routing_seed42_500t	WORLD	B/0.36	B/0.19	B/0.24	up	#536, cause not isolated by measurement
+hero_guild_routing_seed456_500t	COMBAT	B/0.33	B/0.1855	B/0.1986	up	#536, cause not isolated by measurement
+hero_guild_routing_seed456_500t	ECONOMY	B/0.171	S/3.285	B/0.2294	down	#536, cause not isolated by measurement
+hero_guild_routing_seed456_500t	FACTION	C/0	C/-0.08654	C/-0.08955	down	#536, cause not isolated by measurement
+hero_guild_routing_seed456_500t	INFORMATION	C/0	S/20.44	S/15.64	down	#536, cause not isolated by measurement
+hero_guild_routing_seed456_500t	NARRATIVE	C/0	A/0.5904	A/0.9116	up	#536, cause not isolated by measurement
+hero_guild_routing_seed456_500t	PROGRESSION	C/-0.2403	C/-0.3559	C/-0.02814	up	#536, cause not isolated by measurement
+hero_guild_routing_seed456_500t	SOCIAL	S/3.37	S/33.81	S/32.99	down	#536, cause not isolated by measurement
+hero_guild_routing_seed456_500t	WORLD	B/0.35	B/0.2	B/0.1835	down	#536, cause not isolated by measurement
+highland_traverse_seed123_200t	ECONOMY	C/0	A/0.9109	B/0.1	down	#536, cause not isolated by measurement
+highland_traverse_seed123_200t	NARRATIVE	C/0	B/0.3375	B/0.4898	up	#536, cause not isolated by measurement
+highland_traverse_seed123_200t	SOCIAL	S/11.14	S/22.02	S/23.38	up	#536, cause not isolated by measurement
+highland_traverse_seed123_200t	WORLD	A/0.95	A/0.79	A/0.75	down	#536, cause not isolated by measurement
+highland_traverse_seed42_200t	ECONOMY	C/0	A/0.9901	B/0.07018	down	#536, cause not isolated by measurement
+highland_traverse_seed42_200t	NARRATIVE	C/0	B/0.2652	B/0.1837	down	#536, cause not isolated by measurement
+highland_traverse_seed42_200t	SOCIAL	S/5.636	S/17.33	S/11.58	down	#536, cause not isolated by measurement
+highland_traverse_seed42_200t	WORLD	A/1.16	A/1.04	B/0.26	down	#536, cause not isolated by measurement
+highland_traverse_seed456_200t	ECONOMY	C/0	A/1.295	B/0.4892	down	#536, cause not isolated by measurement
+highland_traverse_seed456_200t	NARRATIVE	C/0	B/0.2158	B/0.2222	up	#536, cause not isolated by measurement
+highland_traverse_seed456_200t	SOCIAL	S/7.435	S/16.37	S/15.73	down	#536, cause not isolated by measurement
+highland_traverse_seed456_200t	WORLD	B/0.39	B/0.25	B/0.24	down	#536, cause not isolated by measurement
+lifecycle_full_coverage_world_seed42_200t	AGENCY	B/0.07216	B/0.1983	B/0.1465	down	#536, cause not isolated by measurement
+lifecycle_full_coverage_world_seed42_200t	COGNITION	C/0	A/0.6566	C/0	down	#536, cause not isolated by measurement
+lifecycle_full_coverage_world_seed42_200t	COMBAT	B/0.02367	B/0.132	B/0.06061	down	#536, cause not isolated by measurement
+lifecycle_full_coverage_world_seed42_200t	ECONOMY	C/0	S/4.589	A/0.804	down	#536, cause not isolated by measurement
+lifecycle_full_coverage_world_seed42_200t	INFORMATION	C/0	S/52.17	S/17.13	down	#536, cause not isolated by measurement
+lifecycle_full_coverage_world_seed42_200t	NARRATIVE	B/0.123	A/0.9485	B/0.3081	down	#536, cause not isolated by measurement
+lifecycle_full_coverage_world_seed42_200t	SOCIAL	S/6.19	S/15.46	S/19.96	up	#536, cause not isolated by measurement
+lifecycle_full_coverage_world_seed42_200t	WORLD	A/0.72	A/0.64	B/0.37	down	#536, cause not isolated by measurement
+resource_dense_basin_seed123_200t	COMBAT	C/0	B/0.06283	B/0.03	down	#536, cause not isolated by measurement
+resource_dense_basin_seed123_200t	ECONOMY	C/0	S/3.393	A/0.5366	down	#536, cause not isolated by measurement
+resource_dense_basin_seed123_200t	INFORMATION	C/0	S/17.01	S/11.76	down	#536, cause not isolated by measurement
+resource_dense_basin_seed123_200t	NARRATIVE	C/0	A/0.635	B/0.29	down	#536, cause not isolated by measurement
+resource_dense_basin_seed123_200t	SOCIAL	S/2.58	S/19.86	S/18.18	down	#536, cause not isolated by measurement
+resource_dense_basin_seed123_200t	WORLD	B/0.09	B/0.11	B/0.09	down	#536, cause not isolated by measurement
+resource_dense_basin_seed42_200t	COMBAT	B/0.06897	B/0.03243	C/0	down	#536, cause not isolated by measurement
+resource_dense_basin_seed42_200t	ECONOMY	B/0.0663	S/4.133	A/0.982	down	#536, cause not isolated by measurement
+resource_dense_basin_seed42_200t	INFORMATION	C/0	S/39.36	S/34.83	down	#536, cause not isolated by measurement
+resource_dense_basin_seed42_200t	NARRATIVE	C/0	B/0.4322	B/0.1916	down	#536, cause not isolated by measurement
+resource_dense_basin_seed42_200t	SOCIAL	A/0.8649	S/9.36	S/4.805	down	#536, cause not isolated by measurement
+resource_dense_basin_seed456_200t	COMBAT	C/0	B/0.05882	C/0	down	#536, cause not isolated by measurement
+resource_dense_basin_seed456_200t	ECONOMY	C/0	S/3.624	B/0.4507	down	#536, cause not isolated by measurement
+resource_dense_basin_seed456_200t	NARRATIVE	C/0	B/0.335	B/0.2535	down	#536, cause not isolated by measurement
+resource_dense_basin_seed456_200t	SOCIAL	S/3.14	S/12.86	S/4.3	down	#536, cause not isolated by measurement
+sandbox_world_seed137_200t	COMBAT	C/0	B/0.1458	C/0	down	#536, cause not isolated by measurement
+sandbox_world_seed137_200t	ECONOMY	C/0	S/3.006	C/-0.1036	down	#536, cause not isolated by measurement
+sandbox_world_seed137_200t	NARRATIVE	C/0	A/0.8333	B/0.2926	down	#536, cause not isolated by measurement
+sandbox_world_seed137_200t	SOCIAL	C/0	A/1.687	S/7.33	up	#536, cause not isolated by measurement
+sandbox_world_seed137_200t	WORLD	B/0.09	B/0.15	B/0.09	down	#536, cause not isolated by measurement
+sandbox_world_seed42_1000t	COMBAT	B/0.016	B/0.047	C/-0.001041	down	#536, cause not isolated by measurement
+sandbox_world_seed42_1000t	ECONOMY	B/0.2131	A/1.704	A/0.5633	down	#536, cause not isolated by measurement
+sandbox_world_seed42_1000t	NARRATIVE	C/0	B/0.423	B/0.191	down	#536, cause not isolated by measurement
+sandbox_world_seed42_1000t	PROGRESSION	C/-0.1224	C/-0.04108	C/-0.2477	down	#536, cause not isolated by measurement
+sandbox_world_seed42_1000t	SOCIAL	C/0	S/7.381	S/27.4	up	#536, cause not isolated by measurement
+sandbox_world_seed42_1000t	WORLD	B/0.126	B/0.122	B/0.094	down	#536, cause not isolated by measurement
+sandbox_world_seed42_2000t	COMBAT	B/0.007097	B/0.047	C/-0.001041	down	#536, cause not isolated by measurement
+sandbox_world_seed42_2000t	ECONOMY	B/0.2131	A/1.412	B/0.4391	down	#536, cause not isolated by measurement
+sandbox_world_seed42_2000t	NARRATIVE	C/0	B/0.423	B/0.1847	down	#536, cause not isolated by measurement
+sandbox_world_seed42_2000t	PROGRESSION	C/-0.1014	C/-0.03987	C/-0.2477	down	#536, cause not isolated by measurement
+sandbox_world_seed42_2000t	SOCIAL	C/0	S/16.59	S/39.37	up	#536, cause not isolated by measurement
+sandbox_world_seed42_2000t	WORLD	B/0.15	B/0.106	B/0.092	down	#536, cause not isolated by measurement
+sandbox_world_seed42_200t	COMBAT	B/0.07487	B/0.1556	C/0	down	#536, cause not isolated by measurement
+sandbox_world_seed42_200t	ECONOMY	B/0.18	S/3.58	A/0.5628	down	#536, cause not isolated by measurement
+sandbox_world_seed42_200t	NARRATIVE	C/0	A/0.9776	B/0.2595	down	#536, cause not isolated by measurement
+sandbox_world_seed42_200t	SOCIAL	A/1.335	S/6.965	S/7.3	up	#536, cause not isolated by measurement
+sandbox_world_seed42_200t	WORLD	B/0.15	B/0.17	B/0.11	down	#536, cause not isolated by measurement
+sandbox_world_seed999_200t	COMBAT	C/0	B/0.1124	C/0	down	#536, cause not isolated by measurement
+sandbox_world_seed999_200t	ECONOMY	C/0	S/3.077	A/1.234	down	#536, cause not isolated by measurement
+sandbox_world_seed999_200t	NARRATIVE	C/0	A/1.25	B/0.223	down	#536, cause not isolated by measurement
+sandbox_world_seed999_200t	SOCIAL	A/1.324	S/8.545	A/1.904	down	#536, cause not isolated by measurement
+sandbox_world_seed999_200t	WORLD	B/0.21	B/0.13	B/0.09	down	#536, cause not isolated by measurement
+simq_routing_test_seed123_500t	AGENCY	C/0	C/0	B/0.0309	up	#536, cause not isolated by measurement
+simq_routing_test_seed123_500t	COMBAT	B/0.02212	B/0.1207	B/0.1143	down	#536, cause not isolated by measurement
+simq_routing_test_seed123_500t	ECONOMY	B/0.0885	S/2.841	A/0.5182	down	#536, cause not isolated by measurement
+simq_routing_test_seed123_500t	INFORMATION	C/0	S/59.84	S/108.9	up	#536, cause not isolated by measurement
+simq_routing_test_seed123_500t	NARRATIVE	C/0	A/0.5573	B/0.4556	down	#536, cause not isolated by measurement
+simq_routing_test_seed123_500t	PROGRESSION	C/-0.4798	C/-0.4487	D/-0.5315	down	#536, cause not isolated by measurement
+simq_routing_test_seed123_500t	SOCIAL	S/7.06	S/31.57	S/15.88	down	#536, cause not isolated by measurement
+simq_routing_test_seed123_500t	WORLD	B/0.09	B/0.1288	B/0.16	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_1000t	AGENCY	S/2.397	B/0.04787	B/0.05797	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_1000t	COGNITION	A/1.225	A/0.8557	A/1.127	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_1000t	COMBAT	B/0.001	B/0.1385	B/0.1164	down	#536, cause not isolated by measurement
+simq_routing_test_seed42_1000t	ECONOMY	B/0.2133	S/2.847	B/0.3163	down	#536, cause not isolated by measurement
+simq_routing_test_seed42_1000t	FACTION	C/0	C/-0.04101	C/-0.007732	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_1000t	INFORMATION	C/0	S/46.74	S/69.86	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_1000t	NARRATIVE	C/-0.001014	A/0.7942	A/0.5902	down	#536, cause not isolated by measurement
+simq_routing_test_seed42_1000t	PROGRESSION	C/-0.2385	B/0.1299	C/-0.04513	down	#536, cause not isolated by measurement
+simq_routing_test_seed42_1000t	SOCIAL	C/0	S/40.24	S/39.92	down	#536, cause not isolated by measurement
+simq_routing_test_seed42_1000t	WORLD	B/0.13	B/0.192	B/0.16	down	#536, cause not isolated by measurement
+simq_routing_test_seed42_500t	AGENCY	C/0	B/0.04787	B/0.05797	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_500t	COGNITION	C/0	A/0.8557	A/1.127	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_500t	COMBAT	B/0.2064	B/0.1961	B/0.2789	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_500t	ECONOMY	B/0.2082	S/3.576	A/0.9153	down	#536, cause not isolated by measurement
+simq_routing_test_seed42_500t	FACTION	C/0	C/0	B/0.02841	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_500t	INFORMATION	C/0	S/47.8	S/57.15	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_500t	NARRATIVE	C/0	B/0.268	A/0.8354	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_500t	PROGRESSION	C/-0.3173	C/-0.3812	C/-0.306	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_500t	SOCIAL	S/7.636	S/27.87	S/37.49	up	#536, cause not isolated by measurement
+simq_routing_test_seed42_500t	WORLD	B/0.09	B/0.17	B/0.18	up	#536, cause not isolated by measurement
+simq_routing_test_seed456_500t	COMBAT	S/2.932	B/0.1109	B/0.2469	up	#536, cause not isolated by measurement
+simq_routing_test_seed456_500t	ECONOMY	B/0.1895	S/3.401	B/0.2683	down	#536, cause not isolated by measurement
+simq_routing_test_seed456_500t	FACTION	C/0	C/0	C/-0.0578	down	#536, cause not isolated by measurement
+simq_routing_test_seed456_500t	INFORMATION	C/0	S/53.73	S/7.956	down	#536, cause not isolated by measurement
+simq_routing_test_seed456_500t	NARRATIVE	C/0	A/0.592	A/0.5686	down	#536, cause not isolated by measurement
+simq_routing_test_seed456_500t	PROGRESSION	D/-0.6328	C/-0.249	C/-0.2474	up	#536, cause not isolated by measurement
+simq_routing_test_seed456_500t	SOCIAL	S/15.75	S/24.31	S/40.93	up	#536, cause not isolated by measurement
+simq_routing_test_seed456_500t	WORLD	B/0.11	B/0.17	B/0.1426	down	#536, cause not isolated by measurement
+simq_scale_stress_seed42_seed42_200t	COGNITION	C/0	S/2.25	A/0.575	down	#536, cause not isolated by measurement
+simq_scale_stress_seed42_seed42_200t	COMBAT	A/1.395	A/0.51	B/0.4	down	#536, cause not isolated by measurement
+simq_scale_stress_seed42_seed42_200t	ECONOMY	B/0.1865	S/7.04	A/1.081	down	#536, cause not isolated by measurement
+simq_scale_stress_seed42_seed42_200t	INFORMATION	C/0	S/50.25	S/68.25	up	#536, cause not isolated by measurement
+simq_scale_stress_seed42_seed42_200t	NARRATIVE	B/0.06857	S/3.377	S/2.879	down	#536, cause not isolated by measurement
+simq_scale_stress_seed42_seed42_200t	PROGRESSION	B/0.4767	A/1.01	A/1.011	up	#536, cause not isolated by measurement
+simq_scale_stress_seed42_seed42_200t	SOCIAL	S/23.66	S/57.46	S/59.53	up	#536, cause not isolated by measurement
+simq_scale_stress_seed42_seed42_200t	WORLD	A/1.12	A/1.04	A/0.94	down	#536, cause not isolated by measurement
+swamp_border_world_seed123_200t	ECONOMY	C/0	S/3.514	A/0.6337	down	#536, cause not isolated by measurement
+swamp_border_world_seed123_200t	NARRATIVE	B/0.3317	B/0.1985	B/0.2408	up	#536, cause not isolated by measurement
+swamp_border_world_seed123_200t	SOCIAL	S/5.715	S/14.06	S/23.12	up	#536, cause not isolated by measurement
+swamp_border_world_seed42_200t	COMBAT	B/0.24	B/0.1156	C/0	down	#536, cause not isolated by measurement
+swamp_border_world_seed42_200t	ECONOMY	B/0.1105	S/3.216	A/0.6526	down	#536, cause not isolated by measurement
+swamp_border_world_seed42_200t	NARRATIVE	B/0.1161	A/1.445	B/0.2642	down	#536, cause not isolated by measurement
+swamp_border_world_seed42_200t	SOCIAL	S/2.3	S/12.54	S/23.97	up	#536, cause not isolated by measurement
+swamp_border_world_seed42_200t	WORLD	B/0.15	B/0.21	B/0.17	down	#536, cause not isolated by measurement
+swamp_border_world_seed456_200t	ECONOMY	B/0.1739	S/3.315	B/0.02139	down	#536, cause not isolated by measurement
+swamp_border_world_seed456_200t	NARRATIVE	B/0.05357	B/0.3294	B/0.3571	up	#536, cause not isolated by measurement
+swamp_border_world_seed456_200t	SOCIAL	S/4.02	S/8.89	S/24.65	up	#536, cause not isolated by measurement
+unit_faction_tension_seed123_200t	COMBAT	C/0	B/0.05978	C/0	down	#536, cause not isolated by measurement
+unit_faction_tension_seed123_200t	ECONOMY	C/0	S/2.913	A/0.7	down	#536, cause not isolated by measurement
+unit_faction_tension_seed123_200t	NARRATIVE	C/0	B/0.3901	B/0.224	down	#536, cause not isolated by measurement
+unit_faction_tension_seed123_200t	SOCIAL	A/1.8	S/9.815	S/10.88	up	#536, cause not isolated by measurement
+unit_faction_tension_seed123_200t	WORLD	B/0.09	B/0.11	B/0.09	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_1000t	COMBAT	B/0.016	B/0.047	C/-0.001041	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_1000t	ECONOMY	B/0.2131	A/1.704	A/0.5633	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_1000t	NARRATIVE	C/0	B/0.423	B/0.191	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_1000t	PROGRESSION	C/-0.1224	C/-0.04108	C/-0.2477	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_1000t	SOCIAL	C/0	S/7.381	S/27.4	up	#536, cause not isolated by measurement
+unit_faction_tension_seed42_1000t	WORLD	B/0.126	B/0.122	B/0.094	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_2000t	COMBAT	B/0.007097	B/0.047	C/-0.001041	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_2000t	ECONOMY	B/0.2131	A/1.412	B/0.4391	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_2000t	NARRATIVE	C/0	B/0.423	B/0.1847	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_2000t	PROGRESSION	C/-0.1014	C/-0.03987	C/-0.2477	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_2000t	SOCIAL	C/0	S/16.59	S/39.37	up	#536, cause not isolated by measurement
+unit_faction_tension_seed42_2000t	WORLD	B/0.15	B/0.106	B/0.092	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_200t	COMBAT	B/0.07487	B/0.1556	C/0	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_200t	ECONOMY	B/0.18	S/3.58	A/0.5628	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_200t	NARRATIVE	C/0	A/0.9776	B/0.2595	down	#536, cause not isolated by measurement
+unit_faction_tension_seed42_200t	SOCIAL	A/1.335	S/6.965	S/7.3	up	#536, cause not isolated by measurement
+unit_faction_tension_seed42_200t	WORLD	B/0.15	B/0.17	B/0.11	down	#536, cause not isolated by measurement
+unit_faction_tension_seed456_200t	COMBAT	C/0	B/0.01042	C/0	down	#536, cause not isolated by measurement
+unit_faction_tension_seed456_200t	ECONOMY	B/0.0663	S/3.492	A/0.7821	down	#536, cause not isolated by measurement
+unit_faction_tension_seed456_200t	NARRATIVE	C/0	B/0.2132	B/0.2556	up	#536, cause not isolated by measurement
+unit_faction_tension_seed456_200t	SOCIAL	S/3.125	A/1.775	S/9.34	up	#536, cause not isolated by measurement
+unit_information_density_seed123_200t	ECONOMY	C/0	S/3.271	A/0.5366	down	#536, cause not isolated by measurement
+unit_information_density_seed42_200t	ECONOMY	C/0	S/3.443	A/0.8454	down	#536, cause not isolated by measurement
+unit_information_density_seed456_200t	ECONOMY	C/0	S/3.138	A/0.512	down	#536, cause not isolated by measurement
+unit_information_source_seed123_200t	ECONOMY	C/0	S/3.271	A/0.5366	down	#536, cause not isolated by measurement
+unit_information_source_seed42_200t	ECONOMY	C/0	S/3.443	A/0.8454	down	#536, cause not isolated by measurement
+unit_information_source_seed456_200t	ECONOMY	C/0	S/3.138	A/0.512	down	#536, cause not isolated by measurement
+unit_selfmodel_pilot_seed123_200t	ECONOMY	C/0	S/3.22	A/0.7	down	#536, cause not isolated by measurement
+unit_selfmodel_pilot_seed42_1000t	ECONOMY	B/0.07991	A/1.423	B/0.408	down	#536, cause not isolated by measurement
+unit_selfmodel_pilot_seed42_200t	ECONOMY	C/0	S/3.47	A/0.7607	down	#536, cause not isolated by measurement
+unit_selfmodel_pilot_seed456_200t	ECONOMY	C/0	S/3.425	A/0.6444	down	#536, cause not isolated by measurement
+urban_political_seed123_1000t	COMBAT	C/-0.007	B/0.156	B/0.168	up	#536, cause not isolated by measurement
+urban_political_seed123_1000t	ECONOMY	A/0.6564	S/2.813	B/0.3238	down	#536, cause not isolated by measurement
+urban_political_seed123_1000t	INFORMATION	B/0.04	S/36.78	S/114	up	#536, cause not isolated by measurement
+urban_political_seed123_1000t	NARRATIVE	C/-0.001013	A/0.5757	A/0.6938	up	#536, cause not isolated by measurement
+urban_political_seed123_1000t	PROGRESSION	C/-0.2638	C/-0.2	C/-0.1822	up	#536, cause not isolated by measurement
+urban_political_seed123_1000t	SOCIAL	S/21.37	S/49.76	S/58.3	up	#536, cause not isolated by measurement
+urban_political_seed123_1000t	WORLD	B/0.162	B/0.128	B/0.124	down	#536, cause not isolated by measurement
+urban_political_seed123_500t	COMBAT	B/0.1037	B/0.1822	B/0.1772	down	#536, cause not isolated by measurement
+urban_political_seed123_500t	ECONOMY	B/0.1895	S/3.817	A/0.5203	down	#536, cause not isolated by measurement
+urban_political_seed123_500t	INFORMATION	B/0.08	S/26.16	S/72.94	up	#536, cause not isolated by measurement
+urban_political_seed123_500t	NARRATIVE	C/0	A/0.7249	A/0.8763	up	#536, cause not isolated by measurement
+urban_political_seed123_500t	PROGRESSION	C/-0.3726	C/-0.2188	C/-0.2234	down	#536, cause not isolated by measurement
+urban_political_seed123_500t	SOCIAL	S/16.7	S/51.74	S/61.47	up	#536, cause not isolated by measurement
+urban_political_seed123_500t	WORLD	B/0.275	B/0.185	B/0.175	down	#536, cause not isolated by measurement
+urban_political_seed42_1000t	COMBAT	B/0.0184	B/0.2405	B/0.2139	down	#536, cause not isolated by measurement
+urban_political_seed42_1000t	ECONOMY	B/0.2131	S/2.582	B/0.3137	down	#536, cause not isolated by measurement
+urban_political_seed42_1000t	FACTION	A/0.58	C/-0.09231	C/-0.1011	down	#536, cause not isolated by measurement
+urban_political_seed42_1000t	INFORMATION	B/0.04	S/73.29	S/89.19	up	#536, cause not isolated by measurement
+urban_political_seed42_1000t	NARRATIVE	C/0	A/1.357	A/1.058	down	#536, cause not isolated by measurement
+urban_political_seed42_1000t	PROGRESSION	C/-0.2303	B/0.07692	C/-0.08321	down	#536, cause not isolated by measurement
+urban_political_seed42_1000t	SOCIAL	S/15.12	S/49.61	S/37.71	down	#536, cause not isolated by measurement
+urban_political_seed42_1000t	WORLD	B/0.158	B/0.158	B/0.142	down	#536, cause not isolated by measurement
+urban_political_seed42_2000t	COMBAT	C/-0.001974	B/0.09457	B/0.166	up	#536, cause not isolated by measurement
+urban_political_seed42_2000t	ECONOMY	B/0.2398	A/1.223	B/0.1912	down	#536, cause not isolated by measurement
+urban_political_seed42_2000t	INFORMATION	B/0.02	S/78.42	S/105.4	up	#536, cause not isolated by measurement
+urban_political_seed42_2000t	NARRATIVE	C/-0.002997	A/0.5654	A/1.05	up	#536, cause not isolated by measurement
+urban_political_seed42_2000t	PROGRESSION	C/-0.1563	B/0.06313	C/-0.08321	down	#536, cause not isolated by measurement
+urban_political_seed42_2000t	SOCIAL	S/14.4	S/52.32	S/46.34	down	#536, cause not isolated by measurement
+urban_political_seed42_2000t	WORLD	B/0.166	B/0.128	B/0.116	down	#536, cause not isolated by measurement
+urban_political_seed42_200t	COMBAT	A/1.505	B/0.2513	B/0.2131	down	#536, cause not isolated by measurement
+urban_political_seed42_200t	ECONOMY	B/0.1481	S/5.048	A/0.7914	down	#536, cause not isolated by measurement
+urban_political_seed42_200t	INFORMATION	B/0.2	S/20.84	S/21.27	up	#536, cause not isolated by measurement
+urban_political_seed42_200t	NARRATIVE	C/0	A/1.377	A/1.256	down	#536, cause not isolated by measurement
+urban_political_seed42_200t	PROGRESSION	B/0.3545	A/0.5864	B/0.3804	down	#536, cause not isolated by measurement
+urban_political_seed42_200t	SOCIAL	S/16.82	S/28.82	S/32.44	up	#536, cause not isolated by measurement
+urban_political_seed42_200t	WORLD	B/0.21	B/0.29	B/0.2	down	#536, cause not isolated by measurement
+urban_political_seed42_500t	COMBAT	S/3.374	B/0.2405	B/0.2139	down	#536, cause not isolated by measurement
+urban_political_seed42_500t	ECONOMY	B/0.3292	S/3.077	A/0.521	down	#536, cause not isolated by measurement
+urban_political_seed42_500t	FACTION	A/1.16	C/-0.09231	C/-0.1011	down	#536, cause not isolated by measurement
+urban_political_seed42_500t	INFORMATION	B/0.08	S/49.8	S/43.73	down	#536, cause not isolated by measurement
+urban_political_seed42_500t	NARRATIVE	C/0	A/1.357	A/1.058	down	#536, cause not isolated by measurement
+urban_political_seed42_500t	PROGRESSION	C/-0.3122	B/0.1088	C/-0.05983	down	#536, cause not isolated by measurement
+urban_political_seed42_500t	SOCIAL	S/24.86	S/42.18	S/33.72	down	#536, cause not isolated by measurement
+urban_political_seed42_500t	WORLD	B/0.15	B/0.2316	B/0.22	down	#536, cause not isolated by measurement
+urban_political_seed456_1000t	COGNITION	B/0.012	S/3.28	S/3.668	up	#536, cause not isolated by measurement
+urban_political_seed456_1000t	COMBAT	B/0.007	B/0.1813	B/0.06598	down	#536, cause not isolated by measurement
+urban_political_seed456_1000t	ECONOMY	B/0.2131	A/1.786	B/0.2757	down	#536, cause not isolated by measurement
+urban_political_seed456_1000t	FACTION	A/0.58	C/-0.08219	C/0	up	#536, cause not isolated by measurement
+urban_political_seed456_1000t	INFORMATION	B/0.04	S/45.44	S/71.24	up	#536, cause not isolated by measurement
+urban_political_seed456_1000t	NARRATIVE	A/0.6557	A/0.8191	A/0.5465	down	#536, cause not isolated by measurement
+urban_political_seed456_1000t	PROGRESSION	B/0.1	B/0.003295	C/-0.1174	down	#536, cause not isolated by measurement
+urban_political_seed456_1000t	SOCIAL	S/20.68	S/46.1	S/24.7	down	#536, cause not isolated by measurement
+urban_political_seed456_1000t	WORLD	B/0.12	B/0.17	B/0.158	down	#536, cause not isolated by measurement
+urban_political_seed456_500t	COGNITION	B/0.024	S/3.056	S/2.536	down	#536, cause not isolated by measurement
+urban_political_seed456_500t	COMBAT	S/5.182	B/0.196	B/0.1436	down	#536, cause not isolated by measurement
+urban_political_seed456_500t	ECONOMY	B/0.3491	S/2.711	B/0.3713	down	#536, cause not isolated by measurement
+urban_political_seed456_500t	FACTION	A/1.16	C/-0.08219	C/0	up	#536, cause not isolated by measurement
+urban_political_seed456_500t	INFORMATION	B/0.08	S/33.46	S/51.75	up	#536, cause not isolated by measurement
+urban_political_seed456_500t	NARRATIVE	C/0	A/0.9839	A/1.014	up	#536, cause not isolated by measurement
+urban_political_seed456_500t	PROGRESSION	C/-0.02015	B/0.01411	C/-0.08312	down	#536, cause not isolated by measurement
+urban_political_seed456_500t	SOCIAL	S/23.09	S/45.73	S/29.01	down	#536, cause not isolated by measurement
+urban_political_seed456_500t	WORLD	B/0.205	B/0.23	B/0.26	up	#536, cause not isolated by measurement
+urban_political_selfmodel_execution_probe_seed42_200t	COGNITION	S/27.48	S/26.91	S/28.25	up	#536, cause not isolated by measurement
+urban_political_selfmodel_execution_probe_seed42_200t	COMBAT	A/0.7839	B/0.2513	B/0.2131	down	#536, cause not isolated by measurement
+urban_political_selfmodel_execution_probe_seed42_200t	ECONOMY	C/0	S/5.121	A/0.8293	down	#536, cause not isolated by measurement
+urban_political_selfmodel_execution_probe_seed42_200t	NARRATIVE	C/0	A/1.377	A/1.206	down	#536, cause not isolated by measurement
+urban_political_selfmodel_execution_probe_seed42_200t	PROGRESSION	C/-0.1569	A/0.5864	B/0.3804	down	#536, cause not isolated by measurement
+urban_political_selfmodel_execution_probe_seed42_200t	SOCIAL	S/16.82	S/28.82	S/32.44	up	#536, cause not isolated by measurement
+urban_political_selfmodel_execution_probe_seed42_200t	WORLD	B/0.21	B/0.29	B/0.2	down	#536, cause not isolated by measurement
+urban_political_selfmodel_probe_seed42_200t	COGNITION	S/28.05	S/26.91	S/28.25	up	#536, cause not isolated by measurement
+urban_political_selfmodel_probe_seed42_200t	COMBAT	A/0.809	B/0.2513	B/0.2131	down	#536, cause not isolated by measurement
+urban_political_selfmodel_probe_seed42_200t	ECONOMY	C/0	S/5.121	A/0.8293	down	#536, cause not isolated by measurement
+urban_political_selfmodel_probe_seed42_200t	INFORMATION	B/0.2	S/16.94	S/18.34	up	#536, cause not isolated by measurement
+urban_political_selfmodel_probe_seed42_200t	NARRATIVE	C/0	A/1.377	A/1.206	down	#536, cause not isolated by measurement
+urban_political_selfmodel_probe_seed42_200t	PROGRESSION	C/-0.1569	A/0.5864	B/0.3804	down	#536, cause not isolated by measurement
+urban_political_selfmodel_probe_seed42_200t	SOCIAL	S/17.89	S/28.82	S/32.44	up	#536, cause not isolated by measurement
+urban_political_selfmodel_probe_seed42_200t	WORLD	B/0.21	B/0.29	B/0.2	down	#536, cause not isolated by measurement
+wilderness_survival_seed123_200t	ECONOMY	C/0	B/0.1584	B/0.2652	up	#536, cause not isolated by measurement
+wilderness_survival_seed123_200t	SOCIAL	B/0.3454	S/6.99	S/2.52	down	#536, cause not isolated by measurement
+wilderness_survival_seed42_200t	ECONOMY	C/0	C/0	A/0.7869	up	#536, cause not isolated by measurement
+wilderness_survival_seed42_200t	SOCIAL	A/1.02	A/1.105	A/1.43	up	#536, cause not isolated by measurement
+wilderness_survival_seed42_200t	WORLD	B/0.2	B/0.17	B/0.19	up	#536, cause not isolated by measurement
+wilderness_survival_seed456_200t	COMBAT	C/0	B/0.07595	C/0	down	#536, cause not isolated by measurement
+wilderness_survival_seed456_200t	ECONOMY	C/0	B/0.1584	C/0	down	#536, cause not isolated by measurement
+wilderness_survival_seed456_200t	NARRATIVE	C/0	A/0.9873	C/0	down	#536, cause not isolated by measurement
+wilderness_survival_seed456_200t	SOCIAL	A/0.9776	S/2.955	S/2.07	down	#536, cause not isolated by measurement
+crowded_frontier_seed42_200t	COGNITION	B/0.09615	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+crowded_frontier_seed456_200t	AGENCY	C/0	B/0.03684	B/0.03684	up	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_1000t	COMBAT	B/0.039	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_1000t	ECONOMY	B/0.2131	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_1000t	FACTION	A/0.58	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_1000t	PROGRESSION	C/-0.1653	C/-0.4169	C/-0.4169	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_1000t	WORLD	B/0.212	B/0.06	B/0.06	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_2000t	COMBAT	B/0.04132	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_2000t	ECONOMY	B/0.2131	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_2000t	FACTION	B/0.29	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_2000t	PROGRESSION	C/-0.0626	C/-0.256	C/-0.256	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_2000t	WORLD	B/0.208	B/0.06	B/0.06	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_500t	ECONOMY	B/0.08978	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_500t	FACTION	A/1.283	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_500t	NARRATIVE	B/0.1282	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_500t	PROGRESSION	C/-0.4421	C/-0.4169	C/-0.4169	up	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_500t	SOCIAL	S/6.758	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed123_500t	WORLD	B/0.1466	B/0.06	B/0.06	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_1000t	COMBAT	B/0.047	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_1000t	ECONOMY	B/0.2131	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_1000t	FACTION	A/0.58	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_1000t	PROGRESSION	C/-0.1246	C/-0.3844	C/-0.3844	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_1000t	SOCIAL	C/0	B/0.452	B/0.452	up	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_1000t	WORLD	B/0.226	B/0.074	B/0.074	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_2000t	COMBAT	B/0.026	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_2000t	ECONOMY	B/0.2131	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_2000t	FACTION	B/0.29	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_2000t	PROGRESSION	C/-0.1291	C/-0.236	C/-0.236	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_2000t	SOCIAL	C/0	B/0.226	B/0.226	up	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_2000t	WORLD	B/0.215	B/0.067	B/0.067	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_200t	SOCIAL	A/1.76	B/0.205	B/0.205	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_200t	WORLD	B/0.21	B/0.06	B/0.06	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_500t	FACTION	A/1.33	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_500t	PROGRESSION	D/-0.7774	C/-0.3844	C/-0.3844	up	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_500t	SOCIAL	S/4.692	A/0.5183	A/0.5183	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed42_500t	WORLD	B/0.19	B/0.095	B/0.095	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_1000t	COMBAT	B/0.058	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_1000t	ECONOMY	B/0.2131	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_1000t	FACTION	A/0.58	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_1000t	PROGRESSION	C/-0.1829	C/-0.3541	C/-0.3541	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_1000t	SOCIAL	C/0	A/0.516	A/0.516	up	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_1000t	WORLD	B/0.212	B/0.074	B/0.074	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_2000t	COMBAT	B/0.065	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_2000t	ECONOMY	B/0.2131	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_2000t	FACTION	B/0.29	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_2000t	PROGRESSION	C/-0.09584	C/-0.216	C/-0.216	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_2000t	SOCIAL	C/0	B/0.258	B/0.258	up	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_2000t	WORLD	B/0.208	B/0.067	B/0.067	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_500t	FACTION	A/1.33	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_500t	PROGRESSION	D/-0.7774	C/-0.3541	C/-0.3541	up	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_500t	SOCIAL	S/8.578	A/0.9281	A/0.9281	down	unchanged since the 2026-10-12 ruling
+dungeon_crawl_seed456_500t	WORLD	B/0.1849	B/0.095	B/0.095	down	unchanged since the 2026-10-12 ruling
+frontier_extended_seed123_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+frontier_extended_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+frontier_living_world_seed123_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+frontier_marches_seed123_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+frontier_marches_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+frontier_marches_seed456_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+generated_frontier_3_42_seed42_200t	AGENCY	B/0.06481	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+generated_frontier_3_42_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+generated_frontier_3_42_seed456_200t	AGENCY	C/0	B/0.14	B/0.14	up	unchanged since the 2026-10-12 ruling
+generated_frontier_3_42_seed456_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+hero_guild_routing_seed456_500t	AGENCY	C/0	B/0.056	B/0.056	up	unchanged since the 2026-10-12 ruling
+highland_traverse_seed123_200t	COMBAT	C/-0.005988	C/0	C/0	up	unchanged since the 2026-10-12 ruling
+highland_traverse_seed123_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+highland_traverse_seed42_200t	COGNITION	B/0.2447	B/0.06	B/0.06	down	unchanged since the 2026-10-12 ruling
+highland_traverse_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+highland_traverse_seed456_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+lifecycle_full_coverage_world_seed42_200t	FACTION	S/7.5	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+quest_dense_frontier_seed123_200t	SOCIAL	S/3.06	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+quest_dense_frontier_seed123_200t	WORLD	B/0.5	B/0.09	B/0.09	down	unchanged since the 2026-10-12 ruling
+quest_dense_frontier_seed42_200t	SOCIAL	B/0.2456	B/0.205	B/0.205	down	unchanged since the 2026-10-12 ruling
+quest_dense_frontier_seed42_200t	WORLD	A/0.51	B/0.09	B/0.09	down	unchanged since the 2026-10-12 ruling
+quest_dense_frontier_seed456_200t	PROGRESSION	C/0	C/-0.1569	C/-0.1569	down	unchanged since the 2026-10-12 ruling
+quest_dense_frontier_seed456_200t	SOCIAL	B/0.16	S/2.76	S/2.76	up	unchanged since the 2026-10-12 ruling
+quest_dense_frontier_seed456_200t	WORLD	B/0.49	B/0.09	B/0.09	down	unchanged since the 2026-10-12 ruling
+resource_dense_basin_seed42_200t	PROGRESSION	B/0.06857	C/-0.1569	C/-0.1569	down	unchanged since the 2026-10-12 ruling
+resource_dense_basin_seed456_200t	INFORMATION	C/0	S/2.719	S/2.719	up	unchanged since the 2026-10-12 ruling
+resource_dense_basin_seed456_200t	PROGRESSION	B/0.06316	C/-0.1569	C/-0.1569	down	unchanged since the 2026-10-12 ruling
+resource_dense_basin_seed456_200t	WORLD	B/0.11	B/0.09	B/0.09	down	unchanged since the 2026-10-12 ruling
+sandbox_world_seed137_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+sandbox_world_seed42_1000t	COGNITION	B/0.038	B/0.012	B/0.012	down	unchanged since the 2026-10-12 ruling
+sandbox_world_seed42_1000t	FACTION	A/0.58	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+sandbox_world_seed42_2000t	COGNITION	B/0.04296	B/0.006	B/0.006	down	unchanged since the 2026-10-12 ruling
+sandbox_world_seed42_2000t	FACTION	B/0.29	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+sandbox_world_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+sandbox_world_seed999_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+simq_routing_test_seed456_500t	AGENCY	C/0	B/0.056	B/0.056	up	unchanged since the 2026-10-12 ruling
+simq_scale_stress_seed42_seed42_200t	AGENCY	B/0.14	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+simq_scale_stress_seed42_seed42_200t	FACTION	S/6.5	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+swamp_border_world_seed123_200t	COMBAT	B/0.06154	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+swamp_border_world_seed123_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+swamp_border_world_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+swamp_border_world_seed456_200t	COMBAT	B/0.1071	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+swamp_border_world_seed456_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+swamp_border_world_seed456_200t	PROGRESSION	B/0.1008	C/-0.1569	C/-0.1569	down	unchanged since the 2026-10-12 ruling
+swamp_border_world_seed456_200t	WORLD	B/0.17	B/0.15	B/0.15	down	unchanged since the 2026-10-12 ruling
+unit_faction_tension_seed123_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_faction_tension_seed42_1000t	COGNITION	B/0.035	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_faction_tension_seed42_1000t	FACTION	A/0.58	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_faction_tension_seed42_2000t	COGNITION	B/0.03996	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_faction_tension_seed42_2000t	FACTION	B/0.29	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_faction_tension_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_faction_tension_seed456_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_faction_tension_seed456_200t	PROGRESSION	B/0.07317	C/-0.1569	C/-0.1569	down	unchanged since the 2026-10-12 ruling
+unit_information_density_seed123_200t	COGNITION	A/0.8101	B/0.18	B/0.18	down	unchanged since the 2026-10-12 ruling
+unit_information_density_seed123_200t	NARRATIVE	C/0	B/0.4521	B/0.4521	up	unchanged since the 2026-10-12 ruling
+unit_information_density_seed123_200t	SOCIAL	A/1.8	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_information_density_seed42_200t	NARRATIVE	C/0	B/0.2938	B/0.2938	up	unchanged since the 2026-10-12 ruling
+unit_information_density_seed456_200t	AGENCY	B/0.14	B/0.1524	B/0.1524	up	unchanged since the 2026-10-12 ruling
+unit_information_density_seed456_200t	NARRATIVE	C/0	B/0.328	B/0.328	up	unchanged since the 2026-10-12 ruling
+unit_information_density_seed456_200t	SOCIAL	S/2.895	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_information_source_seed123_200t	COGNITION	A/0.7342	B/0.06	B/0.06	down	unchanged since the 2026-10-12 ruling
+unit_information_source_seed123_200t	NARRATIVE	C/0	B/0.4521	B/0.4521	up	unchanged since the 2026-10-12 ruling
+unit_information_source_seed123_200t	SOCIAL	A/1.8	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_information_source_seed42_200t	NARRATIVE	C/0	B/0.2938	B/0.2938	up	unchanged since the 2026-10-12 ruling
+unit_information_source_seed456_200t	AGENCY	B/0.14	B/0.1524	B/0.1524	up	unchanged since the 2026-10-12 ruling
+unit_information_source_seed456_200t	NARRATIVE	C/0	B/0.328	B/0.328	up	unchanged since the 2026-10-12 ruling
+unit_information_source_seed456_200t	SOCIAL	S/2.895	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed123_200t	AGENCY	B/0.14	B/0.184	B/0.184	up	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed123_200t	NARRATIVE	C/0	B/0.3727	B/0.3727	up	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed123_200t	SOCIAL	A/1.8	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed42_1000t	AGENCY	C/0	B/0.0817	B/0.0817	up	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed42_1000t	COGNITION	S/13.56	S/16	S/16	up	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed42_1000t	COMBAT	C/-0.001144	C/0	C/0	up	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed42_1000t	NARRATIVE	B/0.4213	B/0.1596	B/0.1596	down	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed42_1000t	PROGRESSION	B/0.02517	D/-0.5563	D/-0.5563	down	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed42_1000t	WORLD	B/0.012	B/0.03	B/0.03	up	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed42_200t	AGENCY	B/0.28	B/0.42	B/0.42	up	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed42_200t	NARRATIVE	C/0	B/0.4842	B/0.4842	up	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed456_200t	AGENCY	B/0.14	B/0.184	B/0.184	up	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed456_200t	NARRATIVE	C/0	B/0.3832	B/0.3832	up	unchanged since the 2026-10-12 ruling
+unit_selfmodel_pilot_seed456_200t	SOCIAL	S/2.895	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+urban_political_seed123_1000t	AGENCY	C/0	B/0.028	B/0.028	up	unchanged since the 2026-10-12 ruling
+urban_political_seed123_1000t	FACTION	A/0.58	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+urban_political_seed123_500t	AGENCY	C/0	B/0.056	B/0.056	up	unchanged since the 2026-10-12 ruling
+urban_political_seed123_500t	COGNITION	A/1.336	B/0.024	B/0.024	down	unchanged since the 2026-10-12 ruling
+urban_political_seed123_500t	FACTION	A/1.16	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+urban_political_seed42_1000t	AGENCY	C/0	B/0.064	B/0.064	up	unchanged since the 2026-10-12 ruling
+urban_political_seed42_2000t	AGENCY	C/0	B/0.032	B/0.032	up	unchanged since the 2026-10-12 ruling
+urban_political_seed42_2000t	FACTION	B/0.29	C/-0.072	C/-0.072	down	unchanged since the 2026-10-12 ruling
+urban_political_seed42_200t	AGENCY	C/0	B/0.0904	B/0.0904	up	unchanged since the 2026-10-12 ruling
+urban_political_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+urban_political_seed42_500t	AGENCY	C/0	B/0.0904	B/0.0904	up	unchanged since the 2026-10-12 ruling
+urban_political_selfmodel_execution_probe_seed42_200t	AGENCY	C/0	B/0.1299	B/0.1299	up	unchanged since the 2026-10-12 ruling
+urban_political_selfmodel_execution_probe_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+urban_political_selfmodel_execution_probe_seed42_200t	INFORMATION	B/0.2	S/8.569	S/8.569	up	unchanged since the 2026-10-12 ruling
+urban_political_selfmodel_probe_seed42_200t	AGENCY	C/0	B/0.1299	B/0.1299	up	unchanged since the 2026-10-12 ruling
+urban_political_selfmodel_probe_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+wilderness_survival_seed123_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+wilderness_survival_seed123_200t	WORLD	B/0.41	B/0.14	B/0.14	down	unchanged since the 2026-10-12 ruling
+wilderness_survival_seed42_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+wilderness_survival_seed456_200t	FACTION	S/2.9	C/0	C/0	down	unchanged since the 2026-10-12 ruling
+wilderness_survival_seed456_200t	WORLD	B/0.38	B/0.21	B/0.21	down	unchanged since the 2026-10-12 ruling
