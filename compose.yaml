@@ -107,7 +107,7 @@ services:
 
   grafana:
     profiles: ["observability"]
-    image: grafana/grafana:10.3.3@sha256:8640e5038e83ca4554ed56b9d76375158bcd51580238c6f5d8adaf3f20dd5379
+    image: grafana/grafana:13.2.3@sha256:b28bae15e219c998fb0e0424ed724930cc61b1f61fb404d47c862f9a23f9e572
     mem_limit: 256m
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
