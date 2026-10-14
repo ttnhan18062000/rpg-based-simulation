@@ -1,4 +1,4 @@
-# Dependabot version updates (TCK-20261014-DEPENDABOT-AND-BASE-IMAGE-PINS). Monthly, minor/patch grouped, semver-major ignored, no auto-merge.
+# Dependabot version updates (TCK-20261014-DEPENDABOT-AND-BASE-IMAGE-PINS). Weekly, minor/patch grouped, no auto-merge.
 # Review routing by the file a PR changes (labels below): uv.lock and frontend/** -> rpg; test.yml actions -> testing;
 # everything else -> platform.
 version: 2
@@ -6,12 +6,8 @@ updates:
   - package-ecosystem: docker
     directory: /docker
     schedule:
-      interval: monthly
+      interval: weekly
     open-pull-requests-limit: 5
-    # Major bumps are deliberate tickets owned by the file's domain, not automated PRs (TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS).
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
     labels: [dependencies, platform]
     groups:
       docker-minor-patch:
@@ -19,12 +15,8 @@ updates:
   - package-ecosystem: docker-compose
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
     open-pull-requests-limit: 5
-    # Major bumps are deliberate tickets owned by the file's domain, not automated PRs (TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS).
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
     labels: [dependencies, platform]
     groups:
       compose-minor-patch:
@@ -32,12 +24,8 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
     open-pull-requests-limit: 5
-    # Major bumps are deliberate tickets owned by the file's domain, not automated PRs (TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS).
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
     labels: [dependencies, platform]
     groups:
       actions-minor-patch:
@@ -45,12 +33,8 @@ updates:
   - package-ecosystem: npm
     directory: /frontend
     schedule:
-      interval: monthly
+      interval: weekly
     open-pull-requests-limit: 5
-    # Major bumps are deliberate tickets owned by the file's domain, not automated PRs (TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS).
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
     labels: [dependencies, rpg]
     groups:
       npm-minor-patch:
@@ -58,12 +42,8 @@ updates:
   - package-ecosystem: uv
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
     open-pull-requests-limit: 5
-    # Major bumps are deliberate tickets owned by the file's domain, not automated PRs (TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS).
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
     labels: [dependencies, rpg]
     groups:
       uv-minor-patch:
