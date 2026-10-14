@@ -414,9 +414,38 @@ def apply_flag_override(state: Any, flag: str, mode: str) -> "tuple[Any, Dict[st
 PROFILE_NAMES = ("PROD_SMALL", "PROD_DEFAULT", "PROD_LARGE", "PROD_STRESS")
 
 
+#: What a profile holds fixed (TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION). ``live`` is the historical behaviour and the default.
+CONTRACTS = ("live", "pinned", "canonical", "audit")
+PINNED_NOTE = (
+    "pinned fixes the RuntimeMode only (PinnedNormalGovernor); the other wall-clock inputs still move outside audit_mode: the mid-tick "
+    "budget throttle's wall-clock reading (report-only since DEV-014), the queue and worker wall-clock signals and the scheduler's tick-time inputs"
+)
+
+
+def contract_kernel_args(profile: Any, contract: str) -> Tuple[Any, Optional[Any], Dict[str, Any]]:
+    """The ``(profile, governor, flags)`` a kernel is built with under ``contract``. No ``src/`` edit: every variant is a ``Kernel`` argument."""
+    flags: Dict[str, Any] = {"no_replay": True, "no_frame_pacing": True, "audit_mode": False}
+    governor = None
+    if contract == "live":
+        pass
+    elif contract == "pinned":
+        from tests.helpers.kernel_pinning import PinnedNormalGovernor
+
+        governor = PinnedNormalGovernor()
+    elif contract == "canonical":
+        from src.perf.profiles import canonical_variant
+
+        profile = canonical_variant(profile)
+    elif contract == "audit":
+        flags["audit_mode"] = True
+    else:
+        raise ValueError(f"unknown contract {contract!r}; choose one of {CONTRACTS}")
+    return profile, governor, flags
+
+
 def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, ticks: int,
                        flag: Optional[str] = None, flag_mode: Optional[str] = None,
-                       profile_name: str = "PROD_LARGE") -> Dict[str, Any]:
+                       profile_name: str = "PROD_LARGE", contract: str = "live") -> Dict[str, Any]:
     """Run warmup plus measured ticks in this process and return per-tick data.
 
     The measured loop is ``_measured_ticks``; profile_tick filters sampled stacks to ones that contain
@@ -430,8 +459,8 @@ def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, tic
     override = None
     if flag and flag_mode:
         state, override = apply_flag_override(state, flag, flag_mode)
-    kernel = Kernel(getattr(profiles_module, profile_name), state, DeterministicRNG(seed),
-                    flags={"no_replay": True, "no_frame_pacing": True, "audit_mode": False})
+    profile, governor, flags = contract_kernel_args(getattr(profiles_module, profile_name), contract)
+    kernel = Kernel(profile, state, DeterministicRNG(seed), governor=governor, flags=flags)
     events: Dict[str, int] = {}
     tick_events = [0]
 

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -43,7 +44,7 @@ def child_command(args: argparse.Namespace, out_json: Path) -> List[str]:
     cmd = [sys.executable, str(SCRIPT), "--child", "--scenario", args.scenario, "--entities", str(args.entities),
            "--seed", str(args.seed), "--warmup", str(args.warmup), "--ticks", str(args.ticks),
            "--out-json", str(out_json)]
-    cmd += ["--profile", args.profile]
+    cmd += ["--profile", args.profile, "--contract", args.contract]
     if args.flag and args.flag_mode:
         cmd += ["--flag", args.flag, "--flag-mode", args.flag_mode]
     return cmd
@@ -74,12 +75,38 @@ def render_phase_report(fields, summary, phase_rows, sampling_note: str) -> str:
 def run_child(args: argparse.Namespace) -> int:
     common.load_repo_on_path()
     data = common.run_scenario_ticks(args.scenario, args.entities, args.seed, args.warmup, args.ticks,
-                                     flag=args.flag, flag_mode=args.flag_mode, profile_name=args.profile)
+                                     flag=args.flag, flag_mode=args.flag_mode, profile_name=args.profile, contract=args.contract)
     common.write_json(Path(args.out_json), data)
     return 0
 
 
+def run_unsampled(args: argparse.Namespace) -> int:
+    """The same child with no sampler attached: the per-phase tick table only, to measure the sampler's own overhead."""
+    out_dir = Path(args.out_dir) if args.out_dir else common.OUT_ROOT / f"{args.scenario}_{args.entities}_s{args.seed}_nosampler"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    child_json = out_dir / "child_ticks.json"
+    run = subprocess.run(child_command(args, child_json), capture_output=True, text=True)
+    if run.returncode != 0 or not child_json.exists():
+        print(f"child failed (exit {run.returncode}):\n{run.stderr[-1500:]}", file=sys.stderr)
+        return 1
+    fields = common.header_fields(args.scenario, args.entities, args.seed, args.warmup, args.ticks,
+                                  extra={"profile": args.profile, "tool": "none", "contract": args.contract,
+                                         "contract_note": common.PINNED_NOTE if args.contract == "pinned" else None,
+                                         "loadavg_1min": os.getloadavg()[0], "sample_rate_hz": None})
+    summary = common.summarize_ticks(json.loads(child_json.read_text(encoding="utf-8")))
+    rows = common.phase_table(summary["per_tick_costs"], summary["tick_wall_ms"])
+    md_path, js_path = out_dir / "phases.md", out_dir / "phases.json"
+    md_path.write_text(render_phase_report(fields, summary, rows, "no sampler attached (unprofiled timing)"), encoding="utf-8")
+    common.write_json(js_path, {"header": list(common.header_lines(fields, "Per-phase tick context")), "summary": summary, "phases": rows})
+    child_json.unlink()
+    print(md_path)
+    print(js_path)
+    return 0
+
+
 def run_parent(args: argparse.Namespace) -> int:
+    if args.sampler == "none" and not args.memory:
+        return run_unsampled(args)
     tool = "memray" if args.memory else "py-spy"
     binary = common.find_binary(tool, args.memray if args.memory else args.py_spy)
     if binary is None:
@@ -91,8 +118,10 @@ def run_parent(args: argparse.Namespace) -> int:
     child_json = out_dir / "child_ticks.json"
     child = child_command(args, child_json)
     fields = common.header_fields(args.scenario, args.entities, args.seed, args.warmup, args.ticks,
-                                  extra={"profile": args.profile, "tool": tool,
-                                                      "sample_rate_hz": None if args.memory else args.rate})
+                                  extra={"profile": args.profile, "tool": tool, "contract": args.contract,
+                                                      "contract_note": common.PINNED_NOTE if args.contract == "pinned" else None,
+                                                      "loadavg_1min": os.getloadavg()[0],
+                                                      "sample_rate_hz": None if args.memory or args.sampler == "none" else args.rate})
 
     if args.memory:
         bin_path = out_dir / "memray.bin"
@@ -167,6 +196,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--profile", choices=common.PROFILE_NAMES, default="PROD_LARGE",
                         help="RuntimeProfile; a larger tick budget keeps the governor in NORMAL longer")
+    parser.add_argument("--contract", choices=common.CONTRACTS, default="live",
+                        help="what is held fixed: live (historical default), pinned (RuntimeMode pinned NORMAL, mode only), canonical "
+                             "(modelled-cost governor), audit (audit_mode: adds fingerprint and dirty-set work)")
+    parser.add_argument("--sampler", choices=("py-spy", "none"), default="py-spy",
+                        help="none runs the child with no sampler: the phase table only, to measure the sampler's overhead")
     parser.add_argument("--rate", type=int, default=DEFAULT_RATE_HZ, help="py-spy sample rate in Hz")
     parser.add_argument("--blocking", action="store_true",
                         help="let py-spy pause the process at every sample (consistent stacks, but in this sandbox it "
