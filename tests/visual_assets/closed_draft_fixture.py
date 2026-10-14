@@ -53,15 +53,54 @@ def _reference_problems(entry: dict, committed: Path) -> list[str]:
     return problems
 
 
+# The ONLY keys whose detail axis was declared after the closed gates (`TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANT-DRAFTS`, owner decision 2026-10-12; planner and lead-planner rulings): six terrains that carried one
+# adopted tile and no axis when the icon gates closed. `terrain.forest` is not here: its axis (plain/bush/tree) predates those gates, so its row must still match exactly. A new row for any other key is a problem.
+AXES_DECLARED_AFTER_THE_GATES = frozenset({"terrain.grassland", "terrain.mountain", "terrain.cave", "terrain.ruins", "terrain.swamp", "terrain.shallow_water"})
+
+
+def details_problems(fresh: dict, committed: dict) -> list[str]:
+    """What the owner SAW of the detail axes stays exact; only an axis declared AFTER the gate may be added (`TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANT-DRAFTS`, planner ruling 2026-10-12).
+
+    - the committed manifest keeps the store's own rule: an entry carries a `detail` exactly when its key has a `details` row;
+    - every committed `details` row is in the fresh export unchanged (values, order and default), and every committed entry keeps its `detail` (outside the pinned keys);
+    - a fresh row the fixture does not have is allowed ONLY for a key named in `AXES_DECLARED_AFTER_THE_GATES` whose committed entries carry no detail value, and it must EQUAL the axis the current registry declares.
+    Anything else is a problem: a changed or missing row, an extra row with other values, a fixture entry that gains or loses a `detail`."""
+    from visual_assets.store.catalog.registry import load_registry
+
+    problems: list[str] = []
+    rows = lambda m: {row["visual_key"]: row for row in m.get("details", [])}  # noqa: E731
+    fresh_rows, committed_rows = rows(fresh), rows(committed)
+    detailed = {e["visual_key"] for e in committed["entries"] if e.get("detail") is not None}
+    for key in sorted(detailed ^ set(committed_rows)):
+        problems.append(f"{fx.MANIFEST}: details row and entry detail disagree for {key}")
+    for key, row in committed_rows.items():
+        if fresh_rows.get(key) != row:
+            problems.append(f"{fx.MANIFEST}: the details row of {key} differs from a fresh export")
+    fresh_detail = {(e["visual_key"], e.get("source_asset_id")): e.get("detail") for e in fresh["entries"]}
+    for entry in committed["entries"]:  # an entry the owner saw keeps its detail (or lack of one), except for the keys whose axis came after the gate
+        slot = (entry["visual_key"], entry.get("source_asset_id"))
+        if entry["visual_key"] not in AXES_DECLARED_AFTER_THE_GATES and slot in fresh_detail and fresh_detail[slot] != entry.get("detail"):
+            problems.append(f"{fx.MANIFEST}: the entry {slot[0]} {slot[1]} shows detail {entry.get('detail')!r}, a fresh export {fresh_detail[slot]!r}")
+    registry = load_registry()
+    for key, row in fresh_rows.items():
+        if key in committed_rows:
+            continue
+        axis = registry.keys[key].detail
+        if key not in AXES_DECLARED_AFTER_THE_GATES or key in detailed or axis is None or row != {"visual_key": key, "values": list(axis.values), "default": axis.default}:
+            problems.append(f"{fx.MANIFEST}: a fresh details row for {key} is not an axis declared after the gate")
+    return problems
+
+
 def closed_differences(fresh: Path, committed: Path, result_text=fx.recorded_result_text, *, pinned_manifest_sha256: str) -> list[str]:
     problems: list[str] = []
     actual = "sha256:" + hashlib.sha256((committed / fx.MANIFEST).read_bytes()).hexdigest()
     if actual != pinned_manifest_sha256:
         problems.append(f"{fx.MANIFEST}: the committed gate evidence was rewritten (sha256 {actual} is not the pinned {pinned_manifest_sha256})")
     fm, cm = _manifest(fresh), _manifest(committed)
-    rest = lambda m: {k: v for k, v in m.items() if k not in ("entries", "registry_hash")}  # noqa: E731 - the registry hash is ignored as in `icon_draft_fixture`
+    rest = lambda m: {k: v for k, v in m.items() if k not in ("entries", "registry_hash", "details")}  # noqa: E731 - the registry hash is ignored as in `icon_draft_fixture`; `details` has its own rule below
     if rest(fm) != rest(cm):
-        problems.append(f"{fx.MANIFEST}: set id, draft_set_hash or details differ")
+        problems.append(f"{fx.MANIFEST}: set id or draft_set_hash differ")
+    problems += details_problems(fm, cm)
     fresh_drafts = [e for e in fm["entries"] if not e.get("adopted")]
     committed_drafts = [e for e in cm["entries"] if not e.get("adopted")]
     references = [e for e in cm["entries"] if e.get("adopted")]

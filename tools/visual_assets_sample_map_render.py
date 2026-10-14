@@ -14,6 +14,9 @@ Two views per world, each labelled wherever a number or picture is quoted:
 The terrain is drawn by terrain NAME, never by `present_map`'s per-world integer code (the live client reads those codes as fixed Live Map codes; that is rpg's bug #523 and is
 not worked around here).
 
+The EXACT view resolves a terrain name to its key OR, offline, through a REGISTRY alias (`Registry.resolve`: `plain` and `PLAIN` -> `terrain.grassland`, `ruin` -> `terrain.ruins`, `river` -> `terrain.shallow_water`);
+the live client does NOT do this (aliases are registry-only, `store_contract.md` Known gaps). The alias view adds the UNCONFIRMED object proposals (`shop`, `CAMP`, `RUIN`).
+
 What a gap looks like: a terrain name with no key (exact view) is a diagonal-striped cell; a key with no art in the release is the flat fill of the Live Map with a diagonal line
 (the labelled role fallback of `terrainDrafts.ts`); an object (building, place, resource node) with no art is a checkered 10 x 10 marker. Buildings are drawn from their 24 x 24
 icon scaled to one 16 x 16 cell (nearest neighbour, stated); places are the `icon.plate.location` plate with their marker glyph on it. Entities are counted in the data, not drawn.
@@ -29,7 +32,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 OUT_ROOT = REPO / "reports" / "visual_assets" / "sample_map"
-EXPORT_DIR = OUT_ROOT / "rc-0009-runtime"
+RELEASE_ID = "rc-0010"  # the current release candidate: rc-0009 plus the 14 terrain variants
+EXPORT_DIR = OUT_ROOT / f"{RELEASE_ID}-runtime"
 TILE = 16
 
 # ---- ported constants: `terrainBorders.ts`, `pickDetail.ts`, `terrainDrafts.ts` (a test compares each with the TS text) ----
@@ -266,7 +270,7 @@ def scale_to_cell(rgba: bytes, width: int, height: int) -> bytes:
 # ---- the release art ----
 
 class Release:
-    """The rc-0009 runtime export: `entries` by (key, detail), declared detail axes, decoded 16 x 16 tiles and icons, read with the store's PNG decoder."""
+    """The current release's runtime export: `entries` by (key, detail), declared detail axes, decoded 16 x 16 tiles and icons, read with the store's PNG decoder."""
 
     def __init__(self, export_dir: Path):
         from visual_assets.store import pixels
@@ -457,12 +461,12 @@ def write_page(results: list[dict], datas: dict[str, dict], out_root: Path | Non
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Sample map: the adopted art on three compiled worlds</title>",
         "<style>body{font:14px/1.45 system-ui,sans-serif;margin:16px;background:#14161c;color:#e6e6e6}h1,h2,h3{margin:.6em 0 .3em}img{image-rendering:pixelated;max-width:100%;height:auto;border:1px solid #444}",
         "table{border-collapse:collapse;margin:.4em 0}td,th{border:1px solid #444;padding:2px 8px;text-align:left}.alias{outline:2px dashed #d9a441}.note{color:#d9a441}code{background:#222;padding:0 3px}.row{display:flex;flex-wrap:wrap;gap:16px}</style></head><body>",
-        "<h1>Sample map: the adopted art (rc-0009) on three compiled worlds</h1>",
+        "<h1>Sample map: the adopted art (rc-0010) on three compiled worlds</h1>",
         "<p><b>Evidence, not a shipped asset</b>: this picture is never intaken, adopted or put in a release candidate; nothing is wired into the Live Map. Cells are drawn by terrain <i>name</i> (the presenter's own code table), not by <code>present_map</code>'s per-world integer code.</p>",
         "<h2>Legend</h2><ul>",
-        "<li><b>Exact view</b> (primary evidence): a terrain name draws with <code>terrain.&lt;name&gt;</code> only when that key is registered. A name with no key is a <b>diagonal-striped plum cell</b> (a gap).</li>",
-        "<li><b class=\"note\">Alias view (dashed outline) - unconfirmed: asset-planner proposal for rpg-planner (#519)</b>: a name with no exact key draws with its proposed alias. It shows how far the art goes, not a decision.</li>",
-        "<li>A key with no art in the release would be the Live Map flat fill with a white diagonal line (none occurs in rc-0009: all 23 terrain keys have art).</li>",
+        "<li><b>Exact view</b> (primary evidence): a terrain name draws with <code>terrain.&lt;name&gt;</code> when that key is registered, or through a <b>registry alias</b> (<code>plain</code> and <code>PLAIN</code> to grassland, <code>ruin</code> to ruins, <code>river</code> to shallow water), resolved offline with <code>Registry.resolve</code>: <b>the live client does NOT resolve aliases</b> (registry-only; a runtime consumer is needed at activation). A name with no key or alias is a <b>diagonal-striped plum cell</b> (a gap).</li>",
+        "<li><b class=\"note\">Alias view (dashed outline) - unconfirmed: asset-planner proposal for rpg-planner (#519)</b>: an object kind with no key draws with its proposed alias (<code>shop</code>, <code>CAMP</code>, <code>RUIN</code>); its terrain is the same as the exact view. It shows how far the art goes, not a decision.</li>",
+        "<li>A key with no art in the release would be the Live Map flat fill with a white diagonal line (none occurs in rc-0010: all 23 terrain keys have art).</li>",
         "<li>An object with no art (building, place, resource node) is a <b>checkered magenta and black 10 x 10 marker</b>. Buildings are drawn from their 24 x 24 icon scaled to one 16 x 16 cell (nearest neighbour); places are the location plate with their marker glyph. Entities are counted in the data, not drawn.</li>",
         "<li>Borders: the composition rule of <code>terrainBorders.ts</code> ported to Python and proven on the rule's own test vectors; only cells whose terrain has a Live Map rank fringe. Scale: 16 px per cell (x1); the x2 files double it.</li></ul>",
     ]
@@ -490,12 +494,12 @@ def write_page(results: list[dict], datas: dict[str, dict], out_root: Path | Non
 
 EVIDENCE_DIR = REPO / "docs" / "assets" / "sample_map"
 EVIDENCE_CAP_BYTES = 256 * 1024
-# name -> (world, (x0, y0, x1, y1) in cells, half-open): where a gap shows best. Chosen from the data (see the README), not tuned for looks.
+# name -> (world, (x0, y0, x1, y1) in cells, half-open): where a gap shows best. Chosen from the data (see the README), not tuned for looks. On rc-0010 the exact view draws everything, so three boxes were shrunk to stay under the cap.
 EVIDENCE_CROPS = {
     "frontier_town": ("frontier_living_world", (4, 8, 52, 40)),          # Hometown: town hall, shops, inn, blacksmith, healer, the CITY plate, wood node, herb patch
-    "highland_pass": ("highland_traverse", (80, 84, 128, 116)),          # the mountain pass: mountain and forest, an iron vein and a frost shard cluster
-    "dungeon_ruin": ("dungeon_crawl", (56, 76, 101, 116)),               # the ruin block, its place marker and the forest edge
-    "frontier_camp_ruin": ("frontier_living_world", (104, 24, 152, 56)),  # the goblin camp (CAMP place, berry thicket) and the haunted battlefield (RUIN place, ruin terrain)
+    "highland_pass": ("highland_traverse", (84, 86, 124, 112)),          # the mountain pass: mountain and forest, an iron vein and a frost shard cluster
+    "dungeon_ruin": ("dungeon_crawl", (60, 80, 98, 112)),               # the ruin block, its place marker and the forest edge
+    "frontier_camp_ruin": ("frontier_living_world", (108, 26, 148, 52)),  # the goblin camp (CAMP place, berry thicket) and the haunted battlefield (RUIN place, ruin terrain)
     "highland_river": ("highland_traverse", (124, 26, 172, 58)),         # River Ford: the river terrain, the watchtower and a herb patch
 }
 

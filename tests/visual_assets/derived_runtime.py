@@ -41,8 +41,12 @@ def derive(catalog_id: str, release_id: str, *, allow_fixture_namespace: bool = 
         files[f"{digest}.png"] = png
         entries.append(RuntimeEntry(visual_key=entry.visual_key, family=registry.keys[entry.visual_key].family, pixel_hash=entry.pixel_hash,
                                     file=f"{digest}.png", width=decoded.width, height=decoded.height, detail=entry.detail))
+    # a `details` row only for a key whose entries in THIS candidate carry a detail value: the store's own rule "an entry has a detail exactly when its key is listed in details". For a candidate
+    # assembled before its key declared an axis (rc-0005, rc-0007 and `terrain.swamp` after `TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANT-DRAFTS`) this derives an OLD candidate with a NEWER registry,
+    # which is not what `export_runtime` would do (it refuses with `registry_mismatch`); on a candidate and registry that agree the result is byte-for-byte `export_runtime`'s.
+    detailed = {e.visual_key for e in entries if e.detail is not None}
     details = tuple(RuntimeDetail(visual_key=key, values=tuple(registry.keys[key].detail.values), default=registry.keys[key].detail.default)
-                    for key in sorted({e.visual_key for e in entries}) if registry.keys[key].detail is not None)
+                    for key in sorted(detailed) if registry.keys[key].detail is not None)
     runtime = RuntimeManifest(record_type="runtime_manifest", schema_version=1, catalog_id=catalog_id, release_id=release_id, candidate_manifest_hash=file_hash(manifest_bytes),
                               registry_hash=candidate.registry_hash, fallback_contract_version=FALLBACK_CONTRACT_VERSION,
                               entries=tuple(sorted(entries, key=lambda e: (e.visual_key, e.detail or ""))), details=details)

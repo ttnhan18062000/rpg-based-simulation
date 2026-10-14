@@ -43,13 +43,14 @@ def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_ot
     borders = ["border.edge", "border.inner_corner", "border.outer_corner"]
     tiers = [f"icon.tier.{g}" for g in ("e", "d", "c", "b", "a", "s", "ss", "sss")]
     icons = ["icon.plate.location", "icon.marker.enemy_camp", "icon.building.blacksmith", "icon.class.warrior", *tiers, "icon.status.frame_buff", "icon.status.frame_debuff"]
+    from tests.visual_assets import adopted_facts as af
     from visual_assets.review import icon_v2_keys as v2
 
     proof = ["ui.panel_frame", "fx.selection_ring", "fx.campfire"]  # real-art proof keys (TCK-20261011-VISUAL-ASSETS-REAL-ART-KEYS)
     assert sorted(registry.keys) == sorted(expected + borders + icons + v2.KEYS + proof)
     for key in proof:
         d = registry.keys[key]
-        assert d.optional and d.family == key.split(".")[0] and d.safety_class == "decorative" and d.fallback.kind == "none" and d.variant_axes == () and d.detail is None and d.label is None and dict(registry.aliases) == {}
+        assert d.optional and d.family == key.split(".")[0] and d.safety_class == "decorative" and d.fallback.kind == "none" and d.variant_axes == () and d.detail is None and d.label is None
     sizes = {"icon.plate.location": 16, "icon.marker.enemy_camp": 16, "icon.building.blacksmith": 24, "icon.class.warrior": 24, "icon.status.frame_buff": 16, "icon.status.frame_debuff": 16, **dict.fromkeys(tiers, 8)}
     for key, size in {**sizes, **v2.SIZES}.items():
         d = registry.keys[key]
@@ -59,7 +60,7 @@ def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_ot
         d = registry.keys[key]
         assert d.optional and d.family == "border" and d.variant_axes == () and d.detail.values == ("v1", "v2", "v3") and d.detail.default == "v1"
     others = [d for k, d in registry.keys.items() if k != "terrain.forest" and k not in borders and k not in icons and k not in v2.KEYS and k not in proof]
-    assert len(others) == 22 and all(d.optional and d.family == "terrain" and d.detail is None and d.variant_axes == () for d in others)
+    assert len(others) == 22 and all(d.optional and d.family == "terrain" and (d.detail is None if d.key not in af.TERRAIN_VARIANT_AXES else (d.detail.values, d.detail.default) == (af.TERRAIN_VARIANT_AXES[d.key], "base")) and d.variant_axes == () for d in others)
     forest = registry.keys["terrain.forest"]
     assert forest.family == "terrain" and forest.variant_axes == () and not forest.optional
     # the declared order is what the client picks over: the spread the user approved (64 x 64: plain 1354, bush 1397, tree 1345) was computed for it

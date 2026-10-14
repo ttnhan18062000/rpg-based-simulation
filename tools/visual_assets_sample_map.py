@@ -12,7 +12,7 @@ and never runs `world-compile` (it writes `world_compile_report.json` next to th
 
 `present_map`'s integer codes are PER WORLD (`terrain_code_map`, `state_presenter.py:183`, sorted names of that world's terrains), not the Live Map tile codes the
 registry descriptions cite. Cells are therefore stored as terrain NAMES (the presenter's own codes are inverted through the same `terrain_code_map`) and mapped to keys
-by name: a name maps to `terrain.<name>` only when that key is registered. The rule is exact (lower case, spaces to underscores); a near match is listed as `near`
+by name: a name maps to `terrain.<name>` when that key is registered, or, offline, through a REGISTRY alias (`terrain.plain` -> `terrain.grassland`, `Registry.resolve`; the live client does NOT do this). The rule is exact (lower case, spaces to underscores); a near match is listed as `near`
 and is NEVER applied, so no key is guessed. The same exact rule maps building kinds to `icon.building.<kind>`, place kinds and resource-node kinds to
 `icon.marker.<kind>` and entity kinds to `icon.class.<kind>`.
 
@@ -48,7 +48,7 @@ FORMAT = "sample_map_world_data_v2"
 # registry's `aliases`, and no key is added), every use is labelled, and the exact view stays the primary evidence. `river` could read better as `terrain.water`; it is a proposal either way.
 ALIAS_LABEL = "unconfirmed: asset-planner proposal for rpg-planner (#519)"
 PROPOSED_ALIASES = {
-    "terrain": {"PLAIN": "terrain.grassland", "plain": "terrain.grassland", "ruin": "terrain.ruins", "river": "terrain.shallow_water"},
+    # (the terrain proposals of 2026-10-11 became REGISTRY aliases on 2026-10-12, `TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES`; the exact view resolves them through `Registry.resolve`, see below)
     "building": {"shop": "icon.building.store"},
     "place": {"CAMP": "icon.marker.enemy_camp", "RUIN": "icon.marker.ruins"},
 }
@@ -75,6 +75,13 @@ def _registry_keys() -> set[str]:
     return set(load_registry(REGISTRY_FILE).keys)
 
 
+def _registry_aliases() -> dict[str, str]:
+    """The registry's own aliases (alias -> target key): the V2 terrain names reach existing art through them. Offline only: no release, runtime export or client carries them (`store_contract.md`, Known gaps)."""
+    from visual_assets.store.catalog.registry import load_registry
+
+    return dict(load_registry(REGISTRY_FILE).aliases)
+
+
 def _near(name: str, family_prefix: str, keys: set[str]) -> list[str]:
     """Registered keys of one family whose last segment is close to the name: reported, never applied."""
     pool = sorted(k for k in keys if k.startswith(family_prefix))
@@ -85,12 +92,15 @@ def _near(name: str, family_prefix: str, keys: set[str]) -> list[str]:
     return sorted(set(hits + close))
 
 
-def key_rows(counts: Counter, family_prefix: str, keys: set[str], aliases: dict[str, str] | None = None) -> list[dict]:
+def key_rows(counts: Counter, family_prefix: str, keys: set[str], aliases: dict[str, str] | None = None, registry_aliases: dict[str, str] | None = None) -> list[dict]:
     """One row per distinct raw name: its count, the exact key (or null), the near keys that are NOT applied and, only for a name with no exact key, its UNCONFIRMED proposed alias."""
     rows = []
     for name in sorted(counts):
         exact = family_prefix + _snake(name)
-        row = {"name": name, "count": counts[name], "key": exact if exact in keys else None, "near": [] if exact in keys else _near(name, family_prefix, keys)}
+        via = registry_aliases.get(exact) if registry_aliases and exact not in keys else None  # a REGISTRY alias: the name resolves, offline, through `Registry.resolve` (the live client does not)
+        row = {"name": name, "count": counts[name], "key": exact if exact in keys else via, "near": [] if (exact in keys or via) else _near(name, family_prefix, keys)}
+        if via:
+            row["registry_alias"] = exact
         if row["key"] is None and aliases and name in aliases:
             assert aliases[name] in keys, f"proposed alias {aliases[name]!r} is not a registered key"
             row["proposed_alias"] = aliases[name]
@@ -152,7 +162,7 @@ def build_data(world_id: str) -> dict:
         "cell_order": "row-major, index = y * width + x",
         "terrain_names": names,
         "terrain_rle": rle(flat),
-        "terrain": key_rows(terrain_counts, "terrain.", keys, PROPOSED_ALIASES["terrain"]),
+        "terrain": key_rows(terrain_counts, "terrain.", keys, registry_aliases=_registry_aliases()),
         "buildings": [{"id": b["building_id"], "kind": b["building_type"], "x": b["x"], "y": b["y"]} for b in static["buildings"]],
         "resource_nodes": [{"id": n["node_id"], "kind": n["resource_type"], "x": n["x"], "y": n["y"], "terrain": inverse.get(n["terrain"])} for n in static["resource_nodes"]],
         "treasure_chests": [{"id": c["chest_id"], "x": c["x"], "y": c["y"]} for c in static["treasure_chests"]],
@@ -202,24 +212,24 @@ def keytable(worlds: list[str]) -> str:
     merged: dict[str, dict] = {}
     for w in worlds:
         for row in build_data(w)["terrain"]:
-            m = merged.setdefault(row["name"], {"count": 0, "worlds": [], "key": row["key"], "near": row["near"], "alias": row.get("proposed_alias")})
+            m = merged.setdefault(row["name"], {"count": 0, "worlds": [], "key": row["key"], "near": row["near"], "alias": row.get("registry_alias")})
             m["count"] += row["count"]
             m["worlds"].append(w)
-    lines = ["| terrain name | cells | worlds | exact key | near (not applied) | proposed alias (" + ALIAS_LABEL + ") |", "|---|---|---|---|---|---|"]
+    lines = ["| terrain name | cells | worlds | key (exact, or through a registry alias) | registry alias (registry-only: the live client does not resolve it) | near (not applied) |", "|---|---|---|---|---|---|"]
     for name in sorted(merged):
         m = merged[name]
-        lines.append(f"| `{name}` | {m['count']} | {', '.join(m['worlds'])} | {('`' + m['key'] + '`') if m['key'] else '**UNMAPPED**'} | {', '.join('`' + k + '`' for k in m['near']) or '-'} | {('`' + m['alias'] + '`') if m['alias'] else '-'} |")
+        lines.append(f"| `{name}` | {m['count']} | {', '.join(m['worlds'])} | {('`' + m['key'] + '`') if m['key'] else '**UNMAPPED**'} | {('`' + m['alias'] + '`') if m['alias'] else '-'} | {', '.join('`' + k + '`' for k in m['near']) or '-'} |")
     return "\n".join(lines)
 
 
 def ensure_export() -> Path:
-    """The rc-0009 runtime export under the report directory (written once, with the store's own `export-runtime`, which refuses an existing directory)."""
-    from tools.visual_assets_sample_map_render import EXPORT_DIR
+    """The current release's runtime export under the report directory (written once, with the store's own `export-runtime`, which refuses an existing directory)."""
+    from tools.visual_assets_sample_map_render import EXPORT_DIR, RELEASE_ID
 
     if not (EXPORT_DIR / "runtime_manifest.json").is_file():
         from visual_assets.store import runtime_export
 
-        runtime_export.export_runtime("pilot", "rc-0009", EXPORT_DIR)
+        runtime_export.export_runtime("pilot", RELEASE_ID, EXPORT_DIR)
     return EXPORT_DIR
 
 
@@ -246,7 +256,7 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("world", nargs="?")
     d.add_argument("--all", action="store_true")
     sub.add_parser("keytable", help="print the terrain name -> key table over the chosen worlds")
-    r = sub.add_parser("render", help="draw a world with the rc-0009 runtime export: exact and alias views at x1 and x2, render_stats.json (and the page with --all)")
+    r = sub.add_parser("render", help="draw a world with the current release's runtime export: exact and alias views at x1 and x2, render_stats.json (and the page with --all)")
     r.add_argument("world", nargs="?")
     r.add_argument("--all", action="store_true")
     sub.add_parser("evidence", help="write the committed x1 evidence crops under docs/assets/sample_map/ (at most 256 KiB in all)")

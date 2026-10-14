@@ -3,7 +3,7 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-12
+date: 2026-10-13
 tags: [architecture, documentation, live-map]
 ---
 
@@ -13,6 +13,16 @@ What the adopted art (rc-0009) does and does not cover on three real compiled wo
 the committed crops). Every number says which view it comes from: **exact** (the primary evidence: only exact key names draw) or **alias** (UNCONFIRMED: asset-planner proposals for rpg-planner, see below).
 Sources: the data files `reports/visual_assets/sample_map/<world>/world_data.json` and `render_stats.json` (`python -m tools.visual_assets_sample_map data --all` and `render --all`, seed 42,
 `src/api/engine_manager.py:133-136`), the registry `visual_assets/catalog/definitions/visual_keys.yaml` and the rc-0009 runtime export.
+
+## Update after the terrain-variants batch (2026-10-13, rc-0010)
+
+The numbers below were measured on rc-0009 (2026-10-11 and 2026-10-12) and stay as that record. `TCK-20261012-EPIC-VISUAL-ASSET-TERRAIN-VARIANTS` changed three things, re-measured on rc-0010 (87 entries):
+
+- **G1 to G3 (names), in the registry only.** The registry declares three aliases (`terrain.plain` and `terrain.ruin` and `terrain.river`, mapped to `terrain.grassland`, `terrain.ruins` and `terrain.shallow_water`; `PLAIN` is the same name in the lower-case form the resolver uses). The renderer's EXACT view now resolves a terrain name through `Registry.resolve`, so on the same three worlds (seed 42, 73,808 cells) **all 73,808 cells draw with art in the exact view and 0 are in the gap** (before: 12.1 % drew, 87.9 % did not). **The live client does NOT resolve aliases**: they are registry-only, no release or runtime export carries them, and a runtime consumer is needed at activation. This is evidence that the names are covered offline, not that the app shows them. The `PLAIN`/`plain` duplicate is still rpg's (#523).
+- **G4 (repetition).** Six terrains (grassland, mountain, cave, ruins, swamp, shallow_water) now declare a detail axis with `base` plus 2 to 4 variants: 14 variants adopted by the owner (set-adoption `sa-34445853fa87089b`) and released in rc-0010. Grassland, the 60,239-cell case, has 5 values (`base`, `tufts`, `flowers`, `clover`, `bare`). The owner was told one limit plainly: each variant's feature sits at the same spot inside its tile, so on a 16-px grid the features still line up in rows and columns; different offsets per variant or one more variant per feature would change that. Road got no variants (it needs connecting tiles, G5). The client's pick, not the sample renderer, decides which variant a cell shows live, and the client supports no variants live (#519).
+- **Registry size.** `visual_keys.yaml` is 30,943 B of `MAX_REGISTRY_BYTES` 458,752 B (6.7 %), after the six axes (see `budgets.md`, "Registry re-measurement for the terrain-variants batch").
+
+Still open and unchanged: G5 to G12 (connecting tiles, multi-tile structures, markers, rpg's world generation).
 
 ## Where rpg stands (reconciled, nothing re-rendered)
 
@@ -57,10 +67,10 @@ registry growth a new key or a detail axis causes (see "Input list for candidate
 
 | # | gap | evidence (view) | estimate | needed by | status |
 |---|---|---|---|---|---|
-| G1 | `PLAIN` and `plain` have no key | 60,239 of 73,808 cells (81.6 %) draw as gap in the exact view; both fill the whole world outside regions | 0 tiles if both alias to `terrain.grassland`; 1 tile (16 x 16), or 3 with a forest-style detail axis, for a new `terrain.plain` | vocabulary, terrain variants | unconfirmed by rpg-planner (#519, #523); the `PLAIN`/`plain` duplicate is rpg's to resolve |
-| G2 | `ruin` is not `ruins` | 3,362 cells (frontier 1,681, dungeon 1,681) | 0 tiles: a name mapping | vocabulary | unconfirmed by rpg-planner (#523) |
-| G3 | `river` has no key | 1,271 cells (highland, one 41 x 31 rectangle) | 0 tiles if it aliases to `terrain.shallow_water` or `terrain.water`; 1 tile for a new `terrain.river` | vocabulary | unconfirmed by rpg-planner (#523) |
-| G4 | one tile repeated: no terrain variants outside forest | in the alias view `terrain.grassland` repeats one 16 x 16 tile over 60,239 cells; only `terrain.forest` declares a detail axis (3 values); visible as a regular texture in the renders | 2 extra tiles per key for the 7 terrains the samples use (grassland, ruins, mountain, water or shallow_water, cave, road, swamp) = 14 tiles, plus one detail axis per key | terrain variants | not an rpg question (the client supports no variants live, #519); the axis needs the registry budget review first |
+| G1 | `PLAIN` and `plain` have no key | 60,239 of 73,808 cells (81.6 %) draw as gap in the exact view; both fill the whole world outside regions | 0 tiles if both alias to `terrain.grassland`; 1 tile (16 x 16), or 3 with a forest-style detail axis, for a new `terrain.plain` | vocabulary, terrain variants | registry alias since 2026-10-12 (offline only; the client does not resolve it); grassland has 4 variants since rc-0010; the `PLAIN`/`plain` duplicate is rpg's to resolve (#523) |
+| G2 | `ruin` is not `ruins` | 3,362 cells (frontier 1,681, dungeon 1,681) | 0 tiles: a name mapping | vocabulary | registry alias `terrain.ruin` to `terrain.ruins` since 2026-10-12 (offline only; the client does not resolve it); the vocabulary decision is rpg's (#523) |
+| G3 | `river` has no key | 1,271 cells (highland, one 41 x 31 rectangle) | 0 tiles if it aliases to `terrain.shallow_water` or `terrain.water`; 1 tile for a new `terrain.river` | vocabulary | registry alias `terrain.river` to `terrain.shallow_water` since 2026-10-12 (offline only; the client does not resolve it); rpg's (#523) |
+| G4 | one tile repeated: no terrain variants outside forest | in the alias view `terrain.grassland` repeats one 16 x 16 tile over 60,239 cells; only `terrain.forest` declares a detail axis (3 values); visible as a regular texture in the renders | 2 extra tiles per key for the 7 terrains the samples use (grassland, ruins, mountain, water or shallow_water, cave, road, swamp) = 14 tiles, plus one detail axis per key | terrain variants | DONE for six terrains in rc-0010 (14 variants adopted 2026-10-12, axes declared, registry 30,943 B): road has none, and the features sit at the same offset in every variant (see the update above); the client supports no variants live (#519) |
 | G5 | no connecting tiles (roads, rivers, coasts) | `road` 947 cells and `river` 1,271 cells appear as plain rectangles (regions painted as rectangles), so the data does not yet need them; the client cannot draw them live (#519) | 16 edge-connection tiles (a 4-side mask) per family x 3 families (road, river or water, coast) = 48 tiles; the 9 border masks cover rank fringes only | connecting tiles | design question for rpg-designer (#519); unconfirmed |
 | G6 | building kinds with no icon | healer_hut (2 in the samples; 21 in all worlds per rpg), town_hall (1; 19), mine_entrance (1; 7), watchtower (1; 4) have no `icon.building.*`; `shop` (3; 24) has none exactly (alias `icon.building.store`, unconfirmed); `blacksmith` 2 and `inn` 3 draw | 4 icons (24 x 24) exact; 4 if the `shop` alias holds; 5 if it does not | A markers | `guild`, `hero_house`, `class_hall` exist but no world uses them; rpg: hero retires in M1 (D63), do not invest |
 | G7 | every building is one tile, no multi-tile structures | the town of the frontier world is 8 buildings on one flat terrain (`frontier_town_*` crops); the data gives each building one position; the client draws a lettered square (#519) | 7 structure sprites at 32 x 32 (a 2 x 2 footprint), one per building kind in the samples (town_hall, shop, blacksmith, inn, healer_hut, mine_entrance, watchtower), if structures are to span cells | multi-tile structures | design question for rpg-designer; not supported live; unconfirmed |
@@ -89,7 +99,7 @@ Not gaps (stock to know about): 18 of the 23 terrain keys have art that no sampl
 
 - The vocabulary decision (#523): asset terrain and entity keys follow V2's names, or V2 maps onto the 23-code set. A should not start before it.
 - The kinds and counts above (G6, G8, G9, G10) and rpg's counts over all worlds (#519); rpg's note that markers keyed on diet and size outlast markers keyed on role (M1 moves kinds to properties).
-- `MAX_REGISTRY_BYTES` budget review FIRST (`docs/assets/budgets.md`): the registry is at 29,525 B of 458,752 B after rc-0009 (6.4 %), and about 18 to 24 new marker keys (G6 to G10) and any detail axes (G4) are what the review has to size; a new key
+- `MAX_REGISTRY_BYTES` budget review FIRST (`docs/assets/budgets.md`): the registry is at 30,943 B of 458,752 B after the terrain-variants batch (6.7 %; it was 29,374 B after rc-0009), and about 18 to 24 new marker keys (G6 to G10) and any detail axes (G4) are what the review has to size; a new key
   is optional and cheap, a new per-key field is not.
 - A new key needs a runtime release (any registry edit makes older candidates unexportable, `store_contract.md` Known gaps), so A ends with its own candidate and the tests that export the committed one re-pointed.
 - The frame-1-only build (`TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY`) matters only if a marker is animated.

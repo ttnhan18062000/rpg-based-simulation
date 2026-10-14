@@ -129,17 +129,20 @@ def test_an_alias_to_an_unregistered_key_is_refused():
         sm.key_rows(Counter({"river": 1}), "terrain.", KEYS, {"river": "terrain.not_registered"})
 
 
-def test_every_proposed_alias_names_a_registered_key_and_the_registry_has_no_alias():
+def test_every_proposed_alias_names_a_registered_key_and_the_registry_carries_exactly_the_three_v2_terrain_aliases():
     from visual_assets.store.catalog.registry import load_registry
 
     registry = load_registry(sm.REGISTRY_FILE)
     targets = {k for family in sm.PROPOSED_ALIASES.values() for k in family.values()}
-    assert targets <= set(registry.keys) and dict(registry.aliases) == {}  # the aliases live only in the sample-map data
+    from tests.visual_assets import adopted_facts as af
+
+    assert targets <= set(registry.keys) and dict(registry.aliases) == af.REGISTRY_ALIASES  # since `TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES` the three terrain proposals are registry aliases too
+    assert "terrain" not in sm.PROPOSED_ALIASES  # the terrain proposals ARE the registry's aliases now; the exact view resolves them with `Registry.resolve`, only the object proposals stay in the data
     assert sm.ALIAS_LABEL == "unconfirmed: asset-planner proposal for rpg-planner (#519)"
 
 
 def test_the_data_file_labels_the_aliases(dungeon):
     data = dungeon[0]
-    assert data["proposed_aliases"]["label"] == sm.ALIAS_LABEL and data["proposed_aliases"]["terrain"]["ruin"] == "terrain.ruins"
+    assert data["proposed_aliases"]["label"] == sm.ALIAS_LABEL and "terrain" not in data["proposed_aliases"] and data["proposed_aliases"]["place"]["RUIN"] == "icon.marker.ruins"
     ruin = next(r for r in data["terrain"] if r["name"] == "ruin")
-    assert ruin["key"] is None and ruin["proposed_alias"] == "terrain.ruins" and ruin["near"] == ["terrain.ruins"]
+    assert ruin["key"] == "terrain.ruins" and ruin["registry_alias"] == "terrain.ruin" and ruin["near"] == []  # resolved through the REGISTRY alias, not a data-file proposal
