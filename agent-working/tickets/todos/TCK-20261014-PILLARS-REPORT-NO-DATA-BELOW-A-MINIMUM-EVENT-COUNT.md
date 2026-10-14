@@ -35,6 +35,7 @@ With no XP in 200 ticks the only PROGRESSION event is the plateau penalty (weigh
 - `reason` appears only on no-data. On no-data, grade and score are null: never a placeholder number, never an invented grade string.
 - `min_events` is `PILLAR_MIN_EVENTS: Mapping[PillarId, int]` in `src/simulation_quality/pillars.py`, beside `PillarId` and away from the weights (rpg-planner, 2026-10-14); default 3 for every pillar.
 - Overall is computed only over status-ok pillars with the existing aggregation, and emits `pillars_scored` and `pillars_no_data` beside it. With fewer than half the pillars scored, overall is `{"status": "no-data", "grade": null, "normalized_score": null, "reason": "too_few_pillars_scored"}`.
+- Exact overall field names in `quality_report.json` (rpg-planner, 2026-10-14, for testing's harness AC7): the existing top-level keys stay, `overall_score` (float|null) and `overall_grade` (letter|null). Added beside them at top level: `overall_status` ("ok"|"no-data"), `overall_reason` (null, or "too_few_pillars_scored"), `pillars_scored` (int) and `pillars_no_data` (int). The per-pillar score key stays `normalized_score`.
 - Anchors are testing's: `simq_reanchor` writes `{"status": "no-data", ...}`; `grade_anchors.json` is not touched here.
 
 ## Out of Scope
