@@ -1,0 +1,5 @@
+Each mutant's site was confirmed by grep (1 hit) before the run; originals restored (19 of 19 pass after).
+A: icon_recognition._has_word -> `term in text` (substring). Caught: test_synonyms_match_whole_words... (a crossbow counted as a bow). Right reason.
+B: icon_lookalikes.distance -> len(a & b) (intersection instead of XOR). Caught by 3 look-alike tests (twin at 0 px, ordering, near twin). Right reason.
+C: icon_recognition.candidates drops the intended name. Caught: test_candidate_lists_hold_the_intended_name_once... Right reason.
+D: icon_specs.problems skips the distractor-clash check (`if clash:` -> `if False:`). Caught: test_a_missing_key_a_missing_field_and_a_distractor_that_counts... Right reason.

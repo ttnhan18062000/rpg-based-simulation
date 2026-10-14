@@ -18,5 +18,7 @@ populations: ["swamp_tribe_patrol", "swamp_ambush_party"]
 resources:
   wood_node: 4
   herb_patch: 3
+  # Wild food (Decision 29, SURV-06): a LOWER-fertility biome, the herb_patch default charges (8).
+  berry_thicket: 8
 relationships: []
 observability_tags: ["conflict"]

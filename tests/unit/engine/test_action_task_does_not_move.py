@@ -18,7 +18,7 @@ from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
 from src.core.movement_modes import MovementMode
 from src.core.state import AuthoritativeState, TaskComponent
-from src.core.updates import EntityUpdate, NavigationUpdate
+from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.behavior_consumers import configure_behavior_consumers, reset_behavior_consumers
 from src.engine.candidate_selector import MovementCandidateSelector as MCS
 from src.engine.combat import CombatResolutionSystem
@@ -93,7 +93,11 @@ def test_an_action_holder_does_move_on_a_tick_that_sets_a_target():
     target = _fighter(2, (11.0, 10.0), Faction.MONSTER_HORDE, strong=False)
     holder = _holder("ENTITY_ACT", {"action": "ATTACK", "target_id": 2})
     state = AuthoritativeState(tick=5, seed=1, entities={1: holder, 2: target})
-    fresh = type("U", (), {"entity_updates": {1: EntityUpdate(entity_id=1, navigation=NavigationUpdate(target_set=(20.0, 20.0)))},
+    # a decision: a target set together with an ENTITY_MOVE task update (CONFLICT-04 at the movement layer: a bare navigation update
+    # beside an engaged hostile is not one)
+    decision = EntityUpdate(entity_id=1, navigation=NavigationUpdate(target_set=(20.0, 20.0)),
+                            task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": (20.0, 20.0)}))
+    fresh = type("U", (), {"entity_updates": {1: decision},
                            "dirty_set": None, "force_full_scan": False})()
     assert 1 in MCS.select(state, fresh, [1])
 

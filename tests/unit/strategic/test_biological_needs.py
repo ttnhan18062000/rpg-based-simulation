@@ -24,9 +24,9 @@ def test_biological_decay_per_tick():
     next_state = ApplyPath.apply_generation(state, update, 101)
     
     new_ent = next_state.entities[1]
-    # Hunger: 10.0 + 0.1 = 10.1
+    # Hunger: 10.0 + 0.05 = 10.05 (a person: humanoid_survival hunger is low, owner decision 33)
     # Sleep Debt: 5.0 + 0.05 = 5.05
-    assert new_ent.biological.hunger == pytest.approx(10.1)
+    assert new_ent.biological.hunger == pytest.approx(10.05)
     assert new_ent.biological.sleep_debt == pytest.approx(5.05)
 
 def test_hunger_concern_generation():

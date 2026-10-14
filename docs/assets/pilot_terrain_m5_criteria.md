@@ -81,7 +81,7 @@ W03 wording below). Changing any threshold after a result exists needs a new dat
 
 ### AM5-S: the set colour-vision rule
 
-Method as `AM5-W05` (Machado 2009, severity 1.0, linear RGB; CIE L\*a\*b\* D65; CIE76 `dE`), implemented by `tests/visual_assets/set_colour_vision.py`, which reuses the pilot functions.
+Method as `AM5-W05` (Machado 2009, severity 1.0, linear RGB; CIE L\*a\*b\* D65; CIE76 `dE`), implemented by `visual_assets/review/set_colour_vision.py`, which reuses the pilot functions.
 Inputs: the 22 `terrain-v1` drafts plus Forest's **adopted `plain` slot** (the set has no forest draft; Forest's adopted slots are never redrawn); the flat fills are `TILE_COLORS` (23 codes).
 Forest's `bush` and `tree` slots are reported for information and are not part of the verdict.
 

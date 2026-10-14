@@ -36,7 +36,7 @@ regions:
   - 80
   - 45
   terrain: plain
-  hazard_level: 0.5
+  hazard_level: 0.0
   hazard_kind: NATURAL_TERRAIN
   tags:
   - plain
@@ -103,6 +103,9 @@ factions:
   initial_tension_level: 0.0
 - id: spirit_court
   type: neutral
+  initial_tension_level: 0.0
+- id: wild_fauna
+  type: wild
   initial_tension_level: 0.0
 information_source_profiles:
 - source_id: town_notice_board

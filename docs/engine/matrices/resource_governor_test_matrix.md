@@ -25,13 +25,9 @@ Tests that pin the deterministic behavior of the resource governor and enforce s
 | `test_dwell_time` | Signal drops but 1 tick passes | Mode stays high | Rapid recovery instability |
 | `test_sequential_pressure` | Alternating hi/lo signals | Stable highest-mode dwell | Hysteresis bypass |
 
-## 3. Degradation & Shedding (`test_degradation_order.py`)
+## 3. Degradation & Shedding (removed in Phase B)
 
-| Test Case | Input | Expected Output | Catchment |
-| :--- | :--- | :--- | :--- |
-| `test_waterfall_order` | Rising modes | Opp → Diag → Periodic (Non-Auth) | Incorrect shedding order |
-| `test_critical_protection` | SURVIVAL mode | 0 critical tasks dropped | Semantic corruption |
-| `test_authoritative_periodic` | SURVIVAL mode | Auth periodic tasks survive | Mandatory upkeep loss |
+The waterfall (opportunistic, diagnostics, non-authoritative periodic) and its tests (`test_degradation_order.py`: `test_waterfall_order`, `test_authoritative_periodic`) were removed with the never-wired periodic and opportunistic path (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`, DEV-019). What remains pinned: CRITICAL work is never shed (`test_the_scheduler_selects_only_entity_work`, `test_a_run_produces_only_critical_entity_work_and_never_drops_work`, including in SURVIVAL), and the mode-dependent levers are covered by the governor and phase-governor tests above.
 
 ## 4. Architectural Isolation (`test_governance_isolation.py`)
 

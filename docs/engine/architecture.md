@@ -51,7 +51,7 @@ Every tick executes exactly seven phases in a strict, contract-enforced sequence
 | Phase | Responsibility | Permissions (READ / MUTATE) |
 | :--- | :--- | :--- |
 | **1. INIT** | Increments simulation clock and resets per-tick buffers. | `state.world_time` / `state.world_time` |
-| **2. SCHEDULING** | Identifies entities due to act and selects work by readiness, cadence and the governor policy (the **Work Debt** budget of the original design is never exercised: nothing produces debt, see `docs/engine/contracts/resource_governor_contract.md`). | `state.entities`, `policy` / `tick_work` |
+| **2. SCHEDULING** | Identifies entities due to act and selects work by readiness, cadence and the governor policy (the **Work Debt** budget of the original design was removed in Phase B, `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`: nothing produced debt). | `state.entities`, `policy` / `tick_work` |
 | **3. COLLECTION** | Offloads AI deliberation tasks to the `WorkerManager` (bounded concurrent pool) using compact packets. | `entity, schedule` / `proposals` |
 | **4. RESOLUTION** | **Authoritative Update**. Converts results into `StateUpdate` and applies it via `ApplyPath`, incrementing the state generation. | `worker_results` / `state.authoritative` |
 | **5. CLEANUP** | Internal metrics and state finalization. | `platform, infra` / `infra` |
@@ -69,7 +69,7 @@ The engine is governed by three primary laws to ensure it survives pathological 
 
 1.  **Law of Bounded State**: No authoritative collection may grow without limit. Every entity, event buffer, and replay stream must have an explicit retention policy.
 2.  **Law of Non-Blocking Persistence**: Replay and observability are "Non-Authoritative." Failures in tracing or persistence must never stall the kernel.
-3.  **Law of Progressive Degradation**: The engine must shed optional load (traces, then diagnostics, then AI fidelity) before it crashes due to resource exhaustion. Shipped today: traces (`allow_subsystem_traces`, `src/engine/replay_manager.py`) and replay richness are shed, and AI fidelity is reduced through `PhaseBudgetGovernor` budgets and cadence; the diagnostics step has no effect (`diagnostic_verbosity` has no reader in `src/`). See `docs/engine/matrices/resource_governor_degradation_matrix.md` ("Shipped behaviour").
+3.  **Law of Progressive Degradation**: The engine must shed optional load (traces, then diagnostics, then AI fidelity) before it crashes due to resource exhaustion. Shipped today: traces (`allow_subsystem_traces`, `src/engine/replay_manager.py`) and replay richness are shed, and AI fidelity is reduced through `PhaseBudgetGovernor` budgets and cadence; the diagnostics step has no effect (the unread `diagnostic_verbosity` policy field was removed in Phase B). See `docs/engine/matrices/resource_governor_degradation_matrix.md` ("Shipped behaviour").
 
 ---
 

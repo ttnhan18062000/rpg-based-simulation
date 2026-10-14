@@ -27,7 +27,9 @@ def building_kind_at(state: Any, tile: Tile) -> Optional[str]:
     building = SpatialQueryService.get_building_at(state, tile)
     if building is not None:
         return building.kind
-    kind: Optional[str] = state.building_tiles.get(tile)
+    # A worker's read-only packet carries `buildings` and `building_map` but no `building_tiles`: a missing map means no kind.
+    building_tiles = getattr(state, "building_tiles", None)
+    kind: Optional[str] = building_tiles.get(tile) if building_tiles is not None else None
     return kind
 
 
@@ -38,6 +40,16 @@ def service_tile(state: Any, tile: Tile, kinds: Optional[Collection[str]] = None
         kind = building_kind_at(state, candidate)
         if kind is not None and (kinds is None or kind in kinds):
             return candidate
+    return None
+
+
+def service_building_where(state: Any, tile: Tile, accept: Any) -> Optional[Any]:
+    """The first building in reach of `tile` (same offsets and order as :func:`service_tile`) that passes `accept`, or None. A service whose set of
+    buildings is declared by their state, not by a kind list (the work a building offers, EXCH-02 ruling 66), asks here."""
+    for dx, dy in _REACH_OFFSETS:
+        building = SpatialQueryService.get_building_at(state, (tile[0] + dx, tile[1] + dy))
+        if building is not None and accept(building):
+            return building
     return None
 
 

@@ -29,17 +29,26 @@ import pytest
 
 from src.config.profiles import PROD_SMALL
 from src.core.state import TaskComponent
+from src.engine.executor import LocalSequentialExecutor
 from src.engine.kernel import Kernel
 from src.engine.world_dynamics import WorldDynamicsSystem
 from src.platform.rng import DeterministicRNG
 from src.world.environment import EnvironmentService
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
+from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
 WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
 GOBLIN_ID = 1
 ORC_ID = 2
 SEED = 42
+
+
+def _pinned_kernel(state) -> Kernel:
+    """A deterministic kernel: pinned governor, sequential executor, no tick budget. The corpus test below once read 0, 1 or 2 DEFEAT deaths
+    from identical code because the default executor and governor made the 120-tick run timing-dependent."""
+    return Kernel(profile=PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), state=state, rng=DeterministicRNG(SEED),
+                  flags={"no_frame_pacing": True}, governor=PinnedNormalGovernor(), executor=LocalSequentialExecutor())
 
 # The arena's own compiled hazard_level. Pinned so the differential below changes exactly one
 # field (hazard_kind) -- changing the level too would confound the comparison.
@@ -93,8 +102,7 @@ def _run(kind, ticks):
     assert region is not None, "staging sanity: the orc must stand inside a real region"
     drain = EnvironmentService.calculate_hazard_drain(region, orc)
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(SEED),
-                    flags={"no_frame_pacing": True})
+    kernel = _pinned_kernel(state)
     try:
         snapshots = []
         for _ in range(ticks):
@@ -169,14 +177,24 @@ def test_hazard_drain_no_longer_destroys_a_same_tick_combat_kill_record():
     )
 
 
+# The corpus run ends at the first terminal DEFEAT or at this many ticks, whichever comes first. The count of DEFEATs in a fixed window
+# depends on pursuit geometry (the claim below does not): on `frontier_marches` seed 42 there are 0 DEFEAT deaths by tick 120, 2 by tick 200
+# and 8 by tick 400. #474's intercept change (a chaser aims at where a pursuing target IS, not ahead of it) moved scout 17's death from
+# DEFEAT at tick 93 to COMBAT at tick 104, so the first DEFEAT now lands at tick 120, one tick past the 120-tick window this test had.
+CORPUS_DEFEAT_WINDOW = 400
+
+
 @pytest.mark.slow
 def test_defeat_deaths_are_recorded_in_unscripted_corpus_play():
     """C1's Q1/Q2 production finding, rewritten to the fixed contract by
-    TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE. The same 120-tick
-    `frontier_marches` seed-42 run once showed terminal `DEFEAT` outcomes
-    (src/engine/combat.py forces is_lethal=False for HERO defenders) committed as combat-dead /
-    lifecycle-alive with no death_reason. Now every terminal DEFEAT is a recorded death with its own
-    reason, deactivated by resolve_lifecycle (hero rebirth was retired).
+    TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE. The same `frontier_marches` seed-42 run once showed terminal
+    `DEFEAT` outcomes (src/engine/combat.py forces is_lethal=False for HERO defenders) committed as combat-dead / lifecycle-alive with no
+    death_reason. Now every terminal DEFEAT is a recorded death with its own reason, deactivated by resolve_lifecycle (hero rebirth was
+    retired).
+
+    The claim is that EVERY DEFEAT that occurs is a recorded death, not that one occurs by a given tick: the run goes on until the first
+    DEFEAT, bounded at `CORPUS_DEFEAT_WINDOW` ticks, and a run with no DEFEAT inside the bound still fails (so the test cannot pass
+    vacuously). Per trajectory on this seed: 0 DEFEAT deaths at tick 120, 2 at tick 200, 8 at tick 400.
 
     The remaining combat-dead / lifecycle-active / unrecorded residue is the hazard route
     (world_dynamics.py:39 overwrites outcome_kind), owned by
@@ -185,17 +203,18 @@ def test_defeat_deaths_are_recorded_in_unscripted_corpus_play():
     spec, context = repo.load_world_with_context("frontier_marches")
     state, _report = WorldCompiler.compile(spec, SEED, context=context)
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(SEED),
-                    flags={"no_frame_pacing": True})
+    kernel = _pinned_kernel(state)
     try:
-        for _ in range(120):
+        for _ in range(CORPUS_DEFEAT_WINDOW):
             kernel.tick_once()
+            if any(e.lifecycle.death_reason == "DEFEAT" for e in kernel._state.entities.values()):
+                break
         entities = list(kernel._state.entities.values())
     finally:
         kernel.shutdown()
 
     defeated = [e for e in entities if e.lifecycle.death_reason == "DEFEAT"]
-    assert defeated, "expected at least one terminal DEFEAT in the 120-tick corpus run (was 4 on 71c4aa321)"
+    assert defeated, f"expected at least one terminal DEFEAT within {CORPUS_DEFEAT_WINDOW} ticks of the corpus run"
     assert all(e.lifecycle.active is False and e.combat.alive is False for e in defeated)
 
     # Tightened by TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND and

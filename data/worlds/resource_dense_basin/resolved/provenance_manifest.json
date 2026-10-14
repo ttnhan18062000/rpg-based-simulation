@@ -1,17 +1,17 @@
 {
-  "manifest_id": "prov_55bf1b453a74a32c",
+  "manifest_id": "prov_1b232f78ebd5b523",
   "world_id": "resource_dense_basin",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+  "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
   },
-  "composition_fingerprint": "81b30fe841eea5397a8cd466e1f51cd5fdd596f6701978e6cbb9a41133e8a1e8",
+  "composition_fingerprint": "fff27e15225a18ae52fdb63f067507c68ba7662019105d16eac1b6f6ff8786ee",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "55bf1b453a74a32cc8a0e72ec63cfc117b803eb5694f6a1a166fd2916b2196ea",
-  "created_at": "2026-09-04T08:05:30.064847Z",
+  "content_fingerprint": "1b232f78ebd5b52338f3c3d0cafb95f8566c18044b4663f42f79e642a92d130d",
+  "created_at": "2026-10-12T14:35:39.339316Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -205,6 +205,18 @@
         "description": "Spirit faction protecting sacred or haunted territories."
       }
     },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
+      }
+    },
     "hometown": {
       "element_id": "hometown",
       "element_type": "region",
@@ -238,7 +250,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",

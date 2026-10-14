@@ -130,6 +130,40 @@ def _v_add_tag(op, ctx):
     }
 
 
+def _exact(value, keys: set[str], label: str) -> dict:
+    """A nested object with exactly these keys (`check_no_extra` is for ops: it also allows op/layer/frame and reads `op["op"]`)."""
+    box = check_dict(value, label)
+    if set(box) - keys:
+        raise AdapterError(f"{label}: unexpected field(s) {sorted(set(box) - keys)}")
+    return box
+
+
+def _rect(value, label: str) -> dict:
+    box = _exact(value, {"x", "y", "w", "h"}, label)
+    return {"x": check_int(box.get("x"), f"{label}.x", 0, config.MAX_DIM - 1), "y": check_int(box.get("y"), f"{label}.y", 0, config.MAX_DIM - 1),
+            "w": check_int(box.get("w"), f"{label}.w", 1, config.MAX_DIM), "h": check_int(box.get("h"), f"{label}.h", 1, config.MAX_DIM)}
+
+
+def _v_set_slice(op, ctx):
+    """One named slice with one key (it holds for every frame). The rules are the store's (ADR D25); the canvas is not known here (a batch may resize it), so Lua checks the final canvas."""
+    check_no_extra(op, {"name", "x", "y", "w", "h", "center", "pivot"})
+    ctx["slices"] = ctx.get("slices", 0) + 1
+    if ctx["slices"] > config.MAX_SLICES:
+        raise AdapterError(f"at most {config.MAX_SLICES} set_slice ops per batch")
+    out = {"name": check_layer_name(op.get("name"), "name"), **_rect({k: op.get(k) for k in ("x", "y", "w", "h")}, "slice")}
+    if out["x"] + out["w"] > config.MAX_DIM or out["y"] + out["h"] > config.MAX_DIM:
+        raise AdapterError(f"the slice must lie inside a {config.MAX_DIM} x {config.MAX_DIM} canvas")
+    if op.get("center") is not None:
+        c = _rect(op["center"], "center")
+        if c["x"] + c["w"] > out["w"] or c["y"] + c["h"] > out["h"]:
+            raise AdapterError("the 9-slice centre must lie inside its slice (relative to the slice corner)")
+        out["center"] = c
+    if op.get("pivot") is not None:
+        pivot = _exact(op["pivot"], {"x", "y"}, "pivot")
+        out["pivot"] = {"x": check_int(pivot.get("x"), "pivot.x", 0, out["w"]), "y": check_int(pivot.get("y"), "pivot.y", 0, out["h"])}
+    return out
+
+
 def _v_set_palette(op, ctx):
     check_no_extra(op, {"colors"})
     colors = op.get("colors")
@@ -163,6 +197,7 @@ OPS = {
     "add_frame": _v_add_frame,
     "set_duration": _v_set_duration,
     "add_tag": _v_add_tag,
+    "set_slice": _v_set_slice,
     "set_palette": _v_set_palette,
     "delete_layer": _v_none,
     "delete_frame": _v_none,

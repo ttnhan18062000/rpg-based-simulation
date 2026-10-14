@@ -67,14 +67,33 @@ def test_search_launcher_final_error_message_preserved():
     )
 
 
-def test_search_launcher_knowledge_venv_candidates_come_before_vboxuser():
+def test_search_launcher_explicit_override_then_knowledge_venv_then_system_python():
+    """TCK-20261012-HOST-PATH-LITERALS-MAKEFILE-AND-MCP-LAUNCHERS: no host path; KNOWLEDGE_PYTHON first."""
     text = _text(_SEARCH_LAUNCHER)
+    override = text.index("${KNOWLEDGE_PYTHON:-}")
     knowledge_pos = text.index(".venv-knowledge/bin/python3")
-    vboxuser_pos = text.index("/home/vboxuser/Work/venv/bin/python3")
-    assert knowledge_pos < vboxuser_pos, (
-        "expected .venv-knowledge candidates to be tried before the vboxuser fallback path"
-    )
+    system = text.index("command -v python3")
+    assert override < knowledge_pos < system
 
+
+
+def test_search_launcher_probes_mcp_too() -> None:
+    """TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION: system python3 on host ubuntu has
+    sentence_transformers but not mcp; a sentence_transformers-only probe selected it and the
+    server died with "mcp package not installed"."""
+    text = _text(_SEARCH_LAUNCHER)
+    assert "find_spec('mcp')" in text
+
+
+def test_launchers_resolve_main_checkout_venv_generically() -> None:
+    """TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION: a worktree on any host resolves the main
+    checkout's .venv-knowledge through git's common dir, not only via the u24desktop path."""
+    for launcher in (_SEARCH_LAUNCHER, _HEADROOM_LAUNCHER):
+        text = _text(launcher)
+        assert "--git-common-dir" in text, launcher
+        main_pos = text.index("$MAIN_ROOT/.venv-knowledge/bin/python3")
+        own_pos = text.index('"$REPO_ROOT/.venv-knowledge/bin/python3"')
+        assert main_pos < own_pos, launcher
 
 def test_headroom_launcher_probes_headroom_import_before_selecting():
     text = _text(_HEADROOM_LAUNCHER)
@@ -120,13 +139,11 @@ def test_headroom_launcher_final_error_message_preserved():
     )
 
 
-def test_headroom_launcher_knowledge_venv_candidates_come_before_vboxuser():
+def test_headroom_launcher_workspace_comes_from_the_main_root_and_respects_an_override():
+    """TCK-20261012-HOST-PATH-LITERALS-MAKEFILE-AND-MCP-LAUNCHERS: no host path in the workspace dir."""
     text = _text(_HEADROOM_LAUNCHER)
-    knowledge_pos = text.index(".venv-knowledge/bin/python3")
-    vboxuser_pos = text.index("/home/vboxuser/Work/venv/bin/python3")
-    assert knowledge_pos < vboxuser_pos, (
-        "expected .venv-knowledge candidates to be tried before the vboxuser fallback path"
-    )
+    assert "${HEADROOM_WORKSPACE_DIR:-${MAIN_ROOT:-$REPO_ROOT}/.headroom-workspace}" in text
+    assert "/home/vboxuser" not in text
 
 
 def test_headroom_launcher_still_sets_isolated_workspace_dir():

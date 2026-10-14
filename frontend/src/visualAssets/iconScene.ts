@@ -17,6 +17,12 @@ export const ICON_SIZES: Readonly<Record<string, number>> = Object.freeze({
 })
 export const ICON_KEYS: readonly string[] = Object.freeze(Object.keys(ICON_SIZES).sort())
 
+/** Icon set v2 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-DRAFT-SET`): the families of the sheets, in display order; a key's family is the second part of its name. Which keys exist and their sizes come from the manifests. */
+export const V2_FAMILIES: readonly string[] = Object.freeze(['marker', 'building', 'class', 'item', 'rarity'])
+export const RARITIES = ['common', 'uncommon', 'rare'] as const
+export const rarityKey = (rarity: (typeof RARITIES)[number]): string => `icon.rarity.${rarity}`
+export const familyOf = (key: string): string => key.split('.')[1] ?? ''
+
 /** Plate first, glyph over it: both are 16x16 canvases the client composites at the same origin (planner ruling, 2026-10-06). */
 export const MARKER_LAYERS: readonly string[] = Object.freeze([PLATE_KEY, GLYPH_KEY])
 
@@ -46,7 +52,7 @@ export const SCENE_COLUMNS = SCENE_ROWS[0].length
 export const SCENE_ROW_COUNT = SCENE_ROWS.length
 
 // Colour-vision approximations as SVG `feColorMatrix` values, applied in linear RGB (`color-interpolation-filters="linearRGB"`), the same space and matrices (Machado, Oliveira and Fernandes
-// 2009, severity 1.0) as tests/visual_assets/pilot_colour_vision.py, which a test compares. This is a visual approximation for the eye, not the rule.
+// 2009, severity 1.0) as visual_assets/review/pilot_colour_vision.py, which a test compares. This is a visual approximation for the eye, not the rule.
 export const MACHADO: Readonly<Record<'protan' | 'deutan' | 'tritan', readonly (readonly number[])[]>> = Object.freeze({
   protan: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
   deutan: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]],
@@ -85,6 +91,25 @@ export type Fallback =
   | { readonly kind: 'text'; readonly text: string; readonly note: string }
   | { readonly kind: 'none'; readonly note: string }
 
+const textFallback = (text: string, note: string): Fallback => ({ kind: 'text', text, note: `identifying: ${note}` })
+const RARITY_CHIPS: Readonly<Record<string, string>> = Object.freeze({ common: '#9ca3af', uncommon: '#34d399', rare: '#a78bfa' })
+const MARKER_FALLBACKS: Readonly<Record<string, readonly [string, string]>> = Object.freeze({
+  resource_grove: ['herb emoji', '#4ade80'], ruins: ['classical building emoji', '#a0906a'], dungeon_entrance: ['door emoji', '#e06080'], shrine: ['four-pointed star symbol', '#60a5fa'], boss_arena: ['skull emoji', '#f59e0b'],
+})
+const PANEL_FALLBACKS: Readonly<Record<string, string>> = Object.freeze({
+  'icon.building.store': 'Lucide Store icon (#38bdf8) plus the building name as text', 'icon.building.guild': 'Lucide Shield icon (#818cf8) plus the building name as text',
+  'icon.building.inn': 'Lucide Bed icon (#fb923c) plus the building name as text', 'icon.building.hero_house': 'Lucide Home icon (#34d399) plus the building name as text',
+  'icon.building.class_hall': 'the building name as text (the building panel has no icon for it today)',
+  'icon.class.ranger': 'Lucide Crosshair icon plus the class name as text', 'icon.class.mage': 'Lucide Wand2 icon plus the class name as text', 'icon.class.rogue': 'Lucide Sword icon plus the class name as text',
+})
+/** The fallbacks of the 22 icon set v2 keys, as each key's description in the registry states them (copied; the page imports nothing from the app). */
+const V2_FALLBACKS: Readonly<Record<string, Fallback>> = Object.freeze({
+  ...Object.fromEntries(Object.entries(MARKER_FALLBACKS).map(([n, [what, color]]) => [`icon.marker.${n}`, textFallback(`${what} (${color}) plus the location name as hover text`, `today's ${what} label`)])),
+  ...Object.fromEntries(Object.entries(PANEL_FALLBACKS).map(([k, what]) => [k, textFallback(what, 'today\'s panel label')])),
+  ...Object.fromEntries(['weapon', 'armor', 'trinket', 'tool', 'consumable', 'material'].map((n) => [`icon.item.${n}`, textFallback(`${n} (item type as text)`, 'the item type as text, as the loot and inspect panels show it today')])),
+  ...Object.fromEntries(RARITIES.map((r) => [rarityKey(r), { kind: 'chip', letter: r, color: RARITY_CHIPS[r], note: 'identifying: today\'s rarity colour on the rarity name as text, which the badge never replaces' } as Fallback])),
+})
+
 /** What the Live Map or a panel shows today where the icon will go (docs/assets/fallback_safety.md; each key's description in the registry states the same). */
 export function fallbackFor(key: string): Fallback {
   if (key === PLATE_KEY) return { kind: 'none', note: 'decorative: the bare glyph, no plate' }
@@ -93,6 +118,8 @@ export function fallbackFor(key: string): Fallback {
   if (key === 'icon.class.warrior') return { kind: 'lucide', name: 'shield', color: '#e5e7eb', note: 'identifying: today\'s Lucide Shield plus the class name as text' }
   if (key === BUFF_KEY) return { kind: 'text', text: 'effect name (buff)', note: 'identifying: the effect\'s name as text in the Effects tab, which has no icon today' }
   if (key === DEBUFF_KEY) return { kind: 'text', text: 'effect name (debuff)', note: 'identifying: the effect\'s name as text in the Effects tab, which has no icon today' }
+  const v2 = V2_FALLBACKS[key]
+  if (v2) return v2
   const tier = TIERS.find((t) => tierKey(t) === key)
   if (tier) return { kind: 'chip', letter: tier.toUpperCase(), color: GRADE_CHIPS[tier], note: 'identifying: today\'s colour chip plus the letter, which the badge never replaces' }
   throw new Error(`no fallback is declared for ${key}`)

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from datetime import datetime, timezone
 import yaml
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Set, Tuple
@@ -14,6 +15,7 @@ from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
 from src.worldmodules.utils import topological_sort_modules
 from src.worldmodules.normalizer import NormalizedWorldModule
+from src.worldassembly.cover import with_cover_patches
 from src.worldassembly.schema import (
     WorldCompositionSpec,
     NormalizedWorldComposition,
@@ -23,6 +25,7 @@ from src.worldassembly.schema import (
     ProvenanceRecord,
 )
 from src.worldassembly.context import CompileContext
+from src.worldassembly.spawn_position import resolve_spawn_position
 from src.content.resolver import (
     BiomeResolver,
     EcologyResolver,
@@ -686,14 +689,11 @@ class WorldAssemblyResolver:
             pending_information_responses=list(normalized_comp.pending_information_responses),
             pending_self_model_information_events=list(normalized_comp.pending_self_model_information_events),
             entities=list(entities.values()),
-            resources=list(resources.values()),
+            resources=with_cover_patches(self.catalog_repo, regions, resources, entity_origins, prov_records),
             buildings=list(buildings.values()),
             quest_definitions=list(quest_defs.values()),
         )
 
-        import hashlib
-        from datetime import datetime, timezone
-        
         # Calculate composition fingerprint
         comp_dump = normalized_comp.model_dump()
         comp_serialized = str(sorted(comp_dump.items()))
@@ -944,90 +944,6 @@ class WorldAssemblyResolver:
         )
 
 
-def _hash_point_in_bounds(key: str, bounds: Tuple[int, int, int, int]) -> Tuple[int, int]:
-    """
-    Deterministic (pure function of key + bounds, no RNG) point inside a region's
-    [min_x, min_y, max_x, max_y] bounds -- TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION.
-    """
-    min_x, min_y, max_x, max_y = bounds
-    digest = hashlib.sha256(key.encode("utf-8")).digest()
-    # RegionSpec.validate_bounds guarantees min_x <= max_x and min_y <= max_y, so these are
-    # always >= 1 -- no zero-division guard needed, and no off-by-one beyond max_x/max_y either
-    # (a degenerate min_x == max_x region correctly always yields x == min_x).
-    num_x_positions = max_x - min_x + 1
-    num_y_positions = max_y - min_y + 1
-    x = min_x + (int.from_bytes(digest[0:4], "big") % num_x_positions)
-    y = min_y + (int.from_bytes(digest[4:8], "big") % num_y_positions)
-    return (x, y)
-
-
-# Deterministic fixed probe sequence for de-confliction, tried in this exact order.
-_DECONFLICT_PROBE_OFFSETS: Tuple[Tuple[int, int], ...] = (
-    (1, 0), (-1, 0), (0, 1), (0, -1),
-    (1, 1), (-1, -1), (1, -1), (-1, 1),
-    (2, 0), (-2, 0), (0, 2), (0, -2),
-)
-
-
-def _resolve_spawn_position(
-    key: str,
-    spawn_region: Optional[str],
-    region_bounds: Dict[str, Tuple[int, int, int, int]],
-    claimed: Dict[str, Set[Tuple[int, int]]],
-) -> Optional[Tuple[float, float]]:
-    """
-    Real per-entity spatial placement, anchored on the population's own authored `spawn_region`
-    -- TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION.
-
-    Returns None when spawn_region is unset or not a known region (caller falls back to
-    WorldEntitySpawner's own default_position). `claimed` must be a dict local to one resolve()
-    call -- never module/instance state -- so this stays a pure function of that call's spec.
-
-    De-confliction is required, not optional: multiple populations sharing one spawn_region is
-    the documented normal case (compiler.py's region_declared_population aggregation comment),
-    confirmed against real corpus content (bandit_road_trade_pressure.yaml and others -- see
-    investigation.md) where two populations necessarily resolve to the same single region.
-    """
-    if not spawn_region:
-        return None
-    bounds = region_bounds.get(spawn_region)
-    if bounds is None:
-        return None
-
-    region_claimed = claimed.setdefault(spawn_region, set())
-    candidate = _hash_point_in_bounds(key, bounds)
-    if candidate not in region_claimed:
-        region_claimed.add(candidate)
-        return (float(candidate[0]), float(candidate[1]))
-
-    min_x, min_y, max_x, max_y = bounds
-    for dx, dy in _DECONFLICT_PROBE_OFFSETS:
-        probe = (
-            min(max(candidate[0] + dx, min_x), max_x),
-            min(max(candidate[1] + dy, min_y), max_y),
-        )
-        if probe not in region_claimed:
-            region_claimed.add(probe)
-            return (float(probe[0]), float(probe[1]))
-
-    # Probe sequence exhausted. This is NOT necessarily a degenerate (too-small) region -- the
-    # probe set is 12 fixed offsets covering only a +/-2 box (13 candidate positions) around the
-    # hash point, so exhaustion is also reachable in a large region whose local neighborhood
-    # around that one point happens to be saturated, even with thousands of free tiles
-    # elsewhere in the same region. Falling back beats raising and failing the compile, but the
-    # fallback is a REAL, observable degradation: it reintroduces exactly the
-    # LAW-OCCUPANCY-COLLISION condition this ticket exists to eliminate. Must not be silent --
-    # log it so a future occurrence is diagnosable in one grep, not another multi-day trace.
-    logger.warning(
-        "Spawn-position de-confliction exhausted its probe sequence for key=%r in "
-        "spawn_region=%r -- falling back to an already-claimed position %r, which will "
-        "trigger a real LAW-OCCUPANCY-COLLISION violation for this entity.",
-        key, spawn_region, candidate,
-    )
-    region_claimed.add(candidate)
-    return (float(candidate[0]), float(candidate[1]))
-
-
 class CompileProfileResolver:
     """
     Translates and merges recipe / specification mappings against Content Catalog definitions
@@ -1044,6 +960,26 @@ class CompileProfileResolver:
         self.role_semantics = RoleSemanticsService(repo)
         self.default_semantics = DefaultSemanticsService(repo)
 
+    def _register_legacy_enums_and_regions(self, ctx: CompileContext, spec: Any) -> Dict[str, Tuple[int, int, int, int]]:
+        """Register each population's legacy role and faction enums and each town region's owner on `ctx`; return every region's bounds by id."""
+        from src.core.enums import Faction
+        for pop_spec in getattr(spec, "entities", []):
+            try:
+                ctx.register_legacy_role(pop_spec.role, self.role_semantics.get_legacy_entity_role(pop_spec.role))
+            except Exception:
+                logger.debug("no legacy EntityRole for population role %r: left unregistered", pop_spec.role, exc_info=True)
+            try:
+                ctx.register_legacy_faction(pop_spec.faction, self.faction_semantics.get_legacy_faction_bucket(pop_spec.faction))
+            except Exception:
+                logger.debug("no legacy Faction bucket for population faction %r: left unregistered", pop_spec.faction, exc_info=True)
+
+        region_bounds: Dict[str, Tuple[int, int, int, int]] = {}
+        for r_spec in getattr(spec, "regions", []):
+            if r_spec.type == "town":
+                ctx.register_region_ownership(r_spec.id, Faction.HERO_GUILD)
+            region_bounds[r_spec.id] = tuple(r_spec.bounds)  # type: ignore[assignment]
+        return region_bounds
+
     def resolve(self, spec: Any, population_recipes: Optional[Dict[str, Any]] = None) -> CompileContext:
         """
         Processes a WorldSpec (or template recipes) and populates resolved profiles.
@@ -1055,27 +991,9 @@ class CompileProfileResolver:
             ResolvedFactionEconomyProfile,
         )
 
-        ctx = CompileContext()
+        ctx = CompileContext(tax_share=self.default_semantics.get_tax_share())
 
-        # 0. Populate legacy enums and region ownership
-        from src.core.enums import EntityRole, Faction
-        for pop_idx, pop_spec in enumerate(getattr(spec, "entities", [])):
-            try:
-                role_enum = self.role_semantics.get_legacy_entity_role(pop_spec.role)
-                ctx.register_legacy_role(pop_spec.role, role_enum)
-            except Exception:
-                pass
-            try:
-                faction_enum = self.faction_semantics.get_legacy_faction_bucket(pop_spec.faction)
-                ctx.register_legacy_faction(pop_spec.faction, faction_enum)
-            except Exception:
-                pass
-
-        region_bounds: Dict[str, Tuple[int, int, int, int]] = {}
-        for r_spec in getattr(spec, "regions", []):
-            if r_spec.type == "town":
-                ctx.register_region_ownership(r_spec.id, Faction.HERO_GUILD)
-            region_bounds[r_spec.id] = tuple(r_spec.bounds)  # type: ignore[assignment]
+        region_bounds = self._register_legacy_enums_and_regions(ctx, spec)
 
         # Local to this resolve() call only -- keeps spawn-position resolution a pure function
         # of this call's spec (TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION).
@@ -1098,7 +1016,7 @@ class CompileProfileResolver:
 
             hp, max_hp, atk, def_stat, attack_range, readiness = self._resolve_entity_stats(pop_spec, stats_profile_id)
 
-            spawn_position = _resolve_spawn_position(
+            spawn_position = resolve_spawn_position(
                 key, getattr(pop_spec, "spawn_region", None), region_bounds, claimed_positions
             )
 
@@ -1115,7 +1033,7 @@ class CompileProfileResolver:
             spawn_positions: Tuple[Optional[Tuple[float, float]], ...] = ()
             if declared_count > 0:
                 extra_positions = [
-                    _resolve_spawn_position(
+                    resolve_spawn_position(
                         f"{key}#{i}", getattr(pop_spec, "spawn_region", None), region_bounds, claimed_positions
                     )
                     for i in range(1, declared_count)
@@ -1165,6 +1083,8 @@ class CompileProfileResolver:
                     sense_profile_id=resolved_arch.sense_profile.id if resolved_arch.sense_profile else None,
                     inventory_profile_id=resolved_arch.inventory_profile.id if resolved_arch.inventory_profile else None,
                     skill_profile_id=resolved_arch.skill_profile.id if resolved_arch.skill_profile else None,
+                    starting_gold=int(resolved_arch.inventory_profile.starting_gold) if resolved_arch.inventory_profile else 0,
+                    starting_items=dict(resolved_arch.inventory_profile.starting_items) if resolved_arch.inventory_profile else {},
                 )
             else:
                 resolved_entity = ResolvedEntityProfile(
@@ -1189,15 +1109,11 @@ class CompileProfileResolver:
             res_def = self.repo.get_resource(res_spec.resource_type)
             required_ticks = res_def.required_ticks if res_def else self.default_semantics.get_resource_harvest_defaults()["required_ticks"]
 
-            yield_item = (
-                (getattr(res_def, "runtime_kind", None) or res_def.resource_type) if res_def else None
-            )
+            yield_item = (getattr(res_def, "runtime_kind", None) or res_def.resource_type) if res_def else None
 
             ctx.register_resource(res_spec.id, ResolvedResourceProfile(
-                required_ticks=required_ticks,
-                resource_type=res_spec.resource_type,
-                yield_item=yield_item,
-            ))
+                required_ticks=required_ticks, resource_type=res_spec.resource_type, yield_item=yield_item,
+                placement=getattr(res_def, "placement", None) if res_def else None, **ResolvedResourceProfile.regrowth_of(res_def)))
 
         # 4. Resolve Buildings
         for bld_spec in getattr(spec, "buildings", []):
@@ -1209,7 +1125,11 @@ class CompileProfileResolver:
             ctx.register_building(bld_spec.id, ResolvedBuildingProfile(
                 hp=hp,
                 max_hp=max_hp,
-                service_profile_id=service_profile_id
+                service_profile_id=service_profile_id,
+                starting_gold=bld_def.starting_gold if bld_def else 0,
+                starting_stock=dict(bld_def.starting_stock) if bld_def else {},
+                maintenance_shifts=bld_def.maintenance_shifts if bld_def else 1,
+                hires_for_pay=bld_def.hires_for_pay if bld_def else False,
             ))
 
         return ctx

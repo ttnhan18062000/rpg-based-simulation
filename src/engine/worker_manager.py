@@ -255,7 +255,7 @@ class WorkerManager:
         # 1.0 sentinel was read by ResourceGovernor._get_indicated_mode() as genuine 90%+
         # saturation, forcing DEGRADED unconditionally from tick 1 regardless of real load. Real
         # compute pressure in this mode is still caught independently via tick_compute_ms/
-        # work_debt_total/memory_estimate_mb, none of which depend on worker state.
+        # memory_estimate_mb, none of which depend on worker state.
         worker_utilization = (
             peak_active / self._max_workers
             if self._max_workers > 0 else 0.0

@@ -679,7 +679,13 @@ wrong verdict was only found if a person noticed. Like `claim_detections` this i
 Emitted by (all hand-reachable): `done_checker_static.py` (per-condition `sub_results`), `post_native_run_check.py`
 (`sub_results` per re-run check; nested checkers are labelled `workflow`), `doc_staleness_check.py`,
 `plan_gate_static.py` (new `--plan-path` CLI) and `attest_gate.py` (the ATTEST line's gate, command hash, exit code
-and stdout hash; never the mac; the wrapped command is kept from writing a second row).
+and stdout hash; never the mac; the wrapped command is kept from writing a second row). The ATTEST line carries
+`cmd_sha`, not the command, so a long command is never echoed back through the dispatched agent. A transport mismatch
+(`no ATTEST line`, `unparseable`, `wrong gate`, `wrong command`) is re-dispatched once; that retry's own row carries
+`inputs_ref.attempt: 2` and `inputs_ref.retry_reason`, and the first attempt's row is then superseded, not a second
+unrecorded verdict (`gate_ledger.attested_without_verdict`). A verified non-zero exit and a bad mac are never retried.
+The long gate commands live in `tools/gate_checks/gate_cli.py`, which derives the changed-file list from
+`git diff <start_sha>` plus untracked files instead of taking it as arguments.
 
 ```json
 {"ts":"2026-10-06T09:00:00Z","gate_verdict_id":"gv-3f2a9c1d0b7e4a55","run_id":null,"execution_id":null,

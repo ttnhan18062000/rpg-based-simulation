@@ -23,6 +23,7 @@ AUTHORITY_REL_PATH = Path("registries/session_authority.yaml")
 
 FUNCTIONS = ("designer", "planner", "implementer")
 SEAT_STATUSES = ("staffed", "unstaffed")
+LAUNCH_MODES = ("worktree", "main-checkout")  # placement.launch: where the session starts; main-checkout holds no lease
 
 
 class RosterError(ValueError):
@@ -63,6 +64,17 @@ class Role:
     max_sessions: int
     handover: str
     overrides: tuple[str, ...]  # which of owns / owns_not / routes this entry overrides
+    launch: str = "worktree"  # "main-checkout": read-mostly seat, launched from the main checkout, no worktree and no lease
+    card_note: str = ""  # one role-level line appended to the card after the domain text (TCK-20261013-HOST-LEAD-PLANNER-U24)
+
+
+def handover_rel(role: "Role", instance_id: str | None = None) -> str:
+    """Role-relative handover path of an instance: the role's note for the first instance, `<stem>-N<suffix>` beside it
+    for `<role>-N` (TCK-20261009-PER-INSTANCE-HANDOVER-NOTE)."""
+    if not instance_id or instance_id == role.role:
+        return role.handover
+    p = Path(role.handover)
+    return str(p.with_name(f"{p.stem}-{instance_id[len(role.role) + 1:]}{p.suffix}"))
 
 
 @dataclass(frozen=True)
@@ -171,6 +183,10 @@ def _parse_role(entry: Any, domains: dict[str, Domain]) -> Role:
     domain = domains[domain_name]
     overrides = tuple(k for k in ("owns", "owns_not", "routes") if k in responsibility)
     tools = capability.get("tools")
+    launch = str(placement.get("launch", "worktree"))
+    card_note = entry.get("card_note", "")
+    if not isinstance(card_note, str):
+        raise RosterError(f"{where}: card_note must be a string")
     return Role(
         role=role_id,
         domain=domain_name,
@@ -187,10 +203,12 @@ def _parse_role(entry: Any, domains: dict[str, Domain]) -> Role:
         accepts_dispatch_from=_strs(responsibility.get("accepts_dispatch_from"), f"{where}.accepts_dispatch_from"),
         may_write=_strs(capability.get("may_write"), f"{where}.may_write"),
         tools=None if tools is None else _strs(tools, f"{where}.tools"),
-        worktree=_require(placement, "worktree", f"{where}.placement"),
+        worktree=str(placement.get("worktree") or "") if launch == "main-checkout" else _require(placement, "worktree", f"{where}.placement"),
         max_sessions=int(placement.get("max_sessions", 1)),
         handover=_require(entry, "handover", where),
         overrides=overrides,
+        launch=launch,
+        card_note=card_note.strip(),
     )
 
 

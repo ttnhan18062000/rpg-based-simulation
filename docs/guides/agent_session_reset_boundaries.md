@@ -130,6 +130,11 @@ A transcript does not cross machines; the handover note is the only continuity t
 project memory through `agent-working/handover-transit/<host>/` (one rolling bundle per source
 host; files stored with a `.txt` suffix so registry and validators ignore them).
 
+**This is the only place the export is prescribed, and it is for a machine move, not for a ticket batch or a PR.** Run it
+in its own commit or PR, never inside a ticket batch. The repository is public: the bundle publishes every role's
+handover note, all open drafts and the project memory files. (PR #459 once carried 78 such files, +5,099/-1,438 lines,
+unrelated to its tickets, because a PR checklist told it to export.)
+
 **A transit bundle carries only OPEN handover state:** role notes, unmerged drafts and memory. Completed
 work, merged drafts and probe evidence are never exported. `export` skips a draft whose ticket is in
 `agent-working/tickets/done/` or tracked on `origin/main`, anything under an `evidence` directory, a folder
@@ -140,8 +145,8 @@ the work, so the next export has nothing stale to skip. Every manifest row recor
 from the launcher, never guessed: unresolved is listed as `unattributed`).
 
 1. On the machine being left: `python3 tools/handover_transit.py export` (`--roles a,b`,
-   `--no-drafts`, `--no-memory`, `--role <role>` narrow or attribute it), commit and push the branch (a
-   PR's own export step does this already — see `delivery_process.md`). **An export replaces the host's whole
+   `--no-drafts`, `--no-memory`, `--role <role>` narrow or attribute it), then commit and push it in its own
+   commit or PR, apart from any ticket work. **An export replaces the host's whole
    bundle, so it has two guards.** Memory is read from the one candidate `~/.claude/projects/<slug>/memory` that
    holds files (the resolved checkout path, the path a session started through a symlink such as `~/Working`
    would use, and home-symlink aliases); two non-empty candidates refuse with both named, and `--memory-dir <dir>`
@@ -172,3 +177,12 @@ now say so when free space is below 10 GB (`SESSION_DISK_THRESHOLD_GB` overrides
 a batch of N measurement runs, look: `python3 tools/sessions/disk_headroom.py` (free space, run data per worktree;
 `--json` for a stable shape). After the numbers are stored, clean that batch's own run directories by run id with
 `python3 tools/gate_checks/done_checker_static.py --clean-data-runs --path <run_id>`; never `rm -rf data/runs/*`.
+
+On 2026-10-14 the disk reached 0 bytes free in the middle of a working day, after sessions that had started long
+before. So the PostToolUse hook (`tools/agent-monitoring/post_tool_hook.py`, the same settings entry, no new one)
+also calls `tools/sessions/disk_warning.py`: one `statvfs` per 10 minutes per session, one line when free space is
+below the threshold, repeated at most every 30 minutes, and at once when it first drops below 2 GB. It never fails a
+tool call. `python3 tools/sessions/disk_headroom.py` now ends with "Removable worktrees": the worktrees
+`prune_branches --worktrees` classifies as removable (branch tip equals a merged PR head, clean, no seat, no process
+inside) with their sizes, and detached clean worktrees as "detached, check". Report only: removing them is
+`python3 -m tools.sessions.prune_branches --worktrees --execute --backup <path>` and needs the user's yes.

@@ -37,6 +37,8 @@ module_refs:
     order: 6
   - module_id: "river_crossing"
     order: 7
+  - module_id: "goblin_camp_forage"
+    order: 8
 generation_seed: 42
 faction_tension_overrides:
   town_council: 0.5

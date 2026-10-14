@@ -26,6 +26,8 @@ populations: ["forest_warden_patrol", "sacred_grove_guardians"]
 resources:
   healing_flower_patch: 5
   spirit_wisp: 2
+  # Wild food (Decision 29, SURV-06): a HIGH-fertility biome, same charges as near_forest (the wood_node default, 10).
+  berry_thicket: 10
 relationships: ["forest_wardens_to_wild_beasts"]
 observability_tags: ["ecology"]
 quest_definitions:

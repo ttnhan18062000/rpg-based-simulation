@@ -99,7 +99,7 @@
   combat_profile: "basic_melee"
   cognition_profile: "practical_humanoid"
   drive_profile: "cautious_commoner"
-  inventory_profile: "hero_pocket"
+  inventory_profile: "laborer_empty"
   skill_profile: "blacksmith_skills"
   traits: ["humanoid", "tool_user", "social_humanoid"]
   themes: ["village", "frontier"]
@@ -427,3 +427,18 @@
   skill_profile: "rogue_skills"
   traits: ["humanoid", "tool_user", "opportunistic", "small_body"]
   themes: ["bandit", "frontier"]
+
+# STATE: ADDITIONAL
+- id: "wild_small_plant_eater"
+  display_name: "Small Plant-Eater"
+  species: "small_plant_eater"
+  faction: "wild_fauna"
+  role: "wild_creature"
+  stat_profile: "small_plant_eater_base"
+  combat_profile: "glancing_melee"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "cautious_forager"
+  inventory_profile: "empty_animal_inventory"
+  skill_profile: "evasion_skills"
+  traits: ["quadruped", "small_body"]
+  themes: ["forest"]

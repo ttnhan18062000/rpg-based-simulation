@@ -1,0 +1,5 @@
+Mutants against tests/visual_assets/icon_sheet_rule.py (tests/visual_assets/test_icon_v2_groups.py and test_icon_sheet_rule.py run after each; file restored and diffed identical):
+A 24x24 threshold 8 -> 0 ............ caught: the recoloured-pair tests for buildings, classes and items, both 24x24 boundary tests, the rule-constants test
+B the 24x24 threshold removed ........ caught (KeyError): the same tests plus the shape-only test
+C shape_only ignored (I2 always runs) . caught: test_shape_only_groups_skip_i2_and_say_so_while_the_rarity_group_keeps_i2
+D every group treated as shape-only .. caught: the same test plus four I2 tests of the key-set rule

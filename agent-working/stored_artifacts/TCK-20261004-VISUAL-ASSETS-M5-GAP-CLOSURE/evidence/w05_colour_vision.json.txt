@@ -1,0 +1,54 @@
+{
+  "tile_mean_srgb255": [
+    27.81,
+    60.42,
+    28.07
+  ],
+  "fill_srgb255": [
+    27.0,
+    58.0,
+    27.0
+  ],
+  "per_vision": {
+    "normal": {
+      "dmin_tile": 17.861,
+      "dmin_fill": 18.522,
+      "closest_tile": "Grassland",
+      "closest_fill": "Desert",
+      "p1": true,
+      "texture": 5.25,
+      "p2": true
+    },
+    "protan": {
+      "dmin_tile": 5.94,
+      "dmin_fill": 5.023,
+      "closest_tile": "Desert",
+      "closest_fill": "Desert",
+      "p1": true,
+      "texture": 5.384,
+      "p2": true
+    },
+    "deutan": {
+      "dmin_tile": 1.171,
+      "dmin_fill": 1.458,
+      "closest_tile": "Desert",
+      "closest_fill": "Desert",
+      "p1": true,
+      "texture": 5.151,
+      "p2": true
+    },
+    "tritan": {
+      "dmin_tile": 9.067,
+      "dmin_fill": 10.07,
+      "closest_tile": "Jungle",
+      "closest_fill": "Jungle",
+      "p1": true,
+      "texture": 5.218,
+      "p2": true
+    }
+  },
+  "p1": true,
+  "p2": true,
+  "w05": "PASS",
+  "wording": "better"
+}

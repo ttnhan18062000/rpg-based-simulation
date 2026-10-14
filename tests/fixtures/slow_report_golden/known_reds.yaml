@@ -1,0 +1,21 @@
+# Frozen copy of a known-reds file for the golden test of the slow regression report
+# (TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE). Not the live registry; do not edit it to follow the live file.
+known_reds:
+  - match: "tests.perf.test_perf_combat*"
+    ticket: TCK-GOLDEN-PERF
+    owner: perf-owner
+    added_on: "2026-10-01"
+    expires_on: "2026-12-01"
+    kind: broken
+  - match: "tests.old.test_expired*"
+    ticket: TCK-GOLDEN-OLD
+    owner: someone
+    added_on: "2026-09-01"
+    expires_on: "2026-10-06"
+    kind: flaky
+  - match: "tests.regression.test_gone*"
+    ticket: TCK-GOLDEN-GONE
+    owner: someone
+    added_on: "2026-10-01"
+    expires_on: "2026-12-01"
+    kind: broken

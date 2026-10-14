@@ -14,9 +14,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple
 
+from src.content_semantics.faction import get_species_id_str
+from src.core.items import food_hunger_recovery
 from src.core.strategic import GoalKind, ProjectStatus
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
+from src.engine.appraisal import can_eat_item
 from src.engine.biological_needs import need_rates
+from src.engine.domain.core_actions import EAT_AT_CORPSE_REACH as CARCASS_NEAR
 from src.engine.need_pull import ESCALATION_FULL, SLEEP_LINE, arrival_fraction
 from src.engine.service_reach import service_tile
 from src.engine.tactical_threat import present_threat_terms
@@ -73,3 +77,64 @@ def rest_in_place_update(
         navigation=NavigationUpdate(target_clear=True),
         task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "REST", "reason": "REST_IN_PLACE"}),
     )
+
+
+# Hunger at or above which a subject carrying food eats it (SURV-06: carried food is a way to eat that needs no building).
+# One meal removes a food item's `hunger_recovery`, so below this a carried meal would be wasted.
+EAT_CARRIED_MIN_HUNGER = 40.0
+
+
+def eat_carried_update(entity: EntityState, hostiles: Sequence[EntityState]) -> Optional[EntityUpdate]:
+    """An eat-what-you-carry update for a hungry subject holding food, or None. No building is needed; a present threat outranks it."""
+    if entity.biological.hunger < EAT_CARRIED_MIN_HUNGER:
+        return None
+    if not any(food_hunger_recovery(stack.item_id) > 0.0 and stack.quantity > 0 and can_eat_item(entity, stack.item_id)
+               for stack in entity.inventory.items):
+        return None
+    if hostiles and present_threat_terms(entity, list(hostiles)):
+        return None
+    return EntityUpdate(
+        entity_id=entity.id,
+        navigation=NavigationUpdate(target_clear=True),
+        task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "EAT", "reason": "EAT_CARRIED"}),
+    )
+
+
+def eat_at_corpse_in_place_update(
+    state: AuthoritativeState, entity: EntityState, hostiles: Sequence[EntityState]
+) -> Optional[EntityUpdate]:
+    """Decision 44: a hungry subject at, or just beside, a carcass whose food its diet allows eats it where it lies (within a stride of it), at
+    the same hunger a carried meal would be eaten (one gate for the hunt and the meal). This is what makes a kill
+    lead to the meal: the killer is beside its own fresh kill. A kind never eats a carcass of its own species; a present threat outranks it."""
+    if entity.biological.hunger < EAT_CARRIED_MIN_HUNGER or not state.corpses:
+        return None
+    if hostiles and present_threat_terms(entity, list(hostiles)):
+        return None
+    own = get_species_id_str(entity)
+    px, py = entity.navigation.position
+    best, best_distance = None, 0.0
+    for corpse_id in sorted(state.corpses):
+        corpse = state.corpses[corpse_id]
+        distance = abs(px - corpse.position[0]) + abs(py - corpse.position[1])
+        if distance > CARCASS_NEAR or not any(i.quantity > 0 and can_eat_item(entity, i.item_id) for i in corpse.items):
+            continue
+        dead = state.entities.get(corpse.original_entity_id)
+        if dead is not None and get_species_id_str(dead) == own:
+            continue
+        if best is None or distance < best_distance:
+            best, best_distance = corpse, distance
+    if best is None:
+        return None
+    return EntityUpdate(
+        entity_id=entity.id,
+        navigation=NavigationUpdate(target_clear=True),
+        task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "EAT", "reason": "EAT_AT_CORPSE", "corpse_id": best.id}),
+    )
+
+
+def in_place_survival_update(
+    state: AuthoritativeState, entity: EntityState, hostiles: Sequence[EntityState]
+) -> Optional[EntityUpdate]:
+    """A survival action that needs no building: rest in place, else eat carried food; None to decide as usual."""
+    return (rest_in_place_update(state, entity, hostiles) or eat_carried_update(entity, hostiles)
+            or eat_at_corpse_in_place_update(state, entity, hostiles))

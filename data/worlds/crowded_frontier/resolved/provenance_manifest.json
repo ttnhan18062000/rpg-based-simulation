@@ -1,19 +1,21 @@
 {
-  "manifest_id": "prov_c30294dd56c7f976",
+  "manifest_id": "prov_015c8bbba94a46e0",
   "world_id": "crowded_frontier",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
+    "goblin_camp_forage": "79af965c2ca3a71404f844c2f02753c21149e5cff4e6f21707e6223e1dac63cb",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
-    "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
+    "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
+    "wild_edge_forage": "d8a0de2eac9569521b460a7a986b9b0bde683b81f8e7a86da78a84a80cb7bd3d"
   },
-  "composition_fingerprint": "c1236b66f875f9584b2078c18ff1e3ac317b15422201051050e0d880a50aebd2",
+  "composition_fingerprint": "ba1c780fee163d5349990b97075bf70ba91dde1527dab518da61c00b9856be5a",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "c30294dd56c7f976d7b6f2b1508588494e7b6ec8f02281464f011ba4850a3d62",
-  "created_at": "2026-09-08T02:50:40.407291Z",
+  "content_fingerprint": "015c8bbba94a46e06c1fb033b46bd5c1145834a0a8ade83dec068a2ed777636e",
+  "created_at": "2026-10-12T14:35:22.365351Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -207,6 +209,18 @@
         "description": "Spirit faction protecting sacred or haunted territories."
       }
     },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
+      }
+    },
     "hometown": {
       "element_id": "hometown",
       "element_type": "region",
@@ -240,7 +254,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",
@@ -873,6 +887,41 @@
         "reward_budget": 120
       }
     },
+    "goblin_camp_edge": {
+      "element_id": "goblin_camp_edge",
+      "element_type": "region",
+      "source_module": "goblin_camp_forage",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "goblin_camp"
+      },
+      "details": {
+        "bounds": [
+          106,
+          34,
+          114,
+          42
+        ],
+        "terrain": "forest",
+        "hazard_level": 3.0,
+        "ecology_source": []
+      }
+    },
+    "goblin_camp_forage__berry_thicket_0": {
+      "element_id": "goblin_camp_forage__berry_thicket_0",
+      "element_type": "resource",
+      "source_module": "goblin_camp_forage",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
+        "region": "goblin_camp_edge"
+      }
+    },
     "pop_0": {
       "element_id": "pop_0",
       "element_type": "population",
@@ -1074,6 +1123,83 @@
           "territory"
         ],
         "reward_budget": 100
+      }
+    },
+    "forest_edge": {
+      "element_id": "forest_edge",
+      "element_type": "region",
+      "source_module": "wild_edge_forage",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "near_forest"
+      },
+      "details": {
+        "bounds": [
+          44,
+          10,
+          72,
+          38
+        ],
+        "terrain": "forest",
+        "hazard_level": 0.0,
+        "ecology_source": []
+      }
+    },
+    "wild_edge_forage__berry_thicket_0": {
+      "element_id": "wild_edge_forage__berry_thicket_0",
+      "element_type": "resource",
+      "source_module": "wild_edge_forage",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
+        "region": "forest_edge"
+      }
+    },
+    "cover__forest_edge__0": {
+      "element_id": "cover__forest_edge__0",
+      "element_type": "resource",
+      "source_module": "wild_edge_forage",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "forest_edge"
+      }
+    },
+    "cover__forest_edge__1": {
+      "element_id": "cover__forest_edge__1",
+      "element_type": "resource",
+      "source_module": "wild_edge_forage",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "forest_edge"
+      }
+    },
+    "cover__forest_edge__2": {
+      "element_id": "cover__forest_edge__2",
+      "element_type": "resource",
+      "source_module": "wild_edge_forage",
+      "recipe_type": "biome_cover",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "cover_patch_high"
+      },
+      "details": {
+        "count": 20,
+        "region": "forest_edge"
       }
     }
   }

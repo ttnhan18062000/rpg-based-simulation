@@ -1,0 +1,5 @@
+Mutants against visual_assets/icons/item_families.yaml, tests/visual_assets/test_icon_item_families.py run after each (file restored and diffed identical):
+M1 the `tool` category unmapped ............... caught: six-families test, every-item-maps test, first-categories-are-mapped test
+M2 an extra mapped category (gemstone) the catalog never uses ... caught: six-families test, first-categories test, planted-unknown test (gemstone is now mapped)
+M3 armor merged into the weapon family ........ caught: six-families test, every-item-maps test (family counts and set differ)
+Planted inputs (in the test file): an item with first category `gemstone` or no categories raises UnmappedCategory; a later tag naming a mapped category does not rescue an unknown first one; a planted catalog item with first category `relic` fails the whole check.

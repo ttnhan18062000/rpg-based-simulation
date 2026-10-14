@@ -20,6 +20,7 @@ from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
+from tests.helpers.scenario import empty_inventories
 
 WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
 SEED = 42
@@ -29,6 +30,9 @@ def _run(ticks: int):
     repo = WorldRepository(os.path.join("data", "worlds"))
     spec, context = repo.load_world_with_context(WORLD_ID)
     state, _report = WorldCompiler.compile(spec, SEED, context=context)
+    # The scenario stages two fighters with nothing in their packs; since inventory profiles are applied at compile (owner decision 34)
+    # they would otherwise carry their profile coin and items. Staging only, no assertion changed.
+    state = empty_inventories(state)
     kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(SEED),
                     flags={"no_frame_pacing": True, "no_replay": True}, executor=LocalSequentialExecutor())
     objectives = {}

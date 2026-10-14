@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Dict, Any, Optional, TYPE_CHECKING, List, Tuple
 if TYPE_CHECKING:
-    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, WoundState, ScarState, StatusEffectState
+    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, OwedRecord, WoundState, ScarState, StatusEffectState
     from src.core.quests import QuestStatus
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
@@ -19,6 +19,7 @@ from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage, 
 from src.core.models.social import RelationshipRole
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode, DiplomaticState
+from src.core.update_models.buildings import BuildingUpdate  # noqa: F401  (re-exported: updates.py is where callers import it from)
 from src.core.update_models.inventory import InventoryUpdate, ItemInstanceUpdate
 from src.core.update_models.quests import QuestUpdate
 from src.core.update_models.resources import ResourceTransferIntent
@@ -808,34 +809,6 @@ class ResourceNodeUpdate:
         )
 
 
-@dataclass(frozen=True, slots=True)
-class BuildingUpdate:
-    """Updates to building health/status."""
-    building_id: int
-    hp_delta: int = 0
-    functional_set: Optional[bool] = None
-    inventory: Optional[InventoryUpdate] = None
-    price_modifiers_set: Optional[Dict[str, float]] = None
-
-    def merge(self, other: BuildingUpdate) -> BuildingUpdate:
-        if self.building_id != other.building_id:
-            raise ValueError("Cannot merge BuildingUpdates for different buildings")
-        
-        merged_inventory = self.inventory
-        if self.inventory and other.inventory:
-            merged_inventory = self.inventory.merge(other.inventory)
-        elif other.inventory:
-            merged_inventory = other.inventory
-
-        return replace(self,
-            hp_delta=self.hp_delta + other.hp_delta,
-            functional_set=other.functional_set if other.functional_set is not None else self.functional_set,
-            inventory=merged_inventory,
-            price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set
-        )
-
-
-
 #: In-band sentinel meaning "set the region's owner to None (unowned)".
 #: `owner_faction_id_set=None` already means "no change", so an explicit
 #: clear-to-unowned cannot be expressed with None and needs its own value.
@@ -1036,6 +1009,8 @@ class StateUpdate:
     item_instance_updates: Dict[int, ItemInstanceUpdate] = field(default_factory=dict)
     corpses_add_or_update: List[CorpseState] = field(default_factory=list)
     corpses_remove: List[int] = field(default_factory=list)
+    owed_add_or_update: List[OwedRecord] = field(default_factory=list)
+    owed_remove: List[str] = field(default_factory=list)
     scars_add_or_update: List[LocalScarState] = field(default_factory=list)
     scars_remove: List[int] = field(default_factory=list)
     chest_updates: Dict[int, ChestUpdate] = field(default_factory=dict)
@@ -1045,8 +1020,6 @@ class StateUpdate:
     world_updates: Dict[str, WorldUpdate] = field(default_factory=dict)
     resource_updates: Dict[str, float] = field(default_factory=dict)
     home_storage_updates: Dict[int, InventoryUpdate] = field(default_factory=dict) # Milestone 5
-    periodic_updates: Dict[str, int] = field(default_factory=dict)
-    work_debt_updates: Dict[str, int] = field(default_factory=dict)
     groups_add_or_update: List[GroupRecord] = field(default_factory=list)
     groups_remove: List[int] = field(default_factory=list)
     maturity_set: Optional[int] = None
@@ -1083,12 +1056,11 @@ class StateUpdate:
         return (not self.entity_updates and not self.entities_add and not self.entities_remove and
                 not self.nodes_add and not self.node_updates and not self.ground_items_add_or_update and
                 not self.ground_items_remove and not self.corpses_add_or_update and
-                not self.corpses_remove and not self.scars_add_or_update and
+                not self.corpses_remove and not self.owed_add_or_update and not self.owed_remove and not self.scars_add_or_update and
                 not self.scars_remove and not self.chest_updates and
                 not self.chest_add_or_update and not self.building_updates and
                 not self.camp_updates and not self.world_updates and
                 not self.resource_updates and not self.home_storage_updates and
-                not self.periodic_updates and not self.work_debt_updates and
                 not self.groups_add_or_update and not self.groups_remove and
                 self.maturity_set is None and self.last_calamity_tick_set is None and
                 self.rng_checkpoint is None and not self.transaction_trace and
@@ -1134,8 +1106,6 @@ class StateUpdate:
         new_home_storage_updates = dict(self.home_storage_updates)
         new_rejections_delta = dict(self.rejections_delta)
         new_resource_updates = dict(self.resource_updates)
-        new_periodic_updates = dict(self.periodic_updates)
-        new_work_debt_updates = dict(self.work_debt_updates)
 
         # Non-dict collections
         new_entities_add = list(self.entities_add)
@@ -1148,6 +1118,8 @@ class StateUpdate:
         new_item_instances_add_or_update = list(self.item_instances_add_or_update)
         new_corpses_add_or_update = list(self.corpses_add_or_update)
         new_corpses_remove = set(self.corpses_remove)
+        new_owed_add_or_update = list(self.owed_add_or_update)
+        new_owed_remove = set(self.owed_remove)
         new_chest_add_or_update = list(self.chest_add_or_update)
         new_scars_add_or_update = list(self.scars_add_or_update)
         new_scars_remove = set(self.scars_remove)
@@ -1199,10 +1171,6 @@ class StateUpdate:
                 new_rejections_delta[k] = new_rejections_delta.get(k, 0) + v
             for k, v in other.resource_updates.items():
                 new_resource_updates[k] = new_resource_updates.get(k, 0.0) + v
-            for k, v in other.periodic_updates.items():
-                new_periodic_updates[k] = v
-            for k, v in other.work_debt_updates.items():
-                new_work_debt_updates[k] = new_work_debt_updates.get(k, 0) + v
             if other.metric_counters:
                 for k, v in other.metric_counters.items():
                     new_metric_counters[k] = new_metric_counters.get(k, 0) + v
@@ -1218,6 +1186,8 @@ class StateUpdate:
             new_item_instances_add_or_update.extend(other.item_instances_add_or_update)
             new_corpses_add_or_update.extend(other.corpses_add_or_update)
             new_corpses_remove.update(other.corpses_remove)
+            new_owed_add_or_update.extend(other.owed_add_or_update)
+            new_owed_remove.update(other.owed_remove)
             new_chest_add_or_update.extend(other.chest_add_or_update)
             new_scars_add_or_update.extend(other.scars_add_or_update)
             new_scars_remove.update(other.scars_remove)
@@ -1264,8 +1234,6 @@ class StateUpdate:
             home_storage_updates=new_home_storage_updates,
             rejections_delta=new_rejections_delta,
             resource_updates=new_resource_updates,
-            periodic_updates=new_periodic_updates,
-            work_debt_updates=new_work_debt_updates,
             entities_add=new_entities_add,
             entities_remove=list(new_entities_remove),
             nodes_add=new_nodes_add,
@@ -1275,6 +1243,8 @@ class StateUpdate:
             ground_items_remove=list(new_ground_items_remove),
             corpses_add_or_update=new_corpses_add_or_update,
             corpses_remove=list(new_corpses_remove),
+            owed_add_or_update=new_owed_add_or_update,
+            owed_remove=sorted(new_owed_remove),
             chest_add_or_update=new_chest_add_or_update,
             scars_add_or_update=new_scars_add_or_update,
             scars_remove=list(new_scars_remove),

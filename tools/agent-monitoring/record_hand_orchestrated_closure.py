@@ -51,6 +51,13 @@ This call also appends one row to `agent-working/tickets/working_log.csv` (`--ti
 "none (hotfix — no staging artifacts)" for hotfix) -- do not append that row by hand separately
 when using this wrapper, or the ticket will get a duplicate working_log entry.
 
+As of `TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD`, two templated-events patterns are refused with an `ERROR:` and a
+non-zero exit BEFORE anything is written (PR #457 hand-closed six tickets with one events payload): (a) a Parity event with
+status `ok` when the ticket changed no `docs/parity_ledger/` file (use `"status":"skipped","skip_reason":"condition_false"`,
+or commit the ledger change first); (b) events whose non-empty summaries equal, phase for phase, an already-recorded run of a
+different ticket in the same per-batch events shard (the message names that ticket). `--allow-shared-summaries` overrides (b)
+and records `summaries_shared: true` on the run row.
+
 As of `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`, that warning is also
 enforced, not just documented: before appending, this script checks whether
 `agent-working/tickets/working_log.csv` already has a row for this exact `(ticket_id, title)` pair (via the
@@ -185,6 +192,74 @@ def _existing_row_for(
     return None
 
 
+_PARITY_LEDGER_PREFIX = "docs/parity_ledger/"
+
+
+def parity_claimed_without_ledger_change(events: list[dict], changed_files) -> str | None:
+    """TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD: a Parity event with status `ok` while the ticket changed no
+    `docs/parity_ledger/` file is a templated claim (main records that phase `skipped`/`condition_false`). Returns the
+    ERROR text, or None."""
+    claims = any(e.get("phase") == "Parity" and e.get("status") == "ok" for e in events)
+    if not claims or any(path.startswith(_PARITY_LEDGER_PREFIX) for path in changed_files):
+        return None
+    return ('a Parity event with status "ok" was given, but this ticket changed no docs/parity_ledger/ file. Record it as '
+            '{"phase":"Parity","status":"skipped","skip_reason":"condition_false","summary":"..."}, or commit the ledger '
+            "change first and rerun")
+
+
+def _phase_summaries(events: list[dict]) -> dict[str, str]:
+    return {e["phase"]: e["summary"] for e in events if str(e.get("summary") or "").strip()}
+
+
+def events_copied_from_another_ticket(ticket_id: str, events: list[dict], recorded_events: list[dict]) -> str | None:
+    """TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD: the new events are refused when, phase for phase, ALL of their
+    non-empty summaries equal those of an already-recorded run of a DIFFERENT ticket (`recorded_events` are the rows of
+    the same per-batch events shard). One shared summary is not a copy, so at least two phases must match. Returns the
+    ERROR text naming that ticket, or None."""
+    new = _phase_summaries(events)
+    if len(new) < 2:
+        return None
+    by_ticket: dict[str, list[dict]] = {}
+    for row in recorded_events:
+        other = row.get("ticket_id") or row.get("run_id")
+        if other and other != ticket_id:
+            by_ticket.setdefault(other, []).append(row)
+    for other, rows in by_ticket.items():
+        if all(_phase_summaries(rows).get(phase) == summary for phase, summary in new.items()):
+            return (f"the non-empty summaries of every given event equal, phase for phase, those already recorded for "
+                    f"{other} in this batch's events shard: a reused payload. Write this ticket's own summaries, or pass "
+                    "--allow-shared-summaries if they are honestly identical (the run row then records summaries_shared: true)")
+    return None
+
+
+def _read_jsonl_rows(path: Path) -> list[dict]:
+    rows = []
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return rows
+    for line in lines:
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(row, dict):
+            rows.append(row)
+    return rows
+
+
+def _ticket_changed_files(ticket_id: str) -> set[str] | None:
+    """The ticket's own changed files (its commits plus the working tree); None when git cannot say (no `origin/main`)."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "mechanism_registry"))
+        from mechanism_registry_changed_code_check import get_changed_files_for_ticket  # noqa: PLC0415
+        return get_changed_files_for_ticket(ticket_id)
+    except Exception as exc:  # noqa: BLE001 - an unreadable git state must not block a closure; it skips the Parity check
+        print(f"WARNING: could not read the ticket's changed files ({type(exc).__name__}); the Parity claim was not checked.",
+              file=sys.stderr)
+        return None
+
+
 def build_records(
     ticket_id: str,
     tier: str,
@@ -200,6 +275,7 @@ def build_records(
     resolution: "hand_closure_time.Resolution | None" = None,
     path_reason: str = "unstated",
     path_note: str | None = None,
+    summaries_shared: bool = False,
 ) -> tuple[dict, list[dict]]:
     """Expands a minimal `events` list (phase/status/summary per entry) into a full run record
     plus a full event-record batch, both matching record_run.py's/record_events.py's own REQUIRED
@@ -224,6 +300,8 @@ def build_records(
         # event (read from implement-ticket.yaml at write time; the key is absent when that file cannot be read)
         "path_reason": path_reason,
         **({"path_note": path_note} if path_note else {}),
+        # TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD: the closer overrode the copied-summaries refusal
+        **({"summaries_shared": True} if summaries_shared else {}),
         **({"phases_omitted": omitted} if (omitted := compute_phases_omitted(tier, [e["phase"] for e in events])) is not None else {}),
         # TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS: provenance of start/end (declared | tool_activity | unknown)
         # and the closing session; absent on rows that predate the fields
@@ -420,6 +498,11 @@ def main() -> None:
         help="Why this ticket was closed by hand rather than by the pipeline; 'other' needs --path-note",
     )
     parser.add_argument("--path-note", default=None, help="Free-text detail; required with --path-reason other")
+    parser.add_argument(
+        "--allow-shared-summaries", action="store_true",
+        help="Record events whose summaries equal another ticket's already-recorded ones (refused otherwise); the run row "
+        "then carries summaries_shared: true",
+    )
     args = parser.parse_args()
 
     if args.path_reason == "other" and not args.path_note:
@@ -466,7 +549,7 @@ def main() -> None:
         args.ticket_id, args.tier, args.final_status, events,
         args.start_ts, args.end_ts, args.workflow, args.provider, args.agent,
         now=now, session_id=os.environ.get("CLAUDE_CODE_SESSION_ID") or None, resolution=resolution,
-        path_reason=args.path_reason, path_note=args.path_note,
+        path_reason=args.path_reason, path_note=args.path_note, summaries_shared=args.allow_shared_summaries,
     )
 
     run_errors = record_run.validate_record(run_record)
@@ -482,6 +565,23 @@ def main() -> None:
     if event_errors:
         for err in event_errors:
             print(f"ERROR (event record): {err}", file=sys.stderr)
+        sys.exit(1)
+
+    # TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD: refuse templated events before anything is written.
+    changed = _ticket_changed_files(args.ticket_id) if any(
+        e.get("phase") == "Parity" and e.get("status") == "ok" for e in events) else set()
+    refusals = []
+    if changed is not None and (parity_error := parity_claimed_without_ledger_change(events, changed)):
+        refusals.append(parity_error)
+    if not args.allow_shared_summaries:
+        iso_week_for_guard = datetime.now(timezone.utc).strftime("%G-W%V")
+        shared = events_copied_from_another_ticket(
+            args.ticket_id, events, _read_jsonl_rows(resolve_write_target("events", iso_week=iso_week_for_guard)))
+        if shared:
+            refusals.append(shared)
+    if refusals:
+        for refusal in refusals:
+            print(f"ERROR: {refusal}; nothing was written.", file=sys.stderr)
         sys.exit(1)
 
     for record in event_records:

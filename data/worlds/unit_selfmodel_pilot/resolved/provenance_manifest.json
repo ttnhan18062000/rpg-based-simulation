@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_f7a9827321548c9b",
+  "manifest_id": "prov_28d070a6099c245d",
   "world_id": "unit_selfmodel_pilot",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+  "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837"
   },
-  "composition_fingerprint": "385032768bb4bf53f6716d0e9821267a67048287bc3a3a8bbeb9b413f1fbc0f5",
+  "composition_fingerprint": "a69f7a2196773b3cd935cb1ed2b1b88b82c79f1567ada04cef5cb2faca3d1e45",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "f7a9827321548c9b0fb1d0b3f19824441012d28c2442abc36985880fdd0df026",
-  "created_at": "2026-09-04T08:05:47.083362Z",
+  "content_fingerprint": "28d070a6099c245d2f9e53a72f29755a6fb7a8d16f09b5e18660d00f54da6c9e",
+  "created_at": "2026-10-12T14:35:53.427558Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -204,6 +204,18 @@
         "description": "Spirit faction protecting sacred or haunted territories."
       }
     },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
+      }
+    },
     "hometown": {
       "element_id": "hometown",
       "element_type": "region",
@@ -237,7 +249,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",

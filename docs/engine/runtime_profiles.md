@@ -39,7 +39,7 @@ Every runtime profile must explicitly define the following fields:
 ## 5. Runtime Modes
 Profiles define the thresholds for switching between:
 - `NORMAL`
-- `CONSTRAINED` (Drops subsystem traces and widens system cadence. No metric is shed: `metrics_detail` has no reader in `src/`)
+- `CONSTRAINED` (Drops subsystem traces and widens system cadence. No metric is shed: the unread `metrics_detail` policy field was removed in Phase B)
 - `DEGRADED` (Minimal replay richness, half the worker concurrency, wider cadence and tighter phase budgets. Diagnostic verbosity is set but never read)
 - `SURVIVAL` (Authoritative only, minimal observability)
 

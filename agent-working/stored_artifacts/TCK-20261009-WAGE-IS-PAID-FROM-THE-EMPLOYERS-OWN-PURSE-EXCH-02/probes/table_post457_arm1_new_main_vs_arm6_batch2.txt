@@ -1,0 +1,103 @@
+
+== crowded_frontier  seeds [42, 43, 44, 45, 46]
+  alive total @1000                  arm1   24.4(2.4)  arm6   23.2(2.1)  paired diff -1.2 SE 1.3
+  alive total @2500                  arm1    3.8(1.9)  arm6    3.0(1.5)  paired diff -0.8 SE 1.4
+  alive total @5000                  arm1    2.4(0.5)  arm6    2.8(1.2)  paired diff +0.4 SE 0.6
+  heroes_other alive @1000           arm1    3.8(0.7)  arm6    3.2(0.7)  paired diff -0.6 SE 0.5
+  heroes_other alive @2500           arm1    2.6(0.8)  arm6    2.0(0.0)  paired diff -0.6 SE 0.4
+  heroes_other alive @5000           arm1    2.2(0.4)  arm6    2.0(0.0)  paired diff -0.2 SE 0.2
+  heroes_other starved               arm1    4.0(1.1)  arm6    4.2(0.7)  paired diff +0.2 SE 0.6
+  heroes_other ever-ate              arm1    1.6(0.8)  arm6    0.0(0.0)  paired diff -1.6 SE 0.4 **>2SE**
+  merchants alive @1000              arm1    1.2(0.4)  arm6    1.2(0.7)  paired diff +0.0 SE 0.5
+  merchants alive @5000              arm1    0.0(0.0)  arm6    0.0(0.0)  paired diff +0.0 SE 0.0
+  merchants starved                  arm1    0.8(0.7)  arm6    1.2(0.7)  paired diff +0.4 SE 0.6
+  merchants ever-ate                 arm1    0.2(0.4)  arm6    0.0(0.0)  paired diff -0.2 SE 0.2
+  raiders alive @1000                arm1    7.6(1.0)  arm6    8.0(1.7)  paired diff +0.4 SE 0.7
+  raiders alive @2500                arm1    0.4(0.5)  arm6    0.2(0.4)  paired diff -0.2 SE 0.2
+  raiders alive @5000                arm1    0.2(0.4)  arm6    0.2(0.4)  paired diff +0.0 SE 0.0
+  raiders starved                    arm1    6.2(0.7)  arm6    6.0(0.0)  paired diff -0.2 SE 0.3
+  raiders ever-ate                   arm1    1.6(1.9)  arm6    0.8(1.6)  paired diff -0.8 SE 1.0
+  town_guards_scouts alive @1000     arm1    5.0(1.1)  arm6    4.6(0.5)  paired diff -0.4 SE 0.4
+  town_guards_scouts alive @2500     arm1    0.4(0.8)  arm6    0.2(0.4)  paired diff -0.2 SE 0.4
+  town_guards_scouts alive @5000     arm1    0.0(0.0)  arm6    0.2(0.4)  paired diff +0.2 SE 0.2
+  town_guards_scouts starved         arm1    2.4(1.5)  arm6    2.6(0.8)  paired diff +0.2 SE 1.0
+  town_guards_scouts ever-ate        arm1    0.8(1.2)  arm6    0.4(0.5)  paired diff -0.4 SE 0.7
+  town_workers alive @1000           arm1    6.8(1.2)  arm6    6.2(2.6)  paired diff -0.6 SE 1.1
+  town_workers alive @2500           arm1    0.4(0.5)  arm6    0.6(1.2)  paired diff +0.2 SE 0.7
+  town_workers alive @5000           arm1    0.0(0.0)  arm6    0.4(0.8)  paired diff +0.4 SE 0.4
+  town_workers starved               arm1    5.0(1.8)  arm6    3.6(2.0)  paired diff -1.4 SE 1.2
+  town_workers ever-ate              arm1    1.2(2.4)  arm6    1.0(1.5)  paired diff -0.2 SE 1.5
+  tax paid by the poor (gold)        arm1  50.2(23.2)  arm6  85.8(16.8)  paired diff +35.6 SE 16.9 **>2SE**
+  deaths/run arm1 {'COMBAT': 11.6, 'DEFEAT': 6.2, 'HAZARD': 2.8, 'SLEEP_DEPRIVATION': 1.4, 'STARVATION': 18.4}
+  deaths/run arm6 {'COMBAT': 12.4, 'DEFEAT': 6.2, 'HAZARD': 3.8, 'SLEEP_DEPRIVATION': 0.2, 'STARVATION': 17.6}
+
+== frontier_living_world  seeds [42, 43, 44, 45, 46]
+  alive total @1000                  arm1   26.4(2.9)  arm6   25.8(1.7)  paired diff -0.6 SE 1.7
+  alive total @2500                  arm1   11.2(2.6)  arm6   10.8(1.7)  paired diff -0.4 SE 1.6
+  alive total @5000                  arm1   10.8(2.3)  arm6   10.0(2.1)  paired diff -0.8 SE 1.7
+  heroes_other alive @1000           arm1    3.4(0.8)  arm6    3.6(0.8)  paired diff +0.2 SE 0.6
+  heroes_other alive @2500           arm1    4.2(0.4)  arm6    4.2(0.4)  paired diff +0.0 SE 0.3
+  heroes_other alive @5000           arm1    4.0(0.0)  arm6    4.0(0.0)  paired diff +0.0 SE 0.0
+  heroes_other starved               arm1    5.2(0.4)  arm6    7.0(0.6)  paired diff +1.8 SE 0.4 **>2SE**
+  heroes_other ever-ate              arm1    0.0(0.0)  arm6    0.0(0.0)  paired diff +0.0 SE 0.0
+  merchants alive @1000              arm1    3.2(1.2)  arm6    4.0(0.9)  paired diff +0.8 SE 0.7
+  merchants alive @2500              arm1    0.4(0.8)  arm6    0.2(0.4)  paired diff -0.2 SE 0.4
+  merchants alive @5000              arm1    0.4(0.8)  arm6    0.2(0.4)  paired diff -0.2 SE 0.4
+  merchants starved                  arm1    2.2(1.2)  arm6    3.4(1.0)  paired diff +1.2 SE 0.7
+  merchants ever-ate                 arm1    0.6(0.8)  arm6    0.6(0.5)  paired diff +0.0 SE 0.3
+  raiders alive @1000                arm1    4.2(1.2)  arm6    1.8(0.7)  paired diff -2.4 SE 0.5 **>2SE**
+  raiders alive @2500                arm1    0.8(1.6)  arm6    0.2(0.4)  paired diff -0.6 SE 0.8
+  raiders alive @5000                arm1    0.8(1.6)  arm6    0.2(0.4)  paired diff -0.6 SE 0.8
+  raiders starved                    arm1    2.2(1.3)  arm6    1.6(1.0)  paired diff -0.6 SE 0.6
+  raiders ever-ate                   arm1    4.6(2.1)  arm6    2.4(1.0)  paired diff -2.2 SE 1.2
+  town_guards_scouts alive @1000     arm1    4.8(1.0)  arm6    3.8(1.7)  paired diff -1.0 SE 1.1
+  town_guards_scouts alive @2500     arm1    0.6(0.8)  arm6    0.4(0.8)  paired diff -0.2 SE 0.6
+  town_guards_scouts alive @5000     arm1    0.6(0.8)  arm6    0.4(0.8)  paired diff -0.2 SE 0.6
+  town_guards_scouts starved         arm1    3.0(1.4)  arm6    3.0(2.1)  paired diff +0.0 SE 1.3
+  town_guards_scouts ever-ate        arm1    0.6(0.8)  arm6    0.4(0.8)  paired diff -0.2 SE 0.6
+  town_workers alive @1000           arm1    4.8(1.2)  arm6    4.4(1.6)  paired diff -0.4 SE 0.2
+  town_workers alive @2500           arm1    0.6(0.8)  arm6    0.4(0.5)  paired diff -0.2 SE 0.2
+  town_workers alive @5000           arm1    0.4(0.8)  arm6    0.2(0.4)  paired diff -0.2 SE 0.4
+  town_workers starved               arm1    1.6(0.5)  arm6    2.2(1.2)  paired diff +0.6 SE 0.6
+  town_workers ever-ate              arm1    0.6(0.8)  arm6    0.4(0.8)  paired diff -0.2 SE 0.4
+  undead alive @1000                 arm1    4.6(0.8)  arm6    4.8(0.7)  paired diff +0.2 SE 0.2
+  undead alive @2500                 arm1    4.6(0.8)  arm6    4.8(0.7)  paired diff +0.2 SE 0.2
+  undead alive @5000                 arm1    4.6(0.8)  arm6    4.8(0.7)  paired diff +0.2 SE 0.2
+  undead starved                     arm1    0.0(0.0)  arm6    0.0(0.0)  paired diff +0.0 SE 0.0
+  undead ever-ate                    arm1    0.0(0.0)  arm6    0.0(0.0)  paired diff +0.0 SE 0.0
+  wildlife alive @1000               arm1    1.4(1.0)  arm6    3.4(2.1)  paired diff +2.0 SE 0.7 **>2SE**
+  wildlife alive @2500               arm1    0.0(0.0)  arm6    0.6(0.5)  paired diff +0.6 SE 0.2 **>2SE**
+  wildlife alive @5000               arm1    0.0(0.0)  arm6    0.2(0.4)  paired diff +0.2 SE 0.2
+  wildlife starved                   arm1    1.2(1.2)  arm6    3.0(2.2)  paired diff +1.8 SE 0.8 **>2SE**
+  wildlife ever-ate                  arm1    3.6(1.0)  arm6    3.4(0.5)  paired diff -0.2 SE 0.4
+  tax paid by the poor (gold)        arm1  72.0(26.4)  arm6 123.6(29.3)  paired diff +51.6 SE 4.2 **>2SE**
+  deaths/run arm1 {'COMBAT': 16.8, 'DEFEAT': 11.6, 'HAZARD': 6.0, 'SLEEP_DEPRIVATION': 0.4, 'STARVATION': 15.4}
+  deaths/run arm6 {'COMBAT': 15.2, 'DEFEAT': 8.8, 'HAZARD': 6.0, 'SLEEP_DEPRIVATION': 0.8, 'STARVATION': 20.2}
+
+== urban_political  seeds [42, 43, 44, 45, 46]
+  alive total @1000                  arm1   21.6(1.9)  arm6   22.8(1.7)  paired diff +1.2 SE 0.4 **>2SE**
+  alive total @2500                  arm1    4.4(2.5)  arm6    9.2(5.3)  paired diff +4.8 SE 3.0
+  alive total @5000                  arm1    2.6(1.0)  arm6    4.2(4.2)  paired diff +1.6 SE 1.7
+  heroes_other alive @1000           arm1    2.6(0.5)  arm6    2.8(0.4)  paired diff +0.2 SE 0.3
+  heroes_other alive @2500           arm1    0.4(0.5)  arm6    1.4(1.0)  paired diff +1.0 SE 0.6
+  heroes_other alive @5000           arm1    0.0(0.0)  arm6    0.8(0.7)  paired diff +0.8 SE 0.3 **>2SE**
+  heroes_other starved               arm1    1.8(0.4)  arm6    0.8(0.7)  paired diff -1.0 SE 0.4 **>2SE**
+  heroes_other ever-ate              arm1    0.8(0.7)  arm6    1.6(0.8)  paired diff +0.8 SE 0.5
+  merchants alive @1000              arm1    5.8(1.0)  arm6    5.4(1.4)  paired diff -0.4 SE 0.5
+  merchants alive @2500              arm1    1.2(1.6)  arm6    2.8(1.2)  paired diff +1.6 SE 1.2
+  merchants alive @5000              arm1    0.8(1.0)  arm6    1.4(1.5)  paired diff +0.6 SE 0.8
+  merchants starved                  arm1    2.8(1.2)  arm6    2.0(1.3)  paired diff -0.8 SE 0.5
+  merchants ever-ate                 arm1    2.8(1.3)  arm6    3.4(0.5)  paired diff +0.6 SE 0.8
+  town_guards_scouts alive @1000     arm1    5.4(0.5)  arm6    5.8(0.7)  paired diff +0.4 SE 0.2
+  town_guards_scouts alive @2500     arm1    2.2(0.7)  arm6    2.0(1.1)  paired diff -0.2 SE 0.2
+  town_guards_scouts alive @5000     arm1    1.6(1.0)  arm6    1.2(0.7)  paired diff -0.4 SE 0.2
+  town_guards_scouts starved         arm1    1.6(1.0)  arm6    3.2(1.2)  paired diff +1.6 SE 0.8 **>2SE**
+  town_guards_scouts ever-ate        arm1    3.6(0.8)  arm6    2.6(1.4)  paired diff -1.0 SE 0.7
+  town_workers alive @1000           arm1    7.8(1.2)  arm6    8.8(0.4)  paired diff +1.0 SE 0.6
+  town_workers alive @2500           arm1    0.6(0.8)  arm6    3.0(2.5)  paired diff +2.4 SE 1.4
+  town_workers alive @5000           arm1    0.2(0.4)  arm6    0.8(1.6)  paired diff +0.6 SE 0.8
+  town_workers starved               arm1    3.0(1.8)  arm6    5.2(3.0)  paired diff +2.2 SE 1.3
+  town_workers ever-ate              arm1    4.4(1.6)  arm6    3.4(3.2)  paired diff -1.0 SE 1.0
+  tax paid by the poor (gold)        arm1  44.0(15.2)  arm6  79.0(12.3)  paired diff +35.0 SE 4.3 **>2SE**
+  deaths/run arm1 {'COMBAT': 7.6, 'DEFEAT': 5.2, 'HAZARD': 2.4, 'SLEEP_DEPRIVATION': 3.0, 'STARVATION': 9.2}
+  deaths/run arm6 {'COMBAT': 4.2, 'DEFEAT': 3.8, 'HAZARD': 1.8, 'SLEEP_DEPRIVATION': 4.8, 'STARVATION': 11.2}

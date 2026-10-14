@@ -12,7 +12,9 @@ from src.core.state import AuthoritativeState
 
 # PERF-D5 point 2: the proof digest is named and versioned. A stored or emitted digest of a
 # different scheme is never compared with this one.
-PROOF_DIGEST_SCHEME = "flat-sha256-v1"
+# v2 (TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE): v1 plus the two keys `periodic_due_ticks` and `work_debt`, which were removed from the
+# state; nothing else in the canonical JSON changed, so a v2 digest is not comparable with a v1 digest of the same state.
+PROOF_DIGEST_SCHEME = "flat-sha256-v2"
 
 
 class DigestStatus(str, Enum):
@@ -51,6 +53,12 @@ class HashScheduleViolation(RuntimeError):
     end-of-run (shutdown), or when an explicit sanctioned reason is provided
     ("certification", "audit", "replay"). Any other FULL hash call is a violation.
     """
+
+
+def _canonical_owed(state: AuthoritativeState) -> Dict[str, Any]:
+    """The debts a treasury owes, as the canonical entry `{"owed": {...}}` (EXCH-02); empty when nothing is owed, so a world with no debt hashes as
+    it did before debts existed."""
+    return {"owed": {k: v.to_canonical_dict() for k, v in sorted(state.owed.items())}} if state.owed else {}
 
 
 class CanonicalStateHasher:
@@ -106,6 +114,7 @@ class CanonicalStateHasher:
         data["resource_nodes"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.resource_nodes.items())}
         data["buildings"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.buildings.items())}
         data["corpses"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.corpses.items())}
+        data.update(_canonical_owed(state))
         data["ground_items"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.ground_items.items())}
         data["chests"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.chests.items())}
         data["groups"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.groups.items())}
@@ -113,8 +122,6 @@ class CanonicalStateHasher:
         data["camps"] = {k: v.to_canonical_dict() for k, v in sorted(state.camps.items())}
         
         data["global_resources"] = dict(sorted(state.global_resources.items()))
-        data["periodic_due_ticks"] = dict(sorted(state.periodic_due_ticks.items()))
-        data["work_debt"] = dict(sorted(state.work_debt.items()))
         
         data["blocked_tiles"] = sorted([str(t) for t in state.blocked_tiles])
         data["town_tiles"] = sorted([str(t) for t in state.town_tiles])

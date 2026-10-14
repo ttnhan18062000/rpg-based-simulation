@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, documentation, roadmap]
-last_verified: "2026-10-02"
+last_verified: "2026-10-09"
 ---
 
 # Systemic World Roadmap — PROPOSED / FOR REVIEW
@@ -819,8 +819,8 @@ question above already has a working answer today.
 
 ## 10. Owner decisions
 
-Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has fifteen
-entries:
+Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has
+fifty-one entries (row 27 lands with the decision-27 PR):
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
@@ -836,6 +836,68 @@ entries:
 13. which region a contested point belongs to (decided 2026-10-05: authored precedence, catalog LOC-08);
 14. whether the deferred world-boss branches stay live (decided 2026-10-05: all three inert, flag default OFF, the calamity-gated third branch confirmed);
 15. which deaths count toward regional trauma (decided 2026-10-05: violent causes only, catalog ENV-07).
+16. which way a recruitment contract's movement goes (decided 2026-10-06: the helper joins the task);
+17. how a region's trauma reaches panic (decided 2026-10-06: dread scales to instability, catalog AGENCY-06);
+18. whether attack permission is symmetric (decided 2026-10-06: yes, declared hostility decides, catalog CONFLICT-03);
+19. how long earlier violence keeps a death violent (decided 2026-10-06: the ENV-07 window, parked on its trigger);
+20. whether a diagonal pair is in melee reach (decided 2026-10-06: no, catalog MOV-07);
+21. whether a cautious disposition decides flight by itself (decided 2026-10-07: no, catalog AGENCY-07);
+22. where a subject's needs and drives come from (decided 2026-10-07: body and person, visible defaults, catalog SURV-05 and AGENCY-08);
+23. whether a need must be meetable (decided 2026-10-07: yes, declared ways within reach, catalog SURV-06);
+24. how a need ranks against goal work (decided 2026-10-07: it escalates before its consequence line, catalog SURV-07);
+25. whether positions are whole tiles (decided 2026-10-07: yes, MOV-07 amendment);
+26. whether a subject may start with declared common knowledge about a kind (decided 2026-10-07: yes, catalog KNOW-04);
+27. where a need with no open way pulls (decided 2026-10-07: toward the step that opens one, SURV-07 amendment);
+28. what a fighter does between blows (decided 2026-10-08: holds its ground, catalog CONFLICT-04);
+29. how abundant wild food is (decided 2026-10-08: the land decides by biome, never sized to demand, SURV-06 amendment);
+30. whether settled land or the near wild may kill its people (decided 2026-10-08: no, catalog ENV-08);
+31. how people eat (decided 2026-10-08: by common-sense ways, each with a real cost, SURV-06 amendment);
+32. whether a subject notices a hostile stepping into reach (decided 2026-10-08: yes, and decides, CONFLICT-04 amendment);
+33. how far balancing goes at the foundation stage (decided 2026-10-08: a light, plausible balance pass, not perfection).
+34. how a broke person earns money (decided 2026-10-08: sell, wage, task reward, paid from a real purse, catalog EXCH-02);
+35. whether worlds lack wild land by design (decided 2026-10-08: a frontier needs it, a city may have none, SURV-06 amendment);
+36. how fast starvation kills (decided 2026-10-08: weak first, death over days, SURV-02 amendment);
+37. who holds the first coin (decided 2026-10-09: shop tills and stock, merchants' trade capital, and treasury wages, EXCH-02 amendment);
+38. whether rewards need a payer (decided 2026-10-09: yes, as its own ticket; minting is a recorded exception until then, EXCH-02 amendment);
+39. crowded_frontier's wild land (decided 2026-10-09: a new wolf-free forest-edge module, SURV-06 amendment);
+40. how a craft is learned (decided 2026-10-09: taught by a smith, for a price, over time, catalog LEARN-03);
+41. what extreme sleep debt does (decided 2026-10-09: weaken, then collapse into sleep, no HP loss, SURV-02 amendment);
+42. who the body, need and decision rules cover (decided 2026-10-09: every living kind by default, sized by the kind; people-only rules say so);
+43. who counts as a person for money and town services (decided 2026-10-09: an authored species trait, plus the relationship, EXCH-02);
+44. when the free meal may go (decided 2026-10-09: after predators can hunt and diets are gated, for everyone at once, SURV-06);
+45. whether small, edible animals exist (decided 2026-10-09: add a few generic archetypes declared by coarse properties, SURV-06);
+46. whether predator and prey are labels (decided 2026-10-09: no, roles come from declared properties, SURV-06 amendment);
+47. what decides who hunts, flees or fights (decided 2026-10-09: appraisal for every creature, faction for people, CONFLICT-03);
+48. whether predation is trauma (decided 2026-10-09: a kill made to eat is not, ENV-07);
+49. what makes prey afraid (decided 2026-10-09: what the other is and what it is doing, CONFLICT-03);
+50. how detailed foundation content is (decided 2026-10-09: generic archetypes and coarse bands now; named species and exact figures after the foundation is hardened);
+51. how tax is levied (decided 2026-10-09: a share of income or trade when coin changes hands; no levy on the destitute, EXCH-02).
+52. whether people hunt at milestone 0 (decided 2026-10-09: yes, eating raw kills by the same reading as every creature, SURV-06);
+53. a kind its properties leave with nothing to overcome (decided 2026-10-09: its own description decides; otherwise a scavenger, disclosed; the Cave Spider is one, SURV-06);
+54. the milestone-0 gate (decided 2026-10-09: hard logic checks H1-H7, report-only figures R1-R5 with stop lines to the owner, §12.3).
+55. whether subjects provide for a coming need (decided 2026-10-09: yes, scaled by wits, with storing as a declared habit; the rule is written now and built in milestone 3, SURV-07).
+56. which hunger-cognition gaps are fixed before the milestone-0 gate (decided 2026-10-09: the inn-only target before the gate; true-map knowledge in milestone 1, SURV-07).
+57. how people-kind camps eat (decided 2026-10-09: wild food within the camp's range now, hunting once it lands, the fixed tether replaced by a home range in milestone 1, SURV-06);
+58. how the treasury's coin moves (decided 2026-10-09: a tenth of each sale and wage rounded down, upkeep paid into buildings that pay town wages, one-time repair or a used-up kit, unpaid rewards owed, EXCH-02).
+59. what grazing is (decided 2026-10-10: the land's plant cover, declared per biome with its wild food, and read by all forage and camp food; values decided 2026-10-11: a bite of 20, bands 1/2/4 patches per 1,000 tiles, regrowth 1/2/3 per check, SURV-06);
+60. how much meat a body gives and how often meat-eaters eat (decided 2026-10-10: meat in proportion to size, a meat-eater's full meal lasts at least a day, SURV-06).
+61. who keeps a building up and who pays a quest (decided 2026-10-11: a building pays its own upkeep and the treasury covers only a shortfall; only the real giver pays a quest; coin on a corpse stays where it fell, EXCH-02);
+62. how far faction hostility reaches (decided 2026-10-11: wild creatures go by the appraisal now; monster factions keep faction hostility until milestone 1, when each monster kind declares why it fights, CONFLICT-03);
+63. what a hero is (decided 2026-10-11: a person doing adventuring work, not a kind or a role; the guild is an organization people join, ID-02);
+64. whether hunger wakes a sleeper (decided 2026-10-11: yes; a collapse first holds until the debt is back below its line, SURV-07);
+65. whether bodies heal outside towns (decided 2026-10-11: slowly everywhere, twice as fast at rest, none while starving; placeholders until milestone 1, SURV-02);
+66. how upkeep work is capped (decided 2026-10-11: upkeep shifts capped at need and the only ones the treasury tops up; business shifts from the building's own purse; 1 shift a period, 3 for the town hall, EXCH-02);
+67. why wild herds die out (decided 2026-10-13: nothing is born; reported in milestone 0, basic wild births in milestone 1, ECOL-03);
+68. what a town refuses service on (decided 2026-10-13: the trade trait only in milestone 0; later, a record the place holds or a mark it can see, never a faction label; strangers are served, EXCH-02);
+69. what the live map shows (decided 2026-10-13: the same authored world the gate runs, no hard-coded spawns; places shown through a presenter read-model);
+70. camps that spawn members from nothing (decided 2026-10-13: removed before baseline v1 as its own measured step; camps refill only by births in milestone 1 and later by recruits, ECOL-03);
+71. the conquest stronghold (decided 2026-10-13: the body built from nothing is removed before baseline v1; a region still changes hands and is freed as its influence recovers; conquest's causes wait for caused war and peace, ECOL-03);
+72. terrain movement cost (decided 2026-10-13: declared per terrain in content, a missing one is an error; fixed before baseline v1 as its own measured step, MOV-04);
+73. what a paid inn meal gives once the free part goes (decided 2026-10-13: 60 hunger for 5 gold, paid atomically or refused, SURV-06).
+74. which species the species-less people get (decided 2026-10-13: human, one per recipe, from each role archetype; other peoples later as their own recipes; before v1, SURV-06).
+75. what the terrain cost does (decided 2026-10-14: a step costing N takes N times as long, and routes weigh the cost; before v1, time then route, each measured alone; MOV-04).
+76. how the steps before the milestone-0 gate are measured (decided 2026-10-14: once at fold; a cumulative watch with a stop-and-ask trigger; byte-identical proof for neutral steps and reused arms; §12.3).
+77. what SimQ grades once rebuilt (decided 2026-10-14: outcome measures from the paired table; NARRATIVE retired; COGNITION and INFORMATION no-data until milestone 1; after v1).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -970,6 +1032,200 @@ Implementation detail is deliberately left out.
    *Owner*: this planning session, subject to the owner's acceptance of the direction.
 
 ---
+
+## 12. Foundation path (confirmed by the owner, 2026-10-09)
+
+The owner confirmed milestones 1 to 3 below as the path for hardening the foundation. Milestones
+for a closed economy and a living society were proposed and judged too abstract for the current
+stage. They are recorded at the end as not planned. The source is rpg-designer's forward design
+(published for the owner as "Living World Foundation"), built from four read-only audits of the
+rule catalog and of species content and behaviour code at `df827d945`.
+
+### 12.1 What the audits found (six patterns)
+
+1. **Kinds are labels, not properties.** A species declares a body name, a need-profile name, a
+   binary `intelligence_tier` and free-text traits; it has no size, power, diet, edibility,
+   speed, activity period, group habit or coin-keeping (`src/content/schema.py:156-178`). About
+   100 sites read the `EntityRole` enum. Hostility comes from faction buckets
+   (`src/content_semantics/faction.py:149-174`). `kind` means a role for compiled entities and a
+   species for spawned ones (`src/worldbuilding/compiler.py:688`). Levelling changes species by a
+   table (`src/engine/evolution.py`).
+2. **Things appear from nothing.**
+   - Creatures: the density refill (`src/world/spawn.py`), camp spawning every 30 ticks
+     (`src/world/camp.py:62-77`), raids, and strongholds (`src/world/influence.py`).
+   - Coin: on spawned bodies (`src/systems/world_systems/generator.py`), kill and quest rewards,
+     and the building tax.
+   - Goods: paid inn meals consume no food, ore and stone regrow and are seeded
+     (`src/world/ecology.py:115-150`), and inheritance may copy goods (`lifecycle.py:277-286`).
+3. **Needs with no way.** There is no HP recovery at all (BODY-05). Cooking has no fuel rule.
+   Rough sleep has no shelter rule.
+4. **Supply chains that don't close.** Shop stock, inn food, treasury income, guard pay and
+   equipment end of life (outside this path, see 12.4).
+5. **Blind spots in noticing and deciding.**
+   - "Can overcome" reads true stats (`src/domains/combat_engagement/power.py:58`).
+   - Perception falls back to human senses (`src/world/perception/gate.py:190`), and every body
+     emits the same signals (`src/engine/behavior_consumers.py:79-97`).
+   - One night window applies to every kind (`src/systems/world_systems/routine.py:35`).
+   - Hazard tolerance is per faction.
+6. **Society runs on labels** (outside this path, see 12.4).
+
+### 12.2 The kind property model (coarse first, decision 50)
+
+Every kind declares properties that behaviour reads instead of names:
+- body size;
+- power and danger, kept separate from folk belief (KNOW-04);
+- wits;
+- diet;
+- edibility and yield;
+- speed;
+- temperament;
+- group habit;
+- home range;
+- activity period;
+- senses and emitted signals;
+- hazard tolerance;
+- reproduction;
+- keeps coin and trades (decision 43).
+
+At this stage each is a band (small / medium / large, low / medium / high) or a short category
+list, and kinds are generic archetypes. Exact figures, individual variation and named species
+come after the foundation is hardened. One appraisal (can I eat it, can it eat me, can I
+overcome it), estimated from senses and wits, serves hunting, fleeing and wariness (decisions
+46-49). Role names stay as display labels only.
+
+### 12.3 Milestones
+
+0. **Finish what is in flight.**
+   - Earning: selling and inn wages (Lane B batch 2).
+   - The treasury batch: wages, payer-funded rewards, the tax share (decisions 37, 38, 51;
+     ME-S21 to ME-S23).
+   - Hunting with diet and generic plant-eaters (decisions 44-50; LB-S20, LB-S21).
+   - Sleep collapse (decision 41; LB-S19).
+
+   Done when broke workers earn and eat in all three measured worlds, meat-eaters eat what they
+   kill, and nobody is fed for free. Then the free meal goes, for every kind at once (decision
+   44).
+
+   **The gate as observable conditions (decided by the owner directly, 2026-10-09; memo row 54).**
+   Three worlds, five seeds each, governor pinned NORMAL. Two arms: the free meal on and the free
+   meal off for every kind. The hard checks are read on the off arm.
+   - A *broke worker* is a subject of a kind that keeps coin and trades (decision 43) that starts
+     the run with no coin and no food. Fix the list from the start state.
+   - A *way* to eat is gathering, hunting and eating raw, buying, or receiving. Selling and wages
+     are ways to get coin, not food.
+
+   Hard pass (every world; seeds pooled per world):
+   - H1 **earn:** a broke worker receives coin by selling or a wage, debited from the payer's
+     purse (EXCH-02). Minted kill or quest coin does not count.
+   - H2 **eat by a real way:** broke workers eat by at least one way that is not free; the mix is
+     reported. A city may be buy-only (decision 35).
+   - H3 **nobody fed free:** zero food eaten without a source item, for every kind.
+   - H4 **diets hold:** zero inn meals for kinds that do not keep coin and trade, and zero plant
+     forages by kinds that eat only meat.
+   - H5 **meat-eaters eat their kills:** where a meat-eating group and something it can overcome
+     both live, at least one kill made to eat (decision 48) whose meat is eaten, per group. Kinds
+     that can overcome nothing yet (SURV-06, memo row 53, e.g. the Cave Spider) are exempt and
+     listed.
+   - H6 **no starvation beside an untried way:** zero broke-worker starvation deaths whose
+     death record shows a way judged open and in reach that was never attempted. It is read from
+     a typed starvation-death record (way ids from SURV-06, every kind), which lands before the
+     gate run. Without that record, H6 is report-only and the gate cannot pass. The record lists
+     both the ways the subject's pull judged open and in reach, and the ways truly in reach. H6 is
+     judged on the first; a way the subject did not know of is reported, never a failure (memo
+     row 56). Before the gate run, the pull aims at the nearest open way, not always the inn.
+   - H7 **conservation:** the coin and food invariants are green on both arms.
+
+   Report-only. A crossed stop line goes to the owner for a ruling; it is not an automatic fail,
+   and values are never tuned to pass it (decision 33):
+   - R1 broke-worker starvation, off against on, with mean (SD) and paired SE. Stop if off is
+     worse by more than 2 SE in any world.
+   - R2 population and starvation per kind group (decision 42). Stop if a kind dies out in
+     every seed of a world where it was placed.
+   - R3 meat-eater attacks on people, against the free-meal arm and the pre-hunting main.
+   - R4 minted kill and quest coin, and treasury balances (decision 38's exception).
+   - R5 the mix of ways per world and kind group.
+
+   How the steps before the gate are measured (decision 76, owner, 2026-10-14):
+   - **Once, at fold:** a step is measured once, against its parent, when it lands. A later
+     change of order re-runs it only if the new parent touches the same readers or writers.
+   - **A cumulative watch:** a running table, measured against the pre-milestone base, carries
+     people deaths per seed, extinctions and starvation. Work stops and the owner is asked when
+     the cumulative people-death drift passes 2 SE and its floor, or a kind dies out in every
+     seed of a world. A single step's drift stays report-only.
+   - **Tiered cost:** a step claimed neutral needs byte-identical proof only. A behaviour step
+     keeps 3 worlds, 5 seeds and 5,000 ticks per arm. Step N's child arm is step N+1's parent
+     arm, cached by commit. Runs keep summaries, not full logs.
+1. **Kinds by properties.**
+   - The property model in coarse bands, as schema and content.
+   - The appraisal.
+   - `kind` always means species, and occupation is a separate field.
+   - Honest perception defaults (each kind's own senses; signals follow the body).
+   - Food and other places are found from what the subject perceives, remembers or was told,
+     not from the true map (decision 56).
+   - An activity period per kind, and hazard tolerance per body.
+   - Retire behaviour that branches on role, kind or faction names, in stages, measured each time.
+     This includes the fixed camp tether, replaced by a home range (decision 57).
+   - Each monster kind declares why it fights (the undead hate the living, a spirit guards a
+     place, a troll hunts by diet), which replaces faction hostility for monsters (decision 62).
+   - A hero is a person doing adventuring work: retire the hero role and the hero-guild faction
+     as kinds of being, and make the guild a membership people join and leave (decision 63).
+   - Basic wild births: a well-fed creature with a mate of its kind nearby has young at a rate
+     its kind declares, and the young must eat, so food and hunting set the numbers (decision
+     67). Births cover every living kind, people-kinds in camps included, since camps no longer
+     spawn members from nothing (decision 70). Packs, herds and territory stay in §12.4.
+   - Who a place refuses: a town refuses service on a record it holds against this person or a
+     mark it can see, never on a faction label; strangers are served (decision 68). It depends on
+     per-subject records, and is measured against baseline v1.
+
+   Done when no decision reads a role, kind or faction name, a new kind works from content alone,
+   and a probe finds no name switch left in a decision path.
+2. **Nothing from nothing.**
+   - Creatures come only from births or declared world creation, for every kind; a camp is where
+     a kind lives and breeds.
+   - Individual births and deaths drive population figures (ECOL-03).
+   - No coin on spawned bodies, and treasury income only from real purses (decision 51).
+   - Every fee has a payee, and inn meals draw from stock.
+   - Ore and stone do not regrow; new deposits come only by discovery.
+   - Inheritance moves goods instead of copying them.
+
+   Done when a long-run conservation ledger balances for coin, food, goods and creatures, with
+   every change traced to a cause.
+3. **Bodies heal, food ends, fire cooks.**
+   - Ways to recover per kind (treatment, potions consumed; rest and time already heal at a
+     placeholder rate since decision 65). Decide whether a town tile should heal for free.
+   - Corpse fate: butchery, scavenging, rot, burial.
+   - Spoilage by food type, with cooking and drying to preserve.
+   - Fire needs fuel and a place.
+   - Providing for a coming need (decision 55, SURV-07): eating or packing food before leaving
+     the reach of one's ways, and stores for kinds that keep them, scaled by wits.
+   - Water, cold and disease are recorded as explicit "not yet" choices; shelter and cold come
+     first if rough sleep proves too easy.
+
+   Done when a resting wounded creature recovers, a hunt's meat spoils unless used, a cooked
+   meal fills more than a raw one, and a person who sets out beyond its ways takes food with it.
+
+**How the path runs:**
+- Each milestone's rule work (catalog text, kernel specs) is done before its code.
+- Its owner-level choices come to the owner as questions with options and a recommendation when
+  the milestone starts. Proposed recommendations are in the forward design; none is ruled yet.
+- One milestone PR per milestone.
+
+**Standing checks the path adds (proposed):**
+- a long-run conservation ledger (milestone 2's gate);
+- a "no name checks in decision code" probe (milestone 1's gate);
+- survival reported by kind group (town folk, wildlife, raiders) in every lane measurement.
+
+### 12.4 Not planned at this stage
+
+Judged by the owner too abstract for now (2026-10-09). They are listed so the gaps stay visible,
+not as commitments:
+- a closed economy: supply chains for shop and inn stock, hiring as the source of occupation,
+  paid guards, treasury insolvency, equipment end of life, repair with materials;
+- a living society and wild: packs and herds, territory, households, theft, caused war and peace,
+  control by presence, and settlement growth by births and migration.
+
+The rules already decided for these areas (EXCH-02's selling, wages and tax; LEARN-03's taught
+crafts) stay in force. Only further design waits.
 
 ## Appendix: External review response log (historical)
 

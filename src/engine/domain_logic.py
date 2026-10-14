@@ -55,15 +55,6 @@ class SimulationDomainLogic:
             entity, payload, current_tick, neighbor_view, context
         )
     @staticmethod
-    def drain_debt(owner_id: str, profile) -> int:
-        """
-        Milestone C Law: Authoritative Drain Logic.
-        Determines how much work debt is cleared in a single execution unit.
-        """
-        # owner_id is the subsystem name (e.g. "REPLAY", "KERNEL")
-        return -profile.max_worker_count
-
-    @staticmethod
     def get_neighbor_view(
         state: AuthoritativeState,
         subject: EntityState, 

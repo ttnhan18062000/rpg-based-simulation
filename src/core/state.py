@@ -18,6 +18,7 @@ from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
 from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent, ItemInstance, AcquiredMethod
 from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
+from src.core.models.world_records import CorpseState, GroundItemState, OwedRecord  # noqa: F401  (re-exported: state.py is where callers import them from)
 from src.core.immutability import shallow_freeze
 from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
@@ -299,6 +300,9 @@ class RegionState:
     # decision (see PlaceState.region_id for the back-reference half). A Region can hold
     # zero or many Places.
     places: List[str] = field(default_factory=list)
+    # EXCH-02 (decision 51): the share of a sale or a wage in this region paid to the owner's treasury, rounded down per transaction. Declared
+    # content (`default_tax_share`), set at compile for a region someone holds; 0.0 taxes nothing.
+    tax_share: float = 0.0
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -326,6 +330,8 @@ class RegionState:
             "service_availability": self.service_availability,
             "places": list(self.places),
         }
+        if self.tax_share:
+            res["tax_share"] = self.tax_share
         object.__setattr__(self, "_canonical_cache", res)
         return res
 
@@ -1195,6 +1201,7 @@ class ResourceNodeState:
     respawn_cooldown: int = 100
     cooldown_remaining: int = 0
     regen_rate_per_tick: int = 0  # charges regenerated per ecology tick (0 = no regen)
+    regrowth_mode: str = "none"  # declared by the kind: "regrow" waits ``respawn_cooldown`` ticks bare after being emptied, then regrows from zero
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
     _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -1216,57 +1223,10 @@ class ResourceNodeState:
             "cooldown_remaining": self.cooldown_remaining,
             "regen_rate_per_tick": self.regen_rate_per_tick,
         }
+        if self.regrowth_mode != "none":
+            res["regrowth_mode"] = self.regrowth_mode  # left out for the default so every existing node hashes as before
         object.__setattr__(self, "_canonical_cache", res)
         return res
-
-@dataclass(frozen=True, slots=True)
-class GroundItemState:
-    """An item dropped on the ground."""
-    id: int
-    item_id: str
-    quantity: int
-    position: tuple[float, float]
-    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
-    _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
-
-    def __post_init__(self):
-        object.__setattr__(self, "_readonly_cache", self)
-
-    def to_canonical_dict(self) -> Dict[str, Any]:
-        if self._canonical_cache is not None:
-            return self._canonical_cache
-        res = {
-            "id": self.id,
-            "item_id": self.item_id,
-            "quantity": self.quantity,
-            "position": self.position
-        }
-        object.__setattr__(self, "_canonical_cache", res)
-        return res
-
-@dataclass(frozen=True, slots=True)
-class CorpseState:
-    """A dead entity that can be looted."""
-    id: int
-    original_entity_id: int
-    position: tuple[float, float]
-    items: List[ItemStack]
-    decay_tick: int
-    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
-
-    def to_canonical_dict(self) -> Dict[str, Any]:
-        if self._canonical_cache is not None:
-            return self._canonical_cache
-        res = {
-            "id": self.id,
-            "original_entity_id": self.original_entity_id,
-            "position": self.position,
-            "items": [i.to_canonical_dict() for i in sorted(self.items, key=lambda x: x.item_id)],
-            "decay_tick": self.decay_tick,
-        }
-        object.__setattr__(self, "_canonical_cache", res)
-        return res
-
 
 @dataclass(frozen=True, slots=True)
 class ChestState:
@@ -1307,6 +1267,12 @@ class BuildingState:
     # region/place containment tracking as a state field at all -- this is new,
     # not a mirror of a pre-existing region_id (none existed).
     place_id: Optional[str] = None
+    # EXCH-02, ruling 61 (upkeep in work): the shifts of maintenance work the building needs each upkeep period (copied from its content
+    # declaration at compile) and the shifts done in the current period (reset at each upkeep period, ``TownResolutionSystem``).
+    maintenance_shifts_needed: int = 0
+    maintenance_shifts_done: int = 0
+    # Commercial paid work (content ``hires_for_pay``, ruling 66): a shift is paid from the building's own purse only.
+    hires_for_pay: bool = False
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -1322,6 +1288,9 @@ class BuildingState:
             "inventory": self.inventory.to_canonical_dict(),
             "price_modifiers": dict(sorted(self.price_modifiers.items())),
             "place_id": self.place_id,
+            "maintenance_shifts_needed": self.maintenance_shifts_needed,
+            "maintenance_shifts_done": self.maintenance_shifts_done,
+            "hires_for_pay": self.hires_for_pay,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
@@ -1383,6 +1352,7 @@ class AuthoritativeState:
     resource_nodes: Dict[int, ResourceNodeState] = field(default_factory=dict)
     ground_items: Dict[int, GroundItemState] = field(default_factory=dict)
     corpses: Dict[int, CorpseState] = field(default_factory=dict)
+    owed: Dict[str, OwedRecord] = field(default_factory=dict)  # debts a treasury could not pay (EXCH-02), keyed by record id
     chests: Dict[int, ChestState] = field(default_factory=dict)
     buildings: Dict[int, BuildingState] = field(default_factory=dict)
     camps: Dict[str, CampState] = field(default_factory=dict)
@@ -1422,8 +1392,6 @@ class AuthoritativeState:
     global_resources: Dict[str, float] = field(default_factory=dict)
     home_storage: Dict[int, InventoryComponent] = field(default_factory=dict) # Milestone 5
     town_center: tuple[float, float] = (0.0, 0.0) # Milestone 7
-    periodic_due_ticks: Dict[str, int] = field(default_factory=dict)
-    work_debt: Dict[str, int] = field(default_factory=dict)
     movement_count: int = 0  # Milestone 2: Throughput truth
     maturity: int = 0
     last_calamity_tick: int = 0
@@ -1596,6 +1564,7 @@ class AuthoritativeState:
             entities=ro_entities,
             resource_nodes=ReadOnlyDict(self.resource_nodes),
             corpses=ReadOnlyDict(self.corpses),
+            owed=ReadOnlyDict(self.owed),
             chests=ReadOnlyDict(self.chests),
             buildings=ReadOnlyDict(self.buildings),
             camps=ReadOnlyDict(self.camps),
@@ -1610,8 +1579,6 @@ class AuthoritativeState:
             groups=shallow_freeze(self.groups),
             terrain=shallow_freeze(self.terrain),
             global_resources=shallow_freeze(self.global_resources),
-            periodic_due_ticks=shallow_freeze(self.periodic_due_ticks),
-            work_debt=shallow_freeze(self.work_debt),
             blocked_tiles=shallow_freeze(self.blocked_tiles),
             town_tiles=shallow_freeze(self.town_tiles),
             building_tiles=shallow_freeze(self.building_tiles),

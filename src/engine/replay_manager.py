@@ -37,6 +37,7 @@ class ReplayManager:
         replay_mode: ReplayMode = ReplayMode.DEBUG_WINDOWED,
         rotation_threshold: float = 0.9,
         max_pending_flushes: int = 2,
+        signal_contract: Optional[Dict[str, str]] = None,
     ):
         self._run_dir = run_dir
         self._profile_name = profile_name
@@ -62,6 +63,8 @@ class ReplayManager:
             "chunks": [],
             "status": "IN_PROGRESS"
         }
+        if signal_contract is not None:
+            self._manifest["signal_contract"] = signal_contract
 
         # M7 Law: Replay IO MUST NOT block the kernel heart-beat.
         # Background executor for non-blocking persistence.

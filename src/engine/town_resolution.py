@@ -1,27 +1,23 @@
 # Compliance IDs: TOWN-015, TOWN-018, TOWN-019
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple, List
-from dataclasses import replace
 
-from src.core.updates import EntityUpdate, IdentityUpdate, CombatUpdate, BiologicalUpdate
+from dataclasses import replace
+from typing import TYPE_CHECKING, Dict
+
 from src.core.enums import Faction
-from src.engine.service_reach import service_at
+from src.core.treasury import treasury_key
+from src.core.updates import (
+    BuildingUpdate,
+    CombatUpdate,
+    EntityUpdate,
+    InventoryUpdate,
+)
+from src.engine.work_shift import WAGE_GOLD
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState, EntityState
+    from src.core.state import AuthoritativeState, BuildingState
     from src.core.updates import StateUpdate
     from src.engine.cadence import SystemCadence
-
-# The building kinds that serve an action; an action absent here accepts any building in reach.
-SERVICE_KINDS = {"REST": frozenset({"inn", "home"}), "EAT": frozenset({"inn"})}
-
-
-def _service_request(state: Any, tile: Tuple[int, int], task: Any) -> Tuple[Optional[str], Tuple[int, int], Optional[str]]:
-    """(action, service tile, building kind) for an ENTITY_ACT task; the building is chosen by the action's kinds."""
-    action = task.payload_set.get("action") if task and task.work_kind_set == "ENTITY_ACT" else None
-    service_pos, building_type = service_at(state, tile, SERVICE_KINDS.get(action) if action else None)
-    return action, service_pos, building_type
-
 
 class TownResolutionSystem:
     """
@@ -35,10 +31,9 @@ class TownResolutionSystem:
         Detect entities in town and apply general passive laws (Healing).
         Also handles regional taxation and maintenance.
         """
+        from src.domains.world_emergence.schema import WorldEventCategory
         from src.engine.cadence import SystemCadence as DefaultCadence
         from src.engine.spatial_query import SpatialQueryService
-        from src.core.updates import ResourceTransferIntent, BuildingUpdate
-        from src.domains.world_emergence.schema import WorldEventCategory
 
         cadence = cadence or DefaultCadence()
 
@@ -70,7 +65,7 @@ class TownResolutionSystem:
         is_tax_tick = (state.tick % (cadence.town_resolution * 2) == 0)
         
         # Pre-cache faction keys for faster resource lookup
-        faction_keys: Dict[int, str] = {f: f"faction_{f.name.lower()}_gold" for f in Faction}  # RegionState.owner_faction_id is an int
+        faction_keys: Dict[int, str] = {f: treasury_key(f) for f in Faction}  # RegionState.owner_faction_id is an int; one key scheme (src/core/treasury.py)
         
         # Pre-filter regions with effects
         regions_with_effects = [r for r in state.regions.values() if r.owner_faction_id is not None or r.suppression_active]
@@ -95,7 +90,7 @@ class TownResolutionSystem:
             if ent_upd.new_position:
                 pos = ent_upd.new_position
             
-            # --- Part A: Town Logic (Healing, Services) ---
+            # --- Part A: Town Logic (Healing). Building services (bed, meal, sale) land with their action: building_services.py ---
             tile_pos = (int(pos[0]), int(pos[1]))
             if tile_pos in state.town_tiles:
                 # Healing
@@ -104,48 +99,10 @@ class TownResolutionSystem:
                     ent_upd = replace(ent_upd, combat=cb_upd.merge(CombatUpdate(hp_delta=PASSIVE_HEAL_AMT)))
                     refined_entity_updates[e_id] = ent_upd
 
-                # Building Services (Rest, Eat)
-                action, service_pos, building_type = _service_request(state, tile_pos, ent_upd.task)
-                if building_type and action:
-                    if action in ("REST", "EAT", "GATHER_INTEL"):
-                        building = SpatialQueryService.get_building_at(state, service_pos)
-                        if building and building.functional:
-                            if action == "REST" and building_type in ("inn", "home"):
-                                cb_upd = ent_upd.combat or CombatUpdate()
-                                bio_upd = ent_upd.biological or BiologicalUpdate()
-                                intent = ResourceTransferIntent(source_id=building_type.upper(), source_kind="TOWN_SERVICE", gold_delta=-10, transfer_kind="REST", is_group_required=True)
-                                ent_upd = replace(ent_upd,
-                                    combat=cb_upd.merge(CombatUpdate(hp_delta=5)),
-                                    readiness_delta=ent_upd.readiness_delta + 10.0,
-                                    biological=replace(bio_upd, sleep_debt_delta=bio_upd.sleep_debt_delta - 5.0),
-                                    resource_transfers=list(ent_upd.resource_transfers) + [intent]
-                                )
-                                refined_entity_updates[e_id] = ent_upd
-                            elif action == "EAT" and building_type == "inn":
-                                bio_upd = ent_upd.biological or BiologicalUpdate()
-                                intent = ResourceTransferIntent(source_id="INN", source_kind="TOWN_SERVICE", gold_delta=-5, transfer_kind="EAT", is_group_required=True)
-                                ent_upd = replace(ent_upd,
-                                    biological=replace(bio_upd, hunger_delta=bio_upd.hunger_delta - 20.0),
-                                    resource_transfers=list(ent_upd.resource_transfers) + [intent]
-                                )
-                                refined_entity_updates[e_id] = ent_upd
-
             # --- Part B: Regional Effects (Tax, Suppression) ---
             if has_regional_effects:
                 region = SpatialQueryService.get_region_at(state, pos)
                 if region:
-                    # Taxation
-                    if is_tax_tick and region.owner_faction_id is not None:
-                        if entity.identity.faction != region.owner_faction_id:
-                            tax_to_pay = min(entity.inventory.gold, 2.0)
-                            if tax_to_pay > 0:
-                                intent = ResourceTransferIntent(source_id=f"tax_{region.id}", source_kind="TAX", gold_delta=-tax_to_pay, transfer_kind="TAX")
-                                ent_upd = replace(ent_upd, resource_transfers=list(ent_upd.resource_transfers) + [intent])
-                                refined_entity_updates[e_id] = ent_upd
-                                
-                                f_key = faction_keys[region.owner_faction_id]
-                                new_resource_updates[f_key] = new_resource_updates.get(f_key, 0.0) + tax_to_pay
-
                     # Suppression
                     if region.suppression_active and entity.identity.faction != region.owner_faction_id:
                         cb_upd = ent_upd.combat or CombatUpdate()
@@ -158,45 +115,67 @@ class TownResolutionSystem:
                         )
                         refined_entity_updates[e_id] = ent_upd
 
-        # 4. Building Taxation & Maintenance
+        # 4. Upkeep (EXCH-02, decisions 51 and 58). There is no periodic levy and no coin is minted here: each building meets its upkeep from its own purse (the coin
+        # leaves it only as wages, work_shift.py, and tax); the treasury of the faction that holds the ground tops up only a shortfall. A building
+        # neither can pay is disabled and offers no work; it opens again when it can pay.
+        new_owed_remove = list(update.owed_remove)
         if is_tax_tick:
-            # Building Taxes
-            for building in state.buildings.values():
-                if building.functional:
-                    region = SpatialQueryService.get_building_region(state, building.id)
-                    if region and region.owner_faction_id is not None:
-                        f_key = faction_keys[region.owner_faction_id]
-                        new_resource_updates[f_key] = new_resource_updates.get(f_key, 0.0) + 10.0
-            
-            # Building Maintenance
-            MAINTENANCE_COST = 5.0
-            faction_maintenance: Dict[int, float] = {}
-            faction_buildings: Dict[int, List[int]] = {}
-            
-            for b_id, building in state.buildings.items():
-                if not building.functional: continue
+            # Debts first (decision 58): a treasury pays what it owes, oldest first, before it spends on upkeep; the queue waits at the first
+            # debt it cannot meet. A creditor that has died is written off (no coin moves: it would have nobody to receive it).
+            for rec in sorted(state.owed.values(), key=lambda o: (o.posted_tick, o.id)):
+                if rec.id in new_owed_remove:
+                    continue
+                creditor = state.entities.get(rec.creditor_id)
+                if creditor is None or not creditor.combat.alive:
+                    new_owed_remove.append(rec.id)
+                    continue
+                key = faction_keys[rec.debtor_faction]
+                if state.global_resources.get(key, 0.0) + new_resource_updates.get(key, 0.0) < rec.amount:
+                    break
+                new_resource_updates[key] = new_resource_updates.get(key, 0.0) - rec.amount
+                held = refined_entity_updates.get(rec.creditor_id, EntityUpdate(entity_id=rec.creditor_id))
+                credit = InventoryUpdate(gold_delta=rec.amount)
+                refined_entity_updates[rec.creditor_id] = replace(held, inventory=held.inventory.merge(credit) if held.inventory else credit)
+                new_owed_remove.append(rec.id)
+
+            for b_id in sorted(state.buildings):
+                building = state.buildings[b_id]
+                if building.maintenance_shifts_done:  # a new upkeep period: the count of maintenance shifts starts again (EXCH-02, ruling 61)
+                    reset = BuildingUpdate(building_id=b_id, maintenance_shifts_done_set=0)
+                    held_building = refined_building_updates.get(b_id)
+                    refined_building_updates[b_id] = held_building.merge(reset) if held_building is not None else reset
+                if not building.functional and building.hp <= 0:
+                    continue  # wrecked (sabotage), not merely unpaid: upkeep does not reopen a ruin
                 region = SpatialQueryService.get_building_region(state, b_id)
-                if region and region.owner_faction_id is not None:
-                    fid = region.owner_faction_id
-                    faction_maintenance[fid] = faction_maintenance.get(fid, 0.0) + MAINTENANCE_COST
-                    faction_buildings.setdefault(fid, []).append(b_id)
-            
-            # Apply Maintenance
-            for fid, total_cost in faction_maintenance.items():
-                f_key = faction_keys[fid]
-                current_vault = state.global_resources.get(f_key, 0.0) + new_resource_updates.get(f_key, 0.0)
-                
-                if current_vault >= total_cost:
-                    new_resource_updates[f_key] = new_resource_updates.get(f_key, 0.0) - total_cost
-                else:
-                    # Insolvency: Disable buildings
-                    for b_id in faction_buildings[fid]:
-                        b_upd = refined_building_updates.get(b_id, BuildingUpdate(building_id=b_id))
-                        refined_building_updates[b_id] = replace(b_upd, functional_set=False)
+                if not (region and region.owner_faction_id is not None):
+                    continue
+                fid = region.owner_faction_id
+                key = faction_keys[fid]
+                _meet_upkeep(building, key, state.global_resources, new_resource_updates, refined_building_updates)
 
         return replace(update,
             entity_updates=refined_entity_updates,
             resource_updates=new_resource_updates,
             building_updates=refined_building_updates,
             metric_counters=new_metric_counters,
+            owed_remove=new_owed_remove,
         )
+
+
+def _meet_upkeep(building: "BuildingState", key: str, treasury_balances: Dict[str, float], resource_updates: Dict[str, float],
+                 building_updates: Dict[int, BuildingUpdate]) -> None:
+    """One building's upkeep (decision 58, ruling 61): met from its OWN purse, which is only checked (nothing is paid out to a payee); the owning
+    treasury (`key`) tops up ONLY a shortfall; a building neither can pay is closed, and it reopens when it can."""
+    shortfall = max(0, building.maintenance_shifts_needed * WAGE_GOLD - building.inventory.gold)  # upkeep is shifts times the wage (ruling 66)
+    b_upd = building_updates.get(building.id, BuildingUpdate(building_id=building.id))
+    if shortfall and treasury_balances.get(key, 0.0) + resource_updates.get(key, 0.0) < shortfall:
+        building_updates[building.id] = replace(b_upd, functional_set=False)
+        return
+    if shortfall:
+        resource_updates[key] = resource_updates.get(key, 0.0) - shortfall
+        credit = InventoryUpdate(gold_delta=shortfall)
+        b_upd = replace(b_upd, inventory=b_upd.inventory.merge(credit) if b_upd.inventory else credit)
+    if not building.functional:
+        b_upd = replace(b_upd, functional_set=True)  # paid: a closed but standing building opens again
+    if shortfall or not building.functional:
+        building_updates[building.id] = b_upd

@@ -20,8 +20,10 @@ Checks (each finding names its ticket or path):
   shards           no per-batch `<id>.{runs,events,tools,working_log}.jsonl` shard left for a finished ISO week
   cited_evidence   every backticked `agent-working/stored_artifacts/...` file path a closed ticket cites exists at the ref
                    (a trailing `:LINE` is stripped; a directory citation ending in `/` is skipped)
-  duplicate_runs   `duplicate_run_record_check.check_duplicate_run_records` over the ref's run rows
-  event_seq        `event_seq_integrity_check.find_seq_duplicates_and_gaps` over the ref's event rows
+  duplicate_runs   `duplicate_run_record_check.check_duplicate_run_records` over the ref's run rows; a torn
+                   (unparseable) runs line is named `<path>:<lineno>: invalid JSON, skipped`, a non-dict line is ignored
+  event_seq        `event_seq_integrity_check.find_seq_duplicates_and_gaps` over the ref's event rows; torn and
+                   non-dict events lines are handled the same way
 
 Report-only: prints findings, exits 0 unless `--strict` is passed (local use). Repairs nothing.
 `--since-date YYYYMMDD` limits the ticket-based checks to tickets whose id date is on or after it.
@@ -104,13 +106,20 @@ def check_working_log(reader: RefReader, since_date: str | None) -> list[str]:
     if f"{posix(TICKETS)}/working_log.csv" in reader.paths:
         for row in csv.DictReader(io.StringIO(reader.show(f"{posix(TICKETS)}/working_log.csv"))):
             add(row)
-    for p in reader.paths:
+    findings = []
+    for p in sorted(reader.paths):
         m = _SHARD_RE.match(p)
         if m and m.group(2) == "working_log":
-            for line in reader.show(p).splitlines():
-                if line.strip():
-                    add(json.loads(line))
-    findings = []
+            for lineno, line in enumerate(reader.show(p).splitlines(), 1):
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except ValueError:
+                    findings.append(f"{p}:{lineno}: invalid JSON, skipped")
+                    continue
+                if isinstance(row, dict):
+                    add(row)
     for tid, path in _closed_tickets(reader, since_date):
         rows = rows_by_ticket.get(tid, [])
         if _EPIC_TIER_RE.search(reader.show(path)):
@@ -163,28 +172,34 @@ def check_cited_evidence(reader: RefReader, since_date: str | None) -> list[str]
     return findings
 
 
-def _load_rows(reader: RefReader, kind: str) -> list[dict]:
-    rows = []
+def _load_rows(reader: RefReader, kind: str) -> tuple[list[dict], list[str]]:
+    rows, torn = [], []
     for p in sorted(reader.paths):
         if re.match(rf"^{re.escape(posix(AGENT_MONITORING))}/data/[^/]+/(?:[^/]+\.)?{kind}\.jsonl$", p):
-            for line in reader.show(p).splitlines():
-                if line.strip():
-                    try:
-                        rows.append(json.loads(line))
-                    except ValueError:
-                        pass
-    return rows
+            for lineno, line in enumerate(reader.show(p).splitlines(), 1):
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except ValueError:
+                    torn.append(f"{p}:{lineno}: invalid JSON, skipped")
+                    continue
+                if isinstance(row, dict):
+                    rows.append(row)
+    return rows, torn
 
 
 def check_duplicate_runs(reader: RefReader) -> list[str]:
     from duplicate_run_record_check import check_duplicate_run_records
-    return [r["evidence"] for r in check_duplicate_run_records(runs=_load_rows(reader, "runs")) if r["status"] != "PASS"]
+    rows, torn = _load_rows(reader, "runs")
+    return torn + [r["evidence"] for r in check_duplicate_run_records(runs=rows) if r["status"] != "PASS"]
 
 
 def check_event_seq(reader: RefReader) -> list[str]:
     from event_seq_integrity_check import find_seq_duplicates_and_gaps
-    dups, gaps = find_seq_duplicates_and_gaps(events=_load_rows(reader, "events"))
-    out = [f"{rid}: duplicate event seq" for rid in sorted(dups)]
+    rows, torn = _load_rows(reader, "events")
+    dups, gaps = find_seq_duplicates_and_gaps(events=rows)
+    out = torn + [f"{rid}: duplicate event seq" for rid in sorted(dups)]
     out += [f"{rid}: event seq gap" for rid in sorted(gaps)]
     return out
 

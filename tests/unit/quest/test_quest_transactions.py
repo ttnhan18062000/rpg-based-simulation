@@ -9,6 +9,17 @@ from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
+from src.core.enums import Faction as _F
+from src.core.treasury import treasury_key as _tk
+
+FUNDED = {_tk(_F.NEUTRAL): 10000.0}  # a world whose neutral treasury funds a reward (EXCH-02: a reward is paid by a treasury or owed)
+
+# The one real giver (EXCH-02, ruling 61): the quest was posted at building 1, which stands on ground the neutral faction holds, so the neutral
+# treasury (FUNDED) is the payer. A quest posted nowhere pays experience only.
+from src.core.state import BuildingState as _BS, RegionState as _RS
+QUEST_TOWN = dict(buildings={1: _BS(id=1, kind="shop", position=(1.0, 1.0), functional=True)},
+                  regions={"r": _RS(id="r", name="R", bounds=(0, 0, 100, 100), owner_faction_id=int(_F.NEUTRAL))})
+
 @pytest.fixture
 def base_entity():
     return V2EntityBuilder(entity_id=1).identity(role=EntityRole.HERO).build()
@@ -22,14 +33,14 @@ def active_quest():
         quest_status=QuestStatus.ACTIVE,
         goal_value=5.0,
         current_value=0.0,
-        reward=RewardState(xp=100, gold=50, items=["iron_sword"])
+        reward=RewardState(xp=100, gold=50, items=["iron_sword"]), source_building_id=1
     )
 
 def test_successful_quest_reward_transaction(base_entity, active_quest):
     # Setup entity with quest
     strat = StrategicComponent(projects={"q1": active_quest})
     entity = replace(base_entity, strategic=strat)
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity})
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED, **QUEST_TOWN)
     
     # Complete the quest
     update = EntityUpdate(
@@ -62,7 +73,7 @@ def test_full_inventory_blocks_quest_reward(base_entity, active_quest):
         inventory=replace(base_entity.inventory, items=items),
         strategic=StrategicComponent(projects={"q1": active_quest})
     )
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity})
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED, **QUEST_TOWN)
     
     # Complete the quest
     update = EntityUpdate(
@@ -95,7 +106,7 @@ def test_recovery_after_freeing_inventory(base_entity, active_quest):
         inventory=replace(base_entity.inventory, items=items),
         strategic=StrategicComponent(projects={"q1": pending_quest})
     )
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity})
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED, **QUEST_TOWN)
     
     # Tick 1: Try to reward (should fail again)
     state_upd = StateUpdate(entity_updates={entity.id: EntityUpdate(entity_id=entity.id, quest=QuestUpdate(quest_id="q1"))})
@@ -121,7 +132,7 @@ def test_idempotency_rewarded_quest_does_not_retry(base_entity, active_quest):
     # Setup quest already REWARDED
     rewarded_quest = replace(active_quest, quest_status=QuestStatus.REWARDED, current_value=5.0)
     entity = replace(base_entity, strategic=StrategicComponent(projects={"q1": rewarded_quest}))
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity})
+    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, global_resources=FUNDED, **QUEST_TOWN)
     
     # Try to tick
     state_upd = StateUpdate(entity_updates={entity.id: EntityUpdate(entity_id=entity.id, quest=QuestUpdate(quest_id="q1"))})

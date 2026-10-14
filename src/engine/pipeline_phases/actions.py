@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from src.core.enums import ReasonCode
+from src.core.movement_modes import MovementMode
 from src.core.updates import (
     EntityUpdate,
+    NavigationUpdate,
     RejectionEvent,
 )
 from src.core.state import _readonly_mapping
 from src.engine.domain_logic import SimulationDomainLogic
 from src.engine.legality import LegalityServiceV2
 from src.engine.apply import ApplyPath
+from src.engine.sleep_debt import SLEEP_ACTIONS, is_rested_enough
+from src.engine.work_shift import shift_done
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -39,6 +43,44 @@ _ENDS_HELD_INTERACT_REASONS = frozenset({
 })
 
 _ENDS_HELD_REASONS_BY_ACTION = {"ATTACK": _ENDS_HELD_ATTACK_REASONS, "INTERACT": _ENDS_HELD_INTERACT_REASONS}
+
+
+def _survival_action_ends(action: str, is_survival: bool, outcome: str, actor_update: Optional[EntityUpdate], held: tuple) -> bool:
+    """A survival action that succeeded ends its task, except a shift of work, which is held until its last tick (work_shift.py), and a sleep (a collapse, a
+    rest in place, a rest at a bed), which is held until the debt is below the wake line (sleep_debt.py). ``held`` is (the task payload, the acting entity)."""
+    if not (is_survival and outcome == "SUCCESS"):
+        return False
+    if action == "WORK":
+        return shift_done(actor_update)
+    return is_rested_enough(held[1].biological.sleep_debt) if action in SLEEP_ACTIONS else True
+
+
+def _combat_loss_events(state: AuthoritativeState, actor_id: int, action_updates: dict) -> list:
+    """A COMBAT_LOSS world event for each defender who survives an attack and takes damage (TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING: deliberately
+    NOT tied to NearDeathHardeningPhase's hp_pct<=10% threshold, which would structurally guarantee hp_pct<0.3 on every firing and starve
+    CausalAttributionService's avoid_enemy fallback branch)."""
+    from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
+    events = []
+    for defender_id, defender_upd in action_updates.items():
+        combat_upd = defender_upd.combat
+        if defender_id == actor_id or combat_upd is None or combat_upd.alive_set is False or combat_upd.damage_taken <= 0:
+            continue
+        defender = state.entities.get(defender_id)
+        events.append(WorldEvent(category=WorldEventCategory.COMBAT_LOSS, tick=state.tick,
+                                 region_id=defender.navigation.region_id if defender else None, subject=str(defender_id)))
+    return events
+
+
+def _hold_in_place(update: EntityUpdate) -> EntityUpdate:
+    """``update`` with the entity's movement set to HOLD and its stored navigation target cleared: it stays where it is until its next decision."""
+    hold = NavigationUpdate(target_clear=True, movement_mode_set=MovementMode.HOLD)
+    return replace(update, navigation=update.navigation.merge(hold) if update.navigation else hold)
+
+
+def _killing_blow(action: str, outcome: str, actor_id: int, action_updates: dict) -> bool:
+    """True when a successful ATTACK by ``actor_id`` killed its target this tick (the target's combat update sets it not alive)."""
+    return action == "ATTACK" and outcome == "SUCCESS" and any(
+        other_id != actor_id and upd.combat is not None and upd.combat.alive_set is False for other_id, upd in action_updates.items())
 
 
 def _is_unrecoverable_action_failure(action: str, outcome: str, reason_value: object) -> bool:
@@ -171,7 +213,7 @@ class ActionRoutingPhase:
 
             # Survival actions (EAT/REST/SLEEP) bypass combat readiness —
             # biological necessity is never gated by combat cooldown.
-            is_survival = action in ("EAT", "REST", "SLEEP")
+            is_survival = action in ("EAT", "REST", "SLEEP", "SELL", "WORK")
 
             working_entity = working_entities.get(eid, entity)
 
@@ -225,20 +267,7 @@ class ActionRoutingPhase:
             # guarantee hp_pct<0.3 on every firing and starve CausalAttributionService's
             # avoid_enemy fallback branch (see plan.md Step 4).
             if action == "ATTACK":
-                from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
-                for action_eid, action_upd in action_updates.items():
-                    if action_eid == eid or action_upd.combat is None:
-                        continue
-                    combat_upd = action_upd.combat
-                    if combat_upd.alive_set is not False and combat_upd.damage_taken > 0:
-                        defender_entity = state.entities.get(action_eid)
-                        defender_region_id = defender_entity.navigation.region_id if defender_entity else None
-                        new_world_events_add.append(WorldEvent(
-                            category=WorldEventCategory.COMBAT_LOSS,
-                            tick=state.tick,
-                            region_id=defender_region_id,
-                            subject=str(action_eid),
-                        ))
+                new_world_events_add.extend(_combat_loss_events(state, eid, action_updates))
 
             actor_action_upd = action_updates.get(eid)
             outcome = "SUCCESS"
@@ -278,7 +307,11 @@ class ActionRoutingPhase:
             # TARGET-IS-NEVER-RE-DECIDED); INSUFFICIENT_READINESS is NOT, because readiness regens
             # and the same swing can then land.
             is_unrecoverable_attack_failure = _is_unrecoverable_action_failure(action, outcome, reason_value)
-            if (is_survival and outcome == "SUCCESS") or is_unrecoverable_attack_failure:
+            # The swing that killed its target ends the held attack in the same tick, and the killer stays where it is until its next decision
+            # (decision 44: a kill must lead to the meal, not a held swing at a dead target for several ticks).
+            killing = _killing_blow(action, outcome, eid, action_updates)
+            # A HOLD success ends its task like a survival action (mode HOLD keeps the tile; a kept payload keeps the brain off for good).
+            if _survival_action_ends(action, is_survival, outcome, actor_action_upd, (payload, working_entity)) or (action == "HOLD" and outcome == "SUCCESS") or is_unrecoverable_attack_failure or killing:
                 # Wholesale-empty payload_set is required, not merely clearing action/target_id:
                 # scheduler.py's own is_idle_act check (`work_kind=="ENTITY_ACT" and not
                 # ent.task.payload`) needs a genuinely falsy payload to reclassify this entity
@@ -299,6 +332,7 @@ class ActionRoutingPhase:
                 merged = existing_upd.merge(action_upd)
                 if action_eid == eid:
                     merged = replace(merged, task=annotated_task)
+                    merged = _hold_in_place(merged) if killing else merged
                 refined_entity_updates[action_eid] = merged
                 # Update sliding entities for later actors
                 if action_eid in working_entities:

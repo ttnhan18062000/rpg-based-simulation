@@ -11,6 +11,38 @@
       "readiness": 100.0,
       "inventory_seed": "undead_empty",
       "cognition_seed": "undead_fixated",
+      "spawn_position": [
+        75.0,
+        116.0
+      ],
+      "spawn_region": "haunted_battlefield",
+      "count": 6,
+      "spawn_positions": [
+        [
+          75.0,
+          116.0
+        ],
+        [
+          62.0,
+          103.0
+        ],
+        [
+          86.0,
+          82.0
+        ],
+        [
+          66.0,
+          94.0
+        ],
+        [
+          71.0,
+          110.0
+        ],
+        [
+          73.0,
+          105.0
+        ]
+      ],
       "archetype_id": "undead_sentinel",
       "species_id": "undead",
       "role_id": "sentinel",
@@ -44,17 +76,66 @@
     "mountain_pass__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "iron_ore",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "mountain_pass__frost_shard_cluster_1": {
       "required_ticks": 24,
       "resource_type": "frost_shard_cluster",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "frost_shard",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
     },
     "river_crossing__herb_patch_0": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
-      "yield_policy": null
+      "yield_policy": null,
+      "yield_item": "herb",
+      "regrowth_mode": "none",
+      "bare_wait_ticks": 0
+    },
+    "cover__river_ford__0": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__1": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__2": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__3": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
+    },
+    "cover__river_ford__4": {
+      "required_ticks": 8,
+      "resource_type": "cover_patch_high",
+      "yield_policy": null,
+      "yield_item": "grass_cover",
+      "regrowth_mode": "regrow",
+      "bare_wait_ticks": 1200
     }
   },
   "factions": {
@@ -105,6 +186,9 @@
     },
     "spirit_court": {
       "starting_gold": 1000.0
+    },
+    "wild_fauna": {
+      "starting_gold": 1000.0
     }
   },
   "region_ownership": {},
@@ -114,5 +198,6 @@
   "legacy_roles": {
     "sentinel": 2
   },
-  "perspectives": {}
+  "perspectives": {},
+  "tax_share": 0.1
 }

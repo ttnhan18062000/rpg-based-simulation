@@ -1,0 +1,7 @@
+Mutants applied one at a time, each reverted afterwards; the three test files test_icon_specs, test_icon_recognition, test_icon_compliance were run.
+A. spec loader's modern-object guard off ('if modern:' -> 'if False:')  -> test_a_spec_that_describes_a_modern_object... FAILED (caught)
+B. era scoring ignores the named modern object                        -> test_the_era_question_flags_a_modern_or_futuristic_answer... FAILED (caught)
+C. free-text scoring ignores a named modern object                    -> test_free_text_that_names_a_modern_object... FAILED (caught)
+D. cottage 'no modern blue glass' row always true                     -> test_a_cottage_with_modern_blue_glass... FAILED (caught)
+E. tankard 'same outline' row always true                             -> same test FAILED (caught)
+Unmutated after reverting: 34 passed.

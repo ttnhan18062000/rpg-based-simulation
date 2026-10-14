@@ -18,15 +18,14 @@ from pathlib import Path
 
 import pytest
 
-from src.core.governance import RuntimeMode
 from src.domains.campaigns.orchestrator import CampaignManifest, CampaignOrchestrator
 from src.engine.domain.action_router import ActionRouter
-from src.engine.governor import ResourceGovernor
 from src.engine.kernel import Kernel
 from src.engine.pipeline_phases.actions import ActionRoutingPhase
 from src.engine.scenario_runtime import ScenarioRuntimeService
 from src.engine.tactical import TacticalDecisionSystem
 from src.scenarios.schema import SimulationScenarioDefinition
+from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
 
 class _CollectingRecorder:
@@ -129,16 +128,6 @@ _PERCEPTION_RADIUS = 10.0
 _MAX_SALIENT_TARGETS = 5
 
 
-class _PinnedNormalGovernor(ResourceGovernor):
-    """Pins NORMAL: the test asserts event-stream plausibility, which must not depend on host speed or the #175 coupling."""
-
-    def _get_indicated_mode(self, profile, signals):
-        return RuntimeMode.NORMAL
-
-    def force_mode(self, mode, status, current_tick):
-        return None  # the mid-tick wall-clock throttle must not flip the mode either
-
-
 @dataclass
 class _Counts:
     """What the instrumentation saw. ``attempts`` is the PRIMARY measure of deliberate attacks."""
@@ -238,6 +227,22 @@ def _instrument(mp, counts):
     mp.setattr(Kernel, "tick_once", tick_once)
 
 
+def _pin_audit_mode(mp):
+    """Build the episode's kernel under ``audit_mode``, the documented determinism configuration (docs/engine/deterministic_execution.md).
+
+    ``PinnedNormalGovernor`` pins only the governor's mode. Outside ``audit_mode`` the other wall-clock inputs still change what is
+    computed: a 10 ms stall inside tick 1 (a cold lazy import) moved this episode's deliberate attacks from 2 to 5, so the first
+    episode in a process differed from every later one (TCK-20261009-CAMPAIGN-EPISODE-DELIBERATE-ATTACKS-STRICT-XFAIL-DEPENDS-ON-TEST-ORDER).
+    ``ScenarioRuntimeService`` builds its kernel with fixed flags, so the flag is added at the kernel's constructor (restored when ``mp`` exits)."""
+    original_init = Kernel.__init__
+
+    def init(self, *args, **kwargs):
+        kwargs["flags"] = {**(kwargs.get("flags") or {}), "audit_mode": True}
+        original_init(self, *args, **kwargs)
+
+    mp.setattr(Kernel, "__init__", init)
+
+
 _EPISODE_SEEDS = (42, 1337)
 
 
@@ -251,11 +256,12 @@ def _run_episode(seed):
     counts = _Counts()
     with pytest.MonkeyPatch.context() as mp:
         _instrument(mp, counts)
+        _pin_audit_mode(mp)
         orch = CampaignOrchestrator(_campaign_life_arc_shaped_manifest(tick_limit=_EPISODE_TICKS))
         spec = orch._manifest.episodes[0]
         svc = ScenarioRuntimeService(
             spec, initial_state=orch._build_initial_state(seed, spec), scenario_event_recorder=None,
-            governor=_PinnedNormalGovernor(),
+            governor=PinnedNormalGovernor(),
         )
         svc._kernel = svc._build_kernel()
         svc._kernel._event_listeners = [lambda events: recorder.events.extend(events)]
@@ -319,9 +325,9 @@ def test_real_campaign_episode_event_mix_is_not_dominated_by_cooperation(episode
 @pytest.mark.slow
 @pytest.mark.xfail(
     strict=True,
-    reason=f"{_CAMPAIGN_TICKET}: as measured on 0c89bd390 (seed 42, 70 ticks): 0 deliberate attacks among 250 decisions; "
-           f"11 perceived a hostile (10 of 11 SAFETY_PRESSURE_RETREAT at full HP, 1 pursued), none in reach. Not the "
-           f"attack fix's acceptance signal: an XPASS is a bonus",
+    reason=f"{_CAMPAIGN_TICKET}: under audit_mode (seed 42, 70 ticks) the episode makes 2 deliberate attacks, below the 3 required "
+           f"(267 decisions, 21 perceived a hostile). An XPASS means the expected behaviour changed and needs rpg review: it is "
+           f"not a bonus, and this marker is strict on purpose",
 )
 def test_real_campaign_episode_makes_deliberate_attacks(episode):
     """>= 3 deliberate attacks attempted (decisions that set an offensive ENTITY_ACT), not combat_initiated: the latter was
@@ -331,6 +337,16 @@ def test_real_campaign_episode_makes_deliberate_attacks(episode):
         f"{counts.attempts} deliberate attacks among {counts.decisions} decisions; {counts.decisions_with_hostile_perceived} "
         f"perceived a hostile; {counts.route_calls} router-phase calls over {counts.ticks} ticks; router dispatches of "
         f"offensive kinds (diagnostic, not added): {counts.dispatches} of {counts.dispatches_all_kinds}"
+    )
+
+
+@pytest.mark.slow
+def test_the_episode_is_deterministic_in_one_process_under_audit_mode(episode):
+    """Two episodes of one seed in ONE process give identical counts: the first-in-process episode no longer differs (5 vs 2 attempts before audit_mode)."""
+    _, first = episode
+    _, again = _run_episode(_EPISODE_SEEDS[0])
+    assert (again.attempts, again.decisions, again.decisions_with_hostile_perceived, again.dispatches_all_kinds) == (
+        first.attempts, first.decisions, first.decisions_with_hostile_perceived, first.dispatches_all_kinds
     )
 
 

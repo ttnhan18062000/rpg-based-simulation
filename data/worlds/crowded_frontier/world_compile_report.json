@@ -1,15 +1,15 @@
 {
   "world_id": "crowded_frontier",
-  "seed": 601,
+  "seed": 42,
   "entity_count": 38,
-  "region_count": 4,
-  "resource_node_count": 4,
+  "region_count": 6,
+  "resource_node_count": 9,
   "building_count": 5,
   "quest_count": 12,
   "distinct_populated_factions": 6,
   "warnings": [],
-  "compile_duration_ms": 236.5127159282565,
-  "state_hash": "54c16fd5b454af4d85c2ab5d4dcc37f3",
-  "canonical_state_hash": "51c2cbbc9d4612748947cb7395494ec7c638c9879d3b8491cf9c3e442d793160",
+  "compile_duration_ms": 1273.2230802066624,
+  "state_hash": "df8c64d55653f7deb9cc81c35cbc3c86",
+  "canonical_state_hash": "2fd634ba01b1b99661547fbb7dc917ae1b89bb67e46d4d0dc062780d8a1f35fa",
   "place_count": 2
 }

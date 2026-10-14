@@ -331,7 +331,7 @@ def test_the_committed_catalog_is_never_touched_by_these_tests():
     from tests.visual_assets import adopted_facts as af
 
     committed = config.CATALOG_ROOT
-    for name, count in (("sources", af.ADOPTION_COUNT), ("provenance/adoptions", af.ADOPTION_COUNT), ("provenance/intake", af.INTAKE_FILE_COUNT), ("provenance/set-adoptions", len(af.SET_ADOPTION_IDS)), ("provenance/revocations", 0)):
+    for name, count in (("sources", len(af.ADOPTED_SOURCES)), ("provenance/adoptions", af.ADOPTION_COUNT), ("provenance/intake", af.INTAKE_FILE_COUNT), ("provenance/set-adoptions", len(af.SET_ADOPTION_IDS)), ("provenance/revocations", 0)):
         found = [p.name for p in (committed / name).iterdir() if p.name != ".gitkeep"] if (committed / name).exists() else []
         assert len(found) == count, (name, found)
     assert sorted(p.name for p in (committed / "sources").iterdir() if p.name != ".gitkeep") == af.ADOPTED_SOURCES

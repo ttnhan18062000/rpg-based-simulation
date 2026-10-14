@@ -12,9 +12,23 @@ from src.core.enums import EntityRole, ReasonCode
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.core.state import EquipSlot
+from src.engine.sleep_debt import is_weakened
+from src.engine.starvation import attack_scale
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
+
+def _biological_attack_modifiers(bio: Any) -> Dict[str, float]:
+    """Attack multipliers from the attacker's body, in application order: exhaustion (sleep debt above 80, x0.8) and, compounding with it,
+    weakness from hunger (owner decision 36, x0.8 from hunger 85). Only the factors that apply are returned."""
+    out: Dict[str, float] = {}
+    if is_weakened(bio.sleep_debt):
+        out["EXHAUSTION"] = 0.8
+    weak = attack_scale(bio.hunger)
+    if weak < 1.0:
+        out["STARVATION_WEAKENED"] = weak
+    return out
+
 
 class CombatResolutionSystem:
     """
@@ -87,9 +101,9 @@ class CombatResolutionSystem:
             atk_mult *= 1.5
             trace["SHATTER"] = 1.5
             
-        if attacker.biological.sleep_debt > 80.0:
-            atk_mult *= 0.8
-            trace["EXHAUSTION"] = 0.8
+        for name, factor in _biological_attack_modifiers(attacker.biological).items():
+            atk_mult *= factor
+            trace[name] = factor
             
         # Stamina exhaustion penalty
         from src.engine.rpg_depth import StaminaService
@@ -165,7 +179,6 @@ class CombatResolutionSystem:
         outcome = "SURVIVE"
         alive = True
         xp_gain = 0
-        gold_gain = 0
         
         if new_hp <= 0:
             outcome = "KILL" if is_lethal else "DEFEAT"
@@ -174,7 +187,6 @@ class CombatResolutionSystem:
             from src.engine.combat_rewards import CombatRewardClassificationService
             classification = CombatRewardClassificationService.classify_defeated_target(attacker, defender, state)
             xp_gain = defender.identity.evolution_level * classification.xp_multiplier
-            gold_gain = defender.identity.evolution_level * classification.gold_multiplier
             trace["REWARD_SOURCE"] = classification.source
             trace["REWARD_CATEGORY"] = classification.category.value
 
@@ -205,13 +217,6 @@ class CombatResolutionSystem:
                  transfer_kind="KILL_REWARD",
                  is_group_required=False
              ))
-             if gold_gain > 0:
-                 resource_transfers.append(ResourceTransferIntent(
-                     source_id=defender.id, source_kind="COMBAT",
-                     gold_delta=gold_gain,
-                     transfer_kind="KILL_REWARD",
-                     is_group_required=True
-                 ))
         # Logic ID: COMB-279 (Combat result emits kill/death consequence)
         # Logic ID: COMB-280 (Combat result emits reward/progression consequence)
         # Logic ID: PROG-064 (XP/reward grant is authoritative and traceable)
@@ -264,13 +269,11 @@ class CombatResolutionSystem:
             alive = False
             
         xp_gain = 0
-        gold_gain = 0
         skill_trace: Dict[str, Any] = {}
         if not alive:
             from src.engine.combat_rewards import CombatRewardClassificationService
             classification = CombatRewardClassificationService.classify_defeated_target(attacker, defender, state)
             xp_gain = classification.xp_multiplier * defender.identity.evolution_level
-            gold_gain = classification.gold_multiplier * defender.identity.evolution_level
             skill_trace["REWARD_SOURCE"] = classification.source
             skill_trace["REWARD_CATEGORY"] = classification.category.value
 
@@ -292,13 +295,6 @@ class CombatResolutionSystem:
                   transfer_kind="KILL_REWARD",
                   is_group_required=False
               ))
-              if gold_gain > 0:
-                  resource_transfers.append(ResourceTransferIntent(
-                      source_id=defender.id, source_kind="COMBAT",
-                      gold_delta=gold_gain,
-                      transfer_kind="KILL_REWARD",
-                      is_group_required=True
-                  ))
 
         return CombatUpdate(
             damage_taken=damage,
@@ -374,13 +370,11 @@ class CombatResolutionSystem:
             alive = False
 
         xp_gain = 0
-        gold_gain = 0
         resource_transfers = []
         if not alive and defender.combat.alive:
              from src.engine.combat_rewards import CombatRewardClassificationService
              classification = CombatRewardClassificationService.classify_defeated_target(attacker, defender, state)
              xp_gain = defender.identity.evolution_level * classification.xp_multiplier
-             gold_gain = defender.identity.evolution_level * classification.gold_multiplier
              full_trace["REWARD_SOURCE"] = classification.source
              full_trace["REWARD_CATEGORY"] = classification.category.value
 
@@ -392,13 +386,6 @@ class CombatResolutionSystem:
                  transfer_kind="KILL_REWARD",
                  is_group_required=False
              ))
-             if gold_gain > 0:
-                 resource_transfers.append(ResourceTransferIntent(
-                     source_id=defender.id, source_kind="COMBAT",
-                     gold_delta=gold_gain,
-                     transfer_kind="KILL_REWARD",
-                     is_group_required=True
-                 ))
 
         # Social Consequences (Multi-attacker)
         from src.core.updates import SocialUpdate, SocialBondUpdate

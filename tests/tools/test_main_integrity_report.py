@@ -205,3 +205,65 @@ def test_a_ticket_left_under_inprogress_on_the_ref_is_reported_but_done_and_gitk
     assert found == ["TCK-20260930-NEVER-FINALIZED: still under agent-working/tickets/inprogress/ at the ref "
                      "(agent-working/tickets/inprogress/TCK-20260930-NEVER-FINALIZED.md)"]
     assert _report(repo, since_date="20261001")["findings"]["inprogress"] == []  # --since-date limits it
+
+
+def test_a_torn_working_log_shard_line_is_reported_and_the_rows_around_it_still_count(tmp_path):
+    repo = _clean_repo(tmp_path)
+    _w(repo, "agent-working/tickets/done/TCK-20260928-AFTERTORN.md", "# t\n")
+    shard = "agent-working/agent-monitoring/data/2026-W40/s.working_log.jsonl"
+    good = '{"ticket_id": "TCK-20260928-AFTERTORN", "title": "t", "status": "DONE", "summary": "s"}'
+    _w(repo, "agent-working/tickets/done/TCK-20260927-BEFORETORN.md", "# t\n")
+    _w(repo, shard, '{"ticket_id": "TCK-20260927-BEFORETORN", "title": "t", "status": "DONE", "summary": "s"}\n'
+       '{"ticket_id": "TCK-2026\n[1, 2]\n"text"\n' + good + "\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "torn working_log line")
+    found = _report(repo)["findings"]["working_log"]
+    # exactly one finding: the torn line (line 2); the non-dict lines (3, 4) are skipped silently
+    assert found == [f"{shard}:2: invalid JSON, skipped"]
+
+
+def _commit(repo, msg):
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", msg)
+
+
+def test_a_torn_runs_shard_line_is_reported_once_under_duplicate_runs(tmp_path):
+    repo = _clean_repo(tmp_path)
+    shard = "agent-working/agent-monitoring/data/2026-W40/s.runs.jsonl"
+    row = lambda rid: json.dumps({"run_id": rid, "start_ts": "2026-09-29T10:00:00Z", "final_status": "DONE"})
+    _w(repo, shard, row("R2") + '\n{"run_id": "R3\n' + row("R4") + "\n")
+    _commit(repo, "torn runs line")
+    found = _report(repo)["findings"]
+    assert found["duplicate_runs"] == [f"{shard}:2: invalid JSON, skipped"]
+    assert found["event_seq"] == []
+
+
+def test_a_torn_events_shard_line_is_reported_once_under_event_seq(tmp_path):
+    repo = _clean_repo(tmp_path)
+    shard = "agent-working/agent-monitoring/data/2026-W40/s.events.jsonl"
+    ev = lambda rid, seq: json.dumps({"run_id": rid, "seq": seq})
+    _w(repo, shard, ev("R2", 1) + '\n{"run_id": "R2", "se\n' + ev("R2", 2) + "\n")
+    _commit(repo, "torn events line")
+    found = _report(repo)["findings"]
+    assert found["event_seq"] == [f"{shard}:2: invalid JSON, skipped"]
+    assert found["duplicate_runs"] == []
+
+
+def test_rows_around_a_torn_events_line_still_reach_the_seq_check(tmp_path):
+    repo = _clean_repo(tmp_path)
+    shard = "agent-working/agent-monitoring/data/2026-W40/s.events.jsonl"
+    ev = json.dumps({"run_id": "R2", "seq": 1})
+    _w(repo, shard, ev + '\n{"run_id": "R2", "se\n' + ev + "\n")
+    _commit(repo, "torn events line between duplicate seq")
+    found = _report(repo)["findings"]["event_seq"]
+    assert found == [f"{shard}:2: invalid JSON, skipped", "R2: duplicate event seq"]
+
+
+def test_non_dict_run_and_event_lines_are_skipped_silently(tmp_path):
+    repo = _clean_repo(tmp_path)
+    junk = '[1, 2]\n"text"\n3\n'
+    _w(repo, "agent-working/agent-monitoring/data/2026-W40/s.runs.jsonl", junk)
+    _w(repo, "agent-working/agent-monitoring/data/2026-W40/s.events.jsonl", junk)
+    _commit(repo, "non-dict lines")
+    findings = _report(repo)["findings"]
+    assert findings["duplicate_runs"] == [] and findings["event_seq"] == []

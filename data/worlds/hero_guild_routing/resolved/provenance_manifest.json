@@ -1,19 +1,20 @@
 {
-  "manifest_id": "prov_4007bb49217103b9",
+  "manifest_id": "prov_014cd629f8437fea",
   "world_id": "hero_guild_routing",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
+  "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
+    "goblin_camp_forage": "79af965c2ca3a71404f844c2f02753c21149e5cff4e6f21707e6223e1dac63cb",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
     "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71"
   },
-  "composition_fingerprint": "8577665f57ec59b9cf4a0ad42948bce23afd262ce6776225be0d9c0a443b9b69",
+  "composition_fingerprint": "bbd93ea144e4daa4ee19a9c1c06ce12127dca067109e06693cd2d61155246b17",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "4007bb49217103b91a30b2d1ad87287f0cdca1440cc1488f8cc86ba4e0fdd1b8",
-  "created_at": "2026-09-08T02:50:49.849111Z",
+  "content_fingerprint": "014cd629f8437fea042ac93ffb21e9602272fc8e554e10a959c3c71fbd08ddf6",
+  "created_at": "2026-10-12T14:35:31.645128Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -207,6 +208,18 @@
         "description": "Spirit faction protecting sacred or haunted territories."
       }
     },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
+      }
+    },
     "hometown": {
       "element_id": "hometown",
       "element_type": "region",
@@ -240,7 +253,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",
@@ -696,6 +709,41 @@
           "defense"
         ],
         "reward_budget": 120
+      }
+    },
+    "goblin_camp_edge": {
+      "element_id": "goblin_camp_edge",
+      "element_type": "region",
+      "source_module": "goblin_camp_forage",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "goblin_camp"
+      },
+      "details": {
+        "bounds": [
+          106,
+          34,
+          114,
+          42
+        ],
+        "terrain": "forest",
+        "hazard_level": 3.0,
+        "ecology_source": []
+      }
+    },
+    "goblin_camp_forage__berry_thicket_0": {
+      "element_id": "goblin_camp_forage__berry_thicket_0",
+      "element_type": "resource",
+      "source_module": "goblin_camp_forage",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
+        "region": "goblin_camp_edge"
       }
     },
     "pop_0": {

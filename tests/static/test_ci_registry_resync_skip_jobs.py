@@ -24,6 +24,7 @@ SKIP_JOBS = {
     "migration-lanes",
     "scenario-lane",
     "frontend",
+    "docker-build",  # TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK: result depends on the PR content only
 }
 KEEP_JOBS = {"tools-a-e", "tools-f-z", "arch-docs", "typecheck", "code-health", "code-health-sarif"}
 

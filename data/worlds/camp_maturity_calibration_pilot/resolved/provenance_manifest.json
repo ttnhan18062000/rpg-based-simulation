@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_c9ab69596771c8c3",
+  "manifest_id": "prov_1c91d064a80f5414",
   "world_id": "camp_maturity_calibration_pilot",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "0cb706c243e61d02ee3f28823d0381eaae2fd21b30b40058502c8d5e91a4cfad",
+  "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
-    "camp_maturity_calibration_pilot": "6819a951a4f721da8e81251ef22ba19d875ba4298097f51da67ecb58e5947a77"
+    "camp_maturity_calibration_pilot": "e5b91e10a54ecef4793eaf2af84858ae9842828e0c17096b20c587d0cc399e9f"
   },
-  "composition_fingerprint": "df222dc3b6216df5ae5b3e4bdfedd89ef6967c39a57c4c12862d5698c6e500b4",
+  "composition_fingerprint": "73c78480fe6521b529e836d714dbb87b2945d305f77e887504f810ad4566ad3b",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "c9ab69596771c8c310ca7bbf3975f57a59aa51c1f2ae7c9f24c165b4a3036d01",
-  "created_at": "2026-09-08T03:20:53.666390Z",
+  "content_fingerprint": "1c91d064a80f54144272377e921bb942e1bdbaec88cc6c95a07e48dd8722cb22",
+  "created_at": "2026-10-12T14:35:20.859621Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -204,6 +204,18 @@
         "description": "Spirit faction protecting sacred or haunted territories."
       }
     },
+    "wild_fauna": {
+      "element_id": "wild_fauna",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Unaffiliated wild creatures. No faction verdict toward anyone."
+      }
+    },
     "hometown": {
       "element_id": "hometown",
       "element_type": "region",
@@ -237,7 +249,7 @@
         "role": "worker",
         "faction": "town_council",
         "stats_profile": "commoner_base",
-        "inventory_profile": "hero_pocket",
+        "inventory_profile": "laborer_empty",
         "cognition_profile": "practical_humanoid",
         "compatibility_projection": {
           "legacy_engine_role": "WORKER",
@@ -496,6 +508,29 @@
         "reward_budget": 120
       }
     },
+    "calibration_camp_edge": {
+      "element_id": "calibration_camp_edge",
+      "element_type": "region",
+      "source_module": "camp_maturity_calibration_pilot",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "goblin_camp"
+      },
+      "details": {
+        "bounds": [
+          156,
+          156,
+          164,
+          164
+        ],
+        "terrain": "forest",
+        "hazard_level": 2.0,
+        "ecology_source": [
+          "monster_calibration_ecology"
+        ]
+      }
+    },
     "monster_calibration_zone": {
       "element_id": "monster_calibration_zone",
       "element_type": "region",
@@ -517,6 +552,20 @@
         "ecology_source": [
           "monster_calibration_ecology"
         ]
+      }
+    },
+    "camp_maturity_calibration_pilot__berry_thicket_0": {
+      "element_id": "camp_maturity_calibration_pilot__berry_thicket_0",
+      "element_type": "resource",
+      "source_module": "camp_maturity_calibration_pilot",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "berry_thicket"
+      },
+      "details": {
+        "count": 10,
+        "region": "calibration_camp_edge"
       }
     }
   }

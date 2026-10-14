@@ -59,6 +59,20 @@ class TestDerivation:
         _put(tmp_path, _verdict("a", "2026-10-06T01:00:00Z", True), _verdict("b", "2026-10-06T02:00:00Z", True, inputs={"cmd_sha": "z"}))
         assert _view(tmp_path)["a"]["outcome"] is None
 
+    def test_block_then_block_with_other_inputs_then_pass_resolves_both_as_fixed_and_rerun(self, tmp_path):
+        _put(tmp_path, _verdict("a", "2026-10-06T01:00:00Z", True), _verdict("b", "2026-10-06T02:00:00Z", True, inputs={"cmd_sha": "z"}),
+             _verdict("c", "2026-10-06T03:00:00Z", False))
+        view = _view(tmp_path)
+        assert [(view[v]["outcome"], view[v]["followup_verdict_id"]) for v in "ab"] == [("fixed_and_rerun", "c")] * 2
+        assert view["c"]["outcome"] is None
+
+    def test_a_same_inputs_rerun_stays_rerun_no_change_and_the_rerun_itself_resolves_on_the_later_pass(self, tmp_path):
+        _put(tmp_path, _verdict("a", "2026-10-06T01:00:00Z", True), _verdict("b", "2026-10-06T02:00:00Z", True),
+             _verdict("c", "2026-10-06T03:00:00Z", False))
+        view = _view(tmp_path)
+        assert (view["a"]["outcome"], view["a"]["followup_verdict_id"]) == ("rerun_no_change", "b")
+        assert (view["b"]["outcome"], view["b"]["followup_verdict_id"]) == ("fixed_and_rerun", "c")
+
     def test_lone_block_is_unresolved_and_other_tickets_or_gates_do_not_count(self, tmp_path):
         _put(tmp_path, _verdict("a", "2026-10-06T01:00:00Z", True),
              _verdict("b", "2026-10-06T02:00:00Z", False, ticket="TCK-2"), _verdict("c", "2026-10-06T03:00:00Z", False, gate="cli:other"))
@@ -299,6 +313,47 @@ class TestAttestedRowsAreEvidence:
         assert [r["gate_verdict_id"] for r in gate_ledger.attested_without_verdict(rows)] == ["a1", "a3"]
         section = gate_ledger.render_section(rows, week=WEEK, total_rows=len(rows))
         assert "Attested, no verdict row: 2" in section and "parity_touched_ledger 1" in section
+
+    def test_a_transport_retry_is_one_verdict_not_two(self, tmp_path):
+        """TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY: attempt 1 (command mangled in transport, exit 2) and the
+        retry (attempt 2) are two attested rows for one gate; they must not read as two verdicts or two orphans."""
+        first = _attested("a1", "2026-10-05T10:00:00Z", "test_scope_coverage", "empty", blocking=True)
+        retry = _attested("a2", "2026-10-05T10:00:30Z", "test_scope_coverage", "real")
+        retry["inputs_ref"].update({"attempt": 2, "retry_reason": "wrong_command"})
+        _put(tmp_path, first, retry, _pipeline("p1", "2026-10-05T10:00:31Z", "Test:gate_checks.x.y", False, sha="real"))
+        rows = gate_ledger.load_rows(tmp_path)
+        assert sum(g["verdicts"] for g in gate_ledger.report(rows)) == 1
+        assert gate_ledger.attested_without_verdict(rows) == [], "the superseded first attempt is not an orphan"
+        # control: without the retry marker the same first row IS listed
+        _put(tmp_path / "ctl", first, _pipeline("p1", "2026-10-05T10:00:31Z", "Test:gate_checks.x.y", False, sha="real"))
+        assert [r["gate_verdict_id"] for r in gate_ledger.attested_without_verdict(gate_ledger.load_rows(tmp_path / "ctl"))] == ["a1"]
+
+    def test_an_orphan_attested_row_accepts_an_outcome_and_then_reads_as_resolved(self, tmp_path):
+        """TCK-20261009-GATE-LEDGER-OUTCOME-ON-ORPHAN-ATTESTED-ROW: a run that died before its pipeline site recorded the gate."""
+        _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "test_scope_coverage", "empty", blocking=True))
+        rows = gate_ledger.load_rows(tmp_path)
+        assert [v["gate_verdict_id"] for v in gate_ledger.unresolved(gate_ledger.orphan_view(rows))] == ["a1"]
+        row = gate_ledger.record_outcome("a1", "stopped", note="attested command corrupted in agent transport", data_root=tmp_path)
+        assert row["outcome"] == "stopped" and row["gate_verdict_id"] == "a1"
+        rows = gate_ledger.load_rows(tmp_path)
+        assert gate_ledger.unresolved(gate_ledger.orphan_view(rows)) == []
+        assert [v["outcome"] for v in gate_ledger.orphan_view(rows)] == ["stopped"]
+        assert gate_ledger.report(rows) == [], "an orphan stays out of the verdict totals"
+
+    def test_a_paired_attested_row_refuses_and_names_the_verdict_to_use(self, tmp_path):
+        _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "tag_check", "s1", blocking=True),
+             _pipeline("p1", "2026-10-05T10:00:01Z", "Scope:a.b", True, sha="s1"))
+        with pytest.raises(gate_ledger.PairedAttestedRow) as err:
+            gate_ledger.record_outcome("a1", "stopped", data_root=tmp_path)
+        assert err.value.verdict_id == "p1" and "p1" in str(err.value)
+        assert gate_ledger.record_outcome("p1", "stopped", data_root=tmp_path)["gate_verdict_id"] == "p1"
+
+    def test_the_cli_exits_one_for_a_paired_attested_id_and_two_for_an_unknown_id(self, tmp_path, capsys):
+        _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "tag_check", "s1", blocking=True),
+             _pipeline("p1", "2026-10-05T10:00:01Z", "Scope:a.b", True, sha="s1"))
+        assert gate_ledger.main(["--data-root", str(tmp_path), "outcome", "--gate-verdict-id", "a1", "--outcome", "stopped"]) == 1
+        assert "record the outcome on p1" in capsys.readouterr().err
+        assert gate_ledger.main(["--data-root", str(tmp_path), "outcome", "--gate-verdict-id", "nope", "--outcome", "stopped"]) == 2
 
     def test_attested_only_period_still_names_the_orphans(self, tmp_path):
         _put(tmp_path, _attested("a1", "2026-10-05T10:00:00Z", "tag_check", "s"))

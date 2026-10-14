@@ -321,10 +321,11 @@ class CombatPatch(ComponentPatch):
         new_combat = changes.get("combat", entity.combat)
         if self.combat:
             u_com = self.combat
-            new_hp = max(0, new_combat.hp + u_com.hp_delta)
+            new_max_hp = new_combat.max_hp + u_com.max_hp_delta
+            new_hp = min(new_max_hp, max(0, new_combat.hp + u_com.hp_delta))  # health never exceeds max_hp: the one point every CombatUpdate goes through
             new_combat = replace(new_combat, 
                 hp=new_hp, 
-                max_hp=new_combat.max_hp + u_com.max_hp_delta,
+                max_hp=new_max_hp,
                 permanent_max_hp_bonus=new_combat.permanent_max_hp_bonus + u_com.permanent_max_hp_bonus_delta,
                 alive=(new_hp > 0) if u_com.alive_set is None else u_com.alive_set,
                 atk=new_combat.atk + u_com.atk_delta,

@@ -118,17 +118,21 @@ def test_cooperation_phase_no_immediate_reoffer_after_expiry_tick():
 
 
 def test_phase_respects_feature_flag():
+    """The pipeline's ENABLE_SOCIAL_COOPERATION gate skips the phase when OFF (the old in-phase sentinel in
+    `periodic_due_ticks` is gone with that field)."""
+    from src.domains.optimization.feature_flags import FeatureMode
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+
     req = (V2EntityBuilder(1).kind("HERO").location(0.0, 0.0).combat(hp=20, max_hp=100).lifecycle(active=True).build())
     object.__setattr__(req.strategic, "current_objective_id", "obj_1")
 
-    state = AuthoritativeState(entities={1: req}, tick=1, seed=123)
-    state.periodic_due_ticks["social_cooperation_disabled"] = 1
+    state = AuthoritativeState(entities={1: req}, tick=1, seed=123, feature_flags={"ENABLE_SOCIAL_COOPERATION": FeatureMode.OFF})
+    refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
 
-    update = StateUpdate()
-    refined = CooperationPhase.execute(state, update)
-
-    assert 1 not in refined.entity_updates
-    assert refined.metric_counters == {}
+    assert refined.metric_counters.get("skip_cooperation", 0) == 1
+    assert "run_cooperation" not in refined.metric_counters
+    entity_update = refined.entity_updates.get(1)
+    assert entity_update is None or "last_cooperation_decision" not in entity_update.property_updates
 
 
 # ---------------------------------------------------------------------------

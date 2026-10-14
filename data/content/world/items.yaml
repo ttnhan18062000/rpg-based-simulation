@@ -70,6 +70,37 @@
   base_value: 15
   materials: ["healing_flower", "crystal_shard"]
 
+# STATE: REDESIGNED-CORE
+# Owner row 59 (grazing): what a graze patch yields. Its own food class, so a diet with "graze" eats it and a person's diet does not; a bite fills
+# 20 hunger against 30 for a berry (the value follows the fiction, grass is thin food, not any measured outcome: decision 33).
+- id: "grass_cover"
+  display_name: "Grass and Browse"
+  categories: ["consumable", "food"]
+  food_class: "graze"
+  hunger_recovery: 20.0
+  rarity: "COMMON"
+  base_value: 0
+
+# STATE: EXISTING-LOGIC
+# SURV-06 forage path (decision 27): wild food a subject can harvest and eat as carried food. Its own item; herb and flowers stay inedible.
+- id: "wild_berries"
+  display_name: "Wild Berries"
+  categories: ["consumable", "food"]
+  food_class: "plant"
+  rarity: "COMMON"
+  base_value: 2
+
+# STATE: EXISTING-LOGIC
+# Decision 44: what a kill leaves. Raw flesh is harder to digest than a prepared meal (30), so it fills about two thirds of one (20);
+# a cooked equivalent is later work (cooking). The value follows that fiction, not any measured outcome (decision 33).
+- id: "raw_meat"
+  display_name: "Raw Meat"
+  categories: ["consumable", "food"]
+  food_class: "meat"
+  hunger_recovery: 20.0
+  rarity: "COMMON"
+  base_value: 3
+
 # STATE: LEGACY-EXPORT
 - id: "travel_ration"
   display_name: "Travel Ration"

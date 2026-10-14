@@ -9,10 +9,10 @@ import json
 
 import pytest
 
-from tests.visual_assets import icon_palette as ip
-from tests.visual_assets import icon_sheet_rule as rule
-from tests.visual_assets import icon_sheet_synthetic as syn
-from tests.visual_assets.pilot_colour_vision import VISIONS, from_hex, mean
+from visual_assets.review import icon_palette as ip
+from visual_assets.review import icon_sheet_rule as rule
+from visual_assets.review import icon_sheet_synthetic as syn
+from visual_assets.review.pilot_colour_vision import VISIONS, from_hex, mean
 
 PROTAN_COLLAPSE = ("#555b73", "#d04030")  # L* differ by 9.6 in normal vision and by 0.85 under protanopia
 
@@ -101,7 +101,7 @@ def test_i1_skips_pairs_inside_one_class_but_i2_still_separates_them():
 
 def test_an_unruled_canvas_size_raises_instead_of_passing():
     with pytest.raises(KeyError):
-        _group_report(_flat(24, "#555b73", _block(24, 10)), _flat(24, "#555b73", _block(24, 300)))
+        _group_report(_flat(32, "#555b73", _block(32, 10)), _flat(32, "#555b73", _block(32, 300)))
 
 
 # ---- I2 value ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ def test_the_rule_is_deterministic(real_means):
 
 
 def test_the_rule_constants_are_the_users_answers():
-    assert rule.RULE == rule.Thresholds(shape_min={8: 3, 16: 6}, value_min=6.0, plate_min=12.0) and VISIONS == ("normal", "protan", "deutan", "tritan")
+    assert rule.RULE == rule.Thresholds(shape_min={8: 3, 16: 6, 24: 8}, value_min=6.0, plate_min=12.0) and VISIONS == ("normal", "protan", "deutan", "tritan")
 
 
 def test_off_palette_pixels_are_reported_not_ruled():

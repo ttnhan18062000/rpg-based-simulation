@@ -1,0 +1,10 @@
+Each mutant was applied, its site confirmed with `git diff --stat` (or grep), the three test files run, then restored (git checkout for the tracked fixtures; `derived_runtime.py` from a backup) and the tree confirmed clean before the next. A first mutation script restored with one combined `git checkout` that errored on an untracked path, so M2-M7 of that run were all masked by M1: they were discarded and redone with a restore that checks the tree is clean.
+M1 flipped PNG byte in a pilot fixture PNG -> pilot guard fails (png differs) and terrainset forest-identity test fails (caught)
+M2 dropped slot from the pilot manifest -> pilot guard, rc-0004 history test and declared-slots test fail (caught)
+M3 changed an entry's detail (pilot manifest) -> pilot guard, rc-0004 test, declared-slots test, terrainset forest test fail (caught)
+M4 changed the registry_hash field of the terrainset manifest -> terrainset guard fails (caught)
+M5 flipped PNG byte in a terrainset PNG -> terrainset guard fails (caught)
+M6 an artifact in generated/ overwritten with another valid PNG -> derivation asserts 'does not decode to the pixel hash the candidate records'; pilot and terrainset guards fail (caught)
+M7 helper drops a field (candidate_manifest_hash := registry_hash) -> drift guard, registry-only test and terrainset guard fail (caught)
+M8 probe: a throwaway key registered in the REAL registry -> all 14 tests pass (the point of the ticket); the 8 inventory pins fail as before, by design.
+Unmutated: 14 passed.

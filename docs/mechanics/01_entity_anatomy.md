@@ -83,9 +83,23 @@ The simulation tracks biological "Pressures" that degrade over time.
 ### Passive Decay Rates
 | Need | Decay (per tick) | Max Value | Penalty Threshold |
 | :--- | :--- | :--- | :--- |
-| **Hunger** | `+0.1` | 100.0 | **95.0**: Starvation (+2 HP damage/tick) |
-| **Sleep Debt** | `+0.05` | 100.0 | **98.0**: Fatigue (+1 HP damage/tick) |
+| **Hunger** | `+0.1` base per tick, scaled by the kind's need profile (`humanoid_survival` is "low": `+0.05`, owner decision 33) | 100.0 | **85.0**: Weakened (stamina and readiness recover at half rate, attack x0.8). **95.0**: Starving (1 HP lost every `round(6000 / max_hp)` ticks, so a full-health body dies about 6000 ticks, 2.5 days, after the line) |
+| **Sleep Debt** | `+0.05` (scaled by the kind's need profile) | 100.0 | **80**: Weakened (recovery at half rate, attack x0.8). **98**: Collapse (the subject falls asleep where it stands, takes no action until its debt is below the wake line, and loses no health: owner decision 41) |
 | **Stamina** | `-1.0` (per move) | `Max_Stamina` | **< Exhaustion Threshold**: Exhausted state |
+
+### Staged Sleep Debt (SURV-02, owner decision 41)
+Lack of sleep ends in collapse, never in lost health. The stages derive from `sleep_debt` alone (no extra state) and are tuned in one table, `src/engine/sleep_debt.py::SLEEP_DEBT`:
+- **Weakened** (debt above 80, the pre-existing EXHAUSTION line): stamina and readiness recover at half rate (the worse of the hunger and sleep stages decides, they do not compound) and attack is x0.8.
+- **Collapse** (debt 98 or more, the pre-existing drain line): the subject's decision is a held `SLEEP` where it stands (a walk in progress stops); it takes no other action and can be attacked. **While asleep (a collapse, a rest in place, a rest at a bed) the debt falls per tick at twice the kind's own accrual rate** (people 0.1 against 0.05), and the sleep is held until the debt is below the wake line, SURV-07's escalation onset (`ESCALATION_ONSET` x `SLEEP_LINE`, about 59); then the subject decides (decision 32). A collapse from 98 lasts about 400 ticks (about 4 hours). No health is lost to lack of sleep, so `PassiveDeathCause.SLEEP_DEPRIVATION` is no longer written. A bed still improves quality and has no separate rate; the bed reach is 30 tiles (designer-ruled).
+
+### Natural Healing (owner decision 42, memo row 65)
+Every living body heals a little all the time, wherever it is. A body of `max_hp` regains 1 HP once every `round(9600 / max_hp)` life-due ticks awake and once every `round(4800 / max_hp)` ticks in a held `SLEEP` or `REST` (a collapse included), staggered by entity id, so a body of any size is whole again in about 4 days awake or 2 days resting. It follows the staged-starvation and sleep-debt stages: no healing at or past the starving line (hunger 95), half speed while weakened by hunger or by sleep debt (the worse of the two decides). It is derived from `hp`, `max_hp`, `hunger`, `sleep_debt` and the task (no new state) and tuned in one table, `src/engine/natural_healing.py::HEALING` (named placeholders; per-kind rates come with M1's body properties). A town tile, a paid inn rest and a level-up still heal as before. Health never exceeds `max_hp`: the combat patch writer clamps every update (`hp_delta` and `max_hp_delta` together) to `min(max_hp, max(0, hp + hp_delta))`, so no source of healing (a paid rest, a level-up, a tile) can lift a body past its maximum.
+
+### Staged Starvation (SURV-02, owner decision 36)
+Past the hunger line a person weakens first and loses health only slowly. The stages derive from `hunger` alone (no extra state) and are tuned in one table, `src/engine/starvation.py::STARVATION`:
+- **Hungry** (hunger above 70): the cognitive capacity limits halve (`strategy/cognition_capacity.py`).
+- **Weakened** (hunger 85 and above): stamina and readiness regeneration run at half rate and the attack multiplier is 0.8 (a `STARVATION_WEAKENED` trace; it compounds with `EXHAUSTION`, 0.8 x 0.8 = 0.64). No health is lost.
+- **Starving** (hunger 95 and above): 1 HP is lost once every `round(6000 / max_hp)` life-due ticks, staggered by entity id. Death lands 4800 to 7200 ticks (2 to 3 days at 36 seconds a tick) after the line for a full-health body and sooner for a hurt one. Eating drops hunger and ends each stage.
 
 ### Death Attribution (Same-Tick Causes)
 A death records exactly one `death_reason`: the first cause, in declared pipeline phase order, whose own effect was sufficient to take the subject from `hp > 0` to `hp <= 0`. Combat resolves before world dynamics, so:

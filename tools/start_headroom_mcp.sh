@@ -16,7 +16,7 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 #
 # Hardened after that same ticket's own rename surfaced a second, real bug: the installed
 # `headroom` console-script wrapper has its own interpreter path BAKED INTO ITS SHEBANG at pip
-# install time (`#!/home/u24desktop/.../.venv/bin/python3`, the pre-rename path) -- so executing
+# install time (`#!<abs path>/.venv/bin/python3`, the pre-rename path) -- so executing
 # the wrapper binary directly, even at its new `.venv-knowledge` location, still ran under the
 # WRONG (renamed, headroom-less) interpreter and failed with `ModuleNotFoundError: No module named
 # 'headroom'`, confirmed live on this machine. Fixed at the root: invoke the interpreter directly
@@ -24,10 +24,21 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 # the candidate interpreter can actually import `headroom` before selecting it -- so a future
 # rename or a stale venv falls through to a working candidate instead of failing silently (the
 # probe result is quiet on stdout+stderr; only the final "nothing worked" message is visible).
+# TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION: resolve the main checkout generically. The
+# hardcoded u24desktop path that used to sit in the list below only existed on that one host; on
+# any other host a worktree's $REPO_ROOT has no venv, so the launch fell through to system python3.
+# `git rev-parse --git-common-dir` names the main checkout's .git from any worktree (and from the
+# main checkout itself), so its parent is where the one shared .venv-knowledge lives on every host.
+# TCK-20261011-KNOWLEDGE-TORCH-CPU-INDEX-IN-LOCK: an explicit KNOWLEDGE_PYTHON override comes first;
+# the former hard-coded u24desktop candidate is gone, because on that host MAIN_ROOT resolves to
+# the same path.
+MAIN_ROOT=""
+COMMON_DIR="$(git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
+[ -n "$COMMON_DIR" ] && MAIN_ROOT="$(dirname "$COMMON_DIR")"
 for py in \
-    "/home/u24desktop/Working/rpg-based-simulation/.venv-knowledge/bin/python3" \
-    "$REPO_ROOT/.venv-knowledge/bin/python3" \
-    "/home/vboxuser/Work/venv/bin/python3"; do
+    "${KNOWLEDGE_PYTHON:-}" \
+    "${MAIN_ROOT:+$MAIN_ROOT/.venv-knowledge/bin/python3}" \
+    "$REPO_ROOT/.venv-knowledge/bin/python3"; do
     [ -x "$py" ] || continue
     "$py" -c "import headroom" >/dev/null 2>&1 || continue
     # Isolation, not the default machine-wide ~/.headroom -- config_dir() derives from
@@ -36,7 +47,9 @@ for py in \
     # Shared across worktrees of this repo (same absolute path regardless of which
     # worktree's copy of this script is running), never shared with any other repo or
     # with ~/.headroom.
-    export HEADROOM_WORKSPACE_DIR="/home/u24desktop/Working/rpg-based-simulation/.headroom-workspace"
+    # TCK-20261012-HOST-PATH-LITERALS-MAKEFILE-AND-MCP-LAUNCHERS: derived from the main checkout (no host path);
+    # an already-set HEADROOM_WORKSPACE_DIR is respected.
+    export HEADROOM_WORKSPACE_DIR="${HEADROOM_WORKSPACE_DIR:-${MAIN_ROOT:-$REPO_ROOT}/.headroom-workspace}"
     exec "$py" -m headroom.cli mcp serve "$@"
 done
 

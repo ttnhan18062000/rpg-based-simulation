@@ -1,0 +1,5 @@
+Mutant A: iconScene.ts ruins fallback colour #a0906a -> #a0906b (site confirmed by grep, 1 hit).
+  Caught by iconScene.test.ts "the 22 icon set v2 keys each have a declared fallback...": expected 'classical building emoji (#a0906b) pl…' to contain '#a0906a'. (right reason: colour differs from the registry description)
+Mutant B: IconHarness.tsx nativeOf returns e.width instead of e.width / e.scale (site confirmed by grep, 1 hit).
+  Caught by 3 tests: whole-device-pixel scale (key set), v2 families and sizes, whole-device-pixel scale (v2). (right reason: every image drawn 8x too large)
+Both originals restored (diff vs backup empty).

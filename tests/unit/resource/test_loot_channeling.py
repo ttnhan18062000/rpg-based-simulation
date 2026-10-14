@@ -218,3 +218,21 @@ def test_loot_corpse_interruption_by_distance():
     final_state = ApplyPath.apply_generation(state, sys_upd)
     assert final_state.entities[1].interaction.target_node_id is None
     assert 301 in final_state.corpses # Corpse still there
+
+
+@pytest.mark.v2_contract
+def test_looting_a_purse_on_the_ground_grants_its_coin_and_no_item():
+    """A purse that fell from a body (EXCH-02, ruling 61) is found by looting like any ground stack: its coin goes to the looter's purse."""
+    from src.core.treasury import total_coin
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    purse = GroundItemState(id=101, item_id="", quantity=0, position=(0, 1), gold=7, source_entity_id=9, dropped_tick=3)
+    entity = V2EntityBuilder(1).kind("hero").location(0, 0).build()
+    state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, ground_items={101: purse})
+    before = total_coin(state)
+    state = ApplyPath.apply_generation(state, StateUpdate(entity_updates={1: LootAction.start_loot(entity, 101, "ground_item", state)}))
+    for _ in range(9):
+        state = ApplyPath.apply_generation(state, LootSystem.update(state))
+    refined = AuthoritativeApplyPipeline.refine(state, LootSystem.update(state))
+    state = ApplyPath.apply_generation(state, refined)
+    assert 101 not in state.ground_items and state.entities[1].inventory.gold == 7 and not state.entities[1].inventory.items
+    assert total_coin(state) == before

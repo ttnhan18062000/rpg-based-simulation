@@ -97,16 +97,16 @@ Palettes are not fixed here. A class definition cannot make a hue-only distincti
 | Invalid manifest | every key resolves `manifest_invalid` |
 | Recall (key removed from a release) | the key is absent, so the cell shows the alternative |
 
-**At activation: not built.** Under Profile A (`docs/architecture/visual_asset_foundation_adr.md`, D8) activation is the reviewed frontend deployment, and nothing asks, at that point, whether a key has its
-alternative. What is built is narrower: `assemble_release` refuses a registry key that is not `optional` and has no artifact (`visual_assets/store/release.py::assemble_release`, code
-`key_without_artifact`). That is an artifact requirement, not a fallback requirement. `GAP` for later, not a requirement this page meets.
+**At activation: built at the store, not at the client (updated 2026-10-09).** `assemble_release` and `export_runtime` now also run `registry.fallback_problems` (code `fallback_missing`): every key left without an image in the release must have an alternative that carries its fact. Under Profile A (`docs/architecture/visual_asset_foundation_adr.md`, D8) activation is the reviewed frontend deployment, and the client has no check of its own at that point. Before this update nothing asked whether a key had its alternative; `assemble_release` also refuses a registry key that is not `optional` and has no artifact (`visual_assets/store/release.py::assemble_release`, code
+`key_without_artifact`). That is an artifact requirement; the fallback requirement is the new check. A client-side check at deployment time is not built and stays with `AM-M6`.
 
-**Gaps against this framework, none fixed here:**
+**Gaps against this framework (the first three were closed on 2026-10-09 by `TCK-20261008-VISUAL-ASSETS-REGISTRY-SAFETY-AND-LABEL-FIELDS`, struck through below; the rest are open):**
 
-- The registry has no class field, so a key does not declare its class (`visual_assets/store/contracts/definitions.py::VisualKeyDefinition`; `AM1-W02` safety-class link).
-- No check refuses a release, a build or an adoption whose `identifying` or `critical` key has no named alternative.
+- ~~The registry has no class field, so a key does not declare its class~~ (resolved 2026-10-09, see below; the original text follows) (`visual_assets/store/contracts/definitions.py::VisualKeyDefinition`; `AM1-W02` safety-class link).
+- ~~No check refuses a release, a build or an adoption whose `identifying` or `critical` key has no named alternative.~~ Since 2026-10-09 the registry loader refuses such a key and `assemble_release` and `export_runtime` refuse (`fallback_missing`) when an `identifying` or `critical` key left without an image has no alternative; an adoption is still not checked (an adoption needs a registered key, which has a class by construction).
 - No `critical` key exists, and the HUD has no fallback or text contract at all; the HUD package owns that.
 - The family glyph fallback is not wired into the real Live Map.
+- ~~**The 36 adopted icon keys state their class only as prose.**~~ **Resolved 2026-10-09** (`TCK-20261008-VISUAL-ASSETS-REGISTRY-SAFETY-AND-LABEL-FIELDS`): every registry key now carries `safety_class` and a structured `fallback`, the loader enforces them and 35 icon keys carry an accessible `label` (`m1_contract_register.md`, `W02.7`, `W06.3`). The description prose is kept.
 - No fail-closed rule exists for an image that decodes but is the wrong thing; integrity is the build and `verify` (D9), and the client checks decoded size only.
 
 ## Rule for new kinds

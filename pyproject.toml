@@ -6,10 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "rpg-based-simulation"
 version = "0.1.0"
 description = "Deterministic Concurrent RPG Engine"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 # Single source of dependency declarations. uv.lock is resolved from this file and
-# requirements.txt is a generated export of the lock (never edit it by hand):
-#   uv export --frozen --no-hashes --no-emit-project -o requirements.txt
+# there is no requirements.txt export: every CI job runs `uv sync --locked` (TCK-20261008-DROP-UNUSED-REQUIREMENTS-EXPORT).
+# A consumer that cannot read uv.lock can run `uv export --frozen --no-hashes --no-emit-project` ad hoc.
 # See docs/guidelines/agent_working_environment.md.
 dependencies = [
     "xxhash>=3.4.0",
@@ -31,8 +31,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# torch must be installed separately from the CPU wheel before this extra:
+# torch is not pinned here, and uv.lock resolves it from PyPI (the CUDA build). `.venv-knowledge` (3.12) is built by a
+# manual CPU-wheel step instead:
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# so that venv is NOT reproducible from the lock: do not `uv sync --extra knowledge` expecting the CPU env. The lock
+# stays index-free because download.pytorch.org is blocked on u24desktop-Virtual-Machine (see "Why the knowledge stack
+# is stuck on 3.12" in docs/guidelines/agent_working_environment.md); revisit once it is reachable from every host.
 knowledge = [
     "sentence-transformers>=2.7.0",
     "sqlite-vec>=0.1.1",
@@ -43,7 +47,7 @@ search-mcp = [
 ]
 
 # Test and dev tooling. `dev` and `lint` are installed by default by `uv sync` (`[tool.uv]
-# default-groups`) and are part of the requirements.txt export; `profiling` is opt-in (`uv sync --group profiling`).
+# default-groups`); `profiling` is opt-in (`uv sync --group profiling`).
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
@@ -51,10 +55,12 @@ dev = [
     "httpx>=0.27.0",
     "hypothesis>=6.0.0",
     "coverage>=7.0.0",
-    "mypy",
+    # Exact, equal to the version uv.lock resolves (TCK-20261012-MYPY-DEV-PIN): a new mypy release can add errors
+    # and move the mypy baseline without a code change. Bump here and in uv.lock together.
+    "mypy==2.1.0",
     "jsonschema>=4.0.0",
     # Also declared as the `search-mcp` extra, which existing tests pin; the dev group makes
-    # the default export (requirements.txt) reach it for tests/tools/test_search_mcp.py.
+    # the default install reach it for tests/tools/test_search_mcp.py.
     "mcp>=1.0.0",
     "websockets>=12.0",
     # Baseline filter for mypy (TCK-20261003-MYPY-BASELINE-ADVISORY): existing errors are held in
@@ -68,7 +74,7 @@ dev = [
 # add or retune rules, which would change the measured baseline without a code change.
 # jscpd is a Node tool and is pinned separately (JSCPD_VERSION in the Makefile). Kept out of
 # `dev` so CI jobs that do not run the code-health tests skip them (`uv sync --no-group lint`);
-# `default-groups` below keeps a plain `uv sync` and the requirements.txt export unchanged.
+# `default-groups` below keeps a plain `uv sync` unchanged.
 lint = [
     "ruff==0.16.10",
     "complexipy==8.0.1",
@@ -80,7 +86,7 @@ lint = [
 profiling = [
     "memray>=1.0.0",
     # Sampling profiler for tools/perf/profile_tick.py (TCK-20261003-PERF-PROFILING-TOOLKIT). Opt-in
-    # with the rest of this group, so it is not in `dev` and not in the requirements.txt export.
+    # with the rest of this group, so it is not in `dev` and not in the default install.
     "py-spy>=0.3.14",
 ]
 
@@ -157,7 +163,7 @@ markers = [
 ]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = false
 ignore_missing_imports = true
 warn_return_any = true
@@ -171,6 +177,12 @@ exclude = [
 ]
 
 # ── Code health (python_code_craft_roadmap.md section 6; docs/guidelines/python_code_standard.md) ──
+[tool.ruff]
+# Explicit, and moved together with `requires-python` and `[tool.mypy] python_version` above: ruff would otherwise
+# fall back to requires-python, so a floor change would silently retarget it. Floor is 3.12 (owner decision
+# 2026-10-09, amending roadmap decision 12); 3.13 follows once the knowledge-search venv moves.
+target-version = "py312"
+
 # Check only: no formatter is adopted (roadmap decision 8.3), so there is no [tool.ruff.format].
 # Existing violations are held in an external baseline, not fixed or suppressed in src/.
 [tool.ruff.lint]

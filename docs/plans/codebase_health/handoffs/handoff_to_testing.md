@@ -129,3 +129,52 @@ the job on new findings; the two local `make`-target tests that exceed the 60 s 
 `TCK-20261005-CODE-HEALTH-MAKE-TARGET-TESTS-LOCAL-TIMEOUT`. Adding the checks to ruleset 14220945 as required is the owner's
 step. The import-linter flip and class E test retirement stay on `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`
 (soak ends 2026-10-19, your four conditions attached).
+
+
+## Update 2026-10-08: decision 8.11 notice, repo-root cleanup batch A
+
+Source: `docs/plans/codebase_health/repo_root_layout_ticket_brief.md`. Under owner decision 8.11 (the `src/` freeze only; tests that pin CI or the Makefile may be edited, with a notice to you), ticket `TCK-20261008-DROP-UNUSED-REQUIREMENTS-EXPORT` (A2) deletes `requirements.txt` and edits these tests:
+
+- `tests/static/test_ci_narrow_path_filtered_jobs.py`: the PERF_RE/MIG_RE match check no longer expects `requirements.txt`.
+- `tests/static/test_ci_requirements_no_ml_stack.py`: rewritten. It asserts the ML stack is absent from the default install closure (project dependencies plus `[tool.uv] default-groups`, walked in `uv.lock`) instead of reading `requirements.txt`; the `requirements-knowledge.txt` test is unchanged.
+- `tests/static/test_ci_step_summary_reporting.py`: the banned-dependency check (`pytest-cov`, `pytest-html`) reads `pyproject.toml`; two test functions renamed (`..._no_new_dependency_entry_...`).
+- `tests/unit/tools/test_scenario_lane_paths.py`: the `requirements.txt` trigger cases use `uv.lock`; `tools/test_architecture/scenario_lane_paths.py` drops `requirements.txt` from its regex (`uv.lock` and `pyproject.toml` stay).
+- `tests/tools/test_evidence_cache_identity_contract.py` (candidate list), `tests/tools/test_delivery_ci_triage_classifier.py` (an inline sample workflow line), and comments in `tests/tools/test_knowledge_search.py` and `tests/codebase/test_code_health_impact.py`.
+
+`.github/workflows/test.yml` loses `requirements\.txt$` from PERF_RE and MIG_RE (`pyproject.toml` and `uv.lock` were already in both). Scoped run: `tests/static` and the 42 files referencing the touched paths pass; the known local 60 s failure `test_codebase_health_snapshot.py::test_make_target_runs_successfully_end_to_end` was deselected. Batch B (after A merges) will also edit `tests/architecture/test_docker_compose_dependency_hygiene.py`, `tests/logging/test_loki_cardinality.py`, `tests/codebase/test_code_health_install_git_hooks.py`, and add `tests/codebase/test_repo_root_allowlist.py`; you will get a notice then.
+
+
+## Update 2026-10-08 (batch B): decision 8.11 notice, repo-root layout
+
+Source: `docs/plans/codebase_health/repo_root_layout_ticket_brief.md`. Batch B (after batch A, PR #447) edits tests under owner decision 8.11 (CI- and layout-pinning tests may be edited, with a notice to you):
+
+- `TCK-20261008-OPS-FILES-INTO-DOCKER-DIR` (B1): `tests/architecture/test_docker_compose_dependency_hygiene.py` now reads `compose.yaml` and `pyproject.toml` anchored on the repo root (was cwd-relative `docker-compose.yml`); `tests/logging/test_loki_cardinality.py` reads `docker/promtail-config.yml` anchored on the repo root (was cwd-relative `promtail-config.yml`); `tests/unit/tools/test_scenario_lane_paths.py` gains two `docker/` cases (the scenario-lane gate treats `docker/` like the old `grafana/`: irrelevant to the lane), with `tools/test_architecture/scenario_lane_paths.py` updated.
+- `TCK-20261008-DROP-MAKE-BAT` (B2): `tests/codebase/test_code_health_install_git_hooks.py` drops `make.bat` from its scan list.
+- `TCK-20261008-GRAPH-HTML-JS-DEPS-BESIDE-TOOL` (B3): new `tests/tools/test_graphify_to_html_js_assets.py` (paths and a fake tree, no network or npm).
+- `TCK-20261008-REPO-ROOT-ALLOWLIST-GUARD` (B4): new `tests/codebase/test_repo_root_allowlist.py` compares the tracked root entries (`git ls-files` first path components) with the allowlist in `docs/guidelines/repo_tooling_layout.md`, section "Repo root"; it fails on any new root file or directory and ignores everything below the root. Mutation-proved with an extra staged root file.
+
+Scoped runs pass (169 passed, 1 skipped for B1's set; 97 for B2; 5 for B3; 4 for B4). The known local 60 s failure `test_codebase_health_snapshot.py::test_make_target_runs_successfully_end_to_end` is unrelated.
+
+
+## Update 2026-10-08 (CI backend image build): decision 8.11 notice
+
+`TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK` adds a path-gated `docker-build` job ("Backend image build") to `.github/workflows/test.yml` and edits the tests that pin the workflow, as the job set and the gate shape are exactly what they pin:
+
+- `tests/static/test_ci_step_summary_reporting.py`: `docker-build` joins the expected job set (comment names the ticket).
+- `tests/static/test_ci_uv_install.py`: `docker-build` is in `_NO_PYTHON_INSTALL` (it installs nothing on the runner; plain `docker` commands).
+- `tests/static/test_ci_registry_resync_skip_jobs.py`: `docker-build` is in `SKIP_JOBS` (its result depends on the PR content only).
+- `tests/static/test_ci_narrow_path_filtered_jobs.py`: `run_docker_build` is checked in both fail-open branches and in the gated-job condition checks; three new tests: the job's `if` references its own output and `pr_content_unchanged`; `DOCKER_RE` matches `docker/backend.Dockerfile`, `.dockerignore`, `uv.lock`, `pyproject.toml` and the workflow file but not `src/`, `docs/`, `docker/frontend.Dockerfile` or `docker/nginx.conf`; the job uses plain `docker` commands only (no docker/* action, no cache, no push or login, 15-minute timeout).
+
+The job is deliberately not a required check (a path-skipped required check stays "expected"). `docs/testing/migration_ci_lanes.md` documents the gate and the skip-table row. `actionlint` (via `uvx --from actionlint-py`) reports no findings on the edited workflow, the same as on `origin/main`.
+
+
+## Update 2026-10-09: order-dependent failure in test_metrics_endpoint_integration
+
+Source: `TCK-20261009-HANDOFF-TESTING-METRICS-EXPORT-FLAKE`. Codebase does not fix this test (`tests/observability/` is yours); this is the handover of what perf reported and what I saw.
+
+- **Test:** `tests/observability/test_metrics_export.py::test_metrics_endpoint_integration` (line 155). It starts `python -m src serve --port 8011` as a subprocess, does a fixed `time.sleep(3)`, then `requests.get(...)`.
+- **Missing safeguards (read from the source, not observed failing):** no readiness check (the sleep is the only wait), the port is hard-coded to 8011, `requests.get` has no `timeout=`, and the `finally` does `terminate()` then `wait()` with no timeout and no `kill()` fallback.
+- **Report (perf, repro on `8754f94f2`):** connection refused when the test runs after `tests/unit/resource` and `tests/unit/observability` in a single pytest invocation. CI runs those suites as separate steps, so CI is not affected today. It is the same pattern as the earlier api boot flake.
+- **Re-run on `0c3a5654b` (main, 2026-10-09):** `pytest tests/unit/resource tests/unit/observability tests/observability/test_metrics_export.py -s -q -x`, one invocation, under a 2 GB cgroup cap, light host load: **PASSED**, 1267 passed, 2 skipped, 55.85 s. After the run nothing was listening on port 8011 (`ss -ltnp | grep 8011` empty). So there is no stderr or port state to attach: I could not reproduce the connection refused, and I make no claim about its cause. The report stands as perf's observation; one way it can happen: server startup takes longer than the fixed 3 s, which the missing readiness check leaves unguarded.
+- **Suggested fix (yours to decide):** bind to port 0 and pass the chosen port, poll `/health` (or the port) with a deadline instead of the fixed sleep, give `requests.get` a `timeout=`, and `kill()` the server if `terminate()` does not return in time.
+- **Related:** most of `.github/workflows/test.yml` is your lanes. `ubuntu-latest` begins migrating to Ubuntu 26.04 on 2026-10-19 (rolling out to 2026-11-19); the per-job result of running `test.yml` on `ubuntu-26.04` is in `docs/plans/codebase_health/ubuntu_26_runner_precheck.md` (ticket `TCK-20261009-UBUNTU-26-RUNNER-PRECHECK`).

@@ -19,7 +19,7 @@ from codebase.reports import codebase_health_baseline as chb
 _REPO_ROOT = Path(__file__).parent.parent.parent
 
 # graphify (the CLI binary, not just graphify-out/graph.json) is a locally-installed
-# dev tool -- confirmed absent from requirements.txt/pyproject.toml/any CI workflow,
+# dev tool -- confirmed absent from pyproject.toml/any CI workflow,
 # and graphify-out/ is entirely gitignored (never committed). Only the one
 # end-to-end smoke test below (test_make_target_runs_successfully_against_real_repo)
 # invokes the real `graphify affected` against the real graph.json, so only it

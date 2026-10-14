@@ -4,12 +4,12 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-09"
 ---
 
 # Scenario Bank: Objects / Ownership / Resources / Economy (Batch 08)
 
-**Purpose/scope.** Eighteen scenarios used to pressure-test the Objects/Material Culture,
+**Purpose/scope.** Twenty-three scenarios (two added 2026-10-08 and three 2026-10-09 for EXCH-02) used to pressure-test the Objects/Material Culture,
 Ownership/Possession, Resources/Production, and Economy/Exchange rule families in
 `material-economy/objects-material-culture.md`, `ownership-possession.md`,
 `resources-production.md`, and `economy-exchange.md`, per `tmp/world-rule-batch-8-ext-ai.md`
@@ -259,6 +259,221 @@ an acceptable substitute; production remains valid.
   formulation (which would have forbidden this trajectory outright) and confirms the revised
   Rule permits it cleanly; this repository simply has not yet authored a recipe that exercises
   the permission.
+
+
+## ME-S19 — A broke worker sells what it gathered and buys a meal (EXCH-02, decision 34) (added 2026-10-08)
+
+A worker with no money chooses to sell goods it gathered (wood or ore, not food) to the shop,
+the shop pays out of its own purse, and the worker spends the coins on a meal.
+
+- **Rules invoked:** EXCH-02 (earn by selling; every coin comes out of the payer's own purse),
+  EXCH-01 (price, through `MarketSystem` per Bible 03), SURV-06 (buying is a way to eat).
+- **Kernel spec (`mechanic_scenario`, `tests/mechanic_scenarios/`, through
+  `tests/helpers/scenario.py`).** Two arms, differing only in the shop's purse:
+  - **Staging:** a compiled world with a town that has a shop and an inn, both within reach.
+    Worker W is a people-kind with 0 gold and no food, carrying enough of a non-food gathered
+    good (wood or iron ore) for its sale to pay for one inn meal, and hungry enough that decision
+    27's pull applies. The free meal is removed in this staging,
+    as in the full LB-S17. There are no hostiles.
+  - **Main arm (the shop's purse holds enough to buy):** W chooses to sell at the shop (a decided
+    act, AGENCY-01, not an automatic sale on standing nearby). W's gold rises by the sale price
+    and the shop's purse falls by the same amount. W's carried goods fall by the units sold and
+    the shop's stock rises by them. W then buys a meal at the inn: W's gold falls
+    by the meal price, the inn's purse rises by it, and W's hunger falls. Conservation holds
+    across the run: total coins, total goods and total food units, counting what has been eaten,
+    are unchanged.
+  - **Control arm (the shop's purse is empty):** the sale does not happen. W's gold stays 0, W
+    keeps its goods, and no inn meal is bought.
+  - **Why the control:** it proves the coins came out of the shop's purse, not from nowhere.
+  - **Why not food (revised 2026-10-09):** at `MarketSystem`'s sell price a berry earns 1 gold
+    while an inn meal costs 5, and a berry eaten removes 30 hunger. Selling food to buy food is
+    a bad trade that a sensible worker would not make, so the scenario sells a non-food good.
+    Gathered food is sold only as surplus (the seller keeps at least one meal's worth). That rule
+    is Lane B's to test, not this scenario's.
+- **Result (2026-10-08): revealed missing implementation on main.** No worker is seen selling,
+  and every worker starts with 0 gold (EXCH-02's evidence). Expected to be **covered** with Lane
+  B's batch 2.
+- **Result (#536, 2026-10-13): partly covered.** The shop's purse pays a sale and cannot be
+  spent twice in one tick, and the treasury's share is taken from the sale
+  (`tests/unit/resource/test_tax_and_upkeep.py`). A broke worker gathering, selling a non-food
+  good and then buying a meal is not exercised as one loop yet.
+
+## ME-S20 — A broke worker works a shift at the inn, is paid from the inn's purse, and eats (EXCH-02, decision 34) (added 2026-10-08)
+
+A worker with no money and nothing to sell works a shift at the inn for a wage paid out of the
+inn's purse, then buys a meal.
+
+- **Rules invoked:** EXCH-02 (earn by a wage; the employer's purse pays), SURV-06.
+- **Kernel spec (`mechanic_scenario`).** Two arms, differing only in the inn's purse:
+  - **Staging:** a compiled town with an inn that employs people. Worker W is a people-kind with
+    0 gold and nothing to sell, hungry, with no hostiles and the free meal removed.
+  - **Main arm (the inn's purse holds at least one wage):** W works a shift. Afterwards W's gold
+    has risen by the wage, the inn's purse has fallen by the same amount, and time has passed
+    for the shift. W then buys a meal, its hunger falls, and the meal price returns to the inn's
+    purse. Total coins are conserved, and the inn's purse is checked over the whole run: it is
+    credited by every paid meal and bed and debited by every wage, never by anything else.
+  - **Control arm (the inn's purse is empty):** no wage is paid. Either W does not work, or it
+    works unpaid and no coin appears. W's gold stays 0 and no meal is bought.
+  - **Why the control:** it proves a wage is a transfer from a real purse, not a payout that
+    appears from nowhere.
+  - **Engineering, not observable:** the wage amount, the shift length, and how many people the
+    inn employs. Both values follow the fiction (decision 33). A shift is a few hours (roughly 100
+    to 300 ticks at 36 s per tick), paying about a meal or two. It is never sized to make the
+    loop close. If a plausible shift is too long for a broke worker to eat in time, that is a
+    finding for the designer, not a reason to shorten the shift.
+- **Result (2026-10-08): revealed missing implementation on main.** No paid-work concept exists.
+  Expected to be **covered** once Lane B's wage shape lands (the inn's own purse pays; shape
+  relayed by rpg-planner, 2026-10-09).
+- **Result (#536, 2026-10-13): covered in the kernel, dormant in play.** An inn shift is paid
+  from the inn's own purse, and an empty purse pays nothing
+  (`tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py`). In measured runs no
+  wage is paid while the free meal stands; that is retested after the free-meal removal.
+
+---
+
+## ME-S21 — A broke worker does town work paid from the faction treasury, and an empty treasury pays nothing (EXCH-02, decision 37) (added 2026-10-09)
+
+A worker with no money does a stint of town work (for example hauling or keeping the streets for
+the settlement), is paid from its faction's treasury, and buys a meal. A treasury with no coin
+pays nobody.
+
+- **Rules invoked:** EXCH-02 (earn by a wage; every coin comes out of the payer's purse; decision
+  37: a faction treasury pays wages for town work), SURV-06 (buying is a way to eat).
+- **Kernel spec (`mechanic_scenario`).** Two arms, differing only in the treasury's balance:
+  - **Staging:** a compiled town of one faction, with an inn in reach whose purse and stock can
+    serve a meal. Worker W is a people-kind of that faction with 0 gold, nothing to sell and no
+    food, hungry enough that decision 27's pull applies. The inn offers no shift (or its purse
+    is empty), so the treasury is W's only wage. The free meal is removed. There are no hostiles.
+  - **Main arm (the treasury holds at least one wage):** W chooses town work and does it for a
+    stint of plausible length. Afterwards W's gold has risen by the wage, and the faction
+    treasury has fallen by the same amount. W then buys a meal at the inn, its hunger falls, and
+    the inn's purse rises by the price. Over the whole run, total coins are conserved across
+    the treasury, the inn's purse and every person's purse.
+  - **Control arm (the treasury is empty):** no wage is paid. Either W does not take the work, or
+    it works and no coin appears. W's gold stays 0 and no meal is bought.
+  - **Why the control:** it proves the town wage is a transfer out of the treasury, not minted.
+  - **How the wage reaches W (decision 58, amended 2026-10-09):** the treasury pays a building it
+    owns its upkeep, into that building's own purse, and the building pays W's wage from that
+    purse, at the same rate as an inn shift. So "falls by the same amount" reads across the
+    chain: the treasury falls by the upkeep, the building's purse rises by the upkeep and then
+    falls by the wage. In the control arm, an unpaid building is disabled and offers no work.
+  - **Amended (decision 61, 2026-10-11):** a building meets its upkeep from its own purse first,
+    and the treasury tops up only a shortfall. Add an arm in which a building with coin in its
+    own purse and an empty treasury stays open and pays W.
+  - **Engineering, not observable:** what counts as town work, the wage and stint length (from the
+    fiction, as in ME-S20), and how a treasury refills (taxes, trade). Its refilling is a later
+    Rule's question.
+- **Result (2026-10-09): revealed missing implementation on main.** No wage path from a faction
+  treasury exists, and the treasury (`global_resources`, `faction_<id>_gold`) is held by no
+  building or person. Expected to be **covered** with
+  `TCK-20261009-THE-FACTION-TREASURY-PAYS-WAGES-FOR-TOWN-WORK-DECISION-37`.
+- **Result (#536, 2026-10-13): covered, as amended by rulings 61 and 66.** An upkeep shift is
+  paid from the building's purse, with the treasury topping up only a shortfall; an unpaid
+  building offers no work (`tests/mechanic_scenarios/test_treasury_upkeep_pays_a_town_wage.py`,
+  `tests/unit/resource/test_maintenance_shift_counter.py`). Dormant in play while the free meal
+  stands, as in ME-S20.
+
+---
+
+## ME-S22 — A sale or a wage pays a share to the place-holder's treasury; a subject who earns nothing pays nothing (EXCH-02, decision 51) (added 2026-10-09)
+
+When coin changes hands in a place, a small share goes to the treasury of the faction that holds
+that place. A subject who earns and trades nothing pays no tax, however long it stays.
+
+- **Rules invoked:** EXCH-02 (every coin moves purse to purse; decision 51: tax is a share of
+  income or trade).
+- **Kernel spec (`mechanic_scenario`).** One town held by faction F, with a shop whose purse can
+  buy and an inn whose purse can pay a wage. Three subjects of the same kind, none hostile:
+  - **Seller S:** holds 0 gold and a sellable non-food good, and sells it at the shop. S's gold
+    rises by the price minus the share. The shop's purse falls by the full price. F's treasury
+    rises by exactly the share.
+  - **Worker W:** holds 0 gold and works one paid shift at the inn. W's gold rises by the wage
+    minus the share. The inn's purse falls by the full wage. F's treasury rises by exactly the
+    share.
+  - **Idler I (the control):** holds a few coins, sells nothing and earns nothing, and stays in
+    the town for the whole window. I's gold never falls by tax at any tick, and F's treasury
+    never rises because of I.
+  - **Conservation over the window:** total coins across every purse and the treasury are
+    unchanged. The treasury's rise equals the sum of the shares, and nothing else credits it.
+- **Decided (decision 58, 2026-10-09):** the share is a tenth, rounded down on each transaction,
+  and non-members pay the same. So a 6-gold wage pays nothing and a 20-gold sale pays 2. Stage
+  W's wage and S's price so that the expected share is stated in the spec, and add a small-sum
+  arm: a transaction under 10 gold moves no coin to the treasury.
+- **Engineering and content, not observable:** which side of a sale pays the share.
+- **Result (2026-10-09): revealed contradiction on main.** A regional levy takes 2 gold every 20
+  ticks from anyone present (`src/engine/town_resolution.py`), so I is taxed while earning
+  nothing (decision 51's evidence). Expected to be **covered** with
+  `TCK-20261009-TAX-IS-A-SHARE-OF-SALES-AND-WAGES-PAID-TO-THE-PLACE-HOLDERS-TREASURY-DECISION-51`.
+- **Result (#536, 2026-10-13): covered.** The levy is gone, a sale pays the seller the price
+  minus the tenth and the treasury the tenth, and a small sale moves nothing to the treasury
+  (`tests/unit/resource/test_tax_and_upkeep.py`).
+
+---
+
+## ME-S23 — A bounty and a quest reward come out of a payer's purse, and loot is only what the body carried (EXCH-02, decision 38) (added 2026-10-09)
+
+A reward is paid by someone: a bounty from the treasury of the faction that posted it, a quest
+reward from the giver's purse. Killing a creature yields only what it carried. No coin appears
+because a kill or a quest happened.
+
+- **Rules invoked:** EXCH-02 (every coin moves purse to purse; decision 38: rewards need a
+  payer), decision 37 (first coin is declared world content).
+- **Kernel spec (`mechanic_scenario`).** Four arms, on a world where every purse and treasury
+  balance is known at the start:
+  - **Bounty (posted):** faction F posts a bounty on a creature hostile to it. Subject H kills
+    the creature and claims the bounty. H's gold rises by the bounty, and F's treasury falls by
+    the same amount.
+  - **Bounty (unfunded):** the same, but F's treasury cannot cover the bounty. No bounty is
+    posted, or the claim pays nothing. No coin appears.
+  - **Quest reward:** giver G, holding coin, offers a task with a reward and H completes it. H's
+    gold rises by the reward and G's purse falls by the same amount.
+  - **Quest reward owed (decision 58, 2026-10-09):** G cannot pay when H completes the task. No
+    coin appears. A recorded debt (H is owed, by G, this amount, since this tick) exists and stays
+    visible. When G later holds the coin, the debt is paid, oldest first, and then cleared.
+  - **No giver (decision 61, 2026-10-11):** a quest with no identifiable giver pays no coin. No
+    other purse or treasury is debited for it.
+  - **Loot (control):** H kills a creature that no one has posted a bounty on. H gains exactly
+    what the body carried, coin and items, and the body is left without them. A creature that
+    carried nothing yields nothing; an animal never carries coin.
+  - **Conservation:** in every arm, total coins across every purse and treasury are unchanged.
+- **Engineering, not observable:** how bounties are posted and claimed, escrow, how a quest
+  giver is chosen, and reward sizes.
+- **Result (2026-10-09): revealed contradiction on main.** Kill rewards are minted by level
+  (`src/engine/combat.py`, `src/engine/combat_rewards.py`; MONSTER x5, HERO x50), and quest gold is
+  granted with no poster or escrow (`src/engine/quests.py:203-212`), both through
+  `_reward_result` in `src/core/conservation.py`, which credits and never debits. Spawned bodies,
+  wolves included, are given gold at birth (`src/systems/world_systems/generator.py`). Expected to
+  be **covered** with `TCK-20261009-MINTED-KILL-AND-QUEST-COIN-IS-PAID-BY-A-PAYER-EXCH-02-B`.
+- **Result (#536, 2026-10-13): covered for the quest reward and for loot; the bounty is not
+  exercised.** A kill mints no coin, a looter takes only the coin the body holds, an unlooted
+  purse stays put, and a quest reward is paid by its giver or owed
+  (`tests/unit/resource/test_corpse_gold.py`, `tests/unit/resource/test_rewards_repair_and_fees.py`,
+  `tests/unit/quest/test_quest_lifecycle.py`). No bounty system exists, so no bounty is posted.
+
+---
+
+## ME-S24 — A repair is paid once to the smith, or uses up a kit away from one (EXCH-02, decision 58) (added 2026-10-09)
+
+A worn item is repaired either by a smith, who is paid once, or in the field with a repair kit
+that is used up. No coin leaves without someone receiving it.
+
+- **Rules invoked:** EXCH-02 (every coin moves purse to purse), decision 58.
+- **Kernel spec (`mechanic_scenario`).** Three arms, with every purse known at the start:
+  - **At the smith:** subject R with a worn item and enough coin has it repaired. R's gold falls
+    by the price once, the smith's purse rises by the same amount, and the item's durability
+    rises.
+  - **In the field:** R is far from any smith and carries a repair kit. The repair is offered and
+    done. The kit is gone, no coin moves, and the item's durability rises.
+  - **Control:** R is far from any smith and carries no kit. No repair is offered, and R's gold
+    and the item are unchanged.
+  - **Conservation:** total coins across every purse are unchanged in every arm.
+- **Engineering, not observable:** the price, the reach to a smith, and how much a kit restores.
+- **Result (2026-10-09): revealed contradiction on main** (relayed by rpg-planner). Repair
+  charges `gold_cost` on top of `gold_delta` (twice), and a repair with no smith in reach pays
+  nobody. Expected to be **covered** with Lane B's treasury batch.
+- **Result (#536, 2026-10-13): covered.** A repair at the smith is charged once into the smith's
+  purse; away from a smith a carried kit is used up and no coin moves; with neither, nothing is
+  offered (`tests/unit/resource/test_rewards_repair_and_fees.py`).
 
 ---
 

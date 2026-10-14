@@ -1,0 +1,209 @@
+name: RPG gate report
+
+# TCK-20261009-RPG-GATE-SCHEDULED-AND-DISPATCH-WORKFLOW (child 5 of TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC). ADVISORY: this is not a required check
+# (roadmap principle 8) and nothing waits on it. It runs rpg's regression metrics in fresh pinned processes (tools/test_architecture/rpg_gate_harness.py),
+# evaluates them against the versioned baselines (rpg_gate_report.py) and keeps ONE rolling issue (label `rpg-gate-report`, separate from #390).
+#   - schedule (once a day, off the hour) + workflow_dispatch with a `ref` input; no push or pull_request trigger;
+#   - a non-cancelling concurrency group, so every run that starts also finishes;
+#   - the #464 gate: a SCHEDULED run is skipped when main's head was actually tested (the `RPG gate report` job concluded success or failure) less than 24 h
+#     ago; a dispatch always runs (tools/test_architecture/slow_regression_gate.py, parameterised by workflow and suite job);
+#   - one shard job per world (fresh process per seed inside it), then an aggregate job that evaluates, writes the step summary, uploads the documents and the
+#     report, and (scheduled runs on main only) updates the rolling issue;
+#   - rpg's config (tests/simulation_quality/rpg_gate/config.yaml) and metric module (src/observability/rpg_gate_metrics.py) may not exist yet. No config or
+#     no module: the plan job says so ("rpg's metric module is absent: nothing was run"), no shard or report job runs, the run ends green and counts as
+#     untested (the simulations are not run just to get metric_error). An INVALID config turns the plan job red.
+# Cost (planning): 3 worlds x 5 seeds x 5000 ticks is about 50-60 min wall on one 2-vCPU ubuntu-latest runner (TCK-20261009-RPG-GATE-PINNED-FRESH-PROCESS-HARNESS
+# measured 200-700 s per run on a busy development host); sharding by world runs the shards in parallel and bills the same minutes.
+
+on:
+  schedule:
+    # Once a day. Off the hour (GitHub delays or drops top-of-hour schedules) and clear of the slow suite's slots (02:41, 08:41, 14:41, 20:41).
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag or SHA to report on (default: the ref the workflow was dispatched from)"
+        required: false
+        default: ""
+
+concurrency:
+  group: rpg-gate-report-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: "Gate: skip if main was reported recently"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      decision: ${{ steps.decide.outputs.decision }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            tools/test_architecture/__init__.py
+            tools/test_architecture/slow_regression_gate.py
+          sparse-checkout-cone-mode: false
+      # Schedule events only; a dispatch always runs. If this step errors, `decision` stays empty and the run proceeds (fail open).
+      - name: Decide
+        id: decide
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          set -o pipefail  # a crashing gate must not hide behind `| tee`
+          python3 -m tools.test_architecture.slow_regression_gate decide \
+            --workflow rpg-gate-report.yml --suite-job "RPG gate report" \
+            --head-sha "${{ github.sha }}" --exclude-run-id "${{ github.run_id }}" | tee decision.txt
+          cat decision.txt >> "$GITHUB_OUTPUT"
+          {
+            echo "### RPG gate report gate"
+            sed 's/^/- /' decision.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  plan:
+    name: "Plan from rpg's config"
+    needs: gate
+    # `!cancelled()` so a failed gate does not skip the run (fail open); skip only on an explicit `skip`.
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.gate.outputs.decision != 'skip') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      ready: ${{ steps.plan.outputs.ready }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      # Ready only with a VALID config and rpg's metric module present. An absent config or module ends the run green with nothing run (no billed simulation
+      # minutes just to get metric_error); an INVALID config exits non-zero here, which turns this job red.
+      - name: Plan
+        id: plan
+        run: |
+          rc=0
+          python3 -m tools.test_architecture.rpg_gate_plan > plan.txt || rc=$?
+          cat plan.txt >> "$GITHUB_OUTPUT"
+          {
+            echo "### RPG gate report plan"
+            sed 's/^/- /' plan.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
+
+  shard:
+    name: "Shard (${{ matrix.world }})"
+    needs: plan
+    if: ${{ !cancelled() && needs.plan.outputs.ready == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix || '{"world":["none"]}') }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
+      # Two workers on the 2-vCPU runner. The harness always exits 0: a crashed or timed-out run is a `no-data` document, which the report states.
+      - name: Run the matrix for one world (fresh process per seed)
+        run: |
+          python -m tools.test_architecture.rpg_gate_harness \
+            --config tests/simulation_quality/rpg_gate/config.yaml \
+            --out gate-docs --only-world "${{ matrix.world }}" \
+            --workers 2 --timeout 3000 --sha "$(git rev-parse HEAD)"
+      - name: Upload documents
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rpg-gate-docs-${{ matrix.world }}
+          path: gate-docs/
+          retention-days: 30
+
+  report:
+    # The suite job the #464 gate looks for: it concludes success or failure only when a run actually reported; a skipped run leaves it `skipped`.
+    name: "RPG gate report"
+    needs: [plan, shard]
+    if: ${{ !cancelled() && needs.plan.outputs.ready == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    # Job-level permissions drop everything not listed: checkout needs contents, the rolling issue needs issues.
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: astral-sh/setup-uv@v10.2.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: rpg-gate-docs-*
+          path: gate-docs
+          merge-multiple: true
+      - name: Evaluate (rerun once on a fail or drift, 2 workers, bounded)
+        run: |
+          mkdir -p report
+          python -m tools.test_architecture.rpg_gate_report \
+            --config tests/simulation_quality/rpg_gate/config.yaml \
+            --docs gate-docs \
+            --baselines tests/simulation_quality/rpg_gate/baselines \
+            --known tools/test_architecture/rpg_gate_known.yaml \
+            --out-json report/rpg-gate-report.json --out-md report/rpg-gate-report.md \
+            --sha "$(git rev-parse HEAD)"
+          cat report/rpg-gate-report.md >> "$GITHUB_STEP_SUMMARY"
+      # Best-effort: a refusal is a line in the summary, never a failure. Only a run of main is a baseline source; a branch-ref dispatch writes an
+      # evidence-only candidate that `rebaseline` refuses.
+      - name: Baseline candidate (best-effort)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          evidence=""; why=""
+          if [ "$REF_NAME" != "main" ]; then evidence="--evidence-only"; why="the run is on ref $REF_NAME, not main"; fi
+          if [ -n "$INPUT_REF" ]; then evidence="--evidence-only"; why="${why:+$why; }the dispatch checked out ref input $INPUT_REF"; fi
+          if python -m tools.test_architecture.rpg_gate_candidate \
+              --config tests/simulation_quality/rpg_gate/config.yaml --docs gate-docs \
+              --known tools/test_architecture/rpg_gate_known.yaml --report report/rpg-gate-report.json \
+              --out report/rpg-gate-candidate.json --commit-sha "$(git rev-parse HEAD)" $evidence 2> candidate.err; then
+            echo "### Baseline candidate" >> "$GITHUB_STEP_SUMMARY"
+            echo "- written to the report artifact as rpg-gate-candidate.json${evidence:+ (evidence only, not a baseline source: $why)}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            { echo "### Baseline candidate refused"; sed 's/^/- /' candidate.err; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rpg-gate-report-${{ github.sha }}
+          path: |
+            report/
+            gate-docs-rerun/
+          retention-days: 30
+      # The rolling issue is for main's SCHEDULED runs only; a dispatch (a branch run) writes the summary and the artifact, never the issue.
+      - name: Update the rolling issue
+        if: ${{ !cancelled() && github.event_name == 'schedule' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m tools.test_architecture.rpg_gate_issue \
+            --report report/rpg-gate-report.json \
+            --repo "${{ github.repository }}" --run-id "${{ github.run_id }}" --sha "${{ github.sha }}"
+      # The job's verdict, after the uploads and the issue: red only for an unowned or expired fail, or an unstable metric (rpg_gate_report.verdict).
+      - name: Verdict
+        run: |
+          verdict="$(jq -r .verdict report/rpg-gate-report.json)"
+          echo "verdict: $verdict"
+          test "$verdict" = "green"

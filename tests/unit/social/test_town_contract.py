@@ -128,78 +128,24 @@ def _assert_no_inventory_update(refined):
     )
 
 
-def test_shop_sell_price_enforcement():
-    """Law of Value: Verify that selling items results in exactly the expected gold delta."""
-    e_id = 1
-    pos = (5, 5)
-
-    inventory_component = InventoryComponent(
-        items=[
-            ItemStack("wood", 1),
-            ItemStack("wood", 1),
-        ],
-        gold=100,
-    )
-
-    actor = (
-        V2EntityBuilder(1)
-        .kind("hero")
-        .location(*pos)
-        .identity()
-        .build()
-    )
-    actor = replace(actor, inventory=inventory_component)
-
-    shop = BuildingState(
-        id=10,
-        kind="shop",
-        position=pos,
-        inventory=InventoryComponent(gold=1000),
-    )
-
-    state = AuthoritativeState(
-        tick=1,
-        seed=42,
-        entities={e_id: actor},
-        buildings={shop.id: shop},
-        town_tiles={pos},
-        building_tiles={pos: "shop"},
-    )
-
-    update = StateUpdate(force_full_scan=True, entity_updates={})
-    refined = AuthoritativeApplyPipeline.refine(state, update)
-
-    e_upd = refined.entity_updates[e_id]
-
-    assert e_upd.inventory is not None
-    assert e_upd.inventory.gold_delta == 10
-
-    actual_removed = sorted([
-        i.item_id if hasattr(i, "item_id") else i
-        for i in e_upd.inventory.items_remove
-    ])
-    assert actual_removed == ["wood", "wood"]
+def test_standing_at_a_shop_sells_nothing_so_the_price_law_is_the_sell_action_s():
+    """Decision 34 removed the shop's auto-sell: a subject standing at a shop with sellable goods keeps them and its coin.
+    The sale and its price (MarketSystem, per unit times quantity) are the SELL action's, tested in
+    tests/unit/world/test_sell_is_a_chosen_act.py. This used to assert the auto-sell's gold delta."""
+    actor = _make_actor(SHOP_POS, _make_inventory(items=[ItemStack("wood", 1), ItemStack("wood", 1)], gold=100))
+    refined = _refine(_make_town_state(actor, SHOP_POS, "shop"))
+    _assert_no_inventory_update(refined)
 
 
-def test_shop_junk_auto_sell():
-    """Law of Value: Verify only junk/materials are auto-sold."""
+def test_standing_at_a_shop_keeps_junk_and_gear_alike():
+    """Decision 34: no item is sold by a visit, junk, materials or gear (what a SELL leaves with its owner is tested in test_sell_is_a_chosen_act.py)."""
     inventory_component = _make_inventory(
-        items=[
-            ItemStack("wood", 1),
-            ItemStack("steel_sword", 1),
-            ItemStack("iron_sword", 1),
-        ],
+        items=[ItemStack("wood", 1), ItemStack("steel_sword", 1), ItemStack("iron_sword", 1)],
         gold=100,
     )
     actor = _make_actor(SHOP_POS, inventory_component)
-    state = _make_town_state(actor, SHOP_POS, "shop")
-
-    refined = _refine(state)
-    e_upd = _get_entity_update(refined)
-
-    actual_removed = _removed_item_ids(e_upd.inventory)
-    assert actual_removed == ["iron_sword", "wood"]
-    assert e_upd.inventory.gold_delta == 10
+    refined = _refine(_make_town_state(actor, SHOP_POS, "shop"))
+    _assert_no_inventory_update(refined)
 
 
 def test_blacksmith_material_consumption():

@@ -71,6 +71,7 @@ class IncrementalRenderer:
 
         self.frame = list(self.background)  # current live pixel buffer
         self.last_entity_pos: dict[int, tuple[int, int]] = {}
+        self._entity_count = len(state.entities)
 
         # I-frame completion: seed every currently-active entity's position onto the
         # frame at construction time, alive or dead (TCK-20260822-HOTFIX-INCREMENTAL-
@@ -137,6 +138,21 @@ class IncrementalRenderer:
         for eid in newly_inactive:
             old_pos = self.last_entity_pos.pop(eid)
             self._restore_background_cell(old_pos[0] - self.min_x, old_pos[1] - self.min_y)
+
+        self._draw_spawned(state, dirty_entity_ids)
+
+    def _draw_spawned(self, state: Any, dirty_entity_ids: Set[int]) -> None:
+        """A creature spawned mid-run (a camp or nest spawn) is not movement- or lifecycle-dirty until it first moves, so it would never be drawn:
+        when the entity count changes, draw every active entity this renderer has not tracked yet."""
+        if len(state.entities) == self._entity_count:
+            return
+        self._entity_count = len(state.entities)
+        for eid, ent in state.entities.items():
+            if eid in self.last_entity_pos or eid in dirty_entity_ids or not getattr(ent.lifecycle, "active", True):
+                continue
+            x, y = ent.navigation.position
+            self._blit_cell(int(x) - self.min_x, int(y) - self.min_y, ENTITY_COLOR_ALIVE if ent.combat.alive else ENTITY_COLOR_DEAD)
+            self.last_entity_pos[eid] = (int(x), int(y))
 
     def save(self, path: str) -> None:
         write_png(path, self.width, self.height, self.frame)

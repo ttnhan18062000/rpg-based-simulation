@@ -119,6 +119,74 @@ occurs) — the earlier cost is never revisited or refunded. This confirms the g
 via this repository's own chosen stage granularity (the step), not evidence that the stage must
 always be a step.
 
+**Amendment, terrain cost is declared by the terrain (decided by the owner directly, 2026-10-13;
+row 72 of the memo):** Lane C found that the terrain cost table (`TERRAIN_COST`,
+`src/core/state.py`) is keyed in upper case while compiled terrain is lower case, so forest,
+swamp, mountain and road all cost 1.0 instead of 1.5, 3.0, 4.0 and 0.5, in 20 of 24 corpus
+worlds. Roads give no advantage (`frontier_living_world`: 1,455 forest, 170 swamp and 947 road
+tiles mispriced). Cave, ruin and river had no cost at all.
+- **The cost lives in content:** each terrain declares its movement cost in terrain content.
+  A terrain without one is a content error at compile, never a silent 1.0, and code reads no
+  terrain names (decision 56).
+- **Values:** the existing values are kept. New placeholders (decision 33): cave 1.5, ruin 1.5
+  (rubble) and river 3.0 (wading, like swamp). A river stays walkable. Movement styles per body
+  (a swimmer, a climber) come with milestone 1's body properties.
+- **Sequencing:** it lands before baseline v1 as its own measured step, so v1 records the world
+  as authored.
+- **Alternatives not taken:** after v1 as a change against it; a river that blocks walking,
+  which changes which places connect; keeping the code table with the three values added.
+- **What the cost does (decided by the owner directly, 2026-10-14; row 75 of the memo):** with
+  decision 72 built, the only reader is the readiness pre-check (`legality.py`, `readiness <
+  move_cost * terrain_cost`). Movement spends no readiness (chapter 2, section 7), so that check
+  refuses steps on rough ground when readiness is low but charges nothing. On
+  `frontier_living_world` all 5 seeds move both ways; `urban_political` is byte-identical. Route
+  choice ignores the cost.
+  - **Ruling:** rough ground is slower, and routes are chosen by cost. A step on a tile costing
+    N takes N times as long (road 0.5 is half, mountain 4.0 four times). Routes weigh the cost,
+    so roads get used and mountains avoided.
+  - **Sequencing:** before baseline v1, each part its own measured step: time first, then route
+    choice. Decision 72 ships first as built, with its pre-check effect disclosed.
+  - **Applied (rpg-designer):** the cost is paid in time, not gated on readiness. When the time
+    step lands, the terrain multiplier leaves the readiness pre-check; the plain `move_cost`
+    readiness check stays as it is.
+  - **Road below one tick (decided by the owner directly, 2026-10-14):** the engine allows one
+    step per entity per tick, so a cost below 1 cannot take less than a tick. A step on a tile
+    costing N lets the next step come N ticks after entry (mountain 4; 1.5 alternates 1 and 2),
+    and a cost below 1 is capped at one tick, so road and plain take the same time. Road's
+    advantage comes through route choice. A faster road (more than one step per tick) is a
+    possible later measured step, and the cap is disclosed. **Alternatives not taken:** two
+    steps per tick on road; halving all walking (plain 2 ticks, road 1, mountain 8).
+  - **What a route may know (decided by the owner directly, 2026-10-14):** there is no real
+    pathfinder today (one greedy axis step that ignores terrain), so the route step adds a
+    bounded search over terrain cost. It plans on the true terrain map, treated as common
+    knowledge of the land: terrain is static, public geography, not a hidden fact like a food
+    stock. This is a known shortcut and is disclosed. Routing from what each subject has seen or
+    remembers is a later step of its own, measured alone. **Alternatives not taken:** only known
+    tiles with a default cost for the rest; true terrain within sight range and a default beyond.
+  - **Later:** tiring the body on rough ground (a fatigue cost) can be added on top later.
+  - **Alternatives not taken:** slower only; route choice only; a fatigue cost now; both parts
+    in one step; after v1.
+- **Cover, high ground and walls (rpg-designer, 2026-10-14, applying decisions 33, 56 and 72):**
+  Lane C found more terrain checks that compare upper-case names, which never match catalog
+  terrain. Cover (`check_cover`, COMB-262: forest, mountain, "WALL") and high ground
+  (`check_high_ground`: mountain, "HILL") never apply. No terrain is a wall. Walking is already
+  blocked by structures through `blocked_tiles`, so the "WALL" branch of the walk check is dead,
+  and the chokepoint finder (which looks for "WALL" tiles only) never finds one.
+  - **Terrain declares it:** each terrain declares `gives_cover` and `high_ground` in content,
+    and a missing value is a compile error. Code drops its terrain names, and the "HILL" name
+    goes with them.
+  - **Values (placeholders by each terrain's fiction):** forest, mountain, ruin (rubble and
+    broken walls) and cave (rock walls) give cover. Mountain is high ground. Plain, grass, road,
+    swamp, river, snow and volcanic ground give neither.
+  - **Walls are structures:** the walk check reads only `blocked_tiles`, and the dead "WALL"
+    branch is removed. This must be hash-identical.
+  - **Chokepoints:** reading structures' `blocked_tiles` turns on a mechanic that has never run,
+    so it is its own measured step, after cover and high ground.
+  - **Sequencing:** the same reason as decision 72 (v1 records the world as authored). Cover and
+    high ground land before baseline v1 as one measured step after the terrain route step, then
+    chokepoints. Each reports cover and high-ground hits, perception, flight and pursuit counts
+    per world. The rendering checks are a separate presentation cleanup.
+
 **Scenarios:** [SPC-S08](../scenarios/space-environment-batch-04.md#spc-s08).
 
 ---
@@ -234,8 +302,9 @@ since #424 (`2a50072f2`, 2026-10-08), for the whole-tile clause.**
   ATTACK task against an OUT_OF_RANGE target was never re-decided, and one entity re-swung at a
   diagonal target 267 times. OUT_OF_RANGE must lead to a re-decision or a closing step.
 
-**Scenarios:** none traced yet. One is owed when the ticket lands: an attacker diagonal to its
-target steps one orthogonal tile, then strikes, and never swings from the diagonal.
+**Scenarios:** SPC-S17 (`docs/world_rules/scenarios/space-environment-batch-04.md`, 2026-10-11),
+covered since #385: an attacker diagonal to its target steps one orthogonal tile, then strikes
+within two brain cadences, and never swings from the diagonal (OUT_OF_RANGE ends the task).
 
 ---
 

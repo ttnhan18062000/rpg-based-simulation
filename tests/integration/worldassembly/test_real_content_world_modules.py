@@ -209,7 +209,7 @@ def test_wolf_den_near_forest_declares_terrain_variants(repos):
         assert region.type == "wilderness"
         assert region.tags == ["forest"]
 
-    assert regions_by_id["near_forest"].hazard_level == 1.0
+    assert regions_by_id["near_forest"].hazard_level == 0.0  # ENV-08 (owner decision 30): the near edge of the wild carries no standing hazard
     assert regions_by_id["wolf_den"].hazard_level == 2.0
     assert regions_by_id["near_forest"].hazard_kind == "NATURAL_TERRAIN"
     assert regions_by_id["wolf_den"].hazard_kind == "NATURAL_TERRAIN"
@@ -234,7 +234,7 @@ def test_wolf_den_near_forest_module_regions_preserve_non_terrain_fields(repos):
     tags = {r.id: r.tags for r in contribution.regions}
     types = {r.id: r.type for r in contribution.regions}
 
-    assert hazard_levels == {"near_forest": 1.0, "wolf_den": 2.0}
+    assert hazard_levels == {"near_forest": 0.0, "wolf_den": 2.0}  # ENV-08: near_forest 1.0 to 0.0; the den stays lethal
     assert hazard_kinds == {"near_forest": "NATURAL_TERRAIN", "wolf_den": "NATURAL_TERRAIN"}
     assert tags == {"near_forest": ["forest"], "wolf_den": ["forest"]}
     assert types == {"near_forest": "wilderness", "wolf_den": "wilderness"}

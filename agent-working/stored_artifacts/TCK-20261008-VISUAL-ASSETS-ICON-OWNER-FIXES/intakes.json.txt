@@ -1,0 +1,30 @@
+{
+ "icon.marker.ruins": {
+  "intake_id": "in-d9d25f5048d12abd",
+  "handoff": "cand-afda6fae7c56997c--bb5fe721123c"
+ },
+ "icon.rarity.common": {
+  "intake_id": "in-db5985f18b3164cf",
+  "handoff": "cand-4fee2e3331129c60--48f2e5832346"
+ },
+ "icon.status.frame_buff": {
+  "intake_id": "in-a927d82fcd493c0a",
+  "handoff": "cand-2982ab0a76db0655--c15f0f285368"
+ },
+ "icon.class.rogue": {
+  "intake_id": "in-f332aa813db19054",
+  "handoff": "cand-f5b81c36fbfc576d--6696e02a39ab"
+ },
+ "icon.marker.enemy_camp": {
+  "intake_id": "in-69b1de139c71dbe3",
+  "handoff": "cand-156dd713b3d99509--91459fe1f4a7"
+ },
+ "icon.item.tool": {
+  "intake_id": "in-ae266436924bd202",
+  "handoff": "cand-9d8bdc378332d205--be2c2e73535c"
+ },
+ "icon.marker.enemy_camp#2": {
+  "intake_id": "in-52f654991732087a",
+  "handoff": "cand-ddf834b8d9aff829--266ca6d1e022"
+ }
+}

@@ -15,8 +15,8 @@ import importlib.util
 import json
 import os
 import sqlite3
+import subprocess
 import sys
-from dataclasses import dataclass, field
 from pathlib import Path
 
 # Use locally cached HuggingFace models — avoids SSL cert failures on networks
@@ -35,6 +35,15 @@ if "knowledge_search" not in sys.modules:
     spec.loader.exec_module(_ks)
 _ks = sys.modules["knowledge_search"]
 
+_SS_PATH = _TOOLS_DIR / "search_shared.py"
+
+if "search_shared" not in sys.modules:
+    spec = importlib.util.spec_from_file_location("search_shared", _SS_PATH)
+    _ss = importlib.util.module_from_spec(spec)
+    sys.modules["search_shared"] = _ss
+    spec.loader.exec_module(_ss)
+_ss = sys.modules["search_shared"]
+
 _HR_PATH = _TOOLS_DIR / "hybrid_retrieval.py"
 
 if "hybrid_retrieval" not in sys.modules:
@@ -44,19 +53,74 @@ if "hybrid_retrieval" not in sys.modules:
     spec.loader.exec_module(_hr)
 _hr = sys.modules["hybrid_retrieval"]
 
-_INDEX_DIR = _ks._DEFAULT_DB.parent
-_DB_PATH = _ks._DEFAULT_DB
+
+
+def _main_checkout_root(start: Path) -> Path | None:
+    """The main checkout's root, from any worktree of it (or from the main checkout itself)."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(start), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    common_dir = proc.stdout.strip()
+    return Path(common_dir).parent if proc.returncode == 0 and common_dir else None
+
+
+def _resolve_index_dir(own_index_dir: Path, own_root: Path, main_root: Path | None) -> Path:
+    """This checkout's own knowledge index, or the main checkout's when this one has none.
+
+    The index is generated and gitignored, so a fresh git worktree has none and every
+    search_docs call there answered "index not found"
+    (TCK-20261010-SEARCH-MCP-WORKTREE-VENV-RESOLUTION). Querying reads the main checkout's index
+    instead; building one (`make knowledge-index`) still writes only to the checkout it runs in.
+    """
+    db_name = _ks._DEFAULT_DB.name
+    if (own_index_dir / db_name).exists() or main_root is None:
+        return own_index_dir
+    try:
+        main_index_dir = main_root / own_index_dir.relative_to(own_root)
+    except ValueError:
+        return own_index_dir
+    return main_index_dir if (main_index_dir / db_name).exists() else own_index_dir
+
+
+_INDEX_DIR = _resolve_index_dir(
+    _ks._DEFAULT_DB.parent, _TOOLS_DIR.resolve().parent, _main_checkout_root(_TOOLS_DIR)
+)
+_DB_PATH = _INDEX_DIR / _ks._DEFAULT_DB.name
 _BM25_PATH = _INDEX_DIR / "bm25.pkl"
 _MODEL_NAME: str = _ks._MODEL_NAME
 
 
 # ── Lazy-loaded state (model loaded on first search_docs call) ────────────────
-@dataclass
 class _State:
-    model: object = None
-    bm25: object = None
-    doc_ids: list = field(default_factory=list)
-    ready: bool = False
+    """Lazy-loaded search state. The lexical index is ONE immutable `(bm25, doc_ids)` pair published by a single
+    reference swap, and a search reads it once at entry, so a reload (the shared server rebuilds it when the index
+    changes) can never give a search the new BM25 with the old document ids (TCK-20261012-SEARCH-MCP-SHARED-MODEL)."""
+
+    def __init__(self) -> None:
+        self.model: object = None
+        self.lexical: tuple[object, list] = (None, [])
+        self.ready: bool = False
+
+    @property
+    def bm25(self) -> object:
+        return self.lexical[0]
+
+    @bm25.setter
+    def bm25(self, value: object) -> None:
+        self.lexical = (value, self.lexical[1])
+
+    @property
+    def doc_ids(self) -> list:
+        return self.lexical[1]
+
+    @doc_ids.setter
+    def doc_ids(self, value: list) -> None:
+        self.lexical = (self.lexical[0], value)
+
 
 _STATE = _State()
 
@@ -70,7 +134,7 @@ def _ensure_loaded() -> bool:
     try:
         from sentence_transformers import SentenceTransformer
         _STATE.model = SentenceTransformer(_MODEL_NAME)
-        _STATE.bm25, _STATE.doc_ids = _ks._load_bm25(_BM25_PATH)
+        _STATE.lexical = tuple(_ks._load_bm25(_BM25_PATH))
         _STATE.ready = True
         return True
     except Exception:
@@ -87,11 +151,19 @@ def _run_search(query: str, top_k: int = 8, section: str | None = None,
     `{"results": [...], "stale": {"changed": n, "new": n, "removed": n}}` instead of the bare list, and an index whose
     manifest cannot be read gets `"stale": {"unknown": true}`; a current index still returns the bare list
     (TCK-20261006-KNOWLEDGE-INDEX-STALE-WARNING). The results are returned either way; the warning never blocks."""
-    results = _search(query, top_k=top_k, section=section, mode=mode)
+    results = _search_shared_or_local(query, top_k=top_k, section=section, mode=mode)
     if not with_staleness or not isinstance(results, list):
         return results
     stale = _ks.index_staleness(_DB_PATH)
     return {"results": results, "stale": stale} if stale else results
+
+
+def _search_shared_or_local(query: str, top_k: int = 8, section: str | None = None,
+                            mode: str = "hybrid") -> list[dict] | dict:
+    """The shared server's answer when one is available, else this process's own `_search`
+    (TCK-20261012-SEARCH-MCP-SHARED-MODEL). The server runs `_search` itself, so both give the same results."""
+    shared = _ss.try_search(_DB_PATH, query, top_k, section, mode)
+    return shared if shared is not None else _search(query, top_k=top_k, section=section, mode=mode)
 
 
 def _search(query: str, top_k: int = 8, section: str | None = None,
@@ -102,6 +174,7 @@ def _search(query: str, top_k: int = 8, section: str | None = None,
     if not query.strip():
         return []
 
+    bm25, doc_ids = _STATE.lexical  # read once: one generation for the whole search
     query_tokens = _ks._tokenize(query)
     try:
         q_vec = _STATE.model.encode(query).tolist()
@@ -121,8 +194,8 @@ def _search(query: str, top_k: int = 8, section: str | None = None,
             conn=con,
             query_vec_bytes=q_bytes,
             query_tokens=query_tokens,
-            bm25_obj=_STATE.bm25,
-            bm25_doc_ids=_STATE.doc_ids,
+            bm25_obj=bm25,
+            bm25_doc_ids=doc_ids,
             top_k=top_k,
         )
     except Exception:

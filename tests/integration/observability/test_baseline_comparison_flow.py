@@ -32,6 +32,9 @@ def test_baseline_comparison_and_cli_flow(tmp_path):
     # 2. Generate baseline
     baseline = BaselineGenerator.generate_baseline(sweep_id, base_dir=output_dir)
     baseline_path = os.path.join(output_dir, sweep_id, "baseline.json")
+    with open(baseline_path, "r", encoding="utf-8") as f:
+        # the generator itself stamps the cost accounting, nothing patches the file
+        assert json.load(f)["cost_accounting_version"]
 
     # 3. Test single run comparison (Good run passes)
     records = RunSetArtifactRepository(base_dir=output_dir).read_run_index(sweep_id)
@@ -96,3 +99,24 @@ def test_baseline_comparison_and_cli_flow(tmp_path):
         cli_output = captured_out.getvalue()
         assert "Comparison Result: PASS" in cli_output
         assert "Statistical Metric Drifts" in cli_output
+
+
+
+def test_freshly_generated_baseline_gives_a_tick_cost_verdict_not_inconclusive(tmp_path):
+    from src.perf.benchmark_record import COST_ACCOUNTING_VERSION
+    sweep_id = "fresh_baseline_cost_sweep"
+    output_dir = str(tmp_path / "run_sets")
+    config = ScenarioSweepConfig(
+        sweep_id=sweep_id, scenario_name="idle", scenario_type="sandbox", seeds=[1, 2, 3],
+        ticks=2, observability_mode=ObservabilityMode.LIGHT, output_dir=output_dir
+    )
+    ScenarioSweeper.run_sweep(config)
+    BaselineGenerator.generate_baseline(sweep_id, base_dir=output_dir)
+    baseline_path = os.path.join(output_dir, sweep_id, "baseline.json")
+    with open(baseline_path, "r", encoding="utf-8") as f:
+        assert json.load(f)["cost_accounting_version"] == COST_ACCOUNTING_VERSION
+
+    result = BaselineComparator.compare_sweep(sweep_id, baseline_path, base_dir=output_dir)
+
+    assert result.tick_cost_incomparable_reason is None
+    assert "tick_compute_ms_p95" in result.drifts  # a verdict, not INCONCLUSIVE

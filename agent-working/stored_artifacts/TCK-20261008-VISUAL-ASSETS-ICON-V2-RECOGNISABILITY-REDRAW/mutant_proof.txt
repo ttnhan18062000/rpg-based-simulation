@@ -1,0 +1,5 @@
+Each mutant's site was confirmed by grep (1 hit or an explicit "applied") before the run; originals restored (6 of 6 pass after).
+A: blade-length floor `>= 0.60` -> `>= 0.0`. Caught: test_each_way_the_old_sword_was_wrong_fails_its_own_row (a 7 px blade no longer failed "blade length"). Right reason.
+B: grip read as the narrowest rows (the original measure, which the planted wide-grip case exposed). Caught: the same test ("grip width" missing, only "pommel" failed). Right reason.
+C: bead roundness bound `<= 0.80` -> `<= 1.00`. Caught: test_a_square_bead_and_an_eight_pixel_bead_fail_the_round_and_size_rows. Right reason.
+D: ruins U-shape condition made always true. FIRST SURVIVED (no test planted a sloping wall); a boot-shaped staircase wall test was added and the mutant is now caught: test_a_wall_that_slopes_one_way_like_the_boot_fails_the_u_shape_row_and_a_u_shaped_wall_passes_it.

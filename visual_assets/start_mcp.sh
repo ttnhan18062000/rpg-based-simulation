@@ -4,6 +4,8 @@
 # the `mcp` package (a probe, not a bare existence check), changes to the repo root so the
 # `visual_assets` package is importable, and execs the module. Failed probes stay quiet; only the
 # final "nothing worked" message is visible. Same shape as tools/start_search_mcp.sh.
+# The store the server reads and writes is the checkout this script lives in. To serve ANOTHER checkout or git worktree (a session started in the main checkout while
+# you work in a worktree), set VISUAL_ASSETS_CHECKOUT=<absolute path> before starting Claude Code; .mcp.json passes it through, an invalid value stops the server.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 

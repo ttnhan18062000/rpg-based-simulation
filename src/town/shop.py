@@ -1,11 +1,15 @@
 # Compliance IDs: COMBAT-083, COMBAT-084, COMBAT-085, DATA-050, DATA-064, ECON-001, ECON-002, ECON-004, ECON-005, ECON-006, ECON-007, ECON-008, ECON-009, ECON-010, ECON-011, ECON-012, RES-007, RES-009, RES-011, RES-014, RES-015, RES-022, RES-023, RES-045, RES-065, SOC-012, STRAT-015, STRAT-016, STRAT-017, STRAT-022, STRAT-201
 from __future__ import annotations
-from typing import Optional, List, Dict
-from src.core.state import AuthoritativeState, EntityState, BuildingState, ItemStack
-from src.core.updates import StateUpdate, EntityUpdate, InventoryUpdate
-from src.core.items import ItemRegistry
+
+from typing import Dict, List, Optional
+
 from src.core.inventory import InventoryService
+from src.core.items import ItemRegistry
+from src.core.state import AuthoritativeState, BuildingState, EntityState, ItemStack
+from src.core.updates import EntityUpdate, InventoryUpdate, StateUpdate
+from src.systems.economy_systems.market import MarketSystem
 from src.systems.economy_systems.reputation_discount import apply_reputation_discount
+
 
 class ShopService:
     """Manages buying and selling of items at town shops."""
@@ -32,8 +36,10 @@ class ShopService:
         if not item_def:
             return None
             
-        from src.systems.economy import DynamicPriceService
-        unit_price = DynamicPriceService.calculate_buy_price(item_def.value)
+        # Bible 03 section 4: Price = Item_Base_Value * Market_Multiplier, and the multiplier is only what MarketSystem derives from
+        # region and building modifiers (with the buy factor), so the shop prices a purchase with MarketSystem.calculate_price, the
+        # same path ShopSystem.enforce uses as the legal floor.
+        unit_price = MarketSystem.calculate_price(state, shop, item_id, is_buy=True)
         total_cost = unit_price * quantity
         total_cost = apply_reputation_discount(total_cost, entity.social.public_reputation)
         price_multiplier = unit_price / item_def.value if item_def.value > 0 else 1.0
@@ -89,7 +95,8 @@ class ShopService:
         if not item_def:
             return None
             
-        total_gain = (item_def.value * quantity) // 2 # Sell for half price
+        # One sell law (Bible 03 section 4): MarketSystem's price per unit (base x region x building x the sell factor) times the quantity.
+        total_gain = MarketSystem.calculate_price(state, shop, item_id, is_buy=False) * quantity
         
         # 3. Generate Intent
         from src.core.updates import ResourceTransferIntent

@@ -93,26 +93,24 @@ def test_doc_staleness_blocked_writes_monitoring_before_returning():
 
 
 def test_doc_staleness_check_passes_behavior_changed_and_files_changed():
+    # TCK-20261009-NATIVE-ATTESTED-COMMAND-TRANSPORT-LOSSY: the changed files are no longer carried in the command; the
+    # site hands gate_cli the run's start commit and gate_cli derives the list from git.
     text = _read()
-    invoke_idx = text.find("python3 tools/gate_checks/doc_staleness_check.py")
-    assert invoke_idx != -1, "no bash() invocation of doc_staleness_check.py found"
-    call_line_start = text.rfind("\n", 0, invoke_idx)
-    call_line_end = text.find("\n", invoke_idx)
-    call_line = text[call_line_start:call_line_end]
+    invoke_idx = text.find("gateCmd.docStaleness(")
+    assert invoke_idx != -1, "no gateCmd.docStaleness() invocation found"
+    call_line = text[text.rfind("\n", 0, invoke_idx):text.find("\n", invoke_idx)]
     assert "implementation.behavior_changed" in call_line
-    assert "docStalenessFilesArgs" in call_line
+    assert "startSha" in call_line
+    assert "docStalenessFilesArgs" not in text, "a path list must not travel through the command"
 
 
 def test_docs_to_update_wired_into_doc_staleness_invocation():
-    # TCK-20260802-DOC-UPDATE-DISCIPLINE: Investigate's docs_to_update must reach the
-    # doc_staleness_check.py invocation (via the --docs-to-update CLI sentinel), purely additive —
-    # never replacing implementation.behavior_changed/docStalenessFilesArgs from the test above.
+    # TCK-20260802-DOC-UPDATE-DISCIPLINE: Investigate's docs_to_update must reach the doc_staleness invocation (as
+    # --docs-to-update), purely additive -- never replacing implementation.behavior_changed from the test above.
     text = _read()
-    invoke_idx = text.find("python3 tools/gate_checks/doc_staleness_check.py")
-    call_line_start = text.rfind("\n", 0, invoke_idx)
-    call_line_end = text.find("\n", invoke_idx)
-    call_line = text[call_line_start:call_line_end]
-    assert "docsToUpdateArgs" in call_line
+    invoke_idx = text.find("gateCmd.docStaleness(")
+    call_line = text[text.rfind("\n", 0, invoke_idx):text.find("\n", invoke_idx)]
+    assert "docsToUpdate" in call_line
     assert "investigation.docs_to_update" in text[:invoke_idx][-1500:], (
         "investigation.docs_to_update must be read somewhere shortly before the invocation line"
     )

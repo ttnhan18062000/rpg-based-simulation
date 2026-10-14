@@ -357,7 +357,6 @@ class TestGrafanaMetricsAlignment:
             "worker_utilization": 0.45,
             "queue_utilization": 0.1,
             "memory_rss_bytes": 1024 * 1024 * 150,
-            "work_debt_total": 0,
             "governor_mode": 0,
             "gold_circulation_total": 5000.0,
             "rejection_counts": {"insufficient_ap": 3},

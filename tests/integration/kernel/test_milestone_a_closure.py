@@ -30,7 +30,7 @@ def test_closure_no_placeholders():
     """
     Milestone A Guard: Ensure no unacknowledged placeholders in core runtime.
     Gated Exception: 'pass' is allowed only in non-authoritative branches 
-    (observability, replay) or explicit gated no-ops in the scheduler.
+    (observability, replay); the scheduler has none.
     """
     root = os.getcwd()
     for rel_path in AUTHORITATIVE_FILES:
@@ -45,8 +45,9 @@ def test_closure_no_placeholders():
     with open(os.path.join(root, "src/engine/scheduler.py"), "r") as f:
         lines = f.readlines()
         pass_count = sum(1 for line in lines if "pass" in line)
-        # We expect exactly 1 'pass' in the OPPORTUNISTIC branch
-        assert pass_count == 1, "Unexpected 'pass' count in scheduler.py"
+        # The one gated no-op was the empty OPPORTUNISTIC branch; it was removed with the rest of the never-wired deferred-work path
+        # (TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE), so the scheduler now has no placeholder at all.
+        assert pass_count == 0, "Unexpected 'pass' in scheduler.py"
 
 
 def test_milestone_a_structural_compliance():

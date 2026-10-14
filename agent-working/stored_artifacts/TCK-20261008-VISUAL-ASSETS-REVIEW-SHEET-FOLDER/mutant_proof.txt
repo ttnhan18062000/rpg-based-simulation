@@ -1,0 +1,6 @@
+Each mutant's site was confirmed by grep (1 hit) before the run; originals restored (10 of 10 pass after).
+A: vision mapper ignores the 0..1 units (the black-rows bug). Caught: test_the_vision_rows_are_real_colours_not_black_and_greyscale_has_equal_channels.
+B: the not-proposed drafts are shown. Caught: test_only_the_four_proposed_drafts_are_shown_and_the_two_declined_ones_are_not_candidates.
+C: the in-repository output guard removed. Caught: test_a_folder_inside_a_repository_is_refused_and_the_default_is_outside_every_repo (the mutant first wrote visual_assets/review_try/ into the repo; deleted).
+D: the revision command loses --parent. Caught: test_the_readme_holds_what_each_image_shows_the_recorded_results_the_findings_and_the_exact_owner_commands.
+E: a timestamp in the README. Caught: test_the_same_drafts_give_the_same_bytes.

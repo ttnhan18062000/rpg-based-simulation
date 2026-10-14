@@ -60,6 +60,72 @@ the batch instruction's own explicit flag ("individual deaths not affecting popu
 finding is a fact about the current repository, not a restatement of the Rule; the Rule remains
 a standing requirement for whichever future mechanism eventually closes this gap.
 
+- **Measured consequence, and its sequencing (decided by the owner directly, 2026-10-13; row 67
+  of the memo):** once hunting and grazing landed, wild plant-eaters died out by the hunt
+  because no living creature is born. Lane A, relayed by rpg-planner: 3 worlds, seeds 42-44,
+  5,000 ticks; 6 plant-eaters fell to 0.3-1.0 alive, extinct in 4 of 9 runs; every death was a
+  kill (people 19, wolves 16, lizardfolk 6, orcs 5), and none starved. **Milestone 0 reports
+  this and does not grade it**, and the stop line on a kind dying out in every seed stays.
+  **Milestone 1 adds basic wild births:** a well-fed creature with a mate of its own kind nearby
+  has young at a rate its kind declares (content, decisions 46 and 50), and the young must eat,
+  so food and hunting set the numbers. That is the individual-event link this Rule asks for,
+  starting with the wild. **Alternatives not taken:** births before the gate (every population
+  number moves and the gate waits); topping herds up by spawning, which makes animals from
+  nothing (validity check V1).
+- **Camps stop conjuring members (decided by the owner directly, 2026-10-13; row 70 of the
+  memo):** every camp kind spawned a new member every 30 ticks whenever fewer than
+  max(2, maturity / 10) monsters stood within 10 tiles, with no parent, no cost and no food
+  (`CampService.process_camps`, `src/world/camp.py`; found by Lane C while tracing the live map).
+  The spawned kind is the species' declared camp spawn kind (goblin and orc warriors) or else the
+  camp's own kind, so a wolf den spawns wolves: a generic monster body, not the authored wolf, at
+  tick 0, because a den holding only its alpha is below the cap of 2. That was the live map's
+  unexplained wolf.
+  That is a validity check V1 violation, in the simulation and the gate. It is removed before
+  baseline v1, as its own measured step, so the baseline counts only real arrivals. Camps then
+  shrink as members die, which is reported in milestone 0 and not graded, as for herds above.
+  They refill later only by real ways: milestone 1's births, extended to every living kind
+  including people-kinds (a fed adult with a mate of its kind has young), and recruits who join,
+  later still. The nest-spread branch (`ENABLE_CAMP_NEST_SPREAD`, off by default) has the same
+  parentless shape; it stays off and is retired when births land. **Alternatives not taken:**
+  keeping the spawn in baseline v1 as a reported exception; charging camp stock for a
+  parentless spawn.
+  - **Every other mid-run add, classified (rpg-designer applying decisions 14, 67 and 70,
+    2026-10-13, for validity check V8: every body added mid-run declares its source, initial,
+    birth with parents, or a declared arrival).**
+    - **Regional density top-up** (`SpawnService.process_spawns`, `src/world/spawn.py`, live):
+      every 50 ticks, it fills each region's monster count up to a density target from a pool
+      by region kind. That is topping up by spawning to a target, from nothing, so it is removed
+      before baseline v1. Lane C counted 0 adds in all 10 baseline runs: its pools are keyed by
+      FOREST, PLAINS and MOUNTAIN, and no corpus world has those region kinds. It is removed as
+      dead code, so it cannot wake when a world declares them, with nothing to measure.
+    - **Camp raids** (`RaidService.spawn_raid`, called by the camp's raid trigger, live): new
+      raiders appear at the camp for a maturity cost. It is the same family as camp spawning,
+      so it is removed with it. A raid made of a camp's existing members setting out together is
+      a later direction, not yet ruled.
+    - **Off by default, staying off:**
+      - creature territory spawns, which are parentless and retired with births;
+      - world-boss and lair spawns (decision 14);
+      - a calamity's boss or magical entity (a calamity bringing creatures would need a declared
+        origin first).
+    - **A birth:** humanoid reproduction (off) makes a tracked two-parent birth, a base for
+      milestone 1's births. Displacement moves existing bodies and adds none.
+    - **Conquest strongholds (decided by the owner directly, 2026-10-13; row 71 of the memo):**
+      when deaths drove an unowned region's influence to -50, the monster horde took it and a
+      "stronghold" appeared at its centre (`FactionInfluenceService.process_conquest_lifecycle`,
+      `src/world/influence.py`, live): a creature-type body of 10,000+ HP with no builders and no
+      cost, whose destruction freed the region. The body is removed before baseline v1 as its
+      own measured step, because a structure needs builders and materials. The region still
+      changes hands, and it is freed when its influence recovers rather than by killing a body:
+      the existing liberation line (+50, `process_influence_shift`), against conquest at -50,
+      with influence moving 5 per protector or invader death. The 100-point band is the existing
+      hysteresis, so nothing flaps.
+      Dormant at the baseline horizon: 0 conquests, liberations or strongholds in 10 runs (2
+      worlds, 5 seeds, 5,000 ticks; the lowest influence was -15), so the removal ships with
+      forced-conquest kernel tests rather than a paired measurement.
+      Who conquers what, and why, is re-anchored with caused war and peace (roadmap §12.4).
+      The influence trigger and the horde as taker are disclosed as interim. **Alternatives
+      not taken:** removing conquest entirely; keeping the stronghold as a declared arrival.
+
 **Scenarios:** [LB-S12](../scenarios/life-body-batch-05.md#lb-s12) (population decline —
 scored against this finding, not assumed to pass).
 

@@ -1,0 +1,17 @@
+Running as unit: run-p470900-i470901.scope; invocation ID: 6e40cad4e0244b28b8658af93deed26c
+
+idle_100_local: INCONCLUSIVE: idle_100_local.json is a legacy tripwire reference with no recorded identity; PERF-M2-T08 re-records it through baseline_lifecycle promote
+.
+movement_100_local: INCONCLUSIVE: movement_100_local.json is a legacy tripwire reference with no recorded identity; PERF-M2-T08 re-records it through baseline_lifecycle promote
+.
+=============================== warnings summary ===============================
+tests/perf/test_perf_regression_baseline.py::test_regression_vs_baseline[idle_100_local]
+  /data/vboxuser/Work/rpg-perf/tests/perf/test_perf_regression_baseline.py:35: PerformanceThresholdWarning: idle_100_local: INCONCLUSIVE: idle_100_local.json is a legacy tripwire reference with no recorded identity; PERF
+    warnings.warn(f"{name}: {outcome.state.value}: {outcome.reason}", PerformanceThresholdWarning, stacklevel=1)
+
+tests/perf/test_perf_regression_baseline.py::test_regression_vs_baseline[movement_100_local]
+  /data/vboxuser/Work/rpg-perf/tests/perf/test_perf_regression_baseline.py:35: PerformanceThresholdWarning: movement_100_local: INCONCLUSIVE: movement_100_local.json is a legacy tripwire reference with no recorded identi
+    warnings.warn(f"{name}: {outcome.state.value}: {outcome.reason}", PerformanceThresholdWarning, stacklevel=1)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2 passed, 1 deselected, 2 warnings in 0.14s

@@ -52,7 +52,7 @@ context. Only samples taken inside the measured ticks are kept; import, setup an
 the binary capture gets a `.provisional.txt` sidecar.
 
 Install: `uv sync --group profiling`, the one opt-in dependency group in `pyproject.toml` for both py-spy
-and memray. It is not part of `dev`, so it is not in the `requirements.txt` export, and CI does not install
+and memray. It is not part of `dev`, so it is not in the default install, and CI does not install
 it. When a binary is missing the tool exits with that message; it never falls back to another profiler.
 
 **Sampler overhead.** py-spy pauses the process at every sample by default, which slowed a tick roughly

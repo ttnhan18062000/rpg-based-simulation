@@ -7,6 +7,65 @@ from typing import Optional, List, Dict
 from pydantic import BaseModel, Field
 
 from src.observability.reporting.baseline_generator import BaselineConfig, calculate_distribution
+from src.perf.benchmark_record import COST_ACCOUNTING_VERSION
+
+
+#: The metric whose baseline value depends on how a tick's cost is counted (DEV-017 changed that).
+TICK_COST_METRIC = "tick_compute_ms_p95"
+INCONCLUSIVE = "INCONCLUSIVE"
+
+
+def tick_cost_incomparable_reason(baseline_data: Dict) -> Optional[str]:
+    """Why a baseline's tick costs cannot be compared with a current run, or None when they can.
+
+    A baseline written before DEV-017 (#448) carries no ``cost_accounting_version`` and its tick costs
+    include the double-counted refine sub-phases, so a current run always looks cheaper: a PASS against it
+    is vacuous. The rule is the one ``src.perf.benchmark_record.compare()`` applies to benchmark records
+    (the field must be present and equal to the current ``COST_ACCOUNTING_VERSION``).
+    """
+    version = baseline_data.get("cost_accounting_version")
+    if not version:
+        return (
+            "baseline incomparable: cost_accounting_version is missing, so its tick costs predate DEV-017 "
+            "accounting and are not comparable with a current run"
+        )
+    if version != COST_ACCOUNTING_VERSION:
+        return (
+            f"baseline incomparable: cost_accounting_version {version!r} differs from the current "
+            f"{COST_ACCOUNTING_VERSION!r}"
+        )
+    return None
+
+
+def _demote_passing_tick_cost(comparisons: Dict[str, "MetricComparison"], reason: Optional[str]) -> None:
+    """A tick-cost check that PASSES against an incomparable baseline proves nothing (OD-8: reported, never blocking).
+
+    A FAIL or WARNING stays as it is: an inflated baseline only loosens a threshold.
+    """
+    tick_cost = comparisons.get(TICK_COST_METRIC)
+    if reason and tick_cost is not None and tick_cost.status == "PASS":
+        comparisons[TICK_COST_METRIC] = tick_cost.model_copy(update={"status": INCONCLUSIVE, "message": reason})
+
+
+def _resolve_overall(has_fail: bool, has_warning: bool, statuses: List[str]) -> str:
+    """FAIL > WARNING > INCONCLUSIVE > INSUFFICIENT_DATA > PASS."""
+    if has_fail:
+        return "FAIL"
+    if has_warning:
+        return "WARNING"
+    for status in (INCONCLUSIVE, "INSUFFICIENT_DATA"):
+        if status in statuses:
+            return status
+    return "PASS"
+
+
+def _skips_tick_cost_drift(metric: str, reason: Optional[str]) -> bool:
+    """A tick-cost drift against an incomparable baseline would read as IMPROVED, so it is not reported."""
+    return metric == TICK_COST_METRIC and bool(reason)
+
+
+def _note_tick_cost(summary: str, reason: Optional[str]) -> str:
+    return f"{summary} Tick cost: {reason}." if reason else summary
 
 
 class MetricComparison(BaseModel):
@@ -14,7 +73,7 @@ class MetricComparison(BaseModel):
     metric_name: str
     baseline_value: float
     actual_value: float
-    status: str  # "PASS" | "WARNING" | "FAIL" | "INSUFFICIENT_DATA"
+    status: str  # "PASS" | "WARNING" | "FAIL" | "INSUFFICIENT_DATA" | "INCONCLUSIVE"
     message: str
 
 
@@ -29,6 +88,7 @@ class ComparisonResult(BaseModel):
     warning_metrics: List[str] = Field(default_factory=list)
     summary: str
     envelope_name: Optional[str] = None
+    tick_cost_incomparable_reason: Optional[str] = None
 
 
 class DriftMetricSummary(BaseModel):
@@ -51,6 +111,7 @@ class SweepComparisonResult(BaseModel):
     drifts: Dict[str, DriftMetricSummary] = Field(default_factory=dict)
     summary: str
     envelope_name: Optional[str] = None
+    tick_cost_incomparable_reason: Optional[str] = None
 
 
 class BaselineComparator:
@@ -70,6 +131,7 @@ class BaselineComparator:
         with open(baseline_path, "r", encoding="utf-8") as f:
             baseline_data = json.load(f)
         baseline = BaselineConfig.model_validate(baseline_data)
+        incomparable_reason = tick_cost_incomparable_reason(baseline_data)
 
         # Load envelope if provided
         envelope = None
@@ -306,21 +368,17 @@ class BaselineComparator:
                         message=message
                     )
 
-        # Overall status resolution
-        if failed_metrics:
-            overall_status = "FAIL"
-        elif warning_metrics:
-            overall_status = "WARNING"
-        elif any(c.status == "INSUFFICIENT_DATA" for c in metric_comparisons.values()):
-            overall_status = "INSUFFICIENT_DATA"
-        else:
-            overall_status = "PASS"
+        _demote_passing_tick_cost(metric_comparisons, incomparable_reason)
+        overall_status = _resolve_overall(
+            bool(failed_metrics), bool(warning_metrics), [c.status for c in metric_comparisons.values()]
+        )
 
         summary = f"Comparison completed with status: {overall_status}."
         if failed_metrics:
             summary += f" Failed metrics: {', '.join(failed_metrics)}."
         if warning_metrics:
             summary += f" Warnings raised on: {', '.join(warning_metrics)}."
+        summary = _note_tick_cost(summary, incomparable_reason)
 
         result = ComparisonResult(
             comparison_id=f"comp_{run_id}",
@@ -331,7 +389,8 @@ class BaselineComparator:
             failed_metrics=failed_metrics,
             warning_metrics=warning_metrics,
             summary=summary,
-            envelope_name=envelope.scenario_name if envelope else None
+            envelope_name=envelope.scenario_name if envelope else None,
+            tick_cost_incomparable_reason=incomparable_reason
         )
 
         # Write result to baseline_comparison.json inside target run directory
@@ -355,6 +414,7 @@ class BaselineComparator:
         with open(baseline_path, "r", encoding="utf-8") as f:
             baseline_data = json.load(f)
         baseline = BaselineConfig.model_validate(baseline_data)
+        incomparable_reason = tick_cost_incomparable_reason(baseline_data)
 
         # Load envelope if provided to extract name
         envelope = None
@@ -456,7 +516,7 @@ class BaselineComparator:
         drifts = {}
         for metric, vals in completed_runs_metrics.items():
             baseline_dist = baseline.metrics.get(metric)
-            if not baseline_dist or not vals:
+            if not baseline_dist or not vals or _skips_tick_cost_drift(metric, incomparable_reason):
                 continue
 
             sweep_dist = calculate_distribution(vals)
@@ -479,18 +539,12 @@ class BaselineComparator:
 
         # Derive sweep status
         statuses = list(run_statuses.values())
-        if "FAIL" in statuses:
-            overall_status = "FAIL"
-        elif "WARNING" in statuses:
-            overall_status = "WARNING"
-        elif "INSUFFICIENT_DATA" in statuses:
-            overall_status = "INSUFFICIENT_DATA"
-        else:
-            overall_status = "PASS"
+        overall_status = _resolve_overall("FAIL" in statuses, "WARNING" in statuses, statuses)
 
         summary = f"Sweep baseline comparison finished with status: {overall_status}."
         if outlier_runs:
             summary += f" Identified {len(outlier_runs)} outlier run seeds: {', '.join(outlier_runs)}."
+        summary = _note_tick_cost(summary, incomparable_reason)
 
         result = SweepComparisonResult(
             comparison_id=f"sweep_comp_{sweep_id}",
@@ -501,7 +555,8 @@ class BaselineComparator:
             outlier_runs=outlier_runs,
             drifts=drifts,
             summary=summary,
-            envelope_name=envelope.scenario_name if envelope else None
+            envelope_name=envelope.scenario_name if envelope else None,
+            tick_cost_incomparable_reason=incomparable_reason
         )
 
         # Save output to sweep_baseline_comparison.json inside sweep folder

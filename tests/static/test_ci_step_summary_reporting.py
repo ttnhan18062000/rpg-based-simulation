@@ -16,7 +16,7 @@ import yaml
 
 _ROOT = Path(__file__).resolve().parent.parent.parent
 _WORKFLOW_PATH = _ROOT / ".github" / "workflows" / "test.yml"
-_REQUIREMENTS_PATH = _ROOT / "requirements.txt"
+_PYPROJECT_PATH = _ROOT / "pyproject.toml"
 
 _FASTLANE_JOBS = [
     "unit-core-world",
@@ -48,7 +48,7 @@ _PRE_EXISTING_USES = {
     "github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2",
 }
 
-_BANNED_REQUIREMENTS_ENTRIES = ("pytest-cov", "pytest-html")
+_BANNED_DEPENDENCY_ENTRIES = ("pytest-cov", "pytest-html")
 _BANNED_MARKETPLACE_ACTION_SUBSTRINGS = ("dorny/test-reporter", "EnricoMi/publish-unit-test-result-action")
 
 _EXPECTED_MIGRATION_LANES_YAML = """
@@ -192,11 +192,11 @@ def test_all_fastlane_jobs_have_always_run_summary_step() -> None:
         )
 
 
-def test_no_new_requirements_txt_entry_and_no_new_marketplace_action() -> None:
-    requirements_text = _REQUIREMENTS_PATH.read_text()
-    for banned in _BANNED_REQUIREMENTS_ENTRIES:
+def test_no_new_dependency_entry_and_no_new_marketplace_action() -> None:
+    requirements_text = _PYPROJECT_PATH.read_text()
+    for banned in _BANNED_DEPENDENCY_ENTRIES:
         assert banned not in requirements_text, (
-            f"requirements.txt must not gain a {banned!r} entry for this ticket -- "
+            f"pyproject.toml must not gain a {banned!r} entry for this ticket -- "
             "--junit-xml is pytest's own built-in flag, no new dependency is needed"
         )
 
@@ -406,6 +406,8 @@ def test_no_cross_job_aggregate_step_or_job_added() -> None:
         "migration-lanes",
         "typecheck",
         "frontend",
+        # TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK: the path-gated backend image build job (plain docker, no pytest).
+        "docker-build",
         "simq-grade-drift",
         # TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: the advisory ratchet job (no pytest, so it is
         # not in _FASTLANE_JOBS and has no JUnit/base-collection reporting).
@@ -421,8 +423,8 @@ def test_no_cross_job_aggregate_step_or_job_added() -> None:
     )
 
 
-def test_no_new_requirements_txt_entry_for_new_existing_split() -> None:
+def test_no_new_dependency_entry_for_new_existing_split() -> None:
     # The base-branch collection mechanism is git/pytest shell plus stdlib-only Python
     # classification logic -- re-running the parent ticket's existing assertion is sufficient
     # coverage since this ticket adds no new 'uses:' step and no new dependency.
-    test_no_new_requirements_txt_entry_and_no_new_marketplace_action()
+    test_no_new_dependency_entry_and_no_new_marketplace_action()

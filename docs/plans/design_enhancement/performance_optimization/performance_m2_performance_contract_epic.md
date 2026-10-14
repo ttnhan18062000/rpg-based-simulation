@@ -20,6 +20,11 @@ controlled scheduled runs. A passing smoke gate must not be mistaken for a capac
 - M1 identifies every correction that changes benchmark or baseline identity.
 - Performance and Release/Certification owners are named.
 
+Status 2026-10-09: PERF-D2 and D4 are approved, and M1 is complete. Its invalidation ledger
+(`docs/performance/baseline_invalidation_ledger.md`) is the list of corrections that change
+identity. The RPG-core entry gate has **not** fully lifted, so every `src/` edit below needs a
+named owner lift, and every measurement stays provisional ("Delivery plan", OD-8).
+
 ## Candidate child tickets
 
 | Candidate ID | Ticket scope | Depends on | Deliverable |
@@ -33,6 +38,10 @@ controlled scheduled runs. A passing smoke gate must not be mistaken for a capac
 
 T03 and T04 are different products of the same identity schema. They may proceed in parallel and
 must use names that make their evidence strength impossible to confuse.
+
+T01 (`TCK-20261003-PERF-M2-CLAUSE-INVENTORY`) and T02 (as a provisional draft) are done. The
+remaining work, including three items this table does not name (T02b, T07, T08), is ordered in
+"Delivery plan" below.
 
 ## Required contract dimensions
 
@@ -71,6 +80,83 @@ Known historical failures are separately enumerated with owner, scope, expiratio
 expected signature. The quarantine may prevent an already-red lane from blocking temporarily, but
 new or worsened deltas still produce a regression signal. Promotion from informational to blocking
 requires stable calibration and an explicit P1/CI-owner decision.
+
+## Delivery plan (perf-planner, 2026-10-09)
+
+Written after M1 closed (#473). No ticket below is filed yet; `/create-tickets` files them into
+`agent-working/tickets/todos/perf-m2-contract/` once the owner has answered the decisions in step 1.
+
+### 1. Owner decisions
+
+**Decided by the owner on 2026-10-09: every recommendation below is accepted as written** (OD-1 to OD-8).
+rpg-planner commented in agreement on #475. The OD-8 lift is recorded in the roadmap's RPG-core gate
+(item 8). Two refinements from that review are folded into the tickets in step 3:
+- OD-2: the paired tripwire runs a small scenario set, and each side runs in a fresh process.
+  Process-global state was found leaking between runs in one process (#390, CONFLICT-04).
+- OD-3: a deliberate behaviour change now reads as `REGRESSION` under the canonical contract. T05
+  accepts a re-baseline that cites the behaviour PR or divergence id as its cause, so the change gets a
+  recorded new baseline, not a threshold bump.
+
+Each decision comes with a recommendation. The schema's open questions (`benchmark_identity_schema.md` §7) are
+cited as Q*n*.
+
+| ID | Decision | Recommendation | Blocks |
+|---|---|---|---|
+| OD-1 | Percentile method (Q6) | Nearest-rank, `ceil(q·n)`, for every producer. Record it in `protocol.percentile_method`, which is blocking, so an old `int(n·q)` record never compares with a new one. | T02b |
+| OD-2 | How the tripwire stays comparable on shared CI runners (Q1, Q8) | **Paired base/head on the same runner in the same job**, wall-clock, canonical contract. Both sides share one runtime identity, so `cpu_model` can stay blocking without making every PR `INCONCLUSIVE`. The committed `tests/perf/baselines/` files stay for nightly and local use. The instruction-count tool and any hosted service are deferred to a separate spike after M2. | T03 |
+| OD-3 | A `RuntimeMode` excursion (Q9) | Under the canonical contract the mode sequence does not depend on the host, so a head-side excursion against an all-`NORMAL` base is a `REGRESSION` (the work changed). Under `live_bounded` it stays `INCONCLUSIVE`. | T02b |
+| OD-4 | Hardware class (Q7) | Detect it from cores and RAM (`certification_contract.md` §3, `src/certification/hardware.py`). A runner may declare a class only to match the detected one, and a mismatch is `INCONCLUSIVE`. Remove the hard-coded `CLASS_A` in `src/perf/profiles.py`. | T02b, T04 |
+| OD-5 | Capacity runner (T04) | No controlled runner exists, and both development hosts are VMs. T04 builds the projection and runs it on one named host labelled `runner.controlled = false`. No capacity claim, and no §5.1 target enforced, until the owner names an approved runner. | T04 |
+| OD-6 | Raw samples (Q5) | Embed them in tripwire records (at most a few hundred values). Capacity records carry a `{uri, sha256}` pointer to an uncommitted file under `reports/perf/`. | T02b |
+| OD-7 | `pyperf` (Q2) | Do not adopt it in M2. T04 uses `BenchHarness` with process-level repetitions. Revisit only if T04's variance check fails on the named host. | T04 |
+| OD-8 | Owner lift for M2's `src/` files | One lift for the six bold files in step 3 (`src/perf/bench_harness.py`, `profiles.py`, `long_run_harness.py`, new `benchmark_record.py`; `src/observability/reporting/baseline_comparator.py`, `sweep_report.py`). None of them is a core file (`state.py`, `apply.py`, `pipeline.py`, `kernel.py`). Measurements stay provisional, and no check becomes blocking until the full lift. | T02b, T07, X1, T04 |
+
+### 2. Schema revalidation against M1 (schema §8)
+
+`benchmark_identity_schema.md` §8 asks for a re-read after M1. Against the ledger and the merged
+M1 changes:
+
+| # | Finding | Source | Change for T02b |
+|---|---|---|---|
+| R-1 | Nothing records whether a run's governor read a modelled cost or a measured one, or which work model it used. Under `canonical` the mode sequence depends on `WORK_MODEL_VERSION`, so a V1 and a V2 run do different work. | DEV-018 (#448); `src/config/profiles.py` `signal_contract`; `src/engine/work_units.py` `WORK_MODEL_VERSION`; ledger §5 caveat | Add `contract.signal_contract` (`live`, `canonical`) and `contract.work_model_version`, both blocking. |
+| R-2 | Tick and phase totals changed meaning at DEV-017, but `engine.commit` is recorded-only, so a pre-#448 record compares as comparable with a post-#448 one. That is the vacuous pass of `TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE`, expressed as a schema gap. | DEV-017 (#448); ledger §3.1, §3.2 | Add `result.cost_accounting_version`, blocking; a record without it is `INCONCLUSIVE`. |
+| R-3 | `validity.hash_scheme` is a free string. Digests are `flat-sha256-v2` since #455, and v1 digests stay in compile reports. | DEV-019 (#455); ledger §3.4 | Make it an enum (`flat-sha256-v1`, `flat-sha256-v2`). The rule is unchanged. |
+| R-4 | The zero-worker `DEGRADED` mistrigger is already covered by `executor.worker_count` (blocking) and by the all-`NORMAL` rule. | PERF-M1-T01 (#352) | None. |
+| R-5 | Work debt is gone, so the M1-T02 row of schema §7 ("debt-related counters") has nothing left to describe. | #455 | Drop the debt wording. `work.*` keeps processed, dropped and coalesced counts. |
+
+T02b also writes the answers to OD-1, OD-3, OD-4 and OD-6 into the schema and removes its
+"provisional design draft" banner. The schema stays version `1.0`. Nothing has been written in the
+draft shape, so there is nothing to migrate.
+
+### 3. Tickets
+
+| Order | ID | Scope | Depends on | Files (lift needed: **bold**) | Tier |
+|---|---|---|---|---|---|
+| 1 | **PERF-M2-T02b** Schema adoption | Typed record `BenchmarkRecord` (frozen, schema `1.0`) with R-1 to R-5. An identity collector covers git commit and dirty flag, the profile hash and flags, the runtime, the detected hardware class, signal contract and work model. `compare(base, head, thresholds) -> Outcome` implements schema §4 and returns the four outcomes with a reason. `BenchHarness` emits a record next to its existing dict, and nearest-rank percentiles replace `int(n·q)`. No gate changes. | OD-1, 3, 4, 6, 8 | **new `src/perf/benchmark_record.py`**, **`src/perf/bench_harness.py`**, **`src/perf/profiles.py`** (detected class), `docs/performance/benchmark_identity_schema.md`, `tests/unit/perf/` | standard |
+| 1 | **PERF-M2-T07** Canonical perf profiles | Each `PERF_*` profile gets a canonical variant with `signal_contract = CANONICAL` (the ledger §5 prerequisite). The default profiles do not change. | OD-8 | **`src/perf/profiles.py`**, `tests/unit/perf/` | hotfix |
+| 2 | **X1** `TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE` (existing todo) | `src gate` and `compare-sweep` refuse a tick-cost verdict against a baseline without `cost_accounting_version` (R-2), using T02b's field name. Plus the two guide edits. | T02b | **`src/observability/reporting/baseline_comparator.py`**, **`src/observability/reporting/sweep_report.py`** (it assembles `gate_status`), `docs/guides/simulation.md`, `docs/guides/observability.md`, tests | hotfix |
+| 2 | **PERF-M2-T05** Baseline and known-debt lifecycle | `perf_baseline_policy.md` is rewritten as the lifecycle rules: create, promote, invalidate, migrate, reject. It cites the repository-wide `docs/plans/test_architecture/reference/baseline_change_policy.md` (testing-owned, agreed on #475): versions are never overwritten, a change cites its cause (ticket, divergence id or memo row) and PR, and a stale or mismatched baseline never passes. T05 adds only the perf preconditions: a promotion refuses `dirty_src` and a non-`NORMAL` sequence, and records the before and after identities. A re-baseline caused by a deliberate RPG behaviour change cites that PR or divergence id (OD-3). The known-debt ledger (`docs/performance/known_debt_ledger.yaml`) is the second user of the shared known-reds registry module (`TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE`): it uses the shared fields plus a perf extension, `expected_signature`, and gets the expiry, shadowing and owner lint from the module. The test also checks that every file in `tests/perf/baselines/` is either a schema record or listed as a legacy unlabelled tripwire reference. Promotion goes through `tools/perf/baseline_lifecycle.py`; no `src/` change. | T02b; the shared policy doc and registry module (testing), or field names compatible with them if T05 starts first | `docs/performance/perf_baseline_policy.md`, new `docs/performance/known_debt_ledger.yaml`, new `tools/perf/baseline_lifecycle.py`, `tests/tools/` | standard |
+| 3 | **PERF-M2-T03** Tripwire projection | The live tripwire runs paired base/head per OD-2 through `compare()`, on a small declared scenario set, with each side in a fresh process, with a relative threshold plus an absolute floor and a predeclared noise budget. One diagnostic retry is allowed, and its result is recorded. A missing or incompatible baseline is `INCONCLUSIVE`, not `pytest.skip`. Outcomes are reported, not blocking, until the full lift and an owner promotion (T05 lists them as informational with owner and expiry). It also decides the tripwire-adjacent debt of contract §5.2: absorb or delete the absolute per-scenario and per-phase ceilings and the `PerfBudget` / `perf_baselines.json` store, and retire `tools/perf/check_perf_regression.py` and `perf_ci.py` (schema §6, F6). | T02b, T05, T07 | `tests/perf/test_perf_regression_baseline.py`, `tests/tools/perf_assertions.py`, `tests/perf/conftest.py`, `tools/perf/`, `docs/engine/performance_contract.md` §5 threshold value, CI selector in `.github/workflows/test.yml` (testing-planner told first) | standard |
+| 3 | **PERF-M2-T04** Capacity projection | `tools/perf/capacity_run.py`: 100 warmup and 1000 sampled ticks, N process repetitions, an optional paired base/head mode, p50/p95/p99/max, variance, RSS high-water, and records with `gate.projection = capacity_run`. Variance above the declared limit is `INCONCLUSIVE`. The long-run report (schema F22) maps into the record, and `passed_certification` gives way to `outcome`. No claim per OD-5. | T02b, T05, OD-5, OD-7 | new `tools/perf/capacity_run.py`, **`src/perf/long_run_harness.py`** (F22 fields), tests | standard |
+| 4 | **PERF-M2-T08** M1 reruns | Ledger §5 steps 1, 2, 3 and 5 under the canonical variants (T07). Step 4 (`baseline_5k.json`) is not perf's: RPG's `TCK-20261007-BEHAVIORAL-5K-REBASELINE-AFTER-THE-STARVATION-CHAIN-LANDS` owns it, and rpg-planner carried the ledger's 2.75 price note into it (Ask 13, answered on #475). Results are written as schema records and labelled provisional. Combat-heavy scenarios (`combat_10_*`, corpus worlds that fight) are labelled `WORK_MODEL_V1`: Lane B's fix is not expected within two weeks (Ask 13). Tactical- and combat-heavy scenarios run after RPG's hunting batch lands, which adds an appraisal per perceived pair in the tactical pass, or are labelled pre-hunting. Step 6 (`docs/observability/baselines/*`) is replaced by T03-format records, and `compare-sweep` is pointed at them. Promotion goes through T05's tool. | T03, T05, T07 | `tests/perf/baselines/`, `docs/observability/baselines/`, ledger status column | standard |
+| 5 | **PERF-M2-T06** P1 publication and conformance map | `performance_contract.md` states the decided thresholds, outcomes and the tripwire/capacity/comparative claims. A machine-readable map (`docs/performance/gate_conformance.yaml`) links each live check to the clause it enforces or to "enforces none", and a test fails on an unmapped `assert_perf_threshold` / `perf_check` call site. The P1 owner approves. | T03, T04, T05, T08 | `docs/engine/performance_contract.md`, `docs/engine/contracts/certification_contract.md` (D-9, D-10 name fixes), new `docs/performance/gate_conformance.yaml`, `tests/docs/` | standard |
+
+Parallelism: T02b and T07 together, then X1 and T05 together, then T03 and T04 together. T02b is the
+only ticket every other one consumes, so it ships alone and first. No two tickets in the same
+row edit the same file, except `src/perf/profiles.py`: T02b changes the class and T07 adds the
+variants, so T07 lands after T02b in one batch, or the two are merged.
+
+### 4. Left out of M2
+
+- `TCK-20261006-PERF-LIVE-CONTROL-TRACE` (P2): the PERF-D1 Live contract. It is not a measurement
+  clause, and it needs core files. It stays a separate item for the next core window.
+- The P3 todos (`PERF-SCENARIO-MIXED-STATE-SPAWN-COLLISION`, `PERF-BUDGET-OVERRUN-TELEMETRY-SURFACING`,
+  `PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS`): independent, and they can go in any batch.
+  The spawn collision must land before T08 reruns `mixed_200_*`: the `"mixed"` scenario is
+  `build_mixed_state` itself (`src/perf/scenarios.py` `SCENARIO_BUILDERS`), and a collided build is
+  a different workload.
+- Making any soft check blocking: that needs the full lift plus a P1/CI-owner promotion (M4).
+- The instruction-count tripwire tool (OD-2): a spike after M2.
 
 ## Out of scope
 

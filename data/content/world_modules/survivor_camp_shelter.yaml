@@ -11,7 +11,7 @@ regions:
     type: "wilderness"
     grid_bounds: [30, 30, 60, 60]
     terrain: "forest"
-    hazard_level: 0.5
+    hazard_level: 0.0
     # Idea 66, Stage B (TCK-20260902-PLACE-MIGRATION-STAGE-B-ROLLOUT): CAMP-kind Place,
     # position is the centroid of grid_bounds.
     places:

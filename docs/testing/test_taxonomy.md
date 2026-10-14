@@ -104,71 +104,38 @@ def test_improved_determinism():
 
 ## 4. Performance Test Authoring
 
-Performance tests live in `tests/perf/` and use the `perf_budget` fixture (defined in `tests/perf/conftest.py`).  The fixture enforces budgets declared in `perf_baselines.json` at the repo root.  See also `docs/engine/performance_contract.md` §3.2 for measurement methodology and hardware class definitions.
+Performance tests live in `tests/perf/` (measurements) and `tests/unit/perf/` (pure logic). A perf test measures with the `perf_harness` fixture (a `BenchHarness` factory, `tests/perf/conftest.py`). See `docs/engine/performance_contract.md` §3.2 for measurement methodology and §3.3 for what each kind of check may claim.
 
 ### 4.1 Adding a new performance test
 
-1. Write the test function in `tests/perf/`, accepting `perf_budget` as a parameter.
-2. **Before running the test**, add a baseline entry to `perf_baselines.json`.  The fixture calls `pytest.fail` (not skip) if no entry exists — this is intentional to force authors to declare a budget up-front.
-3. Obtain a starting budget by running:
-   ```
-   make perf-measure
-   ```
-   `perf_guard.py` will print a proposed JSON entry.  Copy it into `perf_baselines.json`, fill in `rationale` and `updated_by` (your ticket ID), and commit the baseline alongside the test.
+1. Write the test in `tests/perf/`, mark it `@pytest.mark.perf` (and `slow` if it runs more than a few seconds), and get a harness with `perf_harness("PERF_1GB_LOCAL")`.
+2. State bounds with `assert_perf_threshold(...)` or `perf_check(...)` (`tests/tools/perf_assertions.py`). They are soft: a breach is a `PerformanceThresholdWarning`, not a failure. An absolute millisecond ceiling is a smoke bound, not a contract clause (`performance_contract.md` §5.2).
+3. Do not add a per-test baseline file. Baselines are `BenchmarkRecord` files promoted by `tools/perf/baseline_lifecycle.py` (`docs/performance/perf_baseline_policy.md`).
 
 **Minimal test structure:**
 
 ```python
-import time
 import pytest
+from src.perf.scenarios import build_movement_state
+from tests.tools.perf_assertions import assert_perf_threshold
 
-def test_my_operation_perf(perf_budget):
-    rss_before = perf_budget.snapshot_rss()
-    t0 = time.perf_counter()
-
-    result = my_expensive_operation()
-
-    elapsed_ms = (time.perf_counter() - t0) * 1000
-    rss_delta_kb = perf_budget.snapshot_rss() - rss_before
-    perf_budget.assert_within_budget(elapsed_ms, rss_delta_kb)
+@pytest.mark.perf
+@pytest.mark.slow
+def test_my_scenario_perf(perf_harness):
+    harness = perf_harness("PERF_1GB_LOCAL")
+    results = harness.run_benchmark("MY_SCENARIO", build_movement_state(entity_count=100), warmup_ticks=10, sample_ticks=50)
+    assert_perf_threshold(results["avg_tick_compute_ms"], 50.0, "avg tick (100 movers)", op="<")
 ```
 
-### 4.2 Updating after an intentional performance change
+A run over 500 sampled ticks writes its raw samples to a file; the perf test directories point that at a temporary directory (`PERF_SAMPLES_DIR`).
 
-If a code change legitimately increases (or decreases) cost:
+### 4.2 After an intentional performance change
 
-1. Land the code change.
-2. Run `make perf-measure` — review the proposed diff on stdout.
-3. Update the relevant `perf_baselines.json` entries: set `time_ms` / `memory_kb` to the new measured values, update `rationale`, set `updated_by` to your ticket ID, and set `updated_at` to today's date.
-4. Commit `perf_baselines.json` in the same commit as the code change.
+If a code change legitimately raises or lowers cost, land the change. The pull-request tripwire (`tools/perf/tripwire.py`) reports a regression, and never blocks. A recorded baseline moves only through `baseline_lifecycle.py promote`, which requires a cited cause (a ticket, a divergence id or a behaviour PR), refuses a dirty tree, and never overwrites an earlier version.
 
-**Do not** commit a new baseline without a rationale explaining why the budget changed.
+### 4.3 Hardware class
 
-### 4.3 Tolerance bands
-
-| `tolerance_pct` | When to use |
-|---|---|
-| 20 | Deterministic, CPU-bound operations — tight gate |
-| 50 | Moderate noise (I/O, allocator variance) |
-| 100 | High VM or scheduler noise; wide gate preferred over flaky test |
-
-Use the narrowest band that avoids false positives on Class B hardware (shared VM, `PERF_HARDWARE_CLASS=B`).
-
-### 4.4 Hardware class (`PERF_HARDWARE_CLASS`)
-
-Override the hardware class via environment variable:
-
-```
-PERF_HARDWARE_CLASS=A python3 -m pytest tests/perf/
-```
-
-| Class | Description |
-|---|---|
-| A | Dedicated CI / bare-metal |
-| B | Shared VM (default) |
-| C | Laptop / dev workstation |
-
-In the current pass, hardware class is **informational only** — it is recorded in `perf_baselines.json` entries and printed by `perf_guard.py`, but does not modify the effective tolerance band.  Per-class tolerance multipliers will be added when CI hardware is classified (see `docs/engine/performance_contract.md` §4.2).
+The hardware class of a result is detected from cores and RAM (`HardwareClassifier`, `certification_contract.md` §3) and recorded in the result's identity; a performance test does not declare one. (The earlier `PERF_HARDWARE_CLASS` variable and the per-test tolerance bands belonged to the retired `perf_budget` store and are gone.)
 
 ---
 

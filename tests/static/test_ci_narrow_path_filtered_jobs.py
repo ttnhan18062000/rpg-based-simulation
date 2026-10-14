@@ -180,6 +180,16 @@ def test_frontend_if_references_changed_files_gate_output() -> None:
     assert "run_frontend" in condition
 
 
+# 5d. docker-build's if: references its own distinct output (TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK).
+def test_docker_build_if_references_changed_files_gate_output() -> None:
+    jobs = _jobs()
+    condition = jobs["docker-build"]["if"]
+    assert "needs." in condition
+    assert ".outputs." in condition
+    assert "run_docker_build" in condition
+    assert "pr_content_unchanged" in condition
+
+
 # 6. Non-pull_request events force both outputs true before any git diff is attempted.
 def test_gate_job_fails_open_on_non_pull_request_events() -> None:
     jobs = _jobs()
@@ -200,6 +210,7 @@ def test_gate_job_fails_open_on_non_pull_request_events() -> None:
     assert "run_perf_cert_arena=true" in branch_text
     assert "run_migration_lanes=true" in branch_text
     assert "run_frontend=true" in branch_text
+    assert "run_docker_build=true" in branch_text
     assert "exit 0" in branch_text
 
 
@@ -219,6 +230,7 @@ def test_gate_job_fails_open_on_diff_command_failure() -> None:
     assert "run_perf_cert_arena=true" in branch_text
     assert "run_migration_lanes=true" in branch_text
     assert "run_frontend=true" in branch_text
+    assert "run_docker_build=true" in branch_text
     assert "exit 0" in branch_text
 
 
@@ -284,6 +296,7 @@ def test_gated_jobs_fail_open_on_gate_job_non_success() -> None:
         ("perf-cert-arena", "run_perf_cert_arena"),
         ("migration-lanes", "run_migration_lanes"),
         ("frontend", "run_frontend"),
+        ("docker-build", "run_docker_build"),
     ):
         condition = jobs[job_name]["if"]
         assert "!cancelled()" in condition, (
@@ -339,13 +352,40 @@ def test_frontend_path_set_covers_frontend_directory_and_workflow_file() -> None
 
 
 # 13. TCK-20261002-UV-REMAINING-CI-JOBS: dependencies are declared in pyproject.toml / uv.lock
-# (requirements.txt is a generated export), so a change to either must run both gated jobs.
+# (there is no requirements.txt export any more), so a change to either must run both gated jobs.
 # Note this also means any pyproject.toml edit, including tool configuration, triggers them.
 def test_both_gated_jobs_trigger_on_pyproject_and_lockfile_but_not_unrelated_files() -> None:
     run_text = _gate_run_text(_jobs())
     for var_name in ("PERF_RE", "MIG_RE"):
         pattern = re.compile(_extract_re_pattern(run_text, var_name))
-        for path in ("pyproject.toml", "uv.lock", "requirements.txt"):
+        for path in ("pyproject.toml", "uv.lock"):
             assert pattern.search(path), f"{var_name} must match {path}"
         for path in ("README.md", "uv.lock.bak", "docs/pyproject.toml.md"):
             assert not pattern.search(path), f"{var_name} must not match {path}"
+
+
+# 13. (TCK-20261008-CI-BACKEND-IMAGE-BUILD-CHECK) docker-build's trigger path set: the backend Dockerfile,
+# .dockerignore, the dependency declarations the image installs from, and the workflow file. Source and docs
+# changes must not trigger a ~minute-long image build.
+def test_docker_path_set_covers_the_image_inputs_and_not_source_or_docs() -> None:
+    jobs = _jobs()
+    run_text = _gate_run_text(jobs)
+    pattern = re.compile(_extract_re_pattern(run_text, "DOCKER_RE"))
+    for path in ("docker/backend.Dockerfile", ".dockerignore", "uv.lock", "pyproject.toml", ".github/workflows/test.yml"):
+        assert pattern.search(path), f"DOCKER_RE must match {path}"
+    for path in ("src/x.py", "docs/x.md", "docker/frontend.Dockerfile", "docker/nginx.conf", "uv.lock.bak", "frontend/src/App.tsx"):
+        assert not pattern.search(path), f"DOCKER_RE must not match {path}"
+
+
+# 14. The job is plain docker: the three commands the ticket pins, no docker/* action, no cache, no push.
+def test_docker_build_job_uses_plain_docker_commands_only() -> None:
+    job = _jobs()["docker-build"]
+    uses = [step["uses"] for step in job["steps"] if "uses" in step]
+    assert uses == ["actions/checkout@v5"], uses
+    runs = "\n".join(step["run"] for step in job["steps"] if "run" in step)
+    assert "docker build --check -f docker/backend.Dockerfile ." in runs
+    assert "docker build -f docker/backend.Dockerfile -t rpg-backend:ci ." in runs
+    assert "sys.version_info[:2] == (3, 13)" in runs
+    for forbidden in ("docker push", "docker login", "--push", "cache-from", "cache-to"):
+        assert forbidden not in runs, forbidden
+    assert job["timeout-minutes"] == 15

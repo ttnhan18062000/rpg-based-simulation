@@ -13,7 +13,7 @@ that contains the point.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Tuple
 
 if TYPE_CHECKING:
     from src.core.state import RegionState
@@ -34,3 +34,45 @@ def resolve_region_among(candidates: Iterable["RegionState"], x: float, y: float
         if x_min <= x <= x_max and y_min <= y <= y_max:
             return region
     return None
+
+
+def _remember_extent(state: Any, extent: Any) -> None:
+    """Cache the extent on a state that has the slot; a slotted context without it (a reconstruction context) stays uncached."""
+    if hasattr(state, "_regions_global_bounds"):
+        object.__setattr__(state, "_regions_global_bounds", extent)
+
+
+def world_extent(state: Any) -> Optional[Tuple[float, float, float, float]]:
+    """The one authoritative extent of the world: ``(x_min, y_min, x_max, y_max)``, or None when none is declared.
+
+    The world declares no map size of its own; its topology is the declared regions (Bible 06, declarative topology), so
+    the extent is the union of the region bounds, inclusive on all four edges. A tile outside it is not part of the world.
+    ``state`` is any object that carries ``regions`` (a worker context included); one without them has no declared extent.
+    The result is cached on the state under ``_regions_global_bounds`` (False records "none declared")."""
+    cached = getattr(state, "_regions_global_bounds", None)
+    if cached is False:
+        return None
+    if cached is not None:
+        return cached  # type: ignore[no-any-return]
+    regions = getattr(state, "regions", None)
+    if not regions:
+        _remember_extent(state, False)
+        return None
+    x_min = y_min = float("inf")
+    x_max = y_max = float("-inf")
+    for r in regions.values():
+        x_min = min(x_min, r.bounds[0])
+        y_min = min(y_min, r.bounds[1])
+        x_max = max(x_max, r.bounds[2])
+        y_max = max(y_max, r.bounds[3])
+    extent = (x_min, y_min, x_max, y_max)
+    _remember_extent(state, extent)
+    return extent
+
+
+def is_inside_world(state: Any, pos: Tuple[float, float]) -> bool:
+    """True when ``pos`` lies inside the world extent (inclusive); True when no extent is declared (nothing to violate)."""
+    extent = world_extent(state)
+    if extent is None:
+        return True
+    return extent[0] <= pos[0] <= extent[2] and extent[1] <= pos[1] <= extent[3]

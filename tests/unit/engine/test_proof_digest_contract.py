@@ -1,7 +1,8 @@
 """The proof digest contract (TCK-20261004-PERF-M1-HASH-POLICY-CHECKPOINT-SLICE, PERF-D5).
 
 Covers three things the PERF-D5 policy relies on:
-  1. the flat hash values did not change when the scheme was named (byte-identity);
+  1. the flat hash is pinned under its scheme, and the current scheme (v2) differs from v1 only by the two state keys that were removed
+     (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`);
   2. the certification harness's digest (now taken through the scheduler) equals `get_hash`
      (until PERF-M1-T03b replaces the copy with a call);
   3. no cached canonical dict is stale: the only path by which a stale value can reach the flat hash.
@@ -21,14 +22,18 @@ from src.certification.harness import CertificationHarness
 from src.config.profiles import HardwareClass, RuntimeProfile
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState
-from src.engine.checkpoint import CanonicalStateHasher
+from src.engine.checkpoint import PROOF_DIGEST_SCHEME, CanonicalStateHasher
 from src.engine.kernel import Kernel
 from src.perf.scenarios import SCENARIO_BUILDERS
 from src.platform.rng import DeterministicRNG
 
-# `get_hash` of the fixed fixture below, computed with `src/engine/checkpoint.py` as it was on
-# origin/main (9793aee08) before this ticket. It must never change without a new scheme version.
-FIXTURE_DIGEST_ON_MAIN = "ec75b10657b6e6f2129670f3968fed91d6b1f54b3bda4780ca6b27f496f505f5"
+# v1 (`flat-sha256-v1`) `get_hash` of the fixture below *as it was*, with `work_debt={"B": 2, "A": 1}` in the state, computed with
+# `src/engine/checkpoint.py` as it was on origin/main (9793aee08). Kept only as history: v1 digests are never compared with v2 ones, and the
+# engine no longer computes v1. `test_v2_is_v1_without_the_two_removed_keys` rebuilds the v1 form to prove it still ties to this value.
+FIXTURE_DIGEST_V1_ON_MAIN = "ec75b10657b6e6f2129670f3968fed91d6b1f54b3bda4780ca6b27f496f505f5"
+# v2 (`flat-sha256-v2`) `get_hash` of the same fixture without the removed fields. It must never change without a new scheme version.
+FIXTURE_DIGEST_V2 = "631feb2b38d5764f29066f0eae78d2cd3215189364d7f559f89061a270b9df17"
+REMOVED_KEYS = ("periodic_due_ticks", "work_debt")
 
 
 def _fixed_state() -> AuthoritativeState:
@@ -36,7 +41,7 @@ def _fixed_state() -> AuthoritativeState:
         1: V2EntityBuilder(1).kind("hero").location(3.0, 4.0).combat(readiness=100.0).build(),
         2: V2EntityBuilder(2).kind("villager").location(7.0, 1.0).build(),
     }
-    return AuthoritativeState(tick=3, seed=42, entities=entities, work_debt={"B": 2, "A": 1})
+    return AuthoritativeState(tick=3, seed=42, entities=entities)
 
 
 def _profile() -> RuntimeProfile:
@@ -64,8 +69,25 @@ def _evolved_state(scenario: str, ticks: int = 8) -> AuthoritativeState:
 # 1. Byte-identity of the flat hash
 # ---------------------------------------------------------------------------
 
-def test_flat_hash_of_fixed_fixture_is_unchanged_from_main():
-    assert CanonicalStateHasher.get_hash(_fixed_state()) == FIXTURE_DIGEST_ON_MAIN
+def test_flat_hash_of_fixed_fixture_is_pinned_under_v2():
+    assert PROOF_DIGEST_SCHEME == "flat-sha256-v2"
+    assert CanonicalStateHasher.get_hash(_fixed_state()) == FIXTURE_DIGEST_V2
+
+
+def test_v2_is_v1_without_the_two_removed_keys():
+    """Migration proof: put the two keys back (with the old fixture's debt) and the v1 digest on main is reproduced exactly, so nothing
+    else in the canonical JSON changed. The v2 digest of the same state is a different value, as the scheme bump says."""
+    data = CanonicalStateHasher.to_canonical_data(_fixed_state())
+    assert not set(REMOVED_KEYS) & set(data)
+    v1_form = {**data, "periodic_due_ticks": {}, "work_debt": {"A": 1, "B": 2}}
+    v1_digest = hashlib.sha256(json.dumps(v1_form, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    assert v1_digest == FIXTURE_DIGEST_V1_ON_MAIN
+    assert CanonicalStateHasher.get_hash(_fixed_state()) != v1_digest
+
+
+def test_the_authoritative_state_has_no_removed_fields():
+    assert not set(REMOVED_KEYS) & set(AuthoritativeState.__dataclass_fields__)
+
 
 
 # ---------------------------------------------------------------------------

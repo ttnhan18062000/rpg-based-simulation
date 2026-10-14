@@ -282,8 +282,9 @@ def test_next_available_id_against_real_world_dynamics_shard():
     # then appended WORLD-DISPLACE-001 after it.
     # 2026-10-05 (TCK-20261005-HAZARD-GROWTH-CAPPED-BELOW-EVERY-AUTHORED-COMBAT-REGION): the shard's last entry is now
     # WORLD-128 (runtime spawns carry their catalog faction), after WORLD-125..127 (the boss-flag, violent-cause and
-    # hazard-growth work), so the last entry's family is the bare WORLD-NNN family again and the next id is WORLD-129.
-    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-129"
+    # hazard-growth work), so the last entry's family is the bare WORLD-NNN family again and the next id was then WORLD-129.
+    # 2026-10-08 (TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL): WORLD-129 (ENV-08, settled land and the near wild carry no standing hazard) is now the last entry.
+    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-130"
 
 
 # ---------------------------------------------------------------------------

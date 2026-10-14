@@ -1,6 +1,6 @@
 # Compliance IDs: PERF-014, PERF-015
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace as _dc_replace
 from typing import Dict, Any, List, Optional, Set, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -8,9 +8,11 @@ if TYPE_CHECKING:
     from src.core.updates import StateUpdate, EntityUpdate
     from src.engine.cadence import SystemCadence
 
+from src.core.inventory import InventoryService
 from src.core.violent_cause import is_violent_building_destruction
 from src.core.enums import ReasonCode
 from src.core.state import CorpseState
+from src.engine.carcass import body_meat
 from src.core.updates import decode_owner_faction_id_set
 from src.engine.cadence import should_run
 from src.world.environment import EnvironmentService
@@ -52,6 +54,29 @@ class ApplyPlanBuilder:
     Constructs a structured ApplyPlan from an authoritative StateUpdate.
     Pre-evaluates domain changes, collection copies, and cache invalidation policies.
     """
+
+    @staticmethod
+    def _body_of(e_id: int, position: tuple, inv: Any, tick: int, meat: Any = ()) -> tuple:
+        """(body, emptied inventory) for an entity that died carrying `inv`. The body holds what the dead entity carried: it MOVES, so the dead
+        record keeps nothing (EXCH-02: goods and coin exist once); the second item is the change to the dead record's inventory ({} when there was nothing to move)."""
+        body = CorpseState(id=1000000 + e_id, original_entity_id=e_id, position=position, items=list(inv.items) + list(meat), decay_tick=tick + 100, gold=int(inv.gold))
+        return body, ({"inventory": _dc_replace(inv, items=[], gold=0)} if inv.items or inv.gold else {})
+
+    @staticmethod
+    def _building_after(bld: Any, b_upd: Any) -> tuple:
+        """(the building after one staged update, whether the update destroyed it violently). Health is clamped to [0, max_hp] and a building at 0 HP
+        is not functional; the maintenance-shift count takes the period reset first, then the shifts paid this tick."""
+        from src.engine.apply import replace  # the fast replace (no __init__), as every other building write here
+        new_hp = max(0, min(bld.max_hp, bld.hp + b_upd.hp_delta))
+        new_func = b_upd.functional_set if b_upd.functional_set is not None else bld.functional
+        new_inv = bld.inventory
+        if b_upd.inventory:
+            new_inv = InventoryService.apply_update(new_inv, b_upd.inventory)
+        new_prc = b_upd.price_modifiers_set if b_upd.price_modifiers_set is not None else bld.price_modifiers
+        is_death = bld.functional and new_hp == 0 and is_violent_building_destruction(b_upd.hp_delta)  # ENV-07: only violent destruction is unrest
+        base_done = b_upd.maintenance_shifts_done_set if b_upd.maintenance_shifts_done_set is not None else bld.maintenance_shifts_done
+        return replace(bld, hp=new_hp, functional=False if new_hp == 0 else new_func, inventory=new_inv, price_modifiers=new_prc,
+                       maintenance_shifts_done=base_done + b_upd.maintenance_shifts_done_delta), is_death
 
     @staticmethod
     def build_plan(
@@ -213,19 +238,11 @@ class ApplyPlanBuilder:
         new_buildings = dict(prior_state.buildings) if "buildings" in cols else prior_state.buildings
         if "buildings" in cols:
             from src.engine.apply import replace
-            from src.core.inventory import InventoryService
             from src.engine.legality import LegalityServiceV2
             for b_id, b_upd in update.building_updates.items():
                 if b_id in new_buildings:
                     bld = new_buildings[b_id]
-                    new_hp = max(0, min(bld.max_hp, bld.hp + b_upd.hp_delta))
-                    new_func = b_upd.functional_set if b_upd.functional_set is not None else bld.functional
-                    new_inv = bld.inventory
-                    if b_upd.inventory:
-                        new_inv = InventoryService.apply_update(new_inv, b_upd.inventory)
-                    new_prc = b_upd.price_modifiers_set if b_upd.price_modifiers_set is not None else bld.price_modifiers
-                    is_death = bld.functional and new_hp == 0 and is_violent_building_destruction(b_upd.hp_delta)  # ENV-07: only violent destruction is unrest
-                    new_buildings[b_id] = replace(bld, hp=new_hp, functional=False if new_hp == 0 else new_func, inventory=new_inv, price_modifiers=new_prc)
+                    new_buildings[b_id], is_death = ApplyPlanBuilder._building_after(bld, b_upd)
                     if is_death:
                         cols.add("regions")
                         if plan.world_collection_changes["regions"] is prior_state.regions:
@@ -340,17 +357,10 @@ class ApplyPlanBuilder:
             # Precompute death corpse creation
             comb = changes.get("combat", entity.combat)
             if entity.combat.alive and not comb.alive:
-                corpse_id = 1000000 + e_id
-                nav = changes.get("navigation", entity.navigation)
-                inv = changes.get("inventory", entity.inventory)
-                corpse = CorpseState(
-                    id=corpse_id,
-                    original_entity_id=e_id,
-                    position=nav.position,
-                    items=list(inv.items),
-                    decay_tick=tick + 100,
-                )
+                corpse, emptied = ApplyPlanBuilder._body_of(e_id, changes.get("navigation", entity.navigation).position,
+                                                            changes.get("inventory", entity.inventory), tick, body_meat(entity))
                 plan.new_corpses.append(corpse)
+                changes.update(emptied)
                 cols.add("corpses")
                 
             # Precompute dirty tags

@@ -32,6 +32,11 @@ SLEEP_LINE = 98.0
 TICKS_PER_TILE = 1.0
 
 
+def hunger_is_pressing(hunger: float) -> bool:
+    """True when hunger has reached ESCALATION_ONSET of its consequence line: the point at which hunger wakes a sleeper (decision 41 x SURV-07)."""
+    return hunger >= ESCALATION_ONSET * HUNGER_LINE
+
+
 def smoothstep(edge0: float, edge1: float, x: float) -> float:
     """0 at or below `edge0`, 1 at or above `edge1`, and a smooth S between."""
     t = max(0.0, min(1.0, (x - edge0) / (edge1 - edge0)))
@@ -48,6 +53,18 @@ def need_pull(raw_utility: float, need: float, rate: float, travel_tiles: float,
     return raw_utility + ESCALATION_AMPLITUDE * smoothstep(
         ESCALATION_ONSET, ESCALATION_FULL, arrival_fraction(need, rate, travel_tiles, line)
     )
+
+
+def need_is_pressing(hunger: float, sleep_debt: float) -> bool:
+    """True when either need is at or past the point where it starts to outrank ordinary goals (``ESCALATION_ONSET`` of its
+    consequence line, with no travel to add: the need the subject has now).
+
+    The one test for "a pressing need" outside the pull itself: the scheduler wakes a holder of a move for it (a pressing need
+    re-decides a held objective, decision 32 applied to hunger and sleep). The trigger is the RAW need while the pull it triggers
+    is arrival-adjusted: the wake only starts a re-decision, and that decision computes the SURV-07 pull for the need the subject
+    will have on arrival. At the human hunger rate (0.05 a tick) even a 190-tile walk adds about 9.5, so waking at 57 still leaves
+    the decision well before the line of 95."""
+    return hunger >= ESCALATION_ONSET * HUNGER_LINE or sleep_debt >= ESCALATION_ONSET * SLEEP_LINE
 
 
 def hunger_pull(raw_utility: float, hunger: float, hunger_rate: float, travel_tiles: float) -> float:

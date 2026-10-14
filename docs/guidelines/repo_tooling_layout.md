@@ -53,3 +53,28 @@ same orphan-accumulation problem the split already caused.
 `tools/` file (and every `.py`/`.sh` file under `codebase/`) with no live cross-reference, on demand via a Makefile target — report-only, not a
 CI gate, since checks over agent tooling should stay proportionate to the risk. Run it
 periodically, not automatically, to catch drift before it accumulates the way `scripts/` did.
+
+## Repo root
+
+The tracked top level of the repository is an allowlist, not a convention. A new root entry (file or directory) needs an
+owner decision, the same as a new domain root; a tool, config or data file that is not on the list goes into a
+`tools/` subpackage, a domain root, `docker/`, `config/` or `docs/` instead. The list below is the root after the repo-root
+cleanup (`TCK-20261008-OPS-FILES-INTO-DOCKER-DIR`, `TCK-20261008-DROP-MAKE-BAT`,
+`TCK-20261008-GRAPH-HTML-JS-DEPS-BESIDE-TOOL`); `tests/codebase/test_repo_root_allowlist.py` reads it from this section and
+compares it with `git ls-files`, so changing the root means changing this list in the same PR, with the owner's decision.
+Only first path components count: adding a file under `src/`, `tools/` or a domain root never touches the list.
+
+<!-- repo-root-allowlist:begin -->
+Directories: `.agents`, `.claude`, `.codex`, `.github`, `agent-working`, `codebase`, `config`, `content`,
+`dashboard-frontend`, `data`, `docker`, `docs`, `experiments`, `frontend`, `registries`, `src`, `tests`, `tools`,
+`visual_assets`, `website`.
+
+Files: `.dockerignore`, `.gitattributes`, `.gitignore`, `.gitmessage`, `.graphifyignore`, `.mcp.json`,
+`.pre-commit-config.yaml`, `.python-version`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `LICENSE`, `Makefile`,
+`README.md`, `compose.yaml`, `pyproject.toml`, `requirements-knowledge.txt`, `skills-lock.json`,
+`uv.lock`.
+<!-- repo-root-allowlist:end -->
+
+One entry is listed on purpose and may move later by its owner's decision, not this guard's: `skills-lock.json`
+(the external `npx skills` CLI's file). (The per-test perf budget file that used to sit at the root was removed by `TCK-20261010-PERF-M2-PERFBUDGET-RETIRE`.) Local untracked clutter (`tmp/`, `scratch/`, `reports/`, logs) is not tracked, so
+it is not checked.

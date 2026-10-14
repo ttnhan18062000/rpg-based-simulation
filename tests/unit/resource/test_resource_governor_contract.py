@@ -17,7 +17,6 @@ def base_profile():
         max_cpu_percent=80.0,
         max_worker_count=4,
         max_queue_depth=100,
-        max_work_debt=100,
         max_replay_buffer_kb=0,
         max_observability_budget_percent=10.0,
         max_tick_budget_ms=16.0
@@ -51,16 +50,16 @@ def test_escalation_path(base_profile):
 
 
 def test_multi_signal_escalation(base_profile):
-    """Verify that debt trigger also causes escalation."""
+    """Verify that more than one signal can cause escalation (the work-debt trigger was retired; compute cost and memory remain)."""
     gov = ResourceGovernor()
     status = RuntimeStatus()
     
-    # Debt threshold: 100. Degraded at 50% (50). Survival at 100% (100).
-    signals = PressureSignals(work_debt_total=60)
+    # Tick budget 16 ms: cost at the budget is DEGRADED. RAM ceiling 1024 MB: memory at the ceiling is SURVIVAL.
+    signals = PressureSignals(tick_compute_ms=17.0)
     gov.evaluate(base_profile, signals, status, 10)
     assert status.current_mode == RuntimeMode.DEGRADED
     
-    signals_survival = PressureSignals(work_debt_total=110)
+    signals_survival = PressureSignals(memory_estimate_mb=1100.0)
     gov.evaluate(base_profile, signals_survival, status, 11)
     assert status.current_mode == RuntimeMode.SURVIVAL
 

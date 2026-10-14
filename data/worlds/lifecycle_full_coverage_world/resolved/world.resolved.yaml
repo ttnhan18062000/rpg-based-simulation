@@ -35,6 +35,19 @@ regions:
     position:
     - 25
     - 25
+- id: goblin_camp_edge
+  type: wilderness
+  bounds:
+  - 106
+  - 34
+  - 114
+  - 42
+  terrain: forest
+  hazard_level: 3.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+  places: []
 - id: goblin_camp
   type: wilderness
   bounds:
@@ -142,7 +155,7 @@ regions:
   - 90
   - 55
   terrain: forest
-  hazard_level: 1.0
+  hazard_level: 0.0
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
@@ -201,6 +214,9 @@ factions:
 - id: spirit_court
   type: neutral
   initial_tension_level: 0.5
+- id: wild_fauna
+  type: wild
+  initial_tension_level: 0.0
 information_source_profiles:
 - source_id: route_waystation_guide
   source_kind: guide
@@ -302,6 +318,12 @@ entities:
   faction: wild_beast_pack
   spawn_region: wolf_den
   archetype_id: alpha_wolf
+- id: small_plant_eater_herd_wild_small_plant_eater
+  count: 6
+  role: wild_creature
+  faction: wild_fauna
+  spawn_region: near_forest
+  archetype_id: wild_small_plant_eater
 resources:
 - id: res_0
   resource_type: wood_node
@@ -312,6 +334,11 @@ resources:
   resource_type: herb_patch
   count: 5
   region: hometown
+  regen_rate: 1
+- id: goblin_camp_forage__berry_thicket_0
+  resource_type: berry_thicket
+  count: 10
+  region: goblin_camp_edge
   regen_rate: 1
 - id: mountain_pass__iron_vein_0
   resource_type: iron_vein
@@ -353,6 +380,76 @@ resources:
   count: 3
   region: near_forest
   regen_rate: 1
+- id: wolf_den_near_forest__berry_thicket_3
+  resource_type: berry_thicket
+  count: 10
+  region: near_forest
+  regen_rate: 1
+- id: cover__river_ford__0
+  resource_type: cover_patch_high
+  count: 20
+  region: river_ford
+  regen_rate: 3
+- id: cover__river_ford__1
+  resource_type: cover_patch_high
+  count: 20
+  region: river_ford
+  regen_rate: 3
+- id: cover__river_ford__2
+  resource_type: cover_patch_high
+  count: 20
+  region: river_ford
+  regen_rate: 3
+- id: cover__river_ford__3
+  resource_type: cover_patch_high
+  count: 20
+  region: river_ford
+  regen_rate: 3
+- id: cover__river_ford__4
+  resource_type: cover_patch_high
+  count: 20
+  region: river_ford
+  regen_rate: 3
+- id: cover__near_forest__0
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__1
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__2
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__3
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__4
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__5
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__6
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
+- id: cover__near_forest__7
+  resource_type: cover_patch_high
+  count: 20
+  region: near_forest
+  regen_rate: 3
 buildings:
 - id: town_hall_0
   type: town_hall

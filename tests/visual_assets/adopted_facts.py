@@ -1,13 +1,13 @@
 """Exact facts about what the committed catalog holds (TCK-20261006-VISUAL-ASSETS-RECORD-TERRAIN-SET-ADOPTION; build and rc-0005 added by TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN; the icon key set added by
-TCK-20261006-VISUAL-ASSETS-RECORD-ICON-KEY-SET-ADOPTION).
+TCK-20261006-VISUAL-ASSETS-RECORD-ICON-KEY-SET-ADOPTION; icon set v2 added by TCK-20261007-VISUAL-ASSETS-RECORD-ICON-V2-ADOPTION).
 
 The owner adopted draft set `terrain-v1` themselves on 2026-10-05T18:17:03Z (UTC): one `adopt-set`, tiles and border masks together. These constants pin the committed truth: the guards that
 used to say "the catalog holds only the pilot forest" compare against them with equality, never `>=`, so a stray adoption or a missing file still fails. If the catalog changes again (a new
 adoption, a revocation), these facts change in the same commit as that decision, with its own ticket.
 
-Two owner decisions are recorded: `terrain-v1` (2026-10-05T18:17:03Z, 31 sources next to the pilot forest's three) and `icons-key-v1` (2026-10-06T15:21:47Z, 14 icon sources). `TERRAIN_ERA_SOURCES` is
-the 34 of the first, `ICON_SOURCES` the 14 of the second and `ADOPTED_SOURCES` everything the catalog holds (48). `build` and `release` have covered only the 34 terrain-era sources: no artifact and no
-release candidate covers an icon slot (rc-0006 has 34 entries; the icon keys are `optional: true`).
+Four owner decisions are recorded (the fourth, `icons-owner-fixes-v1`, is seven revisions of adopted icons: 77 adoptions, still 70 sources): `terrain-v1` (2026-10-05T18:17:03Z, 31 sources next to the pilot forest's three), `icons-key-v1` (2026-10-06T15:21:47Z, 14 icon sources) and `icons-v2` (2026-10-08T00:40:15Z, 22 icon sources). `TERRAIN_ERA_SOURCES` is
+the 34 of the first, `ICON_SOURCES` the 14 of the second, `ICON_V2_SOURCES` the 22 of the third and `ADOPTED_SOURCES` everything the catalog holds (70). `build` covered only the 34 terrain-era sources until `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE` built the 36 icons (one `x1` artifact each, owner-approved candidate `pilot/rc-0008` = rc-0007's 34 entries + the 36 icons).
+rc-0001 to rc-0007 list no icon slot (rc-0006 and rc-0007 have 34 entries; the icon keys are `optional: true`).
 """
 
 from __future__ import annotations
@@ -41,13 +41,101 @@ ICON_SOURCES = sorted(
     + [f"icon_tier_{tier}" for tier in ("e", "d", "c", "b", "a", "s", "ss", "sss")])
 assert len(ICON_SOURCES) == 14
 
-ADOPTED_SOURCES = sorted(TERRAIN_ERA_SOURCES + ICON_SOURCES)
-SET_ADOPTION_IDS = sorted([SET_ADOPTION_ID, ICON_SET_ADOPTION_ID])
-# Counts under the committed catalog: one adoption per source, two intake provenance files (record and review) per adoption.
-ADOPTION_COUNT = 48
-INTAKE_FILE_COUNT = 96
-assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (48, 48, 2 * 48)
+# The owner's third set adoption: icon set v2, one `adopt-set`, 22 sources (the draft set hash is the one the review doc and the adopt-set template printed).
+ICON_V2_SET_ID = "icons-v2"
+ICON_V2_SET_ADOPTION_ID = "sa-c9082d078b954f6b"
+ICON_V2_DRAFT_SET_HASH = "sha256:bb41c3eef245f6eab3488d5c7a940e574a463112a0bfba611b0c5cfd012737f4"
+ICON_V2_DECIDED_AT = "2026-10-08T00:40:15Z"
+ICON_V2_APPROVER = ("nhan", "owner")
+ICON_V2_SOURCES = sorted(
+    [f"icon_marker_{n}" for n in ("resource_grove", "ruins", "dungeon_entrance", "shrine", "boss_arena")]
+    + [f"icon_building_{n}" for n in ("store", "guild", "inn", "hero_house", "class_hall")]
+    + [f"icon_class_{n}" for n in ("ranger", "mage", "rogue")]
+    + [f"icon_item_{n}" for n in ("weapon", "armor", "trinket", "tool", "consumable", "material")]
+    + [f"icon_rarity_{n}" for n in ("common", "uncommon", "rare")])
+assert len(ICON_V2_SOURCES) == 22
+
+# The owner's fourth decision (2026-10-08T14:23:46Z to 14:24:07Z): seven REVISIONS of adopted icons, each `adopt --parent r0001` -> `r0002`, from the draft set `icons-owner-fixes-v1`
+# (TCK-20261008-VISUAL-ASSETS-RECORD-ICON-OWNER-FIXES-ADOPTION). They add adoptions, intakes and revision files but NO new source asset: the 70 sources stay. The set's other two drafts
+# (`icon.marker.ruins`, `icon.marker.enemy_camp`) were not proposed ("Keep current versions") and are not adopted.
+ICON_FIX_SET_ID = "icons-owner-fixes-v1"
+ICON_FIX_DRAFT_SET_HASH = "sha256:bab784060aedc76838ebc246a3534d88559c9493082b1e076a1bdedb8b8fc6e0"
+ICON_FIX_APPROVER = ("nhan", "owner")
+ICON_FIX_ADOPTIONS = {  # source asset id -> (adoption id, intake id, decided_at); every one has parent r0001 and creates r0002
+    "icon_building_hero_house": ("ad-0f04b1794541543e", "in-cce3e6b4fb609dc5", "2026-10-08T14:23:46Z"),
+    "icon_building_inn": ("ad-c4edd43de67dbfa0", "in-ca88fbc521414581", "2026-10-08T14:23:50Z"),
+    "icon_class_rogue": ("ad-9e51d5d4bf9ee568", "in-f332aa813db19054", "2026-10-08T14:23:54Z"),
+    "icon_item_tool": ("ad-eb148a100d2249a8", "in-7d3825eda1fdb00e", "2026-10-08T14:23:57Z"),
+    "icon_rarity_common": ("ad-a5eeb524eaeb0814", "in-db5985f18b3164cf", "2026-10-08T14:24:00Z"),
+    "icon_status_frame_buff": ("ad-b21e0f1d680a6c73", "in-a927d82fcd493c0a", "2026-10-08T14:24:03Z"),
+    "icon_status_frame_debuff": ("ad-e92bdc4e6b959a2b", "in-6ee2b5282280c703", "2026-10-08T14:24:07Z"),
+}
+ICON_FIX_SOURCES = sorted(ICON_FIX_ADOPTIONS)
+assert len(ICON_FIX_SOURCES) == 7 and set(ICON_FIX_SOURCES) <= set(ICON_SOURCES + ICON_V2_SOURCES)
+
+# The real-art proof sources (`TCK-20261011-VISUAL-ASSETS-REAL-ART-DRAFTS`, owner adopted 2026-10-11): the first sources with animation and slices metadata. Nothing is built or released from them until `TCK-20261011-VISUAL-ASSETS-REAL-ART-RELEASE-PROOF`.
+# The terrain variants (`TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANT-DRAFTS`, the owner's `adopt-set` of 2026-10-12, set-adoption `sa-34445853fa87089b`): 14 sources filling the new detail slots of six terrains.
+VARIANT_SET_ID = "terrain-variants-v1"
+VARIANT_SET_ADOPTION_ID = "sa-34445853fa87089b"
+VARIANT_DRAFT_SET_HASH = "sha256:d8de30ac8ef1c3750b371d5a550556b06e511b72a3b1a44e841683204f45b827"
+VARIANT_DETAILS = {  # source asset id -> (visual key, detail value)
+    "terrain_grassland_tufts": ("terrain.grassland", "tufts"), "terrain_grassland_flowers": ("terrain.grassland", "flowers"), "terrain_grassland_clover": ("terrain.grassland", "clover"),
+    "terrain_grassland_bare": ("terrain.grassland", "bare"), "terrain_mountain_crag": ("terrain.mountain", "crag"), "terrain_mountain_scree": ("terrain.mountain", "scree"),
+    "terrain_cave_stalagmite": ("terrain.cave", "stalagmite"), "terrain_cave_rubble": ("terrain.cave", "rubble"), "terrain_ruins_moss": ("terrain.ruins", "moss"), "terrain_ruins_fallen": ("terrain.ruins", "fallen"),
+    "terrain_swamp_reeds": ("terrain.swamp", "reeds"), "terrain_swamp_puddle": ("terrain.swamp", "puddle"), "terrain_shallow_water_ripple": ("terrain.shallow_water", "ripple"),
+    "terrain_shallow_water_pebbles": ("terrain.shallow_water", "pebbles"),
+}
+VARIANT_SOURCES = sorted(VARIANT_DETAILS)
+PROOF_SOURCES = sorted(["ui_panel_frame", "fx_selection_ring", "fx_campfire"])
+PROOF_ANIMATED = sorted(["fx_selection_ring", "fx_campfire"])  # 8 and 16 frames, one tag each; every proof source carries exactly one slice
+PROOF_ANIMATION = {"fx_selection_ring": (8, [("pulse", 0, 7)]), "fx_campfire": (16, [("burn", 0, 15)])}  # frames, then (tag, from_frame, to_frame)
+PROOF_SLICES = {  # name -> [(x, y, w, h, has 9-slice centre, has pivot)] per key
+    "ui_panel_frame": [("panel", [(0, 0, 24, 24, True, False)])],
+    "fx_selection_ring": [("anchor", [(0, 0, 32, 32, False, True)])],
+    "fx_campfire": [("base", [(0, 0, 64, 64, False, True)])],
+}
+ADOPTED_SOURCES = sorted(TERRAIN_ERA_SOURCES + ICON_SOURCES + ICON_V2_SOURCES + PROOF_SOURCES + VARIANT_SOURCES)
+SET_ADOPTION_IDS = sorted([SET_ADOPTION_ID, ICON_SET_ADOPTION_ID, ICON_V2_SET_ADOPTION_ID, VARIANT_SET_ADOPTION_ID])
+# Counts under the committed catalog: one adoption per source plus one per revision (7), two intake provenance files (record and review) per adoption.
+ADOPTION_COUNT = 94
+INTAKE_FILE_COUNT = 188
+REVISION_COUNT = 94  # r0001 of each of the 87 sources + r0002 of the 7 revised icons (what `store list --kind source` counts)
+assert (len(ADOPTED_SOURCES), ADOPTION_COUNT, INTAKE_FILE_COUNT) == (87, 87 + len(ICON_FIX_SOURCES), 2 * 94)
 # `build` and `release` (TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN, approved by the user on 2026-10-06): one generated artifact directory per adopted source, and the candidate pilot/rc-0005 holds all 34 slots.
-# rc-0004 still holds the forest's three slots only. rc-0006 (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, approved by the user on 2026-10-06) is rc-0005's 34 slots on the registry that added the 14 `icon.*` keys.
-GENERATED = sorted(f"{source}--x1" for source in TERRAIN_ERA_SOURCES)  # no icon has been built yet
-RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json"]
+# rc-0004 still holds the forest's three slots only. rc-0006 (`TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`, approved by the user on 2026-10-06) is rc-0005's 34 slots on the registry that added the 14 `icon.*` keys; rc-0007 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`, approved by the user on 2026-10-07) is the same 34 slots on the registry that added the 22 icon set v2 keys.
+TERRAIN_GENERATED = sorted(f"{source}--x1" for source in TERRAIN_ERA_SOURCES)  # the 34 built by `TCK-20261004-VISUAL-ASSETS-DETAIL-M5-RERUN`
+ICON_GENERATED = sorted(f"{source}--x1" for source in ICON_SOURCES + ICON_V2_SOURCES)  # the 36 built by `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE`, each at its newest revision
+VARIANT_GENERATED = sorted(f"{source}--x1" for source in VARIANT_SOURCES)  # the 14 built by `TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANTS-RC-AND-CLOSE`
+PROOF_GENERATED = sorted(f"{source}--x1" for source in PROOF_SOURCES)  # the 3 built by `TCK-20261011-VISUAL-ASSETS-REAL-ART-RELEASE-PROOF` (frame 1 only: `build/exportconfig.py`)
+GENERATED = sorted(TERRAIN_GENERATED + ICON_GENERATED + PROOF_GENERATED + VARIANT_GENERATED)  # one x1 artifact directory per adopted source (87)
+assert len(ICON_GENERATED) == 36 and len(GENERATED) == 87
+RELEASE_CANDIDATES = ["rc-0001.json", "rc-0002.json", "rc-0003.json", "rc-0004.json", "rc-0005.json", "rc-0006.json", "rc-0007.json", "rc-0008.json", "rc-0009.json", "rc-0010.json"]
+# rc-0008 (the owner's answer, 2026-10-09: "Assemble rc-0008"): rc-0007's 34 entries + one entry per icon, 70 in all, on the registry that carries the structured fallbacks.
+RC_0008_ICON_ENTRIES = 36
+# rc-0009 (the owner's answer, 2026-10-11: "Assemble rc-0009"): rc-0008's 70 entries, byte-identical, + one entry per real-art proof key, 73 in all, on the registry that carries the three keys.
+RC_0009_ENTRIES = 73
+# rc-0010 (the owner's answer, 2026-10-13: "Assemble rc-0010"): rc-0009's 73 entries (67 byte-identical, 6 re-anchored to `detail: base`, the same artifact and pixel hash) + the 14 terrain variants = 87.
+RC_0010_ENTRIES = 87
+# The V2 terrain aliases (`TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES`, owner answer on #523, 2026-10-12): registry-only, the documented mapping `review key-usage` shows.
+# The terrain detail axes of `TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANT-DRAFTS` (owner decision 2026-10-12): `base` (the art adopted before the axis) is the default; forest keeps plain/bush/tree and road has none.
+TERRAIN_VARIANT_AXES = {
+    "terrain.grassland": ("base", "tufts", "flowers", "clover", "bare"), "terrain.mountain": ("base", "crag", "scree"), "terrain.cave": ("base", "stalagmite", "rubble"),
+    "terrain.ruins": ("base", "moss", "fallen"), "terrain.swamp": ("base", "reeds", "puddle"), "terrain.shallow_water": ("base", "ripple", "pebbles"),
+}
+RC_0010_RE_ANCHORED = sorted(TERRAIN_VARIANT_AXES)  # the six keys whose rc-0009 entry gains `detail: base`
+REGISTRY_ALIASES = {"terrain.plain": "terrain.grassland", "terrain.ruin": "terrain.ruins", "terrain.river": "terrain.shallow_water"}
+PROOF_KEYS = ["fx.campfire", "fx.selection_ring", "ui.panel_frame"]
+
+# The draft sets whose owner decision is recorded are CLOSED gates: their committed preview fixtures are the evidence of what the owner saw, so they are checked against the gate's own record
+# (`tests/visual_assets/closed_draft_fixture.py`), not against the moving store, which grows references whenever art is built after the gate. Set id -> the adoption records that closed it.
+CLOSED_DRAFT_SETS = {
+    SET_ID: {"kind": "set_adoption", "adoption_ids": (SET_ADOPTION_ID,), "draft_set_hash": DRAFT_SET_HASH},
+    ICON_SET_ID: {"kind": "set_adoption", "adoption_ids": (ICON_SET_ADOPTION_ID,), "draft_set_hash": ICON_DRAFT_SET_HASH,
+                  "fixture_manifest_sha256": "sha256:f227efc175eb80d1040b7aa8ff30aed2fd64164cdc3dc05c2a92dc0e4c624ad2"},
+    ICON_V2_SET_ID: {"kind": "set_adoption", "adoption_ids": (ICON_V2_SET_ADOPTION_ID,), "draft_set_hash": ICON_V2_DRAFT_SET_HASH,
+                     "fixture_manifest_sha256": "sha256:3552998bb94054fb4f86613c6251c021c90779dc34ba3bacb2e19ff9162e174e"},
+    # `fixture_manifest_sha256` pins the committed fixture's `draft_preview_manifest.json` (the owner's gate evidence, frozen at the gate): the fresh-export checks prove the record is still TRUE of the store, this proves the record itself was not rewritten (`icon_draft_fixture --write` on a closed set).
+    # Seven per-slot `adopt --parent` records; they name no set hash, which is pinned by `test_icon_owner_fixes_adoption`.
+    ICON_FIX_SET_ID: {"kind": "slot_adoptions", "adoption_ids": tuple(a for a, _, _ in ICON_FIX_ADOPTIONS.values()), "draft_set_hash": ICON_FIX_DRAFT_SET_HASH,
+                        "fixture_manifest_sha256": "sha256:b9da86ddbea9fb313f9f02d01d6556b0801c35abf359c46650c8474462359944"},
+}

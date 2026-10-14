@@ -45,6 +45,20 @@
     # above) -- same tag-gap shape as the swamp_border_territory fix.
     source_region_tags: ["near_forest", "moon_cave", "hometown", "swamp_border_territory", "river_ford"]
 
+# STATE: EXISTING-LOGIC
+# SURV-06 forage path (decisions 27 and 29): wild food is part of the land. A hungry subject harvests it in wild land (never town land, which
+# holds owned food). Finite (charges) and slow to regrow (the default one charge per ecology cycle, density-modulated); the biome sets how much
+# the land holds. Charges are anchored to wood_node (10), the kind the near_forest ecology already lists.
+- id: "berry_thicket"
+  material: "wild_berries"
+  display_name: "Berry Thicket"
+  resource_type: "wild_berries"
+  required_ticks: 8
+  default_charges: 10
+  preferred_biomes: ["near_forest", "sacred_grove", "sunken_swamp"]
+  metadata:
+    source_region_tags: ["near_forest"]
+
 # STATE: LEGACY-EXPORT
 - id: "healing_flower_patch"
   material: "healing_flower"
@@ -122,3 +136,47 @@
   preferred_biomes: ["frozen_peak"]
   metadata:
     source_region_tags: ["mountain_pass_zone"]
+
+# STATE: REDESIGNED-CORE
+# Owner row 59 (grazing, moderate bands): plant cover on wild land, one kind per fertility band; a biome names its kind (``grazing_cover``). A
+# patch regrows by the band (``regen_per_check`` charges per ecology check, so a patch with regen r feeds r grazers indefinitely and a bigger herd
+# strips it), and an emptied patch stays bare for ``bare_wait_ticks`` before regrowing from zero (``regrowth_mode: regrow``). The numbers are the
+# owner's moderate bands (decision 33), not measured outcomes. Patches per 1,000 tiles of the region's bounds, rounded per region, at least 1.
+- id: "cover_patch_low"
+  material: "grass_cover"
+  display_name: "Sparse Cover"
+  resource_type: "grass_cover"
+  required_ticks: 8
+  default_charges: 6
+  regrowth_mode: "regrow"
+  bare_wait_ticks: 4800
+  fertility: "low"
+  density_per_1000_tiles: 1
+  regen_per_check: 1
+  preferred_biomes: ["sunken_swamp"]
+
+- id: "cover_patch_medium"
+  material: "grass_cover"
+  display_name: "Meadow Cover"
+  resource_type: "grass_cover"
+  required_ticks: 8
+  default_charges: 12
+  regrowth_mode: "regrow"
+  bare_wait_ticks: 2400
+  fertility: "medium"
+  density_per_1000_tiles: 2
+  regen_per_check: 2
+  preferred_biomes: ["sacred_grove"]
+
+- id: "cover_patch_high"
+  material: "grass_cover"
+  display_name: "Lush Cover"
+  resource_type: "grass_cover"
+  required_ticks: 8
+  default_charges: 20
+  regrowth_mode: "regrow"
+  bare_wait_ticks: 1200
+  fertility: "high"
+  density_per_1000_tiles: 4
+  regen_per_check: 3
+  preferred_biomes: ["near_forest"]

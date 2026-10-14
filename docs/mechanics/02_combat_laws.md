@@ -125,6 +125,12 @@ attack is not yet legal only because its readiness is under 100 does not step: i
 (a held `ATTACK`, reason `HOLD_BETWEEN_BLOWS`) and strikes when readiness reaches 100, so it
 provokes no opportunity attack. It leaves only by a decision (flight, panic retreat, a declared
 ability, a goal that outranks the fight), and that decision pays the opportunity attack.
+The same holds for every walk, not only the fighter's own: an entity with an engaged, perceived, hostile entity orthogonally
+adjacent takes no step from a stored navigation target (an idle walk toward an objective, a held move); it steps only on a target
+a decision sets that tick (`MovementCandidateSelector.movement_target`).
+A hostile it is not engaged with, coming adjacent, prompts a fresh decision within two ticks (owner decision 32, "notice and decide"): the scheduler wakes the
+subject's brain ahead of its cadence and the decision follows its own combat-engagement verdict toward that hostile (ignore keeps walking, avoid steps away, watch stands and observes as a typed wait, anything else as the
+tactical pass has always chosen).
 
 *   **Consumption**: A successful attack resets readiness by **-100.0** (a full reset). Movement
     does **not** cost readiness (`TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE`) — it
@@ -200,6 +206,7 @@ ability, a goal that outranks the fight), and that decision pays the opportunity
     dominant axis (a tie takes the y axis, as the local step does); it used to add a unit vector
     and leave the entity between tiles, where the truncated legality distance and the float
     pursuit distance disagreed (`TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT`).
+*   **The World Has an Edge; a Chase Leads Only a Destination**: a tile outside every declared region is not part of the world (Bible 06): `verify_occupancy` refuses it (`OUT_OF_BOUNDS`) and the hard law `LAW-POSITION-IN-WORLD` names any committed position outside the union of the region bounds. An intercept leads a target that is walking to a destination (2 tiles along its path); a target that is itself pursuing is aimed at where it is, because its own aim point is another intercept point and two chasers leading each other's leads never converge. A held task whose target the entity can no longer perceive is let go. (The chase-duration limit waits for Phase B: `chase_ticks` is never incremented.)
 *   **An Action Task Does Not Walk**: movement runs on `navigation.target`, whatever the task kind, so an entity that holds an
     action task (`ENTITY_ACT` with a payload: ATTACK, SKILL, INTERACT, HOLD) must not keep walking on a target an earlier
     decision left behind. The ATTACK and SKILL emissions clear the navigation target (`tactical.py`); an entity holding an action

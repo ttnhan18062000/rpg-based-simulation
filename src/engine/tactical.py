@@ -21,8 +21,13 @@ from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
 from src.engine.tactical_threat import safety_retreat_warranted
-from src.engine.tactical_rest import rest_in_place_update
-from src.engine.tactical_hold import held_swing_update, stalemate_break_update
+from src.engine.tactical_rest import in_place_survival_update
+from src.engine.building_arrival import building_arrival_update
+from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
+from src.engine.sleep_debt import collapse_update, must_collapse
+from src.engine.tactical_hold import held_swing_update, leash_return_update, notice_unengaged_hostile, stalemate_break_update
+from src.engine.hostility import source_identity
+from src.engine.tactical_avoid import avoid_what_can_eat_me, classify_neighbours, eat_at_hunger_corpse
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -67,6 +72,23 @@ def _combined_wound_scar_distress(wounds, scars) -> float:
     """Combined wound + scar distress signal, used only by the PROTECTOR guard
     branch (AC #2's 'ally wound/scar severity as an additional signal')."""
     return _wound_distress(wounds) + _scar_distress(scars)
+
+
+def _held_target_in_view(state: "AuthoritativeState", entity: "EntityState", target_id: int) -> bool:
+    """True when the held-task target is alive and the entity still perceives it (the goal-hysteresis shortcut keeps it)."""
+    target = state.entities.get(target_id)
+    return bool(target and target.combat.alive and _target_still_perceived(entity, target))
+
+
+def _target_still_perceived(entity: "EntityState", target: "EntityState") -> bool:
+    """A held pursuit target the entity can no longer perceive is let go: a chase ends at the edge of what the pursuer knows.
+
+    Applies to the held-task shortcut (goal hysteresis), which used to keep a target without asking the perception gate."""
+    dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, target.navigation.position)
+    try:
+        return bool(get_perception_gate().can_perceive(entity, get_entity_signals(target), {"distance": float(dist)}).perceived)
+    except (AttributeError, KeyError, TypeError, ValueError, RuntimeError):
+        return True  # gate failure: permissive, as the hostile list does
 
 
 def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) -> List["EntityState"]:
@@ -135,15 +157,17 @@ class TacticalDecisionSystem:
             return EntityUpdate(entity_id=entity.id)
 
         from src.engine.cognition import AppraisalSystem
-        
+
+        if must_collapse(entity.biological.sleep_debt):  # decision 41: a subject past the collapse line falls asleep where it stands
+            return collapse_update(entity)
+
         # 1. Goal Hysteresis (Pillar 3.2)
         current_project = entity.strategic.projects.get(entity.strategic.current_project_id or "")
         if current_project and state.tick < current_project.lock_until_tick:
             # Maintain current task if target is still valid
             current_target_id = entity.task.payload.get("target_id")
             if current_target_id:
-                target = state.entities.get(current_target_id)
-                if target and target.combat.alive:
+                if _held_target_in_view(state, entity, current_target_id):
                     stale_ticks = entity.task.payload.get("stale_ticks", 0)
                     return EntityUpdate(
                         entity_id=entity.id,
@@ -172,12 +196,11 @@ class TacticalDecisionSystem:
             social_context=entity.social
         )
         
-        if emotion.is_fleeing:
+        threats = _perceived_threats(entity, neighbors)
+        if emotion.is_fleeing and threats:  # no threat in sight, no flight: low HP, dread and grudge feed the panic but never flee alone (divergence 2.114)
              # PANIC: Move away from the perceived threats, inside the current region
              # (MOV-01 / LOC-01); hold position when no valid destination exists (MOV-03).
-             retreat_to = _destination_or_hold(
-                 entity, retreat_destination(state, entity, _perceived_threats(entity, neighbors))
-             )
+             retreat_to = _destination_or_hold(entity, retreat_destination(state, entity, threats))
              return EntityUpdate(
                  entity_id=entity.id,
                  navigation=NavigationUpdate(target_set=retreat_to, movement_mode_set=MovementMode.RETREAT),
@@ -188,28 +211,10 @@ class TacticalDecisionSystem:
              )
 
         # Section 8: Mob Leashing (GAP-T08)
-        from src.engine.rpg_depth import LeashService
-        is_engaged = entity.task.payload.get("target_id") is not None
-        
-        # If beyond leash AND not chasing, or beyond chase limit
-        if (not is_engaged and LeashService.is_beyond_leash(entity)) or LeashService.should_give_up_chase(entity):
-             home_pos = LeashService.get_return_home_target(entity)
-             if home_pos:
-                  return EntityUpdate(
-                      entity_id=entity.id,
-                      navigation=NavigationUpdate(target_set=home_pos, movement_mode_set=MovementMode.RETREAT),
-                      task=TaskUpdate(
-                          work_kind_set="ENTITY_MOVE",
-                          payload_set={"target_position": home_pos, "reason": "LEASH_RETURN"}
-                      )
-                  )
+        if (leash_return := leash_return_update(entity)) is not None:
+            return leash_return
 
-        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_species_id_str
-        from src.content_semantics.relation import RelationContext
-        from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
-        from src.engine.behavior_consumers import (
-            get_perception_gate, get_pressure_resolver, get_entity_signals,
-        )
+        from src.engine.behavior_consumers import get_pressure_resolver
         from src.world.motivation.pressure_resolver import MotivationPressureSet
 
         # Resolve entity pressures once — used for scoring and flee gating
@@ -218,55 +223,10 @@ class TacticalDecisionSystem:
         except Exception:
             entity_pressures = MotivationPressureSet.empty()
 
-        semantics_service = get_faction_semantics_service()
-        _id_resolver = EntityIdentityResolver()
-        _gate = get_perception_gate()
-        hostiles = []
-        hostile_identity_sources: dict = {}
+        _src_faction_id, _src_identity_source = source_identity(entity)
+        hood = classify_neighbours(entity, neighbors, (_src_faction_id, _src_identity_source))
+        hostiles, hostile_identity_sources = hood.hostiles, hood.hostile_identity_sources
 
-        try:
-            _src_identity = _id_resolver.resolve(entity)
-            _src_faction_id = _src_identity.faction_id
-            _src_identity_source = _src_identity.source
-        except IdentityResolutionError:
-            _src_faction_id = get_faction_id_str(entity)
-            _src_identity_source = "legacy_fallback"
-
-        for n in neighbors:
-            if not n.combat.alive:
-                continue
-            dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, n.navigation.position)
-            # Perception gate: entity can only engage targets it can detect
-            try:
-                if not _gate.can_perceive(entity, get_entity_signals(n), {"distance": float(dist)}).perceived:
-                    continue
-            except Exception:
-                pass  # Gate failure → permissive fallback
-            combat_engaged = (
-                entity.task.payload.get("target_id") == n.id
-                or n.task.payload.get("target_id") == entity.id
-            )
-            # `intruding` left unset (None) -- see the matching note in
-            # LegalityServiceV2.verify_attack_legality (src/engine/legality.py); hardcoding
-            # False here previously made contextual_intruder_groups-based hostility
-            # (e.g. wild_beast_pack's stance) structurally unreachable regardless of
-            # combat_engaged (TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION).
-            context = RelationContext(
-                distance=float(dist),
-                combat_engaged=combat_engaged,
-                source_species=get_species_id_str(entity),
-                target_species=get_species_id_str(n),
-            )
-            try:
-                _tgt_identity = _id_resolver.resolve(n)
-                _tgt_faction_id = _tgt_identity.faction_id
-            except IdentityResolutionError:
-                _tgt_faction_id = get_faction_id_str(n)
-
-            if semantics_service.is_hostile_compat(_src_faction_id, _tgt_faction_id, context):
-                hostiles.append(n)
-                hostile_identity_sources[n.id] = _src_identity_source
-        
         # 4. Strategic Persistence (Pillar 5.1)
         strat_up = _suspend_project_for_threat(entity, hostiles)
 
@@ -283,7 +243,10 @@ class TacticalDecisionSystem:
                 )
             )
 
-        rest_update = rest_in_place_update(state, entity, hostiles)
+        if (avoid_update := avoid_what_can_eat_me(state, entity, hood, strat_up)) is not None:
+            return avoid_update
+
+        rest_update = in_place_survival_update(state, entity, hostiles)
         if rest_update is not None:
             return rest_update
 
@@ -312,28 +275,10 @@ class TacticalDecisionSystem:
                                         interaction=InteractionUpdate(target_node_id=node_id, progress_delta=1)
                                     )
                                 elif building_id is not None:
-                                    # At a building: dispatch survival action by project kind
-                                    proj_kind = getattr(project, "kind", "")
-                                    if proj_kind == "hunger":
-                                        return EntityUpdate(
-                                            entity_id=entity.id,
-                                            task=TaskUpdate(
-                                                work_kind_set="ENTITY_ACT",
-                                                payload_set={"action": "EAT", "target_id": building_id}
-                                            )
-                                        )
-                                    elif proj_kind == "fatigue":
-                                        return EntityUpdate(
-                                            entity_id=entity.id,
-                                            task=TaskUpdate(
-                                                work_kind_set="ENTITY_ACT",
-                                                payload_set={"action": "REST", "target_id": building_id}
-                                            )
-                                        )
-                                    else:
-                                        return EntityUpdate(entity_id=entity.id)
+                                    return building_arrival_update(state, entity, project, building_id)
                                 else:
-                                    return EntityUpdate(entity_id=entity.id)
+                                    # Arrived at a carcass the hunger goal pointed at (decision 44): eat where it lies.
+                                    return eat_at_hunger_corpse(entity, state, project, obj) or EntityUpdate(entity_id=entity.id)
                             else:
                                 # Still en-route — update nav target and stay idle
                                 # so the brain re-evaluates on each cadence tick.
@@ -421,7 +366,7 @@ class TacticalDecisionSystem:
                         navigation=NavigationUpdate(target_set=group.anchor, movement_mode_set=MovementMode.REGROUP),
                         task=TaskUpdate(
                             work_kind_set="ENTITY_MOVE",
-                            payload_set={"target_position": group.anchor, "reason": "REGROUP"}
+                            payload_set={"target_position": group.anchor, "reason": "REGROUP", "arrival_radius": group.cohesion_radius}
                         )
                     )
             
@@ -512,6 +457,11 @@ class TacticalDecisionSystem:
         if stale_ticks > 10 and not fighting_adjacent:
              # Logic ID: COMB-277 (Anti-stalemate does not force illegal movement)
              return stalemate_break_update(entity, strat_up, _destination_or_hold(entity, wander_destination(state, entity)))
+
+        # Decision 32: beside a hostile it is not engaged with, the subject decides now (keep walking, step away, or fight below).
+        noticed = notice_unengaged_hostile(state, entity, target, hostiles, strat_up)
+        if noticed is not None:
+            return noticed
 
         # Tactical Role Logic
         role = entity.combat.tactical_role

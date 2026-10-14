@@ -9,6 +9,8 @@ modules:
   - "bandit_road_trade_pressure"
   - "goblin_camp_conflict"
   - "orc_clan_territory"
+  - "wild_edge_forage"
+  - "goblin_camp_forage"
 default_perspectives:
   - "hero_guild_perspective"
   - "goblin_warband_perspective"

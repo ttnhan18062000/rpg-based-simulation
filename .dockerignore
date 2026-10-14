@@ -1,0 +1,14 @@
+# Keep the build context small and the image free of local state (TCK-20261008-BACKEND-IMAGE-BUILDS-FROM-UV-LOCK).
+.git
+.venv*
+node_modules
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.hypothesis
+data/runs/
+reports/
+tmp/
+scratch/
