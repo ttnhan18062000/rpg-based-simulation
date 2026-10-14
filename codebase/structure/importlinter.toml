@@ -197,7 +197,7 @@ ignore_imports = [
 
 [[tool.importlinter.contracts]]
 id = "c01_core_not_domains"
-name = "core must not import domains (test_entity_models_do_not_import_domain_services)"
+name = "core must not import domains"
 type = "forbidden"
 source_modules = [
     "src.core",
