@@ -67,7 +67,7 @@ def test_the_icons_are_built_but_only_rc_0008_and_later_cover_an_icon_slot():
     candidates = config.CATALOG_ROOT / "manifests" / "candidates" / "pilot"
     for path in sorted(candidates.glob("rc-*.json")):
         keys = {e["visual_key"] for e in json.loads(path.read_text())["entries"]}
-        if path.name in ("rc-0008.json", "rc-0009.json"):  # rc-0009 keeps rc-0008's 36 icons
+        if path.name in ("rc-0008.json", "rc-0009.json", "rc-0010.json"):  # rc-0009 and rc-0010 keep rc-0008's 36 icons
             assert len([k for k in keys if k.startswith("icon.")]) == af.RC_0008_ICON_ENTRIES, path.name
         else:
             assert not [k for k in keys if k.startswith("icon.")], path.name

@@ -3,18 +3,203 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-12
+date: 2026-10-13
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-12 at the close of the sample-map batch (the planner's live handover is authoritative) (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261011-VISUAL-ASSETS-SAMPLE-MAP-GAP-REPORT`.
-Updated: 2026-10-12 (real-art proof MERGED as PR #521 `5951fdb71`; sample-map batch `TCK-20261011-EPIC-VISUAL-ASSET-SAMPLE-MAP` complete on `visual-asset-sample-map`, awaiting the user's push/PR decision)
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-13 at the close of the terrain-variants batch (the planner's live handover is authoritative) (its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261011-VISUAL-ASSETS-SAMPLE-MAP-GAP-REPORT`.
+
+Updated: 2026-10-12 (terrain-variants batch FILED + DISPATCHED)
 
 ## Open
-- 2026-10-12 SAMPLE-MAP COMPLETE, NOT PUSHED: epic `TCK-20261011-EPIC-VISUAL-ASSET-SAMPLE-MAP` (3 children, `done/visual-asset-sample-map/`), branch `visual-asset-sample-map` off `5951fdb71`, upstream unset: read-only data for three worlds, an offline renderer (exact view primary, alias view UNCONFIRMED), `docs/assets/sample_map/` with the gap report (11 gaps sized, needed-by, the #523 evidence table, the owner's art-priority question drafted for me to ask, the input list for A). Real-art proof is MERGED (PR #521, `5951fdb71`): rc-0009, Git LFS (D2) kept closed, no bound raised. rpg owns #519 (answered) and #523 (colour-code bug and terrain vocabulary). NEXT: ask the owner the art-priority question after this merges; candidate A starts with the `MAX_REGISTRY_BYTES` budget review and waits on #523.
-- 2026-10-10 slices batch (`TCK-20261010-EPIC-VISUAL-ASSET-SLICES`, branch `visual-asset-slices`): all four children committed and reviewed (SLICE-SOURCE-FIELDS `20c146af4`, SLICE-RUNTIME-EXPORT `76418d7a5`, SLICE-DRAWING-TOOL `b30ae1663`, then docs and close). Owner decisions: store + drawing tool; 16 slices / 16 keys; ADR D25 approved as written (with the handoff `slice_count` and export scaling sentences). Store-tooling (below) is MERGED as PR #487 (`231e35f77`); its notes are kept for the record.
+- IN FLIGHT: batch visual-asset-terrain-variants. Epic TCK-20261012-EPIC-VISUAL-ASSET-TERRAIN-VARIANTS + REGISTRY-BUDGET-AND-DETAIL-DESIGN
+  -> V2-TERRAIN-ALIASES -> TERRAIN-VARIANT-DRAFTS -> TERRAIN-VARIANTS-RC-AND-CLOSE (todos/visual-asset-terrain-variants/SEQUENCE.md).
+  Planning commit 9b87a6649 (off origin/main 6ba9083ef, REGISTRY regen, my W42 shard), upstream unset; my worktree detached. Dispatched.
+  Owner: next art = terrain variants; #523 answered = V2 names canonical, keys follow V2, aliases reuse art; client colour-by-name is rpg's.
+  Lead order: budget review -> aliases -> ~14 variants. Aliases: terrain.plain->grassland, terrain.ruin->ruins, terrain.river->shallow_water
+  (no terrain.PLAIN: lowercase pattern identities.py:16; lowercasing name rule). Variants = detail axis values, default `base`.
+  Planner split: grassland +4, mountain/cave/ruins/swamp/shallow_water +2, road none (owner decides).
+  LEAD ack: cite #523 in the name-rule docs (rpg: no V2 names differing only by case); child 1 showing ANY existing rc-0009 slot
+  changing bytes -> STOP -> lead/owner. Send child 1's design note to lead too.
+  CHILD 1 STOPS -> OWNER ANSWERED (2026-10-12, direct, neutral): (1) 'Accept detail: base' = 6 rc entries gain detail base, same
+  artifact+hash (forest rc-0001->0002 precedent verified); guard pins 67 identical + 6 = rc-0009 entry + detail base. (2) FINDING:
+  aliases have no runtime consumer (only key_usage.py) -> owner 'Registry-only aliases'; Known gap in store_contract (cite #523);
+  sample map may resolve via Registry.resolve but must say the live client does not. Child 1 design+budgets APPROVED (29,852 B 6.5 %;
+  worst 367,838 B 1.01 s). Told lead (alias gap may need #523 note / backlog: lead's call).
+  Child 1 e2f3565e4 + child 2 15288b81a APPROVED (my run: exact red 16 = atlas 5 + release_repro 7 + sample_map_render 4, all
+  rc-0009 registry_mismatch; child 4 must green them; nit: alias comment wording). Child 3 next: MCP pin check first; refuse -> STOP,
+  get launch cmd/cwd for owner restart; detail-value owner question only once drawing works.
+  Child 3: MCP PIN CHECK PASSED (restart confirmed, pin_check_scratch2). OWNER detail values: grassland tufts/flowers/clover/bare;
+  mountain crag/scree; cave stalagmite/rubble; ruins moss/fallen; swamp reeds/puddle; shallow_water ripple/pebbles. Drawing.
+  My art gate before adopt-set question: blind naming check via fresh subagent, fringe sample, grassland 16x16 pick vs base patch.
+  Child 3 ART DONE (uncommitted): 14 variants drafts set terrain-variants-v1, intake PASS, 360-406 B; review folder
+  ~/Work/asset-review/terrain-variants-v1/; blind 20/20 (pre edge fix; re-run asked). 12 NEW reds: closed-gate fixtures (10) +
+  derived old candidates (2) from declared axes. RULING: closed comparator may only ADD details rows for keys fixture shows w/o
+  detail and equal to registry axis; derived_runtime rows only for keys with detail entries; sha256 pins + zero fixture bytes;
+  4 mutants; rule test; red back to exactly 16. Lead ACCEPTED + narrowed: allowance only for the
+  pinned 6 keys (axis declared after the gate; forest exact) + mutant (e); PR body names the 12 tests citing rc-0008 (c). Then my check, then owner adopt-set question.
+  Child 3 COMMITTED 5ef660231 -> APPROVED (exact 16 red, zero fixture bytes, pins unchanged, axes = owner values; blind 20/20 final).
+  Observation passed to owner via README/question: grassland variant features sit at the same in-tile spot -> visible 16-px grid.
+  Implementer asks owner adopt-set (adopt / redraw named / decline; decline -> STOP to me). Then child 4.
+  OWNER ADOPTED terrain-variants-v1: sa-34445853fa87089b (14 entries, 2026-10-12T17:02:15Z). Implementer: pins commit -> child 4
+  (build 14, owner rc-0010 question, sample map re-render). I review pins commit + red set before the rc-0010 question.
+  MY GATES: child 1 design note (detail axis on adopted keys: adoption, rc slot identity, pickDetail, manifest size) before any registry
+  edit; red set exact from child 2 until rc-0010; review each commit; pre-check closure from my worktree.
+  Owner steps: detail values (child 3), adopt-set (review folder ~/Work/asset-review/terrain-variants-v1/), rc-0010, merge.
+- After this: A (markers) with V2 kind names as the presenter emits them.
+- History:
+- NOTHING IN FLIGHT. D (sample map) MERGED: PR #526 squash 6ba9083ef at 2026-10-12T15:40:12Z (owner --admin pinned e0366f77e).
+  Branch visual-asset-sample-map finished, never pushed again. Evidence + gap report: docs/assets/sample_map/.
+- NEXT (owner, 2026-10-12): TERRAIN VARIANTS (gap G4, ~14 tiles; starts with a MAX_REGISTRY_BYTES budget review, registry ~90 %
+  realistic max). BLOCKED on #523 (rpg: do art keys follow V2 names PLAIN/plain/river/ruin, or V2 maps onto the 23 Live Map names?).
+  Lead takes the vocabulary question to owner/rpg. Then A (markers), also gated on #523. G12: sample worlds are rectangles over
+  one default fill (rpg worldgen), caps what variants show. Owner question asked with neutral options (no Recommended).
+- B MERGED earlier: PR #521 squash 5951fdb71 (rc-0009 = 73 current; Git LFS keep closed; no bound raise).
+  Backlog: TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY (trigger: before client animation).
+- My worktree: untracked 2026-W42/asset-planner-planning.gate_verdicts.jsonl (my own pre-check lines) -> next planning commit.
+- Session name: relaunch as asset-planner (shows as rpg-based-simulation-0b).
+- Owner's call: delete leftover local branches visual-asset-slices, visual-asset-real-art-proof, visual-asset-sample-map;
+  confirm my worktree. MCP restart unconfirmed until a fresh session's first new_sprite.
+- History (superseded):
+- IN FLIGHT (2026-10-12): batch D visual-asset-sample-map DISPATCHED to asset-implementer. Epic TCK-20261011-EPIC-VISUAL-ASSET-SAMPLE-MAP
+  + DATA -> RENDER -> GAP-REPORT (todos/visual-asset-sample-map/SEQUENCE.md). Branch visual-asset-sample-map head 83a8ccefe (my
+  planning 773feea4a + origin/main 5951fdb71 merged + REGISTRY regen + my gate_verdicts shard), upstream unset; my worktree detached.
+  Lead guards: no activation (src/ read-only import only, no frontend/), output reports/visual_assets/sample_map/, evidence only in
+  docs/assets/sample_map/ <= 256 KiB, never adopted/rc, #519 corrects gap report only, every source cited, gap rows with size+needed-by.
+  DATA GATE DONE -> approved: frontier_living_world, highland_traverse, dungeon_crawl (thin); exact-name rule; 87.9 % cells
+  unmapped (PLAIN 54,661). ADDED: second render view 'proposed_aliases' (PLAIN/plain->grassland, ruin->ruins, river->shallow_water,
+  shop->store, CAMP->enemy_camp, RUIN->ruins), labelled unconfirmed, tool data only, never registry aliases.
+  FINDING (code reading) posted on #519 + sent to lead: present_map per-world codes vs client fixed TILE_COLORS -> Live Map likely
+  draws wrong colours; V2 vocabulary (PLAIN/plain/river/ruin) != 23-code set. rpg decides; bears on A's key vocabulary.
+  MY GATE (was): DATA's 3 worlds + terrain-name->key table before commit. STOP cases: a write outside reports/; renderer cannot match
+  terrainBorders.ts test vectors. Then review each commit; pre-check closure from my worktree.
+- B DONE: PR #521 MERGED squash 5951fdb71 at 2026-10-12T14:26:06Z (owner --admin pinned eaa9195a0; lead approved by review).
+  Branch visual-asset-real-art-proof finished, never pushed again. rc-0009 (73) is current. Verdicts: Git LFS keep closed; raise bounds none.
+  Backlog: TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY (todos, trigger before client animation).
+  MCP restart: unconfirmed until a fresh session's first new_sprite.
+- PR #526 OPEN head e0366f77e (diffed: main + REGISTRY only), CI green 18/18, owner --admin merge pending (implementer asked).
+  OWNER ANSWERED art priority 2026-10-12: NEXT = TERRAIN VARIANTS (G4 ~14 tiles + registry budget review); WAIT for #523 vocabulary.
+  A stays after, also gated on #523. Told lead; lead takes the vocabulary question to owner/rpg. After #526 merges: idle until #523.
+- D fix fad0360ad (REGISTRY only) -> APPROVED FOR PR. Implementer merges main, I diff merged head, owner push/PR, then I ask the
+  owner the art-priority question.
+- D CLOSED at 0b72cd21b -> pre-check FAILED on REGISTRY drift only (artifact_files [] for DATA/RENDER/GAP-REPORT; generated while
+  stored artifacts untracked). Implementer to regenerate after git add, send new head. Else PASS (footprint, done_checker x4, 137 KiB).
+  My worktree: untracked 2026-W42/asset-planner-planning.gate_verdicts.jsonl (my own) -> carry into my next planning commit.
+- D children committed: DATA 8ca3eabea, RENDER 8a001d17a, GAP-REPORT d9189ff7e -> ALL APPROVED (asked: add G12 'worlds are rectangles
+  over one fill', needed by rpg worldgen). rpg answered #519 (2026-10-11, reconciled). Differential TS test skips without node/esbuild.
+  My venv lacks complexipy (env failure in tests/codebase). NEXT: pre-check closure head; after PR up, I ASK THE OWNER the drafted
+  art-priority question (gap_report.md, neutral options).
+- LEAD 2026-10-12: colour bug filed as rpg #523. D's gap report = #523 evidence (cells per V2 name per world + alias table, link #523).
+  A is GATED on #523's vocabulary answer (keys follow V2 names vs V2 maps to 23 codes); if D closes first, TELL LEAD (lead asks owner).
+- Next after D: A (entity markers, gated on #523), starting with the MAX_REGISTRY_BYTES budget review; C waits for rpg-planner.
+- Session name: relaunch as asset-planner (shows as rpg-based-simulation-0b after the restart; lead asked).
+- Leftover local branches visual-asset-slices, visual-asset-real-art-proof: owner's call to delete.
+- Open for OWNER: confirm own worktree; test_handover_transit env failure may be fixed by #518 (unchecked).
+- History (superseded):
+- IN FLIGHT (2026-10-11): batch visual-asset-real-art-proof (candidate B), chosen by lead-planner on the owner's authority.
+  Epic TCK-20261011-EPIC-VISUAL-ASSET-REAL-ART-PROOF + 4 children (KEYS, DRAFTS, RELEASE-PROOF, BUDGETS-AND-CLOSE),
+  todos/visual-asset-real-art-proof/SEQUENCE.md. Planning commit 8ed564419 on local branch visual-asset-real-art-proof
+  (off origin/main 9a9058808, upstream unset), made in MY worktree (now detached at 8ed564419). Dispatched to
+  asset-implementer by message; the epic ID was sent to lead-planner.
+  Lead conditions: (1) bound exceeded -> STOP, its own owner question, no bound change; (2) adopt + rc approval with the owner,
+  listed as asks in the PR body (done as blocking questions during the batch; the PR body lists their status); (3) a budgets.md row per
+  bound (fits too) + the Git LFS and raise-bounds verdicts in the epic's closing summary; (4) the handoff refresh goes in this PR.
+  Planner choices (owner may overrule): optional keys ui.panel_frame / fx.selection_ring / fx.campfire (64x64, 16 frames);
+  no store/drawing code. Fact to record, not fix: the build exports frame 1 only (build/exportconfig.py:53).
+  Backlog ticket TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY (lead's ask; trigger: before client animation) committed
+  df1cb3be5 in my worktree; the implementer cherry-picks it onto the batch branch. Lead ACCEPTED the ui/fx families.
+  Child 1 key text REVIEWED -> approved with edits (no slice geometry or names in descriptions; registry 6.4 % does not change the realistic-max row).
+  STOP from implementer: any registry edit -> export-runtime of rc-0008 refuses registry_mismatch (runtime_export.py:87). RULING: option B,
+  per-ticket commits kept; branch red on EXACTLY 11 tests (test_atlas 4, test_release_byte_reproducibility 7) until child 3's rc-0009
+  turns them green (re-point from rc-0008 if named; send me the diff); content pins 62->65 allowed (exact values); owner declines -> STOP.
+  Finding for child 4 docs: a registry edit makes older candidates unexportable (no rollback break: rollback redeploys the frontend build).
+  Child 1 COMMITTED 0abcc3153 -> APPROVED (my worktree: 2427 pass; 12 red = 11 registry_mismatch errors + test_the_cli_flag_is_opt_in
+  exit 2, same cause; child 3 must make all 12 green). Child 2 drawn (uncommitted): 3 intake PASS, no bound exceeded (campfire 10,154 B =
+  9.9 % of MAX_SOURCE_BYTES). DEVIATION accepted: stale MCP server (Lua pin guard, started before #499) -> drove the drawing api from
+  the worktree; pixels from deterministic scripts (owner told). Cleared owner adopt question; asked: real adopted SourceRecord bytes in
+  child 4 + one scratch measurement of a noisy 64x64x16 case for the D2 verdict. OWNER/USER: the aseprite MCP server needs a restart.
+  OWNER ADOPTED all 3 (ad-89f6a62b866bba54 ui.panel_frame, ad-6b7562f0799be9ea fx.selection_ring, ad-27d874d5da867cc0 fx.campfire).
+  Child 2 COMMITTED d94f58b69 -> APPROVED (2427 pass, same 12 red, store verify ok; real SourceRecord 520/669/677 B). Nits folded into
+  child 3: rename no_animation/no_slices tests, module-level import, ==REVISION_COUNT, pin proof metadata exactly. Implementer asks owner
+  rc-0009 directly; child 3 re-points the 12 tests (send me the diff). Child 4 still owes the noisy 64x64x16 scratch measurement.
+  Owner: "Assemble rc-0009". Child 3 a28282206 + proof re-run 96ca645f9 APPROVED (2441 pass, 0 red; record rc-0009 73/73). Child 4 docs
+  4692f2149 APPROVED: Git LFS keep closed (campfire 9.9 %; noisy 16-col 53 %, full-colour noise 2.2x = not pixel art), raise bounds: none.
+  PR #521 OPEN (head eaab84ff9, merge head checked OK) -> CONFLICTING on GitHub after #518 (REGISTRY, server-side, no driver;
+  local merge-tree clean); no CI yet. Implementer told: merge main, push same branch, send me head to diff, then CI, then owner --admin.
+  CLOSED at 3b3838ed4 -> PRE-CHECKED from my worktree: footprint asset-only, done_checker rc 0 x5, registry in sync, capped
+  unit/tools+docs+static+architecture 1170 pass; full tests/tools not run (CI). BATCH APPROVED FOR PR. Implementer merges main, sends
+  head (I diff: REGISTRY/main only), asks owner push/PR; I record PR #, then dispatch D after merge. My worktree has my own
+  gate_verdicts shard modified (carry into D's commit). MCP restart: not confirmed from the implementer's older session.
+  (old) Implementer closing; NEXT FOR ME: pre-check the closure head from my worktree (done_checker_static x5, footprint, tests), then
+  implementer asks owner push/PR; after merge dispatch D.
+  MY GATES: child 1 key text before commit (done); review each commit; checks only from the main checkout or my worktree.
+- D FILED (lead order B -> D -> A; D does not block on #519): epic TCK-20261011-EPIC-VISUAL-ASSET-SAMPLE-MAP + DATA/RENDER/GAP-REPORT,
+  planning commit 773feea4a on local branch visual-asset-sample-map (upstream unset). DISPATCH ONLY AFTER B CLOSES (merge main first).
+  Finding: present_map codes are per world (state_presenter.py:183); map by terrain name.
+- (history) Candidate D (offline sample Live Map from rc-0009 + gap list; owner asked 2026-10-11): issue #519 for:rpg-planner (terrain
+  grid, locations, entities, current drawing) opened; ordering D-before-A proposed to lead (my rec), awaiting lead's decision.
+- Next after this: candidate A (entity markers) starts with a MAX_REGISTRY_BYTES budget review; C (surface gate) waits for rpg-planner.
+- The local branch visual-asset-slices (=10c826ea3, PR #499 head) is leftover from the squash merge; deleting it is the owner's call.
+- Open for OWNER: confirm own worktree; env failure test_handover_transit (two memory dirs; owner decides).
+- History (superseded):
+- NOTHING IN FLIGHT (2026-10-11). Slices batch (epic TCK-20261010-EPIC-VISUAL-ASSET-SLICES + 4) MERGED: PR #499 squash
+  595021d6d at 2026-10-11T03:54:51Z (owner --admin pinned 10c826ea3; only change after my pre-check = REGISTRY regen,
+  verified). Branch visual-asset-slices finished, never pushed again. Shipped: D25, SourceRecord.slices (16/16 bounds,
+  SLICE_* codes), export-runtime --slices (artifact px), drawing op set_slice + handoff slice_count. Gates unmoved.
+- Next batch: implementer cuts a NEW branch from origin/main; FIRST asset PR refreshes both docs/assets/session_handoff/*
+  (merged ones say "awaiting push/PR"). Store/drawing edits -> one proof-record re-run after the last edit
+  (`make PYTHON3=<project venv> visual-assets-aseprite-local`). Planning commits: in MY worktree
+  /data/vboxuser/Work/rpg-asset-planner (used this batch; owner has not formally confirmed it). Lesson: regenerate
+  REGISTRY after the final stored-artifact move, before push (PR #499 CI failed once on stale artifact_files).
+- My worktree is detached at 91e0306db with ONE untracked file: 2026-W41/asset-planner-planning.gate_verdicts.jsonl (my
+  own done_checker pre-check lines for the slices batch). Carry it into the next planning commit (stage monitoring).
+- Open for OWNER: confirm own worktree; env failure test_handover_transit (two memory dirs; owner decides).
+- Still parked: activation (incl. client use of slices/atlases/animation, Live Map icon glyph) until RPG core lands; Git
+  LFS; raising bounds; self-hosted runner; other asset kinds.
+- History of the slices batch (superseded):
+- IN FLIGHT (2026-10-10): batch visual-asset-slices FILED + DISPATCHED to asset-implementer (msg). Epic
+  TCK-20261010-EPIC-VISUAL-ASSET-SLICES + 4 children (todos/visual-asset-slices/SEQUENCE.md). Planning commit 27f62cf39
+  on local branch visual-asset-slices (off origin/main cbfe372b0), made in MY worktree /data/vboxuser/Work/rpg-asset-planner
+  (now detached so the implementer can check the branch out in rpg-aseprite-mcp). Owner answers 2026-10-10: store +
+  drawing tool; MAX_SOURCE_SLICES 16 / MAX_SLICE_KEYS 16 approved. Planner: SourceRecord.slices only (no registry field),
+  export in artifact px (source px x build scale), pivot inside rect inclusive, single-key slices from the drawing tool.
+  MY GATES: c1 D25 draft (I review; implementer asks owner to approve text), c3 op shape before code. Review each commit;
+  run checks only from main checkout / my worktree, never theirs.
+  c1 built (uncommitted): 40 tests, real-Aseprite parity passes; D25 draft REVIEWED -> 2 adds asked (handoff declared
+  count only cross-checked; export scales to artifact px + drawing tool single-key), deviations 1-4 accepted (synthetic
+  multi-key, flags file-level, negative origins + empty slices=() refused, worst record 30,683 B). Implementer now asks
+  owner D25; commits c1 after owner answer + security review.
+  c1 COMMITTED 20c146af4 -> APPROVED (owner approved D25 with my 2 sentences; security review approved, 80k fuzz;
+  store tests 1287 pass in my worktree). Nits sent: ADR status-line comma; stage monitoring shards per commit; child 4
+  docs state zero-size-key limit. Handoff slice_count moved to c3 (agreed). Next: c2 export, then c3 op shape (my gate).
+  c2 COMMITTED 76418d7a5 -> APPROVED (208 targeted tests pass in my worktree; scale cross-checked vs artifact w/h ->
+  BuildError slices_scale_unresolved). c3 op `set_slice` (apply_ops, make-or-replace, single key, tool name pattern,
+  slice_count omitted when 0, SLICE_COUNT_MISMATCH) APPROVED with edits: final-canvas check of all slices before save
+  (resize shrink test), always declare count when >=1 slice + both-direction mismatch tests + absence=unchecked doc,
+  describe whole-slice replace. Monitoring shards staged at c4 closure (no shards in their worktree yet).
+  c3 COMMITTED b30ae1663 -> APPROVED (1420 pass incl. real-Aseprite test_slices, my worktree). LUA_SHA256 re-pinned
+  (enters NEW artifacts' fingerprint only). c4 conditions sent: proof re-run must show rc-0008 70/70 identical (else STOP,
+  no re-pin around), one proof commit, both snapshots, 5 closures, main merge + final pass, then I pre-check.
+  c4 DONE: docs 5270c653b, proof e03f08ded (215/215, rc-0008 70/70 identical), main merge 0d682bb9e + REGISTRY 12f01cf60,
+  closure 91e0306db. PRE-CHECKED at 91e0306db from my worktree: footprint asset-only (55 files), done_checker PASS x5,
+  working-log rows in per-batch shard visual-asset-slices.working_log.jsonl (by design), proof tests 55 pass -> BATCH
+  APPROVED for PR. Implementer asks owner push/PR, then --admin merge; I record PR # and merge commit.
+- PREVIOUS (2026-10-10): Store-tooling batch (epic TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING + 9) MERGED:
+  PR #487 squash 231e35f77 at 2026-10-10T10:37:15Z (owner --admin pinned 37b9d0620). Branch visual-asset-store-tooling
+  finished, never pushed again. Shipped: store lock + hash-chained gc deletion log (D24), PNG decoder ~2x, release byte
+  reproducibility, committed local Aseprite proof record + CI staleness test (D10 addendum), opt-in atlases
+  (MAX_ATLAS_DIM 1024), palettes as data, animation metadata per source revision (16/16), real-bundle evidence capture
+  (rehearsal pixel-verified, 4 pages loading-only; real app build may inline small images: untested). Gates unmoved.
+- Next batch: implementer cuts a NEW branch from origin/main in rpg-aseprite-mcp. FIRST asset PR must refresh
+  docs/assets/session_handoff/* (merged ones say "awaiting push/PR decision"). Any store/** or drawing/** code edit
+  makes the proof record stale -> re-run `make visual-assets-aseprite-local` once after the last store edit.
+- Open for OWNER: own asset-planner worktree (~/Work/rpg-asset-planner exists; confirm); env failure
+  test_handover_transit (two memory dirs -data-/-home-; agent-working domain; owner decides, delete nothing).
+- Still parked: activation (incl. Live Map icon glyph) until RPG core lands; Git LFS; slices/9-slice/pivots; client use
+  of atlases/animation; raising bounds; self-hosted runner; other asset kinds.
+- History of the store-tooling batch (superseded):
 - 2026-10-10 IN FLIGHT: batch visual-asset-store-tooling FILED + DISPATCHED to asset-implementer (msg). Epic
   TCK-20261010-EPIC-VISUAL-ASSET-STORE-TOOLING + 9 children (todos/visual-asset-store-tooling/SEQUENCE.md), branch
   visual-asset-store-tooling off 312fbd78c, planning commit 4c4b0b8d5, upstream unset (implementer checks it out in
@@ -49,6 +234,14 @@ Updated: 2026-10-12 (real-art proof MERGED as PR #521 `5951fdb71`; sample-map ba
   3 cells pixel-verified, 4 pages loading-only, planted 1-px change caught; deviations a bundle.check.ts, b
   assetsInlineLimit 0 [doc must say real build may inline, untested], c dirty-tree refusal: confirmed). Next: proof-record
   re-run commit, c9 closure (batch_hand_close), main merge + final pass, then implementer asks owner push/PR.
+  PRE-CHECKED at head ebd336942: proof record re-run a90818a7e (run dd3e46ac0, 205/205, rc-0008 70/70), closure
+  449900fd8 (done_checker_static PASS x10), main merged twice, proof test 49/49 at head -> BATCH APPROVED for PR.
+  Implementer asks owner push/PR, then --admin merge; I record the merge commit.
+  Final report: head c2807c840 (24 commits), all suites green except the known env memory-dir failure; closure filled
+  real artifacts for c4/c7/c8/c9; owner push/PR question pending (implementer). MY SLIP: my done_checker runs wrote
+  gate_verdicts lines into the implementer's worktree (committed by it in c2807c840) -> run checks only from main
+  checkout/own worktree (memory: gate-checks-write-monitoring-shards). Branch tracks origin/main by mistake: push with
+  explicit `-u origin visual-asset-store-tooling`.
 - 2026-10-10: PR #480 MERGED cfad712cf at 2026-10-10T02:54:01Z (owner --admin pinned to c3e01d71d). Branch
   visual-asset-icon-release-candidate finished, never pushed again. rc-0008 (70 entries: 34 terrain + 36 icons) is the
   current rc. Main checkout NOT fast-forwarded (dirty with other sessions' files) - leave it.
