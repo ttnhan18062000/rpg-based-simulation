@@ -144,3 +144,15 @@ def test_the_revocation_id_is_derived_from_the_target():
     assert revocation_id_for("source_revision", "hero/r0001") != revocation_id_for("source_revision", "hero/r0002")
     assert parse_target("hero/r0001") == ("source_revision", "hero/r0001") and parse_target("in-0123456789abcdef")[0] == "intake"
     assert config.CATALOG_ROOT.exists()
+
+
+@pytest.mark.parametrize("field,value", [("reason", "<why>"), ("approver", "<your name>"), ("approver_role", "TBD"), ("reason", "rights <x> withdrawn")])
+def test_revoke_refuses_a_template_placeholder_in_each_field_and_writes_nothing(env, field, value):
+    result = s.make_intake(env.tmp)
+    s.do_adopt(result.intake_id)
+    before = snapshot(env.catalog)
+    s.CALLS.clear()
+    with pytest.raises(GateError) as err:
+        do_revoke("hero/r0001", **{field: value})
+    assert err.value.code == "placeholder_value" and field in err.value.message
+    assert snapshot(env.catalog) == before and not s.CALLS
