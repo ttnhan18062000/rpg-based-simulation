@@ -33,6 +33,23 @@ Agreed by testing-planner and rpg-planner on 2026-10-14:
 - There is ONE re-anchor. rpg-planner owns the ruling, and testing runs `tools/test_architecture/simq_reanchor.py`.
 - On 2026-10-14 the designer moved the timing: the re-anchor is taken ON baseline v1, the authored world after all M0 pre-v1 steps and the dependency window. That avoids a second re-anchor, because 6 more measured behaviour steps and the dependency upgrades still come before v1. rpg-planner's guess is about 1-1.5 weeks.
 
+**Update 2026-10-14 (testing-planner + rpg-planner ruling), after slow run 38532053464:** the
+first scheduled slow run with audit_mode anchors (7fa1fc7bc, success) turned 14 corpus-diversity
+anchors that had been known red green. They are in the NARRATIVE and SOCIAL "step-change" families
+and the 1000t cognition anchors, and #390 lists them as FIXED. rpg-planner ruled this fits host-speed
+noise in the earlier unaudited runs (cause: TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-THROUGH-PHASE-BUDGETS-EVEN-WITH-THE-PINNED-NORMAL-GOVERNOR),
+not real behaviour shifts. So:
+- The moved-row list in Scope 2-3 is ONLY rows that are red or moved under audit_mode. A row
+  that is green under audit_mode is not ruled as a moved row.
+- Scope 5: no bisect or rebaseline work on the family tickets. A family ticket whose anchors keep
+  passing in scheduled slow runs closes as "host-speed noise (TCK-20261014-UNAUDITED-RUNS-...)",
+  by the green-count rule and through its owner, possibly before this ticket lands. Only a family
+  that still has rows red under audit_mode folds in here with a pointer to the ruling table.
+  AC4 is read that way.
+- NARRATIVE is retired as a grade under D77, so the NARRATIVE family's anchors go with the SimQ
+  rebuild after v1 (TCK-20261014-SIMQ-PILLARS-COMPUTED-FROM-TYPED-RECORDS-WITH-SEED-SPREAD-D77).
+- One green run is one data point. No known-red entry is removed on its strength alone.
+
 ## Scope
 1. When rpg-planner says baseline v1 is on main, run two isolated audit_mode runs per key on one SHA for every anchored key, the 200t and the 1000t keys alike, as in #531. Any pair that isn't identical is refused and becomes an rpg determinism finding.
 2. Produce the moved-rows table and the ruling table with `simq_reanchor.py`, including the status transitions to and from no-data. Send both to rpg-planner BEFORE any commit.
