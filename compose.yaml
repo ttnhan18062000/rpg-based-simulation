@@ -85,7 +85,7 @@ services:
   prometheus:
     profiles: ["observability"]
     # Third-party images are pinned by digest (the multi-arch index current on 2026-10-14; no version change); Dependabot bumps them.
-    image: prom/prometheus:v2.50.0@sha256:042258e3578a558ce41b036104dfa997b2d25151ab6889a3f4d6187e27b1176c
+    image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
     mem_limit: 512m
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
