@@ -70,3 +70,5 @@ Security updates are not governed by the version-update schedule.
 - `.github/dependabot.yml`
 ## Completion Summary
 Dependabot now opens grouped major and minor/patch PRs monthly and does not propose Node 25+.
+
+Supersedes TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS (dropped before merge on the owner's 2026-10-14 decision); its record in the W42 platform-implementer-step1-closure.working_log.jsonl shard is superseded, not a closed ticket.
