@@ -100,6 +100,8 @@ def _run(
 
 def _scan_ruff(root: Path, out_dir: Path) -> None:
     ruff = _run([sys.executable, "-m", "ruff", "check", SCAN_ROOT, "--output-format", "json"], root, (0, 1))
+    if not ruff.stdout.strip():  # ruff always prints JSON (`[]` when clean): none means it did not run, never "clean"
+        raise ToolUnavailableError(f"ruff produced no output (exit {ruff.returncode}): {ruff.stderr.strip()[:300]}")
     (out_dir / RUFF_JSON).write_text(ruff.stdout, encoding="utf-8")
 
 

@@ -11,6 +11,9 @@ Advisory: nothing here fails a PR (TCK-20261004-IMPORT-LINTER-ADOPTION).
     python3 -m codebase.structure.import_contracts seed-baseline [--lint-imports PATH]
                                                              rerun lint-imports with an empty baseline,
                                                              rewrite the baseline file and the block
+    python3 -m codebase.structure.import_contracts report [--lint-imports PATH]
+                                                             run every contract with lint-imports' own output and
+                                                             exit code (`make lint-imports`)
     python3 -m codebase.structure.import_contracts advisory [--summary-out PATH] [--annotate] [--lint-imports PATH]
                                                              run every contract; write the result to a Markdown
                                                              summary and one ::warning:: line; ALWAYS exit 0
@@ -23,13 +26,13 @@ from __future__ import annotations
 
 import argparse
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 from typing import Sequence
 
+from codebase.health.scan import ToolUnavailableError, find_tool
 from codebase.structure.packages import LAYERS, REGISTRY_REL_PATH, REPO_ROOT, load_rows
 
 CONFIG_REL_PATH = Path("codebase/structure/importlinter.toml")
@@ -122,6 +125,27 @@ def seed_baseline(root: Path, lint_imports: str) -> list[str]:
     return parse_violations(result.stdout)
 
 
+def default_lint_imports() -> str:
+    """lint-imports beside this Python, else on PATH; the bare name when neither has it (the run then reports it)."""
+    try:
+        return find_tool("lint-imports")
+    except ToolUnavailableError:
+        return "lint-imports"
+
+
+def lint_imports_command(root: Path, lint_imports: str) -> list[str]:
+    return [lint_imports, "--config", str(root / CONFIG_REL_PATH)]
+
+
+def run_report(root: Path, lint_imports: str) -> int:
+    """Run every contract with lint-imports' own output; return its exit code (2 when it cannot start)."""
+    try:
+        return subprocess.run(lint_imports_command(root, lint_imports), cwd=root, check=False).returncode
+    except OSError as exc:
+        print(f"import contracts: could not run ({exc.__class__.__name__}: {exc})")
+        return 2
+
+
 def advisory_report(root: Path, lint_imports: str) -> tuple[str, bool]:
     """Run every contract; return `(Markdown summary, needs_warning)`. Never raises: a crash is the summary."""
     lines = []
@@ -171,12 +195,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="exit 1 if the generated block differs from the registry and baseline")
     sub = parser.add_subparsers(dest="command")
     seed = sub.add_parser("seed-baseline", help="accept every current layer violation into the baseline file")
-    seed.add_argument("--lint-imports", default=shutil.which("lint-imports") or "lint-imports")
+    seed.add_argument("--lint-imports", default=default_lint_imports())
+    report = sub.add_parser("report", help="run every contract; lint-imports' own output and exit code")
+    report.add_argument("--lint-imports", default=default_lint_imports())
     advisory = sub.add_parser("advisory", help="run every contract for the CI step; always exits 0")
-    advisory.add_argument("--lint-imports", default=shutil.which("lint-imports") or "lint-imports")
+    advisory.add_argument("--lint-imports", default=default_lint_imports())
     advisory.add_argument("--summary-out", type=Path, help="append the result to this Markdown file (GITHUB_STEP_SUMMARY)")
     advisory.add_argument("--annotate", action="store_true", help="print one GitHub ::warning:: line when a contract is broken or stale")
     args = parser.parse_args(argv)
+    if args.command == "report":
+        return run_report(args.root, args.lint_imports)
     if args.command == "advisory":
         return run_advisory(args.root, args.lint_imports, args.summary_out, args.annotate)
     try:
