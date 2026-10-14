@@ -1,4 +1,10 @@
 # Docker Compose configuration for production-grade stack
+#
+# Profiles:
+#   default (`docker compose up`)                  backend, redis, ai_worker, frontend
+#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, watchdog
+# watchdog sits in the observability profile because it depends_on loki and prometheus and polls Loki.
+# Every service has a memory limit (mem_limit); see TCK-20261014-COMPOSE-OBSERVABILITY-PROFILE-AND-LIMITS.
 services:
   backend:
     build: 
@@ -12,10 +18,13 @@ services:
     volumes:
       # Optional: mount data directory for persistent game state / config changes
       - ./data:/app/data
+    mem_limit: 1g
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      # urlopen raises on HTTP >= 400 (a bare requests.get never fails on a 500), so a non-2xx or a down backend exits non-zero.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=4)"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,6 +40,7 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
+    mem_limit: 256m
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -47,8 +57,10 @@ services:
       - REDIS_URL=redis://redis:6379/0
     depends_on:
       redis:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
+    mem_limit: 512m
+    # No healthcheck: the worker exposes no HTTP port (a metrics port is tracked by rpg's TCK-20261014-AI-WORKER-EXPOSES-STREAM-CONSUMER-LAG-AND-PENDING-METRICS).
     # Use deploy block to easily scale workers: docker compose up --scale ai_worker=3
     deploy:
       replicas: 1
@@ -60,11 +72,21 @@ services:
     ports:
       - "${FRONTEND_PORT:-8080}:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
+    mem_limit: 64m
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   prometheus:
-    image: prom/prometheus:v2.50.0
+    profiles: ["observability"]
+    # Third-party images are pinned by digest (the multi-arch index current on 2026-10-14; no version change); Dependabot bumps them.
+    image: prom/prometheus:v2.50.0@sha256:042258e3578a558ce41b036104dfa997b2d25151ab6889a3f4d6187e27b1176c
+    mem_limit: 512m
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
@@ -80,24 +102,35 @@ services:
       timeout: 5s
       retries: 5
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   grafana:
-    image: grafana/grafana:10.3.3
+    profiles: ["observability"]
+    image: grafana/grafana:10.3.3@sha256:8640e5038e83ca4554ed56b9d76375158bcd51580238c6f5d8adaf3f20dd5379
+    mem_limit: 256m
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
       - ./docker/grafana/dashboards:/etc/grafana/dashboards
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
 
   loki:
-    image: grafana/loki:3.0.0
+    profiles: ["observability"]
+    image: grafana/loki:3.0.0@sha256:757b5fadf816a1396f1fea598152947421fa49cb8b2db1ddd2a6e30fae003253
+    mem_limit: 512m
     ports:
       - "${LOKI_PORT:-3100}:3100"
     command: -config.file=/etc/loki/local-config.yaml
@@ -109,7 +142,15 @@ services:
       retries: 5
 
   promtail:
-    image: grafana/promtail:3.0.0
+    profiles: ["observability"]
+    image: grafana/promtail:3.0.0@sha256:d3de3da9431cfbe74a6a94555050df5257f357e827be8e63f8998d509c37af8b
+    mem_limit: 128m
+    healthcheck:
+      # The promtail image has bash but no wget/curl: read the first line of GET /ready over /dev/tcp and require HTTP 200.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/9080 && printf 'GET /ready HTTP/1.0\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200 '"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - ./docker/promtail-config.yml:/etc/promtail/config.yml
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -117,9 +158,13 @@ services:
     command: -config.file=/etc/promtail/config.yml
     restart: unless-stopped
     depends_on:
-      - loki
+      loki:
+        condition: service_healthy
 
   watchdog:
+    profiles: ["observability"]
+    mem_limit: 256m
+    # No healthcheck: the watchdog is a poller with no HTTP port.
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
@@ -132,9 +177,12 @@ services:
       - SIM_ALERTS_WEBHOOK_URL=${SIM_ALERTS_WEBHOOK_URL:-}
       - SIM_ALERTS_WEBHOOK_ENABLED=${SIM_ALERTS_WEBHOOK_ENABLED:-false}
     depends_on:
-      - backend
-      - loki
-      - prometheus
+      backend:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
