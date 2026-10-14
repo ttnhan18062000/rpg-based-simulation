@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-OBS-STACK-PROMETHEUS3-GRAFANA13
-phase: open
+phase: inprogress
 date: 2026-10-14
 tags: [platform]
 ---
@@ -15,7 +15,7 @@ tags: [platform]
 Upgrade the observability profile to Prometheus v3 and Grafana 13 before step 2 builds dashboards on them
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -64,6 +64,16 @@ None.
 Run `tools/sessions/disk_headroom.py` before pulling the new images.
 
 ## Implementation Notes
+`compose.yaml`: `prom/prometheus:v3.15.0` and `grafana/grafana:13.2.4`, both exact tag + digest (confirmed with imagetools). Prometheus v3 needed no change to `docker/prometheus.yml` or its flags. Grafana 13 needed two changes: `mem_limit` 256m -> 768m (it hit 256m and restarted once; first start peaked at 480 MiB, settled at 317 MiB), and `healthcheck.start_period: 120s` (first start with the 10.x data volume ran a long migration, about 2 to 3 minutes on a heavily loaded host). `simulation.json` uses only timeseries, stat, gauge, heatmap, logs and row panels, so no Angular panels.
 ## Test Summary
+- **running locally** (`docker compose --profile observability up -d --build`): prometheus, loki, promtail, redis, backend, frontend and grafana reached `healthy` (grafana after the fix above). Grafana version 13.2.4 `database: ok`.
+- Grafana datasources `Prometheus` and `Loki`: `/api/datasources/uid/<uid>/health` returned `OK` for both. Dashboard `RPG Simulation: Analytics & Diagnostics` (uid `sim-v2`) is provisioned.
+- Prometheus v3 logged no warnings or errors.
+- **Finding, not caused by this change:** the `rpg-backend` target is DOWN with `HTTP 401` because the backend's `/metrics` requires an API key (`dependencies=[Depends(require_admission)]`, since #61) and `docker/prometheus.yml` has never sent credentials. The ticket's `rpg-backend UP` criterion therefore cannot pass on any Prometheus version until someone decides how Prometheus authenticates (an rpg/`src/api` decision); reported to platform-planner.
+- Grafana logs also show harmless errors: missing `provisioning/plugins` and `provisioning/alerting` directories, and TLS failures reaching grafana.com (plugin catalogue).
+- Idle memory peaks after this change: grafana 480 MiB (start), backend 357, loki 93, prometheus 40, promtail 42, ai_worker 33, watchdog 22, frontend 6, redis 8.
+- CI build of images and publish-images on the PR: to confirm.
 ## Files Changed
+- `compose.yaml`
 ## Completion Summary
+Prometheus v3.15.0 and Grafana 13.2.4 run cleanly in the observability profile; the `/metrics` 401 is a pre-existing separate issue.

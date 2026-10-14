@@ -80,3 +80,5 @@ All `FROM` lines and `image:` entries pinned `tag@sha256` (multi-arch index dige
 - `docker/backend.Dockerfile`, `docker/frontend.Dockerfile`, `compose.yaml`, `.github/dependabot.yml`
 ## Completion Summary
 Every base image is pinned by exact tag and digest, the frontend installs with `npm ci`, and Dependabot is configured. Merged in #561.
+
+migration_complete FAILs: no plan/investigation/test_plan staging artifacts. Scoping, plan and test plan were written inline in the ticket by platform-planner (planner's process gap, accepted 2026-10-14); evidence is in Test Summary.

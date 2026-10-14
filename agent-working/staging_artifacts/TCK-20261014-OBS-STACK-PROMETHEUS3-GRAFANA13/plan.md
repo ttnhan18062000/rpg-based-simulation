@@ -15,3 +15,6 @@ tags: [platform]
 3. Open `simulation.json` and replace any Angular panel types with their current equivalents; keep queries and layout.
 4. Run `docker compose --profile observability up -d` on fresh volumes (`down -v` for the obs volumes only, never redis_data), then on existing volumes, and collect the evidence in the test plan.
 5. Record each change and the evidence in the ticket.
+
+## Plan outcome (2026-10-14, platform-implementer)
+Implemented as planned, plus two changes found while running the stack: Grafana `mem_limit` raised to 768m and a 120s `start_period` on its health check (Grafana 13 hit 256m and restarted once, and its first start migrates the 10.x data volume slowly). Prometheus v3 needed no config change.

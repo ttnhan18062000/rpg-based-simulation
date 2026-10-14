@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-FRONTEND-NODE-24-LTS
-phase: open
+phase: inprogress
 date: 2026-10-14
 tags: [platform]
 ---
@@ -15,7 +15,7 @@ tags: [platform]
 Frontend build image: Node 20 → Node 24 LTS
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 hotfix
@@ -56,6 +56,11 @@ None.
 None.
 
 ## Implementation Notes
+`docker/frontend.Dockerfile`: builder is `node:24.21.0-alpine3.24@sha256:ebfe2f90...` (exact tag behind the digest; confirmed with imagetools). `frontend/package.json` has no `engines` field and there is no `.nvmrc`/`.node-version`, so nothing mismatches and nothing was reported to rpg.
 ## Test Summary
+- **running locally:** the image built with `npm ci && npm run build` on Node 24.21.0 and the frontend container reached `healthy` in the full stack (host under heavy load from other sessions).
+- CI build of the image via `publish-images.yml` on the PR: to confirm (**validated** once green).
 ## Files Changed
+- `docker/frontend.Dockerfile`
 ## Completion Summary
+The frontend image builds on Node 24 LTS.

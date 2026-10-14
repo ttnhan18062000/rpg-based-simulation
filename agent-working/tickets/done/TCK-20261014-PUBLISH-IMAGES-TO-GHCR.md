@@ -82,3 +82,5 @@ None.
 - `.github/workflows/publish-images.yml`
 ## Completion Summary
 Backend and frontend images are built on PRs and published to GHCR from main and `v*` tags only. Merged in #561; first main run 38527791050 passed.
+
+migration_complete FAILs: no plan/investigation/test_plan staging artifacts. Scoping, plan and test plan were written inline in the ticket by platform-planner (planner's process gap, accepted 2026-10-14); evidence is in Test Summary.

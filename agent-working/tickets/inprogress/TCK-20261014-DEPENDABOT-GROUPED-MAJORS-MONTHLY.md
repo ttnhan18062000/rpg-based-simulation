@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-DEPENDABOT-GROUPED-MAJORS-MONTHLY
-phase: open
+phase: inprogress
 date: 2026-10-14
 tags: [platform]
 ---
@@ -15,7 +15,7 @@ tags: [platform]
 Dependabot: monthly schedule, one grouped majors PR and one grouped minor/patch PR per ecosystem, Node held to LTS
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 hotfix
@@ -63,6 +63,10 @@ None.
 Security updates are not governed by the version-update schedule.
 
 ## Implementation Notes
+`.github/dependabot.yml`: all five ecosystems are monthly, each with a `<eco>-major` group and a `<eco>-minor-patch` group (at most 2 PRs a month per ecosystem); the docker ecosystem ignores `node >=25`. Labels kept. The superseded `TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS` was started and dropped before shipping when the owner chose to stay current; its closure-tool records remain in the append-only monitoring shards and no `working_log.csv` row was written for it.
 ## Test Summary
+- **validated (schema):** the file parses with 5 ecosystems, monthly, 2 groups each, and the node ignore. GitHub's own config check and the first grouped run are observed after merge (not yet).
 ## Files Changed
+- `.github/dependabot.yml`
 ## Completion Summary
+Dependabot now opens grouped major and minor/patch PRs monthly and does not propose Node 25+.

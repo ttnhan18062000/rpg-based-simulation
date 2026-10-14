@@ -92,3 +92,5 @@ None.
 - `compose.yaml`
 ## Completion Summary
 Default compose starts 4 services; the observability profile adds 5; every service has a memory limit and, where it has an HTTP port, a health check. Merged in #561.
+
+migration_complete FAILs: no plan/investigation/test_plan staging artifacts. Scoping, plan and test plan were written inline in the ticket by platform-planner (planner's process gap, accepted 2026-10-14); evidence is in Test Summary.

@@ -84,3 +84,5 @@ Steps added to `publish-images.yml` after the build: Trivy (report-only, `exit-c
 - `.github/workflows/publish-images.yml`
 ## Completion Summary
 Each published image now has an SPDX SBOM attestation and a keyless cosign signature, verified against both digests; Trivy reports without gating. Baseline recorded above.
+
+migration_complete FAILs: no plan/investigation/test_plan staging artifacts. Scoping, plan and test plan were written inline in the ticket by platform-planner (planner's process gap, accepted 2026-10-14); evidence is in Test Summary.
