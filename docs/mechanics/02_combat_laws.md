@@ -233,3 +233,23 @@ tactical pass has always chosen).
     `outcome` is an earlier annotation and is dropped before the new one is written
     (`TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS`).
     The gate's policy is unchanged; only its return shape and the resulting annotation.
+
+## 8. Terrain Movement Cost (D72, divergence 2.124)
+Each terrain declares its own movement cost in content: `move_cost_multiplier` on its entry in
+`data/content/world/terrain.yaml` (`TerrainDefinition`, required, greater than zero). A terrain with no
+declared cost is a compile-time content error, never a silent 1.0. The factor scales the readiness
+cost of one step onto that tile (`TerrainCostService.get_tile_cost`, read by the move legality
+pre-check in `LegalityServiceV2`), and it is looked up by exact catalog id through
+`src/engine/terrain_cost.py` (`terrain_cost`); there is no name table in code and no case folding
+(D56). `WorldCompiler` refuses a world whose terrain holds an id the catalog does not declare
+(`InvalidWorldSpecError`, naming each one), and its base fill is the catalog id `plain`.
+
+| Terrain | Cost | | Terrain | Cost |
+|---|---|---|---|---|
+| plain, grass | 1.0 | | road | 0.5 |
+| forest, cave, ruin | 1.5 | | swamp, river | 3.0 |
+| mountain | 4.0 | | snow 1.6, volcanic 1.4 | (kept as declared; no owner ruling) |
+
+A river stays walkable (3.0). Cave, ruin and river are D33 placeholders. Per-body movement styles
+are a later change (M1). The numbers `terrain.yaml` declared before D72 were read by nothing; they
+are replaced by the ruled values above.

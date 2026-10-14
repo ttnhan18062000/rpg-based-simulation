@@ -22,4 +22,4 @@ known:
     added_on: "2026-10-13"
     expires_on: "2026-12-31"
     state: fail
-    note: "Unsourced mid-run adds: camps and raids (D70). The remaining source is the conquest stronghold, TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71. When D70 lands this entry is re-pointed to D71, and D71's closer removes it."
+    note: "Unsourced mid-run adds: camps and raids (D70), the only remaining source. The conquest stronghold was removed by TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71 (divergence 2.123). D70's closer removes this entry."

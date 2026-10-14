@@ -43,9 +43,9 @@ def _entity(entity_id: int, position: tuple[float, float], active: bool = True) 
 
 
 def test_total_variation_distance_reproduces_sandbox_dungeon_anchor():
-    # Verified value is 0.23161981243456373 (round(x, 4) == 0.2316), independently
-    # reproduced this session -- not the PROPOSAL.md-rounded 0.2315, to avoid a test
-    # that passes by coincidence of rounding direction.
+    # D72: the compiler's base fill is now the catalog id "plain", so sandbox_world's fill and its
+    # "plain" regions are ONE histogram bucket (before, "PLAIN" fill and "plain" region were two).
+    # Verified value is 0.23153614062704975 (round(x, 4) == 0.2315); it was 0.2316 with the split bucket.
     repo = WorldRepository("data/worlds")
     sandbox_spec = repo.load_world("sandbox_world")
     sandbox_state, _report = WorldCompiler.compile(sandbox_spec, seed=42)
@@ -58,7 +58,7 @@ def test_total_variation_distance_reproduces_sandbox_dungeon_anchor():
 
     result = total_variation_distance(h1, h2)
 
-    assert round(result, 4) == 0.2316
+    assert round(result, 4) == 0.2315
 
 
 def test_total_variation_distance_formula_on_synthetic_histograms():

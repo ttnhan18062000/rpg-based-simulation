@@ -46,8 +46,8 @@ def test_single_run_flow_end_to_end(temp_repos_dir):
             "coordinate_system": "grid"
         },
         "regions": [
-            {"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "GRASS"},
-            {"id": "wilds", "type": "wilderness", "bounds": (15, 15, 40, 40), "terrain": "FOREST"}
+            {"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "grass"},
+            {"id": "wilds", "type": "wilderness", "bounds": (15, 15, 40, 40), "terrain": "forest"}
         ],
         "factions": [
             {"id": "villagers", "type": "civilian"},
