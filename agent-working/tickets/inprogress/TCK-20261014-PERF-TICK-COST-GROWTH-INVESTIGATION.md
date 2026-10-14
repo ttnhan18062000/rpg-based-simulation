@@ -4,7 +4,7 @@ layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION
-phase: open
+phase: inprogress
 date: 2026-10-14
 tags: [performance, benchmarking, regression]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking, regression]
 Find where the tick cost grew since May: per-phase and per-call-site attribution on the scenarios that leave NORMAL under the canonical contract
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
