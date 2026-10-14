@@ -36,8 +36,13 @@ The owner chose to take the Actions majors now. They touch workflows owned by ot
 - Evidence from testing-planner, all of it in the PR body:
   1. One `workflow_dispatch` run of rpg-gate-report.yml on this branch whose report lists the per-world docs (not empty or
      no-data rows).
-  2. The PR run's artifact list shows test.yml's 3 artifacts (incl. `perf-tripwire`) and slow-regression's 2, each with
-     their files present (check hidden/dotfile paths and `if-no-files-found`).
+  2. The PR run's artifact list shows test.yml's 3 artifacts (incl. `perf-tripwire`), each with its files present
+     (check hidden/dotfile paths and `if-no-files-found`).
+  2b. slow-regression.yml runs only on schedule/dispatch, and a dispatch costs about 2 runner-hours. **No dispatch**
+     (testing-planner, 2026-10-14). Its 2 uploads use the same upload-artifact@v7 step shape, so the test.yml proof covers
+     the action. The PR body must say: testing-planner verifies `certification-report-<sha>` and `slow-junit-<sha>` on
+     the first scheduled slow run on main after merge (artifacts exist with files, and the report step finds the
+     JUnit); if both are missing, the merge gets reverted.
   3. The `perf-tripwire` artifact shows both arms measured (second checkout into `perf-base`, #573).
 - deploy-docs (#574): note that it runs only on main, so it can't be proven on the PR. State that plainly and have the owner
   watch the first main run.
