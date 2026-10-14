@@ -71,6 +71,25 @@ P1
 
 ## Test Summary
 
+Hash proof, 5000 ticks, base `56cefc2f4` vs branch (final code), 10 of 10 byte-identical (`CanonicalStateHasher`); no divergence entry needed:
+
+| run | state digest (rpg-next 56cefc2f4 = branch) |
+|---|---|
+| frontier_living_world_42 | `edd91854e0d3a872` identical |
+| frontier_living_world_43 | `bf4671138a94c77d` identical |
+| frontier_living_world_44 | `b2725eae2a7b6e71` identical |
+| frontier_living_world_45 | `bdbbac3f86278f37` identical |
+| frontier_living_world_46 | `820fa6ad389a0bfb` identical |
+| urban_political_42 | `8ad52f2d8c7e8c58` identical |
+| urban_political_43 | `3f6687c451427fb4` identical |
+| urban_political_44 | `52fcc2692eb6d05b` identical |
+| urban_political_45 | `f55cda108f41ad3d` identical |
+| urban_political_46 | `6c501ba8a0bf9c89` identical |
+
+New test: `tests/unit/engine/test_walk_check_reads_only_blocked_tiles.py` (a blocked tile and a building tile are refused; every catalog terrain id not blocked is walkable). Engine movement, swap and candidate tests pass. Code-health ratchet: nothing new from this change; the 1 new row (`terrain_cost.py:28` PLC0415) and the broken `compiler -> terrain_cost` import contract are already on rpg-next 56cefc2f4 (D72).
+
 ## Files Changed
+
+`src/engine/candidate_selector.py` (public `is_static_position_blocked`, WALL branch removed), `src/engine/pipeline_phases/movement.py` (its copy removed; calls the selector via a top-level import), and the test above.
 
 ## Completion Summary
