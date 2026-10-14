@@ -143,6 +143,7 @@ def _run_calibration(world_name: str, profile_name: str, seed: int, ticks: int, 
             "--seed", str(seed),
             "--ticks", str(ticks),
             "--output", str(CALIBRATION_ROOT / run_key),
+            "--audit-mode",  # the anchors are measured under audit_mode, so a run does not depend on host speed
         ]
         cal_mod.main()
     finally:

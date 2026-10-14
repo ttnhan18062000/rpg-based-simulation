@@ -82,7 +82,8 @@ calibration world corpus:
      (``TimeoutError`` vs. ``CalibrationIntegrityError``) across two of this session's own runs.
      This matches the already-known, already-deferred finding that ``Kernel``'s wall-clock
      mid-tick throttle breaks strict determinism under variable system load
-     (``audit_mode=False``) — tracked separately, not a new issue; no new ticket filed for it.
+     (``audit_mode=False``). Resolved by TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE: the grade anchors and these stability tests
+     now run under ``audit_mode`` (one deterministic trial; the anchors come from ``grade_anchors.json``), so the throttle no longer decides a grade.
 
    See ``docs/testing/regression_policy.md``'s "TCK-20260824/TCK-20260828 Re-Baseline" note for
    the same summary in policy-doc form.
@@ -110,6 +111,47 @@ pytestmark = pytest.mark.worldassembly
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WORLDS_ROOT = REPO_ROOT / "data" / "worlds"
 FIXTURE_PATH = REPO_ROOT / "tests" / "simulation_quality" / "fixtures" / "grade_anchors.json"
+
+
+_ANCHOR_FIXTURE: dict = {}
+
+
+def _anchor(run_key: str, pillar: str) -> dict:
+    """The committed anchor for one (run_key, pillar), read from ``grade_anchors.json`` so a test never keeps its own copy that can drift from the fixture.
+
+    The anchors are measured under ``audit_mode`` (TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE), so a run is deterministic: one trial, the shared score
+    tolerance (``abs_floor`` 0.05 or 20% of the anchor) and the shared +/-1 grade band apply, with no evidence-derived widening for host speed."""
+    import json
+
+    if not _ANCHOR_FIXTURE:
+        _ANCHOR_FIXTURE.update(json.loads(FIXTURE_PATH.read_text(encoding="utf-8")))
+    entry = _ANCHOR_FIXTURE[run_key][pillar]
+    return {"grade": entry["grade"], "score": entry["score"], "abs_floor": 0.05}
+
+
+def _audit_cognition(world_name: str, seed: int, ticks: int) -> dict:
+    """One audit_mode engine run for ``world_name`` replayed through the quality hub; the COGNITION pillar snapshot as a dict."""
+    import tempfile
+
+    from tools.calibrate_simq import (
+        _build_hub,
+        _load_profile_feature_flags,
+        _load_weights,
+        _replay_jsonl_through_hub,
+        _resolve_profile,
+        _run_engine,
+    )
+
+    profile = _resolve_profile(world_name)
+    engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=_load_profile_feature_flags(profile), audit_mode=True)
+    with tempfile.TemporaryDirectory() as cal_dir:
+        hub, persistence = _build_hub(_load_weights(profile), cal_dir, run_id or f"{world_name}_seed{seed}_{ticks}t")
+        _replay_jsonl_through_hub(engine_run_dir, hub)
+        report = hub.get_quality_report()
+        persistence.write_report(report)
+        persistence.shutdown()
+    snap = report.pillars["COGNITION"]
+    return {"event_count": snap.event_count, "raw_score": snap.raw_score, "normalized_score": snap.normalized_score, "grade": snap.grade, "loop_detected": snap.loop_detected}
 FACTIONS_CATALOG_PATH = REPO_ROOT / "data" / "content" / "social" / "factions.yaml"
 
 # test_hazard_kind_matches_populating_faction_immunity now runs corpus-wide (all
@@ -573,8 +615,8 @@ def test_urban_political_seed123_500t_cognition_grade_stability() -> None:
     world_name = "urban_political"
     seed = 123
     ticks = 500
-    n_trials = 3
-    anchor = {"grade": "S", "score": 3.536, "abs_floor": 4.482, "band_tolerance": 2}
+    n_trials = 1
+    anchor = {**_anchor("urban_political_seed123_500t", "COGNITION"), "band_tolerance": 1}
 
     profile = _resolve_profile(world_name)
     feature_flags = _load_profile_feature_flags(profile)
@@ -582,7 +624,7 @@ def test_urban_political_seed123_500t_cognition_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{world_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -646,312 +688,55 @@ def test_urban_political_seed123_500t_cognition_grade_stability() -> None:
 # ---------------------------------------------------------------------------
 @pytest.mark.slow
 def test_simq_routing_test_seed42_500t_cognition_grade_stability() -> None:
-    """Tolerance-based grade-stability guard for `simq_routing_test_seed42_500t`
-    COGNITION (TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP).
+    """Grade-stability guard for `simq_routing_test_seed42_500t` COGNITION (class (c) from the #408 measurement; TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE).
 
-    Formerly a tolerance-based guard (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP),
-    reflecting real F6/decision_divergence_detected-class watchdog variance observed at
-    the time (183->179 events across idle/2x/4x-load trials, always grade A). The bulk of
-    that variance is gone: this ticket's investigation directly bisected (disposable
-    `git worktree`s) this anchor's COGNITION drop to commit `3d992dd0`
-    (`TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION`,
-    `docs/guidelines/intentional_divergences.md` §2.40), not F6 jitter: 15 independent
-    trials were bit-identical at `event_count=0, normalized_score=0.0, grade=C`.
-    `AdventureDecisionPhase.apply()` now routes project handoff through
-    `evaluate_project_switch()`'s lock/urgency-floor gate instead of unconditionally
-    overwriting `current_project_id`, so the danger-concern stuck-mismatch state that
-    used to drive `decision_divergence_detected` essentially never persists for this
-    world anymore.
+    Formerly a tolerance guard around the real throttled Kernel under induced CPU load (idle plus 2x oversubscription trials), because COGNITION here depended on
+    host speed: the throttled governor changes mode and the `decision_divergence_detected` count moves with it (0 to 228 events on this key across runs on one SHA). The
+    anchor is now measured under `audit_mode`, where the run is deterministic, so this asserts the committed anchor with the shared +/-1 grade band and score tolerance
+    on ONE run. The induced-load machinery is gone; the throttled kernel keeps its own coarse smoke test (`test_throttled_kernel_smoke.py`)."""
+    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
 
-    However, a strict bit-identical (2a) assertion was falsified during this same
-    ticket's Implement phase: a fresh rerun under this test's own induced-load mechanism
-    produced `event_count=2, grade=B, loop_detected=True` on 1 of 3 trials — a rare
-    residual signal (roughly 1/18 trials across all sampling this ticket performed,
-    Investigate's 15 plus 3 reruns) surviving the `3d992dd0` fix, not yet root-caused to
-    the same precision as the main step-change. This test therefore stays in the
-    tolerance-guard (2b) shape rather than converting to 2a: one idle trial and one
-    induced-load trial (2x core oversubscription) via the real throttled Kernel, with a
-    floor that accepts the deterministic 0/C outcome as the expected case but tolerates
-    the observed rare residual (event_count <= 2, grade in {"C", "B"}) rather than
-    asserting strict equality.
-    """
-    import multiprocessing
-    import tempfile
-    import time
+    result = _audit_cognition("simq_routing_test", 42, 500)
+    anchor = _anchor("simq_routing_test_seed42_500t", "COGNITION")
+    assert _within_band(result["grade"], anchor["grade"]), f"simq_routing_test_seed42_500t COGNITION grade={result['grade']} outside +/-1 of anchor {anchor['grade']} -- {result}"
+    assert _within_score_tolerance(result["normalized_score"], anchor["score"]), f"simq_routing_test_seed42_500t COGNITION score={result['normalized_score']:.4f} outside tolerance of anchor {anchor['score']} -- {result}"
 
-    from tools.calibrate_simq import (
-        _build_hub,
-        _load_profile_feature_flags,
-        _load_weights,
-        _replay_jsonl_through_hub,
-        _resolve_profile,
-        _run_engine,
-    )
-
-    world_name = "simq_routing_test"
-    profile_name = "simq_routing_test"
-    seed = 42
-    ticks = 500
-
-    def _busy_loop(stop_flag) -> None:
-        x = 0
-        while not stop_flag.value:
-            for _ in range(200000):
-                x = (x * 1103515245 + 12345) & 0x7FFFFFFF
-
-    def _run_cognition(label: str, cal_dir: str) -> dict:
-        profile = _resolve_profile(profile_name)
-        feature_flags = _load_profile_feature_flags(profile)
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
-        weights = _load_weights(profile)
-        hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_{label}")
-        _replay_jsonl_through_hub(engine_run_dir, hub)
-        report = hub.get_quality_report()
-        persistence.write_report(report)
-        persistence.shutdown()
-        cognition = report.pillars["COGNITION"]
-        return {
-            "event_count": cognition.event_count,
-            "raw_score": cognition.raw_score,
-            "normalized_score": cognition.normalized_score,
-            "grade": cognition.grade,
-            "loop_detected": cognition.loop_detected,
-        }
-
-    with tempfile.TemporaryDirectory() as idle_dir:
-        idle_result = _run_cognition("idle", idle_dir)
-
-    stop_flag = multiprocessing.Value("b", False)
-    n_workers = max(1, multiprocessing.cpu_count() * 2)
-    procs = [multiprocessing.Process(target=_busy_loop, args=(stop_flag,)) for _ in range(n_workers)]
-    for p in procs:
-        p.start()
-    try:
-        time.sleep(1.0)  # let induced load ramp up before the drive starts
-        with tempfile.TemporaryDirectory() as load_dir:
-            load_result = _run_cognition("load", load_dir)
-    finally:
-        stop_flag.value = True
-        for p in procs:
-            p.join(timeout=5.0)
-            if p.is_alive():
-                p.terminate()
-
-    for label, result in (("idle", idle_result), ("load", load_result)):
-        assert result["event_count"] <= 2, (
-            f"simq_routing_test_seed42_500t COGNITION ({label}) exceeded the tolerance floor "
-            f"for the confirmed-rare residual variance — result={result}"
-        )
-        assert result["grade"] in ("C", "B"), (
-            f"simq_routing_test_seed42_500t COGNITION ({label}) graded outside the tolerated "
-            f"{{C, B}} band — result={result}"
-        )
-    assert idle_result["event_count"] == 0 and idle_result["grade"] == "C", (
-        f"simq_routing_test_seed42_500t COGNITION (idle) drifted from the confirmed "
-        f"deterministic value under non-induced-load conditions — actual={idle_result}"
-    )
 
 
 @pytest.mark.slow
 @pytest.mark.resource_budget_large
 def test_simq_routing_test_seed42_1000t_cognition_grade_stability() -> None:
-    """Tolerance-based grade-stability guard for `simq_routing_test_seed42_1000t`
-    COGNITION (TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT).
+    """Grade-stability guard for `simq_routing_test_seed42_1000t` COGNITION (class (c) from the #408 measurement; TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE).
 
-    Formerly a 3-trial mean-tolerance guard against a stale anchor
-    (`{"grade": "A", "score": 1.7961, ...}`, TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP)
-    with a docstring framed around F6/`decision_divergence_detected`-class watchdog
-    variance. That framing is stale: root cause is the same commit bisected for the
-    `_500t` sibling (`test_simq_routing_test_seed42_500t_cognition_grade_stability`
-    above) -- `3d992dd0` (`TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION`,
-    `docs/guidelines/intentional_divergences.md` §2.40) -- not throttle-driven noise.
-    This ticket's own fresh repro (both idle and one induced-load trial via the
-    `_500t` sibling's own `_busy_loop`/`multiprocessing` mechanism, 2x core
-    oversubscription) found `event_count=0, grade=C, loop_detected=False` in every
-    condition -- no residual observed at this tick count, unlike the `_500t` sibling's
-    own rare 1/18-trial residual. This guard nonetheless defaults to the same
-    tolerance-guard (2b) shape as the `_500t` sibling rather than a strict
-    bit-identical (2a) assertion, matching that sibling's own precedent that idle-only
-    sampling under-covers this test family -- the cost of staying at 2b when 2a would
-    also work is low, while the cost of prematurely locking 2a is a guaranteed future
-    flake ticket.
-    """
-    import multiprocessing
-    import tempfile
-    import time
+    Formerly a tolerance guard around the real throttled Kernel under induced CPU load (idle plus 2x oversubscription trials), because COGNITION here depended on
+    host speed: the throttled governor changes mode and the `decision_divergence_detected` count moves with it (0 to 228 events on this key across runs on one SHA). The
+    anchor is now measured under `audit_mode`, where the run is deterministic, so this asserts the committed anchor with the shared +/-1 grade band and score tolerance
+    on ONE run. The induced-load machinery is gone; the throttled kernel keeps its own coarse smoke test (`test_throttled_kernel_smoke.py`)."""
+    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
 
-    from tools.calibrate_simq import (
-        _build_hub,
-        _load_profile_feature_flags,
-        _load_weights,
-        _replay_jsonl_through_hub,
-        _resolve_profile,
-        _run_engine,
-    )
+    result = _audit_cognition("simq_routing_test", 42, 1000)
+    anchor = _anchor("simq_routing_test_seed42_1000t", "COGNITION")
+    assert _within_band(result["grade"], anchor["grade"]), f"simq_routing_test_seed42_1000t COGNITION grade={result['grade']} outside +/-1 of anchor {anchor['grade']} -- {result}"
+    assert _within_score_tolerance(result["normalized_score"], anchor["score"]), f"simq_routing_test_seed42_1000t COGNITION score={result['normalized_score']:.4f} outside tolerance of anchor {anchor['score']} -- {result}"
 
-    world_name = "simq_routing_test"
-    profile_name = "simq_routing_test"
-    seed = 42
-    ticks = 1000
-
-    def _busy_loop(stop_flag) -> None:
-        x = 0
-        while not stop_flag.value:
-            for _ in range(200000):
-                x = (x * 1103515245 + 12345) & 0x7FFFFFFF
-
-    def _run_cognition(label: str, cal_dir: str) -> dict:
-        profile = _resolve_profile(profile_name)
-        feature_flags = _load_profile_feature_flags(profile)
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
-        weights = _load_weights(profile)
-        hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_{label}")
-        _replay_jsonl_through_hub(engine_run_dir, hub)
-        report = hub.get_quality_report()
-        persistence.write_report(report)
-        persistence.shutdown()
-        cognition = report.pillars["COGNITION"]
-        return {
-            "event_count": cognition.event_count,
-            "raw_score": cognition.raw_score,
-            "normalized_score": cognition.normalized_score,
-            "grade": cognition.grade,
-            "loop_detected": cognition.loop_detected,
-        }
-
-    with tempfile.TemporaryDirectory() as idle_dir:
-        idle_result = _run_cognition("idle", idle_dir)
-
-    stop_flag = multiprocessing.Value("b", False)
-    n_workers = max(1, multiprocessing.cpu_count() * 2)
-    procs = [multiprocessing.Process(target=_busy_loop, args=(stop_flag,)) for _ in range(n_workers)]
-    for p in procs:
-        p.start()
-    try:
-        time.sleep(1.0)  # let induced load ramp up before the drive starts
-        with tempfile.TemporaryDirectory() as load_dir:
-            load_result = _run_cognition("load", load_dir)
-    finally:
-        stop_flag.value = True
-        for p in procs:
-            p.join(timeout=5.0)
-            if p.is_alive():
-                p.terminate()
-
-    for label, result in (("idle", idle_result), ("load", load_result)):
-        assert result["event_count"] <= 2, (
-            f"simq_routing_test_seed42_1000t COGNITION ({label}) exceeded the tolerance floor "
-            f"for the confirmed-rare residual variance -- result={result}"
-        )
-        assert result["grade"] in ("C", "B"), (
-            f"simq_routing_test_seed42_1000t COGNITION ({label}) graded outside the tolerated "
-            f"{{C, B}} band -- result={result}"
-        )
-    assert idle_result["event_count"] == 0 and idle_result["grade"] == "C", (
-        f"simq_routing_test_seed42_1000t COGNITION (idle) drifted from the confirmed "
-        f"deterministic value under non-induced-load conditions -- actual={idle_result}"
-    )
 
 
 @pytest.mark.slow
 @pytest.mark.resource_budget_large
 def test_hero_guild_routing_seed42_1000t_cognition_grade_stability() -> None:
-    """Tolerance-based grade-stability guard for `hero_guild_routing_seed42_1000t`
-    COGNITION (TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT).
+    """Grade-stability guard for `hero_guild_routing_seed42_1000t` COGNITION (class (c) from the #408 measurement; TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE).
 
-    Formerly a 3-trial mean-tolerance guard against a stale anchor
-    (`{"grade": "S", "score": 2.0641, ...}`, TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP)
-    with a docstring framed around F6/`decision_divergence_detected`-class watchdog
-    variance. That framing is stale: root cause is the same commit bisected for the
-    `simq_routing_test_seed42_1000t` sibling above -- `3d992dd0`
-    (`TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION`,
-    `docs/guidelines/intentional_divergences.md` §2.40) -- not throttle-driven noise.
-    This ticket's own fresh repro (both idle and one induced-load trial via the
-    `_500t` sibling's own `_busy_loop`/`multiprocessing` mechanism, 2x core
-    oversubscription) found `event_count=0, grade=C, loop_detected=False` in every
-    condition -- no residual observed at this tick count. This guard nonetheless
-    defaults to the same tolerance-guard (2b) shape as the `_500t` sibling
-    (`test_simq_routing_test_seed42_500t_cognition_grade_stability` above) rather than
-    a strict bit-identical (2a) assertion, matching that sibling's own precedent that
-    idle-only sampling under-covers this test family -- the cost of staying at 2b when
-    2a would also work is low, while the cost of prematurely locking 2a is a
-    guaranteed future flake ticket.
-    """
-    import multiprocessing
-    import tempfile
-    import time
+    Formerly a tolerance guard around the real throttled Kernel under induced CPU load (idle plus 2x oversubscription trials), because COGNITION here depended on
+    host speed: the throttled governor changes mode and the `decision_divergence_detected` count moves with it (0 to 228 events on this key across runs on one SHA). The
+    anchor is now measured under `audit_mode`, where the run is deterministic, so this asserts the committed anchor with the shared +/-1 grade band and score tolerance
+    on ONE run. The induced-load machinery is gone; the throttled kernel keeps its own coarse smoke test (`test_throttled_kernel_smoke.py`)."""
+    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
 
-    from tools.calibrate_simq import (
-        _build_hub,
-        _load_profile_feature_flags,
-        _load_weights,
-        _replay_jsonl_through_hub,
-        _resolve_profile,
-        _run_engine,
-    )
+    result = _audit_cognition("hero_guild_routing", 42, 1000)
+    anchor = _anchor("hero_guild_routing_seed42_1000t", "COGNITION")
+    assert _within_band(result["grade"], anchor["grade"]), f"hero_guild_routing_seed42_1000t COGNITION grade={result['grade']} outside +/-1 of anchor {anchor['grade']} -- {result}"
+    assert _within_score_tolerance(result["normalized_score"], anchor["score"]), f"hero_guild_routing_seed42_1000t COGNITION score={result['normalized_score']:.4f} outside tolerance of anchor {anchor['score']} -- {result}"
 
-    world_name = "hero_guild_routing"
-    profile_name = "hero_guild_routing"
-    seed = 42
-    ticks = 1000
-
-    def _busy_loop(stop_flag) -> None:
-        x = 0
-        while not stop_flag.value:
-            for _ in range(200000):
-                x = (x * 1103515245 + 12345) & 0x7FFFFFFF
-
-    def _run_cognition(label: str, cal_dir: str) -> dict:
-        profile = _resolve_profile(profile_name)
-        feature_flags = _load_profile_feature_flags(profile)
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
-        weights = _load_weights(profile)
-        hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_{label}")
-        _replay_jsonl_through_hub(engine_run_dir, hub)
-        report = hub.get_quality_report()
-        persistence.write_report(report)
-        persistence.shutdown()
-        cognition = report.pillars["COGNITION"]
-        return {
-            "event_count": cognition.event_count,
-            "raw_score": cognition.raw_score,
-            "normalized_score": cognition.normalized_score,
-            "grade": cognition.grade,
-            "loop_detected": cognition.loop_detected,
-        }
-
-    with tempfile.TemporaryDirectory() as idle_dir:
-        idle_result = _run_cognition("idle", idle_dir)
-
-    stop_flag = multiprocessing.Value("b", False)
-    n_workers = max(1, multiprocessing.cpu_count() * 2)
-    procs = [multiprocessing.Process(target=_busy_loop, args=(stop_flag,)) for _ in range(n_workers)]
-    for p in procs:
-        p.start()
-    try:
-        time.sleep(1.0)  # let induced load ramp up before the drive starts
-        with tempfile.TemporaryDirectory() as load_dir:
-            load_result = _run_cognition("load", load_dir)
-    finally:
-        stop_flag.value = True
-        for p in procs:
-            p.join(timeout=5.0)
-            if p.is_alive():
-                p.terminate()
-
-    for label, result in (("idle", idle_result), ("load", load_result)):
-        assert result["event_count"] <= 2, (
-            f"hero_guild_routing_seed42_1000t COGNITION ({label}) exceeded the tolerance floor "
-            f"for the confirmed-rare residual variance -- result={result}"
-        )
-        assert result["grade"] in ("C", "B"), (
-            f"hero_guild_routing_seed42_1000t COGNITION ({label}) graded outside the tolerated "
-            f"{{C, B}} band -- result={result}"
-        )
-    assert idle_result["event_count"] == 0 and idle_result["grade"] == "C", (
-        f"hero_guild_routing_seed42_1000t COGNITION (idle) drifted from the confirmed "
-        f"deterministic value under non-induced-load conditions -- actual={idle_result}"
-    )
 
 
 @pytest.mark.slow
@@ -1003,16 +788,16 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
     profile_name = "unit_selfmodel_pilot"
     seed = 42
     ticks = 1000
-    n_trials = 3
+    n_trials = 1
     anchors = {
-        "COGNITION": {"grade": "S", "score": 14.478, "abs_floor": 3.6322},
-        "ECONOMY": {"grade": "B", "score": 0.1465, "abs_floor": 0.0866},
+        "COGNITION": _anchor("unit_selfmodel_pilot_seed42_1000t", "COGNITION"),
+        "ECONOMY": _anchor("unit_selfmodel_pilot_seed42_1000t", "ECONOMY"),
         # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
         # the 0.3715 anchor predated TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG, which removed
         # ~700 mislabeled AI-goal-transition events counted as fake quest activity. Post-fix,
         # this world's profile does not enable ENABLE_GUILD_QUEST_GENERATION, so real quest
         # events are correctly 0 -- 3 fresh trials measured [-0.001, 0.0, 0.0].
-        "NARRATIVE": {"grade": "B", "score": 0.0, "abs_floor": 0.05},
+        "NARRATIVE": _anchor("unit_selfmodel_pilot_seed42_1000t", "NARRATIVE"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -1021,7 +806,7 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1122,9 +907,9 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
     profile_name = "urban_political"
     seed = 42
     ticks = 1000
-    n_trials = 3
+    n_trials = 1
     anchors = {
-        "SOCIAL": {"grade": "S", "score": 35.1038, "abs_floor": 2.5387},
+        "SOCIAL": _anchor("urban_political_seed42_1000t", "SOCIAL"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -1133,7 +918,7 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1233,7 +1018,7 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
     profile_name = "urban_political"
     seed = 123
     ticks = 1000
-    n_trials = 3
+    n_trials = 1
     anchors = {
         # SOCIAL re-anchored 2026-08-18: 17.9655 was left unsynced with grade_anchors.json's
         # already-correct 21.374 (grade S unchanged) committed by
@@ -1242,8 +1027,8 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
         # pillar). 6 fresh trials across 2 runs measured
         # [18.156, 25.608, 23.748, 21.059, 24.359, 26.606]; max deviation from 21.374 is 5.232,
         # abs_floor = 1.3 * 5.232 = 6.8016.
-        "SOCIAL": {"grade": "S", "score": 21.374, "abs_floor": 6.8016},
-        "ECONOMY": {"grade": "A", "score": 0.6564, "abs_floor": 0.2878},
+        "SOCIAL": _anchor("urban_political_seed123_1000t", "SOCIAL"),
+        "ECONOMY": _anchor("urban_political_seed123_1000t", "ECONOMY"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -1252,7 +1037,7 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1327,14 +1112,14 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
     profile_name = "urban_political_selfmodel_probe"
     seed = 42
     ticks = 200
-    n_trials = 3
+    n_trials = 1
     anchors = {
         # SOCIAL re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
         # 7.525 was an unsynced literal left stale since commit 29d78798, which committed the
         # correct 17.895 to grade_anchors.json in the same commit without updating this copy.
         # 3 fresh trials measured [14.2, 12.065, 17.39].
-        "SOCIAL": {"grade": "S", "score": 17.895, "abs_floor": 7.579},
-        "WORLD": {"grade": "B", "score": 0.21, "abs_floor": 0.078},
+        "SOCIAL": _anchor("urban_political_selfmodel_probe_seed42_200t", "SOCIAL"),
+        "WORLD": _anchor("urban_political_selfmodel_probe_seed42_200t", "WORLD"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -1343,7 +1128,7 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1417,7 +1202,7 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
     profile_name = "generated_frontier_3_42"
     seed = 123
     ticks = 200
-    n_trials = 3
+    n_trials = 1
     anchors = {
         # COMBAT re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
         # FRONTIER-BATCH: co-discovered while verifying the NARRATIVE fix below -- COMBAT was
@@ -1431,7 +1216,7 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
         # (matching this pillar's own docstring note above: "small-sample pillar" prone to 2x+
         # swings even in the original 2026-07 repro). No specific causal ticket identified;
         # recalibrated from real fresh evidence per this file's established methodology.
-        "COMBAT": {"grade": "A", "score": 0.7368, "abs_floor": 0.679},
+        "COMBAT": _anchor("generated_frontier_3_42_seed123_200t", "COMBAT"),
         # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
         # FRONTIER-BATCH: the 0.8934/A anchor was calibrated against telemetry that predates
         # TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG, which correctly stopped mislabeling ordinary
@@ -1440,7 +1225,7 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
         # sovereignty-shift within 200 ticks, so real NARRATIVE activity is correctly 0
         # (TCK-20260817-STANDARD-SIMQ-NARRATIVE-EVENT-EMISSION-REGRESSION-FRONTIER's
         # investigation confirmed the emission pipeline itself is intact and correct).
-        "NARRATIVE": {"grade": "C", "score": 0.0, "abs_floor": 0.05},
+        "NARRATIVE": _anchor("generated_frontier_3_42_seed123_200t", "NARRATIVE"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -1449,7 +1234,7 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1523,13 +1308,13 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
     profile_name = "urban_political"
     seed = 42
     ticks = 200
-    n_trials = 3
+    n_trials = 1
     anchors = {
         # SOCIAL re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
         # 7.525 was an unsynced literal left stale since commit 29d78798, which committed the
         # correct 16.815 to grade_anchors.json in the same commit without updating this copy.
         # 6 fresh trials across 2 runs measured [15.61, 16.47, 15.61, 18.355, 13.565, 13.885].
-        "SOCIAL": {"grade": "S", "score": 16.815, "abs_floor": 4.225},
+        "SOCIAL": _anchor("urban_political_seed42_200t", "SOCIAL"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -1538,7 +1323,7 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1632,7 +1417,7 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
     profile_name = "frontier_extended"
     seed = 42
     ticks = 200
-    n_trials = 3
+    n_trials = 1
     anchors = {
         # NARRATIVE re-anchored by TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-REFRESH
         # (see docstring above): entities now genuinely reach town via real navigation, which
@@ -1641,7 +1426,7 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
         # [0.07058823529411765, 0.08695652173913043, 0.06741573033707865, 0.08695652173913043,
         # 0.23376623376623376, 0.07792207792207792]. mean=0.1039, abs_floor=0.1688 (1.3x the
         # 0.1298 max single-draw deviation from that mean).
-        "NARRATIVE": {"grade": "C", "score": 0.1039, "abs_floor": 0.1688},
+        "NARRATIVE": _anchor("frontier_extended_seed42_200t", "NARRATIVE"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -1650,7 +1435,7 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1724,16 +1509,16 @@ def test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stabi
     profile_name = "frontier_extended"
     seed = 123
     ticks = 200
-    n_trials = 3
+    n_trials = 1
     anchors = {
-        "COMBAT": {"grade": "B", "score": 0.32, "abs_floor": 0.2631},
-        "PROGRESSION": {"grade": "A", "score": 1.0196, "abs_floor": 0.8131},
+        "COMBAT": _anchor("frontier_extended_seed123_200t", "COMBAT"),
+        "PROGRESSION": _anchor("frontier_extended_seed123_200t", "PROGRESSION"),
         # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
         # FRONTIER-BATCH: the 0.9084/A anchor predates TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG's
         # fix (which correctly stopped mislabeling AI strategic goals as fake quests). This
         # world's profile does not enable ENABLE_GUILD_QUEST_GENERATION and reaches no WAR/
         # sovereignty-shift within 200 ticks, so real NARRATIVE activity is correctly 0.
-        "NARRATIVE": {"grade": "C", "score": 0.0, "abs_floor": 0.05},
+        "NARRATIVE": _anchor("frontier_extended_seed123_200t", "NARRATIVE"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -1742,7 +1527,7 @@ def test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stabi
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1836,7 +1621,7 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
     profile_name = "frontier_living_world"
     seed = 42
     ticks = 200
-    n_trials = 3
+    n_trials = 1
     anchors = {
         # SOCIAL re-anchored by TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-REFRESH
         # (see docstring above): real navigation now exposes entities to real hazard en route
@@ -1845,7 +1630,7 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
         # fresh trials each (6 draws total): [16.98, 21.31, 17.56, 24.985, 20.515, 32.53].
         # mean=22.3133, abs_floor=13.2817 (1.3x the 10.2167 max single-draw deviation from
         # that mean).
-        "SOCIAL": {"grade": "S", "score": 22.3133, "abs_floor": 13.2817},
+        "SOCIAL": _anchor("frontier_living_world_seed42_200t", "SOCIAL"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -1854,7 +1639,7 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -1928,15 +1713,15 @@ def test_frontier_living_world_seed123_200t_combat_narrative_grade_stability() -
     profile_name = "frontier_living_world"
     seed = 123
     ticks = 200
-    n_trials = 3
+    n_trials = 1
     anchors = {
-        "COMBAT": {"grade": "B", "score": 0.3333, "abs_floor": 0.2529},
+        "COMBAT": _anchor("frontier_living_world_seed123_200t", "COMBAT"),
         # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
         # FRONTIER-BATCH: the 0.6389/A anchor predates TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG's
         # fix (which correctly stopped mislabeling AI strategic goals as fake quests). This
         # world's profile does not enable ENABLE_GUILD_QUEST_GENERATION and reaches no WAR/
         # sovereignty-shift within 200 ticks, so real NARRATIVE activity is correctly 0.
-        "NARRATIVE": {"grade": "C", "score": 0.0, "abs_floor": 0.05},
+        "NARRATIVE": _anchor("frontier_living_world_seed123_200t", "NARRATIVE"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -1945,7 +1730,7 @@ def test_frontier_living_world_seed123_200t_combat_narrative_grade_stability() -
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
@@ -2023,7 +1808,7 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
     profile_name = "frontier_marches"
     seed = 42
     ticks = 200
-    n_trials = 3
+    n_trials = 1
     anchors = {
         # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
         # FRONTIER-BATCH: the 0.6186/A anchor (and this test's own extended 0.3608-0.8763
@@ -2033,7 +1818,7 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
         # profile does not enable ENABLE_GUILD_QUEST_GENERATION and reaches no WAR/
         # sovereignty-shift within 200 ticks, so real NARRATIVE activity is correctly 0,
         # deterministically (no session-position variance observed post-fix).
-        "NARRATIVE": {"grade": "C", "score": 0.0, "abs_floor": 0.05},
+        "NARRATIVE": _anchor("frontier_marches_seed42_200t", "NARRATIVE"),
     }
 
     profile = _resolve_profile(profile_name)
@@ -2042,7 +1827,7 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
     band_failures: list[str] = []
 
     for trial in range(n_trials):
-        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags, audit_mode=True)
         weights = _load_weights(profile)
         with tempfile.TemporaryDirectory() as cal_dir:
             hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
