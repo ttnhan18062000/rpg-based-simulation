@@ -297,12 +297,15 @@ def test_wider_scope_numbers_pinned():
     # read from the declared diet), and src/core/spawn_source.py::SpawnSource under `humanoid_reproduction` (its one live BIRTH producer).
     # 250 -> 251 on 2026-10-14 (D72): src/engine/terrain_cost.py is an unbound helper (a content-backed lookup). Left unbound on purpose:
     # D75 moves where terrain cost is paid (time, then route), so it is bound with that step's mechanism, not the pre-check's.
-    assert wider["unbound_files"] == 251
+    # 251 -> 252 on 2026-10-14 (D70, 2.125): src/world/raid.py is no longer cited; `faction_raid` is a gap (the raid spawner is deleted, the module
+    # keeps only its constants for the raid that returns with caused war, M3).
+    assert wider["unbound_files"] == 252
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
     # 71 -> 70 on 2026-10-11 (treasury batch): GoldSinkSystem is gone.
-    assert wider["candidates"] == 70  # unbound mechanism-shaped classes, wired or not
+    # 70 -> 71 on 2026-10-14 (D70, 2.125): RaidService is no longer cited (`faction_raid` is a gap), so it is an unbound candidate again.
+    assert wider["candidates"] == 71  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
     assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 3
 

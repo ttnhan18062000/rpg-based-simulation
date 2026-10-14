@@ -417,6 +417,16 @@ case. On a successful birth, this path also nudges the birth region's `young`-br
 via `WorldUpdate.population_young_births_delta` — see "Individual-Birth Population-Pressure Nudge"
 below (`TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE`).
 
+### Camps Spawn Nothing and Raid Nothing (owner ruling D70, TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70)
+
+A camp matures and nothing else. The two parentless sources that used to run in `CampService.process_camps()` are removed: the
+every-30-ticks reinforcement (one monster whenever fewer than `max(2, maturity/10)` members stood within 10 tiles) and the camp raid
+(`3 + maturity` raiders conjured at the camp for a 20-maturity cost, `RaidService.spawn_raid`). A camp's members change by death alone,
+so a camp shrinks as its members die until real births (M1) or recruits refill it, and a camp raids again only when a later rule lets
+its existing members set out together. Camp maturity is no longer drained by a raid cost, so it only grows. Whatever the sections
+below say about a camp's raid outcome describes the retired path; the Nest-spread fork and the Natural-Creature path stay flag-gated
+OFF and are retired with the M1 births.
+
 ### Camp/Nest Classification & Nest Spread (TCK-20260904-CAMP-NEST-CLASSIFICATION)
 
 Behind `ENABLE_CAMP_NEST_SPREAD` (default OFF), `CampService.process_camps()` (`src/world/camp.py`)

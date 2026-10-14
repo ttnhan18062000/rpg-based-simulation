@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70
-phase: open
+phase: done
 date: 2026-10-14
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Camps stop spawning monsters from nothing (V1). They shrink as members die, until real births (M1) or recruits (later) refill them. Owner ruling D70, 2026-10-14.
 
 ## Status
-OPEN (before M0 baseline v1, measured as its own step)
+DONE
 
 ## Tier
 standard
@@ -75,7 +75,7 @@ D67 wild-births child (M1 epic); TCK-20261014-THE-LIVE-SERVER-RUNS-THE-AUTHORED-
 docs/mechanics/05_world_evolution.md; designer memo row 70; ECOL-03.
 
 ## Related Stored Artifacts
-None.
+agent-working/stored_artifacts/TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70/ (plan, investigation, test_plan).
 
 ## Related Code Areas
 src/world/camp.py; src/world/world_dynamics (the caller); the generator's spawn_monster.
@@ -84,13 +84,19 @@ src/world/camp.py; src/world/world_dynamics (the caller); the generator's spawn_
 None.
 
 ## Implementation Notes
-TBD
+- `src/world/camp.py`: the CAMP_SPAWN_INTERVAL spawn block and the raid trigger are gone. The flag-gated nest-spread branch (OFF) and the natural-creature step are unchanged. No remaining camp logic reads `EntityRole.MONSTER`.
+- `src/world/raid.py`: `spawn_raid` deleted; the class keeps its constants and comments for the raid that returns with caused war.
+- Docs: divergence 2.125, WORLD-030/031/032 now `divergent`, Bible 05 subsection, mechanism comment on `camp` (the `EntityGenerator` binding stays: `process_camps` still calls it for the flag-OFF nest-spread offspring).
+- Known red: the V8 entry is removed from `tools/test_architecture/rpg_gate_known.yaml` because V8 is green (0 violations) in all 10 camp-world gate runs (frontier_living_world and crowded_frontier, seeds 42-46, 5000 ticks).
+- Measured (paired, seeds 42-46, 5000 ticks): frontier_living_world mid-run adds 50 to 0, final alive 168 to 121, deaths 151 to 148; urban_political identical (no camps). Details in divergence 2.125.
 
 ## Test Summary
-TBD
+- New `tests/unit/world/test_camps_spawn_nothing.py` (5 tests; 3 fail on the old code).
+- Conversions of tests of the removed behaviour: `test_camp_lifecycle.py`, `test_calamity_raid.py` (spawn_raid tests replaced by a retired-spawner test), `test_global_raid_retired.py`, `tests/unit/ai/test_guild_need_scorer.py` (goblin_raider built through `spawn_monster`), `tests/integration/world/test_camp_raid_targeting.py` (now a matured camp raids nothing).
+- Gate harness V8: 0 violations in 10 of 10 runs.
 
 ## Files Changed
-TBD
+src/world/camp.py; src/world/raid.py; the five test files above plus the new test; docs/guidelines/intentional_divergences.md; docs/parity_ledger/world_dynamics.yaml; docs/mechanics/05_world_evolution.md; registries/mechanisms.yaml; tools/test_architecture/rpg_gate_known.yaml; this ticket and its stored artifacts.
 
 ## Completion Summary
-TBD
+Camps add no entity and raid nothing. Measured against rpg-next 56cefc2f4: frontier mid-run adds 50 to 0; urban unchanged. V8 is green, so its known-red entry is removed. Disclosed in 2.125: camp maturity only rises, camps are empty places until M1, shrinkage is reported not graded.
