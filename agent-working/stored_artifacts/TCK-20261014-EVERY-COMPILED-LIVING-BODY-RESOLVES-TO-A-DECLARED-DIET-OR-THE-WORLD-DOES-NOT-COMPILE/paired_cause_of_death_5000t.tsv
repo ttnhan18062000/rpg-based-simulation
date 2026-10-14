@@ -1,0 +1,276 @@
+world	seed	arm	ticks	hashseed	audit_mode	loadavg	digest	kind	alive	dead	causes	people_alive	people_dead
+crowded_frontier	42	base_3696d0402	5000	0	True	23.6	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	blacksmith	0	1	DEFEAT=1	3	32
+crowded_frontier	42	base_3696d0402	5000	0	True	23.6	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	guard	0	5	COMBAT=2;DEFEAT=1;HAZARD=2	3	32
+crowded_frontier	42	base_3696d0402	5000	0	True	23.6	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	hero	1	2	COMBAT=1;DEFEAT=1	3	32
+crowded_frontier	42	base_3696d0402	5000	0	True	23.6	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	leader	1	0		3	32
+crowded_frontier	42	base_3696d0402	5000	0	True	23.6	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	merchant	0	3	COMBAT=2;DEFEAT=1	3	32
+crowded_frontier	42	base_3696d0402	5000	0	True	23.6	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	raider	2	7	COMBAT=6;DEFEAT=1	3	32
+crowded_frontier	42	base_3696d0402	5000	0	True	23.6	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	scout	0	8	COMBAT=5;DEFEAT=3	3	32
+crowded_frontier	42	base_3696d0402	5000	0	True	23.6	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	worker	0	8	COMBAT=4;DEFEAT=3;HAZARD=1	3	32
+crowded_frontier	43	base_3696d0402	5000	0	True	23.0	cbad37a69ebb2472f4fe4fdde9058aa0924cfa9fa5ba7845a26268f6667a398e	blacksmith	0	1	DEFEAT=1	4	31
+crowded_frontier	43	base_3696d0402	5000	0	True	23.0	cbad37a69ebb2472f4fe4fdde9058aa0924cfa9fa5ba7845a26268f6667a398e	guard	0	5	COMBAT=1;DEFEAT=2;HAZARD=2	4	31
+crowded_frontier	43	base_3696d0402	5000	0	True	23.0	cbad37a69ebb2472f4fe4fdde9058aa0924cfa9fa5ba7845a26268f6667a398e	hero	1	2	DEFEAT=1;HAZARD=1	4	31
+crowded_frontier	43	base_3696d0402	5000	0	True	23.0	cbad37a69ebb2472f4fe4fdde9058aa0924cfa9fa5ba7845a26268f6667a398e	leader	0	1	COMBAT=1	4	31
+crowded_frontier	43	base_3696d0402	5000	0	True	23.0	cbad37a69ebb2472f4fe4fdde9058aa0924cfa9fa5ba7845a26268f6667a398e	merchant	0	3	COMBAT=2;DEFEAT=1	4	31
+crowded_frontier	43	base_3696d0402	5000	0	True	23.0	cbad37a69ebb2472f4fe4fdde9058aa0924cfa9fa5ba7845a26268f6667a398e	raider	4	5	COMBAT=4;STARVATION=1	4	31
+crowded_frontier	43	base_3696d0402	5000	0	True	23.0	cbad37a69ebb2472f4fe4fdde9058aa0924cfa9fa5ba7845a26268f6667a398e	scout	0	8	COMBAT=7;DEFEAT=1	4	31
+crowded_frontier	43	base_3696d0402	5000	0	True	23.0	cbad37a69ebb2472f4fe4fdde9058aa0924cfa9fa5ba7845a26268f6667a398e	worker	0	8	COMBAT=4;DEFEAT=3;HAZARD=1	4	31
+crowded_frontier	44	base_3696d0402	5000	0	True	23.3	cf08f204052da2815d284b2990dd526bf69f4be7a551ddcf5b367856e2ff3b34	blacksmith	0	1	COMBAT=1	3	32
+crowded_frontier	44	base_3696d0402	5000	0	True	23.3	cf08f204052da2815d284b2990dd526bf69f4be7a551ddcf5b367856e2ff3b34	guard	0	5	COMBAT=1;DEFEAT=2;HAZARD=2	3	32
+crowded_frontier	44	base_3696d0402	5000	0	True	23.3	cf08f204052da2815d284b2990dd526bf69f4be7a551ddcf5b367856e2ff3b34	hero	0	3	COMBAT=1;DEFEAT=1;HAZARD=1	3	32
+crowded_frontier	44	base_3696d0402	5000	0	True	23.3	cf08f204052da2815d284b2990dd526bf69f4be7a551ddcf5b367856e2ff3b34	leader	0	1	DEFEAT=1	3	32
+crowded_frontier	44	base_3696d0402	5000	0	True	23.3	cf08f204052da2815d284b2990dd526bf69f4be7a551ddcf5b367856e2ff3b34	merchant	0	3	COMBAT=1;DEFEAT=2	3	32
+crowded_frontier	44	base_3696d0402	5000	0	True	23.3	cf08f204052da2815d284b2990dd526bf69f4be7a551ddcf5b367856e2ff3b34	raider	3	6	COMBAT=4;DEFEAT=2	3	32
+crowded_frontier	44	base_3696d0402	5000	0	True	23.3	cf08f204052da2815d284b2990dd526bf69f4be7a551ddcf5b367856e2ff3b34	scout	0	8	COMBAT=4;DEFEAT=4	3	32
+crowded_frontier	44	base_3696d0402	5000	0	True	23.3	cf08f204052da2815d284b2990dd526bf69f4be7a551ddcf5b367856e2ff3b34	worker	0	8	COMBAT=4;DEFEAT=4	3	32
+crowded_frontier	45	base_3696d0402	5000	0	True	21.5	0a90b69efd5c270ec794badfb530d8824fd4863cb1180b7257be7c7484eafe59	blacksmith	0	1	DEFEAT=1	6	29
+crowded_frontier	45	base_3696d0402	5000	0	True	21.5	0a90b69efd5c270ec794badfb530d8824fd4863cb1180b7257be7c7484eafe59	guard	0	5	COMBAT=2;DEFEAT=1;HAZARD=2	6	29
+crowded_frontier	45	base_3696d0402	5000	0	True	21.5	0a90b69efd5c270ec794badfb530d8824fd4863cb1180b7257be7c7484eafe59	hero	0	3	COMBAT=1;DEFEAT=2	6	29
+crowded_frontier	45	base_3696d0402	5000	0	True	21.5	0a90b69efd5c270ec794badfb530d8824fd4863cb1180b7257be7c7484eafe59	leader	0	1	COMBAT=1	6	29
+crowded_frontier	45	base_3696d0402	5000	0	True	21.5	0a90b69efd5c270ec794badfb530d8824fd4863cb1180b7257be7c7484eafe59	merchant	0	3	COMBAT=2;DEFEAT=1	6	29
+crowded_frontier	45	base_3696d0402	5000	0	True	21.5	0a90b69efd5c270ec794badfb530d8824fd4863cb1180b7257be7c7484eafe59	raider	5	4	COMBAT=3;DEFEAT=1	6	29
+crowded_frontier	45	base_3696d0402	5000	0	True	21.5	0a90b69efd5c270ec794badfb530d8824fd4863cb1180b7257be7c7484eafe59	scout	1	7	COMBAT=6;DEFEAT=1	6	29
+crowded_frontier	45	base_3696d0402	5000	0	True	21.5	0a90b69efd5c270ec794badfb530d8824fd4863cb1180b7257be7c7484eafe59	worker	0	8	COMBAT=3;DEFEAT=4;HAZARD=1	6	29
+crowded_frontier	46	base_3696d0402	5000	0	True	19.3	076e213756a438d4d9760ca93c15adf1aaa69f4dbea2429f60e5b86be391cfc3	blacksmith	0	1	DEFEAT=1	2	33
+crowded_frontier	46	base_3696d0402	5000	0	True	19.3	076e213756a438d4d9760ca93c15adf1aaa69f4dbea2429f60e5b86be391cfc3	guard	0	5	DEFEAT=1;HAZARD=4	2	33
+crowded_frontier	46	base_3696d0402	5000	0	True	19.3	076e213756a438d4d9760ca93c15adf1aaa69f4dbea2429f60e5b86be391cfc3	hero	0	3	COMBAT=2;DEFEAT=1	2	33
+crowded_frontier	46	base_3696d0402	5000	0	True	19.3	076e213756a438d4d9760ca93c15adf1aaa69f4dbea2429f60e5b86be391cfc3	leader	1	0		2	33
+crowded_frontier	46	base_3696d0402	5000	0	True	19.3	076e213756a438d4d9760ca93c15adf1aaa69f4dbea2429f60e5b86be391cfc3	merchant	0	3	COMBAT=1;DEFEAT=2	2	33
+crowded_frontier	46	base_3696d0402	5000	0	True	19.3	076e213756a438d4d9760ca93c15adf1aaa69f4dbea2429f60e5b86be391cfc3	raider	1	8	COMBAT=5;DEFEAT=3	2	33
+crowded_frontier	46	base_3696d0402	5000	0	True	19.3	076e213756a438d4d9760ca93c15adf1aaa69f4dbea2429f60e5b86be391cfc3	scout	0	8	COMBAT=6;DEFEAT=2	2	33
+crowded_frontier	46	base_3696d0402	5000	0	True	19.3	076e213756a438d4d9760ca93c15adf1aaa69f4dbea2429f60e5b86be391cfc3	worker	0	8	COMBAT=2;DEFEAT=3;HAZARD=3	2	33
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	alpha	1	0		3	27
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	blacksmith	0	1	HAZARD=1	3	27
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	guard	1	4	COMBAT=1;HAZARD=3	3	27
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	leader	0	1	HAZARD=1	3	27
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	merchant	0	6	COMBAT=5;DEFEAT=1	3	27
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	predator_hunter	9	0		3	27
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	raider	0	4	COMBAT=2;DEFEAT=1;HAZARD=1	3	27
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	scout	2	6	COMBAT=3;DEFEAT=2;HAZARD=1	3	27
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	sentinel	4	2	HAZARD=2	3	27
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	wild_creature	3	3	COMBAT=2;DEFEAT=1	3	27
+frontier_living_world	42	base_3696d0402	5000	0	True	22.6	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	worker	0	8	COMBAT=1;DEFEAT=2;HAZARD=5	3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	alpha	1	0		3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	blacksmith	0	1	HAZARD=1	3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	guard	0	5	HAZARD=5	3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	leader	1	0		3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	merchant	3	3	COMBAT=1;DEFEAT=2	3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	predator_hunter	9	0		3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	raider	0	4	COMBAT=3;HAZARD=1	3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	scout	0	8	COMBAT=5;DEFEAT=2;HAZARD=1	3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	sentinel	4	2	HAZARD=2	3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	wild_creature	2	4	COMBAT=3;HAZARD=1	3	27
+frontier_living_world	43	base_3696d0402	5000	0	True	25.4	ecbf452afd2a3e6270d76385222523fdcb9a02d6b947fa6e08c27529ef4f5693	worker	0	8	COMBAT=2;HAZARD=6	3	27
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	alpha	1	0		2	28
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	blacksmith	0	1	DEFEAT=1	2	28
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	guard	0	5	COMBAT=1;DEFEAT=1;HAZARD=2;STARVATION=1	2	28
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	leader	1	0		2	28
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	merchant	3	3	COMBAT=1;DEFEAT=2	2	28
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	predator_hunter	9	0		2	28
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	raider	1	3	COMBAT=1;DEFEAT=1;HAZARD=1	2	28
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	scout	0	8	COMBAT=7;DEFEAT=1	2	28
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	sentinel	6	0		2	28
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	wild_creature	3	3	COMBAT=3	2	28
+frontier_living_world	44	base_3696d0402	5000	0	True	18.2	faa3872e4a9885470c553cd47b4d1bceaea683b1540458e8a8b52677a4dbfaa9	worker	0	8	COMBAT=5;DEFEAT=2;HAZARD=1	2	28
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	alpha	1	0		4	26
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	blacksmith	0	1	COMBAT=1	4	26
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	guard	1	4	COMBAT=1;DEFEAT=1;HAZARD=2	4	26
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	leader	1	0		4	26
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	merchant	2	4	COMBAT=1;DEFEAT=2;STARVATION=1	4	26
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	predator_hunter	9	0		4	26
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	raider	0	4	COMBAT=2;HAZARD=2	4	26
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	scout	0	8	COMBAT=3;DEFEAT=3;HAZARD=2	4	26
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	sentinel	4	2	HAZARD=2	4	26
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	wild_creature	1	5	COMBAT=4;HAZARD=1	4	26
+frontier_living_world	45	base_3696d0402	5000	0	True	17.4	e4ea835c0ac0f1575925150bda900416bcda16f0ad2d385d13fedcf1bdc4bdb6	worker	1	7	COMBAT=2;HAZARD=5	4	26
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	alpha	1	0		1	29
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	blacksmith	0	1	COMBAT=1	1	29
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	guard	0	5	COMBAT=1;HAZARD=4	1	29
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	leader	1	0		1	29
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	merchant	1	5	DEFEAT=5	1	29
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	predator_hunter	9	0		1	29
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	raider	0	4	COMBAT=3;HAZARD=1	1	29
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	scout	0	8	COMBAT=5;DEFEAT=3	1	29
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	sentinel	6	0		1	29
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	wild_creature	4	2	COMBAT=2	1	29
+frontier_living_world	46	base_3696d0402	5000	0	True	12.8	e1b779dd4bd6d054ad8e8aa2630bb2ba7532589b24092cc1e65455e56ca65162	worker	0	8	COMBAT=1;DEFEAT=2;HAZARD=5	1	29
+urban_political	42	base_3696d0402	5000	0	True	14.7	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	blacksmith	1	0		14	7
+urban_political	42	base_3696d0402	5000	0	True	14.7	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	guard	3	2	HAZARD=2	14	7
+urban_political	42	base_3696d0402	5000	0	True	14.7	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	hero	2	1	HAZARD=1	14	7
+urban_political	42	base_3696d0402	5000	0	True	14.7	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	merchant	4	5	COMBAT=2;DEFEAT=3	14	7
+urban_political	42	base_3696d0402	5000	0	True	14.7	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	scout	1	3	COMBAT=1;DEFEAT=2	14	7
+urban_political	42	base_3696d0402	5000	0	True	14.7	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	worker	8	0		14	7
+urban_political	43	base_3696d0402	5000	0	True	10.4	d97ed7fce332de20e42b90f57496f7b362e29059ef440b90180930af58e5e441	blacksmith	1	0		14	7
+urban_political	43	base_3696d0402	5000	0	True	10.4	d97ed7fce332de20e42b90f57496f7b362e29059ef440b90180930af58e5e441	guard	3	2	HAZARD=2	14	7
+urban_political	43	base_3696d0402	5000	0	True	10.4	d97ed7fce332de20e42b90f57496f7b362e29059ef440b90180930af58e5e441	hero	3	0		14	7
+urban_political	43	base_3696d0402	5000	0	True	10.4	d97ed7fce332de20e42b90f57496f7b362e29059ef440b90180930af58e5e441	merchant	6	3	DEFEAT=3	14	7
+urban_political	43	base_3696d0402	5000	0	True	10.4	d97ed7fce332de20e42b90f57496f7b362e29059ef440b90180930af58e5e441	scout	1	3	COMBAT=3	14	7
+urban_political	43	base_3696d0402	5000	0	True	10.4	d97ed7fce332de20e42b90f57496f7b362e29059ef440b90180930af58e5e441	worker	7	1	DEFEAT=1	14	7
+urban_political	44	base_3696d0402	5000	0	True	11.2	5d3a217dd7e203ecfaf6e12fc314b78ab6240aebfe30ef03df9fbae77ca1068a	blacksmith	1	0		11	10
+urban_political	44	base_3696d0402	5000	0	True	11.2	5d3a217dd7e203ecfaf6e12fc314b78ab6240aebfe30ef03df9fbae77ca1068a	guard	3	2	HAZARD=2	11	10
+urban_political	44	base_3696d0402	5000	0	True	11.2	5d3a217dd7e203ecfaf6e12fc314b78ab6240aebfe30ef03df9fbae77ca1068a	hero	2	1	COMBAT=1	11	10
+urban_political	44	base_3696d0402	5000	0	True	11.2	5d3a217dd7e203ecfaf6e12fc314b78ab6240aebfe30ef03df9fbae77ca1068a	merchant	6	3	COMBAT=2;DEFEAT=1	11	10
+urban_political	44	base_3696d0402	5000	0	True	11.2	5d3a217dd7e203ecfaf6e12fc314b78ab6240aebfe30ef03df9fbae77ca1068a	scout	0	4	COMBAT=3;DEFEAT=1	11	10
+urban_political	44	base_3696d0402	5000	0	True	11.2	5d3a217dd7e203ecfaf6e12fc314b78ab6240aebfe30ef03df9fbae77ca1068a	worker	6	2	COMBAT=1;HAZARD=1	11	10
+urban_political	45	base_3696d0402	5000	0	True	11.1	ae8b51066e376d7b13d8dbbcf5b7dfbc02ef97eb24b0e01f2a6eea628244e609	blacksmith	0	1	DEFEAT=1	14	7
+urban_political	45	base_3696d0402	5000	0	True	11.1	ae8b51066e376d7b13d8dbbcf5b7dfbc02ef97eb24b0e01f2a6eea628244e609	guard	3	2	HAZARD=2	14	7
+urban_political	45	base_3696d0402	5000	0	True	11.1	ae8b51066e376d7b13d8dbbcf5b7dfbc02ef97eb24b0e01f2a6eea628244e609	hero	3	0		14	7
+urban_political	45	base_3696d0402	5000	0	True	11.1	ae8b51066e376d7b13d8dbbcf5b7dfbc02ef97eb24b0e01f2a6eea628244e609	merchant	5	4	COMBAT=1;DEFEAT=3	14	7
+urban_political	45	base_3696d0402	5000	0	True	11.1	ae8b51066e376d7b13d8dbbcf5b7dfbc02ef97eb24b0e01f2a6eea628244e609	scout	2	2	COMBAT=1;DEFEAT=1	14	7
+urban_political	45	base_3696d0402	5000	0	True	11.1	ae8b51066e376d7b13d8dbbcf5b7dfbc02ef97eb24b0e01f2a6eea628244e609	worker	8	0		14	7
+urban_political	46	base_3696d0402	5000	0	True	7.3	241d4589dfd032a6e0c7d516bf62d3515ab933e2d0a25e0a9fb58805fa1a9d9f	blacksmith	0	1	DEFEAT=1	11	10
+urban_political	46	base_3696d0402	5000	0	True	7.3	241d4589dfd032a6e0c7d516bf62d3515ab933e2d0a25e0a9fb58805fa1a9d9f	guard	3	2	HAZARD=2	11	10
+urban_political	46	base_3696d0402	5000	0	True	7.3	241d4589dfd032a6e0c7d516bf62d3515ab933e2d0a25e0a9fb58805fa1a9d9f	hero	3	0		11	10
+urban_political	46	base_3696d0402	5000	0	True	7.3	241d4589dfd032a6e0c7d516bf62d3515ab933e2d0a25e0a9fb58805fa1a9d9f	merchant	6	3	COMBAT=1;DEFEAT=2	11	10
+urban_political	46	base_3696d0402	5000	0	True	7.3	241d4589dfd032a6e0c7d516bf62d3515ab933e2d0a25e0a9fb58805fa1a9d9f	scout	0	4	COMBAT=3;DEFEAT=1	11	10
+urban_political	46	base_3696d0402	5000	0	True	7.3	241d4589dfd032a6e0c7d516bf62d3515ab933e2d0a25e0a9fb58805fa1a9d9f	worker	7	1	COMBAT=1	11	10
+crowded_frontier	42	diet	5000	0	True	21.8	f83cdcb7514cfa3d78e9e1def4404f3a78099bbbf1e70ca855afe40af1b041b7	blacksmith	0	1	DEFEAT=1	4	34
+crowded_frontier	42	diet	5000	0	True	21.8	f83cdcb7514cfa3d78e9e1def4404f3a78099bbbf1e70ca855afe40af1b041b7	guard	0	5	COMBAT=2;DEFEAT=1;HAZARD=2	4	34
+crowded_frontier	42	diet	5000	0	True	21.8	f83cdcb7514cfa3d78e9e1def4404f3a78099bbbf1e70ca855afe40af1b041b7	hero	0	3	COMBAT=2;DEFEAT=1	4	34
+crowded_frontier	42	diet	5000	0	True	21.8	f83cdcb7514cfa3d78e9e1def4404f3a78099bbbf1e70ca855afe40af1b041b7	leader	1	0		4	34
+crowded_frontier	42	diet	5000	0	True	21.8	f83cdcb7514cfa3d78e9e1def4404f3a78099bbbf1e70ca855afe40af1b041b7	merchant	1	2	COMBAT=1;DEFEAT=1	4	34
+crowded_frontier	42	diet	5000	0	True	21.8	f83cdcb7514cfa3d78e9e1def4404f3a78099bbbf1e70ca855afe40af1b041b7	raider	2	7	COMBAT=6;DEFEAT=1	4	34
+crowded_frontier	42	diet	5000	0	True	21.8	f83cdcb7514cfa3d78e9e1def4404f3a78099bbbf1e70ca855afe40af1b041b7	scout	0	8	COMBAT=5;DEFEAT=3	4	34
+crowded_frontier	42	diet	5000	0	True	21.8	f83cdcb7514cfa3d78e9e1def4404f3a78099bbbf1e70ca855afe40af1b041b7	worker	0	8	COMBAT=4;DEFEAT=3;HAZARD=1	4	34
+crowded_frontier	43	diet	5000	0	True	23.7	4e8f197678e1e582098b9d35501807ce8ba62488dda15d8e7c12111abfdb1a42	blacksmith	0	1	DEFEAT=1	6	32
+crowded_frontier	43	diet	5000	0	True	23.7	4e8f197678e1e582098b9d35501807ce8ba62488dda15d8e7c12111abfdb1a42	guard	0	5	COMBAT=1;DEFEAT=2;HAZARD=2	6	32
+crowded_frontier	43	diet	5000	0	True	23.7	4e8f197678e1e582098b9d35501807ce8ba62488dda15d8e7c12111abfdb1a42	hero	2	1	DEFEAT=1	6	32
+crowded_frontier	43	diet	5000	0	True	23.7	4e8f197678e1e582098b9d35501807ce8ba62488dda15d8e7c12111abfdb1a42	leader	0	1	COMBAT=1	6	32
+crowded_frontier	43	diet	5000	0	True	23.7	4e8f197678e1e582098b9d35501807ce8ba62488dda15d8e7c12111abfdb1a42	merchant	0	3	COMBAT=2;DEFEAT=1	6	32
+crowded_frontier	43	diet	5000	0	True	23.7	4e8f197678e1e582098b9d35501807ce8ba62488dda15d8e7c12111abfdb1a42	raider	4	5	COMBAT=4;STARVATION=1	6	32
+crowded_frontier	43	diet	5000	0	True	23.7	4e8f197678e1e582098b9d35501807ce8ba62488dda15d8e7c12111abfdb1a42	scout	0	8	COMBAT=8	6	32
+crowded_frontier	43	diet	5000	0	True	23.7	4e8f197678e1e582098b9d35501807ce8ba62488dda15d8e7c12111abfdb1a42	worker	0	8	COMBAT=7;DEFEAT=1	6	32
+crowded_frontier	44	diet	5000	0	True	22.4	41bd22222e98f84b68d9abe6d9fdb662159a842e903e600ffd54a98d601b9e63	blacksmith	0	1	COMBAT=1	3	35
+crowded_frontier	44	diet	5000	0	True	22.4	41bd22222e98f84b68d9abe6d9fdb662159a842e903e600ffd54a98d601b9e63	guard	0	5	COMBAT=1;DEFEAT=2;HAZARD=2	3	35
+crowded_frontier	44	diet	5000	0	True	22.4	41bd22222e98f84b68d9abe6d9fdb662159a842e903e600ffd54a98d601b9e63	hero	0	3	COMBAT=1;DEFEAT=1;HAZARD=1	3	35
+crowded_frontier	44	diet	5000	0	True	22.4	41bd22222e98f84b68d9abe6d9fdb662159a842e903e600ffd54a98d601b9e63	leader	0	1	DEFEAT=1	3	35
+crowded_frontier	44	diet	5000	0	True	22.4	41bd22222e98f84b68d9abe6d9fdb662159a842e903e600ffd54a98d601b9e63	merchant	0	3	COMBAT=1;DEFEAT=2	3	35
+crowded_frontier	44	diet	5000	0	True	22.4	41bd22222e98f84b68d9abe6d9fdb662159a842e903e600ffd54a98d601b9e63	raider	3	6	COMBAT=4;DEFEAT=2	3	35
+crowded_frontier	44	diet	5000	0	True	22.4	41bd22222e98f84b68d9abe6d9fdb662159a842e903e600ffd54a98d601b9e63	scout	0	8	COMBAT=4;DEFEAT=4	3	35
+crowded_frontier	44	diet	5000	0	True	22.4	41bd22222e98f84b68d9abe6d9fdb662159a842e903e600ffd54a98d601b9e63	worker	0	8	COMBAT=4;DEFEAT=4	3	35
+crowded_frontier	45	diet	5000	0	True	17.9	34cb1ff9231298f3dfc5045597ea55fe27bc28103e06ff2ec279d54d3b1f408e	blacksmith	0	1	DEFEAT=1	5	33
+crowded_frontier	45	diet	5000	0	True	17.9	34cb1ff9231298f3dfc5045597ea55fe27bc28103e06ff2ec279d54d3b1f408e	guard	0	5	COMBAT=1;DEFEAT=2;HAZARD=2	5	33
+crowded_frontier	45	diet	5000	0	True	17.9	34cb1ff9231298f3dfc5045597ea55fe27bc28103e06ff2ec279d54d3b1f408e	hero	0	3	COMBAT=1;DEFEAT=2	5	33
+crowded_frontier	45	diet	5000	0	True	17.9	34cb1ff9231298f3dfc5045597ea55fe27bc28103e06ff2ec279d54d3b1f408e	leader	0	1	COMBAT=1	5	33
+crowded_frontier	45	diet	5000	0	True	17.9	34cb1ff9231298f3dfc5045597ea55fe27bc28103e06ff2ec279d54d3b1f408e	merchant	0	3	COMBAT=2;DEFEAT=1	5	33
+crowded_frontier	45	diet	5000	0	True	17.9	34cb1ff9231298f3dfc5045597ea55fe27bc28103e06ff2ec279d54d3b1f408e	raider	5	4	COMBAT=3;DEFEAT=1	5	33
+crowded_frontier	45	diet	5000	0	True	17.9	34cb1ff9231298f3dfc5045597ea55fe27bc28103e06ff2ec279d54d3b1f408e	scout	0	8	COMBAT=4;DEFEAT=4	5	33
+crowded_frontier	45	diet	5000	0	True	17.9	34cb1ff9231298f3dfc5045597ea55fe27bc28103e06ff2ec279d54d3b1f408e	worker	0	8	COMBAT=5;DEFEAT=2;HAZARD=1	5	33
+crowded_frontier	46	diet	5000	0	True	19.0	44a205953cc48a6b15aee304f7ed5d412a8452320d47b82207b8d59d1d694bd8	blacksmith	0	1	DEFEAT=1	2	36
+crowded_frontier	46	diet	5000	0	True	19.0	44a205953cc48a6b15aee304f7ed5d412a8452320d47b82207b8d59d1d694bd8	guard	0	5	DEFEAT=1;HAZARD=4	2	36
+crowded_frontier	46	diet	5000	0	True	19.0	44a205953cc48a6b15aee304f7ed5d412a8452320d47b82207b8d59d1d694bd8	hero	0	3	COMBAT=2;DEFEAT=1	2	36
+crowded_frontier	46	diet	5000	0	True	19.0	44a205953cc48a6b15aee304f7ed5d412a8452320d47b82207b8d59d1d694bd8	leader	1	0		2	36
+crowded_frontier	46	diet	5000	0	True	19.0	44a205953cc48a6b15aee304f7ed5d412a8452320d47b82207b8d59d1d694bd8	merchant	0	3	COMBAT=1;DEFEAT=2	2	36
+crowded_frontier	46	diet	5000	0	True	19.0	44a205953cc48a6b15aee304f7ed5d412a8452320d47b82207b8d59d1d694bd8	raider	1	8	COMBAT=5;DEFEAT=3	2	36
+crowded_frontier	46	diet	5000	0	True	19.0	44a205953cc48a6b15aee304f7ed5d412a8452320d47b82207b8d59d1d694bd8	scout	0	8	COMBAT=6;DEFEAT=2	2	36
+crowded_frontier	46	diet	5000	0	True	19.0	44a205953cc48a6b15aee304f7ed5d412a8452320d47b82207b8d59d1d694bd8	worker	0	8	COMBAT=2;DEFEAT=3;HAZARD=3	2	36
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	alpha	1	0		3	30
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	blacksmith	0	1	DEFEAT=1	3	30
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	guard	1	4	COMBAT=2;DEFEAT=1;HAZARD=1	3	30
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	leader	0	1	COMBAT=1	3	30
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	merchant	2	4	COMBAT=2;DEFEAT=1;STARVATION=1	3	30
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	predator_hunter	9	0		3	30
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	raider	0	4	COMBAT=3;DEFEAT=1	3	30
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	scout	0	8	COMBAT=6;DEFEAT=2	3	30
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	sentinel	4	2	HAZARD=2	3	30
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	wild_creature	2	4	COMBAT=3;HAZARD=1	3	30
+frontier_living_world	42	diet	5000	0	True	23.4	80ff2d9c06dd13905b0a87792cae6f3ddc9f1819925bf5770f3f3f60478241c6	worker	0	8	COMBAT=2;DEFEAT=4;HAZARD=2	3	30
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	alpha	1	0		14	19
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	blacksmith	1	0		14	19
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	guard	3	2	HAZARD=2	14	19
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	leader	1	0		14	19
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	merchant	3	3	COMBAT=2;DEFEAT=1	14	19
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	predator_hunter	9	0		14	19
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	raider	0	4	COMBAT=1;DEFEAT=1;HAZARD=2	14	19
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	scout	0	8	COMBAT=5;DEFEAT=1;HAZARD=2	14	19
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	sentinel	4	2	HAZARD=2	14	19
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	wild_creature	1	5	COMBAT=2;HAZARD=3	14	19
+frontier_living_world	43	diet	5000	0	True	19.3	885ac316be9250f8b1822e5eab2e3550d43cd4a992671e996d87fb9f7f3fd14f	worker	6	2	HAZARD=2	14	19
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	alpha	1	0		4	29
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	blacksmith	0	1	DEFEAT=1	4	29
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	guard	0	5	DEFEAT=1;HAZARD=4	4	29
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	leader	1	0		4	29
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	merchant	0	6	COMBAT=3;DEFEAT=3	4	29
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	predator_hunter	9	0		4	29
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	raider	0	4	COMBAT=2;DEFEAT=1;HAZARD=1	4	29
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	scout	3	5	COMBAT=5	4	29
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	sentinel	5	1	HAZARD=1	4	29
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	wild_creature	0	6	COMBAT=1;DEFEAT=5	4	29
+frontier_living_world	44	diet	5000	0	True	19.6	87a895d078da9ebaaa944bdd47907c9c362182dfd96073d3319147a33963341d	worker	0	8	COMBAT=4;DEFEAT=2;HAZARD=2	4	29
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	alpha	1	0		2	31
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	blacksmith	0	1	DEFEAT=1	2	31
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	guard	0	5	COMBAT=1;DEFEAT=2;HAZARD=2	2	31
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	leader	1	0		2	31
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	merchant	1	5	COMBAT=3;DEFEAT=2	2	31
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	predator_hunter	9	0		2	31
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	raider	0	4	COMBAT=2;HAZARD=2	2	31
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	scout	0	8	COMBAT=4;DEFEAT=3;HAZARD=1	2	31
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	sentinel	4	2	HAZARD=2	2	31
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	wild_creature	3	3	COMBAT=3	2	31
+frontier_living_world	45	diet	5000	0	True	10.8	1592b8daec264b48dc26552db63d8dba948a558bac8b367cdadd8a1ee663e9ff	worker	0	8	COMBAT=5;DEFEAT=3	2	31
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	alpha	1	0		5	28
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	blacksmith	0	1	COMBAT=1	5	28
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	guard	0	5	COMBAT=1;DEFEAT=1;HAZARD=3	5	28
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	leader	1	0		5	28
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	merchant	3	3	DEFEAT=3	5	28
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	predator_hunter	9	0		5	28
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	raider	0	4	COMBAT=3;HAZARD=1	5	28
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	scout	1	7	COMBAT=6;DEFEAT=1	5	28
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	sentinel	6	0		5	28
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	wild_creature	2	4	COMBAT=4	5	28
+frontier_living_world	46	diet	5000	0	True	10.6	c8d819eb85fd74b154f61c4337a31f972a4758240093a3563b47fbe2ef8e1339	worker	0	8	COMBAT=2;DEFEAT=5;HAZARD=1	5	28
+urban_political	42	diet	5000	0	True	10.7	9bdcad79585b5b37ba43c460b9a9606af028c9672fcf4c8aefab968055f338f9	blacksmith	1	0		17	13
+urban_political	42	diet	5000	0	True	10.7	9bdcad79585b5b37ba43c460b9a9606af028c9672fcf4c8aefab968055f338f9	guard	3	2	HAZARD=2	17	13
+urban_political	42	diet	5000	0	True	10.7	9bdcad79585b5b37ba43c460b9a9606af028c9672fcf4c8aefab968055f338f9	hero	2	1	HAZARD=1	17	13
+urban_political	42	diet	5000	0	True	10.7	9bdcad79585b5b37ba43c460b9a9606af028c9672fcf4c8aefab968055f338f9	merchant	4	5	COMBAT=2;DEFEAT=3	17	13
+urban_political	42	diet	5000	0	True	10.7	9bdcad79585b5b37ba43c460b9a9606af028c9672fcf4c8aefab968055f338f9	scout	0	4	COMBAT=2;DEFEAT=2	17	13
+urban_political	42	diet	5000	0	True	10.7	9bdcad79585b5b37ba43c460b9a9606af028c9672fcf4c8aefab968055f338f9	worker	7	1	DEFEAT=1	17	13
+urban_political	43	diet	5000	0	True	11.1	676a03abe079b03bc4e11dbc4c75dd7861bd97b5586ea64978251767431e8347	blacksmith	1	0		21	9
+urban_political	43	diet	5000	0	True	11.1	676a03abe079b03bc4e11dbc4c75dd7861bd97b5586ea64978251767431e8347	guard	3	2	HAZARD=2	21	9
+urban_political	43	diet	5000	0	True	11.1	676a03abe079b03bc4e11dbc4c75dd7861bd97b5586ea64978251767431e8347	hero	3	0		21	9
+urban_political	43	diet	5000	0	True	11.1	676a03abe079b03bc4e11dbc4c75dd7861bd97b5586ea64978251767431e8347	merchant	6	3	DEFEAT=3	21	9
+urban_political	43	diet	5000	0	True	11.1	676a03abe079b03bc4e11dbc4c75dd7861bd97b5586ea64978251767431e8347	scout	1	3	COMBAT=3	21	9
+urban_political	43	diet	5000	0	True	11.1	676a03abe079b03bc4e11dbc4c75dd7861bd97b5586ea64978251767431e8347	worker	7	1	DEFEAT=1	21	9
+urban_political	44	diet	5000	0	True	12.1	7e40ec78defbbbb1ec854dfb096e3bdcdfb0a21316e48f46e9b65f6319ef6e0f	blacksmith	1	0		18	12
+urban_political	44	diet	5000	0	True	12.1	7e40ec78defbbbb1ec854dfb096e3bdcdfb0a21316e48f46e9b65f6319ef6e0f	guard	3	2	HAZARD=2	18	12
+urban_political	44	diet	5000	0	True	12.1	7e40ec78defbbbb1ec854dfb096e3bdcdfb0a21316e48f46e9b65f6319ef6e0f	hero	2	1	COMBAT=1	18	12
+urban_political	44	diet	5000	0	True	12.1	7e40ec78defbbbb1ec854dfb096e3bdcdfb0a21316e48f46e9b65f6319ef6e0f	merchant	6	3	COMBAT=2;DEFEAT=1	18	12
+urban_political	44	diet	5000	0	True	12.1	7e40ec78defbbbb1ec854dfb096e3bdcdfb0a21316e48f46e9b65f6319ef6e0f	scout	0	4	COMBAT=3;DEFEAT=1	18	12
+urban_political	44	diet	5000	0	True	12.1	7e40ec78defbbbb1ec854dfb096e3bdcdfb0a21316e48f46e9b65f6319ef6e0f	worker	6	2	COMBAT=1;HAZARD=1	18	12
+urban_political	45	diet	5000	0	True	11.3	e3f4696baccb13aca23f3b6036158988983f2818bc90445ee831dfc6c30957fc	blacksmith	0	1	DEFEAT=1	21	9
+urban_political	45	diet	5000	0	True	11.3	e3f4696baccb13aca23f3b6036158988983f2818bc90445ee831dfc6c30957fc	guard	3	2	HAZARD=2	21	9
+urban_political	45	diet	5000	0	True	11.3	e3f4696baccb13aca23f3b6036158988983f2818bc90445ee831dfc6c30957fc	hero	3	0		21	9
+urban_political	45	diet	5000	0	True	11.3	e3f4696baccb13aca23f3b6036158988983f2818bc90445ee831dfc6c30957fc	merchant	5	4	COMBAT=1;DEFEAT=3	21	9
+urban_political	45	diet	5000	0	True	11.3	e3f4696baccb13aca23f3b6036158988983f2818bc90445ee831dfc6c30957fc	scout	2	2	COMBAT=1;DEFEAT=1	21	9
+urban_political	45	diet	5000	0	True	11.3	e3f4696baccb13aca23f3b6036158988983f2818bc90445ee831dfc6c30957fc	worker	8	0		21	9
+urban_political	46	diet	5000	0	True	4.5	6999446865ddd54ab4f561b5007b631a56f1a68b43318113a7ea7df6267a48cf	blacksmith	0	1	DEFEAT=1	19	11
+urban_political	46	diet	5000	0	True	4.5	6999446865ddd54ab4f561b5007b631a56f1a68b43318113a7ea7df6267a48cf	guard	3	2	HAZARD=2	19	11
+urban_political	46	diet	5000	0	True	4.5	6999446865ddd54ab4f561b5007b631a56f1a68b43318113a7ea7df6267a48cf	hero	3	0		19	11
+urban_political	46	diet	5000	0	True	4.5	6999446865ddd54ab4f561b5007b631a56f1a68b43318113a7ea7df6267a48cf	merchant	6	3	COMBAT=1;DEFEAT=2	19	11
+urban_political	46	diet	5000	0	True	4.5	6999446865ddd54ab4f561b5007b631a56f1a68b43318113a7ea7df6267a48cf	scout	0	4	COMBAT=3;DEFEAT=1	19	11
+urban_political	46	diet	5000	0	True	4.5	6999446865ddd54ab4f561b5007b631a56f1a68b43318113a7ea7df6267a48cf	worker	7	1	COMBAT=1	19	11
+crowded_frontier	42	base_repeat	5000	0	True	16.8	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	blacksmith	0	1	DEFEAT=1	3	32
+crowded_frontier	42	base_repeat	5000	0	True	16.8	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	guard	0	5	COMBAT=2;DEFEAT=1;HAZARD=2	3	32
+crowded_frontier	42	base_repeat	5000	0	True	16.8	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	hero	1	2	COMBAT=1;DEFEAT=1	3	32
+crowded_frontier	42	base_repeat	5000	0	True	16.8	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	leader	1	0		3	32
+crowded_frontier	42	base_repeat	5000	0	True	16.8	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	merchant	0	3	COMBAT=2;DEFEAT=1	3	32
+crowded_frontier	42	base_repeat	5000	0	True	16.8	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	raider	2	7	COMBAT=6;DEFEAT=1	3	32
+crowded_frontier	42	base_repeat	5000	0	True	16.8	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	scout	0	8	COMBAT=5;DEFEAT=3	3	32
+crowded_frontier	42	base_repeat	5000	0	True	16.8	310c1b024ac6f44fdf55c6e18386e711bedf696c631ae2c487967196ca48e4c1	worker	0	8	COMBAT=4;DEFEAT=3;HAZARD=1	3	32
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	alpha	1	0		3	27
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	blacksmith	0	1	HAZARD=1	3	27
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	guard	1	4	COMBAT=1;HAZARD=3	3	27
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	leader	0	1	HAZARD=1	3	27
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	merchant	0	6	COMBAT=5;DEFEAT=1	3	27
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	predator_hunter	9	0		3	27
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	raider	0	4	COMBAT=2;DEFEAT=1;HAZARD=1	3	27
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	scout	2	6	COMBAT=3;DEFEAT=2;HAZARD=1	3	27
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	sentinel	4	2	HAZARD=2	3	27
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	wild_creature	3	3	COMBAT=2;DEFEAT=1	3	27
+frontier_living_world	42	base_repeat	5000	0	True	10.9	fca2bdeabc4ba8f44650c4ece8fe2825c8705576ca67814f2bb8159885305dab	worker	0	8	COMBAT=1;DEFEAT=2;HAZARD=5	3	27
+urban_political	42	base_repeat	5000	0	True	3.8	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	blacksmith	1	0		14	7
+urban_political	42	base_repeat	5000	0	True	3.8	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	guard	3	2	HAZARD=2	14	7
+urban_political	42	base_repeat	5000	0	True	3.8	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	hero	2	1	HAZARD=1	14	7
+urban_political	42	base_repeat	5000	0	True	3.8	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	merchant	4	5	COMBAT=2;DEFEAT=3	14	7
+urban_political	42	base_repeat	5000	0	True	3.8	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	scout	1	3	COMBAT=1;DEFEAT=2	14	7
+urban_political	42	base_repeat	5000	0	True	3.8	c86bd8da2c963fa7f136c345ea2d924e192f56bbf135bfdad459089a785ee890	worker	8	0		14	7

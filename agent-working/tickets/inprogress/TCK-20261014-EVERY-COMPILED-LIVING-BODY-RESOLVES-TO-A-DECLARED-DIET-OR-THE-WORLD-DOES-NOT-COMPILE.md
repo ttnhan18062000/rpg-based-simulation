@@ -78,3 +78,8 @@ TBD
 ## Designer ruling D74 (SURV-06, memo row 74)
 
 G1 hero_adventurers, G2 trading_company_hub merchants and G3 scalable_bandit_camp scouts each take their role archetype species, `human`; one species per recipe, no distribution, no per-body draw; other species come later as separate recipes. Paired runs with the per-kind cause-of-death split: `agent-working/stored_artifacts/TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE/paired_cause_of_death_1500t.tsv`. Divergence 2.127 records the drift (ungraded, untuned).
+
+
+## Re-measure on rpg-next 3696d0402 (5000 ticks, audit_mode, PYTHONHASHSEED=0)
+
+Seeds 42-46, three worlds, base vs diet branch; base-vs-base at seed 42 gives identical digests on all three worlds under unequal load. No pair identical. Table: `paired_cause_of_death_5000t.tsv` (the 1500-tick table is preliminary). Recorded as divergence 2.127 (D74), ungraded and untuned. Two kind groups extinct in all five seeds on the branch but not on base: crowded_frontier scout, frontier_living_world raider (one survivor each on base in one seed).
