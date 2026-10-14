@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20260914-COOPERATION-FIND-PENDING-OFFER-COST-OBSERVED
-phase: open
+phase: done
 date: 2026-09-14
 tags: [performance, social]
 ---
@@ -16,7 +16,7 @@ tags: [performance, social]
 per-tick cost at 1000-entity scale — REPORT ONLY, not investigated
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -140,4 +140,9 @@ _(not applicable — report-only ticket, no implementation performed)_
 _(none — report-only ticket)_
 
 ## Completion Summary
-_(pending future investigation)_
+Closed as FIXED by perf-planner, 2026-10-14, during the #558 triage. No new implementation.
+
+- **Fixed by:** `TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK`, merged as #394 (56cfd0410). `build_pending_offer_index(state)` is now built once per tick, and `find_pending_incoming_offer(entity, state, pending_offers)` reads it (`src/domains/cooperation/phase.py:91` and `:119` on main 0fba246ed). That took cooperation from about 11 s to about 4 ms per tick on movement[5000].
+- **Kept as evidence:** this ticket's A/B per-phase table (advancement +543 ms, resolution_overhead +366 ms) is the starting evidence for perf's tick-cost-growth investigation. That investigation is filed once the owner picks (i), (ii) or (iii) on the PERF-M2-T08 off-NORMAL finding.
+- **Not this ticket:** the cooperation cost PERF-M2-T08 measured on 2026-10-13 (about 30-260 ms per tick in the strategic and mixed scenarios) is a new cost question, which that investigation owns.
+- **Triage record:** issue #558, comment 6171342115.
