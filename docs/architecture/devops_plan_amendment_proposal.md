@@ -9,8 +9,8 @@ tags: [architecture, observability, delivery, documentation]
 
 # Proposal: DevOps plan, amendment 1 (study now, real project later)
 
-**Status: Proposed, not accepted.** This proposes changes to `devops_baseline_adr.md` (accepted 2026-10-12). Nothing
-here takes effect until the owner accepts it. The review is `lead-planner`'s (`docs/architecture/**`).
+**Status: Accepted** by the owner: decision 4 on 2026-10-13, decisions 1-3 on 2026-10-14 (see "Owner decisions"). It amends
+`devops_baseline_adr.md` (accepted 2026-10-12), which now links here. The review was `lead-planner`'s (`docs/architecture/**`).
 Written by `lead-planner-u24` on the owner's request, 2026-10-13.
 
 ## Why amend
