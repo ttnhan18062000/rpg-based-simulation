@@ -48,6 +48,8 @@ domains:
       - .graphifyignore
       - tools/graphify_link.py
       - tools/graphify_prune.py
+      - tools/search_*.py          # search_mcp, search_server, search_shared (owner 2026-10-13)
+      - tools/start_*_mcp.sh       # start_search_mcp, start_headroom_mcp
       - tests/tools/**
       - tests/docs/**
     owns_not:
@@ -138,7 +140,7 @@ domains:
       "tools/**": agent-working-designer
       "agent-working/**": agent-working-designer
   platform:   # deployment and runtime; spec in docs/architecture/devops_plan_amendment_proposal.md (PR #537), owner 2026-10-13
-    owns:     # compose.yaml and docker/** moved from lead; each DevOps step adds the globs it creates (infra/**, deploy/k8s/**, charts/**, docs/runbooks/**, tools/loadtest/**, publish-images.yml, iac.yml, k8s-validate.yml, dependabot.yml) in its own PR
+    owns:     # compose.yaml and docker/** moved from lead; each DevOps step adds the globs it creates (infra/**, deploy/k8s/**, charts/**, docs/runbooks/**, tools/loadtest/**, publish-images.yml, iac.yml, k8s-validate.yml, dependabot.yml) in its own PR; the owner confirms the diff there
       - compose.yaml
       - docker/**
     owns_not: []
