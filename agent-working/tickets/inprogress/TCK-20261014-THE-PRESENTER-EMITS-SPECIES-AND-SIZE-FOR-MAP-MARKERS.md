@@ -15,7 +15,7 @@ tags: []
 The entity presenter emits species and size, so map markers can vary by them (#548, designer application of D46/D50/D69/D74).
 
 ## Status
-OPEN (not on the v1 path; presentation only)
+INPROGRESS (presentation only; built on cefce1664)
 
 ## Tier
 hotfix
@@ -65,6 +65,12 @@ Asset (#548) keys entity map markers on the presented `kind` (the role id). The 
 
 ## Test Summary
 
+`tests/unit/api/test_presenter_species_and_size.py` (both shapes: a known species presents its id and declared band for human, wolf and small_plant_eater; no species presents null for both; an unknown species keeps its id and has no size). `tests/unit/api` and the API projection perf test pass; code-health and import contracts clean. Hash-neutral: 5000 ticks, rpg-next `cefce1664` vs branch, one seed per sample world: frontier_living_world s42 `4d08dd15f19e45a4` identical, urban_political s42 `8ad52f2d8c7e8c58` identical.
+
+Not done here: the acceptance line that sample worlds present no null species. On `cefce1664` the 51 hero, merchant and scout bodies still have no species (the diet step, D74, is not folded yet), so that test would fail today; it belongs with the diet step.
+
 ## Files Changed
+
+`src/api/presenters/state_presenter.py` (`_species_and_size`, both entity shapes) and the test above. There are no entity schemas under `src/api/schemas.py` to update.
 
 ## Completion Summary
