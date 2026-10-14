@@ -266,6 +266,7 @@ def render(report: Report, remote: bool) -> str:
 
 # ---- worktree mode (TCK-20261008-SESSION-MERGED-WORKTREE-PRUNE) --------------------------------
 DIRTY_LISTED = 10
+DETACHED_REASON = "detached HEAD"
 
 
 @dataclass(frozen=True)
@@ -363,7 +364,7 @@ def classify_worktrees(cwd: Path, prs: PrData | None, roster, sroot: Path, proc_
         elif entry.get("bare") or entry.get("prunable") or not path.is_dir():
             rows.append(row(False, "bare, prunable or missing directory"))
         elif not branch:
-            rows.append(row(False, "detached HEAD"))
+            rows.append(row(False, DETACHED_REASON))
         elif resolved in seats:
             rows.append(row(False, f"seat worktree: {seats[resolved]}"))
         elif resolved in live:
