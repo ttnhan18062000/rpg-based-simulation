@@ -36,14 +36,15 @@ The owner chose to take the Actions majors now. They touch workflows owned by ot
 - Evidence from testing-planner, all of it in the PR body:
   1. One `workflow_dispatch` run of rpg-gate-report.yml on this branch whose report lists the per-world docs (not empty or
      no-data rows).
-  2. The PR run's artifact list shows test.yml's 3 artifacts (incl. `perf-tripwire`), each with its files present
-     (check hidden/dotfile paths and `if-no-files-found`).
+  2. (restated by testing-planner, 2026-10-14) On the PR run, `tools-a-e-junit-<sha>`, `tools-f-z-junit-<sha>` and `api-cli-engine-junit-<sha>` are present AND contain files; list the file counts (an empty upload only warns, because `if-no-files-found` is unset).
+  1. (restated) Check the dispatched `rpg-gate-report` artifact *content*, not just the run status: upload at rpg-gate-report.yml:124, download at :149, final upload at :187.
+  3. (restated) If this merges before PR #529 (perf), there is no item 3: #529 bumps its own `perf-tripwire`/`perf-base` steps and testing-planner checks that. If #529 merges first, rebase, bump its new steps, and show `perf-tripwire` with both arms measured.
+  4. Post-merge: the first scheduled slow run has `certification-report-<sha>` and `slow-junit-<sha>`, both with files (slow-regression.yml:139/146), or the merge gets reverted.
   2b. slow-regression.yml runs only on schedule/dispatch, and a dispatch costs about 2 runner-hours. **No dispatch**
      (testing-planner, 2026-10-14). Its 2 uploads use the same upload-artifact@v7 step shape, so the test.yml proof covers
      the action. The PR body must say: testing-planner verifies `certification-report-<sha>` and `slow-junit-<sha>` on
      the first scheduled slow run on main after merge (artifacts exist with files, and the report step finds the
      JUnit); if both are missing, the merge gets reverted.
-  3. The `perf-tripwire` artifact shows both arms measured (second checkout into `perf-base`, #573).
 - deploy-docs (#574): note that it runs only on main, so it can't be proven on the PR. State that plainly and have the owner
   watch the first main run.
 - Request review by comment from testing-planner, plus the owners of the other touched workflows.
