@@ -14,6 +14,7 @@ from src.core.updates import (
     StrategicUpdate,
     StaminaUpdate,
 )
+from src.engine.candidate_selector import MovementCandidateSelector
 from src.engine.movement import MovementSystem
 from src.engine.policy import GovernorPolicy
 
@@ -221,7 +222,6 @@ class MovementPhase:
         object.__setattr__(state, "_occupancy_map_cache", live_occ_map)
         object.__setattr__(state, "transient_claims", live_claims)
         
-        from src.engine.candidate_selector import MovementCandidateSelector
         policy = getattr(update, "current_policy_set", None) or GovernorPolicy()
         position_index = MovementCandidateSelector.position_index(state.entities)
         selected_ids = MovementCandidateSelector.select(
@@ -439,21 +439,9 @@ class MovementPhase:
         b_old: tuple[float, float],
     ) -> bool:
         return (
-            not MovementPhase._is_static_position_blocked(state, a_old)
-            and not MovementPhase._is_static_position_blocked(state, b_old)
+            not MovementCandidateSelector.is_static_position_blocked(state, a_old)
+            and not MovementCandidateSelector.is_static_position_blocked(state, b_old)
         )
-
-    @staticmethod
-    def _is_static_position_blocked(state: AuthoritativeState, pos: tuple[float, float]) -> bool:
-        tile = (int(pos[0]), int(pos[1]))
-        if getattr(state, "terrain", {}).get(tile) == "WALL":
-            return True
-        if tile in getattr(state, "blocked_tiles", set()):
-            return True
-        for building in getattr(state, "buildings", {}).values():
-            if tuple(building.position) == tile:
-                return True
-        return False
 
     @staticmethod
     def _build_position_swap_entity_update(
