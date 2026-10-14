@@ -45,7 +45,7 @@ Loki/Promtail versions (minor group); replacing Promtail (deprecated in favour o
 
 ## Acceptance Criteria
 - `docker compose --profile observability up -d`: all services reach healthy (running locally).
-- Prometheus targets page shows `rpg-backend` UP; the Grafana datasource test passes; `simulation.json` renders with no panel-plugin errors (screenshot or API output in Test Summary).
+- The Prometheus target `rpg-backend` is reached; it returns HTTP 401, which predates this change (the backend's `/metrics` requires `require_admission`). The scrape-auth decision moves to step 2 and the question is with rpg-planner (amended 2026-10-14 by platform-planner); the Grafana datasource test passes; `simulation.json` renders with no panel-plugin errors (screenshot or API output in Test Summary).
 - `compose config -q` passes; publish-images CI stays green.
 
 ## Related Tickets
@@ -69,6 +69,7 @@ Run `tools/sessions/disk_headroom.py` before pulling the new images.
 - **running locally** (`docker compose --profile observability up -d --build`): prometheus, loki, promtail, redis, backend, frontend and grafana reached `healthy` (grafana after the fix above). Grafana version 13.2.4 `database: ok`.
 - Grafana datasources `Prometheus` and `Loki`: `/api/datasources/uid/<uid>/health` returned `OK` for both. Dashboard `RPG Simulation: Analytics & Diagnostics` (uid `sim-v2`) is provisioned.
 - Prometheus v3 logged no warnings or errors.
+- **Target state, v3.15.0 (observed):** `rpg-backend` health `down`, `lastError` `server returned HTTP status 401 Unauthorized`. **v2.50.0:** not run in this session (no before-measurement); the 401 comes from the backend's `require_admission` on `/metrics` (since #61), and `docker/prometheus.yml` was unchanged and sent no credentials under v2, so v2 would have returned the same 401, but that is inferred, not observed. `prometheus.yml` was not changed.
 - **Finding, not caused by this change:** the `rpg-backend` target is DOWN with `HTTP 401` because the backend's `/metrics` requires an API key (`dependencies=[Depends(require_admission)]`, since #61) and `docker/prometheus.yml` has never sent credentials. The ticket's `rpg-backend UP` criterion therefore cannot pass on any Prometheus version until someone decides how Prometheus authenticates (an rpg/`src/api` decision); reported to platform-planner.
 - Grafana logs also show harmless errors: missing `provisioning/plugins` and `provisioning/alerting` directories, and TLS failures reaching grafana.com (plugin catalogue).
 - Idle memory peaks after this change: grafana 480 MiB (start), backend 357, loki 93, prometheus 40, promtail 42, ai_worker 33, watchdog 22, frontend 6, redis 8.
