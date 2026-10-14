@@ -13,6 +13,7 @@ import re
 from pydantic import ValidationError
 
 from visual_assets.store import config, records
+from visual_assets.store.adoption import check_not_placeholder
 from visual_assets.store.catalogwrite import Confirm, publish
 from visual_assets.store.contracts import ContractError, RevocationRecord, canonical_json
 from visual_assets.store.contracts.adoption import IntakeTarget, SourceRevisionTarget
@@ -54,6 +55,7 @@ def revoke(
         check(UtcTimestamp, decided_at)
     except IdentityError:
         raise GateError("bad_decided_at", "decided_at must be a real YYYY-MM-DDTHH:MM:SSZ timestamp") from None
+    check_not_placeholder(reason=reason, approver=approver, approver_role=approver_role)
     kind, text = parse_target(target)
     rv_id = revocation_id_for(kind, text)
 

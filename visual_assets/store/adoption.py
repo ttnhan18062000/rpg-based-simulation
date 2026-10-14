@@ -9,6 +9,8 @@ authenticated (the terminal check and typed id stop accidents and scripts, not i
 
 from __future__ import annotations
 
+import re
+
 from pydantic import ValidationError
 
 from visual_assets.store import animation as source_animation
@@ -205,6 +207,17 @@ def check_slot(registry: Registry | None, visual_key: str, detail_value: str | N
     return definition, slot, slot_name
 
 
+_PLACEHOLDER_SPAN = re.compile(r"<[^<>]*>")
+_PLACEHOLDER_WORDS = frozenset({"todo", "tbd", "xxx", "your name", "your role", "fixme", "changeme"})
+
+
+def check_not_placeholder(**fields: str) -> None:
+    """Refuse a value that is a command-template placeholder: any `<...>` span, or text that is only a placeholder word. Names the field."""
+    for field, value in fields.items():
+        if isinstance(value, str) and (_PLACEHOLDER_SPAN.search(value) or value.strip().lower() in _PLACEHOLDER_WORDS):
+            raise _refuse("placeholder_value", f"{field} looks like a template placeholder ({value!r}); replace every <...> with a real value before running")
+
+
 def check_licence_and_approver(licence_state, licence_evidence_ref, approver: str, approver_role: str) -> None:
     state = getattr(licence_state, "value", licence_state)
     if state != LicenceState.CLEARED.value:
@@ -213,6 +226,7 @@ def check_licence_and_approver(licence_state, licence_evidence_ref, approver: st
         raise _refuse("licence_evidence_missing", "give a real licence evidence reference, not NOT_APPLICABLE, UNAVAILABLE or empty")
     if not approver or not approver.strip() or not approver_role or not approver_role.strip():
         raise _refuse("invalid_approver", "an approver name and role are required")
+    check_not_placeholder(approver=approver, approver_role=approver_role, licence_evidence_ref=licence_evidence_ref)
 
 
 def build_entry_records(

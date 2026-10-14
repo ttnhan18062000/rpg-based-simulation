@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261014-VISUAL-ASSETS-REFUSE-PLACEHOLDER-APPROVALS
-phase: open
+phase: done
 date: 2026-10-14
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Store: adopt, adopt-set and revoke refuse template-placeholder approver, role and licence-evidence values; record the owner's erratum for sa-6690e2619d4abb3e
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -40,9 +40,9 @@ Child 5 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner ran `adopt-se
 - No `src/` or `frontend/` change.
 
 ## Acceptance Criteria
-- [ ] The guard refuses placeholder values in adopt, adopt-set and revoke with `placeholder_value`; tests cover each field and command; nothing is written on refusal.
-- [ ] Existing records (including `sa-6690e2619d4abb3e`) still load; `verify` exit 0.
-- [ ] The erratum is in store_contract.md and child 2's ticket, quoting the owner's answers.
+- [x] The guard refuses placeholder values in adopt, adopt-set and revoke with `placeholder_value`; tests cover each field and command; nothing is written on refusal.
+- [x] Existing records (including `sa-6690e2619d4abb3e`) still load; `verify` exit 0.
+- [x] The erratum is in store_contract.md and child 2's ticket, quoting the owner's answers.
 
 ## Related Tickets
 - Parent: `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`; `TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS` (the adoption)
@@ -60,13 +60,17 @@ Child 5 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner ran `adopt-se
 - A real approver name never contains `<` or `>`.
 
 ## Implementation Notes
-
+- `check_not_placeholder(**fields)` in `visual_assets/store/adoption.py` refuses any `<...>` span and the whole-value words todo, tbd, xxx, your name, your role, fixme, changeme (case-insensitive); code `placeholder_value`, message names the field. Called from `check_licence_and_approver` (so `adopt` and `adopt-set`, after the older empty-value checks keep their own codes) and from `revoke` (reason, approver, role) before anything is read or written. Nothing re-validates existing records: `parse_record` and `verify` are untouched.
+- The review-folder command builders (`set_commands`, `owner_commands` in `visual_assets/review/review_sheets.py`) now print a leading line "Replace every <...> below with your own value before running".
+- Closed review docs `docs/assets/icon_set_v2_review.md` and `docs/assets/icon_key_set_review.md` still print the old templates; they are historic and were not changed.
+- Erratum: `docs/assets/store_contract.md` "Provenance errata" and child 2's done ticket.
 
 ## Test Summary
-
+- `tests/visual_assets/store/unit/test_adoption.py`, `test_revoke.py`, `test_drafts.py`, `tests/visual_assets/test_review_sheets.py`: all pass, including 9 adopt placeholder cases, 4 revoke cases, the adopt-set refusals, real values pass, and the committed placeholder set adoption still loads with `verify()` empty. `python -m visual_assets.store verify` exit 0.
+- Red, owned by child 4 (adopted_facts pins for the 18-source adoption): `test_adoption.py::test_the_committed_catalog_is_never_touched_by_these_tests`, `test_catalog_integrity.py::test_the_committed_catalog_holds_exactly_the_pilot_forest_and_the_adopted_terrain_v1_set`, `...holds_exactly_the_owners_two_set_adoptions`.
 
 ## Files Changed
-
+`visual_assets/store/adoption.py`, `visual_assets/store/revoke.py`, `visual_assets/review/review_sheets.py`, `tests/visual_assets/store/unit/test_{adoption,revoke,drafts}.py`, `docs/assets/store_contract.md`, child 2's done ticket, this ticket.
 
 ## Completion Summary
-
+The store refuses template placeholders in adopt, adopt-set and revoke with `placeholder_value`; the owner's erratum for `sa-6690e2619d4abb3e` and its 18 adoption records is recorded in the store contract and child 2's ticket; existing records are untouched.
