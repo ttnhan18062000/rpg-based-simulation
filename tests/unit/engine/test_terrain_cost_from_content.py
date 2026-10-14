@@ -10,8 +10,8 @@ from pydantic import ValidationError
 
 from src.content.repository import CatalogRepository
 from src.content.schema import TerrainDefinition
-from src.engine import terrain_cost as tc
-from src.engine.terrain_cost import UnknownTerrainError, configure_terrain_costs, reset_terrain_costs, terrain_cost, validate_terrain_ids
+from src.content import terrain_cost as tc
+from src.content.terrain_cost import UnknownTerrainError, configure_terrain_costs, reset_terrain_costs, terrain_cost, validate_terrain_ids
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
 from src.worldbuilding.schema import InvalidWorldSpecError

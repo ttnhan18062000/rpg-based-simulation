@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, Mapping, Optional
 
+from src.content.paths import ContentPathConfig
 from src.content.repository import CatalogRepository
 
 # The terrain a compiled map is filled with before any region paints it: a catalog id (the `plain` entry), never a literal in the compiler.
@@ -25,8 +26,6 @@ class UnknownTerrainError(ValueError):
 
 
 def _load_default_costs() -> Dict[str, float]:
-    from src.content.paths import ContentPathConfig
-
     repo = CatalogRepository(ContentPathConfig().content_root)
     repo.load_all()
     return _costs_of(repo)

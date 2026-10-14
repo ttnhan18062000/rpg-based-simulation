@@ -1,5 +1,5 @@
 # Terrain move costs (D72, owner ruling 2026-10-14): `move_cost_multiplier` is the readiness cost factor of one step onto the terrain, read by the movement
-# legality check through src/engine/terrain_cost.py. It is required: a terrain without one does not load. Forest 1.5, swamp 3.0, mountain 4.0, road 0.5,
+# legality check through src/content/terrain_cost.py. It is required: a terrain without one does not load. Forest 1.5, swamp 3.0, mountain 4.0, road 0.5,
 # plain and grass 1.0 are the ruled values; cave 1.5, ruin 1.5 and river 3.0 are D33 placeholders (a river stays walkable). `snow` and `volcanic` keep the
 # numbers they already declared (no world uses them, no ruling yet). The numbers declared here before D72 were never read by any code.
 # STATE: EXISTING-LOGIC
