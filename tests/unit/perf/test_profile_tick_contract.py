@@ -60,3 +60,24 @@ def test_a_torn_byte_in_a_raw_folded_file_is_replaced_not_fatal(tmp_path) -> Non
     text = common.read_folded_text(raw)
     assert "_measured_ticks" in text and "\ufffd" in text
     assert common.parse_folded(text)
+
+
+def test_a_corpus_scenario_goes_through_the_one_loader_in_rerun_baselines(monkeypatch) -> None:
+    from tools.perf import rerun_baselines
+
+    seen = {}
+    monkeypatch.setattr(rerun_baselines, "load_corpus_state", lambda world, seed: (seen.update(world=world, seed=seed) or ("STATE", {})))
+    assert common.build_state("corpus:frontier_marches", 0, 7) == "STATE"
+    assert seen == {"world": "frontier_marches", "seed": 7}
+
+
+def test_world_option_selects_the_corpus_scenario_and_an_unknown_scenario_is_a_usage_error(capsys) -> None:
+    with pytest.raises(SystemExit):
+        profile_tick.main(["--scenario", "nonsense", "--child", "--out-json", "x"])
+    assert "unknown scenario" in capsys.readouterr().err
+
+
+def test_profile_tick_writes_no_loader_of_its_own() -> None:
+    here = Path(profile_tick.__file__).parent
+    for name in ("profile_tick.py", "_profiling_common.py"):
+        assert "_load_world_state" not in (here / name).read_text(encoding="utf-8"), name  # the loader lives in rerun_baselines only

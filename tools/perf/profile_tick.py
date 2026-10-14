@@ -189,7 +189,9 @@ def run_parent(args: argparse.Namespace) -> int:
 
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--scenario", choices=_scenario_choices(), default="mixed")
+    parser.add_argument("--scenario", default="mixed", help="a synthetic scenario (" + ", ".join(_scenario_choices()) + ") or corpus:<world>")
+    parser.add_argument("--world", default=None,
+                        help="profile a real corpus world (data/worlds/<name>) instead of a synthetic scenario; --entities is then ignored")
     parser.add_argument("--entities", type=int, default=200, help="entity count (keep small; this runs the kernel)")
     parser.add_argument("--ticks", type=int, default=30, help="measured ticks")
     parser.add_argument("--warmup", type=int, default=3, help="warmup ticks before measuring")
@@ -214,6 +216,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--child", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--out-json", default=None, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
+    if args.world:
+        args.scenario = common.CORPUS_PREFIX + args.world
+    if args.scenario not in _scenario_choices() and not args.scenario.startswith(common.CORPUS_PREFIX):
+        parser.error(f"unknown scenario {args.scenario!r}; choose one of {_scenario_choices()} or corpus:<world>")
     if args.child:
         if not args.out_json:
             parser.error("--child requires --out-json")

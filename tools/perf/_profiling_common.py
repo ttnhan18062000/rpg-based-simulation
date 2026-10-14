@@ -370,8 +370,15 @@ def missing_binary_message(name: str) -> str:
 
 # --------------------------------------------------------------------------- child run (imports the engine lazily)
 
-def build_state(scenario: str, entities: int):
-    """Build the scenario state the way tools/perf/profile_engine.py does."""
+CORPUS_PREFIX = "corpus:"
+
+
+def build_state(scenario: str, entities: int, seed: int = 42):
+    """Build the scenario state the way tools/perf/profile_engine.py does. ``corpus:<world>`` loads a real compiled world through the one loader in ``rerun_baselines``."""
+    if scenario.startswith(CORPUS_PREFIX):
+        from tools.perf.rerun_baselines import load_corpus_state
+
+        return load_corpus_state(scenario[len(CORPUS_PREFIX):], seed)[0]
     from src.perf.scenarios import SCENARIO_BUILDERS
     builder = SCENARIO_BUILDERS[scenario]
     if scenario == "resource":
@@ -460,7 +467,7 @@ def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, tic
     from src.engine.kernel import Kernel
     from src.platform.rng import DeterministicRNG
 
-    state = build_state(scenario, entities)
+    state = build_state(scenario, entities, seed)
     override = None
     if flag and flag_mode:
         state, override = apply_flag_override(state, flag, flag_mode)
