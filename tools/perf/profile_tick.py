@@ -152,7 +152,7 @@ def run_parent(args: argparse.Namespace) -> int:
             print(f"py-spy produced no samples (exit {run.returncode}).\nstdout:\n{run.stdout[-1500:]}\n"
                   f"stderr:\n{run.stderr[-1500:]}", file=sys.stderr)
             return 1
-        stacks = common.parse_folded(raw.read_text(encoding="utf-8"))
+        stacks = common.parse_folded(common.read_folded_text(raw))
         kept, kept_n, total_n = common.filter_stacks(stacks, MEASURED_MARKER)
         raw.unlink()
         if not kept:

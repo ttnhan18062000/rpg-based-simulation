@@ -52,3 +52,11 @@ def test_the_child_command_carries_the_contract_and_it_defaults_to_live() -> Non
 def test_the_pinned_note_names_what_still_moves() -> None:
     for text in ("RuntimeMode only", "audit_mode", "DEV-014", "scheduler"):
         assert text in common.PINNED_NOTE
+
+
+def test_a_torn_byte_in_a_raw_folded_file_is_replaced_not_fatal(tmp_path) -> None:
+    raw = tmp_path / "raw.folded"
+    raw.write_bytes(b"main;_measured_ticks;work\xff 3\nmain;other 2\n")
+    text = common.read_folded_text(raw)
+    assert "_measured_ticks" in text and "\ufffd" in text
+    assert common.parse_folded(text)

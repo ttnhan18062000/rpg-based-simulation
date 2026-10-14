@@ -71,6 +71,11 @@ def header_fields(scenario: str, entities: int, seed: int, warmup: int, ticks: i
     return fields
 
 
+def read_folded_text(path: Path) -> str:
+    """The text of a raw py-spy folded file. A nonblocking sample can catch a half-written string, so a bad byte is replaced, not fatal (found by T-cost-growth run strategic_100 at 250 Hz: byte 0xff)."""
+    return path.read_bytes().decode("utf-8", errors="replace")
+
+
 def header_lines(fields: Dict[str, Any], title: str) -> List[str]:
     """Header as plain lines (no comment marker)."""
     lines = [title, PROVISIONAL_LINE]
