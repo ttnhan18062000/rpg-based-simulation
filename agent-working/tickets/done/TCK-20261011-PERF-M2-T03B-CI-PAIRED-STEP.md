@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP
-phase: open
+phase: done
 date: 2026-10-11
 tags: [performance, benchmarking, regression]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking, regression]
 PERF-M2-T03b: Run the paired base/head tripwire as a report-only step in the perf-cert-arena CI job
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -46,13 +46,13 @@ TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED (#496) shipped tools/perf/tripwire.py b
 - Changing the tripwire algorithm itself (the T03 follow-up nits, such as alternating base/head on the retry, stay optional and separate)
 
 ## Acceptance Criteria
-- [ ] On a `pull_request` run, `perf-cert-arena` runs the paired tripwire, writes the verdict table to the step summary, and uploads an artifact with base SHA, head SHA, runner CPU model and the per-scenario results
-- [ ] A tripwire REGRESSION or INCONCLUSIVE leaves the job green. The PR shows this with a forced-regression dry run or a test, plus the step comment.
-- [ ] On a non-PR event the paired step is skipped, and the summary says why
-- [ ] The job has `timeout-minutes`, and the PR cites the p95 it was sized from
-- [ ] `tests/static/test_ci_narrow_path_filtered_jobs.py` and the other `tests/static/test_ci_*` tests pass
-- [ ] The CI-runner A/A noise measurement is recorded in the PR. Either 1.40 is confirmed, or a new §5 value is proposed to the owner.
-- [ ] testing-planner has reviewed the PR by comment
+- [x] On a `pull_request` run, `perf-cert-arena` runs the paired tripwire, writes the verdict table to the step summary, and uploads an artifact with base SHA, head SHA, runner CPU model and the per-scenario results
+- [x] A tripwire REGRESSION or INCONCLUSIVE leaves the job green. The PR shows this with a forced-regression dry run or a test, plus the step comment.
+- [x] On a non-PR event the paired step is skipped, and the summary says why
+- [x] The job has `timeout-minutes`, and the PR cites the p95 it was sized from
+- [x] `tests/static/test_ci_narrow_path_filtered_jobs.py` and the other `tests/static/test_ci_*` tests pass
+- [x] The CI-runner A/A noise measurement is recorded in the PR. Either 1.40 is confirmed, or a new §5 value is proposed to the owner.
+- [x] testing-planner has reviewed the PR by comment
 
 ## Related Tickets
 - TCK-20261010-PERF-M2-T03-TRIPWIRE-PAIRED (done, #496)
@@ -77,9 +77,15 @@ None.
 - If the base side cannot run tripwire.py because the base predates T03 (#496), the step reports SKIPPED for that reason. That can only happen to a PR branched before #496 merged.
 
 ## Implementation Notes
+- Decisions: `agent-working/stored_artifacts/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP/plan.md`. Job `timeout-minutes: 15` from a p95 of 262 s (11 successful PR runs, 161-262 s).
+- CI-runner A/A calibration (workflow_dispatch run 38281230293, 8 trials per scenario): largest head/base deviation 0.025 for avg (idle_100_local 0.021, movement_100_local 0.017; p50 up to 0.025), against 0.35 on the 6-vCPU dev VM. So `max(5 ms, base x 1.40)` holds with a wide margin on the runner. A tighter value is only PROPOSED to the owner (PR body): one run on one runner instance is thin evidence, so no change is applied and `docs/engine/performance_contract.md` (rpg-owned P1) is untouched.
+- The only `src/` change is `benchmark_record.cpu_model` made public, inside `src/perf/`.
 
 ## Test Summary
+- New: `tests/static/test_ci_perf_tripwire_step.py` (7), 3 tests in `tests/unit/perf/test_tripwire.py`. With `tests/unit/perf`, `tests/static` and the paths guard: 318 pass. A real local paired run exited 0 with the table. On the PR the step passed in CI (21 contexts green). Not run: the full suite.
 
 ## Files Changed
+- `.github/workflows/test.yml` (perf-cert-arena), `tools/perf/tripwire.py`, `src/perf/benchmark_record.py` (cpu_model public), `tests/static/test_ci_perf_tripwire_step.py` (new), `tests/unit/perf/test_tripwire.py`, `docs/performance/perf_baseline_policy.md`, `docs/parity_ledger/infrastructure.yaml` (INFRA-435), `docs/REGISTRY.yaml`, this ticket and its artifacts.
 
 ## Completion Summary
+`perf-cert-arena` now runs the paired tripwire report-only on pull_request events: a second checkout at the base SHA, the verdict table in the step summary, a `perf-tripwire` artifact with both SHAs and the CPU model, a 10-minute job timeout (sized from the real paired-step time, 15 s on run 38414975279, which measured both arms), and a manual-dispatch A/A calibration. The measured CI-runner noise is 0.025, so the provisional 1.40 holds; a tighter value is proposed to the owner, not applied.

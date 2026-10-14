@@ -94,6 +94,9 @@ and the approval is the review of the PR that adds the file.
   ("not reproducible"), never a pass. The nightly lane (`tests/perf/test_perf_regression_baseline.py`, `slow`) compares the head with the latest
   promoted baseline record. A missing baseline, or one of the 15 legacy references that carry no identity, is `INCONCLUSIVE` with a named reason: it is
   reported, never skipped. Both lanes only report (a `::warning` annotation or a `PerformanceThresholdWarning`); neither blocks.
+  In CI the pull-request lane is a step of the `perf-cert-arena` job (`PERF-M2-T03b`): a second checkout at the PR's base SHA, `tripwire.py run`, the
+  verdict table in the step summary and a `perf-tripwire` artifact (`report.json`: base and head SHA, runner CPU model, per-scenario outcomes). It is
+  report-only: only an infrastructure failure or the job timeout fails the job. A non-`pull_request` event skips it and the summary says why.
 - `tools/perf/check_perf_regression.py` and `tools/perf/perf_ci.py` are retired: they were a second comparison with its own tolerance and no caller.
 - `PERF-M2-T08` re-records them as schema records under the canonical variants, through `promote`, and then retires the legacy list.
 - No capacity-run baseline exists (`PERF-M2-T04`).

@@ -113,7 +113,10 @@ def run_once(spec: RunSpec) -> BenchmarkRecord:
 
 def spawn(spec: RunSpec, root: Path) -> BenchmarkRecord:
     """One repetition in a fresh process, measuring the ``src/`` of the checkout at ``root``."""
-    env = {**os.environ, ROOT_ENV: str(root)}
+    # The root is made absolute here, once: the worker runs with ``cwd=root``, so a relative root (``perf-base`` in CI) would be resolved against itself
+    # (``perf-base/perf-base``) and the worker could not import its ``src/``. The same absolute path is the cwd, ``CAPACITY_RUN_ROOT`` and the head of ``PYTHONPATH``.
+    root = Path(root).resolve()
+    env = {**os.environ, ROOT_ENV: str(root), "PYTHONPATH": os.pathsep.join(filter(None, [str(root), os.environ.get("PYTHONPATH", "")]))}
     argv = [sys.executable, str(Path(__file__).resolve()), "worker", "--spec", json.dumps(dataclasses.asdict(spec))]
     try:
         done = subprocess.run(argv, cwd=root, env=env, capture_output=True, text=True, timeout=WORKER_TIMEOUT_S, check=False)
