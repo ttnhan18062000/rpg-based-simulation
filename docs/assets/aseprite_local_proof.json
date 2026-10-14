@@ -254,7 +254,7 @@
     },
     {
       "path": "visual_assets/store/adoption.py",
-      "sha256": "sha256:984979e489b6d7c35425686248733216ea77776e511b4f538aeeb98ff99f9d90"
+      "sha256": "sha256:13aaa34502857df67d074683cebc1e1d752664ab4c50a193f54d4c1a1768951f"
     },
     {
       "path": "visual_assets/store/animation.py",
@@ -390,7 +390,7 @@
     },
     {
       "path": "visual_assets/store/identities.py",
-      "sha256": "sha256:f2cc76d48ec048e061c24d3b4351b5ef900b17d928f4030898641c5cac72b9e9"
+      "sha256": "sha256:4f0331bd811ddf52a4132bab40f63a7254866f5057674e7fe8e244fb501455e2"
     },
     {
       "path": "visual_assets/store/intake/__init__.py",
@@ -442,7 +442,7 @@
     },
     {
       "path": "visual_assets/store/revoke.py",
-      "sha256": "sha256:18baef2875ded2ecd29cb4c3a8f532986ff21c37d58911900e4a6ad0b653cdeb"
+      "sha256": "sha256:9c999a41758b514bb76d030df762d8d4f36287d88c804d4372395d9551788df6"
     },
     {
       "path": "visual_assets/store/runtime_export.py",
@@ -461,7 +461,7 @@
       "sha256": "sha256:273e79ef546f44ef25d9cc94980b1b620aac3cd1b1e35ebff334529e92b8d3b5"
     }
   ],
-  "guarded_hash": "sha256:85fbf4edae46cf7ddb0abf2ff69af03c63b261279b41c673caf32909f0f8d5a8",
+  "guarded_hash": "sha256:322169ac46cf3df67f8fc70d4466735f9795599dfb5398b6ccd17c0d8d484c8c",
   "make_target": "visual-assets-aseprite-local",
   "record_type": "aseprite_local_proof",
   "release_rebuild": {
@@ -470,8 +470,8 @@
     "identical": 105,
     "release": "pilot/rc-0011"
   },
-  "run_at_utc": "2026-10-14T17:23:10Z",
-  "run_commit": "7c072ffdc5a5352987288999febfc8787d75e37f",
+  "run_at_utc": "2026-10-14T17:58:18Z",
+  "run_commit": "b0af3c90d3c0cb69bb9888978d167348038720a3",
   "schema_version": 1,
   "strict": true
 }
