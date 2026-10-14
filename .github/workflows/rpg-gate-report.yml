@@ -44,7 +44,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           sparse-checkout: |
             tools/test_architecture/__init__.py
@@ -78,7 +78,7 @@ jobs:
       ready: ${{ steps.plan.outputs.ready }}
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
       # Ready only with a VALID config and rpg's metric module present. An absent config or module ends the run green with nothing run (no billed simulation
@@ -107,7 +107,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.matrix || '{"world":["none"]}') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
       - uses: astral-sh/setup-uv@v10.2.0
@@ -140,7 +140,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
       - uses: astral-sh/setup-uv@v10.2.0
