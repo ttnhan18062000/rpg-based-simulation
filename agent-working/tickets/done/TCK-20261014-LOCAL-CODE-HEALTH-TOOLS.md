@@ -109,6 +109,10 @@ $ make code-health-complexity | tail -2
  topological_sort_modules 17  FAILED   (report-only; binary found beside the main checkout's python)
 ```
 
+Review fixup (codebase-planner): the two remaining `uvx --from import-linter==2.15 lint-imports ...` hints, the
+advisory summary line in `import_contracts.py` and the header comment of `importlinter.toml` (hand-edited, outside the
+generated block), now say `make lint-imports`. Added as a fixup commit after the first T1 commit.
+
 ## Test Summary
 
 With the worktree's own `.venv` (`uv sync --frozen`), each run alone under `systemd-run MemoryMax=3G`, own `--basetemp`:

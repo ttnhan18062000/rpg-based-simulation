@@ -169,7 +169,7 @@ def advisory_report(root: Path, lint_imports: str) -> tuple[str, bool]:
     lines = [head + (f", {stale} stale ignored import(s)" if stale else "")] + lines
     lines += [f"- broken: `{name}`" for name in names]
     if broken:
-        lines.append("- run `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` for the import lines")
+        lines.append("- run `make lint-imports` for the import lines")
     return "\n".join(lines), bool(broken or stale or stale_block)
 
 
