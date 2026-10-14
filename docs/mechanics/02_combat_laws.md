@@ -240,7 +240,7 @@ Each terrain declares its own movement cost in content: `move_cost_multiplier` o
 declared cost is a compile-time content error, never a silent 1.0. The factor scales the readiness
 cost of one step onto that tile (`TerrainCostService.get_tile_cost`, read by the move legality
 pre-check in `LegalityServiceV2`), and it is looked up by exact catalog id through
-`src/engine/terrain_cost.py` (`terrain_cost`); there is no name table in code and no case folding
+`src/content/terrain_cost.py` (`terrain_cost`); there is no name table in code and no case folding
 (D56). `WorldCompiler` refuses a world whose terrain holds an id the catalog does not declare
 (`InvalidWorldSpecError`, naming each one), and its base fill is the catalog id `plain`.
 

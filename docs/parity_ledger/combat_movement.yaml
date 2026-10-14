@@ -4854,7 +4854,7 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: data/content/world/terrain.yaml, src/content/schema.py (TerrainDefinition.move_cost_multiplier), src/engine/terrain_cost.py (terrain_cost, validate_terrain_ids), src/engine/rpg_depth.py (TerrainCostService.get_tile_cost), src/worldbuilding/compiler.py (terrain id validation, plain base fill).
+  v2_evidence: data/content/world/terrain.yaml, src/content/schema.py (TerrainDefinition.move_cost_multiplier), src/content/terrain_cost.py (terrain_cost, validate_terrain_ids), src/engine/rpg_depth.py (TerrainCostService.get_tile_cost), src/worldbuilding/compiler.py (terrain id validation, plain base fill).
   proof_type: regression
   test_path: tests/unit/engine/test_terrain_cost_from_content.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.124.

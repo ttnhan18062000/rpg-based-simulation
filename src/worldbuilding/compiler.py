@@ -30,7 +30,7 @@ from src.core.enums import EntityRole, Faction
 from src.core.treasury import treasury_key
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
-from src.engine.terrain_cost import DEFAULT_TERRAIN_ID, UnknownTerrainError, validate_terrain_ids
+from src.content.terrain_cost import DEFAULT_TERRAIN_ID, UnknownTerrainError, validate_terrain_ids
 from src.worldassembly.region_precedence import first_region_at
 from src.worldbuilding.schema import InvalidWorldSpecError, WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState

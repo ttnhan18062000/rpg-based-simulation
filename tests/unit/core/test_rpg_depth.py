@@ -350,7 +350,7 @@ class TestTerrainCost:
 
     def test_terrain_cost_table(self):
         """Costs are the ones each terrain declares in content (D72), read by catalog id."""
-        from src.engine.terrain_cost import terrain_cost
+        from src.content.terrain_cost import terrain_cost
         assert terrain_cost("road") == 0.5
         assert terrain_cost("forest") == 1.5
         assert terrain_cost("swamp") == 3.0

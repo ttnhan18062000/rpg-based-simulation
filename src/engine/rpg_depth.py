@@ -16,7 +16,7 @@ checklist's sections:
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Dict, Any, List, Set, Tuple
-from src.engine.terrain_cost import DEFAULT_TERRAIN_ID, terrain_cost
+from src.content.terrain_cost import DEFAULT_TERRAIN_ID, terrain_cost
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState, StaminaComponent

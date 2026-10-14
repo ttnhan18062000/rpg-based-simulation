@@ -472,7 +472,7 @@ class CombatComponent:
 
 
 
-# (The terrain move-cost table that lived here was retired by D72: each terrain declares its cost in content, read through src/engine/terrain_cost.py.)
+# (The terrain move-cost table that lived here was retired by D72: each terrain declares its cost in content, read through src/content/terrain_cost.py.)
 
 
 @dataclass(frozen=True, slots=True)
