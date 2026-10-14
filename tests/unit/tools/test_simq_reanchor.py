@@ -129,3 +129,76 @@ def test_a_row_the_owner_holds_stays_at_its_committed_anchor_and_is_listed_in_it
     assert new["w_seed1_200t"]["ECONOMY"] == {"grade": "B", "score": 0.18} and new["w_seed1_200t"]["FACTION"] == {"grade": "C", "score": 0.0}
     groups = {(r["run_key"], r["pillar"]): r["group"] for r in ra.ruling_rows(table)}
     assert groups[("w_seed1_200t", "ECONOMY")] == ra.GROUP_HELD and groups[("w_seed1_200t", "FACTION")] == ra.GROUP_UNCHANGED
+
+
+# ---------------------------------------------------------------------------
+# TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION (AC4): no-data pillars
+# ---------------------------------------------------------------------------
+
+ND_ROW = {"status": "no-data", "grade": None, "norm": None, "raw": None, "events": 1, "min_events": 3}
+ND_ANCHOR = {"status": "no-data", "reason": "below_min_events", "min_events": 3}
+
+
+def _nd_rows(key="w_seed1_200t", faction=ND_ROW):
+    pillars = {**_pillars(faction=(1.02, "A")), "FACTION": faction}
+    row = {"key": key, "exit": 0, "pillars": pillars, "overall": ["B", 1.0]}
+    return {1: {**copy.deepcopy(row), "rep": 1}, 2: {**copy.deepcopy(row), "rep": 2}}
+
+
+def _fixture_with(anchor):
+    return {"w_seed1_200t": {"FACTION": anchor, "ECONOMY": {"grade": "S", "score": 3.58}}}
+
+
+def test_a_no_data_audit_row_writes_the_no_data_anchor_with_no_grade_or_score():
+    new, table = ra.reanchor(_fixture_with({"grade": "S", "score": 2.9}), {"w_seed1_200t": _nd_rows()})
+    assert new["w_seed1_200t"]["FACTION"] == ND_ANCHOR
+    row = next(r for r in table if r["pillar"] == "FACTION")
+    assert (row["moved"], row["committed_status"], row["audit_status"], row["audit_grade"], row["audit_score"]) == (True, "ok", "no-data", None, None)
+    assert "no-data" in ra.table_tsv(table).splitlines()[1 + [r["pillar"] for r in table].index("FACTION")]
+
+
+def test_a_status_change_is_a_moved_row_both_ways_and_an_unchanged_no_data_row_is_not():
+    _, back = ra.reanchor(_fixture_with(ND_ANCHOR), {"w_seed1_200t": _rows(faction=(1.02, "A"))["w_seed1_200t"]})
+    row = next(r for r in back if r["pillar"] == "FACTION")
+    assert row["moved"] and (row["committed_status"], row["audit_status"]) == ("no-data", "ok")
+    new, same = ra.reanchor(_fixture_with(ND_ANCHOR), {"w_seed1_200t": _nd_rows()})
+    assert new["w_seed1_200t"]["FACTION"] == ND_ANCHOR and not next(r for r in same if r["pillar"] == "FACTION")["moved"]
+    _, moved = ra.reanchor(_fixture_with(ND_ANCHOR), {"w_seed1_200t": _nd_rows(faction={**ND_ROW, "min_events": 5})})
+    assert next(r for r in moved if r["pillar"] == "FACTION")["moved"]  # a changed threshold is a moved row
+
+
+def test_the_pair_identity_check_includes_status_and_min_events():
+    pair = _nd_rows()
+    pair[2]["pillars"]["FACTION"] = {**ND_ROW, "min_events": 4}
+    with pytest.raises(ra.ReanchorRefused, match="NOT identical"):
+        ra.reanchor(_fixture_with(ND_ANCHOR), {"w_seed1_200t": pair})
+    pair = _nd_rows()
+    pair[2]["pillars"]["FACTION"] = {"grade": "C", "norm": 0.0, "raw": 0.0, "events": 4}
+    with pytest.raises(ra.ReanchorRefused, match="NOT identical"):
+        ra.reanchor(_fixture_with(ND_ANCHOR), {"w_seed1_200t": pair})
+
+
+def test_a_malformed_audit_pillar_or_committed_anchor_refuses():
+    for bad in ({**ND_ROW, "grade": "C"}, {"status": "no-data", "grade": None, "norm": None}, {"grade": "C"}):
+        with pytest.raises(ra.ReanchorRefused, match="audit_mode pillar"):
+            ra.reanchor(_fixture_with(ND_ANCHOR), {"w_seed1_200t": _nd_rows(faction=bad)})
+    with pytest.raises(ra.ReanchorRefused, match="committed anchor is malformed"):
+        ra.reanchor(_fixture_with({**ND_ANCHOR, "grade": "C"}), {"w_seed1_200t": _nd_rows()})
+
+
+def test_the_ruling_table_shows_status_transitions_and_held_no_data_rows():
+    prior = {"w_seed1_200t": _rows(faction=(1.02, "A"))["w_seed1_200t"]}
+    _, table = ra.reanchor(_fixture_with({"grade": "S", "score": 2.9}), {"w_seed1_200t": _nd_rows()}, prior_rows=prior)
+    rows = {r["pillar"]: r for r in ra.ruling_rows(table)}
+    assert rows["FACTION"]["direction"] == "to-no-data" and rows["FACTION"]["post_536"] == "no-data(min_events=3)" and rows["FACTION"]["pre_536"] == "A/1.02"
+    _, table = ra.reanchor(_fixture_with(ND_ANCHOR), {"w_seed1_200t": _rows(faction=(1.02, "A"))["w_seed1_200t"]}, prior_rows={"w_seed1_200t": _nd_rows()})
+    row = next(r for r in ra.ruling_rows(table) if r["pillar"] == "FACTION")
+    assert row["direction"] == "from-no-data" and row["committed"] == "no-data(min_events=3)"
+    _, held = ra.reanchor(_fixture_with(ND_ANCHOR), {"w_seed1_200t": _nd_rows()}, [("w_seed1_200t", "FACTION")], prior_rows={"w_seed1_200t": _nd_rows()})
+    assert next(r for r in ra.ruling_rows(held) if r["pillar"] == "FACTION")["group"] == ra.GROUP_HELD
+
+
+def test_ok_only_measurements_are_unchanged_by_the_status_columns():
+    new, table = ra.reanchor(FIXTURE, _rows())
+    assert all(r["committed_status"] == r["audit_status"] == "ok" for r in table)
+    assert new["w_seed1_200t"]["FACTION"] == {"grade": "C", "score": 0.0}
