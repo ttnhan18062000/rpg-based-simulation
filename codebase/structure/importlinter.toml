@@ -321,8 +321,10 @@ ignore_imports = [
     # rpg-planner decision (a), #547: every edge is a function-local import in src/engine/kernel.py inside an
     # `obs_mode != ObservabilityMode.OFF` branch (or the shutdown of an object that branch created). With
     # observability OFF none of these modules is imported; each is a write-only sink, never read back into the tick.
-    # The ignores rely on test_hot_path_does_not_import_heavy_analyzers asserting that an OFF-mode kernel imports
-    # none of the four; an edge that moves out of the guard becomes a violation.
+    # The ignores rely on rpg's condition (#547): an OFF-mode kernel imports none of the four, and an edge that moves
+    # out of the guard becomes a violation. That condition is NOT enforced yet: tests/architecture/
+    # test_phase19_observability_boundaries.py is a static scan that never matches `src.observability...` and has no
+    # notion of OFF mode. A runtime OFF-mode test (option 1) or a named follow-up (option 2) is pending testing's pick on #547.
     # kernel.py:294 and :1188 -- decision-trace sink, opened only when observability is on (294), cleared at shutdown only if opened (1188)
     "src.engine.kernel -> src.observability.cognition.decision_trace_writer",
     # kernel.py:283 -- cognition recorder sink, built only when observability is on
