@@ -4,6 +4,7 @@
 # The `icon.*` family: 14 optional keys of the key set (D20) plus 22 of icon set v2; see the comments above them.
 # The `border.*` family (3 optional keys, D19) is not terrain: shared mask shapes for the fringes between terrains, kept in the same draft set so one `adopt-set` covers tiles and masks.
 # The `ui.*` and `fx.*` keys (3 optional keys, TCK-20261011-VISUAL-ASSETS-REAL-ART-KEYS): proof sources for real art that exercises slices (9-slice, pivot) and animation (frames, a tag) against the store bounds. Keys only: no schema field, no client use, nothing adopted until the owner decides.
+# Terrain detail axes (TCK-20261012-VISUAL-ASSETS-TERRAIN-VARIANT-DRAFTS): six terrains declare a decorative `detail` axis whose default `base` is the art adopted before the axis existed (owner decision 2026-10-12); the other values are the variants of the same terrain. `terrain.forest` keeps plain/bush/tree; `terrain.road` has none (it wants connecting tiles).
 record_type: visual_key_registry
 schema_version: 1
 keys:
@@ -67,6 +68,7 @@ keys:
     family: terrain
     description: Live Map Swamp terrain cell (tile code 8), one 16x16 tile at scale x1; the colour fill #2a2a3a is its fallback
     variant_axes: []
+    detail: {values: [base, reeds, puddle], default: base}
     optional: true
     safety_class: identifying
     fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
@@ -74,6 +76,7 @@ keys:
     family: terrain
     description: Live Map Mountain terrain cell (tile code 9), one 16x16 tile at scale x1; the colour fill #3a3a3a is its fallback
     variant_axes: []
+    detail: {values: [base, crag, scree], default: base}
     optional: true
     safety_class: identifying
     fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
@@ -95,6 +98,7 @@ keys:
     family: terrain
     description: Live Map Ruins terrain cell (tile code 12), one 16x16 tile at scale x1; the colour fill #4a4035 is its fallback
     variant_axes: []
+    detail: {values: [base, moss, fallen], default: base}
     optional: true
     safety_class: identifying
     fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
@@ -116,6 +120,7 @@ keys:
     family: terrain
     description: Live Map Grassland terrain cell (tile code 15), one 16x16 tile at scale x1; the colour fill #4a6030 is its fallback
     variant_axes: []
+    detail: {values: [base, tufts, flowers, clover, bare], default: base}
     optional: true
     safety_class: identifying
     fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
@@ -137,6 +142,7 @@ keys:
     family: terrain
     description: Live Map Shallow Water terrain cell (tile code 18), one 16x16 tile at scale x1; the colour fill #2a5070 is its fallback
     variant_axes: []
+    detail: {values: [base, ripple, pebbles], default: base}
     optional: true
     safety_class: identifying
     fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
@@ -151,6 +157,7 @@ keys:
     family: terrain
     description: Live Map Cave terrain cell (tile code 20), one 16x16 tile at scale x1; the colour fill #3a3040 is its fallback
     variant_axes: []
+    detail: {values: [base, stalagmite, rubble], default: base}
     optional: true
     safety_class: identifying
     fallback: {kind: "flat_fill", text: "the terrain name as hover text"}
@@ -541,4 +548,11 @@ keys:
     optional: true
     safety_class: decorative
     fallback: {kind: "none"}
-aliases: []
+# Aliases (TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES, owner answer on #523, 2026-10-12): V2 terrain names are canonical and their art is reused through these aliases.
+# The name -> key rule is lower case with spaces to underscores, so `PLAIN` and `plain` both resolve through `terrain.plain` (a key cannot be upper case, `identities.py`); whether
+# `PLAIN` and `plain` stay two names is rpg's to dedupe (#523: no two V2 terrain names may differ only by case). REGISTRY-ONLY: no release, runtime export or client carries an alias
+# (the only consumer is `review key-usage`), so a runtime consumer is needed at activation; see `docs/assets/store_contract.md`, Known gaps.
+aliases:
+  - {alias: terrain.plain, target: terrain.grassland}
+  - {alias: terrain.ruin, target: terrain.ruins}
+  - {alias: terrain.river, target: terrain.shallow_water}
