@@ -380,8 +380,9 @@ def test_docker_path_set_covers_the_image_inputs_and_not_source_or_docs() -> Non
 # 14. The job is plain docker: the three commands the ticket pins, no docker/* action, no cache, no push.
 def test_docker_build_job_uses_plain_docker_commands_only() -> None:
     job = _jobs()["docker-build"]
-    uses = [step["uses"] for step in job["steps"] if "uses" in step]
-    assert uses == ["actions/checkout@v5"], uses
+    # Action names, not refs: a version bump of actions/checkout must not need a test edit, but a new action still fails.
+    uses = [step["uses"].split("@", 1)[0] for step in job["steps"] if "uses" in step]
+    assert uses == ["actions/checkout"], uses
     runs = "\n".join(step["run"] for step in job["steps"] if "run" in step)
     assert "docker build --check -f docker/backend.Dockerfile ." in runs
     assert "docker build -f docker/backend.Dockerfile -t rpg-backend:ci ." in runs
