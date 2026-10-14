@@ -318,10 +318,18 @@ forbidden_modules = [
 allow_indirect_imports = true
 unmatched_ignore_imports_alerting = "warn"
 ignore_imports = [
-    # pending rpg decision, handoff_to_rpg.md: kernel.py function-local imports at lines 149, 304, 305, 316 and 1241 (the violations the phase19 test was written for; the test itself is a no-op)
+    # rpg-planner decision (a), #547: every edge is a function-local import in src/engine/kernel.py inside an
+    # `obs_mode != ObservabilityMode.OFF` branch (or the shutdown of an object that branch created). With
+    # observability OFF none of these modules is imported; each is a write-only sink, never read back into the tick.
+    # The ignores rely on test_hot_path_does_not_import_heavy_analyzers asserting that an OFF-mode kernel imports
+    # none of the four; an edge that moves out of the guard becomes a violation.
+    # kernel.py:294 and :1188 -- decision-trace sink, opened only when observability is on (294), cleared at shutdown only if opened (1188)
     "src.engine.kernel -> src.observability.cognition.decision_trace_writer",
+    # kernel.py:283 -- cognition recorder sink, built only when observability is on
     "src.engine.kernel -> src.observability.cognition.recorder",
+    # kernel.py:152 -- run manifest and artifact sink, built only when observability is on
     "src.engine.kernel -> src.observability.reporting.artifact_repository",
+    # kernel.py:282 -- metric-window sink, built only when observability is on
     "src.engine.kernel -> src.observability.reporting.metric_recorder",
 ]
 
