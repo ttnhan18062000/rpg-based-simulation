@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-14T08:07:18.493970Z", "ticket_id": "TCK-20261014-NAME-LITERALS-IN-SRC-SCAN", "title": "Name-literal scan of src for content ids (D56)", "status": "DONE", "summary": "AST scan tools/name_literal_scan.py, 623 findings table, nothing fixed", "artifacts_path": "agent-working/stored_artifacts/TCK-20261014-NAME-LITERALS-IN-SRC-SCAN"}
