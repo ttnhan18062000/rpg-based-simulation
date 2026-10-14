@@ -149,6 +149,13 @@ tiles mispriced). Cave, ruin and river had no cost at all.
   - **Applied (rpg-designer):** the cost is paid in time, not gated on readiness. When the time
     step lands, the terrain multiplier leaves the readiness pre-check; the plain `move_cost`
     readiness check stays as it is.
+  - **Road below one tick (decided by the owner directly, 2026-10-14):** the engine allows one
+    step per entity per tick, so a cost below 1 cannot take less than a tick. A step on a tile
+    costing N lets the next step come N ticks after entry (mountain 4; 1.5 alternates 1 and 2),
+    and a cost below 1 is capped at one tick, so road and plain take the same time. Road's
+    advantage comes through route choice. A faster road (more than one step per tick) is a
+    possible later measured step, and the cap is disclosed. **Alternatives not taken:** two
+    steps per tick on road; halving all walking (plain 2 ticks, road 1, mountain 8).
   - **Later:** tiring the body on rough ground (a fatigue cost) can be added on top later.
   - **Alternatives not taken:** slower only; route choice only; a fatigue cost now; both parts
     in one step; after v1.
