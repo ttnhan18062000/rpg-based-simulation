@@ -43,7 +43,7 @@ Written by `lead-planner-u24` on the owner's request, 2026-10-13.
 
 | # | Step | Tools | What it shows / teaches | ADR link |
 |---|---|---|---|---|
-| 1 | **Containers and delivery** | Docker, Compose, GitHub Actions, GHCR, syft, Trivy, cosign, Dependabot | The observability profile is optional, with memory limits and health checks. Images are published with an SBOM, a scan and a keyless signature, and dependency and image pins are bumped by PR. **Starts from the parked `devops-s1` work** (codebase, local `7e604d3fa`): T1 (compose profile) and T2 (`publish-images.yml`) carry over; T3 is redone as a platform `owns` line | S1 + S2, plus Dependabot (new) |
+| 1 | **Containers and delivery** | Docker, Compose, GitHub Actions, GHCR, syft, Trivy, cosign, Dependabot | The observability profile is optional, with memory limits and health checks. Images are published with an SBOM, a scan and a keyless signature, and dependency and image pins are bumped by PR. **Rebuilt on u24desktop by platform** (owner, 2026-10-14). The parked `devops-s1` (codebase, local `7e604d3fa`) is not adopted. Its T3 roles line is replaced by a platform `owns` line | S1 + S2, plus Dependabot (new) |
 | 2 | **Observability** | Prometheus, Grafana, Loki, OpenTelemetry, Tempo | One API dashboard (metrics and logs) and one request trace; the engine imports no tracing code | S3, kept small |
 | 3 | **Operate** | Locust, Grafana alerting, ntfy | A measured req/s and p95; one SLO alert; a runbook; one drill (stop Redis under load), recording detection time, recovery time and a short post-mortem | S2b + S4 (Locust instead of k6) |
 | 4 | **Kubernetes locally** | kind, kubectl, Helm, kubeconform | Plain manifests first (Deployment, Service, probes, limits, rollout), then a Helm chart; the chart is checked in CI (kubeconform plus a `kind` smoke test). `kind` runs on the CI runner; on a local host it runs only with the observability profile down, under step 1's `mem_limit` values, because `kind` plus the step-2 stack will not fit next to the session fleet | **new** (the ADR deferred Kubernetes) |
@@ -105,7 +105,7 @@ The lead seats can't dispatch, so the D8 paths have nobody to drive them. The ne
 
 ## Owner decisions
 
-1. Accept the step order 1-6 in place of S1 → S2 → S2b → S4 → S3 → S5.
+1. ~~Accept the step order 1-6~~ **Accepted 2026-10-14** (owner, in the platform-planner session). Step 1 is dispatched as `devops-step1-containers-delivery`.
 2. Add step 4 (local Kubernetes and Helm) and the optional step 6 (Argo CD).
 3. Allow step 5's short-lived `terraform apply`/`destroy` on AWS, with a budget alarm (alert), a Budgets action (deny-all cap) and a destroy-on-timeout job.
 4. ~~Choose who does the work~~ **Decided 2026-10-13: the `platform` domain.** The owner confirmed the registry diff ("proceed") in the agent-working-planner session; the change is `TCK-20261013-PLATFORM-DOMAIN-SEATS`.
