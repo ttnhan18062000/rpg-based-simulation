@@ -15,7 +15,7 @@ tags: []
 Below a minimum event count a pillar reports no-data in the quality report, not the plateau-penalty constant (PROGRESSION -8/51 = -0.1569).
 
 ## Status
-OPEN (planned; build HELD until testing's harness ticket is ready, because the current tests crash on nulls or read them as C and the two land together)
+INPROGRESS (built on rpg-next d39c60aa7; testing's harness TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION lands with it)
 
 ## Tier
 standard
@@ -76,10 +76,10 @@ Consumer audit (read 2026-10-14; what each does on a null grade or score):
 - Anything under `tools/test_architecture/` (the grade-regression harness and `simq_reanchor`) is testing's and covered by their harness ticket; so are the tests that read grades from the report (they would crash on nulls or read them as C).
 
 ## Test Summary
-TBD
+`tests/simulation_quality/test_report.py` (lone plateau penalty is no-data; at the minimum scored as before; overall excludes no-data and counts both; overall no-data below half scored; every key present and bytes stable; calibrate prints no-data), `test_api_routes.py::TestNoDataPillar`. The single-event formula tests now feed the minimum event count (same formulas, same assertions). `tests/simulation_quality` and `tests/tools`: 5354 passed; 2 failures `test_perf_inventories_committed_in_sync` (phase_inventory, wall_clock_inventory) fail identically on base d39c60aa7, not from this change. Code-health: nothing new from this change (the `terrain_cost.py:28` row is on the base).
 
 ## Files Changed
-TBD
+`src/simulation_quality/pillars.py` (PILLAR_MIN_EVENTS), `quality_report.py` (nullable grade/score, status, min_events, reason, overall fields), `api/routes.py` (status fields), `tools/calibrate_simq.py` (pillar_line, null-safe overall), tests above. Not touched: `grade_anchors.json`, the harness, `simq_reanchor` (testing's).
 
 ## Completion Summary
 TBD
