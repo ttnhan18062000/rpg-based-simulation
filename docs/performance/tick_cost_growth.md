@@ -54,7 +54,7 @@ Evidence is the share of all samples whose stack contains the function (inclusiv
 | **H6** | `spatial_query.nearby_entities` and `cognition.filter_saliency` | 10 % each at `movement_1000` | likely legitimate (the neighbourhood query), but quadratic without a spatial index | not estimated |
 | **H7** | cyclic garbage: about 1230 container objects per tick survive in reference cycles (gc object count 118k with the collector on, 242k with it off after 100 ticks) | not a CPU share | **Waste** (see section 5) | fewer cycles per tick lowers collector cost and the memory the benchmark harness accumulates |
 
-**What is legitimate work and what budget it needs (input to the option (i) decision, not the decision).** Under the pinned contract on this loaded host the tick costs are idle_100 126 ms, movement_100 160 ms, mixed_200 233 ms, strategic_100 615 ms, corpus worlds 105 to 130 ms; the PROD profiles budget 50 to 100 ms per tick. If H1, H2 and H3 removed their measured shares, `strategic_100` would be about 615 x (1 - 0.59 x 0.7 - 0.30 x 0.5) = about 270 ms and the late corpus tick about 75 ms: the legitimate work is well below the current tick, so a larger canonical budget for work that is mostly waste would price the waste in. These are projections from shares, not measurements after a fix.
+**What is legitimate work and what budget it needs (input to the option (i) decision, not the decision).** Under the pinned contract on this loaded host the tick costs are idle_100 126 ms, movement_100 160 ms, mixed_200 233 ms, strategic_100 615 ms, corpus worlds 105 to 130 ms; the PROD profiles budget 50 to 100 ms per tick. Two projections, each from measured shares and an assumed saving (not a measurement after a fix): `strategic_100` (615 ms) would be about 615 x (1 - 0.59 x 0.7 - 0.30 x 0.5) = about 270 ms, where 0.59 is the share of the cooperation phase (H2, assumed 70 % saved) and 0.30 is the share of the hostility relation, H1 (about 32 % of the tick inclusive, assumed 50 % saved; H1 and H2 overlap a little, so this is an optimistic figure); H3 is about zero in `strategic_100`. The late corpus tick (130 ms) would be about 130 x (1 - 0.425) = about 75 ms, from H3 alone (42.5 % of the tick assumed removed): the legitimate work is well below the current tick, so a larger canonical budget for work that is mostly waste would price the waste in. These are projections from shares, not measurements after a fix.
 
 ## 4. The three held cost tickets, from the call-site evidence
 
@@ -74,14 +74,16 @@ T08 recorded `simq_corpus_frontier_extended` at 1703 MB and `frontier_marches` a
 | `c84352465` | 1068 | none | 383 | 382 |
 | `132bf09ca` | 5323 | 2174 | 2704 | 358 |
 | 2026-10-06 `d135dd6be` | 6919 | 2227 | 3903 | 339 |
-| 2026-10-14 `dc9b63c99` | 4452 | 3477 | 246 | |
-| today | 3880 | 2506 | 842 | |
+| 2026-10-14 `dc9b63c99` | 4452 | 3477 | 246 | n/r |
+| today (this branch at `32242fdb7`, engine `src/` identical to main `2dabff8c1`) | 3880 | 2506 | 842 | n/r |
+
+(n/r: not recorded; the cooperation phase was not among the top four phases of those two runs.)
 
 `resolution_overhead` fell between October trees because DEV-017 stopped double counting the refine sub-phases, so totals before and after DEV-017 are not comparable; shares of the corrected accounting are. The first old-tree runs of this investigation used `src/` only and ran the engine's legacy content fallback; that reading ("5x growth since 2026-10-06") was withdrawn.
 
 ## 7. Ranked hand-off for rpg (#593)
 
-1. **`EventRecorder.record` eviction** (`src/observability/event_recorder.py:209-222`): replace the per-event full scan with O(1) eviction. Largest single saving in long runs (35 to 40 % of the tick).
+1. **`EventRecorder.record` eviction** (`src/observability/event_recorder.py:209-222`): replace the per-event full scan with O(1) eviction. Largest single saving in long runs (35 to 40 % of the tick). Note that the all-CRITICAL branch (buffer full of CRITICAL events) also does `self.events.pop(0)`, which is O(n) on a list, so the O(1) design (per-severity deques or a ring buffer) must cover both paths.
 2. **Hostility relation** (`faction.py` `is_hostile_compat`, `relation.py` `project_relation`, callers `combat_engagement/phase.py:310`, `engine/candidate_selector.py`, `engine/hostility.py`): memoise per faction pair per generation and gate by adjacency. Largest in dense and idle scenarios (30 to 60 % of the tick).
 3. **Cooperation candidates** (`domains/cooperation/providers.py:53`, `entities/identity_resolver.py resolve`): per-tick index. 40 to 60 % of `strategic_100`.
 4. **Event construction** (pydantic `__init__` in `observability/event_shapers.py`): skip validation for engine-made events. 5 to 10 %.
