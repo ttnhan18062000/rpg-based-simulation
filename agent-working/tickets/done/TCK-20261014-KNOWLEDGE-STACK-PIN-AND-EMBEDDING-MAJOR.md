@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-KNOWLEDGE-STACK-PIN-AND-EMBEDDING-MAJOR
-phase: open
+phase: done
 date: 2026-10-14
 tags: [knowledge-store, security, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [knowledge-store, security, process-improvement]
 Pin `mcp` exactly for the knowledge stack, rebuild the missing search index, and take sentence-transformers 6 only if search quality holds
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -95,9 +95,33 @@ Separately, the local index is missing: `agent-working/.index/knowledge-index/` 
 - Model downloads may hit the TLS block; `HF_HUB_ETAG_TIMEOUT` and the cert env in the Makefile already apply.
 
 ## Implementation Notes
+- `requirements-knowledge.txt`: `mcp==1.28.1` added with a comment citing follow-up 5 of the security mapping; `sentence-transformers` 5.6.0 -> 6.1.0
+  (decision below). `uv.lock` / `pyproject.toml` are lead-owned and untouched: `pyproject.toml` has `sentence-transformers>=2.7.0` and
+  `mcp>=1.0.0` (unpinned), so lead-planner decides whether `uv.lock` follows.
+- Disk (`disk_headroom.py`) before any rebuild: 14.4 GB free of 48.9 GB (floor 10 GB). Rebuilds ran 2026-10-14 18:42-19:10 +07 after the 1-minute
+  load fell to 0.2-2.6 on 6 cores (it was 14-37 earlier, so they were held until then).
+- Baseline: `make knowledge-index` on sentence-transformers 5.6.0 (15562 documents, 6m47s), then `make eval-search`:
+  **Recall@5 0.43, Recall@10 0.65, MRR@10 0.26** (61 queries, 54 with expected; the tool's own threshold Recall@5 >= 0.80 FAILS on the baseline, so it
+  is not a gate for this decision).
+- Candidate: throwaway venv (`uv venv`, sentence-transformers 6.1.0 installed `--no-deps` over the main venv's torch 2.12.1+cpu and transformers
+  5.12.1 via a .pth), full index (6m46s), same eval: **Recall@5 0.43, Recall@10 0.65, MRR@10 0.26**, identical per query. The cached
+  embeddings are bit-identical (max abs diff 0.0 over 200 vectors), so a model-weights-preserving major changes nothing here.
+- Five fixed spot checks (top-5 doc ids compared, 5.6.0 vs 6.1.0 index): "mechanics damage formula", "authoritative mutation pipeline contract",
+  "disk headroom midsession warning", "regional sovereignty region boundaries", "pre-push advisory hook": identical lists for all five.
+- Decision rule met (Recall@5 and MRR@10 not lower): 6.1.0 taken. The pin is bumped, the 6.1.0-built index is the real one in this worktree
+  (`agent-working/.index/knowledge-index/`, gitignored), and the shared `.venv-knowledge` was upgraded to 6.1.0 (`--no-deps`, the same
+  combination the trial ran). The main checkout has no index of its own; this worktree's is the one built (a build there is
+  `make knowledge-index`, not run here).
+- Throwaway venv and scratch indexes removed; free space 14.64 GB -> 14.77 GB after the cleanup.
+- Not verified: a docker/CI image build of the search server on 6.1.0 (the host cannot reach the torch index); `uv.lock` unchanged.
 
 ## Test Summary
+- No code change; verification is the measured eval above. `tests/tools/test_session_status.py` 13 passed in the low-load window (the earlier
+  timeout was load). Search answers queries from the 6.1.0 index with the upgraded main venv (`pre-push advisory hook` returns the right tickets).
 
 ## Files Changed
+- requirements-knowledge.txt
 
 ## Completion Summary
+`mcp` is pinned to 1.28.1 and sentence-transformers is 6.1.0: same Recall@5/MRR@10 (0.43/0.26) as 5.6.0, identical embeddings and spot checks.
+The local index is rebuilt and answers queries. Follow-ups for others: `uv.lock` (lead-planner), a stable regex module is unrelated and filed in the lane ticket.

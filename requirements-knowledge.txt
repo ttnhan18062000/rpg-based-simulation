@@ -9,7 +9,7 @@
 # resolves torch from PyPI), so `uv sync --extra knowledge` is not the way to build this venv.
 # `make` picks its interpreter via KNOWLEDGE_PYTHON, else the main checkout's .venv-knowledge (see PYTHON_KNOWLEDGE).
 torch==2.12.1+cpu
-sentence-transformers==5.6.0
+sentence-transformers==6.1.0
 sqlite-vec==0.1.9
 rank-bm25==0.2.2
 # mcp: exact pin per follow-up 5 of docs/plans/agent_infrastructure/llm_security_mapping.md (1.28.1 is the installed, working
