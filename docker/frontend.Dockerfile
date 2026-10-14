@@ -1,5 +1,5 @@
 # Build stage. Base images are pinned by digest (multi-arch index current on 2026-10-14); Dependabot bumps them.
-FROM node:20.20-alpine3.23@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS builder
+FROM node:26.11-alpine3.23@sha256:f1394b3ffc021bc3f4aaf363e70a8d9667f7a9a63538bc824d7cc583129fffad AS builder
 
 WORKDIR /app
 
