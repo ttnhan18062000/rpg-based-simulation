@@ -28,7 +28,7 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -94,7 +94,7 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -158,7 +158,7 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -302,7 +302,7 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -338,7 +338,7 @@ jobs:
     name: "Tools · a–e"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
@@ -357,7 +357,7 @@ jobs:
                  --junit-xml=reports/junit/tools-a-e.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tools-a-e-junit-${{ github.sha }}
           path: reports/junit/tools-a-e*.xml
@@ -389,7 +389,7 @@ jobs:
     name: "Tools · f–z"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -402,7 +402,7 @@ jobs:
                  --junit-xml=reports/junit/tools-f-z.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tools-f-z-junit-${{ github.sha }}
           path: reports/junit/tools-f-z*.xml
@@ -435,7 +435,7 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -494,7 +494,7 @@ jobs:
                  reports/junit/api-cli-engine-visual_assets.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-cli-engine-junit-${{ github.sha }}
           path: reports/junit/api-cli-engine*.xml
@@ -542,7 +542,7 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -602,7 +602,7 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # Every Python job installs from uv.lock (TCK-20261002-UV-FIRST-CI-JOB,
       # TCK-20261002-UV-REMAINING-CI-JOBS). setup-uv provides Python 3.13 and puts .venv on PATH,
       # so the pytest/python3 steps are unchanged. --no-install-project keeps the old behaviour of
@@ -644,7 +644,7 @@ jobs:
     name: "Architecture / docs / static"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -723,7 +723,7 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_frontend == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -750,7 +750,7 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_docker_build == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Build checks
         run: docker build --check -f docker/backend.Dockerfile .
       - name: Build
@@ -779,7 +779,7 @@ jobs:
       run_docker_build: ${{ steps.diff.outputs.run_docker_build }}
       run_scenario_lane: ${{ steps.diff.outputs.run_scenario_lane }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
       - id: diff
         run: |
@@ -863,7 +863,7 @@ jobs:
     outputs:
       pr_content_unchanged: ${{ steps.decide.outputs.pr_content_unchanged }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0, filter: "blob:none" }
       - id: decide
         continue-on-error: true
@@ -887,7 +887,7 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -934,7 +934,7 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || (needs.changed-files.outputs.run_scenario_lane == 'true' && needs.changed-files.outputs.run_perf_cert_arena != 'true')) && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -959,7 +959,7 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -976,7 +976,7 @@ jobs:
     # 96 s (average 34 s, 40 runs of 2026-10-03/04), so 10 minutes leaves wide headroom.
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -1011,7 +1011,7 @@ jobs:
     # acceptance of the historical backlog.
     if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
@@ -1037,7 +1037,7 @@ jobs:
     # runs took at most 183 s (average 118 s, 40 runs of 2026-10-03/04), so 20 minutes leaves wide headroom.
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
@@ -1091,7 +1091,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0, persist-credentials: false }
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
