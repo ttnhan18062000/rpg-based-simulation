@@ -267,8 +267,7 @@ def _pillar_failures(run_key: str, anchors: dict, report: dict[str, Any]) -> tup
         if verdict.code == BAND:
             band.append(f"  {verdict.message}")
         elif verdict.code == SCORE:
-            pillar = verdict.message.split(":", 1)[0]
-            score.append(f"  {verdict.message}{_ceiling_note(run_key, pillar)}")
+            score.append(f"  {verdict.message}{_ceiling_note(run_key, verdict.pillar)}")
         else:
             other.append(f"  {verdict.message}")
     if sets["anchor_no_data"] or sets["live_no_data"]:

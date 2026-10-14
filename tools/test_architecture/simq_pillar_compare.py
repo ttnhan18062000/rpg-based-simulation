@@ -52,6 +52,7 @@ class Verdict:
     ok: bool
     code: str
     message: str
+    pillar: str = ""  # the pillar the verdict is about, so a caller never parses it out of the message
 
 
 def within_band(actual: str, anchor: str, tolerance: int = 1) -> bool:
@@ -83,6 +84,10 @@ def _parse(name: str, data: Any, score_key: str) -> Pillar:
         min_events = data.get("min_events")
         if isinstance(min_events, bool) or not isinstance(min_events, int) or min_events < 1:
             raise PillarContractError(f"{name}: status no-data needs an integer min_events >= 1, got {min_events!r}")
+        for count_key in ("event_count", "events"):
+            count = data.get(count_key)
+            if isinstance(count, int) and not isinstance(count, bool) and count >= min_events:
+                raise PillarContractError(f"{name}: status no-data contradicts itself: {count_key}={count} is not below min_events={min_events}")
         return Pillar(NO_DATA, None, None, min_events)
     raise PillarContractError(f"{name}: unknown status {status!r} (expected 'ok' or 'no-data')")
 
@@ -124,21 +129,21 @@ def compare_pillar(
 
     ``check_score=False`` leaves the score tolerance to the caller (a guard that averages trials), for the ok/ok cell only; the other cells are unchanged."""
     if live is None:
-        return Verdict(False, MISSING, f"{name}: pillar missing from the report")
+        return Verdict(False, MISSING, f"{name}: pillar missing from the report", pillar=name)
     if anchor.status == OK and live.status == OK:
         if not within_band(live.grade, anchor.grade, band):
-            return Verdict(False, BAND, f"{name}: actual={live.grade!r} is outside ±{band} band of anchor={anchor.grade!r}")
+            return Verdict(False, BAND, f"{name}: actual={live.grade!r} is outside ±{band} band of anchor={anchor.grade!r}", pillar=name)
         if check_score and not within_score(live.score, anchor.score, abs_floor):
-            return Verdict(False, SCORE, f"{name}: actual_score={live.score!r} outside tolerance of anchor_score={anchor.score!r}")
-        return Verdict(True, PASS, f"{name}: ok")
+            return Verdict(False, SCORE, f"{name}: actual_score={live.score!r} outside tolerance of anchor_score={anchor.score!r}", pillar=name)
+        return Verdict(True, PASS, f"{name}: ok", pillar=name)
     if anchor.status == NO_DATA and live.status == NO_DATA:
         if anchor.min_events != live.min_events:
             return Verdict(False, THRESHOLD_CHANGED,
-                           f"{name}: threshold changed (min_events anchor={anchor.min_events} live={live.min_events}): re-anchor under a ruling")
-        return Verdict(True, STILL_NO_DATA, f"{name}: still no-data (min_events={live.min_events})")
+                           f"{name}: threshold changed (min_events anchor={anchor.min_events} live={live.min_events}): re-anchor under a ruling", pillar=name)
+        return Verdict(True, STILL_NO_DATA, f"{name}: still no-data (min_events={live.min_events})", pillar=name)
     if anchor.status == OK:
-        return Verdict(False, LOST_DATA, f"{name}: pillar lost its data (anchor={anchor.grade!r}, live has fewer than min_events={live.min_events} events)")
-    return Verdict(False, GAINED_DATA, f"{name}: pillar gained data (anchor is no-data, live={live.grade!r}): re-anchor under a ruling")
+        return Verdict(False, LOST_DATA, f"{name}: pillar lost its data (anchor={anchor.grade!r}, live has fewer than min_events={live.min_events} events)", pillar=name)
+    return Verdict(False, GAINED_DATA, f"{name}: pillar gained data (anchor is no-data, live={live.grade!r}): re-anchor under a ruling", pillar=name)
 
 
 def no_data_pillars(pillars: Mapping[str, Pillar]) -> list[str]:
@@ -169,14 +174,14 @@ def compare_report(
         try:
             anchor = anchor_parsed[pillar] = parse_anchor(label, raw)
         except PillarContractError as exc:
-            verdicts.append(Verdict(False, CONTRACT, f"contract (anchor) {exc}"))
+            verdicts.append(Verdict(False, CONTRACT, f"contract (anchor) {exc}", pillar=pillar))
             continue
         live = None
         if pillar in live_raw:
             try:
                 live = live_parsed[pillar] = parse_report_pillar(label, live_raw[pillar])
             except PillarContractError as exc:
-                verdicts.append(Verdict(False, CONTRACT, f"contract (report) {exc}"))
+                verdicts.append(Verdict(False, CONTRACT, f"contract (report) {exc}", pillar=pillar))
                 continue
         verdicts.append(compare_pillar(
             pillar, anchor, live, band=band_overrides.get((run_key, pillar), 1), abs_floor=floor_overrides.get((run_key, pillar), SCORE_ABS_FLOOR),

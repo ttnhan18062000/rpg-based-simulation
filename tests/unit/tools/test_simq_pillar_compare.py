@@ -153,3 +153,18 @@ def test_the_committed_fixture_is_all_ok_anchors_today():
     for run_key, pillars in fixture.items():
         if not run_key.startswith("_"):
             assert all(parse_anchor(f"{run_key}/{p}", a).status == "ok" for p, a in pillars.items())
+
+
+def test_a_verdict_names_its_pillar_without_parsing_the_message():
+    verdicts, _ = compare_report("k", {"A": OK_ANCHOR, "B": ND_ANCHOR, "C": OK_ANCHOR, "D": OK_ANCHOR},
+                                 {"pillars": {"A": {**OK_LIVE, "normalized_score": 9.0}, "B": OK_LIVE, "D": {"grade": "B"}}})
+    assert {v.pillar: v.code for v in verdicts} == {"A": spc.SCORE, "B": spc.GAINED_DATA, "C": spc.MISSING, "D": spc.CONTRACT}
+
+
+def test_a_no_data_pillar_whose_event_count_reaches_min_events_contradicts_itself():
+    with pytest.raises(Bad, match="contradicts itself"):
+        parse_report_pillar("X", {**ND_LIVE, "event_count": 3})
+    with pytest.raises(Bad, match="contradicts itself"):
+        parse_row_pillar("X", {"status": "no-data", "grade": None, "norm": None, "events": 7, "min_events": 3})
+    assert parse_report_pillar("X", {**ND_LIVE, "event_count": 2}).status == "no-data"
+    assert parse_report_pillar("X", {k: v for k, v in ND_LIVE.items() if k != "event_count"}).status == "no-data"  # no count to contradict
