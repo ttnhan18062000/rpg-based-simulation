@@ -74,7 +74,7 @@ All `FROM` lines and `image:` entries pinned `tag@sha256` (multi-arch index dige
 - Unpinned-reference grep (`grep -E '^\s*(image:|FROM) ' compose.yaml docker/*.Dockerfile | grep -v @sha256`) returns nothing.
 - **running locally:** the full stack above was built from these Dockerfiles (including `npm ci`) and started.
 - CI build via `publish-images.yml` on this PR to confirm (**validated** once green).
-- **validated (Dependabot):** GitHub parsed the file and opened 21 PRs on its first run, so the config is accepted. The first run exceeded the PR limit, and most were semver-major bumps; follow-up `TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS` ignores majors and moves to monthly.
+- **validated (Dependabot):** GitHub parsed the file and opened 21 PRs on its first run, so the config is accepted. The first run exceeded the PR limit, and most were semver-major bumps; the user chose to stay current on majors, so the follow-up is `TCK-20261014-DEPENDABOT-GROUPED-MAJORS-MONTHLY` (grouped majors, monthly).
 
 ## Files Changed
 - `docker/backend.Dockerfile`, `docker/frontend.Dockerfile`, `compose.yaml`, `.github/dependabot.yml`

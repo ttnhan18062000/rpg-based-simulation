@@ -85,5 +85,5 @@ See the child tickets.
 See the child tickets.
 
 ## Completion Summary
-All five children plus the follow-up `TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS` are done. Step 1 shipped in #561 (7fa1fc7bc); images are published and verified (cosign verify and verify-attestation on both digests), Trivy baseline recorded in `TCK-20261014-IMAGE-SBOM-SCAN-SIGN`.
+All five children are done; Dependabot follow-ups are tracked in `TCK-20261014-DEPENDABOT-GROUPED-MAJORS-MONTHLY`. Step 1 shipped in #561 (7fa1fc7bc); images are published and verified (cosign verify and verify-attestation on both digests), Trivy baseline recorded in `TCK-20261014-IMAGE-SBOM-SCAN-SIGN`.
 (open)
