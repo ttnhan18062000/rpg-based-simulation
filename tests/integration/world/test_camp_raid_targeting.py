@@ -82,75 +82,32 @@ def _build_kernel() -> Kernel:
     return Kernel(profile=profile, state=state, rng=rng, world_id=_WORLD_ID, governor=_DegradedGovernor())
 
 
-def test_camp_triggered_raid_spawns_real_raiders_anchored_and_targeted_correctly():
+def test_a_matured_camp_raids_nothing_in_a_real_run():
+    """D70 (TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70): the camp raid is retired. The same real run that used to conjure
+    goblin_raider entities (a camp crossing the 80.0 raid threshold with its cooldown already satisfied) now adds no entity at all, charges the
+    camp no raid cost, and leaves its raid clock alone; the camp only matures.
+
+    The DEGRADED non-urgent-movement starvation fix this file used to cover through those raiders
+    (TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION) keeps its own unit coverage in
+    tests/unit/domains/optimization/test_movement_candidate_selector.py.
+    """
     kernel = _build_kernel()
     try:
         assert kernel._state.camps[_CAMP_ID].maturity == 79.9
-
-        # Raid trigger needs maturity>=80 (fast, seeded near threshold) AND
-        # tick - last_raid_tick >= 500 (camp.last_raid_tick starts at 0). Pre-seed last_raid_tick
-        # far in the past so the cooldown gate is already satisfied at tick 0 -- this still
-        # exercises the real Kernel loop, real pipeline, and real raid-composition logic; it only
-        # avoids burning ~500 real ticks of unrelated simulation wall-clock time to reach a
-        # precondition this test can construct directly, matching this repo's existing pattern of
-        # constructing test preconditions via dataclasses.replace() rather than always simulating
-        # up to them.
         camp = kernel._state.camps[_CAMP_ID]
         kernel._state = dataclasses.replace(
             kernel._state,
             camps={**kernel._state.camps, _CAMP_ID: dataclasses.replace(camp, last_raid_tick=-10_000)},
         )
+        ids_before = set(kernel._state.entities)
 
-        # world_dynamics (which calls CampService.process_camps) only runs on
-        # tick % cadence.world_dynamics == 0 (default 50). The maturity-threshold check inside
-        # process_camps() reads camp.maturity as of the START of that call (before that same
-        # call's own growth delta is applied) -- so the tick-50 call still sees maturity=79.95
-        # (just under threshold) and only applies the delta that crosses to 80.0; the raid check
-        # itself only passes on the NEXT window (tick 100), which reads the now-80.0 value.
         for _ in range(105):
             kernel.tick_once()
 
-        raiders_at_trigger = [
-            e for e in kernel._state.entities.values() if e.kind == "goblin_raider"
-        ]
-        assert raiders_at_trigger, (
-            "camp-triggered raid did not spawn any goblin_raider entities -- the discard bug "
-            "this ticket fixes"
-        )
-
-        # Raiders must not spawn at the hardcoded world origin -- confirms real camp anchoring.
-        for e in raiders_at_trigger:
-            assert e.navigation.position != (0, 0)
-            assert e.navigation.target == _CITY_POS, (
-                f"raider {e.id} targets {e.navigation.target}, expected the real settlement "
-                f"{_CITY_POS}, not a fabricated or hardcoded destination"
-            )
-
-        raider_ids = [e.id for e in raiders_at_trigger]
-        start_positions = {
-            eid: kernel._state.entities[eid].navigation.position for eid in raider_ids
-        }
-
-        # Run enough further real ticks to cover a full EXACT_DIRTY reduced-cadence window
-        # (TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION) -- proves the raiders
-        # spawned above are not permanently stuck, the exact consequence this test used to
-        # document as an accepted gap.
-        modulo = 20  # MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO
-        for _ in range(modulo + 5):
-            kernel.tick_once()
-
-        assert kernel.status.current_mode is RuntimeMode.DEGRADED, (
-            "the run must be in DEGRADED; under NORMAL this test would not cover the starvation path"
-        )
-        moved = [
-            eid
-            for eid in raider_ids
-            if kernel._state.entities.get(eid) is not None
-            and kernel._state.entities[eid].navigation.position != start_positions[eid]
-        ]
-        assert moved, (
-            "no raider moved within a full reduced-cadence window -- the starvation fix "
-            "(TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION) did not take effect"
-        )
+        after = kernel._state.camps[_CAMP_ID]
+        assert after.maturity >= 80.0, "the camp must cross the old raid threshold for this test to mean anything"
+        assert after.last_raid_tick == -10_000, "no raid happened, so the raid clock is untouched"
+        assert not [e for e in kernel._state.entities.values() if e.kind == "goblin_raider"]
+        assert not [e for e in kernel._state.entities.values() if e.id not in ids_before and e.kind.startswith("goblin")]
     finally:
         kernel.shutdown()
