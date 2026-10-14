@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED
-phase: open
+phase: done
 date: 2026-10-01
 tags: [simulation-quality, grade-thresholds]
 ---
@@ -18,7 +18,7 @@ lead), and nothing reports it because the whole family is `@slow` and CI does no
 the anchors currently protect nothing
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -276,10 +276,14 @@ None yet — standard tier, staging artifacts created when picked up.
 **Known-reds split and legacy-path removal, 2026-10-07 (testing-implementer; dispatched by testing-planner).** `slow_known_reds.yaml` now maps by exact JUnit id: the 5 NARRATIVE step-change anchors to `TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE`, the 5 SOCIAL ones to `TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE` (both `broken`, owner rpg-implementer-2, expire 2026-11-15) and unit_selfmodel_pilot to its rebaseline ticket (`broken`, owner rpg-implementer-2, 2026-11-15, per rpg-planner). The corpus catch-all stays last as `flaky` (expires 2026-11-04, owner testing-implementer) and now covers only the 6 class-(c) anchors. New entries: the species-hostility metamorphic red (`TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC`, expires 2026-10-28); 5k repointed to `TCK-20261007-BEHAVIORAL-5K-REBASELINE-AFTER-THE-STARVATION-CHAIN-LANDS` (2026-11-15). `owner_of()` takes the first match, so the lint now rejects an entry shadowed by an earlier, broader pattern, and a test pins each family anchor to its own entry. The legacy-adoption path in `slow_regression_report.py` is deleted (#390 carries the marker since run 37604139091); an unmarked issue is no longer a tracker. ph9 moves to 2026-10-28 (rpg-planner: the remaining boss assertion is a class (a) test update after KNOW-04). Replaying #390's 16 reds against the new file: 0 UNOWNED and 0 EXPIRED on 2026-10-07; the ph9 and species-hostility entries both expire 2026-10-28.
 
 ## Test Summary
-_To be completed during implementation._
+The reporting path is covered by its own tests (`tests/unit/tools/test_slow_regression_report.py`, `tests/static/test_ci_slow_workflow_shape.py`); see Implementation Notes.
 
 ## Files Changed
-_To be completed during implementation._
+See Implementation Notes: `tools/test_architecture/slow_regression_report.py`, `slow_known_reds.yaml`, `.github/workflows/test.yml`, the report tests. The final known-reds edit is in the audit_mode ticket.
 
 ## Completion Summary
-_To be completed during implementation._
+**Superseded and closed (2026-10-11; decision on issue #511 by rpg-planner).**
+- The reporting gap this ticket opened for is solved: the slow job's failing set is reported by issue #390 and owned through `tools/test_architecture/slow_known_reds.yaml` (specific entries per anchor family, an expiring catch-all).
+- The class-(c) cause is carried by two tickets: `TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE` (the anchors move to audit_mode, so they grade the rules and not host speed; it also owns the catch-all entry) and rpg's `TCK-20261011-DEFAULT-RUN-ID-CANNOT-COLLIDE-ACROSS-SAME-SEED-PROCESSES` (same-second run-dir collision).
+- The 3 population_stability tests are out of scope of the audit_mode ticket; they now have their own specific `flaky` entries (ticket `TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2`, expiring 2026-11-04).
+- The step-change anchors stay with rpg's rebaseline tickets.

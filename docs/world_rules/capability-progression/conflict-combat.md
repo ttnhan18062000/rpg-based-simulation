@@ -90,7 +90,16 @@ directly, 2026-10-09; rows 47 and 49 of the memo):**
 - **Alternatives not taken:** appraisal only, with faction dropped as a reason to fight; faction
   hostility kept as the main gate with a narrow hunting exception; prey fearing only a
   hungry-looking predator; prey fleeing any predator on sight.
-- **Evidence: CONFLICTING** until Lane A's hunting batch lands.
+- **Evidence: PARTLY SUPPORTED since #536 (2.107).** A faction verdict never decides a fight with
+  a wild creature: animals of a wild faction are wild creatures, a raider and a wolf have no
+  faction verdict either way, and a faction verdict cannot make an attack on a wild creature
+  legal (`tests/unit/engine/test_wild_creature_regarded_by_appraisal.py`). A hungry wolf regards
+  the herd as prey and a sated one does not
+  (`tests/unit/engine/test_hungry_wolf_hunts_prey_it_out_bands.py`). **Still open:**
+  - A wolf and a person tie in kind bands, so in M0 a wolf never takes a person as prey (a strict
+    xfail names milestone 1's single-appraisal child).
+  - Monster factions keep faction hostility as an interim (decision 62), until milestone 1's
+    declared drives.
   - **Still CONFLICTING for people after hunting (rpg-planner's read of `origin/main`,
     2026-10-09):** pursuit and intercept start from membership in the hostile list alone
     (`src/engine/tactical.py`: faction hostility, plus PREDATION once hunting lands). The KNOW-04
