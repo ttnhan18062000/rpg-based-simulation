@@ -492,6 +492,9 @@ def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, tic
         kernel.shutdown()
     data["events"] = dict(sorted(events.items()))
     data["flag_override"] = override
+    import resource
+
+    data["peak_rss_mb"] = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0, 1)  # the child's own high-water mark (Linux: KiB)
     return data
 
 

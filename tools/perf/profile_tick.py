@@ -56,6 +56,7 @@ def render_phase_report(fields, summary, phase_rows, sampling_note: str) -> str:
     work = ", ".join(f"{k}={v:.1f}" for k, v in summary["work_mean_per_tick"].items()) or "n/a"
     out.append(f"- processed work (mean per tick): {work}")
     out.append(f"- events (measured ticks): {sum(summary['events'].values())}")
+    out.append(f"- child peak RSS (MB, ru_maxrss of the profiled process): {summary.get('peak_rss_mb')}")
     out.append(f"- sampling: {sampling_note}")
     if summary["runtime_mode_sequence"] != ["NORMAL"]:
         out.append("- WARNING: the RuntimeMode left NORMAL during the measured ticks. Cadence, LOD and scan policy "
@@ -93,7 +94,9 @@ def run_unsampled(args: argparse.Namespace) -> int:
                                   extra={"profile": args.profile, "tool": "none", "contract": args.contract,
                                          "contract_note": common.PINNED_NOTE if args.contract == "pinned" else None,
                                          "loadavg_1min": os.getloadavg()[0], "sample_rate_hz": None})
-    summary = common.summarize_ticks(json.loads(child_json.read_text(encoding="utf-8")))
+    raw_child = json.loads(child_json.read_text(encoding="utf-8"))
+    summary = common.summarize_ticks(raw_child)
+    summary["peak_rss_mb"] = raw_child.get("peak_rss_mb")
     rows = common.phase_table(summary["per_tick_costs"], summary["tick_wall_ms"])
     md_path, js_path = out_dir / "phases.md", out_dir / "phases.json"
     md_path.write_text(render_phase_report(fields, summary, rows, "no sampler attached (unprofiled timing)"), encoding="utf-8")
@@ -175,7 +178,9 @@ def run_parent(args: argparse.Namespace) -> int:
     if not child_json.exists():
         print("The child run wrote no tick data; see the profiler output above.", file=sys.stderr)
         return 1
-    summary = common.summarize_ticks(json.loads(child_json.read_text(encoding="utf-8")))
+    raw_child = json.loads(child_json.read_text(encoding="utf-8"))
+    summary = common.summarize_ticks(raw_child)
+    summary["peak_rss_mb"] = raw_child.get("peak_rss_mb")
     rows = common.phase_table(summary["per_tick_costs"], summary["tick_wall_ms"])
     md_path, js_path = out_dir / "phases.md", out_dir / "phases.json"
     md_path.write_text(render_phase_report(fields, summary, rows, sampling_note), encoding="utf-8")
