@@ -49,6 +49,7 @@ _ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 _TOTALS_RE = re.compile(r"Contracts: (\d+) kept, (\d+) broken")
 _BROKEN_RE = re.compile(r"^(.+?) BROKEN(?: \(\d+ ignored imports\))?$", re.M)
 _STALE_RE = re.compile(r"No matches for ignored import")
+_SECTION_RE = re.compile(r"((?:[^\n]+\n)+?)-{5,}\n")
 
 
 def layer_packages(rows: Sequence[dict]) -> list[tuple[str, list[str]]]:
@@ -95,6 +96,27 @@ def parse_violations(output: str) -> list[str]:
             raise ValueError(f"indirect chain, baseline by hand: {entry[:200]}")
         pairs.add(f"{match.group(1)} -> {match.group(2)}")
     return sorted(pairs)
+
+
+def broken_pairs(output: str) -> dict[str, list[str]]:
+    """Contract name -> its `importer -> imported (l.N)` entries, from lint-imports' "Broken contracts" section.
+
+    A contract name can wrap at the terminal width, so it is joined on whitespace. An entry that is a chain
+    of several edges is kept whole.
+    """
+    text = _ANSI_RE.sub("", output)
+    start = text.find("Broken contracts")
+    if start < 0:
+        return {}
+    text = text[start:]
+    sections = list(_SECTION_RE.finditer(text))[1:]  # the first match is the "Broken contracts" header itself
+    found: dict[str, list[str]] = {}
+    for index, match in enumerate(sections):
+        end = sections[index + 1].start() if index + 1 < len(sections) else len(text)
+        name = " ".join(match.group(1).split())
+        entries = [" ".join(block.split())[2:] for block in re.split(r"\n\s*\n", text[match.end():end]) if block.strip().startswith("- ")]
+        found[name] = entries
+    return found
 
 
 def splice_block(config: str, block: str) -> str:
@@ -163,13 +185,17 @@ def advisory_report(root: Path, lint_imports: str) -> tuple[str, bool]:
     if totals is None:
         return f"**Import contracts (advisory):** could not run ({(result.stderr or text).strip()[-200:]})", True
     kept, broken = int(totals.group(1)), int(totals.group(2))
-    names = sorted({" ".join(name.split()) for name in _BROKEN_RE.findall(text)})
+    pairs = broken_pairs(text)
+    # The section's own headings carry the full name; the `X BROKEN` status lines wrap at the terminal width.
+    names = sorted(pairs) or sorted({" ".join(name.split()) for name in _BROKEN_RE.findall(text)})
     stale = len(_STALE_RE.findall(text))
     head = f"**Import contracts (advisory):** {kept} kept, {broken} broken"
     lines = [head + (f", {stale} stale ignored import(s)" if stale else "")] + lines
-    lines += [f"- broken: `{name}`" for name in names]
+    for name in names:
+        lines.append(f"- broken: `{name}`")
+        lines += [f"  - `{pair}`" for pair in pairs.get(name, [])]
     if broken:
-        lines.append("- run `make lint-imports` for the import lines")
+        lines.append("- run `make lint-imports` for the full report")
     return "\n".join(lines), bool(broken or stale or stale_block)
 
 

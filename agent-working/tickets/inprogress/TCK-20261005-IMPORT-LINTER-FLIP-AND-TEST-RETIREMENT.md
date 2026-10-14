@@ -75,6 +75,8 @@ None.
 - Soak dates are unknown until the adoption batch merges
 
 ## Implementation Notes
+Flip batch (local only, nothing pushed), 2026-10-15. Steps done: 1 merge (476330a34), 2 phase19 reasons (1f49161d2, 8ec5a369f), 3 class E retirements (e5cf25404), plus 1b broken-pair naming. Not done: 1c blocking `ci` mode + `test.yml` + static pins (step 4), the 8.11 notice draft in `handoff_to_testing.md` (the notice lives there, not here), docs 1e, phase19 commit.
+**Coupling (testing condition 1, codebase-planner 2026-10-15):** the retirement commit e5cf25404 is valid only together with the blocking commit. If the blocking step is dropped or deferred on the day, e5cf25404 goes with it.
 Soak review drafted 2026-10-08, interim
 
 ## Test Summary

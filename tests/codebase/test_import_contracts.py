@@ -232,3 +232,60 @@ def test_make_target_runs_the_advisory_command() -> None:
     """`make import-contracts` is the local twin of the CI step."""
     result = subprocess.run(["make", "-n", "import-contracts"], cwd=_REPO_ROOT, capture_output=True, text=True, check=True)
     assert "codebase.structure.import_contracts advisory" in result.stdout
+
+
+_TWO_BROKEN = """Analyzed 9 files, 9 dependencies.
+---------------------------------------
+
+core must not import domains BROKEN (4 ignored imports)
+engine and the three hot observability modules do not import the heavy analyzers
+(phase19) BROKEN
+
+Contracts: 15 kept, 2 broken.
+
+
+----------------
+Broken contracts
+----------------
+
+core must not import domains
+----------------------------
+
+src.core is not allowed to import src.domains:
+
+-   src.core.builder -> src.domains.campaigns.state (l.955)
+
+-   src.core.builder -> src.domains.fame.deriver (l.956)
+
+engine and the three hot observability modules do not import the heavy analyzers
+(phase19)
+--------------------------------------------------------------------------------
+
+src.engine is not allowed to import src.observability.reporting:
+
+-   src.engine.kernel -> src.observability.reporting.retention (l.77)
+
+"""
+
+
+def test_broken_pairs_lists_every_pair_of_every_broken_contract_including_wrapped_names() -> None:
+    """A contract with 2+ broken pairs names all of them; a name wrapped at the terminal width is joined."""
+    assert ic.broken_pairs(_TWO_BROKEN) == {
+        "core must not import domains": [
+            "src.core.builder -> src.domains.campaigns.state (l.955)",
+            "src.core.builder -> src.domains.fame.deriver (l.956)",
+        ],
+        "engine and the three hot observability modules do not import the heavy analyzers (phase19)": [
+            "src.engine.kernel -> src.observability.reporting.retention (l.77)",
+        ],
+    }
+    assert ic.broken_pairs("Contracts: 17 kept, 0 broken.") == {}
+
+
+def test_advisory_summary_names_every_broken_pair(tmp_path: Path) -> None:
+    """The step summary carries each pair under its contract, not only the contract count."""
+    summary = tmp_path / "summary.md"
+    ic.main(["--root", str(_scratch_repo(tmp_path)), "advisory", "--lint-imports", _fake_lint_imports(tmp_path, _TWO_BROKEN, 1), "--summary-out", str(summary)])
+    text = summary.read_text()
+    for pair in ("src.core.builder -> src.domains.campaigns.state (l.955)", "src.core.builder -> src.domains.fame.deriver (l.956)", "src.engine.kernel -> src.observability.reporting.retention (l.77)"):
+        assert f"  - `{pair}`" in text
