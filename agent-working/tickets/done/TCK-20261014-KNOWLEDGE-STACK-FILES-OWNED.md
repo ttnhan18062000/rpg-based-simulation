@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-KNOWLEDGE-STACK-FILES-OWNED
-phase: open
+phase: done
 date: 2026-10-14
 tags: [knowledge-store, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [knowledge-store, process-improvement]
 Register the knowledge-search stack files (`requirements-knowledge.txt`, `tools/knowledge_search.py`, `tools/eval_search.py`) to the agent-working domain
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -73,9 +73,23 @@ batch; the user agreed in agent-working-planner's terminal on 2026-10-14.
   stack's.
 
 ## Implementation Notes
+- `registries/session_roles.yaml` `domains.agent-working.owns`: added `tools/*_search.py` (exactly knowledge_search.py and
+  eval_search.py today) and `requirements-knowledge.txt` after the `tools/start_*_mcp.sh` line; `card.py` folds the first into the
+  `tools/{...}` group. Cards regenerated. Three agent-working cards went over 400 (planner 409, designer 402), so card text was
+  shortened, budget untouched: the domain overlay lost "; ticket process problems here" (now "process incl. tickets") and the
+  planner function text says "commit only on your own leased branch" for "you may commit on your own branch where you hold the
+  lease". That edit also regenerates the other planner cards (wording only).
 
 ## Test Summary
+- `tools.sessions.validate`: 0 findings. Composed card tokens, largest first: codebase-designer 399, agent-working-planner 398,
+  agent-working-designer 398, agent-working-implementer 392. `route` reports all three paths owned by agent-working
+  (`longest owns glob`). `test_session_cards.py` and the other session tests pass (see the CI-lane ticket for the one
+  load-induced timeout in test_session_status.py).
 
 ## Files Changed
+- registries/session_roles.yaml, docs/guidelines/session_roles/domains/agent-working.md, docs/guidelines/session_roles/functions/planner.md,
+  .claude/agents/session-*.md (the planner cards and the agent-working cards)
 
 ## Completion Summary
+The knowledge-stack files `requirements-knowledge.txt`, `tools/knowledge_search.py` and `tools/eval_search.py` are owned by
+agent-working; every composed card stays within 400 tokens. The owner confirms the roster diff on the PR.
