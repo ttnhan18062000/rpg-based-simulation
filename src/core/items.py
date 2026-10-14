@@ -113,9 +113,7 @@ class ItemRegistry:
                 if not display_name:
                     display_name = item_id.replace("_", " ").title()
                 
-                categories = getattr(v, "categories", []) or (v.get("categories", []) if isinstance(v, dict) else [])
-                if not categories:
-                    raise ValueError(f"item {item_id!r} declares no categories; every item needs one (it decides whether a shop buys it)")
+                categories = _declared_categories(v, item_id)
                 base_value = getattr(v, "base_value", 0.0) or (v.get("base_value", 0.0) if isinstance(v, dict) else 0.0)
                 
                 # Resolve ItemKind
@@ -225,6 +223,14 @@ class ItemRegistry:
             else:
                 # Native ItemDefinition
                 cls._items[k] = v
+
+
+def _declared_categories(source: Any, item_id: str) -> Any:
+    """An item's declared categories; an item with none does not compile (the category decides, for one, whether a shop buys it)."""
+    categories = getattr(source, "categories", []) or (source.get("categories", []) if isinstance(source, dict) else [])
+    if not categories:
+        raise ValueError(f"item {item_id!r} declares no categories; every item needs one (it decides whether a shop buys it)")
+    return categories
 
 
 def _food_properties(source: Any, props: Dict[str, Any]) -> None:
