@@ -104,7 +104,7 @@ lead-planner), not here.
   silent otherwise, degrades on error, part of run_all_checks). With `test_delivery_pre_push_advisory.py`, `test_session_*.py`,
   `test_delivery_*.py`: 868 passed, 1 failed (`test_session_status.py::test_collect_runs_against_the_real_repository_without_failing`,
   `TimeoutError` from conftest's resource limit at load average 14-37 on 6 cores with 52 worktrees; it does not touch these
-  files; reran alone: same timeout. Unverified under light load, to be rerun.)
+  files; reran alone under load: same timeout). Rerun at load average 1.2 (2026-10-14 evening): `test_session_status.py` 13 passed in 16 s.
 
 ## Files Changed
 - tools/delivery/ci_lanes.py (new), tools/delivery/pre_push_advisory_hook.py, tests/tools/test_delivery_ci_lanes.py (new),

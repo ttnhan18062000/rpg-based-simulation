@@ -83,8 +83,8 @@ batch; the user agreed in agent-working-planner's terminal on 2026-10-14.
 ## Test Summary
 - `tools.sessions.validate`: 0 findings. Composed card tokens, largest first: codebase-designer 399, agent-working-planner 398,
   agent-working-designer 398, agent-working-implementer 392. `route` reports all three paths owned by agent-working
-  (`longest owns glob`). `test_session_cards.py` and the other session tests pass (see the CI-lane ticket for the one
-  load-induced timeout in test_session_status.py).
+  (`longest owns glob`). `test_session_cards.py` and the other session tests pass (`test_session_status.py` timed out under
+  load once and passes at low load).
 
 ## Files Changed
 - registries/session_roles.yaml, docs/guidelines/session_roles/domains/agent-working.md, docs/guidelines/session_roles/functions/planner.md,
