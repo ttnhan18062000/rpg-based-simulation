@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION
-phase: open
+phase: done
 date: 2026-10-13
 tags: [testing, regression, simulation-quality]
 ---
@@ -15,7 +15,7 @@ tags: [testing, regression, simulation-quality]
 The grade regression tests and the re-anchor tool read a pillar's "no-data" status, so a pillar with too few events is neither a fake score nor a silent pass. A pillar missing from a report becomes a failure, not grade C.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -74,14 +74,14 @@ A no-data pillar anchor is `{"status": "no-data", "reason": "below_min_events", 
 - Changing any band or score tolerance.
 
 ## Acceptance Criteria
-- [ ] AC1: no `.get(<pillar>, <default grade or score>)` (grade `"C"` and score `0.0` included) or equivalent remains in the SimQ tests. A test proves that a pillar missing from the report fails, naming the pillar.
-- [ ] AC2: the four-way comparison and the contract-failure cases have unit tests on synthetic reports and anchors (all 4 cells, the `min_events` change, and both malformed shapes).
-- [ ] AC3: the overall is compared only on equal no-data sets, and an overall no-data follows the four-way rule. Both are tested.
-- [ ] AC4: `simq_reanchor.py` writes the no-data anchor shape and records status transitions as moved rows in both tables. Tested.
-- [ ] AC5: the fixture schema guard accepts the two shapes and rejects the others.
-- [ ] AC6: it works against today's reports, which have no `status` field. A pillar without `status` is read as ok only when it has a numeric grade and score, so the existing anchors and CI are unchanged until (b) lands.
-- [ ] AC7: it is merged before or together with rpg's (b). The ticket records the rpg PR it pairs with.
-- [ ] AC8: no tolerance, band or override is relaxed (baseline_change_policy.md rules 6 and 8).
+- [x] AC1: no `.get(<pillar>, <default grade or score>)` (grade `"C"` and score `0.0` included) or equivalent remains in the SimQ tests. A test proves that a pillar missing from the report fails, naming the pillar.
+- [x] AC2: the four-way comparison and the contract-failure cases have unit tests on synthetic reports and anchors (all 4 cells, the `min_events` change, and both malformed shapes).
+- [x] AC3: the overall is compared only on equal no-data sets, and an overall no-data follows the four-way rule. Both are tested.
+- [x] AC4: `simq_reanchor.py` writes the no-data anchor shape and records status transitions as moved rows in both tables. Tested.
+- [x] AC5: the fixture schema guard accepts the two shapes and rejects the others.
+- [x] AC6: it works against today's reports, which have no `status` field. A pillar without `status` is read as ok only when it has a numeric grade and score, so the existing anchors and CI are unchanged until (b) lands.
+- [x] AC7: it is merged before rpg's (b) (agreed with rpg-planner, 2026-10-14; the harness is back-compatible with today's reports). The ticket records (b)'s ticket id: TCK-20261014-PILLARS-REPORT-NO-DATA-BELOW-A-MINIMUM-EVENT-COUNT.
+- [x] AC8: no tolerance, band or override is relaxed (baseline_change_policy.md rules 6 and 8).
 
 ## Related Tickets
 - TCK-20261014-POST-536-PROGRESSION-FLOOR-AND-INFORMATION-SPIKE-IN-200T-GRADE-ANCHORS (rpg; the (a) and (b) fixes)
@@ -118,7 +118,7 @@ Visibility (Scope 4): `_pillar_failures` warns `<run_key>: no-data pillars: anch
 
 The overall is not anchored in `grade_anchors.json` today (810 = 81 x 10 pillar rows), so AC3 is the helper rule plus its tests: `no_data_sets_equal`, and `parse_report_overall` (the flat report keys `overall_grade`, `overall_score`, `overall_status`, `overall_reason`, `pillars_scored`, `pillars_no_data`, pinned by rpg-planner 2026-10-14; counts checked against the pillars) with `compare_pillar` for an overall that is itself no-data. No overall anchor shape is invented, and no test compares an overall to an anchor yet.
 
-Pairs with: rpg's (b), ticket TCK-20261014-PILLARS-REPORT-NO-DATA-BELOW-A-MINIMUM-EVENT-COUNT (the scorer's `no-data` report; `min_events` from `PILLAR_MIN_EVENTS` in `src/simulation_quality/pillars.py`). AC7: the PR number is recorded here when rpg opens it; this PR is #557.
+AC7: this PR (#557) merges BEFORE rpg's (b), TCK-20261014-PILLARS-REPORT-NO-DATA-BELOW-A-MINIMUM-EVENT-COUNT (the scorer's `no-data` report; `min_events` from `PILLAR_MIN_EVENTS` in `src/simulation_quality/pillars.py`), as agreed with rpg-planner: the harness is back-compatible with today's reports, so it does not wait for (b).
 
 Not done here: re-anchoring the 27 held rows and the 23 on the -8/51 constant (follow-up after (a) and (b) are on main, under its own rpg ruling).
 
@@ -135,4 +135,4 @@ Not done here: re-anchoring the 27 held rows and the 23 on the -8/51 constant (f
 - docs/simulation_quality/quality_scoring_contract.md (11.3)
 
 ## Completion Summary
-(implementer)
+The SimQ grade regression tests, the corpus-diversity guards, `simq_reanchor` and `tools/evaluate_simq.py` read a pillar through `tools/test_architecture/simq_pillar_compare.py`. A pillar missing from a report fails naming itself (no grade-C or score-0.0 default remains), a pillar with no `status` field is ok only with a letter grade and a numeric score, and the four-way comparison (ok/ok unchanged, still no-data, threshold changed, lost data, gained data, contract failures) is covered by unit tests. `simq_reanchor` writes the no-data anchor shape and records status changes as moved rows. No tolerance, band or override changed; re-running the tool on the #531 rows reproduces the committed anchors and ruling table byte for byte. PR #557. Known gaps: no overall is anchored yet, so an overall is parsed (`parse_report_overall`) but not compared to an anchor; the 27 held rows and the 23 on the -8/51 constant are re-anchored later, under rpg's own ruling, after (a) and (b) are on main.

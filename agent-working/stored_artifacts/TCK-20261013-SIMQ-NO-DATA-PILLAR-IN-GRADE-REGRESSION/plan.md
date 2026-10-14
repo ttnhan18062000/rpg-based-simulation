@@ -1,11 +1,11 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 artifact_type: plan
 ticket_id: TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION
-phase: open
+phase: done
 date: 2026-10-14
 tags: [testing, regression, simulation-quality]
 ---
