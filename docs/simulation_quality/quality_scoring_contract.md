@@ -1485,6 +1485,20 @@ either of which failing blocks the anchor as a regression:
    floor comfortably absorbs that noise while the 20% relative threshold still catches a
    50%+ magnitude regression on higher-magnitude (e.g. S-band) pillars.
 
+**No-data pillars (TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION).** A pillar with fewer than `min_events`
+events reports `status: "no-data"` with a null grade and score (the report shape is the scorer's; `min_events` comes from `PILLAR_MIN_EVENTS` in `src/simulation_quality/pillars.py`, default 3, and the harness reads it from the report, not from src). The regression tests read every pillar through `tools/test_architecture/simq_pillar_compare.py`:
+
+- A pillar **missing** from the report is a failure naming the pillar. No pillar is ever defaulted to a grade or a score.
+- A pillar with no `status` field (reports from before the field) is `ok` only with a letter grade and a numeric score; anything else is a contract failure.
+- An anchor is exactly one of two shapes: `{"grade", "score"}` (an explicit `"status": "ok"` is allowed) or
+  `{"status": "no-data", "reason": "below_min_events", "min_events": k}`. Only `tools/test_architecture/simq_reanchor.py` writes either.
+- The four-way comparison: anchor ok / live ok is the band and score check above, unchanged; no-data / no-data with the same `min_events`
+  passes ("still no-data"); a different `min_events` fails ("threshold changed: re-anchor under a ruling"); ok / no-data fails
+  ("pillar lost its data"); no-data / ok fails ("pillar gained data: re-anchor under a ruling"); a no-data pillar that carries a grade or score,
+  or an ok pillar with a null grade or score, is a contract failure.
+- The overall is flat top-level keys: `overall_grade` and `overall_score` (null when no-data), `overall_status` (`ok` | `no-data`), `overall_reason` (null, or `too_few_pillars_scored`), and the integers `pillars_scored` and `pillars_no_data`. A no-data overall has no `min_events`; the harness checks that the counts match the pillars' statuses (`parse_report_overall`). No overall is anchored today. An overall is compared only when the anchor's and the live report's no-data pillar sets are equal; an overall that is itself `no-data` follows the same four-way rule.
+- A run with no-data pillars lists them in the test output (a warning naming the anchor's and the live no-data pillars), so no-data cannot grow unseen.
+
 ### 11.4 Performance Tests
 
 `tests/simulation_quality/test_performance.py`

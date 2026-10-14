@@ -177,3 +177,12 @@ now say so when free space is below 10 GB (`SESSION_DISK_THRESHOLD_GB` overrides
 a batch of N measurement runs, look: `python3 tools/sessions/disk_headroom.py` (free space, run data per worktree;
 `--json` for a stable shape). After the numbers are stored, clean that batch's own run directories by run id with
 `python3 tools/gate_checks/done_checker_static.py --clean-data-runs --path <run_id>`; never `rm -rf data/runs/*`.
+
+On 2026-10-14 the disk reached 0 bytes free in the middle of a working day, after sessions that had started long
+before. So the PostToolUse hook (`tools/agent-monitoring/post_tool_hook.py`, the same settings entry, no new one)
+also calls `tools/sessions/disk_warning.py`: one `statvfs` per 10 minutes per session, one line when free space is
+below the threshold, repeated at most every 30 minutes, and at once when it first drops below 2 GB. It never fails a
+tool call. `python3 tools/sessions/disk_headroom.py` now ends with "Removable worktrees": the worktrees
+`prune_branches --worktrees` classifies as removable (branch tip equals a merged PR head, clean, no seat, no process
+inside) with their sizes, and detached clean worktrees as "detached, check". Report only: removing them is
+`python3 -m tools.sessions.prune_branches --worktrees --execute --backup <path>` and needs the user's yes.

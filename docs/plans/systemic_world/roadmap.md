@@ -883,7 +883,21 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 60. how much meat a body gives and how often meat-eaters eat (decided 2026-10-10: meat in proportion to size, a meat-eater's full meal lasts at least a day, SURV-06).
 61. who keeps a building up and who pays a quest (decided 2026-10-11: a building pays its own upkeep and the treasury covers only a shortfall; only the real giver pays a quest; coin on a corpse stays where it fell, EXCH-02);
 62. how far faction hostility reaches (decided 2026-10-11: wild creatures go by the appraisal now; monster factions keep faction hostility until milestone 1, when each monster kind declares why it fights, CONFLICT-03);
-63. what a hero is (decided 2026-10-11: a person doing adventuring work, not a kind or a role; the guild is an organization people join, ID-02).
+63. what a hero is (decided 2026-10-11: a person doing adventuring work, not a kind or a role; the guild is an organization people join, ID-02);
+64. whether hunger wakes a sleeper (decided 2026-10-11: yes; a collapse first holds until the debt is back below its line, SURV-07);
+65. whether bodies heal outside towns (decided 2026-10-11: slowly everywhere, twice as fast at rest, none while starving; placeholders until milestone 1, SURV-02);
+66. how upkeep work is capped (decided 2026-10-11: upkeep shifts capped at need and the only ones the treasury tops up; business shifts from the building's own purse; 1 shift a period, 3 for the town hall, EXCH-02);
+67. why wild herds die out (decided 2026-10-13: nothing is born; reported in milestone 0, basic wild births in milestone 1, ECOL-03);
+68. what a town refuses service on (decided 2026-10-13: the trade trait only in milestone 0; later, a record the place holds or a mark it can see, never a faction label; strangers are served, EXCH-02);
+69. what the live map shows (decided 2026-10-13: the same authored world the gate runs, no hard-coded spawns; places shown through a presenter read-model);
+70. camps that spawn members from nothing (decided 2026-10-13: removed before baseline v1 as its own measured step; camps refill only by births in milestone 1 and later by recruits, ECOL-03);
+71. the conquest stronghold (decided 2026-10-13: the body built from nothing is removed before baseline v1; a region still changes hands and is freed as its influence recovers; conquest's causes wait for caused war and peace, ECOL-03);
+72. terrain movement cost (decided 2026-10-13: declared per terrain in content, a missing one is an error; fixed before baseline v1 as its own measured step, MOV-04);
+73. what a paid inn meal gives once the free part goes (decided 2026-10-13: 60 hunger for 5 gold, paid atomically or refused, SURV-06).
+74. which species the species-less people get (decided 2026-10-13: human, one per recipe, from each role archetype; other peoples later as their own recipes; before v1, SURV-06).
+75. what the terrain cost does (decided 2026-10-14: a step costing N takes N times as long, and routes weigh the cost; before v1, time then route, each measured alone; MOV-04).
+76. how the steps before the milestone-0 gate are measured (decided 2026-10-14: once at fold; a cumulative watch with a stop-and-ask trigger; byte-identical proof for neutral steps and reused arms; §12.3).
+77. what SimQ grades once rebuilt (decided 2026-10-14: outcome measures from the paired table; NARRATIVE retired; COGNITION and INFORMATION no-data until milestone 1; after v1).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -1130,6 +1144,17 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    - R3 meat-eater attacks on people, against the free-meal arm and the pre-hunting main.
    - R4 minted kill and quest coin, and treasury balances (decision 38's exception).
    - R5 the mix of ways per world and kind group.
+
+   How the steps before the gate are measured (decision 76, owner, 2026-10-14):
+   - **Once, at fold:** a step is measured once, against its parent, when it lands. A later
+     change of order re-runs it only if the new parent touches the same readers or writers.
+   - **A cumulative watch:** a running table, measured against the pre-milestone base, carries
+     people deaths per seed, extinctions and starvation. Work stops and the owner is asked when
+     the cumulative people-death drift passes 2 SE and its floor, or a kind dies out in every
+     seed of a world. A single step's drift stays report-only.
+   - **Tiered cost:** a step claimed neutral needs byte-identical proof only. A behaviour step
+     keeps 3 worlds, 5 seeds and 5,000 ticks per arm. Step N's child arm is step N+1's parent
+     arm, cached by commit. Runs keep summaries, not full logs.
 1. **Kinds by properties.**
    - The property model in coarse bands, as schema and content.
    - The appraisal.
@@ -1144,6 +1169,13 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
      place, a troll hunts by diet), which replaces faction hostility for monsters (decision 62).
    - A hero is a person doing adventuring work: retire the hero role and the hero-guild faction
      as kinds of being, and make the guild a membership people join and leave (decision 63).
+   - Basic wild births: a well-fed creature with a mate of its kind nearby has young at a rate
+     its kind declares, and the young must eat, so food and hunting set the numbers (decision
+     67). Births cover every living kind, people-kinds in camps included, since camps no longer
+     spawn members from nothing (decision 70). Packs, herds and territory stay in §12.4.
+   - Who a place refuses: a town refuses service on a record it holds against this person or a
+     mark it can see, never on a faction label; strangers are served (decision 68). It depends on
+     per-subject records, and is measured against baseline v1.
 
    Done when no decision reads a role, kind or faction name, a new kind works from content alone,
    and a probe finds no name switch left in a decision path.
@@ -1159,7 +1191,8 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    Done when a long-run conservation ledger balances for coin, food, goods and creatures, with
    every change traced to a cause.
 3. **Bodies heal, food ends, fire cooks.**
-   - Ways to recover per kind (rest and time, treatment, potions consumed).
+   - Ways to recover per kind (treatment, potions consumed; rest and time already heal at a
+     placeholder rate since decision 65). Decide whether a town tile should heal for free.
    - Corpse fate: butchery, scavenging, rot, burial.
    - Spoilage by food type, with cooking and drying to preserve.
    - Fire needs fuel and a place.

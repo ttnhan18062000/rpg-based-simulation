@@ -310,3 +310,31 @@ def test_the_first_baseline_past_a_stop_line_needs_a_ruling_too(tmp_path):
 def test_a_v1_ruling_records_the_lines_it_covers(tmp_path):
     path = rgb.rebaseline(_candidate(deaths=11.0), _config(), tmp_path / "b", pr=None, cites=["t"], owner_ruling=RULING, now=NOW)
     assert json.loads(path.read_text())["stop_lines_crossed"] == ["R1"]
+
+
+# ---- TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK: required_validity in the config
+
+def _cfg_text(extra):
+    return "worlds: [w]\nseeds: [1, 2]\nticks: 5000\nstale_after_days: 30\n" + extra
+
+
+def test_required_validity_loads_as_a_tuple_and_defaults_to_empty(tmp_path):
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(_cfg_text(""))
+    assert rgb.load_config(cfg).required_validity == ()
+    cfg.write_text(_cfg_text("required_validity: [V1, V8]\n"))
+    assert rgb.load_config(cfg).required_validity == ("V1", "V8")
+
+
+@pytest.mark.parametrize("text, match", [
+    ("required_validity: V8\n", "must be a list"),
+    ("required_validity: [V8, V8]\n", "duplicate"),
+    ("required_validity: [O1]\n", r"V<n>"),
+    ("required_validity: [V]\n", r"V<n>"),
+    ("required_validity: [8]\n", r"V<n>"),
+])
+def test_a_malformed_required_validity_is_refused(tmp_path, text, match):
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(_cfg_text(text))
+    with pytest.raises(rgb.BaselineError, match=match):
+        rgb.load_config(cfg)

@@ -300,6 +300,7 @@ website/.docusaurus/
 
 # Agent-monitoring hook temp files
 .claude/.tool_start
+.claude/.disk_warn.*
 .claude/.current_session_id
 .claude/current_run
 .claude/current_run.*
