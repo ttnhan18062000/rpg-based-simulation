@@ -15,7 +15,7 @@ tags: [testing, regression, simulation-quality]
 The grade regression tests and the re-anchor tool read a pillar's "no-data" status, so a pillar with too few events is neither a fake score nor a silent pass. A pillar missing from a report becomes a failure, not grade C.
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -51,7 +51,7 @@ Found during the design: `tests/simulation_quality/test_grade_regression.py` (~L
 A no-data pillar anchor is `{"status": "no-data", "reason": "below_min_events", "min_events": k}` with no grade or score. An ok anchor keeps `{grade, score}`; an explicit `status: ok` is allowed.
 
 ## Scope
-1. **Missing pillar fails.** Remove the `.get(pillar, "C")` default and every similar default (search the SimQ tests for others). A pillar present in the anchor but missing from the report is a test failure that names the pillar.
+1. **Missing pillar fails.** Remove the `.get(pillar, "C")` default and every similar default (search the SimQ tests for others; the scan found `actual_scores.get(pillar, 0.0)` in `_format_score_failures` too, which turned a missing pillar into a score of 0.0, and the no-default reads at `_extract_pillar_grades/_scores`, the COGNITION `== "S"` assert, the corpus-diversity guards, `simq_reanchor` and `evaluate_simq`: all go through one shared helper, `tools/test_architecture/simq_pillar_compare.py`). A pillar present in the anchor but missing from the report is a test failure that names the pillar.
 2. **Four-way comparison** in `test_grade_regression.py` (fast and long-run) and in every `test_corpus_diversity.py` guard that reads `_anchor(...)`:
    - anchor ok / live ok: the existing band and score checks, unchanged.
    - anchor no-data / live no-data with the same `min_events`: pass, "still no-data". A different `min_events` fails: "threshold changed: re-anchor under a ruling".
@@ -74,7 +74,7 @@ A no-data pillar anchor is `{"status": "no-data", "reason": "below_min_events", 
 - Changing any band or score tolerance.
 
 ## Acceptance Criteria
-- [ ] AC1: no `.get(<pillar>, <default grade>)` or equivalent remains in the SimQ tests. A test proves that a pillar missing from the report fails, naming the pillar.
+- [ ] AC1: no `.get(<pillar>, <default grade or score>)` (grade `"C"` and score `0.0` included) or equivalent remains in the SimQ tests. A test proves that a pillar missing from the report fails, naming the pillar.
 - [ ] AC2: the four-way comparison and the contract-failure cases have unit tests on synthetic reports and anchors (all 4 cells, the `min_events` change, and both malformed shapes).
 - [ ] AC3: the overall is compared only on equal no-data sets, and an overall no-data follows the four-way rule. Both are tested.
 - [ ] AC4: `simq_reanchor.py` writes the no-data anchor shape and records status transitions as moved rows in both tables. Tested.
@@ -106,13 +106,33 @@ A no-data pillar anchor is `{"status": "no-data", "reason": "below_min_events", 
 - The file and symbol for `min_events` come from rpg-implementer-2. The harness reads `min_events` from the report, not from src.
 
 ## Implementation Notes
-(implementer)
+Design (testing-planner approved 2026-10-14): one module, `tools/test_architecture/simq_pillar_compare.py`, owns the reading and the comparison, so the regression tests, the corpus-diversity guards, `simq_reanchor` and `evaluate_simq` cannot drift apart. Three parts: a typed parse of a pillar (`parse_report_pillar`, `parse_anchor`, `parse_row_pillar`, `parse_overall`; ok, no-data, or `PillarContractError`), the four-way `compare_pillar` verdict, and `no_data_sets_equal` for the overall.
+
+Found during the scan (pillar-default reads, all removed): `test_grade_regression.py` `actual_scores.get(pillar, 0.0)` (L250, not in the original ticket), `actual_grades.get(pillar, "C")` at L332/L379/L432/L435/L473/L476; the no-default reads `_extract_pillar_grades/_scores`, `pillars["COGNITION"]["grade"]`, the 14 `test_corpus_diversity.py` guards that read `_anchor()` and `snap.grade`, `simq_reanchor` L112-124, and `tools/evaluate_simq.py` `_extract_pillar_grades` / `anchor_grades` (agent-working-designer's file, minimum change only: it reads through the helper and prints `no-data`; informational job).
+
+AC6: a pillar with no `status` is read as ok only with a letter grade and a numeric score; anything else is a contract failure, never a default. Proof the existing anchors and CI are unchanged: the committed fixture parses as 810 ok anchors (test), and re-running the tool on the #531 stored rows (`audit_rows.jsonl` + `audit_rows_pre536.jsonl` over the pre-re-anchor fixture, with the 27 exclusions) reproduces the committed anchors byte for byte and the stored `ruling_table.tsv` byte for byte.
+
+AC8: no tolerance, band or override changed (`SCORE_TOLERANCE_OVERRIDES` is still empty, `SCORE_ABS_FLOOR`/`SCORE_REL_PCT` pinned equal to the helper's by a test).
+
+Visibility (Scope 4): `_pillar_failures` warns `<run_key>: no-data pillars: anchor=[...] live=[...]` for every run with a no-data pillar, so the pytest warnings summary lists them.
+
+The overall is not anchored in `grade_anchors.json` today (810 = 81 x 10 pillar rows), so AC3 is the helper rule plus its tests (`no_data_sets_equal`, `parse_overall` + `compare_pillar` for an overall that is itself no-data); no test compares an overall yet.
+
+Pairs with: rpg's (b) PR (the scorer's `no-data` report). AC7 is recorded here when that PR number is known.
+
+Not done here: re-anchoring the 27 held rows and the 23 on the -8/51 constant (follow-up after (a) and (b) are on main, under its own rpg ruling).
 
 ## Test Summary
-(implementer)
+`tests/unit/tools/test_simq_pillar_compare.py` (17 tests: constants pinned to the regression tests, AC6 status-less reads, both malformed shapes, all four cells, `min_events` change, missing pillar, anchor-shape accept/reject, overall comparability and overall no-data, the committed fixture is all ok); `tests/simulation_quality/test_grade_regression.py` (5 new tests on synthetic reports, they need no `data/calibration` so they run in the blocking suite); `tests/unit/worldassembly/test_corpus_diversity.py` (2 new: the `_anchor` reader and `_snap_failure` four-way on hub snapshots; one real engine guard re-run passed); `tests/unit/tools/test_simq_reanchor.py` (6 new: no-data anchor written, status change moved both ways, identity check includes status and `min_events`, malformed refusals, ruling table transitions, ok-only measurements unchanged); `tests/simulation_quality/test_evaluate_harness.py` (1 new). Whole set, `-m "not slow"`: 611 passed, 64 skipped.
 
 ## Files Changed
-(implementer)
+- tools/test_architecture/simq_pillar_compare.py (new)
+- tools/test_architecture/simq_reanchor.py
+- tools/evaluate_simq.py (minimum change)
+- tests/simulation_quality/test_grade_regression.py, test_evaluate_harness.py
+- tests/unit/worldassembly/test_corpus_diversity.py
+- tests/unit/tools/test_simq_pillar_compare.py (new), test_simq_reanchor.py
+- docs/simulation_quality/quality_scoring_contract.md (11.3)
 
 ## Completion Summary
 (implementer)

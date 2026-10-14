@@ -6,14 +6,17 @@ pair differs is never re-anchored (it is a determinism finding for rpg, not a va
 anchor (for example a FACTION=0 that rpg rules a regression the stale anchor had hidden; that row gets an rpg-owned known-red instead).
 
 Input rows (``rows.jsonl``, one per run): ``{"key", "rep", "exit", "pillars": {PILLAR: {"grade", "norm", "raw", "events"}}, "overall": [grade, score]}``, the
-shape the proof driver writes. Output: the new fixture (same layout as the committed one: ``indent=2`` and a final newline, metadata keys first and untouched,
+shape the proof driver writes. A pillar the scorer reports as no-data is ``{"status": "no-data", "grade": null, "norm": null, "events": n, "min_events": k}``
+(TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION): it is written as the no-data anchor ``{"status": "no-data", "reason": "below_min_events", "min_events": k}``, a
+change of status (ok to no-data or back) is always a moved row, and the pair-identity check compares status and ``min_events`` with everything else. A pillar that is
+neither a letter and a number nor a well-formed no-data pillar refuses the re-anchor. Output: the new fixture (same layout as the committed one: ``indent=2`` and a final newline, metadata keys first and untouched,
 run keys and pillars in their existing order) and a provenance table with one line per (run_key, pillar)::
 
-    run_key  pillar  committed_grade  committed_score  audit_grade  audit_score  in_band_before  in_band_after  moved  excluded
+    run_key  pillar  committed_grade  committed_score  audit_grade  audit_score  in_band_before  in_band_after  moved  excluded  committed_status  audit_status
 
 ``in_band_before`` is the committed anchor's own check applied to the audit value (grade within the band and score within the tolerance, including the
 per-(run_key, pillar) overrides in ``test_grade_regression``); ``in_band_after`` is the same check against the new anchor (true unless the row is excluded);
-``moved`` is ``not in_band_before``.
+``moved`` is ``not in_band_before`` (the four-way comparison of ``simq_pillar_compare``, so a status change is moved). A no-data pillar has an empty grade and score cell.
 
 CLI::
 
@@ -30,20 +33,14 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
-GRADE_ORDER = ("F", "D", "C", "B", "A", "S")
-SCORE_ABS_FLOOR, SCORE_REL_PCT = 0.05, 0.20  # mirrors test_grade_regression; a test pins that they agree
+from tools.test_architecture.simq_pillar_compare import (  # noqa: E402  (one reading of a pillar and one comparison, shared with the regression tests)
+    BELOW_MIN_EVENTS, GRADE_ORDER, NO_DATA, OK, SCORE_ABS_FLOOR, SCORE_REL_PCT, Pillar, PillarContractError, compare_pillar, parse_anchor, parse_row_pillar,
+    within_band, within_score,
+)
 
 
 class ReanchorRefused(ValueError):
     """The proof rows can not re-anchor; the message names the run key and the rule."""
-
-
-def within_band(actual: str, anchor: str, tolerance: int = 1) -> bool:
-    return actual in GRADE_ORDER and anchor in GRADE_ORDER and abs(GRADE_ORDER.index(actual) - GRADE_ORDER.index(anchor)) <= tolerance
-
-
-def within_score(actual: float, anchor: float, abs_floor: float = SCORE_ABS_FLOOR) -> bool:
-    return abs(actual - anchor) <= max(abs_floor, SCORE_REL_PCT * abs(anchor))
 
 
 def load_rows(path: Path) -> Dict[str, Dict[int, dict]]:
@@ -81,6 +78,31 @@ def audit_values(run_key: str, runs: Mapping[int, dict]) -> Dict[str, dict]:
     return a["pillars"]
 
 
+def _row_pillar(run_key: str, pillar: str, data: Mapping[str, Any]) -> Pillar:
+    try:
+        return parse_row_pillar(f"{run_key}/{pillar}", data)
+    except PillarContractError as exc:
+        raise ReanchorRefused(f"{run_key}: the audit_mode pillar is neither a graded nor a well-formed no-data pillar: {exc}") from exc
+
+
+def _anchor_pillar(run_key: str, pillar: str, data: Mapping[str, Any]) -> Pillar:
+    try:
+        return parse_anchor(f"{run_key}/{pillar}", data)
+    except PillarContractError as exc:
+        raise ReanchorRefused(f"{run_key}: the committed anchor is malformed: {exc}") from exc
+
+
+def _new_anchor(actual: Pillar) -> Dict[str, Any]:
+    """The anchor an audit value writes: ``{grade, score}`` for an ok pillar, the no-data shape otherwise (never a grade or score on a no-data pillar)."""
+    if actual.status == NO_DATA:
+        return {"status": NO_DATA, "reason": BELOW_MIN_EVENTS, "min_events": actual.min_events}
+    return {"grade": actual.grade, "score": actual.score}
+
+
+def _identity(p: Pillar) -> tuple:
+    return (p.status, p.grade, p.score, p.min_events)
+
+
 def reanchor(
     fixture: Mapping[str, Any],
     rows: Mapping[str, Mapping[int, dict]],
@@ -105,24 +127,29 @@ def reanchor(
         prior = audit_values(run_key, prior_rows.get(run_key, {})) if prior_rows is not None else None
         new[run_key] = {}
         for pillar, anchor in pillars.items():
-            actual = audit.get(pillar)
-            if actual is None:
+            actual_raw = audit.get(pillar)
+            if actual_raw is None:
                 raise ReanchorRefused(f"{run_key}: the audit_mode runs have no {pillar} pillar to anchor on")
+            actual = _row_pillar(run_key, pillar, actual_raw)
+            committed = _anchor_pillar(run_key, pillar, anchor)
             floor = score_overrides.get((run_key, pillar), SCORE_ABS_FLOOR)
-            before = within_band(actual["grade"], anchor["grade"], band_overrides.get((run_key, pillar), 1)) and within_score(actual["norm"], anchor["score"], floor)
+            before = compare_pillar(pillar, committed, actual, band=band_overrides.get((run_key, pillar), 1), abs_floor=floor).ok
             skip = (run_key, pillar) in excluded
-            new[run_key][pillar] = dict(anchor) if skip else {"grade": actual["grade"], "score": actual["norm"]}
+            new[run_key][pillar] = dict(anchor) if skip else _new_anchor(actual)
             extra = {}
             if prior is not None:
-                before_value = prior.get(pillar)
-                if before_value is None:
+                before_raw = prior.get(pillar)
+                if before_raw is None:
                     raise ReanchorRefused(f"{run_key}: the prior measurement has no {pillar} pillar")
-                extra = {"prior_grade": before_value["grade"], "prior_score": before_value["norm"], "grade_changed": before_value["grade"] != actual["grade"],
-                         "changed_since_ruling": (before_value["grade"], before_value["norm"]) != (actual["grade"], actual["norm"])}
+                before_value = _row_pillar(run_key, pillar, before_raw)
+                extra = {"prior_grade": before_value.grade, "prior_score": before_value.score, "prior_status": before_value.status,
+                         "grade_changed": before_value.grade != actual.grade,
+                         "changed_since_ruling": _identity(before_value) != _identity(actual)}
             table.append({
-                **extra, "run_key": run_key, "pillar": pillar, "committed_grade": anchor["grade"], "committed_score": anchor["score"],
-                "audit_grade": actual["grade"], "audit_score": actual["norm"], "in_band_before": before,
+                **extra, "run_key": run_key, "pillar": pillar, "committed_grade": committed.grade, "committed_score": committed.score,
+                "audit_grade": actual.grade, "audit_score": actual.score, "in_band_before": before,
                 "in_band_after": before if skip else True, "moved": not before, "excluded": skip,
+                "committed_status": committed.status, "audit_status": actual.status, "committed_min_events": committed.min_events, "audit_min_events": actual.min_events,
             })
     unknown = sorted(f"{k}:{p}" for k, p in excluded if k not in fixture or p not in fixture[k])
     if unknown:
@@ -142,13 +169,27 @@ def table_tsv(table: Iterable[Mapping[str, Any]]) -> str:
     cols += ["audit_grade", "audit_score"]
     if table and "prior_grade" in table[0]:
         cols += ["grade_changed", "changed_since_ruling"]
-    cols += ["in_band_before", "in_band_after", "moved", "excluded"]
-    return "\t".join(cols) + "\n" + "".join("\t".join(str(row[c]) for c in cols) + "\n" for row in table)
+    cols += ["in_band_before", "in_band_after", "moved", "excluded", "committed_status"]
+    if table and "prior_grade" in table[0]:
+        cols += ["prior_status"]
+    cols += ["audit_status"]
+    return "\t".join(cols) + "\n" + "".join("\t".join("" if row.get(c) is None else str(row[c]) for c in cols) + "\n" for row in table)
 
 
 GROUP_CHANGED = "#536, cause not isolated by measurement"
 GROUP_UNCHANGED = "unchanged since the 2026-10-12 ruling"
 GROUP_HELD = "held as a finding: kept at the committed anchor (excluded)"
+
+
+def _same_value(a: tuple, b: tuple) -> bool:
+    """Whether two ``(status, grade, score, min_events)`` readings are the same value; ``min_events`` counts only when both sides know it."""
+    if a[:3] != b[:3]:
+        return False
+    return a[3] is None or b[3] is None or a[3] == b[3]
+
+
+def _fmt(v: tuple) -> str:
+    return f"no-data(min_events={v[3]})" if v[0] == NO_DATA and v[3] is not None else "no-data" if v[0] == NO_DATA else f"{v[1]}/{v[2]:.4g}"
 
 
 def ruling_rows(table: Iterable[Mapping[str, Any]]) -> List[dict]:
@@ -159,21 +200,25 @@ def ruling_rows(table: Iterable[Mapping[str, Any]]) -> List[dict]:
     committed anchor is :data:`GROUP_UNCHANGED` (already covered by the earlier ruling). A row equal to its committed anchor is not listed."""
     out: List[dict] = []
     for row in table:
-        committed = (row["committed_grade"], row["committed_score"])
-        before, after = (row["prior_grade"], row["prior_score"]), (row["audit_grade"], row["audit_score"])
+        committed = (row.get("committed_status", OK), row["committed_grade"], row["committed_score"], row.get("committed_min_events"))
+        before = (row.get("prior_status", OK), row["prior_grade"], row["prior_score"], None)
+        after = (row.get("audit_status", OK), row["audit_grade"], row["audit_score"], row.get("audit_min_events"))
         if row.get("excluded"):
             group = GROUP_HELD
-        elif before != after:
+        elif not _same_value(before, after):
             group = GROUP_CHANGED
-        elif after != committed:
+        elif not _same_value(after, committed):
             group = GROUP_UNCHANGED
         else:
             continue
         reference = before if group in (GROUP_CHANGED, GROUP_HELD) else committed
-        step = GRADE_ORDER.index(after[0]) - GRADE_ORDER.index(reference[0]) if after[0] in GRADE_ORDER and reference[0] in GRADE_ORDER else 0
-        direction = "up" if step > 0 or (step == 0 and after[1] > reference[1]) else "down"
-        out.append({"run_key": row["run_key"], "pillar": row["pillar"], "committed": f"{committed[0]}/{committed[1]:.4g}", "pre_536": f"{before[0]}/{before[1]:.4g}",
-                    "post_536": f"{after[0]}/{after[1]:.4g}", "direction": direction, "group": group})
+        if reference[0] != after[0]:
+            direction = "to-no-data" if after[0] == NO_DATA else "from-no-data"  # a status transition is shown as one, never as a grade step
+        else:
+            step = GRADE_ORDER.index(after[1]) - GRADE_ORDER.index(reference[1]) if after[1] in GRADE_ORDER and reference[1] in GRADE_ORDER else 0
+            direction = "up" if step > 0 or (step == 0 and (after[2] or 0) > (reference[2] or 0)) else "down"
+        out.append({"run_key": row["run_key"], "pillar": row["pillar"], "committed": _fmt(committed), "pre_536": _fmt(before),
+                    "post_536": _fmt(after), "direction": direction, "group": group})
     order = (GROUP_HELD, GROUP_CHANGED, GROUP_UNCHANGED)
     return sorted(out, key=lambda r: (order.index(r["group"]), r["run_key"], r["pillar"]))
 

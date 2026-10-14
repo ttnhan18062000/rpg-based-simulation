@@ -106,6 +106,8 @@ from typing import Any
 import pytest
 import yaml
 
+from tools.test_architecture.simq_pillar_compare import Pillar, PillarContractError, compare_pillar, parse_anchor, parse_report_pillar
+
 pytestmark = pytest.mark.worldassembly
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -125,8 +127,38 @@ def _anchor(run_key: str, pillar: str) -> dict:
 
     if not _ANCHOR_FIXTURE:
         _ANCHOR_FIXTURE.update(json.loads(FIXTURE_PATH.read_text(encoding="utf-8")))
-    entry = _ANCHOR_FIXTURE[run_key][pillar]
-    return {"grade": entry["grade"], "score": entry["score"], "abs_floor": 0.05}
+    entry = parse_anchor(f"{run_key}/{pillar}", _ANCHOR_FIXTURE[run_key][pillar])  # strict: one of the two anchor shapes, no default
+    if entry.status == "no-data":
+        return {"status": "no-data", "min_events": entry.min_events, "abs_floor": 0.05}
+    return {"status": "ok", "grade": entry.grade, "score": entry.score, "abs_floor": 0.05}
+
+
+def _live_pillar(snap) -> Pillar:
+    """A hub pillar snapshot read through the shared pillar parser (a snapshot with no ``status`` attribute is an ok pillar only with a letter grade and a numeric score)."""
+    data = {"grade": snap["grade"] if isinstance(snap, dict) else snap.grade, "normalized_score": snap["normalized_score"] if isinstance(snap, dict) else snap.normalized_score}
+    for key in ("status", "min_events"):
+        value = snap.get(key) if isinstance(snap, dict) else getattr(snap, key, None)
+        if value is not None:
+            data[key] = value
+    return parse_report_pillar("pillar", data)
+
+
+def _snap_failure(label: str, target: dict, snap, band: int = 1) -> str | None:
+    """The four-way status/band failure of one trial's pillar against its anchor (None when it passes; the score tolerance stays with the caller's mean over trials).
+
+    Anchor no-data / live no-data with the same ``min_events`` passes; a lost or gained data status, a changed ``min_events`` and a malformed snapshot fail."""
+    anchor = Pillar(target["status"], target.get("grade"), target.get("score"), target.get("min_events"))
+    try:
+        live = _live_pillar(snap)
+    except PillarContractError as exc:
+        return f"  {label}: contract failure: {exc}"
+    verdict = compare_pillar(label, anchor, live, band=band, check_score=False)
+    return None if verdict.ok else f"  {verdict.message}"
+
+
+def _score_applies(target: dict) -> bool:
+    """The score tolerance applies only to an ok anchor (a no-data anchor has no score; its status was checked by ``_snap_failure``)."""
+    return target["status"] == "ok"
 
 
 def _audit_cognition(world_name: str, seed: int, ticks: int) -> dict:
@@ -151,7 +183,8 @@ def _audit_cognition(world_name: str, seed: int, ticks: int) -> dict:
         persistence.write_report(report)
         persistence.shutdown()
     snap = report.pillars["COGNITION"]
-    return {"event_count": snap.event_count, "raw_score": snap.raw_score, "normalized_score": snap.normalized_score, "grade": snap.grade, "loop_detected": snap.loop_detected}
+    return {"event_count": snap.event_count, "raw_score": snap.raw_score, "normalized_score": snap.normalized_score, "grade": snap.grade, "loop_detected": snap.loop_detected,
+            "status": getattr(snap, "status", None), "min_events": getattr(snap, "min_events", None)}
 FACTIONS_CATALOG_PATH = REPO_ROOT / "data" / "content" / "social" / "factions.yaml"
 
 # test_hazard_kind_matches_populating_faction_immunity now runs corpus-wide (all
@@ -610,7 +643,7 @@ def test_urban_political_seed123_500t_cognition_grade_stability() -> None:
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "urban_political"
     seed = 123
@@ -634,11 +667,9 @@ def test_urban_political_seed123_500t_cognition_grade_stability() -> None:
             persistence.shutdown()
         snap = report.pillars["COGNITION"]
         trial_scores.append(snap.normalized_score)
-        if not _within_band(snap.grade, anchor["grade"], tolerance=anchor["band_tolerance"]):
-            band_failures.append(
-                f"  trial {trial} COGNITION: grade={snap.grade} outside +/-{anchor['band_tolerance']} "
-                f"band of anchor grade={anchor['grade']}"
-            )
+        failure = _snap_failure(f"trial {trial} COGNITION", anchor, snap, band=anchor["band_tolerance"])
+        if failure:
+            band_failures.append(failure)
 
     assert not band_failures, (
         f"urban_political_seed123_500t -- {len(band_failures)} trial(s) drifted beyond anchor band:\n"
@@ -646,7 +677,7 @@ def test_urban_political_seed123_500t_cognition_grade_stability() -> None:
     )
 
     mean_score = sum(trial_scores) / n_trials
-    assert _within_score_tolerance(mean_score, anchor["score"], abs_floor=anchor["abs_floor"]), (
+    assert not _score_applies(anchor) or _within_score_tolerance(mean_score, anchor["score"], abs_floor=anchor["abs_floor"]), (
         f"urban_political_seed123_500t -- COGNITION mean_score={mean_score:.4f} across {n_trials} "
         f"trials outside tolerance of anchor_score={anchor['score']} (abs_floor={anchor['abs_floor']}) "
         f"-- per-trial values: {trial_scores}"
@@ -694,12 +725,13 @@ def test_simq_routing_test_seed42_500t_cognition_grade_stability() -> None:
     host speed: the throttled governor changes mode and the `decision_divergence_detected` count moves with it (0 to 228 events on this key across runs on one SHA). The
     anchor is now measured under `audit_mode`, where the run is deterministic, so this asserts the committed anchor with the shared +/-1 grade band and score tolerance
     on ONE run. The induced-load machinery is gone; the throttled kernel keeps its own coarse smoke test (`test_throttled_kernel_smoke.py`)."""
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     result = _audit_cognition("simq_routing_test", 42, 500)
     anchor = _anchor("simq_routing_test_seed42_500t", "COGNITION")
-    assert _within_band(result["grade"], anchor["grade"]), f"simq_routing_test_seed42_500t COGNITION grade={result['grade']} outside +/-1 of anchor {anchor['grade']} -- {result}"
-    assert _within_score_tolerance(result["normalized_score"], anchor["score"]), f"simq_routing_test_seed42_500t COGNITION score={result['normalized_score']:.4f} outside tolerance of anchor {anchor['score']} -- {result}"
+    failure = _snap_failure("simq_routing_test_seed42_500t COGNITION", anchor, result)
+    assert failure is None, f"{failure} -- {result}"
+    assert not _score_applies(anchor) or _within_score_tolerance(result["normalized_score"], anchor["score"]), f"simq_routing_test_seed42_500t COGNITION score={result['normalized_score']:.4f} outside tolerance of anchor {anchor['score']} -- {result}"
 
 
 
@@ -712,12 +744,13 @@ def test_simq_routing_test_seed42_1000t_cognition_grade_stability() -> None:
     host speed: the throttled governor changes mode and the `decision_divergence_detected` count moves with it (0 to 228 events on this key across runs on one SHA). The
     anchor is now measured under `audit_mode`, where the run is deterministic, so this asserts the committed anchor with the shared +/-1 grade band and score tolerance
     on ONE run. The induced-load machinery is gone; the throttled kernel keeps its own coarse smoke test (`test_throttled_kernel_smoke.py`)."""
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     result = _audit_cognition("simq_routing_test", 42, 1000)
     anchor = _anchor("simq_routing_test_seed42_1000t", "COGNITION")
-    assert _within_band(result["grade"], anchor["grade"]), f"simq_routing_test_seed42_1000t COGNITION grade={result['grade']} outside +/-1 of anchor {anchor['grade']} -- {result}"
-    assert _within_score_tolerance(result["normalized_score"], anchor["score"]), f"simq_routing_test_seed42_1000t COGNITION score={result['normalized_score']:.4f} outside tolerance of anchor {anchor['score']} -- {result}"
+    failure = _snap_failure("simq_routing_test_seed42_1000t COGNITION", anchor, result)
+    assert failure is None, f"{failure} -- {result}"
+    assert not _score_applies(anchor) or _within_score_tolerance(result["normalized_score"], anchor["score"]), f"simq_routing_test_seed42_1000t COGNITION score={result['normalized_score']:.4f} outside tolerance of anchor {anchor['score']} -- {result}"
 
 
 
@@ -730,12 +763,13 @@ def test_hero_guild_routing_seed42_1000t_cognition_grade_stability() -> None:
     host speed: the throttled governor changes mode and the `decision_divergence_detected` count moves with it (0 to 228 events on this key across runs on one SHA). The
     anchor is now measured under `audit_mode`, where the run is deterministic, so this asserts the committed anchor with the shared +/-1 grade band and score tolerance
     on ONE run. The induced-load machinery is gone; the throttled kernel keeps its own coarse smoke test (`test_throttled_kernel_smoke.py`)."""
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     result = _audit_cognition("hero_guild_routing", 42, 1000)
     anchor = _anchor("hero_guild_routing_seed42_1000t", "COGNITION")
-    assert _within_band(result["grade"], anchor["grade"]), f"hero_guild_routing_seed42_1000t COGNITION grade={result['grade']} outside +/-1 of anchor {anchor['grade']} -- {result}"
-    assert _within_score_tolerance(result["normalized_score"], anchor["score"]), f"hero_guild_routing_seed42_1000t COGNITION score={result['normalized_score']:.4f} outside tolerance of anchor {anchor['score']} -- {result}"
+    failure = _snap_failure("hero_guild_routing_seed42_1000t COGNITION", anchor, result)
+    assert failure is None, f"{failure} -- {result}"
+    assert not _score_applies(anchor) or _within_score_tolerance(result["normalized_score"], anchor["score"]), f"hero_guild_routing_seed42_1000t COGNITION score={result['normalized_score']:.4f} outside tolerance of anchor {anchor['score']} -- {result}"
 
 
 
@@ -782,7 +816,7 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "unit_selfmodel_pilot"
     profile_name = "unit_selfmodel_pilot"
@@ -817,10 +851,9 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"unit_selfmodel_pilot_seed42_1000t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -830,7 +863,7 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -901,7 +934,7 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "urban_political"
     profile_name = "urban_political"
@@ -929,10 +962,9 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"urban_political_seed42_1000t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -942,7 +974,7 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1012,7 +1044,7 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "urban_political"
     profile_name = "urban_political"
@@ -1048,10 +1080,9 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"urban_political_seed123_1000t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -1061,7 +1092,7 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1106,7 +1137,7 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "urban_political"
     profile_name = "urban_political_selfmodel_probe"
@@ -1139,10 +1170,9 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"urban_political_selfmodel_probe_seed42_200t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -1152,7 +1182,7 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1196,7 +1226,7 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "generated_frontier_3_42"
     profile_name = "generated_frontier_3_42"
@@ -1245,10 +1275,9 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"generated_frontier_3_42_seed123_200t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -1258,7 +1287,7 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1302,7 +1331,7 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "urban_political"
     profile_name = "urban_political"
@@ -1334,10 +1363,9 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"urban_political_seed42_200t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -1347,7 +1375,7 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1411,7 +1439,7 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "frontier_extended"
     profile_name = "frontier_extended"
@@ -1446,10 +1474,9 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"frontier_extended_seed42_200t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -1459,7 +1486,7 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1503,7 +1530,7 @@ def test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stabi
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "frontier_extended"
     profile_name = "frontier_extended"
@@ -1538,10 +1565,9 @@ def test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stabi
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"frontier_extended_seed123_200t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -1551,7 +1577,7 @@ def test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stabi
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1615,7 +1641,7 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "frontier_living_world"
     profile_name = "frontier_living_world"
@@ -1650,10 +1676,9 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"frontier_living_world_seed42_200t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -1663,7 +1688,7 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1707,7 +1732,7 @@ def test_frontier_living_world_seed123_200t_combat_narrative_grade_stability() -
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "frontier_living_world"
     profile_name = "frontier_living_world"
@@ -1741,10 +1766,9 @@ def test_frontier_living_world_seed123_200t_combat_narrative_grade_stability() -
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"frontier_living_world_seed123_200t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -1754,7 +1778,7 @@ def test_frontier_living_world_seed123_200t_combat_narrative_grade_stability() -
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1802,7 +1826,7 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
+    from tests.simulation_quality.test_grade_regression import _within_score_tolerance
 
     world_name = "frontier_marches"
     profile_name = "frontier_marches"
@@ -1838,10 +1862,9 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
         for pillar, target in anchors.items():
             snap = report.pillars[pillar]
             trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+            failure = _snap_failure(f"trial {trial} {pillar}", target, snap)
+            if failure:
+                band_failures.append(failure)
 
     assert not band_failures, (
         f"frontier_marches_seed42_200t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
@@ -1851,7 +1874,7 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
     score_failures: list[str] = []
     for pillar, target in anchors.items():
         mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1972,3 +1995,38 @@ def test_trading_company_hub_composed(world_id: str) -> None:
         f"{world_id}: expected 'trading_company_hub' in composition module list, "
         f"got {_world_modules(world_id)}"
     )
+
+
+# ---------------------------------------------------------------------------
+# TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION: the anchor guards' status handling on synthetic snapshots (no engine run)
+# ---------------------------------------------------------------------------
+
+class _Snap:
+    def __init__(self, grade, normalized_score, **extra):
+        self.grade, self.normalized_score = grade, normalized_score
+        for key, value in extra.items():
+            setattr(self, key, value)
+
+
+_OK_TARGET = {"status": "ok", "grade": "B", "score": 1.0, "abs_floor": 0.05}
+_ND_TARGET = {"status": "no-data", "min_events": 3, "abs_floor": 0.05}
+
+
+def test_anchor_reader_returns_the_committed_ok_anchors_and_never_a_default():
+    anchor = _anchor("urban_political_seed123_500t", "COGNITION")
+    assert anchor["status"] == "ok" and anchor["grade"] in "FDCBAS" and isinstance(anchor["score"], float)
+    with pytest.raises(KeyError):
+        _anchor("urban_political_seed123_500t", "NO_SUCH_PILLAR")
+
+
+def test_snap_failure_four_way_on_hub_snapshots():
+    assert _snap_failure("t COGNITION", _OK_TARGET, _Snap("A", 1.0)) is None  # a snapshot with no status attribute is ok (AC6)
+    assert "outside" in _snap_failure("t COGNITION", _OK_TARGET, _Snap("D", 1.0))
+    assert _snap_failure("t X", _ND_TARGET, _Snap(None, None, status="no-data", min_events=3)) is None
+    assert "threshold changed" in _snap_failure("t X", _ND_TARGET, _Snap(None, None, status="no-data", min_events=5))
+    assert "lost its data" in _snap_failure("t X", _OK_TARGET, _Snap(None, None, status="no-data", min_events=3))
+    assert "gained data" in _snap_failure("t X", _ND_TARGET, _Snap("B", 1.0, status="ok"))
+    assert "contract failure" in _snap_failure("t X", _OK_TARGET, _Snap(None, 1.0))
+    assert "contract failure" in _snap_failure("t X", _ND_TARGET, _Snap("C", None, status="no-data", min_events=3))
+    assert _snap_failure("t X", _OK_TARGET, {"grade": "B", "normalized_score": 1.0, "status": None, "min_events": None}) is None  # the dict form (_audit_cognition)
+    assert _score_applies(_OK_TARGET) and not _score_applies(_ND_TARGET)

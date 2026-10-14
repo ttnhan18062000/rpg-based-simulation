@@ -34,7 +34,9 @@ To update anchors after an intentional scoring change:
   2. Inspect new grades/scores in ``data/calibration/<run_key>/quality_report.json``
      (use ``normalized_score``, not ``raw_score``)
   3. Edit ``tests/simulation_quality/fixtures/grade_anchors.json`` with new
-     ``{"grade": ..., "score": ...}`` values
+     ``{"grade": ..., "score": ...}`` values (a pillar the scorer reports as ``no-data`` is anchored as
+     ``{"status": "no-data", "reason": "below_min_events", "min_events": k}``, never with a grade or score; a change of
+     status is a moved row that needs an owner ruling, ``simq_reanchor`` writes both shapes)
   4. Run this file to confirm all pass
   5. Commit both fixture and calibration data together
 
@@ -54,6 +56,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
+from tools.test_architecture.simq_pillar_compare import BAND, SCORE, compare_report, parse_anchor, parse_report_pillar
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -231,54 +235,52 @@ def _within_score_tolerance(
     return abs(actual_score - anchor_score) <= max(abs_floor, rel_pct * abs(anchor_score))
 
 
-def _format_score_failures(
-    run_key: str, anchors: dict, actual_scores: dict
-) -> list[str]:
-    """Build score-tolerance failure lines, appending a known structural_ceiling classification
-    when one exists (TCK-20260808-SIMQ-SCORE-CEILING-PROVENANCE) so a drift immediately shows
-    whether it's a known, already-explained ceiling/correction rather than a bare number mismatch.
-    """
+def _ceiling_note(run_key: str, pillar: str) -> str:
+    """The known-ceiling annotation for a score failure (``simq_ceiling``), or ''."""
     import sys as _sys
     from pathlib import Path as _Path
 
     _sys.path.insert(0, str(_Path(__file__).resolve().parents[2] / "tools"))
     from simq_ceiling import lookup_ceiling  # noqa: E402
 
-    lines = []
-    for pillar, anchor in anchors.items():
-        kwargs = _score_tolerance_kwargs(run_key, pillar)
-        actual = actual_scores.get(pillar, 0.0)
-        if _within_score_tolerance(actual, anchor["score"], **kwargs):
+    ceiling = lookup_ceiling(run_key, pillar)
+    if ceiling is None:
+        return ""
+    return f" [known {ceiling.ceiling_kind}: {ceiling.reason}" + (f" — {ceiling.since_ticket}" if ceiling.since_ticket else "") + "]"
+
+
+def _pillar_failures(run_key: str, anchors: dict, report: dict[str, Any]) -> tuple[list[str], list[str], list[str]]:
+    """Compare every anchored pillar of ``run_key`` with ``report`` through ``simq_pillar_compare`` (TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION).
+
+    Returns ``(band_failures, score_failures, other_failures)``. A pillar missing from the report, a pillar that lost or gained its data, a changed ``min_events``
+    and a malformed pillar are ``other_failures``: there is no default grade or score, so none of them can read as a pass. Anchor ok / live ok keeps the band check
+    and the score tolerance (with the per-row override) exactly as before. A run with no-data pillars warns, naming them, so no-data cannot grow unseen."""
+    import warnings
+
+    verdicts, sets = compare_report(
+        run_key, anchors, report, floor_overrides={(run_key, p): v for (k, p), v in SCORE_TOLERANCE_OVERRIDES.items() if k == run_key},
+    )
+    band, score, other = [], [], []
+    for verdict in verdicts:
+        if verdict.ok:
             continue
-        line = (
-            f"  {pillar}: actual_score={actual!r} outside tolerance of "
-            f"anchor_score={anchor['score']!r}"
-        )
-        ceiling = lookup_ceiling(run_key, pillar)
-        if ceiling is not None:
-            line += (
-                f" [known {ceiling.ceiling_kind}: {ceiling.reason}"
-                + (f" — {ceiling.since_ticket}" if ceiling.since_ticket else "")
-                + "]"
-            )
-        lines.append(line)
-    return lines
+        if verdict.code == BAND:
+            band.append(f"  {verdict.message}")
+        elif verdict.code == SCORE:
+            pillar = verdict.message.split(":", 1)[0]
+            score.append(f"  {verdict.message}{_ceiling_note(run_key, pillar)}")
+        else:
+            other.append(f"  {verdict.message}")
+    if sets["anchor_no_data"] or sets["live_no_data"]:
+        warnings.warn(f"{run_key}: no-data pillars: anchor={sets['anchor_no_data']} live={sets['live_no_data']}", stacklevel=2)
+    return band, score, other
 
 
-def _extract_pillar_grades(report: dict[str, Any]) -> dict[str, str]:
-    """Extract ``{PILLAR: grade}`` mapping from a quality_report.json dict."""
-    return {
-        pillar: data["grade"]
-        for pillar, data in report.get("pillars", {}).items()
-    }
-
-
-def _extract_pillar_scores(report: dict[str, Any]) -> dict[str, float]:
-    """Extract ``{PILLAR: normalized_score}`` mapping from a quality_report.json dict."""
-    return {
-        pillar: data["normalized_score"]
-        for pillar, data in report.get("pillars", {}).items()
-    }
+def _assert_pillars(run_key: str, anchors: dict, report: dict[str, Any]) -> None:
+    band, score, other = _pillar_failures(run_key, anchors, report)
+    assert not other, f"{run_key} — {len(other)} pillar(s) missing, malformed or changed their data status:\n" + "\n".join(other)
+    assert not band, f"{run_key} — {len(band)} pillar(s) drifted beyond anchor band:\n" + "\n".join(band)
+    assert not score, f"{run_key} — {len(score)} pillar(s) drifted beyond score tolerance:\n" + "\n".join(score)
 
 
 def _load_calibration_report(run_key: str) -> dict[str, Any] | None:
@@ -322,28 +324,7 @@ def test_grade_within_anchor_band(run_key: str, grade_anchors: dict) -> None:
     if report is None:
         pytest.skip(f"Calibration report not found: data/calibration/{run_key}/quality_report.json")
 
-    anchors = grade_anchors[run_key]
-    actual_grades = _extract_pillar_grades(report)
-    actual_scores = _extract_pillar_scores(report)
-
-    band_failures: list[str] = []
-    for pillar, anchor in anchors.items():
-        anchor_grade = anchor["grade"]
-        actual_grade = actual_grades.get(pillar, "C")
-        if not _within_band(actual_grade, anchor_grade):
-            band_failures.append(
-                f"  {pillar}: actual={actual_grade!r} is outside ±1 band of anchor={anchor_grade!r}"
-            )
-    score_failures = _format_score_failures(run_key, anchors, actual_scores)
-
-    assert not band_failures, (
-        f"{run_key} — {len(band_failures)} pillar(s) drifted beyond anchor band:\n"
-        + "\n".join(band_failures)
-    )
-    assert not score_failures, (
-        f"{run_key} — {len(score_failures)} pillar(s) drifted beyond score tolerance:\n"
-        + "\n".join(score_failures)
-    )
+    _assert_pillars(run_key, grade_anchors[run_key], report)
 
 
 # ---------------------------------------------------------------------------
@@ -369,28 +350,7 @@ def test_grade_within_anchor_band_long_run(run_key: str, grade_anchors: dict) ->
     if report is None:
         pytest.skip(f"Calibration report not found: data/calibration/{run_key}/quality_report.json")
 
-    anchors = grade_anchors[run_key]
-    actual_grades = _extract_pillar_grades(report)
-    actual_scores = _extract_pillar_scores(report)
-
-    band_failures: list[str] = []
-    for pillar, anchor in anchors.items():
-        anchor_grade = anchor["grade"]
-        actual_grade = actual_grades.get(pillar, "C")
-        if not _within_band(actual_grade, anchor_grade):
-            band_failures.append(
-                f"  {pillar}: actual={actual_grade!r} is outside ±1 band of anchor={anchor_grade!r}"
-            )
-    score_failures = _format_score_failures(run_key, anchors, actual_scores)
-
-    assert not band_failures, (
-        f"{run_key} — {len(band_failures)} pillar(s) drifted beyond anchor band:\n"
-        + "\n".join(band_failures)
-    )
-    assert not score_failures, (
-        f"{run_key} — {len(score_failures)} pillar(s) drifted beyond score tolerance:\n"
-        + "\n".join(score_failures)
-    )
+    _assert_pillars(run_key, grade_anchors[run_key], report)
 
 
 # ---------------------------------------------------------------------------
@@ -422,21 +382,8 @@ def test_urban_political_selfmodel_cognition_isolated_grade_anchor(grade_anchors
     if report is None:
         pytest.skip(f"Calibration report not found: data/calibration/{run_key}/quality_report.json")
 
-    pillars = report.get("pillars", {})
-    assert pillars["COGNITION"]["grade"] == "S"
-
-    actual_grades = _extract_pillar_grades(report)
-    actual_scores = _extract_pillar_scores(report)
-    anchors = grade_anchors[run_key]
-    band_failures = [
-        f"  {pillar}: actual={actual_grades.get(pillar, 'C')!r} outside ±1 band of "
-        f"anchor={anchor['grade']!r}"
-        for pillar, anchor in anchors.items()
-        if not _within_band(actual_grades.get(pillar, "C"), anchor["grade"])
-    ]
-    score_failures = _format_score_failures(run_key, anchors, actual_scores)
-    assert not band_failures, f"{run_key} — pillar(s) drifted beyond anchor band:\n" + "\n".join(band_failures)
-    assert not score_failures, f"{run_key} — pillar(s) drifted beyond score tolerance:\n" + "\n".join(score_failures)
+    _assert_pillars(run_key, grade_anchors[run_key], report)  # a missing or no-data COGNITION fails here, naming it
+    assert parse_report_pillar("COGNITION", report["pillars"]["COGNITION"]).grade == "S"
 
 
 def test_urban_political_selfmodel_execution_isolated_grade_anchor(grade_anchors: dict) -> None:
@@ -466,18 +413,7 @@ def test_urban_political_selfmodel_execution_isolated_grade_anchor(grade_anchors
     if report is None:
         pytest.skip(f"Calibration report not found: data/calibration/{run_key}/quality_report.json")
 
-    actual_grades = _extract_pillar_grades(report)
-    actual_scores = _extract_pillar_scores(report)
-    anchors = grade_anchors[run_key]
-    band_failures = [
-        f"  {pillar}: actual={actual_grades.get(pillar, 'C')!r} outside ±1 band of "
-        f"anchor={anchor['grade']!r}"
-        for pillar, anchor in anchors.items()
-        if not _within_band(actual_grades.get(pillar, "C"), anchor["grade"])
-    ]
-    score_failures = _format_score_failures(run_key, anchors, actual_scores)
-    assert not band_failures, f"{run_key} — pillar(s) drifted beyond anchor band:\n" + "\n".join(band_failures)
-    assert not score_failures, f"{run_key} — pillar(s) drifted beyond score tolerance:\n" + "\n".join(score_failures)
+    _assert_pillars(run_key, grade_anchors[run_key], report)
 
 
 def test_information_intent_execution_fires_through_kernel_tick_once() -> None:
@@ -542,8 +478,9 @@ def test_information_intent_execution_fires_through_kernel_tick_once() -> None:
 def test_grade_anchor_file_exists_and_valid(grade_anchors: dict) -> None:
     """grade_anchors.json must exist and contain at least all fast anchor run keys.
 
-    Each entry must have exactly 10 pillars, each pillar an object with exactly
-    ``{"grade", "score"}`` — grade in GRADE_ORDER, score a numeric normalized_score.
+    Each entry must have exactly 10 pillars, each an anchor of exactly one of two shapes
+    (``simq_pillar_compare.parse_anchor``): ``{"grade", "score"}`` (``"status": "ok"`` allowed) with grade in GRADE_ORDER and a numeric
+    normalized_score, or ``{"status": "no-data", "reason": "below_min_events", "min_events": k}`` with no grade or score.
     """
     assert FIXTURE_PATH.exists(), f"Grade anchors fixture missing: {FIXTURE_PATH}"
 
@@ -556,15 +493,7 @@ def test_grade_anchor_file_exists_and_valid(grade_anchors: dict) -> None:
             f"{run_key}: expected 10 pillars, got {len(entry)}: {list(entry.keys())}"
         )
         for pillar, value in entry.items():
-            assert isinstance(value, dict) and set(value.keys()) == {"grade", "score"}, (
-                f"{run_key}/{pillar}: expected {{'grade', 'score'}} object, got {value!r}"
-            )
-            assert value["grade"] in GRADE_ORDER, (
-                f"{run_key}/{pillar}: grade {value['grade']!r} not in GRADE_ORDER {GRADE_ORDER}"
-            )
-            assert isinstance(value["score"], (int, float)), (
-                f"{run_key}/{pillar}: score {value['score']!r} is not numeric"
-            )
+            parse_anchor(f"{run_key}/{pillar}", value)  # exactly one of the two anchor shapes (ok {grade, score}, or no-data {status, reason, min_events}); raises otherwise
 
     # Field-confusion guard: catches an implementer wiring raw_score instead of
     # normalized_score into the "score" field (the two differ by an order of magnitude).
@@ -684,3 +613,55 @@ def test_score_tolerance_overrides_do_not_affect_unlisted_anchors(grade_anchors:
             )
             checked += 1
     assert checked > 0
+
+
+# ---------------------------------------------------------------------------
+# TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION: the comparison on synthetic reports (these need no data/calibration, so they run in the blocking suite)
+# ---------------------------------------------------------------------------
+
+_ND_ANCHOR = {"status": "no-data", "reason": "below_min_events", "min_events": 3}
+_ND_LIVE = {"status": "no-data", "grade": None, "normalized_score": None, "event_count": 1, "min_events": 3, "reason": "below_min_events"}
+
+
+def test_a_pillar_missing_from_the_report_fails_naming_it_not_reading_as_c() -> None:
+    anchors = {"COMBAT": {"grade": "C", "score": 0.0}, "FACTION": {"grade": "C", "score": 0.0}}
+    report = {"pillars": {"COMBAT": {"grade": "C", "normalized_score": 0.0}}}
+    with pytest.raises(AssertionError, match="FACTION: pillar missing from the report"):
+        _assert_pillars("k", anchors, report)
+
+
+def test_status_less_reports_compare_as_before() -> None:
+    anchors = {"COMBAT": {"grade": "B", "score": 1.0}, "FACTION": {"grade": "A", "score": 2.0}}
+    ok = {"pillars": {"COMBAT": {"grade": "A", "normalized_score": 1.1}, "FACTION": {"grade": "A", "normalized_score": 2.0}}}
+    _assert_pillars("k", anchors, ok)
+    band = {"pillars": {"COMBAT": {"grade": "D", "normalized_score": 1.0}, "FACTION": {"grade": "A", "normalized_score": 2.0}}}
+    with pytest.raises(AssertionError, match="outside ±1 band"):
+        _assert_pillars("k", anchors, band)
+    score = {"pillars": {"COMBAT": {"grade": "B", "normalized_score": 1.0}, "FACTION": {"grade": "A", "normalized_score": 3.5}}}
+    with pytest.raises(AssertionError, match="outside tolerance"):
+        _assert_pillars("k", anchors, score)
+
+
+def test_no_data_pillars_pass_only_as_still_no_data_and_are_listed() -> None:
+    anchors = {"INFORMATION": _ND_ANCHOR, "COMBAT": {"grade": "B", "score": 1.0}}
+    good = {"pillars": {"INFORMATION": _ND_LIVE, "COMBAT": {"grade": "B", "normalized_score": 1.0}}}
+    with pytest.warns(UserWarning, match=r"no-data pillars: anchor=\['INFORMATION'\] live=\['INFORMATION'\]"):
+        _assert_pillars("k", anchors, good)
+    lost = {"pillars": {"INFORMATION": {"grade": "B", "normalized_score": 1.0}, "COMBAT": _ND_LIVE}}
+    with pytest.raises(AssertionError) as exc:
+        _assert_pillars("k", anchors, lost)
+    assert "COMBAT: pillar lost its data" in str(exc.value) and "INFORMATION: pillar gained data" in str(exc.value)
+    with pytest.raises(AssertionError, match="threshold changed"):
+        _assert_pillars("k", {"INFORMATION": _ND_ANCHOR}, {"pillars": {"INFORMATION": {**_ND_LIVE, "min_events": 5}}})
+    with pytest.raises(AssertionError, match="no-data must carry no grade or score"):
+        _assert_pillars("k", {"INFORMATION": _ND_ANCHOR}, {"pillars": {"INFORMATION": {**_ND_LIVE, "grade": "C"}}})
+
+
+def test_a_report_with_no_grade_for_an_ok_looking_pillar_is_a_contract_failure_not_a_default() -> None:
+    with pytest.raises(AssertionError, match="contract"):
+        _assert_pillars("k", {"COMBAT": {"grade": "C", "score": 0.0}}, {"pillars": {"COMBAT": {"normalized_score": 0.0}}})
+
+
+def test_a_known_ceiling_still_annotates_a_score_failure() -> None:
+    _band, score, _other = _pillar_failures("k", {"COMBAT": {"grade": "B", "score": 1.0}}, {"pillars": {"COMBAT": {"grade": "B", "normalized_score": 9.0}}})
+    assert score and "outside tolerance of anchor_score=1.0" in score[0]

@@ -43,7 +43,10 @@ def _within_band(actual: str, anchor: str, tolerance: int = 1) -> bool:
 
 
 def _extract_pillar_grades(report: dict[str, Any]) -> dict[str, str]:
-    return {pillar: data["grade"] for pillar, data in report.get("pillars", {}).items()}
+    """``{PILLAR: grade letter}``, with the literal ``no-data`` for a pillar the scorer reports as no-data (TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION)."""
+    from tools.test_architecture.simq_pillar_compare import grade_label
+
+    return {pillar: grade_label(pillar, data) for pillar, data in report.get("pillars", {}).items()}
 
 
 def _parse_run_key(run_key: str) -> tuple[str, int, int]:
@@ -160,6 +163,10 @@ def _compare(
         actual = actual_grades.get(pillar)
         if actual is None:
             rows.append({"run_key": run_key, "pillar": pillar, "anchor": anchor, "actual": "—", "status": "MISSING"})
+        elif actual == "no-data" and anchor == "no-data":
+            rows.append({"run_key": run_key, "pillar": pillar, "anchor": anchor, "actual": actual, "status": "PASS"})
+        elif "no-data" in (actual, anchor):  # lost or gained its data: a regression to put to the owner, never a pass
+            rows.append({"run_key": run_key, "pillar": pillar, "anchor": anchor, "actual": actual, "status": "REGRESS"})
         elif _within_band(actual, anchor):
             rows.append({"run_key": run_key, "pillar": pillar, "anchor": anchor, "actual": actual, "status": "PASS"})
         else:
@@ -268,7 +275,9 @@ def main() -> None:
             _warn_if_run_health_guard_failed(run_key)
 
         actual_grades = _extract_pillar_grades(report)
-        anchor_grades = {p: v["grade"] for p, v in all_anchors[run_key].items()}
+        from tools.test_architecture.simq_pillar_compare import anchor_grade_label
+
+        anchor_grades = {p: anchor_grade_label(p, v) for p, v in all_anchors[run_key].items()}
         rows = _compare(run_key, actual_grades, anchor_grades)
         all_rows.extend(rows)
 
