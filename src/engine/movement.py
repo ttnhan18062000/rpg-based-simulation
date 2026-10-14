@@ -82,6 +82,32 @@ class MovementSystem:
         return None
 
     @staticmethod
+    def _step_ready_tick(entity: EntityState, success: bool, effective_target: Optional[Tuple[float, float]], current_tick: int, state_or_context: Any) -> Optional[float]:
+        """Terrain cost is time (D75): entering a tile of cost N holds the next step back N ticks. The carried time is kept only while it is
+        within the last tick, so the entity never takes more than one step per tick (a road, cost 0.5, is no faster than plain)."""
+        if not success or effective_target is None or effective_target == entity.navigation.position:
+            return None
+        ready = entity.navigation.step_ready_tick
+        base = ready if ready > current_tick - 1 else float(current_tick)
+        return base + TerrainCostService.get_tile_cost((int(effective_target[0]), int(effective_target[1])), state_or_context)
+
+    @staticmethod
+    def _move_speed_mult(entity: EntityState, mode: MovementMode, state_or_context: Any) -> float:
+        """Weather and aura speed factors at the entity's region, times the movement mode's factor (Logic ID: COMB-011)."""
+        region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state_or_context)
+        move_speed_mult = 1.0
+        if region:
+            w_mults = EnvironmentService.get_weather_multipliers(region)
+            a_mults = EnvironmentService.get_aura_multipliers(state_or_context, entity)
+            move_speed_mult = w_mults.get("move_speed", 1.0) * a_mults.get("move_speed", 1.0)
+        mode_mults = {
+            MovementMode.PURSUE: 1.2, MovementMode.RETREAT: 1.5, MovementMode.WANDER: 0.5,
+            MovementMode.REPOSITION: 1.1, MovementMode.REGROUP: 1.0, MovementMode.GUARD: 1.0,
+            MovementMode.HOLD: 0.0,
+        }
+        return move_speed_mult * mode_mults.get(mode, 1.0)
+
+    @staticmethod
     def resolve_move(
         state_or_context: Any,
         entity: EntityState,
@@ -106,8 +132,7 @@ class MovementSystem:
         target_tile = (int(target_pos[0]), int(target_pos[1]))
         current_tick = getattr(state_or_context, "tick", 0)
 
-        # 1b. Terrain cost is time (D75, MOV-04): the step onto the last tile is still taking its time, so this tick the entity
-        # stays where it is. No failure, no wait count: it is walking, not blocked.
+        # 1b. Terrain cost is time (D75): the step onto the last tile is still taking its time, so the entity stays where it is.
         if current_tick < entity.navigation.step_ready_tick:
             return {entity.id: EntityUpdate(entity_id=entity.id)}
 
@@ -123,20 +148,7 @@ class MovementSystem:
             effective_target = NavigationSystem.get_next_step(entity, target_pos, state_or_context)
 
         # 3. Environment & Mode Multipliers (Calculated early for readiness gating)
-        region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state_or_context)
-        move_speed_mult = 1.0
-        if region:
-            w_mults = EnvironmentService.get_weather_multipliers(region)
-            a_mults = EnvironmentService.get_aura_multipliers(state_or_context, entity)
-            move_speed_mult = w_mults.get("move_speed", 1.0) * a_mults.get("move_speed", 1.0)
-            
-        mode_mults = {
-            MovementMode.PURSUE: 1.2, MovementMode.RETREAT: 1.5, MovementMode.WANDER: 0.5,
-            MovementMode.REPOSITION: 1.1, MovementMode.REGROUP: 1.0, MovementMode.GUARD: 1.0,
-            MovementMode.HOLD: 0.0,
-        }
-        # Logic ID: COMB-011 (Movement intentions exist as semantic modes)
-        move_speed_mult *= mode_mults.get(mode, 1.0)
+        move_speed_mult = MovementSystem._move_speed_mult(entity, mode, state_or_context)
 
         # 4. Decision Ladder
         # VERIFIED v2: collision_rejection
@@ -328,16 +340,8 @@ class MovementSystem:
              if new_region:
                  new_region_id = new_region.id
 
-        # Terrain cost is time (D75): entering a tile of cost N holds the next step back N ticks. The carried time is kept only while it
-        # is within the last tick, so the entity never takes more than one step per tick (a road, cost 0.5, is no faster than plain).
-        step_ready_tick_set = None
-        if success and effective_target is not None and effective_target != entity.navigation.position:
-            ready = entity.navigation.step_ready_tick
-            base = ready if ready > current_tick - 1 else float(current_tick)
-            step_ready_tick_set = base + TerrainCostService.get_tile_cost((int(effective_target[0]), int(effective_target[1])), state_or_context)
-
         nav_upd = NavigationUpdate(
-            step_ready_tick_set=step_ready_tick_set,
+            step_ready_tick_set=MovementSystem._step_ready_tick(entity, success, effective_target, current_tick, state_or_context),
             moved_recently_set=True,
             failure_reason=None if success else reason_code,
             # VERIFIED v2: movement_priority_tiebreak

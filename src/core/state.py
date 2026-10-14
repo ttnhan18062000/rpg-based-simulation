@@ -509,6 +509,30 @@ class NavigationComponent:
     # 0.0 = never stepped (free to step).
     step_ready_tick: float = 0.0
 
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        """The navigation block of the entity's canonical form. `step_ready_tick` (D75) is present only once non-zero, so the form of an
+        entity that never stepped is unchanged."""
+        res = {
+            "target": self.target,
+            "path": self.path,
+            "moved_recently": self.moved_recently,
+            "place_id": self.place_id,
+            "movement_mode": str(self.movement_mode),
+            "last_failure_reason": self.last_failure_reason,
+            "wait_count": self.wait_count,
+            "oscillation_count": self.oscillation_count,
+            "last_position": self.last_position,
+            "home_position": self.home_position,
+            "leash_radius": self.leash_radius,
+            "region_id": self.region_id,
+            "chase_ticks": self.chase_ticks,
+            "max_chase_ticks": self.max_chase_ticks,
+            "returning_home": self.returning_home,
+        }
+        if self.step_ready_tick:
+            res["step_ready_tick"] = self.step_ready_tick
+        return res
+
 
 @dataclass(frozen=True, slots=True)
 class TaskComponent:
@@ -999,24 +1023,7 @@ class EntityState:
             "combat": self.combat.to_canonical_dict(),
             "biological": self.biological.to_canonical_dict(),
             "lifecycle": self.lifecycle.to_canonical_dict(),
-            "navigation": {
-                "target": self.navigation.target,
-                "path": self.navigation.path,
-                "moved_recently": self.navigation.moved_recently,
-                "place_id": self.navigation.place_id,
-                "movement_mode": str(self.navigation.movement_mode),
-                "last_failure_reason": self.navigation.last_failure_reason,
-                "wait_count": self.navigation.wait_count,
-                "oscillation_count": self.navigation.oscillation_count,
-                "last_position": self.navigation.last_position,
-                "home_position": self.navigation.home_position,
-                "leash_radius": self.navigation.leash_radius,
-                "region_id": self.navigation.region_id,
-                "chase_ticks": self.navigation.chase_ticks,
-                "max_chase_ticks": self.navigation.max_chase_ticks,
-                "returning_home": self.navigation.returning_home,
-                **({"step_ready_tick": self.navigation.step_ready_tick} if self.navigation.step_ready_tick else {}),
-            },
+            "navigation": self.navigation.to_canonical_dict(),
             "task": {
                 "work_kind": self.task.work_kind,
                 "payload": dict(sorted(self.task.payload.items()))
