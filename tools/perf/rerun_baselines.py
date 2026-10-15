@@ -110,6 +110,17 @@ def build_state(scenario: str, entities: int, seed: int) -> Any:
     return builder(entity_count=entities, seed=seed)
 
 
+def load_corpus_state(world: str, seed: int) -> Tuple[Any, Any]:
+    """The compiled state of a corpus world and its compile report: the one corpus-world loader of ``tools/perf`` (``profile_tick`` uses it too)."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from calibrate_simq import _load_world_state  # type: ignore[import-not-found]
+
+    state, report = _load_world_state(world, seed)
+    if state is None:
+        raise RerunError(f"world {world!r} has no resolved world spec")
+    return state, report
+
+
 def measure_record(name: str, samples_dir: Optional[Path] = None) -> BenchmarkRecord:
     """One measured record of ``name`` in this process. ``samples_dir`` keeps every sampled tick's latency in a file the record points to (OD-6)."""
     from src.perf.bench_harness import BenchHarness
@@ -118,12 +129,7 @@ def measure_record(name: str, samples_dir: Optional[Path] = None) -> BenchmarkRe
     world: Optional[str] = None
     if spec.scenario.startswith("corpus:"):
         world = spec.scenario.split(":", 1)[1]
-        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-        from calibrate_simq import _load_world_state  # type: ignore[import-not-found]
-
-        state, report = _load_world_state(world, spec.seed)
-        if state is None:
-            raise RerunError(f"world {world!r} has no resolved world spec")
+        state, report = load_corpus_state(world, spec.seed)
         scenario_id = corpus_name(world)
         region_count = report.get("region_count") if isinstance(report, dict) else None
     else:
