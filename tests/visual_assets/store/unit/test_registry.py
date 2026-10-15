@@ -30,7 +30,7 @@ def rejects(tmp_path: Path, body: str, match: str | None = None, **kw) -> None:
         load(tmp_path, body, **kw)
 
 
-def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_other_terrain_code_the_three_border_mask_keys_and_the_36_icon_keys():
+def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_other_terrain_code_the_three_border_mask_keys_and_the_54_icon_keys():
     """`terrain.forest` is the one adopted key; the other 22 Live Map terrain codes are registered `optional: true` for the draft set `terrain-v1`
     (`TCK-20261004-VISUAL-ASSETS-TERRAIN-DRAFT-SET`), and the `border.*` mask family (D19, `TCK-20261006-VISUAL-ASSETS-TERRAIN-BORDER-CONTRACT`) adds three optional keys
     with a v1-v3 detail axis; the `icon.*` key set (D20, `TCK-20261006-VISUAL-ASSETS-ICON-KEY-FAMILIES`) adds 14 optional keys with no axis, and icon set v2 (`TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC`) 22 more. The expected terrain keys are read from the page's explicit code-to-key table, the contract both sides share."""
@@ -47,19 +47,20 @@ def test_committed_registry_holds_the_adopted_forest_key_one_optional_key_per_ot
     from visual_assets.review import icon_v2_keys as v2
 
     proof = ["ui.panel_frame", "fx.selection_ring", "fx.campfire"]  # real-art proof keys (TCK-20261011-VISUAL-ASSETS-REAL-ART-KEYS)
-    assert sorted(registry.keys) == sorted(expected + borders + icons + v2.KEYS + proof)
+    assert sorted(registry.keys) == sorted(expected + borders + icons + v2.KEYS + af.OBJECT_KEYS + proof)  # the 18 object markers: 13 nodes, the nest, 4 buildings
     for key in proof:
         d = registry.keys[key]
         assert d.optional and d.family == key.split(".")[0] and d.safety_class == "decorative" and d.fallback.kind == "none" and d.variant_axes == () and d.detail is None and d.label is None
     sizes = {"icon.plate.location": 16, "icon.marker.enemy_camp": 16, "icon.building.blacksmith": 24, "icon.class.warrior": 24, "icon.status.frame_buff": 16, "icon.status.frame_debuff": 16, **dict.fromkeys(tiers, 8)}
-    for key, size in {**sizes, **v2.SIZES}.items():
+    object_sizes = {k: 24 if k.startswith("icon.building.") else 16 for k in af.OBJECT_KEYS}
+    for key, size in {**sizes, **v2.SIZES, **object_sizes}.items():
         d = registry.keys[key]
         assert d.optional and d.family == "icon" and d.variant_axes == () and d.detail is None  # D17: tier and marker state are separate keys, never axes
         assert f"{size}x{size}" in d.description and "scale x1" in d.description and "fallback" in d.description and " class" in d.description
     for key in borders:
         d = registry.keys[key]
         assert d.optional and d.family == "border" and d.variant_axes == () and d.detail.values == ("v1", "v2", "v3") and d.detail.default == "v1"
-    others = [d for k, d in registry.keys.items() if k != "terrain.forest" and k not in borders and k not in icons and k not in v2.KEYS and k not in proof]
+    others = [d for k, d in registry.keys.items() if k != "terrain.forest" and k not in borders and k not in icons and k not in v2.KEYS and k not in af.OBJECT_KEYS and k not in proof]
     assert len(others) == 22 and all(d.optional and d.family == "terrain" and (d.detail is None if d.key not in af.TERRAIN_VARIANT_AXES else (d.detail.values, d.detail.default) == (af.TERRAIN_VARIANT_AXES[d.key], "base")) and d.variant_axes == () for d in others)
     forest = registry.keys["terrain.forest"]
     assert forest.family == "terrain" and forest.variant_axes == () and not forest.optional
@@ -288,13 +289,13 @@ def test_fallback_problems_name_every_identifying_or_critical_key_left_without_a
     assert fallback_problems(Registry({good.key: good}, {}, "sha256:x"), set()) == []
 
 
-def test_the_committed_registry_carries_a_class_a_structured_fallback_and_35_labels_for_every_key():
+def test_the_committed_registry_carries_a_class_a_structured_fallback_and_53_labels_for_every_key():
     registry = load_registry()  # the real read path: every rule above applies to the committed file
     keys = registry.keys
-    assert len(keys) == 65 and all(d.safety_class and d.fallback for d in keys.values())
+    assert len(keys) == 83 and all(d.safety_class and d.fallback for d in keys.values())
     from collections import Counter
 
-    assert Counter((d.family, d.safety_class) for d in keys.values()) == Counter({("terrain", "identifying"): 23, ("border", "decorative"): 3, ("icon", "identifying"): 35, ("icon", "decorative"): 1, ("ui", "decorative"): 1, ("fx", "decorative"): 2})
+    assert Counter((d.family, d.safety_class) for d in keys.values()) == Counter({("terrain", "identifying"): 23, ("border", "decorative"): 3, ("icon", "identifying"): 53, ("icon", "decorative"): 1, ("ui", "decorative"): 1, ("fx", "decorative"): 2})
     labelled = {k: d.label for k, d in keys.items() if d.label is not None}
-    assert len(labelled) == 35 and all(keys[k].label_key == f"label.{k}" for k in labelled) and "icon.plate.location" not in labelled
+    assert len(labelled) == 53 and all(keys[k].label_key == f"label.{k}" for k in labelled) and "icon.plate.location" not in labelled
     assert labelled["icon.tier.sss"] == "Tier SSS" and labelled["icon.status.frame_debuff"] == "Harmful effect" and labelled["icon.item.consumable"] == "Consumable item"

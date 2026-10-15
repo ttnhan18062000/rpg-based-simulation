@@ -2,9 +2,10 @@
 # Backend image built from uv.lock on the Python CI tests (TCK-20261008-BACKEND-IMAGE-BUILDS-FROM-UV-LOCK),
 # following https://docs.astral.sh/uv/guides/integration/docker/. The uv version below is the one CI pins
 # (`astral-sh/setup-uv` `version: "0.11.2"` in .github/workflows/test.yml); change both together.
-FROM ghcr.io/astral-sh/uv:0.11.2 AS uv
+# Base images are pinned by digest (the multi-arch index current on 2026-10-14; no version change). Dependabot's `docker` ecosystem bumps them.
+FROM ghcr.io/astral-sh/uv:0.11.2@sha256:c4f5de312ee66d46810635ffc5df34a1973ba753e7241ce3a08ef979ddd7bea5 AS uv
 
-FROM python:3.13-slim AS builder
+FROM python:3.13.16-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f AS builder
 COPY --from=uv /uv /uvx /bin/
 
 # Bytecode at build time, copy (not hardlink) from the cache mount, no dev/lint tooling, and use this image's
@@ -29,7 +30,7 @@ COPY src/ /app/src/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-default-groups --no-editable
 
-FROM python:3.13-slim AS runtime
+FROM python:3.13.16-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f AS runtime
 
 WORKDIR /app
 
