@@ -202,7 +202,7 @@ Each follows §3.1 and is intentionally empty.
 
 #### PERF-D1 — Determinism contracts (Canonical and Live bounded)
 
-- **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`. Amended on 2026-10-03 (amendment A1 below), also owner-approved, after the wall-clock inventory found a fourth input.
+- **Status:** **approved by the repository owner on 2026-10-03** as drafted by `perf-planner`. Amended on 2026-10-03 (amendment A1 below), also owner-approved, after the wall-clock inventory found a fourth input. Amended again on 2026-10-14 (amendment A2 below, owner-approved on #585): the contract each kind of run uses.
   The P1 document edits it requires were applied by `TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT`
   (`docs/engine/deterministic_execution.md`, `docs/engine/runtime_profiles.md` §4, and the determinism
   envelope epic's M1 item 1); the Canonical contract itself is not implemented (`PERF-M1`).
@@ -353,6 +353,24 @@ Each follows §3.1 and is intentionally empty.
     (`WORK_MODEL_V1`), recorded in the run manifest. There are no new threshold fields.
   - The Live half (control trace) is a separate ticket: `TCK-20261006-PERF-LIVE-CONTROL-TRACE`.
   - The code waits for the full no-touch window (it needs `kernel.py`).
+
+- **Amendment A2 (owner-approved 2026-10-14, #585; perf-planner ruling in comment 6171273478, owner approval relayed by lead-planner the same day): which contract each kind of run uses.** No run except the live server may depend on host speed. The 2026-10-06 update left `LIVE` as the default and deferred option 3. This amendment settles the default by run kind and **does not** make Canonical the default for outcome runs:
+
+  | run kind | contract |
+  |---|---|
+  | Runs judged on their **outcomes**: CLI sims, lab and campaign runs, SimQ, every determinism and regression test | **fixed budgets**: `audit_mode`, or pinned NORMAL (no adaptation at all) |
+  | Runs that **measure governance or cost**: `tools/perf` baselines, the tripwire, capacity runs | **Canonical** (`SignalContract.CANONICAL`, modelled reference-ms) |
+  | The **live server**, plus tests that opt in explicitly to test adaptation | **Live** (wall-clock) |
+
+  **Why not Canonical for outcome runs.** Under Canonical on today's cost model, T08 (#591) measured `strategic_100` and `mixed_200` in CONSTRAINED or SURVIVAL, `frontier_extended` in SURVIVAL on 902 of 1000 ticks and `frontier_marches` in CONSTRAINED on 876 of 1000, identically in all 3 runs. A Canonical default would remove the host dependency but would silently run those worlds degraded and change SimQ and lab outcomes. `TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION` (#597) found that most of today's tick cost is waste (`docs/performance/tick_cost_growth.md` §3), which is the input to whether the cost model or the budgets change. That choice is separate from this amendment.
+
+  Specific rulings:
+  1. `tests/certification/test_cert_long_run_stability.py` stays **Live**, as an explicit opt-in. It asserts invariants only (bounded tick, no hard-law violation, recovers to NORMAL), never digests or exact outcomes, and it runs outside any same-SHA determinism lane (testing-planner owns the lane placement).
+  2. `tests/integration/kernel/test_long_run_determinism.py` uses fixed budgets.
+  3. The kernel's mid-tick throttle: if it reads wall-clock directly instead of the effective (contract-aware) costs, it is a second host dependency that fixed-budget and Canonical runs must also neutralise, so it is part of the same fix. This was asked of rpg on #585 and is open.
+  4. Perf regenerates `docs/observability/baselines/latest.json` under fixed budgets once the default flips. Until then it is single-host evidence and blocks nothing.
+
+  **Implementation:** the default flip is in `src/engine`, so rpg owns it: `TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-THROUGH-PHASE-BUDGETS-EVEN-WITH-THE-PINNED-NORMAL-GOVERNOR`. Perf reviews the measurement side. It needs an `intentional_divergences.md` entry when implemented, because unaudited non-live runs stop adapting to the host. Until it lands, the default stays as the 2026-10-06 update describes, and pinned NORMAL fixes the RuntimeMode only.
 
 #### PERF-D2 — Portability
 
