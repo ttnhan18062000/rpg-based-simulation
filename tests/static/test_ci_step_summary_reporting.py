@@ -32,21 +32,40 @@ _FASTLANE_JOBS = [
     "perf-cert-arena",
 ]
 
+# Action NAMES (owner/repo[/path]), not pinned refs: an Actions version bump (Dependabot) must not need a test edit, but a NEW
+# action must still be added here deliberately. `_action_name` strips the `@ref`.
 _PRE_EXISTING_USES = {
-    "actions/checkout@v5",
-    "actions/setup-python@v6",
-    "actions/upload-artifact@v4",
-    # actions/setup-node@v4 added by TCK-20260825-CI-FRONTEND-TEST-COVERAGE-GAP for the new
+    "actions/checkout",
+    "actions/setup-python",
+    "actions/upload-artifact",
+    # actions/setup-node added by TCK-20260825-CI-FRONTEND-TEST-COVERAGE-GAP for the new
     # 'frontend' job -- a legitimate, expected new Action (mirrors deploy-docs.yml's existing
     # actions/setup-node@v4 usage), not scope creep on this ticket's own dependency guard.
-    "actions/setup-node@v4",
+    "actions/setup-node",
     # astral-sh/setup-uv added by TCK-20261002-UV-FIRST-CI-JOB for the first job installed with
     # `uv sync` (owner decision, python_code_craft_roadmap.md 8.11).
-    "astral-sh/setup-uv@v10.2.0",
+    "astral-sh/setup-uv",
     # github/codeql-action/upload-sarif added by TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK for the advisory
     # `code-health-sarif` job (the only job with `security-events: write`); pinned by full commit SHA, v4.38.2.
-    "github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2",
+    "github/codeql-action/upload-sarif",
 }
+
+
+def _action_name(uses: str) -> str:
+    """'owner/repo[/path]@ref' -> 'owner/repo[/path]'."""
+    return uses.split("@", 1)[0]
+
+
+def _unexpected_action_names(uses_values) -> set[str]:
+    """Action names in `uses_values` that are not in the allowlist (any version/ref of an allowed name passes)."""
+    return {_action_name(u) for u in uses_values} - _PRE_EXISTING_USES
+
+
+def _normalise_uses(job: dict) -> dict:
+    """A copy of `job` with every step's `uses:` reduced to the action name; every other field is untouched."""
+    out = dict(job)
+    out["steps"] = [dict(s, uses=_action_name(s["uses"])) if "uses" in s else s for s in job.get("steps", [])]
+    return out
 
 _BANNED_DEPENDENCY_ENTRIES = ("pytest-cov", "pytest-html")
 _BANNED_MARKETPLACE_ACTION_SUBSTRINGS = ("dorny/test-reporter", "EnricoMi/publish-unit-test-result-action")
@@ -215,18 +234,26 @@ def test_no_new_dependency_entry_and_no_new_marketplace_action() -> None:
             if uses:
                 all_uses.add(uses)
 
-    unexpected = all_uses - _PRE_EXISTING_USES
+    unexpected = _unexpected_action_names(all_uses)
     assert not unexpected, (
         f"found unexpected new 'uses:' Action(s) in test.yml: {unexpected} -- only "
         f"{_PRE_EXISTING_USES} were expected"
     )
 
 
+def test_action_allowlist_is_version_agnostic_but_rejects_new_actions() -> None:
+    # A bump of an allowed action passes; an action name that is not on the allowlist fails.
+    fake_job = {"steps": [{"uses": "actions/checkout@v99"}, {"uses": "actions/upload-artifact@v7"}, {"run": "true"}]}
+    assert _unexpected_action_names(s["uses"] for s in fake_job["steps"] if "uses" in s) == set()
+    assert _unexpected_action_names(["evil/action@v1"]) == {"evil/action"}
+    assert _unexpected_action_names(["actions/checkout@v5", "evil/action@v1"]) == {"evil/action"}
+
+
 def test_slow_and_migration_lanes_jobs_unchanged_by_this_ticket() -> None:
     jobs = _jobs()
     expected_migration_lanes = yaml.safe_load(_EXPECTED_MIGRATION_LANES_YAML)
 
-    assert jobs["migration-lanes"] == expected_migration_lanes, (
+    assert _normalise_uses(jobs["migration-lanes"]) == _normalise_uses(expected_migration_lanes), (
         "migration-lanes job changed -- this ticket explicitly defers --junit-xml/summary "
         "reporting for this job (see plan.md 'Decisions Made by This Plan')"
     )

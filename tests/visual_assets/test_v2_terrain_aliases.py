@@ -17,9 +17,10 @@ def registry():
     return load_registry()
 
 
-def test_the_three_aliases_load_and_resolve_to_the_art_that_exists(registry):
-    assert dict(registry.aliases) == af.REGISTRY_ALIASES
-    assert [registry.resolve(a).key for a in af.REGISTRY_ALIASES] == ["terrain.grassland", "terrain.ruins", "terrain.shallow_water"]
+def test_the_eight_aliases_load_and_resolve_to_the_art_that_exists(registry):  # three terrain (V2 names) + five object aliases
+    assert dict(registry.aliases) == af.REGISTRY_ALIASES and len(registry.aliases) == 8
+    assert [registry.resolve(a).key for a in af.TERRAIN_ALIASES] == ["terrain.grassland", "terrain.ruins", "terrain.shallow_water"]
+    assert [registry.resolve(a).key for a in af.OBJECT_ALIASES] == list(af.OBJECT_ALIASES.values())
 
 
 def test_no_alias_is_a_key_and_no_alias_points_at_an_alias(registry):
