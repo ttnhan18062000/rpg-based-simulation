@@ -178,3 +178,24 @@ Source: `TCK-20261009-HANDOFF-TESTING-METRICS-EXPORT-FLAKE`. Codebase does not f
 - **Re-run on `0c3a5654b` (main, 2026-10-09):** `pytest tests/unit/resource tests/unit/observability tests/observability/test_metrics_export.py -s -q -x`, one invocation, under a 2 GB cgroup cap, light host load: **PASSED**, 1267 passed, 2 skipped, 55.85 s. After the run nothing was listening on port 8011 (`ss -ltnp | grep 8011` empty). So there is no stderr or port state to attach: I could not reproduce the connection refused, and I make no claim about its cause. The report stands as perf's observation; one way it can happen: server startup takes longer than the fixed 3 s, which the missing readiness check leaves unguarded.
 - **Suggested fix (yours to decide):** bind to port 0 and pass the chosen port, poll `/health` (or the port) with a deadline instead of the fixed sleep, give `requests.get` a `timeout=`, and `kill()` the server if `terminate()` does not return in time.
 - **Related:** most of `.github/workflows/test.yml` is your lanes. `ubuntu-latest` begins migrating to Ubuntu 26.04 on 2026-10-19 (rolling out to 2026-11-19); the per-job result of running `test.yml` on `ubuntu-26.04` is in `docs/plans/codebase_health/ubuntu_26_runner_precheck.md` (ticket `TCK-20261009-UBUNTU-26-RUNNER-PRECHECK`).
+
+## Update 2026-10-19 (import-linter flip): decision 8.11 notice
+
+**DRAFT: committed, not sent.** codebase-planner sends it on the day of the flip; until then nothing here is live.
+
+Source: ticket `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`, branch `import-linter-flip`. The two-week soak from the adoption merge (#351) ended 2026-10-19T13:40Z. Under decision 8.11 (the `src/` freeze only; tests that pin CI may be edited, with a notice to you) the flip does this:
+
+- **`.github/workflows/test.yml`:** the `Import contracts` step (last step of the `code-health` job, which has been a required check since 2026-10-06) runs `python3 -m codebase.structure.import_contracts ci ...` and loses its `continue-on-error`. A broken contract, a stale `ignore_imports` entry or a stale generated `layers` block now fails `Code health` (exit 1); a run that cannot start fails it too (exit 2). There is no ruleset change and no new check name. The step summary and the `::error::` annotations list each broken contract's `importer -> imported (l.N)` pairs.
+- **Static pins edited:** `tests/static/test_ci_uv_install.py::test_code_health_job_is_blocking_and_the_ratchet_step_can_fail_it` (the tolerant-step set is now only `Paths this PR changed`; the `Import contracts` step must carry no `continue-on-error` and stay last) and `tests/codebase/test_import_contracts.py` (the step is blocking; unit tests for the exit codes).
+- **Retired tests (7), each with its replacement contract and a parity row set in the ticket's Test Summary** (37 injected violations, the contract went BROKEN on all 37, none where the test failed and the contract stayed KEPT; the tests missed 9 of them). Four of the seven files are outside `tests/architecture/`:
+  - `tests/architecture/test_phase18_import_boundaries.py::test_entity_models_do_not_import_domain_services` -> `c01_core_not_domains`
+  - `tests/architecture/test_belief_institution_write_paths.py::test_belief_institution_module_no_engine_or_core_state_imports` -> `c08_belief_model_pure`
+  - `tests/architecture/test_fame_legend_fact_distinctness.py::test_fame_deriver_and_model_no_engine_or_core_state_imports` -> `c08_fame_model_pure`
+  - `tests/architecture/test_fidelity_write_paths.py::test_fidelity_deriver_and_model_no_engine_or_core_state_imports` -> `c08_fidelity_model_pure`
+  - `tests/api/test_admission_control.py::test_admission_control_does_not_reach_into_governor_internals` -> `c09_admission_governor`
+  - `tests/unit/domains/campaigns/test_campaign_state.py::test_campaign_state_module_has_no_engine_imports` -> `c13_campaign_state`
+  - `tests/visual_assets/test_boundaries.py::test_src_never_imports_visual_assets` -> `c15_src_no_visual_assets`
+
+  Dead helpers and constants those tests left behind went with them (`_is_type_checking_test`, `_collect_type_checking_node_ids`, three `_FORBIDDEN_TOP_LEVEL_IMPORT_PREFIXES`, `_FAME_DERIVER_AND_MODEL_FILES`, unused imports).
+- **Not retired:** `tests/visual_assets/test_boundaries.py::test_visual_assets_module_respects_the_boundaries` (about 10 rules `c14` does not express) and the 42 rules that stay tests. **phase19 `test_hot_path_does_not_import_heavy_analyzers` stays:** the OFF-mode condition rpg's four reasons rely on is not enforced by it today (static scan, bare prefixes); your pick on #547 (runtime OFF-mode test, or the gap note plus a follow-up ticket) decides what lands.
+- **Coupling (your condition 1):** the retirements and the blocking step land in one PR. If the blocking step is dropped, the retirements are dropped with it.
