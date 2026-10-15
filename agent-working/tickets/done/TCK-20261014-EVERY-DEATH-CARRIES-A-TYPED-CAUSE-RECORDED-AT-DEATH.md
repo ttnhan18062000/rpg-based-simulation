@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH
-phase: implement
+phase: done
 date: 2026-10-14
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Every death carries a typed cause, recorded at death in a durable field: a `DeathCause` enum, the last attacker, and the region hazard kind when the cause is a hazard. Hash-neutral.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -80,4 +80,4 @@ tests/unit/progression/test_death_record.py (9), tests/unit/progression/test_dea
 src/core/death_cause.py (new), src/core/state.py, src/core/updates.py, src/engine/patches.py, src/engine/kernel.py, src/systems/lifecycle_systems/lifecycle.py, src/observability/death_ledger.py (new), src/observability/event_recorder.py; tests above plus tests/helpers/death_field_projection.py; docs/mechanics/01_entity_anatomy.md, docs/parity_ledger/progression.yaml (PROG-137).
 
 ## Completion Summary
-TBD
+Every death now carries a durable typed `DeathRecord` (cause, tick, last attacker, hazard kind) written by the lifecycle resolver, and every hp loss has a typed source in the death ledger (UNATTRIBUTED expected 0). Behaviour-neutral by projection (3 worlds, seed 42, 5000 ticks, identical to base 7888c5457; every dead body has a record). The record names the most recent hit at any time before death; recency is not recorded (follow-up if needed). Branch death-cause-typed, not pushed.
