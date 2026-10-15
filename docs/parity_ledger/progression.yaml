@@ -1773,7 +1773,7 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/core/death_cause.py (DeathCause, HpLossSource, DeathRecord), src/core/state.py (LifecycleComponent.death_record, CombatComponent.last_attacker_id, canonical dicts), src/systems/lifecycle_systems/lifecycle.py (_death_record), src/engine/patches.py (LifecyclePatch and CombatPatch apply), src/observability/death_ledger.py (hp loss by typed source; UNATTRIBUTED expected 0). docs/mechanics/01_entity_anatomy.md Death Record."
+  v2_evidence: "src/core/death_cause.py (DeathCause, HpLossSource, DeathRecord), src/core/state.py (LifecycleComponent.death_record, CombatComponent.last_attacker_id, canonical dicts), src/systems/lifecycle_systems/lifecycle.py (_death_record), src/engine/patches.py (LifecyclePatch and CombatPatch apply), src/observability/death_ledger.py (hp loss by typed source; UNATTRIBUTED expected 0). docs/mechanics/01_entity_anatomy.md Death Record. Projection proof 15/15 pairs (3 worlds x seeds 42-46 x 5000 ticks) and the 15 post-step full fingerprints: agent-working/stored_artifacts/TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH/probes/projection_proof_table.md."
   proof_type: regression
   test_path: tests/unit/progression/test_death_record.py
   divergence_note: null
