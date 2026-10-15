@@ -323,6 +323,21 @@ def test_objects_with_art_are_drawn_and_objects_without_are_a_counted_checkered_
     assert alias_stats["objects_gap"] == {"building:shop": 1}  # the alias key has no art in this release: still a counted gap
 
 
+def test_a_city_is_the_location_plate_alone_and_a_node_draws_its_own_tile_with_no_plate():
+    art = {("terrain.forest", None): solid(0, 90, 0), ("icon.plate.location", None): solid(50, 50, 50), ("icon.node.herb_patch", None): solid(10, 200, 10)}
+    data = small_data(
+        [["forest", "forest", "forest"]], [trow("forest", 3, "terrain.forest")],
+        places=[{"id": "p", "kind": "CITY", "x": 0, "y": 0}],
+        place=[{"name": "CITY", "count": 1, "key": None, "near": [], "plate_only": True}],
+        resource_nodes=[{"id": "n", "kind": "herb_patch", "x": 1, "y": 0}, {"id": "m", "kind": "wood_node", "x": 2, "y": 0}],
+        resource_node=[{"name": "herb_patch", "count": 1, "key": "icon.node.herb_patch", "near": []}, {"name": "wood_node", "count": 1, "key": "icon.node.wood_node", "near": []}],
+    )
+    canvas, stats = r.draw_world(data, FakeRelease(art), "exact")
+    assert stats["objects_drawn"] == {"place:CITY": 1, "resource_node:herb_patch": 1} and stats["objects_gap"] == {"resource_node:wood_node": 1}  # a CITY is drawn, never a gap
+    assert bytes(canvas[8][8 * 4:8 * 4 + 4]) == bytes((50, 50, 50, 255))  # the plate alone, no glyph over it
+    assert bytes(canvas[8][(16 + 8) * 4:(16 + 8) * 4 + 4]) == bytes((10, 200, 10, 255))  # the node's own 16 x 16 tile, nothing under it but the terrain
+
+
 def test_borders_are_composed_only_where_a_ranked_terrain_meets_a_higher_one():
     art = {
         ("terrain.water", None): solid(0, 0, 200), ("terrain.forest", None): solid(0, 200, 0),
@@ -385,7 +400,7 @@ def test_the_real_render_counts_its_gaps_against_the_data_and_every_png_decodes(
     # the exact view resolves terrain names through the registry aliases (`plain` -> grassland, `ruin` -> ruins; the base fill is the catalog id `plain` since D72, divergence 2.124), so the terrain gap is empty in both views
     assert exact["terrain_no_key"] == {} and exact["terrain_cells_in_gap"] == 0 and alias["terrain_cells_in_gap"] == 0
     assert exact["terrain_drawn"] == alias["terrain_drawn"] and alias["terrain_drawn"]["terrain.grassland"] == by_name["plain"] and alias["terrain_drawn"]["terrain.ruins"] == by_name["ruin"]
-    assert exact["objects_gap"] == {"place:RUIN": 1} and alias["objects_gap"] == {} and alias["objects_drawn"] == {"place:RUIN": 1}
+    assert exact["objects_gap"] == {} and alias["objects_gap"] == {} and exact["objects_drawn"] == alias["objects_drawn"] == {"place:RUIN": 1}  # RUIN resolves through the registry alias `icon.marker.ruin`
     for view in (exact, alias):
         assert view["cells"] == data["width"] * data["height"]
         for name, info in view["files"].items():
@@ -421,7 +436,7 @@ def test_the_committed_evidence_is_small_and_is_exactly_what_the_tool_produces(t
     committed = {p.name: p.read_bytes() for p in sorted(r.EVIDENCE_DIR.glob("*.png"))}
     assert committed == produced  # regenerate with `python -m tools.visual_assets_sample_map evidence`
     assert sum(len(b) for b in committed.values()) <= r.EVIDENCE_CAP_BYTES == 256 * 1024
-    assert sorted(committed) == sorted(f"{name}_{view}_x1.png" for name in r.EVIDENCE_CROPS for view in ("exact", "alias"))
+    assert sorted(committed) == sorted(f"{name}_exact_x1.png" for name in r.EVIDENCE_CROPS)  # no unconfirmed proposal is left: the alias crops would equal the exact ones, so they are not committed
     docs_bytes = sum(p.stat().st_size for p in r.EVIDENCE_DIR.iterdir() if p.is_file())
     assert docs_bytes <= r.EVIDENCE_CAP_BYTES  # the whole folder, README and gap report included
 

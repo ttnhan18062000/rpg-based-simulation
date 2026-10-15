@@ -188,6 +188,6 @@ def test_layer_values_matches_real_seeded_registry():
         "mechanics", "engine", "testing", "simulation", "ai", "architecture",
         "core", "ticket", "artifact", "guidelines", "observability", "performance",
         "combat", "compliance", "strategy", "systems", "economy", "world", "misc",
-        "frontend",
+        "frontend", "platform",
     }
     assert layer_values() == expected

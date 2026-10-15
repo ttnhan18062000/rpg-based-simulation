@@ -1,0 +1,12 @@
+Comparing sweep t08_check_idle against baseline docs/observability/baselines/latest.json...
+
+Comparison Result: PASS
+Summary:           Sweep baseline comparison finished with status: PASS.
+
+Statistical Metric Drifts:
+  METRIC                     BASELINE MEAN   SWEEP MEAN      DRIFT           MAGNITUDE 
+  --------------------------------------------------------------------------------------
+  health_score                        100.00          100.00 STABLE               +0.00
+  tick_compute_ms_p95                  26.94           31.53 DEGRADED             +4.59
+  memory_rss_bytes_max           78972518.40     78780006.40 IMPROVED        -192512.00
+  anomaly_count                         0.00            0.00 STABLE               +0.00

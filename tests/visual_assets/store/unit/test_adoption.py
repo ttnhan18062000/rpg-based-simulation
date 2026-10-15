@@ -154,6 +154,11 @@ def _evidence(env, result, **_):
     return dict(licence_evidence_ref="UNAVAILABLE")
 
 
+@refusal("placeholder_value")
+def _placeholder(env, result, **_):
+    return dict(approver="<your name>")
+
+
 @refusal("invalid_approver")
 def _approver(env, result, **_):
     return dict(approver="   ")
@@ -405,3 +410,35 @@ def test_a_revoked_revision_wins_over_a_live_duplicate_in_the_message(env):
     with pytest.raises(GateError) as err:
         s.do_adopt(again.intake_id, source_asset_id="other")
     assert err.value.code == "source_bytes_revoked"
+
+
+@pytest.mark.parametrize("field,value", [
+    ("approver", "<your name>"), ("approver", "<x>"), ("approver", "Pat <name> Approver"), ("approver", "TODO"),
+    ("approver_role", "<your role>"), ("approver_role", "  tbd "), ("licence_evidence_ref", "<your own licence evidence reference>"),
+    ("licence_evidence_ref", "see <ref>"), ("licence_evidence_ref", "xxx"),
+])
+def test_adopt_refuses_a_template_placeholder_in_each_field_and_writes_nothing(env, field, value):
+    result = s.make_intake(env.tmp)
+    before = snapshot(env.catalog)
+    with pytest.raises(GateError) as err:
+        s.do_adopt(result.intake_id, **{field: value})
+    assert err.value.code == "placeholder_value" and field in err.value.message
+    assert snapshot(env.catalog) == before and not s.CALLS
+
+
+def test_real_values_like_the_earlier_records_pass_the_placeholder_check(env):
+    result = s.make_intake(env.tmp)
+    adopted = s.do_adopt(result.intake_id, approver="nhan", approver_role="owner",
+                         licence_evidence_ref="Own pixels drawn in this repo with the Aseprite MCP tools, from palette icons-v1 (ADR D20, theme D21)")
+    assert adopted.approver_name == "nhan"
+
+
+def test_the_committed_set_adoption_that_holds_template_placeholders_still_loads_and_the_store_still_verifies():
+    # sa-6690e2619d4abb3e was recorded with the command template's <...> values (owner erratum in store_contract.md): records are immutable and are never re-validated by the new guard.
+    from visual_assets.store import verify
+    from visual_assets.store.contracts import SetAdoptionRecord
+
+    path = config.CATALOG_ROOT / "provenance" / "set-adoptions" / "sa-6690e2619d4abb3e.json"
+    record = parse_record(SetAdoptionRecord, path.read_bytes())
+    assert record.approver_name == "<your name>" and record.approver_role == "<your role>"
+    assert not verify.verify()

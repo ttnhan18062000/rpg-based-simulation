@@ -18,7 +18,6 @@ from src.core.enums import EntityRole, ReasonCode
 from src.core.skills import SKILL_REGISTRY
 from src.engine.domain.view import DomainView
 from src.engine.hostility import attack_allowed
-from src.engine.rpg_depth import TerrainCostService
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.tile_distance import manhattan_tile_distance
 from src.world.environment import EnvironmentService
