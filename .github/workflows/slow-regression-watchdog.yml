@@ -31,7 +31,7 @@ jobs:
       GH_REPO: ${{ github.repository }}
     steps:
       # Sparse checkout: only the pure decision module, not the slow suite.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           sparse-checkout: |
             tools/test_architecture/__init__.py

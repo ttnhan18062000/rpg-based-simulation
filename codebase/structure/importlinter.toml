@@ -1,5 +1,5 @@
 # import-linter config (TCK-20261004-IMPORT-LINTER-ADOPTION, advisory). Run:
-#   uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml
+#   make lint-imports
 # (or `lint-imports --config ...` from the `lint` group). Docs: docs/guidelines/agent_working_environment.md.
 # Only the block between the GENERATED markers is rewritten (python3 -m codebase.structure.import_contracts);
 # everything else is edited by hand.
