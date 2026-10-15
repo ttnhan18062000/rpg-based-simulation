@@ -83,3 +83,12 @@ G1 hero_adventurers, G2 trading_company_hub merchants and G3 scalable_bandit_cam
 ## Re-measure on rpg-next 3696d0402 (5000 ticks, audit_mode, PYTHONHASHSEED=0)
 
 Seeds 42-46, three worlds, base vs diet branch; base-vs-base at seed 42 gives identical digests on all three worlds under unequal load. No pair identical. Table: `paired_cause_of_death_5000t.tsv` (the 1500-tick table is preliminary). Recorded as divergence 2.127 (D74), ungraded and untuned. Two kind groups extinct in all five seeds on the branch but not on base: crowded_frontier scout, frontier_living_world raider (one survivor each on base in one seed).
+
+## 10-seed rerun (owner's stop-and-ask, crowded_frontier and frontier_living_world, seeds 42-51, 5000 ticks, audit_mode, PYTHONHASHSEED=0)
+
+Same commits as the 5-seed table (base `3696d0402`, diet `9026d0dab`). Table: `paired_cause_of_death_10seed_5000t.tsv` (last column: deaths among bodies that are people in BOTH arms, matched by entity id and kind). Base-vs-base digests identical at seeds 42 and 47 on both worlds; no base/diet pair identical.
+
+- Scouts (crowded_frontier) alive at the end, seeds 42-51: base [0,0,0,1,0,1,1,0,2,0], diet [0,0,0,0,0,1,1,0,2,0] (alive in 3 of 10 seeds on the diet branch; only seed 45 lost its scout).
+- Raiders (frontier_living_world): base [0,0,1,0,0,0,0,0,0,0], diet all 0.
+- People bodies: crowded 350 base vs 380 diet, frontier 300 vs 330 (the extra 30 are hero bodies). Like-for-like (same id and kind, a person in both arms): crowded 308 vs 309 dead of 350 (0.880 vs 0.883 per member); frontier 269 vs 247 dead of 300 (0.897 vs 0.823).
+- crowded_frontier blacksmith, guard and worker die out in both arms (not caused by this step).
