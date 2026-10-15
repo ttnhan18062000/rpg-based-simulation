@@ -35,6 +35,7 @@ from tools.handover_home import handover_base  # noqa: E402
 SOURCES = ("startup", "resume", "clear", "compact")
 HANDOVER_CAP_CHARS = 8000
 ISSUE_SOURCES = ("startup", "resume", "clear")   # not `compact`: nothing new arrived and the list is already in context
+FRESHNESS_SOURCES = ISSUE_SOURCES  # TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START: startup, resume and clear (not `compact`: same worktree, same code)
 ISSUE_TIMEOUT_S = 3.0   # one `gh` call; slow or offline just means no list (TCK-20261011-SESSION-START-FOR-ROLE-ISSUES)
 ISSUE_SHOWN = 10
 ISSUES_OFF_ENV = "SESSION_START_ISSUES"   # set to "off" to skip the call
@@ -230,6 +231,12 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
                 st.take_lease(state_root, worktree, instance_id, binding.session_id, proc, proc_root)
             except st.LeaseRefused as exc:
                 notes.append(f"session-roles: WRITER LEASE NOT TAKEN: {exc}")
+    if source in FRESHNESS_SOURCES:
+        from tools.sessions import settings_freshness as sf
+
+        line = sf.session_code_line(worktree)
+        if line:
+            notes.append(line)
     if link_shared_graph(worktree) == "linked":
         notes.append("session-roles: linked graphify-out to the main checkout's graph (read-only here; refresh it from the main checkout).")
     parts.extend(notes)

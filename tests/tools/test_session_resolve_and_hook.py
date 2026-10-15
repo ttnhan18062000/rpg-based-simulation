@@ -563,3 +563,13 @@ def test_an_unreadable_bindings_history_still_gives_card_and_note_and_says_so(wo
     out = _ctx(world, _payload(repo, session_id="b", source="clear"))
     assert f"You are `{WRITER}`" in out and "SECRET-WRITER-NOTE" in out
     assert out.count("the bindings history could not be read") == 1
+
+
+def test_the_start_hook_adds_the_stale_code_line_on_startup_and_clear_not_compact(world, monkeypatch):
+    """TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START."""
+    from tools.sessions import settings_freshness as sf
+    root, repo, state_root = world
+    monkeypatch.setattr(sf, "session_code_line", lambda *_a, **_k: "session-roles: STALE SESSION CODE: test line")
+    for source in ("startup", "resume", "clear"):
+        assert _ctx(world, _payload(repo, source=source, session_title=WRITER)).count("STALE SESSION CODE") == 1
+    assert "STALE SESSION CODE" not in _ctx(world, _payload(repo, source="compact", session_title=WRITER))

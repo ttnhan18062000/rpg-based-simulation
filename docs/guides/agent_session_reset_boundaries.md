@@ -123,6 +123,15 @@ commit distance, so a branch that itself edits `.claude/settings.json` reports a
 overrides that, but never a directory outside the repo. **A `/clear` resume note should include this check** (run it,
 and relaunch through the launcher if it reports a mismatch).
 
+The launcher is not the only check. On `startup`, `resume` and `clear` (not `compact`) the SessionStart hook itself adds one
+`STALE SESSION CODE` line when `tools/sessions/**`, `tools/handover_home.py`, `session_start_handover_hook.py` or
+`registries/session_{roles,authority}.yaml` changed on the local `origin/main` ref since this worktree diverged from it
+(one `merge-base` and one `diff`, offline, never a fetch; `settings_freshness.stale_session_code`). A plain `claude --resume` and
+a `/clear` therefore no longer start silently on old session code, which is how a lagging worktree injected another instance's
+handover note (2026-10-15, TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START). It compares against the merge base, so a
+branch that edits session code itself is not called stale; the fix for a real warning is to sync that worktree to
+`origin/main` (each seat syncs its own). If the check cannot run it says so in one line instead of failing the session.
+
 ## Moving sessions between machines
 
 A transcript does not cross machines; the handover note is the only continuity that can.
