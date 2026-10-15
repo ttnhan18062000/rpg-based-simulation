@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-FRONTEND-NODE-24-LTS
-phase: inprogress
+phase: done
 date: 2026-10-14
 tags: [platform]
 ---
@@ -15,7 +15,7 @@ tags: [platform]
 Frontend build image: Node 20 → Node 24 LTS
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -60,6 +60,8 @@ None.
 ## Test Summary
 - **running locally:** the image built with `npm ci && npm run build` on Node 24.21.0 and the frontend container reached `healthy` in the full stack (host under heavy load from other sessions).
 - CI build of the image via `publish-images.yml` on the PR: to confirm (**validated** once green).
+- **validated (CI):** publish-images on main at 5324afafe (run 38682866242) built `images (frontend, docker/frontend.Dockerfile)` on Node 24.21.0: success; the #586 PR run was green too.
+
 ## Files Changed
 - `docker/frontend.Dockerfile`
 ## Completion Summary
