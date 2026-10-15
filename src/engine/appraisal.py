@@ -67,7 +67,8 @@ def can_eat_item(eater: "EntityState", item_id: str) -> bool:
     """True when ``item_id`` is food whose class the eater's body can eat (decision 44: the diet gate).
 
     A body whose diet is undeclared, or an entity with no known species, keeps the legacy "eats any food" behaviour: missing data gates
-    nothing."""
+    nothing. This fallback is for hand-built (non-compiled) entities only: a compiled world resolves every living body to a declared diet or
+    does not compile (``worldbuilding/diet_declaration.py``, TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE)."""
     return kind_can_eat_item(get_species_id_str(eater), item_id)
 
 
@@ -83,7 +84,8 @@ def kind_can_eat_item(species_id: Optional[str], item_id: str) -> bool:
 
 
 def can_use_inn_meal(eater: "EntityState") -> bool:
-    """True when the inn's free meal (a prepared meal) is in the eater's diet; an undeclared diet keeps the legacy behaviour."""
+    """True when the inn's free meal (a prepared meal) is in the eater's diet; an undeclared diet keeps the legacy behaviour (hand-built entities only:
+    a compiled world declares every body's diet, see ``kind_can_eat_item``)."""
     _, body = get_kind_properties(get_species_id_str(eater))
     return body is None or body.diet is None or "prepared" in body.diet
 

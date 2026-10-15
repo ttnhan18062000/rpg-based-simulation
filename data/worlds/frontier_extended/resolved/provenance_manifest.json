@@ -1,5 +1,5 @@
 {
-  "manifest_id": "prov_bd735af85a051cc8",
+  "manifest_id": "prov_304bdc7fcbb02f6c",
   "world_id": "frontier_extended",
   "source_schema_version": "provenancemanifest.v1",
   "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
@@ -10,15 +10,15 @@
     "goblin_camp_forage": "79af965c2ca3a71404f844c2f02753c21149e5cff4e6f21707e6223e1dac63cb",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
-    "trading_company_hub": "154fc6ef87e46522880df12f548520ebc2564b1b6a2d44c14a37284b1a390c8d",
+    "trading_company_hub": "555572694bcb8ad723476f31abb84a62d8889e2098b585d434a48fdec6aac28c",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
     "wolf_den_near_forest": "705d6afb6e0b2992d1fde612cc46a9f55d6e9eddd4cda6c15e864b76f3e62d81",
     "forest_warden_grove": "c41ff99559a8e7f6603051db5d5fff790fd4cbf4b35a3d50a5ff48eccc33c6ea"
   },
   "composition_fingerprint": "a62991178376e649d5be280513bd87c7fa10d32851f622abdb7affc7cec0cb65",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "bd735af85a051cc829ed6c6b43af2a89e6952191c9b304cc45029b88ac6a5881",
-  "created_at": "2026-10-12T14:35:25.417390Z",
+  "content_fingerprint": "304bdc7fcbb02f6cdd82d6dae1e9b12aab7fcd4fe4d143bd634740c1e8aebc25",
+  "created_at": "2026-10-13T10:26:23.677461Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
