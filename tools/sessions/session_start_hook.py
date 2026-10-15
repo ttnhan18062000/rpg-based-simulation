@@ -163,7 +163,17 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
     if pid is not None:
         proc = st.process_identity(pid, proc_root)
 
-    previous = st.read_bindings(state_root, instance_id)
+    # TCK-20261015-SESSION-BINDINGS-TORN-TAIL: a damaged bindings history must never cost the session its card and
+    # handover note; it only costs the manifest-change comparison, and the session is told so.
+    history_notes: list[str] = []
+    try:
+        previous, torn = st.read_bindings_report(state_root, instance_id)
+        if torn:
+            history_notes.append(f"session-roles: {torn}")
+    except st.StateError as exc:
+        previous = []
+        history_notes.append(f"session-roles: the bindings history could not be read ({exc}); "
+                             "the manifest-change check is skipped this start.")
     prior_snapshot = st.read_role_file(state_root, instance_id, "manifest.json")
     prior_instance = st.read_instance(state_root, instance_id)
 
@@ -179,7 +189,7 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
     parts = [compose_card(role.role, roster, authority, root)]
     if instance_id != role.role:
         parts.append(f"session-roles: you are instance `{instance_id}` of role `{role.role}` (a second holder; the first is `{role.role}`).")
-    notes: list[str] = []
+    notes: list[str] = list(history_notes)
 
     # TCK-20261006-SESSION-START-CLEAR-FALSE-LIVE-HOLDER-WARNING: a `/clear` gives the SAME process a new session id, so the prior holder
     # recorded in this very process is this session's own superseded predecessor, not a second writer.

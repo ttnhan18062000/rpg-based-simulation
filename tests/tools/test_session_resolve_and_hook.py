@@ -539,3 +539,27 @@ def test_a_main_checkout_seat_takes_no_lease_and_says_nothing_about_one(world):
     assert "Launches from the main checkout, no lease" in out
     assert "writer lease not taken" not in out and "WRITER LEASE" not in out
     assert st.read_lease(world[2], world[1]) is None
+
+
+def test_a_torn_bindings_tail_still_gives_card_and_note_and_one_warning(world):
+    """TCK-20261015-SESSION-BINDINGS-TORN-TAIL: the rpg-implementer file was torn by a full disk and the next
+    start was silent; now the card and the note arrive with one warning."""
+    root, repo, state_root = world
+    _ctx(world, _payload(repo, session_id="a"))
+    path = state_root / WRITER / st.BINDINGS
+    with path.open("ab") as fh:
+        fh.write(b'{"session_id": "torn", "role"')
+    out = _ctx(world, _payload(repo, session_id="b", source="clear"))
+    assert f"You are `{WRITER}`" in out and "SECRET-WRITER-NOTE" in out
+    assert out.count("unparseable last line") == 1
+
+
+def test_an_unreadable_bindings_history_still_gives_card_and_note_and_says_so(world):
+    root, repo, state_root = world
+    _ctx(world, _payload(repo, session_id="a"))
+    path = state_root / WRITER / st.BINDINGS
+    good = path.read_text()
+    path.write_text('{"torn": \n' + good)
+    out = _ctx(world, _payload(repo, session_id="b", source="clear"))
+    assert f"You are `{WRITER}`" in out and "SECRET-WRITER-NOTE" in out
+    assert out.count("the bindings history could not be read") == 1
