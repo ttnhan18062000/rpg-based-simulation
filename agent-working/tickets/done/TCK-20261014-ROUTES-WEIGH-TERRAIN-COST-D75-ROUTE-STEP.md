@@ -68,3 +68,7 @@ src/engine/route_search.py (new), src/engine/movement.py, src/core/state.py, src
 
 ## Completion Summary
 Routes weigh terrain cost: a cheaper route than the greedy walk is taken when one exists. Fallback rate 0.004% frontier, 0 urban; detours 2.0% and 0.34% of searches. Drift, raiders flagged for the extinction watch.
+
+## Fold measurement (added after the D76 ten-seed run)
+
+Base 549e132fb against route, three worlds, seeds 42-51: people deaths mean diff urban -0.30 (SE 1.03), crowded 0.00 (SE 0.70), frontier -1.00 (SE 1.65); only more deaths stops, so the rule did not trip. The numbers and the disclosures are in divergence 2.128; the five-seed 7888c5457 numbers there are marked a superseded preview.
