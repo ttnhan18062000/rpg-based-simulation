@@ -112,6 +112,9 @@ That table shows a new `persistence` phase cost of ~37ms/tick appearing only wit
 ## Implementation Notes
 _(not applicable — report-only ticket, no implementation performed)_
 
+### Evidence from TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION (2026-10-15)
+`decision_trace` frames are **0.0 to 1.4 %** of the samples in every profile; the samples are filtered to stacks containing the measured tick loop, so a writer thread's own frames are not counted (`docs/performance/tick_cost_growth.md` section 4). **Recommendation: close as not a tick cost** (perf-planner checks the close). Not measured: whether the `QueueDrainWorker` thread itself is slow, which is not a tick cost.
+
 ## Test Summary
 _(not applicable — report-only ticket, no implementation performed)_
 
