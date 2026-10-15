@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-OBS-STACK-PROMETHEUS3-GRAFANA13
-phase: inprogress
+phase: done
 date: 2026-10-14
 tags: [platform]
 ---
@@ -15,7 +15,7 @@ tags: [platform]
 Upgrade the observability profile to Prometheus v3 and Grafana 13 before step 2 builds dashboards on them
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -74,6 +74,8 @@ Run `tools/sessions/disk_headroom.py` before pulling the new images.
 - Grafana logs also show harmless errors: missing `provisioning/plugins` and `provisioning/alerting` directories, and TLS failures reaching grafana.com (plugin catalogue).
 - Idle memory peaks after this change: grafana 480 MiB (start), backend 357, loki 93, prometheus 40, promtail 42, ai_worker 33, watchdog 22, frontend 6, redis 8.
 - CI build of images and publish-images on the PR: to confirm.
+- **validated (CI):** publish-images on main at 5324afafe (run 38682866242) built both images: success; `compose config -q` passed in the #586 PR run. The observability profile itself is not started in CI; its runtime evidence is the local run above.
+
 ## Files Changed
 - `compose.yaml`
 ## Completion Summary
