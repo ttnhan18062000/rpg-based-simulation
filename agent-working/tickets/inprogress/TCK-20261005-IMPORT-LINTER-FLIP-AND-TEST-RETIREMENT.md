@@ -158,5 +158,13 @@ After retirement: the 7 touched test files plus `tests/codebase/test_import_cont
 
 
 ## Files Changed
+- `codebase/structure/import_contracts.py` (`ci` mode, `check_contracts`/`Report`, `broken_pairs`, pair-naming summary, `::error::` annotations), `tests/codebase/test_import_contracts.py`
+- `.github/workflows/test.yml` (the `Import contracts` step only: `ci`, no `continue-on-error`; decision 8.11 notice drafted, not sent), `tests/static/test_ci_uv_install.py` (step pin), `Makefile` (help text of `import-contracts`)
+- `codebase/structure/importlinter.toml` (rpg's per-edge reasons on the phase19 `ignore_imports`, reasons only; c01 name no longer cites its retired test)
+- Retired tests (7): `tests/architecture/test_phase18_import_boundaries.py`, `tests/architecture/test_belief_institution_write_paths.py`, `tests/architecture/test_fame_legend_fact_distinctness.py`, `tests/architecture/test_fidelity_write_paths.py`, `tests/api/test_admission_control.py`, `tests/unit/domains/campaigns/test_campaign_state.py`, `tests/visual_assets/test_boundaries.py` (one function each, plus the helpers and imports it left unused)
+- Docs: `docs/guidelines/agent_working_environment.md`, `docs/plans/codebase_health/import_linter_evaluation.md`, `python_code_craft_roadmap.md`, `handoffs/handoff_to_testing.md` (decision 8.11 notice, draft)
+- Nothing under `src/`.
 
 ## Completion Summary
+(Fill on the day, after the final re-merge: soak review final, owner's yes to the blocking step with date, the PR number, the closure record. Draft:)
+The Import contracts step is blocking: `python3 -m codebase.structure.import_contracts ci` exits 1 on a broken contract, a stale ignored import or a stale generated `layers` block, and 2 when it cannot run; the step has no `continue-on-error`, in the already-required `Code health` job (no ruleset change, no new check name). The step summary and one `::error::` line per broken contract name every `importer -> imported (l.N)` pair. Seven class E tests were retired with their replacement contracts (c01, c08 belief/fame/fidelity, c09, c13, c15); the parity proof (37 injections, the contract caught all 37, the tests missed 9) is in the Test Summary. The phase19 hot-path test and the 42 other import rules stay tests; rpg's four per-edge reasons are on the phase19 ignores, and the OFF-mode condition they rely on is enforced only if testing's #547 pick lands. Retirements and the blocking step are one unit: dropping one drops the other. Owed: `make knowledge-index-update`, the closure record, the live probe-PR demo (owner's yes).
