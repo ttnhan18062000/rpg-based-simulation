@@ -5,7 +5,9 @@ Everything here reads the typed facts ``arm_child.py`` wrote (start roster, fina
 * People = the entities of the BASE arm's tick-0 roster whose species keeps coin, matched by id; both arms are read on those same ids (the keeps_coin
   set of the new arm never changes who is counted). Anything that exists at the end but not at tick 0 is "added" and listed apart.
 * SE = standard deviation of the per-seed (new - base) difference / sqrt(n_seeds). The base-vs-base spread is only the self-check (must be 0).
-* Verdict per world: drift = |mean difference| > 2 * SE AND > floor. The floor's value is the designer's: ``DEFAULT_FLOOR`` is a named placeholder.
+* Verdict per world (the owner's D76 ruling): STOP when the people-death increase is > 2 * SE AND > the floor, the floor being ``FLOOR_PER_SEED`` (1 death per
+  seed, so the total delta must exceed the seed count); a fall past both is REPORT-ONLY. SE uses the actual seed count; an SD of 0 is not special-cased
+  (the floor is then the only guard).
 """
 from __future__ import annotations
 
@@ -13,7 +15,9 @@ import math
 from collections import Counter
 from typing import Any, Dict, Iterable, List, Mapping, Sequence, Set
 
-DEFAULT_FLOOR = 0.0  # PLACEHOLDER: the designer sets the minimum delta that counts as drift; until then every >2 SE drift is reported and the header says the floor is unset
+FLOOR_PER_SEED = 1.0  # the owner's floor: one people death per seed per world (total floor = number of seeds)
+STOP = "STOP"
+REPORT_ONLY = "REPORT-ONLY"
 SE_MULTIPLE = 2.0
 
 Run = Mapping[str, Any]
@@ -62,10 +66,15 @@ def standard_error(diffs: Sequence[float]) -> float:
     return math.sqrt(sum((d - m) ** 2 for d in diffs) / (n - 1)) / math.sqrt(n)
 
 
-def drifts(diffs: Sequence[float], floor: float = DEFAULT_FLOOR) -> bool:
-    """The verdict line: |mean difference| > 2 SE AND > floor."""
-    m = abs(mean(diffs))
-    return m > SE_MULTIPLE * standard_error(diffs) and m > floor
+def verdict(diffs: Sequence[float], floor_per_seed: float = FLOOR_PER_SEED) -> str:
+    """STOP when more deaths past 2 SE and past the floor; REPORT-ONLY when fewer past both; else empty. ``diffs`` are per-seed (new - base).
+
+    The mean difference is compared with 2 SE (SE of the mean); the floor is per seed, i.e. the total difference must exceed the seed count times it.
+    """
+    m = mean(diffs)
+    if abs(m) > SE_MULTIPLE * standard_error(diffs) and abs(m) > floor_per_seed:
+        return STOP if m > 0 else REPORT_ONLY
+    return ""
 
 
 def deaths_by_kind(run: Run, ids: Iterable[str] = None) -> Counter:

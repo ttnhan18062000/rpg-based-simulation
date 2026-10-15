@@ -100,7 +100,7 @@ def _counter_sum(runs: Sequence[Dict[str, Any]], prefix: str) -> Optional[int]:
     return sum(v for r in runs for k, v in r["counters"].items() if k.startswith(prefix))
 
 
-def world_section(world: str, base: List[Dict[str, Any]], new: List[Dict[str, Any]], floor: float, headline: Optional[str]) -> Tuple[List[str], Dict[str, Any]]:
+def world_section(world: str, base: List[Dict[str, Any]], new: List[Dict[str, Any]], floor_per_seed: float, headline: Optional[str]) -> Tuple[List[str], Dict[str, Any]]:
     seeds = [r["seed"] for r in base]
     ids = [stats.people_ids(b["start"]) for b in base]
     mismatch = [stats.roster_mismatch(b["start"], n["start"]) for b, n in zip(base, new)]
@@ -108,20 +108,20 @@ def world_section(world: str, base: List[Dict[str, Any]], new: List[Dict[str, An
     pn = [stats.people_deaths(n, i) for n, i in zip(new, ids)]
     diffs = [n - b for b, n in zip(pb, pn)]
     se, mean = stats.standard_error(diffs), stats.mean(diffs)
-    drift = stats.drifts(diffs, floor)
+    verdict = stats.verdict(diffs, floor_per_seed)
     ext = stats.extinction_verdict(base, new)
     lines = [f"### {world}", "",
              f"People deaths (tick-0 base roster, keeps_coin, by id; n={len(ids[0])} per seed): base {pb} -> new {pn}",
-             f"- total {sum(pb)} -> {sum(pn)}; mean per-seed delta {_fmt(mean)}, SE {se:.2f}; drift > {stats.SE_MULTIPLE:g}·SE AND > floor {floor:g}: **{'YES' if drift else 'no'}**"]
+             f"- total {sum(pb)} -> {sum(pn)} (delta {sum(pn) - sum(pb):+d}); mean per-seed delta {_fmt(mean)}, SE {se:.2f}, floor {floor_per_seed * len(diffs):g} total; verdict (more deaths past {stats.SE_MULTIPLE:g}·SE and the floor stops, fewer is report-only): **{verdict or 'no drift'}**"]
     if any(m["only_base"] or m["only_new"] or m["changed"] for m in mismatch):
         lines.append(f"- ROSTER MISMATCH at tick 0 (the arms did not start from the same world): {[ (s, m) for s, m in zip(seeds, mismatch) if any(m.values()) ]}")
     kinds = sorted({k for r in base + new for k in stats.deaths_by_kind(r)})
     kb = {k: [stats.deaths_by_kind(r)[k] for r in base] for k in kinds}
     kn = {k: [stats.deaths_by_kind(r)[k] for r in new] for k in kinds}
-    lines += ["", "| kind (all entities of the tick-0 roster) | dead base | dead new | mean delta | SE | drift |", "|---|---|---|---|---|---|"]
+    lines += ["", "| kind (all entities of the tick-0 roster) | dead base | dead new | mean delta | SE | verdict |", "|---|---|---|---|---|---|"]
     for k in kinds:
         d = [b - a for a, b in zip(kb[k], kn[k])]
-        lines.append(f"| {k} | {sum(kb[k])} | {sum(kn[k])} | {_fmt(stats.mean(d))} | {stats.standard_error(d):.2f} | {'YES' if stats.drifts(d, floor) else ''} |")
+        lines.append(f"| {k} | {sum(kb[k])} | {sum(kn[k])} | {_fmt(stats.mean(d))} | {stats.standard_error(d):.2f} | {stats.verdict(d, floor_per_seed)} |")
     cb, cn = sum((stats.causes_by_kind(r) for r in base), stats.Counter()), sum((stats.causes_by_kind(r) for r in new), stats.Counter())
     moved = sorted(k for k in set(cb) | set(cn) if cb[k] != cn[k])
     lines += ["", f"Deaths by kind|cause (death_record), rows that moved: " + (", ".join(f"{k} {cb[k]}->{cn[k]}" for k in moved) or "none")]
@@ -142,7 +142,7 @@ def world_section(world: str, base: List[Dict[str, Any]], new: List[Dict[str, An
     if headline:
         lines.append(f"- headline `{headline}`: {_counter_sum(base, headline)} -> {_counter_sum(new, headline)}")
     lines.append("")
-    row = {"world": world, "people_base": sum(pb), "people_new": sum(pn), "delta": sum(pn) - sum(pb), "mean_delta": mean, "se": se, "drift": drift, "stop": ext["stop"]}
+    row = {"world": world, "people_base": sum(pb), "people_new": sum(pn), "delta": sum(pn) - sum(pb), "mean_delta": mean, "se": se, "verdict": verdict, "stop": ext["stop"]}
     return lines, row
 
 
@@ -150,7 +150,7 @@ def watch_rows(step: str, div: str, rows: Sequence[Dict[str, Any]]) -> List[str]
     out = ["### Watch-table rows (cumulative table, D76)", "", "| Step | Div | World | People deaths base->new | Delta | SE | Extinctions |", "|---|---|---|---|---|---|---|"]
     for r in rows:
         ext = ("STOP " + ", ".join(r["stop"])) if r["stop"] else "none"
-        flag = " (drift)" if r["drift"] else ""
+        flag = f" ({r['verdict']})" if r["verdict"] else ""
         out.append(f"| {step} | {div} | {r['world']} | {r['people_base']}->{r['people_new']} | {r['delta']:+d}{flag} | {r['se']:.2f} | {ext} |")
     return out
 
@@ -177,7 +177,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--ticks", type=int, default=TICKS)
     ap.add_argument("--seeds", type=int, nargs="+", default=list(SEEDS))
     ap.add_argument("--jobs", type=int, default=2, help="parallel runs (memory: the reaper kills at 3 heavy processes)")
-    ap.add_argument("--floor", type=float, default=stats.DEFAULT_FLOOR, help="minimum delta that counts as drift (the designer's value; default is a placeholder)")
+    ap.add_argument("--floor-per-seed", type=float, default=stats.FLOOR_PER_SEED, help="people deaths per seed a world's delta must exceed (owner's D76 floor: 1)")
     ap.add_argument("--self-check", choices=("seed42", "full", "off"), default="seed42")
     ap.add_argument("--headline", default=None, help="a ledger counter prefix to show as the step's headline metric")
     ap.add_argument("--neutral", action="store_true")
@@ -204,11 +204,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     lines = [f"## Paired measurement: {a.step} (div {a.div})", "",
              f"- base {bsha[:12]} -> new {nsha[:12]}; {', '.join(worlds)}; seeds {a.seeds}; {a.ticks} ticks; PYTHONHASHSEED={HASHSEED}; audit_mode and signals_zeroed recorded True in every run of both arms",
              f"- base-vs-base self-check ({a.self_check}, {len(check_jobs)} runs): spread 0 (byte-identical final and start hashes, fates and counters)",
-             f"- SE = sd(per-seed new-base)/sqrt({len(a.seeds)}); drift = |mean| > {stats.SE_MULTIPLE:g}·SE AND > floor {a.floor:g}" + ("  [FLOOR VALUE UNSET: designer's value pending; default placeholder]" if a.floor == stats.DEFAULT_FLOOR else ""),
+             f"- SE = sd(per-seed new-base)/sqrt({len(a.seeds)}); STOP = more people deaths by > {stats.SE_MULTIPLE:g}·SE AND > floor ({a.floor_per_seed:g} per seed = {a.floor_per_seed * len(a.seeds):g} total); fewer past both is REPORT-ONLY; SD 0 is not special-cased",
              ""]
     rows = []
     for w in worlds:
-        sect, row = world_section(w, [base[(w, s)] for s in a.seeds], [new[(w, s)] for s in a.seeds], a.floor, a.headline)
+        sect, row = world_section(w, [base[(w, s)] for s in a.seeds], [new[(w, s)] for s in a.seeds], a.floor_per_seed, a.headline)
         lines += sect
         rows.append(row)
     lines += watch_rows(a.step, a.div, rows)

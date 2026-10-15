@@ -43,11 +43,17 @@ def test_standard_error_is_the_sd_of_the_per_seed_difference_over_root_n():
     assert stats.standard_error([3.0]) == 0.0
 
 
-def test_drift_needs_more_than_two_se_and_more_than_the_floor():
-    diffs = [5.0, 5.0, 5.0, 6.0, 4.0]
-    assert stats.drifts(diffs, floor=0.0)
-    assert not stats.drifts(diffs, floor=5.0)
-    assert not stats.drifts([4.0, -3.0, 5.0, -4.0, 1.0], floor=0.0)
+def test_more_deaths_past_two_se_and_the_floor_stop_and_fewer_is_report_only():
+    assert stats.verdict([5.0, 5.0, 5.0, 6.0, 4.0]) == stats.STOP
+    assert stats.verdict([-5.0, -5.0, -5.0, -6.0, -4.0]) == stats.REPORT_ONLY
+    assert stats.verdict([5.0, 5.0, 5.0, 6.0, 4.0], floor_per_seed=5.0) == ""
+    assert stats.verdict([4.0, -3.0, 5.0, -4.0, 1.0]) == ""
+
+
+def test_with_zero_spread_the_floor_is_the_only_guard():
+    assert stats.verdict([1.0] * 5) == ""
+    assert stats.verdict([2.0] * 5) == stats.STOP
+    assert stats.verdict([0.0] * 5) == ""
 
 
 def test_extinction_stop_only_when_extinct_in_every_new_seed_and_not_in_the_base():
@@ -81,10 +87,10 @@ def test_the_world_section_reports_per_seed_people_deaths_the_verdict_and_the_wa
     pairs = [pair(s, d) for s, d in zip(range(42, 47), [1, 1, 1, 2, 1])]
     lines, row = paired.world_section("w", [p[0] for p in pairs], [p[1] for p in pairs], 0.0, None)
     text = "\n".join(lines)
-    assert row["people_base"] == 0 and row["people_new"] == 6 and row["delta"] == 6 and row["drift"] is True
+    assert row["people_base"] == 0 and row["people_new"] == 6 and row["delta"] == 6 and row["verdict"] == "STOP"
     assert "base [0, 0, 0, 0, 0] -> new [1, 1, 1, 2, 1]" in text
     assert "n/a (an arm tree predates the ledger counters)" in text
-    assert "| step | 2.1 | w | 0->6 | +6 (drift) |" in "\n".join(paired.watch_rows("step", "2.1", [row]))
+    assert "| step | 2.1 | w | 0->6 | +6 (STOP) |" in "\n".join(paired.watch_rows("step", "2.1", [row]))
 
 
 def test_results_are_cached_by_commit_and_the_repeat_arm_has_its_own_directory(tmp_path):
