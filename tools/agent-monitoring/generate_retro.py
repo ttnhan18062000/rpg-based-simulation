@@ -828,7 +828,7 @@ def compute_retro_metrics(
         group_durations = [r["duration_s"] for r in group if r.get("duration_s") and not retro_provenance.is_derived(r)]
         execution_mode_summary[mode] = {
             "count": len(group),
-            "unknown": sum(1 for r in group if r.get("duration_source") == "unknown"),
+            "unknown": sum(1 for r in group if retro_provenance.source_of(r) == "unknown"),
             "done_count": sum(1 for r in group if _resolve_status(r) == "DONE"),
             "avg_duration_min": (
                 (int(sum(group_durations) / len(group_durations)) // 60)
