@@ -1768,3 +1768,13 @@
   test_path: tests/unit/world/test_conquest_adds_no_entity.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.123.
   support_boundary: "Dormant in the baseline (0 conquests in 10 runs of 5000 ticks); proved by forced-conquest tests. The influence trigger and MONSTER_HORDE as a taker are label-driven until caused war and peace (not before M3)."
+- id: PROG-137
+  text: "TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH: every death writes one durable typed LifecycleComponent.death_record (cause, tick, last_attacker_id, hazard_kind) through resolve_lifecycle and the authoritative patch. last_attacker_id is the most recent hit at any time before death; recency is not recorded. The behaviour is unchanged: the canonical state with the two new fields removed is byte-identical to the state before this step."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/core/death_cause.py (DeathCause, HpLossSource, DeathRecord), src/core/state.py (LifecycleComponent.death_record, CombatComponent.last_attacker_id, canonical dicts), src/systems/lifecycle_systems/lifecycle.py (_death_record), src/engine/patches.py (LifecyclePatch and CombatPatch apply), src/observability/death_ledger.py (hp loss by typed source; UNATTRIBUTED expected 0). docs/mechanics/01_entity_anatomy.md Death Record."
+  proof_type: regression
+  test_path: tests/unit/progression/test_death_record.py
+  divergence_note: null
+  support_boundary: "Recency of the last attacker is not recorded (no last_attacker_tick); a follow-up if testing or SimQ need it."

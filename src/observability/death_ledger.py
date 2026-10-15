@@ -1,13 +1,14 @@
 """
 src/observability/death_ledger.py
 ───────────────────────────────────────────────────────────────────────────────
-The death ledger (TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH): one typed record per death and a typed source for every hp loss.
+The death ledger (TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH): a typed source for every hp loss, and the deaths by cause.
 
-`death_reason` is durable but a string, the hazard kind lives only on the region, and the last attacker only on the transient combat update. This
-bounded, non-authoritative, run-scoped observer reads the staged update and the two states and writes nothing back: it adds nothing to the state
-fingerprint. Each tick it (1) splits every hp loss into hit, hazard and starving drain (a loss none explains is UNATTRIBUTED), (2) remembers the
-last attacker per body, and (3) on the tick a death reason is first recorded writes a `DeathRecord`: the typed cause, the last attacker, the
-region's hazard kind when the cause is a hazard, and the hp the body lost by source over its life (so the dominant source is read, not rebuilt).
+The durable record of a death (cause, tick, last attacker, hazard kind) is `LifecycleComponent.death_record`, written by the lifecycle resolver. What no
+state can hold is where each hp went: the starving drain is taken inside the apply path's passive branch and no update carries it. This bounded,
+non-authoritative, run-scoped observer reads the staged update and the two states and writes nothing back. Each tick it splits every hp loss into hit,
+hazard and starving drain (a loss none explains is UNATTRIBUTED, a count that must stay at zero), keeps the hp each body lost by source, and on the
+tick a death record first appears tallies the death by cause and writes one row with that body's hp lost by source (so the dominant source is read,
+not rebuilt).
 
 Like the run ledger: a live header opens the run, ONE tally closes it, both WARNING so the DEGRADED/PRESSURE recorder modes keep them; a recorder
 that never saw the header writes no tally, and a silent ledger reads as no-data, never as zero.
@@ -18,8 +19,7 @@ import time
 from typing import Any, Dict, List, Optional, Set
 
 from src.ai.goals.kind_group import is_person, kind_group
-from src.core.death_cause import DeathCause, HpLossSource, death_cause_of
-from src.core.region_resolution import resolve_region_among
+from src.core.death_cause import DeathCause, HpLossSource
 from src.core.state import AuthoritativeState, EntityState
 from src.observability.events import SimulationEvent
 
@@ -44,11 +44,11 @@ class DeathLedger:
     _hp_lost: Dict[str, int] = {}  # group|source
     _records: List[Dict[str, Any]] = []
     _by_entity: Dict[int, Dict[str, int]] = {}  # entity id -> hp lost by source so far
-    _last_attacker: Dict[int, Dict[str, int]] = {}  # entity id -> {"id", "tick"} of the last damaging attacker
     _unrecorded: Set[int] = set()  # bodies seen dying with no death reason yet; any still here at the close are UNKNOWN
 
     @classmethod
     def reset_run_state(cls) -> None:
+        """Clear every counter and the header flag at run start (and in test teardown)."""
         cls._live = False
         cls._header_sent = False
         cls._last_tick = 0
@@ -57,7 +57,6 @@ class DeathLedger:
         cls._hp_lost = {}
         cls._records = []
         cls._by_entity = {}
-        cls._last_attacker = {}
         cls._unrecorded = set()
 
     @classmethod
@@ -68,6 +67,7 @@ class DeathLedger:
 
     @classmethod
     def observe(cls, prior: AuthoritativeState, current: AuthoritativeState, update: Any) -> List[SimulationEvent]:
+        """Count one tick: the live header once, then every hp loss by source and every death record that first appears; silent when not live."""
         if not cls._live:
             return []
         tick = current.tick
@@ -81,12 +81,12 @@ class DeathLedger:
             before = prior.entities.get(eid)
             if before is None:
                 continue
-            cls._count_hp_loss(tick, eid, before, entity, updates.get(eid))
-            cls._record_death(tick, eid, before, entity, current)
+            cls._count_hp_loss(eid, before, entity, updates.get(eid))
+            cls._record_death(tick, eid, before, entity)
         return events
 
     @classmethod
-    def _count_hp_loss(cls, tick: int, eid: int, before: EntityState, entity: EntityState, upd: Any) -> None:
+    def _count_hp_loss(cls, eid: int, before: EntityState, entity: EntityState, upd: Any) -> None:
         loss = before.combat.hp - entity.combat.hp
         if loss <= 0:
             return
@@ -102,42 +102,31 @@ class DeathLedger:
                 cls._hp_lost[_key(group, source.value)] = cls._hp_lost.get(_key(group, source.value), 0) + amount
                 mine = cls._by_entity.setdefault(eid, {})
                 mine[source.value] = mine.get(source.value, 0) + amount
-        attacker = getattr(combat, "attacker_id", None)
-        if attacker is not None and hit > 0:
-            cls._last_attacker[eid] = {"id": int(attacker), "tick": tick}
 
     @classmethod
-    def _record_death(cls, tick: int, eid: int, before: EntityState, entity: EntityState, current: AuthoritativeState) -> None:
-        if before.combat.alive and not entity.combat.alive and entity.lifecycle.death_reason is None:
+    def _record_death(cls, tick: int, eid: int, before: EntityState, entity: EntityState) -> None:
+        if before.combat.alive and not entity.combat.alive and entity.lifecycle.death_record is None:
             cls._unrecorded.add(eid)
-        if before.lifecycle.death_reason is not None or entity.lifecycle.death_reason is None:
+        if before.lifecycle.death_record is not None or entity.lifecycle.death_record is None:
             return
         cls._unrecorded.discard(eid)
-        cause = death_cause_of(entity.lifecycle.death_reason)
+        record = entity.lifecycle.death_record
         group = kind_group(entity)
-        person = bool(is_person(entity))
-        cls._deaths[_key(group, cause.value, int(person))] = cls._deaths.get(_key(group, cause.value, int(person)), 0) + 1
+        person = int(bool(is_person(entity)))
+        cls._deaths[_key(group, record.cause.value, person)] = cls._deaths.get(_key(group, record.cause.value, person), 0) + 1
         if len(cls._records) < MAX_RECORDS:
-            hazard_kind: Optional[str] = None
-            if cause is DeathCause.HAZARD:
-                x, y = entity.navigation.position
-                region = resolve_region_among(current.regions.values(), x, y)
-                hazard_kind = getattr(region, "hazard_kind", None)
-            attacker = cls._last_attacker.get(eid)
-            cls._records.append({
-                "entity_id": eid, "group": group, "person": person, "tick": tick, "cause": cause.value,
-                "last_attacker_id": attacker["id"] if attacker else None, "hazard_kind": hazard_kind,
-                "hp_lost": dict(sorted(cls._by_entity.get(eid, {}).items())),
-            })
+            cls._records.append({"entity_id": eid, "group": group, "person": bool(person), "tick": tick, "cause": record.cause.value,
+                                 "hp_lost": dict(sorted(cls._by_entity.get(eid, {}).items()))})
         cls._by_entity.pop(eid, None)
-        cls._last_attacker.pop(eid, None)
 
     @classmethod
     def closing_event(cls, event_counts: Dict[str, int]) -> Optional[SimulationEvent]:
+        """The tally for a recorder that recorded this run's live header, else nothing: a ledger that never opened must not look live."""
         return cls.tally_event() if event_counts.get(LEDGER_LIVE_EVENT, 0) > 0 else None
 
     @classmethod
     def tally_event(cls) -> SimulationEvent:
+        """The closing marker: deaths by cause, hp lost by source, the unattributed hp (must be 0) and one row per death, sorted so two runs of a seed write the same bytes."""
         deaths = dict(sorted(cls._deaths.items()))
         unknown = len(cls._unrecorded)
         payload = {

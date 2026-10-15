@@ -6,8 +6,9 @@ explains is UNATTRIBUTED, a count that must stay at zero.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Any, Dict, Optional
 
 
 class DeathCause(str, Enum):
@@ -35,3 +36,26 @@ class HpLossSource(str, Enum):
     HAZARD = "HAZARD"  # the region's hazard drain (`CombatUpdate.hazard_damage`)
     STARVATION = "STARVATION"  # the starving passive drain, written by the apply path's passive branch (no update carries it)
     UNATTRIBUTED = "UNATTRIBUTED"  # a loss none of the above explains; must stay at zero
+
+
+@dataclass(frozen=True, slots=True)
+class DeathRecord:
+    """The durable record of one death, written once by the lifecycle resolver on the tick it records the death.
+
+    `cause` is the typed reading of `death_reason`; `last_attacker_id` is the body that last took hp from this one (this tick's attacker when a hit
+    killed it, else the last one `CombatComponent.last_attacker_id` remembers; None when nothing ever hit it); `hazard_kind` is the region's hazard
+    kind and is set only for a HAZARD death. It sits in the canonical state, so a wrong record shows in the fingerprint and in replay.
+    """
+    cause: DeathCause
+    tick: int
+    last_attacker_id: Optional[int] = None
+    hazard_kind: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """The canonical form the state fingerprint carries."""
+        return {"cause": self.cause.value, "tick": self.tick, "last_attacker_id": self.last_attacker_id, "hazard_kind": self.hazard_kind}
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "DeathRecord":
+        """The record back from its canonical form."""
+        return cls(cause=DeathCause(data["cause"]), tick=int(data["tick"]), last_attacker_id=data.get("last_attacker_id"), hazard_kind=data.get("hazard_kind"))

@@ -264,7 +264,8 @@ def test_wider_scope_numbers_pinned():
     # 337 -> 338 on 2026-10-13 (M0 gate V8): +src/core/spawn_source.py (SpawnKind, SpawnSource: a record of where an add came from).
     # 338 -> 339 (run ledger): +src/ai/goals/kind_group.py (the kind group from the declared diet; functions only). src/observability/run_ledger.py is outside the scope globs.
     # 339 -> 340 on 2026-10-14 (D72, folded into rpg-next): +src/content/terrain_cost.py (the content-declared terrain cost accessor).
-    assert wider["scope_files"] == 340
+    # 340 -> 341 on 2026-10-15 (typed death cause): +src/core/death_cause.py (DeathCause, HpLossSource, DeathRecord: enums and one frozen record). src/observability/death_ledger.py is outside the scope globs.
+    assert wider["scope_files"] == 341
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -299,7 +300,8 @@ def test_wider_scope_numbers_pinned():
     # D75 moves where terrain cost is paid (time, then route), so it is bound with that step's mechanism, not the pre-check's.
     # 251 -> 252 on 2026-10-14 (D70, 2.125): src/world/raid.py is no longer cited; `faction_raid` is a gap (the raid spawner is deleted, the module
     # keeps only its constants for the raid that returns with caused war, M3).
-    assert wider["unbound_files"] == 252
+    # 252 -> 253 on 2026-10-15 (typed death cause): src/core/death_cause.py is in scope and bound to no mechanism; rpg-planner binds it at the fold.
+    assert wider["unbound_files"] == 253
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
