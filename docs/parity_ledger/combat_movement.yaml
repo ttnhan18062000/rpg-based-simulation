@@ -4868,4 +4868,4 @@
   proof_type: regression
   test_path: tests/unit/engine/test_terrain_cost_is_time.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.126.
-  support_boundary: Position swaps and yields are not timed. Route choice is not weighted by cost (the next step), so a path may cross slow ground when a faster way exists. Road (0.5) is capped at one tick. Fatigue is not modelled.
+  support_boundary: About 0.03% of frontier steps (78 of 249031, five seeds) still carry no step time (an ordinary move update whose final form lacks the field; the writer is not identified). Swaps and yields are timed and respect the hold (D75 completion). Route choice is not weighted by cost (the next step), so a path may cross slow ground when a faster way exists. Road (0.5) is capped at one tick. Fatigue is not modelled.

@@ -351,6 +351,8 @@ def test_the_committed_catalog_fills_each_declared_slot_of_terrain_forest_once_a
     expected.update({source: None for source in af.ICON_V2_SOURCES})
     # and the real-art proof adoption (2026-10-11) added three sources with no detail axis
     expected.update({source: None for source in af.PROOF_SOURCES})
+    # and the object markers (the owner's adopt-set of 2026-10-14) added 18 sources with no detail axis
+    expected.update({source: None for source in af.OBJECT_SOURCES})
     # and the terrain variants (the owner's adopt-set of 2026-10-12) each name the detail value they fill
     expected.update({source: detail for source, (_key, detail) in af.VARIANT_DETAILS.items()})
     assert {a.source_asset_id: a.detail_value for a in (records.load_adoption(p.stem) for p in sorted(records.adoptions_dir().glob("*.json")))} == expected

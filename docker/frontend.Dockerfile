@@ -1,18 +1,18 @@
-# Build stage
-FROM node:20-alpine AS builder
+# Build stage. Base images are pinned by digest (multi-arch index current on 2026-10-14); Dependabot bumps them.
+FROM node:20.20-alpine3.23@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS builder
 
 WORKDIR /app
 
 # Copy package files and install dependencies
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm ci
 
 # Copy source code and build
 COPY frontend/ .
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM nginx:1.31.6-alpine3.24@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2
 
 # Copy built assets to Nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
