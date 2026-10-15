@@ -63,8 +63,14 @@ GitHub #598. #596 (`51b044c69`, `TCK-20261013-VISUAL-ASSETS-MARKERS-RC-AND-CLOSE
 - Assumed: the page keeps one hand-copied fallback table, as it does today. A generated table would be a design change, not this hotfix.
 
 ## Implementation Notes
+- `iconScene.ts`: new `OBJECT_MARKER_FALLBACKS` table (glyph, text) for the 18 rc-0011 keys, folded into `V2_FALLBACKS` through `textFallback` (shown text is `<glyph> plus <text>`, note starts `identifying`). The registry spelling `#aaa` is kept; the hex test skips it by design.
+- `iconScene.test.ts`: counts by named set, 14 drawn + 22 icon set v2 + 18 object markers = 54 registered, 40 undrawn; `it(...)` titles updated.
+- Fallback copy check: a throwaway script read each of the 18 keys' registry `fallback` and confirmed its glyph and text strings appear in the table (18 checked, 0 mismatches). The existing hex test stays as the guard.
+- Why #596's CI missed it: path-filter skip, filed by lead. The Frontend lane was skipped on #596 by test.yml's `FRONTEND_RE='^(frontend/|\.github/workflows/test\.yml$)'`; `visual_keys.yaml` is not in it, but `iconScene.test.ts` reads it. lead-planner is filing the filter fix with test.yml's owner. No workflow change here.
 
 ## Test Summary
+- `cd frontend && npx vitest run src/visualAssets` (under MemoryMax=3G): 22 files, 279 tests passed.
+- `npx tsc --noEmit -p .`: clean. CI's Frontend job also runs `npm run build`, not run locally (heavy; CI will).
 
 ## Files Changed
 
