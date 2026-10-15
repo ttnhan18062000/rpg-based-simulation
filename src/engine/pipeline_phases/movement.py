@@ -152,29 +152,9 @@ class MovementPhase:
                 continue
 
             # Apply atomic swap.
-            a_existing = refined_entity_updates.get(
-                a_id,
-                EntityUpdate(entity_id=a_id),
+            refined_entity_updates[a_id], refined_entity_updates[b_id] = MovementPhase._swap_updates(
+                state, a, b, refined_entity_updates.get(a_id, EntityUpdate(entity_id=a_id)), refined_entity_updates.get(b_id, EntityUpdate(entity_id=b_id)),
             )
-            b_existing = refined_entity_updates.get(
-                b_id,
-                EntityUpdate(entity_id=b_id),
-            )
-
-            a_swap = MovementPhase._build_position_swap_entity_update(
-                entity=a,
-                new_position=b_old,
-                reason=ReasonCode.POSITION_SWAP,
-            )
-
-            b_swap = MovementPhase._build_position_swap_entity_update(
-                entity=b,
-                new_position=a_old,
-                reason=ReasonCode.POSITION_SWAP,
-            )
-
-            refined_entity_updates[a_id] = a_existing.merge(a_swap)
-            refined_entity_updates[b_id] = b_existing.merge(b_swap)
 
             if active_contract is not None:
                 MovementPhase._mark_position_swap_contract_fulfilled(
@@ -320,6 +300,20 @@ class MovementPhase:
     # --- Helpers ---
 
     @staticmethod
+    def _swap_updates(state: AuthoritativeState, a: EntityState, b: EntityState, a_existing: EntityUpdate, b_existing: EntityUpdate) -> tuple[EntityUpdate, EntityUpdate]:
+        """Each side moves onto the other's tile and pays the step time of that tile (D75), merged onto its update so far this tick."""
+        a_old, b_old = a.navigation.position, b.navigation.position
+        a_swap = MovementPhase._build_position_swap_entity_update(
+            entity=a, new_position=b_old, reason=ReasonCode.POSITION_SWAP,
+            step_ready_tick=MovementSystem._step_ready_tick(a, True, b_old, state.tick, state),
+        )
+        b_swap = MovementPhase._build_position_swap_entity_update(
+            entity=b, new_position=a_old, reason=ReasonCode.POSITION_SWAP,
+            step_ready_tick=MovementSystem._step_ready_tick(b, True, a_old, state.tick, state),
+        )
+        return a_existing.merge(a_swap), b_existing.merge(b_swap)
+
+    @staticmethod
     def _can_attempt_position_swap_pair(
         state: AuthoritativeState,
         a: EntityState,
@@ -332,6 +326,9 @@ class MovementPhase:
         if a.navigation.movement_mode == MovementMode.HOLD:
             return False
         if b.navigation.movement_mode == MovementMode.HOLD:
+            return False
+        # Terrain cost is time (D75): an entity still taking its previous step does not swap either.
+        if state.tick < a.navigation.step_ready_tick or state.tick < b.navigation.step_ready_tick:
             return False
         a_pos = a.navigation.position
         b_pos = b.navigation.position
@@ -448,6 +445,7 @@ class MovementPhase:
         entity: EntityState,
         new_position: tuple[float, float],
         reason,
+        step_ready_tick: float | None = None,
     ) -> EntityUpdate:
         # Movement no longer costs readiness -- see the matching note in
         # MovementSystem.resolve_move (src/engine/movement.py)
@@ -464,6 +462,7 @@ class MovementPhase:
                 oscillation_count_delta=-entity.navigation.oscillation_count,
                 last_position_set=entity.navigation.position,
                 clear_path=True,
+                step_ready_tick_set=step_ready_tick,
             ),
             stamina_update=StaminaUpdate(
                 current_delta=-entity.stamina.MOVE_COST,
