@@ -7,6 +7,10 @@ from src.core.items import ItemRegistry
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, BuildingState
 
+# What an item the catalog does not know is worth.
+UNKNOWN_ITEM_BASE_VALUE = 10.0
+
+
 class MarketSystem:
     """
     Authoritative logic for market pricing and deterministic fluctuations.
@@ -15,30 +19,9 @@ class MarketSystem:
 
     @staticmethod
     def get_item_base_value(item_id: str) -> float:
-        """Returns the static base value for an item."""
-        # Baseline values (Milestone 8)
-        bases = {
-            "gold": 1.0,
-            "wood": 2.0,
-            "iron_ore": 5.0,
-            "steel_ore": 15.0,
-            "leather": 4.0,
-            "cloth": 3.0,
-            "herb": 2.5,
-            
-            "iron_sword": 50.0,
-            "steel_sword": 150.0,
-            "iron_plate": 80.0,
-            "steel_plate": 240.0,
-            "health_potion": 20.0,
-            "stamina_potion": 15.0
-        }
-        if item_id in bases:
-            return bases[item_id]
-        # EXCH-01: an item the table does not price is worth its catalog value (before this the fallback was a flat 10, which made a berry
-        # worth 10 and ore, fish and fiber worth 10 each whatever their catalog value); only an item the catalog does not know defaults to 10.
+        """The item's content base value (EXCH-01, D79): the catalog is the only price source. Only an item the catalog does not know defaults to 10."""
         definition = ItemRegistry.get(item_id)
-        return float(definition.value) if definition is not None and definition.value > 0 else 10.0
+        return float(definition.value) if definition is not None else UNKNOWN_ITEM_BASE_VALUE
 
     @staticmethod
     def calculate_price(
@@ -82,11 +65,6 @@ class MarketSystem:
 
     @staticmethod
     def get_item_kind(item_id: str) -> str:
-        """Maps item IDs to broader categories for modifiers."""
-        if "sword" in item_id or "plate" in item_id:
-            return "GEAR"
-        if "ore" in item_id or item_id in ("wood", "leather", "cloth"):
-            return "MATERIAL"
-        if "potion" in item_id or item_id == "herb":
-            return "CONSUMABLE"
-        return "OTHER"
+        """The item's content kind (MATERIAL, WEAPON, ARMOR, CONSUMABLE, CURRENCY), the key regional and building price modifiers use; OTHER for an unknown item."""
+        definition = ItemRegistry.get(item_id)
+        return definition.kind.value if definition is not None else "OTHER"
