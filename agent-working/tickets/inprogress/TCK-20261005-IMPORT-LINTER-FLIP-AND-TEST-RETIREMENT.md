@@ -80,6 +80,24 @@ Flip batch (local only, nothing pushed), 2026-10-15. Steps done: 1 merge (476330
 Soak review drafted 2026-10-08, interim
 
 ## Test Summary
+### Real lint-imports output through the pair-naming parser (2026-10-15)
+Not a hand-written fixture: three injections into the git-archive scratch copy (two imports into `src/core/builder.py`, one `import src.engine.cadence` into `src/domains/campaigns/state.py`), the real `lint-imports` 2.15, `python3 -m codebase.structure.import_contracts --root <scratch> advisory --annotate`, exit 0. The section parser matched the real format, including the generated `layers` contract:
+
+```
+**Import contracts (advisory):** 14 kept, 3 broken
+- broken: `Registry layer order (advisory)`
+  - `src.domains.campaigns.state -> src.engine.cadence (l.538)`
+  - `src.core.builder -> src.domains.fame.deriver (l.956)`
+  - `src.core.builder -> src.domains.campaigns.state (l.955)`
+- broken: `campaign state imports no engine or systems`
+  - `src.domains.campaigns.state -> src.engine.cadence (l.538)`
+- broken: `core must not import domains (test_entity_models_do_not_import_domain_services)`
+  - `src.core.builder -> src.domains.campaigns.state (l.955)`
+  - `src.core.builder -> src.domains.fame.deriver (l.956)`
+- run `make lint-imports` for the full report
+```
+(The scratch copy still holds the old c01 name.) Every injected pair is named under every contract it breaks.
+
 ### Step 3: class E retirements, parity proof (2026-10-15, head `8ec5a369f`, scratch copy)
 Made in a scratch copy (`git archive HEAD src tests codebase visual_assets pyproject.toml registries`), one injection at a time appended to one file, the file restored after each; this checkout was not touched. Test run as `PYTHONPATH=<scratch> python -m pytest <node id> -o addopts=` from the scratch root; contract run as `lint-imports --config codebase/structure/importlinter.toml --contract <id>`. A test counts as "caught" only if it fails on an assertion (not an import error). Baseline on the clean copy: all 7 tests PASS, all 7 contracts KEPT.
 
