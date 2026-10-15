@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-ROUTES-WEIGH-TERRAIN-COST-D75-ROUTE-STEP
-phase: open
+phase: done
 date: 2026-10-14
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Routes weigh terrain cost (D75, MOV-04, the route step): route choice weighs each tile by its declared terrain cost, so a road (0.5) becomes preferred.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -55,16 +55,16 @@ None.
 src/systems/world_systems/navigation.py (NavigationSystem.get_next_step, FlowFieldService); src/engine/movement.py (resolve_move); src/engine/movement_cache.py; src/engine/pipeline_phases/movement.py (position-swap next step).
 
 ## Assumptions / Open Questions
-- There is no A* today. `NavigationSystem.get_next_step` takes one axis-dominant step toward the target (no terrain, no obstacles); `FlowFieldService` is an anchor stub used only for a far TOWN target. The planner shape (a bounded weighted search versus a greedy two-neighbour choice) is a decision for rpg-planner and the designer.
+- (Resolved) There was no A*. `NavigationSystem.get_next_step` takes one axis-dominant step toward the target (no terrain, no obstacles); `FlowFieldService` is an anchor stub used only for a far TOWN target. The planner shape (a bounded weighted search versus a greedy two-neighbour choice) is a decision for rpg-planner and the designer.
 
 ## Implementation Notes
-TBD
+src/engine/route_search.py: bounded A* (node cap 3000) over declared terrain cost; the route leaves the greedy step only when cheaper; plans stored whole on AuthoritativeState.route_plans (RoutePlanStore, outside the hash, carried by apply); fallbacks counted. MovementSystem._route_step wires it. True terrain map, terrain cost only (disclosed). MovementPlanCache is never constructed in src, so the store is new rather than the dead cache. Divergence 2.128, parity COMB-349, Bible ch02 section 8.
 
 ## Test Summary
-TBD
+New tests/unit/engine/test_route_weighs_terrain_cost.py (9). Affected movement, pipeline, world, engine, architecture and hunting tests pass. Code-health 0 new, 0 worse; lint-imports 17 kept, 0 broken. Paired measurement under audit_mode with base-vs-base and on-vs-on determinism checks (2.128).
 
 ## Files Changed
-TBD
+src/engine/route_search.py (new), src/engine/movement.py, src/core/state.py, src/engine/apply.py, tests (new unit file), docs (divergence 2.128, parity COMB-349, Bible ch02).
 
 ## Completion Summary
-TBD
+Routes weigh terrain cost: a cheaper route than the greedy walk is taken when one exists. Fallback rate 0.004% frontier, 0 urban; detours 2.0% and 0.34% of searches. Drift, raiders flagged for the extinction watch.

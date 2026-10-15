@@ -1369,6 +1369,8 @@ class AuthoritativeState:
     _occupancy_map_cache: Any = field(default=None, repr=False, compare=False)
     occupancy_snapshot: Any = field(default=None, repr=False, compare=False)
     movement_cache: Any = field(default=None, repr=False, compare=False)
+    # D75 route step (src/engine/route_search.py): the route plans and search counters. Not world state: a derived, droppable cache, outside the hash.
+    route_plans: Any = field(default=None, repr=False, compare=False)
     world_indexes: Any = field(default=None, repr=False, compare=False)
     semantic_entity_indexes: Any = field(default=None, repr=False, compare=False)
     _index_hits: int = field(default=0, repr=False, compare=False)
@@ -1592,6 +1594,7 @@ class AuthoritativeState:
             _building_map_cache=self._building_map_cache,
             occupancy_snapshot=self.occupancy_snapshot,
             movement_cache=self.movement_cache,
+            route_plans=self.route_plans,
             world_indexes=self.world_indexes,
             semantic_entity_indexes=self.semantic_entity_indexes
         )

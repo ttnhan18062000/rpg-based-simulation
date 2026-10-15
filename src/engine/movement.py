@@ -16,6 +16,7 @@ from src.engine.combat import CombatResolutionSystem
 from src.engine.rpg_depth import TerrainCostService
 
 from src.engine.movement_cache import MovementPlanKey, MovementPlan
+from src.engine.route_search import route_next_step
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -104,6 +105,19 @@ class MovementSystem:
         return None
 
     @staticmethod
+    def _route_step(entity: EntityState, target_pos: Tuple[float, float], state_or_context: Any) -> Tuple[float, float]:
+        """The next tile toward the target: the cheaper-than-greedy terrain route when there is one (D75 route step), else the greedy step. A far TOWN target
+        keeps the flow-field branch of `NavigationSystem.get_next_step`."""
+        px, py = entity.navigation.position
+        far_town = target_pos == getattr(state_or_context, "town_center", None) and ((target_pos[0] - px) ** 2 + (target_pos[1] - py) ** 2) ** 0.5 > 50.0
+        if not far_town:
+            step = route_next_step(entity.id, (int(entity.navigation.position[0]), int(entity.navigation.position[1])),
+                                   (int(target_pos[0]), int(target_pos[1])), state_or_context)
+            if step is not None:
+                return (float(step[0]), float(step[1]))
+        return NavigationSystem.get_next_step(entity, target_pos, state_or_context)
+
+    @staticmethod
     def _step_ready_tick(entity: EntityState, success: bool, effective_target: Optional[Tuple[float, float]], current_tick: int, state_or_context: Any) -> Optional[float]:
         """Terrain cost is time (D75): entering a tile of cost N holds the next step back N ticks. The carried time is kept only while it is
         within the last tick, so the entity never takes more than one step per tick (a road, cost 0.5, is no faster than plain)."""
@@ -167,7 +181,7 @@ class MovementSystem:
         if cached_plan is not None:
             effective_target = cached_plan.next_step
         else:
-            effective_target = NavigationSystem.get_next_step(entity, target_pos, state_or_context)
+            effective_target = MovementSystem._route_step(entity, target_pos, state_or_context)
 
         # 3. Environment & Mode Multipliers (Calculated early for readiness gating)
         move_speed_mult = MovementSystem._move_speed_mult(entity, mode, state_or_context)
