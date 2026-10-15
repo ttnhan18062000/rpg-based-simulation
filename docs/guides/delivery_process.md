@@ -351,6 +351,16 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
 2a. **Handover-transit bundle: not part of a PR.** Export it only before a machine move, in its own commit or PR, never
    inside a ticket batch. The repo is public, so an export publishes every handover note, open draft and memory file; see
    `docs/guides/agent_session_reset_boundaries.md` ("Moving sessions between machines"), the only place that prescribes it.
+2b. **Run the CI lanes your diff touches, before the push** (`TCK-20261014-PRE-PUSH-CI-LANE-PARITY`): `python3 -m tools.delivery.ci_lanes`
+   lists them (`--run` runs them and exits non-zero on a failing lane). It reads `.github/workflows/test.yml`, so there is no
+   copied lane list: path-filtered lanes (perf-cert-arena, migration-lanes, scenario-lane, frontend, docker-build) are evaluated
+   from the `changed-files` regexes, and every unfiltered lane is reported as running on any diff (never "not affected"), with a
+   *hint* where a changed file sits under its pytest paths. Changed files are `git diff --name-only origin/main...HEAD`
+   (committed only; uncommitted paths are warned about), a failed diff or evaluation reports `runs (fail-open)` as CI does, and
+   `slow-regression*.yml` lanes are listed as not on PR. It models a `pull_request` against `main`; `resync-gate` is assumed
+   not to skip. The pre-push hook's check D names the touched lanes and this command; it is advisory, never runs tests and never
+   blocks. `tests/tools/test_delivery_ci_lanes.py` fails if `test.yml` gains a regex variable, output or pytest step the
+   resolver cannot map. Scoping which tests to run inside a lane stays test-scoper's job.
 3. **Push** the branch, then **create the PR** (`gh pr create`). The title and the generated body
    sections (`## What landed` through `## Verification`/`## Known gaps`, plus the `Closes:` line)
    come from `python3 tools/delivery/pr_render.py` — run it plain for readable stdout

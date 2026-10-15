@@ -105,8 +105,28 @@ def test_every_new_job_installs_with_uv_from_the_lockfile():
         runs = [s.get("run") for s in steps]
         expected = "uv sync --locked --no-install-project" + ("" if job == "tools-a-e" else " --no-group lint")
         assert expected in runs
-        assert any(s.get("uses") == "astral-sh/setup-uv@v10.2.0" for s in steps)
+        assert _has_setup_uv(steps)
         assert not any("pip install" in (r or "") for r in runs)
+
+
+def _has_setup_uv(steps) -> bool:
+    """True if a step uses astral-sh/setup-uv at any ref (Dependabot bumps the pin; the version is not the contract)."""
+    return any(str(s.get("uses", "")).split("@", 1)[0] == "astral-sh/setup-uv" for s in steps)
+
+
+@pytest.mark.parametrize(
+    "steps, expected",
+    [
+        ([{"uses": "astral-sh/setup-uv@v10.2.0"}], True),
+        ([{"uses": "astral-sh/setup-uv@v99"}], True),
+        ([{"uses": "actions/checkout@v4"}, {"run": "uv sync"}], False),
+        ([{"uses": "astral-sh/setup-uv-fork@v1"}], False),
+        ([{"uses": "someone-else/setup-uv@v1"}], False),
+        ([], False),
+    ],
+)
+def test_setup_uv_is_matched_by_action_name_not_version(steps, expected):
+    assert _has_setup_uv(steps) is expected
 
 
 def test_the_coverage_parser_reads_tests_tools_for_both_tools_jobs_and_ignores_the_glob_word():
