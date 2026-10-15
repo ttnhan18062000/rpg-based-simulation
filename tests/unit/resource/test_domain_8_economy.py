@@ -11,6 +11,15 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.apply import ApplyPath
 from src.systems.market import MarketSystem
 
+@pytest.fixture(autouse=True)
+def _content_prices(monkeypatch):
+    """The price comes from the item's content value (D79): this file's worked numbers (iron ore 5, iron sword 50) are declared as content here."""
+    from dataclasses import replace as _replace
+    from src.core.items import ItemRegistry
+    for item_id, value in (("iron_ore", 5), ("iron_sword", 50)):
+        monkeypatch.setitem(ItemRegistry._items, item_id, _replace(ItemRegistry._items[item_id], value=value))
+
+
 @pytest.fixture
 def economic_state():
     # Setup a region with a shop

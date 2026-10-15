@@ -9,14 +9,17 @@ observability_tags: ["combat", "adventurer"]
 factions: ["hero_guild"]
 population_recipes:
   - role: "hero"
+    species_id: "human"
     count: 1
     faction: "hero_guild"
     spawn_region: "hometown"
   - role: "hero"
+    species_id: "human"
     count: 1
     faction: "hero_guild"
     spawn_region: "hometown"
   - role: "hero"
+    species_id: "human"
     count: 1
     faction: "hero_guild"
     spawn_region: "hometown"

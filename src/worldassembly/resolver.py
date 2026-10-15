@@ -37,6 +37,7 @@ from src.content.resolver import (
     ResolverError,
     SocialDefaultsResolver,
 )
+from src.worldbuilding.diet_declaration import require_known_recipe_species
 from src.worldbuilding.recipe import PopulationRecipeSpec
 from src.worldmodules.evaluator import AssemblyParameterError, ModuleParameterEvaluator
 from src.content.pack_manifest import ContentPackManifest
@@ -473,6 +474,7 @@ class WorldAssemblyResolver:
                     raise ResolverError("role", pop.role)
                 if not self.catalog_repo.get_faction(pop.faction):
                     raise ResolverError("faction", pop.faction)
+                require_known_recipe_species(self.catalog_repo, pop)
 
                 spawn_region = f"{prefix}{pop.spawn_region}" if pop.spawn_region else ""
                 resolved_count = ModuleParameterEvaluator.evaluate_field(pop.count, param_vals, m_id, "count")
@@ -1101,6 +1103,7 @@ class CompileProfileResolver:
                     spawn_position=spawn_position,
                     count=declared_count,
                     spawn_positions=spawn_positions,
+                    species_id=getattr(pop_recipe, "species_id", None),  # a recipe with no archetype names its body's species (diet slice of SURV-05)
                 )
             ctx.register_entity(key, resolved_entity)
 

@@ -26,6 +26,7 @@ regions:
 factions: ["merchant_league", "town_council"]
 population_recipes:
   - role: "merchant"
+    species_id: "human"
     count: "{merchant_count}"
     faction: "merchant_league"
     spawn_region: "hometown"

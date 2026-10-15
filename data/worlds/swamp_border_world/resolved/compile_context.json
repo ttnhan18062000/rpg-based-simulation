@@ -436,7 +436,7 @@
         ]
       ],
       "archetype_id": null,
-      "species_id": null,
+      "species_id": "human",
       "role_id": null,
       "faction_id": null,
       "traits": [],
