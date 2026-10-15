@@ -67,9 +67,14 @@ Security updates are not governed by version-update ignores in the same way. If 
 handled by hand.
 
 ## Implementation Notes
+- `.github/dependabot.yml` docker ecosystem `ignore:` gained `python` (`>=3.14`) and `astral-sh/uv` (all versions), with comments beside the node rule.
+- **Dependency name:** #576's own commit metadata (Dependabot's `dependency-name` block) names the image `astral-sh/uv` (not `ghcr.io/astral-sh/uv`). The same block shows Dependabot also proposed `python 3.15.0rc3-slim`, which the `>=3.14` rule covers.
 
 ## Test Summary
+- **validated (schema):** the file parses; the docker ecosystem has the node, python and astral-sh/uv ignore entries. GitHub's Dependabot config check and the next monthly docker run are observed after merge (not yet; append the result to this ticket).
 
 ## Files Changed
+- `.github/dependabot.yml`
 
 ## Completion Summary
+The docker ecosystem no longer proposes Python 3.14+ or a uv image bump; both are manual changes. Supersedes Dependabot #576 (the user closes it after merge).

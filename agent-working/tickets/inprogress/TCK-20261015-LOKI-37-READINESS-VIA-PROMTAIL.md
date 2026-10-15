@@ -76,9 +76,20 @@ TCK-20261014-OBS-STACK-PROMETHEUS3-GRAFANA13 (same profile, same evidence shape)
 - The e2e/test compose usage, if any, does not depend on loki being `service_healthy`. Grep for it before changing.
 
 ## Implementation Notes
+- `compose.yaml`: loki 3.7.8 and promtail 3.6.8 pinned by tag + digest (#562's pins); loki's healthcheck block removed with a comment; promtail `depends_on: loki: service_started`; promtail healthcheck is two `/dev/tcp` GET /ready probes (own :9080 and loki:3100, each in a subshell so fd 3 is reopened) with `start_period: 30s`; watchdog depends on `promtail: service_healthy` instead of loki; the line-6 header comment updated.
+- No other compose or test file depends on loki being `service_healthy` (searched yaml/yml and tests).
 
 ## Test Summary
+- **validated (static):** `docker compose --profile observability config -q` passes. CI result: to confirm on the PR.
+- **running locally** (project `lokiprobe`, `--profile observability up -d --build watchdog grafana`, which starts redis, backend, prometheus, loki, promtail, grafana, watchdog; **frontend and ai_worker were not started** to save disk, since the loki change does not touch them): backend, prometheus, promtail, redis and grafana reached `healthy`; loki has no healthcheck and ran; watchdog ran. Grafana's `Loki` datasource health returned `Data source successfully connected`, and the `Prometheus` datasource health was OK.
+- **Logs through Loki:** queries via Grafana's datasource proxy returned lines for the loki, promtail and backend containers (so promtail ships logs to Loki 3.7.8).
+- **loki stopped -> promtail unhealthy:** after `docker stop` of loki, promtail went from healthy to `unhealthy` at about 40 s (5 failing probes at a 10 s interval). After `docker start` of loki, promtail was `healthy` again within 30 s.
+- Loki 3.7.8 logged `empty ring` once at startup and `context canceled` querier lines when queries ended or loki was stopped; promtail logged only the `watchConfig` warning. The watchdog logged `Metrics HTTP 401`, the known `/metrics` scrape-auth issue (step 2), not this change.
+- Idle memory (MiB): grafana 363, backend 140, loki 70, promtail 53, prometheus 29, watchdog 22, redis 5.
+- Disk: root had 4.1 GB free before the run (`disk_headroom.py` did not finish in time, so `df` was used); the stack, volumes and pulled images were removed afterwards (5.7 GB free).
 
 ## Files Changed
+- `compose.yaml`
 
 ## Completion Summary
+Loki 3.7.8 and promtail 3.6.8 run in the observability profile. Loki has no healthcheck; promtail's healthcheck now requires both its own and Loki's /ready, and the watchdog waits on promtail. Supersedes Dependabot #562 (the user closes it after merge).
