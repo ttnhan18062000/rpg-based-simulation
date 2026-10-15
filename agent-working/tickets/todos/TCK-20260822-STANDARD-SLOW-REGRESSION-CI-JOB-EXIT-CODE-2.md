@@ -57,6 +57,27 @@ Unblock condition: the planned engine re-architecture lands. At that point re-de
 still reproduces before doing any work on it — the exit-code-2 cause was never confirmed by a local
 reproduction (see below), so it may not survive the re-architecture at all.
 
+## Cross-reference — 2026-10-14 (testing-planner; record only, still parked)
+
+A second wall-clock mechanism, separate from the kernel's mid-tick throttle below, was found by
+rpg-planner in `TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-THROUGH-PHASE-BUDGETS-EVEN-WITH-THE-PINNED-NORMAL-GOVERNOR`.
+`PhaseBudgetGovernor.evaluate` (`src/engine/phase_governor.py:107-143`) reads the measured
+per-phase ms every tick and throttles the scan policy and the movement and strategic budgets.
+Some of its thresholds are absolute (15/10 ms), so a large `max_tick_budget_ms` does not stop them.
+`PinnedNormalGovernor` (`tests/helpers/kernel_pinning.py`) pins only the mode. `audit_mode=True`
+was shown identical under concurrent load. PYTHONHASHSEED 0/1/2 makes no difference.
+
+The three files named below, as of main 7fa1fc7bc:
+- `tests/simulation_quality/test_grade_regression.py`: runs under audit_mode since
+  `TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE` (#531). Safe.
+- `tests/integration/kernel/test_long_run_determinism.py`: plain `Kernel(profile, state, rng)`, so
+  no audit_mode and no pin. Exposed to both mechanisms.
+- `tests/certification/test_cert_long_run_stability.py`: tests the adaptive governor under
+  pressure on purpose. Check what it claims before pinning anything.
+
+Nothing here changes the parked disposition. Once rpg's Lane A fix merges, the slow-run history
+after it is the evidence for whether this still reproduces.
+
 ## Request Summary
 `.github/workflows/test.yml`'s `slow` job ("Slow regression", `if: github.ref ==
 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'`
