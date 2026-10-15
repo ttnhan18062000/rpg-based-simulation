@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-EPIC-DEVOPS-STEP1-CONTAINERS-DELIVERY
-phase: open
+phase: done
 date: 2026-10-14
 tags: [platform]
 ---
@@ -85,4 +85,5 @@ See the child tickets.
 See the child tickets.
 
 ## Completion Summary
+All five children are done; Dependabot follow-ups are tracked in `TCK-20261014-DEPENDABOT-GROUPED-MAJORS-MONTHLY`. Step 1 shipped in #561 (7fa1fc7bc); images are published and verified (cosign verify and verify-attestation on both digests), Trivy baseline recorded in `TCK-20261014-IMAGE-SBOM-SCAN-SIGN`.
 (open)

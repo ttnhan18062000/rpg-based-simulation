@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-DEPENDABOT-AND-BASE-IMAGE-PINS
-phase: open
+phase: done
 date: 2026-10-14
 tags: [platform]
 ---
@@ -15,7 +15,7 @@ tags: [platform]
 Add Dependabot, pin every container image by digest, and make the frontend build use `npm ci`
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -74,5 +74,11 @@ All `FROM` lines and `image:` entries pinned `tag@sha256` (multi-arch index dige
 - Unpinned-reference grep (`grep -E '^\s*(image:|FROM) ' compose.yaml docker/*.Dockerfile | grep -v @sha256`) returns nothing.
 - **running locally:** the full stack above was built from these Dockerfiles (including `npm ci`) and started.
 - CI build via `publish-images.yml` on this PR to confirm (**validated** once green).
+- **validated (Dependabot):** GitHub parsed the file and opened 21 PRs on its first run, so the config is accepted. The first run exceeded the PR limit, and most were semver-major bumps; the user chose to stay current on majors, so the follow-up is `TCK-20261014-DEPENDABOT-GROUPED-MAJORS-MONTHLY` (grouped majors, monthly).
+
 ## Files Changed
+- `docker/backend.Dockerfile`, `docker/frontend.Dockerfile`, `compose.yaml`, `.github/dependabot.yml`
 ## Completion Summary
+Every base image is pinned by exact tag and digest, the frontend installs with `npm ci`, and Dependabot is configured. Merged in #561.
+
+migration_complete FAILs: no plan/investigation/test_plan staging artifacts. Scoping, plan and test plan were written inline in the ticket by platform-planner (planner's process gap, accepted 2026-10-14); evidence is in Test Summary.
