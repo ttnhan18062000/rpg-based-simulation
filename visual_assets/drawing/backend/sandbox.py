@@ -6,6 +6,7 @@ import os
 import signal
 import subprocess
 import time
+from functools import cache
 from pathlib import Path
 
 from visual_assets.drawing import config
@@ -90,6 +91,42 @@ def kill_tree(proc: subprocess.Popen) -> None:
     proc.wait()
 
 
+USERNS_SIGNATURE = "Failed RTM_NEWADDR: Operation not permitted"  # bwrap's stderr when the kernel refuses its new network namespace
+USERNS_MESSAGE = (
+    "bwrap cannot create its sandbox: the host's AppArmor unprivileged-userns restriction "
+    "(kernel.apparmor_restrict_unprivileged_userns=1) refuses it and no profile allows /usr/bin/bwrap. "
+    "Host fix (needs sudo, not done by this repo): install or upgrade the `apparmor` package, which ships "
+    "/etc/apparmor.d/bwrap-userns-restrict, or add a bwrap profile with `userns` (#555)."
+)
+PROBE_TIMEOUT_S = 15.0
+
+
+def _text(stderr) -> str:
+    return stderr.decode("utf-8", "replace") if isinstance(stderr, bytes) else (stderr or "")
+
+
+@cache
+def bwrap_problem() -> str | None:
+    """Why bwrap cannot run a sandbox on this host, or None when it can. Run once per process: `bwrap --unshare-all --ro-bind / / true`.
+
+    Tells "bwrap is installed" apart from "bwrap works here". Used by the test conftest to skip honestly (or fail in strict mode)."""
+    try:
+        done = subprocess.run(
+            ["bwrap", "--unshare-all", "--ro-bind", "/", "/", "true"],
+            capture_output=True, stdin=subprocess.DEVNULL, timeout=PROBE_TIMEOUT_S, check=False,
+        )
+    except FileNotFoundError:
+        return "bwrap is not installed"
+    except (OSError, subprocess.SubprocessError) as exc:
+        return f"bwrap probe could not run: {exc}"
+    if done.returncode == 0:
+        return None
+    stderr = _text(done.stderr)
+    if USERNS_SIGNATURE in stderr:
+        return USERNS_MESSAGE
+    return f"bwrap probe failed (exit {done.returncode}): {stderr.strip()[:200]}"
+
+
 def bwrap(job: Path, argv: list[str]) -> subprocess.CompletedProcess:
     home = "/home/sandbox"
     cmd = [
@@ -127,4 +164,6 @@ def bwrap(job: Path, argv: list[str]) -> subprocess.CompletedProcess:
         except BaseException:
             kill_tree(proc)
             raise
+        if proc.returncode != 0 and USERNS_SIGNATURE in _text(stderr):
+            raise AdapterError(USERNS_MESSAGE)
         return subprocess.CompletedProcess(cmd, proc.returncode, stdout, stderr)

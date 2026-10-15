@@ -62,9 +62,17 @@ GitHub #555. On u24desktop (Ubuntu 24.04+, `kernel.apparmor_restrict_unprivilege
 - Assumed: bubblewrap's stderr text `Failed RTM_NEWADDR: Operation not permitted` is stable across 0.9.x. The match is on that substring only.
 
 ## Implementation Notes
+- `sandbox.py`: `USERNS_SIGNATURE`/`USERNS_MESSAGE`; `bwrap()` raises `AdapterError(USERNS_MESSAGE)` when the exit is non-zero and stderr holds the signature (a successful run is never turned into an error; the timeout path is untouched). `bwrap_problem()` is the `functools.cache`d probe (`bwrap --unshare-all --ro-bind / / true`), returning None or one reason string (userns message, "not installed", or the exit and first stderr text).
+- `tests/visual_assets/conftest.py`: `aseprite_available()` also needs `bwrap_problem() is None`; `skip_reason()` keeps the `requires aseprite and bwrap` prefix (so `SKIP_MARKER` and `ci_aseprite_skip_line` are unchanged) and appends the host cause. Strict mode never skips: `_strict_problem` passes `bwrap_problem` to `strict_aseprite.strict_problem` (new optional keyword), which fails with `strict mode: bwrap cannot run here: ...`.
+- The host fix itself stays the owner's (no sudo here).
 
 ## Test Summary
+All scoped, one at a time, under `systemd-run --user --scope -q -p MemoryMax=3G`:
+- new `tests/visual_assets/drawing/unit/test_sandbox_userns_error.py` (fake subprocess: error message, other failure unchanged, success with the signature is no error, probe cached, probe causes) + `test_strict_aseprite.py` and `test_ci_aseprite_skip_line.py`: 31 passed.
+- `tests/visual_assets/drawing/unit`: 137 passed.
+- real Aseprite on this host, `tests/visual_assets/drawing/integration/test_ops.py`: 62 passed, none skipped (the probe passes here).
 
 ## Files Changed
+- `visual_assets/drawing/backend/sandbox.py`, `tests/visual_assets/conftest.py`, `tests/visual_assets/strict_aseprite.py`, `tests/visual_assets/test_strict_aseprite.py`, `tests/visual_assets/drawing/unit/test_sandbox_userns_error.py`
 
 ## Completion Summary
