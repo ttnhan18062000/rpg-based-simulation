@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-VISUAL-ASSETS-ICON-SCENE-RC11-KEYS
-phase: open
+phase: done
 date: 2026-10-15
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Main's Frontend tests: give the 18 rc-0011 marker keys their fallbacks in the icon page and correct the key counts (#598)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -73,5 +73,7 @@ GitHub #598. #596 (`51b044c69`, `TCK-20261013-VISUAL-ASSETS-MARKERS-RC-AND-CLOSE
 - `npx tsc --noEmit -p .`: clean. CI's Frontend job also runs `npm run build`, not run locally (heavy; CI will).
 
 ## Files Changed
+- `frontend/src/visualAssets/iconScene.ts`, `frontend/src/visualAssets/__tests__/iconScene.test.ts`
 
 ## Completion Summary
+The icon page declares fallbacks for the 18 rc-0011 keys (copied from the registry) and pins the counts by named set (14 + 22 + 18 = 54 registered, 40 undrawn); scoped vitest on src/visualAssets passes (22 files, 279 tests), tsc clean. CI miss: path-filter skip; filter fix is #607 (testing). Approved by asset-planner.

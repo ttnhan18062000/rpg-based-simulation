@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261015-VISUAL-ASSETS-SANDBOX-BWRAP-USERNS-ERROR
-phase: open
+phase: done
 date: 2026-10-15
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Drawing sandbox: one clear error naming the host fix when bwrap cannot set up its network namespace, and an honest skip in tests (#555)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -76,3 +76,4 @@ All scoped, one at a time, under `systemd-run --user --scope -q -p MemoryMax=3G`
 - `visual_assets/drawing/backend/sandbox.py`, `tests/visual_assets/conftest.py`, `tests/visual_assets/strict_aseprite.py`, `tests/visual_assets/test_strict_aseprite.py`, `tests/visual_assets/drawing/unit/test_sandbox_userns_error.py`
 
 ## Completion Summary
+bwrap() raises one AdapterError naming AppArmor, bwrap-userns-restrict and #555 on the RTM_NEWADDR signature; a cached probe lets the conftest skip with a named reason (SKIP_MARKER prefix kept) and strict mode still fails. 31 new/related, 137 drawing-unit and 62 real-Aseprite tests pass, scoped. Approved by asset-planner. Host fix remains the owner's.
