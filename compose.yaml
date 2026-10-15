@@ -85,7 +85,7 @@ services:
   prometheus:
     profiles: ["observability"]
     # Third-party images are pinned by digest (the multi-arch index current on 2026-10-14; no version change); Dependabot bumps them.
-    image: prom/prometheus:v2.50.0@sha256:042258e3578a558ce41b036104dfa997b2d25151ab6889a3f4d6187e27b1176c
+    image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
     mem_limit: 512m
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
@@ -107,8 +107,9 @@ services:
 
   grafana:
     profiles: ["observability"]
-    image: grafana/grafana:10.3.3@sha256:8640e5038e83ca4554ed56b9d76375158bcd51580238c6f5d8adaf3f20dd5379
-    mem_limit: 256m
+    image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
+    # Grafana 13 needs more than the 10.x limit of 256m: it hit 256m and restarted once, then peaked at 480 MiB during first start (317 MiB settled).
+    mem_limit: 768m
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
     environment:
@@ -123,6 +124,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 120s # Grafana 13 runs a long first-start migration
     depends_on:
       prometheus:
         condition: service_healthy

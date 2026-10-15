@@ -12,6 +12,7 @@ tags: [architecture, observability, delivery]
 ## Status
 
 **Accepted** by the owner on 2026-10-12, in the lead session: D1–D10 as written, alert channel **ntfy.sh** (topic name: the owner picks it at S4), run order S1 → S2 → S2b (D9) → S4 → S3 → S5, with D10 at any time. D8's `registries/session_roles.yaml` change is approved, with the literal diff shown in S1's PR. D3's later flip to blocking needs its own yes. A real AWS deploy ("2b") is not selected and stays out of scope.
+**Amended 2026-10-13/14** by [`devops_plan_amendment_proposal.md`](devops_plan_amendment_proposal.md), accepted by the owner in full (decision 4 on 2026-10-13; decisions 1-3 on 2026-10-14): six steps replace S1-S5 (step 4 local Kubernetes and Helm; step 5 staged and $0-first, with one short apply/test/destroy; step 6 Argo CD deferred), and D8's paths move to the `platform` domain (#539). Where this ADR and the amendment differ, the amendment wins; D1-D7 and D9-D10 otherwise stand.
 Slices start one at a time. Each slice becomes tickets in its owning domain: the lead scopes and routes, and domain implementers edit.
 
 Origin: the owner's career plan (the personal-career session, 2026-10-11/12) asked which modern ops practices fit this repo at

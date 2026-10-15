@@ -17,3 +17,6 @@ tags: [platform]
 - Existing-volume upgrade: start v3/13 on the v2/10 volumes left by the previous run; both start healthy (records the one-way migration).
 - Regression: the default profile (4 services) is unchanged and healthy; publish-images PR build stays green.
 Evidence labels: running locally, validated.
+
+## Test outcome (2026-10-14, platform-implementer)
+Ran: `compose config -q`, full `--profile observability` stack, Prometheus targets and logs, Grafana `/api/health`, datasource health for Loki and Prometheus, dashboard provisioning. Not met: `rpg-backend UP` (401, pre-existing). Details are in the ticket's Test Summary.
