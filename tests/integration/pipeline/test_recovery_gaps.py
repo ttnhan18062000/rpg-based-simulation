@@ -103,7 +103,7 @@ def test_building_sabotage():
 
 def test_hero_evolution_trigger():
     """
-    Verify that a hero reaching the evolution threshold becomes LEGEND_HERO.
+    Verify that a hero reaching the evolution threshold levels up and stays a hero (D79).
 
     Fraud this catches:
     - XP threshold is ignored
@@ -136,12 +136,12 @@ def test_hero_evolution_trigger():
     refined = EvolutionSystem.evaluate(state, raw_update)
 
     ent_upd = refined.entity_updates[3]
-    assert ent_upd.kind_set == "LEGEND_HERO"
+    assert ent_upd.kind_set is None
     assert ent_upd.identity.evolution_level_set == 10
 
 def test_goblin_evolution_trigger():
     """
-    Verify that a goblin reaching the evolution threshold becomes GOBLIN_WARRIOR.
+    Verify that a goblin reaching the evolution threshold levels up and stays a goblin (D79).
 
     Fraud this catches:
     - monster evolution mapping is broken
@@ -173,5 +173,5 @@ def test_goblin_evolution_trigger():
     refined = EvolutionSystem.evaluate(state, raw_update)
 
     ent_upd = refined.entity_updates[3]
-    assert ent_upd.kind_set == "GOBLIN_WARRIOR"
+    assert ent_upd.kind_set is None  # D79: the kind stays
     assert ent_upd.identity.evolution_level_set == 10
