@@ -116,18 +116,7 @@ class ItemRegistry:
                 categories = _declared_categories(v, item_id)
                 base_value = getattr(v, "base_value", 0.0) or (v.get("base_value", 0.0) if isinstance(v, dict) else 0.0)
                 
-                # Resolve ItemKind
-                kind = ItemKind.OTHER
-                if "weapon" in categories:
-                    kind = ItemKind.WEAPON
-                elif "armor" in categories:
-                    kind = ItemKind.ARMOR
-                elif "consumable" in categories:
-                    kind = ItemKind.CONSUMABLE
-                elif "currency" in categories:
-                    kind = ItemKind.CURRENCY
-                elif "material" in categories:
-                    kind = ItemKind.MATERIAL
+                kind = _kind_of(categories)
                 
                 # Resolve weight and stack_size
                 metadata = getattr(v, "metadata", {}) or (v.get("metadata", {}) if isinstance(v, dict) else {})
@@ -225,6 +214,15 @@ class ItemRegistry:
             else:
                 # Native ItemDefinition
                 cls._items[k] = v
+
+
+def _kind_of(categories: Any) -> ItemKind:
+    """The item kind a catalog item's categories name; one that names none of them is OTHER (a gap, not a default material)."""
+    for category, kind in (("weapon", ItemKind.WEAPON), ("armor", ItemKind.ARMOR), ("consumable", ItemKind.CONSUMABLE),
+                           ("currency", ItemKind.CURRENCY), ("material", ItemKind.MATERIAL)):
+        if category in categories:
+            return kind
+    return ItemKind.OTHER
 
 
 def _declared_categories(source: Any, item_id: str) -> Any:
