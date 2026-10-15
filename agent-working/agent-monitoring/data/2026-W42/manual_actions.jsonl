@@ -1,2 +1,3 @@
 {"ts":"2026-10-14T08:08:32.810043Z","category":"handover_recovery","source":"sample","session_id":"fce89243-36a0-4225-8ffb-a49216435ff5","session_role":"agent-working-implementer","batch":null,"count":1}
 {"ts":"2026-10-14T08:11:55.785729Z","category":"handover_recovery","source":"sample","session_id":"216a5d1b-cb94-4ed5-9ed0-17ea9c5122a1","session_role":"testing-planner","batch":null,"count":1}
+{"ts":"2026-10-14T07:59:55.577620Z","category":"handover_recovery","source":"sample","session_id":"1139d8d9-4615-42cf-9d10-54ffee8bb3a3","session_role":"lead-planner-u24","batch":null,"count":1}
