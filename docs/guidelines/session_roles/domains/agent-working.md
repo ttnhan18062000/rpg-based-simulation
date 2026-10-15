@@ -12,4 +12,4 @@ Source of the agent-working part of a role card. Ownership and routes come from 
 and are not restated here. Only `## Card` is injected.
 
 ## Card
-Domain: agent-working (process, tooling, monitoring, delivery; ticket process problems here). Designer reviews.
+Domain: agent-working (process incl. tickets, tooling, monitoring, delivery). Designer reviews.
