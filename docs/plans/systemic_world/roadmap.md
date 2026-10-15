@@ -898,6 +898,8 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 75. what the terrain cost does (decided 2026-10-14: a step costing N takes N times as long, and routes weigh the cost; before v1, time then route, each measured alone; MOV-04).
 76. how the steps before the milestone-0 gate are measured (decided 2026-10-14: once at fold; a cumulative watch with a stop-and-ask trigger; byte-identical proof for neutral steps and reused arms; §12.3).
 77. what SimQ grades once rebuilt (decided 2026-10-14: outcome measures from the paired table; NARRATIVE retired; COGNITION and INFORMATION no-data until milestone 1; after v1).
+78. when dead name-checked rules are switched on (decided 2026-10-14: before v1 only the gate path, earning and eating, plus the ruled terrain work; the rest listed in v1's disclosure and switched on after v1, each measured alone).
+79. the gate-path name rows (decided 2026-10-14: material-category items sell as spare; content base value is the only price, its own step; the level-up role rename is switched off; all before v1, each measured alone).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,

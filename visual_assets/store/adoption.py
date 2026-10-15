@@ -29,7 +29,7 @@ from visual_assets.store.contracts.base import Evidence, IntakeVerdict, LicenceS
 from visual_assets.store.contracts.review import RenderVerdict
 from visual_assets.store.contracts.handoff import SourceFormat
 from visual_assets.store.errors import GateError, IdentityError, IntakeError, PngDecodeError, RegistryError, RenderError, StageError
-from visual_assets.store.identities import IntakeId, SourceAssetId, SourceRevision, UtcTimestamp, check, next_revision
+from visual_assets.store.identities import IntakeId, SourceAssetId, SourceRevision, UtcTimestamp, check, check_not_placeholder, next_revision
 from visual_assets.store.intake import quarantine, service, validator
 
 PREVIEW_WARNING = (
@@ -213,6 +213,7 @@ def check_licence_and_approver(licence_state, licence_evidence_ref, approver: st
         raise _refuse("licence_evidence_missing", "give a real licence evidence reference, not NOT_APPLICABLE, UNAVAILABLE or empty")
     if not approver or not approver.strip() or not approver_role or not approver_role.strip():
         raise _refuse("invalid_approver", "an approver name and role are required")
+    check_not_placeholder(approver=approver, approver_role=approver_role, licence_evidence_ref=licence_evidence_ref)
 
 
 def build_entry_records(

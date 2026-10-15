@@ -401,11 +401,14 @@ def commands_mode(shown: list[Entry]) -> str:
     return "set" if declares and not any(e.draft_id in adopted for e in shown) else "slot"
 
 
+REPLACE_WARNING = "# Replace every <...> below with your own value before running; the store refuses a command that still holds one (placeholder_value)."
+
+
 def set_commands(set_id: str, shown: list[Entry], not_proposed: dict[str, dict] | None = None) -> str:
     """The ONE `adopt-set` command with the NEW / REVISION summary the owner will be shown again before typing the set id."""
     py = "/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python"
     revisions = [e for e in shown if e.parent_revision]
-    lines = [f"cd {REPO}", f"PY={py}", ""]
+    lines = [f"cd {REPO}", f"PY={py}", "", REPLACE_WARNING, ""]
     for key, spec in sorted((not_proposed or {}).items()):
         lines += [f"# {key} is a draft in this set that is NOT proposed; adopt-set adopts EVERY draft, so drop it first (no approval is recorded by a drop, the set hash changes):",
                   f"$PY -m visual_assets.store draft drop {set_id} --slot {spec['slot']} --reason \"owner declined\"", ""]
@@ -423,7 +426,7 @@ def owner_commands(set_id: str, shown: list[Entry], not_proposed: dict[str, dict
     if commands_mode(shown) == "set":
         return set_commands(set_id, shown, not_proposed)
     py = "/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python"
-    lines = [f"cd {REPO}", f"PY={py}", ""]
+    lines = [f"cd {REPO}", f"PY={py}", "", REPLACE_WARNING, ""]
     new = []
     already = adopted_intakes()
     for e in sorted(shown, key=lambda e: e.key):
