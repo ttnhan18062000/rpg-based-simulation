@@ -301,7 +301,7 @@ code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (repor
 	npx --yes jscpd@$(JSCPD_VERSION) src --config codebase/config/.jscpd.json
 
 .PHONY: import-contracts
-import-contracts: ## Run the import-linter contracts in codebase/structure/importlinter.toml (advisory; also the `Import contracts` step of the code-health CI job). Prints the result, always exits 0
+import-contracts: ## Run the import-linter contracts in codebase/structure/importlinter.toml (local advisory twin of the blocking `Import contracts` step of the code-health CI job). Prints the result, always exits 0
 	$(PYTHON3) -m codebase.structure.import_contracts advisory --annotate
 
 .PHONY: lint-imports

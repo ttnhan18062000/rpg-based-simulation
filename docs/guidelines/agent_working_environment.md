@@ -182,29 +182,35 @@ is changed-line feedback only and stays advisory permanently (decision 8.19).
 3. Locally: `make code-health` (ratchet), `make typecheck-py` (mypy through the baseline) and
    `python3 -m codebase.gates.sarif_feedback --changed FILE --out SARIF` (the SARIF the job would upload).
 
-### Reading the import-contract result (advisory)
+### Reading the import-contract result (blocking)
 
 The `Import contracts` step is the last step of the `code-health` CI job. It runs the import-linter contracts in
-`codebase/structure/importlinter.toml` (`TCK-20261004-IMPORT-LINTER-ADOPTION`) and can never fail the job: the
-command exits 0 whatever it finds and the step has its own `continue-on-error`. `Code health` is a required check
-(`TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING`), but this step stays advisory: a broken contract is a summary line
-and a `::warning::`, never a red required check. Blocking is a separate, later step
-(`TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`).
+`codebase/structure/importlinter.toml` (`TCK-20261004-IMPORT-LINTER-ADOPTION`, made blocking by
+`TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`) as `python3 -m codebase.structure.import_contracts ci`. The step
+has no `continue-on-error`, and `Code health` has been a required check since 2026-10-06
+(`TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING`), so a failing step is a red required check. There is no separate
+required-check name and no ruleset change.
 
-- **Job summary:** one line `Import contracts (advisory): N kept, M broken` (plus stale ignored imports), then each
-  broken contract by name. One `::warning::` annotation appears when a contract is broken, stale or could not
-  run ("could not run" is shown instead of looking like a pass).
+- **Exit codes:** 1 when a contract is broken, an `ignore_imports` entry is stale, or the generated `layers` block is
+  out of date; 2 when the contracts could not run (a missing binary or output that is not lint-imports' own). Both fail
+  the job: "could not run" never looks like a pass.
+- **Job summary:** one line `Import contracts (blocking): N kept, M broken` (plus stale ignored imports), then each
+  broken contract by name with every `importer -> imported (l.N)` pair under it. One `::error::` annotation per broken
+  contract carries the same pairs (and one each for stale entries, a stale block and "could not run").
 - **A broken contract** means a new import crosses a boundary: the `layers` contract (order from
-  `codebase/structure/package_registry.jsonl`, 135 existing upward imports held in
-  `codebase/structure/import_layers_baseline.txt`) or one of the class E and loophole contracts. Run locally for the
-  import lines. **A stale ignored import** means an excepted import no longer exists: delete its entry.
-- **Locally:** `make import-contracts` (the same step), or for the full import lines
-  `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` (`lint-imports` is in
-  the `lint` group). After a registry change: `python3 -m codebase.structure.import_contracts` rewrites the
-  generated `layers` block, `--check` reports a stale one; `seed-baseline` accepts the current violations (a
-  deliberate reseed, never to hide a new import).
-- The existing `tests/architecture/` import tests still run beside the contracts; nothing is retired until
-  `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`.
+  `codebase/structure/package_registry.jsonl`, existing upward imports held in
+  `codebase/structure/import_layers_baseline.txt`) or one of the class E and loophole contracts. Fix the import in your
+  PR; if it is deliberate, ask the codebase planner for a baseline or `ignore_imports` entry with a reason (never add one
+  just to pass). **A stale ignored import** means an excepted import no longer exists: delete its entry.
+- **Locally:** `make import-contracts` (the advisory twin: same summary, always exit 0), `make lint-imports` for
+  lint-imports' own report and exit code, or
+  `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` (`lint-imports` is in the
+  `lint` group). After a registry change: `python3 -m codebase.structure.import_contracts` rewrites the generated
+  `layers` block, `--check` reports a stale one; `seed-baseline` accepts the current violations (a deliberate reseed,
+  never to hide a new import).
+- **Retired tests:** seven class E import tests were retired when the step became blocking; each has a replacement
+  contract and a parity table (injected violation, contract BROKEN) in the ticket's Test Summary. The phase19 hot-path
+  test and the other 42 import rules stay tests.
 
 ### Git hooks (opt-in)
 

@@ -218,14 +218,82 @@ def test_advisory_flags_a_stale_generated_block(tmp_path: Path, capsys: pytest.C
     assert "out of date" in printed and printed.count("::warning::") == 1
 
 
-def test_ci_step_is_the_last_step_of_the_package_registry_job_and_stays_non_blocking() -> None:
-    """The step follows the package-registry step, keeps its own continue-on-error and never needs the job's."""
+def test_ci_step_is_the_last_step_of_the_package_registry_job_and_is_blocking() -> None:
+    """A required check must be able to fail: the step runs `ci`, follows the package-registry step and has no continue-on-error."""
     workflow = yaml.safe_load((_REPO_ROOT / ".github/workflows/test.yml").read_text())
     steps = next(job for job in workflow["jobs"].values() if any(s.get("name") == "Package registry" for s in job["steps"]))["steps"]
     step = steps[-1]
-    assert step["name"] == "Import contracts" and step["continue-on-error"] is True
-    assert "codebase.structure.import_contracts advisory" in step["run"] and "--annotate" in step["run"]
+    assert step["name"] == "Import contracts" and "continue-on-error" not in step
+    assert "codebase.structure.import_contracts ci " in step["run"] and "--annotate" in step["run"] and "--summary-out" in step["run"]
     assert steps[-2]["name"] == "Package registry"
+
+
+def _run_ci(tmp_path: Path, stdout: str, exit_code: int, *extra: str, root: Path | None = None) -> int:
+    return ic.main(["--root", str(root or _scratch_repo(tmp_path)), "ci", "--lint-imports", _fake_lint_imports(tmp_path, stdout, exit_code), "--annotate", *extra])
+
+
+def test_ci_exits_0_when_every_contract_is_kept(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Clean run: totals, no annotation, exit 0."""
+    code = _run_ci(tmp_path, "Contracts: 17 kept, 0 broken.", 0)
+    printed = capsys.readouterr().out
+    assert code == 0 and "17 kept, 0 broken" in printed and "::error::" not in printed
+
+
+def test_ci_exits_1_on_a_broken_contract_and_names_every_pair_in_the_summary_and_annotations(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A broken contract fails the step; each pair appears in the summary and in one ::error:: line per contract."""
+    summary = tmp_path / "summary.md"
+    code = _run_ci(tmp_path, _TWO_BROKEN, 1, "--summary-out", str(summary))
+    printed = capsys.readouterr().out
+    pairs = ("src.core.builder -> src.domains.campaigns.state (l.955)", "src.core.builder -> src.domains.fame.deriver (l.956)", "src.engine.kernel -> src.observability.reporting.retention (l.77)")
+    assert code == 1 and "::warning::" not in printed
+    errors = [line for line in printed.splitlines() if line.startswith("::error::")]
+    assert len(errors) == 2
+    for pair in pairs:
+        assert f"  - `{pair}`" in summary.read_text()
+        assert sum(pair in line for line in errors) == 1
+    assert "core must not import domains" in errors[0] or "core must not import domains" in errors[1]
+
+
+def test_ci_exits_1_on_a_stale_ignored_import(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A fixed import leaves an `ignore_imports` entry that matches nothing: that fails the step too."""
+    out = "Warnings\n- No matches for ignored import src.a -> src.b\nContracts: 17 kept, 0 broken.\n"
+    code = _run_ci(tmp_path, out, 0)
+    printed = capsys.readouterr().out
+    assert code == 1 and "1 stale ignored import(s)" in printed and printed.count("::error::") == 1
+
+
+def test_ci_exits_1_on_a_stale_generated_block(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A `layers` block that no longer matches the registry fails the step."""
+    root = _scratch_repo(tmp_path)
+    config = root / ic.CONFIG_REL_PATH
+    config.write_text(config.read_text().replace("ignore_imports = [", 'ignore_imports = [\n    "src.a -> src.b",', 1))
+    code = _run_ci(tmp_path, "Contracts: 17 kept, 0 broken.", 0, root=root)
+    printed = capsys.readouterr().out
+    assert code == 1 and "out of date" in printed and printed.count("::error::") == 1
+
+
+def test_ci_exits_2_when_lint_imports_cannot_run(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A missing binary and garbage output both fail the step with exit 2 (the required check goes red, never green)."""
+    root = _scratch_repo(tmp_path)
+    assert ic.main(["--root", str(root), "ci", "--lint-imports", str(tmp_path / "missing"), "--annotate"]) == 2
+    assert "could not run" in capsys.readouterr().out
+    assert _run_ci(tmp_path, "Traceback: boom", 3, root=root) == 2
+    printed = capsys.readouterr().out
+    assert "could not run" in printed and "::error::import contracts: could not run" in printed
+
+
+def test_ci_exit_code_does_not_depend_on_the_summary_file(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """An unwritable summary is a note, never the reason the step passes or fails."""
+    unwritable = str(tmp_path / "no/such/dir/s.md")
+    root = _scratch_repo(tmp_path)
+    assert _run_ci(tmp_path, "Contracts: 17 kept, 0 broken.", 0, "--summary-out", unwritable, root=root) == 0
+    assert _run_ci(tmp_path, _TWO_BROKEN, 1, "--summary-out", unwritable, root=root) == 1
+    assert "summary not written" in capsys.readouterr().out
+
+
+def test_ci_annotation_escapes_newlines_and_percent() -> None:
+    """GitHub workflow commands are one line: `%`, CR and LF are escaped."""
+    assert ic._annotation("a%b\r\nc") == "a%25b%0D%0Ac"
 
 
 def test_make_target_runs_the_advisory_command() -> None:
