@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT
-phase: open
+phase: inprogress
 date: 2026-10-15
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 `test_every_new_job_installs_with_uv_from_the_lockfile` compares the setup-uv action by name, not by its exact version
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 hotfix
@@ -40,9 +40,9 @@ The test is about "every new job installs with uv", not about which setup-uv ver
 - Other tests.
 
 ## Acceptance Criteria
-- [ ] AC1: the assertion no longer contains a version literal. The test still fails if a new job has no `astral-sh/setup-uv` step.
-- [ ] AC2: there is a regression case for the version-agnostic match, as in Scope 2.
-- [ ] AC3: `pytest tests/tools/test_ci_split_tools_jobs.py` passes on main.
+- [x] AC1: the assertion no longer contains a version literal. The test still fails if a new job has no `astral-sh/setup-uv` step.
+- [x] AC2: there is a regression case for the version-agnostic match, as in Scope 2.
+- [x] AC3: `pytest tests/tools/test_ci_split_tools_jobs.py` passes on main.
 - [ ] AC4: after merge, `@dependabot rebase` on #571 turns Tools · a–e green. Record the run in Completion Summary, or note that the user or platform did the rebase.
 
 ## Related Tickets
@@ -63,9 +63,12 @@ The test is about "every new job installs with uv", not about which setup-uv ver
 - None.
 
 ## Implementation Notes
+`_has_setup_uv(steps)` in `tests/tools/test_ci_split_tools_jobs.py` compares `uses.split("@",1)[0] == "astral-sh/setup-uv"`; `test_every_new_job_installs_with_uv_from_the_lockfile` calls it. New parametrized `test_setup_uv_is_matched_by_action_name_not_version`: v10.2.0 and v99 pass; no setup-uv step, `setup-uv-fork` and `someone-else/setup-uv` fail; an empty list fails. No workflow change.
 
 ## Test Summary
+`tests/tools/test_ci_split_tools_jobs.py` + `tests/static/test_ci_step_summary_reporting.py`: 35 passed.
 
 ## Files Changed
+- tests/tools/test_ci_split_tools_jobs.py
 
 ## Completion Summary
