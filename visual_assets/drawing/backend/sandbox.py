@@ -98,7 +98,6 @@ USERNS_MESSAGE = (
     "Host fix (needs sudo, not done by this repo): install or upgrade the `apparmor` package, which ships "
     "/etc/apparmor.d/bwrap-userns-restrict, or add a bwrap profile with `userns` (#555)."
 )
-PROBE_TIMEOUT_S = 15.0
 
 
 def _text(stderr) -> str:
@@ -113,7 +112,7 @@ def bwrap_problem() -> str | None:
     try:
         done = subprocess.run(
             ["bwrap", "--unshare-all", "--ro-bind", "/", "/", "true"],
-            capture_output=True, stdin=subprocess.DEVNULL, timeout=PROBE_TIMEOUT_S, check=False,
+            capture_output=True, stdin=subprocess.DEVNULL, timeout=config.JOB_TIMEOUT_S, check=False,
         )
     except FileNotFoundError:
         return "bwrap is not installed"
