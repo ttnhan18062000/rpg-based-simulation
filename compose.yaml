@@ -131,7 +131,7 @@ services:
 
   loki:
     profiles: ["observability"]
-    image: grafana/loki:3.0.0@sha256:757b5fadf816a1396f1fea598152947421fa49cb8b2db1ddd2a6e30fae003253
+    image: grafana/loki:3.7.8@sha256:1107dd5274e0ada47e42472b7a7e71f3b2a2fe878878108f3e2f9e51528f0193
     mem_limit: 512m
     ports:
       - "${LOKI_PORT:-3100}:3100"
@@ -145,7 +145,7 @@ services:
 
   promtail:
     profiles: ["observability"]
-    image: grafana/promtail:3.0.0@sha256:d3de3da9431cfbe74a6a94555050df5257f357e827be8e63f8998d509c37af8b
+    image: grafana/promtail:3.6.8@sha256:6cfa64ec432b24a912d640e2edb940eeae2666f61861a66c121d763dd7241381
     mem_limit: 128m
     healthcheck:
       # The promtail image has bash but no wget/curl: read the first line of GET /ready over /dev/tcp and require HTTP 200.
