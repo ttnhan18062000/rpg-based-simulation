@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE
-phase: open
+phase: done
 date: 2026-10-11
 tags: [simulation-quality, grade-thresholds, determinism, regression]
 ---
@@ -16,7 +16,7 @@ The SimQ grade anchors are measured under audit_mode, so an anchor grades the ru
 speed; the whole anchor family is re-anchored once from deterministic runs, with provenance
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -205,11 +205,15 @@ Filed by testing-planner 2026-10-11 after rpg-planner's audit_mode ruling. Lands
 - CI cost: slow job 113 min of 240; corpus step 20 min, audit_mode x1.35 typical (+7 min), x2.1 worst (+22 min). `simq-grade-drift` runs the fast tier only, informational.
 - The old reporting-path ticket TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED was closed as superseded by this one.
 - Docs: `docs/testing/regression_policy.md` §11b, the `test_corpus_diversity.py` §5 note and the re-anchor how-to in `test_grade_regression.py`.
-- OPEN until after the merge: AC8 (first tested slow run, its run id). Cross-host proof: `slow-regression.yml` dispatched on the PR branch at 64f339f98, run 38378565537 (evidence only, not the AC8 proof).
+- AC8 MET: the first scheduled slow run after #531 merged (9a9955f0d) is run 38532053464, at 7fa1fc7bc (contains 9a9955f0d), conclusion success. Corpus-diversity step: 32/32 isolated tests passed, including the 1000t cognition anchors. Remaining reds are the 10 owned known reds (arena gold x3, perf x5, campaign cooperation, behavioral 5k); no unowned red. #390's tracker marks 14 corpus-diversity anchors FIXED (stale mappings); their entries are NOT removed here: they retire by the green-count rule through their rpg owners.
+- Successor: the `test_corpus_diversity*` catch-all in `slow_known_reds.yaml` is re-pointed to TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1 (owner and 2026-11-04 expiry kept; note "re-anchor moved to baseline v1 (designer, 2026-10-14)"), so it does not point at a closed ticket. The 27 held rows and the −8/51 constant rows are that ticket's.
+- Previously OPEN item, now closed: Cross-host proof: `slow-regression.yml` dispatched on the PR branch at 64f339f98, run 38378565537 (evidence only, not the AC8 proof).
 
 ## Test Summary
 On the re-anchor commit (main b396080cc, local host, 6 cores): `tests/unit/tools tests/simulation_quality tests/static` plus the smoke test: 1465 passed, 85 skipped. The 3 class-(c) COGNITION guards plus the urban_political 500t stability test: 8 passed. `test_corpus_diversity.py -k "stability or grade"` in whole-file order: 31 passed, 1 failed: `test_generated_frontier_3_42_extended_population_stability` hit the resource time limit (`TimeoutError`) while other jobs shared the host; it is the throttled, non-anchor population test, covered by its specific `flaky` known-red entry (owner testing-implementer, expiry 2026-11-04), not a grade-anchor failure. The 2-fresh-isolated-process check of AC3 and the cross-host proof are the slow-regression dispatch on the PR branch (run id on #531). The anchor-reading tests in `test_grade_regression.py` read `data/calibration/` (populated by `evaluate_simq`), which this run did not repopulate; their fixture is validated by the 81-key identity proof and the structure tests.
 
 ## Files Changed
+See PR #531 (anchors, runner, tests, tools/test_architecture/simq_reanchor.py) and this close PR (slow_known_reds.yaml catch-all repoint, test_slow_regression_report.py).
 
 ## Completion Summary
+Done. Every anchor is measured under audit_mode; the family was re-anchored once with provenance (stored_artifacts); AC1-AC8 met, AC8 by slow run 38532053464 (success, 32/32 corpus-diversity tests). Follow-up: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1.
