@@ -401,7 +401,7 @@ class ItemDefinition(CatalogBaseDefinition):
     """Schema for item definitions under the dynamic content catalog."""
     categories: List[str] = Field(..., description="Category tags (e.g. weapon, melee, material)")
     rarity: str = Field("COMMON", description="Item rarity")
-    base_value: float = Field(0.0, ge=0.0, description="Base value in gold")
+    base_value: float = Field(..., ge=0.0, description="Base value in gold; required (a missing value is a gap, not a default of 0)")
     materials: List[str] = Field(default_factory=list, description="Materials composing this item")
     use_kind: Optional[str] = Field(None, description="Explicit runtime usage kind")
     class_fit: List[str] = Field(default_factory=list, description="Explicit class fit tags")

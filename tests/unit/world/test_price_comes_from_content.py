@@ -52,3 +52,13 @@ def test_the_market_names_no_item():
     source = inspect.getsource(market)
     for literal in ("iron_ore", "steel_ore", "iron_sword", "herb", "health_potion", "leather", "cloth", '"sword"', '"plate"', '"potion"'):
         assert literal not in source
+
+
+def test_a_catalog_item_without_a_base_value_fails_to_compile():
+    from pydantic import ValidationError
+
+    from src.content.schema import ItemDefinition
+
+    with pytest.raises(ValidationError, match="base_value"):
+        ItemDefinition(id="x", display_name="X", categories=["material"])
+    assert ItemDefinition(id="x", display_name="X", categories=["material"], base_value=0).base_value == 0.0
