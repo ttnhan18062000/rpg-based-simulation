@@ -98,6 +98,9 @@ Not a hand-written fixture: three injections into the git-archive scratch copy (
 ```
 (The scratch copy still holds the old c01 name.) Every injected pair is named under every contract it breaks.
 
+### tests/tools full run for the Makefile help-text fixup (2026-10-15, one slot, MemoryMax 3G)
+`tests/tools` once, on `610300f85` plus the Makefile edit: 4874 passed, 56 skipped, 1 xfailed, **2 failed, 3 errors** (14m48s). Re-run alone: `tests/tools/test_session_resolve_and_hook.py::test_a_second_live_holder_is_flagged` and the 3 `tests/tools/test_monitoring_hook_subdirectory_cwd.py::test_post_tool_hook_command_writes_a_row_from_a_subdirectory[...]` errors passed (9 passed together with the registry test's file run), and they touch nothing this batch changed; their cause in the full run was not investigated (a shared-machine or ordering effect is the likely class, not shown). `tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry` failed for a real cause of this batch: the ticket move in `e5cf25404` left `docs/REGISTRY.yaml` stale; regenerated and folded into the blocking commit, `test_generate_registry.py` 68 passed. No second full run (planner decision); CI runs `tests/tools` on the PR, and closure regenerates REGISTRY again.
+
 ### Step 3: class E retirements, parity proof (2026-10-15, head `8ec5a369f`, scratch copy)
 Made in a scratch copy (`git archive HEAD src tests codebase visual_assets pyproject.toml registries`), one injection at a time appended to one file, the file restored after each; this checkout was not touched. Test run as `PYTHONPATH=<scratch> python -m pytest <node id> -o addopts=` from the scratch root; contract run as `lint-imports --config codebase/structure/importlinter.toml --contract <id>`. A test counts as "caught" only if it fails on an assertion (not an import error). Baseline on the clean copy: all 7 tests PASS, all 7 contracts KEPT.
 
