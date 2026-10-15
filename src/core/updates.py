@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage, ItemInstance
 from src.core.models.social import RelationshipRole
 from src.core.movement_modes import MovementMode
+from src.core.death_cause import DeathRecord
 from src.core.enums import ReasonCode, DiplomaticState
 from src.core.spawn_source import SpawnSource
 from src.core.update_models.buildings import BuildingUpdate  # noqa: F401  (re-exported: updates.py is where callers import it from)
@@ -447,6 +448,11 @@ class AttributeUpdate:
         if other.charisma_delta != 0: changes["charisma_delta"] = self.charisma_delta + other.charisma_delta
         return replace(self, **changes)
 
+# The scalar fields a later update overwrites (a None leaves the earlier value); the list and dict fields accumulate.
+_LIFECYCLE_SET_FIELDS = ("is_permadeath_set", "death_tick_set", "death_reason_set", "death_record_set", "heir_entity_id_set", "parent_a_entity_id_set",
+                         "parent_b_entity_id_set", "birth_tick_set", "birth_city_id_set", "genetic_profile_set")
+
+
 @dataclass(frozen=True, slots=True)
 class LifecycleUpdate:
     """Updates to aging and death mechanics."""
@@ -454,6 +460,7 @@ class LifecycleUpdate:
     is_permadeath_set: Optional[bool] = None
     death_tick_set: Optional[int] = None
     death_reason_set: Optional[str] = None
+    death_record_set: Optional[DeathRecord] = None
     heir_entity_id_set: Optional[int] = None
     heirlooms_add: list[str] = field(default_factory=list)
     parent_a_entity_id_set: Optional[int] = None
@@ -467,7 +474,7 @@ class LifecycleUpdate:
     def is_noop(self) -> bool:
         return (self.age_delta == 0 and
                 self.is_permadeath_set is None and self.death_tick_set is None and
-                self.death_reason_set is None and self.heir_entity_id_set is None and
+                self.death_reason_set is None and self.death_record_set is None and self.heir_entity_id_set is None and
                 not self.heirlooms_add and self.parent_a_entity_id_set is None and
                 self.parent_b_entity_id_set is None and not self.dependent_entity_ids_add and
                 self.birth_tick_set is None and
@@ -479,19 +486,11 @@ class LifecycleUpdate:
             return self
         changes = {}
         if other.age_delta != 0: changes["age_delta"] = self.age_delta + other.age_delta
-        if other.is_permadeath_set is not None: changes["is_permadeath_set"] = other.is_permadeath_set
-        if other.death_tick_set is not None: changes["death_tick_set"] = other.death_tick_set
-        if other.death_reason_set is not None: changes["death_reason_set"] = other.death_reason_set
-        if other.heir_entity_id_set is not None: changes["heir_entity_id_set"] = other.heir_entity_id_set
+        changes.update({name: getattr(other, name) for name in _LIFECYCLE_SET_FIELDS if getattr(other, name) is not None})
         if other.heirlooms_add: changes["heirlooms_add"] = self.heirlooms_add + other.heirlooms_add
-        if other.parent_a_entity_id_set is not None: changes["parent_a_entity_id_set"] = other.parent_a_entity_id_set
-        if other.parent_b_entity_id_set is not None: changes["parent_b_entity_id_set"] = other.parent_b_entity_id_set
         if other.dependent_entity_ids_add: changes["dependent_entity_ids_add"] = self.dependent_entity_ids_add + other.dependent_entity_ids_add
-        if other.birth_tick_set is not None: changes["birth_tick_set"] = other.birth_tick_set
-        if other.birth_city_id_set is not None: changes["birth_city_id_set"] = other.birth_city_id_set
         if other.reproduction_cooldowns_add:
             changes["reproduction_cooldowns_add"] = {**self.reproduction_cooldowns_add, **other.reproduction_cooldowns_add}
-        if other.genetic_profile_set is not None: changes["genetic_profile_set"] = other.genetic_profile_set
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)

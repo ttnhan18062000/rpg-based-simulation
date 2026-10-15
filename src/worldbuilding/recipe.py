@@ -89,6 +89,9 @@ class PopulationRecipeSpec(BaseModel):
     role: str = Field(..., min_length=1, description="Societal role")
     count: Union[int, str] = Field(..., description="Number of entities to spawn; may be a parameter template expression")
     faction: str = Field(..., min_length=1, description="Faction affiliation")
+    species_id: Optional[str] = Field(
+        default=None, min_length=1,
+        description="The species of the bodies this recipe spawns when it names no archetype: their diet, edibility, size, power and wits come from it (decision 63: people of a species with a role; a missing species is a content error at compile)")
 
     @model_validator(mode="after")
     def _validate_count(self) -> "PopulationRecipeSpec":

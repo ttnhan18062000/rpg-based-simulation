@@ -5,7 +5,7 @@ Selling is a decision (AGENCY-01), not something that happens to whoever stands 
 The shop pays out of its own purse (the resolver debits the building), so a sale never exceeds the purse: units are sold only while the
 purse covers their price. One price law: ``MarketSystem.calculate_price(is_buy=False)`` per UNIT, times the quantity.
 
-What a subject can spare: the listed gathered materials; the last unit of a weapon or armor stack and any item an equipment slot names
+What a subject can spare: every item the content files under the MATERIAL kind (an item with no category does not compile); the last unit of a weapon or armor stack and any item an equipment slot names
 stay with its owner (equipment is proposed from the inventory, so the stack IS the equipped item); food only as SURPLUS: at least one meal's
 worth stays (``FOOD_KEPT_HUNGER_RECOVERY``) and the rest may be sold.
 """
@@ -21,8 +21,6 @@ from src.engine.place_tax import tax_on
 from src.engine.serves import serves
 from src.engine.shop import shop_price
 
-# The gathered materials a shop buys (the old auto-sell list).
-SELLABLE_MATERIALS = ("wood", "ore", "iron_ore", "fish", "leather", "fiber", "herb", "iron_sword")
 # Food a subject keeps for itself: enough to clear a hungry stomach once (2 berries of 30 hunger each).
 FOOD_KEPT_HUNGER_RECOVERY = 60.0
 
@@ -34,10 +32,10 @@ def spare_quantity(entity: Any, item: Any) -> int:
     recovery = food_hunger_recovery(item_id)
     if recovery > 0.0:
         return max(0, held - math.ceil(FOOD_KEPT_HUNGER_RECOVERY / recovery))
-    if item_id.lower() not in SELLABLE_MATERIALS:
-        return 0
     definition = ItemRegistry.get(item_id)
-    keeps_one = (definition is not None and definition.kind in (ItemKind.WEAPON, ItemKind.ARMOR)) or item_id in entity.equipment.slots.values()
+    if definition is None or definition.kind not in (ItemKind.MATERIAL, ItemKind.WEAPON, ItemKind.ARMOR):
+        return 0
+    keeps_one = definition.kind in (ItemKind.WEAPON, ItemKind.ARMOR) or item_id in entity.equipment.slots.values()
     return held - 1 if keeps_one else held
 
 

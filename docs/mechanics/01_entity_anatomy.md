@@ -108,6 +108,9 @@ A death records exactly one `death_reason`: the first cause, in declared pipelin
 - Hazard drain can cause death only where `EnvironmentService.calculate_hazard_drain()` returns a nonzero drain after the subject's immunities.
 Basis: world rules CAUSE-03, CAUSE-06, LIMIT-04, BODY-07 (`docs/world_rules/`). Declared by `TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND`.
 
+### Death Record (Typed, Durable)
+Every death also writes one durable `LifecycleComponent.death_record` (`DeathRecord`: `cause`, `tick`, `last_attacker_id`, `hazard_kind`), written only by the lifecycle resolver on the tick it records `death_reason` and applied through the authoritative path. `cause` is the typed `DeathCause` reading of `death_reason` (`COMBAT`, `DEFEAT`, `HAZARD`, `STARVATION`, `SLEEP_DEPRIVATION`, `OLD_AGE`; `UNKNOWN` is a catch-all that must stay at zero). `hazard_kind` is the hazard kind of the region the body stood in, set only for a `HAZARD` death. `last_attacker_id` is the most recent hit at any time before death; recency is not recorded: a hazard or starvation death 2000 ticks after a scratch still names that attacker, and a body nothing ever hit names none. The body remembers it in `CombatComponent.last_attacker_id`, written only by a damaging hit (a hazard drain or a hit that took no hp leaves it). Both fields are in the canonical state. Where each lost hp went (hit, hazard drain, starving drain) is an observability record, not state: the starving drain is taken inside the apply path's passive branch and no update carries it (`src/observability/death_ledger.py`). Declared by `TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH`.
+
 ### Stamina Service
 *   **Attack Cost**: `stamina.ATTACK_COST` (Base: 5.0)
 *   **Harvest Cost**: `stamina.HARVEST_COST` (Base: 2.0)

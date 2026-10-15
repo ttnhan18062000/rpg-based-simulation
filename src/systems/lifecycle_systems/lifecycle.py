@@ -3,7 +3,9 @@ from typing import TYPE_CHECKING, List, Optional
 from dataclasses import replace
 from src.core.updates import StateUpdate, EntityUpdate, LifecycleUpdate, InventoryUpdate, IdentityUpdate
 from src.core.state import LifeStage
+from src.core.death_cause import DeathCause, DeathRecord, death_cause_of
 from src.core.enums import EntityRole
+from src.core.region_resolution import resolve_region_among
 from src.ai.life_stage import LifeStageService
 from src.ai.coming_of_age import choose_archetype, is_excluded_no_birth_record
 from src.domains.demographics.cohort import compute_elder_attribute_update
@@ -137,6 +139,19 @@ class LifecycleSystem:
         return replace(heir_upd, cognition_bundle_set=new_cognition)
 
     @staticmethod
+    def _death_record(state: AuthoritativeState, entity: EntityState, ent_upd: EntityUpdate, death_reason: Optional[str]) -> DeathRecord:
+        """The typed record of this death: the cause, the tick, who last hit the body (this tick's damaging attacker, else the one it remembers) and, for a hazard death, the hazard kind of the region it stood in."""
+        cause = death_cause_of(death_reason)
+        combat = ent_upd.combat if ent_upd else None
+        attacker = combat.attacker_id if (combat is not None and combat.attacker_id is not None and combat.damage_taken > 0) else entity.combat.last_attacker_id
+        hazard_kind = None
+        if cause is DeathCause.HAZARD:
+            x, y = entity.navigation.position
+            region = resolve_region_among(state.regions.values(), x, y)
+            hazard_kind = getattr(region, "hazard_kind", None)
+        return DeathRecord(cause=cause, tick=state.tick, last_attacker_id=attacker, hazard_kind=hazard_kind)
+
+    @staticmethod
     def _select_default_heir(state: AuthoritativeState, deceased: EntityState) -> Optional[int]:
         candidates = []
         for target_id, bond in deceased.social.bonds.items():
@@ -258,7 +273,8 @@ class LifecycleSystem:
                     lifecycle=replace(life_upd,
                         is_permadeath_set=True,
                         death_tick_set=state.tick,
-                        death_reason_set=death_reason
+                        death_reason_set=death_reason,
+                        death_record_set=LifecycleSystem._death_record(state, entity, ent_upd, death_reason),
                     )
                 )
                 

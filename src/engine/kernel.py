@@ -23,6 +23,7 @@ from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, Concurre
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
 from src.engine.cadence import should_run
 from src.engine.need_pull import ESCALATION_ONSET, HUNGER_LINE
+from src.engine.starvation import STARVING_LINE
 
 if TYPE_CHECKING:
     from src.config.profiles import RuntimeProfile
@@ -316,7 +317,8 @@ class Kernel:
         self._workers_started = 2 if (obs_mode != ObservabilityMode.OFF) else 0
         self._last_shutdown_report = None
 
-        reset_run_state(profile.cadence.strategic_intelligence, ESCALATION_ONSET * HUNGER_LINE, should_run, profile.max_observability_budget_percent > 0)
+        reset_run_state(profile.cadence.strategic_intelligence, ESCALATION_ONSET * HUNGER_LINE, should_run, profile.max_observability_budget_percent > 0,
+                        starving_line=STARVING_LINE)
 
         self.validate(flags)
 

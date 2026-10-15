@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from src.domains.fame.legend import LegendFact
     from src.domains.belief_institution.model import BeliefInstitution
 from src.core.strategic import StrategicComponent
+from src.core.death_cause import DeathRecord
 from src.core.enums import Faction, EntityRole, DiplomaticState, PassiveDeathCause
 from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
@@ -173,6 +174,8 @@ class LifecycleComponent:
     # (CAUSE-05 / TIME-02). Ignored and cleared once another death_reason is recorded.
     passive_death_cause: Optional[PassiveDeathCause] = None
     passive_death_cause_tick: Optional[int] = None
+    # The typed record of the death (cause, tick, last attacker, hazard kind), written once by resolve_lifecycle (TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH).
+    death_record: Optional[DeathRecord] = None
     heir_entity_id: Optional[int] = None
     heirlooms: list[str] = field(default_factory=list)
     parent_a_entity_id: Optional[int] = None
@@ -196,6 +199,7 @@ class LifecycleComponent:
             "death_reason": self.death_reason,
             "passive_death_cause": self.passive_death_cause.value if self.passive_death_cause is not None else None,
             "passive_death_cause_tick": self.passive_death_cause_tick,
+            "death_record": self.death_record.to_dict() if self.death_record is not None else None,
             "heir_entity_id": self.heir_entity_id,
             "heirlooms": sorted(list(self.heirlooms)),
             "parent_a_entity_id": self.parent_a_entity_id,
@@ -438,6 +442,8 @@ class CombatComponent:
     # Accumulated permanent max-HP grants (near-death hardening). Kept apart from base_hp so the
     # grant stays traceable (CAUSE-05 / HP-02); the derivation adds it as its own term.
     permanent_max_hp_bonus: int = 0
+    # The body that last took hp from this one by a hit, written by CombatPatch; a hazard or starvation death still names who last hit it.
+    last_attacker_id: Optional[int] = None
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -449,6 +455,7 @@ class CombatComponent:
             "base_def": self.base_def,
             "base_evasion": self.base_evasion,
             "permanent_max_hp_bonus": self.permanent_max_hp_bonus,
+            "last_attacker_id": self.last_attacker_id,
             "hp": self.hp,
             "max_hp": self.max_hp,
             "atk": self.atk,
@@ -1125,29 +1132,8 @@ class EntityState:
             
         combat_comp = self.combat
         if type(combat_comp.wounds) is not tuple or type(combat_comp.scars) is not tuple:
-            combat_comp = CombatComponent(
-                hp=combat_comp.hp,
-                max_hp=combat_comp.max_hp,
-                atk=combat_comp.atk,
-                def_stat=combat_comp.def_stat,
-                speed=combat_comp.speed,
-                range=combat_comp.range,
-                evasion=combat_comp.evasion,
-                move_cost=combat_comp.move_cost,
-                tactical_role=combat_comp.tactical_role,
-                action_style=combat_comp.action_style,
-                alive=combat_comp.alive,
-                readiness=combat_comp.readiness,
-                readiness_speed=combat_comp.readiness_speed,
-                wounds=tuple(combat_comp.wounds),
-                scars=tuple(combat_comp.scars),
-                latest_result=combat_comp.latest_result,
-                base_hp=combat_comp.base_hp,
-                base_atk=combat_comp.base_atk,
-                base_def=combat_comp.base_def,
-                base_evasion=combat_comp.base_evasion,
-                permanent_max_hp_bonus=combat_comp.permanent_max_hp_bonus,
-            )
+            # status_effects is not carried (as before this rewrite); every other field, including the ones added later, is.
+            combat_comp = replace(combat_comp, wounds=tuple(combat_comp.wounds), scars=tuple(combat_comp.scars), status_effects=[])
 
         equip_comp = self.equipment
         if type(equip_comp.slots) is not ReadOnlyDict or type(equip_comp.durability) is not ReadOnlyDict:
