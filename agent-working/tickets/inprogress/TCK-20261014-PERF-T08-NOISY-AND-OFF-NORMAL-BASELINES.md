@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 Finish the baselines PERF-M2-T08 could not promote: diagnose the intrinsic noise first, then re-record the NOISY and off-NORMAL records
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard

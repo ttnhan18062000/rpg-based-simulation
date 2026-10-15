@@ -48,9 +48,26 @@ def test_the_two_declared_tripwire_scenarios_reuse_the_tripwire_spec_unchanged()
 
 
 def test_the_other_synthetic_records_keep_the_committed_protocol_under_the_canonical_contract() -> None:
-    spec = rr.spec_for("combat_10_local")
-    assert (spec.warmup, spec.ticks, spec.contract, spec.profile) == (10, 20, "canonical", "PERF_2GB_LOCAL")
+    spec = rr.spec_for("resource_100_local")
+    assert (spec.warmup, spec.ticks, spec.contract, spec.profile) == (10, 20, "canonical", "PERF_1GB_LOCAL")
     assert (spec.gate_tier, spec.gate_projection) == ("tripwire", "tripwire_paired")
+
+
+def test_combat_10_local_samples_100_ticks_because_20_were_shorter_than_the_host_regimes() -> None:
+    spec = rr.spec_for("combat_10_local")
+    assert (spec.warmup, spec.ticks, spec.profile) == (10, 100, "PERF_2GB_LOCAL")
+    assert set(rr.SAMPLE_TICKS_OVERRIDE) == {"combat_10_local"}  # nothing else changed, and no declared tripwire scenario is in it
+    assert not set(rr.SAMPLE_TICKS_OVERRIDE) & {n for n, _ in tripwire.TRIPWIRE_SCENARIOS}
+
+
+def test_the_tripwire_runspecs_are_pinned_at_10_plus_50() -> None:
+    assert {n: (s.warmup, s.ticks) for n, s in tripwire.TRIPWIRE_SCENARIOS} == {"idle_100_local": (10, 50), "movement_100_local": (10, 50)}
+
+
+def test_mixed_200_builds_140_entities_80_heroes_and_60_monsters() -> None:
+    """The name follows the requested ``entity_count``; 60 of the 200 are resource nodes, which are not entities (TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES, AC4)."""
+    state = rr.build_state("mixed", 200, 42)
+    assert len(state.entities) == 140 and len(state.resource_nodes) == 60
 
 
 def test_a_corpus_record_keeps_100_plus_1000_on_the_512mb_profile() -> None:
@@ -159,3 +176,34 @@ def test_a_record_that_left_normal_is_reported_and_no_promote_command_is_printed
     out = capsys.readouterr().out
     assert "NOT A BASELINE" in out and "CONSTRAINED" in out and "PROMOTE:" not in out
     assert json.loads((tmp_path / "strategic_100_local" / "summary.json").read_text(encoding="utf-8"))["off_normal"] == ["CONSTRAINED"]
+
+
+def test_the_host_probe_is_a_positive_time_in_milliseconds_and_runs_the_same_work_each_call() -> None:
+    assert rr.host_speed_probe(1000) > 0.0
+    assert rr.host_speed_probe(0) >= 0.0  # no iterations: still a number, never an error
+
+
+def test_cpu_counters_read_the_proc_files_and_degrade_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    def refuse(self: Path, *args: object, **kwargs: object) -> str:
+        raise OSError("no /proc")
+
+    monkeypatch.setattr(Path, "read_text", refuse)
+    assert rr.cpu_counters() == {"steal_jiffies": None, "cpu_mhz": None}
+
+
+def test_cpu_counters_parse_steal_and_mean_mhz(monkeypatch: pytest.MonkeyPatch) -> None:
+    files = {"/proc/stat": "cpu  1 2 3 4 5 6 7 8 9 10\ncpu0 1 2 3 4 5 6 7 8 9 10\n", "/proc/cpuinfo": "cpu MHz\t\t: 2000.0\ncpu MHz\t\t: 3000.0\n"}
+    monkeypatch.setattr(Path, "read_text", lambda self, *a, **k: files[str(self)])
+    assert rr.cpu_counters() == {"steal_jiffies": 8.0, "cpu_mhz": 2500.0}
+
+
+def test_the_promotion_note_carries_each_runs_probe_when_there_is_one() -> None:
+    runs = [rr.Run("p.json", 10.0, 1.0, 0.0, 100.0, 3.0, 54.1, 58.9), rr.Run("p.json", 11.0, 1.0, 0.0, 100.0, 3.0)]
+    note = rr.promotion_note("x", rr.summarize(runs), "host")
+    assert "probe median of 5 54.1 -> 58.9 ms (before the state build)" in note and note.count("probe") == 1  # a run measured before the probe existed adds nothing
+
+
+def test_the_probe_series_records_every_call_with_min_median_and_max() -> None:
+    series = rr.host_speed_series(5)
+    assert len(series["values"]) == 5 and series["min"] == min(series["values"]) and series["max"] == max(series["values"])
+    assert series["min"] <= series["median"] <= series["max"]

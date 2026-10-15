@@ -45,6 +45,13 @@ RUNS = 3
 NOISY_SPREAD = 0.15
 WARMUP_TICKS = 10
 SAMPLE_TICKS = 20
+#: Sampled ticks of a synthetic record that is not a declared tripwire scenario and whose 20 ticks (about 1 s) were shorter than the host's speed
+#: regimes (TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES, investigation.md): the new count is written to ``protocol.measured_ticks``.
+SAMPLE_TICKS_OVERRIDE: Dict[str, int] = {"combat_10_local": 100}
+#: Iterations of the host-speed probe: a fixed, deterministic pure-Python integer spin, about 50 to 100 ms on this 6-vCPU VM.
+PROBE_ITERATIONS = 400_000
+#: Probes per side of a run (before and after); the median is what the promotion note carries.
+PROBE_CALLS = 5
 CORPUS_WARMUP_TICKS = 100
 CORPUS_SAMPLE_TICKS = 1000
 CORPUS_PROFILE = "PERF_512MB_LOCAL"
@@ -89,7 +96,8 @@ def spec_for(name: str) -> RunSpec:
             return spec
     if name in SYNTHETIC:
         scenario, entities, profile = SYNTHETIC[name]
-        return RunSpec(scenario, entities, profile, "canonical", WARMUP_TICKS, SAMPLE_TICKS, 42, None, "tripwire", "tripwire_paired")
+        ticks = SAMPLE_TICKS_OVERRIDE.get(name, SAMPLE_TICKS)
+        return RunSpec(scenario, entities, profile, "canonical", WARMUP_TICKS, ticks, 42, None, "tripwire", "tripwire_paired")
     for world in CORPUS_WORLDS:
         if name == corpus_name(world):
             return RunSpec(f"corpus:{world}", 0, CORPUS_PROFILE, "canonical", CORPUS_WARMUP_TICKS, CORPUS_SAMPLE_TICKS, 42, None, "tripwire", "tripwire_paired")
@@ -164,6 +172,45 @@ def host_load() -> Dict[str, Any]:
     return {"loadavg_1min": round(load1, 2), "swap_used_mb": swap_used_mb}
 
 
+def host_speed_probe(iterations: int = PROBE_ITERATIONS) -> float:
+    """Milliseconds a fixed, deterministic pure-Python spin takes right now. The work is identical every call (an integer recurrence, no allocation, no
+    I/O), so a change of the result between two calls is the host's speed, not the engine's: ``/proc/stat`` steal and ``cpu MHz`` do not move on this
+    VirtualBox guest (investigation.md)."""
+    x = 1
+    t0 = time.perf_counter()
+    for _ in range(iterations):
+        x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+    elapsed = (time.perf_counter() - t0) * 1000.0
+    if x < 0:  # never true; keeps the loop's result live
+        raise AssertionError(x)
+    return round(elapsed, 3)
+
+
+def host_speed_series(calls: int = PROBE_CALLS) -> Dict[str, Any]:
+    """``calls`` probes back to back: every value plus their min, median and max (one 50 ms sample says little when regimes last 0.5 to 2 s)."""
+    values = [host_speed_probe() for _ in range(calls)]
+    return {"values": values, "min": min(values), "median": round(statistics.median(values), 3), "max": max(values)}
+
+
+def cpu_counters() -> Dict[str, Optional[float]]:
+    """Cumulative steal jiffies (``/proc/stat``) and the mean ``cpu MHz`` (``/proc/cpuinfo``); a field is ``None`` when it cannot be read."""
+    steal: Optional[float] = None
+    mhz: Optional[float] = None
+    try:
+        for line in Path("/proc/stat").read_text(encoding="utf-8").splitlines():
+            if line.startswith("cpu "):
+                steal = float(line.split()[8])
+                break
+    except (OSError, IndexError, ValueError):
+        pass
+    try:
+        values = [float(line.split(":", 1)[1]) for line in Path("/proc/cpuinfo").read_text(encoding="utf-8").splitlines() if line.startswith("cpu MHz")]
+        mhz = round(sum(values) / len(values), 3) if values else None
+    except (OSError, IndexError, ValueError):
+        pass
+    return {"steal_jiffies": steal, "cpu_mhz": mhz}
+
+
 @dataclass(frozen=True)
 class Run:
     """One of the runs of a record: its average tick latency and the host's load when it started."""
@@ -174,6 +221,10 @@ class Run:
     swap_used_mb: float
     peak_rss_mb: float
     wall_s: float
+    #: Median of 5 host-speed probes (ms) before and after the measured run (before the state build, outside the sampled ticks), ``None`` for a run
+    #: measured before the probe existed.
+    probe_before_ms: Optional[float] = None
+    probe_after_ms: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -198,7 +249,11 @@ def summarize(runs: Sequence[Run], noisy_spread: float = NOISY_SPREAD) -> Summar
 
 def promotion_note(name: str, summary: Summary, host: str) -> str:
     """The text ``baseline_lifecycle promote --note`` records: every run's avg and its load, the spread and the host."""
-    parts = [f"run {i + 1}: avg {r.avg_ms:.3f} ms, loadavg1 {r.loadavg_1min}, swap {r.swap_used_mb} MB" for i, r in enumerate(summary.runs)]
+    parts = [
+        f"run {i + 1}: avg {r.avg_ms:.3f} ms, loadavg1 {r.loadavg_1min}, swap {r.swap_used_mb} MB"
+        + (f", probe median of {PROBE_CALLS} {r.probe_before_ms} -> {r.probe_after_ms} ms (before the state build)" if r.probe_before_ms is not None and r.probe_after_ms is not None else "")
+        for i, r in enumerate(summary.runs)
+    ]
     return (
         f"{name}: median of {len(summary.runs)} fresh-process runs (promoted run {summary.median_index + 1}); spread {summary.spread * 100:.1f} %; "
         + "; ".join(parts)
@@ -212,11 +267,17 @@ def _child_env() -> Dict[str, str]:
 
 def cmd_measure(name: str, out: Path, samples_dir: Optional[Path] = None) -> int:
     started = host_load()
+    counters_before = cpu_counters()
+    probe_before = host_speed_series()
     t0 = time.perf_counter()
     record = measure_record(name, samples_dir)
     wall = time.perf_counter() - t0
+    probe_after = host_speed_series()
+    counters_after = cpu_counters()
     out.write_text(json.dumps(record.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    meta = {**started, "wall_s": round(wall, 2), "peak_rss_mb": round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0, 1)}
+    meta = {**started, "wall_s": round(wall, 2), "peak_rss_mb": round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0, 1),
+            "probe_before": probe_before, "probe_after": probe_after,
+            "probe_note": "the before-probe runs before the state build and warm-up (BenchHarness.run_benchmark does both in one call); both sides are outside the sampled ticks", "cpu_before": counters_before, "cpu_after": counters_after}
     out.with_suffix(".meta.json").write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return 0
 
@@ -237,7 +298,8 @@ def cmd_record(name: str, out_root: Path, keep_samples: bool = False) -> int:
             return 1
         record = BenchmarkRecord.from_dict(json.loads(path.read_text(encoding="utf-8")))
         meta = json.loads(path.with_suffix(".meta.json").read_text(encoding="utf-8"))
-        runs.append(Run(str(path), record.result.latency_ms["avg"], meta["loadavg_1min"], meta["swap_used_mb"], meta["peak_rss_mb"], meta["wall_s"]))
+        runs.append(Run(str(path), record.result.latency_ms["avg"], meta["loadavg_1min"], meta["swap_used_mb"], meta["peak_rss_mb"], meta["wall_s"],
+                        (meta.get("probe_before") or {}).get("median"), (meta.get("probe_after") or {}).get("median")))
     summary = summarize(runs)
     median = Path(runs[summary.median_index].path)
     candidate = out_dir / "candidate.json"
