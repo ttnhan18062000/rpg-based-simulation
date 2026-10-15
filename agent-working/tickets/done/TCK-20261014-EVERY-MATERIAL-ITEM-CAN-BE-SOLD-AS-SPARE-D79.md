@@ -47,7 +47,7 @@ P1
 - TCK-20261014-NAME-LITERALS-IN-SRC-SCAN
 
 ## Related Docs
-- docs/guidelines/intentional_divergences.md 2.130; docs/parity_ledger/town_resource.yaml TOWN-202
+- docs/guidelines/intentional_divergences.md 2.131; docs/parity_ledger/town_resource.yaml TOWN-202
 
 ## Related Stored Artifacts
 - agent-working/stored_artifacts/TCK-20261014-EVERY-MATERIAL-ITEM-CAN-BE-SOLD-AS-SPARE-D79/
@@ -65,7 +65,7 @@ See plan.md. The measurement is dormant: no SELL or WAGE in either arm.
 tests/unit/world/test_every_material_item_sells_as_spare.py (5) plus the sell, economy, resource and registry-bridge suites (297 passed, 1 skipped).
 
 ## Files Changed
-src/engine/shop_sale.py; src/core/items.py; the new test; divergence 2.130; TOWN-202.
+src/engine/shop_sale.py; src/core/items.py; the new test; divergence 2.131; TOWN-202.
 
 ## Completion Summary
 SELLABLE_MATERIALS is gone; every MATERIAL item sells as spare, spare weapons and armor sell beyond the last, a categoryless item fails bootstrap. Measured: 30 paired audit_mode runs show zero SELL and zero WAGE in both arms, all counts identical; the base-vs-base repeat was identical. The sell path is dormant in the gate worlds, so the change is proved by unit tests only.

@@ -2463,7 +2463,7 @@
     `docs/mechanics/03_economic_laws.md` section 4; `docs/guidelines/intentional_divergences.md` section 2.100'
   proof_type: parity
   test_path: tests/unit/world/test_sell_is_a_chosen_act.py
-  divergence_note: 'Intentional divergence 2.100 (Intentional Gameplay Change and Bug Fix); the spare rule reads the content kind, 2.130.'
+  divergence_note: 'Intentional divergence 2.100 (Intentional Gameplay Change and Bug Fix); the spare rule reads the content kind, 2.131.'
   support_boundary: 'Dormant in the measured worlds while the free meal stands (the ladder runs only when no inn is in reach); the end-to-end chain (ME-S19) is on the parked removal stack. Held out: paid work lives in TOWN-204.'
 - id: TOWN-203
   text: 'A building service (a bed, a meal at the inn, a sale at the shop) lands when its action executes (SURV-06, EXCH-02), on whatever tick the

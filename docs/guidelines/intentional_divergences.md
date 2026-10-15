@@ -3462,7 +3462,7 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Rationale**: **Intentional Gameplay Change** (owner decision D75).
 - **Verification**: `tests/unit/engine/test_terrain_cost_is_time.py` (plain every tick; mountain 0, 4, 8; swamp and river every 3; forest 0, 2, 3, 5, 6, 8; cave and ruin as forest; road capped at plain; a held tick is not a failure; the pre-check no longer reads terrain; the canonical form carries `step_ready_tick` only once set), `tests/unit/world/test_terrain_weighting.py`, `tests/mechanic_scenarios/test_hunting_kill_to_meat.py`.
 
-### 2.130 Every Material Item Sells As Spare; The Code Names No Item To Sell (D79 step 1, EXCH-02) (TCK-20261014-EVERY-MATERIAL-ITEM-CAN-BE-SOLD-AS-SPARE-D79)
+### 2.131 Every Material Item Sells As Spare; The Code Names No Item To Sell (D79 step 1, EXCH-02) (TCK-20261014-EVERY-MATERIAL-ITEM-CAN-BE-SOLD-AS-SPARE-D79)
 
 - **Legacy Behavior**: `src/engine/shop_sale.py` `SELLABLE_MATERIALS` listed eight item names (wood, ore, iron_ore, fish, leather, fiber, herb, iron_sword); an item not on the list could never be sold, however it was categorised in content. Only four of the eight exist in `items.yaml`.
 - **New Behavior**: `spare_quantity` reads the item's registry kind. A MATERIAL item sells whole; a WEAPON or ARMOR item sells beyond the last unit (and an item an equipment slot names stays), as the old list did for the one sword it named; every other kind sells nothing; food keeps its surplus rule. `SELLABLE_MATERIALS` is removed and the sale module names no item. `ItemRegistry.bootstrap` raises for a catalog item with no categories (a compile error), because the category now decides whether a shop buys it.
