@@ -11,6 +11,7 @@ class ItemKind(str, Enum):
     WEAPON = "WEAPON"
     ARMOR = "ARMOR"
     CURRENCY = "CURRENCY"
+    OTHER = "OTHER"  # an item whose categories name none of the above (a tool or trinket today): it is not a material and no shop buys it
 
 class EquipSlot(str, Enum):
     """Valid equipment locations on an entity."""

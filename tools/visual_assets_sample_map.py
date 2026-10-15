@@ -13,8 +13,9 @@ and never runs `world-compile` (it writes `world_compile_report.json` next to th
 `present_map`'s integer codes are PER WORLD (`terrain_code_map`, `state_presenter.py:183`, sorted names of that world's terrains), not the Live Map tile codes the
 registry descriptions cite. Cells are therefore stored as terrain NAMES (the presenter's own codes are inverted through the same `terrain_code_map`) and mapped to keys
 by name: a name maps to `terrain.<name>` when that key is registered, or, offline, through a REGISTRY alias (`terrain.plain` -> `terrain.grassland`, `Registry.resolve`; the live client does NOT do this). The rule is exact (lower case, spaces to underscores); a near match is listed as `near`
-and is NEVER applied, so no key is guessed. The same exact rule maps building kinds to `icon.building.<kind>`, place kinds and resource-node kinds to
-`icon.marker.<kind>` and entity kinds to `icon.class.<kind>`.
+and is NEVER applied, so no key is guessed. The same exact rule maps building kinds to `icon.building.<kind>`, place kinds to
+`icon.marker.<kind>`, resource-node kinds to `icon.node.<kind>` and entity kinds to `icon.class.<kind>`; since `TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS` the registry aliases `icon.building.shop`,
+`icon.marker.camp`, `icon.marker.ruin` (and `dungeon`, `lair`) resolve the same way, offline. A CITY place is the location plate ALONE (the owner's answer of 2026-10-13: no key, alias or glyph): its row says `plate_only`.
 
 Output goes only under the gitignored `reports/visual_assets/sample_map/`; the file is deterministic (same world -> byte-identical). This tool is evidence tooling: it
 activates nothing, adopts nothing and puts nothing into a release candidate. It is a tool, not part of `visual_assets/`, so the boundary guard does not police its
@@ -48,10 +49,12 @@ FORMAT = "sample_map_world_data_v2"
 # registry's `aliases`, and no key is added), every use is labelled, and the exact view stays the primary evidence. `river` could read better as `terrain.water`; it is a proposal either way.
 ALIAS_LABEL = "unconfirmed: asset-planner proposal for rpg-planner (#519)"
 PROPOSED_ALIASES = {
-    # (the terrain proposals of 2026-10-11 became REGISTRY aliases on 2026-10-12, `TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES`; the exact view resolves them through `Registry.resolve`, see below)
-    "building": {"shop": "icon.building.store"},
-    "place": {"CAMP": "icon.marker.enemy_camp", "RUIN": "icon.marker.ruins"},
+    # (the terrain proposals of 2026-10-11 became REGISTRY aliases on 2026-10-12, `TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES`, and the building and place proposals (shop, CAMP, RUIN) on 2026-10-14,
+    # `TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS`; the exact view resolves them through `Registry.resolve`, so no proposal is left and the alias view equals the exact view)
+    "building": {},
+    "place": {},
 }
+PLATE_ONLY_PLACES = frozenset({"CITY"})  # the owner's answer, 2026-10-13: a CITY is the location plate alone: no key, no alias, no glyph
 
 
 def sources() -> dict:
@@ -92,7 +95,7 @@ def _near(name: str, family_prefix: str, keys: set[str]) -> list[str]:
     return sorted(set(hits + close))
 
 
-def key_rows(counts: Counter, family_prefix: str, keys: set[str], aliases: dict[str, str] | None = None, registry_aliases: dict[str, str] | None = None) -> list[dict]:
+def key_rows(counts: Counter, family_prefix: str, keys: set[str], aliases: dict[str, str] | None = None, registry_aliases: dict[str, str] | None = None, plate_only=None) -> list[dict]:
     """One row per distinct raw name: its count, the exact key (or null), the near keys that are NOT applied and, only for a name with no exact key, its UNCONFIRMED proposed alias."""
     rows = []
     for name in sorted(counts):
@@ -104,6 +107,8 @@ def key_rows(counts: Counter, family_prefix: str, keys: set[str], aliases: dict[
         if row["key"] is None and aliases and name in aliases:
             assert aliases[name] in keys, f"proposed alias {aliases[name]!r} is not a registered key"
             row["proposed_alias"] = aliases[name]
+        if row["key"] is None and plate_only and name in plate_only:
+            row["plate_only"] = True
         rows.append(row)
     return rows
 
@@ -146,6 +151,7 @@ def build_data(world_id: str) -> dict:
     assert len(flat) == width * height
 
     keys = _registry_keys()
+    reg_aliases = _registry_aliases()
     terrain_counts = Counter(names[i] for i in flat)
     place_kinds = Counter(getattr(p.kind, "value", str(p.kind)) for p in state.places.values())
     entity_kinds = Counter(str(e.kind) for e in state.entities.values())
@@ -162,7 +168,7 @@ def build_data(world_id: str) -> dict:
         "cell_order": "row-major, index = y * width + x",
         "terrain_names": names,
         "terrain_rle": rle(flat),
-        "terrain": key_rows(terrain_counts, "terrain.", keys, registry_aliases=_registry_aliases()),
+        "terrain": key_rows(terrain_counts, "terrain.", keys, registry_aliases=reg_aliases),
         "buildings": [{"id": b["building_id"], "kind": b["building_type"], "x": b["x"], "y": b["y"]} for b in static["buildings"]],
         "resource_nodes": [{"id": n["node_id"], "kind": n["resource_type"], "x": n["x"], "y": n["y"], "terrain": inverse.get(n["terrain"])} for n in static["resource_nodes"]],
         "treasure_chests": [{"id": c["chest_id"], "x": c["x"], "y": c["y"]} for c in static["treasure_chests"]],
@@ -176,9 +182,9 @@ def build_data(world_id: str) -> dict:
         ],
         "entities": [{"kind": str(e.kind), "x": e.position[0], "y": e.position[1]} for e in sorted(state.entities.values(), key=lambda e: e.id)],
         "kinds": {
-            "building": key_rows(building_kinds, "icon.building.", keys, PROPOSED_ALIASES["building"]),
-            "resource_node": key_rows(node_kinds, "icon.marker.", keys),
-            "place": key_rows(place_kinds, "icon.marker.", keys, PROPOSED_ALIASES["place"]),
+            "building": key_rows(building_kinds, "icon.building.", keys, PROPOSED_ALIASES["building"], registry_aliases=reg_aliases),
+            "resource_node": key_rows(node_kinds, "icon.node.", keys),
+            "place": key_rows(place_kinds, "icon.marker.", keys, PROPOSED_ALIASES["place"], registry_aliases=reg_aliases, plate_only=PLATE_ONLY_PLACES),
             "entity": key_rows(entity_kinds, "icon.class.", keys),
         },
         "proposed_aliases": {"label": ALIAS_LABEL, "applies_only_to_names_without_an_exact_key": True, **PROPOSED_ALIASES},

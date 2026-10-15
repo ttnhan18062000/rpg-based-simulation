@@ -548,6 +548,169 @@ keys:
     optional: true
     safety_class: decorative
     fallback: {kind: "none"}
+# Object markers (TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS, owner answers 2026-10-13): 4 building panel icons (24x24), 1 place glyph (16x16 over the plate) and 13 resource-node glyphs (16x16, live 12x12, NO plate: a node is not a location), one key per V2 kind as the presenter emits it. Optional, identifying; nothing is adopted yet (the art is drafted, then adopted by the owner's `adopt-set`).
+  - key: icon.building.healer_hut
+    family: icon
+    description: Panel icon for the healer hut building, one 24x24 image at scale x1; identifying class, the fallback is today's white-outlined square with a question mark (the client default for this building kind) plus the building name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "white-outlined square with a question mark (the client default for this building kind)", text: "the building name as text"}
+    label_key: label.icon.building.healer_hut
+    label: "Healer hut"
+  - key: icon.building.town_hall
+    family: icon
+    description: Panel icon for the town hall building, one 24x24 image at scale x1; identifying class, the fallback is today's white-outlined square with a question mark (the client default for this building kind) plus the building name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "white-outlined square with a question mark (the client default for this building kind)", text: "the building name as text"}
+    label_key: label.icon.building.town_hall
+    label: "Town hall"
+  - key: icon.building.mine_entrance
+    family: icon
+    description: Panel icon for the mine entrance building, one 24x24 image at scale x1; identifying class, the fallback is today's white-outlined square with a question mark (the client default for this building kind) plus the building name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "white-outlined square with a question mark (the client default for this building kind)", text: "the building name as text"}
+    label_key: label.icon.building.mine_entrance
+    label: "Mine entrance"
+  - key: icon.building.watchtower
+    family: icon
+    description: Panel icon for the watchtower building, one 24x24 image at scale x1; identifying class, the fallback is today's white-outlined square with a question mark (the client default for this building kind) plus the building name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "white-outlined square with a question mark (the client default for this building kind)", text: "the building name as text"}
+    label_key: label.icon.building.watchtower
+    label: "Watchtower"
+  - key: icon.marker.nest
+    family: icon
+    description: Map glyph for a nest location, one 16x16 image at scale x1, live area 12x12 centred (2 px margin) over the location plate; identifying class, the fallback is today's bullet label (#aaa, the client default) plus the location name as hover text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "bullet label (#aaa)", text: "the location name as hover text"}
+    label_key: label.icon.marker.nest
+    label: "Nest"
+  - key: icon.node.cover_patch_high
+    family: icon
+    description: Map glyph for a cover patch high resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.cover_patch_high
+    label: "Cover patch (high)"
+  - key: icon.node.cover_patch_medium
+    family: icon
+    description: Map glyph for a cover patch medium resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.cover_patch_medium
+    label: "Cover patch (medium)"
+  - key: icon.node.cover_patch_low
+    family: icon
+    description: Map glyph for a cover patch low resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.cover_patch_low
+    label: "Cover patch (low)"
+  - key: icon.node.wood_node
+    family: icon
+    description: Map glyph for a wood node resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.wood_node
+    label: "Wood node"
+  - key: icon.node.herb_patch
+    family: icon
+    description: Map glyph for a herb patch resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#6ee7b7) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#6ee7b7)", text: "the resource node name as text"}
+    label_key: label.icon.node.herb_patch
+    label: "Herb patch"
+  - key: icon.node.berry_thicket
+    family: icon
+    description: Map glyph for a berry thicket resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.berry_thicket
+    label: "Berry thicket"
+  - key: icon.node.iron_vein
+    family: icon
+    description: Map glyph for a iron vein resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.iron_vein
+    label: "Iron vein"
+  - key: icon.node.healing_flower_patch
+    family: icon
+    description: Map glyph for a healing flower patch resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.healing_flower_patch
+    label: "Healing flower patch"
+  - key: icon.node.crystal_outcrop
+    family: icon
+    description: Map glyph for a crystal outcrop resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.crystal_outcrop
+    label: "Crystal outcrop"
+  - key: icon.node.spirit_wisp
+    family: icon
+    description: Map glyph for a spirit wisp resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.spirit_wisp
+    label: "Spirit wisp"
+  - key: icon.node.silver_vein
+    family: icon
+    description: Map glyph for a silver vein resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.silver_vein
+    label: "Silver vein"
+  - key: icon.node.frost_shard_cluster
+    family: icon
+    description: Map glyph for a frost shard cluster resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.frost_shard_cluster
+    label: "Frost shard cluster"
+  - key: icon.node.moon_resin_tree
+    family: icon
+    description: Map glyph for a moon resin tree resource node, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate; identifying class, the fallback is today's inset square (#7dd3a0) plus the node name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
+    label_key: label.icon.node.moon_resin_tree
+    label: "Moon resin tree"
 # Aliases (TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES, owner answer on #523, 2026-10-12): V2 terrain names are canonical and their art is reused through these aliases.
 # The name -> key rule is lower case with spaces to underscores, so `PLAIN` and `plain` both resolve through `terrain.plain` (a key cannot be upper case, `identities.py`); whether
 # `PLAIN` and `plain` stay two names is rpg's to dedupe (#523: no two V2 terrain names may differ only by case). REGISTRY-ONLY: no release, runtime export or client carries an alias
@@ -556,3 +719,9 @@ aliases:
   - {alias: terrain.plain, target: terrain.grassland}
   - {alias: terrain.ruin, target: terrain.ruins}
   - {alias: terrain.river, target: terrain.shallow_water}
+# Object-marker aliases (TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS, owner answers 2026-10-13, all REGISTRY-ONLY like the terrain aliases: no release, runtime export or client carries them, a runtime consumer is a Known gap): V2 place and building names reuse existing art. CITY has no key, alias or glyph (owner: the location plate alone).
+  - {alias: icon.building.shop, target: icon.building.store}
+  - {alias: icon.marker.camp, target: icon.marker.enemy_camp}
+  - {alias: icon.marker.ruin, target: icon.marker.ruins}
+  - {alias: icon.marker.dungeon, target: icon.marker.dungeon_entrance}
+  - {alias: icon.marker.lair, target: icon.marker.boss_arena}

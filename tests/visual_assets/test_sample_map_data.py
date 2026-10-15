@@ -129,20 +129,35 @@ def test_an_alias_to_an_unregistered_key_is_refused():
         sm.key_rows(Counter({"river": 1}), "terrain.", KEYS, {"river": "terrain.not_registered"})
 
 
-def test_every_proposed_alias_names_a_registered_key_and_the_registry_carries_exactly_the_three_v2_terrain_aliases():
+def test_every_proposed_alias_names_a_registered_key_and_the_registry_carries_exactly_the_eight_aliases():
     from visual_assets.store.catalog.registry import load_registry
 
     registry = load_registry(sm.REGISTRY_FILE)
     targets = {k for family in sm.PROPOSED_ALIASES.values() for k in family.values()}
     from tests.visual_assets import adopted_facts as af
 
-    assert targets <= set(registry.keys) and dict(registry.aliases) == af.REGISTRY_ALIASES  # since `TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES` the three terrain proposals are registry aliases too
+    assert targets <= set(registry.keys) and dict(registry.aliases) == af.REGISTRY_ALIASES  # since `TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES` the three terrain proposals are registry aliases too, and `TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS` added the five object aliases
     assert "terrain" not in sm.PROPOSED_ALIASES  # the terrain proposals ARE the registry's aliases now; the exact view resolves them with `Registry.resolve`, only the object proposals stay in the data
     assert sm.ALIAS_LABEL == "unconfirmed: asset-planner proposal for rpg-planner (#519)"
 
 
 def test_the_data_file_labels_the_aliases(dungeon):
     data = dungeon[0]
-    assert data["proposed_aliases"]["label"] == sm.ALIAS_LABEL and "terrain" not in data["proposed_aliases"] and data["proposed_aliases"]["place"]["RUIN"] == "icon.marker.ruins"
+    assert data["proposed_aliases"]["label"] == sm.ALIAS_LABEL and "terrain" not in data["proposed_aliases"] and data["proposed_aliases"]["place"] == {} and data["proposed_aliases"]["building"] == {}  # no proposal is left: shop, CAMP and RUIN are registry aliases
+    place = {r["name"]: r for r in data["kinds"]["place"]}
+    assert place["RUIN"]["key"] == "icon.marker.ruins" and place["RUIN"]["registry_alias"] == "icon.marker.ruin" and "proposed_alias" not in place["RUIN"]
     ruin = next(r for r in data["terrain"] if r["name"] == "ruin")
     assert ruin["key"] == "terrain.ruins" and ruin["registry_alias"] == "terrain.ruin" and ruin["near"] == []  # resolved through the REGISTRY alias, not a data-file proposal
+
+
+def test_object_kinds_resolve_exactly_nodes_by_icon_node_and_aliases_through_the_registry_and_a_city_is_the_plate_alone():
+    keys = {"icon.node.herb_patch", "icon.building.store", "icon.marker.enemy_camp"}
+    aliases = {"icon.building.shop": "icon.building.store", "icon.marker.camp": "icon.marker.enemy_camp"}
+    nodes = {r["name"]: r for r in sm.key_rows(Counter({"herb_patch": 1, "wood_node": 1}), "icon.node.", keys)}
+    assert nodes["herb_patch"]["key"] == "icon.node.herb_patch" and nodes["wood_node"]["key"] is None  # no key is guessed
+    buildings = {r["name"]: r for r in sm.key_rows(Counter({"shop": 1}), "icon.building.", keys, registry_aliases=aliases)}
+    assert buildings["shop"]["key"] == "icon.building.store" and buildings["shop"]["registry_alias"] == "icon.building.shop"
+    places = {r["name"]: r for r in sm.key_rows(Counter({"CAMP": 1, "CITY": 1, "NEST": 1}), "icon.marker.", keys, registry_aliases=aliases, plate_only=sm.PLATE_ONLY_PLACES)}
+    assert places["CAMP"]["key"] == "icon.marker.enemy_camp"
+    assert places["CITY"]["key"] is None and places["CITY"]["plate_only"] is True  # the owner's answer, 2026-10-13: location plate alone
+    assert places["NEST"]["key"] is None and "plate_only" not in places["NEST"]

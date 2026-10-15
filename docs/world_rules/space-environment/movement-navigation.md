@@ -156,6 +156,13 @@ tiles mispriced). Cave, ruin and river had no cost at all.
     advantage comes through route choice. A faster road (more than one step per tick) is a
     possible later measured step, and the cap is disclosed. **Alternatives not taken:** two
     steps per tick on road; halving all walking (plain 2 ticks, road 1, mountain 8).
+  - **What a route may know (decided by the owner directly, 2026-10-14):** there is no real
+    pathfinder today (one greedy axis step that ignores terrain), so the route step adds a
+    bounded search over terrain cost. It plans on the true terrain map, treated as common
+    knowledge of the land: terrain is static, public geography, not a hidden fact like a food
+    stock. This is a known shortcut and is disclosed. Routing from what each subject has seen or
+    remembers is a later step of its own, measured alone. **Alternatives not taken:** only known
+    tiles with a default cost for the rest; true terrain within sight range and a default beyond.
   - **Later:** tiring the body on rough ground (a fatigue cost) can be added on top later.
   - **Alternatives not taken:** slower only; route choice only; a fatigue cost now; both parts
     in one step; after v1.

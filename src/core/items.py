@@ -117,7 +117,7 @@ class ItemRegistry:
                 base_value = getattr(v, "base_value", 0.0) or (v.get("base_value", 0.0) if isinstance(v, dict) else 0.0)
                 
                 # Resolve ItemKind
-                kind = ItemKind.MATERIAL
+                kind = ItemKind.OTHER
                 if "weapon" in categories:
                     kind = ItemKind.WEAPON
                 elif "armor" in categories:
@@ -126,6 +126,8 @@ class ItemRegistry:
                     kind = ItemKind.CONSUMABLE
                 elif "currency" in categories:
                     kind = ItemKind.CURRENCY
+                elif "material" in categories:
+                    kind = ItemKind.MATERIAL
                 
                 # Resolve weight and stack_size
                 metadata = getattr(v, "metadata", {}) or (v.get("metadata", {}) if isinstance(v, dict) else {})

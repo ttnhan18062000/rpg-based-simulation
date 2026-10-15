@@ -44,3 +44,20 @@ def test_the_sale_code_names_no_item():
     assert not hasattr(shop_sale, "SELLABLE_MATERIALS")
     for literal in ("wood", "iron_ore", "fiber", "leather", "iron_sword"):
         assert f'"{literal}"' not in source
+
+
+def test_a_tool_or_trinket_with_no_category_of_its_own_is_not_a_material_and_is_not_sold():
+    ItemRegistry.bootstrap({"spanner": {"id": "spanner", "categories": ["tool"], "base_value": 20},
+                            "charm": {"id": "charm", "categories": ["trinket", "holy"], "base_value": 60}})
+    assert ItemRegistry.get("spanner").kind.value == "OTHER" and ItemRegistry.get("charm").kind.value == "OTHER"
+    state, ent, shop = _world([ItemStack("spanner", 2), ItemStack("charm", 1)])
+    assert plan_sale(state, ent, shop) is None
+
+
+def test_the_shipped_tools_and_trinkets_resolve_to_no_sellable_kind():
+    import yaml
+    rows = yaml.safe_load(open("data/content/world/items.yaml"))
+    ItemRegistry.bootstrap({row["id"]: row for row in rows})
+    odd = [row["id"] for row in rows if set(row["categories"]) & {"tool", "trinket"} and not set(row["categories"]) & {"weapon", "armor", "material", "consumable"}]
+    assert len(odd) == 4 and all(ItemRegistry.get(i).kind.value == "OTHER" for i in odd)
+    assert all(ItemRegistry.get(row["id"]).kind.value == "MATERIAL" for row in rows if "material" in row["categories"])
