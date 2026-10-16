@@ -20,3 +20,7 @@ tags: [platform, security]
 | 6 | The step-summary commands match #5 exactly | main CI summary | validated |
 
 Post-merge checks 3, 5 and 6 are recorded in the ticket's Test Summary before close; the ticket stays INPROGRESS until then.
+
+## Outcome so far (2026-10-16, platform-implementer)
+- Check 1: done (actionlint clean, YAML parses). Check 4: done (cosign v3.1.3 `verify-attestation --type spdxjson` on backend `154b5d5f…` exits 1, "found: .../sign/v1"). Scratch repro: v3.1.3 labels the SBOM referrer `https://spdx.dev/Document` and the check passes (keyed, local stand-in registry).
+- Checks 2, 3, 5, 6 are post-merge or PR-run observations, recorded in the ticket's Test Summary before close.

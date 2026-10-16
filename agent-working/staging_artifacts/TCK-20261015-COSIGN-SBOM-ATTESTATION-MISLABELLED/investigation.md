@@ -30,3 +30,8 @@ tags: [platform, security]
 - Upstream: a cosign v3 issue or fix for the referrer annotation on `attest`; flags controlling the bundle format and
   the referrers fallback.
 - Whether `verify-attestation` in v3 reads the annotation or the DSSE payload, and whether a newer v3 fixes either side.
+
+## Findings (2026-10-16, platform-implementer)
+- CI ran cosign **v3.0.6**: the installer's default (`cosign-release: v3.0.6` in the main run 38719666196 step log). Local `cosign v3.1.3` on the same published digest fails `verify-attestation` with `found: .../sign/v1`.
+- Both referrers of the published backend digest carry `predicateType: .../cosign/sign/v1`. A scratch attest + sign with v3.1.3 gives `https://spdx.dev/Document` for the attest referrer and `sign/v1` for the sign referrer, and `verify-attestation --type spdxjson` passes. Exact upstream commit not traced (v3.0.6 and v3.1.2 release notes mention referrer-writing and predicate-type fixes). v3.1.3 is the latest cosign release (2026-08-06).
+- Not reproducible here: v3.0.6 on the scratch image (binary download failed; Docker Hub pulls fail with a TLS error).
