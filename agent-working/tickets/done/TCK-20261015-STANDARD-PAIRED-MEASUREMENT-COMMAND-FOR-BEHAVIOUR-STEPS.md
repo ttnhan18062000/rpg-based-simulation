@@ -81,6 +81,7 @@ Each behaviour step (diet, route, cover, level-keeps-kind, ...) has been measure
 - People = base arm tick-0 keeps_coin roster by id, read on the same ids in both arms; added ids listed apart; roster mismatch named.
 - Verdict per world (owner's D76 ruling): SE = SD(per-seed new-base)/sqrt(n seeds); STOP when more people deaths by > 2 SE AND > floor (1 per seed, total = seed count); fewer past both is REPORT-ONLY; SD 0 not special-cased. Extinctions: STOP / base-state / recovered. Watch-table rows are emitted per world.
 - A cumulative run takes `--base` pinned to the pre-M0 commit (rpg-planner names it at the first cumulative check).
+- Follow-up (rpg-planner, 2026-10-16, same ticket): a pre-M0 base (STOP base 903239fbe, and a REPORT-ONLY reading against c3f6202b9) predates the determinism fix, so its manifest has no typed audit_mode/signals_zeroed.  /  accept such an arm only when the child verified its kernel was built with audit_mode and no_frame_pacing, the manifest never recorded live signals, and a full base-vs-base repeat (all worlds x seeds) is byte-identical ( is required); the header then says "legacy base, audit proven by repeat".  suppresses STOP (verdicts and extinctions) and labels the output and the watch rows report-only.
 
 ## Test Summary
 tests/unit/observability/test_run_ledger_behaviour.py (7), tests/unit/tools/test_rpg_measure.py (11), tests/unit/observability and tools sweep 1174 passed; health 0 new / 0 worse; lint-imports 17 kept / 0 broken.

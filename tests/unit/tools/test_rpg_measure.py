@@ -130,3 +130,15 @@ def test_a_legacy_base_is_accepted_only_when_its_kernel_was_forced_and_it_never_
         paired.refuse_non_audit("base", {("w", 44): dict(old, forced_flags={"audit_mode": True, "no_frame_pacing": False})}, legacy=True)
     with pytest.raises(NonAuditRunError, match="base:w:45"):
         paired.refuse_non_audit("base", {("w", 45): dict(old, forced_flags=None)}, legacy=True)
+
+
+def test_a_report_only_reading_never_says_stop_and_still_names_the_drift():
+    def pair(seed, d):
+        base = _run(seed=seed, start=START, final={1: (1, None, "merchant"), 2: (1, None, "guard"), 3: (1, None, "wolf")})
+        return base, _run(seed=seed, start=START, final={1: (0 if d >= 1 else 1, "COMBAT", "merchant"), 2: (0 if d >= 2 else 1, "COMBAT", "guard"), 3: (1, None, "wolf")})
+    pairs = [pair(s, d) for s, d in zip(range(42, 47), [2, 2, 2, 2, 2])]
+    stop_lines, stop_row = paired.world_section("w", [p[0] for p in pairs], [p[1] for p in pairs], 1.0, None)
+    ro_lines, ro_row = paired.world_section("w", [p[0] for p in pairs], [p[1] for p in pairs], 1.0, None, report_only=True)
+    assert stop_row["verdict"] == "STOP" and ro_row["verdict"] == "REPORT-ONLY"
+    assert "STOP" not in "\n".join(paired.watch_rows("s", "d", [ro_row], True)).replace("never trips a stop", "")
+    assert "REPORT-ONLY reading" in "\n".join(paired.watch_rows("s", "d", [ro_row], True))
