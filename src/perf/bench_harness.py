@@ -45,11 +45,16 @@ def _gc_collected_total() -> int:
 
 
 def _malloc_trim() -> bool:
-    """Hand the allocator's freed pages back to the OS (glibc ``malloc_trim(0)``). False where it is unavailable; never raises."""
+    """Hand the allocator's freed pages back to the OS (glibc ``malloc_trim(0)``).
+
+    True when the call was made, **whatever it returned** (glibc returns 1 when it released memory and 0 when there was nothing to release; neither
+    means "unavailable"). False only when libc or the symbol is missing or the call raised. Never raises.
+    """
     try:
         import ctypes
 
-        return bool(ctypes.CDLL("libc.so.6").malloc_trim(0))
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+        return True
     except (OSError, AttributeError):
         return False
 

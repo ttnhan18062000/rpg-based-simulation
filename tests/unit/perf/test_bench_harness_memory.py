@@ -213,3 +213,22 @@ def test_the_collected_total_reads_gc_stats_and_a_collect_raises_it() -> None:
     del cycle
     gc.collect()
     assert bench_harness._gc_collected_total() > before
+
+
+def test_a_trim_that_released_nothing_still_counts_as_a_trim(monkeypatch: pytest.MonkeyPatch) -> None:
+    """glibc's malloc_trim returns 0 when there was nothing to release; that is not "unavailable" and must not drop the trim keys."""
+    import ctypes
+
+    class StubLibc:
+        calls: List[int] = []
+
+        def malloc_trim(self, pad: int) -> int:
+            StubLibc.calls.append(pad)
+            return 0
+
+    monkeypatch.setattr(ctypes, "CDLL", lambda *_a, **_k: StubLibc())
+    assert bench_harness._malloc_trim() is True and StubLibc.calls == [0]
+    harness, _ = _run(monkeypatch, [])
+    memory = harness.last_record.result.memory_mb
+    assert TRIM_KEYS <= set(memory) and memory["rss_over_declared_basis_trim"] == 1.0
+    assert memory["rss_over_declared"] == pytest.approx(memory["rss_after_trim_mb"] / PROFILE.max_ram_mb, abs=1e-4)
