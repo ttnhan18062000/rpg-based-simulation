@@ -71,6 +71,9 @@ All scoped, one at a time, under `systemd-run --user --scope -q -p MemoryMax=3G`
 - new `tests/visual_assets/drawing/unit/test_sandbox_userns_error.py` (fake subprocess: error message, other failure unchanged, success with the signature is no error, probe cached, probe causes) + `test_strict_aseprite.py` and `test_ci_aseprite_skip_line.py`: 31 passed.
 - `tests/visual_assets/drawing/unit`: 137 passed.
 - real Aseprite on this host, `tests/visual_assets/drawing/integration/test_ops.py`: 62 passed, none skipped (the probe passes here).
+- PR #608 CI on 8c41086f3 failed the lane "API / CLI / engine / logging" on two `tests/visual_assets` tests I had not run (the heavy-run gate kept me from a full `tests/visual_assets`):
+  1. `test_budgets_parity::test_every_code_bound_has_a_row`: the new `sandbox.PROBE_TIMEOUT_S` had no `budgets.md` row. Fixed at the root in `ce9608f5d`: the probe uses the already-budgeted `config.JOB_TIMEOUT_S` and the constant is gone (no new APPROVED row). `test_budgets_parity` + the sandbox unit tests: 12 passed.
+  2. `test_aseprite_local_proof::test_the_guarded_files_still_match_the_committed_record`: `conftest.py`, `strict_aseprite.py`, `test_strict_aseprite.py` and `sandbox.py` are guarded files and changed. The only fix is a real strict `make visual-assets-aseprite-local` run, which rewrites `docs/assets/aseprite_local_proof.json` (never edited by hand). Held until lead-planner lifts the heavy-run gate.
 
 ## Files Changed
 - `visual_assets/drawing/backend/sandbox.py`, `tests/visual_assets/conftest.py`, `tests/visual_assets/strict_aseprite.py`, `tests/visual_assets/test_strict_aseprite.py`, `tests/visual_assets/drawing/unit/test_sandbox_userns_error.py`
