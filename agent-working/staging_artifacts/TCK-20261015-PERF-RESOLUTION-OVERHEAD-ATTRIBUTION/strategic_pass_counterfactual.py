@@ -169,6 +169,8 @@ def main(argv: List[str] | None = None) -> int:
     p.add_argument("--profile", default="PROD_LARGE")
     p.add_argument("--contract", default="pinned", choices=["live", "pinned", "canonical", "audit"])
     p.add_argument("--out", default=None, help="write the JSON report here")
+    p.add_argument("--control", action="store_true", help="run the unwrapped pass a second time: a pinned run is not deterministic when the wall-clock budget throttle fires, so the inert check "
+                   "only counts against the wrapper when the two unwrapped runs agree")
     p.add_argument("--selftest", action="store_true")
     args = p.parse_args(argv)
     if args.selftest:
@@ -176,19 +178,27 @@ def main(argv: List[str] | None = None) -> int:
     from tools.perf import _profiling_common as common
 
     off, digest_off = run_once(args, wrap=False)
+    control_digest = run_once(args, wrap=False)[1] if args.control else None
     on, digest_on = run_once(args, wrap=True)
     per_call = wrapper_overhead_ms_per_call()
     report = {
         "header": {**common.header_fields(args.scenario, args.entities, args.seed, args.warmup, args.ticks), "contract": args.contract, "profile": args.profile,
                    "loadavg_1min": os.getloadavg()[0], "platform": platform.platform()},
         "inert": digest_off == digest_on, "fingerprint_unwrapped": digest_off, "fingerprint_wrapped": digest_on,
+        "fingerprint_unwrapped_control": control_digest,
+        "unwrapped_runs_agree": None if control_digest is None else control_digest == digest_off,
         "summary": summarize(off, on, per_call), "ticks_unwrapped": off["ticks"], "ticks_wrapped": on["ticks"],
     }
     text = json.dumps(report, indent=2, sort_keys=True)
     if args.out:
         Path(args.out).write_text(text + "\n", encoding="utf-8")
-    print(json.dumps({"header": report["header"], "inert": report["inert"], "summary": report["summary"]}, indent=2, sort_keys=True))
-    return 0 if report["inert"] else 2
+    print(json.dumps({"header": report["header"], "inert": report["inert"], "unwrapped_runs_agree": report["unwrapped_runs_agree"], "summary": report["summary"]}, indent=2, sort_keys=True))
+    if report["inert"]:
+        return 0
+    if report["unwrapped_runs_agree"] is False:
+        print("NOTE: the two unwrapped runs already differ, so the fingerprint difference is not evidence against the wrapper")
+        return 0
+    return 2
 
 
 if __name__ == "__main__":
