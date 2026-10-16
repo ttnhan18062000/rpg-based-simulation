@@ -116,3 +116,17 @@ def test_an_arm_already_in_the_cache_is_not_run_again_and_a_repeat_always_is(tmp
     paired.run_arm(tmp_path, tmp_path, "c" * 40, jobs, 10, 1, repeat=True)
     paired.run_arm(tmp_path, tmp_path, "c" * 40, jobs, 10, 1, repeat=True)
     assert len(calls) == 6
+
+
+def test_a_legacy_base_is_accepted_only_when_its_kernel_was_forced_and_it_never_recorded_live_signals():
+    forced = {"audit_mode": True, "no_frame_pacing": True}
+    old = dict(_run(), signals_zeroed=None, audit_mode=None, forced_flags=forced)
+    paired.refuse_non_audit("base", {("w", 42): old}, legacy=True)
+    with pytest.raises(NonAuditRunError):
+        paired.refuse_non_audit("base", {("w", 42): old})  # strict mode still refuses it
+    with pytest.raises(NonAuditRunError, match="base:w:43"):
+        paired.refuse_non_audit("base", {("w", 42): old, ("w", 43): dict(old, signals_zeroed=False)}, legacy=True)
+    with pytest.raises(NonAuditRunError, match="base:w:44"):
+        paired.refuse_non_audit("base", {("w", 44): dict(old, forced_flags={"audit_mode": True, "no_frame_pacing": False})}, legacy=True)
+    with pytest.raises(NonAuditRunError, match="base:w:45"):
+        paired.refuse_non_audit("base", {("w", 45): dict(old, forced_flags=None)}, legacy=True)

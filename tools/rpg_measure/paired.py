@@ -82,8 +82,19 @@ def run_arm(tree: Path, cache: Path, sha: str, jobs: Sequence[Key], ticks: int, 
     return {(w, s): json.loads(result_path(cache, sha, ticks, w, s, repeat).read_text(encoding="utf-8")) for w, s in jobs}
 
 
-def refuse_non_audit(arm: str, runs: Dict[Key, Dict[str, Any]]) -> None:
-    """Both flags recorded by the run's own manifest: audit_mode and signals_zeroed must be True, else the comparison measures host speed."""
+def refuse_non_audit(arm: str, runs: Dict[Key, Dict[str, Any]], legacy: bool = False) -> None:
+    """Both flags recorded by the run's own manifest: audit_mode and signals_zeroed must be True, else the comparison measures host speed.
+
+    ``legacy`` (a base older than the determinism fix, whose manifest has no typed record): accept a manifest that says nothing (None) when the child verified
+    that the arm's kernel was built with audit_mode and no_frame_pacing; a manifest that records ``False`` is still refused. The caller must also have
+    proved the arm by a full base-vs-base repeat.
+    """
+    if legacy:
+        bad = [f"{arm}:{w}:{s}" for (w, s), r in runs.items()
+               if r.get("signals_zeroed") is False or r.get("audit_mode") is False or r.get("forced_flags") != {"audit_mode": True, "no_frame_pacing": True}]
+        if bad:
+            raise NonAuditRunError(f"legacy runs not forced to audit_mode and no_frame_pacing, or recorded live: {sorted(bad)}")
+        return
     require_host_independent_runs({f"{arm}:{w}:{s}": {"signals_zeroed": r.get("signals_zeroed")} for (w, s), r in runs.items()})
     off = [f"{arm}:{w}:{s}" for (w, s), r in runs.items() if r.get("audit_mode") is not True]
     if off:
@@ -179,6 +190,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--jobs", type=int, default=2, help="parallel runs (memory: the reaper kills at 3 heavy processes)")
     ap.add_argument("--floor-per-seed", type=float, default=stats.FLOOR_PER_SEED, help="people deaths per seed a world's delta must exceed (owner's D76 floor: 1)")
     ap.add_argument("--self-check", choices=("seed42", "full", "off"), default="seed42")
+    ap.add_argument("--legacy-base", action="store_true", help="accept a base older than the determinism fix (no typed audit_mode/signals_zeroed in its manifest) ONLY with a full base-vs-base repeat")
     ap.add_argument("--headline", default=None, help="a ledger counter prefix to show as the step's headline metric")
     ap.add_argument("--neutral", action="store_true")
     ap.add_argument("--clean-cache", action="store_true")
@@ -193,7 +205,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     jobs = [(w, s) for w in worlds for s in a.seeds]
     (bsha, btree), (nsha, ntree) = prepare_tree(repo, a.base, cache), prepare_tree(repo, a.new, cache)
     base, new = run_arm(btree, cache, bsha, jobs, a.ticks, a.jobs), run_arm(ntree, cache, nsha, jobs, a.ticks, a.jobs)
-    refuse_non_audit("base", base)
+    if a.legacy_base and a.self_check != "full":
+        print("REFUSED: --legacy-base needs --self-check full (the audit is proven only by a byte-identical repeat of every seed and world)", file=sys.stderr)
+        return 2
+    refuse_non_audit("base", base, legacy=a.legacy_base)
     refuse_non_audit("new", new)
     check_jobs = [] if a.self_check == "off" else jobs if a.self_check == "full" else [(w, 42) for w in worlds if (w, 42) in base]
     repeat = run_arm(btree, cache, bsha, check_jobs, a.ticks, a.jobs, repeat=True) if check_jobs else {}
@@ -202,7 +217,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"REFUSED: base-vs-base is not byte-identical for {bad}; the measurement is not host-independent", file=sys.stderr)
         return 2
     lines = [f"## Paired measurement: {a.step} (div {a.div})", "",
-             f"- base {bsha[:12]} -> new {nsha[:12]}; {', '.join(worlds)}; seeds {a.seeds}; {a.ticks} ticks; PYTHONHASHSEED={HASHSEED}; audit_mode and signals_zeroed recorded True in every run of both arms",
+             *(["- **legacy base, audit proven by repeat**: the base arm predates the determinism fix (no typed audit_mode/signals_zeroed in its manifest); its kernel was verified built with audit_mode and no_frame_pacing, and the full base-vs-base repeat below is byte-identical"] if a.legacy_base else []),
+             f"- base {bsha[:12]} -> new {nsha[:12]}; {', '.join(worlds)}; seeds {a.seeds}; {a.ticks} ticks; PYTHONHASHSEED={HASHSEED}; audit_mode and signals_zeroed recorded True in every run of " + ("the new arm (base: see the legacy line)" if a.legacy_base else "both arms"),
              (f"- base-vs-base self-check ({a.self_check}, {len(check_jobs)} runs): spread 0 (byte-identical final and start hashes, fates and counters)" if check_jobs else "- base-vs-base self-check: NOT RUN (--self-check off)"),
              f"- SE = sd(per-seed new-base)/sqrt({len(a.seeds)}); STOP = more people deaths by > {stats.SE_MULTIPLE:g}·SE AND > floor ({a.floor_per_seed:g} per seed = {a.floor_per_seed * len(a.seeds):g} total); fewer past both is REPORT-ONLY; SD 0 is not special-cased",
              ""]
