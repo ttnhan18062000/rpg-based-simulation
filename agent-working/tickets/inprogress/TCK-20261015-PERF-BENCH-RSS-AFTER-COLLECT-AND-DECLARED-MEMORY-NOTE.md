@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 A benchmark record's memory describes the engine, not the harness's disabled collector, and carries a report-only note against the profile's declared memory
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
