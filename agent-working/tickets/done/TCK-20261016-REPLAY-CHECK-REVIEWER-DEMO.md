@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261016-REPLAY-CHECK-REVIEWER-DEMO
-phase: inprogress
+phase: done
 date: 2026-10-16
 tags: [determinism, testing]
 ---
@@ -15,7 +15,7 @@ tags: [determinism, testing]
 `make replay-check`: a one-command reviewer demo that the same seed gives the same final state hash under the Canonical signal contract
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -83,7 +83,7 @@ Cleanup: the CLI never prints the run id on stdout (it only appears inside a wat
 `docs/guides/reviewer_replay_check.md`, a README "For reviewers" section (one link line; the determinism row is untouched), and a `replay-check` Makefile target (picked up by `make help`).
 
 ## Test Summary
-`tests/codebase/test_replay_check.py`: 14 tests against a fake CLI script (hash parsing, match 0, differ 1, crash / no hash / timeout 2, env var on both runs and no live pair by default, `--live` label with exit code unchanged, cleanup removes only its own run dirs, pid match is exact). `tests/codebase`: 491 passed, 2 skipped (after review fixes); real `make replay-check` rerun: same MATCH, data/runs empty. ruff clean on the two new files (`ruff check codebase` has 55 pre-existing findings, none in them).
+`tests/codebase/test_replay_check.py`: 14 tests against a fake CLI script (hash parsing, match 0, differ 1, crash / no hash / timeout 2, env var on both runs and no live pair by default, `--live` label with exit code unchanged, cleanup removes only its own run dirs, pid match is exact). `tests/codebase`: 491 passed, 2 skipped (after review fixes); all of `tests/tools` (Makefile edit): 4980 passed, 56 skipped, 1 xfailed; real `make replay-check` rerun: same MATCH, data/runs empty. ruff clean on the two new files (`ruff check codebase` has 55 pre-existing findings, none in them).
 
 Real run, `systemd-run --user --scope -p MemoryMax=3G make replay-check` (exit 0, `data/runs` left empty):
 ```
@@ -98,4 +98,4 @@ Real `--live --ticks 100` (exit 0): Canonical pair `95f0372b...` twice, MATCH; l
 codebase/reports/replay_check.py, tests/codebase/test_replay_check.py, Makefile, README.md, docs/guides/reviewer_replay_check.md, docs/REGISTRY.yaml
 
 ## Completion Summary
-TBD (tests/tools, knowledge-index and closure pending).
+`make replay-check` is in: seed 42 / 300 ticks gives the same final state hash twice under the Canonical signal contract (exit 0), with `--live` as an opt-in contrast labelled as a known gap (#585) that never changes the exit code. Review fixes (pid-reuse epoch guard, stderr reason on exit 2, guide hash note) are in e8be52dc4. Verification: tests/codebase 491 passed / 2 skipped; all of tests/tools 4980 passed / 56 skipped / 1 xfailed (Makefile edit); `make knowledge-index-update` ran; real `make replay-check` MATCH. Known limits: the cleanup depends on the run id embedding the pid and epoch (a CLI format change would make it remove nothing, never something else); the check proves nothing about LIVE runs or other seeds. No src/ change, no parity-ledger change.
