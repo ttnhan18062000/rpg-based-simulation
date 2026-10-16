@@ -39,6 +39,21 @@ from src.perf.benchmark_record import (
 logger = logging.getLogger(__name__)
 
 
+def _gc_collected_total() -> int:
+    """Objects the collector has freed so far, over all generations (``gc.get_stats()``)."""
+    return sum(int(generation["collected"]) for generation in gc.get_stats())
+
+
+def _malloc_trim() -> bool:
+    """Hand the allocator's freed pages back to the OS (glibc ``malloc_trim(0)``). False where it is unavailable; never raises."""
+    try:
+        import ctypes
+
+        return bool(ctypes.CDLL("libc.so.6").malloc_trim(0))
+    except (OSError, AttributeError):
+        return False
+
+
 class PerformanceRegressionError(Exception):
     """Raised when an engine phase exceeds its allotted time budget."""
     pass
@@ -57,19 +72,23 @@ class _Measured:
 
 @dataclass(frozen=True)
 class _CollectedMemory:
-    """Memory read with every unreachable object collected, before the sampled window and once after it (TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE).
+    """Memory read with every unreachable object collected, before the sampled window and after it (TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE).
 
-    The collector is disabled for the sampled ticks, so ``mem_rss_mb`` / ``peak_rss_mb`` include the cyclic garbage the engine makes meanwhile. These
-    readings do not: the first follows the ``gc.collect()`` that precedes the window, the second a ``gc.collect()`` taken after the window's wall and CPU
-    clocks have stopped. Freed arenas can stay mapped, so ``rss_after_mb`` is an upper bound on the working set; ``blocks_*`` (live Python allocations)
-    does not depend on the allocator returning memory to the OS.
+    The collector is disabled for the sampled ticks, so ``mem_rss_mb`` / ``peak_rss_mb`` include the cyclic garbage the engine makes meanwhile, and a
+    ``gc.collect()`` alone does not bring RSS back: the freed memory stays mapped in the allocator (measured: 402 MB after collect, 125.6 MB after
+    ``malloc_trim(0)``, against 99.6 MB at the end of warm-up). So there are three RSS readings: ``rss_before_window_mb`` (after the ``gc.collect()`` that
+    precedes the window, untrimmed: trimming before the window would hand pages back and make the sampled ticks fault them in again),
+    ``rss_after_collect_mb`` (after a ``gc.collect()`` taken once the window's wall and CPU clocks have stopped) and ``rss_after_trim_mb`` (after
+    ``malloc_trim(0)`` straight after it, ``None`` where glibc's is unavailable). ``blocks_*`` (live Python allocations) does not depend on the allocator.
+    ``gc_collected`` is the change of ``gc.get_stats()``' collected total over the window plus the end collect.
     """
 
     rss_before_mb: float
     blocks_before: int
-    rss_after_mb: float
+    rss_after_collect_mb: float
+    rss_after_trim_mb: Optional[float]
     blocks_after: int
-    unreachable_objects: int
+    gc_collected: int
     collect_s: float
 
 
@@ -138,7 +157,7 @@ class BenchHarness:
                 kernel.tick_once()
 
             gc.collect()
-            before_window = (self._rss_mb(), sys.getallocatedblocks())
+            before_window = (self._rss_mb(), sys.getallocatedblocks(), _gc_collected_total())
             gc_was_enabled = gc.isenabled()
             gc.disable()
 
@@ -238,12 +257,16 @@ class BenchHarness:
         finally:
             kernel.shutdown()
 
-    def _collect_and_read(self, before_window: Tuple[float, int]) -> _CollectedMemory:
-        """One full ``gc.collect()``, timed, then the RSS and live-block readings that pair with the ones taken before the sampled window."""
+    def _collect_and_read(self, before_window: Tuple[float, int, int]) -> _CollectedMemory:
+        """One full ``gc.collect()``, timed, then the RSS and live-block readings (and RSS again after ``malloc_trim``) that pair with those taken before the window."""
         start_ts = time.perf_counter()
-        unreachable_objects = gc.collect()
+        gc.collect()
         collect_s = time.perf_counter() - start_ts
-        return _CollectedMemory(before_window[0], before_window[1], self._rss_mb(), sys.getallocatedblocks(), unreachable_objects, collect_s)
+        rss_after_collect = self._rss_mb()
+        blocks_after = sys.getallocatedblocks()
+        trimmed = _malloc_trim()
+        rss_after_trim = self._rss_mb() if trimmed else None
+        return _CollectedMemory(before_window[0], before_window[1], rss_after_collect, rss_after_trim, blocks_after, _gc_collected_total() - before_window[2], collect_s)
 
     def _rss_mb(self) -> float:
         return float(self._process.memory_info().rss) / (1024 * 1024)
@@ -287,9 +310,9 @@ class BenchHarness:
         """Assemble the typed record from the numbers already collated. A failure here is logged and never fails the benchmark.
 
         ``memory_mb.rss_high_water`` and ``rss_delta`` come from RSS samples taken with the collector disabled, so they **include the cyclic garbage the
-        engine made during the window**; the ``*_collected*`` / ``rss_after_collect_mb`` keys (``collected``) do not. ``rss_over_declared`` is
-        ``rss_after_collect_mb / RuntimeProfile.max_ram_mb`` (report only, never a gate); the peak-based ratio is the separate key
-        ``peak_rss_over_declared``.
+        engine made during the window**; the after-collect keys (``collected``) do not. ``rss_over_declared`` is ``rss_after_trim_mb /
+        RuntimeProfile.max_ram_mb`` (report only, never a gate), or ``rss_after_collect_mb / max_ram_mb`` where the trim is unavailable, and
+        ``rss_over_declared_basis_trim`` says which (1.0 trim, 0.0 collect); the peak-based ratio is the separate key ``peak_rss_over_declared``.
         """
         try:
             wall_ms = [round(v, 4) for v in measured.tick_wall_ms]
@@ -337,19 +360,23 @@ class BenchHarness:
         if collected is None:
             return memory
         declared = float(self._profile.max_ram_mb)
+        rss_basis = collected.rss_after_trim_mb if collected.rss_after_trim_mb is not None else collected.rss_after_collect_mb
         memory.update(
             {
                 "rss_before_window_mb": round(collected.rss_before_mb, 2),
-                "rss_after_collect_mb": round(collected.rss_after_mb, 2),
-                "rss_collected_delta_mb": round(collected.rss_after_mb - collected.rss_before_mb, 2),
+                "rss_after_collect_mb": round(collected.rss_after_collect_mb, 2),
                 "allocated_blocks_delta": float(collected.blocks_after - collected.blocks_before),
-                "gc_unreachable_objects": float(collected.unreachable_objects),
+                "gc_collected_objects": float(collected.gc_collected),
                 "gc_collect_s": round(collected.collect_s, 4),
                 "declared_ram_mb": declared,
-                "rss_over_declared": round(collected.rss_after_mb / declared, 4),
+                "rss_over_declared": round(rss_basis / declared, 4),
+                "rss_over_declared_basis_trim": 1.0 if collected.rss_after_trim_mb is not None else 0.0,
                 "peak_rss_over_declared": round(result["mem_rss_mb"]["max"] / declared, 4),
             }
         )
+        if collected.rss_after_trim_mb is not None:
+            memory["rss_after_trim_mb"] = round(collected.rss_after_trim_mb, 2)
+            memory["rss_trim_delta_mb"] = round(collected.rss_after_trim_mb - collected.rss_before_mb, 2)
         return memory
 
     def _calculate_stats(self, values: List[float]) -> Dict[str, float]:

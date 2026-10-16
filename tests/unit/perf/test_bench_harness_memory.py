@@ -24,9 +24,10 @@ from tools.perf import baseline_lifecycle, tripwire
 PROFILE = PERF_PROFILES["PERF_512MB_LOCAL"]
 LEGACY_KEYS = {"rss_high_water", "rss_delta", "sample_every_ticks"}
 NEW_KEYS = {
-    "rss_before_window_mb", "rss_after_collect_mb", "rss_collected_delta_mb", "allocated_blocks_delta", "gc_unreachable_objects", "gc_collect_s",
-    "declared_ram_mb", "rss_over_declared", "peak_rss_over_declared",
+    "rss_before_window_mb", "rss_after_collect_mb", "rss_after_trim_mb", "rss_trim_delta_mb", "allocated_blocks_delta", "gc_collected_objects",
+    "gc_collect_s", "declared_ram_mb", "rss_over_declared", "rss_over_declared_basis_trim", "peak_rss_over_declared",
 }
+TRIM_KEYS = {"rss_after_trim_mb", "rss_trim_delta_mb"}
 
 
 class _Cycle:
@@ -69,8 +70,8 @@ def test_garbage_makes_the_old_fields_large_and_the_collected_delta_small(monkey
     harness, result = _run(monkeypatch, [], garbage_cycles=5)  # 5 x 2 MB per tick, 20 ticks: about 200 MB of uncollected garbage
     memory = harness.last_record.result.memory_mb
     assert memory["rss_delta"] > 40.0  # RSS sampled with the collector disabled grows with the garbage
-    assert memory["rss_collected_delta_mb"] < memory["rss_delta"] / 4  # collected to collected: the garbage is gone
-    assert memory["gc_unreachable_objects"] >= 100  # 5 cycles x 20 ticks, each an object (plus its dict)
+    assert memory["rss_after_collect_mb"] - memory["rss_before_window_mb"] < memory["rss_delta"] / 4  # collected to collected: the garbage is gone
+    assert memory["gc_collected_objects"] >= 100  # 5 cycles x 20 ticks, each an object (plus its dict), freed by the end collect or by the first gen-0 pass after gc.enable
     assert memory["allocated_blocks_delta"] < 5000  # live python blocks do not grow with collected garbage
     assert result["mem_rss_mb"]["delta"] == memory["rss_delta"] and result["peak_rss_mb"] == memory["rss_high_water"]
 
@@ -83,13 +84,15 @@ def test_the_result_dict_and_the_old_memory_keys_are_unchanged(monkeypatch: pyte
     assert memory["sample_every_ticks"] == 10
 
 
-def test_the_declared_ratio_is_the_collected_rss_over_the_profiles_max_ram(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_the_declared_ratio_is_the_trimmed_rss_over_the_profiles_max_ram(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(bench_harness, "_malloc_trim", lambda: True)
     for name in ("PERF_512MB_LOCAL", "PERF_2GB_LOCAL"):
         profile = PERF_PROFILES[name]
         harness, result = _run(monkeypatch, [], profile=profile)
         memory = harness.last_record.result.memory_mb
-        assert memory["declared_ram_mb"] == float(profile.max_ram_mb)
-        assert memory["rss_over_declared"] == pytest.approx(memory["rss_after_collect_mb"] / profile.max_ram_mb, abs=1e-4)
+        assert memory["declared_ram_mb"] == float(profile.max_ram_mb) and memory["rss_over_declared_basis_trim"] == 1.0
+        assert memory["rss_over_declared"] == pytest.approx(memory["rss_after_trim_mb"] / profile.max_ram_mb, abs=1e-4)
+        assert memory["rss_trim_delta_mb"] == pytest.approx(memory["rss_after_trim_mb"] - memory["rss_before_window_mb"], abs=0.02)
         assert memory["peak_rss_over_declared"] == pytest.approx(result["peak_rss_mb"] / profile.max_ram_mb, abs=1e-4)
 
 
@@ -109,6 +112,12 @@ def test_the_end_collect_comes_after_the_clocks_stop_and_gc_is_left_as_found(mon
         events.append("cpu_times")
         return real_cpu_times()
 
+    def logging_trim() -> bool:
+        events.append("trim")
+        return True
+
+    monkeypatch.setattr(bench_harness, "_malloc_trim", logging_trim)
+
     monkeypatch.setattr(gc, "collect", logging_collect)
     monkeypatch.setattr(harness, "_process", SimpleNamespace(cpu_times=logging_cpu_times, memory_info=harness._process.memory_info))
     (gc.enable if initially_enabled else gc.disable)()
@@ -124,6 +133,8 @@ def test_the_end_collect_comes_after_the_clocks_stop_and_gc_is_left_as_found(mon
     last_cpu = max(i for i, e in enumerate(events) if e == "cpu_times")
     end_collect = max(i for i, e in enumerate(events) if e.startswith("collect"))
     assert sampled[-1] < last_cpu < end_collect < events.index("shutdown")  # tick, clock stop, collect, shutdown
+    trims = [i for i, e in enumerate(events) if e == "trim"]
+    assert len(trims) == 1 and last_cpu < end_collect < trims[0] < events.index("shutdown")  # one trim, after the clocks and after the end collect, never before the window
     assert all(e == "tick:gc_enabled=False" for e in (events[i] for i in sampled))  # the latency window runs with the collector off
 
 
@@ -174,3 +185,31 @@ def test_a_1_1_record_without_the_new_keys_loads_and_reserialises_unchanged() ->
     record = dataclasses.replace(make_record(), schema_version="1.1")
     again = BenchmarkRecord.from_dict(record.to_dict())
     assert again == record and set(again.result.memory_mb) == LEGACY_KEYS
+
+
+def test_without_a_trim_the_keys_are_absent_and_the_ratio_says_it_used_the_collect_reading(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(bench_harness, "_malloc_trim", lambda: False)
+    harness, _ = _run(monkeypatch, [])
+    memory = harness.last_record.result.memory_mb
+    assert not TRIM_KEYS & set(memory) and set(memory) == LEGACY_KEYS | (NEW_KEYS - TRIM_KEYS)
+    assert memory["rss_over_declared_basis_trim"] == 0.0
+    assert memory["rss_over_declared"] == pytest.approx(memory["rss_after_collect_mb"] / PROFILE.max_ram_mb, abs=1e-4)
+
+
+def test_malloc_trim_never_raises_when_libc_is_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    import ctypes
+
+    def refuse(*_a: Any, **_k: Any) -> Any:
+        raise OSError("no libc.so.6")
+
+    monkeypatch.setattr(ctypes, "CDLL", refuse)
+    assert bench_harness._malloc_trim() is False
+
+
+def test_the_collected_total_reads_gc_stats_and_a_collect_raises_it() -> None:
+    before = bench_harness._gc_collected_total()
+    cycle: List[Any] = []
+    cycle.append(cycle)
+    del cycle
+    gc.collect()
+    assert bench_harness._gc_collected_total() > before

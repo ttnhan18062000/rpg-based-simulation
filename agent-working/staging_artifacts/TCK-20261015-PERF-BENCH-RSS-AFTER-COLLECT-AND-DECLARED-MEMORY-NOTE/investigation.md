@@ -34,3 +34,20 @@ Section 4 of the schema doc: a MINOR bump is "additive; absent optional fields a
 ## Risks
 - The end `gc.collect()` on a 1000+-tick corpus world with about 1.4 GB of garbage may take seconds and spike RSS briefly; it is after the timed window, but it is wall time added to the run (the corpus record is about 70 s today). Report the collect duration in the record.
 - Memory at the end collect can exceed the profile cap under `systemd-run MemoryMax` only if the garbage itself is near the cap; the old run already reached 1.7 GB, so the 3 GB rule from lead applies to the AC1 run.
+
+## Diagnostics after the first evidence run (2026-10-16): the after-collect RSS was not the working set
+First run, `simq_corpus_frontier_extended`, 1 process, 100 + 1000 ticks: `rss_after_collect_mb` 1701.8 against `rss_before_window_mb` 100.1, `gc_unreachable_objects` 1355, `allocated_blocks_delta` +211,398 (AC1 expected 100-200 MB; not met as written). Script `rss_diagnose.py` in this folder; 200 ticks after 100 warm-up on the same world, one process at a time under `MemoryMax=3G`, loadavg1 1.1 to 2.3 (diagnostics, not measurements):
+
+| run | warm-up MB | end of window MB | growth | after end collect | modes |
+|---|---|---|---|---|---|
+| gc off, canonical (census) | 102 | 402 | +285 | 402 | NORMAL 40, CONSTRAINED 44, DEGRADED 14, SURVIVAL 102 |
+| gc off, pinned | 97 | 404 | +292 | 404 | NORMAL 200 |
+| gc on, canonical | 102 | 113 | +9 | 109 | as above |
+| gc on, pinned | 100 | 113 | +11.5 | 108 | NORMAL 200 |
+| no BenchHarness, gc on, canonical | 104 | 109 | +3 | 109 | as above |
+| tracemalloc, gc off, canonical | 98 | 442 | +332 | 442 | as above |
+| gc off, canonical, then `malloc_trim(0)` | 100 | 402 | | 402, **125.6 after trim** | |
+
+- **Named cause:** the disabled collector lets cyclic garbage pile up (about 1.4 MB per tick); freeing it does not return the memory to the OS. Mode and the harness's history list are ruled out (pinned and canonical match; no-harness with the collector on is flat). `tracemalloc`: Python peak 324.6 MB during the window, 11.1 MB at its end; RSS minus traced 431 MB. Census (`gc.get_objects()`): 121k tracked objects at the end against 103k at warm-up, about 6 MB shallow growth (sets 3.2, dicts 1.8): no large holder.
+- **The unreachable-count puzzle** (a full collect found only 1230-1355 objects although about 325 MB was freed): explanation proposed by perf-planner and built into the harness, checked by the new `gc_collected_objects` (the `gc.get_stats()` collected total over the window and the end collect): `gc.disable()` leaves new objects in generation 0, and the `finally`'s `gc.enable()` comes before the clocks stop, so the first allocation after it triggers an automatic generation-0 collection that takes all of it; the explicit collect finds the leftovers. The 1000-tick run with the new keys is the test of it.
+- **Consequence for the design:** the first design (an after-collect reading) could not describe engine memory; the harness now trims straight after the end collect (outside the timed spans, never before the window, so the sampled ticks fault no pages they do not fault today) and `rss_over_declared` uses the after-trim reading, with `rss_over_declared_basis_trim` saying which basis was used.
