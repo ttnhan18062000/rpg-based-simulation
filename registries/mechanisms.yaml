@@ -317,6 +317,8 @@ mechanisms:
     implemented_by:
       - src/engine/movement.py::MovementSystem
       - src/systems/world_systems/navigation.py::NavigationSystem
+      - src/engine/route_search.py::route_next_step
+      - src/content/terrain_cost.py::terrain_cost
     verified:
       instrument: code_trace
       verdict: observed
@@ -463,6 +465,7 @@ mechanisms:
       - src/engine/apply.py::ApplyPath::_compute_entity_changes
       - src/engine/biological_needs.py::need_rates
       - src/engine/starvation.py::hp_loss
+      - src/worldbuilding/diet_declaration.py::require_declared_diet
       - src/engine/natural_healing.py::hp_gain
       - src/ai/goals/kind_group.py::kind_group
     verified:
@@ -715,6 +718,7 @@ mechanisms:
     implemented_by:
       - src/systems/lifecycle_systems/lifecycle.py::LifecycleSystem::resolve_lifecycle
       - src/ai/life_stage.py::LifeStageService
+      - src/core/death_cause.py::DeathRecord
     verified:
       instrument: scenario
       verdict: observed

@@ -82,8 +82,19 @@ def run_arm(tree: Path, cache: Path, sha: str, jobs: Sequence[Key], ticks: int, 
     return {(w, s): json.loads(result_path(cache, sha, ticks, w, s, repeat).read_text(encoding="utf-8")) for w, s in jobs}
 
 
-def refuse_non_audit(arm: str, runs: Dict[Key, Dict[str, Any]]) -> None:
-    """Both flags recorded by the run's own manifest: audit_mode and signals_zeroed must be True, else the comparison measures host speed."""
+def refuse_non_audit(arm: str, runs: Dict[Key, Dict[str, Any]], legacy: bool = False) -> None:
+    """Both flags recorded by the run's own manifest: audit_mode and signals_zeroed must be True, else the comparison measures host speed.
+
+    ``legacy`` (a base older than the determinism fix, whose manifest has no typed record): accept a manifest that says nothing (None) when the child verified
+    that the arm's kernel was built with audit_mode and no_frame_pacing; a manifest that records ``False`` is still refused. The caller must also have
+    proved the arm by a full base-vs-base repeat.
+    """
+    if legacy:
+        bad = [f"{arm}:{w}:{s}" for (w, s), r in runs.items()
+               if r.get("signals_zeroed") is False or r.get("audit_mode") is False or r.get("forced_flags") != {"audit_mode": True, "no_frame_pacing": True}]
+        if bad:
+            raise NonAuditRunError(f"legacy runs not forced to audit_mode and no_frame_pacing, or recorded live: {sorted(bad)}")
+        return
     require_host_independent_runs({f"{arm}:{w}:{s}": {"signals_zeroed": r.get("signals_zeroed")} for (w, s), r in runs.items()})
     off = [f"{arm}:{w}:{s}" for (w, s), r in runs.items() if r.get("audit_mode") is not True]
     if off:
@@ -100,7 +111,7 @@ def _counter_sum(runs: Sequence[Dict[str, Any]], prefix: str) -> Optional[int]:
     return sum(v for r in runs for k, v in r["counters"].items() if k.startswith(prefix))
 
 
-def world_section(world: str, base: List[Dict[str, Any]], new: List[Dict[str, Any]], floor_per_seed: float, headline: Optional[str]) -> Tuple[List[str], Dict[str, Any]]:
+def world_section(world: str, base: List[Dict[str, Any]], new: List[Dict[str, Any]], floor_per_seed: float, headline: Optional[str], report_only: bool = False) -> Tuple[List[str], Dict[str, Any]]:
     seeds = [r["seed"] for r in base]
     ids = [stats.people_ids(b["start"]) for b in base]
     mismatch = [stats.roster_mismatch(b["start"], n["start"]) for b, n in zip(base, new)]
@@ -109,7 +120,10 @@ def world_section(world: str, base: List[Dict[str, Any]], new: List[Dict[str, An
     diffs = [n - b for b, n in zip(pb, pn)]
     se, mean = stats.standard_error(diffs), stats.mean(diffs)
     verdict = stats.verdict(diffs, floor_per_seed)
+    verdict = stats.REPORT_ONLY if report_only and verdict else verdict  # a report-only reading never trips a stop
     ext = stats.extinction_verdict(base, new)
+    if report_only:
+        ext = {**ext, "stop": []}
     lines = [f"### {world}", "",
              f"People deaths (tick-0 base roster, keeps_coin, by id; n={len(ids[0])} per seed): base {pb} -> new {pn}",
              f"- total {sum(pb)} -> {sum(pn)} (delta {sum(pn) - sum(pb):+d}); mean per-seed delta {_fmt(mean)}, SE {se:.2f}, floor {floor_per_seed * len(diffs):g} total; verdict (more deaths past {stats.SE_MULTIPLE:g}·SE and the floor stops, fewer is report-only): **{verdict or 'no drift'}**"]
@@ -121,13 +135,14 @@ def world_section(world: str, base: List[Dict[str, Any]], new: List[Dict[str, An
     lines += ["", "| kind (all entities of the tick-0 roster) | dead base | dead new | mean delta | SE | verdict |", "|---|---|---|---|---|---|"]
     for k in kinds:
         d = [b - a for a, b in zip(kb[k], kn[k])]
-        lines.append(f"| {k} | {sum(kb[k])} | {sum(kn[k])} | {_fmt(stats.mean(d))} | {stats.standard_error(d):.2f} | {stats.verdict(d, floor_per_seed)} |")
+        lines.append(f"| {k} | {sum(kb[k])} | {sum(kn[k])} | {_fmt(stats.mean(d))} | {stats.standard_error(d):.2f} | {(stats.REPORT_ONLY if report_only and stats.verdict(d, floor_per_seed) else stats.verdict(d, floor_per_seed))} |")
     cb, cn = sum((stats.causes_by_kind(r) for r in base), stats.Counter()), sum((stats.causes_by_kind(r) for r in new), stats.Counter())
     moved = sorted(k for k in set(cb) | set(cn) if cb[k] != cn[k])
     lines += ["", f"Deaths by kind|cause (death_record), rows that moved: " + (", ".join(f"{k} {cb[k]}->{cn[k]}" for k in moved) or "none")]
     ab, an = sum((stats.alive_by_kind(r) for r in base), stats.Counter()), sum((stats.alive_by_kind(r) for r in new), stats.Counter())
     lines.append("Alive at end by kind (sum of seeds): " + ", ".join(f"{k} {ab[k]}->{an[k]}" for k in sorted(set(ab) | set(an))))
     lines.append(f"Added after tick 0 (count of seeds' ids): base {sum(len(stats.added(r)) for r in base)} -> new {sum(len(stats.added(r)) for r in new)}")
+    lines.append(("REPORT-ONLY reading: STOP is suppressed; extinct in the new arm only: " + str(sorted(stats.extinction_verdict(base, new)['stop']) or 'none')) if report_only else "")
     lines.append(f"Extinctions: STOP {ext['stop'] or 'none'}; base-state (extinct in both arms) {ext['base_state'] or 'none'}; recovered {ext['recovered'] or 'none'}")
     lines.append("")
     for name, prefix in (("flee ticks", "flee_ticks"), ("flee episodes", "flee_episodes"), ("pursuit ticks", "pursuit_ticks"), ("pursuit episodes", "pursuit_episodes"),
@@ -146,8 +161,8 @@ def world_section(world: str, base: List[Dict[str, Any]], new: List[Dict[str, An
     return lines, row
 
 
-def watch_rows(step: str, div: str, rows: Sequence[Dict[str, Any]]) -> List[str]:
-    out = ["### Watch-table rows (cumulative table, D76)", "", "| Step | Div | World | People deaths base->new | Delta | SE | Extinctions |", "|---|---|---|---|---|---|---|"]
+def watch_rows(step: str, div: str, rows: Sequence[Dict[str, Any]], report_only: bool = False) -> List[str]:
+    out = ["### Watch-table rows (cumulative table, D76)" + (" - REPORT-ONLY reading, never trips a stop" if report_only else ""), "", "| Step | Div | World | People deaths base->new | Delta | SE | Extinctions |", "|---|---|---|---|---|---|---|"]
     for r in rows:
         ext = ("STOP " + ", ".join(r["stop"])) if r["stop"] else "none"
         flag = f" ({r['verdict']})" if r["verdict"] else ""
@@ -179,6 +194,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--jobs", type=int, default=2, help="parallel runs (memory: the reaper kills at 3 heavy processes)")
     ap.add_argument("--floor-per-seed", type=float, default=stats.FLOOR_PER_SEED, help="people deaths per seed a world's delta must exceed (owner's D76 floor: 1)")
     ap.add_argument("--self-check", choices=("seed42", "full", "off"), default="seed42")
+    ap.add_argument("--legacy-base", action="store_true", help="accept a base older than the determinism fix (no typed audit_mode/signals_zeroed in its manifest) ONLY with a full base-vs-base repeat")
+    ap.add_argument("--legacy-new", action="store_true", help="the same for the NEW arm (a pre-fix commit read against the stop base); the new arm is then repeated in full too")
+    ap.add_argument("--report-only", action="store_true", help="suppress STOP (verdicts and extinctions) and label the whole output report-only")
     ap.add_argument("--headline", default=None, help="a ledger counter prefix to show as the step's headline metric")
     ap.add_argument("--neutral", action="store_true")
     ap.add_argument("--clean-cache", action="store_true")
@@ -193,25 +211,33 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     jobs = [(w, s) for w in worlds for s in a.seeds]
     (bsha, btree), (nsha, ntree) = prepare_tree(repo, a.base, cache), prepare_tree(repo, a.new, cache)
     base, new = run_arm(btree, cache, bsha, jobs, a.ticks, a.jobs), run_arm(ntree, cache, nsha, jobs, a.ticks, a.jobs)
-    refuse_non_audit("base", base)
-    refuse_non_audit("new", new)
+    if (a.legacy_base or a.legacy_new) and a.self_check != "full":
+        print("REFUSED: --legacy-base / --legacy-new need --self-check full (the audit is proven only by a byte-identical repeat of every seed and world)", file=sys.stderr)
+        return 2
+    refuse_non_audit("base", base, legacy=a.legacy_base)
+    refuse_non_audit("new", new, legacy=a.legacy_new)
     check_jobs = [] if a.self_check == "off" else jobs if a.self_check == "full" else [(w, 42) for w in worlds if (w, 42) in base]
     repeat = run_arm(btree, cache, bsha, check_jobs, a.ticks, a.jobs, repeat=True) if check_jobs else {}
     bad = stats.self_check_spread([base[k] for k in check_jobs], [repeat[k] for k in check_jobs])
+    if a.legacy_new:
+        repeat_new = run_arm(ntree, cache, nsha, check_jobs, a.ticks, a.jobs, repeat=True)
+        bad += [f"new:{x}" for x in stats.self_check_spread([new[k] for k in check_jobs], [repeat_new[k] for k in check_jobs])]
     if bad:
         print(f"REFUSED: base-vs-base is not byte-identical for {bad}; the measurement is not host-independent", file=sys.stderr)
         return 2
-    lines = [f"## Paired measurement: {a.step} (div {a.div})", "",
-             f"- base {bsha[:12]} -> new {nsha[:12]}; {', '.join(worlds)}; seeds {a.seeds}; {a.ticks} ticks; PYTHONHASHSEED={HASHSEED}; audit_mode and signals_zeroed recorded True in every run of both arms",
+    lines = [f"## Paired measurement: {a.step} (div {a.div})" + (" - REPORT-ONLY" if a.report_only else ""), "",
+             *(["- **legacy base, audit proven by repeat**: the base arm predates the determinism fix (no typed audit_mode/signals_zeroed in its manifest); its kernel was verified built with audit_mode and no_frame_pacing, and the full base-vs-base repeat below is byte-identical"] if a.legacy_base else []),
+             *(["- **legacy new arm, audit proven by repeat**: the new arm also predates the determinism fix; its kernel was verified forced and its own full repeat is byte-identical"] if a.legacy_new else []),
+             f"- base {bsha[:12]} -> new {nsha[:12]}; {', '.join(worlds)}; seeds {a.seeds}; {a.ticks} ticks; PYTHONHASHSEED={HASHSEED}; audit_mode and signals_zeroed recorded True in every run of " + ("the new arm (base: see the legacy line)" if a.legacy_base and not a.legacy_new else "neither arm (see the legacy lines)" if a.legacy_new else "both arms"),
              (f"- base-vs-base self-check ({a.self_check}, {len(check_jobs)} runs): spread 0 (byte-identical final and start hashes, fates and counters)" if check_jobs else "- base-vs-base self-check: NOT RUN (--self-check off)"),
              f"- SE = sd(per-seed new-base)/sqrt({len(a.seeds)}); STOP = more people deaths by > {stats.SE_MULTIPLE:g}·SE AND > floor ({a.floor_per_seed:g} per seed = {a.floor_per_seed * len(a.seeds):g} total); fewer past both is REPORT-ONLY; SD 0 is not special-cased",
              ""]
     rows = []
     for w in worlds:
-        sect, row = world_section(w, [base[(w, s)] for s in a.seeds], [new[(w, s)] for s in a.seeds], a.floor_per_seed, a.headline)
+        sect, row = world_section(w, [base[(w, s)] for s in a.seeds], [new[(w, s)] for s in a.seeds], a.floor_per_seed, a.headline, a.report_only)
         lines += sect
         rows.append(row)
-    lines += watch_rows(a.step, a.div, rows)
+    lines += watch_rows(a.step, a.div, rows, a.report_only)
     text = "\n".join(lines) + "\n"
     print(text)
     if a.out:
