@@ -34,12 +34,14 @@ def read_version(binary: str, timeout: float = 15.0) -> str:
     return (done.stdout + done.stderr).strip()
 
 
-def strict_problem(*, binary_present: bool, bwrap_present: bool, version_output: str, pinned: str) -> str | None:
+def strict_problem(*, binary_present: bool, bwrap_present: bool, version_output: str, pinned: str, bwrap_problem: str | None = None) -> str | None:
     """Why a strict run cannot proceed, or None when it can."""
     if not binary_present:
         return "strict mode: the Aseprite binary is missing (ASEPRITE_MCP_BINARY)"
     if not bwrap_present:
         return "strict mode: bwrap is missing"
+    if bwrap_problem:
+        return f"strict mode: bwrap cannot run here: {bwrap_problem}"
     found = parse_version(version_output)
     if found != pinned:
         return f"strict mode: Aseprite reports version {found or version_output!r}, pinned {pinned!r}"
