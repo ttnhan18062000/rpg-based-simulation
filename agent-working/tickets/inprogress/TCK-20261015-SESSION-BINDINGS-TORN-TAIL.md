@@ -82,3 +82,5 @@ tools/sessions/state.py, tools/sessions/session_start_hook.py, tests/tools/test_
 OPEN: code fix done. The repair of the rpg-implementer file and the check that its next SessionStart shows card and note are pending the owner's run; this ticket stays in inprogress/ until then and is left out of `Closes:`.
 
 Note: the batch's other tickets are closed in `agent-working/tickets/done/`, and the batch folder (SEQUENCE.md) is already in `agent-working/tickets/done/w41-retro-followups/`; this ticket stays here, in `inprogress/`, only until the owner's repair of rpg-implementer's file is confirmed.
+
+Update 2026-10-16 (planner's note): with the self-healing `append_binding`, rpg-implementer's torn file repairs itself on its next SessionStart that runs this code (the tail goes to a `bindings.jsonl.torn-<time>` sidecar), so the owner's manual repair is now optional. The ticket closes once a start of that seat is seen to show card and note AND the sidecar exists, whichever way the file got repaired. That start needs a worktree with this batch's code merged (`rpg` lags origin/main; see TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START).
