@@ -218,8 +218,8 @@
   v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11. src/engine/tactical.py (a VANGUARD at an identified chokepoint holds with movement mode HOLD and an ENTITY_ACT HOLD, reason HOLD_CHOKEPOINT); src/engine/domain/action_router.py (HOLD is a typed no-op success); src/engine/pipeline_phases/actions.py (a HOLD success ends its task so the brain re-decides on its cadence).'
   proof_type: regression
   test_path: tests/unit/combat/test_chokepoint_hold.py
-  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.90.
-  support_boundary: 'The hold was reported as UNSUPPORTED_ACTION on every emission before (the tile was still held by the movement mode); the reporting is the only change. The path needs WALL tiles with a one-tile gap and is not reached in the pinned corpus worlds (0 decisions in 30 runs).'
+  divergence_note: See docs/guidelines/intentional_divergences.md Sections 2.90 and 2.130.
+  support_boundary: 'The hold was reported as UNSUPPORTED_ACTION on every emission before (the tile was still held by the movement mode); the reporting is the only change. Since divergence 2.130 a chokepoint is a one-tile gap between two blocked tiles (state.blocked_tiles, the tiles structures occupy), not between terrain tiles named WALL; before it the path was never reached (0 decisions in 30 runs), so the hold now runs wherever structures leave such a gap.'
 - id: COMB-016
   text: "`test_cardinal_opposite_bracketing`: Cardinal opposite bracketing \u2014\
     \ Verify that two allies bracket a target from opposite sides.."
