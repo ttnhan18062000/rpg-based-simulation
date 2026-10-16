@@ -112,6 +112,8 @@ def main(argv: List[str] | None = None) -> int:
         if not args.no_harness:
             gc.collect()
         report["rss_after_warmup_mb"] = round(rss_mb(), 1)
+        blocks_before = sys.getallocatedblocks()
+        gc_collected_before = sum(int(g["collected"]) for g in gc.get_stats())
         before = type_census() if args.census else None
         lens_before = {**container_lengths(kernel, "kernel"), **container_lengths(kernel._state, "state", 0)} if args.census else None
         snap_before = None
@@ -147,6 +149,8 @@ def main(argv: List[str] | None = None) -> int:
         if not args.no_harness:
             report["end_collect_unreachable"] = gc.collect()
         report["rss_after_end_collect_mb"] = round(rss_mb(), 1)
+        report["allocated_blocks_delta"] = sys.getallocatedblocks() - blocks_before
+        report["gc_collected_objects"] = sum(int(g["collected"]) for g in gc.get_stats()) - gc_collected_before
         if args.trim:
             import ctypes
 
