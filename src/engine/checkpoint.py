@@ -100,6 +100,8 @@ class CanonicalStateHasher:
             "last_calamity_tick": state.last_calamity_tick,
             "town_center": state.town_center
         }
+        if getattr(state, "grief_drained_tick", -1) != -1:  # in the canonical form only once a grief drain has happened (keeps untouched digests)
+            data["grief_drained_tick"] = state.grief_drained_tick
         
         # 2. Entities (Sorted by ID)
         sorted_entities = {}

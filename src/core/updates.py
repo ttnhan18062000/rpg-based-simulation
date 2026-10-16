@@ -1037,6 +1037,7 @@ class StateUpdate:
     groups_remove: List[int] = field(default_factory=list)
     maturity_set: Optional[int] = None
     last_calamity_tick_set: Optional[int] = None
+    grief_drained_tick_set: Optional[int] = None
     rng_checkpoint: Any = None
     transaction_trace: List[str] = field(default_factory=list)
     rejections_delta: Dict[str, int] = field(default_factory=dict) # Rejection counters for this tick
@@ -1075,7 +1076,7 @@ class StateUpdate:
                 not self.camp_updates and not self.world_updates and
                 not self.resource_updates and not self.home_storage_updates and
                 not self.groups_add_or_update and not self.groups_remove and
-                self.maturity_set is None and self.last_calamity_tick_set is None and
+                self.maturity_set is None and self.last_calamity_tick_set is None and self.grief_drained_tick_set is None and
                 self.rng_checkpoint is None and not self.transaction_trace and
                 not self.rejections_delta and self.pressure_signals_set is None and
                 self.current_mode_set is None and self.current_policy_set is None and
@@ -1150,6 +1151,7 @@ class StateUpdate:
         # Single values
         maturity = self.maturity_set
         calamity = self.last_calamity_tick_set
+        grief_drained = self.grief_drained_tick_set
         node_id = self.next_node_id_set
         ent_id = self.next_entity_id_set
         item_inst_id = self.next_item_instance_id_set
@@ -1223,6 +1225,7 @@ class StateUpdate:
             # Single values
             if other.maturity_set is not None: maturity = other.maturity_set
             if other.last_calamity_tick_set is not None: calamity = other.last_calamity_tick_set
+            if other.grief_drained_tick_set is not None: grief_drained = other.grief_drained_tick_set
             if other.next_node_id_set is not None: node_id = other.next_node_id_set
             if other.next_entity_id_set is not None: ent_id = other.next_entity_id_set
             if other.next_item_instance_id_set is not None: item_inst_id = other.next_item_instance_id_set
@@ -1265,6 +1268,7 @@ class StateUpdate:
             processed_transaction_ids=list(new_processed_ids),
             maturity_set=maturity,
             last_calamity_tick_set=calamity,
+            grief_drained_tick_set=grief_drained,
             next_node_id_set=node_id,
             next_entity_id_set=ent_id,
             rng_checkpoint=rng,

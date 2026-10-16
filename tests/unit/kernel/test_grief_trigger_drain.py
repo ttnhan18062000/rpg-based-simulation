@@ -1,12 +1,12 @@
 """Unit tests for Kernel._drain_pending_grief_triggers() and
 Kernel.drain_pending_triggers_at_teardown() (TCK-20260824-GRIEF-NEMESIS-REACHABILITY,
-Steps 3/5/5b).
+Steps 3/5/5b; the owed triggers are read from state, decision 80).
 
 drain_pending_triggers_at_teardown() is a one-shot resolution+apply flush for a death
 detected on a Kernel run's FINAL tick, which _phase_resolution never gets a tick N+1 to
 drain into — reuses the same AuthoritativeApplyPipeline.refine() + ApplyPath.
 apply_generation() commit route as a normal tick, but must NOT advance tick/world_time
-and must be a true no-op (no state rebuild) when nothing is queued.
+and must be a true no-op (no state rebuild) when no trigger is owed, and a second flush finds nothing (the `grief_drained_tick` watermark).
 """
 from __future__ import annotations
 
@@ -14,6 +14,10 @@ import pytest
 
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.core.builder import V2EntityBuilder
+from dataclasses import replace
+
+from src.core.death_cause import DeathCause, DeathRecord
+from src.core.grief_triggers import pending_grief_triggers
 from src.core.state import AuthoritativeState
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
@@ -39,15 +43,26 @@ def _make_kernel(entities=None, tick: int = 5, world_time: int = 500, seed: int 
     return Kernel(_profile(), state, rng, flags={"no_replay": True})
 
 
-def _griever(entity_id: int = 1):
-    return V2EntityBuilder(entity_id).kind("worker").location(0.0, 0.0).combat(hp=80, max_hp=80).build()
+def _griever(entity_id: int = 1, ally_id: int = 99, trust: float = 0.75):
+    e = V2EntityBuilder(entity_id).kind("worker").location(0.0, 0.0).combat(hp=80, max_hp=80).build()
+    return replace(e, social=replace(e.social, trust_history={ally_id: trust}))
+
+
+def _dead_ally(ally_id: int = 99, death_tick: int = 4):
+    e = V2EntityBuilder(ally_id).kind("worker").location(1.0, 0.0).build()
+    return replace(e, lifecycle=replace(e.lifecycle, active=False, death_record=DeathRecord(cause=DeathCause.COMBAT, tick=death_tick)))
+
+
+def _kernel_with_owed_trigger(tick: int = 5, world_time: int = 500, ally_id: int = 99) -> Kernel:
+    """A kernel whose state owes one grief trigger: the ally died on tick `tick - 1`."""
+    return _make_kernel(entities={1: _griever(1, ally_id), ally_id: _dead_ally(ally_id, tick - 1)}, tick=tick, world_time=world_time)
 
 
 class TestDrainPendingTriggersAtTeardownNoop:
     def test_noop_when_empty(self, monkeypatch):
         kernel = _make_kernel()
         try:
-            assert kernel._pending_grief_triggers == []
+            assert pending_grief_triggers(kernel.state) == []
             prior_state = kernel.state
 
             from src.engine.pipeline import AuthoritativeApplyPipeline
@@ -74,27 +89,24 @@ class TestDrainPendingTriggersAtTeardownNoop:
 
 
 class TestDrainPendingTriggersAtTeardownNonEmpty:
-    def test_applies_grief_concern_and_clears_queue(self):
-        entity = _griever(1)
-        kernel = _make_kernel(entities={1: entity})
+    def test_applies_grief_concern_and_advances_the_watermark(self):
+        kernel = _kernel_with_owed_trigger(ally_id=99)
         try:
-            kernel._pending_grief_triggers = [(1, 99, 0.6)]
+            assert pending_grief_triggers(kernel.state) != []
 
             kernel.drain_pending_triggers_at_teardown()
 
-            assert kernel._pending_grief_triggers == []
+            assert pending_grief_triggers(kernel.state) == []
+            assert kernel.state.grief_drained_tick == 4
             concerns = kernel.state.entities[1].strategic.concerns
             assert "grief_ally_99" in concerns
-            assert concerns["grief_ally_99"].urgency == pytest.approx(0.6)
+            assert concerns["grief_ally_99"].urgency == pytest.approx(round(min(1.0, 0.75 * 0.8), 6))
         finally:
             kernel.shutdown()
 
     def test_does_not_advance_tick_or_world_time(self):
-        entity = _griever(1)
-        kernel = _make_kernel(entities={1: entity}, tick=7, world_time=777)
+        kernel = _kernel_with_owed_trigger(tick=7, world_time=777)
         try:
-            kernel._pending_grief_triggers = [(1, 42, 0.5)]
-
             kernel.drain_pending_triggers_at_teardown()
 
             assert kernel.state.tick == 7
@@ -106,14 +118,25 @@ class TestDrainPendingTriggersAtTeardownNonEmpty:
         """Unlike the no-op case, a real drain reassigns self._state to a new object
         (via ApplyPath.apply_generation), since StrategicPatch application replaces the
         entity and therefore the entities dict."""
-        entity = _griever(1)
-        kernel = _make_kernel(entities={1: entity})
+        kernel = _kernel_with_owed_trigger()
         try:
             prior_state = kernel.state
-            kernel._pending_grief_triggers = [(1, 5, 0.4)]
 
             kernel.drain_pending_triggers_at_teardown()
 
             assert kernel.state is not prior_state
+        finally:
+            kernel.shutdown()
+
+    def test_a_second_flush_finds_nothing(self):
+        """The watermark makes the flush idempotent: the trigger fires exactly once."""
+        kernel = _kernel_with_owed_trigger()
+        try:
+            kernel.drain_pending_triggers_at_teardown()
+            after_first = kernel.state
+
+            kernel.drain_pending_triggers_at_teardown()
+
+            assert kernel.state is after_first
         finally:
             kernel.shutdown()

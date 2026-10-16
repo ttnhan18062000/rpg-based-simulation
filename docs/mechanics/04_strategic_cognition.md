@@ -170,41 +170,28 @@ respectively.
 running episode now injects the same `grief_ally_{dead_ally_id}` `SOCIAL_THREAT` concern within
 the same episode, through the authoritative pipeline rather than a direct `EntityState` return:
 
-1. `EventExtractor.detect_grief_triggers()` (`src/observability/event_extractor.py:1665-1706`)
-   is called from `Kernel._phase_observability()` (`src/engine/kernel.py:1009`), immediately
-   after that phase's own `EventExtractor.extract()` call. It re-walks the same
-   `lifecycle.active: True→False` transition condition used for death detection and returns
-   `(griever_id, dead_ally_id, urgency)` triples for every currently-alive entity whose
-   `entity.social.trust_history` toward the newly-dead entity meets `ALLY_TRUST_THRESHOLD`
-   (`0.30`, `src/core/social_constants.py` — re-exported by `grief_urgency.py` for its own
-   callers). `urgency = round(min(1.0, trust * 0.8), 6)` — the identical
-   formula `CampaignOrchestrator._advance_grief_urgencies()` uses, so the two paths cannot
-   diverge in value.
-2. Because Observability runs *after* that tick's own `ApplyPath` pass in the 7-phase kernel loop
-   (`docs/engine/kernel.md`), the resulting mutation cannot land in the same tick that detected
-   the death. `Kernel._phase_observability()` records a `GriefUrgencyTriggeredEvent` immediately
-   (`kernel.py:1008-1012`) and queues each triple onto `Kernel._pending_grief_triggers`
-   (`kernel.py:1013`).
-3. On the *next* tick's `_phase_resolution()`, `Kernel._drain_pending_grief_triggers()`
-   (`kernel.py:692-730`) converts each queued triple into a `StrategicUpdate` via
-   `GriefUrgencyImporter.build_strategic_update()` (`grief_urgency.py:81-91`) — built from the
-   same `_build_grief_concern()` helper (`grief_urgency.py:45-63`) Path 1's `apply()` uses, so
-   the concern id/shape cannot drift between the two paths. The `StrategicUpdate` is merged into
-   that tick's `entity_updates` (`EntityUpdate.merge()`, preserving any decision system's own
-   update for the same entity) and committed through the normal `AuthoritativeApplyPipeline.
-   refine()` / `ApplyPath` route (`kernel.py:635`, `:659-664`) — the same authoritative route
-   `src/engine/tactical.py` already uses for its own `StrategicUpdate`s. This is the durable-state
-   rule this mechanism now satisfies for any mid-tick caller, which the Path 1 direct-`EntityState`
-   -return shape could not.
-4. **Last-tick edge case:** a death on an episode's *final* tick has no subsequent tick to drain
-   into. `Kernel.drain_pending_triggers_at_teardown()` (`kernel.py:732-754`) is a one-shot
-   resolution+apply flush against the current (final) state — reusing
-   `_drain_pending_grief_triggers()` and the same `AuthoritativeApplyPipeline.refine()` +
-   `ApplyPath.apply_generation()` commit route, but running none of the other 6 kernel phases and
-   not advancing `tick`/`world_time`. `ScenarioRuntimeService.flush_pending_grief_triggers()`
-   (`src/engine/scenario_runtime.py:264`) invokes it, and `CampaignOrchestrator.run_episode()`
-   (`src/domains/campaigns/orchestrator.py:178`) calls that before reading `svc.final_state` —
-   guaranteeing the same-episode injection guarantee holds even on the terminal tick.
+1. **Detection reads state (decision 80, grief as state).** `pending_grief_triggers(state)` (`src/core/grief_triggers.py`) is a pure function of
+   `AuthoritativeState`: every body with `lifecycle.active == False` whose `lifecycle.death_record.tick == state.tick - 1` (it died on the previous
+   tick, the lifecycle resolver wrote the record) is a death owed a grief, and every still-active entity whose `entity.social.trust_history` toward it
+   meets `ALLY_TRUST_THRESHOLD` (`0.30`, `src/core/social_constants.py`) yields `(griever_id, dead_ally_id, urgency)` with
+   `urgency = round(min(1.0, trust * 0.8), 6)`, the formula `CampaignOrchestrator._advance_grief_urgencies()` uses. Nothing depends on the
+   observability mode.
+2. **The watermark is typed state.** `AuthoritativeState.grief_drained_tick` (default `-1`) is the newest death tick whose triggers have been applied. It
+   is written only through `StateUpdate.grief_drained_tick_set` and the apply path, in the same update as the `StrategicUpdate`s, and a death whose tick is
+   at or below it is never owed again. It is in the canonical data and the replay fingerprint only once it is not `-1`, so every state without a grief
+   drain keeps its digest. There is no kernel-side list.
+3. On a tick's `_phase_resolution()`, `Kernel._drain_pending_grief_triggers()` converts each owed trigger into a `StrategicUpdate` via
+   `GriefUrgencyImporter.build_strategic_update()` (`grief_urgency.py`) — built from the same `_build_grief_concern()` helper Path 1's `apply()` uses, so
+   the concern id/shape cannot drift between the two paths. The `StrategicUpdate` is merged into that tick's `entity_updates` (`EntityUpdate.merge()`,
+   preserving any decision system's own update for the same entity) and committed through the normal `AuthoritativeApplyPipeline.refine()` /
+   `ApplyPath` route, together with `grief_drained_tick_set`. The mutation therefore lands one tick after the death, as before.
+   `Kernel._phase_observability()` only reports: it builds a `GriefUrgencyTriggeredEvent` from the same function and emits nothing when observability is
+   `OFF`; the authoritative outcome is the same either way.
+4. **Last-tick edge case:** a death on an episode's *final* tick has no subsequent tick to drain into. `Kernel.drain_pending_triggers_at_teardown()` is a
+   one-shot resolution+apply flush against the current (final) state — the same owed triggers from state, the same commit route, no other kernel phase,
+   `tick`/`world_time` not advanced — and it sets `grief_drained_tick`, so a second flush, or a resume from a checkpoint taken after the death tick, applies
+   each trigger exactly once. `ScenarioRuntimeService.flush_pending_grief_triggers()` invokes it, and `CampaignOrchestrator.run_episode()` calls that
+   before reading `svc.final_state`.
 
 **Nemesis relations do not (yet) have a mid-episode path.** `NemesisRelationImporter.
 build_strategic_update()` (`grief_urgency.py:135-150`) exists for architectural symmetry with
