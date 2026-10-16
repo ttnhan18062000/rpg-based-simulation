@@ -7738,6 +7738,20 @@
   - agent-monitoring
   - data-quality
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED.md
+  ticket_id: TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED
+  title: 'publish-images: the SBOM attestation fails `cosign verify-attestation --type
+    spdxjson`; pin cosign and gate the job on verification'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - .github/workflows/publish-images.yml
+  artifact_files: []
+  tags:
+  - platform
+  - security
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261015-DEPENDABOT-DOCKER-IGNORE-PYTHON-MINOR-AND-UV.md
   ticket_id: TCK-20261015-DEPENDABOT-DOCKER-IGNORE-PYTHON-MINOR-AND-UV
   title: 'Dependabot docker ecosystem: stop proposing Python minor-line moves and
