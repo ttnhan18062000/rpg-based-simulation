@@ -16,6 +16,7 @@ from tools.perf import baseline_lifecycle, rerun_baselines as rr, tripwire
 
 
 REAL_RUN = subprocess.run
+CAUSE_UNDER_TEST = "TCK-20261014-PERF-UNIT-CAUSE"
 REAL_WAIT = rr.wait_for_quiet_window  # the real function, for the tests of the wait itself
 
 
@@ -134,7 +135,7 @@ def test_record_runs_three_fresh_processes_and_writes_the_median_candidate_witho
         return subprocess.CompletedProcess(argv, 0)
 
     monkeypatch.setattr(rr.subprocess, "run", fake_run)
-    assert rr.main(["record", "idle_100_concurrent", "--out-root", str(tmp_path)]) == 0
+    assert rr.main(["record", "idle_100_concurrent", "--cause", CAUSE_UNDER_TEST, "--out-root", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     summary = json.loads((tmp_path / "idle_100_concurrent" / "summary.json").read_text(encoding="utf-8"))
     assert summary["median_run"] == 3 and summary["noisy"] is False and len(summary["runs"]) == 3
@@ -155,7 +156,7 @@ def test_a_noisy_record_is_reported_and_no_promote_command_is_printed(tmp_path, 
         return subprocess.CompletedProcess(argv, 0)
 
     monkeypatch.setattr(rr.subprocess, "run", fake_run)
-    assert rr.main(["record", "movement_100_concurrent", "--out-root", str(tmp_path)]) == 0
+    assert rr.main(["record", "movement_100_concurrent", "--cause", CAUSE_UNDER_TEST, "--out-root", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "NOISY" in out and "PROMOTE:" not in out
     assert json.loads((tmp_path / "movement_100_concurrent" / "summary.json").read_text(encoding="utf-8"))["noisy"] is True
@@ -163,7 +164,7 @@ def test_a_noisy_record_is_reported_and_no_promote_command_is_printed(tmp_path, 
 
 def test_a_failing_run_stops_the_record_with_exit_one(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(rr.subprocess, "run", lambda argv, env=None, check=False, **kw: subprocess.CompletedProcess(argv, 3))
-    assert rr.main(["record", "idle_100_local", "--out-root", str(tmp_path)]) == 1
+    assert rr.main(["record", "idle_100_local", "--cause", CAUSE_UNDER_TEST, "--out-root", str(tmp_path)]) == 1
 
 
 def test_a_record_that_left_normal_is_reported_and_no_promote_command_is_printed(tmp_path, monkeypatch, capsys) -> None:
@@ -180,7 +181,7 @@ def test_a_record_that_left_normal_is_reported_and_no_promote_command_is_printed
         return subprocess.CompletedProcess(argv, 0)
 
     monkeypatch.setattr(rr.subprocess, "run", fake_run)
-    assert rr.main(["record", "strategic_100_local", "--out-root", str(tmp_path)]) == 0
+    assert rr.main(["record", "strategic_100_local", "--cause", CAUSE_UNDER_TEST, "--out-root", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "NOT A BASELINE" in out and "CONSTRAINED" in out and "PROMOTE:" not in out
     assert json.loads((tmp_path / "strategic_100_local" / "summary.json").read_text(encoding="utf-8"))["off_normal"] == ["CONSTRAINED"]
@@ -286,9 +287,9 @@ def test_record_runs_five_fresh_processes_for_a_named_record_and_three_for_any_o
         return subprocess.CompletedProcess(argv, 0)
 
     monkeypatch.setattr(rr.subprocess, "run", fake_run)
-    assert rr.cmd_record("combat_10_local", tmp_path) == 0 and launched == ["combat_10_local"] * 5
+    assert rr.cmd_record("combat_10_local", tmp_path, CAUSE_UNDER_TEST) == 0 and launched == ["combat_10_local"] * 5
     launched.clear()
-    assert rr.cmd_record("resource_100_local", tmp_path) == 0 and launched == ["resource_100_local"] * 3
+    assert rr.cmd_record("resource_100_local", tmp_path, CAUSE_UNDER_TEST) == 0 and launched == ["resource_100_local"] * 3
     summary = json.loads((tmp_path / "combat_10_local" / "summary.json").read_text(encoding="utf-8"))
     assert summary["rule"] == "middle_3" and len(summary["runs"]) == 5 and "spread_all_runs" in summary
 
@@ -325,5 +326,25 @@ def test_it_waits_until_the_load_falls_and_gives_up_at_the_deadline() -> None:
 def test_record_refuses_to_start_a_run_outside_the_quiet_window(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(rr, "wait_for_quiet_window", lambda *a, **k: (False, "loadavg1 2.5, available 4000.0 MB"))
     monkeypatch.setattr(rr.subprocess, "run", lambda *a, **k: pytest.fail("no process may start outside the quiet window"))
-    assert rr.cmd_record("idle_100_local", tmp_path) == 1
+    assert rr.cmd_record("idle_100_local", tmp_path, CAUSE_UNDER_TEST) == 1
     assert not (tmp_path / "idle_100_local" / "candidate.json").exists()
+
+
+def test_the_promote_command_names_the_cause_it_was_given_and_there_is_no_default(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
+    assert not hasattr(rr, "CAUSE")  # a hard-coded cause once named the wrong ticket
+    with pytest.raises(SystemExit):
+        rr.main(["record", "idle_100_concurrent", "--out-root", str(tmp_path)])  # --cause is required
+    averages = iter([30.0, 34.0, 32.0])
+
+    def fake_run(argv: List[str], **kw: Any) -> Any:
+        if "measure" not in argv:
+            return REAL_RUN(argv, **kw)
+        out = Path(argv[argv.index("--out") + 1])
+        out.write_text(json.dumps(make_record(avg=next(averages)).to_dict()), encoding="utf-8")
+        out.with_suffix(".meta.json").write_text(json.dumps({"loadavg_1min": 1.0, "swap_used_mb": 0.0, "peak_rss_mb": 50.0, "wall_s": 1.0}), encoding="utf-8")
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(rr.subprocess, "run", fake_run)
+    assert rr.main(["record", "idle_100_concurrent", "--cause", "TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES", "--out-root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "--cause TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES " in out and "TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS" not in out

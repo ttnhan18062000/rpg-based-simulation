@@ -60,3 +60,35 @@ Common fast floor: `idle_100_local` run 3 (31 ms plateau), `combat_10_local` run
 
 ## Discarded attempt: `simq_corpus_crowded_frontier`, 2026-10-16 15:28 (current 3-run rule), NOT promoted
 `rerun_baselines.py record simq_corpus_crowded_frontier --keep-samples` (output under `reports/perf/t08_noisy/`, git-ignored): averages 59.214 / 53.369 / 54.026 ms, spread 10.9 % (under 15 %), median run 3. **Run 2 started at loadavg1 1.56, above the 1.5 precondition** (runs 1 and 3: 1.25 and 1.38), so the attempt does not meet the quiet-window rule, which applies to every measured run, not only the promoted one. perf-planner decided it is discarded and redone at a quieter moment. Probe medians (before the state build, then after): 36.6 -> 26.3 / 33.9 -> 35.8 / 34.1 -> 39.8 ms; swap used 591 MB in all three. The candidate file is kept as evidence only and must not be promoted.
+
+## Re-records of 2026-10-16 (committed tool 9accca4ad, enforced quiet window); NOTHING promoted, the owner decides
+Output `reports/perf/t08_noisy2/<name>/` (git-ignored). Every run started with loadavg1 below 1.5; swap in use 543 MB; all NORMAL, schema 1.2.
+
+| record | rule | runs | averages (ms) | spread (rule) | all-runs spread | candidate |
+|---|---|---|---|---|---|---|
+| `simq_corpus_crowded_frontier` | all runs | 3 | 57.805 / 56.200 / 55.695 | 3.8 % | 3.8 % | run 2 |
+| `combat_10_local` (10 + 100 ticks) | middle 3 of 5 | 5 | 47.906 / 41.162 / 45.793 / 46.961 / 44.276 | 6.1 % | 16.4 % | run 3 |
+| `idle_100_local` (10 + 50) | middle 3 of 5 | 5 | 49.072 / 46.622 / 48.156 / 56.511 / 49.703 | 3.2 % | 21.2 % | run 1 |
+| `movement_100_local` (10 + 50) | middle 3 of 5 | 5 | 110.603 / 96.060 / 107.863 / 94.471 / 108.498 | 13.0 % | 17.1 % | run 3 |
+
+### Does the host-speed probe track the tick average? (computed, 18 runs)
+Pearson / Spearman of the run's average tick latency against the probe median taken after the run, before the run, and their mean (a slow host should give both a longer probe and a longer tick, so a tracking probe shows a positive correlation). Per record (n = 3 to 5, so each is weak evidence) and pooled over all 18 runs, each probe value and each average expressed relative to its record's median:
+
+| | after-run probe | before-run probe | mean of the two |
+|---|---|---|---|
+| `simq_corpus_crowded_frontier` (n 3) | r -0.55 | r +0.05 | r -0.38 |
+| `combat_10_local` (n 5) | r -0.52 | r +0.68 | r +0.25 |
+| `idle_100_local` (n 5) | r -0.61 | r +0.62 | r +0.01 |
+| `movement_100_local` (n 5) | r +0.44 | r +0.23 | r +0.29 |
+| pooled (n 18) | r -0.37, rho -0.42 | r +0.47, rho +0.35 | r +0.19, rho -0.09 |
+
+**Reading, stated plainly: there is no consistent relation.** The sign flips between records and between the before and the after probe; the after-run probe is negatively correlated with the tick average when pooled, the before-run probe positively (r +0.47 for n 18 is at the edge of p 0.05, and the opposite sign of the other probe argues against reading it as a signal); the mean of the two is r +0.19. So the probe as built does **not** show that the tick-average spread is the host's speed regime. The host-regime cause therefore stays **inferred** (the 4.3x spread of an identical spin on a quiet host is a measured fact; that it is what moves these tick averages is not shown). Possible reasons the probe misses it, none tested: the regime changes faster than the 5 x 50 ms probe window, the probe runs outside the window seconds before and after it, a pure integer spin and an engine tick are bound differently, and 3 to 5 runs per record is little data.
+
+### `movement_100_local`: draft ledger note (for the owner's decision on promotion)
+Five fresh-process runs under the owner's middle-3 rule (2026-10-16) gave 94.5, 96.1, 107.9, 108.5, 110.6 ms: **two clusters, about 95 ms and about 109 ms (14 % apart)**, the median (107.9 ms) in the upper one. The middle-3 spread is 13.0 % (all five: 17.1 %), inside the 15 % rule, so the record passes the rule, but another five runs could put the median in the lower cluster and move the baseline by about 12 %. This is the bimodality the T08 diagnosis described for the local records; the probe does not explain it (see above). If promoted, the ledger line says so and the baseline is read as one of two plausible values, not as a point.
+
+### What promoting `idle_100_local` and `movement_100_local` changes for the nightly tripwire lane
+- `tripwire.load_baseline(name)` returns the latest promoted `<name>.vNNNN.json`; a legacy `<name>.json` is only a reason string. Today both names resolve to the legacy file, so `tests/perf/test_perf_regression_baseline.py::test_regression_vs_baseline[idle_100_local|movement_100_local]` reports INCONCLUSIVE "legacy tripwire reference" and runs **no head measurement**.
+- After a promotion, the same test finds a record, **runs the head** (`run_once` of the declared `RunSpec`, 10 + 50 ticks, unchanged) and `compare`s it with `TRIPWIRE_THRESHOLDS` (relative 0.40, absolute 5 ms). The outcome is PASS, REGRESSION, or INCONCLUSIVE (the identity checks include `cpu_model`, blocking, and `declared_hardware_class`, so a CI runner that is not this VM's i5-11400H gives INCONCLUSIVE). It is still non-blocking: a non-PASS is a `PerformanceThresholdWarning`.
+- The test is `slow`, so it runs in `.github/workflows/slow-regression.yml` (`pytest tests/ -m "slow or extra_slow"`, scheduled 4 times a day). **The lane would start executing a head measurement and a comparison for these two scenarios; the RunSpec, the thresholds and the PR lane (`tripwire.py run`, base against head, no stored baseline) do not change.**
+- `LEGACY_TRIPWIRE_REFERENCES` only exempts file names from `baseline_lifecycle.py check`. Removing `idle_100_local.json` / `movement_100_local.json` from it requires deleting those legacy files (otherwise `check` rejects them as invalid records); `load_baseline` already prefers a promoted version over the legacy file, so the list change itself does not alter what any lane compares. `tests/unit/perf/test_baseline_lifecycle.py` pins `len(LEGACY_TRIPWIRE_REFERENCES) == 10`, which would change to 8.

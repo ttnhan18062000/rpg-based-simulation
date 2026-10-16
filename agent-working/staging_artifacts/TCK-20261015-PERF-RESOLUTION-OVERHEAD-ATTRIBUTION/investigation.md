@@ -51,3 +51,16 @@ Under canonical the governors read a modelled cost and `movement_2000` leaves NO
 - So `resolution_overhead` is mostly **`strategic_intelligence` time that a mis-scoped timer failed to attribute**, not dispatch or bookkeeping; a fix is one line in `src/engine/pipeline.py` (a separate variable for the faction_sentiment block), which is **rpg's, via lead**, not mine (`src/` outside `src/perf/` is out of scope).
 - A second, smaller effect: the same shadowing means `final_integrity` (as stored) is a tail slice while `faction_sentiment` is inside it; no double count, but `sum(sub_phase_costs)` is underestimated by the lost head.
 - Not explained by this: the canonical jump at `movement_2000` (40 % against 13 %): `strategic_intelligence` cost may grow in degraded modes (it is the part that now falls into the residual), to be tested with the per-tick mode sequence as planned.
+
+## Counterfactual results, idle_100 and strategic_100 pinned (2026-10-16; commit 9accca4ad; 10 warm-up + 30 measured ticks; one process each, MemoryMax=3G; mode NORMAL for every tick)
+`strategic_pass_counterfactual.py`: same seed run twice in one process (unwrapped, then wrapped with the process-local timer on `StrategicIntelligenceSystem.fused_strategic_pass`); `inert` = identical sha256 of `state.fingerprint()` at the end of both runs. The residual is computed from the WRAPPED run (its `resolution_overhead` minus its wrapped ms); the unwrapped run's overhead is the check column.
+
+| scenario | inert | wrapped ms/tick | `resolution_overhead` (wrapped run) ms | residual ms | residual share | `resolution_overhead` (unwrapped run) ms | reported `final_integrity` ms | wrapper cost per tick | loadavg1 |
+|---|---|---|---|---|---|---|---|---|---|
+| idle_100 pinned | True | 25.507 | 26.256 | 0.749 | 2.9 % | 19.311 | 0.101 | 0.37 us | 0.52 |
+| strategic_100 pinned | True | 55.245 | 60.247 | 5.002 | 8.3 % | 52.383 | 0.146 | 0.30 us | 0.80 |
+
+- **AC1 is met for both: the residual is 2.9 % (idle_100) and 8.3 % (strategic_100) of the overhead, below the 20 % bar.** `fused_strategic_pass` is 97 % and 92 % of `resolution_overhead`. The wrapper is inert (identical fingerprints) and costs about 0.3 microseconds per tick, negligible.
+- **Caveat on the check column:** the unwrapped run's overhead (19.3 and 52.4 ms) is lower than the wrapped run's (26.3 and 60.2 ms), by 36 % and 15 %. The wrapper's own cost is four orders of magnitude too small to explain that, so it is run-to-run variance between two 30-tick processes' runs on this loaded VM, and these figures do not show that "wrapping did not move the overhead" any tighter than that. The conclusion rests on the within-run ratio (wrapped ms against the same run's overhead), which does not depend on the difference between runs.
+- **Reported `final_integrity` stays 0.10 to 0.15 ms,** as the shadowed `t_start` predicts.
+- Still open: the corpus world past tick 600 (needs lead's go) and the movement_2000 canonical-versus-pinned question (movement_1000/500 stand in, per lead).

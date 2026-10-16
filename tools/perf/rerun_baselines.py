@@ -69,7 +69,6 @@ CORPUS_WARMUP_TICKS = 100
 CORPUS_SAMPLE_TICKS = 1000
 CORPUS_PROFILE = "PERF_512MB_LOCAL"
 CORPUS_WORLDS = ("crowded_frontier", "frontier_extended", "frontier_marches")
-CAUSE = "TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS"
 OUT_ROOT = Path("reports") / "perf" / "t08"
 
 #: name -> (scenario builder key, entities, profile). The profile is the old committed file's ``profile`` field (read, not inferred from the name).
@@ -367,7 +366,7 @@ def cmd_measure(name: str, out: Path, samples_dir: Optional[Path] = None) -> int
     return 0
 
 
-def cmd_record(name: str, out_root: Path, keep_samples: bool = False, wait_s: float = QUIET_WAIT_S) -> int:
+def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False, wait_s: float = QUIET_WAIT_S) -> int:
     spec_for(name)  # raises RerunError for an unknown name before anything runs
     out_dir = out_root / name
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -407,7 +406,7 @@ def cmd_record(name: str, out_root: Path, keep_samples: bool = False, wait_s: fl
     if summary.noisy:
         print(f"NOISY: spread {summary.spread * 100:.1f} % ({summary.rule}) is above {NOISY_SPREAD * 100:.0f} %: NOT promotable; stays PENDING-NOISY")
     elif not off_normal:
-        print(f"PROMOTE: python3 tools/perf/baseline_lifecycle.py promote --candidate {candidate} --name {name} --cause {CAUSE} --note {json.dumps(note)}")
+        print(f"PROMOTE: python3 tools/perf/baseline_lifecycle.py promote --candidate {candidate} --name {name} --cause {cause} --note {json.dumps(note)}")
     return 0
 
 
@@ -416,6 +415,7 @@ def _parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
     rec = sub.add_parser("record", help="measure a baseline 3 times in fresh processes and pick the median")
     rec.add_argument("name", choices=known_names())
+    rec.add_argument("--cause", required=True, help="the ticket id the re-record belongs to; printed into the promote command (there is no default: a hard-coded one named the wrong ticket)")
     rec.add_argument("--out-root", type=Path, default=OUT_ROOT)
     rec.add_argument("--wait-s", type=float, default=QUIET_WAIT_S, help="how long to wait before each run for loadavg1 < 1.5 and 2.5 GB available (0 = check once); a run never starts outside that window")
     rec.add_argument("--keep-samples", action="store_true", help="keep every sampled tick's latency of each run under <out>/<name>/samples/ (for a noise diagnosis)")
@@ -435,7 +435,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return 0
         if args.command == "measure":
             return cmd_measure(args.name, args.out, args.samples_dir)
-        return cmd_record(args.name, args.out_root, args.keep_samples, args.wait_s)
+        return cmd_record(args.name, args.out_root, args.cause, args.keep_samples, args.wait_s)
     except (RerunError, CapacityRunError) as exc:
         print(f"cannot run: {exc}", file=sys.stderr)
         return 1
