@@ -7720,6 +7720,34 @@
   - hooks
   - data-quality
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-VISUAL-ASSETS-ICON-SCENE-RC11-KEYS.md
+  ticket_id: TCK-20261015-VISUAL-ASSETS-ICON-SCENE-RC11-KEYS
+  title: 'Main''s Frontend tests: give the 18 rc-0011 marker keys their fallbacks
+    in the icon page and correct the key counts (#598)'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-15'
+  related_code_areas:
+  - frontend/src/visualAssets/iconScene.ts
+  artifact_files: []
+  tags:
+  - architecture
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261015-VISUAL-ASSETS-SANDBOX-BWRAP-USERNS-ERROR.md
+  ticket_id: TCK-20261015-VISUAL-ASSETS-SANDBOX-BWRAP-USERNS-ERROR
+  title: 'Drawing sandbox: one clear error naming the host fix when bwrap cannot set
+    up its network namespace, and an honest skip in tests (#555)'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-15'
+  related_code_areas:
+  - visual_assets/drawing/backend/sandbox.py
+  artifact_files: []
+  tags:
+  - architecture
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW.md
   ticket_id: TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW
   title: Week close folds gate_verdicts, manual_actions and role_boundary shards too,
