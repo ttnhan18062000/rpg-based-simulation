@@ -51,6 +51,9 @@ def main(argv: list[str]) -> int:
 
     run_id = f"rpgm_{world}_{seed}_{os.getpid()}"
     kernel = build_kernel(world, seed, run_id)
+    forced = {"audit_mode": getattr(kernel, "_audit_mode", None), "no_frame_pacing": getattr(kernel, "_no_frame_pacing", None)}
+    if forced["audit_mode"] is not True or forced["no_frame_pacing"] is not True:
+        raise RuntimeError(f"this arm's build_kernel did not force audit_mode and no_frame_pacing: {forced}")
     start = _roster(kernel.state, keeps_coin)
     start_hash = CanonicalStateHasher.get_hash(kernel.state)
     for _ in range(ticks):
@@ -64,7 +67,7 @@ def main(argv: list[str]) -> int:
     doc = {
         "world": world, "seed": seed, "ticks": ticks, "hashseed": os.environ.get("PYTHONHASHSEED"),
         "start_hash": start_hash, "final_hash": CanonicalStateHasher.get_hash(state),
-        "audit_mode": manifest.get("audit_mode"), "signals_zeroed": manifest.get("signals_zeroed"),
+        "forced_flags": forced, "audit_mode": manifest.get("audit_mode"), "signals_zeroed": manifest.get("signals_zeroed"),
         "start": start, "final": final,
         "counters": (tally or {}).get("behaviour") if tally and "behaviour" in tally else None,
         "perception_samples": (tally or {}).get("perception_samples"),
