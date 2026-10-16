@@ -1,0 +1,1 @@
+{"row_kind": "void", "timestamp": "2026-10-16T02:03:28Z", "ticket_id": "TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS", "reason": "ticket dropped in 0582ec8db (deleted, never shipped); its DONE row must not become a working_log.csv row", "voided_by": "agent-working-implementer"}
