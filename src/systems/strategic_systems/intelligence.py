@@ -393,9 +393,6 @@ class StrategicIntelligenceSystem:
                         town_target = nearest_town_tile(state.town_tiles, entity.navigation.position) or state.town_center
                         if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target and entity.navigation.target != town_target:
                             if ent_upd:
-                                # Keep every field the move already wrote this tick (step_ready_tick_set, moved_recently_set,
-                                # region_id_set, last_position_set ...): a fresh NavigationUpdate here dropped them and left a stepped
-                                # entity with no step time (TCK-20261014-SOME-MOVE-STEPS-LOSE-THEIR-STEP-TIME-BETWEEN-RESOLVE-MOVE-AND-APPLY).
                                 refined_entity_updates[e_id] = replace(ent_upd,
                                     navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=town_target, movement_mode_set=MovementMode.REGROUP),
                                     interaction=InteractionUpdate(reset=True)
