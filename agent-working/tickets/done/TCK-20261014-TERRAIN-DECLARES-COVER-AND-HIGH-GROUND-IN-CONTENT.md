@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-TERRAIN-DECLARES-COVER-AND-HIGH-GROUND-IN-CONTENT
-phase: implement
+phase: done
 date: 2026-10-14
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Each terrain declares in content whether it gives cover and whether it is high ground; the code stops naming terrain (designer application of D33/D56/D72).
 
 ## Status
-INPROGRESS (code built on rpg-next 3696d0402; measurement waits for the route-weighting fold)
+DONE
 
 ## Tier
 standard
@@ -59,7 +59,7 @@ check_cover (legality.py ~498-507, COMB-262) gives cover when the tile behind th
 - Designer applications of D33/D56/D72, recorded in MOV-04 after D75 (rpg-designer-m0-evidence, local)
 
 ## Related Stored Artifacts
-- none yet
+- agent-working/stored_artifacts/TCK-20261014-TERRAIN-DECLARES-COVER-AND-HIGH-GROUND-IN-CONTENT/
 
 ## Related Code Areas
 - src/engine/legality.py (check_high_ground ~428, check_cover ~488-507)
@@ -72,9 +72,13 @@ check_cover (legality.py ~498-507, COMB-262) gives cover when the tile behind th
 - The catalog terrain kinds are plain, forest, swamp, cave, mountain, ruin, road, snow, volcanic, river and grass. No catalog terrain is "WALL" or "HILL", so every check that names them is dead today (checked on rpg-next 56cefc2f4).
 
 ## Implementation Notes
+See plan.md and divergence 2.129. Rebased onto the post-route rpg-next 05c49ac05; the ticket asked for highland_traverse as the mountain world, the standard command measures crowded_frontier instead (disclosed in 2.129).
 
 ## Test Summary
+tests/unit/engine, tests/unit/combat, tests/unit/world: 1311 passed, 3 skipped. Paired run: 30 runs, no drift, identical to base; probe shows both reads reached and always false.
 
 ## Files Changed
+terrain.yaml, schema.py, terrain_cost.py, legality.py, scenarios.py, tests, Bible 02, combat_movement.yaml, divergence 2.129.
 
 ## Completion Summary
+Done; divergence 2.129. The change is dormant in the gate worlds (no moved run), proved by unit tests.
