@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20261014-SOME-MOVE-STEPS-LOSE-THEIR-STEP-TIME-BETWEEN-RESOLVE-MOVE-AND-APPLY
-phase: open
+phase: done
 date: 2026-10-14
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 About 0.03% of frontier steps move an entity with an ordinary move update that carries no `step_ready_tick_set`, although `MovementSystem._step_ready_tick` returned one at the `resolve_move` call. A second move path in one tick is suspected.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -57,13 +57,13 @@ src/engine/movement.py (resolve_move, _step_ready_tick); src/domains/cooperation
 - Runs after the route step (rpg-planner).
 
 ## Implementation Notes
-TBD
+The second path is `StrategicIntelligenceSystem.fused_strategic_pass` (src/systems/strategic_systems/intelligence.py): the fast-path REGROUP-to-town branch replaced the entity's existing NavigationUpdate with a fresh one, dropping step_ready_tick_set (and moved_recently_set, region_id_set, last_position_set). It now merges into the existing update, as the sibling branches do. Not the cooperation SOLO merge and not movement_actions.py (the SOLO marker was only a property update on the same entity).
 
 ## Test Summary
-TBD
+tests/unit/strategic/test_strategic_regroup_keeps_the_step_time.py (fails before the fix, passes after); tests/unit/strategic and the detour scenario: 415 passed. Seed 42 frontier 400 ticks: untimed applied steps 8 to 0. Standard paired run (base e98b75a86, new 8b9daf3bf, 3 worlds x 42-46 x 5000t): people deaths 138 to 132, 58 to 58, 170 to 166, no drift; see divergence 2.126.
 
 ## Files Changed
-TBD
+src/systems/strategic_systems/intelligence.py; tests/unit/strategic/test_strategic_regroup_keeps_the_step_time.py; docs/guidelines/intentional_divergences.md (2.126 residual).
 
 ## Completion Summary
-TBD
+Every stepping path now carries its step time; the 2.126 residual is closed and recorded.
