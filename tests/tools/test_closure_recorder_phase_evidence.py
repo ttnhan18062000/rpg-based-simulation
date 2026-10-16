@@ -9,16 +9,19 @@ if str(_TOOLS) not in sys.path:
 
 import generate_retro  # noqa: E402
 import record_hand_orchestrated_closure as rec  # noqa: E402
+from tools.agent_working_paths import STAGING_ARTIFACTS, STORED_ARTIFACTS  # noqa: E402
+
+_STORED, _STAGING = STORED_ARTIFACTS.name, STAGING_ARTIFACTS.name
 
 TID = "TCK-20261015-X"
 
 
-def _artifacts(tmp_path, *names, root="stored_artifacts"):
+def _artifacts(tmp_path, *names, root=_STORED):
     folder = tmp_path / root / TID
     folder.mkdir(parents=True)
     for n in names:
         (folder / n).write_text("# x\n")
-    return (tmp_path / "stored_artifacts", tmp_path / "staging_artifacts")
+    return (tmp_path / _STORED, tmp_path / _STAGING)
 
 
 # --- phase evidence ------------------------------------------------------------------------------------------------
@@ -28,19 +31,19 @@ def test_a_standard_ticket_with_artifacts_records_investigate_and_plan_as_ran(tm
     derived = rec.evidence_phase_events(TID, "standard", [{"phase": "Scope"}, {"phase": "Implement"}], "claude", roots)
     assert [e["phase"] for e in derived] == ["Investigate", "Plan"]
     assert all(e["status"] == "ok" and e["agent"] == "claude" for e in derived)
-    assert f"stored_artifacts/{TID}/investigation.md" in derived[0]["summary"] and "not narrated" in derived[0]["summary"]
+    assert f"{_STORED}/{TID}/investigation.md" in derived[0]["summary"] and "not narrated" in derived[0]["summary"]
 
 
 def test_without_artifacts_the_phases_stay_absent_so_phases_omitted_names_the_real_gap(tmp_path):
-    roots = (tmp_path / "stored_artifacts", tmp_path / "staging_artifacts")
+    roots = (tmp_path / _STORED, tmp_path / _STAGING)
     assert rec.evidence_phase_events(TID, "standard", [{"phase": "Scope"}], "claude", roots) == []
 
 
 def test_staging_artifacts_count_too_and_one_file_gives_one_phase(tmp_path):
-    folder = tmp_path / "staging_artifacts" / TID
+    folder = tmp_path / _STAGING / TID
     folder.mkdir(parents=True)
     (folder / "investigation.md").write_text("# x\n")
-    derived = rec.evidence_phase_events(TID, "epic", [], "claude", (tmp_path / "stored_artifacts", tmp_path / "staging_artifacts"))
+    derived = rec.evidence_phase_events(TID, "epic", [], "claude", (tmp_path / _STORED, tmp_path / _STAGING))
     assert [e["phase"] for e in derived] == ["Investigate"]
 
 

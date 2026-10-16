@@ -108,7 +108,7 @@ from generate_registry import generate_registry  # noqa: E402
 _REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
 if _REPO_ROOT_STR not in sys.path:
     sys.path.append(_REPO_ROOT_STR)
-from tools.agent_working_paths import AGENT_MONITORING, STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
+from tools.agent_working_paths import AGENT_MONITORING, STAGING_ARTIFACTS, STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
 
 def unregistered_agents(ticket_id: str, default_agent: str, events: list) -> list[str]:
@@ -215,7 +215,7 @@ def parity_claimed_without_ledger_change(events: list[dict], changed_files) -> s
 
 #: standard/epic artifact -> the phase it is evidence of (TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON)
 _PHASE_EVIDENCE = (("investigation.md", "Investigate"), ("plan.md", "Plan"))
-_ARTIFACT_ROOTS = (Path("agent-working/stored_artifacts"), Path("agent-working/staging_artifacts"))
+_ARTIFACT_ROOTS = (STORED_ARTIFACTS, STAGING_ARTIFACTS)
 
 
 def evidence_phase_events(ticket_id: str, tier: str, events: list[dict], default_agent: str,
