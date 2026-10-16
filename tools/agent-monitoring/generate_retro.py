@@ -1368,7 +1368,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
-    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None, failures=None,
+    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None, failures=None, ledger_blocks=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -1444,6 +1444,11 @@ def generate(
     lines.append(f"| Total runs | {rs['total']} |")
     lines.append(f"| Completed (DONE) | {rs['done_count']} ({fmt_pct(rs['done_count'], rs['total'])}) |")
     lines.append(f"| Gate failures | {rs['gate_fail_count']} |")
+    if ledger_blocks is not None:
+        # TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON: the line above counts runs whose
+        # final_status is a gate failure only, so "0" hid 22 blocking Finalize verdicts in W42. Two labelled numbers.
+        lines.append(f"| Blocking gate verdicts (ledger) | {ledger_blocks['blocking']} of {ledger_blocks['verdicts']} verdicts "
+                     f"({ledger_blocks['unresolved']} without a recorded outcome) |")
     if prov:
         lines.extend(retro_provenance.run_summary_rows(prov))
     else:
@@ -2170,6 +2175,23 @@ def _session_layer_section(runs, week_str, cutoff, latency_prs):
         return None
 
 
+def _ledger_blocks(week_str):
+    """{"verdicts", "blocking", "unresolved"} over the gate ledger's verdicts of `week_str` (every week when None), or None
+    when the ledger holds none or cannot be read (never fails the retro)."""
+    try:
+        import gate_ledger
+
+        data_dir = DEFAULT_TOOLS_FILE if DEFAULT_TOOLS_FILE.is_dir() else DEFAULT_TOOLS_FILE.parent
+        readings = gate_ledger.report(gate_ledger.load_rows(data_dir), week_str)
+        verdicts = sum(g["verdicts"] for g in readings)
+        if not verdicts:
+            return None
+        return {"verdicts": verdicts, "blocking": sum(g["blocking"] for g in readings),
+                "unresolved": sum(g["unresolved"] for g in readings)}
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _gates_section(week_str):
     """The rendered Gates section (TCK-20261006-GATE-PRECISION-REPORT-AND-RETRO), or None when it cannot be built
     (never fails the retro). A `--days`/`--all` report is not week-scoped, so it reads every week."""
@@ -2287,13 +2309,14 @@ def main():
 
     session_layer = _session_layer_section(runs, week_str, cutoff if args.days else None, args.latency_prs)
     gates = _gates_section(None if (args.all or args.days) else week_str)
+    ledger_blocks = _ledger_blocks(None if (args.all or args.days) else week_str)
     paths = _paths_section(runs, events, all_runs)
     failures = _failures_section(runs, events)
 
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
         raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
-        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths, failures=failures,
+        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths, failures=failures, ledger_blocks=ledger_blocks,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)

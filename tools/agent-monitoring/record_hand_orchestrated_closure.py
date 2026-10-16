@@ -58,6 +58,12 @@ or commit the ledger change first); (b) events whose non-empty summaries equal, 
 different ticket in the same per-batch events shard (the message names that ticket). `--allow-shared-summaries` overrides (b)
 and records `summaries_shared: true` on the run row.
 
+As of `TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON`, a standard/epic closure with
+`agent-working/{stored,staging}_artifacts/<ticket>/investigation.md` or `plan.md` gets an Investigate or Plan event
+recorded as `ok` (its summary names the artifact path and says the recorder derived it) when the closer gave none, so
+`phases_omitted` lists real gaps instead of every hand closure; and a Parity event `skipped` while the ticket's diff
+touches `src/` is refused unless it carries a `skip_reason` from the enum (`unstated` does not count).
+
 As of `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`, that warning is also
 enforced, not just documented: before appending, this script checks whether
 `agent-working/tickets/working_log.csv` already has a row for this exact `(ticket_id, title)` pair (via the
@@ -93,7 +99,7 @@ from vocabulary import (  # noqa: E402
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 import hand_closure_time  # noqa: E402
 from path_record import phases_omitted as compute_phases_omitted  # noqa: E402
-from vocabulary import PATH_REASONS  # noqa: E402
+from vocabulary import PATH_REASONS, SKIP_REASONS  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
@@ -205,6 +211,51 @@ def parity_claimed_without_ledger_change(events: list[dict], changed_files) -> s
     return ('a Parity event with status "ok" was given, but this ticket changed no docs/parity_ledger/ file. Record it as '
             '{"phase":"Parity","status":"skipped","skip_reason":"condition_false","summary":"..."}, or commit the ledger '
             "change first and rerun")
+
+
+#: standard/epic artifact -> the phase it is evidence of (TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON)
+_PHASE_EVIDENCE = (("investigation.md", "Investigate"), ("plan.md", "Plan"))
+_ARTIFACT_ROOTS = (Path("agent-working/stored_artifacts"), Path("agent-working/staging_artifacts"))
+
+
+def evidence_phase_events(ticket_id: str, tier: str, events: list[dict], default_agent: str,
+                          roots: tuple[Path, ...] = _ARTIFACT_ROOTS) -> list[dict]:
+    """The standard/epic-tier phases that demonstrably ran, from the artifacts they leave, as events the closer did not
+    narrate. `investigation.md` present means Investigate ran, `plan.md` means Plan ran; each derived event says so and
+    names the artifact path, and is added only when the closer gave no event for that phase. With no artifact a phase
+    stays absent, so `phases_omitted` keeps naming the real gaps (a standard ticket without artifacts) instead of every
+    hand closure. Hotfix tickets carry no staging artifacts, so nothing is derived for them."""
+    if tier not in ("standard", "epic"):
+        return []
+    given = {e.get("phase") for e in events}
+    derived = []
+    for filename, phase in _PHASE_EVIDENCE:
+        if phase in given:
+            continue
+        found = next((root / ticket_id / filename for root in roots if (root / ticket_id / filename).is_file()), None)
+        if found is not None:
+            derived.append({"phase": phase, "status": "ok", "agent": default_agent,
+                            "summary": f"{phase} ran: derived by the recorder from its artifact {found.as_posix()} "
+                                       f"(present at closure), not narrated by the closer."})
+    return derived
+
+
+def parity_skipped_without_enum_reason(events: list[dict], changed_files) -> str | None:
+    """A Parity event skipped without a structured reason while the ticket's own diff touches `src/`: the free-text
+    summary alone does not say why the behavior-parity check did not apply to a source change. Returns the ERROR text,
+    or None. `unstated` is the recorder's default for a missing reason, so it does not count as one."""
+    skipped = [e for e in events if e.get("phase") == "Parity" and e.get("status") == "skipped"]
+    if not skipped or not any(path.startswith("src/") for path in changed_files):
+        return None
+    valid = ", ".join(r for r in SKIP_REASONS if r != "unstated")
+    invalid = [e["skip_reason"] for e in skipped if e.get("skip_reason") not in (None, "", "unstated") and e["skip_reason"] not in SKIP_REASONS]
+    if invalid:
+        return f"Parity skip_reason {invalid} is not one of {valid}"
+    if not [e for e in skipped if e.get("skip_reason") in (None, "", "unstated")]:
+        return None
+    return ("a Parity event was skipped, but this ticket's diff touches src/, so it needs a structured skip_reason, not a "
+            f"summary alone: one of {', '.join(r for r in SKIP_REASONS if r != 'unstated')} "
+            '(e.g. {"phase":"Parity","status":"skipped","skip_reason":"condition_false","summary":"..."})')
 
 
 def _phase_summaries(events: list[dict]) -> dict[str, str]:
@@ -532,6 +583,13 @@ def main() -> None:
             print(f"ERROR: events[{i}] missing required fields {sorted(missing)}", file=sys.stderr)
             sys.exit(1)
 
+    derived_events = evidence_phase_events(args.ticket_id, args.tier, events, args.agent)
+    if derived_events:
+        # keep the canonical order: the derived phases sit right after Scope (or first when there is no Scope event)
+        at = next((i + 1 for i, e in enumerate(events) if e.get("phase") == "Scope"), 0)
+        events = events[:at] + derived_events + events[at:]
+        print(f"NOTE: recorded {[e['phase'] for e in derived_events]} as ran, from the ticket's artifacts.", file=sys.stderr)
+
     bad_agents = unregistered_agents(args.ticket_id, args.agent, events)
     if bad_agents:
         print(
@@ -569,10 +627,12 @@ def main() -> None:
 
     # TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD: refuse templated events before anything is written.
     changed = _ticket_changed_files(args.ticket_id) if any(
-        e.get("phase") == "Parity" and e.get("status") == "ok" for e in events) else set()
+        e.get("phase") == "Parity" and e.get("status") in ("ok", "skipped") for e in events) else set()
     refusals = []
     if changed is not None and (parity_error := parity_claimed_without_ledger_change(events, changed)):
         refusals.append(parity_error)
+    if changed is not None and (parity_skip_error := parity_skipped_without_enum_reason(events, changed)):
+        refusals.append(parity_skip_error)
     if not args.allow_shared_summaries:
         iso_week_for_guard = datetime.now(timezone.utc).strftime("%G-W%V")
         shared = events_copied_from_another_ticket(
