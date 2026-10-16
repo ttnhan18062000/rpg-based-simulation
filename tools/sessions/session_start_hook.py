@@ -136,7 +136,11 @@ def _handover_text(role, root: Path, instance_id: str | None = None) -> str:
         return f"(no handover note yet at {rel}; create one at the first HARD reset boundary)"
     text = path.read_text(encoding="utf-8", errors="replace").strip()
     if len(text) > HANDOVER_CAP_CHARS:
+        # TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP: say it, do not only cut it
+        over = (f"session-roles: your handover note is {len(text)} chars, over the {HANDOVER_CAP_CHARS} cap; only the first "
+                f"{HANDOVER_CAP_CHARS} are shown below. Compact it at the next HARD boundary.\n")
         text = text[:HANDOVER_CAP_CHARS] + f"\n[... note cut at {HANDOVER_CAP_CHARS} chars; full file: {rel}]"
+        return over + f"Your handover note ({rel}):\n{text}"
     return f"Your handover note ({rel}):\n{text}"
 
 
@@ -210,6 +214,20 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
                              "text already in your context may still describe the old, wider authority.")
         elif change is None:
             notes.append("session-roles: the manifest changed since your last binding (previous summary unreadable).")
+
+    # TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP: a /clear whose previous session declared no
+    # HARD boundary, or whose handover note changed after it, gets one advisory line. Never blocks, never raises.
+    if source == "clear" and prior_instance is not None and prior_instance.holder.session_id != binding.session_id:
+        try:
+            from tools.sessions import reset_boundary as rb
+            from tools.sessions.roster import handover_rel
+
+            sha = rb._sha256(handover_base(root) / handover_rel(role, instance_id))
+            advisory = rb.advisory_for_clear(rb.read_rows(root), prior_instance.holder.session_id, sha, instance_id)
+            if advisory:
+                notes.append(advisory)
+        except Exception:
+            pass
 
     wt = next((w for w in roster.worktrees if w.name == role.worktree), None)
     if wt is not None and wt.writer == role.role and instance_id == role.role:

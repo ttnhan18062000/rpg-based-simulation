@@ -103,3 +103,11 @@ def test_the_run_summary_shows_ledger_blocks_beside_zero_run_gate_failures():
 def test_without_a_ledger_reading_the_run_summary_is_unchanged():
     text = generate_retro.generate([_run("A")], [], "2026-W42", week_str="2026-W42")
     assert "Blocking gate verdicts" not in text and "| Gate failures | 0 |" in text
+
+
+def test_the_run_summary_shows_a_declarations_count_including_zero():
+    text = generate_retro.generate([_run("A")], [], "2026-W42", week_str="2026-W42",
+                                   reset_declarations={"total": 0, "HARD": 0, "SOFT": 0, "NEVER": 0})
+    assert "| Reset-boundary declarations | 0 (HARD 0, SOFT 0, NEVER 0) |" in text
+    assert "Reset-boundary declarations" not in generate_retro.generate([_run("A")], [], "2026-W41", week_str="2026-W41")
+    assert generate_retro._reset_declarations("2026-W41") is None

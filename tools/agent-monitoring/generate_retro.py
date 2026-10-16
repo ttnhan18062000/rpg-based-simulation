@@ -1368,7 +1368,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
-    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None, failures=None, ledger_blocks=None,
+    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None, failures=None, ledger_blocks=None, reset_declarations=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -1449,6 +1449,11 @@ def generate(
         # final_status is a gate failure only, so "0" hid 22 blocking Finalize verdicts in W42. Two labelled numbers.
         lines.append(f"| Blocking gate verdicts (ledger) | {ledger_blocks['blocking']} of {ledger_blocks['verdicts']} verdicts "
                      f"({ledger_blocks['unresolved']} without a recorded outcome) |")
+    if reset_declarations is not None:
+        # TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP: a count, 0 included, from the first week
+        # the declaration command exists; earlier weeks are not instrumented, so they show no row
+        lines.append(f"| Reset-boundary declarations | {reset_declarations['total']} "
+                     f"(HARD {reset_declarations['HARD']}, SOFT {reset_declarations['SOFT']}, NEVER {reset_declarations['NEVER']}) |")
     if prov:
         lines.extend(retro_provenance.run_summary_rows(prov))
     else:
@@ -2175,6 +2180,31 @@ def _session_layer_section(runs, week_str, cutoff, latency_prs):
         return None
 
 
+_RESET_DECLARATIONS_FROM = "2026-W42"
+
+
+def _reset_declarations(week_str):
+    """{"total", "HARD", "SOFT", "NEVER"} of the week's `reset_boundary.jsonl` (0s when none), or None for a report that is
+    not one week, or a week before the command existed (never fails the retro)."""
+    try:
+        if not week_str or week_str < _RESET_DECLARATIONS_FROM:
+            return None
+        data_dir = DEFAULT_TOOLS_FILE if DEFAULT_TOOLS_FILE.is_dir() else DEFAULT_TOOLS_FILE.parent
+        path = Path(data_dir) / week_str / "reset_boundary.jsonl"
+        counts = {"HARD": 0, "SOFT": 0, "NEVER": 0}
+        if path.is_file():
+            for line in path.read_text(encoding="utf-8").splitlines():
+                try:
+                    kind = json.loads(line).get("kind")
+                except ValueError:
+                    continue
+                if kind in counts:
+                    counts[kind] += 1
+        return {"total": sum(counts.values()), **counts}
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _ledger_blocks(week_str):
     """{"verdicts", "blocking", "unresolved"} over the gate ledger's verdicts of `week_str` (every week when None), or None
     when the ledger holds none or cannot be read (never fails the retro)."""
@@ -2310,13 +2340,14 @@ def main():
     session_layer = _session_layer_section(runs, week_str, cutoff if args.days else None, args.latency_prs)
     gates = _gates_section(None if (args.all or args.days) else week_str)
     ledger_blocks = _ledger_blocks(None if (args.all or args.days) else week_str)
+    reset_declarations = _reset_declarations(None if (args.all or args.days) else week_str)
     paths = _paths_section(runs, events, all_runs)
     failures = _failures_section(runs, events)
 
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
         raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
-        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths, failures=failures, ledger_blocks=ledger_blocks,
+        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths, failures=failures, ledger_blocks=ledger_blocks, reset_declarations=reset_declarations,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)

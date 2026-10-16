@@ -573,3 +573,57 @@ def test_the_start_hook_adds_the_stale_code_line_on_startup_and_clear_not_compac
     for source in ("startup", "resume", "clear"):
         assert _ctx(world, _payload(repo, source=source, session_title=WRITER)).count("STALE SESSION CODE") == 1
     assert "STALE SESSION CODE" not in _ctx(world, _payload(repo, source="compact", session_title=WRITER))
+
+
+# ---- TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP -----------------------------------------
+
+def _declare(world, session_id, kind="HARD", row="r"):
+    from tools.sessions import reset_boundary as rb
+
+    root, _repo, _ = world
+    record = rb.build_row(kind, row, session_id, WRITER, root)
+    assert rb.append_row(record, root)
+    return record
+
+
+def test_a_clear_after_a_session_that_declared_no_hard_gets_one_advisory_line(world):
+    root, repo, _ = world
+    _ctx(world, _payload(repo, session_id="first"))
+    out = _ctx(world, _payload(repo, session_id="second", source="clear", session_title=WRITER))
+    assert out.count("declared no HARD boundary before this /clear") == 1
+
+
+def test_a_clear_after_a_declared_hard_with_an_unchanged_note_gets_no_line(world):
+    root, repo, _ = world
+    _ctx(world, _payload(repo, session_id="first"))
+    _declare(world, "first")
+    out = _ctx(world, _payload(repo, session_id="second", source="clear", session_title=WRITER))
+    assert "reset-boundary:" not in out
+
+
+def test_a_handover_edited_after_the_hard_declaration_is_called_out(world):
+    root, repo, _ = world
+    _ctx(world, _payload(repo, session_id="first"))
+    _declare(world, "first")
+    (root / ".claude" / "handover" / f"{WRITER}.md").write_text("# edited after the declaration\n")
+    out = _ctx(world, _payload(repo, session_id="second", source="clear", session_title=WRITER))
+    assert out.count("changed after the previous session's HARD declaration") == 1
+
+
+def test_a_startup_never_gets_the_clear_advisory(world):
+    root, repo, _ = world
+    _ctx(world, _payload(repo, session_id="first"))
+    assert "reset-boundary:" not in _ctx(world, _payload(repo, session_id="second", source="startup"))
+
+
+def test_an_over_cap_handover_note_says_its_size_and_the_cap_instead_of_cutting_silently(world):
+    root, repo, _ = world
+    (root / ".claude" / "handover" / f"{WRITER}.md").write_text("x" * (hook.HANDOVER_CAP_CHARS + 500))
+    out = _ctx(world, _payload(repo))
+    assert f"your handover note is {hook.HANDOVER_CAP_CHARS + 500} chars, over the {hook.HANDOVER_CAP_CHARS} cap" in out
+    assert out.count("over the") >= 1 and "note cut at" in out
+
+
+def test_a_note_under_the_cap_has_no_size_line(world):
+    root, repo, _ = world
+    assert "over the" not in _ctx(world, _payload(repo))
