@@ -19,6 +19,8 @@ import time
 from typing import Any, Dict, List, Optional
 
 from src.ai.goals.kind_group import is_person, kind_group
+from src.ai.goals.scorers_support import perceived_hostiles
+from src.core.movement_modes import MovementMode
 from src.core.region_resolution import is_inside_world
 from src.core.spawn_source import SpawnKind
 from src.core.state import AuthoritativeState
@@ -32,7 +34,14 @@ POPULATION_SAMPLE_EVERY = 500  # ticks between population samples (the first obs
 _SOURCE = "run_ledger"
 _WORLD_EVENT_KEYS = ("FEEDING_KILL", "MEAT_DECAYED")
 _RAW_MEAT = "raw_meat"  # engine.carcass.RAW_MEAT_ITEM (observability may not import the engine; a test pins the two equal)
+PERCEPTION_SAMPLE_EVERY = 10  # ticks between perception samples (perceived_hostiles scans neighbours per entity); the sample count is in the tally
+FLEE_MODES = frozenset({MovementMode.RETREAT})
+PURSUIT_MODES = frozenset({MovementMode.PURSUE, MovementMode.INTERCEPT})
 MAX_EXAMPLES = 5
+
+
+def _tile(position: Any) -> tuple:
+    return (int(position[0]), int(position[1]))
 
 
 def _key(*parts: Any) -> str:
@@ -57,6 +66,8 @@ class RunLedger:
     _world_events: Dict[str, float] = {}  # FEEDING_KILL / MEAT_DECAYED counts, and meat_decayed_quantity
     _meat: Dict[str, float] = {}  # made (new bodies), taken (off persisting bodies: eaten or looted a part), looted (a body taken whole by a CORPSE transfer), vanished (left with no transfer: the decay sink)
     _attacks: Dict[str, int] = {}  # attacker_group|attacker_person|victim_person|hit or kill (person = 1 when the species keeps coin and trades, D43): genuine entity-vs-entity combat resolutions
+    _behaviour: Dict[str, int] = {}  # measure|group|person: flee/pursuit entity-ticks and episodes (typed MovementMode), steps|terrain (tile entered), perceiving entity-ticks and perceived-hostile counts (sampled)
+    _perception_samples: int = 0  # ticks on which perception was sampled
     _out_of_world: Dict[str, int] = {}  # group -> entity-ticks of a moved, alive entity outside the world extent
     _out_of_world_examples: List[Dict[str, Any]] = []
 
@@ -76,6 +87,8 @@ class RunLedger:
         cls._world_events = {}
         cls._meat = {}
         cls._attacks = {}
+        cls._behaviour = {}
+        cls._perception_samples = 0
         cls._out_of_world = {}
         cls._out_of_world_examples = []
 
@@ -107,6 +120,7 @@ class RunLedger:
         cls._count_meat(prior, current, update)
         cls._count_positions(current, update)
         cls._count_attacks(prior, current, update)
+        cls._count_behaviour(prior, current)
         return events
 
     @staticmethod
@@ -214,6 +228,51 @@ class RunLedger:
             cls._attacks[key] = cls._attacks.get(key, 0) + 1
 
     @classmethod
+    def _count_behaviour(cls, prior: AuthoritativeState, current: AuthoritativeState) -> None:
+        """Flee and pursuit from the typed movement mode (entity-ticks, and episodes = ticks that enter the mode), steps by the terrain entered, and
+        perception from ``perceived_hostiles`` on every ``PERCEPTION_SAMPLE_EVERY``-th tick. Reads only; nothing here reaches the state."""
+        sample = current.tick % PERCEPTION_SAMPLE_EVERY == 0
+        cls._perception_samples += 1 if sample else 0
+        for eid, entity in current.entities.items():
+            if not entity.combat.alive:
+                continue
+            who = _key(kind_group(entity), int(is_person(entity)))
+            before = prior.entities.get(eid)
+            before = before if before is not None and before.combat.alive else None
+            cls._count_modes(who, entity, before)
+            cls._count_step(current, entity, before)
+            if sample:
+                cls._count_perception(who, entity, current)
+
+    @classmethod
+    def _count_modes(cls, who: str, entity: Any, before: Any) -> None:
+        mode = entity.navigation.movement_mode
+        was = before.navigation.movement_mode if before is not None else None
+        for name, modes in (("flee", FLEE_MODES), ("pursuit", PURSUIT_MODES)):
+            if mode in modes:
+                cls._bump(_key(name + "_ticks", who))
+                if was not in modes:
+                    cls._bump(_key(name + "_episodes", who))
+
+    @classmethod
+    def _count_step(cls, current: AuthoritativeState, entity: Any, before: Any) -> None:
+        if before is not None:
+            tile = _tile(entity.navigation.position)
+            if tile != _tile(before.navigation.position):
+                cls._bump(_key("steps", current.terrain.get(tile, "unknown")))
+
+    @classmethod
+    def _count_perception(cls, who: str, entity: Any, current: AuthoritativeState) -> None:
+        seen = len(perceived_hostiles(entity, current))
+        if seen:
+            cls._bump(_key("perceiving_ticks", who))
+            cls._bump(_key("perceived_hostiles", who), seen)
+
+    @classmethod
+    def _bump(cls, key: str, n: int = 1) -> None:
+        cls._behaviour[key] = cls._behaviour.get(key, 0) + n
+
+    @classmethod
     def _count_positions(cls, current: AuthoritativeState, update: Any) -> None:
         for eid in (getattr(update, "entity_updates", None) or {}):
             entity = current.entities.get(eid)
@@ -241,7 +300,7 @@ class RunLedger:
             "transfers": dict(sorted(cls._transfers.items())), "hunger_drops": dict(sorted(cls._hunger_drops.items())),
             "deaths": dict(sorted(cls._deaths.items())), "adds": dict(sorted(cls._adds.items())),
             "world_events": dict(sorted(cls._world_events.items())), "meat": dict(sorted(cls._meat.items())),
-            "attacks": dict(sorted(cls._attacks.items())), "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples),
+            "attacks": dict(sorted(cls._attacks.items())), "behaviour": dict(sorted(cls._behaviour.items())), "perception_samples": cls._perception_samples, "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples),
         }
         return cls._event(LEDGER_TALLY_EVENT, cls._last_tick, payload)
 
