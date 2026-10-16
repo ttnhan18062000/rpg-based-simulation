@@ -78,12 +78,12 @@ LIVE contract (known gap, #585, PERF-D1 A2). No `src/` change.
 ## Implementation Notes
 `codebase/reports/replay_check.py`: `main(argv, command_builder, repo_root)` runs `run_once` twice per contract (Popen from the repo root, `sys.executable -m src cli --seed S --ticks N`, stderr discarded, per-run timeout default 300 s). The Canonical pair sets `RPG_SIGNAL_CONTRACT=canonical`; the `--live` pair removes the variable. Exit 0 / 1 / 2 from the Canonical pair alone. A non-zero CLI exit, a timeout or a missing `Final State Hash:` line is exit 2.
 
-Cleanup: the CLI never prints the run id on stdout (it only appears inside a watchdog alert on stderr), and `--replay <dir>` does not stop it writing `data/runs/<run_id>`. So `own_run_dirs` matches `run_<epoch>_<n>_<pid>_<hex>` on the child pid from Popen and removes exactly those directories, also after a timeout kill. No directory diff. A pid is unique among live processes, so a concurrent session's run cannot match.
+Cleanup: the CLI never prints the run id on stdout (it only appears inside a watchdog alert on stderr), and `--replay <dir>` does not stop it writing `data/runs/<run_id>`. So `own_run_dirs` matches `run_<epoch>_<n>_<pid>_<hex>` on the child pid from Popen and removes exactly those directories, also after a timeout kill. No directory diff. Pids recycle, so a dir also needs an epoch no older than the run's own start (less 1 s slack); a same-pid dir with an older epoch survives (planner review). On a crash or a missing hash the last 5 stderr lines are added to the reason, so exit 2 says why.
 
 `docs/guides/reviewer_replay_check.md`, a README "For reviewers" section (one link line; the determinism row is untouched), and a `replay-check` Makefile target (picked up by `make help`).
 
 ## Test Summary
-`tests/codebase/test_replay_check.py`: 11 tests against a fake CLI script (hash parsing, match 0, differ 1, crash / no hash / timeout 2, env var on both runs and no live pair by default, `--live` label with exit code unchanged, cleanup removes only its own run dirs, pid match is exact). `tests/codebase`: 488 passed, 2 skipped. ruff clean on the two new files (`ruff check codebase` has 55 pre-existing findings, none in them).
+`tests/codebase/test_replay_check.py`: 14 tests against a fake CLI script (hash parsing, match 0, differ 1, crash / no hash / timeout 2, env var on both runs and no live pair by default, `--live` label with exit code unchanged, cleanup removes only its own run dirs, pid match is exact). `tests/codebase`: 491 passed, 2 skipped (after review fixes); real `make replay-check` rerun: same MATCH, data/runs empty. ruff clean on the two new files (`ruff check codebase` has 55 pre-existing findings, none in them).
 
 Real run, `systemd-run --user --scope -p MemoryMax=3G make replay-check` (exit 0, `data/runs` left empty):
 ```

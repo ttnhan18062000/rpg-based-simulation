@@ -25,6 +25,8 @@ canonical contract (RPG_SIGNAL_CONTRACT=canonical) (seed=42, ticks=300)
 MATCH
 ```
 
+The hash shown is an example from origin/main `927700be4` and will change as the code changes. What matters is that the two runs print the same value.
+
 | Exit code | Meaning |
 |---|---|
 | 0 | The two hashes match. |

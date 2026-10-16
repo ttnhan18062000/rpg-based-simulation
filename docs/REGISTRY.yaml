@@ -2153,6 +2153,16 @@
   - hard-law
   - eventbus
 - type: doc
+  path: docs/guides/reviewer_replay_check.md
+  title: Reviewer replay check
+  status: active
+  layer: testing
+  authority: P1
+  audience: agent
+  tags:
+  - determinism
+  - testing
+- type: doc
   path: docs/guides/simulation.md
   title: Simulation — Getting Started Guide
   status: ''

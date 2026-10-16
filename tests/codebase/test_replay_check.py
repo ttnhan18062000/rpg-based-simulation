@@ -1,6 +1,7 @@
 """Unit tests for `codebase.reports.replay_check` against a fake CLI (no real simulation)."""
 
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -18,14 +19,17 @@ counter.write_text(str(n))
 with open("contracts.txt", "a") as f:
     f.write(os.environ.get("RPG_SIGNAL_CONTRACT", "<unset>") + "\\n")
 Path("data/runs").mkdir(parents=True, exist_ok=True)
-Path("data/runs/run_1_2_%d_abc123" % os.getpid()).mkdir()
+Path("data/runs/run_%d_2_%d_abc123" % (time.time(), os.getpid())).mkdir()
 if mode == "hang":
     time.sleep(60)
 if mode == "nohash":
     print("Simulation finished")
+    print("boom: no hash today", file=sys.stderr)
     sys.exit(0)
 if mode == "crash":
     print("Final State Hash: deadbeef")
+    for i in range(8):
+        print("trace line %d" % i, file=sys.stderr)
     sys.exit(3)
 live = os.environ.get("RPG_SIGNAL_CONTRACT") is None
 differ = mode == "differ" or (mode == "live_differ" and live)
@@ -150,3 +154,41 @@ def test_own_run_dirs_matches_pid_only(tmp_path: Path) -> None:
         "run_1_2_77_ab"
     ]
     assert replay_check.own_run_dirs(tmp_path / "missing", 77) == []
+
+
+def test_stale_same_pid_dir_survives(fake_repo: Path) -> None:
+    """A dir with this run's pid but an older epoch (a recycled pid) is not deleted."""
+    pid = 4242
+    stale = fake_repo / "data" / "runs" / f"run_1000_2_{pid}_abc123"
+    fresh = fake_repo / "data" / "runs" / f"run_{int(time.time())}_2_{pid}_abc123"
+    stale.mkdir()
+    fresh.mkdir()
+    runs = fake_repo / "data" / "runs"
+    started = int(time.time()) - 1
+    assert replay_check.own_run_dirs(runs, pid, started) == [fresh]
+
+
+def test_crash_reason_carries_last_stderr_lines(
+    fake_repo: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A crash shows the status and only the last five stderr lines."""
+    monkeypatch.setenv("FAKE_MODE", "crash")
+    assert _run(fake_repo) == 2
+    out = capsys.readouterr().out
+    assert (
+        "exited with status 3: trace line 3 | trace line 4 | trace line 5 | trace line 6 | trace line 7"
+        in out
+    )
+    assert "trace line 2" not in out
+
+
+def test_missing_hash_reason_carries_stderr(
+    fake_repo: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A missing hash line is reported together with the stderr reason."""
+    monkeypatch.setenv("FAKE_MODE", "nohash")
+    assert _run(fake_repo) == 2
+    assert (
+        "no 'Final State Hash:' line in the output: boom: no hash today"
+        in capsys.readouterr().out
+    )

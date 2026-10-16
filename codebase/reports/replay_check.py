@@ -12,8 +12,9 @@ Exit codes: 0 the hashes match, 1 they differ, 2 a run crashed, timed out or pri
 differ today (known gap, #585), and its result never changes the exit code.
 
 Each run writes a `data/runs/<run_id>` directory. The CLI does not print the run id on stdout,
-but the id embeds the child process id (`run_<epoch>_<n>_<pid>_<hex>`), so this module removes
-exactly the directories whose pid is one of its own children. It never diffs the directory
+but the id embeds the start epoch and the child process id (`run_<epoch>_<n>_<pid>_<hex>`), so this
+module removes exactly the directories with its own child's pid and an epoch no older than that
+run's start (pids recycle). It never diffs the directory
 (other sessions write there at the same time).
 """
 
@@ -23,6 +24,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Sequence
@@ -40,7 +42,9 @@ EXIT_COULD_NOT_RUN = 2
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 _HASH_LINE = re.compile(r"^Final State Hash:[ \t]*(\S+)[ \t]*$", re.MULTILINE)
-_RUN_DIR = re.compile(r"^run_\d+_\d+_(\d+)_[0-9a-f]+$")
+_RUN_DIR = re.compile(r"^run_(\d+)_\d+_(\d+)_[0-9a-f]+$")
+STDERR_TAIL_LINES = 5
+EPOCH_SLACK_S = 1
 
 CommandBuilder = Callable[[int, int], list[str]]
 
@@ -73,15 +77,31 @@ def parse_final_hash(output: str) -> str | None:
     return found[-1] if found else None
 
 
-def own_run_dirs(runs_root: Path, pid: int) -> list[Path]:
-    """Return the `run_*` directories under `runs_root` created by process `pid`."""
+def stderr_tail(stderr: str, lines: int = STDERR_TAIL_LINES) -> str:
+    """Return the last `lines` non-empty stderr lines joined by ' | ', or '' if there are none."""
+    kept = [line.strip() for line in stderr.splitlines() if line.strip()]
+    return " | ".join(kept[-lines:])
+
+
+def _with_reason(message: str, stderr: str) -> str:
+    """Append the stderr tail to `message` when there is one."""
+    tail = stderr_tail(stderr)
+    return f"{message}: {tail}" if tail else message
+
+
+def own_run_dirs(runs_root: Path, pid: int, started_at: int = 0) -> list[Path]:
+    """Return the `run_*` directories under `runs_root` created by process `pid`.
+
+    Pids recycle, so a directory only counts when the epoch in its name is at least
+    `started_at` (the run's own start time, less a little slack).
+    """
     if not runs_root.is_dir():
         return []
     matches = (_RUN_DIR.match(p.name) for p in runs_root.iterdir() if p.is_dir())
     return [
         runs_root / m.string
         for m in matches
-        if m is not None and int(m.group(1)) == pid
+        if m is not None and int(m.group(2)) == pid and int(m.group(1)) >= started_at
     ]
 
 
@@ -92,16 +112,17 @@ def run_once(
     timeout_s: float,
 ) -> RunResult:
     """Run `command` once from `repo_root`, parse its hash, and remove only its own run dirs."""
+    started_at = int(time.time()) - EPOCH_SLACK_S
     proc = subprocess.Popen(
         list(command),
         cwd=repo_root,
         env=env,
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
         text=True,
     )
     try:
-        stdout, _ = proc.communicate(timeout=timeout_s)
+        stdout, stderr = proc.communicate(timeout=timeout_s)
     except subprocess.TimeoutExpired:
         proc.kill()
         proc.communicate()
@@ -109,12 +130,14 @@ def run_once(
     else:
         final_hash = parse_final_hash(stdout)
         if proc.returncode != 0:
-            result = RunResult(final_hash, f"exited with status {proc.returncode}")
+            message = _with_reason(f"exited with status {proc.returncode}", stderr)
+            result = RunResult(final_hash, message)
         elif final_hash is None:
-            result = RunResult(None, "no 'Final State Hash:' line in the output")
+            message = _with_reason("no 'Final State Hash:' line in the output", stderr)
+            result = RunResult(None, message)
         else:
             result = RunResult(final_hash)
-    for run_dir in own_run_dirs(repo_root / "data" / "runs", proc.pid):
+    for run_dir in own_run_dirs(repo_root / "data" / "runs", proc.pid, started_at):
         shutil.rmtree(run_dir, ignore_errors=True)
     return result
 
@@ -143,9 +166,8 @@ def _run_pair(
         results.append(result)
     if any(r.error or r.final_hash is None for r in results):
         return results, "COULD NOT RUN"
-    return results, "MATCH" if results[0].final_hash == results[
-        1
-    ].final_hash else "DIFFER"
+    same = results[0].final_hash == results[1].final_hash
+    return results, "MATCH" if same else "DIFFER"
 
 
 def main(
