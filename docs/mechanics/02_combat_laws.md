@@ -30,13 +30,15 @@ Before damage is calculated, the base `Atk` and `Def` values are modified by the
 
 | Modifier | Impact | Condition |
 | :--- | :--- | :--- |
-| **High Ground** | `+0.20` Atk | Attacker is at a higher elevation than the target. |
+| **High Ground** | `+0.20` Atk | Attacker stands on a terrain declared `high_ground` in content (mountain only) and the target does not. |
 | **Flanking** | `+0.15` Atk | Attacker is behind the target's current focus. |
 | **Surrounded** | `+0.25` Atk | Target is surrounded by multiple enemies. |
-| **Cover** | `+0.30` Def | Target is behind environmental cover relative to the attacker. |
+| **Cover** | `+0.30` Def | The tile behind the target (on the side away from a non-adjacent attacker) is a terrain declared `gives_cover` in content (forest, mountain, ruin, cave). |
 | **Shatter** | `x1.50` Atk | Target is currently in the `Frozen` state. |
 | **Exhaustion** | `x0.80` Atk | Attacker's `Sleep Debt` is greater than 80. |
 | **Bond Synergy** | `+0.10` Atk | Adjacent ally has >0.5 Familiarity with the attacker. |
+
+*Terrain declares both flags (owner/designer application of D33/D56/D72, divergence 2.129).* `gives_cover` and `high_ground` are required fields of each terrain in `data/content/world/terrain.yaml`; a terrain that omits either fails to load, and code names no terrain. Before this change the two checks named upper-case `WALL`, `FOREST`, `MOUNTAIN` and `HILL`, so on the lower-case catalog ids neither modifier ever fired (this table described behavior that did not run). The modifier sizes are unchanged.
 
 ---
 

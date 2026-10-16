@@ -33,8 +33,8 @@ def test_warmup_installs_the_terrain_catalog_and_reset_clears_it():
     from src.content import terrain_cost as tc
 
     reset_terrain_costs()
-    assert tc._costs_cache is None
+    assert tc._terrain_cache is None
     ContentWarmupService.warmup()
-    assert tc._costs_cache is not None and "forest" in tc._costs_cache
+    assert tc._terrain_cache is not None and "forest" in tc._terrain_cache
     ContentWarmupService.reset()
-    assert tc._costs_cache is None
+    assert tc._terrain_cache is None

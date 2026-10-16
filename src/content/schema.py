@@ -371,6 +371,8 @@ class ServiceProfileDefinition(CatalogBaseDefinition):
 class TerrainDefinition(CatalogBaseDefinition):
     """Schema for ground terrain speed, hazard multipliers and descriptions."""
     move_cost_multiplier: float = Field(..., gt=0.0, description="Readiness cost factor for one step onto this terrain (D72). Required: a terrain without a declared cost is a content error, never a silent 1.0")
+    gives_cover: bool = Field(..., description="Whether a defender standing against this terrain is behind cover (the combat cover check reads it). Required: a terrain that does not say is a content error")
+    high_ground: bool = Field(..., description="Whether an attacker standing on this terrain has the high-ground edge (the combat high-ground check reads it). Required: a terrain that does not say is a content error")
     hazard_multiplier: float = Field(1.0, ge=0.0, description="Scaling factor for hazard damage")
 
 
