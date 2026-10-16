@@ -169,8 +169,8 @@ def main(argv: List[str] | None = None) -> int:
     p.add_argument("--profile", default="PROD_LARGE")
     p.add_argument("--contract", default="pinned", choices=["live", "pinned", "canonical", "audit"])
     p.add_argument("--out", default=None, help="write the JSON report here")
-    p.add_argument("--control", action="store_true", help="run the unwrapped pass a second time: a pinned run is not deterministic when the wall-clock budget throttle fires, so the inert check "
-                   "only counts against the wrapper when the two unwrapped runs agree")
+    p.add_argument("--control", action="store_true", help="run the unwrapped pass a second time: a pinned run is not deterministic (the queue and worker wall-clock signals and the scheduler's tick-time "
+                   "inputs still move, see PINNED_NOTE in tools/perf/_profiling_common.py), so the inert check only counts against the wrapper when the two unwrapped runs agree")
     p.add_argument("--selftest", action="store_true")
     args = p.parse_args(argv)
     if args.selftest:
