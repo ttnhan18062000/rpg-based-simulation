@@ -212,9 +212,10 @@ provides it.
 | `throughput` | object `{compute_tps, wall_tps}` | required | today: harness |
 | `time_s` | object `{wall, cpu_user, cpu_system}` | required | today: harness (CPU includes warmup, which wall does not; the schema fixes one window) |
 | `memory_mb` | object `{rss_high_water, rss_delta, sample_every_ticks}` plus, from `1.2`, the optional keys below | required | today: `mem_rss_mb`, sampled every 10th tick; `delta` is max minus min of samples. **`rss_high_water` and `rss_delta` are read with the collector disabled for the sampled window, so they include the cyclic garbage the engine makes during it** (`tick_cost_growth.md` §5); they are not the engine's working set |
-| `memory_mb.rss_before_window_mb`, `rss_after_collect_mb`, `rss_collected_delta_mb` | numbers (MB), optional (`1.2`) | optional | RSS read after the `gc.collect()` that precedes the window, RSS read after a second `gc.collect()` taken once the window's wall and CPU clocks have stopped, and their difference. Freed arenas can stay mapped, so the after-collect value is an upper bound on the working set, not an exact figure |
-| `memory_mb.allocated_blocks_delta`, `gc_unreachable_objects`, `gc_collect_s` | numbers, optional (`1.2`) | optional | change of `sys.getallocatedblocks()` between the same two points (live Python blocks, independent of the allocator returning memory), objects the end collect found unreachable, and its duration in seconds |
-| `memory_mb.declared_ram_mb`, `rss_over_declared`, `peak_rss_over_declared` | numbers, optional (`1.2`) | optional, **report only** | `declared_ram_mb` is `RuntimeProfile.max_ram_mb`; **`rss_over_declared = rss_after_collect_mb / declared_ram_mb`**; `peak_rss_over_declared = rss_high_water / declared_ram_mb` (garbage included, so it is not the basis of any statement about the engine). Neither is read by `compare`, `promote` or any gate: a ratio above `1.0` is reported, never refused (`PERF-M2` OD-8) |
+| `memory_mb.rss_before_window_mb`, `rss_after_collect_mb` | numbers (MB), optional (`1.2`) | optional | RSS after the `gc.collect()` that precedes the window (untrimmed: a trim before the window would hand pages back and make the sampled ticks fault them in again), and RSS after a second `gc.collect()` taken once the window's wall and CPU clocks have stopped. **The second one is not the working set**: the freed garbage's memory stays mapped in the allocator, so it equals the high-water mark (measured: 402 MB after collect against 99.6 MB at the end of warm-up) |
+| `memory_mb.rss_after_trim_mb`, `rss_trim_delta_mb` | numbers (MB), optional (`1.2`), absent where glibc `malloc_trim` is unavailable | optional | RSS after `malloc_trim(0)` straight after the end collect (outside the timed spans), and `rss_after_trim_mb - rss_before_window_mb`. This is the engine-memory reading (125.6 MB in the same 200-tick run) |
+| `memory_mb.allocated_blocks_delta`, `gc_collected_objects`, `gc_collect_s` | numbers, optional (`1.2`) | optional | change of `sys.getallocatedblocks()` between the pre-window collect and the end collect (live Python blocks, independent of the allocator returning memory); the change of the `gc.get_stats()` collected total over the window and the end collect (the garbage the disabled collector let pile up, freed by the first collection after the window or by the end collect); and the end collect's duration in seconds |
+| `memory_mb.declared_ram_mb`, `rss_over_declared`, `rss_over_declared_basis_trim`, `peak_rss_over_declared` | numbers, optional (`1.2`) | optional, **report only** | `declared_ram_mb` is `RuntimeProfile.max_ram_mb`; **`rss_over_declared = rss_after_trim_mb / declared_ram_mb`**, or `rss_after_collect_mb / declared_ram_mb` where the trim is unavailable, and `rss_over_declared_basis_trim` is `1.0` when the trim was the basis and `0.0` when it was not; `peak_rss_over_declared = rss_high_water / declared_ram_mb` (garbage included, so it is not the basis of any statement about the engine). None is read by `compare`, `promote` or any gate: a ratio above `1.0` is reported, never refused (`PERF-M2` OD-8) |
 | `scaling_slope` | object or null | optional | not yet (M4) |
 | `runtime_mode_sequence` | array of `{mode, ticks}` (run-length) | required | today: `mode_sequence` per tick; toolkit compresses |
 | `work` | object name → number | required (may be empty) | today: the kernel's `metrics` per-tick means under the names it emits. The processed / dropped / coalesced split is not named yet, and the collector does not invent counts. Work debt is gone (DEV-019), so there is no debt counter to describe (R-5) |
@@ -400,12 +401,14 @@ provides it.
             "sample_every_ticks": {"type": "integer", "minimum": 1},
             "rss_before_window_mb": {"type": "number"},
             "rss_after_collect_mb": {"type": "number"},
-            "rss_collected_delta_mb": {"type": "number"},
+            "rss_after_trim_mb": {"type": "number"},
+            "rss_trim_delta_mb": {"type": "number"},
             "allocated_blocks_delta": {"type": "number"},
-            "gc_unreachable_objects": {"type": "number"},
+            "gc_collected_objects": {"type": "number"},
             "gc_collect_s": {"type": "number"},
             "declared_ram_mb": {"type": "number"},
             "rss_over_declared": {"type": "number"},
+            "rss_over_declared_basis_trim": {"type": "number"},
             "peak_rss_over_declared": {"type": "number"}
           }
         },
