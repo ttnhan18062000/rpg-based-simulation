@@ -266,7 +266,8 @@ def test_wider_scope_numbers_pinned():
     # 339 -> 340 on 2026-10-14 (D72, folded into rpg-next): +src/content/terrain_cost.py (the content-declared terrain cost accessor).
     # 340 -> 341 on 2026-10-14 (diet slice of SURV-05): +src/worldbuilding/diet_declaration.py (two checks: a compiled body names a declared diet; a recipe names a known species; functions only).
     # 341 -> 342 on 2026-10-15 (typed death cause): +src/core/death_cause.py (DeathCause, HpLossSource, DeathRecord: enums and one frozen record). src/observability/death_ledger.py is outside the scope globs.
-    assert wider["scope_files"] == 342
+    # 342 -> 343 on 2026-10-16 (D75 route step, divergence 2.128): +src/engine/route_search.py (RoutePlanStore and the bounded terrain-cost search).
+    assert wider["scope_files"] == 343
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -303,7 +304,11 @@ def test_wider_scope_numbers_pinned():
     # keeps only its constants for the raid that returns with caused war, M3).
     # 252 -> 253 on 2026-10-14 (diet slice of SURV-05): +src/worldbuilding/diet_declaration.py is unbound; rpg-planner binds it.
     # 253 -> 254 on 2026-10-15 (typed death cause): src/core/death_cause.py is in scope and bound to no mechanism; rpg-planner binds it at the fold.
-    assert wider["unbound_files"] == 254
+    # 254 -> 255 on 2026-10-16 (D75 route step): +src/engine/route_search.py, in scope and unbound.
+    # 255 -> 251 on 2026-10-16 (rpg-planner binding at the fold): route_search.py::route_next_step and content/terrain_cost.py::terrain_cost
+    # under `movement` (terrain cost is now paid in step time and route weighting, so it is movement's), death_cause.py::DeathRecord under
+    # `aging_death` (the record resolve_lifecycle writes at death), diet_declaration.py::require_declared_diet under `attributes_biology`.
+    assert wider["unbound_files"] == 251
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
