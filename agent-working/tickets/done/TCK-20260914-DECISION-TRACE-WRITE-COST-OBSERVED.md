@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
 ticket_id: TCK-20260914-DECISION-TRACE-WRITE-COST-OBSERVED
-phase: open
+phase: done
 date: 2026-09-14
 tags: [performance, observability]
 ---
@@ -16,7 +16,7 @@ tags: [performance, observability]
 material per-tick I/O cost at 1000-entity scale — REPORT ONLY, not investigated
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -112,6 +112,9 @@ That table shows a new `persistence` phase cost of ~37ms/tick appearing only wit
 ## Implementation Notes
 _(not applicable — report-only ticket, no implementation performed)_
 
+### Evidence from TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION (2026-10-15)
+`decision_trace` frames are **0.0 to 1.4 %** of the samples in every profile; the samples are filtered to stacks containing the measured tick loop, so a writer thread's own frames are not counted (`docs/performance/tick_cost_growth.md` section 4). **Recommendation: close as not a tick cost** (perf-planner checks the close). Not measured: whether the `QueueDrainWorker` thread itself is slow, which is not a tick cost.
+
 ## Test Summary
 _(not applicable — report-only ticket, no implementation performed)_
 
@@ -119,4 +122,8 @@ _(not applicable — report-only ticket, no implementation performed)_
 _(none — report-only ticket)_
 
 ## Completion Summary
-_(pending future investigation)_
+Closed as NOT A TICK COST by perf-planner, 2026-10-15. No implementation.
+
+- **Measured:** in `TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION` (#597, d7d328875), `decision_trace` frames are 0.0 to 1.4 % of the tick-thread samples in every profile (`docs/performance/tick_cost_growth.md` §4).
+- **Why:** `_write_entry_to_file` runs on the `observability-drain-worker` daemon thread. `DecisionTraceWriter` hands it to a `QueueDrainWorker` (`src/observability/cognition/decision_trace_writer.py:82`, `src/observability/queue.py:116`), and the tick thread only enqueues through `write_trace`. The tick thread calls it only in `close()`'s final drain (`:177`), at shutdown. The ticket's own acceptance criterion applies: "not material at realistic scale … recorded here and the ticket closes on that finding". Checked on main d7d328875.
+- **Not measured, and not a tick cost:** the drain thread's own speed, and its GIL share while the tick runs. Any future observer-overhead work under PERF-M3-T07 can measure that. Nothing is routed to the Gate-A process.
