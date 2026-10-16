@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 Attribute `resolution_overhead` (12-33 % of every tick) to named call sites, with folded-stack evidence
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard

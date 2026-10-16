@@ -8,7 +8,7 @@ tags: [performance, benchmarking, schema, documentation]
 
 # Benchmark Identity and Result Schema (schema 1.2)
 
-> **Status: the contract for schema version `1.2`** (`1.1` plus the optional after-collect keys of `result.memory_mb`, §3.2; `1.1` was `1.0` plus the optional `identity.runner` section, §3.1; both are MINOR bumps, so a `1.0` or `1.1` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
+> **Status: the contract for schema version `1.2`** (`1.1` plus the optional after-collect keys of `result.memory_mb`, §3.1 and §3.2; `1.1` was `1.0` plus the optional `identity.runner` section, §3.1; both are MINOR bumps, so a `1.0` or `1.1` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
 > (`BenchmarkRecord`, `compare`), adopted by `PERF-M2-T02b` (`TCK-20261010-PERF-M2-T02B-RECORD`).
 > It began as the design draft of `PERF-M2-T02` (`TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA`),
 > written from code read on 2026-10-03; §1 and §2 are that inventory and still describe the formats as
