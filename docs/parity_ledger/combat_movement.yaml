@@ -4869,3 +4869,13 @@
   test_path: tests/unit/engine/test_terrain_cost_is_time.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.126.
   support_boundary: About 0.03% of frontier steps (78 of 249031, five seeds) still carry no step time (an ordinary move update whose final form lacks the field; the writer is not identified). Swaps and yields are timed and respect the hold (D75 completion). Route choice is not weighted by cost (the next step), so a path may cross slow ground when a faster way exists. Road (0.5) is capped at one tick. Fatigue is not modelled.
+- id: COMB-349
+  text: 'TCK-20261014-ROUTES-WEIGH-TERRAIN-COST-D75-ROUTE-STEP: the route toward a target is the cheapest by declared terrain cost when that is cheaper than the greedy walk (a bounded A*, node cap 3000, greedy fallback counted); on uniform ground the step is the old greedy step.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/route_search.py (search, route_next_step, RoutePlanStore, ROUTE_NODE_CAP), src/engine/movement.py (MovementSystem._route_step), src/core/state.py (AuthoritativeState.route_plans), src/engine/apply.py (route_plans carried).
+  proof_type: regression
+  test_path: tests/unit/engine/test_route_weighs_terrain_cost.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.128.
+  support_boundary: The search plans on the true terrain map and over terrain cost only (no hazard, no obstacles or entities; those stay with the sidestep ladder). A far TOWN target keeps the flow-field branch and swaps keep their own next step. Knowledge-limited routing is a later step.

@@ -531,6 +531,7 @@ class ApplyPath:
             _has_hostiles_or_dead_cache=pass_hostile,
             _has_contracts_cache=pass_contracts,
             movement_cache=m_cache,
+            route_plans=getattr(prior_state, "route_plans", None),
             world_indexes=getattr(prior_state, "world_indexes", None),
             semantic_entity_indexes=getattr(prior_state, "semantic_entity_indexes", None),
             _index_hits=getattr(prior_state, "_index_hits", 0),

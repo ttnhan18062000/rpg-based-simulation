@@ -258,3 +258,8 @@ reads the factor: it stays the plain `move_cost / speed` readiness check. The co
 A river stays walkable (3.0). Cave, ruin and river are D33 placeholders. Per-body movement styles
 are a later change (M1). The numbers `terrain.yaml` declared before D72 were read by nothing; they
 are replaced by the ruled values above.
+
+**Routes weigh the cost (D75 route step, divergence 2.128).** The route toward a target is the greedy axis-dominant walk unless a bounded A* over the declared
+terrain cost (`src/engine/route_search.py`, node cap `ROUTE_NODE_CAP`) finds a cheaper one, in which case the entity takes the first tile of that route. A road
+(0.5) therefore draws a walk toward it when it saves cost. The search reads the true terrain map as common knowledge of the land, weighs terrain cost only (no hazard;
+walls, buildings and other entities stay with the sidestep and reroute ladder), and a search over its cap falls back to the greedy step and is counted.
