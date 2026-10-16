@@ -266,8 +266,10 @@ def read_bound_worktree(root: Path, instance: str) -> tuple[str, bool] | None:
 def append_binding(root: Path, binding: Binding) -> None:
     """Atomic append: one O_APPEND write of one line under a lock, so parallel writers never interleave.
 
-    A file that does not end in a newline (a torn tail left by a short write) gets one first, so the new record
-    never glues onto the torn one (TCK-20261015-SESSION-BINDINGS-TORN-TAIL)."""
+    A file that does not end in a newline holds a torn tail (a short write when the disk filled). Under the same lock
+    the fragment is moved to a `bindings.jsonl.torn-<UTC time>` sidecar next to the file and the file is cut back to its
+    last complete line, so the history stays fully readable on every later start instead of turning the fragment into a
+    middle line that raises (TCK-20261015-SESSION-BINDINGS-TORN-TAIL). Nothing is discarded: the sidecar keeps the bytes."""
     path = role_dir(root, binding.role) / BINDINGS
     line = json.dumps(asdict(binding), sort_keys=True) + "\n"
     with _locked(path.with_suffix(".lock")):
@@ -275,7 +277,12 @@ def append_binding(root: Path, binding: Binding) -> None:
         try:
             size = os.fstat(fd).st_size
             if size and os.pread(fd, 1, size - 1) != b"\n":
-                line = "\n" + line
+                data = os.pread(fd, size, 0)
+                keep = data.rfind(b"\n") + 1
+                sidecar = path.with_name(f"{BINDINGS}.torn-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}")
+                with open(sidecar, "ab") as side:
+                    side.write(data[keep:])
+                os.ftruncate(fd, keep)
             os.write(fd, line.encode("utf-8"))
         finally:
             os.close(fd)

@@ -552,6 +552,9 @@ def test_a_torn_bindings_tail_still_gives_card_and_note_and_one_warning(world):
     out = _ctx(world, _payload(repo, session_id="b", source="clear"))
     assert f"You are `{WRITER}`" in out and "SECRET-WRITER-NOTE" in out
     assert out.count("unparseable last line") == 1
+    # the start's own append moved the fragment aside, so the NEXT start is clean (the tolerance does not wear off)
+    again = _ctx(world, _payload(repo, session_id="c", source="clear"))
+    assert "unparseable last line" not in again and "could not be read" not in again
 
 
 def test_an_unreadable_bindings_history_still_gives_card_and_note_and_says_so(world):

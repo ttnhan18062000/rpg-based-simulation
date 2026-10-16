@@ -264,16 +264,40 @@ def test_a_last_line_that_is_json_but_not_a_binding_still_raises(repo):
         st.read_bindings(root, "r-one")
 
 
-def test_append_after_a_torn_tail_starts_on_a_new_line(repo):
+def test_append_after_a_torn_tail_moves_the_fragment_to_a_sidecar_and_keeps_the_history_readable(repo):
     root = st.state_root(repo)
     path = _torn_file(root)
     st.append_binding(root, _binding(sid="after"))
-    text = path.read_text()
-    assert '"torn", "role": "r-o\n{' in text  # the torn fragment keeps its own line
-    # the torn fragment is now a MIDDLE line, which is a hard error, so the repair is a sidecar move, not tolerance
-    with pytest.raises(st.StateError):
-        st.read_bindings(root, "r-one")
-    assert text.endswith("\n") and text.splitlines()[-1].startswith("{") and '"after"' in text.splitlines()[-1]
+    # the file is whole again: every later start reads it with no warning and no error
+    bindings, warning = st.read_bindings_report(root, "r-one")
+    assert [b.session_id for b in bindings] == ["good-0", "good-1", "after"] and warning is None
+    assert path.read_text().endswith("\n") and "torn" not in path.read_text()
+    # nothing is discarded: the bytes are in a sidecar beside the file
+    (sidecar,) = list(path.parent.glob(f"{st.BINDINGS}.torn-*"))
+    assert sidecar.read_bytes() == b'{"session_id": "torn", "role": "r-o'
+
+
+def test_a_file_that_is_only_a_torn_fragment_is_emptied_into_the_sidecar(repo):
+    root = st.state_root(repo)
+    (root / "r-one").mkdir(parents=True, exist_ok=True)
+    path = root / "r-one" / st.BINDINGS
+    path.write_bytes(b'{"session_id": "tor')
+    st.append_binding(root, _binding(sid="only"))
+    assert [b.session_id for b in st.read_bindings(root, "r-one")] == ["only"]
+    (sidecar,) = list(path.parent.glob(f"{st.BINDINGS}.torn-*"))
+    assert sidecar.read_bytes() == b'{"session_id": "tor'
+
+
+def test_two_tears_in_the_same_second_share_one_sidecar_without_losing_either(repo):
+    root = st.state_root(repo)
+    path = _torn_file(root, n_good=1)
+    st.append_binding(root, _binding(sid="a"))
+    with path.open("ab") as fh:
+        fh.write(b"{second")
+    st.append_binding(root, _binding(sid="b"))
+    sidecars = list(path.parent.glob(f"{st.BINDINGS}.torn-*"))
+    assert b"".join(p.read_bytes() for p in sorted(sidecars)).count(b"torn") == 1 and b"{second" in b"".join(p.read_bytes() for p in sidecars)
+    assert [b.session_id for b in st.read_bindings(root, "r-one")] == ["good-0", "a", "b"]
 
 
 def test_append_to_a_clean_file_adds_no_blank_line(repo):
