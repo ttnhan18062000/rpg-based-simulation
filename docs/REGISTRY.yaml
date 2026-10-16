@@ -7581,21 +7581,23 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT.md
-  ticket_id: TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT
-  title: '`test_every_new_job_installs_with_uv_from_the_lockfile` compares the setup-uv
-    action by name, not by its exact version'
-  tier: hotfix
+  path: agent-working/tickets/todos/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH.md
+  ticket_id: TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH
+  title: Say when a session's tool-call hook is not loaded, and get late tool rows
+    committed, so tools shards cover the sessions that close tickets
+  tier: standard
   ticket_type: repair
-  date: '2026-10-15'
+  date: '2026-10-16'
   related_code_areas:
-  - tests/tools/test_ci_split_tools_jobs.py
-  - _action_name
+  - tools/agent-monitoring/post_tool_hook.py, tools/sessions/settings_freshness.py,
+    tools/sessions/session_start_hook.py
   artifact_files: []
   tags:
-  - testing
+  - agent-monitoring
+  - hooks
+  - data-quality
 - type: ticket
-  path: agent-working/tickets/todos/w41-retro-followups/TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON.md
+  path: agent-working/tickets/done/TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON.md
   ticket_id: TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON
   title: Hand-closure records which phases really ran from artifact evidence, needs
     a structured Parity skip reason when src/ changed, and the retro counts ledger
@@ -7606,13 +7608,16 @@
   related_code_areas:
   - tools/agent-monitoring/record_hand_orchestrated_closure.py, tools/agent-monitoring/generate_retro.py,
     tools/agent-monitoring/path_report.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON/investigation.md
+  - agent-working/stored_artifacts/TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON/plan.md
+  - agent-working/stored_artifacts/TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON/test_plan.md
   tags:
   - agent-monitoring
   - data-quality
   - workflows
 - type: ticket
-  path: agent-working/tickets/todos/w41-retro-followups/TCK-20261015-PROCESS-TEXT-PLANNER-CARD-TLS-MERGE-TREE.md
+  path: agent-working/tickets/done/TCK-20261015-PROCESS-TEXT-PLANNER-CARD-TLS-MERGE-TREE.md
   ticket_id: TCK-20261015-PROCESS-TEXT-PLANNER-CARD-TLS-MERGE-TREE
   title: 'Correct three process texts: the planner card commit line, the TLS paragraph,
     and what a local merge-tree with the REGISTRY driver can tell you'
@@ -7627,7 +7632,7 @@
   - delivery
   - process-improvement
 - type: ticket
-  path: agent-working/tickets/todos/w41-retro-followups/TCK-20261015-REGISTRY-DETERMINISTIC-OUTPUT.md
+  path: agent-working/tickets/done/TCK-20261015-REGISTRY-DETERMINISTIC-OUTPUT.md
   ticket_id: TCK-20261015-REGISTRY-DETERMINISTIC-OUTPUT
   title: Make docs/REGISTRY.yaml generation deterministic so an unchanged tree regenerates
     byte-identical and stops conflicting on its timestamp line
@@ -7637,13 +7642,92 @@
   related_code_areas:
   - tools/generate_registry.py
   - tests/ (real-registry drift test, registry generator tests)
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261015-REGISTRY-DETERMINISTIC-OUTPUT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261015-REGISTRY-DETERMINISTIC-OUTPUT/plan.md
+  - agent-working/stored_artifacts/TCK-20261015-REGISTRY-DETERMINISTIC-OUTPUT/test_plan.md
   tags:
   - delivery
   - determinism
   - process-improvement
 - type: ticket
-  path: agent-working/tickets/todos/w41-retro-followups/TCK-20261015-SESSION-BINDINGS-TORN-TAIL.md
+  path: agent-working/tickets/done/TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START.md
+  ticket_id: TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START
+  title: SessionStart warns when the worktree it runs from has stale session code
+    or session registries, so a lagging worktree cannot inject the wrong role or handover
+    note
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - tools/sessions/settings_freshness.py, tools/sessions/session_start_hook.py, tools/sessions/launch.py
+  - tests/tools/ (session tests)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START/investigation.md
+  - agent-working/stored_artifacts/TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START/plan.md
+  - agent-working/stored_artifacts/TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START/test_plan.md
+  tags:
+  - hooks
+  - process-improvement
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP.md
+  ticket_id: TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP
+  title: 'Session-layer measures: role_boundary matches seat suffixes, reset-boundary
+    declarations get a durable record, and SessionStart warns when a handover note
+    is over the cap'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-15'
+  related_code_areas:
+  - tools/sessions/boundary.py, tools/sessions/session_start_hook.py, tools/agent-monitoring/generate_retro.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP/investigation.md
+  - agent-working/stored_artifacts/TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP/plan.md
+  - agent-working/stored_artifacts/TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP/test_plan.md
+  tags:
+  - agent-monitoring
+  - hooks
+  - process-improvement
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261015-TOOLS-TELEMETRY-FAILURES-AND-DURATIONS.md
+  ticket_id: TCK-20261015-TOOLS-TELEMETRY-FAILURES-AND-DURATIONS
+  title: Record failed tool calls and stop corrupting tool durations; explain and
+    size the missing tools shards
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - tools/agent-monitoring/pre_tool_hook.py, tools/agent-monitoring/post_tool_hook.py,
+    tools/agent-monitoring/generate_retro.py
+  - .claude/settings.json (owner applies)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261015-TOOLS-TELEMETRY-FAILURES-AND-DURATIONS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261015-TOOLS-TELEMETRY-FAILURES-AND-DURATIONS/plan.md
+  - agent-working/stored_artifacts/TCK-20261015-TOOLS-TELEMETRY-FAILURES-AND-DURATIONS/test_plan.md
+  tags:
+  - agent-monitoring
+  - hooks
+  - data-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW.md
+  ticket_id: TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW
+  title: Week close folds gate_verdicts, manual_actions and role_boundary shards too,
+    and a dropped ticket can void its pending working_log row
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - tools/agent-monitoring/week_close.py, tools/agent-monitoring/monitoring_consolidation.py,
+    tools/agent-monitoring/gate_ledger.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW/investigation.md
+  - agent-working/stored_artifacts/TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW/plan.md
+  - agent-working/stored_artifacts/TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW/test_plan.md
+  tags:
+  - agent-monitoring
+  - data-quality
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261015-SESSION-BINDINGS-TORN-TAIL.md
   ticket_id: TCK-20261015-SESSION-BINDINGS-TORN-TAIL
   title: A torn last line in a session-roles bindings.jsonl must not silence SessionStart;
     repair the torn rpg-implementer file
@@ -7658,69 +7742,19 @@
   - hooks
   - data-quality
 - type: ticket
-  path: agent-working/tickets/todos/w41-retro-followups/TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START.md
-  ticket_id: TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START
-  title: SessionStart warns when the worktree it runs from has stale session code
-    or session registries, so a lagging worktree cannot inject the wrong role or handover
-    note
-  tier: standard
+  path: agent-working/tickets/inprogress/TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT.md
+  ticket_id: TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT
+  title: '`test_every_new_job_installs_with_uv_from_the_lockfile` compares the setup-uv
+    action by name, not by its exact version'
+  tier: hotfix
   ticket_type: repair
   date: '2026-10-15'
   related_code_areas:
-  - tools/sessions/settings_freshness.py, tools/sessions/session_start_hook.py, tools/sessions/launch.py
-  - tests/tools/ (session tests)
+  - tests/tools/test_ci_split_tools_jobs.py
+  - _action_name
   artifact_files: []
   tags:
-  - hooks
-  - process-improvement
-- type: ticket
-  path: agent-working/tickets/todos/w41-retro-followups/TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP.md
-  ticket_id: TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP
-  title: 'Session-layer measures: role_boundary matches seat suffixes, reset-boundary
-    declarations get a durable record, and SessionStart warns when a handover note
-    is over the cap'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-15'
-  related_code_areas:
-  - tools/sessions/boundary.py, tools/sessions/session_start_hook.py, tools/agent-monitoring/generate_retro.py
-  artifact_files: []
-  tags:
-  - agent-monitoring
-  - hooks
-  - process-improvement
-- type: ticket
-  path: agent-working/tickets/todos/w41-retro-followups/TCK-20261015-TOOLS-TELEMETRY-FAILURES-AND-DURATIONS.md
-  ticket_id: TCK-20261015-TOOLS-TELEMETRY-FAILURES-AND-DURATIONS
-  title: Record failed tool calls and stop corrupting tool durations; explain and
-    size the missing tools shards
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-15'
-  related_code_areas:
-  - tools/agent-monitoring/pre_tool_hook.py, tools/agent-monitoring/post_tool_hook.py,
-    tools/agent-monitoring/generate_retro.py
-  - .claude/settings.json (owner applies)
-  artifact_files: []
-  tags:
-  - agent-monitoring
-  - hooks
-  - data-quality
-- type: ticket
-  path: agent-working/tickets/todos/w41-retro-followups/TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW.md
-  ticket_id: TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW
-  title: Week close folds gate_verdicts, manual_actions and role_boundary shards too,
-    and a dropped ticket can void its pending working_log row
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-15'
-  related_code_areas:
-  - tools/agent-monitoring/week_close.py, tools/agent-monitoring/monitoring_consolidation.py,
-    tools/agent-monitoring/gate_ledger.py
-  artifact_files: []
-  tags:
-  - agent-monitoring
-  - data-quality
+  - testing
 - type: ticket
   path: agent-working/tickets/done/TCK-20261014-ANYIO-CVE-BUMP.md
   ticket_id: TCK-20261014-ANYIO-CVE-BUMP
