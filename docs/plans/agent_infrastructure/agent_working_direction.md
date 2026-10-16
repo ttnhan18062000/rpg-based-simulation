@@ -55,6 +55,7 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 | CI and code-health gate ingest into the gate ledger | idea | the CI jobs and the code-health ratchet are gates too; their verdicts are not in `gate_verdicts` yet |
 | Finding-to-ticket-to-merge funnel | held | needs a stable finding-id convention first |
 | PR body `Closes:` must reflect ticket location | shipped | `TCK-20261002-PR-RENDER-CLOSES-LISTS-FILED-FOLLOWUPS` (PR #280): a ticket under `todos/` or `inprogress/` is left out of `Closes:` with a warning, so a PR that files a follow-up no longer claims to close it; found twice by a peer reading the body (PRs #276, #279), not by `--check` |
+| Stop committing `docs/REGISTRY.yaml` (generate when read, regenerate on main, or split per entry) | idea | reopens the rejected option B of `TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX` with the cost measured in 2026-10-05..15 (RETRO-2026-W41 final note, PR #605): 151 of 210 session PRs hit a REGISTRY conflict on GitHub, 146 of 288 follow-up pushes were REGISTRY-only re-syncs (about 23 h of CI and approvals), 17 CI failures were stale-REGISTRY drift, the owner folded 13 closed PRs into 4. `TCK-20261015-REGISTRY-DETERMINISTIC-OUTPUT` dropped the wall-clock `# Generated:` line, which removes the header hunk only; what is left is adjacent same-day ticket insertions (replay: 21 of 67 origin/main merges over the last 60 merged PRs still conflict, down from 59). This row decides nothing |
 
 ### Adaptable
 

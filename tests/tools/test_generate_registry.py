@@ -610,7 +610,7 @@ class TestCheckMode:
         assert rc != 1  # Distinguishable from the frontmatter-error code.
         assert output.read_bytes() == stale_before  # No write occurred.
 
-    def test_check_ignores_header_timestamp_drift(self, tmp_path):
+    def test_check_ignores_header_comment_drift(self, tmp_path):
         _make_doc(tmp_path, "engine/foo.md",
                   "status: active\nlayer: engine\nauthority: P1\naudience: developer\ntags: []",
                   "# Foo\n")
@@ -619,12 +619,26 @@ class TestCheckMode:
 
         content = output.read_text(encoding="utf-8")
         lines = content.splitlines(keepends=True)
-        assert lines[2].startswith("# Generated: ")
-        lines[2] = "# Generated: 2000-01-01T00:00:00Z\n"
+        assert lines[1].startswith("# Do not edit manually")
+        lines[1] = "# A hand-edited header comment\n"
         output.write_text("".join(lines), encoding="utf-8")
 
         rc = generate_registry(tmp_path, output, check=True)
         assert rc == 0
+
+    def test_regenerating_an_unchanged_tree_is_byte_identical_with_no_clock_line(self, tmp_path, monkeypatch):
+        _make_doc(tmp_path, "engine/foo.md",
+                  "status: active\nlayer: engine\nauthority: P1\naudience: developer\ntags: []",
+                  "# Foo\n")
+        output = tmp_path / "docs" / "REGISTRY.yaml"
+        generate_registry(tmp_path, output)
+        first = output.read_bytes()
+        # A clock that moves between the two runs must not show up in the file.
+        import time
+        monkeypatch.setattr(time, "time", lambda: 4102444800.0)
+        generate_registry(tmp_path, output)
+        assert output.read_bytes() == first
+        assert b"Generated" not in first
 
     def test_check_reports_readable_diff_summary(self, tmp_path, capsys):
         _make_doc(tmp_path, "engine/foo.md",
