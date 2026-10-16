@@ -101,8 +101,7 @@ class StateFingerprinter:
         macro_ident = (
             f"maturity={state.maturity}:"
             f"last_calamity_tick={state.last_calamity_tick}:"
-            f"movement_count={state.movement_count}"
-            + (f":grief_drained_tick={state.grief_drained_tick}" if getattr(state, "grief_drained_tick", -1) != -1 else "")
+            f"movement_count={state.movement_count}" + ("" if state.grief_drained_tick == -1 else f":grief_drained_tick={state.grief_drained_tick}")
         )
 
         raw_data = (

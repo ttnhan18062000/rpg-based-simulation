@@ -8,14 +8,17 @@ The urgency formula is the one `CampaignOrchestrator._advance_grief_urgencies()`
 """
 from __future__ import annotations
 
-from typing import List, Tuple
+from typing import TYPE_CHECKING, List, Tuple
 
 from src.core.social_constants import ALLY_TRUST_THRESHOLD
+
+if TYPE_CHECKING:
+    from src.core.state import AuthoritativeState
 
 GriefTrigger = Tuple[int, int, float]
 
 
-def pending_grief_triggers(state) -> List[GriefTrigger]:
+def pending_grief_triggers(state: "AuthoritativeState") -> List[GriefTrigger]:
     """The `(griever_id, dead_id, urgency)` triples owed for the bodies that died on the previous tick and are not yet drained."""
     death_tick = state.tick - 1
     if death_tick <= state.grief_drained_tick:

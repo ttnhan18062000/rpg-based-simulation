@@ -960,7 +960,7 @@ class Kernel:
         if obs_mode == ObservabilityMode.OFF:
             return
 
-        from src.observability.event_recorder import EventExtractor, extract_events
+        from src.observability.event_recorder import extract_events
         from src.observability.events import SimulationEvent
 
         tick = self._state.tick
