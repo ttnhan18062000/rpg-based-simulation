@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: guidelines
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-PROCESS-TEXT-PLANNER-CARD-TLS-MERGE-TREE
-phase: open
+phase: done
 date: 2026-10-15
 tags: [documentation, delivery, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [documentation, delivery, process-improvement]
 Correct three process texts: the planner card commit line, the TLS paragraph, and what a local merge-tree with the REGISTRY driver can tell you
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -73,13 +73,13 @@ intermittent handshake timeouts and 502s. (c) "Local merge-tree with the driver 
 - none
 
 ## Implementation Notes
-(filled during work)
+(a) Planner card: the owner-approved sentence of 2026-10-15 was "Review PRs by comment; commit only on your own branch: in your own worktree, or, if you launch from the main checkout, on a small doc/ticket branch you cut there. Never commit in another role's worktree." It does not fit the card budget (eight planner cards went over 400: agent-working-planner 439, asset 421, lead 421, perf 417, rpg 415, codebase 413, lead-u24 413, testing 407). The owner AMENDED the wording on 2026-10-16 (decided in agent-working-planner's terminal): "Review PRs by comment; commit only on your own branch: your worktree's, or a small doc/ticket branch if you launch from the main checkout." and dropped "See cross_session_messages guide." and "Designer briefs: handoffs once confirmed." from the card; both are kept in a new non-injected `## Reference` section of planner.md. After regeneration every planner card is within 400: agent-working-planner 399, lead-planner 380, asset-planner 381, perf-planner 377, rpg-planner 375, codebase-planner 373, lead-planner-u24 373, testing-planner 367, platform-planner 328. (b) delivery_process.md TLS paragraph names both patterns (a block page; on u24desktop the corporate intercepting CA `DC=vn, DC=com, DC=tma, CN=tma-ADCA-CA` with handshake timeouts and 502s) and the check `openssl s_client -connect api.github.com:443 -showcerts | grep issuer`. (c) delivery_process.md gets a bullet: predict GitHub mergeability with a driverless `git merge-tree --write-tree origin/main HEAD`, never with the registry driver (`merge.registry-regen.driver true` keeps our side; shown on #589).
 
 ## Test Summary
-(filled during work)
+`tests/tools/test_session_cards.py`, `test_session_agent_generator.py`, `test_session_roster.py`, `test_session_platform_domain.py`: 106 passed; `python -m tools.sessions.validate`: 0 findings.
 
 ## Files Changed
-(filled during work)
+docs/guidelines/session_roles/functions/planner.md, .claude/agents/session-*-planner.md (9 generated cards), docs/guides/delivery_process.md
 
 ## Completion Summary
-(filled at close)
+The card wording, the TLS paragraph and the merge-tree rule are corrected. The planner card carries the amended (shorter) wording; the owner confirms the literal card diff in the PR (governing text).

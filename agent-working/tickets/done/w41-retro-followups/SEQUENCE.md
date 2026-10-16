@@ -16,3 +16,5 @@ policy); the implementer may split it into two PRs if item 1 is ready early, sin
 
 Routed elsewhere (not in this batch): the Frontend path filter `FRONTEND_RE` misses `visual_assets/` (testing-planner owns
 test.yml); the iconScene failure #598 (asset-planner); syncing the `rpg` worktree (rpg).
+
+Status 2026-10-16 (agent-working-implementer): items 1, 3-8 are closed in `agent-working/tickets/done/` (item 4 with the owner-amended card wording of 2026-10-16). Item 2 (`TCK-20261015-SESSION-BINDINGS-TORN-TAIL`) has its code fix merged with this batch but stays in `agent-working/tickets/inprogress/` until the owner runs the one-time repair of rpg-implementer's `bindings.jsonl` and the next SessionStart is seen to show card and note. Follow-up filed: `TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH`.

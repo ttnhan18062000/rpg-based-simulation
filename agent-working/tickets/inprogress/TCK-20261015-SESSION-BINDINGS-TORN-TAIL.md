@@ -4,7 +4,7 @@ layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-SESSION-BINDINGS-TORN-TAIL
-phase: open
+phase: inprogress
 date: 2026-10-15
 tags: [hooks, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [hooks, data-quality]
 A torn last line in a session-roles bindings.jsonl must not silence SessionStart; repair the torn rpg-implementer file
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 hotfix
@@ -70,13 +70,13 @@ pid 964593 as holder.
 - The repair touches runtime state under the main checkout .git: tell rpg-planner and the owner in the PR body.
 
 ## Implementation Notes
-(filled during work)
+`tools/sessions/state.py`: `read_bindings_report()` skips an unparseable LAST line and returns a one-line warning; any other bad line, and a last line that parses as JSON but is not a binding, still raises `StateError`. `read_bindings()` delegates to it. `append_binding()` now writes a leading newline when the file does not end in one, so a new record never glues onto a torn tail (the torn fragment then sits in the middle, which is a hard error: that is why the one-time repair moves it out). `tools/sessions/session_start_hook.py`: a torn tail adds one warning line; an unreadable history (`StateError`) no longer costs the card or the handover note, it says the history could not be read and skips only the manifest-change comparison. The one-time repair of `.git/session-roles/rpg-implementer/bindings.jsonl` is NOT done: my attempt was denied by the permission classifier (Modify Shared Resources) and I did not work around it. rpg-planner agreed to the timing and the move (only the torn tail). The owner runs it with a script (the commands, with byte checks, were sent to agent-working-planner on 2026-10-16): the file is 8192 bytes, 13 complete lines plus a torn 14th of 529 bytes with no newline; the move goes to `bindings.jsonl.torn-2026-10-11`; the file plus the sidecar must sum to 8192 and the file must keep 13 lines.
 
 ## Test Summary
-(filled during work)
+`tests/tools/test_session_state.py` (6 new: torn last line skipped and reported, intact file no warning, torn middle line raises, JSON-but-not-a-binding last line raises, append after a torn tail starts on a new line, clean append adds no blank line) and `tests/tools/test_session_resolve_and_hook.py` (2 new: torn tail gives card, note and one warning; unreadable history gives card, note and says so). Session suites pass.
 
 ## Files Changed
-(filled during work)
+tools/sessions/state.py, tools/sessions/session_start_hook.py, tests/tools/test_session_state.py, tests/tools/test_session_resolve_and_hook.py
 
 ## Completion Summary
-(filled at close)
+OPEN: code fix done. The repair of the rpg-implementer file and the check that its next SessionStart shows card and note are pending the owner's run; this ticket stays in inprogress/ until then and is left out of `Closes:`.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW
-phase: open
+phase: done
 date: 2026-10-15
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 Week close folds gate_verdicts, manual_actions and role_boundary shards too, and a dropped ticket can void its pending working_log row
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -71,13 +71,13 @@ that never shipped. There is no row kind for "this pending row is void".
 - Depends on #603 merging first (W41 canonical files).
 
 ## Implementation Notes
-(filled during work)
+`week_close.py`: `CLOSE_KINDS = (runs, events, tools, gate_verdicts)`, so a closed week leaves no per-batch gate_verdicts shard; the same fold, de-duplication, ts/seq ordering and lines-in/lines-out report. `manual_actions.jsonl` and `role_boundary.jsonl` are bare per-week files with no per-batch shards anywhere, so there is nothing of theirs to fold. `gate_ledger.shard_paths()` already reads the bare canonical `<week>/gate_verdicts.jsonl`, so every reader works on the folded file (checked: same unresolved ids and row count before and after). Void mechanism: a typed row `{row_kind: "void", timestamp, ticket_id, reason, voided_by}` in the same per-batch working_log shard family (`working_log_writer.append_void_row()`, CLI `--void-ticket ... --reason ... --voided-by ...`); `working_log_parser.apply_voids()` removes every earlier-or-equal-timestamp pending row of that ticket (a later re-record stands) and the void is never a CSV row; `consolidate_pending_rows()` applies it and records each void with the row it removed in `<week>/working_log_voids.jsonl` (also unmatched voids, `matched: false`), so nothing is a silent delete; `parse_pending_working_log_shards()` (the done-checker and integrity readers' view) applies voids too. The return dict of `consolidate_pending_rows` only gains `voided_rows` when a void applied, so its old contract is unchanged. Applied: a void for TCK-20261014-DEPENDABOT-IGNORE-MAJOR-BUMPS (dropped in 0582ec8db, pending row in `2026-W42/platform-implementer-step1-closure.working_log.jsonl`) is staged in this batch's shard; a W42 fold dry run of the real pending shards folds 55 of 57 rows and 0 rows for that ticket. W41 was folded on this branch with `make agent-monitoring-close-week WEEK=2026-W41` (see the counts in the PR).
 
 ## Test Summary
-(filled during work)
+`tests/tools/test_week_close_gate_verdicts_and_void.py` (8 new: gate shards fold to one canonical file with equal counts and an unchanged ledger; a week with no gate shards is left alone; bare manual_actions and role_boundary untouched; apply_voids semantics; a voided pending row never reaches the CSV and is recorded; the dropped ticket writes no CSV row; the void writer). With `test_week_close.py`, `test_working_log_writer.py`, `test_gate_ledger.py`, the working-log duplicate checks and the done-checker/integrity suites: all pass.
 
 ## Files Changed
-(filled during work)
+tools/agent-monitoring/week_close.py, tools/working_log_writer.py, tools/working_log_parser.py, tests/tools/test_week_close_gate_verdicts_and_void.py, agent-working/agent-monitoring/data/2026-W42/agent-working-w41-retro-followups.working_log.jsonl (the void row), W41 gate_verdicts shards folded
 
 ## Completion Summary
-(filled at close)
+Week close folds gate_verdicts; a typed, recorded void row exists and is applied to the DEPENDABOT row; W41's gate shards are folded in this PR.

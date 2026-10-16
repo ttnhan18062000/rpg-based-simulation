@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-REGISTRY-DETERMINISTIC-OUTPUT
-phase: open
+phase: done
 date: 2026-10-15
 tags: [delivery, determinism, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [delivery, determinism, process-improvement]
 Make docs/REGISTRY.yaml generation deterministic so an unchanged tree regenerates byte-identical and stops conflicting on its timestamp line
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -77,13 +77,13 @@ diff, so PRs that change no indexed input still touch the file.
 - The remaining 31% (adjacent insertions) is out of reach of this fix; measure it, do not fix it here.
 
 ## Implementation Notes
-(filled during work)
+Dropped the wall-clock `# Generated: <now>` line from `tools/generate_registry.py` (header is now two fixed lines) and the unused datetime import. Nothing parses that line: `--check` compares parsed entries, and the one test that rewrote it (`test_check_ignores_header_timestamp_drift`) now edits the second header comment instead. Added a determinism test (two runs with a moved clock are byte-identical, no `Generated` in the file). Direction-doc idea row added (stop committing REGISTRY.yaml), citing the measured cost; it decides nothing. Replay (driverless 3-way `git merge-file` of docs/REGISTRY.yaml for every `Merge remote-tracking branch 'origin/main'` commit in a PR branch, once as committed and once with line 3 removed from base, ours and theirs, which is what the new generator produces on both sides): last 60 merged PRs, 67 origin/main merges, 59 conflicted as committed, 21 still conflict without the Generated line (64% of the conflicts gone; the remaining ones are adjacent same-day ticket insertions, out of scope). The five named sample PRs (#586, #589, #590, #599, #597) have 4 such merges: 2 conflicted before and 2 after, and in both the header hunk is gone (hunk counts 3 to 2 and 2 to 1), the other hunks are adjacent insertions. The script is stored in the ticket's stored artifacts (`replay_registry_merges.sh`).
 
 ## Test Summary
-(filled during work)
+`tests/tools/test_generate_registry.py` 69 passed (new determinism test; the header test rewritten), `tests/tools/test_done_checker_static.py` passed. The real-registry drift test passes after regeneration.
 
 ## Files Changed
-(filled during work)
+tools/generate_registry.py, tests/tools/test_generate_registry.py, docs/plans/agent_infrastructure/agent_working_direction.md, docs/REGISTRY.yaml (regenerated, no clock line), agent-working/stored_artifacts/TCK-20261015-REGISTRY-DETERMINISTIC-OUTPUT/
 
 ## Completion Summary
-(filled at close)
+The generator no longer writes a wall-clock line, so an unchanged tree regenerates byte-identical. Replay on 60 PRs: 59 REGISTRY conflicts before, 21 after. The remaining 31 to 36% are adjacent insertions, unchanged by design.

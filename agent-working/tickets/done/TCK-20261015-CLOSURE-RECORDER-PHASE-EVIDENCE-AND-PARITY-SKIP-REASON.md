@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON
-phase: open
+phase: done
 date: 2026-10-15
 tags: [agent-monitoring, data-quality, workflows]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality, workflows]
 Hand-closure records which phases really ran from artifact evidence, needs a structured Parity skip reason when src/ changed, and the retro counts ledger blocks as gate failures
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -70,13 +70,13 @@ final_status only.
 - Assumption: the stored_artifacts path for a ticket is stable at closure time (staging moved before the recorder runs). Verify the order.
 
 ## Implementation Notes
-(filled during work)
+`record_hand_orchestrated_closure.py`: `evidence_phase_events()` adds an Investigate and/or Plan event (status ok, summary naming the artifact path and saying the recorder derived it) for a standard/epic closure whose `investigation.md` / `plan.md` exists under stored_artifacts or staging_artifacts and whose phase the closer did not give; they are placed right after Scope; with no artifact the phase stays absent, so `phases_omitted` names the real gaps. `parity_skipped_without_enum_reason()` refuses (before anything is written, like the other guards) a Parity event skipped without a `skip_reason` from the enum, or with `unstated`, when the ticket's own diff touches `src/`; an out-of-vocabulary reason is refused with the valid list. `generate_retro.py`: the Run Summary adds `Blocking gate verdicts (ledger)` (blocking of verdicts, and how many have no recorded outcome) beside the unchanged `Gate failures` line, and a `Reset-boundary declarations` row for weeks from 2026-W42 (item 8). Measured on W42's ledger: 22 blocking of 81 verdicts, 1 without an outcome, next to run Gate failures 0. The recorder docstring is updated. This ticket's own closure is the first use of the evidence rule: its stored artifacts exist, so Investigate and Plan are recorded as ran.
 
 ## Test Summary
-(filled during work)
+`tests/tools/test_closure_recorder_phase_evidence.py` (new, 13: artifacts give Investigate and Plan, no artifacts none, staging counts, no duplication and hotfix derives nothing, phases_omitted loses them, the Parity refusal cases, the run-summary rows) and `test_record_hand_orchestrated_closure.py`, `test_retro_provenance.py`, `test_generate_retro.py` pass.
 
 ## Files Changed
-(filled during work)
+tools/agent-monitoring/record_hand_orchestrated_closure.py, tools/agent-monitoring/generate_retro.py, tests/tools/test_closure_recorder_phase_evidence.py
 
 ## Completion Summary
-(filled at close)
+Hand closures record the phases their artifacts prove, refuse an unstructured Parity skip on a src/ change, and the retro shows ledger blocks beside run gate failures (W42: 22 beside 0).

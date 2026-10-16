@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP
-phase: open
+phase: done
 date: 2026-10-15
 tags: [agent-monitoring, hooks, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, hooks, process-improvement]
 Session-layer measures: role_boundary matches seat suffixes, reset-boundary declarations get a durable record, and SessionStart warns when a handover note is over the cap
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -72,13 +72,13 @@ announced only in chat (`docs/guides/agent_session_reset_boundaries.md` around L
 - docs/guides/ is used by every role; keep guide edits to the two sentences named.
 
 ## Implementation Notes
-(filled during work)
+(a) Seat suffix: not reproduced as a defect. The one flagged record (2026-10-13T07:55, lead-planner-u24 writing docs/architecture/devops_plan_amendment_proposal.md, owner_seats [lead-planner]) is the intended sibling crossing of TCK-20261013-HOST-LEAD-PLANNER-U24 (the u24 seat owns only its host page; the rest of the lead domain is lead-planner's), and with current code `check_edit` returns owner_seats [lead-planner] for it, [] for its own page, and the reverse for lead-planner writing the u24 page: the registry already maps the host seat. A numbered instance resolves to its base role (`_base_role`), and a registered seat is never string-stripped. Pinned with tests; no code change. (b) `tools/sessions/reset_boundary.py declare --kind HARD|SOFT|NEVER --row ...` appends `{ts, session_id, session_role, kind, row, handover_rel, handover_sha256}` to this week's bare `reset_boundary.jsonl` through the shared locked writer, never fails its caller; on `source == clear` SessionStart adds one advisory line when the previous session declared no HARD, or its handover note changed after the HARD declaration; the retro Run Summary shows a declarations count for weeks from 2026-W42 (0 included). Not in manual_actions. (c) A handover note over the 8000-character cap now gets a line with its size and the cap before the (still cut) text. (d) Guide: say it AND run the declare command, per-instance `<stem>-N.md` notes and the cap, two sentences as the ticket allowed.
 
 ## Test Summary
-(filled during work)
+`tests/tools/test_session_reset_boundary.py` (new, 7) and `test_session_resolve_and_hook.py` (6 new: clear with no prior HARD, with an unchanged note, with a note edited after, startup never, over-cap size line, under-cap no line) and one retro row test pass; session suites pass.
 
 ## Files Changed
-(filled during work)
+tools/sessions/reset_boundary.py, tools/sessions/session_start_hook.py, tools/agent-monitoring/generate_retro.py, docs/guides/agent_session_reset_boundaries.md, tests/tools/test_session_reset_boundary.py, tests/tools/test_session_resolve_and_hook.py, tests/tools/test_closure_recorder_phase_evidence.py
 
 ## Completion Summary
-(filled at close)
+Reset-boundary declarations are recorded and audited at `/clear`, an over-cap note says so, the guide says to record it, and the host-seat mapping is pinned (the reported false flag was not reproduced: the flag was the intended crossing).
