@@ -56,7 +56,7 @@ from src.config.profiles import RuntimeProfile, SignalContract
 from src.core.governance import RuntimeMode
 from src.engine.work_units import WORK_MODEL_VERSION
 
-SCHEMA_VERSION = "1.1"  # 1.1 added the optional identity.runner section (additive: a MINOR bump, schema section 4)
+SCHEMA_VERSION = "1.2"  # 1.1 added the optional identity.runner section, 1.2 the optional after-collect keys of result.memory_mb (both additive: MINOR bumps, schema section 4)
 
 #: Source of ``result.cost_accounting_version`` (OD-8: a constant here, no engine edit). DEV-017 (#448) changed what a tick's and a phase's
 #: reported cost means, so a record without this value, or with another one, is not comparable on tick cost.

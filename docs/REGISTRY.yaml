@@ -5642,7 +5642,7 @@
   - testing
 - type: doc
   path: docs/performance/benchmark_identity_schema.md
-  title: Benchmark Identity and Result Schema (schema 1.1)
+  title: Benchmark Identity and Result Schema (schema 1.2)
   status: active
   layer: performance
   authority: P2
@@ -7592,6 +7592,36 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS.md
+  ticket_id: TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS
+  title: A benchmark record carries a real engine working-set figure from a separate,
+    untimed, collector-on memory pass
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-16'
+  related_code_areas:
+  - src/perf/bench_harness.py, src/perf/benchmark_record.py, tools/perf/rerun_baselines.py,
+    tests/unit/perf/test_bench_harness_memory.py
+  artifact_files: []
+  tags:
+  - performance
+  - benchmarking
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS.md
+  ticket_id: TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS
+  title: The corpus baseline test and bench_corpus_world.py --commit use the promoted
+    lifecycle records, so legacy corpus files can be retired
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-16'
+  related_code_areas:
+  - tests/tools/test_corpus_perf_baseline.py, tools/bench_corpus_world.py, tools/perf/baseline_lifecycle.py,
+    tests/perf/baselines/
+  artifact_files: []
+  tags:
+  - performance
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH.md
   ticket_id: TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH
   title: Say when a session's tool-call hook is not loaded, and get late tool rows
@@ -7627,6 +7657,42 @@
   - agent-monitoring
   - data-quality
   - workflows
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE.md
+  ticket_id: TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE
+  title: A benchmark record's memory describes the engine, not the harness's disabled
+    collector, and carries a report-only note against the profile's declared memory
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - src/perf/bench_harness.py (run_benchmark, the result dict at :180-203 and :275-276),
+    src/perf/benchmark_record.py, tools/perf/rerun_baselines.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE/plan.md
+  - agent-working/stored_artifacts/TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE/test_plan.md
+  tags:
+  - performance
+  - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261015-PERF-RESOLUTION-OVERHEAD-ATTRIBUTION.md
+  ticket_id: TCK-20261015-PERF-RESOLUTION-OVERHEAD-ATTRIBUTION
+  title: Attribute `resolution_overhead` (12-33 % of every tick) to named call sites,
+    with folded-stack evidence
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-15'
+  related_code_areas:
+  - src/engine/kernel.py (_phase_resolution, :452, read only), tools/perf/profile_tick.py,
+    tools/perf/_profiling_common.py, tools/perf/profile_diff.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261015-PERF-RESOLUTION-OVERHEAD-ATTRIBUTION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261015-PERF-RESOLUTION-OVERHEAD-ATTRIBUTION/plan.md
+  - agent-working/stored_artifacts/TCK-20261015-PERF-RESOLUTION-OVERHEAD-ATTRIBUTION/test_plan.md
+  tags:
+  - performance
+  - benchmarking
 - type: ticket
   path: agent-working/tickets/done/TCK-20261015-PROCESS-TEXT-PLANNER-CARD-TLS-MERGE-TREE.md
   ticket_id: TCK-20261015-PROCESS-TEXT-PLANNER-CARD-TLS-MERGE-TREE
@@ -7835,36 +7901,6 @@
   artifact_files: []
   tags:
   - testing
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE.md
-  ticket_id: TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE
-  title: A benchmark record's memory describes the engine, not the harness's disabled
-    collector, and carries a report-only note against the profile's declared memory
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-15'
-  related_code_areas:
-  - src/perf/bench_harness.py (run_benchmark, the result dict at :180-203 and :275-276),
-    src/perf/benchmark_record.py, tools/perf/rerun_baselines.py
-  artifact_files: []
-  tags:
-  - performance
-  - benchmarking
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261015-PERF-RESOLUTION-OVERHEAD-ATTRIBUTION.md
-  ticket_id: TCK-20261015-PERF-RESOLUTION-OVERHEAD-ATTRIBUTION
-  title: Attribute `resolution_overhead` (12-33 % of every tick) to named call sites,
-    with folded-stack evidence
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-15'
-  related_code_areas:
-  - src/engine/kernel.py (_phase_resolution, :452, read only), tools/perf/profile_tick.py,
-    tools/perf/_profiling_common.py, tools/perf/profile_diff.py
-  artifact_files: []
-  tags:
-  - performance
-  - benchmarking
 - type: ticket
   path: agent-working/tickets/done/TCK-20261014-ANYIO-CVE-BUMP.md
   ticket_id: TCK-20261014-ANYIO-CVE-BUMP
@@ -8139,20 +8175,7 @@
   tags:
   - platform
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES.md
-  ticket_id: TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES
-  title: 'Three slow arena tests assert gold payouts from before #536''s treasury
-    rules (coin no longer minted). Re-state each one under the new rules, or find
-    a real defect.'
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-10-14'
-  related_code_areas:
-  - tests/arena/test_arena_quests.py; tests/arena/test_arena_regional_control.py.
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES.md
+  path: agent-working/tickets/inprogress/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES.md
   ticket_id: TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES
   title: 'Finish the baselines PERF-M2-T08 could not promote: diagnose the intrinsic
     noise first, then re-record the NOISY and off-NORMAL records'
@@ -8166,6 +8189,19 @@
   tags:
   - performance
   - benchmarking
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES.md
+  ticket_id: TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES
+  title: 'Three slow arena tests assert gold payouts from before #536''s treasury
+    rules (coin no longer minted). Re-state each one under the new rules, or find
+    a real defect.'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-14'
+  related_code_areas:
+  - tests/arena/test_arena_quests.py; tests/arena/test_arena_regional_control.py.
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1.md
   ticket_id: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1

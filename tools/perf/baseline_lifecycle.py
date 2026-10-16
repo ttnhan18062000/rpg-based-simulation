@@ -53,7 +53,6 @@ DEFAULT_BASELINES_DIR = REPO_ROOT / "tests" / "perf" / "baselines"
 #: The files committed before schema 1.0 and not yet re-recorded (15 at the start of PERF-M2-T08, which promoted five). They are tripwire references with no identity, not records.
 LEGACY_TRIPWIRE_REFERENCES = frozenset(
     {
-        "combat_10_local.json",
         "idle_100_local.json",
         "mixed_200_concurrent.json",
         "mixed_200_local.json",

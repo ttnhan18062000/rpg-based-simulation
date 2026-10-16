@@ -28,7 +28,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 _SELF_ROOT = Path(__file__).resolve().parents[2]
 if str(_SELF_ROOT) not in sys.path:
@@ -41,15 +41,34 @@ from src.perf.benchmark_record import BenchmarkRecord, GateTier, RecordOptions, 
 
 #: Runs per record, each a fresh process.
 RUNS = 3
+#: The owner's spread rule (2026-10-16, option "(a) Middle-3 spread", perf_baseline_policy.md section 2.1): these three records are measured in 5 fresh
+#: processes, the median is promoted and the 15 % spread is computed on the middle 3 (the lowest and the highest average dropped). Fixed here by name:
+#: the rule is never chosen at run time and no other record uses it.
+MIDDLE_THREE_RECORDS = ("idle_100_local", "movement_100_local", "combat_10_local")
+RUNS_MIDDLE_THREE = 5
+#: The quiet-window precondition of every measured run (perf-planner, 2026-10-16): 1-minute load average below this and at least this much available
+#: memory when the run starts; ``record`` waits up to ``QUIET_WAIT_S`` for it and gives up (exit 1, nothing promotable) rather than measure outside it.
+MAX_LOAD_1MIN = 1.5
+MIN_AVAILABLE_MB = 2500.0
+QUIET_WAIT_S = 900.0
+QUIET_POLL_S = 15.0
+RULE_ALL_RUNS = "all_runs"
+RULE_MIDDLE_THREE = "middle_3"
 #: Above this spread (max / min of the average tick latency, minus one) a record is NOISY and not promoted.
 NOISY_SPREAD = 0.15
 WARMUP_TICKS = 10
 SAMPLE_TICKS = 20
+#: Sampled ticks of a synthetic record that is not a declared tripwire scenario and whose 20 ticks (about 1 s) were shorter than the host's speed
+#: regimes (TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES, investigation.md): the new count is written to ``protocol.measured_ticks``.
+SAMPLE_TICKS_OVERRIDE: Dict[str, int] = {"combat_10_local": 100}
+#: Iterations of the host-speed probe: a fixed, deterministic pure-Python integer spin, about 50 to 100 ms on this 6-vCPU VM.
+PROBE_ITERATIONS = 400_000
+#: Probes per side of a run (before and after); the median is what the promotion note carries.
+PROBE_CALLS = 5
 CORPUS_WARMUP_TICKS = 100
 CORPUS_SAMPLE_TICKS = 1000
 CORPUS_PROFILE = "PERF_512MB_LOCAL"
 CORPUS_WORLDS = ("crowded_frontier", "frontier_extended", "frontier_marches")
-CAUSE = "TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS"
 OUT_ROOT = Path("reports") / "perf" / "t08"
 
 #: name -> (scenario builder key, entities, profile). The profile is the old committed file's ``profile`` field (read, not inferred from the name).
@@ -74,6 +93,15 @@ class RerunError(Exception):
     """A usage or input problem: the tool cannot run and says why."""
 
 
+def rule_for(name: str) -> str:
+    """The spread rule of a record, by name: ``middle_3`` for the three records the owner named, ``all_runs`` (3 runs, spread over all of them) for every other one."""
+    return RULE_MIDDLE_THREE if name in MIDDLE_THREE_RECORDS else RULE_ALL_RUNS
+
+
+def runs_for(name: str) -> int:
+    return RUNS_MIDDLE_THREE if rule_for(name) == RULE_MIDDLE_THREE else RUNS
+
+
 def corpus_name(world: str) -> str:
     return f"simq_corpus_{world}"
 
@@ -89,7 +117,8 @@ def spec_for(name: str) -> RunSpec:
             return spec
     if name in SYNTHETIC:
         scenario, entities, profile = SYNTHETIC[name]
-        return RunSpec(scenario, entities, profile, "canonical", WARMUP_TICKS, SAMPLE_TICKS, 42, None, "tripwire", "tripwire_paired")
+        ticks = SAMPLE_TICKS_OVERRIDE.get(name, SAMPLE_TICKS)
+        return RunSpec(scenario, entities, profile, "canonical", WARMUP_TICKS, ticks, 42, None, "tripwire", "tripwire_paired")
     for world in CORPUS_WORLDS:
         if name == corpus_name(world):
             return RunSpec(f"corpus:{world}", 0, CORPUS_PROFILE, "canonical", CORPUS_WARMUP_TICKS, CORPUS_SAMPLE_TICKS, 42, None, "tripwire", "tripwire_paired")
@@ -164,6 +193,83 @@ def host_load() -> Dict[str, Any]:
     return {"loadavg_1min": round(load1, 2), "swap_used_mb": swap_used_mb}
 
 
+def host_conditions() -> Dict[str, Optional[float]]:
+    """The 1-minute load average and the available memory (MB, ``MemAvailable``; ``None`` where ``/proc/meminfo`` cannot be read)."""
+    available: Optional[float] = None
+    try:
+        for line in Path("/proc/meminfo").read_text(encoding="utf-8").splitlines():
+            if line.startswith("MemAvailable:"):
+                available = round(float(line.split()[1]) / 1024.0, 1)
+                break
+    except (OSError, IndexError, ValueError):
+        pass
+    return {"loadavg_1min": round(os.getloadavg()[0], 2), "available_mb": available}
+
+
+def wait_for_quiet_window(
+    max_load: float = MAX_LOAD_1MIN,
+    min_available_mb: float = MIN_AVAILABLE_MB,
+    wait_s: float = QUIET_WAIT_S,
+    poll_s: float = QUIET_POLL_S,
+    read: Callable[[], Dict[str, Optional[float]]] = host_conditions,
+    sleep: Callable[[float], None] = time.sleep,
+    clock: Callable[[], float] = time.monotonic,
+) -> Tuple[bool, str]:
+    """Poll until the host is quiet (load below ``max_load``, memory at or above ``min_available_mb``) or ``wait_s`` has passed; ``(ok, what was read last)``.
+
+    Memory that cannot be read is not a reason to refuse; load always is. ``wait_s`` 0 checks once.
+    """
+    deadline = clock() + wait_s
+    while True:
+        now = read()
+        load, available = now["loadavg_1min"], now["available_mb"]
+        text = f"loadavg1 {load}, available {available} MB"
+        if load is not None and load < max_load and (available is None or available >= min_available_mb):
+            return True, text
+        if clock() >= deadline:
+            return False, text
+        sleep(poll_s)
+
+
+def host_speed_probe(iterations: int = PROBE_ITERATIONS) -> float:
+    """Milliseconds a fixed, deterministic pure-Python spin takes right now. The work is identical every call (an integer recurrence, no allocation, no
+    I/O), so a change of the result between two calls is the host's speed, not the engine's: ``/proc/stat`` steal and ``cpu MHz`` do not move on this
+    VirtualBox guest (investigation.md)."""
+    x = 1
+    t0 = time.perf_counter()
+    for _ in range(iterations):
+        x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+    elapsed = (time.perf_counter() - t0) * 1000.0
+    if x < 0:  # never true; keeps the loop's result live
+        raise AssertionError(x)
+    return round(elapsed, 3)
+
+
+def host_speed_series(calls: int = PROBE_CALLS) -> Dict[str, Any]:
+    """``calls`` probes back to back: every value plus their min, median and max (one 50 ms sample says little when regimes last 0.5 to 2 s)."""
+    values = [host_speed_probe() for _ in range(calls)]
+    return {"values": values, "min": min(values), "median": round(statistics.median(values), 3), "max": max(values)}
+
+
+def cpu_counters() -> Dict[str, Optional[float]]:
+    """Cumulative steal jiffies (``/proc/stat``) and the mean ``cpu MHz`` (``/proc/cpuinfo``); a field is ``None`` when it cannot be read."""
+    steal: Optional[float] = None
+    mhz: Optional[float] = None
+    try:
+        for line in Path("/proc/stat").read_text(encoding="utf-8").splitlines():
+            if line.startswith("cpu "):
+                steal = float(line.split()[8])
+                break
+    except (OSError, IndexError, ValueError):
+        pass
+    try:
+        values = [float(line.split(":", 1)[1]) for line in Path("/proc/cpuinfo").read_text(encoding="utf-8").splitlines() if line.startswith("cpu MHz")]
+        mhz = round(sum(values) / len(values), 3) if values else None
+    except (OSError, IndexError, ValueError):
+        pass
+    return {"steal_jiffies": steal, "cpu_mhz": mhz}
+
+
 @dataclass(frozen=True)
 class Run:
     """One of the runs of a record: its average tick latency and the host's load when it started."""
@@ -174,6 +280,10 @@ class Run:
     swap_used_mb: float
     peak_rss_mb: float
     wall_s: float
+    #: Median of 5 host-speed probes (ms) before and after the measured run (before the state build, outside the sampled ticks), ``None`` for a run
+    #: measured before the probe existed.
+    probe_before_ms: Optional[float] = None
+    probe_after_ms: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -182,25 +292,54 @@ class Summary:
     median_index: int
     spread: float
     noisy: bool
+    #: ``all_runs`` (spread over every run) or ``middle_3`` (spread over the runs left after the lowest and the highest average are dropped).
+    rule: str = RULE_ALL_RUNS
+    #: The spread over every run, recorded whichever rule decided NOISY.
+    spread_all_runs: float = 0.0
 
 
-def summarize(runs: Sequence[Run], noisy_spread: float = NOISY_SPREAD) -> Summary:
-    """The median run (by average tick latency; the lower one for an even count), the spread and whether it is NOISY."""
+def _spread(values: Sequence[float]) -> float:
+    lowest = min(values)
+    return (max(values) / lowest - 1.0) if lowest > 0 else float("inf")
+
+
+def summarize(runs: Sequence[Run], noisy_spread: float = NOISY_SPREAD, rule: str = RULE_ALL_RUNS) -> Summary:
+    """The median run (by average tick latency; the lower one for an even count), the spread and whether it is NOISY.
+
+    ``rule`` ``all_runs``: the spread is max / min of every run's average, minus one. ``middle_3``: 5 runs, the lowest and the highest average are dropped and
+    the spread is taken over the other 3 (the median run is the same either way); the spread over all runs is recorded too.
+    """
     if not runs:
         raise RerunError("no run produced a record")
     order = sorted(range(len(runs)), key=lambda i: runs[i].avg_ms)
     median_index = order[(len(order) - 1) // 2]
     values = [r.avg_ms for r in runs]
-    lowest = min(values)
-    spread = (max(values) / lowest - 1.0) if lowest > 0 else float("inf")
-    return Summary(tuple(runs), median_index, round(spread, 4), spread > noisy_spread)
+    spread_all = _spread(values)
+    if rule == RULE_MIDDLE_THREE:
+        if len(runs) != RUNS_MIDDLE_THREE:
+            raise RerunError(f"the middle_3 rule needs exactly {RUNS_MIDDLE_THREE} runs, got {len(runs)}")
+        spread = _spread(sorted(values)[1:-1])
+    elif rule == RULE_ALL_RUNS:
+        spread = spread_all
+    else:
+        raise RerunError(f"unknown spread rule {rule!r}")
+    return Summary(tuple(runs), median_index, round(spread, 4), spread > noisy_spread, rule, round(spread_all, 4))
 
 
 def promotion_note(name: str, summary: Summary, host: str) -> str:
     """The text ``baseline_lifecycle promote --note`` records: every run's avg and its load, the spread and the host."""
-    parts = [f"run {i + 1}: avg {r.avg_ms:.3f} ms, loadavg1 {r.loadavg_1min}, swap {r.swap_used_mb} MB" for i, r in enumerate(summary.runs)]
+    parts = [
+        f"run {i + 1}: avg {r.avg_ms:.3f} ms, loadavg1 {r.loadavg_1min}, swap {r.swap_used_mb} MB"
+        + (f", probe median of {PROBE_CALLS} {r.probe_before_ms} -> {r.probe_after_ms} ms (before the state build)" if r.probe_before_ms is not None and r.probe_after_ms is not None else "")
+        for i, r in enumerate(summary.runs)
+    ]
+    spread_text = (
+        f"spread {summary.spread * 100:.1f} % over the middle 3 of {len(summary.runs)} (all {len(summary.runs)}: {summary.spread_all_runs * 100:.1f} %, owner rule 2026-10-16)"
+        if summary.rule == RULE_MIDDLE_THREE
+        else f"spread {summary.spread * 100:.1f} %"
+    )
     return (
-        f"{name}: median of {len(summary.runs)} fresh-process runs (promoted run {summary.median_index + 1}); spread {summary.spread * 100:.1f} %; "
+        f"{name}: median of {len(summary.runs)} fresh-process runs (promoted run {summary.median_index + 1}); {spread_text}; "
         + "; ".join(parts)
         + f"; host {host}; canonical variant, provisional, claims none (runner.controlled=false)"
     )
@@ -212,22 +351,32 @@ def _child_env() -> Dict[str, str]:
 
 def cmd_measure(name: str, out: Path, samples_dir: Optional[Path] = None) -> int:
     started = host_load()
+    counters_before = cpu_counters()
+    probe_before = host_speed_series()
     t0 = time.perf_counter()
     record = measure_record(name, samples_dir)
     wall = time.perf_counter() - t0
+    probe_after = host_speed_series()
+    counters_after = cpu_counters()
     out.write_text(json.dumps(record.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    meta = {**started, "wall_s": round(wall, 2), "peak_rss_mb": round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0, 1)}
+    meta = {**started, "wall_s": round(wall, 2), "peak_rss_mb": round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0, 1),
+            "probe_before": probe_before, "probe_after": probe_after,
+            "probe_note": "the before-probe runs before the state build and warm-up (BenchHarness.run_benchmark does both in one call); both sides are outside the sampled ticks", "cpu_before": counters_before, "cpu_after": counters_after}
     out.with_suffix(".meta.json").write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return 0
 
 
-def cmd_record(name: str, out_root: Path, keep_samples: bool = False) -> int:
+def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False, wait_s: float = QUIET_WAIT_S) -> int:
     spec_for(name)  # raises RerunError for an unknown name before anything runs
     out_dir = out_root / name
     out_dir.mkdir(parents=True, exist_ok=True)
     runs: List[Run] = []
-    for index in range(1, RUNS + 1):
+    for index in range(1, runs_for(name) + 1):
         path = out_dir / f"run{index}.json"
+        quiet, seen = wait_for_quiet_window(wait_s=wait_s)
+        if not quiet:
+            print(f"cannot run: run {index} of {name} would start outside the quiet window ({seen}; need loadavg1 < {MAX_LOAD_1MIN}, >= {MIN_AVAILABLE_MB:.0f} MB): attempt discarded", file=sys.stderr)
+            return 1
         argv = [sys.executable, str(Path(__file__).resolve()), "measure", "--name", name, "--out", str(path)]
         if keep_samples:
             argv += ["--samples-dir", str(out_dir / "samples")]
@@ -237,8 +386,9 @@ def cmd_record(name: str, out_root: Path, keep_samples: bool = False) -> int:
             return 1
         record = BenchmarkRecord.from_dict(json.loads(path.read_text(encoding="utf-8")))
         meta = json.loads(path.with_suffix(".meta.json").read_text(encoding="utf-8"))
-        runs.append(Run(str(path), record.result.latency_ms["avg"], meta["loadavg_1min"], meta["swap_used_mb"], meta["peak_rss_mb"], meta["wall_s"]))
-    summary = summarize(runs)
+        runs.append(Run(str(path), record.result.latency_ms["avg"], meta["loadavg_1min"], meta["swap_used_mb"], meta["peak_rss_mb"], meta["wall_s"],
+                        (meta.get("probe_before") or {}).get("median"), (meta.get("probe_after") or {}).get("median")))
+    summary = summarize(runs, rule=rule_for(name))
     median = Path(runs[summary.median_index].path)
     candidate = out_dir / "candidate.json"
     candidate.write_text(median.read_text(encoding="utf-8"), encoding="utf-8")
@@ -247,16 +397,16 @@ def cmd_record(name: str, out_root: Path, keep_samples: bool = False) -> int:
     off_normal = sorted({m.mode for m in cand.result.runtime_mode_sequence} - {"NORMAL"})
     host = f"{platform.node()} / {cpu} / {os.cpu_count()} vCPU"
     note = promotion_note(name, summary, host)
-    doc = {"name": name, "spread": summary.spread, "noisy": summary.noisy, "off_normal": off_normal, "median_run": summary.median_index + 1, "host": host,
+    doc = {"name": name, "spread": summary.spread, "spread_all_runs": summary.spread_all_runs, "rule": summary.rule, "noisy": summary.noisy, "off_normal": off_normal, "median_run": summary.median_index + 1, "host": host,
            "runs": [dataclasses.asdict(r) for r in summary.runs], "note": note}
     (out_dir / "summary.json").write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(note)
     if off_normal:
         print(f"NOT A BASELINE: the run left NORMAL ({', '.join(off_normal)}) under the canonical contract; promote would refuse (performance_contract.md 3.1)")
     if summary.noisy:
-        print(f"NOISY: spread {summary.spread * 100:.1f} % is above {NOISY_SPREAD * 100:.0f} %: NOT promotable; re-run on a quieter host")
+        print(f"NOISY: spread {summary.spread * 100:.1f} % ({summary.rule}) is above {NOISY_SPREAD * 100:.0f} %: NOT promotable; stays PENDING-NOISY")
     elif not off_normal:
-        print(f"PROMOTE: python3 tools/perf/baseline_lifecycle.py promote --candidate {candidate} --name {name} --cause {CAUSE} --note {json.dumps(note)}")
+        print(f"PROMOTE: python3 tools/perf/baseline_lifecycle.py promote --candidate {candidate} --name {name} --cause {cause} --note {json.dumps(note)}")
     return 0
 
 
@@ -265,7 +415,9 @@ def _parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
     rec = sub.add_parser("record", help="measure a baseline 3 times in fresh processes and pick the median")
     rec.add_argument("name", choices=known_names())
+    rec.add_argument("--cause", required=True, help="the ticket id the re-record belongs to; printed into the promote command (there is no default: a hard-coded one named the wrong ticket)")
     rec.add_argument("--out-root", type=Path, default=OUT_ROOT)
+    rec.add_argument("--wait-s", type=float, default=QUIET_WAIT_S, help="how long to wait before each run for loadavg1 < 1.5 and 2.5 GB available (0 = check once); a run never starts outside that window")
     rec.add_argument("--keep-samples", action="store_true", help="keep every sampled tick's latency of each run under <out>/<name>/samples/ (for a noise diagnosis)")
     mea = sub.add_parser("measure", help="one measured record in this process (the worker of ``record``)")
     mea.add_argument("--name", required=True, choices=known_names())
@@ -283,7 +435,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return 0
         if args.command == "measure":
             return cmd_measure(args.name, args.out, args.samples_dir)
-        return cmd_record(args.name, args.out_root, args.keep_samples)
+        return cmd_record(args.name, args.out_root, args.cause, args.keep_samples, args.wait_s)
     except (RerunError, CapacityRunError) as exc:
         print(f"cannot run: {exc}", file=sys.stderr)
         return 1

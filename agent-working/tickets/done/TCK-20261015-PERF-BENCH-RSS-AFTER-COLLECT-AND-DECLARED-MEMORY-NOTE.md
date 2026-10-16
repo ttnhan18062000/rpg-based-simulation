@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE
-phase: open
+phase: done
 date: 2026-10-15
 tags: [performance, benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 A benchmark record's memory describes the engine, not the harness's disabled collector, and carries a report-only note against the profile's declared memory
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -69,13 +69,24 @@ The collector is disabled deliberately, to keep collector pauses out of the late
 - Q1 (for the plan): is the after-collect reading at the end of the window enough, or is a periodic in-window reading needed? The investigation's linear growth suggests the end reading is enough.
 
 ## Implementation Notes
-(to be filled)
+`src/perf/bench_harness.py`: after the pre-window `gc.collect()` the harness reads RSS (untrimmed) and `sys.getallocatedblocks()`; the sampled loop and `gc.disable()` are untouched. After `wall_end_ts` and `cpu_end` (outside both timed spans) it runs `gc.collect()`, reads RSS, calls `malloc_trim(0)` (guarded ctypes; true whenever the call was made, whatever it returned) and reads RSS again. The finally still owns the collector's state. New optional `memory_mb` keys (schema 1.2): `rss_before_window_mb`, `rss_after_collect_mb`, `rss_after_trim_mb`, `rss_trim_delta_mb`, `allocated_blocks_delta`, `gc_collected_objects` (the `gc.get_stats()` collected total), `gc_collect_s`, `declared_ram_mb`, `rss_over_declared` (= `rss_after_trim_mb / max_ram_mb`, or `rss_after_collect_mb / max_ram_mb` where no trim, flagged by `rss_over_declared_basis_trim` 1.0 / 0.0), `peak_rss_over_declared`. The result dict keeps its legacy keys (a test pins them). Report-only: no gate, no `compare` or `promote` input.
+Diagnosis on the way: the first 1000-tick record's after-collect RSS equalled the high-water mark (1702 MB) because the freed garbage stays mapped; 200-tick runs (collector on/off, canonical/pinned, no harness, tracemalloc, malloc_trim; `rss_diagnose.py`) named the cause; `malloc_trim(0)` took 402 MB to 125.6 MB. `tick_cost_growth.md` section 5 corrected. Trim is taken only after the clocks, never before the window (page faults would enter the sampled ticks). The quiet-host spin (4.3x on identical work) and the crowded_frontier discard are recorded in the T08-NOISY ticket.
 
 ## Test Summary
-(to be filled)
+`tests/unit/perf/test_bench_harness_memory.py` (18 tests): garbage-making fake tick (old `rss_delta` large, after-collect delta small, `gc_collected_objects` large); old fields and the result dict's keys unchanged; the declared ratio against two profiles and the basis flag; ordering (tick, clock stop, end collect, one trim, shutdown; no trim before a sampled tick; the collector's state after `run_benchmark` equals its state before, enabled and disabled); protocol unchanged and the tripwire RunSpecs pinned at 10 + 50; a failing memory reader never fails a run; report-only for `compare` and `promote`; 1.1 against 1.2 records compare as one version, MAJOR 2.0 still INCONCLUSIVE, a 1.1 record round-trips; no trim means no trim keys and basis 0.0; `_malloc_trim` never raises and a stub libc returning 0 still counts as a trim. Mutation checks: end collect before the clocks, trim before the window, and `bool(malloc_trim(0))` each fail the matching test. `tests/unit/perf` 275 passed; mypy gate rc=0; `codebase.health check` rc=0 (0 new, 0 worse); wall-clock inventory regenerated and its sync tests pass.
 
 ## Files Changed
-(to be filled)
+- src/perf/bench_harness.py, src/perf/benchmark_record.py (SCHEMA_VERSION 1.2)
+- tests/unit/perf/test_bench_harness_memory.py (new), tests/unit/perf/test_benchmark_record.py
+- docs/performance/benchmark_identity_schema.md (schema 1.2 text, PENDING OWNER APPROVAL), docs/performance/baseline_invalidation_ledger.md, docs/performance/tick_cost_growth.md (section 5 correction), docs/performance/wall_clock_inventory.md and .json (regenerated)
+- agent-working/stored_artifacts/TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE/ (investigation.md, plan.md, test_plan.md, rss_diagnose.py)
+Commits on `perf-t08-noisy-baselines`: 5b1413535, 62809b22a, 133a46e37, 781781c3b, 24ff9ba89, f609d49e0. Raw run data: `reports/perf/rss_evidence/` (git-ignored).
 
 ## Completion Summary
-(to be filled)
+**AC1 NOT MET, closed on the owner's decision "(a) Close + follow-up" (2026-10-16, through lead-planner).** AC1 asked for after-collect values of the order of 100-200 MB on `simq_corpus_frontier_extended`; the record reads **311.0 MB after trim** (1701.9 MB after the plain collect; old fields 1687.6 / 1589.0 MB unchanged). That figure is an upper bound: the collector-on diagnostic (not the harness) reads **106.2 MB** after trim (+5.6 MB over warm-up, same +211.7k live blocks), and tracemalloc traces **26.0 MB** at the end of 1000 ticks with the collector on. The 311 MB is collector-off allocator fragmentation the trim cannot fully release, so this design cannot give the record a working-set figure. The AC1 text is unchanged. Follow-up: `TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS` (an untimed collector-on pass).
+- AC2 met: old fields unchanged in value (the 1000-tick runs reproduce 1687.4 / 1587.3 and 1687.6 / 1589.0) and documented as including uncollected garbage (`_build_record` docstring, schema text); tests: `test_the_result_dict_and_the_old_memory_keys_are_unchanged`.
+- AC3 met: the ratio is recorded (0.61 on the trimmed reading, 3.30 for the peak) and report-only by test (`test_the_ratio_is_report_only_for_compare_and_promotion`, `test_a_failure_reading_the_new_keys_never_fails_the_run`).
+- AC4: ledger notes updated (three readings side by side, AC1 recorded as not met). **Schema text (62809b22a and 781781c3b) awaits the owner's approval in the batch PR. AC4 is complete only on that approval, and the merge waits for it.**
+- AC5 met: the latency protocol is unchanged (`test_the_protocol_is_unchanged`, the ordering test with the collector state before and after, the tripwire RunSpecs pinned at 10 + 50).
+- AC6 followed: one heavy run at a time under `MemoryMax=3G`, quiet window checked, no run over 3 GB (the process peak was 1.70 GB).
+Corrections found on the way: `tick_cost_growth.md` section 5's "sample RSS after an explicit collect" proposal does not work without a trim; the unreachable-object count puzzle is explained by the first generation-0 collection after `gc.enable()` (1.34 M objects collected).
