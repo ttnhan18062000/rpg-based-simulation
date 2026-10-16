@@ -71,6 +71,11 @@ def header_fields(scenario: str, entities: int, seed: int, warmup: int, ticks: i
     return fields
 
 
+def read_folded_text(path: Path) -> str:
+    """The text of a raw py-spy folded file. A nonblocking sample can catch a half-written string, so a bad byte is replaced, not fatal (found by T-cost-growth run strategic_100 at 250 Hz: byte 0xff)."""
+    return path.read_bytes().decode("utf-8", errors="replace")
+
+
 def header_lines(fields: Dict[str, Any], title: str) -> List[str]:
     """Header as plain lines (no comment marker)."""
     lines = [title, PROVISIONAL_LINE]
@@ -365,8 +370,15 @@ def missing_binary_message(name: str) -> str:
 
 # --------------------------------------------------------------------------- child run (imports the engine lazily)
 
-def build_state(scenario: str, entities: int):
-    """Build the scenario state the way tools/perf/profile_engine.py does."""
+CORPUS_PREFIX = "corpus:"
+
+
+def build_state(scenario: str, entities: int, seed: int = 42):
+    """Build the scenario state the way tools/perf/profile_engine.py does. ``corpus:<world>`` loads a real compiled world through the one loader in ``rerun_baselines``."""
+    if scenario.startswith(CORPUS_PREFIX):
+        from tools.perf.rerun_baselines import load_corpus_state
+
+        return load_corpus_state(scenario[len(CORPUS_PREFIX):], seed)[0]
     from src.perf.scenarios import SCENARIO_BUILDERS
     builder = SCENARIO_BUILDERS[scenario]
     if scenario == "resource":
@@ -414,9 +426,38 @@ def apply_flag_override(state: Any, flag: str, mode: str) -> "tuple[Any, Dict[st
 PROFILE_NAMES = ("PROD_SMALL", "PROD_DEFAULT", "PROD_LARGE", "PROD_STRESS")
 
 
+#: What a profile holds fixed (TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION). ``live`` is the historical behaviour and the default.
+CONTRACTS = ("live", "pinned", "canonical", "audit")
+PINNED_NOTE = (
+    "pinned fixes the RuntimeMode only (PinnedNormalGovernor); the other wall-clock inputs still move outside audit_mode: the mid-tick "
+    "budget throttle's wall-clock reading (report-only since DEV-014), the queue and worker wall-clock signals and the scheduler's tick-time inputs"
+)
+
+
+def contract_kernel_args(profile: Any, contract: str) -> Tuple[Any, Optional[Any], Dict[str, Any]]:
+    """The ``(profile, governor, flags)`` a kernel is built with under ``contract``. No ``src/`` edit: every variant is a ``Kernel`` argument."""
+    flags: Dict[str, Any] = {"no_replay": True, "no_frame_pacing": True, "audit_mode": False}
+    governor = None
+    if contract == "live":
+        pass
+    elif contract == "pinned":
+        from tests.helpers.kernel_pinning import PinnedNormalGovernor
+
+        governor = PinnedNormalGovernor()
+    elif contract == "canonical":
+        from src.perf.profiles import canonical_variant
+
+        profile = canonical_variant(profile)
+    elif contract == "audit":
+        flags["audit_mode"] = True
+    else:
+        raise ValueError(f"unknown contract {contract!r}; choose one of {CONTRACTS}")
+    return profile, governor, flags
+
+
 def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, ticks: int,
                        flag: Optional[str] = None, flag_mode: Optional[str] = None,
-                       profile_name: str = "PROD_LARGE") -> Dict[str, Any]:
+                       profile_name: str = "PROD_LARGE", contract: str = "live") -> Dict[str, Any]:
     """Run warmup plus measured ticks in this process and return per-tick data.
 
     The measured loop is ``_measured_ticks``; profile_tick filters sampled stacks to ones that contain
@@ -426,12 +467,12 @@ def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, tic
     from src.engine.kernel import Kernel
     from src.platform.rng import DeterministicRNG
 
-    state = build_state(scenario, entities)
+    state = build_state(scenario, entities, seed)
     override = None
     if flag and flag_mode:
         state, override = apply_flag_override(state, flag, flag_mode)
-    kernel = Kernel(getattr(profiles_module, profile_name), state, DeterministicRNG(seed),
-                    flags={"no_replay": True, "no_frame_pacing": True, "audit_mode": False})
+    profile, governor, flags = contract_kernel_args(getattr(profiles_module, profile_name), contract)
+    kernel = Kernel(profile, state, DeterministicRNG(seed), governor=governor, flags=flags)
     events: Dict[str, int] = {}
     tick_events = [0]
 
@@ -451,6 +492,9 @@ def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, tic
         kernel.shutdown()
     data["events"] = dict(sorted(events.items()))
     data["flag_override"] = override
+    import resource
+
+    data["peak_rss_mb"] = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0, 1)  # the child's own high-water mark (Linux: KiB)
     return data
 
 

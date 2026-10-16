@@ -109,6 +109,9 @@ apply/hash/checkpoint-adjacent work) — which phase specifically was not determ
 ## Implementation Notes
 _(not applicable — report-only ticket, no implementation performed)_
 
+### Evidence from TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION (2026-10-15)
+`fingerprint` is in **0.0 %** of the py-spy samples of every non-audit profile (idle, combat, mixed, strategic, movement 100 to 2000, corpus worlds; pinned, canonical, live) and **3.5 %** under `audit_mode` (strategic_100); `docs/performance/tick_cost_growth.md` section 4. **Recommendation: update, not close.** Not a material tick cost with replay off; the profiles run `no_replay`, so the `kernel.py:664` REFINED_UPDATE path under `replay_allowed` is not measured; a replay-on profile would settle it.
+
 ## Test Summary
 _(not applicable — report-only ticket, no implementation performed)_
 
