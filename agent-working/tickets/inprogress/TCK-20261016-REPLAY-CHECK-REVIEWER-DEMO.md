@@ -76,13 +76,26 @@ LIVE contract (known gap, #585, PERF-D1 A2). No `src/` change.
   by the child process id embedded in the run id (`run_<epoch>_<n>_<pid>_<hex>`), not by a directory diff. Told to codebase-planner.
 
 ## Implementation Notes
-TBD.
+`codebase/reports/replay_check.py`: `main(argv, command_builder, repo_root)` runs `run_once` twice per contract (Popen from the repo root, `sys.executable -m src cli --seed S --ticks N`, stderr discarded, per-run timeout default 300 s). The Canonical pair sets `RPG_SIGNAL_CONTRACT=canonical`; the `--live` pair removes the variable. Exit 0 / 1 / 2 from the Canonical pair alone. A non-zero CLI exit, a timeout or a missing `Final State Hash:` line is exit 2.
+
+Cleanup: the CLI never prints the run id on stdout (it only appears inside a watchdog alert on stderr), and `--replay <dir>` does not stop it writing `data/runs/<run_id>`. So `own_run_dirs` matches `run_<epoch>_<n>_<pid>_<hex>` on the child pid from Popen and removes exactly those directories, also after a timeout kill. No directory diff. A pid is unique among live processes, so a concurrent session's run cannot match.
+
+`docs/guides/reviewer_replay_check.md`, a README "For reviewers" section (one link line; the determinism row is untouched), and a `replay-check` Makefile target (picked up by `make help`).
 
 ## Test Summary
-TBD.
+`tests/codebase/test_replay_check.py`: 11 tests against a fake CLI script (hash parsing, match 0, differ 1, crash / no hash / timeout 2, env var on both runs and no live pair by default, `--live` label with exit code unchanged, cleanup removes only its own run dirs, pid match is exact). `tests/codebase`: 488 passed, 2 skipped. ruff clean on the two new files (`ruff check codebase` has 55 pre-existing findings, none in them).
+
+Real run, `systemd-run --user --scope -p MemoryMax=3G make replay-check` (exit 0, `data/runs` left empty):
+```
+canonical contract (RPG_SIGNAL_CONTRACT=canonical) (seed=42, ticks=300)
+  run 1: 43e5263e113907ec0119c9b7124c24ac0c16524fce80cec9559153b03e0e10b3
+  run 2: 43e5263e113907ec0119c9b7124c24ac0c16524fce80cec9559153b03e0e10b3
+MATCH
+```
+Real `--live --ticks 100` (exit 0): Canonical pair `95f0372b...` twice, MATCH; live pair `ca4c2d1b...` vs `17546857...`, DIFFER, labelled "expected to differ today (known gap, #585)".
 
 ## Files Changed
-TBD.
+codebase/reports/replay_check.py, tests/codebase/test_replay_check.py, Makefile, README.md, docs/guides/reviewer_replay_check.md, docs/REGISTRY.yaml
 
 ## Completion Summary
-TBD.
+TBD (tests/tools, knowledge-index and closure pending).
