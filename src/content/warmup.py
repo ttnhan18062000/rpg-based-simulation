@@ -36,7 +36,6 @@ class ContentWarmupService:
         from src.content_semantics.faction import (
             configure_faction_semantics_service,
         )
-        from src.content.terrain_cost import configure_terrain_costs
         from src.engine.behavior_consumers import configure_behavior_consumers
 
         if repo is not None:
@@ -70,7 +69,6 @@ class ContentWarmupService:
         )
         from src.content_semantics.faction import reset_faction_semantics_service
         from src.engine.behavior_consumers import reset_behavior_consumers
-        from src.content.terrain_cost import reset_terrain_costs
         reset_faction_semantics_service()
         reset_behavior_consumers()
         reset_terrain_costs()
