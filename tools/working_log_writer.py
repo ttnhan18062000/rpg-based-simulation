@@ -138,6 +138,26 @@ def append_working_log_row(
         f.write(json.dumps(row) + "\n")
 
 
+def append_void_row(ticket_id: str, reason: str, voided_by: str, timestamp: str | None = None) -> Path:
+    """Stage a typed void for every pending row of `ticket_id` that is not later than `timestamp` (default: now).
+
+    TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW: the pending row of a ticket that never shipped (dropped
+    after it was recorded DONE) must not become a working_log.csv row when its week closes. The void is a row in the
+    same per-batch shard family, never an edit or a deletion, and is itself recorded in `<week>/working_log_voids.jsonl`
+    when the fold applies it. Returns the shard written."""
+    from datetime import datetime, timezone
+
+    if not (ticket_id and reason and voided_by):
+        raise ValueError("a void needs a ticket_id, a reason and who voided it")
+    target = resolve_write_target("working_log")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    row = {"row_kind": "void", "timestamp": timestamp or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+           "ticket_id": ticket_id, "reason": reason, "voided_by": voided_by}
+    with open(target, "a", encoding="utf-8") as f:
+        f.write(json.dumps(row) + "\n")
+    return target
+
+
 def consolidate_pending_rows(
     data_root: Path = _DEFAULT_DATA_ROOT, csv_path: Path = _WORKING_LOG_PATH, week: str | None = None
 ) -> dict:
@@ -168,6 +188,15 @@ def consolidate_pending_rows(
             if line.strip():
                 rows.append(json.loads(line))
 
+    from working_log_parser import apply_voids
+
+    rows, applied = apply_voids(rows)
+    if applied:
+        # recorded, never a silent delete: one line per void in the week's own directory
+        for week_dir in sorted({f.parent for f in shard_files}):
+            with open(week_dir / "working_log_voids.jsonl", "a", encoding="utf-8") as vf:
+                for void, voided in applied:
+                    vf.write(json.dumps({"void": void, "voided_row": voided, "matched": voided is not None}) + "\n")
     rows.sort(key=lambda r: r.get("timestamp", ""))
     for row in rows:
         _append_csv_row(
@@ -181,20 +210,33 @@ def consolidate_pending_rows(
     for f in shard_files:
         f.unlink()
 
-    return {"consolidated_rows": len(rows), "shard_files": len(shard_files)}
+    result = {"consolidated_rows": len(rows), "shard_files": len(shard_files)}
+    if applied:
+        result["voided_rows"] = len([1 for _, v in applied if v is not None])  # absent when nothing was voided
+    return result
 
 
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--void-ticket", metavar="TICKET_ID", default=None,
+                        help="Instead of writing a row, stage a typed void for this ticket's pending rows "
+                             "(needs --reason and --voided-by).")
+    parser.add_argument("--reason", default=None)
+    parser.add_argument("--voided-by", default=None)
     parser.add_argument(
         "--data-file",
-        required=True,
+        required=False,
         help="Path to a JSON file: "
         '{"timestamp": ..., "ticket_id": ..., "title": ..., "status": ..., "summary": ..., '
         '"artifacts_path": ...} -- read from a file, never a shell/CLI argument, so arbitrary '
         "title/summary text (quotes, backticks, $, embedded newlines) needs no escaping.",
     )
     args = parser.parse_args(argv)
+    if args.void_ticket:
+        print(f"void staged in {append_void_row(args.void_ticket, args.reason or '', args.voided_by or '')}")
+        return
+    if not args.data_file:
+        parser.error("one of --data-file or --void-ticket is required")
     fields = json.loads(Path(args.data_file).read_text(encoding="utf-8"))
     append_working_log_row(**fields)
 
