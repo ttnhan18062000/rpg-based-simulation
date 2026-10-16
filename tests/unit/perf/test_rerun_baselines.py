@@ -5,6 +5,7 @@ import dataclasses
 import json
 import subprocess
 from pathlib import Path
+from typing import Any, List
 
 import pytest
 
@@ -15,6 +16,13 @@ from tools.perf import baseline_lifecycle, rerun_baselines as rr, tripwire
 
 
 REAL_RUN = subprocess.run
+REAL_WAIT = rr.wait_for_quiet_window  # the real function, for the tests of the wait itself
+
+
+@pytest.fixture(autouse=True)
+def _host_is_quiet(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``record`` waits for a quiet host before every run; a unit test never waits for the real one."""
+    monkeypatch.setattr(rr, "wait_for_quiet_window", lambda *a, **k: (True, "quiet"))
 
 
 def run(avg: float, load: float = 1.0) -> rr.Run:
@@ -126,11 +134,11 @@ def test_record_runs_three_fresh_processes_and_writes_the_median_candidate_witho
         return subprocess.CompletedProcess(argv, 0)
 
     monkeypatch.setattr(rr.subprocess, "run", fake_run)
-    assert rr.main(["record", "idle_100_local", "--out-root", str(tmp_path)]) == 0
+    assert rr.main(["record", "idle_100_concurrent", "--out-root", str(tmp_path)]) == 0
     out = capsys.readouterr().out
-    summary = json.loads((tmp_path / "idle_100_local" / "summary.json").read_text(encoding="utf-8"))
+    summary = json.loads((tmp_path / "idle_100_concurrent" / "summary.json").read_text(encoding="utf-8"))
     assert summary["median_run"] == 3 and summary["noisy"] is False and len(summary["runs"]) == 3
-    candidate = json.loads((tmp_path / "idle_100_local" / "candidate.json").read_text(encoding="utf-8"))
+    candidate = json.loads((tmp_path / "idle_100_concurrent" / "candidate.json").read_text(encoding="utf-8"))
     assert candidate["result"]["latency_ms"]["avg"] == 32.0
     assert "PROMOTE: python3 tools/perf/baseline_lifecycle.py promote" in out and "NOISY" not in out
 
@@ -147,10 +155,10 @@ def test_a_noisy_record_is_reported_and_no_promote_command_is_printed(tmp_path, 
         return subprocess.CompletedProcess(argv, 0)
 
     monkeypatch.setattr(rr.subprocess, "run", fake_run)
-    assert rr.main(["record", "movement_100_local", "--out-root", str(tmp_path)]) == 0
+    assert rr.main(["record", "movement_100_concurrent", "--out-root", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "NOISY" in out and "PROMOTE:" not in out
-    assert json.loads((tmp_path / "movement_100_local" / "summary.json").read_text(encoding="utf-8"))["noisy"] is True
+    assert json.loads((tmp_path / "movement_100_concurrent" / "summary.json").read_text(encoding="utf-8"))["noisy"] is True
 
 
 def test_a_failing_run_stops_the_record_with_exit_one(tmp_path, monkeypatch) -> None:
@@ -207,3 +215,115 @@ def test_the_probe_series_records_every_call_with_min_median_and_max() -> None:
     series = rr.host_speed_series(5)
     assert len(series["values"]) == 5 and series["min"] == min(series["values"]) and series["max"] == max(series["values"])
     assert series["min"] <= series["median"] <= series["max"]
+
+
+# ── the owner's spread rule (2026-10-16, option "(a) Middle-3 spread"), fixed by record name ────────────────────────────────────────
+
+MIDDLE_THREE = ("idle_100_local", "movement_100_local", "combat_10_local")
+
+
+def test_the_middle_three_rule_belongs_to_exactly_the_three_named_records_and_no_other() -> None:
+    assert rr.MIDDLE_THREE_RECORDS == MIDDLE_THREE and rr.RUNS_MIDDLE_THREE == 5
+    for name in rr.known_names():
+        expected = ("middle_3", 5) if name in MIDDLE_THREE else ("all_runs", 3)
+        assert (rr.rule_for(name), rr.runs_for(name)) == expected, name
+
+
+def test_the_corpus_and_the_other_records_keep_three_runs_and_the_all_runs_spread() -> None:
+    for name in [n for n in rr.known_names() if n not in MIDDLE_THREE]:
+        assert rr.runs_for(name) == 3 and rr.rule_for(name) == "all_runs"
+    # three runs, one far outlier: still NOISY under the all-runs rule
+    assert rr.summarize([run(100.0), run(101.0), run(150.0)], rule=rr.rule_for("simq_corpus_crowded_frontier")).noisy
+
+
+def test_the_middle_three_spread_drops_the_lowest_and_the_highest_average() -> None:
+    summary = rr.summarize([run(60.0), run(100.0), run(105.0), run(110.0), run(200.0)], rule="middle_3")
+    assert summary.spread == 0.1 and not summary.noisy  # 110 / 100 - 1, not 200 / 60 - 1
+    assert summary.spread_all_runs == round(200.0 / 60.0 - 1.0, 4) and summary.rule == "middle_3"
+    assert summary.median_index == 2  # the median of five is the third lowest, whichever rule decided
+
+
+def test_the_middle_three_boundary_is_fifteen_percent_exactly() -> None:
+    at = rr.summarize([run(1.0), run(100.0), run(107.0), run(115.0), run(900.0)], rule="middle_3")
+    over = rr.summarize([run(1.0), run(100.0), run(107.0), run(115.1), run(900.0)], rule="middle_3")
+    assert at.spread == 0.15 and not at.noisy
+    assert over.noisy and over.spread > 0.15
+
+
+def test_the_all_runs_rule_is_unchanged_at_its_boundary() -> None:
+    assert not rr.summarize([run(100.0), run(110.0), run(115.0)]).noisy
+    assert rr.summarize([run(100.0), run(110.0), run(116.0)]).noisy
+    assert rr.summarize([run(100.0), run(110.0), run(115.0)]).rule == "all_runs"
+
+
+def test_the_middle_three_rule_refuses_anything_but_five_runs_and_an_unknown_rule() -> None:
+    for count in (3, 4, 6):
+        with pytest.raises(rr.RerunError, match="exactly 5"):
+            rr.summarize([run(10.0 + i) for i in range(count)], rule="middle_3")
+    with pytest.raises(rr.RerunError, match="unknown spread rule"):
+        rr.summarize([run(10.0)] * 3, rule="best_of")
+
+
+def test_the_note_lists_all_five_runs_and_both_spreads_under_the_middle_three_rule() -> None:
+    runs = [run(60.0, 1.0), run(100.0, 1.1), run(105.0, 1.2), run(110.0, 1.3), run(200.0, 1.4)]
+    note = rr.promotion_note("idle_100_local", rr.summarize(runs, rule="middle_3"), "host")
+    assert note.count("avg ") == 5 and "run 1: avg 60.000" in note and "run 5: avg 200.000" in note  # not only the middle three
+    assert "spread 10.0 % over the middle 3 of 5" in note and "all 5: 233.3 %" in note and "owner rule 2026-10-16" in note
+    assert "promoted run 3" in note
+    assert "over the middle 3" not in rr.promotion_note("x", rr.summarize([run(10.0), run(11.0), run(10.5)]), "host")  # the 3-run note is unchanged
+
+
+def test_record_runs_five_fresh_processes_for_a_named_record_and_three_for_any_other(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    launched: List[str] = []
+
+    def fake_run(argv: List[str], **kw: Any) -> Any:
+        if "measure" not in argv:
+            return REAL_RUN(argv, **kw)
+        name, out = argv[argv.index("--name") + 1], Path(argv[argv.index("--out") + 1])
+        launched.append(name)
+        out.write_text(json.dumps(make_record(avg=10.0 + len(launched)).to_dict()), encoding="utf-8")
+        out.with_suffix(".meta.json").write_text(json.dumps({"loadavg_1min": 1.0, "swap_used_mb": 0.0, "peak_rss_mb": 50.0, "wall_s": 1.0}), encoding="utf-8")
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(rr.subprocess, "run", fake_run)
+    assert rr.cmd_record("combat_10_local", tmp_path) == 0 and launched == ["combat_10_local"] * 5
+    launched.clear()
+    assert rr.cmd_record("resource_100_local", tmp_path) == 0 and launched == ["resource_100_local"] * 3
+    summary = json.loads((tmp_path / "combat_10_local" / "summary.json").read_text(encoding="utf-8"))
+    assert summary["rule"] == "middle_3" and len(summary["runs"]) == 5 and "spread_all_runs" in summary
+
+
+# ── the quiet-window precondition of every measured run ────────────────────────────────────────────────────────────────────────────
+
+
+def _clock():
+    now = [0.0]
+    return now, (lambda: now[0]), (lambda s: now.__setitem__(0, now[0] + s))
+
+
+def test_a_quiet_host_is_accepted_at_once() -> None:
+    ok, seen = REAL_WAIT(read=lambda: {"loadavg_1min": 0.4, "available_mb": 4000.0}, sleep=lambda s: pytest.fail("must not wait"))
+    assert ok and "loadavg1 0.4" in seen
+
+
+def test_the_load_bound_is_strict_below_1_5_and_memory_at_or_above_2500() -> None:
+    quiet = lambda load, mem: REAL_WAIT(wait_s=0, read=lambda: {"loadavg_1min": load, "available_mb": mem})[0]  # noqa: E731
+    assert quiet(1.49, 2500.0) and not quiet(1.5, 4000.0) and not quiet(1.56, 4000.0) and not quiet(0.2, 2499.9)
+    assert quiet(0.2, None)  # unreadable memory is not a reason to refuse; load always is
+
+
+def test_it_waits_until_the_load_falls_and_gives_up_at_the_deadline() -> None:
+    now, clock, sleep = _clock()
+    loads = iter([2.0, 1.8, 1.4])
+    ok, seen = REAL_WAIT(wait_s=100.0, poll_s=15.0, read=lambda: {"loadavg_1min": next(loads), "available_mb": 4000.0}, sleep=sleep, clock=clock)
+    assert ok and now[0] == 30.0 and "loadavg1 1.4" in seen
+    now2, clock2, sleep2 = _clock()
+    ok, seen = REAL_WAIT(wait_s=60.0, poll_s=15.0, read=lambda: {"loadavg_1min": 3.0, "available_mb": 4000.0}, sleep=sleep2, clock=clock2)
+    assert not ok and now2[0] == 60.0 and "loadavg1 3.0" in seen
+
+
+def test_record_refuses_to_start_a_run_outside_the_quiet_window(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(rr, "wait_for_quiet_window", lambda *a, **k: (False, "loadavg1 2.5, available 4000.0 MB"))
+    monkeypatch.setattr(rr.subprocess, "run", lambda *a, **k: pytest.fail("no process may start outside the quiet window"))
+    assert rr.cmd_record("idle_100_local", tmp_path) == 1
+    assert not (tmp_path / "idle_100_local" / "candidate.json").exists()

@@ -47,6 +47,28 @@ projection it serves decides what it may be used for.
 | **Migrate** | A MAJOR `schema_version` bump invalidates every baseline of the older MAJOR for comparison (schema §4). They stay readable and are re-recorded by a promotion that cites the cause, not converted: a converter would invent identity the old file never recorded. |
 | **Reject** | A missing baseline, an incompatible one, one without `cost_accounting_version`, or one whose cause cannot be shown is `INCONCLUSIVE`, never a pass and never a skip that reads as success. |
 
+### 2.1 Spread rule for re-recording a baseline (owner decision, 2026-10-16)
+
+**DRAFT: the owner approves this paragraph in the PR (P1 document).** Until then it records what was decided, not a rule in force.
+
+A re-recorded baseline is measured in fresh processes, one after the other; the run with the median average tick latency is the candidate, and the spread of the averages decides whether it may be promoted (`NOISY` above 15 %). **Rule, fixed per record by name in `tools/perf/rerun_baselines.py` (`MIDDLE_THREE_RECORDS`), never chosen at run time:**
+
+| Records | Runs | Candidate | Spread tested against 15 % |
+|---|---|---|---|
+| `idle_100_local`, `movement_100_local`, `combat_10_local` | 5 fresh-process runs | the median run | the middle 3: the lowest and the highest average dropped, spread = max / min of the other three, minus one |
+| every other record (including the corpus worlds and the `*_concurrent` records) | 3 fresh-process runs | the median run | all 3 |
+
+The promotion note lists **all** runs' averages, loadavg, swap and host-speed probes (not only the middle three), the spread over the middle 3 and the spread over all 5; the spread over all runs is recorded whichever rule decided. A record that still exceeds 15 % under its rule stays `PENDING-NOISY` in `baseline_invalidation_ledger.md`. Every measured run starts with a 1-minute load average below 1.5 and at least 2.5 GB available (`rerun_baselines.py record` waits up to 15 minutes before each run and refuses to start one outside that window, exit 1, nothing promotable), recorded in the note. This quiet-window precondition is a working rule of the perf sessions, not part of the owner's choice among the options below. This rule weakens the 15 % test for the three records it names (one slow and one fast run no longer count); it does not change `tripwire.TRIPWIRE_SCENARIOS`, `tripwire.NOISE_BUDGET` or any threshold of `compare`.
+
+*How it was decided.* Evidence: the T08 noise diagnosis (`TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES`) found the spread of these records to be a between-process level shift of the host (an identical allocation-free spin varied 4.3x on a quiet host), and `tripwire.py calibrate` had measured 0.35 head/base deviation with identical code. `lead-planner` put four options to the owner on 2026-10-16 (second ask, "Perf baseline spread rule for perf_baseline_policy.md (P1). My recommendation is (b), reasons above. Which do you choose?"):
+
+- **(a) Middle-3 spread**: "5 runs, median promoted, 15% spread on the middle 3, for the 3 noisy local records."
+- **(b) NOISE_BUDGET bound**: "Two tripwire records' spread bounded by tripwire.NOISE_BUDGET (0.35); all other records keep 15%; raw spread still recorded."
+- **(c) Keep 15% strict**: "Re-record under the probe and loadavg < 1.5; failures stay PENDING-NOISY."
+- **(d) Quieter runner**: "No policy change; record the two tripwire baselines elsewhere via a follow-up ticket."
+
+`lead-planner` recommended (b): the tripwire's own 0.35 noise budget means a 15 % baseline spread buys no detection, and (b) is the narrowest change. **The owner chose (a), "(a) Middle-3 spread", on 2026-10-16, over that recommendation, with no note.**
+
 `python3 tools/perf/baseline_lifecycle.py check` verifies the directory: every `tests/perf/baselines/*.json` is a valid `BenchmarkRecord` or
 is named in the legacy list (`LEGACY_TRIPWIRE_REFERENCES`, §4), and the version chain of each promoted baseline is intact (each version's
 `baseline_ref` matches the digest of the previous file, so an edited earlier version is found). `tests/unit/perf/test_baseline_lifecycle.py`
