@@ -1,0 +1,15 @@
+frontier_living_world 42
+frontier_living_world 43
+frontier_living_world 44
+frontier_living_world 45
+frontier_living_world 46
+urban_political 42
+urban_political 43
+urban_political 44
+urban_political 45
+urban_political 46
+crowded_frontier 42
+crowded_frontier 43
+crowded_frontier 44
+crowded_frontier 45
+crowded_frontier 46
