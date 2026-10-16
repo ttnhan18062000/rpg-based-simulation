@@ -15,6 +15,15 @@ updates:
     ignore:
       - dependency-name: node
         versions: [">=25"]
+      # Python 3.14+ waits for rpg's dependency window: CI, uv.lock and setup-uv are on 3.13 and the image
+      # check "Image runs the CI Python" fails on a different line. 3.13.x patch updates still come through.
+      # Widen this when rpg moves CI and the lockfile to the next line.
+      - dependency-name: python
+        versions: [">=3.14"]
+      # The uv image pin moves together with test.yml's setup-uv `version:` input, which Dependabot cannot bump
+      # (see the header of docker/backend.Dockerfile). Bump both by hand. The name is the one Dependabot
+      # reported for ghcr.io/astral-sh/uv in #576's update metadata.
+      - dependency-name: astral-sh/uv
     groups:
       docker-major:
         update-types: [major]
