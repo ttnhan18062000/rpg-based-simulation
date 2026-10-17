@@ -59,9 +59,16 @@ P3
 - Assumed: a snapshot is a copy, not a second source of truth. If the live note and the snapshot disagree later, the live note wins, as the snapshot's own header says.
 
 ## Implementation Notes
+- `docs/assets/session_handoff/asset-planner.md`: taken from the planner's final live note (2026-10-18; it names `178de1ea4`, the owner's G4/G6 decisions, the #607 filter gap and the entity-marker gates). Edits: new header quote with the 2026-10-18 date and "the live handover is authoritative"; the local-only `.claude/handover/archive/...` pointer removed; the worktree path labelled as the writing machine's; "asset-implementer" written as a seat, not a live session.
+- `docs/assets/session_handoff/asset-implementer.md`: rewritten from my live note to the post-#608 state plus this batch (ticket 1 `178de1ea4` and `21e465157`, ticket 2), with the entity-marker gates (#523 and role id vs species + size, #548), the not-started backlog, and the #608 lessons (guarded files need a proof refresh, new bounds need a budgets row, the Frontend path filter #607).
+- My live note `.claude/handover/asset-implementer.md` was updated to the same content (it is gitignored and each seat's own), so the snapshot matches it in substance.
+- Checked for `<...>` placeholders (the only hit is the sentence saying the store now refuses them), tokens, personal data, and session names such as `rpg-based-simulation-NN`: none.
 
 ## Test Summary
+- `tools/validate_frontmatter.py` on both snapshots and on this ticket: no violations.
+- Scoped under `systemd-run --user --scope -q -p MemoryMax=3G`: `tests/docs/test_doc_integrity.py`, `tests/docs/test_doc_path_existence.py`: passed (see the closing run).
 
 ## Files Changed
+- `docs/assets/session_handoff/asset-planner.md`, `docs/assets/session_handoff/asset-implementer.md`
 
 ## Completion Summary
