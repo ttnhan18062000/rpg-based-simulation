@@ -7592,6 +7592,179 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
+  ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF
+  title: 'Grafana: one provisioned API dashboard (rate, errors, latency percentiles
+    by route, backend logs, trace links), and the step-2 end-to-end local proof'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/grafana/dashboards/api.json
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL
+  title: 'DevOps step 2 (host ubuntu): one API dashboard (metrics and logs) and one
+    API request trace in Tempo, running locally'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING.md
+  ticket_id: TCK-20261018-OBSERVABILITY-PROFILE-HARDENING
+  title: 'Compose: Grafana admin password from a secret file (no `admin` default),
+    host ports bound to 127.0.0.1, Promtail''s Docker socket behind a read-only proxy'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+  - security
+- type: ticket
+  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT.md
+  ticket_id: TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
+  title: 'Prometheus: scrape the backend''s internal metrics port 9109 instead of
+    the admission-gated /metrics on 8000'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-TEMPO-TRACE-BACKEND.md
+  ticket_id: TCK-20261018-TEMPO-TRACE-BACKEND
+  title: 'Compose: Grafana Tempo in the observability profile as the OTLP trace backend,
+    with a Grafana datasource linking traces to logs and metrics'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT.md
+  ticket_id: TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT
+  title: Prometheus scrape of ai_worker:9108, an ai_worker healthcheck on its up gauge,
+    and an alert on stream consumer lag/pending
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
+  ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
+  title: 'The measured API load-test run on host ubuntu: req/s and p50/p95/p99 with
+    spread, the USE result, and a separately labelled profiled run'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/
+  artifact_files: []
+  tags:
+  - platform
+  - performance
+  - benchmarking
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK.md
+  ticket_id: TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK
+  title: One API SLO alert as a provisioned Grafana alert rule, a local ntfy container
+    as its contact point, and the runbook it links to
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
+  title: 'DevOps step 3 (host ubuntu): a measured Locust API load test, one SLO alert
+    to a local ntfy, a runbook, and a recorded Redis-stop drill'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/**
+  - pyproject.toml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+  - performance
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-LOCUST-API-LOAD-TEST.md
+  ticket_id: TCK-20261018-LOCUST-API-LOAD-TEST
+  title: 'tools/loadtest: a Locust API scenario and a runner that records the method,
+    the environment and the USE signals with every run'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/
+  artifact_files: []
+  tags:
+  - platform
+  - performance
+  - benchmarking
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-REDIS-DOWN-CAUSE-ALERT.md
+  ticket_id: TCK-20261018-REDIS-DOWN-CAUSE-ALERT
+  title: A Redis-down cause alert, so the Redis-stop drill has something that fires
+    when the API SLO stays green
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD.md
+  ticket_id: TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD
+  title: 'The recorded drill: stop Redis under Locust load, follow the runbook, and
+    record detection time, recovery time and a short post-mortem'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS.md
   ticket_id: TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS
   title: A benchmark record carries a real engine working-set figure from a separate,
