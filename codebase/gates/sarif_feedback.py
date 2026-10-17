@@ -283,7 +283,7 @@ def _summary(ruff: dict[str, int], complexipy: dict[str, int], ast_grep: dict[st
     return line + (f" {omitted} results were left out of the upload (cap {RESULT_CAP})." if omitted else "")
 
 
-def run(root: Path, changed: Path, out: Path, summary_out: Path | None = None, annotate: bool = False,
+def run(root: Path, changed: Path, out: Path, summary_out: Path | None = None, annotate: bool = False,  # noqa: PLR0913  # CLI-flag-shaped entry point
         registry_file: Path | None = None) -> int:
     """Write the SARIF for the PR's changed files; returns 0, or 2 if it could not run (nothing written)."""
     try:
