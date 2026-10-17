@@ -1385,6 +1385,7 @@ class AuthoritativeState:
     movement_count: int = 0  # Milestone 2: Throughput truth
     maturity: int = 0
     last_calamity_tick: int = 0
+    grief_drained_tick: int = -1  # the newest death tick whose grief triggers have been applied (D80 grief-as-state); -1 = none
     blocked_tiles: set[tuple[int, int]] = field(default_factory=set) # Spatial truth
     town_tiles: set[tuple[int, int]] = field(default_factory=set)    # Social truth
     building_tiles: Dict[tuple[int, int], str] = field(default_factory=dict) # Service mapping

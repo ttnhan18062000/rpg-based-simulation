@@ -13,6 +13,7 @@ from pathlib import Path
 
 from src.engine.phases import get_authoritative_phases
 from src.core.updates import StateUpdate, EntityUpdate
+from src.core.grief_triggers import pending_grief_triggers
 from src.core.governance import RuntimeMode
 from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
@@ -49,7 +50,6 @@ class Kernel:
         "_start_perf_ts", "_current_world_time", "_platform_signals",
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
-        "_pending_grief_triggers",
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
         "_run_id", "_run_id_is_default", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer", "_personality_recorder",
         "_workers_started", "_last_shutdown_report",
@@ -210,13 +210,6 @@ class Kernel:
         self._source_packets = {}
         self._source_work_items = {}
         self._final_results = []
-        # Kernel-run-scoped relay for grief triggers detected mid-tick by
-        # EventExtractor.detect_grief_triggers() (Observability phase, which runs after
-        # that tick's ApplyPath pass) — drained into a later tick's _phase_resolution, or
-        # at episode teardown for a death on the run's final tick. NOT durable simulation
-        # state: not part of AuthoritativeState, not serialized, does not survive process
-        # restart (TCK-20260824-GRIEF-NEMESIS-REACHABILITY).
-        self._pending_grief_triggers = []
         self._final_compute_ms = 0.0
         self._phase_costs = {}
         self._metrics = {}
@@ -631,13 +624,15 @@ class Kernel:
             else:
                 entity_updates[res.entity_id] = EntityUpdate(entity_id=res.entity_id)
 
-        entity_updates = self._drain_pending_grief_triggers(entity_updates)
+        grief_triggers = pending_grief_triggers(self._state)
+        entity_updates = self._drain_pending_grief_triggers(entity_updates, grief_triggers)
 
         # No gameplay-facing pressure signal is derived here: the measured compute time (`tick_compute_ms`) is a
         # control signal for the governor, not an input to authoritative state (PERF-D1 amendment A1,
         # TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING).
         raw_update = StateUpdate(
             entity_updates=entity_updates,
+            grief_drained_tick_set=self._state.tick - 1 if grief_triggers else None,
             current_mode_set=self._current_policy.mode,
             current_policy_set=self._current_policy
         )
@@ -676,21 +671,18 @@ class Kernel:
         self._current_update = refined_update
 
     def _drain_pending_grief_triggers(
-        self, entity_updates: Dict[int, EntityUpdate]
+        self, entity_updates: Dict[int, EntityUpdate], triggers: List[Any]
     ) -> Dict[int, EntityUpdate]:
-        """Drain self._pending_grief_triggers into entity_updates as StrategicUpdates.
+        """Turn the owed grief triggers (read from state, `pending_grief_triggers`) into StrategicUpdates on `entity_updates`.
 
-        Shared by _phase_resolution() (normal tick, called with the tick's own
-        entity_updates so a decision system's own strategic update for the same entity
-        is preserved via EntityUpdate.merge()) and
-        drain_pending_triggers_at_teardown() (episode-teardown flush, called with {}).
-        Clears self._pending_grief_triggers before returning
-        (TCK-20260824-GRIEF-NEMESIS-REACHABILITY).
+        Shared by _phase_resolution() (normal tick, called with the tick's own entity_updates so a decision system's own strategic update for
+        the same entity is preserved via EntityUpdate.merge()) and drain_pending_triggers_at_teardown() (episode-teardown flush, called with {}).
+        The caller records `grief_drained_tick_set` in the same StateUpdate (TCK-20260824-GRIEF-NEMESIS-REACHABILITY, decision 80).
         """
         from src.domains.campaigns.grief_urgency import GriefUrgencyImporter
         from src.domains.campaigns.state import GriefUrgencyModifier
 
-        for griever_id, dead_id, urgency in self._pending_grief_triggers:
+        for griever_id, dead_id, urgency in triggers:
             # episode= is meaningful at the CampaignState layer (a real episode index);
             # Kernel only has tick. This substitute is transient — used only to keep the
             # source= string on the resulting ConcernState informative — and is never
@@ -712,7 +704,6 @@ class Kernel:
                 else new_eu
             )
 
-        self._pending_grief_triggers = []
         return entity_updates
 
     def drain_pending_triggers_at_teardown(self) -> None:
@@ -727,14 +718,15 @@ class Kernel:
         and does NOT advance self._state.tick or world_time -- a narrow resolution+apply flush
         against the CURRENT (final) state, not a disguised extra tick. No-op if nothing queued.
         """
-        if not self._pending_grief_triggers:
+        triggers = pending_grief_triggers(self._state)
+        if not triggers:
             return
         from src.core.updates import StateUpdate
         from src.engine.pipeline import AuthoritativeApplyPipeline
         from src.engine.apply import ApplyPath
 
-        entity_updates = self._drain_pending_grief_triggers({})
-        raw_update = StateUpdate(entity_updates=entity_updates)
+        entity_updates = self._drain_pending_grief_triggers({}, triggers)
+        raw_update = StateUpdate(entity_updates=entity_updates, grief_drained_tick_set=self._state.tick - 1)
         refined_update = AuthoritativeApplyPipeline.refine(
             self._state, raw_update,
             cadence=self._profile.cadence,
@@ -968,7 +960,7 @@ class Kernel:
         if obs_mode == ObservabilityMode.OFF:
             return
 
-        from src.observability.event_recorder import EventExtractor, extract_events
+        from src.observability.event_recorder import extract_events
         from src.observability.events import SimulationEvent
 
         tick = self._state.tick
@@ -976,18 +968,13 @@ class Kernel:
         # 1. Extract domain events
         generated_events = extract_events(prior_state, self._state, update, obs_mode)
 
-        # 1a. Mid-tick grief triggers (TCK-20260824-GRIEF-NEMESIS-REACHABILITY): a live
-        # ally's death detected this tick. This phase runs after this tick's ApplyPath
-        # pass (see docs/engine/kernel.md's 7-phase ordering), so the resulting
-        # StrategicUpdate cannot be applied until a later tick's _phase_resolution (or,
-        # for a death on the run's final tick, at episode teardown — see
-        # drain_pending_triggers_at_teardown()). The event itself is recorded now.
+        # 1a. Grief triggers (TCK-20260824-GRIEF-NEMESIS-REACHABILITY, decision 80): report the triggers the authoritative state owes for
+        # this tick's deaths; the next tick's _phase_resolution applies them whatever the observability mode (src/core/grief_triggers.py).
         from src.observability.events import GriefUrgencyTriggeredEvent
-        for griever_id, dead_id, urgency in EventExtractor.detect_grief_triggers(prior_state, self._state):
+        for griever_id, dead_id, urgency in pending_grief_triggers(self._state):
             generated_events.append(GriefUrgencyTriggeredEvent(
                 tick=tick, entity_id=griever_id, dead_ally_id=dead_id, urgency=urgency,
             ))
-            self._pending_grief_triggers.append((griever_id, dead_id, urgency))
 
         # 1b. Push-based event shapers (src/observability/event_shapers.py) — the live default
         # path for COMBAT/ECONOMY/FACTION as of TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION.

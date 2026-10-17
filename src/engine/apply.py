@@ -350,6 +350,7 @@ class ApplyPath:
         new_next_item_instance = update.next_item_instance_id_set if update.next_item_instance_id_set is not None else getattr(prior_state, "next_item_instance_id", 1)
         new_maturity = update.maturity_set if update.maturity_set is not None else prior_state.maturity
         new_last_calamity = update.last_calamity_tick_set if update.last_calamity_tick_set is not None else prior_state.last_calamity_tick
+        new_grief_drained = update.grief_drained_tick_set if update.grief_drained_tick_set is not None else prior_state.grief_drained_tick
         new_rng = update.rng_checkpoint if update.rng_checkpoint is not None else prior_state.rng_checkpoint
         new_global_resources = dict(prior_state.global_resources)
         for k, v in update.resource_updates.items():
@@ -514,6 +515,7 @@ class ApplyPath:
             movement_count=new_movement_count,
             maturity=new_maturity,
             last_calamity_tick=new_last_calamity,
+            grief_drained_tick=new_grief_drained,
             blocked_tiles=prior_state.blocked_tiles,
             town_entity_ids=prior_state.town_entity_ids,
             rng_checkpoint=new_rng,
