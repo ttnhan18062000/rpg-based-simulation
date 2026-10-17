@@ -70,7 +70,7 @@ reference for the alert rule.
 
 ## Related Tickets
 Epic `TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL`. Needs `TCK-20261018-TEMPO-TRACE-BACKEND`,
-`TCK-20261018-SCRAPE-BACKEND-METRICS-PORT`, and rpg's R2 (request histogram) and R3 (OTel middleware) on main.
+`TCK-20261018-SCRAPE-BACKEND-METRICS-PORT`, and rpg's R2 (request histogram) and R3 (OTel middleware) on main (issue #622).
 
 ## Related Docs
 `docs/architecture/devops_plan_amendment_proposal.md` (step 2), `docs/architecture/devops_baseline_adr.md` (D4, D7)

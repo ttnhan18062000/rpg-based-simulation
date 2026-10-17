@@ -11,7 +11,7 @@ Written by hand. One PR for the whole folder, from a `platform-implementer-local
 
 Epic: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL (closes last).
 
-## rpg prerequisites (requested through lead-planner; rpg-planner owns src/**)
+## rpg prerequisites (issue #622, filed by lead-planner; rpg-planner owns src/**)
 
 - R1: internal backend metrics port 9109 (`BACKEND_METRICS_PORT`, `expose` only). Option A, decided on #618.
 - R2: HTTP request-duration histogram on the R1 registry, labelled method, route template and status class.
