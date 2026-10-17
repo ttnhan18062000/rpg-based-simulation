@@ -2,7 +2,7 @@
 #
 # Profiles:
 #   default (`docker compose up`)                  backend, redis, ai_worker, frontend
-#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, watchdog
+#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, docker-socket-proxy, tempo, watchdog
 # watchdog sits in the observability profile because it depends_on promtail (healthy only once loki is ready) and prometheus, and polls Loki.
 # Grafana's admin password is a compose secret file (gitignored). Create it once before `--profile observability up`:
 #   mkdir -p docker/secrets && openssl rand -base64 24 > docker/secrets/grafana_admin_password
@@ -19,6 +19,10 @@ services:
     restart: unless-stopped
     environment:
       - REDIS_URL=redis://redis:6379/0
+      # Tracing is off while the endpoint is empty (ADR D4). With the observability profile set it to http://tempo:4318 (or :4317, matching rpg's exporter, #622).
+      # The sampling variable is added once rpg's middleware defines its name.
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      - OTEL_SERVICE_NAME=rpg-backend
     volumes:
       # Optional: mount data directory for persistent game state / config changes
       - ./data:/app/data
@@ -183,6 +187,25 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
 
+  tempo:
+    profiles: ["observability"]
+    # Latest stable at least two weeks old on 2026-10-18 (3.0.3, 2026-08-13; 3.0.4 is two days old); multi-arch index digest from a registry query.
+    image: grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5
+    # mem_limit is a start value; set it from the measured peak.
+    mem_limit: 512m
+    command: -config.file=/etc/tempo/tempo.yaml
+    # OTLP gRPC 4317 and HTTP 4318, query 3200: compose network only, no host port.
+    expose:
+      - "4317"
+      - "4318"
+      - "3200"
+    volumes:
+      - ./docker/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    restart: unless-stopped
+    # No healthcheck: like loki, the tempo image has no shell or probe tool. Readiness (GET :3200/ready) is probed from another container
+    # on the compose network, and by Grafana's Tempo datasource "Test".
+
   watchdog:
     profiles: ["observability"]
     mem_limit: 256m
@@ -215,3 +238,4 @@ volumes:
   prometheus_data:
   grafana_data:
   redis_data:
+  tempo_data:

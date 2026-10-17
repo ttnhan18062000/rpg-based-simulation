@@ -15,7 +15,7 @@ tags: [platform, observability]
 Compose: Grafana Tempo in the observability profile as the OTLP trace backend, with a Grafana datasource linking traces to logs and metrics
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -88,13 +88,19 @@ None.
 - Image pull and stack start: ask lead-planner first (host rules).
 
 ## Implementation Notes
-(open)
+- Tempo `grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5` (latest stable at least 2 weeks old on 2026-10-18: 3.0.3 is 2026-08-13, 3.0.4 is 2026-10-16). Digest from a registry query; image NOT pulled yet.
+- `docker/tempo.yaml`: monolithic, local storage (`/var/tempo/{wal,blocks}`), `block_retention: 24h`, OTLP gRPC 4317 + HTTP 4318, query 3200. Written from Tempo "next" docs; Tempo 3.0 config is unverified until the container runs (watch for strict-parser errors).
+- Service `tempo`: observability profile, `expose` only, `mem_limit: 512m` (start value), `tempo_data` volume, no healthcheck (no probe tool assumed; verify at runtime).
+- Grafana datasource `tempo` (tracesToLogsV2 to Loki on `container=~".*backend.*"` + trace id, tracesToMetrics to Prometheus).
+- Backend env: `OTEL_EXPORTER_OTLP_ENDPOINT=${...:-}` (empty), `OTEL_SERVICE_NAME=rpg-backend`.
+- DEFERRED to R3 (#622): the Loki `derivedFields` entry (log field name unknown), the sampling variable, and the exporter port 4317 vs 4318.
 
 ## Test Summary
-(open)
+- PASS: `compose config -q` for default and observability profiles; YAML parse of tempo.yaml and datasource.yml.
+- PENDING (waiting for lead-planner clearance of pull, build and stack start): Tempo up and `/ready`, Grafana Tempo datasource Test, synthetic span (telemetrygen in a throwaway container) found by trace id, measured peak memory in the docker stats table.
 
 ## Files Changed
-(open)
+`compose.yaml`, `docker/tempo.yaml`, `docker/grafana/provisioning/datasources/datasource.yml`, this ticket.
 
 ## Completion Summary
 (open)
