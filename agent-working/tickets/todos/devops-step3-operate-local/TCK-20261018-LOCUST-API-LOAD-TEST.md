@@ -109,14 +109,20 @@ None.
 - Endpoints (all admission-gated except /health): live/status 3, state 2, live/health 2, entities 1, /health 2. Whether they do real work on the default profile is not yet checked (needs the smoke run).
 - `classify_failure` lives in `summary.py` (no locust import) so tests run without the loadtest group; `locustfile.py` imports it and needs `PYTHONPATH=<repo>` (run.py sets it).
 - Warm-up is a separate, unrecorded Locust invocation per repeat. USE: `docker stats`, `vmstat 1`, `ps` of the Locust process. pidstat/throttling not sampled (not needed for the smoke).
-- `locust==2.46.7` in `[dependency-groups] loadtest` (not a default group; 14 days old on 2026-10-18). `uv lock` also moved `requests` 2.32.3 -> newer and `cffi` 2.0.0 -> 2.1.1 (locust's dependencies); lead should look at those two in the uv.lock diff.
+- `locust==2.46.7` in `[dependency-groups] loadtest` (not a default group; 14 days old on 2026-10-18).
+- **Runtime dependency changes (for the PR body, under "Runtime dependency changes"):** `uv lock` moved `requests` 2.32.3 -> 2.34.2, forced by locust's constraint on it; `requests` is a runtime dependency of the project, so this is a runtime bump. 2.34.2 includes the fix for CVE-2024-47081 (`.netrc` credential leak). Evidence that the backend still passes: the `tests/api` result recorded in Test Summary (lead cleared the run on 2026-10-18 because `requests` changed).
+- **cffi:** the lock now has two cffi entries, 2.0.0 and 2.1.1. `uv tree --invert --package cffi` shows the project resolves cffi 2.0.0 (via cryptography, pyjwt, mcp). The lock's own markers split the two by platform only: 2.0.0 for `sys_platform != 'win32'`, 2.1.1 for `sys_platform == 'win32'` (the gevent/locust side). On Linux, where the runtime image and CI run, there is one cffi, 2.0.0. This is a clean marker fork; lead decides (planner asked).
 - Generated session agent cards (`.claude/agents/session-platform-*.md`) were regenerated: the `owns` glob is embedded there and `tools/sessions/validate.py` reports generated-drift without them.
 - `.gitignore`: `tools/loadtest/.keys.txt` and `tools/loadtest/runs/`.
 
 ## Test Summary
 - PASS: tests/tools/test_loadtest_summary.py (14 tests, under a 800M cap).
 - PASS: `PYTHONPATH=. tools/sessions/validate.py` generated-drift findings fixed by regenerating the cards (re-run needed after commit).
-- PENDING (clearances needed): 2-step smoke run (needs a stack start), single-key 429 proof, `tests/static` incl. `test_ci_uv_install`, all of `tests/tools`.
+- Cleared run 2026-10-18 (3G cap, own basetemp, one suite at a time, main checkout venv which still has requests 2.32.3, so the `requests` 2.34.2 bump is NOT exercised by these runs):
+  - `tests/static`: 96 passed (includes `test_ci_uv_install`).
+  - `tests/tools`: 4994 passed, 56 skipped, 1 xfailed (17m14s).
+  - `tests/api`: 148 passed, 2 failed (`test_observability_websocket_suite` resource-time-limit TimeoutError; `test_ws_delta_envelope_new_field_...` ConnectionRefused to 127.0.0.1:8008). A re-run of the two files failed three different live-server ws tests (`test_ws_json_handshake`, `test_ws_msgpack_delta_payload_shape`, `test_ws_delta_envelope_includes_null_spatial_placeholder_field`, same ConnectionRefused), 3 passed. The failing set changes between runs, no `src/` or test file changed in this branch: looks like live-server startup timing on a loaded host, NOT shown to be pre-existing (no baseline run on main yet).
+- PENDING: backend tests on an environment synced from the NEW uv.lock (requests 2.34.2) to give the "backend tests passed" evidence for the PR body; 2-step smoke run (needs a stack start, not cleared).
 
 ## Files Changed
 `tools/loadtest/*` (new), `tests/tools/test_loadtest_summary.py`, `pyproject.toml`, `uv.lock`, `registries/session_roles.yaml`, `.claude/agents/session-platform-{implementer,planner}.md`, `.gitignore`, this ticket.
