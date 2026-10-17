@@ -56,7 +56,7 @@ platform-planner reviews. This ticket switches the scrape job and proves the tar
 - The panel list for `simulation.json` is in the Test Summary.
 
 ## Related Tickets
-Epic `TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL`. **Blocked on rpg R1** (backend metrics port 9109) reaching main.
+Epic `TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL`. **Blocked on rpg R1** (backend metrics port 9109, issue #622) reaching main.
 
 ## Related Docs
 `docs/architecture/devops_baseline_adr.md` (D1)
@@ -68,7 +68,7 @@ None.
 `docker/prometheus.yml`, `compose.yaml` (rpg's hunk, reviewed here), `src/api/server.py` (read only)
 
 ## Assumptions / Open Questions
-- If rpg's R1 ticket isn't filed yet, lead-planner relays it to rpg-planner (#618 records option A as decided).
+- R1 is requested from rpg-planner in issue #622 (filed by lead-planner, 2026-10-18).
 
 ## Implementation Notes
 (open)

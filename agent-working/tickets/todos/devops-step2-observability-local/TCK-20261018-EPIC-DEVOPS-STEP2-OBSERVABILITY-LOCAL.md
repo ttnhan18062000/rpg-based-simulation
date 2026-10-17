@@ -45,7 +45,7 @@ Four platform child tickets, in the order in `SEQUENCE.md`:
 4. `TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF`: the API dashboard (rate, errors, p50/p95/p99 by route, backend logs,
    trace links) and the end-to-end local proof.
 
-**rpg-side prerequisites** (src/**, rpg-planner's; requested through lead-planner, not filed here):
+**rpg-side prerequisites** (src/**, rpg-planner's; filed by lead-planner as issue **#622**, R4 explicitly not needed):
 - **R1** internal backend metrics port 9109 (`BACKEND_METRICS_PORT`, compose `expose` only): option A, already decided on #618.
 - **R2** HTTP request metrics on that registry: a request-duration histogram labelled by method, route **template**
   (not the raw path) and status class. There are no request metrics today; the collector only exports `sim_*` engine gauges.
