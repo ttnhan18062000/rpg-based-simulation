@@ -7602,6 +7602,24 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS.md
+  ticket_id: TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS
+  title: A benchmark record carries a real engine working-set figure from a separate,
+    untimed, collector-on memory pass
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-16'
+  related_code_areas:
+  - src/perf/bench_harness.py, src/perf/benchmark_record.py, tools/perf/rerun_baselines.py,
+    tests/unit/perf/test_bench_harness_memory.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS/plan.md
+  - agent-working/stored_artifacts/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS/test_plan.md
+  tags:
+  - performance
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261016-REPLAY-CHECK-REVIEWER-DEMO.md
   ticket_id: TCK-20261016-REPLAY-CHECK-REVIEWER-DEMO
   title: '`make replay-check`: a one-command reviewer demo that the same seed gives
@@ -7616,22 +7634,7 @@
   - determinism
   - testing
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS.md
-  ticket_id: TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS
-  title: A benchmark record carries a real engine working-set figure from a separate,
-    untimed, collector-on memory pass
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-16'
-  related_code_areas:
-  - src/perf/bench_harness.py, src/perf/benchmark_record.py, tools/perf/rerun_baselines.py,
-    tests/unit/perf/test_bench_harness_memory.py
-  artifact_files: []
-  tags:
-  - performance
-  - benchmarking
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS.md
+  path: agent-working/tickets/inprogress/TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS.md
   ticket_id: TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS
   title: The corpus baseline test and bench_corpus_world.py --commit use the promoted
     lifecycle records, so legacy corpus files can be retired
