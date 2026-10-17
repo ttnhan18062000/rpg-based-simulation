@@ -11,6 +11,8 @@ whether the observability profile is up, and the fleet state (`uptime`, count of
 
 ```bash
 uv sync --group loadtest                                   # locust is not in any default group
+# 990 keys, not 1000: the server keeps at most 1000 client entries (_MAX_CLIENT_ENTRIES in src/api/admission_control.py), so the pool plus the
+# status key must stay under that or the oldest client is evicted mid-run. 990 keys carry about 2970 req/s before per-key 429s.
 export LOADTEST_API_KEY_HASHES="$(python3 tools/loadtest/keys.py -n 990)"   # writes tools/loadtest/.keys.txt (gitignored)
 docker compose -f compose.yaml -f tools/loadtest/compose.loadtest.yaml up -d backend redis
 python3 -m tools.loadtest.run --users 10,25,50,100,200 --duration 60 --repeats 3 --label baseline
