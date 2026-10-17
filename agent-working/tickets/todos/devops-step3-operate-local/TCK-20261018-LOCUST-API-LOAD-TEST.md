@@ -122,7 +122,20 @@ None.
   - `tests/static`: 96 passed (includes `test_ci_uv_install`).
   - `tests/tools`: 4994 passed, 56 skipped, 1 xfailed (17m14s).
   - `tests/api`: 148 passed, 2 failed (`test_observability_websocket_suite` resource-time-limit TimeoutError; `test_ws_delta_envelope_new_field_...` ConnectionRefused to 127.0.0.1:8008). A re-run of the two files failed three different live-server ws tests (`test_ws_json_handshake`, `test_ws_msgpack_delta_payload_shape`, `test_ws_delta_envelope_includes_null_spatial_placeholder_field`, same ConnectionRefused), 3 passed. The failing set changes between runs, no `src/` or test file changed in this branch: looks like live-server startup timing on a loaded host, NOT shown to be pre-existing (no baseline run on main yet).
-- PENDING: backend tests on an environment synced from the NEW uv.lock (requests 2.34.2) to give the "backend tests passed" evidence for the PR body; 2-step smoke run (needs a stack start, not cleared).
+- ws flake comparison and `requests` 2.34.2 evidence, 2026-10-18 (same branch code, `tests/api/test_observability_websocket.py` + `tests/api/test_ws_protocol.py`, alternating old/new; 3G cap, own basetemp, host memory >= 2.5 GB before each; scratch venv from `uv sync --locked --no-install-project --no-group lint` on the new uv.lock, requests 2.34.2, deleted afterwards):
+
+  | run | venv | requests | result | failing tests |
+  |---|---|---|---|---|
+  | ws1-old | shared | 2.32.3 | 6 passed (83.5 s) | none |
+  | ws1-new | scratch | 2.34.2 | 6 passed (27.3 s) | none |
+  | ws2-old | shared | 2.32.3 | 6 passed (27.1 s) | none |
+  | ws2-new | scratch | 2.34.2 | 6 passed (77.0 s) | none |
+  | ws3-old | shared | 2.32.3 | 6 passed (27.0 s) | none |
+  | ws3-new | scratch | 2.34.2 | 6 passed (26.8 s) | none |
+  | full tests/api | scratch | 2.34.2 | 150 passed (74.3 s) | none |
+
+  Reading: no failure in 6 of 6 ws runs and in the full `tests/api` on 2.34.2, so `requests` 2.34.2 is not a regression for the backend API tests. The two earlier failures (shared venv, 2.32.3) did not recur; the slow runs (77-84 s vs 27 s) in both venvs point to load-dependent live-server startup timing, not to the dependency. Run-to-run host load was not controlled.
+- PENDING: 2-step smoke run (needs a stack start; separate clearance).
 
 ## Files Changed
 `tools/loadtest/*` (new), `tests/tools/test_loadtest_summary.py`, `pyproject.toml`, `uv.lock`, `registries/session_roles.yaml`, `.claude/agents/session-platform-{implementer,planner}.md`, `.gitignore`, this ticket.
