@@ -20,6 +20,7 @@ from src.perf.benchmark_record import (
     MAX_EMBEDDED_SAMPLES,
     BenchmarkRecord,
     GateTier,
+    MemoryPassReading,
     Outcome,
     OutcomeState,
     PercentileMethod,
@@ -73,6 +74,56 @@ class _Measured:
     mode_samples: List[str]
     phase_stats: Dict[str, Dict[str, float]]
     metric_stats: Dict[str, float]
+
+
+def run_memory_pass(
+    profile: RuntimeProfile,
+    initial_state: AuthoritativeState,
+    scenario_id: str,
+    warmup_ticks: int,
+    sample_ticks: int,
+) -> MemoryPassReading:
+    """An untimed pass over the same run shape as ``run_benchmark``, with the collector **enabled**, read at its end (TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS).
+
+    ``run_benchmark`` disables the collector for its sampled ticks, so its RSS includes garbage the engine would have collected and the freed memory stays
+    mapped; this pass leaves the collector on, so what it reads after ``gc.collect()`` and ``malloc_trim(0)`` is the engine's working set. It reads no clock
+    and is meant to run in a fresh process, so it shares no arenas with the timed pass. The collector's state is restored on return.
+    """
+    process = psutil.Process(os.getpid())
+    rng = DeterministicRNG(initial_state.seed)
+    kernel = Kernel(profile, initial_state, rng, flags={"no_replay": True, "no_frame_pacing": True})  # the M1 defaults of ``run_benchmark``
+    gc_was_enabled = gc.isenabled()
+    try:
+        for _ in range(warmup_ticks):
+            kernel.tick_once()
+        gc.collect()
+        rss_before = process.memory_info().rss / (1024 * 1024)
+        blocks_before = sys.getallocatedblocks()
+        collected_before = _gc_collected_total()
+        gc.enable()
+        for _ in range(sample_ticks):
+            kernel.tick_once()
+        gc.collect()
+        rss_after_collect = process.memory_info().rss / (1024 * 1024)
+        trimmed = _malloc_trim()
+        rss_after_trim = process.memory_info().rss / (1024 * 1024) if trimmed else None
+        blocks_after = sys.getallocatedblocks()
+        return MemoryPassReading(
+            scenario_id=scenario_id,
+            seed=initial_state.seed,
+            profile_name=profile.name,
+            warmup_ticks=warmup_ticks,
+            sample_ticks=sample_ticks,
+            rss_before_mb=rss_before,
+            rss_after_collect_mb=rss_after_collect,
+            rss_after_trim_mb=rss_after_trim,
+            blocks_delta=blocks_after - blocks_before,
+            gc_collected=_gc_collected_total() - collected_before,
+        )
+    finally:
+        if not gc_was_enabled:
+            gc.disable()
+        kernel.shutdown()
 
 
 @dataclass(frozen=True)

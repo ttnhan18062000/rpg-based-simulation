@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 A benchmark record carries a real engine working-set figure from a separate, untimed, collector-on memory pass
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
