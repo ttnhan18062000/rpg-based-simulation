@@ -7706,6 +7706,20 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER.md
+  ticket_id: TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER
+  title: 'Backend image: run backend, ai_worker and watchdog as a non-root user, so
+    the bind-mounted ./data is never left root-owned'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/backend.Dockerfile
+  artifact_files: []
+  tags:
+  - platform
+  - security
+- type: ticket
   path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
   ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
   title: 'DevOps step 3 (host ubuntu): a measured Locust API load test, one SLO alert
