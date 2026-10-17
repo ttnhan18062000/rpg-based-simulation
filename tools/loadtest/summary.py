@@ -12,12 +12,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
-# Saturation thresholds (README "Saturation rule"). Order is the tie-break within one step.
-BACKEND_CPU_PCT = 90.0       # docker stats CPU %; 100 % is one core, the backend is one process
-HOST_CPU_PCT = 90.0          # vmstat us+sy
-MEMORY_FRACTION = 0.90       # backend memory / its mem_limit
-ERROR_RATE = 0.01            # 5xx or 429 share of requests
-RESOURCE_ORDER = ("backend_cpu", "host_cpu", "run_queue", "memory", "swap", "admission_429", "server_5xx")
+# Saturation (README "Saturation rule"). Throughput that stops growing while p95 climbs marks the knee; the resource is then attributed.
+KNEE_MAX_RPS_GAIN = 0.10      # throughput gain over the previous step below this ...
+KNEE_MIN_P95_RISE = 0.50      # ... while p95 rises by at least this
+HOST_CPU_PCT = 90.0           # vmstat us+sy
+BACKEND_NEAR_MAX = 0.90       # backend CPU within 10 % of its maximum over all steps
+MEMORY_FRACTION = 0.90        # backend memory / its mem_limit (flag, not a verdict)
+ERROR_RATE = 0.01             # 5xx or 429 share of requests (flag)
+HOST_BASELINE_LIMIT_KB_S = 1024.0   # swap or disk above the idle baseline by more than 1 MB/s (flag)
+PER_KEY_REFILL_PER_S = 3.0    # src/api/admission_control.py _BUCKET_REFILL_PER_SECOND
+CEILING_WARN_FRACTION = 0.5
 
 
 def classify_failure(status_code: int) -> str | None:
@@ -103,35 +107,76 @@ def error_rates(requests: int, failures: Mapping[str, int]) -> dict[str, float]:
     return {key: count / requests for key, count in failures.items()}
 
 
-def saturated_resources(
-    use: Mapping[str, float], *, nproc: int, mem_limit_mb: float, rates: Mapping[str, float]
-) -> list[tuple[str, float]]:
-    """Resources over their threshold in one step, in RESOURCE_ORDER.
+def pool_ceiling_rps(pool_size: int) -> float:
+    """Requests/s the key pool carries before per-key 429s start (keys rotate round-robin per request)."""
+    return PER_KEY_REFILL_PER_S * pool_size
 
-    ``use`` keys (peak over the step): backend_cpu_pct, host_cpu_pct, run_queue, backend_mem_mb, swap_kb_s.
+
+def ceiling_warning(rps: float, pool_size: int) -> bool:
+    """True when a step's throughput is above 50 % of the pool ceiling (the step is too close to measuring the key limit)."""
+    return rps > CEILING_WARN_FRACTION * pool_ceiling_rps(pool_size)
+
+
+def above_baseline(step_mean_kb_s: float, baseline_mean_kb_s: float) -> tuple[float, bool]:
+    """(step minus idle baseline, flagged) for host swap or disk, in KB/s; flagged when more than 1 MB/s above baseline."""
+    delta = step_mean_kb_s - baseline_mean_kb_s
+    return delta, delta > HOST_BASELINE_LIMIT_KB_S
+
+
+@dataclass(frozen=True)
+class StepView:
+    """What the saturation verdict needs from one user step (medians/means over repeats)."""
+
+    users: int
+    rps: float
+    p95: float
+    backend_cpu_pct: float
+    host_cpu_pct: float
+    run_queue: float
+
+
+@dataclass(frozen=True)
+class Saturation:
+    users: int          # the step at which throughput stopped growing
+    resource: str       # host_cpu | backend_process | unattributed
+    branch: str         # which rule branch fired, in words
+
+
+def find_saturation(steps: Sequence[StepView], *, nproc: int) -> Saturation | None:
+    """The first step where throughput gains < 10 % over the previous step while p95 rises >= 50 %, then the resource.
+
+    Attribution at that step: host CPU >= 90 % or run queue > nproc -> host_cpu; else backend CPU within 10 % of its
+    maximum over all steps -> backend_process (GIL/engine contention); else unattributed. None when there is no knee.
     """
-    checks = {
-        "backend_cpu": (use.get("backend_cpu_pct", 0.0), lambda v: v >= BACKEND_CPU_PCT),
-        "host_cpu": (use.get("host_cpu_pct", 0.0), lambda v: v >= HOST_CPU_PCT),
-        "run_queue": (use.get("run_queue", 0.0), lambda v: v > nproc),
-        "memory": (use.get("backend_mem_mb", 0.0), lambda v: v >= MEMORY_FRACTION * mem_limit_mb),
-        "swap": (use.get("swap_kb_s", 0.0), lambda v: v > 0),
-        "admission_429": (rates.get("admission_429", 0.0), lambda v: v >= ERROR_RATE),
-        "server_5xx": (rates.get("server_5xx", 0.0), lambda v: v >= ERROR_RATE),
-    }
-    return [(name, checks[name][0]) for name in RESOURCE_ORDER if checks[name][1](checks[name][0])]
-
-
-def first_saturation(
-    steps: Iterable[tuple[int, Mapping[str, float], Mapping[str, float]]], *, nproc: int, mem_limit_mb: float
-) -> tuple[int, str, float] | None:
-    """(users, resource, value) for the lowest user step with any saturated resource, else None.
-
-    ``steps`` is (users, peak USE values, error rates); steps are checked in ascending user order and the
-    first resource in RESOURCE_ORDER wins a tie within a step.
-    """
-    for users, use, rates in sorted(steps, key=lambda s: s[0]):
-        hits = saturated_resources(use, nproc=nproc, mem_limit_mb=mem_limit_mb, rates=rates)
-        if hits:
-            return users, hits[0][0], hits[0][1]
+    ordered = sorted(steps, key=lambda s: s.users)
+    backend_max = max((s.backend_cpu_pct for s in ordered), default=0.0)
+    for previous, step in zip(ordered, ordered[1:]):
+        gain = (step.rps - previous.rps) / previous.rps if previous.rps > 0 else 0.0
+        rise = (step.p95 - previous.p95) / previous.p95 if previous.p95 > 0 else 0.0
+        if gain < KNEE_MAX_RPS_GAIN and rise >= KNEE_MIN_P95_RISE:
+            if step.host_cpu_pct >= HOST_CPU_PCT:
+                return Saturation(step.users, "host_cpu", f"host CPU {step.host_cpu_pct:.0f} % >= {HOST_CPU_PCT:.0f} %")
+            if step.run_queue > nproc:
+                return Saturation(step.users, "host_cpu", f"run queue {step.run_queue:.0f} > {nproc} vCPUs")
+            if backend_max > 0 and step.backend_cpu_pct >= BACKEND_NEAR_MAX * backend_max:
+                return Saturation(step.users, "backend_process",
+                                  f"backend CPU {step.backend_cpu_pct:.0f} % within 10 % of its maximum {backend_max:.0f} %")
+            return Saturation(step.users, "unattributed", "host CPU, run queue and backend CPU all below their branch limits")
     return None
+
+
+def step_flags(*, backend_mem_mb: float, mem_limit_mb: float, rates: Mapping[str, float],
+               swap_delta_kb_s: float, disk_delta_kb_s: float) -> list[str]:
+    """Context flags for one step (not saturation verdicts)."""
+    flags = []
+    if backend_mem_mb >= MEMORY_FRACTION * mem_limit_mb:
+        flags.append("memory_near_limit")
+    if rates.get("admission_429", 0.0) >= ERROR_RATE:
+        flags.append("admission_429")
+    if rates.get("server_5xx", 0.0) >= ERROR_RATE:
+        flags.append("server_5xx")
+    if swap_delta_kb_s > HOST_BASELINE_LIMIT_KB_S:
+        flags.append("host_swap")
+    if disk_delta_kb_s > HOST_BASELINE_LIMIT_KB_S:
+        flags.append("host_disk")
+    return flags

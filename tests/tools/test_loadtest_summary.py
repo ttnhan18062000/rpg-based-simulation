@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from tools.loadtest import summary
-from tools.loadtest.keys import api_key_hashes, hash_key
+from tools.loadtest.keys import STATUS_CLIENT_ID, api_key_hashes, hash_key
 
 STATS_HEADER = ('"Type","Name","Request Count","Failure Count","Median Response Time","Average Response Time",'
                 '"Min Response Time","Max Response Time","Average Content Size","Requests/s","Failures/s",'
@@ -65,40 +65,79 @@ def test_error_rates_handle_zero_requests() -> None:
     assert summary.error_rates(200, {"admission_429": 10}) == {"admission_429": 0.05}
 
 
-QUIET = {"backend_cpu_pct": 40.0, "host_cpu_pct": 50.0, "run_queue": 2, "backend_mem_mb": 300.0, "swap_kb_s": 0}
+def _view(users: int, rps: float, p95: float, backend: float = 100.0, host: float = 40.0, runq: float = 2) -> summary.StepView:
+    return summary.StepView(users, rps, p95, backend, host, runq)
 
 
-def test_no_resource_saturated_when_everything_is_below_threshold() -> None:
-    assert summary.saturated_resources(QUIET, nproc=6, mem_limit_mb=1024, rates={}) == []
+def test_no_knee_while_throughput_keeps_growing() -> None:
+    steps = [_view(10, 100, 50), _view(25, 180, 70), _view(50, 300, 120)]
+    assert summary.find_saturation(steps, nproc=6) is None
 
 
-def test_each_resource_threshold() -> None:
-    def hit(**change: float) -> list[str]:
-        use = {**QUIET, **change}
-        return [name for name, _ in summary.saturated_resources(use, nproc=6, mem_limit_mb=1024, rates={})]
-
-    assert hit(backend_cpu_pct=90.0) == ["backend_cpu"]
-    assert hit(backend_cpu_pct=89.9) == []
-    assert hit(host_cpu_pct=95.0) == ["host_cpu"]
-    assert hit(run_queue=6) == []          # equal to nproc is not saturated
-    assert hit(run_queue=7) == ["run_queue"]
-    assert hit(backend_mem_mb=921.6) == ["memory"]
-    assert hit(swap_kb_s=1) == ["swap"]
+def test_no_knee_when_throughput_flat_but_p95_does_not_rise() -> None:
+    assert summary.find_saturation([_view(10, 100, 50), _view(25, 105, 60)], nproc=6) is None
 
 
-def test_error_rate_thresholds() -> None:
-    assert [n for n, _ in summary.saturated_resources(QUIET, nproc=6, mem_limit_mb=1024, rates={"admission_429": 0.01})] == ["admission_429"]
-    assert summary.saturated_resources(QUIET, nproc=6, mem_limit_mb=1024, rates={"server_5xx": 0.0099}) == []
+def test_no_knee_when_p95_rises_but_throughput_still_grows() -> None:
+    assert summary.find_saturation([_view(10, 100, 50), _view(25, 130, 90)], nproc=6) is None
 
 
-def test_first_saturation_is_the_lowest_step_and_ties_follow_resource_order() -> None:
-    hot = {**QUIET, "backend_cpu_pct": 99.0, "host_cpu_pct": 97.0}
-    steps = [(100, hot, {}), (10, QUIET, {}), (50, hot, {}), (25, QUIET, {})]
-    assert summary.first_saturation(steps, nproc=6, mem_limit_mb=1024) == (50, "backend_cpu", 99.0)
+def test_knee_thresholds_are_gain_under_10_percent_and_p95_rise_at_least_50_percent() -> None:
+    # gain exactly 10 % is not under the limit; p95 rise exactly 50 % is enough
+    assert summary.find_saturation([_view(10, 100, 100), _view(25, 110, 200)], nproc=6) is None
+    assert summary.find_saturation([_view(10, 100, 100), _view(25, 109.9, 150)], nproc=6) is not None
 
 
-def test_first_saturation_none_when_never_saturated() -> None:
-    assert summary.first_saturation([(10, QUIET, {}), (25, QUIET, {})], nproc=6, mem_limit_mb=1024) is None
+def test_knee_attributed_to_host_cpu_by_cpu_percent() -> None:
+    steps = [_view(10, 100, 50), _view(25, 105, 90, backend=120, host=93)]
+    got = summary.find_saturation(steps, nproc=6)
+    assert got is not None and (got.users, got.resource) == (25, "host_cpu") and "93" in got.branch
+
+
+def test_knee_attributed_to_host_cpu_by_run_queue() -> None:
+    steps = [_view(10, 100, 50), _view(25, 105, 90, backend=120, host=60, runq=7)]
+    got = summary.find_saturation(steps, nproc=6)
+    assert got is not None and got.resource == "host_cpu" and "run queue" in got.branch
+    steps_equal = [_view(10, 100, 50), _view(25, 105, 90, backend=120, host=60, runq=6)]
+    assert summary.find_saturation(steps_equal, nproc=6).resource == "backend_process"
+
+
+def test_knee_attributed_to_backend_process_when_backend_cpu_is_near_its_maximum() -> None:
+    steps = [_view(10, 100, 50, backend=60), _view(25, 105, 90, backend=130), _view(50, 106, 200, backend=125)]
+    got = summary.find_saturation(steps, nproc=6)
+    assert got is not None and (got.users, got.resource) == (25, "backend_process")
+
+
+def test_knee_unattributed_when_nothing_matches() -> None:
+    steps = [_view(10, 100, 50, backend=130), _view(25, 105, 90, backend=70, host=40, runq=2)]
+    got = summary.find_saturation(steps, nproc=6)
+    assert got is not None and got.resource == "unattributed"
+
+
+def test_first_knee_wins_and_steps_are_ordered_by_users() -> None:
+    steps = [_view(50, 106, 400, backend=130), _view(10, 100, 50), _view(25, 104, 100, backend=130)]
+    assert summary.find_saturation(steps, nproc=6).users == 25
+
+
+def test_pool_ceiling_and_the_half_ceiling_warning() -> None:
+    assert summary.pool_ceiling_rps(1000) == 3000.0
+    assert not summary.ceiling_warning(1500.0, 1000)    # exactly 50 % is not over
+    assert summary.ceiling_warning(1500.1, 1000)
+    assert summary.ceiling_warning(400.0, 250)
+
+
+def test_host_swap_and_disk_are_judged_against_the_idle_baseline() -> None:
+    assert summary.above_baseline(5000.0, 4200.0) == (800.0, False)
+    delta, flagged = summary.above_baseline(5300.0, 4000.0)
+    assert delta == 1300.0 and flagged
+    assert summary.above_baseline(100.0, 4000.0)[1] is False   # below baseline
+
+
+def test_step_flags() -> None:
+    flags = summary.step_flags(backend_mem_mb=930.0, mem_limit_mb=1024.0, rates={"admission_429": 0.02, "server_5xx": 0.0},
+                               swap_delta_kb_s=2000.0, disk_delta_kb_s=10.0)
+    assert flags == ["memory_near_limit", "admission_429", "host_swap"]
+    assert summary.step_flags(backend_mem_mb=100.0, mem_limit_mb=1024.0, rates={}, swap_delta_kb_s=0.0, disk_delta_kb_s=0.0) == []
 
 
 def test_classify_failure_separates_admission_from_server_errors() -> None:
@@ -112,3 +151,9 @@ def test_api_key_hashes_match_the_server_format() -> None:
     value = api_key_hashes(["k0", "k1"])
     assert value == f"loadtest-0:{hash_key('k0')},loadtest-1:{hash_key('k1')}"
     assert len(hash_key("k0")) == 64
+
+
+def test_status_key_is_hashed_after_the_pool_under_its_own_client_id() -> None:
+    value = api_key_hashes(["k0"], status_key="status")
+    assert value == f"loadtest-0:{hash_key('k0')},{STATUS_CLIENT_ID}:{hash_key('status')}"
+    assert "status" not in value.replace(STATUS_CLIENT_ID, "")   # only the hash, never the key

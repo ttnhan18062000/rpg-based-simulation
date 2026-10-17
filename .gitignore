@@ -334,4 +334,5 @@ docker/secrets/
 
 # TCK-20261018-LOCUST-API-LOAD-TEST: load-test key pool (plaintext keys) and run output, never committed
 tools/loadtest/.keys.txt
+tools/loadtest/.status-key.txt
 tools/loadtest/runs/

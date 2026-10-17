@@ -69,6 +69,15 @@ a short smoke run. The measured run is the next ticket.
   supersession route: the owner confirms the literal diff; agent-working-planner reviews by comment).
 - `tools/loadtest/README.md`: how to run it, the method, and the saturation rule.
 
+- **Amendment 2026-10-18 (deviation accepted by platform-planner; per-user keys still measured the per-key bucket):** keys
+  rotate round-robin per request over the pool, not one key per Locust user. The pool ceiling (3 x pool size req/s) is
+  printed in every summary, a step above 50 % of it is flagged, and the pool is sized for the measured run (990 keys: about
+  2970 req/s; the server keeps at most 1000 client entries). Planner decisions folded in the same day: saturation = first
+  step with throughput gain < 10 % while p95 rises >= 50 %, resource attributed host_cpu / backend_process / unattributed
+  with the branch recorded; host swap and disk are judged against a 30 s idle baseline (flag only > 1 MB/s above it);
+  engine state is read with a dedicated key outside the pool; `backend_image_id` replaces `backend_repo_digest`; every
+  container of the project is sampled and a per-container peak table is printed.
+
 ## Out of Scope
 - The measured run and its record (`TCK-20261018-API-LOAD-TEST-MEASURED-RUN`).
 - py-spy profiling (perf's toolkit, through perf-planner).
@@ -150,9 +159,10 @@ None.
   1. FIXED: `parse_failures_csv` did not see 429s. Locust writes a `catch_response` failure as `CatchResponseError('admission_429')`; the first run reported 0.0 % while the CSV held about 12,000 429s. The test fixtures used the bare message, so the unit tests passed on the wrong format. Fixtures now use the real format.
   2. FIXED (deviation from the ticket's "one key per Locust user"): with no think time one user sends tens to hundreds of req/s, far above one key's refill of 3/s, so a per-user key still measured the per-key bucket (the first pool run with per-user keys logged 4085 + 2596 + 1391 + 2640 = 10,712 429s in its 5-user step; the request total for that step was not recorded, rps x 30 s suggests most requests). Keys now rotate round-robin per request over the pool; the ceiling is about 3 x pool size req/s (250 keys: about 750 req/s) and the runner prints it.
   3. FIXED: the manifest crashed on a `Path` in the settings.
-  4. OPEN (decision for the planner, not changed): the `backend_cpu` rule treats 100 % as one core ("the backend is one process"), but the backend reached 131-134 % at 5 users, so the rule reports `backend_cpu` as saturated at the lowest step of every run. The rule needs a better definition (for example against the cores the backend can really use, or against run-queue/host CPU) before the measured run.
-  5. OPEN: the `swap` rule uses host-wide vmstat si+so, which other sessions can move (7992 KB/s at the 5-user step); it did not win here only because `backend_cpu` is checked first.
-  6. OPEN: manifest `engine_state` was `None` in the pool run (the status request used key 0, whose bucket the earlier run had drained, so it got a 429); `image_digests.backend_repo_digest` holds the image name (`platform-backend`), not a digest, because a locally built image has none. Only the image id is a real identifier.
+  4. FIXED (static, not yet run on a stack; planner decision 2026-10-18): the old `backend_cpu` rule treats 100 % as one core ("the backend is one process"), but the backend reached 131-134 % at 5 users, so the rule reports `backend_cpu` as saturated at the lowest step of every run. The rule needs a better definition (for example against the cores the backend can really use, or against run-queue/host CPU) before the measured run.
+  5. FIXED (static): the old `swap` rule used host-wide vmstat si+so, which other sessions can move (7992 KB/s at the 5-user step); it did not win here only because `backend_cpu` is checked first.
+  6. FIXED (static): manifest `engine_state` was `None` in the pool run (the status request used key 0, whose bucket the earlier run had drained, so it got a 429); `image_digests.backend_repo_digest` holds the image name (`platform-backend`), not a digest, because a locally built image has none. Only the image id is a real identifier.
+  6b. OPEN, for the next stack start: the 9 pool 429s at 5 users. Not known whether they come from the per-user-key version or the round-robin one; this was the round-robin run. The run's output was deleted before it could be examined. At the next smoke run keep `tools/loadtest/runs/`, read `step5_r0_failures.csv` (First/Last Seen) and `step5_r0_stats_history.csv` (failures per second) to place them in time (warm-up edge or steady state), and record the answer here.
   7. After the run: `data/runs` holds a root-owned run dir created by the backend container (`run_1792263138_5169_1_3e0de9d3`), reported to the planner, not cleaned. The scratch venv, `.keys.txt` and `tools/loadtest/runs/` were deleted.
 
 ## Files Changed

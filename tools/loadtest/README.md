@@ -11,7 +11,7 @@ whether the observability profile is up, and the fleet state (`uptime`, count of
 
 ```bash
 uv sync --group loadtest                                   # locust is not in any default group
-export LOADTEST_API_KEY_HASHES="$(python3 tools/loadtest/keys.py -n 250)"   # writes tools/loadtest/.keys.txt (gitignored)
+export LOADTEST_API_KEY_HASHES="$(python3 tools/loadtest/keys.py -n 990)"   # writes tools/loadtest/.keys.txt (gitignored)
 docker compose -f compose.yaml -f tools/loadtest/compose.loadtest.yaml up -d backend redis
 python3 -m tools.loadtest.run --users 10,25,50,100,200 --duration 60 --repeats 3 --label baseline
 ```
@@ -34,25 +34,43 @@ Failure categories (Locust's failure messages): `admission_429` (rate limited), 
 
 ## USE sampling
 
-During each step: `docker stats --no-stream` of the backend container (CPU %, memory, net/block I/O) every
+Before step 1 the runner records a 30 s idle baseline (`--baseline-seconds`). During each step and repeat it samples
+every container of the compose project (`docker stats --no-stream`: CPU %, memory, net/block I/O) every
 `--sample-interval` seconds, `vmstat 1` for the host (run queue, swap, block I/O, CPU), and the Locust process's own CPU.
+The printed table ends with a per-container peak table (CPU % of one core, memory MiB).
 
 Locust runs on the host, outside the backend container and outside any memory cap. It shares the host's vCPUs with the
-backend, so `locust_cpu_pct` is recorded: a high value means the generator, not the API, is the limit.
+backend, so `locust_cpu_pct` is recorded in `summary.json`: a high value means the generator, not the API, is the limit.
+
+Host swap and disk (`vmstat si+so`, `bi+bo`) are host-wide, so other sessions move them. They are context, not
+verdicts: each step reports its mean minus the idle baseline and flags `host_swap` / `host_disk` only when that is more
+than 1 MB/s above baseline.
+
+## Key pool and ceiling
+
+Keys rotate per request over the pool, so the pool carries about 3 x pool size req/s before per-key 429s start
+(990 keys: about 2970 req/s). The server keeps at most 1000 client entries (`_MAX_CLIENT_ENTRIES`), so the pool plus the
+status key stay under that. Every summary prints the ceiling, and a step whose throughput is above 50 % of it is flagged
+`near_pool_ceiling`: the measured run has to stay well below it.
+
+`keys.py` also writes one extra key that is not in the pool (`.status-key.txt`, client id `loadtest-status`). The
+manifest reads the engine state (`/api/v1/observability/live/status`) with it before any load starts, so that read never
+competes with the load or gets a 429.
 
 ## Saturation rule
 
-The summary names the first resource that saturated: the lowest user step in which any of these holds (peak over the
-step's repeats), ties broken in this order:
+Saturation is the first step (ascending users) where **throughput gains less than 10 % over the previous step while p95
+rises by at least 50 %**. At that step the resource is named, and the branch that fired is recorded:
 
-1. `backend_cpu`: backend container CPU >= 90 % (100 % = one core; the backend is one process).
-2. `host_cpu`: host `us+sy` >= 90 %.
-3. `run_queue`: vmstat `r` > nproc.
-4. `memory`: backend memory >= 90 % of its `mem_limit` (`--mem-limit-mb`, default 1024).
-5. `swap`: any swap in/out (`si+so` > 0).
-6. `admission_429`: 429 share of requests >= 1 %.
-7. `server_5xx`: 5xx share of requests >= 1 %.
+1. host CPU (vmstat `us+sy`) >= 90 %, or run queue > nproc: `host_cpu`;
+2. otherwise backend CPU within 10 % of its maximum over all steps: `backend_process` (GIL/engine contention; Python with
+   native threads can use more than one core, so there is no fixed per-core threshold);
+3. otherwise `unattributed`.
 
-The rule lives in `tools/loadtest/summary.py` (`saturated_resources`, `first_saturation`) and is tested in
-`tests/tools/test_loadtest_summary.py`. Per step, throughput and p50/p95/p99 are reported as the median and min-max
-across repeats.
+If there is no such step the summary says so. Separately, each step carries context flags (not verdicts): `memory_near_limit`
+(backend memory >= 90 % of its `mem_limit`, `--mem-limit-mb`), `admission_429` and `server_5xx` (>= 1 % of requests),
+`host_swap`, `host_disk`, `near_pool_ceiling`.
+
+The rule lives in `tools/loadtest/summary.py` (`find_saturation`, `step_flags`, `above_baseline`,
+`ceiling_warning`) and is tested in `tests/tools/test_loadtest_summary.py`. Per step, throughput and p50/p95/p99 are
+reported as the median and min-max across repeats.
