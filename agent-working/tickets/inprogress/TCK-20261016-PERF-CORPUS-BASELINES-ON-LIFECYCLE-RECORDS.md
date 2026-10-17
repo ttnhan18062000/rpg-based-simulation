@@ -70,6 +70,8 @@ So a legacy file sits beside a promoted version, and the name stays in `LEGACY_T
 - Decision (perf-planner dispatch, owner GO 2026-10-18): `bench_corpus_world.py --commit` is removed, not converted; promotion has one path (`rerun_baselines.py` candidate, then `baseline_lifecycle.py promote`).
 
 ## Implementation Notes
+
+- tests/tools/test_corpus_perf_baseline.py is an agent-working path; edited on the owner's override, 2026-10-18 (#623).
 (empty until the plan)
 
 ## Test Summary
