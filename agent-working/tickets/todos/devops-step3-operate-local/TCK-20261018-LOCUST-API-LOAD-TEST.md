@@ -15,7 +15,7 @@ tags: [platform, performance, benchmarking]
 tools/loadtest: a Locust API scenario and a runner that records the method, the environment and the USE signals with every run
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -105,13 +105,21 @@ None.
   the measured paths are cheap. Don't load a world through the tick to fill them.
 
 ## Implementation Notes
-(open)
+- Env var for the key hashes: `RPG_API_KEY_HASHES` (ConfigLoader prefix `RPG_` + field `api_key_hashes`, `src/config/loader.py`, `src/cli/entry.py`). The override reads it from `LOADTEST_API_KEY_HASHES` and fails if unset.
+- Endpoints (all admission-gated except /health): live/status 3, state 2, live/health 2, entities 1, /health 2. Whether they do real work on the default profile is not yet checked (needs the smoke run).
+- `classify_failure` lives in `summary.py` (no locust import) so tests run without the loadtest group; `locustfile.py` imports it and needs `PYTHONPATH=<repo>` (run.py sets it).
+- Warm-up is a separate, unrecorded Locust invocation per repeat. USE: `docker stats`, `vmstat 1`, `ps` of the Locust process. pidstat/throttling not sampled (not needed for the smoke).
+- `locust==2.46.7` in `[dependency-groups] loadtest` (not a default group; 14 days old on 2026-10-18). `uv lock` also moved `requests` 2.32.3 -> newer and `cffi` 2.0.0 -> 2.1.1 (locust's dependencies); lead should look at those two in the uv.lock diff.
+- Generated session agent cards (`.claude/agents/session-platform-*.md`) were regenerated: the `owns` glob is embedded there and `tools/sessions/validate.py` reports generated-drift without them.
+- `.gitignore`: `tools/loadtest/.keys.txt` and `tools/loadtest/runs/`.
 
 ## Test Summary
-(open)
+- PASS: tests/tools/test_loadtest_summary.py (14 tests, under a 800M cap).
+- PASS: `PYTHONPATH=. tools/sessions/validate.py` generated-drift findings fixed by regenerating the cards (re-run needed after commit).
+- PENDING (clearances needed): 2-step smoke run (needs a stack start), single-key 429 proof, `tests/static` incl. `test_ci_uv_install`, all of `tests/tools`.
 
 ## Files Changed
-(open)
+`tools/loadtest/*` (new), `tests/tools/test_loadtest_summary.py`, `pyproject.toml`, `uv.lock`, `registries/session_roles.yaml`, `.claude/agents/session-platform-{implementer,planner}.md`, `.gitignore`, this ticket.
 
 ## Completion Summary
 (open)
