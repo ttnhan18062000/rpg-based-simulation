@@ -72,7 +72,7 @@ def build_manifest(host: str, key: str | None, args: argparse.Namespace) -> dict
         "observability_profile_on": "prometheus" in services,
         "compose_services_running": services,
         "fleet": {"uptime": sh("uptime"), "claude_processes": int(sh("pgrep", "-fc", "claude") or 0)},
-        "settings": {k: v for k, v in vars(args).items() if k not in {"keys_file"}},
+        "settings": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items() if k != "keys_file"},
     }
 
 
@@ -154,8 +154,7 @@ def main(argv: list[str] | None = None) -> int:
     if not keys:
         print(f"no keys in {args.keys_file}; run tools/loadtest/keys.py", file=sys.stderr)
         return 2
-    if not args.single_key and max(steps) > len(keys):
-        print(f"warning: {max(steps)} users but only {len(keys)} keys; keys will be shared", file=sys.stderr)
+    print(f"key pool: {len(keys)} keys, about {3 * len(keys)} req/s before the per-key limit (3/s per key) is reached", file=sys.stderr)
     out = args.out / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out.mkdir(parents=True)
     env = {**os.environ, "LOADTEST_KEYS_FILE": str(args.keys_file), "PYTHONPATH": str(REPO)}

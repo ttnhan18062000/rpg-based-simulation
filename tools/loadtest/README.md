@@ -27,8 +27,7 @@ Output goes to `tools/loadtest/runs/<utc timestamp>/` (gitignored): per step and
 
 Endpoints, weight: `/api/v1/observability/live/status` 3, `/api/v1/state` 2, `/api/v1/observability/live/health` 2,
 `/api/v1/entities` 1, `/health` 2 (no auth). The authenticated ones are mounted by default and gated by the
-admission control. There is no wait between tasks, so offered load = user count. One key per user from the pool;
-if there are more users than keys, keys are shared and the run warns.
+admission control. There is no wait between tasks, so offered load = user count. Keys rotate round-robin **per request** over the pool (not one key per user): with no think time a single user sends far more than one key's 3 req/s, so a per-user key would measure the per-key bucket. The pool carries about 3 x pool-size req/s before 429s start (250 keys: about 750 req/s); 429s show up as `admission_429` if the offered load passes that.
 
 Failure categories (Locust's failure messages): `admission_429` (rate limited), `server_5xx_<code>`, `http_<code>`
 (other 4xx), and anything else is a transport error. They are counted separately in the summary.

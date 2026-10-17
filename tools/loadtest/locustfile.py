@@ -1,7 +1,9 @@
 """Locust scenario for the HTTP API (never the simulation tick).
 
-One API key per Locust user, taken from a pool file, so the per-key admission bucket
-(capacity 30, refill 3/s, src/api/admission_control.py) is not what gets measured.
+API keys come from a pool file and rotate round-robin PER REQUEST (not per user): with no think time one user
+sends tens to hundreds of requests a second, far above one key's refill of 3/s, so a per-user key would measure
+the per-key bucket (capacity 30, refill 3/s, src/api/admission_control.py) instead of the API. The pool therefore
+carries at most about 3 x len(pool) requests/s before 429s start (250 keys: about 750 req/s).
 LOADTEST_SINGLE_KEY=1 makes every user share key 0 (used once to show the pool works).
 429 responses are failures with message ``admission_429``; 5xx are ``server_5xx_<code>``; other
 statuses >= 400 are ``http_<code>``. Transport errors are reported by Locust itself (status 0).
@@ -22,21 +24,22 @@ KEYS_FILE = Path(os.environ.get("LOADTEST_KEYS_FILE", Path(__file__).resolve().p
 SINGLE_KEY = os.environ.get("LOADTEST_SINGLE_KEY") == "1"
 
 _KEYS = [line.strip() for line in KEYS_FILE.read_text().splitlines() if line.strip()] if KEYS_FILE.exists() else []
-_user_counter = itertools.count()
+_request_counter = itertools.count()  # shared by all users of this Locust process (gevent: one thread, no lock needed)
 
 
 class ApiUser(HttpUser):
     wait_time = lambda self: 0  # noqa: E731 -- no think time
 
     def on_start(self) -> None:
-        index = next(_user_counter)
         if not _KEYS:
             raise RuntimeError(f"no load-test keys at {KEYS_FILE}; run tools/loadtest/keys.py first")
-        key = _KEYS[0] if SINGLE_KEY else _KEYS[index % len(_KEYS)]
-        self.headers = {"X-API-Key": key}
+
+    def _next_key(self) -> str:
+        return _KEYS[0] if SINGLE_KEY else _KEYS[next(_request_counter) % len(_KEYS)]
 
     def _get(self, path: str, auth: bool = True) -> None:
-        with self.client.get(path, headers=self.headers if auth else None, catch_response=True) as response:
+        headers = {"X-API-Key": self._next_key()} if auth else None
+        with self.client.get(path, headers=headers, catch_response=True) as response:
             message = classify_failure(response.status_code)
             if message:
                 response.failure(message)

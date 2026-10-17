@@ -135,7 +135,25 @@ None.
   | full tests/api | scratch | 2.34.2 | 150 passed (74.3 s) | none |
 
   Reading: no failure in 6 of 6 ws runs and in the full `tests/api` on 2.34.2, so `requests` 2.34.2 is not a regression for the backend API tests. The two earlier failures (shared venv, 2.32.3) did not recur; the slow runs (77-84 s vs 27 s) in both venvs point to load-dependent live-server startup timing, not to the dependency. Run-to-run host load was not controlled.
-- PENDING: 2-step smoke run (needs a stack start; separate clearance).
+- **Smoke run, 2026-10-18, SMOKE, NOT A MEASUREMENT** (default profile + observability + `tools/loadtest/compose.loadtest.yaml`; 250 keys; 30 s per step after a 5 s warm-up; R=1; Locust 2.46.7 on the host; host available memory min 4690 MB, swap 2.4-2.8 GB, abort guard never triggered; commit 46da5bc3e plus uncommitted fixes):
+
+  | run | users | req/s | p50 ms | p95 ms | 429 | 5xx |
+  |---|---|---|---|---|---|---|
+  | pool | 5 | 167.6 | 21 | 78 | 9 of 4875 (0.2 %) | 0 |
+  | pool | 10 | 182.0 | 41 | 140 | 0 of 5283 | 0 |
+  | single shared key | 10 | 399.4 | 16 | 58 | 9237 of 11616 (79.5 %) | 0 |
+
+  - Pool: no 429 at 10 users (acceptance met). 9 at 5 users: not explained (the first-start burst of keys whose buckets the earlier runs had drained is a guess, not shown). Single key: 429s in their own `admission_429` category, as required.
+  - The single-key run's req/s is mostly fast rejections, so it is not comparable to the pool numbers.
+  - Peak `docker stats` of the backend in the pool steps: CPU 133.9 % (5 users) and 131.4 % (10 users) of one core, memory 164 and 129 MiB; Locust process CPU 46 % and 42 % of one core; host CPU (vmstat us+sy) 49 % and 43 %; run queue 9 and 12 (nproc 6). Throughput barely rises from 5 to 10 users (168 -> 182 req/s) while latency doubles: consistent with the backend using about 1.3 cores, not shown to be the single limit.
+- **Findings from the smoke run (all fixed in the same ticket unless marked OPEN):**
+  1. FIXED: `parse_failures_csv` did not see 429s. Locust writes a `catch_response` failure as `CatchResponseError('admission_429')`; the first run reported 0.0 % while the CSV held about 12,000 429s. The test fixtures used the bare message, so the unit tests passed on the wrong format. Fixtures now use the real format.
+  2. FIXED (deviation from the ticket's "one key per Locust user"): with no think time one user sends tens to hundreds of req/s, far above one key's refill of 3/s, so a per-user key still measured the per-key bucket (the first pool run with per-user keys logged 4085 + 2596 + 1391 + 2640 = 10,712 429s in its 5-user step; the request total for that step was not recorded, rps x 30 s suggests most requests). Keys now rotate round-robin per request over the pool; the ceiling is about 3 x pool size req/s (250 keys: about 750 req/s) and the runner prints it.
+  3. FIXED: the manifest crashed on a `Path` in the settings.
+  4. OPEN (decision for the planner, not changed): the `backend_cpu` rule treats 100 % as one core ("the backend is one process"), but the backend reached 131-134 % at 5 users, so the rule reports `backend_cpu` as saturated at the lowest step of every run. The rule needs a better definition (for example against the cores the backend can really use, or against run-queue/host CPU) before the measured run.
+  5. OPEN: the `swap` rule uses host-wide vmstat si+so, which other sessions can move (7992 KB/s at the 5-user step); it did not win here only because `backend_cpu` is checked first.
+  6. OPEN: manifest `engine_state` was `None` in the pool run (the status request used key 0, whose bucket the earlier run had drained, so it got a 429); `image_digests.backend_repo_digest` holds the image name (`platform-backend`), not a digest, because a locally built image has none. Only the image id is a real identifier.
+  7. After the run: `data/runs` holds a root-owned run dir created by the backend container (`run_1792263138_5169_1_3e0de9d3`), reported to the planner, not cleaned. The scratch venv, `.keys.txt` and `tools/loadtest/runs/` were deleted.
 
 ## Files Changed
 `tools/loadtest/*` (new), `tests/tools/test_loadtest_summary.py`, `pyproject.toml`, `uv.lock`, `registries/session_roles.yaml`, `.claude/agents/session-platform-{implementer,planner}.md`, `.gitignore`, this ticket.

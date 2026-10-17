@@ -69,11 +69,12 @@ def parse_failures_csv(path: Path) -> dict[str, int]:
     with path.open(newline="") as handle:
         for row in csv.DictReader(handle):
             error, occurrences = row["Error"], int(row["Occurrences"])
-            if error.startswith("admission_429"):
+            # Locust writes a catch_response failure as "CatchResponseError('<message>')", so match the message anywhere.
+            if "admission_429" in error:
                 counts["admission_429"] += occurrences
-            elif error.startswith("server_5xx_"):
+            elif "server_5xx_" in error:
                 counts["server_5xx"] += occurrences
-            elif error.startswith("http_"):
+            elif "'http_" in error:
                 counts["http_other"] += occurrences
             else:
                 counts["transport"] += occurrences

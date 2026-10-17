@@ -36,8 +36,9 @@ def test_parse_stats_csv_without_aggregated_row_raises(tmp_path: Path) -> None:
 def test_failures_are_split_into_their_own_categories(tmp_path: Path) -> None:
     path = tmp_path / "f.csv"
     path.write_text('"Method","Name","Error","Occurrences"\n'
-                    '"GET","/a","admission_429",7\n"GET","/a","server_5xx_503",2\n"GET","/b","server_5xx_500",1\n'
-                    '"GET","/b","http_404",4\n"GET","/c","ConnectionError(...)",3\n')
+                    '"GET","/a","CatchResponseError(\'admission_429\')",7\n"GET","/a","CatchResponseError(\'server_5xx_503\')",2\n'
+                    '"GET","/b","CatchResponseError(\'server_5xx_500\')",1\n"GET","/b","CatchResponseError(\'http_404\')",4\n'
+                    '"GET","/c","ConnectionError(...)",3\n')
     assert summary.parse_failures_csv(path) == {"admission_429": 7, "server_5xx": 3, "http_other": 4, "transport": 3}
 
 
