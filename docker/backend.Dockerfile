@@ -45,6 +45,18 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY src/ /app/src/
 COPY data/ /app/data/
 
+# Run as a non-root user (TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER). The compose file bind-mounts ./data at /app/data and the
+# engine writes data/runs/<run_id> there: as root that left root-owned directories in the checkout on every stack start.
+# uid/gid default to 1000, the host user on both hosts; compose passes APP_UID/APP_GID build args for any other host user.
+# Only /app/data must be writable; /app/src is byte-compiled here, as root, because the app user cannot write __pycache__ later.
+ARG APP_UID=1000
+ARG APP_GID=1000
+RUN groupadd --gid "${APP_GID}" app \
+    && useradd --uid "${APP_UID}" --gid "${APP_GID}" --no-create-home --shell /usr/sbin/nologin app \
+    && python -m compileall -q /app/src \
+    && chown -R app:app /app/data
+USER app
+
 # Expose port
 EXPOSE 8000
 

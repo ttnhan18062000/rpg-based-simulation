@@ -15,7 +15,7 @@ tags: [platform, security]
 Backend image: run backend, ai_worker and watchdog as a non-root user, so the bind-mounted ./data is never left root-owned
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -76,13 +76,18 @@ None.
 - Host uid is 1000 on both hosts. The build args cover other cases.
 
 ## Implementation Notes
-(open)
+- `docker/backend.Dockerfile` (runtime stage, before `EXPOSE`): `ARG APP_UID=1000` / `APP_GID=1000`, `groupadd`/`useradd` (no home, nologin shell), `python -m compileall -q /app/src` as root (the app user cannot write `__pycache__` later; the venv is already byte-compiled by `UV_COMPILE_BYTECODE`), `chown -R app:app /app/data`, `USER app`.
+- `compose.yaml`: `args: APP_UID/APP_GID: ${APP_UID:-1000}` on the three builds that use this Dockerfile (backend, ai_worker, watchdog); header comment says how to build for another host user.
+- Static check of writes outside `/app/data`: a grep of `src/` finds `mkdir` calls in `src/lab/*` (lab runs), `src/worldassembly/resolve_io.py` and `src/observability/behavior/worker.py`; the lab runs are not started by `serve`, the anomaly worker or the watchdog. NOT proven for those three processes; the runtime check below decides. If the app writes outside `/app/data` at runtime, report it to platform-planner (src/ is rpg's).
+- `publish-images.yml` builds the same Dockerfile: the published image now also runs as uid 1000. No workflow change.
+- Trivy: not run locally; non-root removes the "runs as root" class of findings.
 
 ## Test Summary
-(open)
+- PASS: `compose config -q` (default and observability); tests/architecture/test_docker_compose_dependency_hygiene.py, tests/tools/test_session_platform_domain.py, tests/static/test_ci_narrow_path_filtered_jobs.py, tests/codebase/test_repo_root_allowlist.py.
+- PENDING (needs lead clearance): `docker compose build`, default-profile `up`, `id` in backend, ai_worker and watchdog running, `ls -ln data/runs` owner after a run.
 
 ## Files Changed
-(open)
+`docker/backend.Dockerfile`, `compose.yaml`, this ticket.
 
 ## Completion Summary
 (open)

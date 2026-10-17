@@ -9,12 +9,17 @@
 # A missing file fails only the observability profile (Grafana's start), never the default profile; an empty file or the value `admin` makes Grafana exit at start (guard in the grafana entrypoint).
 # Grafana applies the admin password only when it first creates its database: to change it later, run `grafana cli admin reset-admin-password` in the container or remove the grafana_data volume.
 # Host ports of redis, prometheus, grafana and loki bind to 127.0.0.1 (redis has no auth); services reach each other by service name.
+# backend, ai_worker and watchdog run as a non-root user (uid/gid 1000). On a host whose user is not 1000, build with APP_UID/APP_GID set
+# (for example `APP_UID=$(id -u) APP_GID=$(id -g) docker compose build`) so the bind-mounted ./data stays writable and files in it stay yours.
 # Every service has a memory limit (mem_limit); see TCK-20261014-COMPOSE-OBSERVABILITY-PROFILE-AND-LIMITS.
 services:
   backend:
     build: 
       context: .
       dockerfile: docker/backend.Dockerfile
+      args:
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     restart: unless-stopped
@@ -60,6 +65,9 @@ services:
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
+      args:
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
     # Override FastAPI command to run the V2 live anomaly worker
     command: python -m src.observability.anomaly.worker
     environment:
@@ -221,6 +229,9 @@ services:
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
+      args:
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
     command: python -m src.observability.watchdog
     environment:
       - BACKEND_URL=http://backend:8000
