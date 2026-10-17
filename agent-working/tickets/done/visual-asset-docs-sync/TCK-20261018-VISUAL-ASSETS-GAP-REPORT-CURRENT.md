@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT
-phase: open
+phase: done
 date: 2026-10-18
 tags: [architecture, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation]
 Sample-map gap report: say what is open now, and record the owner's 2026-10-18 answers on G6 (16 px building glyph) and G4 (variant offsets)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -94,3 +94,4 @@ The owner answered two further questions on 2026-10-18, through lead-planner, wi
 - `docs/assets/sample_map/gap_report.md`
 
 ## Completion Summary
+The gap report opens with a 2026-10-18 section: the owner's G6 "Keep scaled icons" and G4 "Leave as is" answers (via lead-planner), an Open-now list (G5, G7, G10, G11, G12, client alias resolution) with owner and blocker, and the art-priority and candidate-A sections marked answered, not deleted. Every id checked with gh and git (#519 is closed, #523 and #548 open). No table number changed. Approved by asset-planner (178de1ea4, 21e465157).

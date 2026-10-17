@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261018-VISUAL-ASSETS-HANDOFF-SNAPSHOTS
-phase: open
+phase: done
 date: 2026-10-18
 tags: [architecture, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation]
 Refresh the tracked asset handover snapshots to the post-#608 state
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -72,3 +72,4 @@ P3
 - `docs/assets/session_handoff/asset-planner.md`, `docs/assets/session_handoff/asset-implementer.md`
 
 ## Completion Summary
+Both tracked handover snapshots are refreshed to 2026-10-18: the planner's from its final live note, the implementer's from mine, naming #608, the docs-sync batch, the entity-marker gates (#523, role id vs species + size) and the backlog; local-only archive pointers and session names removed, worktree paths labelled as the writing machine's. Frontmatter and docs tests pass, scoped.
