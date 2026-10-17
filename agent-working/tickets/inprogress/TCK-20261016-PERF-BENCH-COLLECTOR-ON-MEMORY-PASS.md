@@ -70,10 +70,11 @@ A diagnostic run of the same world with the collector ON gave 106 MB after trim 
 - Whether the pass should also run in the nightly tripwire lane: no, unless testing-planner asks for it.
 
 ## Implementation Notes
-(empty until the plan)
+Design in staging plan.md (approved by perf-planner): `run_memory_pass` (fresh process, collector on, no clock), `MemoryPassReading` echoing scenario/seed/profile/ticks, `with_working_set` (adds `memory_mb` keys only; refuses an identity mismatch), schema 1.3, opt-in `rerun_baselines.py measure|record --memory-pass` (record: once, into the candidate). AC4's "two corpus rows" are the ledger rows of `simq_corpus_frontier_extended` and `simq_corpus_frontier_marches` (the two with the 1703 / 1568 MB readings); only frontier_extended was measured, the marches row says "working set not yet measured".
 
 ## Test Summary
-(empty until implementation)
+tests/unit/perf/test_memory_pass.py (23): collector on inside the pass and restored, no clock read, identity echoed, cyclic garbage in the timed `rss_delta` and not in the working set, merge changes `memory_mb` only, precedence per branch (pass present / absent), trim-unavailable fallback, all five identity mismatches refused, report-only for `compare`, older records load, CLI (merge, `.timed.json` kept, failing child, forged identity, `record` spawns exactly one child, off by default). Mutation proofs: collector left off, end collect skipped, ratio left on the timed basis: each fails the matching test. `make code-health` 0 new / 0 worse, mypy baseline gate rc=0, wall-clock inventory regenerated.
+Evidence run (2026-10-18, `measure --name simq_corpus_frontier_extended --memory-pass`, `PERF_512MB_LOCAL` canonical, 100 + 1000 ticks, tool quiet-window gate passed at loadavg1 1.47, 5.67 GB available): AC1 MET, `working_set_mb` 101.38 (bound 95.6 to 116.8), `working_set_delta_mb` 12.64 (bound < 25), basis trim; AC2 MET in-run, the merged record equals `frontier_extended.timed.json` outside `result.memory_mb` (schema 1.3 on both). AC5: one run under `systemd-run` MemoryMax=3G, peak cgroup memory 1707 MB, swap 0, loadavg1 0.87 at the end. Not a baseline.
 
 ## Files Changed
 (empty until implementation)

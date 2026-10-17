@@ -8,7 +8,7 @@ tags: [performance, benchmarking, schema, documentation]
 
 # Benchmark Identity and Result Schema (schema 1.2)
 
-> **Status: the contract for schema version `1.2`** (`1.1` plus the optional after-collect keys of `result.memory_mb`, §3.1 and §3.2; `1.1` was `1.0` plus the optional `identity.runner` section, §3.1; both are MINOR bumps, so a `1.0` or `1.1` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
+> **Status: the contract for schema version `1.3`** (`1.2` plus the optional `working_set_*` keys of `result.memory_mb`, §3.1 and §3.2; `1.2` was `1.1` plus the optional after-collect keys of `result.memory_mb`; `1.1` was `1.0` plus the optional `identity.runner` section, §3.1; all are MINOR bumps, so a `1.0`, `1.1` or `1.2` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
 > (`BenchmarkRecord`, `compare`), adopted by `PERF-M2-T02b` (`TCK-20261010-PERF-M2-T02B-RECORD`).
 > It began as the design draft of `PERF-M2-T02` (`TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA`),
 > written from code read on 2026-10-03; §1 and §2 are that inventory and still describe the formats as
@@ -215,7 +215,8 @@ provides it.
 | `memory_mb.rss_before_window_mb`, `rss_after_collect_mb` | numbers (MB), optional (`1.2`) | optional | RSS after the `gc.collect()` that precedes the window (untrimmed: a trim before the window would hand pages back and make the sampled ticks fault them in again), and RSS after a second `gc.collect()` taken once the window's wall and CPU clocks have stopped. **The second one is not the working set**: the freed garbage's memory stays mapped in the allocator, so it equals the high-water mark (measured: 402 MB after collect against 99.6 MB at the end of warm-up) |
 | `memory_mb.rss_after_trim_mb`, `rss_trim_delta_mb` | numbers (MB), optional (`1.2`), absent where glibc `malloc_trim` is unavailable | optional | RSS after `malloc_trim(0)` straight after the end collect (outside the timed spans), and `rss_after_trim_mb - rss_before_window_mb`. This is the engine-memory reading (125.6 MB in the same 200-tick run) |
 | `memory_mb.allocated_blocks_delta`, `gc_collected_objects`, `gc_collect_s` | numbers, optional (`1.2`) | optional | change of `sys.getallocatedblocks()` between the pre-window collect and the end collect (live Python blocks, independent of the allocator returning memory); the change of the `gc.get_stats()` collected total over the window and the end collect (the garbage the disabled collector let pile up, freed by the first collection after the window or by the end collect); and the end collect's duration in seconds |
-| `memory_mb.declared_ram_mb`, `rss_over_declared`, `rss_over_declared_basis_trim`, `peak_rss_over_declared` | numbers, optional (`1.2`) | optional, **report only** | `declared_ram_mb` is `RuntimeProfile.max_ram_mb`; **`rss_over_declared = rss_after_trim_mb / declared_ram_mb`**, or `rss_after_collect_mb / declared_ram_mb` where the trim is unavailable, and `rss_over_declared_basis_trim` is `1.0` when the trim was the basis and `0.0` when it was not; `peak_rss_over_declared = rss_high_water / declared_ram_mb` (garbage included, so it is not the basis of any statement about the engine). None is read by `compare`, `promote` or any gate: a ratio above `1.0` is reported, never refused (`PERF-M2` OD-8) |
+| `memory_mb.working_set_mb`, `working_set_delta_mb`, `working_set_basis_trim`, `working_set_allocated_blocks_delta`, `working_set_gc_collected_objects`, `working_set_measured_ticks` | numbers, optional (`1.3`); present only when the memory pass ran | optional, **report only** | The engine working set, read by a **separate, untimed pass** (`TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS`): the same scenario, seed and tick counts as the timed run, in a fresh process, with the collector **enabled**, no clock read, then `gc.collect()`, `malloc_trim(0)` and an RSS read. `working_set_mb` is that RSS after the trim (after the collect where the trim is unavailable, and `working_set_basis_trim` is then `0.0`; `1.0` otherwise); `working_set_delta_mb` is `working_set_mb` minus the pass's own RSS after its warm-up collect; `working_set_allocated_blocks_delta` and `working_set_gc_collected_objects` are the pass's live-block change and collected-object total; `working_set_measured_ticks` is the pass's sampled tick count. The pass is opt-in (`rerun_baselines.py measure|record --memory-pass`; `record` runs it once, after the last timed run, into the candidate). **Absent keys mean the pass did not run.** A pass whose echoed scenario id, seed, profile or tick counts differ from the timed record's is refused. It changes no timed field: the timed pass's keys above are unchanged |
+| `memory_mb.declared_ram_mb`, `rss_over_declared`, `rss_over_declared_basis_trim`, `rss_over_declared_basis_working_set`, `rss_over_declared_timed_pass`, `peak_rss_over_declared` | numbers, optional (`1.2`; the two `working_set` ones `1.3`) | optional, **report only** | `declared_ram_mb` is `RuntimeProfile.max_ram_mb`; **precedence, defined here once: when `rss_over_declared_basis_working_set` is `1.0` (the memory pass ran), `rss_over_declared = working_set_mb / declared_ram_mb`, `working_set_basis_trim` says trim or collect, and `rss_over_declared_timed_pass` keeps the timed pass's ratio; when the pass is absent the `1.2` meaning applies unchanged: `rss_over_declared = rss_after_trim_mb / declared_ram_mb`, or `rss_after_collect_mb / declared_ram_mb` where the trim is unavailable, and `rss_over_declared_basis_trim` is `1.0` when the trim was the basis and `0.0` when it was not (it describes the timed pass in both cases);** `peak_rss_over_declared = rss_high_water / declared_ram_mb` (garbage included, so it is not the basis of any statement about the engine). None is read by `compare`, `promote` or any gate: a ratio above `1.0` is reported, never refused (`PERF-M2` OD-8) |
 | `scaling_slope` | object or null | optional | not yet (M4) |
 | `runtime_mode_sequence` | array of `{mode, ticks}` (run-length) | required | today: `mode_sequence` per tick; toolkit compresses |
 | `work` | object name → number | required (may be empty) | today: the kernel's `metrics` per-tick means under the names it emits. The processed / dropped / coalesced split is not named yet, and the collector does not invent counts. Work debt is gone (DEV-019), so there is no debt counter to describe (R-5) |
@@ -409,6 +410,14 @@ provides it.
             "declared_ram_mb": {"type": "number"},
             "rss_over_declared": {"type": "number"},
             "rss_over_declared_basis_trim": {"type": "number"},
+            "rss_over_declared_basis_working_set": {"type": "number"},
+            "rss_over_declared_timed_pass": {"type": "number"},
+            "working_set_mb": {"type": "number"},
+            "working_set_delta_mb": {"type": "number"},
+            "working_set_basis_trim": {"type": "number"},
+            "working_set_allocated_blocks_delta": {"type": "number"},
+            "working_set_gc_collected_objects": {"type": "number"},
+            "working_set_measured_ticks": {"type": "number"},
             "peak_rss_over_declared": {"type": "number"}
           }
         },
@@ -509,7 +518,7 @@ perf-only result field, so a gate report outside `src/perf/` can reuse it.
 **Schema version change.** A MAJOR bump invalidates every stored baseline of the older MAJOR for
 comparison. They stay readable and are reported `INCONCLUSIVE` until migrated or re-recorded by an
 owner-approved baseline update (`PERF-M2-T05`), which records the cause ticket and the before and
-after identities. A MINOR bump only adds optional fields (`1.1`: `identity.runner`; `1.2`: the after-collect keys of `memory_mb`; `compare` reads only the MAJOR, so a `1.2` candidate against a `1.1` baseline, or the reverse, is compared exactly as two records of one version). The reader never guesses a missing
+after identities. A MINOR bump only adds optional fields (`1.1`: `identity.runner`; `1.2`: the after-collect keys of `memory_mb`; `1.3`: the `working_set_*` keys of `memory_mb`; `compare` reads only the MAJOR, so a `1.3` candidate against a `1.1` baseline, or the reverse, is compared exactly as two records of one version). The reader never guesses a missing
 required field.
 
 ## 5. Tool mapping
