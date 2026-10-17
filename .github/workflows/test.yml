@@ -724,7 +724,7 @@ jobs:
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_frontend == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -1043,7 +1043,7 @@ jobs:
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
       # jscpd runs through `npx` (version pinned by JSCPD_VERSION in the Makefile); same Node as the frontend job.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
       # Keep this step's continue-on-error: it truncates /tmp/changed.txt first, and a failed diff only changes the
