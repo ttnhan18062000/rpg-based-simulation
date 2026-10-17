@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 The corpus baseline test and bench_corpus_world.py --commit use the promoted lifecycle records, so legacy corpus files can be retired
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -65,6 +65,9 @@ So a legacy file sits beside a promoted version, and the name stays in `LEGACY_T
 
 ## Assumptions / Open Questions
 - `tests/tools/test_corpus_perf_baseline.py` sits under `tests/tools/`. If another session owns that file, the plan names that owner and gets their agreement.
+  Owner: agent-working (`registries/session_roles.yaml`); the gate is GitHub issue #623 (for:agent-working-designer). The edit is drafted locally and not committed until perf-planner relays agreement or an owner override.
+- Ordering: the T08 close (TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES, #613) lands with this ticket or after it. tests/tools/test_corpus_perf_baseline.py reads idle_100_local.json as its shape reference until this ticket removes that read.
+- Decision (perf-planner dispatch, owner GO 2026-10-18): `bench_corpus_world.py --commit` is removed, not converted; promotion has one path (`rerun_baselines.py` candidate, then `baseline_lifecycle.py promote`).
 
 ## Implementation Notes
 (empty until the plan)

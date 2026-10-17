@@ -108,8 +108,8 @@ and the approval is the review of the PR that adds the file.
   benchmark; only the three `simq_corpus_*` files record 1,000 sampled ticks. Their percentiles use the old `sorted[int(n * q)]` method,
   and most of them predate DEV-017, so most are listed as needing a rerun or incomparable in the invalidation ledger.
 - The synthetic-scenario files (`idle_100_local.json`, ...) have the shape and file names produced by `tools/perf/run_benchmarks.py`. No
-  script copies them into `tests/perf/baselines/`; the only tool that writes there besides `baseline_lifecycle.py` is
-  `tools/bench_corpus_world.py --commit` (§6).
+  script copies them into `tests/perf/baselines/`; the only tool that writes there is `baseline_lifecycle.py promote`. `tools/bench_corpus_world.py`
+  no longer has `--commit` (`TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS`; §6).
 - **Two tripwire lanes, both through `compare()`** (`PERF-M2-T03`). The pull-request lane is `tools/perf/tripwire.py`: base and head are run paired on
   one runner, each side in a fresh process, over the declared scenario list (`TRIPWIRE_SCENARIOS`: 10 warmup and 50 sampled ticks, canonical contract).
   A scenario that is not `PASS` is run once more as a diagnostic; both outcomes are reported, and when they disagree the result is `INCONCLUSIVE`
@@ -152,20 +152,18 @@ synthetic scenarios (`combat_10`, `idle_100`, `mixed_200`, `movement_100`, `reso
 `strategic_100`, via `src/perf/scenarios.py`'s raw `State` builders) — none of the real, authored
 SimQ world corpus (`data/worlds/`) had ever been perf-measured.
 
-`tools/bench_corpus_world.py --world {name} [--commit]` benchmarks a real corpus world: reuses
+`tools/bench_corpus_world.py --world {name}` benchmarks a real corpus world: reuses
 `tools/calibrate_simq.py::_load_world_state()` to build the same real, `WorldCompiler`-compiled
 `AuthoritativeState` SimQ calibration uses (no synthetic content, no separate authoring), then runs
 `BenchHarness(PERF_PROFILES["PERF_512MB_LOCAL"]).run_benchmark(...)` — a genuinely separate,
 dedicated benchmark execution (NOT a free byproduct of a calibration run — `BenchHarness` runs its
-own warmup+sample tick loop). Writes the same raw-dict JSON shape as the existing baselines
-(`avg_tick_compute_ms`, `tick_ms{}`, `mem_rss_mb{}`, `phase_breakdown{}`), so
-`tests/perf/test_perf_regression_baseline.py`'s own real, live comparison logic applies unchanged
-— committed baselines are added as new `(scenario_id, builder_fn, kwargs)` rows in that file's own
-`parametrize` list.
+own warmup+sample tick loop). It prints the harness result and writes nothing (its `--commit` raw-dict writer was removed by
+`TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS`). A corpus baseline now has one path: `python3 tools/perf/rerun_baselines.py record
+simq_corpus_{world} --cause <TCK>` writes the candidate, and `baseline_lifecycle.py promote` (§2) commits `simq_corpus_{world}.vNNNN.json`.
 
 **Coverage so far**: `simq_corpus_frontier_extended` (59 entities), `simq_corpus_frontier_marches`
 (62 entities), `simq_corpus_crowded_frontier` (38 entities) — the corpus's largest 3 worlds by
 entity count at the time this ticket ran. Extending coverage to the remaining corpus worlds, or to
 `TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION`'s own new large world once it exists, is a
-natural follow-up using the same `tools/bench_corpus_world.py --commit` command — not automated in
+natural follow-up through `rerun_baselines.py record` and `baseline_lifecycle.py promote` — not automated in
 this ticket.
