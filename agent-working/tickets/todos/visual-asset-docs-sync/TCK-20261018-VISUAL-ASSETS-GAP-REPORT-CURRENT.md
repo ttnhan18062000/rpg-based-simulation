@@ -81,9 +81,16 @@ The owner answered two further questions on 2026-10-18, through lead-planner, wi
 - Assumed: the owner's two answers are final for now. Either can reopen on the owner's word; say so in one clause, not more.
 
 ## Implementation Notes
+- New section "Update 2026-10-18: what is open now, and the owner's two answers" at the top of the updates: the two owner decisions in the owner's words (G6 "Keep scaled icons", G4 "Leave as is", via lead-planner), an "Open now" list (G5, G7, G10, G11, G12, client alias resolution) with owner and blocker, and a one-line list of what is closed.
+- G4 and G6 table rows keep their old text and append the owner's decision. The art-priority question and the "Input list for candidate A" headings are marked ANSWERED, each with one line saying what happened; neither was deleted. No table number was changed or re-measured.
+- Wording correction to the dispatch: #519 is CLOSED (answered 2026-10-11), so G5 is described as a design question for rpg-designer, not as "open on #519".
 
 ## Test Summary
+- Ids checked read-only with `gh` and `git log`: PR #545 MERGED 2026-10-13 (squash `06aa3a20c`, rc-0010); PR #596 MERGED 2026-10-14 (`51b044c69`, rc-0011); PR #608 MERGED 2026-10-16 (`d7831efab`, not cited in the report); issues #519 CLOSED, #523 OPEN, #548 OPEN, #543 CLOSED; `agent-working/tickets/todos/visual-asset-entity-markers/` exists.
+- `tools/validate_frontmatter.py` on the report and on this ticket: no violations.
+- Scoped under `systemd-run --user --scope -q -p MemoryMax=3G`: `tests/docs/test_doc_integrity.py`, `tests/docs/test_doc_path_existence.py`, `tests/visual_assets/test_sample_map_render.py`: 41 passed, 1 skipped, 1 xfailed.
 
 ## Files Changed
+- `docs/assets/sample_map/gap_report.md`
 
 ## Completion Summary
