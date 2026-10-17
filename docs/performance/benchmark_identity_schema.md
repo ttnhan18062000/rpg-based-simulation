@@ -6,9 +6,9 @@ audience: agent
 tags: [performance, benchmarking, schema, documentation]
 ---
 
-# Benchmark Identity and Result Schema (schema 1.1)
+# Benchmark Identity and Result Schema (schema 1.2)
 
-> **Status: the contract for schema version `1.1`** (`1.0` plus the optional `identity.runner` section, §3.1; a MINOR bump, so a `1.0` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
+> **Status: the contract for schema version `1.2`** (`1.1` plus the optional after-collect keys of `result.memory_mb`, §3.1 and §3.2; `1.1` was `1.0` plus the optional `identity.runner` section, §3.1; both are MINOR bumps, so a `1.0` or `1.1` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
 > (`BenchmarkRecord`, `compare`), adopted by `PERF-M2-T02b` (`TCK-20261010-PERF-M2-T02B-RECORD`).
 > It began as the design draft of `PERF-M2-T02` (`TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA`),
 > written from code read on 2026-10-03; §1 and §2 are that inventory and still describe the formats as
@@ -156,7 +156,7 @@ provides it.
 
 | Field | Type | Req. | Source |
 |---|---|---|---|
-| `schema_version` | string `MAJOR.MINOR` | required | today: `benchmark_record.SCHEMA_VERSION` (`1.0`) |
+| `schema_version` | string `MAJOR.MINOR` | required | today: `benchmark_record.SCHEMA_VERSION` (`1.2`) |
 | `scenario.id` | string | required | today: `BenchHarness` `scenario_id`. Note: an id must not map to `build_metropolis_state()` until `TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION` is fixed |
 | `scenario.builder` | string (module path and function) | required | not yet (`PERF-M2-T03`); builders live in `src/perf/scenarios.py` |
 | `scenario.builder_version` | string (content hash of the builder source) | optional | not yet |
@@ -211,7 +211,11 @@ provides it.
 | `latency_ms` | object `{avg, p50, p95, p99, max, min}` | required | today: `tick_ms` |
 | `throughput` | object `{compute_tps, wall_tps}` | required | today: harness |
 | `time_s` | object `{wall, cpu_user, cpu_system}` | required | today: harness (CPU includes warmup, which wall does not; the schema fixes one window) |
-| `memory_mb` | object `{rss_high_water, rss_delta, sample_every_ticks}` | required | today: `mem_rss_mb`, sampled every 10th tick; `delta` is max minus min of samples |
+| `memory_mb` | object `{rss_high_water, rss_delta, sample_every_ticks}` plus, from `1.2`, the optional keys below | required | today: `mem_rss_mb`, sampled every 10th tick; `delta` is max minus min of samples. **`rss_high_water` and `rss_delta` are read with the collector disabled for the sampled window, so they include the cyclic garbage the engine makes during it** (`tick_cost_growth.md` §5); they are not the engine's working set |
+| `memory_mb.rss_before_window_mb`, `rss_after_collect_mb` | numbers (MB), optional (`1.2`) | optional | RSS after the `gc.collect()` that precedes the window (untrimmed: a trim before the window would hand pages back and make the sampled ticks fault them in again), and RSS after a second `gc.collect()` taken once the window's wall and CPU clocks have stopped. **The second one is not the working set**: the freed garbage's memory stays mapped in the allocator, so it equals the high-water mark (measured: 402 MB after collect against 99.6 MB at the end of warm-up) |
+| `memory_mb.rss_after_trim_mb`, `rss_trim_delta_mb` | numbers (MB), optional (`1.2`), absent where glibc `malloc_trim` is unavailable | optional | RSS after `malloc_trim(0)` straight after the end collect (outside the timed spans), and `rss_after_trim_mb - rss_before_window_mb`. This is the engine-memory reading (125.6 MB in the same 200-tick run) |
+| `memory_mb.allocated_blocks_delta`, `gc_collected_objects`, `gc_collect_s` | numbers, optional (`1.2`) | optional | change of `sys.getallocatedblocks()` between the pre-window collect and the end collect (live Python blocks, independent of the allocator returning memory); the change of the `gc.get_stats()` collected total over the window and the end collect (the garbage the disabled collector let pile up, freed by the first collection after the window or by the end collect); and the end collect's duration in seconds |
+| `memory_mb.declared_ram_mb`, `rss_over_declared`, `rss_over_declared_basis_trim`, `peak_rss_over_declared` | numbers, optional (`1.2`) | optional, **report only** | `declared_ram_mb` is `RuntimeProfile.max_ram_mb`; **`rss_over_declared = rss_after_trim_mb / declared_ram_mb`**, or `rss_after_collect_mb / declared_ram_mb` where the trim is unavailable, and `rss_over_declared_basis_trim` is `1.0` when the trim was the basis and `0.0` when it was not; `peak_rss_over_declared = rss_high_water / declared_ram_mb` (garbage included, so it is not the basis of any statement about the engine). None is read by `compare`, `promote` or any gate: a ratio above `1.0` is reported, never refused (`PERF-M2` OD-8) |
 | `scaling_slope` | object or null | optional | not yet (M4) |
 | `runtime_mode_sequence` | array of `{mode, ticks}` (run-length) | required | today: `mode_sequence` per tick; toolkit compresses |
 | `work` | object name → number | required (may be empty) | today: the kernel's `metrics` per-tick means under the names it emits. The processed / dropped / coalesced split is not named yet, and the collector does not invent counts. Work debt is gone (DEV-019), so there is no debt counter to describe (R-5) |
@@ -394,7 +398,18 @@ provides it.
           "properties": {
             "rss_high_water": {"type": "number"},
             "rss_delta": {"type": "number"},
-            "sample_every_ticks": {"type": "integer", "minimum": 1}
+            "sample_every_ticks": {"type": "integer", "minimum": 1},
+            "rss_before_window_mb": {"type": "number"},
+            "rss_after_collect_mb": {"type": "number"},
+            "rss_after_trim_mb": {"type": "number"},
+            "rss_trim_delta_mb": {"type": "number"},
+            "allocated_blocks_delta": {"type": "number"},
+            "gc_collected_objects": {"type": "number"},
+            "gc_collect_s": {"type": "number"},
+            "declared_ram_mb": {"type": "number"},
+            "rss_over_declared": {"type": "number"},
+            "rss_over_declared_basis_trim": {"type": "number"},
+            "peak_rss_over_declared": {"type": "number"}
           }
         },
         "scaling_slope": {"type": ["object", "null"]},
@@ -494,7 +509,7 @@ perf-only result field, so a gate report outside `src/perf/` can reuse it.
 **Schema version change.** A MAJOR bump invalidates every stored baseline of the older MAJOR for
 comparison. They stay readable and are reported `INCONCLUSIVE` until migrated or re-recorded by an
 owner-approved baseline update (`PERF-M2-T05`), which records the cause ticket and the before and
-after identities. A MINOR bump only adds optional fields. The reader never guesses a missing
+after identities. A MINOR bump only adds optional fields (`1.1`: `identity.runner`; `1.2`: the after-collect keys of `memory_mb`; `compare` reads only the MAJOR, so a `1.2` candidate against a `1.1` baseline, or the reverse, is compared exactly as two records of one version). The reader never guesses a missing
 required field.
 
 ## 5. Tool mapping
