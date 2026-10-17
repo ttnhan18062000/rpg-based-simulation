@@ -2021,6 +2021,7 @@ mechanisms:
     state: done
     implemented_by:
       - src/domains/campaigns/grief_urgency.py
+      - src/core/grief_triggers.py::pending_grief_triggers
     verified:
       instrument: code_trace
       verdict: observed

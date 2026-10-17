@@ -267,7 +267,9 @@ def test_wider_scope_numbers_pinned():
     # 340 -> 341 on 2026-10-14 (diet slice of SURV-05): +src/worldbuilding/diet_declaration.py (two checks: a compiled body names a declared diet; a recipe names a known species; functions only).
     # 341 -> 342 on 2026-10-15 (typed death cause): +src/core/death_cause.py (DeathCause, HpLossSource, DeathRecord: enums and one frozen record). src/observability/death_ledger.py is outside the scope globs.
     # 342 -> 343 on 2026-10-16 (D75 route step, divergence 2.128): +src/engine/route_search.py (RoutePlanStore and the bounded terrain-cost search).
-    assert wider["scope_files"] == 343
+    # 343 -> 344 on 2026-10-17 (grief-as-state, decision 80, divergence 2.134): +src/core/grief_triggers.py (pending_grief_triggers, a pure read of
+    # death records and trust), bound under `cross_episode_grief_nemesis`, so unbound_files is unchanged.
+    assert wider["scope_files"] == 344
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
