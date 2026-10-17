@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20261016-GRIEF-AS-STATE-GRIEF-TRIGGERS-ARE-DETECTED-AND-CARRIED-IN-AUTHORITATIVE-STATE-D80
-phase: open
+phase: done
 date: 2026-10-16
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Grief triggers are detected in the observability phase and held in a kernel list outside the world, so turning observability OFF changes the authoritative outcome; detect them in the authoritative pipeline and carry them as a typed record in authoritative state.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -65,13 +65,14 @@ src/engine/kernel.py (_phase_observability, _drain_pending_grief_triggers, drain
 - Whether the record is a state-level queue or per-entity (on the griever) is a design choice for the plan; the grief cause is the death record's `last_attacker`-independent ally death.
 
 ## Implementation Notes
-TBD
+`src/core/grief_triggers.py::pending_grief_triggers(state)` derives owed triggers from typed state (inactive body, `death_record.tick == tick-1`, above `AuthoritativeState.grief_drained_tick`; trust >= `ALLY_TRUST_THRESHOLD`). The kernel applies them in `_phase_resolution` and at teardown and writes the watermark via `StateUpdate.grief_drained_tick_set`; the field is left out of the canonical data/fingerprint while it is -1. The kernel list and `EventExtractor.detect_grief_triggers` are removed. Divergence 2.134, parity row SOC-277, Bible ch04.
+Proof: see 2.134 Measured. 15 natural runs (3 worlds x seeds 42-46 x 5000t) have identical projected digests and counts, but no grief fires in any of them (no allies form), so they prove inertness only. Grief fires in the forced ally-death scenario (3 seeds): triggers and the tick they enter StrategicUpdates are identical base-ON vs new-ON, new-OFF == new-ON, base-OFF differs (the bug).
 
 ## Test Summary
-TBD
+Scoped run on the final tip (tests/unit/core, kernel, domains/campaigns, observability, engine, replay; tests/integration/campaigns; tests/certification; the encounterability mechanic scenario): all pass. tests/regression/test_behavioral_5k.py is a known red on base too, unchanged.
 
 ## Files Changed
-TBD
+src/core/grief_triggers.py (new), src/core/state.py, src/core/updates.py, src/engine/apply.py, src/engine/checkpoint.py, src/engine/kernel.py, src/observability/event_extractor.py, src/replay/fingerprint.py, docs (ch04, divergences 2.134, parity social_narrative), tests (see git diff f06ae95c3..HEAD).
 
 ## Completion Summary
-TBD
+Grief triggers are a pure function of authoritative state and the drain is a typed watermark; observability OFF no longer changes the authoritative outcome. Known gap: no natural world in the 3-world matrix forms allies, so the natural-run grief counts are zero; the forced scenario covers the trigger path.
