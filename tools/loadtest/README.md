@@ -80,19 +80,31 @@ reported as the median and min-max across repeats.
 ## Profiled hold
 A single-step hold while py-spy samples the backend. Uses `tools/loadtest/compose.profile.yaml` on top of the other two files, for this hold only:
 the throughput and observability-on runs never use it, so their backend has no `SYS_PTRACE`. `PY_SPY_BIN` must point to a static py-spy binary
-(host: `~/.local/bin/py-spy` 0.4.2); the overlay refuses to load without it.
+(host: `~/.local/bin/py-spy` 0.4.2); the overlay refuses to load without it. `LOADTEST_API_KEY_HASHES` must also be exported (see the
+header of `compose.loadtest.yaml`). `up -d backend` starts redis through `depends_on`.
 
 ```
 export PY_SPY_BIN=~/.local/bin/py-spy
+export LOADTEST_API_KEY_HASHES="$(python3 tools/loadtest/keys.py -n 990)"
 C="docker compose -f compose.yaml -f tools/loadtest/compose.loadtest.yaml -f tools/loadtest/compose.profile.yaml"
 $C up -d backend
-# start the hold (users N chosen from the throughput run), then 15 s later, after the warm-up:
-PYTHONPATH=. python3 -m tools.loadtest.run --users N --duration 120 --repeats 1 --warmup 15 --baseline-seconds 0 --label profiled
-# find the uvicorn PID, do not assume 1 (the slim image may have no pgrep/ps, so read /proc; not yet run, check it at the window)
-PID=$($C exec -T backend sh -c 'for d in /proc/[0-9]*; do tr "\0" " " < $d/cmdline 2>/dev/null | grep -q "src serve" && echo ${d#/proc/} && break; done')
-$C exec -u 0 backend /opt/py-spy record --pid "$PID" --nonblocking --rate 100 --duration 90 --format raw -o /app/data/profile.raw
-$C cp backend:/app/data/profile.raw ./profile.raw           # then convert to SVG with a flamegraph tool
+
+# the hold runs in the foreground for about 135 s, so background it: attach 15 s in (after the warm-up), then wait for it
+PYTHONPATH=. python3 -m tools.loadtest.run --users N --duration 120 --repeats 1 --warmup 15 --baseline-seconds 0 --label profiled &
+sleep 15
+
+# find the uvicorn PID, do not assume 1. The slim image may have no pgrep/ps, so read /proc. "src[ ]serve" does not match its own
+# text, and $$ (this sh) is skipped. Print the matched command line and check it before attaching.
+PID=$($C exec -T backend sh -c 'for d in /proc/[0-9]*; do p=${d#/proc/}; [ "$p" = "$$" ] && continue; tr "\0" " " < $d/cmdline 2>/dev/null | grep -q "src[ ]serve" && echo $p && break; done')
+$C exec -T backend sh -c "tr '\\0' ' ' < /proc/$PID/cmdline; echo"
+
+# -u 0: ptrace_scope=1 allows the attach only for root with the added cap; the target stays uid 1000.
+# Write to the container's /tmp, not /app/data: that is the bind-mounted ./data, and a root-owned file there brings back the root-owned data/runs bug.
+$C exec -u 0 backend /opt/py-spy record --pid "$PID" --nonblocking --rate 100 --duration 90 --format raw -o /tmp/profile.raw
+wait
+$C cp backend:/tmp/profile.raw <ticket staging dir>/profile.raw
 ```
 
-`-u 0` is needed: `ptrace_scope=1` allows attaching only for root with the added capability, while the target stays uid 1000.
+The file is py-spy's raw (folded-stack) format, which tools/perf reads (`tools/perf/_profiling_common.py` parses it and writes a speedscope JSON).
+This overlay produces no SVG: py-spy has no folded-to-SVG converter, and none is pinned here.
 Label for the record: "py-spy nonblocking 100 Hz attached during the hold; latency during the hold is not a measured figure".
