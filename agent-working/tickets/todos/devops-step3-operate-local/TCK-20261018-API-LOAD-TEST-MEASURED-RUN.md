@@ -46,7 +46,7 @@ is the run itself, on a quiet machine that lead-planner arranges, and its dated 
   (`tools/perf/_profiling_common.py`, `profile_api_payload.py`) against the backend at the knee step, while the load
   runs. This ticket gets back the flame graph and perf's reading. No new profiling tool. The profiled run's numbers
   are never mixed into the measured table.
-- **Record:** `docs/runbooks/records/<date>-api-load-test.md` (location pending lead), with frontmatter. Contents:
+- **Record:** `docs/runbooks/records/<date>-api-load-test.md` (location confirmed by lead, 2026-10-18), with frontmatter. Contents:
   - the method (link to the README);
   - the manifest values;
   - the tables;
@@ -81,7 +81,7 @@ plus the server's p95 from the dashboard side by side).
 To be created: this ticket's raw CSVs and manifest.
 
 ## Related Code Areas
-`tools/loadtest/`, `docs/runbooks/records/` (new; pending lead)
+`tools/loadtest/`, `docs/runbooks/records/` (new)
 
 ## Assumptions / Open Questions
 - If the host can't be made quiet, the run is labelled "measured, fleet active" with the fleet state, not dropped.

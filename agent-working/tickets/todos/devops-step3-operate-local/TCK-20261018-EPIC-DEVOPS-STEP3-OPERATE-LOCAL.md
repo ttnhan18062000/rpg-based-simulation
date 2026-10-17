@@ -46,7 +46,8 @@ Children, in the order in `SEQUENCE.md`:
 3. `TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK`: one Grafana-provisioned SLO alert (threshold from 2), a local ntfy
    container as the contact point, and the runbook; registers `docs/runbooks/**` to platform.
 4. `TCK-20261018-REDIS-DOWN-CAUSE-ALERT`: a Redis-down alert that fires when Redis stops, since the API SLO likely
-   won't (see Assumptions). **Pending lead's choice of signal.**
+   won't (see Assumptions). Signal A (redis_exporter, `redis_up == 0`), labelled "cause alert, added 2026-10-18 by
+   lead review", not the step-3 SLO alert.
 5. `TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD`: stop Redis under Locust load, record detection time, recovery time and
    a short post-mortem.
 6. `TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT`: **BLOCKED** on rpg's ai_worker `:9108/metrics` reaching main.
@@ -95,7 +96,8 @@ None.
   (`src/api/admission_control.py`). One key caps sustained load at about 3 req/s, so the load test would measure the
   limiter. The load test configures many load-test keys (`api_key_hashes` accepts a list) and reports 429s
   separately from 5xx. No `src` change.
-- Where the dated load-test and drill records live: proposed `docs/runbooks/records/` (one registered glob). For lead to confirm.
+- The dated load-test and drill records live in `docs/runbooks/records/` (lead, 2026-10-18). `docs/runbooks/**` is
+  registered to platform in the slice that creates its first file; the owner confirms that roles diff in its PR.
 - Host rules: the load runs and the drill are heavy. Ask lead-planner first and run one at a time; lead quiets the fleet for the measured run.
 
 ## Implementation Notes

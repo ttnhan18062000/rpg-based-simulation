@@ -62,8 +62,9 @@ a short smoke run. The measured run is the next ticket.
 - **Locust runs on the host** (not in the backend container), outside the cap from the host rules. Its own CPU use is
   recorded too, because Locust shares the 6 vCPUs with the backend. The README says so.
 - **Dependency:** `locust` in a new `[dependency-groups] loadtest` group in `pyproject.toml`, plus `uv.lock`. Not a
-  runtime dep. These files are lead-owned: show lead-planner the diff, and run the CI pin tests after the change
-  (memory: dep pin).
+  runtime dep. These files are lead-owned: lead-planner reviews the diff (approved in principle 2026-10-18). After the pin,
+  run `tests/static` (CI uv pin tests) and **all** of `tests/tools`.
+- `.gitignore` gets one line for the load-test key file (lead approved; lead reviews it in the PR).
 - **Register `tools/loadtest/**`** to the platform domain's `owns` in `registries/session_roles.yaml`, in this PR (D8
   supersession route: the owner confirms the literal diff; agent-working-planner reviews by comment).
 - `tools/loadtest/README.md`: how to run it, the method, and the saturation rule.

@@ -71,6 +71,9 @@ deprecated (Grafana Alloy replaces it), but migrating it is out of scope here.
 - With the file missing, `docker compose --profile observability up -d` does not start Grafana (show the error).
   With the file present, Grafana reaches `healthy` and logs in with that password; `admin`/`admin` is refused.
 - `ss -ltnp` (or `docker port`) shows 9090, 3000, 3100 and 6379 bound on `127.0.0.1` only (**running locally**).
+- backend and ai_worker still reach Redis by service name (`redis:6379`) on the compose network after the rebinding:
+  show it (for example `redis-cli -h redis ping` from a container on that network, and the backend's stream adapter
+  connecting without errors in its log).
 - No service except the socket proxy mounts `/var/run/docker.sock`. A POST through the proxy (for example
   `curl -X POST http://docker-socket-proxy:2375/containers/x/stop` from a throwaway container on that network) is
   refused, and backend log lines still arrive in Loki.
@@ -91,7 +94,8 @@ None.
 `compose.yaml`, `docker/promtail-config.yml`, `docker/secrets/` (new, gitignored), `.gitignore`
 
 ## Assumptions / Open Questions
-- `.gitignore` is not a platform path. A single added line (`docker/secrets/`) is asked of lead-planner in the PR.
+- `.gitignore` is not a platform path. The added line `docker/secrets/` is approved by lead (2026-10-18), who reviews it in the PR.
+- Lead review 2026-10-18 approved: secret file, socket proxy now (Alloy is a follow-up ticket), loopback binding of 6379/9090/3000/3100.
 - The `make` targets that start the observability profile may need a pre-check for the secret file. If the Makefile
   needs editing, run all of `tests/tools` (memory: Makefile edits).
 - Pull the new image only after asking lead-planner (host rules).

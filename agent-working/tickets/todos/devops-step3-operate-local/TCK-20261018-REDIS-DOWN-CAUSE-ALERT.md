@@ -36,7 +36,7 @@ Events still get lost (the anomaly stream, ai_worker input), and nothing alerts 
 cause-side alert on the same ntfy contact point, with a runbook section.
 
 ## Scope
-The signal is **pending lead-planner's choice** (platform-planner recommends option A):
+**Decided by lead review, 2026-10-18: option A** (redis_exporter, `redis_up == 0`). B and C are kept below as the record of what was weighed; rpg is not asked for R4. Label the alert and its runbook section "cause alert, added 2026-10-18 by lead review", never as the step-3 SLO alert.
 - **A. `redis_exporter`** (`oliver006/redis_exporter`, pinned by digest, observability profile, `mem_limit`, no host
   port). Prometheus scrapes it; alert on `redis_up == 0` for 30 s.
   - Platform-only, no rpg dependency, a standard exporter.
@@ -76,9 +76,8 @@ None.
 `compose.yaml`, `docker/prometheus.yml`, `docker/grafana/provisioning/alerting/`, `docs/runbooks/redis-down.md`
 
 ## Assumptions / Open Questions
-- **Open: signal choice A/B/C (lead-planner).**
-- The step brief says "one SLO alert". This is a cause alert, not an SLO. It is added only so the drill has a
-  detection signal. Lead-planner confirms that this doesn't overstep the step.
+- Signal A chosen by lead review (2026-10-18). Lead confirmed a cause alert beside the one SLO alert is in scope:
+  it is what makes the drill meaningful. Lead tells the owner.
 
 ## Implementation Notes
 (open)

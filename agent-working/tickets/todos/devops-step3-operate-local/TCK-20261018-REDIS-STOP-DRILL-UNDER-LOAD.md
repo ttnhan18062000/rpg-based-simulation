@@ -86,7 +86,7 @@ To be created: the drill's raw Locust CSVs and log export.
 `tools/loadtest/`, `docs/runbooks/`
 
 ## Assumptions / Open Questions
-- The record location follows the measured-run ticket (pending lead).
+- The record goes to `docs/runbooks/records/` (lead, 2026-10-18).
 
 ## Implementation Notes
 (open)
