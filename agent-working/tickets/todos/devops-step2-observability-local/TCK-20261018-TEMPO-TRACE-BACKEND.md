@@ -89,7 +89,7 @@ None.
 
 ## Implementation Notes
 - Tempo `grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5` (latest stable at least 2 weeks old on 2026-10-18: 3.0.3 is 2026-08-13, 3.0.4 is 2026-10-16). Digest from a registry query; image NOT pulled yet.
-- `docker/tempo.yaml`: monolithic, local storage (`/var/tempo/{wal,blocks}`), `block_retention: 24h`, OTLP gRPC 4317 + HTTP 4318, query 3200. Written from Tempo "next" docs; Tempo 3.0 config is unverified until the container runs (watch for strict-parser errors).
+- `docker/tempo.yaml`: monolithic, local storage (`/var/tempo/{wal,blocks}`), `block_retention: 24h`, OTLP gRPC 4317 + HTTP 4318, query 3200. Written from Tempo "next" docs; Config corrected at runtime (see Test Summary).
 - Service `tempo`: observability profile, `expose` only, `mem_limit: 512m` (start value), `tempo_data` volume, no healthcheck (no probe tool assumed; verify at runtime).
 - Grafana datasource `tempo` (tracesToLogsV2 to Loki on `container=~".*backend.*"` + trace id, tracesToMetrics to Prometheus).
 - Backend env: `OTEL_EXPORTER_OTLP_ENDPOINT=${...:-}` (empty), `OTEL_SERVICE_NAME=rpg-backend`.
@@ -97,7 +97,15 @@ None.
 
 ## Test Summary
 - PASS: `compose config -q` for default and observability profiles; YAML parse of tempo.yaml and datasource.yml.
-- PENDING (waiting for lead-planner clearance of pull, build and stack start): Tempo up and `/ready`, Grafana Tempo datasource Test, synthetic span (telemetrygen in a throwaway container) found by trace id, measured peak memory in the docker stats table.
+- Runtime, 2026-10-18, local:
+  - FIX 1: Tempo 3.0.3 rejected the `compactor:` block: `failed parsing config: ... yaml: unmarshal errors: line 14: field compactor not found in type app.Config` (restart loop). Retention moved to `backend_worker.compaction.block_retention` (found with `-help`: `-backend-worker.compaction.block-retention`); Tempo then started ("Tempo started", OTLP gRPC 4317 and HTTP 4318).
+  - No volume permission problem: the WAL started on the fresh named volume without a `user:` or init service (no "permission denied" in the log).
+  - Tempo is not on a host port. `GET http://tempo:3200/ready` from the grafana container returns `ready`. The image has no healthcheck (none added).
+  - Grafana datasource test (`GET /api/datasources/uid/tempo/health`): `Data source is working`, status OK.
+  - Synthetic span (OTLP/HTTP JSON POST to `tempo:4318/v1/traces`, sent with python from the backend container, so nothing was pulled or installed; no telemetrygen): trace id `580bb4a0b429886696ebeda847e80411`, found via Grafana's datasource proxy (`/api/datasources/proxy/uid/tempo/api/traces/<id>`) on the first try, span `synthetic-span`. This is the Grafana API, not the Explore UI.
+  - Warnings, harmless: "metrics-generator is not configured", "unowned file entry ignored during wal replay file=blocks", a BackendScheduler "no jobs found".
+  - Memory (`docker stats --no-stream`, max of 3 samples, idle apart from the synthetic span): tempo 35 MiB of 512m; whole profile peak sum about 710 MiB (backend 188, grafana 281, loki 74, tempo 35, watchdog 23, ai_worker 33, prometheus 30, promtail 18, proxy 13, redis 9, frontend 6). Host: available memory stayed >= 4.9 GB while up. A lower `mem_limit` for tempo is possible; left at 512m until a load run.
+  - NOT done: Explore-UI check, trace to logs/metrics links (need rpg's R3 spans and log field), derivedFields.
 
 ## Files Changed
 `compose.yaml`, `docker/tempo.yaml`, `docker/grafana/provisioning/datasources/datasource.yml`, this ticket.

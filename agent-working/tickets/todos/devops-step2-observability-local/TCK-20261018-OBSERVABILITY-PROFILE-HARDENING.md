@@ -103,14 +103,28 @@ None.
 ## Implementation Notes
 - Grafana: `GF_SECURITY_ADMIN_PASSWORD__FILE` from compose secret `grafana_admin_password` (`./docker/secrets/grafana_admin_password`, gitignored); `:-admin` fallback removed.
 - Ports 6379/9090/3000/3100 now `127.0.0.1:${VAR:-port}:port`.
-- New `docker-socket-proxy` (tecnativa v0.4.1, digest-pinned from a registry query, not pulled; CONTAINERS=1, NETWORKS=1, POST=0; mem_limit 64m) is the only service mounting the socket (`:ro`). Promtail uses `tcp://docker-socket-proxy:2375`; `/var/lib/docker/containers` mount removed. NETWORKS=1 is a guess (docker_sd lists networks); confirm or drop at runtime.
+- New `docker-socket-proxy` (tecnativa v0.4.1, digest-pinned from a registry query, not pulled; CONTAINERS=1, POST=0; mem_limit 64m) is the only service mounting the socket (`:ro`). Promtail uses `tcp://docker-socket-proxy:2375`; `/var/lib/docker/containers` mount removed. NETWORKS=1 was dropped after the runtime check (see Test Summary).
 - Promtail drop rule matches the compose service label (`loki|promtail`).
+- Added after planner review: promtail `docker_sd_configs.filters` label `com.docker.compose.project=${COMPOSE_PROJECT_NAME}`; compose passes `COMPOSE_PROJECT_NAME` into promtail's env and promtail runs with `-config.expand-env=true`.
+- Added after the runtime check: a grafana entrypoint guard (exits when the secret file is empty or `admin`), because Grafana otherwise starts with `admin`/`admin` on an empty file.
 - No Makefile edit was needed.
 
 ## Test Summary
 - PASS: `compose config -q` default and observability profiles, with and without the secret file.
 - PASS: tests/architecture/test_docker_compose_dependency_hygiene.py, tests/tools/test_session_platform_domain.py, tests/logging/test_loki_cardinality.py (12 passed).
-- PENDING (waiting for lead-planner clearance of docker pull and stack start): missing/empty secret file behaviour, Grafana login and `admin`/`admin` refused, loopback-only ports (`ss -ltnp`), backend and ai_worker reaching `redis:6379`, POST refused through the proxy, logs arriving in Loki without the containers mount, NETWORKS=1 necessity.
+- Runtime, 2026-10-18, local (build 4m26s; `up` ran by planner/lead clearance; memory guard: available stayed >= 4.9 GB, swap 2.0-2.5 GB):
+  - Missing secret file: `up -d grafana` leaves Grafana "Creating", error `invalid mount config for type "bind": bind source path does not exist: .../docker/secrets/grafana_admin_password`; backend/prometheus/redis were created. PASS (fail-fast).
+  - Empty secret file (before the guard): Grafana STARTED and `admin`/`admin` returned 200. FINDING; fixed with the entrypoint guard. With the guard and an empty file Grafana exits with `docker/secrets/grafana_admin_password is empty or admin` (restart loop with that message).
+  - Password and the persisted DB: Grafana applies the admin password only when it creates its database. The `grafana_data` volume came from the empty-file test, so the real password gave 401 and `admin`/`admin` 200. I did not delete the volume (data deletion needs the user); `grafana cli admin reset-admin-password "$(cat /run/secrets/...)"` then gave password 200 and `admin`/`admin` 401. NOT shown: a first start on a fresh volume applying `GF_SECURITY_ADMIN_PASSWORD__FILE` by itself. Needs `docker volume rm platform_grafana_data` (user decision) and one more start.
+  - Ports: `ss -ltnH` shows 9090, 3000, 3100, 6379 on 127.0.0.1 only; 8000 and 8080 unchanged (0.0.0.0). PASS.
+  - Redis by service name: backend and ai_worker both got `+PONG` from `redis:6379` on the compose network; no redis error lines in their logs. PASS.
+  - Socket: only `platform-docker-socket-proxy-1` mounts `/var/run/docker.sock` (checked with `docker inspect` on every container of the profile). `POST /containers/x/stop` through the proxy: 403; `GET /containers/json` and `/version`: 200. PASS.
+  - Loki without the `/var/lib/docker/containers` mount: backend lines arrive (query `{container="platform-backend-1"}`). PASS.
+  - Project filter: Loki `container` label values are exactly this project's 9 containers (ai_worker, backend, docker-socket-proxy, frontend, grafana, prometheus, redis, tempo, watchdog); no `loki`/`promtail` (drop rule works) and none of the other containers on the host. PASS.
+  - NETWORKS=1: not needed. Without it the proxy returns 403 on `GET /networks` (logged every refresh), `GET /containers/json` works and backend logs keep arriving. Dropped (least privilege); the 403 line in the proxy log is expected.
+  - Leftovers: `data/runs` is owned by root after the run (reported to the planner, not cleaned). Named volumes `platform_*` remain after `down`.
+- Not run: tests/static and all of tests/tools (separate clearance; this ticket changes no Makefile).
+- PASS again after the changes: `compose config -q` (default and observability).
 
 ## Files Changed
 `compose.yaml`, `docker/promtail-config.yml`, `.gitignore`, this ticket.

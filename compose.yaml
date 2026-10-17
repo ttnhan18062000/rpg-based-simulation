@@ -6,7 +6,8 @@
 # watchdog sits in the observability profile because it depends_on promtail (healthy only once loki is ready) and prometheus, and polls Loki.
 # Grafana's admin password is a compose secret file (gitignored). Create it once before `--profile observability up`:
 #   mkdir -p docker/secrets && openssl rand -base64 24 > docker/secrets/grafana_admin_password
-# A missing file fails only the observability profile (Grafana's start), never the default profile.
+# A missing file fails only the observability profile (Grafana's start), never the default profile; an empty file or the value `admin` makes Grafana exit at start (guard in the grafana entrypoint).
+# Grafana applies the admin password only when it first creates its database: to change it later, run `grafana cli admin reset-admin-password` in the container or remove the grafana_data volume.
 # Host ports of redis, prometheus, grafana and loki bind to 127.0.0.1 (redis has no auth); services reach each other by service name.
 # Every service has a memory limit (mem_limit); see TCK-20261014-COMPOSE-OBSERVABILITY-PROFILE-AND-LIMITS.
 services:
@@ -124,6 +125,12 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
     secrets:
       - grafana_admin_password
+    # Fail-fast guard: Grafana falls back to admin/admin when the password file is empty (shown on 2026-10-18), so refuse to start on an
+    # empty file or on the literal "admin". /run.sh is the image's own entrypoint.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - 'p=$$(tr -d "[:space:]" < /run/secrets/grafana_admin_password); if [ -z "$$p" ] || [ "$$p" = admin ]; then echo "docker/secrets/grafana_admin_password is empty or admin; see the top of compose.yaml" >&2; exit 1; fi; exec /run.sh'
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
@@ -164,7 +171,9 @@ services:
       start_period: 30s
     volumes:
       - ./docker/promtail-config.yml:/etc/promtail/config.yml
-    command: -config.file=/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml -config.expand-env=true
+    environment:
+      - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
     restart: unless-stopped
     depends_on:
       loki:
@@ -181,7 +190,6 @@ services:
     mem_limit: 64m
     environment:
       - CONTAINERS=1
-      - NETWORKS=1
       - POST=0
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro

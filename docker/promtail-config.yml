@@ -13,6 +13,11 @@ scrape_configs:
   docker_sd_configs:
     - host: tcp://docker-socket-proxy:2375
       refresh_interval: 5s
+      # Only this compose project's containers: the proxy lists every container on the host (other sessions' stacks, MCP servers).
+      # COMPOSE_PROJECT_NAME is passed in by compose.yaml and expanded by promtail (-config.expand-env=true).
+      filters:
+        - name: label
+          values: ['com.docker.compose.project=${COMPOSE_PROJECT_NAME}']
   relabel_configs:
     # Drop loki's and promtail's own logs by compose service label, independent of the project name.
     - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
