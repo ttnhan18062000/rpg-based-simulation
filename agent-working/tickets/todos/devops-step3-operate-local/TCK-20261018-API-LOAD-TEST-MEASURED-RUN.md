@@ -89,12 +89,15 @@ To be created: this ticket's raw CSVs and manifest.
 
 ## Implementation Notes
 (open)
+- Profiling overlay (prep, 2026-10-18): `tools/loadtest/compose.profile.yaml` adds only `cap_add: [SYS_PTRACE]` and a read-only mount of `${PY_SPY_BIN:?...}` at `/opt/py-spy` to the backend. Used for the profiled hold only; the throughput and obs-on runs never load it. Command and the label text ("py-spy nonblocking 100 Hz attached during the hold; latency during the hold is not a measured figure") are in `tools/loadtest/README.md` ("Profiled hold"). The `/proc` PID lookup there has not been run yet.
 
 ## Test Summary
+- Prep: `compose -f compose.yaml -f tools/loadtest/compose.loadtest.yaml -f tools/loadtest/compose.profile.yaml config -q` passes with PY_SPY_BIN set and fails with 'required variable PY_SPY_BIN is missing a value' without it; the two-file config (no overlay) has no SYS_PTRACE. Loadtest, compose hygiene, platform domain and repo-root tests: 36 passed.
 (open)
 
 ## Files Changed
 (open)
+`tools/loadtest/compose.profile.yaml`, `tools/loadtest/README.md` (profiled-hold prep).
 
 ## Completion Summary
 (open)
