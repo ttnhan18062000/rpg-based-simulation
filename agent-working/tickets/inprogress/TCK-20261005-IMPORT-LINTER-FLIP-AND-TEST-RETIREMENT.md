@@ -72,9 +72,11 @@ None.
   3. phase19 `test_hot_path_does_not_import_heavy_analyzers` is an expectation change, not a retirement: the engine/observability owner first decides whether `kernel.py`'s function-local imports at 149/304/305/316/1241 are allowed (allowlist with a reason) or violations (an engine ticket);
   4. the blind spots and the stale allowlist are covered by contracts. The `or True` assert (`tests/unit/observability/test_decision_trace.py:376`) is testing's, not one of the eight.
 - phase19 waits on rpg (`handoff_to_rpg.md`)
+- phase19 OFF-mode condition (owner decision 2026-10-18, #547, "Accept gap + follow-up"): the flip proceeds with the condition UNENFORCED; the runtime test is filed as `TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK` (testing-planner owns it). The four ignores are unchanged.
 - Soak dates are unknown until the adoption batch merges
 
 ## Implementation Notes
+phase19 (2026-10-18): option 2 chosen by the owner (gap note plus follow-up). The `importlinter.toml` phase19 comment now says the OFF-mode condition is UNENFORCED until `TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK` lands; the four `ignore_imports` entries are byte-identical and `test_phase19_observability_boundaries.py` is untouched. After that test lands, codebase updates the comment to name it.
 Flip batch (local only, nothing pushed), 2026-10-15. Steps done: 1 merge (476330a34), 2 phase19 reasons (1f49161d2, 8ec5a369f), 3 class E retirements (e5cf25404), plus 1b broken-pair naming. Not done: 1c blocking `ci` mode + `test.yml` + static pins (step 4), the 8.11 notice draft in `handoff_to_testing.md` (the notice lives there, not here), docs 1e, phase19 commit.
 **Coupling (testing condition 1, codebase-planner 2026-10-15):** the retirement commit e5cf25404 is valid only together with the blocking commit. If the blocking step is dropped or deferred on the day, e5cf25404 goes with it.
 Soak review drafted 2026-10-08, interim
