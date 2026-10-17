@@ -5,6 +5,7 @@ Written by hand. One PR for the folder (child 6 may stay behind), from a `platfo
 ## Order
 
 1. TCK-20261018-LOCUST-API-LOAD-TEST  (no deps; can be built while step 2 is in flight)
+1b. TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER  (before any further stack start: compose leaves root-owned data/runs otherwise; filed 2026-10-18 after the smoke run)
 2. TCK-20261018-API-LOAD-TEST-MEASURED-RUN  (needs 1; heavy, quiet machine arranged by lead-planner; profiled run through perf-planner)
 3. TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK  (needs 2 for the threshold, and step 2's dashboard PromQL)
 4. TCK-20261018-REDIS-DOWN-CAUSE-ALERT  (needs 3; signal A, redis_exporter, decided by lead review 2026-10-18)
