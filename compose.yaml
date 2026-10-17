@@ -4,6 +4,10 @@
 #   default (`docker compose up`)                  backend, redis, ai_worker, frontend
 #   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, watchdog
 # watchdog sits in the observability profile because it depends_on promtail (healthy only once loki is ready) and prometheus, and polls Loki.
+# Grafana's admin password is a compose secret file (gitignored). Create it once before `--profile observability up`:
+#   mkdir -p docker/secrets && openssl rand -base64 24 > docker/secrets/grafana_admin_password
+# A missing file fails only the observability profile (Grafana's start), never the default profile.
+# Host ports of redis, prometheus, grafana and loki bind to 127.0.0.1 (redis has no auth); services reach each other by service name.
 # Every service has a memory limit (mem_limit); see TCK-20261014-COMPOSE-OBSERVABILITY-PROFILE-AND-LIMITS.
 services:
   backend:
@@ -35,7 +39,7 @@ services:
     # so a new 7.x patch cannot change the observability stream, anomaly worker or readiness behaviour with no diff here. Bump deliberately.
     image: redis:7.4.11-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -88,7 +92,7 @@ services:
     image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
     mem_limit: 512m
     ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -111,9 +115,11 @@ services:
     # Grafana 13 needs more than the 10.x limit of 256m: it hit 256m and restarted once, then peaked at 480 MiB during first start (317 MiB settled).
     mem_limit: 768m
     ports:
-      - "${GRAFANA_PORT:-3000}:3000"
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
+    secrets:
+      - grafana_admin_password
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
@@ -134,7 +140,7 @@ services:
     image: grafana/loki:3.7.8@sha256:1107dd5274e0ada47e42472b7a7e71f3b2a2fe878878108f3e2f9e51528f0193
     mem_limit: 512m
     ports:
-      - "${LOKI_PORT:-3100}:3100"
+      - "127.0.0.1:${LOKI_PORT:-3100}:3100"
     command: -config.file=/etc/loki/local-config.yaml
     restart: unless-stopped
     # No healthcheck: the loki 3.7 image has neither wget nor sh, so nothing in the image can probe itself.
@@ -154,13 +160,28 @@ services:
       start_period: 30s
     volumes:
       - ./docker/promtail-config.yml:/etc/promtail/config.yml
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail/config.yml
     restart: unless-stopped
     depends_on:
       loki:
         condition: service_started
+      docker-socket-proxy:
+        condition: service_started
+
+  docker-socket-proxy:
+    profiles: ["observability"]
+    # The only service that mounts the Docker socket, read-only, behind an allow-list: container list/inspect/logs, no POST (no exec, stop or create).
+    # Remaining risk: GET on /containers/*/json still exposes every container's environment (including secrets passed as env) to promtail,
+    # and the socket itself is still reachable by this proxy process. Internal network only (no published port).
+    image: tecnativa/docker-socket-proxy:v0.4.1@sha256:3400c429c5f9e1b21d62130fb93b16e2e772d4fb7695bd52fc2b743800b9fe9e
+    mem_limit: 64m
+    environment:
+      - CONTAINERS=1
+      - NETWORKS=1
+      - POST=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
 
   watchdog:
     profiles: ["observability"]
@@ -185,6 +206,10 @@ services:
       prometheus:
         condition: service_healthy
     restart: unless-stopped
+
+secrets:
+  grafana_admin_password:
+    file: ./docker/secrets/grafana_admin_password
 
 volumes:
   prometheus_data:

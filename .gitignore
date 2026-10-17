@@ -328,3 +328,6 @@ visual_assets/catalog/.review/
 visual_assets/catalog/.store.lock
 visual_assets/catalog/.deletions.jsonl
 visual_assets/catalog/.deletions-*.jsonl
+
+# TCK-20261018-OBSERVABILITY-PROFILE-HARDENING: compose secret files, never committed
+docker/secrets/

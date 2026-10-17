@@ -15,7 +15,7 @@ tags: [platform, observability, security]
 Compose: Grafana admin password from a secret file (no `admin` default), host ports bound to 127.0.0.1, Promtail's Docker socket behind a read-only proxy
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -101,13 +101,19 @@ None.
 - Pull the new image only after asking lead-planner (host rules).
 
 ## Implementation Notes
-(open)
+- Grafana: `GF_SECURITY_ADMIN_PASSWORD__FILE` from compose secret `grafana_admin_password` (`./docker/secrets/grafana_admin_password`, gitignored); `:-admin` fallback removed.
+- Ports 6379/9090/3000/3100 now `127.0.0.1:${VAR:-port}:port`.
+- New `docker-socket-proxy` (tecnativa v0.4.1, digest-pinned from a registry query, not pulled; CONTAINERS=1, NETWORKS=1, POST=0; mem_limit 64m) is the only service mounting the socket (`:ro`). Promtail uses `tcp://docker-socket-proxy:2375`; `/var/lib/docker/containers` mount removed. NETWORKS=1 is a guess (docker_sd lists networks); confirm or drop at runtime.
+- Promtail drop rule matches the compose service label (`loki|promtail`).
+- No Makefile edit was needed.
 
 ## Test Summary
-(open)
+- PASS: `compose config -q` default and observability profiles, with and without the secret file.
+- PASS: tests/architecture/test_docker_compose_dependency_hygiene.py, tests/tools/test_session_platform_domain.py, tests/logging/test_loki_cardinality.py (12 passed).
+- PENDING (waiting for lead-planner clearance of docker pull and stack start): missing/empty secret file behaviour, Grafana login and `admin`/`admin` refused, loopback-only ports (`ss -ltnp`), backend and ai_worker reaching `redis:6379`, POST refused through the proxy, logs arriving in Loki without the containers mount, NETWORKS=1 necessity.
 
 ## Files Changed
-(open)
+`compose.yaml`, `docker/promtail-config.yml`, `.gitignore`, this ticket.
 
 ## Completion Summary
 (open)
