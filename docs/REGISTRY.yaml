@@ -7708,6 +7708,24 @@
   date: '2026-10-18'
   related_code_areas:
   - docker/prometheus.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER/test_plan.md
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES.md
+  ticket_id: TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES
+  title: 'Grafana alerting provisioned as files: local ntfy service, ntfy contact
+    point (topic from a gitignored secret), notification policy, and the base rule
+    group'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/grafana/provisioning/alerting/
   artifact_files: []
   tags:
   - platform
@@ -7799,21 +7817,6 @@
   date: '2026-10-18'
   related_code_areas:
   - docs/runbooks/**
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES.md
-  ticket_id: TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES
-  title: 'Grafana alerting provisioned as files: local ntfy service, ntfy contact
-    point (topic from a gitignored secret), notification policy, and the base rule
-    group'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - docker/grafana/provisioning/alerting/
   artifact_files: []
   tags:
   - platform

@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P2
 audience: agent
@@ -31,3 +31,13 @@ No `tests/**` changes (D-4).
 | L3 | the `coll.Dict` / `data.ToJSON` template makes valid ntfy JSON | the message arrives | title, priority and tags are present |
 | L4 | `grafana_alerting_notifications_failed_total` exists | Grafana `/metrics` | present; otherwise fix the rule |
 | L5 | node-exporter mountpoints read `/` and `/data` with no `/host` prefix | `node_filesystem_avail_bytes` series labels | both mounts present, so the disk regex matches |
+
+## Live-check results (2026-10-18, two runs on the 8-service subset)
+| # | result | evidence |
+|---|---|---|
+| L1 | PASS on the second run (FAILED on the first) | first run delivered a literal `$$labels`; after the fix the message reads "Scrape target loki is down" |
+| L2 | PASS | `GET /api/v1/provisioning/contact-points` shows the credential as `[REDACTED]` and no `$__file` text; the topic var expanded (messages reached the topic) |
+| L3 | PASS | ntfy received valid JSON: title `[firing] TargetDown`, priority 4, tags `bell` |
+| L4 | PASS live | `grafana_alerting_notifications_failed_total{integration="webhook",org="1"}` appeared after a real failed delivery (1, then 2); `GrafanaAlertingFailures` fired |
+| L5 | PASS | node-exporter mountpoints `/` and `/data`, no `/host` prefix |
+Delivery was proven by the drill's real messages, not the test-notification API (the old endpoint is removed in 13.x).

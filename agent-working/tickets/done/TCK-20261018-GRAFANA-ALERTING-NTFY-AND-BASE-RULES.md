@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES
-phase: inprogress
+phase: done
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 Grafana alerting provisioned as files: local ntfy service, ntfy contact point (topic from a gitignored secret), notification policy, and the base rule group
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -95,14 +95,19 @@ None.
 - **Rules** (`docker/grafana/provisioning/alerting/rules-base.yaml`, group `base`, interval 1m): TargetDown (`min by (job) (up) < 1`, for 2m), PrometheusUnreachable (`vector(1)`, `execErrState: Alerting`, for 2m), GrafanaAlertingFailures (increase of `grafana_alerting_rule_evaluation_failures_total` + `grafana_alerting_notifications_failed_total` over 5m; the first name is in the 13.2.4 source, the second is confirmed at the live check), DiskSpaceLow (free % < 15, for 10m, mounts `/` and `/data`), DiskWillFillIn24h (`predict_linear` 6h at +24h < 0, for 30m). `noDataState`/`execErrState` choices are in the file header and go into the runbook. Policy: default route to ntfy, group_by alertname+job, group_wait 30s, group_interval 5m, repeat 4h.
 
 ## Test Summary
-- **validated:** `docker compose config -q` for both profiles; YAML parse of the four provisioning files; `promtool check config` from the pinned image (SUCCESS, with the `ntfy` job); `git check-ignore` shows `docker/secrets/ntfy_topic` and `ntfy_token` are ignored.
-- **running locally** (first stack run, 2026-10-18, 8-service subset; details in the drill record `docs/runbooks/records/2026-10-18-target-down-drill.md`): provisioning loaded with no error; 5 rules, the contact point and the policy read back as provenance `file`; the contact point shows the credential as `[REDACTED]` and no `$__file` text (L2 PASS); ntfy received valid JSON with title, priority 4 and tag `bell` (L3 PASS); node-exporter mountpoints `/` and `/data` without a `/host` prefix (L5 PASS).
-- **L1 FAILED** on the first run: the message carried a literal `$$labels` (see investigation.md); fixed to a single `$labels`; re-check pending.
-- **L4:** the metric name is right but the series is absent at zero by design (source cited in investigation.md); not exercised with a real failure.
-- Delivery was proven by the drill's real firing and resolved messages, not by the test-notification API (the old endpoint is removed in 13.x). Delivery path: Grafana webhook, ntfy deny-all, write-only token.
+- **validated:** `docker compose config -q` for both profiles; YAML parse of the four provisioning files; `promtool check config` from the pinned image (SUCCESS, with the `ntfy` job); `git check-ignore` shows `docker/secrets/ntfy_topic` and `ntfy_token` ignored; `git grep` finds no topic or token in the tree.
+- **running locally** (two stack runs on 2026-10-18, 8-service subset; record `docs/runbooks/records/2026-10-18-target-down-drill.md`):
+  - Provisioning loaded with no error; 5 rules, the contact point and the policy read back as provenance `file`.
+  - L2: the credential reads `[REDACTED]`; no `$__file` text remains. L3: valid ntfy JSON reached the deny-all server through the write-only token (title, priority 4, tag `bell`). L5: mountpoints `/` and `/data`.
+  - L1: FAILED on the first run (literal `$$labels` delivered), fixed to a single `$labels`; PASS on the second run ("Scrape target loki is down").
+  - L4: PASS live. `grafana_alerting_notifications_failed_total{integration="webhook",org="1"}` appeared after ntfy was stopped during a notification (1, then 2); `GrafanaAlertingFailures` fired and its message was delivered after ntfy returned.
+  - Drill (first run): detection about 3 m 39 s, recovery message about 4 m 42 s.
+- Delivery was proven by the drill's real firing and resolved messages, not by the test-notification API (the old endpoint is removed in 13.x; the new one rejected my request body).
+- Not shown: the `[resolved] GrafanaAlertingFailures` message before `down`; ntfy's own CLI setup steps in the compose header were run as written except `umask 077` (fixed to `chmod 644`).
 
 ## Files Changed
-(open)
+`compose.yaml` (ntfy service, secrets, grafana guard, limits, header), `docker/prometheus.yml` (ntfy job), `docker/grafana/provisioning/alerting/{contact-points,policies,rules-base}.yaml` (new), this ticket and its staging artifacts, `docs/runbooks/records/2026-10-18-target-down-drill.md`.
 
 ## Completion Summary
-(open)
+Grafana alerting is provisioned as files: a webhook contact point to a local ntfy (`auth-default-access: deny-all`, bearer token of a write-only user for one topic), a default notification policy, and the `base` rule group (TargetDown, PrometheusUnreachable, GrafanaAlertingFailures, DiskSpaceLow, DiskWillFillIn24h). The topic and the token are gitignored secret files read through `$__file{}`; Grafana refuses to start on an empty one. Running locally on 2026-10-18 (two runs): provisioning loaded cleanly, messages reached the topic with the right title, priority and tag, and live checks L1-L5 passed (L1 after a fix: `$$` is not an escape in provisioning, so summaries use a single `$labels`). ntfy peak 26 MiB (limit 64m); Grafana peaked at 559 MiB of 768m (73 %), noted at its limit, not raised.
+Known limits and gaps: the secret files are 0644 because Grafana's container user (uid 472) must read them (accepted for this single-user host; use a group-readable mode or a compose-managed secret on a multi-user host); the test-notification API was not used (delivery proven by real messages); the `[resolved] GrafanaAlertingFailures` message was not seen before the stack was taken down. Staging artifacts were written by platform-planner at filing and updated at close. Knowledge index refreshed by lead-planner in the main checkout after merge.
