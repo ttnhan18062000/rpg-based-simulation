@@ -96,7 +96,10 @@ None.
 
 ## Test Summary
 - **validated:** `docker compose config -q` for both profiles; YAML parse of the four provisioning files; `promtool check config` from the pinned image (SUCCESS, with the `ntfy` job); `git check-ignore` shows `docker/secrets/ntfy_topic` and `ntfy_token` are ignored.
-- Not yet run (needs the ntfy pull and the single stack run): provisioning loads with no error, rules/contact point/policy appear provisioned, the test notification reaches ntfy, `$__file{}` expansion, the exact metric names, the webhook template output.
+- **running locally** (first stack run, 2026-10-18, 8-service subset; details in the drill record `docs/runbooks/records/2026-10-18-target-down-drill.md`): provisioning loaded with no error; 5 rules, the contact point and the policy read back as provenance `file`; the contact point shows the credential as `[REDACTED]` and no `$__file` text (L2 PASS); ntfy received valid JSON with title, priority 4 and tag `bell` (L3 PASS); node-exporter mountpoints `/` and `/data` without a `/host` prefix (L5 PASS).
+- **L1 FAILED** on the first run: the message carried a literal `$$labels` (see investigation.md); fixed to a single `$labels`; re-check pending.
+- **L4:** the metric name is right but the series is absent at zero by design (source cited in investigation.md); not exercised with a real failure.
+- Delivery was proven by the drill's real firing and resolved messages, not by the test-notification API (the old endpoint is removed in 13.x). Delivery path: Grafana webhook, ntfy deny-all, write-only token.
 
 ## Files Changed
 (open)

@@ -9,7 +9,7 @@
 # A missing file fails only the observability profile (Grafana's start), never the default profile; an empty file or the value `admin` makes Grafana exit at start (guard in the grafana entrypoint).
 # Alerting (TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES): Grafana sends alerts to a local ntfy over a webhook contact point. ntfy runs with auth-default-access
 # deny-all, so Grafana needs a token. The topic and the token are two more gitignored secret files, never committed. Create them once, after the first ntfy start:
-#   mkdir -p docker/secrets && (umask 077; openssl rand -hex 16 > docker/secrets/ntfy_topic; : > docker/secrets/ntfy_token)   # an empty token file only lets compose parse; Grafana's guard refuses to start until step 4 fills it
+#   mkdir -p docker/secrets && openssl rand -hex 16 > docker/secrets/ntfy_topic && : > docker/secrets/ntfy_token && chmod 644 docker/secrets/ntfy_topic docker/secrets/ntfy_token   # the files must be world-readable (644) because Grafana's container user (uid 472) reads them through the bind mount (accepted for this single-user host; on a multi-user host use a group-readable mode or a compose-managed secret instead); an empty token file only lets compose parse; Grafana's guard refuses to start until step 4 fills it
 #   docker compose --profile observability up -d ntfy
 #   docker compose exec -T -e NTFY_PASSWORD="$(openssl rand -hex 12)" ntfy ntfy user add grafana                       # a regular user for Grafana; its password is never used (the token is)
 #   docker compose exec -T ntfy ntfy access grafana "$(cat docker/secrets/ntfy_topic)" write-only
@@ -183,7 +183,7 @@ services:
     profiles: ["observability"]
     image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
     # Grafana 13 needs more than the 10.x limit of 256m: it hit 256m and restarted once, then peaked at 480 MiB during first start (317 MiB settled).
-    mem_limit: 768m
+    mem_limit: 768m # measured peak 559 MiB (73 %) with the base alert rules and ntfy contact point loaded, 2026-10-18; watch when the SLO rules are added. Not raised.
     ports:
       - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
     environment:

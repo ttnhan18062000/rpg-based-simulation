@@ -5,7 +5,10 @@ apiVersion: 1
 #   TargetDown            noData OK (a vanished series is a config change, not an outage), execErr OK (PrometheusUnreachable covers a dead Prometheus)
 #   PrometheusUnreachable noData OK, execErr Alerting (a failing query IS the signal)
 #   GrafanaAlertingFailures, DiskSpaceLow, DiskWillFillIn24h: noData OK, execErr OK (TargetDown covers a missing exporter)
-# A literal dollar sign in a provisioning value must be written $$ (Grafana expands $VAR in these files), hence $$labels below.
+# Annotations use a single-dollar {{ $labels.x }}. A doubled $$labels is NOT an escape here: the first drill (2026-10-18) delivered the literal text $$labels.
+# If a single $labels is eaten by the provisioning env expansion, the fallback is a provisioned notification template (templates: under provisioning/alerting).
+# GrafanaAlertingFailures: grafana_alerting_notifications_failed_total is a real 13.2.4 metric (pkg/services/ngalert/metrics/multi_org_alertmanager.go at v13.2.4: the
+# numFailedNotifications desc, sent with WithSkipZeroValueMetrics), so the series only appears after a first failure; `or vector(0)` keeps the rule evaluating until then.
 # runbook_url values are repo-relative paths until a docs host exists (docs/runbooks/README.md is the index).
 groups:
   - orgId: 1
@@ -52,7 +55,7 @@ groups:
         for: 2m
         isPaused: false
         annotations:
-          summary: "Scrape target {{ $$labels.job }} is down"
+          summary: "Scrape target {{ $labels.job }} is down"
           runbook_url: docs/runbooks/target-down.md
         labels:
           severity: critical
@@ -181,7 +184,7 @@ groups:
         for: 10m
         isPaused: false
         annotations:
-          summary: "Free space on {{ $$labels.mountpoint }} is below 15 percent"
+          summary: "Free space on {{ $labels.mountpoint }} is below 15 percent"
           runbook_url: docs/runbooks/disk-space.md
         labels:
           severity: warning
@@ -224,7 +227,7 @@ groups:
         for: 30m
         isPaused: false
         annotations:
-          summary: "{{ $$labels.mountpoint }} is predicted to fill within 24 hours"
+          summary: "{{ $labels.mountpoint }} is predicted to fill within 24 hours"
           runbook_url: docs/runbooks/disk-space.md
         labels:
           severity: warning
