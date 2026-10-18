@@ -7604,6 +7604,23 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER.md
+  ticket_id: TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER
+  title: 'Backend image: run backend, ai_worker and watchdog as a non-root user, so
+    the bind-mounted ./data is never left root-owned'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/backend.Dockerfile
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER/test_plan.md
+  tags:
+  - platform
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-LOCUST-API-LOAD-TEST.md
   ticket_id: TCK-20261018-LOCUST-API-LOAD-TEST
   title: 'tools/loadtest: a Locust API scenario and a runner that records the method,
@@ -7738,20 +7755,6 @@
   tags:
   - platform
   - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER.md
-  ticket_id: TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER
-  title: 'Backend image: run backend, ai_worker and watchdog as a non-root user, so
-    the bind-mounted ./data is never left root-owned'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-18'
-  related_code_areas:
-  - docker/backend.Dockerfile
-  artifact_files: []
-  tags:
-  - platform
-  - security
 - type: ticket
   path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
   ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER
-phase: open
+phase: done
 date: 2026-10-18
 tags: [platform, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, security]
 Backend image: run backend, ai_worker and watchdog as a non-root user, so the bind-mounted ./data is never left root-owned
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -92,10 +92,12 @@ None.
   - No `src/` writer outside `/app/data` fired in `serve` or in the anomaly worker (it started and wrote its output without error).
   - `down` (no -v) clean. My run dir was removed by run id.
 - PASS: tests/architecture/test_docker_compose_dependency_hygiene.py, tests/tools/test_session_platform_domain.py, tests/tools/test_loadtest_summary.py (32 passed); tests/static/test_ci_narrow_path_filtered_jobs.py, tests/codebase/test_repo_root_allowlist.py (22 passed).
-- Open: watchdog run proof at the next observability start.
+- Watchdog (window 2, 2026-10-18, observability start after `docker compose --profile observability build watchdog`): `exec watchdog id` = `uid=1000(app) gid=1000(app)`, watchdog Up. The first observability start earlier the same day showed `uid=0` because `platform-watchdog` was a stale image built before this change (the earlier `docker compose build` ran without the observability profile). `find data -uid 0` after the starts listed only the old pre-existing run dir; the watchdog wrote nothing there.
 
 ## Files Changed
 `docker/backend.Dockerfile`, `compose.yaml`, this ticket.
 
 ## Completion Summary
-(open)
+`docker/backend.Dockerfile` creates user and group `app` (uid/gid from `APP_UID`/`APP_GID`, default 1000), compiles `/app/src` as root, chowns `/app/data` and sets `USER app`; `compose.yaml` passes the build args for backend, ai_worker and watchdog. Proven locally: `id` is uid 1000 in backend, ai_worker and (on the rebuilt image) watchdog; a new `data/runs/<run_id>` and its files are owned by 1000:1000; no PermissionError or HOME/cache error; no `src/` writer outside `/app/data` fired in `serve` or the anomaly worker. `HOME=/home/app` does not exist (`--no-create-home`) and nothing needed it.
+
+For the PR body: `publish-images.yml` builds this Dockerfile, so the GHCR images now run as uid 1000 (intended; no workflow change). Trivy was not run locally. The pre-existing root-owned `data/runs/run_1792263138_5169_1_3e0de9d3` is the owner's to remove. Staging artifacts (plan, investigation, test plan) were written retrospectively at close, on 2026-10-18.
