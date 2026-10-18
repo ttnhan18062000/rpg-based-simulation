@@ -25,7 +25,7 @@ def test_the_job_keeps_its_path_filter() -> None:
 
 def test_the_base_is_a_second_checkout_at_the_pr_base_sha_under_its_own_path() -> None:
     step = _STEPS["Perf tripwire base checkout"]
-    assert step["uses"] == "actions/checkout@v5"
+    assert step["uses"] == "actions/checkout@v7"
     assert step["with"] == {"ref": "${{ github.event.pull_request.base.sha }}", "path": "perf-base"}
     assert step["if"] == "github.event_name == 'pull_request'"
     assert "HEAD~1" not in _TRIPWIRE["run"].replace("never guesses HEAD~1", "")
@@ -46,7 +46,7 @@ def test_the_step_is_report_only_it_neither_continues_on_error_nor_gates_on_the_
 
 def test_the_artifact_is_uploaded_even_when_a_step_fails() -> None:
     step = _STEPS["Perf tripwire artifact"]
-    assert step["uses"] == "actions/upload-artifact@v4" and step["with"]["name"] == "perf-tripwire"
+    assert step["uses"] == "actions/upload-artifact@v7" and step["with"]["name"] == "perf-tripwire"
     assert "always()" in step["if"]
 
 
