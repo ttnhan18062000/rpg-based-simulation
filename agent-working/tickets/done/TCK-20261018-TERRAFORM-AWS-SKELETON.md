@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-TERRAFORM-AWS-SKELETON
-phase: inprogress
+phase: done
 date: 2026-10-18
 tags: [platform, delivery, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, delivery, security]
 Terraform: infra/terraform bootstrap (OIDC role, budget alarm and deny action) and service (one Fargate task in the default VPC) roots, written and validated, never applied
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -98,7 +98,7 @@ None.
   - Trivy did not report the task's public IP (`assign_public_ip = true`) as a finding; it is a deliberate choice (no NAT gateway) and is stated in the README.
 
 ## Files Changed
-(open)
+`infra/terraform/{bootstrap,service}/*` (new roots with per-root locks), `infra/terraform/.tflint.hcl`, `infra/terraform/README.md`, `.gitignore`, this ticket and its staging artifacts.
 
 ## Completion Summary
-(open)
+Two Terraform roots are written and validated, never applied (label: written + validated; no AWS account, credential or bucket name exists in the repository). `bootstrap/` has the GitHub OIDC provider and a deploy role trusted only for this repository's main branch and scoped so it cannot escalate (roles `<name_prefix>-task-*` only, ECS task execution policy only, PassRole to ecs-tasks only, log groups under the prefix), plus a monthly budget with a Budgets action that attaches a deny-all policy. `service/` has one Fargate task in the default VPC with a public IP, a CIDR-limited security group, one cluster, one service and a one-day log group. In terraform 1.16.5: fmt clean, init -backend=false + validate pass on both roots (aws provider 6.67.0, lock files for linux_amd64 and darwin_arm64); tflint with the aws ruleset 0.49.0 reports nothing; trivy config 0.70.0 reports 3 findings (AWS-0104 CRITICAL egress, AWS-0017 and AWS-0034 LOW), each accepted for the evidence-only skeleton with its reason. The README says apply, test and destroy (5c) is a future owner decision and names the cost cap's limit (the deny-all stops new deploys, not a running task). Gaps: nothing was planned or applied; ecs:* and ec2 actions stay on "*" until scoped before an apply; egress is open until narrowed. Staging artifacts were written by platform-planner at filing and updated at close. Knowledge index refreshed by lead-planner in the main checkout after merge.

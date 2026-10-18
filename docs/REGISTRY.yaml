@@ -7822,6 +7822,22 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-TERRAFORM-AWS-SKELETON.md
+  ticket_id: TCK-20261018-TERRAFORM-AWS-SKELETON
+  title: 'Terraform: infra/terraform bootstrap (OIDC role, budget alarm and deny action)
+    and service (one Fargate task in the default VPC) roots, written and validated,
+    never applied'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - infra/terraform/**
+  artifact_files: []
+  tags:
+  - platform
+  - delivery
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD.md
   ticket_id: TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD
   title: Find why a sub-second Aseprite job hits the 30 s `JOB_TIMEOUT_S` under host
@@ -7908,22 +7924,6 @@
   tags:
   - platform
   - delivery
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261018-TERRAFORM-AWS-SKELETON.md
-  ticket_id: TCK-20261018-TERRAFORM-AWS-SKELETON
-  title: 'Terraform: infra/terraform bootstrap (OIDC role, budget alarm and deny action)
-    and service (one Fargate task in the default VPC) roots, written and validated,
-    never applied'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - infra/terraform/**
-  artifact_files: []
-  tags:
-  - platform
-  - delivery
-  - security
 - type: ticket
   path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE.md
   ticket_id: TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE

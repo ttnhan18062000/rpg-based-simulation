@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P2
 audience: agent
@@ -22,3 +22,9 @@ Written by platform-planner at filing (2026-10-18); the implementer updates it a
 | no secrets/ids | static | grep | none | no match | `git grep -n -E "[0-9]{12}|AKIA|@" infra/` (reviewed by hand) |
 
 No `tests/**` changes (D-4).
+
+## Results (2026-10-18)
+- validated (terraform 1.16.5 in the pinned image, no credentials): `fmt -check -recursive` clean; `init -backend=false` + `validate` pass for `bootstrap` and `service`; lock files for linux_amd64 and darwin_arm64 committed.
+- validated: `tflint --recursive` with the aws ruleset 0.49.0 reports no finding.
+- validated: `trivy config` 0.70.0 reports 3 findings in `service/main.tf` (AWS-0104 CRITICAL, AWS-0017 LOW, AWS-0034 LOW), each accepted with its reason in the ticket's Test Summary; none in `bootstrap/`; no inline ignores.
+- `git grep` finds no account id, access key, bucket name or real email in `infra/`.
