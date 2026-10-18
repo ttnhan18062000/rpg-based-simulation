@@ -42,11 +42,7 @@ is the run itself, on a quiet machine that lead-planner arranges, and its dated 
   - 5xx, 429 and timeout rates;
   - the USE table and the first saturated resource;
   - the knee: the last step before p95 or errors climb.
-- **Profiled run, labelled separately.** Ask perf-planner to run its existing py-spy toolkit
-  (`tools/perf/_profiling_common.py`, `profile_api_payload.py`) against the backend at the knee step, while the load
-  runs. This ticket gets back the flame graph and perf's reading. No new profiling tool. The profiled run's numbers
-  are never mixed into the measured table.
-- **Record:** `docs/runbooks/records/<date>-api-load-test.md` (location confirmed by lead, 2026-10-18), with frontmatter. Contents:
+- **Profiled run, labelled separately.** perf parameters, run by platform (lead decision B, 2026-10-18): py-spy 0.4.2 (host static binary, read-only mount) `record --nonblocking --rate 100 --duration 90` against uvicorn at the knee step, via `tools/loadtest/compose.profile.yaml` (`SYS_PTRACE`, profiled hold only; owner-approved 2026-10-18). Output: py-spy raw (folded) plus a speedscope flame graph made with tools/perf's `folded_to_speedscope`, both in this ticket's stored artifacts. No new profiling tool, no SVG converter dependency. perf-planner may send a reading as an fyi; that's optional, not a dependency. The profiled run's numbers are never mixed into the measured table.
   - the method (link to the README);
   - the manifest values;
   - the tables;
@@ -90,10 +86,21 @@ To be created: this ticket's raw CSVs and manifest.
 ## Implementation Notes
 (open)
 - Profiling overlay (prep, 2026-10-18): `tools/loadtest/compose.profile.yaml` adds only `cap_add: [SYS_PTRACE]` and a read-only mount of `${PY_SPY_BIN:?...}` at `/opt/py-spy` to the backend. Used for the profiled hold only; the throughput and obs-on runs never load it. Command and the label text ("py-spy nonblocking 100 Hz attached during the hold; latency during the hold is not a measured figure") are in `tools/loadtest/README.md` ("Profiled hold"). The `/proc` PID lookup there has not been run yet.
+- PR-body item: SYS_PTRACE in tools/loadtest/compose.profile.yaml only: owner-approved security choice, 2026-10-18.
 
 ## Test Summary
 - Prep: `compose -f compose.yaml -f tools/loadtest/compose.loadtest.yaml -f tools/loadtest/compose.profile.yaml config -q` passes with PY_SPY_BIN set and fails with 'required variable PY_SPY_BIN is missing a value' without it; the two-file config (no overlay) has no SYS_PTRACE. Loadtest, compose hygiene, platform domain and repo-root tests: 36 passed.
 (open)
+- Window 2026-10-18 (lead CLEAR via planner). Raw data in `agent-working/staging_artifacts/TCK-20261018-API-LOAD-TEST-MEASURED-RUN/` (`run-baseline-…`, `run-profiled-…`, `run-obs-on-…`, `profile.raw`, `profile.speedscope.json`). Fleet: 10 Claude sessions idle-ish plus their MCP servers, 7 github-mcp containers; other seats held heavy work. Commit 888a0761b, tree dirty (ticket text only). Locust run in a systemd scope (MemoryMax 2G) with its own scratch venv (locust 2.46.7). Memory stayed at about 5.5-5.9 GB available, swap 2.4 GB.
+- Baseline (default profile, observability off, 990 keys, ceiling 2970 req/s, 0.0% 429 and 5xx, no failure rows): users 10 / 25 / 50 / 100 / 200 -> req/s median 409.6 / 227.7 / 116.1 / 125.9 / 134.8; p95 51 / 250 / 930 / 1500 / 2900 ms; backend CPU peak 150-161% of one core; Locust CPU peak 55 / 42 / 27 / 30 / 30%; idle baseline host CPU 12%. Saturation flag: host_cpu at 25 users.
+- Throughput FALLS with users in the baseline, which closed-loop users should not do. A fresh backend (profiled hold, 25 users) gave 377 req/s, and the obs-on pass (fresh stack, 50 and 100 users) gave 421.5 and 424.0 req/s. So the decline is not an effect of user count; it follows the backend's age or state in the first run. Cause unproven. Open for the next run: one step on a fresh backend, repeated after a soak; check `_prune_idle_clients` with a 990-entry client table (7.8% of samples in the profile).
+- Profiled hold (PROVISIONAL; py-spy nonblocking 100 Hz attached during the hold; latency during the hold is not a measured figure): 9044 samples; by stack about 68% API, 17% engine, 15% other; top leaves `queue._run` 10.6%, pydantic `dump_python` 10.4%, json `iterencode` 6.8%, gzip `_write_raw` 6.4%. Flame graph: speedscope JSON from py-spy raw, via tools/perf.
+- Observability on (`--users 50,100 --duration 60 --repeats 1`): 421.5 / 424.0 req/s, p95 220 / 420 ms; peak CPU Grafana 121%, backend 168%, all others under 9%.
+- 6b: no 429 in any step (zero failure rows), the 9 pool 429s did not reproduce.
+- Whitespace-guard check: PASS (Grafana exits and restart-loops with the guard message on a whitespace-only secret; secret restored, sha256 identical, Grafana healthy).
+- Grafana fresh-volume check: still PENDING (the owner has not told the implementer directly).
+- Watchdog: running but `id` = uid 0, because `platform-watchdog` was a stale image from before the non-root change (the earlier `docker compose build` ran without `--profile observability`). Needs `--profile observability build watchdog` and a start.
+- Engine tick rate per step: not captured (the status key was read once per run).
 
 ## Files Changed
 (open)
