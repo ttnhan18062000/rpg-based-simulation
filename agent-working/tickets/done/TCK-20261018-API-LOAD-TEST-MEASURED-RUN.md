@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
-phase: open
+phase: done
 date: 2026-10-18
 tags: [platform, performance, benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [platform, performance, benchmarking]
 The measured API load-test run on host ubuntu: req/s and p50/p95/p99 with spread, the USE result, and a separately labelled profiled run
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -107,4 +107,8 @@ To be created: this ticket's raw CSVs and manifest.
 `tools/loadtest/compose.profile.yaml`, `tools/loadtest/README.md` (profiled-hold prep).
 
 ## Completion Summary
-(open)
+The measured run, the age soak, the fresh and aged py-spy profiles, the fresh-backend curve and the aged curve at the `/entities` page cap were run on 2026-10-18 and are recorded in `docs/runbooks/records/2026-10-18-api-load-test.md` (label: measured, running locally). Raw CSVs, manifests, `profile*.raw` and the speedscope JSON are in this ticket's stored artifacts (the `.json` files are force-added because `.gitignore` hides `stored_artifacts/**/*.json`).
+
+Main result: the baseline's throughput fall (409.6 -> 116-135 req/s) follows backend age, not user count. `GET /api/v1/entities` (default `limit=100`, `src/api/server.py` lines 241-248) grows from about 69 KB to 744,977 B; at that cap the ceiling is about 145-152 req/s at every user count from 10 to 100. Proposed SLO (accepted by lead-planner as proposed; the owner approves the text at PR time): API p95 <= 300 ms over 5 min and 5xx < 1%, at the `/entities` page cap, on this host spec, load-test route mix, concurrency <= 10 clients (about 145 req/s ceiling). The SLO is not wired until rpg R2 (#622).
+
+Gaps: the Grafana fresh-volume check was not run (needs the owner's direct yes to remove `platform_grafana_data`); the profiles are PROVISIONAL (py-spy nonblocking errors 1164/9044 and 518/9821); the fresh curve is comparison only; `make knowledge-index-update` was not run (on hold). Run dirs written by this session were removed by run id. PR-body items: SYS_PTRACE only in `tools/loadtest/compose.profile.yaml`, owner-approved 2026-10-18; staging artifacts for the closed tickets were written at close, not before implementation.

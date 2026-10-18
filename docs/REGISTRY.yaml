@@ -7604,6 +7604,24 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
+  ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
+  title: 'The measured API load-test run on host ubuntu: req/s and p50/p95/p99 with
+    spread, the USE result, and a separately labelled profiled run'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-API-LOAD-TEST-MEASURED-RUN/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-API-LOAD-TEST-MEASURED-RUN/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-API-LOAD-TEST-MEASURED-RUN/test_plan.md
+  tags:
+  - platform
+  - performance
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER.md
   ticket_id: TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER
   title: 'Backend image: run backend, ai_worker and watchdog as a non-root user, so
@@ -7726,21 +7744,6 @@
   tags:
   - platform
   - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
-  ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
-  title: 'The measured API load-test run on host ubuntu: req/s and p50/p95/p99 with
-    spread, the USE result, and a separately labelled profiled run'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - tools/loadtest/
-  artifact_files: []
-  tags:
-  - platform
-  - performance
-  - benchmarking
 - type: ticket
   path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK.md
   ticket_id: TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK
