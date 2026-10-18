@@ -7726,6 +7726,21 @@
   - architecture
   - documentation
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
+  ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24
+  title: Platform workflows on the Ubuntu 26 runner migration (observe publish-images,
+    pin only reactively) and deploy-docs off Node 20 (setup-node bump, Node 24, roles
+    move to platform)
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-18'
+  related_code_areas:
+  - .github/workflows/publish-images.yml
+  artifact_files: []
+  tags:
+  - platform
+  - delivery
+- type: ticket
   path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
   ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF
   title: 'Grafana: one provisioned API dashboard (rate, errors, latency percentiles
@@ -8200,6 +8215,22 @@
   - hooks
   - data-quality
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261014-ACTIONS-MAJORS-COMBINED.md
+  ticket_id: TCK-20261014-ACTIONS-MAJORS-COMBINED
+  title: Land the GitHub Actions majors (#572-#575) as one verified PR, with testing-planner's
+    artifact proof
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-14'
+  related_code_areas:
+  - .github/workflows/{test,slow-regression,slow-regression-watchdog,rpg-gate-report,deploy-docs,pr-body-lint}.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261014-ACTIONS-MAJORS-COMBINED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261014-ACTIONS-MAJORS-COMBINED/plan.md
+  - agent-working/stored_artifacts/TCK-20261014-ACTIONS-MAJORS-COMBINED/test_plan.md
+  tags:
+  - platform
+- type: ticket
   path: agent-working/tickets/done/TCK-20261014-ANYIO-CVE-BUMP.md
   ticket_id: TCK-20261014-ANYIO-CVE-BUMP
   title: 'Bump anyio in uv.lock to 4.14.2 (security advisory, #586)'
@@ -8461,19 +8492,6 @@
   date: '2026-10-14'
   related_code_areas:
   - compose.yaml
-  artifact_files: []
-  tags:
-  - platform
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261014-ACTIONS-MAJORS-COMBINED.md
-  ticket_id: TCK-20261014-ACTIONS-MAJORS-COMBINED
-  title: Land the GitHub Actions majors (#572-#575) as one verified PR, with testing-planner's
-    artifact proof
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-14'
-  related_code_areas:
-  - .github/workflows/{test,slow-regression,slow-regression-watchdog,rpg-gate-report,deploy-docs,pr-body-lint}.yml
   artifact_files: []
   tags:
   - platform
