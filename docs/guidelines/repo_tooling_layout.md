@@ -66,8 +66,8 @@ Only first path components count: adding a file under `src/`, `tools/` or a doma
 
 <!-- repo-root-allowlist:begin -->
 Directories: `.agents`, `.claude`, `.codex`, `.github`, `agent-working`, `codebase`, `config`, `content`,
-`dashboard-frontend`, `data`, `docker`, `docs`, `experiments`, `frontend`, `registries`, `src`, `tests`, `tools`,
-`visual_assets`, `website`.
+`dashboard-frontend`, `data`, `docker`, `docs`, `experiments`, `frontend`, `infra`, `registries`, `src`, `tests`,
+`tools`, `visual_assets`, `website`.
 
 Files: `.dockerignore`, `.gitattributes`, `.gitignore`, `.gitmessage`, `.graphifyignore`, `.mcp.json`,
 `.pre-commit-config.yaml`, `.python-version`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `LICENSE`, `Makefile`,
