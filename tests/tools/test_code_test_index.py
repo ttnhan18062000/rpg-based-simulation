@@ -316,4 +316,4 @@ class TestRequirementsPin:
 
     def test_requirements_knowledge_pins_graphifyy_version(self):
         content = (_REPO_ROOT / "requirements-knowledge.txt").read_text(encoding="utf-8")
-        assert "graphifyy==0.8.39" in content
+        assert "graphifyy==0.9.88" in content

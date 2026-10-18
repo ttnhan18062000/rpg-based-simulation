@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from src.engine.scenario_runtime import ScenarioObjectiveState
 import src.engine.scenario_registry as registry
+from tests.api.route_table import flat_routes
 
 _TEST_CLIENT_ID = "scenario-runtime-test-client"
 _TEST_RAW_KEY = "scenario-runtime-test-key"
@@ -219,7 +220,7 @@ def test_route_registered_in_server():
         max_tick_budget_ms=200.0,
     )
     app = create_v2_app(profile=profile)
-    routes = [r.path for r in app.routes]
+    routes = [r.path for r in flat_routes(app) if r.path]
     assert any("/scenarios" in r for r in routes)
 
 

@@ -21,6 +21,7 @@ import src.api.auth as auth_mod
 from src.api.auth import ClientIdentity, configure_api_keys
 from src.api.server import create_v2_app
 from src.config.profiles import RuntimeProfile, HardwareClass
+from tests.api.route_table import flat_routes
 
 TEST_CLIENT_ID = "test-client"
 TEST_RAW_KEY = "test-raw-key-12345"
@@ -178,8 +179,8 @@ def test_only_dashboard_and_websocket_routes_use_weaker_auth_channel():
     found_weak_paths = set()
     found_strict_paths = set()
 
-    for route in app.routes:
-        dependant = getattr(route, "dependant", None)
+    for route in flat_routes(app):
+        dependant = route.dependant
         if dependant is None:
             continue
         dep_names = {
@@ -187,7 +188,7 @@ def test_only_dashboard_and_websocket_routes_use_weaker_auth_channel():
             for dep in dependant.dependencies
             if dep.call is not None
         }
-        path = getattr(route, "path", None)
+        path = route.path
         if dep_names & weak_dependency_names:
             found_weak_paths.add(path)
         elif "require_api_key" in dep_names:
