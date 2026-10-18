@@ -328,3 +328,11 @@ visual_assets/catalog/.review/
 visual_assets/catalog/.store.lock
 visual_assets/catalog/.deletions.jsonl
 visual_assets/catalog/.deletions-*.jsonl
+
+# TCK-20261018-OBSERVABILITY-PROFILE-HARDENING: compose secret files, never committed
+docker/secrets/
+
+# TCK-20261018-LOCUST-API-LOAD-TEST: load-test key pool (plaintext keys) and run output, never committed
+tools/loadtest/.keys.txt
+tools/loadtest/.status-key.txt
+tools/loadtest/runs/

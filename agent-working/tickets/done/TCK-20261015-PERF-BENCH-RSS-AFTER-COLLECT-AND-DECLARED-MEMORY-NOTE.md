@@ -90,3 +90,4 @@ Commits on `perf-t08-noisy-baselines`: 5b1413535, 62809b22a, 133a46e37, 781781c3
 - AC5 met: the latency protocol is unchanged (`test_the_protocol_is_unchanged`, the ordering test with the collector state before and after, the tripwire RunSpecs pinned at 10 + 50).
 - AC6 followed: one heavy run at a time under `MemoryMax=3G`, quiet window checked, no run over 3 GB (the process peak was 1.70 GB).
 Corrections found on the way: `tick_cost_growth.md` section 5's "sample RSS after an explicit collect" proposal does not work without a trim; the unreachable-object count puzzle is explained by the first generation-0 collection after `gc.enable()` (1.34 M objects collected).
+AC4 completed by the owner's merge of #616 (927700be4).

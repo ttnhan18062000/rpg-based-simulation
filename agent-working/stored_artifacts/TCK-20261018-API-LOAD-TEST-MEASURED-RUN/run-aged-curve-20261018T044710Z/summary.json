@@ -1,0 +1,373 @@
+{
+  "is_measurement": true,
+  "pool_ceiling_rps": 2970.0,
+  "baseline": {
+    "backend_cpu_pct": 47.53,
+    "backend_mem_mb": 168.6,
+    "locust_cpu_pct": 0.0,
+    "host_cpu_pct": 9,
+    "run_queue": 5,
+    "swap_kb_s_mean": 3.8666666666666667,
+    "disk_kb_s_mean": 71.9
+  },
+  "steps": {
+    "10": {
+      "engine": {
+        "ticks_per_s": [
+          7.68,
+          7.8,
+          7.85
+        ],
+        "ticks_per_s_median": 7.8,
+        "start": {
+          "status": "RUNNING",
+          "current_tick": 5938,
+          "governor_mode": "DEGRADED",
+          "health_state": "DEGRADED",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 729.0764448642731,
+          "taken_at": 1792298877.145114
+        },
+        "end": {
+          "status": "RUNNING",
+          "current_tick": 7580,
+          "governor_mode": "DEGRADED",
+          "health_state": "DEGRADED",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 940.344140291214,
+          "taken_at": 1792299088.4124181
+        },
+        "governor_modes": [
+          "DEGRADED",
+          "SURVIVAL"
+        ],
+        "health_states": [
+          "DEGRADED",
+          "HEALTHY"
+        ],
+        "observability_modes": [
+          "LIGHT"
+        ]
+      },
+      "spread": {
+        "rps": {
+          "median": 144.91539919162207,
+          "min": 139.65084918459388,
+          "max": 145.10732481969592
+        },
+        "p50": {
+          "median": 56.0,
+          "min": 56.0,
+          "max": 57.0
+        },
+        "p95": {
+          "median": 200.0,
+          "min": 190.0,
+          "max": 200.0
+        },
+        "p99": {
+          "median": 280.0,
+          "min": 280.0,
+          "max": 280.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 147.47,
+        "backend_mem_mb": 174.0,
+        "locust_cpu_pct": 25.2,
+        "host_cpu_pct": 34,
+        "run_queue": 15
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 147.47,
+          "mem_mb_peak": 174.0
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 5.58,
+          "mem_mb_peak": 10.22
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": -1.9158469945355192,
+      "disk_delta_kb_s": -1.9491803278688593,
+      "ceiling_warning": false,
+      "flags": []
+    },
+    "25": {
+      "engine": {
+        "ticks_per_s": [
+          7.87,
+          7.3,
+          7.6
+        ],
+        "ticks_per_s_median": 7.6,
+        "start": {
+          "status": "RUNNING",
+          "current_tick": 7698,
+          "governor_mode": "DEGRADED",
+          "health_state": "DEGRADED",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 955.6722779273987,
+          "taken_at": 1792299103.7416267
+        },
+        "end": {
+          "status": "RUNNING",
+          "current_tick": 9305,
+          "governor_mode": "DEGRADED",
+          "health_state": "DEGRADED",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 1167.4866819381714,
+          "taken_at": 1792299315.555502
+        },
+        "governor_modes": [
+          "DEGRADED",
+          "SURVIVAL"
+        ],
+        "health_states": [
+          "DEGRADED",
+          "HEALTHY"
+        ],
+        "observability_modes": [
+          "LIGHT"
+        ]
+      },
+      "spread": {
+        "rps": {
+          "median": 146.12313588309055,
+          "min": 143.6716978489405,
+          "max": 147.88824697185512
+        },
+        "p50": {
+          "median": 140.0,
+          "min": 140.0,
+          "max": 140.0
+        },
+        "p95": {
+          "median": 410.0,
+          "min": 390.0,
+          "max": 420.0
+        },
+        "p99": {
+          "median": 510.0,
+          "min": 480.0,
+          "max": 550.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 154.98,
+        "backend_mem_mb": 174.7,
+        "locust_cpu_pct": 26.1,
+        "host_cpu_pct": 34,
+        "run_queue": 17
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 154.98,
+          "mem_mb_peak": 174.7
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 4.51,
+          "mem_mb_peak": 10.1
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": -1.7057377049180324,
+      "disk_delta_kb_s": 15.650364298724952,
+      "ceiling_warning": false,
+      "flags": []
+    },
+    "50": {
+      "engine": {
+        "ticks_per_s": [
+          7.01,
+          7.83,
+          7.63
+        ],
+        "ticks_per_s_median": 7.63,
+        "start": {
+          "status": "RUNNING",
+          "current_tick": 9423,
+          "governor_mode": "SURVIVAL",
+          "health_state": "HEALTHY",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 1183.0126049518585,
+          "taken_at": 1792299331.0815516
+        },
+        "end": {
+          "status": "RUNNING",
+          "current_tick": 11014,
+          "governor_mode": "DEGRADED",
+          "health_state": "DEGRADED",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 1395.653139591217,
+          "taken_at": 1792299543.7218573
+        },
+        "governor_modes": [
+          "DEGRADED",
+          "SURVIVAL"
+        ],
+        "health_states": [
+          "DEGRADED",
+          "HEALTHY"
+        ],
+        "observability_modes": [
+          "LIGHT"
+        ]
+      },
+      "spread": {
+        "rps": {
+          "median": 151.852788838736,
+          "min": 146.48102102184967,
+          "max": 164.2543583638379
+        },
+        "p50": {
+          "median": 280.0,
+          "min": 270.0,
+          "max": 300.0
+        },
+        "p95": {
+          "median": 680.0,
+          "min": 630.0,
+          "max": 710.0
+        },
+        "p99": {
+          "median": 840.0,
+          "min": 760.0,
+          "max": 890.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 156.43,
+        "backend_mem_mb": 176.3,
+        "locust_cpu_pct": 29.7,
+        "host_cpu_pct": 33,
+        "run_queue": 13
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 156.43,
+          "mem_mb_peak": 176.3
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 5.66,
+          "mem_mb_peak": 10.19
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": -1.7136612021857927,
+      "disk_delta_kb_s": 3.078142076502729,
+      "ceiling_warning": false,
+      "flags": []
+    },
+    "100": {
+      "engine": {
+        "ticks_per_s": [
+          7.62,
+          7.61,
+          7.92
+        ],
+        "ticks_per_s_median": 7.62,
+        "start": {
+          "status": "RUNNING",
+          "current_tick": 11137,
+          "governor_mode": "DEGRADED",
+          "health_state": "DEGRADED",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 1411.1617767810822,
+          "taken_at": 1792299559.2363546
+        },
+        "end": {
+          "status": "RUNNING",
+          "current_tick": 12787,
+          "governor_mode": "DEGRADED",
+          "health_state": "DEGRADED",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 1624.6808650493622,
+          "taken_at": 1792299772.7501473
+        },
+        "governor_modes": [
+          "CONSTRAINED",
+          "DEGRADED",
+          "SURVIVAL"
+        ],
+        "health_states": [
+          "DEGRADED",
+          "HEALTHY"
+        ],
+        "observability_modes": [
+          "LIGHT"
+        ]
+      },
+      "spread": {
+        "rps": {
+          "median": 146.1102923314541,
+          "min": 139.28866036015322,
+          "max": 146.29523754025652
+        },
+        "p50": {
+          "median": 570.0,
+          "min": 570.0,
+          "max": 570.0
+        },
+        "p95": {
+          "median": 1400.0,
+          "min": 1300.0,
+          "max": 1400.0
+        },
+        "p99": {
+          "median": 1700.0,
+          "min": 1600.0,
+          "max": 1800.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 152.71,
+        "backend_mem_mb": 185.2,
+        "locust_cpu_pct": 30.7,
+        "host_cpu_pct": 46,
+        "run_queue": 23
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 152.71,
+          "mem_mb_peak": 185.2
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 6.12,
+          "mem_mb_peak": 10.08
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": -1.544262295081967,
+      "disk_delta_kb_s": 287.2147540983607,
+      "ceiling_warning": false,
+      "flags": []
+    }
+  },
+  "saturation": {
+    "users": 25,
+    "resource": "host_cpu",
+    "branch": "run queue 17 > 6 vCPUs"
+  }
+}
