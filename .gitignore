@@ -336,3 +336,18 @@ docker/secrets/
 tools/loadtest/.keys.txt
 tools/loadtest/.status-key.txt
 tools/loadtest/runs/
+
+# Terraform (infra/terraform): local state, plugin dirs and variable files stay out of git. backend.hcl.example and .terraform.lock.hcl are committed.
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+backend.hcl
+.tf-plugin-cache/
+.tf-home/
+.tflint-plugins/
+.trivy-cache/

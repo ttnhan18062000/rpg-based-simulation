@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE
-phase: open
+phase: done
 date: 2026-10-18
 tags: [platform, delivery, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, delivery, security]
 DevOps S5 (host ubuntu): Terraform for the amendment's 5b/5c AWS shape, written and validated in CI ($0, no account, no plan, no apply)
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -68,13 +68,18 @@ None.
   provider and plugin downloads are asked of lead-planner first, one at a time, and the cache is deleted afterwards.
 
 ## Implementation Notes
-Epic tier: the children carry the implementation.
+Epic tier: the children carry the implementation: `TCK-20261018-TERRAFORM-AWS-SKELETON` and `TCK-20261018-IAC-WORKFLOW-AND-ROLES` (both done, one branch `platform-implementer-local-terraform-validate`, PR #643).
 
 ## Test Summary
-See the child tickets.
+See the child tickets. Labels (ADR D7): **written + validated** (fmt, init -backend=false + validate, tflint and trivy config, locally in pinned images and on CI in run 39141316584). Nothing was planned or applied.
 
 ## Files Changed
-See the child tickets.
+`infra/terraform/**` (new), `.github/workflows/iac.yml` (new), `registries/session_roles.yaml` and the platform session cards, `docs/guidelines/repo_tooling_layout.md` (one line), `.gitignore`, the two child tickets and their stored artifacts.
 
 ## Completion Summary
-(open)
+Both children are done on `platform-implementer-local-terraform-validate`. The AWS shape (a GitHub OIDC deploy role scoped against escalation, a budget with a deny-all action, and one Fargate task in the default VPC) is written and proven only with `terraform fmt`, `init -backend=false` + `validate`, `tflint` and `trivy config`, locally and on CI (run 39141316584: every step of both terraform legs, tflint and trivy ran and succeeded; the CI trivy artifact lists the same 3 findings as the local run). Nothing was planned, applied or destroyed, and no AWS account, credential or bucket name exists in the repository. Apply, test and destroy (5c) is a future owner decision.
+
+Owner decisions recorded here: the roles diff (`infra/**` and `iac.yml` to platform, D8), confirmed at the merge question; and `infra` as an allowed repo-root directory (2026-10-18, via lead), with the one-line allowlist edit assigned as a one-off.
+
+Stated limits: `Resource "*"` remains on `ecs:*`, the ec2 describe and security-group actions and `logs:DescribeLogGroups` (plus the deny-all, correctly `*`), to be scoped before any apply; the security group's unrestricted egress (trivy AWS-0104 CRITICAL) is needed to pull the image from GHCR over the public IP with no NAT and is narrowed before any apply; trivy stays report-only; the Budgets deny-all stops further deploys but not a running Fargate task.
+Knowledge index refreshed by lead-planner in the main checkout after merge.
