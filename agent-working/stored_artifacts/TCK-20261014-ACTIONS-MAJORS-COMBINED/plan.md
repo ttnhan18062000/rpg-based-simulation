@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P2
 audience: agent
@@ -15,3 +15,6 @@ tags: [platform]
 3. With the user's authorization: push, open a PR, and run one `workflow_dispatch` of rpg-gate-report on the branch.
 4. Collect the evidence (test plan) into the PR body, including the deploy-docs and slow-regression post-merge notes.
 5. Ask testing-planner and the other workflow owners for review by comment. The user merges, then closes #572-#575.
+
+## Closing note
+**Written retrospectively at ticket close (2026-10-18).** The plan above was written before the work (#588). At close nothing in it changed; the two post-merge checks that remain unshown are named in the investigation and in the ticket's Completion Summary.

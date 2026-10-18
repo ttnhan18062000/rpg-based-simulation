@@ -8200,6 +8200,22 @@
   tags:
   - testing
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261014-ACTIONS-MAJORS-COMBINED.md
+  ticket_id: TCK-20261014-ACTIONS-MAJORS-COMBINED
+  title: Land the GitHub Actions majors (#572-#575) as one verified PR, with testing-planner's
+    artifact proof
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-14'
+  related_code_areas:
+  - .github/workflows/{test,slow-regression,slow-regression-watchdog,rpg-gate-report,deploy-docs,pr-body-lint}.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261014-ACTIONS-MAJORS-COMBINED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261014-ACTIONS-MAJORS-COMBINED/plan.md
+  - agent-working/stored_artifacts/TCK-20261014-ACTIONS-MAJORS-COMBINED/test_plan.md
+  tags:
+  - platform
+- type: ticket
   path: agent-working/tickets/done/TCK-20261014-ANYIO-CVE-BUMP.md
   ticket_id: TCK-20261014-ANYIO-CVE-BUMP
   title: 'Bump anyio in uv.lock to 4.14.2 (security advisory, #586)'
@@ -8461,19 +8477,6 @@
   date: '2026-10-14'
   related_code_areas:
   - compose.yaml
-  artifact_files: []
-  tags:
-  - platform
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261014-ACTIONS-MAJORS-COMBINED.md
-  ticket_id: TCK-20261014-ACTIONS-MAJORS-COMBINED
-  title: Land the GitHub Actions majors (#572-#575) as one verified PR, with testing-planner's
-    artifact proof
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-14'
-  related_code_areas:
-  - .github/workflows/{test,slow-regression,slow-regression-watchdog,rpg-gate-report,deploy-docs,pr-body-lint}.yml
   artifact_files: []
   tags:
   - platform

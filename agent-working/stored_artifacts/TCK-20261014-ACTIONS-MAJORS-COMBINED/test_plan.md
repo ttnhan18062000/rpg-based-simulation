@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P2
 audience: agent
@@ -22,3 +22,12 @@ Evidence label: validated (CI).
 3. If this merges before #529 there is no item 3 (#529 bumps its own steps). If #529 merges first: rebase, bump its new steps, show `perf-tripwire` with both arms measured.
 4. Post-merge: first scheduled slow run has `certification-report-<sha>` and `slow-junit-<sha>`, both with files, or revert. deploy-docs runs on main only; its first main run is watched.
 
+
+## Proof Plan
+**Written retrospectively at ticket close (2026-10-18).** The proofs were the evidence list above; this table records how each was shown at close.
+| criterion | level | proof kind | oracle source | expected effect | selected commands |
+|---|---|---|---|---|---|
+| junit artifacts present with files on the PR run | CI | artifact content | testing-planner's restated evidence list, 2026-10-14 | three artifacts, each with files | file counts listed in #588's body (run 38544297527) |
+| first scheduled slow run has both artifacts with files | CI | artifact content | testing-planner's restated evidence list | `certification-report-<sha>` and `slow-junit-<sha>` exist with files | `gh api repos/<repo>/actions/runs/38700638996/artifacts`; `gh run view 38700638996 --json jobs` |
+| rpg-gate-report shard and aggregate run on main | CI | job conclusions | testing-planner's restated evidence list | shard and aggregate executed | `gh run view <id> --json jobs` for 38717903321, 38883951584, 39021377963: skipped (not shown) |
+| deploy-docs upload-pages-artifact v5 | CI | first main run | owner's re-enable ticket | Pages artifact uploaded | not run (Pages off) |
