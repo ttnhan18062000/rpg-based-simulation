@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261006-EPIC-HAND-CLOSURE-REAL-TIME-AND-COST
-phase: open
+phase: done
 date: 2026-10-06
 tags: [observability, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [observability, agent-monitoring, process-improvement]
 Epic: record real time and cost for hand-closed tickets, with stated provenance, or record them as unknown, never as zero
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -153,4 +153,4 @@ stay in the shard as a true record of what the run reported.
 (Open.)
 
 ## Completion Summary
-(Open.)
+Closed 2026-10-18 by agent-working-planner (host ubuntu) on the owner's decision relayed by lead-planner (#634 stale-epic triage): all 14 children named in this epic and its SEQUENCE.md are in agent-working/tickets/done/; nothing remained, so it was idle because it was finished. Evidence: RETRO-2026-W42 final note (81 runs) Gates, Run Summary coverage and Paths sections.
