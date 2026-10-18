@@ -8787,8 +8787,8 @@
 - type: ticket
   path: agent-working/tickets/todos/visual-asset-entity-markers/TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS.md
   ticket_id: TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS
-  title: 'Map markers: entity markers on V2 entity names or properties (gated on rpg''s
-    #523 and its M1 answer)'
+  title: 'Map markers: entity role markers keyed on the presenter''s `kind` (gated
+    on rpg''s #523)'
   tier: standard
   ticket_type: feature
   date: '2026-10-13'

@@ -12,7 +12,7 @@ tags: [architecture, testing, mcp]
 # TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS
 
 ## Title
-Map markers: entity markers on V2 entity names or properties (gated on rpg's #523 and its M1 answer)
+Map markers: entity role markers keyed on the presenter's `kind` (gated on rpg's #523)
 
 ## Status
 OPEN
@@ -31,9 +31,10 @@ Child 3 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner's #523 answer
 
 ## Scope
 - **Moved out of the map-markers batch (owner, 2026-10-14, "Objects now, entities later").** The object markers (batch A: `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`, rc-0011) shipped without entities. This ticket now waits in its own batch folder, `agent-working/tickets/todos/visual-asset-entity-markers/`; its parent epic's Completion Summary says "child 3 moved out on the owner's answer".
-- **Preconditions (do not start before both):** (1) rpg's #523 is merged; (2) the owner picks role or property markers. #548 is ANSWERED: rpg-planner says key on the role id (`kind`) today; rpg-designer wants the presented `species` plus `size` (not emitted yet). So the choice is between the two, and it is the owner's. The sample worlds hold 11 entity kinds (wild_creature x6 since #536).
-- **Owner-only step 1 (blocking, neutral fixed-order options):** role markers or property markers, from child 1's option table with rpg's answer.
-- Keys per the decision and child 1's design (labels, `safety_class`, `fallback` = today's coloured circle), with the red set listed exactly.
+- **Owner decision (2026-10-18, relayed by lead-planner, posted on #548):** entity markers key on the presenter's role id, `kind` (`src/api/presenters/state_presenter.py`, emitted today). No species/size markers. The property-marker option is closed for this batch.
+- **Remaining precondition (do not start before it):** rpg's #523 is merged (V2 names canonical). Then re-read the emitted `kind` values from the three sample worlds on the merged main, because #523 may rename or recolour kinds.
+- **Red set today** (11 kinds in the sample worlds, from `docs/assets/sample_map/gap_report.md` G10 plus `wild_creature` since #536): alpha, blacksmith, guard, leader, merchant, predator_hunter, raider, scout, sentinel, worker, wild_creature. The batch draws exactly the kinds the sample worlds hold on the post-#523 main. If that list differs from today's, record the difference in investigation.md and use the post-#523 list. Other role ids in `data/content/social/roles.yaml` that no sample world uses are out of scope.
+- Keys: one key per kind in the red set. No entity key family exists yet (child 1 named only `icon.marker.*` place keys), so plan.md picks the family (for example `icon.entity.<kind>`) against the `visual_keys.yaml` conventions, and the review checks it, with labels, `safety_class` and `fallback` = today's coloured circle. Names follow the presenter; aliases are registry-only.
 - Specs, reference study, **owner-approved silhouette sheet** (`~/Work/asset-review/entity-markers-silhouettes/`), drawing with the MCP tools, compliance table, blind naming check: the same process rule as child 2. A marker must read on a 16 px cell next to the object markers and must not be confused with a class icon or a place glyph.
 - **Owner review folder** `~/Work/asset-review/entity-markers-v1/` and **owner `adopt-set`** of the whole set.
 
@@ -45,8 +46,8 @@ Child 3 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner's #523 answer
 - No animation. `TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY` stays in the backlog unless a marker is animated.
 
 ## Acceptance Criteria
-- [ ] Both preconditions met and recorded (the #523 merge sha; the owner's role-or-property answer; rpg's #548 answer, linked).
-- [ ] The owner chose role or property markers; keys in the registry; the red set listed exactly.
+- [ ] The precondition is met and recorded: the #523 merge sha, plus the owner's 2026-10-18 `kind` decision (#548 link).
+- [ ] The red set is re-derived from the sample worlds on the post-#523 main and listed exactly. Each kind gets one key in the registry, keyed on `kind`.
 - [ ] Specs, owner-approved silhouettes, compliance table, blind check; the owner adopted the set with `adopt-set`.
 
 ## Related Tickets
@@ -64,7 +65,8 @@ Child 3 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner's #523 answer
 - `visual_assets/catalog/definitions/visual_keys.yaml`, `visual_assets/icons/icon_specs.yaml`, `tests/visual_assets/**`; `src/api/presenters/state_presenter.py:69` (read only: the emitted entity `kind`)
 
 ## Assumptions / Open Questions
-- rpg-planner's answer on post-M1 entity names or properties is outstanding: GitHub #548 (filed 2026-10-13).
+- #548 is closed for this batch by the owner's decision (2026-10-18): key on `kind`. If M1 later moves kinds to properties, re-keying is a later ticket, not this one.
+- Standard tier: the dispatch asks for plan.md, investigation.md and test_plan.md up front. The registry byte budget (`MAX_REGISTRY_BYTES`, about 450 B per key) for 11 keys is checked in plan.md. If it doesn't fit, STOP and raise it as an owner question; no bound raise inside this ticket.
 
 ## Implementation Notes
 
