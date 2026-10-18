@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-LOCUST-API-LOAD-TEST
-phase: open
+phase: done
 date: 2026-10-18
 tags: [platform, performance, benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [platform, performance, benchmarking]
 tools/loadtest: a Locust API scenario and a runner that records the method, the environment and the USE signals with every run
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -169,4 +169,8 @@ None.
 `tools/loadtest/*` (new), `tests/tools/test_loadtest_summary.py`, `pyproject.toml`, `uv.lock`, `registries/session_roles.yaml`, `.claude/agents/session-platform-{implementer,planner}.md`, `.gitignore`, this ticket.
 
 ## Completion Summary
-(open)
+`tools/loadtest/` (Locust scenario, runner with manifest, USE sampling, knee-based saturation rule, idle baseline, pool ceiling warning, per-step engine reading), `pyproject.toml` `loadtest` group with `locust==2.46.7`, `uv.lock`, `.gitignore` lines, `tools/loadtest/**` registered to the platform domain, `tests/tools/test_loadtest_summary.py`. The 2-step smoke run completed and is labelled not a measurement; the pool showed no 429 at 10 users and a single shared key did. The measured run used the runner (see `TCK-20261018-API-LOAD-TEST-MEASURED-RUN`).
+
+Deviation accepted by platform-planner: keys rotate per request over the pool (990 keys, ceiling about 2970 req/s) instead of one key per Locust user. Runtime dependency change for the PR body: `requests` 2.32.3 -> 2.34.2 (forced by locust; includes the CVE-2024-47081 fix); evidence is the scratch-venv ws comparison and the full `tests/api` run (150 passed) on 2.34.2. The `uv.lock` `cffi` marker fork (2.0.0 on Linux, 2.1.1 on win32) is for lead to decide.
+
+Smoke-run open item 6b (9 pool 429s at 5 users) did not reproduce in the measured runs: no 429s in any step; see `docs/runbooks/records/2026-10-18-api-load-test.md` section 9. Staging artifacts (plan, investigation, test plan) were written retrospectively at close, on 2026-10-18.

@@ -7604,6 +7604,24 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-LOCUST-API-LOAD-TEST.md
+  ticket_id: TCK-20261018-LOCUST-API-LOAD-TEST
+  title: 'tools/loadtest: a Locust API scenario and a runner that records the method,
+    the environment and the USE signals with every run'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-LOCUST-API-LOAD-TEST/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-LOCUST-API-LOAD-TEST/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-LOCUST-API-LOAD-TEST/test_plan.md
+  tags:
+  - platform
+  - performance
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-TEMPO-TRACE-BACKEND.md
   ticket_id: TCK-20261018-TEMPO-TRACE-BACKEND
   title: 'Compose: Grafana Tempo in the observability profile as the OTLP trace backend,
@@ -7613,7 +7631,10 @@
   date: '2026-10-18'
   related_code_areas:
   - compose.yaml
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-TEMPO-TRACE-BACKEND/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-TEMPO-TRACE-BACKEND/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-TEMPO-TRACE-BACKEND/test_plan.md
   tags:
   - platform
   - observability
@@ -7747,21 +7768,6 @@
   - platform
   - observability
   - performance
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-LOCUST-API-LOAD-TEST.md
-  ticket_id: TCK-20261018-LOCUST-API-LOAD-TEST
-  title: 'tools/loadtest: a Locust API scenario and a runner that records the method,
-    the environment and the USE signals with every run'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - tools/loadtest/
-  artifact_files: []
-  tags:
-  - platform
-  - performance
-  - benchmarking
 - type: ticket
   path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-REDIS-DOWN-CAUSE-ALERT.md
   ticket_id: TCK-20261018-REDIS-DOWN-CAUSE-ALERT
