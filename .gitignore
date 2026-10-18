@@ -347,3 +347,5 @@ crash.*.log
 *.tfvars.json
 !*.tfvars.example
 backend.hcl
+.tf-plugin-cache/
+.tf-home/
