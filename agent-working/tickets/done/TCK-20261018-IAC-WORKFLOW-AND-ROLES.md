@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-IAC-WORKFLOW-AND-ROLES
-phase: inprogress
+phase: done
 date: 2026-10-18
 tags: [platform, delivery, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, delivery, security]
 CI: .github/workflows/iac.yml (fmt, validate, tflint, trivy config report-only; no credentials) and the D8 roles diff for infra/** and iac.yml
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -79,11 +79,12 @@ None.
 - Roles diff (D8): `infra/**` and `.github/workflows/iac.yml` added to platform's `owns` in `registries/session_roles.yaml` (exactly two globs); the cards are regenerated; the owner confirms the diff in the PR.
 
 ## Test Summary
-- **validated:** `grep -n -E "secrets\.|terraform (plan|apply|destroy)" .github/workflows/iac.yml` finds nothing; YAML parses; `tests/static` passes with the new workflow; `PYTHONPATH=. python3 tools/sessions/validate.py`: 0 findings; `python3 -m tools.sessions.route` returns domain platform for `infra/terraform/service/main.tf` and `.github/workflows/iac.yml`; the session and registry tests pass once the registry is regenerated.
-- Pending: the PR's own run of `iac.yml` (path match) and the trivy summary and artifact actually read.
+- **validated (local):** `grep -n -E "secrets\.|terraform (plan|apply|destroy)" .github/workflows/iac.yml` finds nothing; YAML parses; `tests/static` passes with the new workflow; `tools/sessions/validate.py`: 0 findings; `python3 -m tools.sessions.route` returns domain platform for `infra/terraform/service/main.tf` and `.github/workflows/iac.yml`; the session and registry tests pass; `tests/codebase/test_repo_root_allowlist.py` passes (4) after the allowlist edit.
+- **running on CI** (PR #643, head 0673009b1, `iac.yml` run 39141316584, steps read, not just the colour): `terraform (bootstrap)` and `terraform (service)`: fmt, `init -backend=false`, `validate` all success; `tflint`: `--init` and `--recursive` success; `trivy config (report-only)`: scan, summary and artifact upload success. The downloaded `trivy-config` artifact lists 3 findings (AWS-0017 LOW, AWS-0034 LOW, AWS-0104 CRITICAL, all `service/main.tf`), identical to the local run.
+- The PR's first CI run also failed `test_repo_root_allowlist` (`infra` not an allowed root entry); fixed by the owner-decided one-line allowlist edit.
 
 ## Files Changed
-(open)
+`.github/workflows/iac.yml` (new), `registries/session_roles.yaml`, `.claude/agents/session-platform-{planner,implementer}.md`, `docs/guidelines/repo_tooling_layout.md` (one line), this ticket and its staging artifacts.
 
 ## Completion Summary
-(open)
+`.github/workflows/iac.yml` proves the Terraform at $0 with no credentials: fmt, `init -backend=false` + validate per root, tflint, and trivy config in report-only mode (exit code 0), with actions SHA-pinned and Terraform 1.16.5, tflint v0.64.0 and trivy v0.70.0 pinned; there is no `secrets.*` and no plan, apply or destroy. CI evidence: the PR's own run 39141316584 ran every step of both terraform legs, tflint and trivy successfully, and its trivy artifact lists the same 3 findings as the local run (AWS-0017 LOW, AWS-0034 LOW, AWS-0104 CRITICAL). The roles diff moves exactly two globs (`infra/**`, `.github/workflows/iac.yml`) to platform (D8); the owner confirms it at the merge question. The first CI run also showed that `infra` was not an allowed repo-root entry; the owner decided on 2026-10-18 (via lead) to allow it and assigned the one-line edit to `docs/guidelines/repo_tooling_layout.md` as a one-off. Gaps: trivy stays report-only (flipping it to blocking needs its own owner decision); the tflint step passes the job's own read-only `github.token` to `--init` only to raise the ruleset download rate limit. Staging artifacts were written by platform-planner at filing and updated at close. Knowledge index refreshed by lead-planner in the main checkout after merge.
