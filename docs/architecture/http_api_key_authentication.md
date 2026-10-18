@@ -126,7 +126,7 @@ websocket-scoped dependency would raise an `HTTPException` that
 do not "simplify" this back to a single shared dependency function without
 re-verifying this FastAPI/Starlette exception-handling behavior first.
 
-**Re-verified on starlette 1.8.0 / fastapi 0.143.5** (the v1 dependency window): a websocket upgrade without a
+**Re-verified on starlette 1.9.0 / fastapi 0.143.5** (the v1 dependency window): a websocket upgrade without a
 key is still closed with code 1008 on all 3 routes, and an ordinary REST route still answers 401. What changed is
 how the route table is read, not how a request is authenticated. From starlette 1.x `app.routes` holds one
 `_IncludedRouter` node per `include_router` call (no `.path`), and a websocket route's effective context has an
