@@ -51,7 +51,7 @@ Nothing can scrape backend metrics: /metrics on 8000 is behind the API key (401)
 - src/api/metrics_port.py, src/api/engine_manager.py (start/stop, metrics_port property)
 
 ## Assumptions / Open Questions
-- Compose needs from platform: on the backend service add `expose: ["9109"]` (never under `ports:`); optionally `BACKEND_METRICS_PORT=9109` in its environment (9109 is the default); scrape target backend:9109/metrics. Not edited here.
+- Compose needs from platform: on the backend service add `expose: ["9109"]` (never under `ports:`); optionally `BACKEND_METRICS_PORT=9109` (the default). `BACKEND_METRICS_HOST` defaults to 0.0.0.0 so compose works unchanged; a developer outside compose sets it to 127.0.0.1 so the unauthenticated metrics are not on the LAN. Scrape target backend:9109/metrics. Not edited here.
 - Under uvicorn with several workers only one process could bind the port; compose runs one worker.
 
 ## Implementation Notes

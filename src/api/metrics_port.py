@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_METRICS_PORT = 9109
 METRICS_PORT_ENV = "BACKEND_METRICS_PORT"
+DEFAULT_METRICS_HOST = "0.0.0.0"  # all interfaces, so the compose network can reach it; a developer outside compose sets 127.0.0.1
+METRICS_HOST_ENV = "BACKEND_METRICS_HOST"
 
 
 def metrics_port_from_env(environ: Optional[dict] = None) -> int:
@@ -38,6 +40,12 @@ def metrics_port_from_env(environ: Optional[dict] = None) -> int:
     return port
 
 
+def metrics_host_from_env(environ: Optional[dict] = None) -> str:
+    """The address named by BACKEND_METRICS_HOST, else every interface."""
+    raw = (os.environ if environ is None else environ).get(METRICS_HOST_ENV)
+    return DEFAULT_METRICS_HOST if raw is None or str(raw).strip() == "" else str(raw).strip()
+
+
 @dataclass
 class MetricsPort:
     """A running metrics server: the port it is bound to (port 0 asks the OS for a free one) and how to stop it."""
@@ -51,16 +59,17 @@ class MetricsPort:
         self._server.server_close()
 
 
-def start_metrics_port(registry: Any, port: Optional[int] = None) -> Optional[MetricsPort]:
-    """Serve `registry` at /metrics on `port` (BACKEND_METRICS_PORT, default 9109) on every interface, without auth.
+def start_metrics_port(registry: Any, port: Optional[int] = None, host: Optional[str] = None) -> Optional[MetricsPort]:
+    """Serve `registry` at /metrics on `port` (BACKEND_METRICS_PORT, default 9109) at `host` (BACKEND_METRICS_HOST, default every interface), without auth.
 
     Returns the running server, or None when the port cannot be bound (logged, never raised)."""
     wanted = metrics_port_from_env() if port is None else port
+    address = metrics_host_from_env() if host is None else host
     try:
-        server, _thread = start_http_server(wanted, addr="0.0.0.0", registry=registry)
+        server, _thread = start_http_server(wanted, addr=address, registry=registry)
     except OSError as exc:
-        logger.warning("backend metrics port %d not served: %s", wanted, exc)
+        logger.warning("backend metrics %s:%d not served: %s", address, wanted, exc)
         return None
     bound = server.server_port
-    logger.info("backend metrics served on port %d", bound)
+    logger.info("backend metrics served on %s:%d", address, bound)
     return MetricsPort(port=bound, _server=server)

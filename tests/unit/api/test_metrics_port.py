@@ -6,7 +6,9 @@ import urllib.request
 
 from prometheus_client import CollectorRegistry, Gauge
 
-from src.api.metrics_port import DEFAULT_METRICS_PORT, METRICS_PORT_ENV, metrics_port_from_env, start_metrics_port
+from src.api.metrics_port import (
+    DEFAULT_METRICS_HOST, DEFAULT_METRICS_PORT, METRICS_HOST_ENV, METRICS_PORT_ENV, metrics_host_from_env, metrics_port_from_env, start_metrics_port,
+)
 
 
 def _registry() -> CollectorRegistry:
@@ -54,3 +56,21 @@ def test_the_server_stops_and_releases_its_port():
     again = start_metrics_port(_registry(), port=port)
     assert again is not None
     again.stop()
+
+
+def test_the_host_defaults_to_every_interface_and_the_environment_can_narrow_it():
+    assert DEFAULT_METRICS_HOST == "0.0.0.0"
+    assert metrics_host_from_env({}) == "0.0.0.0"
+    assert metrics_host_from_env({METRICS_HOST_ENV: " "}) == "0.0.0.0"
+    assert metrics_host_from_env({METRICS_HOST_ENV: "127.0.0.1"}) == "127.0.0.1"
+
+
+def test_a_loopback_host_is_served_on_loopback_only():
+    handle = start_metrics_port(_registry(), port=0, host="127.0.0.1")
+    assert handle is not None
+    try:
+        assert handle._server.server_address[0] == "127.0.0.1"
+        with urllib.request.urlopen(f"http://127.0.0.1:{handle.port}/metrics", timeout=5) as response:
+            assert response.status == 200
+    finally:
+        handle.stop()
