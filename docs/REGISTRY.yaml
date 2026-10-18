@@ -8414,6 +8414,21 @@
   - platform
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ.md
+  ticket_id: TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ
+  title: test.yml's `FRONTEND_RE` also covers the files outside `frontend/` that the
+    frontend tests read, and a static test keeps the two in step
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - FRONTEND_RE
+  - tests/static/test_ci_narrow_path_filtered_jobs.py
+  - frontend/src/visualAssets/__tests__/iconScene.test.ts (read-only)
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL.md
   ticket_id: TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL
   title: 'Observability profile: take Loki 3.7.8 / Promtail 3.6.8 and probe Loki readiness
@@ -8536,6 +8551,20 @@
   - hooks
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT.md
+  ticket_id: TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT
+  title: '`test_every_new_job_installs_with_uv_from_the_lockfile` compares the setup-uv
+    action by name, not by its exact version'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - tests/tools/test_ci_split_tools_jobs.py
+  - _action_name
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-STANDARD-PAIRED-MEASUREMENT-COMMAND-FOR-BEHAVIOUR-STEPS.md
   ticket_id: TCK-20261015-STANDARD-PAIRED-MEASUREMENT-COMMAND-FOR-BEHAVIOUR-STEPS
   title: One standard command measures a behaviour step as a paired run (base arm
@@ -8647,20 +8676,6 @@
   tags:
   - hooks
   - data-quality
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT.md
-  ticket_id: TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT
-  title: '`test_every_new_job_installs_with_uv_from_the_lockfile` compares the setup-uv
-    action by name, not by its exact version'
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-10-15'
-  related_code_areas:
-  - tests/tools/test_ci_split_tools_jobs.py
-  - _action_name
-  artifact_files: []
-  tags:
-  - testing
 - type: ticket
   path: agent-working/tickets/done/TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71.md
   ticket_id: TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71
