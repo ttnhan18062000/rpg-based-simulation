@@ -417,6 +417,31 @@ def disk_warning(root: Path) -> list[str]:
         return []
 
 
+def resolve_missing_worktree(wt: Path, target: Target, sroot: Path, root: Path, sid: str | None,
+                             explicit_arg: bool, holder_wt: str | None = None) -> tuple[Path, bool, list[str]]:
+    """The worktree is still missing after self-heal: (path, explicit, refusal lines). Falls back to the role's recorded
+    holder's own worktree when resuming (`claude --resume` finds a transcript only from the cwd it was written in), then the
+    bound worktree (never when --worktree named this one); otherwise a refusal with the real role and instance filled in,
+    so the launch never reaches os.chdir with a path that is not there (GitHub #620 part 2)."""
+    why = f"worktree {wt} does not exist"
+    if not explicit_arg:
+        if holder_wt and Path(holder_wt).is_dir() and _run(["git", "rev-parse", "--git-dir"], Path(holder_wt)).returncode == 0:
+            print(f"manifest worktree {wt} missing; resuming in the dead holder's worktree {holder_wt}")
+            return Path(holder_wt), False, []
+        bound = st.read_bound_worktree(sroot, target.instance)
+        if bound and Path(bound[0]).is_dir() and _run(["git", "rev-parse", "--git-dir"], Path(bound[0])).returncode == 0:
+            print(f"manifest worktree {wt} missing; using the recorded bound worktree {bound[0]}")
+            return Path(bound[0]), bound[1], []
+        why += " and no existing bound worktree is recorded" if not bound else f" and the recorded bound worktree {bound[0]} is not usable"
+    resume = f"--resume {sid} " if sid else "--resume <session-id> "
+    return wt, explicit_arg, [
+        f"refusing to launch {target.instance}: {why}.",
+        f"fix: cd {main_checkout(root)} && SESSION_ROLE={target.instance} claude {resume}--name {target.instance} "
+        f"--agent session-{target.role.role}",
+        f"or create the worktree: relaunch with `--branch <topic>` (creates `{target.role.role}-<topic>` from origin/main) "
+        "or `--worktree <existing worktree path>`"]
+
+
 def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
     ap = argparse.ArgumentParser(description="Launch a session role.")
     ap.add_argument("role")
@@ -456,6 +481,13 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         print(line)
     if code != 0:
         return code
+    explicit = bool(a.worktree)
+    if not wt.is_dir() and not (a.dry_run and a.branch):  # a dry run with --branch only prints the worktree it would create
+        holder_wt = recorded.holder.worktree if recorded and sid else None  # a resume: its transcript lives under the holder's cwd
+        wt, explicit, refusal = resolve_missing_worktree(wt, target, sroot, root, sid, bool(a.worktree), holder_wt)
+        if refusal:
+            print("\n".join(refusal), file=sys.stderr)
+            return EXIT_REFUSED
     go, notes = preflight(wt, a.allow_stale)
     for line in notes:
         print(line)
@@ -476,7 +508,7 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         handover.write_text(HANDOVER_STUB.format(role=target.instance, date=time.strftime("%Y-%m-%d")), encoding="utf-8")
     if role.launch == "worktree":  # the lease follows the recorded worktree (a batch worktree via --worktree)
         try:
-            st.write_bound_worktree(sroot, target.instance, os.path.realpath(wt), bool(a.worktree))
+            st.write_bound_worktree(sroot, target.instance, os.path.realpath(wt), explicit)
         except (OSError, st.StateError):
             pass  # the record is a convenience; the launch never fails on it
     link_shared_graph(wt)  # graphify-out -> the main checkout's graph; a no-op when it has its own or is the main checkout

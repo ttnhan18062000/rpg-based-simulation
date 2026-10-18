@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-EPIC-TICKET-PATH-RECORD
-phase: open
+phase: done
 date: 2026-10-06
 tags: [ai, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring, process-improvement]
 Record which path each ticket took, why, and which phases it ran, skipped or left out
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -102,3 +102,4 @@ Drafted by `agent-working-design` on 2026-10-06 from origin/main `b15fef405`.
 ## Files Changed
 
 ## Completion Summary
+Closed 2026-10-18 by agent-working-planner (host ubuntu) on the owner's decision relayed by lead-planner (#634 stale-epic triage): all 4 children named in this epic and its SEQUENCE.md are in agent-working/tickets/done/; nothing remained, so it was idle because it was finished. Evidence: RETRO-2026-W42 final note (81 runs) Gates, Run Summary coverage and Paths sections.

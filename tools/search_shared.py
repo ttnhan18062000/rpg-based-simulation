@@ -13,6 +13,13 @@ This module lets the first session start one local server that holds the model, 
   uid or is group/other accessible.
 * The server binds 127.0.0.1 on an OS-assigned port, requires the token, and exits after an idle period.
 
+* One server per index, from the main checkout's code (TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT):
+  `code_tools_dir()` pins the server's argv and the client's code hash to the main checkout, so a worktree's own copy of
+  `tools/search_*.py` neither spawns nor is refused. The server holds an exclusive flock on `server.lock` for its whole
+  life (taken before it loads anything; a second `serve` exits 0, a killed one's lock vanishes with its pid) and writes a
+  `starting` record while it loads, so a slow load is waited for or reported (`REASON_STARTING`), never answered by a
+  second server or by a client loading its own model.
+
 Kill switch: `RPG_SEARCH_SHARED=0` forces in-process search. Under pytest no server is ever spawned unless a test sets
 `RPG_SEARCH_SHARED_ALLOW_TEST_SPAWN=1`.
 """
@@ -20,6 +27,7 @@ from __future__ import annotations
 
 import contextlib
 import fcntl
+import functools
 import hashlib
 import hmac
 import http.client
@@ -44,6 +52,14 @@ IDLE_ENV = "RPG_SEARCH_IDLE_SECONDS"
 DEFAULT_IDLE_SECONDS = 1800
 SPAWN_WAIT_SECONDS = 12.0
 LOCK_WAIT_SECONDS = 15.0
+START_GRACE_SECONDS = 180.0
+CLAIM_WINDOW_SECONDS = 20.0
+RETIRE_WAIT_SECONDS = 5.0
+REASON_OLD_CODE = "server was started from different code"
+CODE_ROOT_ENV = "RPG_SEARCH_SHARED_CODE_ROOT"
+REASON_STARTING = "server starting"
+REASON_UNRESPONSIVE = "server not responding"
+_SILENT_REASONS = frozenset({"shared search not used"})
 CONNECT_TIMEOUT = 2.0
 READ_TIMEOUT = 8.0
 _TOOLS_DIR = Path(__file__).resolve().parent
@@ -71,6 +87,44 @@ def code_version(tools_dir: Path = _TOOLS_DIR) -> str:
         digest.update(name.encode())
         digest.update(path.read_bytes() if path.exists() else b"")
     return digest.hexdigest()[:16]
+
+
+def main_checkout_root(start: Path) -> Path | None:
+    """The main checkout's root, from any worktree of it (or from the main checkout itself); None outside git."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(start), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    common_dir = proc.stdout.strip()
+    return Path(common_dir).parent if proc.returncode == 0 and common_dir else None
+
+
+@functools.lru_cache(maxsize=1)
+def _own_main_root() -> Path | None:
+    return main_checkout_root(_TOOLS_DIR)
+
+
+def code_tools_dir(db_path: Path) -> Path:
+    """The `tools/` directory whose code serves `db_path` and whose hash a client compares.
+
+    The main checkout's, resolved from this module's own path (never the cwd), so the first client to spawn does not
+    decide which checkout's code serves everyone, and a worktree editing `tools/search_*.py` neither spawns nor is
+    served by its own copy (TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT). Exceptions: the test/dev
+    override `RPG_SEARCH_SHARED_CODE_ROOT`; no resolvable main checkout; and a worktree that built its own index, whose
+    server must run that checkout's code because a server refuses a database its code does not search."""
+    override = os.environ.get(CODE_ROOT_ENV)
+    if override:
+        return Path(override) / "tools"
+    main = _own_main_root()
+    if main is None or not (main / "tools" / "search_shared.py").is_file():
+        return _TOOLS_DIR
+    own_root = _TOOLS_DIR.parent.resolve()
+    if own_root != main.resolve() and db_path.resolve().is_relative_to(own_root):
+        return _TOOLS_DIR
+    return main / "tools"
 
 
 def state_dir(db_path: Path) -> Path:
@@ -121,6 +175,43 @@ def _write_state(directory: Path, record: dict) -> None:
     with os.fdopen(fd, "w", encoding="utf-8") as handle:
         json.dump(record, handle)
     os.replace(tmp, directory / "server.json")
+
+
+def _read_starting(directory: Path) -> dict | None:
+    """The record a spawning client or a loading server leaves before the port exists, or None."""
+    path = directory / "server.json"
+    if not _owned_and_private(path, directory=False):
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if data.get("state") == "starting" and int(data["pid"]) > 0 and float(data["started"]) > 0 else None
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        return None
+
+
+def _write_starting(directory: Path, pid: int) -> None:
+    _write_state(directory, {"state": "starting", "pid": pid, "started": time.time()})
+
+
+def _proc_starttime(pid: int) -> str | None:
+    """Field 22 of /proc/<pid>/stat (clock ticks since boot at process start): with the pid, a process's identity."""
+    try:
+        return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()[19]
+    except (OSError, IndexError):
+        return None
+
+
+def _pid_alive(pid: int) -> bool:
+    """A live process that is not a zombie (a dead child no one has reaped still answers kill 0)."""
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    try:
+        fields = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()
+        return fields[0] != "Z"
+    except (OSError, IndexError):
+        return True
 
 
 # ── Client ────────────────────────────────────────────────────────────────────
@@ -181,83 +272,173 @@ def _locked(directory: Path) -> Iterator[bool]:
 
 
 def _server_argv(db_path: Path) -> list[str]:
-    return [sys.executable, str(_TOOLS_DIR / "search_shared.py"), "serve", "--db", str(db_path)]
+    return [sys.executable, str(code_tools_dir(db_path) / "search_shared.py"), "serve", "--db", str(db_path)]
 
 
-def _spawn(directory: Path, db_path: Path) -> None:
-    """Start the detached server; its stdout/stderr go to `server.log` in the private directory."""
+def _spawn(directory: Path, db_path: Path) -> int:
+    """Start the detached server and return its pid; its stdout/stderr go to `server.log` in the private directory."""
     log_fd = os.open(directory / "server.log", os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
     try:
-        subprocess.Popen(  # noqa: S603 - fixed argv built from this file's own path
+        return subprocess.Popen(  # noqa: S603 - fixed argv built from the code root's own path
             _server_argv(db_path), stdin=subprocess.DEVNULL, stdout=log_fd, stderr=log_fd,
             start_new_session=True, close_fds=True,
-        )
+        ).pid
     finally:
         os.close(log_fd)
 
 
 def _wait_ready(directory: Path, db_path: Path) -> dict | None:
+    """Poll for a ready, healthy server until SPAWN_WAIT_SECONDS; stop early once the starting process is gone."""
     deadline = time.monotonic() + SPAWN_WAIT_SECONDS
     while time.monotonic() < deadline:
         state = _read_state(directory)
         if state is not None and _alive(state, db_path):
             return state
+        starting = _read_starting(directory)
+        if state is None and starting is not None and not _pid_alive(int(starting["pid"])):
+            return None
         time.sleep(0.1)
     return None
 
 
-def _attach_or_spawn(directory: Path, db_path: Path) -> dict | None:
-    """Under the lock: reuse a live server, else clear stale state and start one. None if it is not ready in time."""
+def _starting_reason(directory: Path) -> str:
+    """Why no ready server: still within its start grace, or wedged / gone."""
+    starting = _read_starting(directory)
+    if starting is not None and _pid_alive(int(starting["pid"])) \
+            and time.time() - float(starting["started"]) < START_GRACE_SECONDS:
+        return REASON_STARTING
+    return REASON_UNRESPONSIVE
+
+
+def _server_lock_held(directory: Path) -> bool:
+    """True while some process holds `server.lock`, i.e. a server process lives (loading or serving)."""
+    fd = os.open(directory / "server.lock", os.O_RDWR | os.O_CREAT, 0o600)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return True
+    else:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        return False
+    finally:
+        os.close(fd)
+
+
+def _server_present(directory: Path, state: dict | None) -> bool:
+    """A server process exists for this directory even though it does not answer yet (or any more).
+
+    The server's own flock is the proof, so a pid the kernel reused for something else never counts. The one gap is a
+    child a client just spawned that has not taken the lock yet: its `starting` record counts for CLAIM_WINDOW_SECONDS."""
+    if _server_lock_held(directory):
+        return True
+    starting = _read_starting(directory) if state is None else None
+    return starting is not None and _pid_alive(int(starting["pid"])) \
+        and time.time() - float(starting["started"]) < CLAIM_WINDOW_SECONDS
+
+
+def _attach_or_spawn(directory: Path, db_path: Path) -> tuple[dict | None, str | None]:
+    """(ready server, None) or (None, reason).
+
+    Under the client lock: reuse a live server; never touch or respawn over a server that is starting or hung (its pid
+    lives and it holds `server.lock`); clear a record whose pid is dead and start one, leaving a `starting` record with
+    the child's pid so the next client sees it. The wait for readiness happens outside the lock."""
     with _locked(directory) as got:
         if not got:
-            return None
+            return None, REASON_UNRESPONSIVE
         state = _read_state(directory)
         if state is not None and _alive(state, db_path):
-            return state
-        with contextlib.suppress(OSError):
-            (directory / "server.json").unlink()
-        if not spawn_allowed():
-            return None
-        _spawn(directory, db_path)
-        return _wait_ready(directory, db_path)
+            return state, None
+        if _server_present(directory, state):
+            pass  # starting, or alive but not answering: wait / report, never a second server
+        else:
+            with contextlib.suppress(OSError):
+                (directory / "server.json").unlink()
+            if not spawn_allowed():
+                return None, REASON_UNRESPONSIVE
+            _write_starting(directory, _spawn(directory, db_path))
+    state = _wait_ready(directory, db_path)
+    return (state, None) if state is not None else (None, _starting_reason(directory))
 
 
 def _note(reason: str) -> None:
     print(f"[search_shared] in-process fallback: {reason}", file=sys.stderr)
 
 
-def try_search(db_path: Path, query: str, top_k: int, section: str | None, mode: str) -> list | dict | None:
-    """The shared server's answer, or None when the caller must search in-process."""
+def _retire_outdated_server(directory: Path, db_path: Path, old: dict, want: str) -> str:
+    """The recorded server runs other code than the main checkout's (a pull changed `tools/search_*.py`).
+
+    Answering in-process would make every session load its own model at once, and the old server would idle for 30
+    minutes holding `server.lock`. So, under the client lock: stop it (it answered with our token, same uid), wait a
+    few seconds for its lock, and start the current one. Returns REASON_STARTING, so the caller answers lexical-only; if
+    the lock does not free in time that is still the answer and the next query tries again. Never spawns while the lock
+    is held. Only the process that answered is signalled: the record's start time (field 22 of /proc/<pid>/stat, written
+    by the server itself) must still match, so a recycled pid is never killed. A record whose pid lives but does not
+    answer is left alone (the old reason, no spawn)."""
+    with _locked(directory) as got:
+        if not got:
+            return REASON_STARTING
+        current = _read_state(directory)
+        if current is None or current["code_version"] != old["code_version"] or current["pid"] != old["pid"]:
+            return REASON_STARTING  # another client already replaced it
+        pid = int(current["pid"])
+        if _alive(current, db_path):  # answered with the token just now
+            recorded = current.get("starttime")
+            if pid != os.getpid() and (recorded is None or recorded == _proc_starttime(pid)):  # still that very process
+                with contextlib.suppress(OSError):
+                    os.kill(pid, signal.SIGTERM)
+        elif _pid_alive(pid):
+            return REASON_OLD_CODE
+        deadline = time.monotonic() + RETIRE_WAIT_SECONDS
+        while _server_lock_held(directory) and time.monotonic() < deadline:
+            time.sleep(0.05)
+        if _server_lock_held(directory):
+            return REASON_STARTING
+        if not spawn_allowed():
+            return REASON_OLD_CODE
+        with contextlib.suppress(OSError):
+            (directory / "server.json").unlink()
+        _write_starting(directory, _spawn(directory, db_path))
+    return REASON_STARTING
+
+
+def try_search_ex(db_path: Path, query: str, top_k: int, section: str | None,
+                  mode: str) -> tuple[list | dict | None, str | None]:
+    """(the shared server's answer, None), or (None, why) when the caller must search in-process.
+
+    Prints nothing: the caller logs its mode transitions once (`search_mcp`). `REASON_STARTING` means a server is
+    loading its model right now, so the caller may answer without loading one itself."""
     if not enabled() or not query.strip() or not db_path.exists():
-        return None
+        return None, "shared search not used"
     directory = state_dir(db_path)
     if not _ensure_private_dir(directory):
-        _note("state directory is not private to this user")
-        return None
+        return None, "state directory is not private to this user"
+    want = code_version(code_tools_dir(db_path))
     state = _read_state(directory)
-    if state is not None and state["code_version"] != code_version():
-        _note("server was started from different code")
-        return None
+    if state is not None and state["code_version"] != want:
+        return None, _retire_outdated_server(directory, db_path, state, want)
     body = {"query": query, "top_k": top_k, "section": section, "mode": mode}
     for attempt in (0, 1):
         if state is None or attempt == 1:
-            state = _attach_or_spawn(directory, db_path)
-        if state is None:
-            _note("no server ready")
-            return None
-        if state["code_version"] != code_version():
-            _note("server was started from different code")
-            return None
+            state, why = _attach_or_spawn(directory, db_path)
+            if state is None:
+                return None, why or "no server ready"
+        if state["code_version"] != want:
+            return None, _retire_outdated_server(directory, db_path, state, want)
         try:
-            answer = _request(state, "POST", "/search", body)
+            return _request(state, "POST", "/search", body), None
         except (OSError, ValueError) as exc:
             state = None
             if attempt == 1:
-                _note(f"request failed: {exc}")
-                return None
-            continue
-        return answer
-    return None
+                return None, f"request failed: {exc}"
+    return None, "no server ready"
+
+
+def try_search(db_path: Path, query: str, top_k: int, section: str | None, mode: str) -> list | dict | None:
+    """The shared server's answer, or None when the caller must search in-process (the reason goes to stderr)."""
+    answer, reason = try_search_ex(db_path, query, top_k, section, mode)
+    if answer is None and reason and reason not in _SILENT_REASONS:
+        _note(reason)
+    return answer
 
 
 # ── Server ────────────────────────────────────────────────────────────────────
@@ -335,7 +516,8 @@ def serve(search_fn: Callable[..., list | dict], db_path: Path, idle_seconds: fl
         return 1
     server = _SharedServer(search_fn, db_path, secrets.token_hex(32))
     record = {"pid": os.getpid(), "port": server.server_address[1], "token": server.token,
-              "db": str(db_path.resolve()), "code_version": server.version, "started": time.time()}
+              "db": str(db_path.resolve()), "code_version": server.version, "started": time.time(),
+              "starttime": _proc_starttime(os.getpid())}
     _write_state(directory, record)
     if threading.current_thread() is threading.main_thread():
         signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=server.shutdown, daemon=True).start())
@@ -373,20 +555,65 @@ def _load_search_mcp() -> object:
     return module
 
 
+_SERVER_LOCK_FD: int | None = None
+
+
+def _claim_single_instance(directory: Path) -> bool:
+    """Take the exclusive, non-blocking flock on `<dir>/server.lock` and keep it for the process's life.
+
+    The kernel drops it when the pid dies, so a killed server never blocks its successor. False: another server holds it."""
+    global _SERVER_LOCK_FD
+    fd = os.open(directory / "server.lock", os.O_RDWR | os.O_CREAT, 0o600)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        os.close(fd)
+        return False
+    _SERVER_LOCK_FD = fd
+    return True
+
+
+def _release_single_instance() -> None:
+    global _SERVER_LOCK_FD
+    if _SERVER_LOCK_FD is not None:
+        os.close(_SERVER_LOCK_FD)
+        _SERVER_LOCK_FD = None
+
+
+def _clear_own_starting(directory: Path) -> None:
+    starting = _read_starting(directory)
+    if starting is not None and int(starting["pid"]) == os.getpid():
+        with contextlib.suppress(OSError):
+            (directory / "server.json").unlink()
+
+
 def _main(argv: list[str]) -> int:
     if len(argv) < 3 or argv[0] != "serve" or argv[1] != "--db":
         print("usage: search_shared.py serve --db <knowledge.db>", file=sys.stderr)
         return 2
-    mcp = _load_search_mcp()
-    if Path(argv[2]).resolve() != Path(mcp._DB_PATH).resolve():
-        print(f"[search_shared] refusing to serve {argv[2]}: this code searches {mcp._DB_PATH}", file=sys.stderr)
+    db_path = Path(argv[2])
+    directory = state_dir(db_path)
+    if not _ensure_private_dir(directory):
+        print("[search_shared] state directory is not private to this user", file=sys.stderr)
         return 1
-    if not mcp._ensure_loaded():  # loads the model and BM25 before the port is announced
-        print("[search_shared] index or model not available; not serving", file=sys.stderr)
-        return 1
-    mcp._STATE.model = _LockedModel(mcp._STATE.model)
-    idle = float(os.environ.get(IDLE_ENV, DEFAULT_IDLE_SECONDS))
-    return serve(_reloading(mcp), Path(argv[2]), idle)
+    if not _claim_single_instance(directory):  # before importing search_mcp or loading anything
+        print(f"[search_shared] another server already serves {db_path}; exiting without loading", file=sys.stderr)
+        return 0
+    try:
+        _write_starting(directory, os.getpid())
+        mcp = _load_search_mcp()
+        if db_path.resolve() != Path(mcp._DB_PATH).resolve():
+            print(f"[search_shared] refusing to serve {argv[2]}: this code searches {mcp._DB_PATH}", file=sys.stderr)
+            return 1
+        if not mcp._ensure_loaded():  # loads the model and BM25 before the port is announced
+            print("[search_shared] index or model not available; not serving", file=sys.stderr)
+            return 1
+        mcp._STATE.model = _LockedModel(mcp._STATE.model)
+        idle = float(os.environ.get(IDLE_ENV, DEFAULT_IDLE_SECONDS))
+        return serve(_reloading(mcp), db_path, idle)
+    finally:
+        _clear_own_starting(directory)
+        _release_single_instance()
 
 
 def _reloading(mcp: object) -> Callable[..., list | dict]:
