@@ -54,6 +54,8 @@ SPAWN_WAIT_SECONDS = 12.0
 LOCK_WAIT_SECONDS = 15.0
 START_GRACE_SECONDS = 180.0
 CLAIM_WINDOW_SECONDS = 20.0
+RETIRE_WAIT_SECONDS = 5.0
+REASON_OLD_CODE = "server was started from different code"
 CODE_ROOT_ENV = "RPG_SEARCH_SHARED_CODE_ROOT"
 REASON_STARTING = "server starting"
 REASON_UNRESPONSIVE = "server not responding"
@@ -189,6 +191,14 @@ def _read_starting(directory: Path) -> dict | None:
 
 def _write_starting(directory: Path, pid: int) -> None:
     _write_state(directory, {"state": "starting", "pid": pid, "started": time.time()})
+
+
+def _proc_starttime(pid: int) -> str | None:
+    """Field 22 of /proc/<pid>/stat (clock ticks since boot at process start): with the pid, a process's identity."""
+    try:
+        return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()[19]
+    except (OSError, IndexError):
+        return None
 
 
 def _pid_alive(pid: int) -> bool:
@@ -354,6 +364,43 @@ def _note(reason: str) -> None:
     print(f"[search_shared] in-process fallback: {reason}", file=sys.stderr)
 
 
+def _retire_outdated_server(directory: Path, db_path: Path, old: dict, want: str) -> str:
+    """The recorded server runs other code than the main checkout's (a pull changed `tools/search_*.py`).
+
+    Answering in-process would make every session load its own model at once, and the old server would idle for 30
+    minutes holding `server.lock`. So, under the client lock: stop it (it answered with our token, same uid), wait a
+    few seconds for its lock, and start the current one. Returns REASON_STARTING, so the caller answers lexical-only; if
+    the lock does not free in time that is still the answer and the next query tries again. Never spawns while the lock
+    is held. Only the process that answered is signalled: the record's start time (field 22 of /proc/<pid>/stat, written
+    by the server itself) must still match, so a recycled pid is never killed. A record whose pid lives but does not
+    answer is left alone (the old reason, no spawn)."""
+    with _locked(directory) as got:
+        if not got:
+            return REASON_STARTING
+        current = _read_state(directory)
+        if current is None or current["code_version"] != old["code_version"] or current["pid"] != old["pid"]:
+            return REASON_STARTING  # another client already replaced it
+        pid = int(current["pid"])
+        if _alive(current, db_path):  # answered with the token just now
+            recorded = current.get("starttime")
+            if pid != os.getpid() and (recorded is None or recorded == _proc_starttime(pid)):  # still that very process
+                with contextlib.suppress(OSError):
+                    os.kill(pid, signal.SIGTERM)
+        elif _pid_alive(pid):
+            return REASON_OLD_CODE
+        deadline = time.monotonic() + RETIRE_WAIT_SECONDS
+        while _server_lock_held(directory) and time.monotonic() < deadline:
+            time.sleep(0.05)
+        if _server_lock_held(directory):
+            return REASON_STARTING
+        if not spawn_allowed():
+            return REASON_OLD_CODE
+        with contextlib.suppress(OSError):
+            (directory / "server.json").unlink()
+        _write_starting(directory, _spawn(directory, db_path))
+    return REASON_STARTING
+
+
 def try_search_ex(db_path: Path, query: str, top_k: int, section: str | None,
                   mode: str) -> tuple[list | dict | None, str | None]:
     """(the shared server's answer, None), or (None, why) when the caller must search in-process.
@@ -368,7 +415,7 @@ def try_search_ex(db_path: Path, query: str, top_k: int, section: str | None,
     want = code_version(code_tools_dir(db_path))
     state = _read_state(directory)
     if state is not None and state["code_version"] != want:
-        return None, "server was started from different code"
+        return None, _retire_outdated_server(directory, db_path, state, want)
     body = {"query": query, "top_k": top_k, "section": section, "mode": mode}
     for attempt in (0, 1):
         if state is None or attempt == 1:
@@ -376,7 +423,7 @@ def try_search_ex(db_path: Path, query: str, top_k: int, section: str | None,
             if state is None:
                 return None, why or "no server ready"
         if state["code_version"] != want:
-            return None, "server was started from different code"
+            return None, _retire_outdated_server(directory, db_path, state, want)
         try:
             return _request(state, "POST", "/search", body), None
         except (OSError, ValueError) as exc:
@@ -469,7 +516,8 @@ def serve(search_fn: Callable[..., list | dict], db_path: Path, idle_seconds: fl
         return 1
     server = _SharedServer(search_fn, db_path, secrets.token_hex(32))
     record = {"pid": os.getpid(), "port": server.server_address[1], "token": server.token,
-              "db": str(db_path.resolve()), "code_version": server.version, "started": time.time()}
+              "db": str(db_path.resolve()), "code_version": server.version, "started": time.time(),
+              "starttime": _proc_starttime(os.getpid())}
     _write_state(directory, record)
     if threading.current_thread() is threading.main_thread():
         signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=server.shutdown, daemon=True).start())

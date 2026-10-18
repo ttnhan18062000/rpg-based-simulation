@@ -626,3 +626,149 @@ def test_two_indexes_get_two_servers_and_neither_respawns_on_repeat_queries(shar
         os.kill(ss._read_state(ss.state_dir(other))["pid"], signal.SIGTERM)
     except OSError:
         pass
+
+
+# ── a pull changes the code under a live server: replace it, never fall back fleet-wide ─────────
+
+_VERSIONED_STUB = '''
+import importlib.util, os, sys
+from pathlib import Path
+spec = importlib.util.spec_from_file_location("search_shared", {path!r})
+ss = importlib.util.module_from_spec(spec); sys.modules["search_shared"] = ss; spec.loader.exec_module(ss)
+orig = ss.code_version
+ss.code_version = lambda tools_dir=None: orig(Path(os.environ["STUB_CODE_ROOT"]) / "tools")
+db = Path(sys.argv[1])
+with open({launches!r}, "a") as f:
+    f.write("launch\\n")
+directory = ss.state_dir(db)
+assert ss._ensure_private_dir(directory)
+if not ss._claim_single_instance(directory):
+    sys.exit(0)
+ss._write_starting(directory, os.getpid())
+def fake(query, top_k=8, section=None, mode="hybrid"):
+    return [{{"doc_id": query}}]
+sys.exit(ss.serve(fake, db, 30.0))
+'''
+
+
+@pytest.fixture
+def code_roots(shared_env, tmp_path, monkeypatch):
+    """Two code roots with different hashes, a stub server that reports the hash of STUB_CODE_ROOT, a launch log."""
+    roots = []
+    for name in ("old", "new"):
+        tools = tmp_path / name / "tools"
+        tools.mkdir(parents=True)
+        for f in ss._CODE_FILES:
+            (tools / f).write_text(f"{name} {f}")
+        roots.append(tmp_path / name)
+    launches = tmp_path / "launches.log"
+    stub = tmp_path / "versioned_stub.py"
+    stub.write_text(_VERSIONED_STUB.format(path=str(_TOOLS / "search_shared.py"), launches=str(launches)))
+    monkeypatch.setattr(ss, "_server_argv", lambda d: [sys.executable, str(stub), str(d)])
+
+    def use(root):
+        monkeypatch.setenv(ss.CODE_ROOT_ENV, str(root))
+        monkeypatch.setenv("STUB_CODE_ROOT", str(root))
+
+    use(roots[0])
+    return roots, launches, use
+
+
+def test_a_server_on_old_code_is_replaced_and_the_client_answers_lexical_only_meanwhile(shared_env, code_roots):
+    (old, new), launches, use = code_roots
+    first, why = ss.try_search_ex(shared_env, "a", 2, None, "hybrid")
+    assert why is None and first == [{"doc_id": "a"}]
+    old_pid = ss._read_state(ss.state_dir(shared_env))["pid"]
+    use(new)  # main was pulled: clients now hash the new code
+    answer, reason = ss.try_search_ex(shared_env, "b", 2, None, "hybrid")
+    assert (answer, reason) == (None, ss.REASON_STARTING)  # the caller answers lexical-only: no model in the client
+    _wait_ready_for_teardown(shared_env)
+    state = ss._read_state(ss.state_dir(shared_env))
+    assert state["pid"] != old_pid and not _alive(old_pid)
+    assert launches.read_text().split() == ["launch", "launch"]  # exactly one new launch
+    assert ss.try_search_ex(shared_env, "c", 2, None, "hybrid") == ([{"doc_id": "c"}], None)
+
+
+def test_clients_racing_after_a_pull_cause_exactly_one_new_launch(shared_env, code_roots):
+    (old, new), launches, use = code_roots
+    assert ss.try_search_ex(shared_env, "a", 2, None, "hybrid")[1] is None
+    use(new)
+    results: list = []
+    barrier = threading.Barrier(3)
+
+    def client(i: int) -> None:
+        barrier.wait()
+        results.append(ss.try_search_ex(shared_env, f"q{i}", 2, None, "hybrid"))
+
+    threads = [threading.Thread(target=client, args=(i,)) for i in range(3)]
+    [t.start() for t in threads]
+    [t.join(30) for t in threads]
+    assert all(r[0] is None and r[1] == ss.REASON_STARTING for r in results)
+    _wait_ready_for_teardown(shared_env)
+    assert launches.read_text().split() == ["launch", "launch"]
+
+
+def test_a_stuck_old_server_that_keeps_its_lock_is_never_raced_by_a_second_spawn(shared_env, code_roots, monkeypatch):
+    (old, new), launches, use = code_roots
+    assert ss.try_search_ex(shared_env, "a", 2, None, "hybrid")[1] is None
+    use(new)
+    monkeypatch.setattr(ss, "RETIRE_WAIT_SECONDS", 0.3)
+    monkeypatch.setattr(ss.os, "kill", lambda pid, sig: None)  # the old server ignores the signal and keeps its lock
+    assert ss.try_search_ex(shared_env, "b", 2, None, "hybrid") == (None, ss.REASON_STARTING)
+    assert launches.read_text().split() == ["launch"]
+
+
+def _watch_sigterm(monkeypatch):
+    sent: list = []
+    real = os.kill
+    monkeypatch.setattr(ss.os, "kill", lambda pid, sig: sent.append((pid, sig)) if sig == signal.SIGTERM else real(pid, sig))
+    return sent
+
+
+def test_a_client_whose_own_worktree_tools_are_older_never_terminates_a_matching_server(shared_env, code_roots, tmp_path, monkeypatch):
+    (old, new), launches, use = code_roots
+    assert ss.try_search_ex(shared_env, "a", 2, None, "hybrid")[1] is None
+    pid = ss._read_state(ss.state_dir(shared_env))["pid"]
+    older = tmp_path / "older_commit" / "tools"
+    older.mkdir(parents=True)
+    for f in ss._CODE_FILES:
+        (older / f).write_text("an older commit's copy")
+    monkeypatch.setattr(ss, "_TOOLS_DIR", older)  # this worktree's own copy differs; the code root is still the main checkout's
+    sent = _watch_sigterm(monkeypatch)
+    answer, reason = ss.try_search_ex(shared_env, "b", 2, None, "hybrid")
+    assert (answer, reason) == ([{"doc_id": "b"}], None)  # attached: nothing for the caller to load
+    assert sent == [] and ss._read_state(ss.state_dir(shared_env))["pid"] == pid
+    assert launches.read_text().split() == ["launch"]
+
+
+def test_an_own_index_worktree_client_never_touches_the_main_index_server(two_checkouts, shared_env, code_roots, monkeypatch):
+    main, wt = two_checkouts
+    (old, new), launches, use = code_roots
+    assert ss.try_search_ex(shared_env, "a", 2, None, "hybrid")[1] is None
+    main_pid = ss._read_state(ss.state_dir(shared_env))["pid"]
+    own_db = wt / "agent-working" / ".index" / "knowledge.db"
+    own_db.parent.mkdir(parents=True)
+    own_db.write_bytes(b"z")
+    monkeypatch.delenv(ss.CODE_ROOT_ENV)  # a plain worktree client: its own index means its own code root
+    assert ss.code_tools_dir(own_db) == wt / "tools" and ss.state_dir(own_db) != ss.state_dir(shared_env)
+    spawned: list = []
+    monkeypatch.setattr(ss, "_spawn", lambda d, db: spawned.append((d, db)) or os.getpid())
+    monkeypatch.setattr(ss, "SPAWN_WAIT_SECONDS", 0.2)
+    sent = _watch_sigterm(monkeypatch)
+    ss.try_search_ex(own_db, "b", 2, None, "hybrid")
+    assert [db for _, db in spawned] == [own_db] and sent == []
+    assert ss._read_state(ss.state_dir(shared_env))["pid"] == main_pid and _alive(main_pid)
+
+
+def test_a_live_pid_whose_start_time_differs_is_never_signalled(shared_env, code_roots, monkeypatch):
+    (old, new), launches, use = code_roots
+    assert ss.try_search_ex(shared_env, "a", 2, None, "hybrid")[1] is None
+    directory = ss.state_dir(shared_env)
+    record = ss._read_state(directory)
+    assert record["starttime"] == ss._proc_starttime(record["pid"])  # the server recorded its own identity
+    ss._write_state(directory, {**record, "starttime": "1"})  # the pid is live but is not the process that wrote this
+    use(new)
+    sent = _watch_sigterm(monkeypatch)
+    monkeypatch.setattr(ss, "RETIRE_WAIT_SECONDS", 0.3)
+    assert ss.try_search_ex(shared_env, "b", 2, None, "hybrid") == (None, ss.REASON_STARTING)
+    assert sent == [] and _alive(record["pid"]) and launches.read_text().split() == ["launch"]
