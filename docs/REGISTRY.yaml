@@ -2153,6 +2153,16 @@
   - hard-law
   - eventbus
 - type: doc
+  path: docs/guides/reviewer_replay_check.md
+  title: Reviewer replay check
+  status: active
+  layer: testing
+  authority: P1
+  audience: agent
+  tags:
+  - determinism
+  - testing
+- type: doc
   path: docs/guides/simulation.md
   title: Simulation — Getting Started Guide
   status: ''
@@ -7136,6 +7146,18 @@
   - determinism
   - visualization
 - type: doc
+  path: docs/runbooks/records/2026-10-18-api-load-test.md
+  title: 'API load test (2026-10-18): age effect, /entities page cap and proposed
+    SLO'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+  - performance
+- type: doc
   path: docs/simulation/domains/perception_contract.md
   title: Perception Domain Contract
   status: historical
@@ -7592,7 +7614,248 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS.md
+  path: agent-working/tickets/done/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
+  ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
+  title: 'The measured API load-test run on host ubuntu: req/s and p50/p95/p99 with
+    spread, the USE result, and a separately labelled profiled run'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-API-LOAD-TEST-MEASURED-RUN/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-API-LOAD-TEST-MEASURED-RUN/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-API-LOAD-TEST-MEASURED-RUN/test_plan.md
+  tags:
+  - platform
+  - performance
+  - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER.md
+  ticket_id: TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER
+  title: 'Backend image: run backend, ai_worker and watchdog as a non-root user, so
+    the bind-mounted ./data is never left root-owned'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/backend.Dockerfile
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER/test_plan.md
+  tags:
+  - platform
+  - security
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-LOCUST-API-LOAD-TEST.md
+  ticket_id: TCK-20261018-LOCUST-API-LOAD-TEST
+  title: 'tools/loadtest: a Locust API scenario and a runner that records the method,
+    the environment and the USE signals with every run'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-LOCUST-API-LOAD-TEST/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-LOCUST-API-LOAD-TEST/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-LOCUST-API-LOAD-TEST/test_plan.md
+  tags:
+  - platform
+  - performance
+  - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-TEMPO-TRACE-BACKEND.md
+  ticket_id: TCK-20261018-TEMPO-TRACE-BACKEND
+  title: 'Compose: Grafana Tempo in the observability profile as the OTLP trace backend,
+    with a Grafana datasource linking traces to logs and metrics'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-TEMPO-TRACE-BACKEND/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-TEMPO-TRACE-BACKEND/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-TEMPO-TRACE-BACKEND/test_plan.md
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD.md
+  ticket_id: TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD
+  title: Find why a sub-second Aseprite job hits the 30 s `JOB_TIMEOUT_S` under host
+    load (flaky `tests/visual_assets/drawing/integration/test_ops.py`)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-18'
+  related_code_areas:
+  - visual_assets/drawing/config.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD/test_plan.md
+  tags:
+  - architecture
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/visual-asset-docs-sync/TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT.md
+  ticket_id: TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT
+  title: 'Sample-map gap report: say what is open now, and record the owner''s 2026-10-18
+    answers on G6 (16 px building glyph) and G4 (variant offsets)'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-18'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - architecture
+  - documentation
+- type: ticket
+  path: agent-working/tickets/done/visual-asset-docs-sync/TCK-20261018-VISUAL-ASSETS-HANDOFF-SNAPSHOTS.md
+  ticket_id: TCK-20261018-VISUAL-ASSETS-HANDOFF-SNAPSHOTS
+  title: Refresh the tracked asset handover snapshots to the post-#608 state
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-18'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - architecture
+  - documentation
+- type: ticket
+  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
+  ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF
+  title: 'Grafana: one provisioned API dashboard (rate, errors, latency percentiles
+    by route, backend logs, trace links), and the step-2 end-to-end local proof'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/grafana/dashboards/api.json
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL
+  title: 'DevOps step 2 (host ubuntu): one API dashboard (metrics and logs) and one
+    API request trace in Tempo, running locally'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING.md
+  ticket_id: TCK-20261018-OBSERVABILITY-PROFILE-HARDENING
+  title: 'Compose: Grafana admin password from a secret file (no `admin` default),
+    host ports bound to 127.0.0.1, Promtail''s Docker socket behind a read-only proxy'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+  - security
+- type: ticket
+  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT.md
+  ticket_id: TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
+  title: 'Prometheus: scrape the backend''s internal metrics port 9109 instead of
+    the admission-gated /metrics on 8000'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT.md
+  ticket_id: TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT
+  title: Prometheus scrape of ai_worker:9108, an ai_worker healthcheck on its up gauge,
+    and an alert on stream consumer lag/pending
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK.md
+  ticket_id: TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK
+  title: One API SLO alert as a provisioned Grafana alert rule, a local ntfy container
+    as its contact point, and the runbook it links to
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
+  title: 'DevOps step 3 (host ubuntu): a measured Locust API load test, one SLO alert
+    to a local ntfy, a runbook, and a recorded Redis-stop drill'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/**
+  - pyproject.toml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+  - performance
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-REDIS-DOWN-CAUSE-ALERT.md
+  ticket_id: TCK-20261018-REDIS-DOWN-CAUSE-ALERT
+  title: A Redis-down cause alert, so the Redis-stop drill has something that fires
+    when the API SLO stays green
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD.md
+  ticket_id: TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD
+  title: 'The recorded drill: stop Redis under Locust load, follow the runbook, and
+    record detection time, recovery time and a short post-mortem'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS.md
   ticket_id: TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS
   title: A benchmark record carries a real engine working-set figure from a separate,
     untimed, collector-on memory pass
@@ -7602,12 +7865,15 @@
   related_code_areas:
   - src/perf/bench_harness.py, src/perf/benchmark_record.py, tools/perf/rerun_baselines.py,
     tests/unit/perf/test_bench_harness_memory.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS/plan.md
+  - agent-working/stored_artifacts/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS/test_plan.md
   tags:
   - performance
   - benchmarking
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS.md
+  path: agent-working/tickets/done/TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS.md
   ticket_id: TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS
   title: The corpus baseline test and bench_corpus_world.py --commit use the promoted
     lifecycle records, so legacy corpus files can be retired
@@ -7617,10 +7883,27 @@
   related_code_areas:
   - tests/tools/test_corpus_perf_baseline.py, tools/bench_corpus_world.py, tools/perf/baseline_lifecycle.py,
     tests/perf/baselines/
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS/plan.md
+  - agent-working/stored_artifacts/TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS/test_plan.md
   tags:
   - performance
   - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261016-REPLAY-CHECK-REVIEWER-DEMO.md
+  ticket_id: TCK-20261016-REPLAY-CHECK-REVIEWER-DEMO
+  title: '`make replay-check`: a one-command reviewer demo that the same seed gives
+    the same final state hash under the Canonical signal contract'
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-16'
+  related_code_areas:
+  - codebase/reports/, tests/codebase/, Makefile, README.md, docs/guides/
+  artifact_files: []
+  tags:
+  - determinism
+  - testing
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH.md
   ticket_id: TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH
@@ -8053,6 +8336,24 @@
   tags:
   - platform
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES.md
+  ticket_id: TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES
+  title: 'Finish the baselines PERF-M2-T08 could not promote: diagnose the intrinsic
+    noise first, then re-record the NOISY and off-NORMAL records'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-14'
+  related_code_areas:
+  - tools/perf/rerun_baselines.py, tools/perf/baseline_lifecycle.py, tools/perf/tripwire.py,
+    src/perf/scenarios.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES/investigation.md
+  - agent-working/stored_artifacts/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES/plan.md
+  - agent-working/stored_artifacts/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES/test_plan.md
+  tags:
+  - performance
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION.md
   ticket_id: TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION
   title: 'Find where the tick cost grew since May: per-phase and per-call-site attribution
@@ -8177,21 +8478,6 @@
   artifact_files: []
   tags:
   - platform
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES.md
-  ticket_id: TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES
-  title: 'Finish the baselines PERF-M2-T08 could not promote: diagnose the intrinsic
-    noise first, then re-record the NOISY and off-NORMAL records'
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-14'
-  related_code_areas:
-  - tools/perf/rerun_baselines.py, tools/perf/baseline_lifecycle.py, tools/perf/tripwire.py,
-    src/perf/scenarios.py
-  artifact_files: []
-  tags:
-  - performance
-  - benchmarking
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES.md
   ticket_id: TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES
