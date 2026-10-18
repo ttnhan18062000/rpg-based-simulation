@@ -1,0 +1,9 @@
+# Profiling-only overlay, used ONLY for the profiled hold (never for the throughput or observability-on runs):
+#   PY_SPY_BIN=~/.local/bin/py-spy LOADTEST_API_KEY_HASHES="$(python3 tools/loadtest/keys.py -n 990)" \
+#   docker compose -f compose.yaml -f tools/loadtest/compose.loadtest.yaml -f tools/loadtest/compose.profile.yaml up -d backend
+# SYS_PTRACE lets root inside the container attach to the backend (uid 1000) process; py-spy is a static binary mounted read-only.
+services:
+  backend:
+    cap_add: [SYS_PTRACE]
+    volumes:
+      - ${PY_SPY_BIN:?set PY_SPY_BIN to a static py-spy binary}:/opt/py-spy:ro

@@ -1,0 +1,105 @@
+{
+  "is_measurement": true,
+  "pool_ceiling_rps": 2970.0,
+  "baseline": {
+    "backend_cpu_pct": 30.75,
+    "backend_mem_mb": 125.5,
+    "locust_cpu_pct": 0.0,
+    "host_cpu_pct": 33,
+    "run_queue": 7,
+    "swap_kb_s_mean": 4.733333333333333,
+    "disk_kb_s_mean": 319.9
+  },
+  "steps": {
+    "10": {
+      "engine": {
+        "ticks_per_s": [
+          8.61,
+          8.59,
+          8.3
+        ],
+        "ticks_per_s_median": 8.59,
+        "start": {
+          "status": "RUNNING",
+          "current_tick": 443,
+          "governor_mode": "DEGRADED",
+          "health_state": "DEGRADED",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 51.396809816360474,
+          "taken_at": 1792296732.2957466
+        },
+        "end": {
+          "status": "RUNNING",
+          "current_tick": 2241,
+          "governor_mode": "DEGRADED",
+          "health_state": "DEGRADED",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 262.7672264575958,
+          "taken_at": 1792296943.6648157
+        },
+        "governor_modes": [
+          "CONSTRAINED",
+          "DEGRADED",
+          "SURVIVAL"
+        ],
+        "health_states": [
+          "DEGRADED",
+          "HEALTHY"
+        ],
+        "observability_modes": [
+          "LIGHT"
+        ]
+      },
+      "spread": {
+        "rps": {
+          "median": 415.639697974829,
+          "min": 401.5323556316777,
+          "max": 464.35760631514313
+        },
+        "p50": {
+          "median": 19.0,
+          "min": 17.0,
+          "max": 20.0
+        },
+        "p95": {
+          "median": 49.0,
+          "min": 43.0,
+          "max": 51.0
+        },
+        "p99": {
+          "median": 67.0,
+          "min": 59.0,
+          "max": 73.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 173.01,
+        "backend_mem_mb": 137.0,
+        "locust_cpu_pct": 53.0,
+        "host_cpu_pct": 62,
+        "run_queue": 14
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 173.01,
+          "mem_mb_peak": 137.0
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 7.21,
+          "mem_mb_peak": 9.648
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": -2.476502732240437,
+      "disk_delta_kb_s": 312.2803278688525,
+      "ceiling_warning": false,
+      "flags": []
+    }
+  },
+  "saturation": null
+}

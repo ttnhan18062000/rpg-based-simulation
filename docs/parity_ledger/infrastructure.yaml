@@ -12980,3 +12980,15 @@
   test_path: tests/static/test_ci_perf_tripwire_step.py
   divergence_note: DEV-022 (Stabilized)
   support_boundary: 'Report-only (OD-8). The 1.40 threshold stays provisional; the CI-runner A/A calibration (workflow_dispatch) measured 0.025 and a tighter value is proposed to the owner, not applied.'
+
+- id: INFRA-436
+  text: 'TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS: 5 of the 15 legacy tests/perf/baselines files are re-recorded as benchmark-identity schema records (canonical variant, provisional, claims none) through tools/perf/baseline_lifecycle.py promote, from tools/perf/rerun_baselines.py (3 fresh-process runs per record, the median avg promoted, a spread above 15 % is NOISY and not promoted, a run that leaves NORMAL is not a baseline). docs/observability/baselines/latest.json is a generated BaselineConfig (baseline_v1, cost_accounting_version DEV-017) that src gate and compare-sweep parse; the 14 per-profile matrix files were deleted.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/perf/rerun_baselines.py; tests/perf/baselines/*.v0001.json; docs/observability/baselines/latest.json
+  proof_type: contract
+  test_path: tests/unit/perf/test_rerun_baselines.py
+  divergence_note: null
+  support_boundary: 'Report-only (OD-8). 10 of 15 baselines stay legacy references: 4 PENDING-NOISY and 6 leave NORMAL under canonical (including mixed_200_local and mixed_200_concurrent, measured after the spawn-collision fix); the ledger names each. The sweep-gate baseline is one idle sweep on one loaded host; tests/integration/observability/test_baseline_comparison_flow.py is host-timing sensitive (fails on a loaded VM, passes in CI on main) and is not covered here.'
+

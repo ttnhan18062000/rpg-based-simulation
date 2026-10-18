@@ -12,6 +12,7 @@ families:
   tier: {size: 8, convention: "8x8 rank badge: octagon (E to A) or diamond (S to SSS), pips cut out for steps"}
   status: {size: 16, convention: "16x16 frame with one arrow inside; the arrow's direction carries the meaning, not colour"}
   plate: {size: 16, convention: "16x16 rounded plate, rim #9ea4b6, composited under a location glyph"}
+  node: {size: 16, convention: "16x16 glyph, live area 12x12 (2 px margin), dark outline #0e1018, drawn on the map cell with NO plate (a resource node is not a location); one object, upright and centred, no scene; readable over any terrain colour"}
 icons:
   icon.marker.resource_grove:
     status: v2
@@ -357,3 +358,219 @@ icons:
     must_not_read_as: a warning sign, a gear, a sun, an up arrow
     synonyms: [down arrow, arrow down, downward, decrease, debuff, drop, spiked, spike, mace, morning star]
     distractors: [warning sign, gear, sun, up arrow, flower, shield]
+  icon.building.healer_hut:
+    status: v2
+    subject: a mortar and pestle with a herb sprig
+    theme: "medieval: a stone mortar and pestle of an herbalist, with a green herb sprig"
+    modern_lookalikes_to_avoid: ["a modern pill bottle or medicine cross", "a coffee cup", "a first-aid kit"]
+    orientation: upright, centred, the pestle leaning out to the upper right
+    proportions: "a bowl 14 px wide and 9 px tall (flat-topped rim, rounded base on a 2 px foot) in stone grey; a pestle 3 px wide leaning out 9 px tall to the upper right; a green sprig of 2 leaf pairs rising from the bowl, at least 12 px of green; fits the 20x20 live area"
+    parts: [stone bowl, rim, pestle, herb sprig, foot]
+    reads_as: an herbalist's mortar and pestle
+    must_not_read_as: a cup, a cauldron, a pot of soup
+    synonyms: [mortar, pestle, bowl, herbs, herbalist, apothecary, healer, potion]
+    distractors: [cup, kettle, helmet, bucket, teapot, drum]
+  icon.building.town_hall:
+    status: v2
+    subject: a rolled charter scroll with a wax seal
+    theme: "medieval: a town charter, a parchment scroll tied with a ribbon and a red wax seal"
+    modern_lookalikes_to_avoid: ["a modern rolled poster tube", "a diploma in a frame", "a paper towel roll"]
+    orientation: upright, centred, the scroll slightly slanted
+    proportions: "a parchment scroll 16 px wide and 12 px tall with both ends curled into 3 px rolls; a red wax seal 4 px across on a hanging ribbon at the lower right; two ink lines of text as 1 px dark dashes; fits the 20x20 live area"
+    parts: [parchment, curled rolls, ink lines, wax seal, ribbon]
+    reads_as: a rolled parchment charter with a seal
+    must_not_read_as: an open book, a letter, a bandage
+    synonyms: [scroll, charter, parchment, decree, paper, document, letter, seal]
+    distractors: [book, bandage, flag, bone, candle, bread]
+  icon.building.mine_entrance:
+    status: v2
+    subject: a pickaxe
+    theme: "medieval: an iron-headed miner's pickaxe on a wooden haft"
+    modern_lookalikes_to_avoid: ["a modern jackhammer", "a garden fork", "a hockey stick"]
+    orientation: upright on a diagonal, head at the upper left, haft to the lower right
+    proportions: "a haft 3 px wide and 17 px long on a diagonal; a curved double-pointed iron head 16 px across with two pointed tips curving down (steel grey with a light top edge); nothing else; fits the 20x20 live area"
+    parts: [wooden haft, iron head, pointed tips, binding]
+    reads_as: a miner's pickaxe
+    must_not_read_as: a hammer, an axe, an anchor
+    synonyms: [pickaxe, pick, pick axe, mining, mine, miner]
+    distractors: [hammer, anchor, sickle, scythe, fishing rod, shovel]
+  icon.building.watchtower:
+    status: v2
+    subject: a crenellated stone tower with a pennant
+    theme: "medieval: a stone watchtower with a crenellated top, an arrow slit and a pennant"
+    modern_lookalikes_to_avoid: ["a modern lighthouse", "a chimney", "a rocket"]
+    orientation: upright, symmetric, centred, taller than wide
+    proportions: "a tower 10 px wide and 17 px tall; four crenellations on top (2 px wide, 2 px gap); a 1x3 px arrow slit; a stone block pattern of lighter and darker greys; a 4 px pennant on a 3 px pole above the top; fits the 20x20 live area"
+    parts: [stone shaft, crenellations, arrow slit, pennant, base]
+    reads_as: a medieval watchtower
+    must_not_read_as: a lighthouse, a chimney, a chess piece
+    synonyms: [tower, watchtower, turret, castle tower, keep, lookout, rook]
+    distractors: [chimney, lighthouse, silo, rocket, bottle, chess pawn]
+  icon.marker.nest:
+    status: v2
+    subject: a bird's nest with three eggs
+    theme: "medieval fantasy: a woven twig nest of a wild beast with speckled eggs"
+    modern_lookalikes_to_avoid: ["a modern bowl of eggs", "a straw hat", "a basket"]
+    orientation: upright, centred, the nest low and wide
+    proportions: "a nest 12 px wide and 6 px tall of interlaced twig lines (brown, two shades) with a ragged top rim; three pale speckled eggs 3x4 px resting in it, visible above the rim; fits the 12x12 live area"
+    parts: [twig bowl, rim twigs, three eggs, shadow]
+    reads_as: a nest with eggs
+    must_not_read_as: a bowl of food, a hat, a basket
+    synonyms: [nest, eggs, egg, bird nest, twigs]
+    distractors: [hat, wreath, basket, haystack, bread, bowl of fruit]
+  icon.node.wood_node:
+    status: v2
+    subject: a stack of three logs
+    theme: "medieval: cut logs of timber stacked with their ends showing, ringed and bark-brown"
+    modern_lookalikes_to_avoid: ["a modern lumber plank", "a stack of pipes", "a barrel"]
+    orientation: upright, a 2-over-1 pyramid of logs
+    proportions: "three round log ends 5 px across (two below, one above) with 2 px light ring marks and bark-brown rims; fits the 12x12 live area"
+    parts: [log ends, growth rings, bark, shadow]
+    reads_as: a stack of logs
+    must_not_read_as: a barrel, a stack of pipes, a bunch of coins
+    synonyms: [log, logs, wood, timber, firewood, stack]
+    distractors: [pipes, barrel, coins, bread, drum, cheese]
+  icon.node.herb_patch:
+    status: v2
+    subject: three leafy herb sprigs
+    theme: "medieval fantasy: wild medicinal herbs, three green sprigs with paired leaves and no blossoms"
+    modern_lookalikes_to_avoid: ["a modern potted plant", "a salad", "a clover icon"]
+    orientation: upright, three sprigs fanning from one base
+    proportions: "three stems 9 px, 7 px and 8 px tall with 3 to 4 pairs of 2 px leaves, two greens, no flowers, a 1-px soil line; fits the 12x12 live area"
+    parts: [stems, paired leaves, soil line]
+    reads_as: a few green herb sprigs
+    must_not_read_as: a cluster of cover grass, a flower, a seaweed frond
+    synonyms: [herb, herbs, plant, leaves, sprig, grass]
+    distractors: [flower, tree, cactus, clover, fern, seaweed]
+  icon.node.berry_thicket:
+    status: v2
+    subject: a round bush with red berries
+    theme: "medieval fantasy: a wild berry bush with leaves and red berries"
+    modern_lookalikes_to_avoid: ["a modern holly wreath", "a cherry emoji", "a tomato plant"]
+    orientation: upright, round, wider than tall
+    proportions: "a bush 12 px wide and 10 px tall, dark and light green clumps, five red berries 2 px across with a 1 px highlight, a 2 px trunk stub; fits the 12x12 live area"
+    parts: [leaf clumps, red berries, trunk stub]
+    reads_as: a bush with red berries
+    must_not_read_as: a round tree crown, a cherry, a holly wreath
+    synonyms: [bush, berries, berry, shrub, thicket, hedge]
+    distractors: [tree, cherry, tomato, holly wreath, cloud, broccoli]
+  icon.node.healing_flower_patch:
+    status: v2
+    subject: a single white and gold flower
+    theme: "medieval fantasy: a wild healing flower with five white petals and a gold centre on a leafy stem"
+    modern_lookalikes_to_avoid: ["a modern daisy emoji", "a sunflower", "a cotton swab"]
+    orientation: upright, one flower on a stem with two leaves
+    proportions: "a stem 8 px tall; five white petals around a 3 px gold centre (a flower head 7 px across); two green leaves 3 px long; fits the 12x12 live area"
+    parts: [petals, gold centre, stem, leaves]
+    reads_as: a single white flower
+    must_not_read_as: a sun, a star, a mushroom
+    synonyms: [flower, daisy, bloom, blossom, petal, plant]
+    distractors: [sun, star, tree, mushroom, clover, snowflake]
+  icon.node.cover_patch_high:
+    status: v2
+    subject: a tall grass clump
+    theme: "medieval fantasy: tall wild grass hiding a person, reeds and long blades to head height"
+    modern_lookalikes_to_avoid: ["a modern lawn", "a paintbrush", "a broom"]
+    orientation: upright, blades fanning slightly
+    proportions: "eleven blades in two greens, the tallest 11 px and the shortest 8 px, tips leaning outward by 1 px, a 2 px dark base; the tallest of the three cover patches; fits the 12x12 live area"
+    parts: [tall blades, tips, base]
+    reads_as: tall grass
+    must_not_read_as: a feather, a flame, a broom
+    synonyms: [grass, tall grass, reeds, reed, blades, weeds]
+    distractors: [flame, feather, broom, palm, fountain, wheat]
+  icon.node.cover_patch_medium:
+    status: v2
+    subject: a medium grass tuft
+    theme: "medieval fantasy: waist-high wild grass, a tuft of blades"
+    modern_lookalikes_to_avoid: ["a modern lawn", "a paintbrush", "a broom"]
+    orientation: upright, blades fanning slightly
+    proportions: "eight blades in two greens, the tallest 7 px and the shortest 5 px, a 2 px dark base; half the height of the high patch; fits the 12x12 live area"
+    parts: [blades, tips, base]
+    reads_as: a tuft of grass
+    must_not_read_as: a bush, a flame, a feather
+    synonyms: [grass, tuft, tall grass, weeds, blades, bush]
+    distractors: [flame, feather, broom, palm, fountain, wheat]
+  icon.node.cover_patch_low:
+    status: v2
+    subject: a short grass tuft
+    theme: "medieval fantasy: ankle-high wild grass, a few short blades"
+    modern_lookalikes_to_avoid: ["a modern lawn", "a paintbrush", "a broom"]
+    orientation: upright, blades short and close
+    proportions: "five blades in two greens, the tallest 4 px, a 2 px dark base; the shortest of the three patches; fits the 12x12 live area"
+    parts: [short blades, base]
+    reads_as: a short grass tuft
+    must_not_read_as: a sprout, a bush, a wave
+    synonyms: [grass, tuft, sprout, weeds, blades, sprouts]
+    distractors: [flame, feather, broom, palm, fountain, wheat]
+  icon.node.iron_vein:
+    status: v2
+    subject: a grey boulder with rust-brown ore seams
+    theme: "medieval: a rough rock with veins of iron ore in angular rust-brown chunks"
+    modern_lookalikes_to_avoid: ["a modern brick", "a coal lump", "a meteor"]
+    orientation: upright, a rough angular boulder, wider than tall
+    proportions: "a boulder 12 px wide and 9 px tall in two cool greys with an angular silhouette; two rust-brown angular ore chunks 3 x 2 px set into it; no sparkle; fits the 12x12 live area"
+    parts: [rock, angular ore chunks, shadow]
+    reads_as: a rock with iron ore
+    must_not_read_as: a brick, a lump of coal, an egg
+    synonyms: [rock, ore, iron, boulder, stone, mine]
+    distractors: [brick, coal, egg, meteor, bread, mushroom]
+  icon.node.silver_vein:
+    status: v2
+    subject: a rounded boulder with a bright silver seam
+    theme: "medieval: a smooth rock cut by a bright silver seam with a sparkle"
+    modern_lookalikes_to_avoid: ["a modern coin", "a snowball", "a pearl"]
+    orientation: upright, a rounded boulder, wider than tall
+    proportions: "a boulder 12 px wide and 9 px tall in two warm greys with a ROUNDED silhouette; one diagonal pale silver seam 8 px long and 2 px wide; two white sparkle pixels beside it; fits the 12x12 live area"
+    parts: [rounded rock, silver seam, sparkle]
+    reads_as: a rock with a silver seam
+    must_not_read_as: a pearl, an egg, a snowball
+    synonyms: [rock, ore, silver, boulder, stone, mine]
+    distractors: [brick, coal, egg, pearl, bread, snowball]
+  icon.node.crystal_outcrop:
+    status: v2
+    subject: a cluster of pointed crystals on rock
+    theme: "medieval fantasy: three tall pointed blue crystals growing from a grey rock base"
+    modern_lookalikes_to_avoid: ["a modern glass shard", "a diamond emoji", "a candle flame"]
+    orientation: upright, three crystals of different heights on a low rock base
+    proportions: "a rock base 11 px wide and 3 px tall; three hexagonal-pointed crystals 9 px, 7 px and 5 px tall in light blue with a white highlight edge; fits the 12x12 live area"
+    parts: [rock base, three crystals, highlight edges]
+    reads_as: blue crystals
+    must_not_read_as: an icicle, a candle flame, a tooth
+    synonyms: [crystal, crystals, gem, gems, quartz, outcrop]
+    distractors: [ice, icicle, candle, flame, tooth, bottle]
+  icon.node.frost_shard_cluster:
+    status: v2
+    subject: a spray of ice shards
+    theme: "medieval fantasy: pale cyan ice shards bursting outward from one point, with a frost sparkle"
+    modern_lookalikes_to_avoid: ["a modern ice cube", "a snowflake logo", "a broken windshield"]
+    orientation: upright, shards radiating outward from the bottom centre
+    proportions: "five thin angular shards radiating from a 2 px base, 5 to 9 px long, pale cyan with white edges; NO rock base; one white sparkle pixel above; fits the 12x12 live area"
+    parts: [radiating shards, white edges, sparkle]
+    reads_as: shards of ice
+    must_not_read_as: a crystal outcrop on rock, a star, a claw
+    synonyms: [ice, shards, shard, frost, icicles, icicle]
+    distractors: [crystal, star, flame, feather, claw, tree]
+  icon.node.spirit_wisp:
+    status: v2
+    subject: a floating wisp flame with a curved tail
+    theme: "medieval fantasy: a pale blue-white will-o'-the-wisp, a teardrop flame with a curled tail floating above the ground"
+    modern_lookalikes_to_avoid: ["a modern light bulb", "a candle", "a ghost emoji"]
+    orientation: upright, the flame body above a curling tail, tilted slightly
+    proportions: "a teardrop body 6 px wide and 7 px tall in pale blue with a white core; a curled tail 5 px long to one side; no base and no ground; two 1 px dark eye dots; fits the 12x12 live area"
+    parts: [body, white core, curled tail, eye dots]
+    reads_as: a floating wisp of spirit flame
+    must_not_read_as: a candle flame, a water drop, a leaf
+    synonyms: [wisp, flame, spirit, ghost, fire, soul]
+    distractors: [candle, drop, bulb, cloud, egg, leaf]
+  icon.node.moon_resin_tree:
+    status: v2
+    subject: a slim pale tree with an amber resin drop
+    theme: "medieval fantasy: a slender silver-barked tree with a glowing amber resin drop on its trunk"
+    modern_lookalikes_to_avoid: ["a modern street tree", "a lollipop", "a palm tree"]
+    orientation: upright, centred, a round crown on a slender trunk
+    proportions: "a crown 9 px wide and 6 px tall in blue-green; a slender pale silver trunk 2 px wide and 5 px tall; one amber resin drop 2 x 3 px with a highlight on the trunk; fits the 12x12 live area"
+    parts: [crown, pale trunk, amber drop]
+    reads_as: a tree with an amber resin drop
+    must_not_read_as: a lollipop, a mushroom, a plain green tree
+    synonyms: [tree, resin, amber, trunk, sap, forest]
+    distractors: [lollipop, mushroom, cactus, broccoli, cloud, candle]

@@ -1,0 +1,275 @@
+{
+  "is_measurement": true,
+  "pool_ceiling_rps": 2970.0,
+  "baseline": {
+    "backend_cpu_pct": 35.3,
+    "backend_mem_mb": 128.7,
+    "locust_cpu_pct": 0.0,
+    "host_cpu_pct": 12,
+    "run_queue": 3,
+    "swap_kb_s_mean": 4.166666666666667,
+    "disk_kb_s_mean": 211.3
+  },
+  "steps": {
+    "10": {
+      "spread": {
+        "rps": {
+          "median": 409.5597098580158,
+          "min": 392.11440607465966,
+          "max": 445.9057911189358
+        },
+        "p50": {
+          "median": 19.0,
+          "min": 18.0,
+          "max": 20.0
+        },
+        "p95": {
+          "median": 51.0,
+          "min": 45.0,
+          "max": 53.0
+        },
+        "p99": {
+          "median": 72.0,
+          "min": 66.0,
+          "max": 76.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 149.75,
+        "backend_mem_mb": 141.3,
+        "locust_cpu_pct": 55.0,
+        "host_cpu_pct": 46,
+        "run_queue": 19
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 149.75,
+          "mem_mb_peak": 141.3
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 5.69,
+          "mem_mb_peak": 30.77
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": -1.724043715846995,
+      "disk_delta_kb_s": -49.30000000000001,
+      "ceiling_warning": false,
+      "flags": []
+    },
+    "25": {
+      "spread": {
+        "rps": {
+          "median": 227.73104887323456,
+          "min": 174.9510272922658,
+          "max": 321.1829474463099
+        },
+        "p50": {
+          "median": 93.0,
+          "min": 65.0,
+          "max": 120.0
+        },
+        "p95": {
+          "median": 250.0,
+          "min": 160.0,
+          "max": 330.0
+        },
+        "p99": {
+          "median": 360.0,
+          "min": 220.0,
+          "max": 430.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 152.22,
+        "backend_mem_mb": 149.3,
+        "locust_cpu_pct": 42.2,
+        "host_cpu_pct": 41,
+        "run_queue": 14
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 152.22,
+          "mem_mb_peak": 149.3
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 6.08,
+          "mem_mb_peak": 30.77
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": -2.101092896174864,
+      "disk_delta_kb_s": -77.28360655737706,
+      "ceiling_warning": false,
+      "flags": []
+    },
+    "50": {
+      "spread": {
+        "rps": {
+          "median": 116.13819403972234,
+          "min": 107.96286685589413,
+          "max": 123.54011957177119
+        },
+        "p50": {
+          "median": 370.0,
+          "min": 360.0,
+          "max": 400.0
+        },
+        "p95": {
+          "median": 930.0,
+          "min": 870.0,
+          "max": 980.0
+        },
+        "p99": {
+          "median": 1200.0,
+          "min": 1100.0,
+          "max": 1300.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 157.17,
+        "backend_mem_mb": 157.1,
+        "locust_cpu_pct": 27.1,
+        "host_cpu_pct": 50,
+        "run_queue": 13
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 157.17,
+          "mem_mb_peak": 157.1
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 8.56,
+          "mem_mb_peak": 4.285
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": -0.051912568306010876,
+      "disk_delta_kb_s": -72.73715846994537,
+      "ceiling_warning": false,
+      "flags": []
+    },
+    "100": {
+      "spread": {
+        "rps": {
+          "median": 125.93227234690636,
+          "min": 124.78456267391118,
+          "max": 145.57304072940104
+        },
+        "p50": {
+          "median": 630.0,
+          "min": 580.0,
+          "max": 650.0
+        },
+        "p95": {
+          "median": 1500.0,
+          "min": 1300.0,
+          "max": 1500.0
+        },
+        "p99": {
+          "median": 1900.0,
+          "min": 1600.0,
+          "max": 1900.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 160.91,
+        "backend_mem_mb": 165.3,
+        "locust_cpu_pct": 29.9,
+        "host_cpu_pct": 33,
+        "run_queue": 23
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 160.91,
+          "mem_mb_peak": 165.3
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 4.64,
+          "mem_mb_peak": 4.523
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": -1.8495446265938074,
+      "disk_delta_kb_s": -118.15965391621131,
+      "ceiling_warning": false,
+      "flags": []
+    },
+    "200": {
+      "spread": {
+        "rps": {
+          "median": 134.76940524973236,
+          "min": 131.24237665646655,
+          "max": 141.6963586927263
+        },
+        "p50": {
+          "median": 640.0,
+          "min": 620.0,
+          "max": 640.0
+        },
+        "p95": {
+          "median": 2900.0,
+          "min": 2700.0,
+          "max": 3100.0
+        },
+        "p99": {
+          "median": 14000.0,
+          "min": 13000.0,
+          "max": 14000.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 149.27,
+        "backend_mem_mb": 198.6,
+        "locust_cpu_pct": 30.1,
+        "host_cpu_pct": 34,
+        "run_queue": 18
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 149.27,
+          "mem_mb_peak": 198.6
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 4.19,
+          "mem_mb_peak": 4.469
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": -1.8661202185792356,
+      "disk_delta_kb_s": -129.54590163934427,
+      "ceiling_warning": false,
+      "flags": []
+    }
+  },
+  "saturation": {
+    "users": 25,
+    "resource": "host_cpu",
+    "branch": "run queue 14 > 6 vCPUs"
+  }
+}

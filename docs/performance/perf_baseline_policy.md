@@ -47,6 +47,28 @@ projection it serves decides what it may be used for.
 | **Migrate** | A MAJOR `schema_version` bump invalidates every baseline of the older MAJOR for comparison (schema §4). They stay readable and are re-recorded by a promotion that cites the cause, not converted: a converter would invent identity the old file never recorded. |
 | **Reject** | A missing baseline, an incompatible one, one without `cost_accounting_version`, or one whose cause cannot be shown is `INCONCLUSIVE`, never a pass and never a skip that reads as success. |
 
+### 2.1 Spread rule for re-recording a baseline (owner decision, 2026-10-16)
+
+**DRAFT: the owner approves this paragraph in the PR (P1 document).** Until then it records what was decided, not a rule in force.
+
+A re-recorded baseline is measured in fresh processes, one after the other; the run with the median average tick latency is the candidate, and the spread of the averages decides whether it may be promoted (`NOISY` above 15 %). **Rule, fixed per record by name in `tools/perf/rerun_baselines.py` (`MIDDLE_THREE_RECORDS`), never chosen at run time:**
+
+| Records | Runs | Candidate | Spread tested against 15 % |
+|---|---|---|---|
+| `idle_100_local`, `movement_100_local`, `combat_10_local` | 5 fresh-process runs | the median run | the middle 3: the lowest and the highest average dropped, spread = max / min of the other three, minus one |
+| every other record (including the corpus worlds and the `*_concurrent` records) | 3 fresh-process runs | the median run | all 3 |
+
+The promotion note lists **all** runs' averages, loadavg, swap and host-speed probes (not only the middle three), the spread over the middle 3 and the spread over all 5; the spread over all runs is recorded whichever rule decided. A record that still exceeds 15 % under its rule stays `PENDING-NOISY` in `baseline_invalidation_ledger.md`. Every measured run starts with a 1-minute load average below 1.5 and at least 2.5 GB available (`rerun_baselines.py record` waits up to 15 minutes before each run and refuses to start one outside that window, exit 1, nothing promotable), recorded in the note. This quiet-window precondition is a working rule of the perf sessions, not part of the owner's choice among the options below. This rule weakens the 15 % test for the three records it names (one slow and one fast run no longer count); it does not change `tripwire.TRIPWIRE_SCENARIOS`, `tripwire.NOISE_BUDGET` or any threshold of `compare`.
+
+*How it was decided.* Evidence: the T08 noise diagnosis (`TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES`) found the spread of these records to be a between-process level shift of the host (an identical allocation-free spin varied 4.3x on a quiet host), and `tripwire.py calibrate` had measured 0.35 head/base deviation with identical code. `lead-planner` put four options to the owner on 2026-10-16 (second ask, "Perf baseline spread rule for perf_baseline_policy.md (P1). My recommendation is (b), reasons above. Which do you choose?"):
+
+- **(a) Middle-3 spread**: "5 runs, median promoted, 15% spread on the middle 3, for the 3 noisy local records."
+- **(b) NOISE_BUDGET bound**: "Two tripwire records' spread bounded by tripwire.NOISE_BUDGET (0.35); all other records keep 15%; raw spread still recorded."
+- **(c) Keep 15% strict**: "Re-record under the probe and loadavg < 1.5; failures stay PENDING-NOISY."
+- **(d) Quieter runner**: "No policy change; record the two tripwire baselines elsewhere via a follow-up ticket."
+
+`lead-planner` recommended (b): the tripwire's own 0.35 noise budget means a 15 % baseline spread buys no detection, and (b) is the narrowest change. **The owner chose (a), "(a) Middle-3 spread", on 2026-10-16, over that recommendation, with no note.**
+
 `python3 tools/perf/baseline_lifecycle.py check` verifies the directory: every `tests/perf/baselines/*.json` is a valid `BenchmarkRecord` or
 is named in the legacy list (`LEGACY_TRIPWIRE_REFERENCES`, §4), and the version chain of each promoted baseline is intact (each version's
 `baseline_ref` matches the digest of the previous file, so an edited earlier version is found). `tests/unit/perf/test_baseline_lifecycle.py`
@@ -86,8 +108,8 @@ and the approval is the review of the PR that adds the file.
   benchmark; only the three `simq_corpus_*` files record 1,000 sampled ticks. Their percentiles use the old `sorted[int(n * q)]` method,
   and most of them predate DEV-017, so most are listed as needing a rerun or incomparable in the invalidation ledger.
 - The synthetic-scenario files (`idle_100_local.json`, ...) have the shape and file names produced by `tools/perf/run_benchmarks.py`. No
-  script copies them into `tests/perf/baselines/`; the only tool that writes there besides `baseline_lifecycle.py` is
-  `tools/bench_corpus_world.py --commit` (§6).
+  script copies them into `tests/perf/baselines/`; the only tool that writes there is `baseline_lifecycle.py promote`. `tools/bench_corpus_world.py`
+  no longer has `--commit` (`TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS`; §6).
 - **Two tripwire lanes, both through `compare()`** (`PERF-M2-T03`). The pull-request lane is `tools/perf/tripwire.py`: base and head are run paired on
   one runner, each side in a fresh process, over the declared scenario list (`TRIPWIRE_SCENARIOS`: 10 warmup and 50 sampled ticks, canonical contract).
   A scenario that is not `PASS` is run once more as a diagnostic; both outcomes are reported, and when they disagree the result is `INCONCLUSIVE`
@@ -98,7 +120,8 @@ and the approval is the review of the PR that adds the file.
   verdict table in the step summary and a `perf-tripwire` artifact (`report.json`: base and head SHA, runner CPU model, per-scenario outcomes). It is
   report-only: only an infrastructure failure or the job timeout fails the job. A non-`pull_request` event skips it and the summary says why.
 - `tools/perf/check_perf_regression.py` and `tools/perf/perf_ci.py` are retired: they were a second comparison with its own tolerance and no caller.
-- `PERF-M2-T08` re-records them as schema records under the canonical variants, through `promote`, and then retires the legacy list.
+- `PERF-M2-T08` (2026-10-13) re-recorded 5 of the 15 as schema records under the canonical variants, through `promote` (`resource_100_local`, `idle_100_concurrent`, `movement_100_concurrent`, `combat_10_concurrent`, `resource_100_concurrent`); `LEGACY_TRIPWIRE_REFERENCES` then listed the other 10 (6 now; see the next bullet). Each of those 10 is, in `baseline_invalidation_ledger.md`, one of: PENDING-NOISY (3 more runs would not settle a spread above 15 %), or not a baseline under canonical because the run leaves NORMAL (6 of them, including `mixed_200_*`, measured after the spawn-collision fix). The list is retired when the last one is re-recorded or deleted.
+- `PERF-M2-T08-NOISY` (`TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES`, 2026-10-16) re-recorded `simq_corpus_crowded_frontier` and `combat_10_local` through `promote` (v0001 each; owner decision 2026-10-16 "(a) Promote all four"; the spread rule is section 2.1). `combat_10_local.json` is deleted and the list was then 9. `simq_corpus_crowded_frontier.json` was later retired (`TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS`, 2026-10-18): the list was then 8, `--commit` is removed and the corpus test reads the promoted record. `idle_100_local` and `movement_100_local` were promoted on 2026-10-18 under the same decision (the owner gave testing's agreement on #613, testing to review after the fact; the nightly slow lane now compares against them, non-blocking), and their legacy files are deleted: the list is now 6.
 - No capacity-run baseline exists (`PERF-M2-T04`).
 
 The **known-debt ledger** (a baseline lane that is already red, with an owner and an expiry) is `docs/performance/known_debt_ledger.yaml`
@@ -132,20 +155,18 @@ synthetic scenarios (`combat_10`, `idle_100`, `mixed_200`, `movement_100`, `reso
 `strategic_100`, via `src/perf/scenarios.py`'s raw `State` builders) — none of the real, authored
 SimQ world corpus (`data/worlds/`) had ever been perf-measured.
 
-`tools/bench_corpus_world.py --world {name} [--commit]` benchmarks a real corpus world: reuses
+`tools/bench_corpus_world.py --world {name}` benchmarks a real corpus world: reuses
 `tools/calibrate_simq.py::_load_world_state()` to build the same real, `WorldCompiler`-compiled
 `AuthoritativeState` SimQ calibration uses (no synthetic content, no separate authoring), then runs
 `BenchHarness(PERF_PROFILES["PERF_512MB_LOCAL"]).run_benchmark(...)` — a genuinely separate,
 dedicated benchmark execution (NOT a free byproduct of a calibration run — `BenchHarness` runs its
-own warmup+sample tick loop). Writes the same raw-dict JSON shape as the existing baselines
-(`avg_tick_compute_ms`, `tick_ms{}`, `mem_rss_mb{}`, `phase_breakdown{}`), so
-`tests/perf/test_perf_regression_baseline.py`'s own real, live comparison logic applies unchanged
-— committed baselines are added as new `(scenario_id, builder_fn, kwargs)` rows in that file's own
-`parametrize` list.
+own warmup+sample tick loop). It prints the harness result and writes nothing (its `--commit` raw-dict writer was removed by
+`TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS`). A corpus baseline now has one path: `python3 tools/perf/rerun_baselines.py record
+simq_corpus_{world} --cause <TCK>` writes the candidate, and `baseline_lifecycle.py promote` (§2) commits `simq_corpus_{world}.vNNNN.json`.
 
 **Coverage so far**: `simq_corpus_frontier_extended` (59 entities), `simq_corpus_frontier_marches`
 (62 entities), `simq_corpus_crowded_frontier` (38 entities) — the corpus's largest 3 worlds by
 entity count at the time this ticket ran. Extending coverage to the remaining corpus worlds, or to
 `TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION`'s own new large world once it exists, is a
-natural follow-up using the same `tools/bench_corpus_world.py --commit` command — not automated in
+natural follow-up through `rerun_baselines.py record` and `baseline_lifecycle.py promote` — not automated in
 this ticket.

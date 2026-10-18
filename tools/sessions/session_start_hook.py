@@ -35,6 +35,7 @@ from tools.handover_home import handover_base  # noqa: E402
 SOURCES = ("startup", "resume", "clear", "compact")
 HANDOVER_CAP_CHARS = 8000
 ISSUE_SOURCES = ("startup", "resume", "clear")   # not `compact`: nothing new arrived and the list is already in context
+FRESHNESS_SOURCES = ISSUE_SOURCES  # TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START: startup, resume and clear (not `compact`: same worktree, same code)
 ISSUE_TIMEOUT_S = 3.0   # one `gh` call; slow or offline just means no list (TCK-20261011-SESSION-START-FOR-ROLE-ISSUES)
 ISSUE_SHOWN = 10
 ISSUES_OFF_ENV = "SESSION_START_ISSUES"   # set to "off" to skip the call
@@ -135,7 +136,11 @@ def _handover_text(role, root: Path, instance_id: str | None = None) -> str:
         return f"(no handover note yet at {rel}; create one at the first HARD reset boundary)"
     text = path.read_text(encoding="utf-8", errors="replace").strip()
     if len(text) > HANDOVER_CAP_CHARS:
+        # TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP: say it, do not only cut it
+        over = (f"session-roles: your handover note is {len(text)} chars, over the {HANDOVER_CAP_CHARS} cap; only the first "
+                f"{HANDOVER_CAP_CHARS} are shown below. Compact it at the next HARD boundary.\n")
         text = text[:HANDOVER_CAP_CHARS] + f"\n[... note cut at {HANDOVER_CAP_CHARS} chars; full file: {rel}]"
+        return over + f"Your handover note ({rel}):\n{text}"
     return f"Your handover note ({rel}):\n{text}"
 
 
@@ -163,7 +168,17 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
     if pid is not None:
         proc = st.process_identity(pid, proc_root)
 
-    previous = st.read_bindings(state_root, instance_id)
+    # TCK-20261015-SESSION-BINDINGS-TORN-TAIL: a damaged bindings history must never cost the session its card and
+    # handover note; it only costs the manifest-change comparison, and the session is told so.
+    history_notes: list[str] = []
+    try:
+        previous, torn = st.read_bindings_report(state_root, instance_id)
+        if torn:
+            history_notes.append(f"session-roles: {torn}")
+    except st.StateError as exc:
+        previous = []
+        history_notes.append(f"session-roles: the bindings history could not be read ({exc}); "
+                             "the manifest-change check is skipped this start.")
     prior_snapshot = st.read_role_file(state_root, instance_id, "manifest.json")
     prior_instance = st.read_instance(state_root, instance_id)
 
@@ -179,7 +194,7 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
     parts = [compose_card(role.role, roster, authority, root)]
     if instance_id != role.role:
         parts.append(f"session-roles: you are instance `{instance_id}` of role `{role.role}` (a second holder; the first is `{role.role}`).")
-    notes: list[str] = []
+    notes: list[str] = list(history_notes)
 
     # TCK-20261006-SESSION-START-CLEAR-FALSE-LIVE-HOLDER-WARNING: a `/clear` gives the SAME process a new session id, so the prior holder
     # recorded in this very process is this session's own superseded predecessor, not a second writer.
@@ -199,6 +214,20 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
                              "text already in your context may still describe the old, wider authority.")
         elif change is None:
             notes.append("session-roles: the manifest changed since your last binding (previous summary unreadable).")
+
+    # TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP: a /clear whose previous session declared no
+    # HARD boundary, or whose handover note changed after it, gets one advisory line. Never blocks, never raises.
+    if source == "clear" and prior_instance is not None and prior_instance.holder.session_id != binding.session_id:
+        try:
+            from tools.sessions import reset_boundary as rb
+            from tools.sessions.roster import handover_rel
+
+            sha = rb._sha256(handover_base(root) / handover_rel(role, instance_id))
+            advisory = rb.advisory_for_clear(rb.read_rows(root), prior_instance.holder.session_id, sha, instance_id)
+            if advisory:
+                notes.append(advisory)
+        except Exception:
+            pass
 
     wt = next((w for w in roster.worktrees if w.name == role.worktree), None)
     if wt is not None and wt.writer == role.role and instance_id == role.role:
@@ -220,6 +249,12 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
                 st.take_lease(state_root, worktree, instance_id, binding.session_id, proc, proc_root)
             except st.LeaseRefused as exc:
                 notes.append(f"session-roles: WRITER LEASE NOT TAKEN: {exc}")
+    if source in FRESHNESS_SOURCES:
+        from tools.sessions import settings_freshness as sf
+
+        line = sf.session_code_line(worktree)
+        if line:
+            notes.append(line)
     if link_shared_graph(worktree) == "linked":
         notes.append("session-roles: linked graphify-out to the main checkout's graph (read-only here; refresh it from the main checkout).")
     parts.extend(notes)

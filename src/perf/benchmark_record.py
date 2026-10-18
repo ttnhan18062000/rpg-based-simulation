@@ -32,7 +32,7 @@ import sysconfig
 import types
 import typing
 import uuid
-from dataclasses import dataclass, field, fields, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
@@ -56,7 +56,7 @@ from src.config.profiles import RuntimeProfile, SignalContract
 from src.core.governance import RuntimeMode
 from src.engine.work_units import WORK_MODEL_VERSION
 
-SCHEMA_VERSION = "1.1"  # 1.1 added the optional identity.runner section (additive: a MINOR bump, schema section 4)
+SCHEMA_VERSION = "1.3"  # 1.1 added the optional identity.runner section, 1.2 the optional after-collect keys of result.memory_mb, 1.3 the optional working_set_* keys of result.memory_mb (all additive: MINOR bumps, schema section 4)
 
 #: Source of ``result.cost_accounting_version`` (OD-8: a constant here, no engine edit). DEV-017 (#448) changed what a tick's and a phase's
 #: reported cost means, so a record without this value, or with another one, is not comparable on tick cost.
@@ -399,6 +399,81 @@ class BenchmarkRecord:
         """Rebuild a record. Unknown keys are ignored (a newer MINOR may add optional fields); a missing required field raises."""
         record: BenchmarkRecord = _from_plain(cls, data)
         return record
+
+
+# ── the memory pass (TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS) ───────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class MemoryPassReading:
+    """What an untimed, collector-on pass read at its end, with the identity it ran under so a merge can refuse a pass of another run.
+
+    ``rss_after_trim_mb`` is ``None`` where glibc's ``malloc_trim`` is unavailable; the working set then falls back to the after-collect reading.
+    """
+
+    scenario_id: str
+    seed: int
+    profile_name: str
+    warmup_ticks: int
+    sample_ticks: int
+    rss_before_mb: float
+    rss_after_collect_mb: float
+    rss_after_trim_mb: Optional[float]
+    blocks_delta: int
+    gc_collected: int
+
+    def to_dict(self) -> Dict[str, Any]:
+        """The JSON-ready form (the child process writes it, the parent reads it)."""
+        plain: Dict[str, Any] = _to_plain(self)
+        return plain
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "MemoryPassReading":
+        """Rebuild a reading; a missing field raises."""
+        reading: MemoryPassReading = _from_plain(cls, data)
+        return reading
+
+
+def working_set_mismatch(record: BenchmarkRecord, reading: MemoryPassReading) -> Optional[str]:
+    """Why ``reading`` is not a pass of ``record``'s run (scenario, seed, profile, tick counts), or ``None`` when it is."""
+    expected = {
+        "scenario_id": (record.identity.scenario.id, reading.scenario_id),
+        "seed": (record.identity.rng.seed, reading.seed),
+        "profile": (record.identity.config.profile_name, reading.profile_name),
+        "warmup_ticks": (record.result.protocol.warmup_ticks, reading.warmup_ticks),
+        "sample_ticks": (record.result.protocol.measured_ticks, reading.sample_ticks),
+    }
+    differing = [f"{key} {timed!r} (timed record) vs {seen!r} (memory pass)" for key, (timed, seen) in expected.items() if timed != seen]
+    return "; ".join(differing) if differing else None
+
+
+def with_working_set(record: BenchmarkRecord, reading: MemoryPassReading, declared_ram_mb: float) -> BenchmarkRecord:
+    """``record`` with the pass's ``working_set_*`` keys added to ``result.memory_mb``; nothing else changes (schema section 3.1).
+
+    ``rss_over_declared`` moves to the working-set basis (``working_set_mb / declared_ram_mb``) and says so with ``rss_over_declared_basis_working_set`` 1.0;
+    the ratio of the timed pass is kept as ``rss_over_declared_timed_pass``. Report only (OD-8): nothing reads these keys as a gate.
+    """
+    mismatch = working_set_mismatch(record, reading)
+    if mismatch is not None:
+        raise BenchmarkRecordError(f"the memory pass is not a pass of this record: {mismatch}")
+    trimmed = reading.rss_after_trim_mb is not None
+    working_set = reading.rss_after_trim_mb if reading.rss_after_trim_mb is not None else reading.rss_after_collect_mb
+    memory = dict(record.result.memory_mb)
+    if "rss_over_declared" in memory:
+        memory["rss_over_declared_timed_pass"] = memory["rss_over_declared"]
+    memory.update(
+        {
+            "working_set_mb": round(working_set, 2),
+            "working_set_delta_mb": round(working_set - reading.rss_before_mb, 2),
+            "working_set_basis_trim": 1.0 if trimmed else 0.0,
+            "working_set_allocated_blocks_delta": float(reading.blocks_delta),
+            "working_set_gc_collected_objects": float(reading.gc_collected),
+            "working_set_measured_ticks": float(reading.sample_ticks),
+            "rss_over_declared": round(working_set / declared_ram_mb, 4),
+            "rss_over_declared_basis_working_set": 1.0,
+        }
+    )
+    return replace(record, result=replace(record.result, memory_mb=memory))
 
 
 # ── serialization ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────

@@ -287,13 +287,13 @@ visual-assets-bundle-capture: ## Local only, CI never runs it: capture the rehea
 	$(PYTHON3) -m tools.visual_assets_bundle_capture
 
 lint-py: ## Lint Python under src/ with ruff (check only: no formatter, no --fix). Reports existing violations; the baseline ratchet is TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY
-	python3 -m ruff check src
+	$(PYTHON3) -m ruff check src
 
 code-health-size: ## Report modules/classes/functions over the length limits in [tool.code_health.size] (report-only)
-	python3 -m codebase.health.line_count src --flagged-only
+	$(PYTHON3) -m codebase.health.line_count src --flagged-only
 
 code-health-complexity: ## Report functions over the cognitive-complexity limit in [tool.complexipy] (report-only)
-	complexipy --failed --ignore-complexity
+	"$$($(PYTHON3) -c 'from codebase.health.scan import find_tool; print(find_tool("complexipy"))')" --failed --ignore-complexity
 
 # jscpd is a Node tool outside uv.lock; its version is pinned here and fetched with npx.
 JSCPD_VERSION ?= 5.4.0
@@ -302,12 +302,20 @@ code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (repor
 
 .PHONY: import-contracts
 import-contracts: ## Run the import-linter contracts in codebase/structure/importlinter.toml (advisory; also the `Import contracts` step of the code-health CI job). Prints the result, always exits 0
-	python3 -m codebase.structure.import_contracts advisory --annotate
+	$(PYTHON3) -m codebase.structure.import_contracts advisory --annotate
+
+.PHONY: replay-check
+replay-check: ## Reviewer demo: run the same seed twice under the Canonical signal contract and compare the final state hashes (about 1 minute; see docs/guides/reviewer_replay_check.md)
+	$(PYTHON3) -m codebase.reports.replay_check
+
+.PHONY: lint-imports
+lint-imports: ## Run every import-linter contract in codebase/structure/importlinter.toml with lint-imports' own full output and exit code (the `import-contracts` target prints only the one-line summary and always exits 0)
+	$(PYTHON3) -m codebase.structure.import_contracts report
 
 # `code-health` is the Python craft-debt ratchet (codebase/health/, codebase/baselines/code_health_exceptions.jsonl).
 # It is unrelated to the codebase-health-* targets, which belong to codebase/reports/codebase_health_*.py.
 code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than codebase/baselines/code_health_exceptions.jsonl (also the blocking `Code health` CI job; ruff, complexipy, ast-grep and line-count findings block while jscpd findings are listed but report-only, and a jscpd that cannot run, for example offline, is noted and skipped)
-	python3 -m codebase.health check
+	$(PYTHON3) -m codebase.health check
 
 # Ratchet over docs/parity_ledger/*.yaml against docs/parity_ledger/schema.json (TCK-20261003-PARITY-LEDGER-SCHEMA-RATCHET).
 parity-ledger-schema-check: ## Fail when any parity-ledger schema error count rose or a new error rule appeared against codebase/baselines/parity_ledger_schema_baseline.json (blocking; the tests/codebase live test runs it in CI)

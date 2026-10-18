@@ -156,7 +156,7 @@ def test_a_missing_baseline_is_inconclusive_with_a_named_reason(tmp_path) -> Non
 
 
 def test_a_legacy_reference_has_no_identity_so_it_is_inconclusive_not_a_skip() -> None:
-    record, reason = tw.load_baseline("idle_100_local")  # the committed legacy file
+    record, reason = tw.load_baseline("strategic_100_local")  # the committed legacy file
     outcome = tw.compare_with_baseline(record, reason, make_record())
     assert record is None and outcome.state is OutcomeState.INCONCLUSIVE and "legacy tripwire reference" in outcome.reason
 

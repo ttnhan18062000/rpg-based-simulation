@@ -1,0 +1,91 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS
+phase: done
+date: 2026-10-16
+tags: [performance, benchmarking]
+---
+
+# TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS
+
+## Title
+A benchmark record carries a real engine working-set figure from a separate, untimed, collector-on memory pass
+
+## Status
+DONE
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+This is the follow-up the owner chose ("(a) Close + follow-up", 2026-10-16, via lead-planner) when `TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE` closed with its AC1 NOT MET.
+
+That ticket added after-collect and after-`malloc_trim` RSS readings, taken after the timed window. On `simq_corpus_frontier_extended` (1000 ticks, `PERF_512MB_LOCAL`, canonical) the record now reads 311 MB after trim, against 1702 MB before. That figure is still an upper bound. The latency window runs with the collector disabled, and the garbage freed at the end leaves fragmented arenas that `malloc_trim(0)` cannot fully release.
+
+A diagnostic run of the same world with the collector ON gave 106 MB after trim (+5.6 MB over warm-up), and tracemalloc traced 26 MB retained over 1100 ticks. Live-block growth was the same with the collector off and on. So the engine's working set is about 106 MB, but no benchmark record carries that figure.
+
+## Scope
+1. **A separate memory pass.** For a benchmark record, run a second pass that is untimed and kept apart from the latency window. It uses the same scenario, seed and RunSpec tick counts, with the collector left enabled. At the end it collects, trims and reads RSS, live blocks and `gc.get_stats()` collected. The latency window, `protocol.gc_disabled` and every timed field are unchanged.
+2. **Where the pass runs.** The plan chooses, with its reason: either a fresh process (cleanest; the arenas aren't shared with the timed pass) or the same process after the timed pass (cheaper; the plan then shows the timed pass's retained arenas don't leak into the reading). Default: fresh process.
+3. **Cost control.** The pass roughly doubles a memory-carrying run's wall time. Run it opt-in per record or per tool (`rerun_baselines.py`, the corpus records), or for the corpus and memory-relevant records by default. The plan states which, and how a record says whether the pass ran.
+4. **Record fields.** Add optional `memory_mb` keys for the pass (e.g. `working_set_mb`, `working_set_delta_mb`, `working_set_basis`), with a MINOR schema bump. `rss_over_declared` moves to the working-set basis when it is present; the record says which basis was used. It stays report-only (OD-8). The schema doc edit is P1: the owner approves it.
+5. **Tests.** The pass runs with the collector enabled, outside every timed span. The timed fields are byte-identical with and without the pass. With a fake kernel making cyclic garbage per tick, the pass's working-set delta is small while the old `rss_delta` is large. The pass's absence leaves the record valid.
+
+## Out of Scope
+- Any change to the latency protocol, the tripwire RunSpecs, `NOISE_BUDGET` or compare thresholds.
+- Breaking the engine's reference cycles (rpg, #593).
+- The pydantic/uuid retained-growth candidate (#593 note; rpg's).
+- Any `src/` change outside `src/perf/`. Any memory gate (OD-8).
+
+## Acceptance Criteria
+- AC1: On `simq_corpus_frontier_extended` (the same RunSpec as the ledger line), a record carries the working-set reading from the pass, and its value matches the collector-on diagnostic (106 MB after trim, `TCK-20261015-...` investigation) within an error the plan states before the run. One local run is enough as evidence; it is not a baseline promotion.
+- AC2: The timed fields of a record are unchanged by the pass (test, plus one real record compared with and without the pass).
+- AC3: The declared-memory ratio uses the working-set basis when it is present and says so; it stays report-only (test).
+- AC4: The owner approves the schema doc change before the merge; the ledger's two corpus rows get the working-set figure.
+- AC5: Resource rule: one heavy run at a time, under the systemd-run memory cap; lead-planner is told before any run over about 3 GB.
+
+## Related Tickets
+- TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE (closed with AC1 NOT MET; owner decision (a)), TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION (#597, §5 as corrected), TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS (#591)
+
+## Related Docs
+- docs/performance/tick_cost_growth.md §5, docs/performance/benchmark_identity_schema.md, docs/performance/baseline_invalidation_ledger.md, docs/performance/perf_baseline_policy.md (OD-8)
+
+## Related Stored Artifacts
+- agent-working/stored_artifacts/TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE/ (investigation, rss_diagnose.py), once that ticket closes
+
+## Related Code Areas
+- src/perf/bench_harness.py, src/perf/benchmark_record.py, tools/perf/rerun_baselines.py, tests/unit/perf/test_bench_harness_memory.py
+
+## Assumptions / Open Questions
+- Fresh process vs same process is the plan's choice (scope 2), with the default being a fresh process.
+- Whether the pass should also run in the nightly tripwire lane: no, unless testing-planner asks for it.
+
+## Implementation Notes
+Design in staging plan.md (approved by perf-planner): `run_memory_pass` (fresh process, collector on, no clock), `MemoryPassReading` echoing scenario/seed/profile/ticks, `with_working_set` (adds `memory_mb` keys only; refuses an identity mismatch), schema 1.3, opt-in `rerun_baselines.py measure|record --memory-pass` (record: once, into the candidate). AC4's "two corpus rows" are the ledger rows of `simq_corpus_frontier_extended` and `simq_corpus_frontier_marches` (the two with the 1703 / 1568 MB readings); both rows now carry a figure (frontier_extended 101.38 MB, frontier_marches 102.15 MB).
+
+## Test Summary
+tests/unit/perf/test_memory_pass.py (23): collector on inside the pass and restored, no clock read, identity echoed, cyclic garbage in the timed `rss_delta` and not in the working set, merge changes `memory_mb` only, precedence per branch (pass present / absent), trim-unavailable fallback, all five identity mismatches refused, report-only for `compare`, older records load, CLI (merge, `.timed.json` kept, failing child, forged identity, `record` spawns exactly one child, off by default). Mutation proofs: collector left off, end collect skipped, ratio left on the timed basis: each fails the matching test. `make code-health` 0 new / 0 worse, mypy baseline gate rc=0, wall-clock inventory regenerated.
+Evidence run (2026-10-18, `measure --name simq_corpus_frontier_extended --memory-pass`, `PERF_512MB_LOCAL` canonical, 100 + 1000 ticks, tool quiet-window gate passed at loadavg1 1.47, 5.67 GB available): AC1 MET, `working_set_mb` 101.38 (bound 95.6 to 116.8), `working_set_delta_mb` 12.64 (bound < 25), basis trim; AC2 MET in-run, the merged record equals `frontier_extended.timed.json` outside `result.memory_mb` (schema 1.3 on both). AC5: one run under `systemd-run` MemoryMax=3G, peak cgroup memory 1707 MB, swap 0, loadavg1 0.87 at the end. Not a baseline.
+Second run (AC4's second row, a measurement with no stated bound): `simq_corpus_frontier_marches`, loadavg1 0.68 at start, `working_set_mb` 102.15, delta +2.24, timed fields identical to the unmerged record, child identity echoed (simq_corpus_frontier_marches, seed 42, PERF_512MB_LOCAL_CANONICAL, 100/1000), peak cgroup memory 1569 MB, swap 0.
+AC4: both rows filled; owner approval of the schema doc pending in the PR.
+
+## Files Changed
+src/perf/bench_harness.py (`run_memory_pass`), src/perf/benchmark_record.py (`MemoryPassReading`, `working_set_mismatch`, `with_working_set`, schema 1.3), tools/perf/rerun_baselines.py (`--memory-pass`, `apply_memory_pass`, `memory-pass` subcommand), tests/unit/perf/test_memory_pass.py (new), tests/unit/perf/test_benchmark_record.py (1.3 pin), docs/performance/benchmark_identity_schema.md (P1, owner approval pending in the PR), baseline_invalidation_ledger.md, tick_cost_growth.md (section 5), wall_clock_inventory.md and .json (regenerated), staging artifacts moved to agent-working/stored_artifacts/. Commits on `perf-corpus-records-and-memory-pass`: 5a74d40b8, 6b9dd5458, 5b5a40572 plus the closure commit. Raw run data: `reports/perf/mempass/` (git-ignored).
+
+## Completion Summary
+All five ACs met, with the schema doc approval pending.
+- AC1 MET: on `simq_corpus_frontier_extended` the record carries `working_set_mb` 101.38 (stated bound 95.6 to 116.8 MB around the 106.2 MB diagnostic; delta +12.64 MB, bound < 25), from one local run; not a baseline. A second run on `simq_corpus_frontier_marches` read 102.15 MB (delta +2.24 MB), a measurement with no stated bound.
+- AC2 MET: unit test (`with_working_set` changes `result.memory_mb` only) and, in the real run, the merged record equals the unmerged `<run>.timed.json` outside `memory_mb` for both worlds. Two separate timed runs cannot be compared byte for byte (host noise), which investigation.md records.
+- AC3 MET: `rss_over_declared` moves to the working-set basis when the pass ran and says so (`rss_over_declared_basis_working_set`); the timed ratio is kept as `rss_over_declared_timed_pass`; report-only by test.
+- AC4: both ledger rows filled; owner approval of the schema doc pending in the PR (the merge waits for it).
+- AC5 followed: one heavy run at a time under `MemoryMax=3G`, the tool's quiet-window gate (loadavg1 1.47 and 0.68 at start), peak cgroup memory 1707 and 1569 MB, swap 0.
+Gates: `make code-health` 0 new / 0 worse, mypy baseline rc=0, wall-clock inventory regenerated. Design choices approved by perf-planner: fresh process, opt-in `--memory-pass` (off by default and off in nightly), `record --memory-pass` runs the pass once into the candidate, the child's identity echo is checked before a merge.

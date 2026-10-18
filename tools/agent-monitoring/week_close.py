@@ -36,6 +36,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from monitoring_consolidation import DEFAULT_DATA_DIR, JSONL_KINDS, _default_csv_path_for  # noqa: E402
+
+#: What a week close folds: the three canonical kinds plus the gate-verdict ledger, so a closed week leaves no per-batch shard
+#: of any family that has them (TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW). `manual_actions.jsonl` and
+#: `role_boundary.jsonl` are bare per-week files with no per-batch shards, so there is nothing of theirs to fold.
+CLOSE_KINDS = (*JSONL_KINDS, "gate_verdicts")
 from monitoring_shard_paths import per_identifier_shard_paths  # noqa: E402
 from working_log_writer import consolidate_pending_rows  # noqa: E402
 
@@ -123,7 +128,7 @@ def close_week(week: str, data_dir: Path = DEFAULT_DATA_DIR, today: date | None 
     week_dir = Path(data_dir) / week
     if not week_dir.is_dir():
         raise WeekCloseError(f"no such week directory: {week_dir}")
-    result = {kind: _fold_kind(week_dir, kind) for kind in JSONL_KINDS}
+    result = {kind: _fold_kind(week_dir, kind) for kind in CLOSE_KINDS}
     result["working_log"] = consolidate_pending_rows(
         data_root=Path(data_dir), csv_path=_default_csv_path_for(Path(data_dir)), week=week
     )
@@ -149,12 +154,13 @@ def main(argv=None) -> int:
     if args.json:
         print(json.dumps(result, indent=2, sort_keys=True))
     else:
-        for kind in JSONL_KINDS:
+        for kind in CLOSE_KINDS:
             r = result[kind]
             print(f"{args.week} {kind}: {r['shard_files']} shard(s), {r['lines_in']} line(s) in, "
                   f"{r['lines_out']} out, {r['duplicates_dropped']} exact duplicate(s) dropped")
         wl = result["working_log"]
-        print(f"{args.week} working_log: folded {wl['shard_files']} shard file(s) ({wl['consolidated_rows']} row(s))")
+        print(f"{args.week} working_log: folded {wl['shard_files']} shard file(s) ({wl['consolidated_rows']} row(s)"
+              + (f", {wl['voided_rows']} voided, recorded in working_log_voids.jsonl" if wl.get("voided_rows") else "") + ")")
     return 0
 
 

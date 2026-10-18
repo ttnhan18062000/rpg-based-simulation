@@ -18,7 +18,7 @@ confirmed false-positive shape in the corpus (`git push` inside a `grep` pattern
 -n "git commit\\|git push\\|..."`) does not follow any of those three anchors and is excluded by
 construction, not by a special case.
 
-Three checks, each read-only against local refs (no network call — an offline-first design so this
+Four checks, each read-only against local refs (no network call — an offline-first design so this
 hook cannot itself become a source of the Fortiguard TLS-block failure mode this epic elsewhere
 defends against):
 
@@ -38,6 +38,11 @@ defends against):
   reliable discriminator this repo's own CLAUDE.md prose describes, operationalized as code. A
   branch merely behind `main` (no squash-merge involved) fails the ancestor/content conditions and
   is correctly never flagged.
+
+- **D — CI lanes this push touches (advisory).** `tools/delivery/ci_lanes.py` reads `.github/workflows/test.yml`
+  and, for `git diff --name-only <base>...HEAD`, names the path-filtered lanes that will run and the always-on lanes
+  whose pytest paths hold a changed file, plus the one command that runs them. It never runs a test (hook
+  timeouts) and says nothing when no lane is specifically touched.
 
 Every check degrades to "no finding" on any git-command failure (detached HEAD, no local
 `origin/main` ref, non-tracking branch) rather than raising — this hook must never traceback, and
@@ -166,6 +171,29 @@ def check_squash_merged_finished(run_command=default_run_command, base_ref: str 
     ]
 
 
+def check_ci_lanes(run_command=default_run_command, base_ref: str = "origin/main") -> List[str]:
+    try:
+        diff = run_command(["git", "diff", "--name-only", f"{base_ref}...HEAD"])
+        if diff.returncode != 0:
+            return []
+        changed = [p for p in diff.stdout.splitlines() if p.strip()]
+        if not changed:
+            return []
+        from tools.delivery import ci_lanes
+
+        workflow = ci_lanes.load_workflow()
+        names = [v.lane for v in ci_lanes.touched(workflow, ci_lanes.resolve(workflow, changed))]
+    except Exception:
+        return []  # an uncertain check says nothing
+    if not names:
+        return []
+    return [
+        f"pre-push: this push touches CI lane(s) {', '.join(names)} (CI also runs every unfiltered lane on a PR). "
+        "Run the touched ones first: `python3 -m tools.delivery.ci_lanes --run` "
+        "(`--list` shows the commands and hints)."
+    ]
+
+
 def run_all_checks(
     run_command=default_run_command,
     base_ref: str = "origin/main",
@@ -175,6 +203,7 @@ def run_all_checks(
     findings.extend(check_commit_subjects(run_command, base_ref, tickets_root))
     findings.extend(check_monitoring_shard_staged(run_command))
     findings.extend(check_squash_merged_finished(run_command, base_ref))
+    findings.extend(check_ci_lanes(run_command, base_ref))
     return findings
 
 
