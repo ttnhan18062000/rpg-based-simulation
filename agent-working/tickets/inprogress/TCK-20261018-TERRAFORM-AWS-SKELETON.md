@@ -91,7 +91,11 @@ None.
 - `terraform providers lock -platform=linux_amd64 -platform=darwin_arm64` per root; both `.terraform.lock.hcl` files are committed (aws 6.67.0, constraint `~> 6.67.0`, h1 and zh hashes for both platforms).
 - The scratch plugin cache, the scratch HOME and both `.terraform/` directories were deleted after the run.
 - **validated: tflint** (`ghcr.io/terraform-linters/tflint:v0.64.0@sha256:1c595f42...`, 36,596,657 bytes, run as my uid with no credentials and no token): `tflint --init` installed the aws ruleset v0.49.0 (79 MB unpacked in an ignored scratch dir on /data, deleted afterwards); `tflint --recursive --format compact` over `infra/terraform` printed no finding and exited 0. Bundled terraform ruleset 0.15.0 also ran. No inline disable was needed.
-- Pending: `trivy config` (needs the trivy image); its result and the accepted findings go here.
+- **trivy config** (`ghcr.io/aquasecurity/trivy:0.70.0@sha256:be1190af...`, 58,469,315 bytes; the same version trivy-action v0.36.0 installs by default; run as my uid with no credentials and no token; cache dir on /data, deleted afterwards). The checks bundle (`policy/` in the cache) is 3.1 MB. Trivy warned that the variable values were not found, so the evaluation is of the unresolved variables, which is how CI runs it too. Exit code 0 (report-only). **3 findings**, all `service/main.tf`, none in `bootstrap/`, none silenced inline (no `trivy:ignore`):
+  - **AWS-0104 CRITICAL** "A security group rule should not allow unrestricted egress to any IP address": accepted for the evidence-only skeleton. The Fargate task has a public IP and no NAT or load balancer, so it needs open outbound to pull its image from GHCR and reach package and DNS endpoints; narrowing it to a prefix list is a pre-apply task. The ingress rule is open only to the `allowed_cidr` variable (no default, validated), which trivy did not flag.
+  - **AWS-0017 LOW** "CloudWatch log groups should be encrypted using CMK": accepted. The group keeps one day of logs of a throwaway test service; a customer-managed key adds a KMS key (a recurring charge) for no gain here.
+  - **AWS-0034 LOW** "ECS clusters should have container insights enabled": accepted. Container Insights adds per-metric CloudWatch charges, which conflicts with the "cents per cycle" cost aim of 5c.
+  - Trivy did not report the task's public IP (`assign_public_ip = true`) as a finding; it is a deliberate choice (no NAT gateway) and is stated in the README.
 
 ## Files Changed
 (open)
