@@ -7,7 +7,7 @@ Written by hand. One PR for the folder (child 6 may stay behind), from a `platfo
 1. TCK-20261018-LOCUST-API-LOAD-TEST  (no deps; can be built while step 2 is in flight)
 1b. TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER  (before any further stack start: compose leaves root-owned data/runs otherwise; filed 2026-10-18 after the smoke run)
 2. TCK-20261018-API-LOAD-TEST-MEASURED-RUN  (needs 1; heavy, quiet machine arranged by lead-planner; profiled run through perf-planner)
-3. TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK  (needs 2 for the threshold, and step 2's dashboard PromQL)
+3. TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK  (needs 2 for the threshold, and step 2's dashboard PromQL); also needs S4 (devops-s4-base-alerts-local) for ntfy, the contact point and the policy (2026-10-18)
 4. TCK-20261018-REDIS-DOWN-CAUSE-ALERT  (needs 3; signal A, redis_exporter, decided by lead review 2026-10-18)
 5. TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD  (needs 1-4; heavy, run alone)
 6. TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT  (BLOCKED on rpg's ai_worker /metrics reaching main; may land later)
