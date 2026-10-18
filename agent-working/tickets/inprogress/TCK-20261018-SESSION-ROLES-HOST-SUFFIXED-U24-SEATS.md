@@ -89,7 +89,8 @@ GitHub #620 part 1. **Owner decision 2026-10-18, option (a)**, relayed by lead-p
 - registries/session_roles.yaml, tools/sessions/{validate,generate_agents,route,boundary,launch}.py
 
 ## Assumptions / Open Questions
-- **For the owner, via lead-planner:** on ubuntu, agent-working-planner and platform-planner are directed by lead-planner under the 2026-10-11 grant, while their registered dispatchers are user/designer. Should `lead-planner` be added to the plain `agent-working-planner` and `platform-planner` `accepts_dispatch_from`? The default if there's no answer is no change.
+- **Owner decision 2026-10-18 (via lead-planner): no change to `accepts_dispatch_from`.** Work flows from the owner to the domain planner, with lead relaying decisions and approving plans; lead-planner is not added to any planner's dispatch list.
+- **Dispatch waits for u24's answer on #634** (lead-planner): no defaults. The relaunch commands in this ticket and in the PR body carry u24's real worktree paths, never placeholders.
 - **For u24 (on #634):** the current worktree paths and the staffing of each u24 seat.
 
 ## Implementation Notes
