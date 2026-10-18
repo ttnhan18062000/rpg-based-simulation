@@ -23176,6 +23176,25 @@
   - world
   - faction
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED.md
+  ticket_id: TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED
+  title: '`src/core/state.py::fingerprint()` measured as a real, material per-call
+    cost at 1000-entity
+
+    scale — REPORT ONLY, not investigated'
+  tier: standard
+  ticket_type: chore
+  date: '2026-09-14'
+  related_code_areas:
+  - src/core/state.py::fingerprint()
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED/evidence.md
+  - agent-working/stored_artifacts/TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED/investigation.md
+  - agent-working/stored_artifacts/TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED/plan.md
+  - agent-working/stored_artifacts/TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED/test_plan.md
+  tags:
+  - performance
+- type: ticket
   path: agent-working/tickets/done/TCK-20260914-VENV-NAMING-CI-PARITY-SWAP.md
   ticket_id: TCK-20260914-VENV-NAMING-CI-PARITY-SWAP
   title: Default venv name points at the non-CI Python version — rename so `.venv`
@@ -23194,21 +23213,6 @@
   tags:
   - ai
   - process-improvement
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED.md
-  ticket_id: TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED
-  title: '`src/core/state.py::fingerprint()` measured as a real, material per-call
-    cost at 1000-entity
-
-    scale — REPORT ONLY, not investigated'
-  tier: standard
-  ticket_type: chore
-  date: '2026-09-14'
-  related_code_areas:
-  - src/core/state.py::fingerprint()
-  artifact_files: []
-  tags:
-  - performance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES.md
   ticket_id: TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES

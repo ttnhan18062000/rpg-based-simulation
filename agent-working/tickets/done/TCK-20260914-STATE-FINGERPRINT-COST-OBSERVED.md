@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED
-phase: open
+phase: done
 date: 2026-09-14
 tags: [performance]
 ---
@@ -16,7 +16,7 @@ tags: [performance]
 scale — REPORT ONLY, not investigated
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -115,6 +115,9 @@ _(not applicable — report-only ticket, no implementation performed)_
 ### Evidence from TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION (2026-10-15)
 `fingerprint` is in **0.0 %** of the py-spy samples of every non-audit profile (idle, combat, mixed, strategic, movement 100 to 2000, corpus worlds; pinned, canonical, live) and **3.5 %** under `audit_mode` (strategic_100); `docs/performance/tick_cost_growth.md` section 4. **Recommendation: update, not close.** Not a material tick cost with replay off; the profiles run `no_replay`, so the `kernel.py:664` REFINED_UPDATE path under `replay_allowed` is not measured; a replay-on profile would settle it.
 
+### Replay-on measurement (2026-10-18, PROVISIONAL)
+Tool `profile_tick.py --replay` (commit f116fafba); numbers in `docs/performance/tick_cost_growth.md` section 4 and the staging `evidence.md`. With replay allowed the cost is the phase-7 digest (`kernel.py:1131`): 9.2 % of tick-thread samples (strategic_100 pinned) and 27.1 % (corpus:frontier_extended canonical); the `kernel.py:664` fingerprint is 1.0 % and 1.1 %; the replay writer has no tick-thread samples and no buffer drops. Canonical `strategic_100` is SURVIVAL and replay is disallowed on 30 of 30 ticks, so it is a no-op there. **Above the 2 % line at both scales for the digest, not for `fingerprint()` itself: the ticket closes (its AC asks only that a confirmed candidate be routed into the epic's Gate-A process) and the digest is routed to PERF-M5-T04 as evidence; nothing is fixed here.** 33 measurement runs; 56 run directories (those and 23 from test runs) cleaned by run id with `done_checker_static --clean-data-runs`.
+
 ## Test Summary
 _(not applicable — report-only ticket, no implementation performed)_
 
@@ -122,4 +125,4 @@ _(not applicable — report-only ticket, no implementation performed)_
 _(none — report-only ticket)_
 
 ## Completion Summary
-_(pending future investigation)_
+`fingerprint()` is not material (about 1 % of the tick with replay on, at both scales); the material replay-on cost is the phase-7 digest (9 to 27 %), routed to PERF-M5-T04 as evidence (note added under the T04 row of the M5 epic); nothing fixed; PROVISIONAL (single host, `src/` not lifted). Numbers: `docs/performance/tick_cost_growth.md` section 4 and `evidence.md` (33 runs). AC1 met (call sites `kernel.py:664` and `:1131`, cadence every tick when replay is allowed, materiality at two scales); AC2 met (routed, not fixed ad hoc); AC3 n/a (the conclusion for `fingerprint()` itself is "not material").
