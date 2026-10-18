@@ -7684,6 +7684,23 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD.md
+  ticket_id: TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD
+  title: Find why a sub-second Aseprite job hits the 30 s `JOB_TIMEOUT_S` under host
+    load (flaky `tests/visual_assets/drawing/integration/test_ops.py`)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-18'
+  related_code_areas:
+  - visual_assets/drawing/config.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD/test_plan.md
+  tags:
+  - architecture
+  - testing
+- type: ticket
   path: agent-working/tickets/done/visual-asset-docs-sync/TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT.md
   ticket_id: TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT
   title: 'Sample-map gap report: say what is open now, and record the owner''s 2026-10-18
@@ -7708,20 +7725,6 @@
   tags:
   - architecture
   - documentation
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD.md
-  ticket_id: TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD
-  title: Find why a sub-second Aseprite job hits the 30 s `JOB_TIMEOUT_S` under host
-    load (flaky `tests/visual_assets/drawing/integration/test_ops.py`)
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-18'
-  related_code_areas:
-  - visual_assets/drawing/config.py
-  artifact_files: []
-  tags:
-  - architecture
-  - testing
 - type: ticket
   path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
   ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF
@@ -8330,6 +8333,24 @@
   tags:
   - platform
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES.md
+  ticket_id: TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES
+  title: 'Finish the baselines PERF-M2-T08 could not promote: diagnose the intrinsic
+    noise first, then re-record the NOISY and off-NORMAL records'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-14'
+  related_code_areas:
+  - tools/perf/rerun_baselines.py, tools/perf/baseline_lifecycle.py, tools/perf/tripwire.py,
+    src/perf/scenarios.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES/investigation.md
+  - agent-working/stored_artifacts/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES/plan.md
+  - agent-working/stored_artifacts/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES/test_plan.md
+  tags:
+  - performance
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION.md
   ticket_id: TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION
   title: 'Find where the tick cost grew since May: per-phase and per-call-site attribution
@@ -8454,21 +8475,6 @@
   artifact_files: []
   tags:
   - platform
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES.md
-  ticket_id: TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES
-  title: 'Finish the baselines PERF-M2-T08 could not promote: diagnose the intrinsic
-    noise first, then re-record the NOISY and off-NORMAL records'
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-14'
-  related_code_areas:
-  - tools/perf/rerun_baselines.py, tools/perf/baseline_lifecycle.py, tools/perf/tripwire.py,
-    src/perf/scenarios.py
-  artifact_files: []
-  tags:
-  - performance
-  - benchmarking
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES.md
   ticket_id: TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES
