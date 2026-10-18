@@ -349,3 +349,4 @@ crash.*.log
 backend.hcl
 .tf-plugin-cache/
 .tf-home/
+.tflint-plugins/

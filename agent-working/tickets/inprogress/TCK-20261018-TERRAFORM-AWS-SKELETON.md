@@ -90,7 +90,8 @@ None.
 - **validated** (2026-10-18, `hashicorp/terraform:1.16.5@sha256:c7926fea...` as my uid, no credentials, no backend, no plan): `fmt -check -recursive` exit 0; `init -backend=false` then `validate` on `bootstrap` and `service`: "The configuration is valid." for both, on top of the scoped deploy role. aws provider v6.67.0 (signed by HashiCorp), installed once into a scratch `TF_PLUGIN_CACHE_DIR` (789 MB unpacked, on /data) and shared by the two roots.
 - `terraform providers lock -platform=linux_amd64 -platform=darwin_arm64` per root; both `.terraform.lock.hcl` files are committed (aws 6.67.0, constraint `~> 6.67.0`, h1 and zh hashes for both platforms).
 - The scratch plugin cache, the scratch HOME and both `.terraform/` directories were deleted after the run.
-- Pending: `tflint --recursive` (needs the tflint image and the aws ruleset download) and `trivy config` (needs the trivy image); their results and the accepted trivy findings go here.
+- **validated: tflint** (`ghcr.io/terraform-linters/tflint:v0.64.0@sha256:1c595f42...`, 36,596,657 bytes, run as my uid with no credentials and no token): `tflint --init` installed the aws ruleset v0.49.0 (79 MB unpacked in an ignored scratch dir on /data, deleted afterwards); `tflint --recursive --format compact` over `infra/terraform` printed no finding and exited 0. Bundled terraform ruleset 0.15.0 also ran. No inline disable was needed.
+- Pending: `trivy config` (needs the trivy image); its result and the accepted findings go here.
 
 ## Files Changed
 (open)
