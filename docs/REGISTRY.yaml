@@ -7661,6 +7661,18 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-FOLDED-REDS-TERRAIN-ID-AND-GENERATOR-SPECIES.md
+  ticket_id: TCK-20261018-FOLDED-REDS-TERRAIN-ID-AND-GENERATOR-SPECIES
+  title: 'Fix two reds on rpg-next b23e78128: a test staging a terrain id the catalog
+    lacks, and the procedural generator emitting populations with no species'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-18'
+  related_code_areas:
+  - src/worldgeneration/generator.py, src/worldbuilding/diet_declaration.py, src/content/terrain_cost.py.
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-LOCUST-API-LOAD-TEST.md
   ticket_id: TCK-20261018-LOCUST-API-LOAD-TEST
   title: 'tools/loadtest: a Locust API scenario and a runner that records the method,
