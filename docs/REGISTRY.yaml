@@ -7801,6 +7801,21 @@
   - performance
   - benchmarking
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-MAKE-AGENT-MONITORING-INDEX-WORKS-WITHOUT-LOCAL-VENV.md
+  ticket_id: TCK-20261018-MAKE-AGENT-MONITORING-INDEX-WORKS-WITHOUT-LOCAL-VENV
+  title: '`make agent-monitoring-index` works in a worktree that has no `.venv` of
+    its own'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-18'
+  related_code_areas:
+  - agent-monitoring-index
+  artifact_files: []
+  tags:
+  - ai
+  - agent-monitoring
+  - setup
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-SEARCH-SHARED-SERVER-CWD-AND-TEST-RUNTIME-ISOLATION.md
   ticket_id: TCK-20261018-SEARCH-SHARED-SERVER-CWD-AND-TEST-RUNTIME-ISOLATION
   title: The shared search server runs with cwd = the main checkout, and no test can
@@ -7909,6 +7924,21 @@
   tags:
   - architecture
   - documentation
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261018-RETRO-GATE-FAILURES-ROW-CITES-LEDGER.md
+  ticket_id: TCK-20261018-RETRO-GATE-FAILURES-ROW-CITES-LEDGER
+  title: The retro Run Summary's "Gate failures" row cites the gate ledger's blocking
+    count instead of a misleading 0
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-18'
+  related_code_areas:
+  - _ledger_blocks
+  artifact_files: []
+  tags:
+  - ai
+  - agent-monitoring
+  - data-quality
 - type: ticket
   path: agent-working/tickets/inprogress/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
   ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24

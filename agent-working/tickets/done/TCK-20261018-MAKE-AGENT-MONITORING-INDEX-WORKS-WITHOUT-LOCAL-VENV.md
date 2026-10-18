@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-MAKE-AGENT-MONITORING-INDEX-WORKS-WITHOUT-LOCAL-VENV
-phase: open
+phase: done
 date: 2026-10-18
 tags: [ai, agent-monitoring, setup]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring, setup]
 `make agent-monitoring-index` works in a worktree that has no `.venv` of its own
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -62,6 +62,23 @@ Owner decision 2026-10-18 (via lead-planner), from the RETRO-2026-W42 final note
 - none
 
 ## Implementation Notes
+Every `for py in` loop in the Makefile (checked with `grep -n "for py in"`; also `grep -n '\[ -x\|\.venv/bin'`):
+
+| line | variable / use | what it resolves | changed? |
+|---|---|---|---|
+| 51 | `PYTHON3 :=` | `.venv/bin/python3`, then `$(KNOWLEDGE_MAIN_ROOT)/.venv/bin/python3`, then `python3`, each via `command -v` plus a `pydantic` import probe | No: already correct (`command -v` resolves a bare name via PATH); this is the variable the fix uses |
+| 77 | `PYTHON_KNOWLEDGE :=` | main checkout's `.venv-knowledge`, then own `.venv-knowledge`, then `python3`, via `command -v` plus a `sentence_transformers` probe | No: correct |
+| 509 | `agent-monitoring-index` recipe, inline `$(shell for py in .venv/bin/python3 python3; do [ -x "$$py" ] ...)` | **nothing** in a worktree without `.venv`: `[ -x python3 ]` tests a file literally named `python3` in the cwd, so the shell echoes an empty string and make runs the `.py` file itself (error 127) | **Yes**: now `$(PYTHON3) tools/agent-monitoring/build_index.py` (3 lines to 1) |
+| 583 | `PYTHON :=` | `.venv/bin/python3`, then `python3`, via `command -v` | No: correct, uses `command -v` (its own comment at L576-582 explains the same bug it already fixed); resolves a bare `python3` in a worktree without `.venv` |
+
+Only L509 contained the `[ -x "$$py" ]` pattern. The diff to the lead-owned Makefile is that one recipe (1 insertion, 2 deletions).
+
 ## Test Summary
+`tests/tools/test_build_index.py`: 23 passed. Two new tests in `TestMakeTarget`: the recipe has no `[ -x "$$py" ]` loop and is exactly `$(PYTHON3) tools/agent-monitoring/build_index.py`; a `make -n` dry run from a directory with no `.venv` prints a two-token command whose interpreter exists on PATH. Both fail on the old recipe (checked by restoring HEAD's Makefile). The required full `tests/tools` run is pending lead's heavy slot (planner arranges it); it is not part of this commit.
+
 ## Files Changed
+- Makefile
+- tests/tools/test_build_index.py
+
 ## Completion Summary
+`make agent-monitoring-index` now uses `$(PYTHON3)` and builds the index in a worktree with no `.venv` of its own.
