@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT
-phase: inprogress
+phase: done
 date: 2026-10-15
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 `test_every_new_job_installs_with_uv_from_the_lockfile` compares the setup-uv action by name, not by its exact version
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -43,7 +43,7 @@ The test is about "every new job installs with uv", not about which setup-uv ver
 - [x] AC1: the assertion no longer contains a version literal. The test still fails if a new job has no `astral-sh/setup-uv` step.
 - [x] AC2: there is a regression case for the version-agnostic match, as in Scope 2.
 - [x] AC3: `pytest tests/tools/test_ci_split_tools_jobs.py` passes on main.
-- [ ] AC4: after merge, `@dependabot rebase` on #571 turns Tools · a–e green. Record the run in Completion Summary, or note that the user or platform did the rebase.
+- [x] AC4: after merge, `@dependabot rebase` on #571 turns Tools · a–e green. Record the run in Completion Summary, or note that the user or platform did the rebase.
 
 ## Related Tickets
 - TCK-20261014-ACTIONS-MAJORS-COMBINED (#588, made the tests/static pins name-based)
@@ -72,3 +72,4 @@ The test is about "every new job installs with uv", not about which setup-uv ver
 - tests/tools/test_ci_split_tools_jobs.py
 
 ## Completion Summary
+Done in #602 (merged 2026-10-15, 44405a5e9). AC4: Dependabot #571 (head dee847879) merged 2026-10-15T10:43Z after #602 with Tools · a–e and Tools · f–z both SUCCESS; the rebase was done by Dependabot/the owner, not by testing-implementer. The ticket is closed in the next testing PR (frontend path filter), as testing-planner directed.
