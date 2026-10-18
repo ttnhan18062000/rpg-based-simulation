@@ -86,7 +86,7 @@ None.
 - PASS: `compose config -q` (default and observability); tests/architecture/test_docker_compose_dependency_hygiene.py, tests/tools/test_session_platform_domain.py, tests/static/test_ci_narrow_path_filtered_jobs.py, tests/codebase/test_repo_root_allowlist.py.
 - Runtime, 2026-10-18, local (lead CLEAR via planner). Build alone: 54 s. Memory before `up`: available 5.9 GB, swap 2.4 GB; after `down`: 5.9 GB / 2.4 GB.
   - `docker compose exec backend id` and `exec ai_worker id`: `uid=1000(app) gid=1000(app)`. backend `healthy`, ai_worker `Up` (it has no healthcheck), frontend and redis `healthy`.
-  - Watchdog: NOT run. It is in the `observability` profile, not the default one, so it was not started (`exec watchdog id` says "not running"). Its image is the same Dockerfile with the same `USER`, but a run proof for it needs an observability start.
+  - Watchdog (default-profile run only; proven later, see the Watchdog bullet below): NOT run. It is in the `observability` profile, not the default one, so it was not started (`exec watchdog id` says "not running"). Its image is the same Dockerfile with the same `USER`, but a run proof for it needs an observability start.
   - `ls -ln data/runs` after the run: the new `run_1792267369_...` dir is `1000 1000`; the old `run_1792263138_...` stays `0 0` (the owner's to remove, not touched). Files inside are 1000:1000, and `touch /app/data/x` works in the backend.
   - Logs: no PermissionError and no HOME or cache error in backend or ai_worker. `HOME=/home/app`, which does not exist (`--no-create-home`), and nothing needed it, so no `ENV HOME` change was made.
   - No `src/` writer outside `/app/data` fired in `serve` or in the anomaly worker (it started and wrote its output without error).

@@ -84,13 +84,11 @@ To be created: this ticket's raw CSVs and manifest.
   Lead-planner decides whether that is enough to set the SLO.
 
 ## Implementation Notes
-(open)
 - Profiling overlay (prep, 2026-10-18): `tools/loadtest/compose.profile.yaml` adds only `cap_add: [SYS_PTRACE]` and a read-only mount of `${PY_SPY_BIN:?...}` at `/opt/py-spy` to the backend. Used for the profiled hold only; the throughput and obs-on runs never load it. Command and the label text ("py-spy nonblocking 100 Hz attached during the hold; latency during the hold is not a measured figure") are in `tools/loadtest/README.md` ("Profiled hold"). The `/proc` PID lookup there has not been run yet.
 - PR-body item: SYS_PTRACE in tools/loadtest/compose.profile.yaml only: owner-approved security choice, 2026-10-18.
 
 ## Test Summary
 - Prep: `compose -f compose.yaml -f tools/loadtest/compose.loadtest.yaml -f tools/loadtest/compose.profile.yaml config -q` passes with PY_SPY_BIN set and fails with 'required variable PY_SPY_BIN is missing a value' without it; the two-file config (no overlay) has no SYS_PTRACE. Loadtest, compose hygiene, platform domain and repo-root tests: 36 passed.
-(open)
 - Window 2026-10-18 (lead CLEAR via planner). Raw data in `agent-working/staging_artifacts/TCK-20261018-API-LOAD-TEST-MEASURED-RUN/` (`run-baseline-…`, `run-profiled-…`, `run-obs-on-…`, `profile.raw`, `profile.speedscope.json`). Fleet: 10 Claude sessions idle-ish plus their MCP servers, 7 github-mcp containers; other seats held heavy work. Commit 888a0761b, tree dirty (ticket text only). Locust run in a systemd scope (MemoryMax 2G) with its own scratch venv (locust 2.46.7). Memory stayed at about 5.5-5.9 GB available, swap 2.4 GB.
 - Baseline (default profile, observability off, 990 keys, ceiling 2970 req/s, 0.0% 429 and 5xx, no failure rows): users 10 / 25 / 50 / 100 / 200 -> req/s median 409.6 / 227.7 / 116.1 / 125.9 / 134.8; p95 51 / 250 / 930 / 1500 / 2900 ms; backend CPU peak 150-161% of one core; Locust CPU peak 55 / 42 / 27 / 30 / 30%; idle baseline host CPU 12%. Saturation flag: host_cpu at 25 users.
 - Throughput FALLS with users in the baseline, which closed-loop users should not do. A fresh backend (profiled hold, 25 users) gave 377 req/s, and the obs-on pass (fresh stack, 50 and 100 users) gave 421.5 and 424.0 req/s. So the decline is not an effect of user count; it follows the backend's age or state in the first run. Cause unproven. Open for the next run: one step on a fresh backend, repeated after a soak; check `_prune_idle_clients` with a 990-entry client table (7.8% of samples in the profile).
@@ -99,12 +97,13 @@ To be created: this ticket's raw CSVs and manifest.
 - 6b: no 429 in any step (zero failure rows), the 9 pool 429s did not reproduce.
 - Whitespace-guard check: PASS (Grafana exits and restart-loops with the guard message on a whitespace-only secret; secret restored, sha256 identical, Grafana healthy).
 - Grafana fresh-volume check: still PENDING (the owner has not told the implementer directly).
-- Watchdog: running but `id` = uid 0, because `platform-watchdog` was a stale image from before the non-root change (the earlier `docker compose build` ran without `--profile observability`). Needs `--profile observability build watchdog` and a start.
-- Engine tick rate per step: not captured (the status key was read once per run).
+- Watchdog: in window 1 `id` was uid 0 because `platform-watchdog` was a stale image from before the non-root change (the earlier `docker compose build` ran without `--profile observability`). Fixed in window 2: after `docker compose --profile observability build watchdog` and an observability start, `exec watchdog id` = `uid=1000(app) gid=1000(app)`.
+- Engine tick rate per step: not captured in window 1 (the status key was read once per run). From commit `f83cbde54` the runner reads it at the start and end of every repeat; windows 2 and 3 have it (about 7.0-8.7 ticks/s in every step).
+- Windows 2 and 3 (age soak, fresh and aged py-spy profiles, fresh-backend curve, aged curve at the `/entities` cap): results are in `docs/runbooks/records/2026-10-18-api-load-test.md` sections 3-6; the raw run dirs are in this ticket's stored artifacts.
 
 ## Files Changed
-(open)
 `tools/loadtest/compose.profile.yaml`, `tools/loadtest/README.md` (profiled-hold prep).
+`docs/runbooks/records/2026-10-18-api-load-test.md` (new), `registries/session_roles.yaml` and `.claude/agents/session-platform-{implementer,planner}.md` (`docs/runbooks/**` owned by platform), `tools/loadtest/run.py`, `tools/loadtest/summary.py` and `tests/tools/test_loadtest_summary.py` (per-step engine reading, commit `f83cbde54`), the stored artifacts of this ticket, this ticket.
 
 ## Completion Summary
 The measured run, the age soak, the fresh and aged py-spy profiles, the fresh-backend curve and the aged curve at the `/entities` page cap were run on 2026-10-18 and are recorded in `docs/runbooks/records/2026-10-18-api-load-test.md` (label: measured, running locally). Raw CSVs, manifests, `profile*.raw` and the speedscope JSON are in this ticket's stored artifacts (the `.json` files are force-added because `.gitignore` hides `stored_artifacts/**/*.json`).
