@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-18T05:07:02.629757Z", "ticket_id": "TCK-20261018-TEMPO-TRACE-BACKEND", "title": "Tempo trace backend in the observability profile", "status": "DONE", "summary": "Tempo 3.0.3 added with Grafana datasource, runtime-proven with a synthetic trace.", "artifacts_path": "agent-working/stored_artifacts/TCK-20261018-TEMPO-TRACE-BACKEND"}

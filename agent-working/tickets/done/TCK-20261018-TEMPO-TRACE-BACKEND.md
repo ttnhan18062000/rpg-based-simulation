@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-TEMPO-TRACE-BACKEND
-phase: open
+phase: done
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 Compose: Grafana Tempo in the observability profile as the OTLP trace backend, with a Grafana datasource linking traces to logs and metrics
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -111,4 +111,10 @@ None.
 `compose.yaml`, `docker/tempo.yaml`, `docker/grafana/provisioning/datasources/datasource.yml`, this ticket.
 
 ## Completion Summary
-(open)
+Tempo 3.0.3 (digest-pinned, 512m, 24h retention, local storage, OTLP gRPC/HTTP, no host port) is in the observability profile, with a provisioned Grafana datasource `tempo` whose health test passes. The backend gets `OTEL_EXPORTER_OTLP_ENDPOINT` (empty by default) and `OTEL_SERVICE_NAME` from compose. Peak memory is in the Test Summary (tempo 35 MiB of 512m).
+
+How the synthetic trace was found: the span was sent to Tempo over OTLP/HTTP and read back **through Grafana's datasource proxy API** (`/api/datasources/proxy/uid/tempo/api/traces/<id>`), the Grafana API that the Explore UI sits on, not through the Explore UI itself. The AC says "found by trace id in Grafana Explore": **Explore UI view not done.** This is a stated gap, not a met criterion.
+
+Deferred to `TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF` (after rpg's R3 spans): the trace-to-logs and trace-to-metrics checks, the Loki `derivedFields` entry, the sampling variable and the exporter port choice.
+
+Staging artifacts (plan, investigation, test plan) were written retrospectively at close, on 2026-10-18.

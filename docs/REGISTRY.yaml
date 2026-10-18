@@ -7136,6 +7136,18 @@
   - determinism
   - visualization
 - type: doc
+  path: docs/runbooks/records/2026-10-18-api-load-test.md
+  title: 'API load test (2026-10-18): age effect, /entities page cap and proposed
+    SLO'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+  - performance
+- type: doc
   path: docs/simulation/domains/perception_contract.md
   title: Perception Domain Contract
   status: historical
@@ -7592,6 +7604,20 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-TEMPO-TRACE-BACKEND.md
+  ticket_id: TCK-20261018-TEMPO-TRACE-BACKEND
+  title: 'Compose: Grafana Tempo in the observability profile as the OTLP trace backend,
+    with a Grafana datasource linking traces to logs and metrics'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
   ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF
   title: 'Grafana: one provisioned API dashboard (rate, errors, latency percentiles
@@ -7644,20 +7670,6 @@
   date: '2026-10-18'
   related_code_areas:
   - docker/prometheus.yml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-TEMPO-TRACE-BACKEND.md
-  ticket_id: TCK-20261018-TEMPO-TRACE-BACKEND
-  title: 'Compose: Grafana Tempo in the observability profile as the OTLP trace backend,
-    with a Grafana datasource linking traces to logs and metrics'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
   artifact_files: []
   tags:
   - platform
