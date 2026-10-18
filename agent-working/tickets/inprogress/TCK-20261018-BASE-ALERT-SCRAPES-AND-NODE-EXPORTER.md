@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER
-phase: open
+phase: inprogress
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 Prometheus: scrape the observability services and a new node-exporter; drop the always-401 backend:8000 job
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -76,10 +76,13 @@ None.
 - The host mounts to watch are `/` and `/data` (both about 70 % used on 2026-10-18).
 
 ## Implementation Notes
-(open)
+- `docker/prometheus.yml`: the `rpg-backend` `backend:8000` job is removed (a comment says why and where `backend:9109` comes back). New jobs: `prometheus` (localhost:9090), `grafana` (grafana:3000/metrics), `loki` (loki:3100/metrics), `tempo` (tempo:3200/metrics), `node-exporter` (node-exporter:9100). The `ntfy` job is added in `TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES` (ntfy is not defined yet).
+- `compose.yaml`: `node-exporter` service, `prom/node-exporter:v1.12.1` (2026-07-14, latest stable at least two weeks old) with the multi-arch index digest from a registry query (no pull). Observability profile, `mem_limit: 64m` as a PLACEHOLDER until the RSS is measured, `/:/host:ro,rslave`, `--path.rootfs=/host`, only the filesystem collector (`--collector.disable-defaults`), pseudo filesystem types excluded by `fs-types-exclude`. No privileged, host network, host PID or host port. No healthcheck (static binary); `up{job="node-exporter"}` is the probe.
+- Lead's note 4: record the RSS before fixing `mem_limit`, and confirm series for both `/` and `/data`.
 
 ## Test Summary
-(open)
+- **validated:** `docker compose config -q` for the default and the observability profile; YAML parse; `promtool check config` from the pinned Prometheus image (`SUCCESS: valid prometheus config file syntax`).
+- Not yet run (needs the node-exporter pull and the single stack run, both asked of platform-planner/lead): targets `up`, `node_filesystem_avail_bytes` for `/` and `/data`, node-exporter RSS and the `mem_limit`, Grafana `/metrics` without auth.
 
 ## Files Changed
 (open)

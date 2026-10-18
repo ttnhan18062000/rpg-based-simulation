@@ -23,3 +23,7 @@ Written by platform-planner at filing (2026-10-18); the implementer updates it a
 
 ## Scope guards
 No `src/**`, no `tests/**`, no Alertmanager, no host network/PID/privileged for node-exporter.
+
+## Update (implementer, 2026-10-18)
+- Steps 1, 2 and 4 done (config checks green). Lead's notes: record node-exporter RSS before setting `mem_limit` (placeholder 64m now), confirm `/` and `/data` series. The pull (step 3) and the live check wait for platform-planner's relay; the single stack run covers C1's, C2's and C3's live checks.
+- The `ntfy` scrape job moves to C2 (ntfy does not exist yet).

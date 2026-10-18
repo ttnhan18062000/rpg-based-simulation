@@ -122,6 +122,25 @@ services:
       backend:
         condition: service_healthy
 
+  node-exporter:
+    profiles: ["observability"]
+    # Host filesystem metrics for the disk alerts (TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER). Pinned by tag and
+    # multi-arch index digest (v1.12.1, 2026-07-14); Dependabot bumps it. No privileged, no host network, no host PID, no host
+    # port: Prometheus reaches it by service name. The host root is mounted read-only at /host (rslave so a separate mount
+    # such as /data shows up under /host/data) and read through --path.rootfs. Only the filesystem collector is enabled,
+    # which is all the rules need; pseudo filesystems are excluded by type.
+    image: prom/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+    mem_limit: 64m # placeholder until the measured RSS is recorded (see the ticket)
+    command:
+      - '--path.rootfs=/host'
+      - '--collector.disable-defaults'
+      - '--collector.filesystem'
+      - '--collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tmpfs|tracefs)$'
+    volumes:
+      - /:/host:ro,rslave
+    restart: unless-stopped
+    # No healthcheck: the image is a single static binary with no shell or wget; Prometheus' `up{job="node-exporter"}` is the probe.
+
   grafana:
     profiles: ["observability"]
     image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f

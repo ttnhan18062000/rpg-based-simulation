@@ -50,8 +50,9 @@ Grafana and in `up`.
 
 ## Out of Scope
 - The Redis-stop drill under load (step 3, needs the SLO and Redis cause alerts).
-- Disk alerts are not drilled by filling a disk; `DiskSpaceLow` is proven by evaluating its query (free % per mount)
-  and, if lead agrees, by a temporary env-override threshold, never by editing the committed one.
+- Disk alerts are not drilled by filling a disk. `DiskSpaceLow` is proven by query only (lead decision, 2026-10-18): run the
+  rule expression in Explore or the Prometheus API with a threshold above the current free %, and record the output. No
+  env-override threshold exists; the committed value stays 15 %.
 
 ## Acceptance Criteria
 - The drill record exists with all timestamps and the ntfy evidence (**running locally**).
