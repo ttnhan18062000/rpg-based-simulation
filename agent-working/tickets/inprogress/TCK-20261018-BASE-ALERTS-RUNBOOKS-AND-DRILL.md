@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL
-phase: open
+phase: inprogress
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 Runbooks for the base alerts, the docs/runbooks index, and one recorded drill (stop Loki, alert reaches ntfy, recover)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -76,10 +76,13 @@ None.
   configured values next to the measured times.
 
 ## Implementation Notes
-(open)
+- Written before the stack run: `docs/runbooks/README.md` (index with the alert -> runbook -> drill table, silence, escalation), `target-down.md`, `disk-space.md`, `alerting-pipeline.md`. Each states what the alert means, the first three checks, known causes, mitigation, silence and escalation, the rule's `for`, thresholds with the reason, and its `noDataState`/`execErrState`. Frontmatter validated. The rules' `runbook_url` values (`docs/runbooks/target-down.md`, `disk-space.md`, `alerting-pipeline.md`) match these paths.
+- Lead's note 1: `DiskSpaceLow` is proven by query only (the expression run in Explore or the Prometheus API with a threshold above the current free percent, output recorded). No override threshold; the committed 15 percent stays. The Out of Scope line was edited to match, in the C1 commit.
+- The drill record (`docs/runbooks/records/<run date>-target-down-drill.md`), the `docker stats` peak table and `make knowledge-index-update` come after the single stack run.
 
 ## Test Summary
-(open)
+- **validated:** frontmatter of the four new docs (`validate_frontmatter.py`: no violations).
+- Not yet run: the drill (stop Loki, T0..T5), the disk-query proof, the `docker stats` peak table. They need the single stack run, asked of platform-planner/lead after the two pulls.
 
 ## Files Changed
 (open)

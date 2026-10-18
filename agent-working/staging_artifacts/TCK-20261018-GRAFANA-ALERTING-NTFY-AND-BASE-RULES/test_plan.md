@@ -22,3 +22,12 @@ Written by platform-planner at filing (2026-10-18); the implementer updates it a
 | compose valid, ntfy on 127.0.0.1 | static | config check | none | exit 0; port bound to 127.0.0.1 | `docker compose --profile observability config` |
 
 No `tests/**` changes (D-4).
+
+## Live-check rows (added at planner review; proven in the single stack run)
+| # | check | oracle | expected |
+|---|---|---|---|
+| L1 | `$$labels` is an escape, not a literal | one firing ntfy message | the summary shows the job name, not `$labels` or `$$labels` |
+| L2 | `$__file{}` expands inside nested `payload.vars.topic` and `authorization_credentials` | `GET /api/v1/provisioning/contact-points` | the token shows as redacted or set, never the literal `$__file{...}`; the token itself is never printed |
+| L3 | the `coll.Dict` / `data.ToJSON` template makes valid ntfy JSON | the message arrives | title, priority and tags are present |
+| L4 | `grafana_alerting_notifications_failed_total` exists | Grafana `/metrics` | present; otherwise fix the rule |
+| L5 | node-exporter mountpoints read `/` and `/data` with no `/host` prefix | `node_filesystem_avail_bytes` series labels | both mounts present, so the disk regex matches |
