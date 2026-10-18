@@ -376,8 +376,8 @@ def _build_population_seeding_world_spec() -> WorldSpec:
             # bounds sized generously (60x60 = 3600 tiles) relative to the 1000-entity
             # citizen_group below, so LAW-SPAWN-OCCUPANCY's collision-reroll/raster-fallback
             # path (cohort spawn tile resolution) isn't exercised under heavy oversubscription.
-            {"id": "town_square", "type": "town", "bounds": [0, 0, 60, 60], "terrain": "GRASS"},
-            {"id": "empty_outpost", "type": "wilderness", "bounds": [70, 70, 75, 75], "terrain": "PLAIN"},
+            {"id": "town_square", "type": "town", "bounds": [0, 0, 60, 60], "terrain": "grass"},
+            {"id": "empty_outpost", "type": "wilderness", "bounds": [70, 70, 75, 75], "terrain": "plain"},
         ],
         "factions": [
             {"id": "villagers", "type": "civilian"},

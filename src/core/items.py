@@ -113,19 +113,10 @@ class ItemRegistry:
                 if not display_name:
                     display_name = item_id.replace("_", " ").title()
                 
-                categories = getattr(v, "categories", []) or (v.get("categories", []) if isinstance(v, dict) else [])
+                categories = _declared_categories(v, item_id)
                 base_value = getattr(v, "base_value", 0.0) or (v.get("base_value", 0.0) if isinstance(v, dict) else 0.0)
                 
-                # Resolve ItemKind
-                kind = ItemKind.MATERIAL
-                if "weapon" in categories:
-                    kind = ItemKind.WEAPON
-                elif "armor" in categories:
-                    kind = ItemKind.ARMOR
-                elif "consumable" in categories:
-                    kind = ItemKind.CONSUMABLE
-                elif "currency" in categories:
-                    kind = ItemKind.CURRENCY
+                kind = _kind_of(categories)
                 
                 # Resolve weight and stack_size
                 metadata = getattr(v, "metadata", {}) or (v.get("metadata", {}) if isinstance(v, dict) else {})
@@ -223,6 +214,23 @@ class ItemRegistry:
             else:
                 # Native ItemDefinition
                 cls._items[k] = v
+
+
+def _kind_of(categories: Any) -> ItemKind:
+    """The item kind a catalog item's categories name; one that names none of them is OTHER (a gap, not a default material)."""
+    for category, kind in (("weapon", ItemKind.WEAPON), ("armor", ItemKind.ARMOR), ("consumable", ItemKind.CONSUMABLE),
+                           ("currency", ItemKind.CURRENCY), ("material", ItemKind.MATERIAL)):
+        if category in categories:
+            return kind
+    return ItemKind.OTHER
+
+
+def _declared_categories(source: Any, item_id: str) -> Any:
+    """An item's declared categories; an item with none does not compile (the category decides, for one, whether a shop buys it)."""
+    categories = getattr(source, "categories", []) or (source.get("categories", []) if isinstance(source, dict) else [])
+    if not categories:
+        raise ValueError(f"item {item_id!r} declares no categories; every item needs one (it decides whether a shop buys it)")
+    return categories
 
 
 def _food_properties(source: Any, props: Dict[str, Any]) -> None:

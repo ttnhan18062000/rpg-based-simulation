@@ -218,8 +218,8 @@
   v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11. src/engine/tactical.py (a VANGUARD at an identified chokepoint holds with movement mode HOLD and an ENTITY_ACT HOLD, reason HOLD_CHOKEPOINT); src/engine/domain/action_router.py (HOLD is a typed no-op success); src/engine/pipeline_phases/actions.py (a HOLD success ends its task so the brain re-decides on its cadence).'
   proof_type: regression
   test_path: tests/unit/combat/test_chokepoint_hold.py
-  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.90.
-  support_boundary: 'The hold was reported as UNSUPPORTED_ACTION on every emission before (the tile was still held by the movement mode); the reporting is the only change. The path needs WALL tiles with a one-tile gap and is not reached in the pinned corpus worlds (0 decisions in 30 runs).'
+  divergence_note: See docs/guidelines/intentional_divergences.md Sections 2.90 and 2.130.
+  support_boundary: 'The hold was reported as UNSUPPORTED_ACTION on every emission before (the tile was still held by the movement mode); the reporting is the only change. Since divergence 2.130 a chokepoint is a one-tile gap between two blocked tiles (state.blocked_tiles, the tiles structures occupy), not between terrain tiles named WALL; before it the path was never reached (0 decisions in 30 runs), so the hold now runs wherever structures leave such a gap.'
 - id: COMB-016
   text: "`test_cardinal_opposite_bracketing`: Cardinal opposite bracketing \u2014\
     \ Verify that two allies bracket a target from opposite sides.."
@@ -280,9 +280,9 @@
   status: legacy_verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: "Corrected 2026-10-14 (divergence 2.129): check_high_ground named upper-case HILL and MOUNTAIN, so on lower-case catalog terrain it never fired. Each terrain now declares high_ground in content (mountain only); the check reads it through src/content/terrain_cost.py. The attacker on mountain against a defender who is not high ground gets the edge."
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/engine/test_terrain_declares_cover_and_high_ground.py
   divergence_note: null
   support_boundary: null
 - id: COMB-022
@@ -2812,9 +2812,9 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: "Corrected 2026-10-14 (divergence 2.129). The earlier 'proven via exhaustive checklist audit' claim was stale: check_cover named upper-case WALL, FOREST and MOUNTAIN, while terrain is lower-case catalog ids, so cover never fired. Each terrain now declares gives_cover in content (forest, mountain, ruin, cave) and LegalityServiceV2.check_cover reads it through src/content/terrain_cost.py; the code names no terrain. Geometry (designer ruling 2026-10-18, fiction of cover, D33): cover is an obstacle BETWEEN attacker and defender, the tile next to the defender on the attacker's side; the Bible row and the docstring said 'behind the target, away from the attacker', and their wording was fixed to match the code (no code change). Proven through the kernel by tests/unit/combat/test_terrain_mechanics_forced_scenarios.py and at the helper by tests/unit/engine/test_terrain_declares_cover_and_high_ground.py."
   proof_type: null
-  test_path: null
+  test_path: tests/unit/combat/test_terrain_mechanics_forced_scenarios.py; tests/unit/engine/test_terrain_declares_cover_and_high_ground.py
   divergence_note: null
   support_boundary: null
 - id: COMB-263
@@ -4849,3 +4849,33 @@
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.114.
   support_boundary: 'Panic hold ticks fall (urban 1357 to 1, frontier 2181 to 115 per run, seeds 42 to 46, 5000 ticks). There is no natural hit-point regeneration outside a town tile, an inn rest or a level-up; a disclosed gap, not fixed here.'
 
+- id: COMB-347
+  text: 'TCK-20261013-TERRAIN-COST-IS-KEYED-BY-UPPER-CASE-NAMES-SO-LOWER-CASE-TERRAIN-GETS-COST-1: each terrain declares its movement cost in content (TerrainDefinition.move_cost_multiplier, required); TERRAIN_COST in state.py is retired; a terrain without a declared cost is a compile-time error. Ruled values (D72): forest 1.5, swamp 3.0, mountain 4.0, road 0.5, plain/grass 1.0, cave/ruin 1.5, river 3.0.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: data/content/world/terrain.yaml, src/content/schema.py (TerrainDefinition.move_cost_multiplier), src/content/terrain_cost.py (terrain_cost, validate_terrain_ids), src/engine/rpg_depth.py (TerrainCostService.get_tile_cost), src/worldbuilding/compiler.py (terrain id validation, plain base fill).
+  proof_type: regression
+  test_path: tests/unit/engine/test_terrain_cost_from_content.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.124.
+  support_boundary: Only the readiness cost of a step reads the factor. Pathfinding weights, per-body movement styles (M1) and the wall and line-of-sight terrain checks in legality.py, positioning.py and movement.py (they compare raw terrain to upper-case names and never match lower-case content terrain) are not covered.
+- id: COMB-348
+  text: 'TCK-20261014-TERRAIN-COST-BECOMES-TIME-A-STEP-COSTING-N-TAKES-N-TIMES-AS-LONG-D75: a step onto a tile of cost N takes N ticks (NavigationComponent.step_ready_tick; one step per tick at most, so cost below 1.0 is no faster than plain). The readiness pre-check no longer multiplies by the terrain cost.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/movement.py (MovementSystem.resolve_move, the step_ready_tick hold and set), src/core/state.py (NavigationComponent.step_ready_tick), src/core/updates.py (NavigationUpdate.step_ready_tick_set), src/engine/patches.py, src/engine/apply.py (_fast_replace_navigation), src/engine/legality.py (verify_movement_legality, terrain factor removed).
+  proof_type: regression
+  test_path: tests/unit/engine/test_terrain_cost_is_time.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.126.
+  support_boundary: About 0.03% of frontier steps (78 of 249031, five seeds) still carry no step time (an ordinary move update whose final form lacks the field; the writer is not identified). Swaps and yields are timed and respect the hold (D75 completion). Route choice is not weighted by cost (the next step), so a path may cross slow ground when a faster way exists. Road (0.5) is capped at one tick. Fatigue is not modelled.
+- id: COMB-349
+  text: 'TCK-20261014-ROUTES-WEIGH-TERRAIN-COST-D75-ROUTE-STEP: the route toward a target is the cheapest by declared terrain cost when that is cheaper than the greedy walk (a bounded A*, node cap 3000, greedy fallback counted); on uniform ground the step is the old greedy step.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/route_search.py (search, route_next_step, RoutePlanStore, ROUTE_NODE_CAP), src/engine/movement.py (MovementSystem._route_step), src/core/state.py (AuthoritativeState.route_plans), src/engine/apply.py (route_plans carried).
+  proof_type: regression
+  test_path: tests/unit/engine/test_route_weighs_terrain_cost.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.128.
+  support_boundary: The search plans on the true terrain map and over terrain cost only (no hazard, no obstacles or entities; those stay with the sidestep ladder). A far TOWN target keeps the flow-field branch and swaps keep their own next step. Knowledge-limited routing is a later step.

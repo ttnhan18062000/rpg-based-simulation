@@ -81,3 +81,52 @@ def test_profile_tick_writes_no_loader_of_its_own() -> None:
     here = Path(profile_tick.__file__).parent
     for name in ("profile_tick.py", "_profiling_common.py"):
         assert "_load_world_state" not in (here / name).read_text(encoding="utf-8"), name  # the loader lives in rerun_baselines only
+
+
+# --- TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED: --replay -------------------------------------------------
+
+
+def test_replay_off_is_the_default_and_the_flag_maps_to_no_replay_false() -> None:
+    profile = profiles_module.PROD_LARGE
+    assert common.contract_kernel_args(profile, "live")[2]["no_replay"] is True  # every earlier caller is unchanged
+    for contract in common.CONTRACTS:
+        _, _, flags = common.contract_kernel_args(profile, contract, replay=True)
+        assert flags["no_replay"] is False
+        assert flags["no_frame_pacing"] is True  # only replay changes
+    assert common.contract_kernel_args(profile, "audit", replay=True)[2]["audit_mode"] is True
+
+
+def test_the_replay_option_defaults_off_in_the_parser_and_reaches_the_child_under_out_dir(tmp_path) -> None:
+    ns = argparse.Namespace(scenario="idle", entities=10, seed=1, warmup=1, ticks=2, profile="PROD_LARGE", flag=None, flag_mode=None, contract="canonical")
+    assert "--replay" not in profile_tick.child_command(ns, tmp_path / "child.json")
+    ns.replay = True
+    cmd = profile_tick.child_command(ns, tmp_path / "child.json")
+    assert "--replay" in cmd
+    replay_dir = Path(cmd[cmd.index("--replay-dir") + 1])
+    assert tmp_path in replay_dir.parents  # under the run's out-dir, never data/runs/
+
+
+def test_a_replay_run_without_a_directory_is_refused() -> None:
+    with pytest.raises(ValueError, match="replay_dir"):
+        common.make_replay_manager(profiles_module.PROD_LARGE, {"audit_mode": False}, None)
+
+
+def test_the_summary_counts_ticks_where_replay_was_not_allowed() -> None:
+    ticks = [{"replay_allowed": True, "replay_richness": "FULL"}, {"replay_allowed": False, "replay_richness": "MINIMAL"}, {"replay_allowed": True, "replay_richness": "FULL"}]
+    got = common.replay_summary({"ticks": ticks, "replay_stats": {"total_bytes_written": 5}})
+    assert got == {"replay_allowed_ticks": 2, "replay_disallowed_ticks": 1, "replay_richness": ["FULL", "MINIMAL"], "replay_stats": {"total_bytes_written": 5}}
+    assert common.replay_summary({"ticks": ticks}) is None  # a run without --replay records nothing
+
+
+def test_a_tiny_replay_run_records_the_policy_the_stats_and_writes_only_under_the_given_directory(tmp_path) -> None:
+    runs = Path("data/runs")
+    before = set(runs.iterdir()) if runs.exists() else set()
+    data = common.run_scenario_ticks("idle", 10, 42, 1, 2, contract="canonical", replay=True, replay_dir=tmp_path / "replay")
+    summary = common.summarize_ticks(data)
+    assert summary["replay"]["replay_allowed_ticks"] + summary["replay"]["replay_disallowed_ticks"] == 2
+    assert "total_bytes_written" in summary["replay"]["replay_stats"]
+    assert list((tmp_path / "replay").glob("chunk_*.json")) and (tmp_path / "replay" / "manifest.json").exists()  # the replay writer wrote here
+    new_run_dirs = (set(runs.iterdir()) if runs.exists() else set()) - before  # the kernel's own run directory is its observability, replay on or off
+    assert not [p for d in new_run_dirs for p in d.glob("chunk_*.json")]  # no replay chunk landed in data/runs/
+    off = common.run_scenario_ticks("idle", 10, 42, 1, 2, contract="canonical")
+    assert common.summarize_ticks(off)["replay"] is None and all("replay_allowed" in t for t in off["ticks"])

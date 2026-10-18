@@ -20,6 +20,7 @@ from __future__ import annotations
 import os
 from dataclasses import replace
 
+from src.core.grief_triggers import pending_grief_triggers
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
 from src.engine.kernel import Kernel
@@ -139,13 +140,13 @@ def test_grief_trigger_is_the_only_real_trace_a_bonded_observer_receives_on_comb
         )
 
         expected_urgency = round(min(1.0, 0.9 * 0.8), 6)
-        assert (BONDED_ALLY_ID, ORC_ID, expected_urgency) in kernel._pending_grief_triggers, (
+        assert (BONDED_ALLY_ID, ORC_ID, expected_urgency) in pending_grief_triggers(kernel.state), (
             "the grief trigger must fire for the bonded (trust >= ALLY_TRUST_THRESHOLD) observer "
             "even though it is NOT co-located with the death -- Answer 3's location-independence "
             "finding."
         )
         assert not any(
-            trigger[0] == UNRELATED_BYSTANDER_ID for trigger in kernel._pending_grief_triggers
+            trigger[0] == UNRELATED_BYSTANDER_ID for trigger in pending_grief_triggers(kernel.state)
         ), (
             "the grief trigger must NOT fire for the unrelated, unbonded observer even though it "
             "IS co-located/adjacent to the death -- pinning that this path is trust-keyed, never a "

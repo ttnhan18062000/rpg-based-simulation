@@ -66,7 +66,7 @@ class RegionRecipeSpec(BaseModel):
     id: str = Field(..., min_length=1, description="Unique identifier for the region")
     type: str = Field(..., min_length=1, description="Ecological type of the region")
     grid_bounds: tuple[int, int, int, int] = Field(..., description="Bounds as [min_x, min_y, max_x, max_y]")
-    terrain: Optional[str] = Field("GRASS", description="Terrain type")
+    terrain: Optional[str] = Field("grass", description="Terrain type")
     hazard_level: Optional[float] = Field(0.0, description="Hazard difficulty rating")
     hazard_kind: Optional[str] = Field("PHYSICAL", description="Semantic type of this region's passive hazard drain (e.g. 'PHYSICAL', 'NATURAL_TERRAIN', 'TOXIC_GAS').")
     tags: List[str] = Field(default_factory=list, description="Semantic labels for quest routing (e.g. mine, forest, ruins, settlement)")
@@ -89,6 +89,9 @@ class PopulationRecipeSpec(BaseModel):
     role: str = Field(..., min_length=1, description="Societal role")
     count: Union[int, str] = Field(..., description="Number of entities to spawn; may be a parameter template expression")
     faction: str = Field(..., min_length=1, description="Faction affiliation")
+    species_id: Optional[str] = Field(
+        default=None, min_length=1,
+        description="The species of the bodies this recipe spawns when it names no archetype: their diet, edibility, size, power and wits come from it (decision 63: people of a species with a role; a missing species is a content error at compile)")
 
     @model_validator(mode="after")
     def _validate_count(self) -> "PopulationRecipeSpec":

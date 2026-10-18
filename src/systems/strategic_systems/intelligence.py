@@ -394,7 +394,7 @@ class StrategicIntelligenceSystem:
                         if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target and entity.navigation.target != town_target:
                             if ent_upd:
                                 refined_entity_updates[e_id] = replace(ent_upd,
-                                    navigation=NavigationUpdate(target_set=town_target, movement_mode_set=MovementMode.REGROUP),
+                                    navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=town_target, movement_mode_set=MovementMode.REGROUP),
                                     interaction=InteractionUpdate(reset=True)
                                 )
                             else:

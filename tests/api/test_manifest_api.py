@@ -145,8 +145,8 @@ def test_manifest_terrain_types_id_space_matches_present_map_grid():
 
     catalog = _catalog()
     terrain = {
-        (0, 0): "PLAIN", (1, 0): "PLAIN", (2, 0): "GRASS",
-        (0, 1): "GRASS", (1, 1): "GRASS", (2, 1): "GRASS",
+        (0, 0): "plain", (1, 0): "plain", (2, 0): "sand",
+        (0, 1): "sand", (1, 1): "sand", (2, 1): "sand",
     }
     state = _state(terrain=terrain)
     code_map = StatePresenter.terrain_code_map(state)
@@ -155,28 +155,28 @@ def test_manifest_terrain_types_id_space_matches_present_map_grid():
     # Both codes present_map's grid actually emits must be represented in terrain_types.
     assert set(result["terrain_types"].keys()) == {str(c) for c in code_map.values()}
 
-    # PLAIN has a real lowercase catalog entry ("plain" -> display_name "Plain") -- resolved
+    # plain has a real lowercase catalog entry ("plain" -> display_name "Plain") -- resolved
     # via the case-insensitive .lower() catalog lookup, NOT the title()-fallback.
-    plain_code = str(code_map["PLAIN"])
+    plain_code = str(code_map["plain"])
     assert result["terrain_types"][plain_code] == "Plain"
 
-    # GRASS has no catalog entry at all (no "grass" id in data/content/world/terrain.yaml) --
-    # resolved via the title()-cased fallback, a separate code path from PLAIN's above.
-    grass_code = str(code_map["GRASS"])
-    assert result["terrain_types"][grass_code] == "Grass"
+    # SAND has no catalog entry at all (no "sand" id in data/content/world/terrain.yaml) --
+    # resolved via the title()-cased fallback, a separate code path from plain's above.
+    grass_code = str(code_map["sand"])
+    assert result["terrain_types"][grass_code] == "Sand"
 
 
 def test_manifest_terrain_types_uncataloged_default_uses_title_fallback():
     catalog = _catalog()
-    assert "grass" not in catalog.terrain, "GRASS must remain uncataloged for this test to be meaningful"
-    display = ManifestPresenter._terrain_display_name("GRASS", catalog)
-    assert display == "Grass"
+    assert "sand" not in catalog.terrain, "SAND must remain uncataloged for this test to be meaningful"
+    display = ManifestPresenter._terrain_display_name("sand", catalog)
+    assert display == "Sand"
 
 
 def test_manifest_terrain_types_cataloged_value_resolves_case_insensitively():
     catalog = _catalog()
-    assert "plain" in catalog.terrain, "PLAIN must be cataloged for this test to be meaningful"
-    display = ManifestPresenter._terrain_display_name("PLAIN", catalog)
+    assert "plain" in catalog.terrain, "plain must be cataloged for this test to be meaningful"
+    display = ManifestPresenter._terrain_display_name("plain", catalog)
     assert display == "Plain"
 
 

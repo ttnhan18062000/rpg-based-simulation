@@ -42,8 +42,8 @@ def create_smoke_spec() -> dict:
             "coordinate_system": "grid"
         },
         "regions": [
-            {"id": "hometown", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "GRASS"},
-            {"id": "near_forest", "type": "wilderness", "bounds": [15, 15, 40, 40], "terrain": "FOREST"}
+            {"id": "hometown", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "grass"},
+            {"id": "near_forest", "type": "wilderness", "bounds": [15, 15, 40, 40], "terrain": "forest"}
         ],
         "factions": [
             {"id": "town_council", "type": "civilian"},

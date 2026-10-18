@@ -75,6 +75,7 @@ class FakeState:
     movement_count: int = 0
     maturity: int = 0
     last_calamity_tick: int = 0
+    grief_drained_tick: int = -1  # D80: canonical only once a grief drain happened
     town_center = (0, 0)
     local_scars: dict = {}
     chests: dict = {}

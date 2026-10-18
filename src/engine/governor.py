@@ -20,6 +20,10 @@ class ResourceGovernor:
     Proof: Verified by mb_test_matrix.md and test_milestone_b_closure.py.
     """
 
+    #: True for a governor that must see zeroed pressure signals (the kernel then uses the same ZeroedSignalSource as ``audit_mode``), so neither the
+    #: mode nor the phase budgets nor any other wall-clock reader can depend on host speed. Overridden by the test pin.
+    zeroes_signals: bool = False
+
     def __init__(self) -> None:
         """Initialize the governor. Constants are now profile-driven."""
         pass

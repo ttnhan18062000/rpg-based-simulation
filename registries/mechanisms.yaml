@@ -317,6 +317,8 @@ mechanisms:
     implemented_by:
       - src/engine/movement.py::MovementSystem
       - src/systems/world_systems/navigation.py::NavigationSystem
+      - src/engine/route_search.py::route_next_step
+      - src/content/terrain_cost.py::terrain_cost
     verified:
       instrument: code_trace
       verdict: observed
@@ -463,7 +465,9 @@ mechanisms:
       - src/engine/apply.py::ApplyPath::_compute_entity_changes
       - src/engine/biological_needs.py::need_rates
       - src/engine/starvation.py::hp_loss
+      - src/worldbuilding/diet_declaration.py::require_declared_diet
       - src/engine/natural_healing.py::hp_gain
+      - src/ai/goals/kind_group.py::kind_group
     verified:
       instrument: code_trace
       verdict: observed
@@ -714,6 +718,7 @@ mechanisms:
     implemented_by:
       - src/systems/lifecycle_systems/lifecycle.py::LifecycleSystem::resolve_lifecycle
       - src/ai/life_stage.py::LifeStageService
+      - src/core/death_cause.py::DeathRecord
     verified:
       instrument: scenario
       verdict: observed
@@ -2016,6 +2021,7 @@ mechanisms:
     state: done
     implemented_by:
       - src/domains/campaigns/grief_urgency.py
+      - src/core/grief_triggers.py::pending_grief_triggers
     verified:
       instrument: code_trace
       verdict: observed
@@ -2754,6 +2760,7 @@ mechanisms:
       - src/core/state.py::CampState
       - src/world/camp.py::CampService
       - src/world/creature_territory.py::CreatureTerritoryService
+      - src/systems/world_systems/generator.py::EntityGenerator  # re-bound 2026-10-14: the retired regional_monster_spawn was its other binding (2.122); D70 (2.125) removed the camp spawn; the camp still calls it for the flag-OFF nest-spread offspring, which retires with the M1 births
     verified:
       instrument: corpus_run
       verdict: observed
@@ -3160,22 +3167,6 @@ mechanisms:
         zero-caller. `state: partial` accurately represents the mixed disposition. `mechanism_
         state_caller_check.py`'s own full-registry run raises no contradiction for this entry.
 
-  - id: regional_monster_spawn
-    layer: region
-    systems: [world]
-    depends_on: []
-    state: done
-    implemented_by:
-      - src/world/spawn.py::SpawnService
-      - src/systems/world_systems/generator.py::EntityGenerator
-    verified:
-      instrument: corpus_run
-      verdict: observed
-      date: "2026-09-30"
-      note: >-
-        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `SpawnService.process_spawns` was called 30 times (its per-region cadence) across the three worlds. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
-        Regional monster replenishment and density management (cadence in spawn_config.py). Distinct from `world_boss_spawn` (BossService) and from camp-anchored spawns (`camp`).
-
   - id: resource_ecology_regrowth
     layer: world
     systems: [world, economy]
@@ -3281,7 +3272,9 @@ mechanisms:
     systems: [world]
     depends_on: []
     state: gated
-    implemented_by: [src/world/reproduction_humanoid.py::HumanoidReproductionService]
+    implemented_by:
+      - src/world/reproduction_humanoid.py::HumanoidReproductionService
+      - src/core/spawn_source.py::SpawnSource
     verified:
       instrument: corpus_run
       verdict: observed
@@ -3308,8 +3301,8 @@ mechanisms:
     layer: faction
     systems: [faction, world]
     depends_on: [camp]
-    state: done
-    implemented_by: [src/world/raid.py::RaidService]
+    state: gap
+    implemented_by: []
     verified:
       instrument: corpus_run
       verdict: observed
@@ -3317,6 +3310,7 @@ mechanisms:
       note: >-
         TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `RaidService.check_for_raid` was called 30 times and `spawn_raid` 3 times. Probe output: agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
         A faction action against a place, launched from camp maturity or its own 500-tick cadence. Kept separate from `camp` (a place, not an action).
+        **Retired 2026-10-14 (D70, divergence 2.125):** `RaidService.spawn_raid` conjured raiders from nothing and is deleted; a camp raids nothing. `src/world/raid.py::RaidService` keeps only its constants for the raid that returns with caused war (M3), so the mechanism is a gap again.
 
   - id: refugee_displacement
     layer: region

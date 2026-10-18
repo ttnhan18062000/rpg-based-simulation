@@ -73,6 +73,8 @@ Reported by `rpg-feature-planning` from `test-architecture-reviewer`: `tests/int
 - `tests/integration/campaigns/test_catalog_entity_spawn_wiring.py`; `src/engine/worker_manager.py` (the sentinel); `src/engine/governor.py`; `src/engine/movement.py:241` (opportunity attacks); `src/observability/event_shapers.py`.
 
 ## Assumptions / Open Questions
+**Triage 2026-10-18 (#636): STANDALONE, epic closed.** Re-run on rpg-next b23e78128: the test (reworked in #367 to count deliberate attacks) is still a strict xfail, 2 deliberate attacks of 3 required (seed 42, 70 ticks). The known red stays explained by its xfail; v1 discloses it; the assertion is not weakened.
+
 - One seed (42), one 70-tick episode; deterministic, but one world only.
 - Why `main` falls from 1 to 0 after #175 is not isolated.
 - **This test is NOT the attack fix's acceptance signal** (test-architecture-reviewer's ruling); its XPASS would be a bonus. The acceptance signal is a deliberate-attack test on a world or seed with measured contact (see `TCK-20261005-REGIONAL-TRAUMA-FED-INTO-PANIC-AS-IF-NORMALISED-MAKES-EVERYONE-FLEE`). A correct fix might yield fewer than 3 attacks from only ~11 encounters.

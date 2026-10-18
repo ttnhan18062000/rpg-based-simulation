@@ -77,7 +77,7 @@ The index at `agent-working/agent-monitoring/retro/index.md` is updated automati
 
 | Section | What to Look For |
 |---|---|
-| **Run Summary** | DONE rate < 80%? Average duration > 20 min? |
+| **Run Summary** | DONE rate < 80%? Average duration > 20 min? The "Gate failures" row cites the gate ledger (`N blocking verdicts of M (ledger: O overridden, U without an outcome); R runs ended in a gate failure`) because runs almost never end in a gate failure; with no ledger for the window it is the labelled run count `Gate failures (runs; no gate ledger for this window)`. The retro index column shows `NL` (ledger blocking verdicts) for a week with ledger data and the plain run count elsewhere. |
 | **Gate Failure Breakdown** | Which gates block most runs? Repeated TESTS_FAILED or PARITY_FAIL suggests systemic issues. |
 | **Reason Codes** | Only shown when at least one event carries a `reason_code` (see `docs/agent-monitoring/schema.md`). Disambiguates gate statuses that collapse multiple causes into one value — e.g. a run of `DOD_BLOCKED` or Scope/Structure `failed`/`blocked` counts alone can't tell you whether the cause was an unregistered tag, a duplicate ticket, or an unrelated DoD condition; this section can. A rising `tag_registry_rejection` count suggests agents need better registry-awareness before Scope, not just a Verify-time catch. |
 | **Tag Breakdown — Subsystem/Topic** | Only shown when at least one run resolves to a registered Subsystem/Topic tag. Tags are resolved live at report-generation time from ticket frontmatter under `agent-working/tickets/done/` and `agent-working/tickets/inprogress/`, keyed by `run_id` — a ticket file that has been moved, renamed, or deleted since its run completed becomes unresolvable and is silently excluded from this table (a known limitation of live resolution, not a bug). Use this to spot which subsystem/topic areas have the lowest DONE rate or the most gate failures. |
@@ -211,6 +211,15 @@ stale — deliberately parked):". `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC`
 is the concrete real example — parked pending an explicit owner decision, with
 a dated rationale in its own body — and is the case that motivated this
 distinction (`TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC`).
+
+**All filed children done — a finished epic is not a stale one.** A non-`BLOCKED` epic goes into its own
+"All filed children done (check SEQUENCE.md for unfiled plan items, then close the epic and move its folder to done/):" section, instead of
+stale or never-started, when its folder holds no ticket file other than the epic itself (folder mode; `SEQUENCE.md` and
+non-ticket files are ignored) and every child ID it names (at least one) resolves under `agent-working/tickets/done/`.
+The epic's own ID and any epic-tier ticket it cross-references are not children. A child ID that exists nowhere keeps the
+epic out of the bucket and is named under "Not ready to close: … these child IDs exist nowhere" (only when at least one
+child resolves and all resolvable children are done). An epic whose own `SEQUENCE.md` or body says an item is `not filed` / `not yet filed` / `unfiled` is not listed as done: it appears under "Not ready to close: plan items not filed yet" with that line, because all filed children done does not mean the plan is done. The hook nudge (`find_stale_epics`) never counts ready epics
+(`TCK-20261018-EPIC-STALENESS-READY-TO-CLOSE-BUCKET`). Report-only: nothing is closed for you.
 
 Advisory-only and read-only, matching `retro_nudge_hook.py`'s contract: it
 never mutates a ticket file's `Status`/`phase`, never raises past its own
