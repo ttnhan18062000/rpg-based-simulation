@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-ACTIONS-MAJORS-COMBINED
-phase: inprogress
+phase: done
 date: 2026-10-14
 tags: [platform]
 ---
@@ -15,7 +15,7 @@ tags: [platform]
 Land the GitHub Actions majors (#572-#575) as one verified PR, with testing-planner's artifact proof
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -86,3 +86,9 @@ Audit (no workflow logic changed):
 ## Files Changed
 - `.github/workflows/{deploy-docs,pr-body-lint,rpg-gate-report,slow-regression-watchdog,slow-regression,test}.yml` (version tags only)
 ## Completion Summary
+The four Actions majors (checkout 7, upload-artifact 7, download-artifact 8, upload-pages-artifact 5) landed in #588 (5324afafe, merged 2026-10-15) with testing-planner's review and no blockers. Evidence items 1-3 were in #588's body; item 4 (first scheduled slow run) is met by run 38700638996 (`certification-report-62a01febc` 3,705 B and `slow-junit-62a01febc` 25,907 B, both with files). Closed 2026-10-18 by the platform implementer; the check is in the investigation artifact.
+
+Gaps, stated:
+- Not shown: rpg-gate-report.yml's download-artifact@v8 and final upload-artifact@v7 have never executed on main (shard/aggregate jobs skipped in runs 38717903321, 38883951584, 39021377963). Accepted as post-merge by testing-planner in #588. Tracked by issue #631 (rpg-gate-report.yml -> testing).
+- Not shown: deploy-docs upload-pages-artifact@v5 (hidden-file check). Pages is off. Tracked by TCK-20260916-REENABLE-DOCS-PAGES-PUBLISHING.
+- The staging artifacts were written before the work; their closing sections are retrospective, labelled so.
