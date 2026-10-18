@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
@@ -19,3 +19,6 @@ The investigation (investigation.md) finds a guest-wide stall, not a slow or hun
 
 ## Scope guard
 No edits outside docs until the planner picks A or B.
+
+## Decision
+Option A, chosen by asset-planner on 2026-10-18 (lead-planner agreed). Done: docs note in `docs/assets/drawing_tools.md`; ticket acceptance criterion replaced, not passed.

@@ -1,0 +1,30 @@
+14:03:35 GAP mono 16.9s wall 16.9s steal=0 load 9.55
+14:03:35 load 9.55 steal=0
+ 349145 R    -                 3.7      18 /data/vboxuser/Work/rpg-based-simulation/.venv/bin/python -m pytest -p phasep
+14:03:41 load 15.19 steal=0
+ 349145 R    -                10.5      23 /data/vboxuser/Work/rpg-based-simulation/.venv/bin/python -m pytest -p phasep
+14:03:44 GAP mono 2.1s wall 2.1s steal=0 load 15.98
+14:03:45 load 15.98 steal=0
+ 349145 Sl   poll_schedule_ti 10.3      27 /data/vboxuser/Work/rpg-based-simulation/.venv/bin/python -m pytest -p phasep
+ 349299 S    poll_schedule_ti  0.0       0 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+ 349300 Ss   do_wait           0.0       0 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+14:03:50 GAP mono 1.6s wall 1.6s steal=0 load 16.22
+14:03:51 load 16.22 steal=0
+ 349145 Sl   poll_schedule_ti  8.7      33 /data/vboxuser/Work/rpg-based-simulation/.venv/bin/python -m pytest -p phasep
+ 349480 S    poll_schedule_ti  0.0       1 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+ 349482 Ss   do_wait           0.5       1 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+ 349483 Sl   futex_do_wait     1.1       1 /usr/bin/aseprite -b --script /lua/ops.lua
+14:03:54 GAP mono 3.8s wall 3.8s steal=0 load 15.80
+14:03:55 load 15.80 steal=0
+ 349145 Sl   poll_schedule_ti  7.8      37 /data/vboxuser/Work/rpg-based-simulation/.venv/bin/python -m pytest -p phasep
+ 349597 S    poll_schedule_ti  0.0       0 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+ 349598 Ss   do_wait           0.0       0 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+ 349599 Sl   futex_do_wait     2.9       0 /usr/bin/aseprite -b --script /lua/ops.lua
+14:04:00 load 14.61 steal=0
+ 349145 Sl   poll_schedule_ti  7.0      42 /data/vboxuser/Work/rpg-based-simulation/.venv/bin/python -m pytest -p phasep
+ 349784 S    poll_schedule_ti  0.0       0 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+ 349785 Ss   do_wait           0.0       0 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+ 349786 Rl   -                10.2       0 /usr/bin/aseprite -b /job/in.aseprite --frame-range 0,0 --layer body --scale 
+14:04:42 GAP mono 37.7s wall 37.7s steal=0 load 10.75
+14:04:45 load 10.75 steal=0
+ 349145 R    -                 4.5      87 /data/vboxuser/Work/rpg-based-simulation/.venv/bin/python -m pytest -p phasep

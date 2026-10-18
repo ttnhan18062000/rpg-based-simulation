@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
@@ -24,6 +24,8 @@ A sub-second Aseprite job (slowest measured 0.258 s, `docs/assets/budgets.md`) s
 3. In run 3 the in-process sampler thread (2 s tick) logged nothing for 167 s, and the process tree sampled at the end held no sandbox or Aseprite process of ours: the job had finished; the Python process was simply not running.
 4. Run 4 settles it: the external sampler, a separate trivial process outside the scope, shows `GAP mono 37.7s wall 37.7s` at 14:04:42, matching the 37.4 s call to the second. Earlier gaps: 16.9 s, 3.8 s, 2.1 s, 1.6 s. A `sleep(1)` process was not scheduled for 37 s, so the whole guest stalled; the job was healthy.
 5. Host state at the time: load average 35-75 (mostly other sessions: a question-bank run, localsearch, indexers), 2.5-2.6 GB of swap in use, 200 MB free, system CPU 52 %, swap-in 3.5 MB/s. `/proc/stat` steal reads 0 (VirtualBox does not report it), so the host-side cause is not visible from inside. This matches the earlier note on VirtualBox host starvation (soft lockups on idle CPUs).
+
+6. Two more sampled runs (5 and 6, same load, external sampler on) repeat it: run 5 slowest calls 20.0/19.5/17.4 s vs gaps 18.0/17.7/17.5 s; run 6 slowest calls 39.1/21.6/19.9 s vs gaps 37.8/22.2/20.2/18.0 s. Raw samples: `evidence/ext_sampler_run{4,5,6}.txt`, `evidence/phase_run{4,5,6}.txt`.
 
 ## Cause
 Not a phase of the job and not a defect in `sandbox.py`: the guest as a whole stalls for tens of seconds to minutes under host plus guest contention (swap thrash), and every wall-clock bound (30 s job, 60 s test budget) then trips even though the job needed 0.2 s. The ticket's hypotheses (pipe drain, lock, display/socket wait) are ruled out: `communicate` drains, no lock or display exists, and the process tree was empty at the stall.

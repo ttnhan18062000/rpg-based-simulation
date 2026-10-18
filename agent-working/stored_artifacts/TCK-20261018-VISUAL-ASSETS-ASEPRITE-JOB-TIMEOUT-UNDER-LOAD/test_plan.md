@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
@@ -18,4 +18,4 @@ Pass criteria (option A, evidence ties the failure to a stall):
 
 If option B is chosen: a unit test with a faked slow monotonic/wall gap asserts the stall-specific `AdapterError`; the unchanged-message paths (`test_negative` timeout tests) stay green; then the strict local proof run refreshes `docs/assets/aseprite_local_proof.json`.
 
-Runs so far (4, all failed with one stalled call; see investigation.md and `evidence/`).
+Runs: 6 loaded runs, all failed on a stalled call; runs 4-6 had the external sampler and every slow call maps to a gap (see the ticket Test Summary and `evidence/`).
