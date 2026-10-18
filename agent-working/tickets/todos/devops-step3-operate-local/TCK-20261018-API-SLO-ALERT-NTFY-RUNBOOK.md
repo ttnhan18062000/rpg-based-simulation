@@ -41,13 +41,10 @@ runbook in `docs/runbooks/`.
 - **Provisioning files** under `docker/grafana/provisioning/alerting/`: the rule group, the contact point, and the
   notification policy. Datasources are referenced by uid. `noDataState` and `execErrState` are chosen and stated in
   the runbook.
-- **`ntfy` service:**
-  - `profiles: ["observability"]`, pinned by digest, with a `mem_limit`, a healthcheck if the image can probe itself;
-  - a host port on `127.0.0.1` only, so the owner can open the web UI or subscribe on this host;
-  - the topic name from env with a local default (for example `rpg-alerts-local`).
-
-  The Grafana contact point is the webhook or ntfy integration to `http://ntfy/<topic>`, with the runbook URL in the
-  message.
+- **ntfy, contact point and policy: reuse S4's** (amended 2026-10-18 at S4 filing). `TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES`
+  builds the `ntfy` service, the ntfy contact point (topic from a gitignored secret file, never committed) and the
+  notification policy. This ticket adds only its rule group (with `runbook_url`) under
+  `docker/grafana/provisioning/alerting/` and routes through that policy.
 - **`docs/runbooks/api-latency-slo.md`** (frontmatter per the docs schema):
   - what the alert means;
   - the first three checks (the dashboard panels, the Loki query, a Tempo search for slow traces);
@@ -57,8 +54,8 @@ runbook in `docs/runbooks/`.
   - escalation (the owner);
   - the Trivy baseline note from #561 under risks.
 
-  Also `docs/runbooks/README.md`, the index.
-- **Register `docs/runbooks/**`** to the platform domain's `owns` in this PR (D8 route, as in the Locust ticket).
+  Add its row to `docs/runbooks/README.md` (the index is created by S4's `TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL`).
+- `docs/runbooks/**` is already platform-owned (registered with #627).
 - Run `make knowledge-index-update` after adding the docs.
 
 ## Out of Scope

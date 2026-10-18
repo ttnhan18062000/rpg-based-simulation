@@ -1,0 +1,6 @@
+# Copy to backend.hcl (gitignored) and fill in your own values. Nothing here names a real bucket or account.
+bucket       = "REPLACE-WITH-YOUR-STATE-BUCKET"
+key          = "rpg-based-simulation/bootstrap.tfstate"
+region       = "REPLACE-WITH-YOUR-REGION"
+use_lockfile = true # S3-native locking (Terraform >= 1.11); no DynamoDB table
+encrypt      = true

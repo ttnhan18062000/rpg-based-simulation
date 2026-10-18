@@ -57,15 +57,7 @@ _hr = sys.modules["hybrid_retrieval"]
 
 def _main_checkout_root(start: Path) -> Path | None:
     """The main checkout's root, from any worktree of it (or from the main checkout itself)."""
-    try:
-        proc = subprocess.run(
-            ["git", "-C", str(start), "rev-parse", "--path-format=absolute", "--git-common-dir"],
-            capture_output=True, text=True, timeout=5, check=False,
-        )
-    except (OSError, subprocess.SubprocessError):
-        return None
-    common_dir = proc.stdout.strip()
-    return Path(common_dir).parent if proc.returncode == 0 and common_dir else None
+    return _ss.main_checkout_root(start)
 
 
 def _resolve_index_dir(own_index_dir: Path, own_root: Path, main_root: Path | None) -> Path:
@@ -152,18 +144,88 @@ def _run_search(query: str, top_k: int = 8, section: str | None = None,
     manifest cannot be read gets `"stale": {"unknown": true}`; a current index still returns the bare list
     (TCK-20261006-KNOWLEDGE-INDEX-STALE-WARNING). The results are returned either way; the warning never blocks."""
     results = _search_shared_or_local(query, top_k=top_k, section=section, mode=mode)
-    if not with_staleness or not isinstance(results, list):
+    degraded = results if isinstance(results, dict) and "degraded" in results else None
+    if not with_staleness or not (isinstance(results, list) or degraded):
         return results
     stale = _ks.index_staleness(_DB_PATH)
+    if degraded is not None:
+        return {**degraded, "stale": stale} if stale else degraded
     return {"results": results, "stale": stale} if stale else results
+
+
+_DEGRADED_STARTING = "lexical_only_server_starting"
+_LAST_MODE: dict[str, str | None] = {"mode": None}
+
+
+def _log_mode(mode: str, detail: str = "") -> None:
+    """One stderr line per move between the shared server, lexical-only and in-process search; never per query."""
+    if _LAST_MODE["mode"] == mode:
+        return
+    _LAST_MODE["mode"] = mode
+    if mode == "shared":
+        print("[search_shared] using shared server", file=sys.stderr)
+    elif mode == "lexical":
+        print(f"[search_shared] lexical-only answers while the shared server starts: {detail}", file=sys.stderr)
+    else:
+        print(f"[search_shared] in-process fallback: {detail}", file=sys.stderr)
 
 
 def _search_shared_or_local(query: str, top_k: int = 8, section: str | None = None,
                             mode: str = "hybrid") -> list[dict] | dict:
-    """The shared server's answer when one is available, else this process's own `_search`
-    (TCK-20261012-SEARCH-MCP-SHARED-MODEL). The server runs `_search` itself, so both give the same results."""
-    shared = _ss.try_search(_DB_PATH, query, top_k, section, mode)
-    return shared if shared is not None else _search(query, top_k=top_k, section=section, mode=mode)
+    """The shared server's answer when one is available (TCK-20261012-SEARCH-MCP-SHARED-MODEL); the server runs
+    `_search` itself, so both give the same results. While a server is still loading its model, a lexical-only answer
+    marked `degraded` (this process never loads a second copy of the model because of a slow start,
+    TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT); any other reason searches in-process."""
+    shared, reason = _ss.try_search_ex(_DB_PATH, query, top_k, section, mode)
+    if shared is not None:
+        _log_mode("shared")
+        return shared
+    if reason == _ss.REASON_STARTING:
+        lexical = _search_lexical(query, top_k=top_k, section=section)
+        if isinstance(lexical, list):
+            _log_mode("lexical", reason)
+            return {"results": lexical, "degraded": _DEGRADED_STARTING}
+    _log_mode("local", reason or "no server ready")
+    return _search(query, top_k=top_k, section=section, mode=mode)
+
+
+def _search_lexical(query: str, top_k: int = 8, section: str | None = None) -> list[dict] | dict:
+    """BM25-only ranking: loads the lexical index but never the embedding model (a cheap answer while the shared
+    server loads). Same result shape as `_search`; `semantic_score` is 0."""
+    if not _DB_PATH.exists():
+        return {"error": "index not found", "action": "run make knowledge-index"}
+    if not query.strip():
+        return []
+    if _STATE.bm25 is None:
+        _STATE.lexical = tuple(_ks._load_bm25(_BM25_PATH))
+    bm25, doc_ids = _STATE.lexical
+    tokens = _ks._tokenize(query)
+    if bm25 is None or not doc_ids or not tokens:
+        return {"error": "lexical index not available while the shared server starts", "action": "retry shortly"}
+    scores = bm25.get_scores(tokens)
+    top = max(float(max(scores)), 0.0) if len(scores) else 0.0
+    order = sorted(range(len(doc_ids)), key=lambda i: scores[i], reverse=True)
+    results: list[dict] = []
+    con = sqlite3.connect(str(_DB_PATH))
+    try:
+        for i in order[: _hr.candidate_k(top_k)]:
+            if scores[i] <= 0:
+                break
+            row = _hr._fetch_row_by_doc_id(con, doc_ids[i])
+            if row is None:
+                continue
+            _, doc_id, path, heading, row_section, text, _source = row
+            if section and row_section != section:
+                continue
+            results.append({
+                "doc_id": doc_id, "title": _derive_title(doc_id), "heading": heading or "", "source_path": path,
+                "section": row_section or "", "score": round(float(scores[i]) / top, 4) if top else 0.0,
+                "semantic_score": 0.0, "keyword_score": round(float(scores[i]) / top, 4) if top else 0.0,
+                "excerpt": text[:200].replace("\n", " "),
+            })
+    finally:
+        con.close()
+    return results[:top_k]
 
 
 def _search(query: str, top_k: int = 8, section: str | None = None,

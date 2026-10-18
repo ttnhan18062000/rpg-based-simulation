@@ -96,16 +96,18 @@ def _run(rid):
             "execution_mode": "hand", "duration_s": 600}
 
 
-def test_the_run_summary_shows_ledger_blocks_beside_zero_run_gate_failures():
-    blocks = {"verdicts": 140, "blocking": 22, "unresolved": 3}
+def test_the_gate_failures_row_cites_the_ledger_with_the_run_count_as_a_trailing_clause():
+    blocks = {"verdicts": 140, "blocking": 22, "overridden": 5, "unresolved": 3}
     text = generate_retro.generate([_run("A")], [], "2026-W42", week_str="2026-W42", ledger_blocks=blocks)
-    assert "| Gate failures | 0 |" in text
-    assert "| Blocking gate verdicts (ledger) | 22 of 140 verdicts (3 without a recorded outcome) |" in text
+    assert ("| Gate failures | 22 blocking verdicts of 140 (ledger: 5 overridden, 3 without an outcome); "
+            "0 runs ended in a gate failure |") in text
+    assert "Blocking gate verdicts (ledger)" not in text  # folded in: one row, no duplicate number
 
 
-def test_without_a_ledger_reading_the_run_summary_is_unchanged():
+def test_without_a_ledger_reading_the_gate_failures_row_is_the_labelled_run_count():
     text = generate_retro.generate([_run("A")], [], "2026-W42", week_str="2026-W42")
-    assert "Blocking gate verdicts" not in text and "| Gate failures | 0 |" in text
+    assert "| Gate failures (runs; no gate ledger for this window) | 0 |" in text
+    assert "blocking verdicts" not in text
 
 
 def test_the_run_summary_shows_a_declarations_count_including_zero():

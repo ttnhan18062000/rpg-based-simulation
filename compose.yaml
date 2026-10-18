@@ -2,11 +2,20 @@
 #
 # Profiles:
 #   default (`docker compose up`)                  backend, redis, ai_worker, frontend
-#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, docker-socket-proxy, tempo, watchdog
+#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, docker-socket-proxy, tempo, watchdog, node-exporter, ntfy
 # watchdog sits in the observability profile because it depends_on promtail (healthy only once loki is ready) and prometheus, and polls Loki.
 # Grafana's admin password is a compose secret file (gitignored). Create it once before `--profile observability up`:
 #   mkdir -p docker/secrets && openssl rand -base64 24 > docker/secrets/grafana_admin_password
 # A missing file fails only the observability profile (Grafana's start), never the default profile; an empty file or the value `admin` makes Grafana exit at start (guard in the grafana entrypoint).
+# Alerting (TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES): Grafana sends alerts to a local ntfy over a webhook contact point. ntfy runs with auth-default-access
+# deny-all, so Grafana needs a token. The topic and the token are two more gitignored secret files, never committed. Create them once, after the first ntfy start:
+#   mkdir -p docker/secrets && openssl rand -hex 16 > docker/secrets/ntfy_topic && : > docker/secrets/ntfy_token && chmod 644 docker/secrets/ntfy_topic docker/secrets/ntfy_token   # the files must be world-readable (644) because Grafana's container user (uid 472) reads them through the bind mount (accepted for this single-user host; on a multi-user host use a group-readable mode or a compose-managed secret instead); an empty token file only lets compose parse; Grafana's guard refuses to start until step 4 fills it
+#   docker compose --profile observability up -d ntfy
+#   docker compose exec -T -e NTFY_PASSWORD="$(openssl rand -hex 12)" ntfy ntfy user add grafana                       # a regular user for Grafana; its password is never used (the token is)
+#   docker compose exec -T ntfy ntfy access grafana "$(cat docker/secrets/ntfy_topic)" write-only
+#   docker compose exec -T ntfy ntfy token add --label=grafana grafana | grep -o 'tk_[A-Za-z0-9]*' > docker/secrets/ntfy_token
+#   docker compose exec ntfy ntfy user add --role=admin <your name>                                                  # your own login, to subscribe from this host (http://127.0.0.1:${NTFY_PORT:-2586}); it prompts for the password, so none lands in shell history
+# Grafana refuses to start on an empty ntfy_topic or ntfy_token (guard in the grafana entrypoint). Never put a real topic or token in a file that is committed.
 # Grafana applies the admin password only when it first creates its database: to change it later, run `grafana cli admin reset-admin-password` in the container or remove the grafana_data volume.
 # Host ports of redis, prometheus, grafana and loki bind to 127.0.0.1 (redis has no auth); services reach each other by service name.
 # backend, ai_worker and watchdog run as a non-root user (uid/gid 1000). On a host whose user is not 1000, build with APP_UID/APP_GID set
@@ -125,23 +134,73 @@ services:
       backend:
         condition: service_healthy
 
+  ntfy:
+    profiles: ["observability"]
+    # Local push target for Grafana alerts (ADR D5; no Alertmanager). binwiederhier/ntfy v2.28.0 (2026-08-27, latest stable at least two weeks old),
+    # pinned by tag and multi-arch index digest; Dependabot bumps it. auth-default-access deny-all: nobody reads or writes a topic without a login or
+    # token; the user and token are created with ntfy's own CLI (see the top of this file). Bound to 127.0.0.1 only. Metrics are on a dedicated
+    # in-network port (9091), outside the auth, scraped by Prometheus as job "ntfy". The auth and cache databases live in the ntfy_data volume.
+    image: binwiederhier/ntfy:v2.28.0@sha256:6ef4b819f722fccdc036af611c4774cfdc2de821ab74fdd48bbf4c9d6f8973da
+    command: serve
+    mem_limit: 64m # measured peak 26 MiB over a 2026-10-18 run (about 2.5x headroom)
+    init: true # needed by the healthcheck (no zombie processes)
+    environment:
+      - NTFY_BASE_URL=http://ntfy
+      - NTFY_LISTEN_HTTP=:80
+      - NTFY_CACHE_FILE=/var/lib/ntfy/cache.db
+      - NTFY_AUTH_FILE=/var/lib/ntfy/auth.db
+      - NTFY_AUTH_DEFAULT_ACCESS=deny-all
+      - NTFY_METRICS_LISTEN_HTTP=:9091
+    ports:
+      - "127.0.0.1:${NTFY_PORT:-2586}:80"
+    volumes:
+      - ntfy_data:/var/lib/ntfy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:80/v1/health -O - | grep -Eo '\"healthy\"\\s*:\\s*true' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  node-exporter:
+    profiles: ["observability"]
+    # Host filesystem metrics for the disk alerts (TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER). Pinned by tag and
+    # multi-arch index digest (v1.12.1, 2026-07-14); Dependabot bumps it. No privileged, no host network, no host PID, no host
+    # port: Prometheus reaches it by service name. The host root is mounted read-only at /host (rslave so a separate mount
+    # such as /data shows up under /host/data) and read through --path.rootfs. Only the filesystem collector is enabled,
+    # which is all the rules need; pseudo filesystems are excluded by type.
+    image: prom/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+    mem_limit: 32m # measured peak 11.4 MiB over a 2026-10-18 run (about 3x headroom)
+    command:
+      - '--path.rootfs=/host'
+      - '--collector.disable-defaults'
+      - '--collector.filesystem'
+      - '--collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tmpfs|tracefs)$'
+    volumes:
+      - /:/host:ro,rslave
+    restart: unless-stopped
+    # No healthcheck: the image is a single static binary with no shell or wget; Prometheus' `up{job="node-exporter"}` is the probe.
+
   grafana:
     profiles: ["observability"]
     image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
     # Grafana 13 needs more than the 10.x limit of 256m: it hit 256m and restarted once, then peaked at 480 MiB during first start (317 MiB settled).
-    mem_limit: 768m
+    mem_limit: 768m # measured peak 559 MiB (73 %) with the base alert rules and ntfy contact point loaded, 2026-10-18; watch when the SLO rules are added. Not raised.
     ports:
       - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
     secrets:
       - grafana_admin_password
+      - ntfy_topic
+      - ntfy_token
     # Fail-fast guard: Grafana falls back to admin/admin when the password file is empty (shown on 2026-10-18), so refuse to start on an
-    # empty file or on the literal "admin". /run.sh is the image's own entrypoint.
+    # empty file or on the literal "admin"; the same loop refuses an empty ntfy topic or token file. /run.sh is the image's own entrypoint.
     entrypoint:
       - /bin/sh
       - -c
-      - 'p=$$(tr -d "[:space:]" < /run/secrets/grafana_admin_password); if [ -z "$$p" ] || [ "$$p" = admin ]; then echo "docker/secrets/grafana_admin_password is empty or admin; see the top of compose.yaml" >&2; exit 1; fi; exec /run.sh'
+      - 'p=$$(tr -d "[:space:]" < /run/secrets/grafana_admin_password); if [ -z "$$p" ] || [ "$$p" = admin ]; then echo "docker/secrets/grafana_admin_password is empty or admin; see the top of compose.yaml" >&2; exit 1; fi; for f in ntfy_topic ntfy_token; do if [ -z "$$(tr -d "[:space:]" < /run/secrets/$$f)" ]; then echo "docker/secrets/$$f is empty; see the top of compose.yaml" >&2; exit 1; fi; done; exec /run.sh'
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
@@ -255,9 +314,14 @@ services:
 secrets:
   grafana_admin_password:
     file: ./docker/secrets/grafana_admin_password
+  ntfy_topic:
+    file: ./docker/secrets/ntfy_topic
+  ntfy_token:
+    file: ./docker/secrets/ntfy_token
 
 volumes:
   prometheus_data:
   grafana_data:
   redis_data:
   tempo_data:
+  ntfy_data:
