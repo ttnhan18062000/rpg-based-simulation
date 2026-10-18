@@ -75,10 +75,12 @@ None.
   to platform-planner: the fix may be in rpg's or testing's files.
 
 ## Implementation Notes
-(open)
+- `.github/workflows/iac.yml`: triggers on `pull_request`, `push` to `main` (both path-gated to `infra/**` and the workflow) and `workflow_dispatch`; `permissions: contents: read` only; a concurrency group that cancels PR runs only; `runs-on: ubuntu-latest` (precheck decision, no pin). Jobs: `terraform` (matrix `bootstrap`, `service`: `fmt -check -recursive`, `init -backend=false -input=false`, `validate`), `tflint` (`tflint --init` then `tflint --recursive`; the job's own `github.token` is passed to `--init` only to raise the ruleset download rate limit, accepted by lead), `trivy-config` (report-only, `exit-code: "0"`, JSON report, a job-summary table, an artifact). Versions are workflow `env` (Terraform 1.16.5, tflint v0.64.0, trivy v0.70.0, the last the trivy-action v0.36.0 default and passed explicitly). Actions are SHA-pinned with a version comment, the same pins as `publish-images.yml`.
+- Roles diff (D8): `infra/**` and `.github/workflows/iac.yml` added to platform's `owns` in `registries/session_roles.yaml` (exactly two globs); the cards are regenerated; the owner confirms the diff in the PR.
 
 ## Test Summary
-(open)
+- **validated:** `grep -n -E "secrets\.|terraform (plan|apply|destroy)" .github/workflows/iac.yml` finds nothing; YAML parses; `tests/static` passes with the new workflow; `PYTHONPATH=. python3 tools/sessions/validate.py`: 0 findings; `python3 -m tools.sessions.route` returns domain platform for `infra/terraform/service/main.tf` and `.github/workflows/iac.yml`; the session and registry tests pass once the registry is regenerated.
+- Pending: the PR's own run of `iac.yml` (path match) and the trivy summary and artifact actually read.
 
 ## Files Changed
 (open)

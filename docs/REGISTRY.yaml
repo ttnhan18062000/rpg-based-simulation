@@ -7879,6 +7879,21 @@
   - architecture
   - documentation
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261018-IAC-WORKFLOW-AND-ROLES.md
+  ticket_id: TCK-20261018-IAC-WORKFLOW-AND-ROLES
+  title: 'CI: .github/workflows/iac.yml (fmt, validate, tflint, trivy config report-only;
+    no credentials) and the D8 roles diff for infra/** and iac.yml'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - .github/workflows/iac.yml
+  artifact_files: []
+  tags:
+  - platform
+  - delivery
+  - security
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
   ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24
   title: Platform workflows on the Ubuntu 26 runner migration (observe publish-images,
@@ -7894,11 +7909,12 @@
   - platform
   - delivery
 - type: ticket
-  path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE.md
-  ticket_id: TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE
-  title: 'DevOps S5 (host ubuntu): Terraform for the amendment''s 5b/5c AWS shape,
-    written and validated in CI ($0, no account, no plan, no apply)'
-  tier: epic
+  path: agent-working/tickets/inprogress/TCK-20261018-TERRAFORM-AWS-SKELETON.md
+  ticket_id: TCK-20261018-TERRAFORM-AWS-SKELETON
+  title: 'Terraform: infra/terraform bootstrap (OIDC role, budget alarm and deny action)
+    and service (one Fargate task in the default VPC) roots, written and validated,
+    never applied'
+  tier: standard
   ticket_type: feature
   date: '2026-10-18'
   related_code_areas:
@@ -7909,27 +7925,11 @@
   - delivery
   - security
 - type: ticket
-  path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-IAC-WORKFLOW-AND-ROLES.md
-  ticket_id: TCK-20261018-IAC-WORKFLOW-AND-ROLES
-  title: 'CI: .github/workflows/iac.yml (fmt, validate, tflint, trivy config report-only;
-    no credentials) and the D8 roles diff for infra/** and iac.yml'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - .github/workflows/iac.yml
-  artifact_files: []
-  tags:
-  - platform
-  - delivery
-  - security
-- type: ticket
-  path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-TERRAFORM-AWS-SKELETON.md
-  ticket_id: TCK-20261018-TERRAFORM-AWS-SKELETON
-  title: 'Terraform: infra/terraform bootstrap (OIDC role, budget alarm and deny action)
-    and service (one Fargate task in the default VPC) roots, written and validated,
-    never applied'
-  tier: standard
+  path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE
+  title: 'DevOps S5 (host ubuntu): Terraform for the amendment''s 5b/5c AWS shape,
+    written and validated in CI ($0, no account, no plan, no apply)'
+  tier: epic
   ticket_type: feature
   date: '2026-10-18'
   related_code_areas:
