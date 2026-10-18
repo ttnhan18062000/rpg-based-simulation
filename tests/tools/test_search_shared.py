@@ -809,8 +809,9 @@ def test_the_spawn_cwd_falls_back_to_the_code_roots_parent_outside_git(tmp_path,
 
 def test_every_tools_test_runs_in_a_tmp_runtime_dir_not_the_real_one(tmp_path):
     real = Path(os.environ[ss.TEST_REAL_BASE_ENV])
-    assert Path(os.environ["XDG_RUNTIME_DIR"]).resolve() != real
-    assert Path(os.environ["XDG_RUNTIME_DIR"]).resolve().is_relative_to(tmp_path.resolve())
+    runtime = Path(os.environ["XDG_RUNTIME_DIR"]).resolve()
+    assert runtime != real and runtime.is_dir() and runtime != tmp_path.resolve()
+    assert runtime.is_relative_to(tmp_path.resolve().parent)  # under the pytest basetemp, beside the test's own tmp_path
 
 
 def test_state_dir_refuses_the_real_runtime_dir_under_pytest(tmp_path, monkeypatch):
@@ -842,4 +843,5 @@ def test_the_server_main_creates_its_lock_only_inside_the_tmp_runtime_dir(tmp_pa
     monkeypatch.setattr(ss, "_load_search_mcp", lambda: Mcp)
     assert ss._main(["serve", "--db", str(tmp_path / "knowledge.db")]) == 1
     assert (ss.state_dir(tmp_path / "knowledge.db") / "server.lock").exists()
-    assert ss.state_dir(tmp_path / "knowledge.db").is_relative_to(tmp_path)
+    assert ss.state_dir(tmp_path / "knowledge.db").is_relative_to(Path(os.environ["XDG_RUNTIME_DIR"]))
+    assert not ss.state_dir(tmp_path / "knowledge.db").is_relative_to(Path(os.environ[ss.TEST_REAL_BASE_ENV]))

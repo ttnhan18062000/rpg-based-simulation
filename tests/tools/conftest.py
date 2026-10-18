@@ -27,9 +27,9 @@ def _search_shared_off_by_default(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _tmp_runtime_dir_for_every_tools_test(tmp_path, monkeypatch):
+def _tmp_runtime_dir_for_every_tools_test(tmp_path_factory, monkeypatch):
     """Every tools test gets its own XDG_RUNTIME_DIR, so nothing that reaches `search_shared` (a lock, a state dir, a
     server) can touch the live `$XDG_RUNTIME_DIR/rpg-search`. Tests that need a runtime dir of their own still set theirs."""
-    runtime = tmp_path / "_xdg_runtime"
-    runtime.mkdir(mode=0o700, exist_ok=True)
+    runtime = tmp_path_factory.mktemp("xdg_runtime")  # outside the test's own tmp_path: some tests assert it is empty
+    runtime.chmod(0o700)
     monkeypatch.setenv("XDG_RUNTIME_DIR", str(runtime))

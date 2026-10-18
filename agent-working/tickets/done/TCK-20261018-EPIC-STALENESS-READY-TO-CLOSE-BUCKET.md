@@ -70,8 +70,10 @@ The owner said yes on 2026-10-18 (via lead-planner, #634). In the triage of 8 "s
 - The "unresolved" section is shown only when at least one child resolves and every resolvable child is done, so a not-yet-filed plan does not add noise (an earlier version listed those and broke two existing exact-count tests).
 - Real-data check: `make agent-monitoring-epic-staleness` on this branch (origin/main plus the planner's batch commits, the four epics already closed) lists nothing under Ready to close and no unresolved section.
 
+- **Planner review (epic E trap):** an epic whose own SEQUENCE.md or body says a plan item is `not filed` / `not yet filed` / `unfiled` (case-insensitive) is not ready: it is listed under "Not ready to close: plan items not filed yet" with the matching line. The ready section is retitled "All filed children done (check SEQUENCE.md for unfiled plan items, then close the epic and move its folder to done/):" and its line counts real children only (cross-referenced epics are not counted).
+
 ## Test Summary
-`tests/tools/test_epic_staleness_check.py`, `test_monitoring_hook_subdirectory_cwd.py`, `test_status_drift_check.py`: 65 passed (8 new): all children done → ready and not stale or hook-visible; one open child → stale; a ghost ID blocks and is named; cross-referenced epics (done and in-progress) ignored; BLOCKED wins; no children → not ready; a stray sibling ticket blocks; the hook never counts a ready epic.
+`tests/tools/test_epic_staleness_check.py`, `test_monitoring_hook_subdirectory_cwd.py`, `test_status_drift_check.py`: 65 passed (11 new, including the epic-E shape: all filed children done plus a "not yet filed" line → not ready and named; every spelling; body wording; real-children count): all children done → ready and not stale or hook-visible; one open child → stale; a ghost ID blocks and is named; cross-referenced epics (done and in-progress) ignored; BLOCKED wins; no children → not ready; a stray sibling ticket blocks; the hook never counts a ready epic.
 
 ## Files Changed
 - tools/agent-monitoring/epic_staleness_check.py

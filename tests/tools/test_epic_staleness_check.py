@@ -1006,7 +1006,7 @@ def test_an_epic_with_every_child_in_done_is_ready_to_close_not_stale(tmp_path):
     for child in ("TCK-20260601-CHILD-A", "TCK-20260601-CHILD-B"):
         _write_ticket(done / f"{child}.md", child, "standard", "2026-06-01")
     report = _report(tmp_path)
-    assert epic_id in _section(report, "Ready to close")
+    assert epic_id in _section(report, "All filed children done")
     assert epic_id not in _section(report, "Stale epics:")
     assert find_stale_epics(inprogress, todos, tmp_path / "working_log.csv", tmp_path / "runs", now=NOW) == []
 
@@ -1017,7 +1017,7 @@ def test_one_open_child_keeps_the_epic_stale(tmp_path):
     _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
     _write_ticket(folder / "TCK-20260601-CHILD-B.md", "TCK-20260601-CHILD-B", "standard", "2026-06-01")
     report = _report(tmp_path)
-    assert epic_id not in _section(report, "Ready to close")
+    assert epic_id not in _section(report, "All filed children done")
     assert epic_id in _section(report, "Stale epics:")
 
 
@@ -1026,7 +1026,7 @@ def test_a_child_id_that_resolves_nowhere_blocks_the_bucket_and_is_named(tmp_pat
     _, epic_id = _folder_epic(todos, "typo", ["TCK-20260601-CHILD-A", "TCK-20260601-CHILD-GHOST"])
     _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
     report = _report(tmp_path)
-    assert epic_id not in _section(report, "Ready to close")
+    assert epic_id not in _section(report, "All filed children done")
     assert "unresolved: TCK-20260601-CHILD-GHOST" in report and epic_id in report.split("exist nowhere:")[1]
 
 
@@ -1035,11 +1035,11 @@ def test_a_cross_referenced_epic_id_is_not_a_child(tmp_path):
     _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
     _write_ticket(done / "TCK-20260501-OTHER-EPIC.md", "TCK-20260501-OTHER-EPIC", "epic", "2026-05-01")
     _, epic_id = _folder_epic(todos, "crossref", ["TCK-20260601-CHILD-A", "TCK-20260501-OTHER-EPIC"])
-    assert epic_id in _section(_report(tmp_path), "Ready to close")
+    assert epic_id in _section(_report(tmp_path), "All filed children done")
     # an epic that is only elsewhere (still open in inprogress/) is ignored the same way
     _write_ticket(inprogress / "TCK-20260502-LIVE-EPIC.md", "TCK-20260502-LIVE-EPIC", "epic", "2026-05-02")
     _, second = _folder_epic(todos, "crossref2", ["TCK-20260601-CHILD-A", "TCK-20260502-LIVE-EPIC"])
-    assert second in _section(_report(tmp_path), "Ready to close")
+    assert second in _section(_report(tmp_path), "All filed children done")
 
 
 def test_blocked_wins_over_ready_to_close(tmp_path):
@@ -1047,14 +1047,14 @@ def test_blocked_wins_over_ready_to_close(tmp_path):
     _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
     _, epic_id = _folder_epic(todos, "parked", ["TCK-20260601-CHILD-A"], body_status="BLOCKED")
     report = _report(tmp_path)
-    assert epic_id not in _section(report, "Ready to close")
+    assert epic_id not in _section(report, "All filed children done")
     assert epic_id in report.split("BLOCKED epics")[1]
 
 
 def test_an_epic_with_no_children_is_not_ready(tmp_path):
     inprogress, todos, done = _tickets_tree(tmp_path)
     _, epic_id = _folder_epic(todos, "empty", [])
-    assert epic_id not in _section(_report(tmp_path), "Ready to close")
+    assert epic_id not in _section(_report(tmp_path), "All filed children done")
 
 
 def test_a_sibling_ticket_file_left_in_the_folder_blocks_the_bucket(tmp_path):
@@ -1062,7 +1062,7 @@ def test_a_sibling_ticket_file_left_in_the_folder_blocks_the_bucket(tmp_path):
     folder, epic_id = _folder_epic(todos, "leftover", ["TCK-20260601-CHILD-A"])
     _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
     _write_ticket(folder / "TCK-20260601-STRAY.md", "TCK-20260601-STRAY", "standard", "2026-06-01")
-    assert epic_id not in _section(_report(tmp_path), "Ready to close")
+    assert epic_id not in _section(_report(tmp_path), "All filed children done")
 
 
 def test_the_hook_nudge_never_counts_a_ready_epic(tmp_path):
@@ -1070,3 +1070,34 @@ def test_the_hook_nudge_never_counts_a_ready_epic(tmp_path):
     _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
     _folder_epic(todos, "finished", ["TCK-20260601-CHILD-A"])
     assert find_stale_epics(inprogress, todos, tmp_path / "working_log.csv", tmp_path / "runs", now=NOW) == []
+
+
+def test_an_epic_whose_plan_says_items_are_not_filed_yet_is_not_ready_and_is_named(tmp_path):
+    """The epic-E shape: every filed child is done, but SEQUENCE.md says other plan items are not filed yet."""
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
+    folder, epic_id = _folder_epic(todos, "planned", ["TCK-20260601-CHILD-A"])
+    with open(folder / "SEQUENCE.md", "a") as f:
+        f.write("\nE2, E3, E5 and E6 are  Not Yet Filed.\n")
+    report = _report(tmp_path)
+    assert epic_id not in _section(report, "All filed children done")
+    named = _section(report, "Not ready to close: plan items not filed yet:")
+    assert epic_id in named and "E2, E3, E5 and E6 are  Not Yet Filed." in named
+
+
+def test_unfiled_wording_in_the_epic_body_also_blocks_and_each_spelling_matches(tmp_path):
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
+    for i, phrase in enumerate(("these are not filed", "still UNFILED", "not yet filed")):
+        folder, epic_id = _folder_epic(todos, f"body{i}", ["TCK-20260601-CHILD-A"])
+        epic_file = folder / f"{epic_id}.md"
+        epic_file.write_text(epic_file.read_text() + f"\n## Scope\nPhase 2: {phrase}.\n")
+        assert epic_id in _section(_report(tmp_path), "Not ready to close: plan items not filed yet:")
+
+
+def test_the_ready_line_counts_real_children_not_cross_referenced_epics(tmp_path):
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
+    _write_ticket(done / "TCK-20260501-OTHER-EPIC.md", "TCK-20260501-OTHER-EPIC", "epic", "2026-05-01")
+    _folder_epic(todos, "counted", ["TCK-20260601-CHILD-A", "TCK-20260501-OTHER-EPIC"])
+    assert "1 child ticket(s), all in done/" in _section(_report(tmp_path), "All filed children done")
