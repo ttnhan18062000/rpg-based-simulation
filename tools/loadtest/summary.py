@@ -180,3 +180,55 @@ def step_flags(*, backend_mem_mb: float, mem_limit_mb: float, rates: Mapping[str
     if disk_delta_kb_s > HOST_BASELINE_LIMIT_KB_S:
         flags.append("host_disk")
     return flags
+
+
+# --- engine state per step (the engine shares the backend process and its GIL) ---------------------------------------------
+
+ENGINE_FIELDS = ("status", "current_tick", "governor_mode", "health_state", "observability_mode", "elapsed_seconds")
+
+
+def engine_reading(payload: Mapping | None, taken_at: float) -> dict | None:
+    """The fields of one /api/v1/observability/live/status reading, plus the wall time it was taken. None if there is no payload."""
+    if not isinstance(payload, Mapping):
+        return None
+    reading = {name: payload.get(name) for name in ENGINE_FIELDS}
+    reading["taken_at"] = taken_at
+    return reading
+
+
+def ticks_per_second(start: Mapping | None, end: Mapping | None) -> float | None:
+    """Engine ticks per second between two readings. Uses the engine's own elapsed_seconds when both readings carry it, else the wall
+    time of the readings. None when a reading or tick is missing, the tick went backwards (engine restarted) or no time passed."""
+    if not start or not end:
+        return None
+    first, last = start.get("current_tick"), end.get("current_tick")
+    if not isinstance(first, (int, float)) or not isinstance(last, (int, float)) or last < first:
+        return None
+    seconds = None
+    if isinstance(start.get("elapsed_seconds"), (int, float)) and isinstance(end.get("elapsed_seconds"), (int, float)):
+        seconds = end["elapsed_seconds"] - start["elapsed_seconds"]
+    if seconds is None or seconds <= 0:
+        seconds = end["taken_at"] - start["taken_at"]
+    return (last - first) / seconds if seconds > 0 else None
+
+
+def aggregate_engine(windows: Sequence[tuple[Mapping | None, Mapping | None]]) -> dict:
+    """One step's engine summary from its (start, end) readings, one pair per repeat: ticks/s per repeat and the modes seen."""
+    rates = [ticks_per_second(a, b) for a, b in windows]
+    readings = [r for pair in windows for r in pair if r]
+    return {
+        "ticks_per_s": [None if r is None else round(r, 2) for r in rates],
+        "ticks_per_s_median": round(statistics.median(valid), 2) if (valid := [r for r in rates if r is not None]) else None,
+        "start": windows[0][0] if windows else None,
+        "end": windows[-1][1] if windows else None,
+        "governor_modes": sorted({r["governor_mode"] for r in readings if r.get("governor_mode")}),
+        "health_states": sorted({r["health_state"] for r in readings if r.get("health_state")}),
+        "observability_modes": sorted({r["observability_mode"] for r in readings if r.get("observability_mode")}),
+    }
+
+
+def format_engine_row(users: int, engine: Mapping) -> str:
+    """One row of the per-step engine table: users, ticks/s median, then governor / health / observability mode (n/a when unread)."""
+    tps = engine.get("ticks_per_s_median")
+    modes = (", ".join(engine.get(key) or ["n/a"]) for key in ("governor_modes", "health_states", "observability_modes"))
+    return f"{users:>5} {'n/a' if tps is None else f'{tps:.1f}':>8} ticks/s  " + " / ".join(modes)

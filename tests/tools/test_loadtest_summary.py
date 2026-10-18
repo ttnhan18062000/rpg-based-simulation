@@ -157,3 +157,60 @@ def test_status_key_is_hashed_after_the_pool_under_its_own_client_id() -> None:
     value = api_key_hashes(["k0"], status_key="status")
     assert value == f"loadtest-0:{hash_key('k0')},{STATUS_CLIENT_ID}:{hash_key('status')}"
     assert "status" not in value.replace(STATUS_CLIENT_ID, "")   # only the hash, never the key
+
+
+# --- engine state per step -------------------------------------------------------------------------------------------------
+
+def _status(tick: int, elapsed: float | None = None, governor: str = "DEGRADED") -> dict:
+    return {"status": "RUNNING", "current_tick": tick, "elapsed_seconds": elapsed, "governor_mode": governor,
+            "health_state": "DEGRADED", "observability_mode": "LIGHT", "run_id": "ignored"}
+
+
+def test_engine_reading_keeps_only_the_status_fields_and_the_time() -> None:
+    reading = summary.engine_reading(_status(10, 2.0), 100.0)
+    assert reading is not None and reading["current_tick"] == 10 and reading["taken_at"] == 100.0
+    assert "run_id" not in reading
+
+
+def test_engine_reading_of_a_missing_payload_is_none() -> None:
+    assert summary.engine_reading(None, 1.0) is None
+
+
+def test_ticks_per_second_uses_the_engines_own_elapsed_seconds() -> None:
+    start, end = summary.engine_reading(_status(100, 10.0), 0.0), summary.engine_reading(_status(300, 20.0), 99.0)
+    assert summary.ticks_per_second(start, end) == pytest.approx(20.0)
+
+
+def test_ticks_per_second_falls_back_to_wall_time() -> None:
+    start, end = summary.engine_reading(_status(100), 0.0), summary.engine_reading(_status(160), 30.0)
+    assert summary.ticks_per_second(start, end) == pytest.approx(2.0)
+
+
+@pytest.mark.parametrize("start,end", [(None, {"current_tick": 5, "taken_at": 1.0}), ({"current_tick": 9, "taken_at": 0.0}, {"current_tick": 5, "taken_at": 1.0}),
+                                       ({"current_tick": 5, "taken_at": 1.0}, {"current_tick": 9, "taken_at": 1.0}),
+                                       ({"current_tick": None, "taken_at": 0.0}, {"current_tick": 9, "taken_at": 1.0})])
+def test_ticks_per_second_is_none_when_it_cannot_be_trusted(start, end) -> None:
+    assert summary.ticks_per_second(start, end) is None
+
+
+def test_aggregate_engine_gives_median_rate_and_modes_seen() -> None:
+    windows = [(summary.engine_reading(_status(0, 0.0), 0.0), summary.engine_reading(_status(100, 10.0), 10.0)),
+               (summary.engine_reading(_status(100, 10.0), 10.0), summary.engine_reading(_status(120, 20.0, "NORMAL"), 20.0)),
+               (None, None)]
+    agg = summary.aggregate_engine(windows)
+    assert agg["ticks_per_s"] == [10.0, 2.0, None]
+    assert agg["ticks_per_s_median"] == pytest.approx(6.0)
+    assert agg["governor_modes"] == ["DEGRADED", "NORMAL"]
+    assert agg["start"]["current_tick"] == 0 and agg["end"] is None
+
+
+def test_aggregate_engine_with_no_readings_is_all_unread() -> None:
+    agg = summary.aggregate_engine([(None, None)])
+    assert agg["ticks_per_s_median"] is None and agg["governor_modes"] == [] and agg["start"] is None
+
+
+def test_engine_row_shows_ticks_and_modes_and_na_when_unread() -> None:
+    row = summary.format_engine_row(25, {"ticks_per_s_median": 12.34, "governor_modes": ["DEGRADED"], "health_states": ["DEGRADED", "OK"],
+                                         "observability_modes": ["LIGHT"]})
+    assert row.split() [:3] == ["25", "12.3", "ticks/s"] and row.endswith("DEGRADED / DEGRADED, OK / LIGHT")
+    assert summary.format_engine_row(10, {"ticks_per_s_median": None, "governor_modes": [], "health_states": [], "observability_modes": []}).endswith("n/a / n/a / n/a")

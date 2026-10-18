@@ -22,6 +22,8 @@ Smoke check: `--users 5,10 --duration 30 --repeats 1 --warmup 5 --smoke` (the ou
 `--single-key` makes all users share key 0, which shows the per-key limit (30 tokens, refill 3/s,
 `src/api/admission_control.py`) as `admission_429` failures; the pool does not.
 
+The engine state (tick, governor/health/observability mode, ticks/s) is read through the status key at the start and end of every repeat and shown per step (`summary.json` `engine`).
+
 Output goes to `tools/loadtest/runs/<utc timestamp>/` (gitignored): per step and repeat `step<N>_r<R>_stats.csv`,
 `_failures.csv`, `_use.json`; plus `manifest.json` and `summary.json`.
 

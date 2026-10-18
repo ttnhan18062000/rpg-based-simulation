@@ -209,17 +209,21 @@ def main(argv: list[str] | None = None) -> int:
     baseline = digest_use(baseline_sampler.finish(), backend_name)
     (out / "baseline_use.json").write_text(json.dumps(baseline))
 
+    status_url = f"{args.host}/api/v1/observability/live/status"
     per_step: dict[int, dict] = {}
     for users in steps:
-        repeats, uses, rates_all = [], [], []
+        repeats, uses, rates_all, engine_windows = [], [], [], []
         for repeat in range(args.repeats):
             if args.warmup:
                 run_locust(users, args.warmup, None, args.host, env).wait()
             prefix = out / f"step{users}_r{repeat}"
+            engine_start = summary.engine_reading(get_json(status_url, status_key), time.time())
             proc = run_locust(users, args.duration, prefix, args.host, env)
             sampler = UseSampler(containers, proc.pid, args.sample_interval)
             sampler.start()
             proc.wait()
+            engine_end = summary.engine_reading(get_json(status_url, status_key), time.time())
+            engine_windows.append((engine_start, engine_end))
             samples = sampler.finish()
             (out / f"step{users}_r{repeat}_use.json").write_text(json.dumps(samples))
             stats = summary.parse_stats_csv(Path(f"{prefix}_stats.csv"))
@@ -239,6 +243,7 @@ def main(argv: list[str] | None = None) -> int:
         disk_delta, _ = summary.above_baseline(_mean([u["disk_kb_s_mean"] for u in uses]), baseline["disk_kb_s_mean"])
         rates = {k: max(r[k] for r in rates_all) for k in rates_all[0]}
         per_step[users] = {
+            "engine": summary.aggregate_engine(engine_windows),
             "spread": agg, "peak_use": peak_use, "containers_peak": containers_peak, "error_rates": rates,
             "swap_delta_kb_s": swap_delta, "disk_delta_kb_s": disk_delta,
             "ceiling_warning": summary.ceiling_warning(agg["rps"]["median"], 1 if args.single_key else len(keys)),
@@ -261,6 +266,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{users:>5} {s['rps']['median']:>10.1f} ({s['rps']['min']:.1f}-{s['rps']['max']:.1f}) {s['p50']['median']:>6.0f} "
               f"{s['p95']['median']:>6.0f} {s['p99']['median']:>6.0f} {d['error_rates']['admission_429']:>6.1%} "
               f"{d['error_rates']['server_5xx']:>6.1%}  {','.join(flags)}")
+    print("engine per step (status key, read at the start and end of every repeat): ticks/s median, governor / health / observability mode")
+    for users, d in per_step.items():
+        print(summary.format_engine_row(users, d["engine"]))
     print("saturation (throughput gain < 10 % while p95 rises >= 50 %):",
           f"{sat.resource} at {sat.users} users ({sat.branch})" if sat else "no knee within the tested steps")
     names = sorted({n for d in per_step.values() for n in d["containers_peak"]})
