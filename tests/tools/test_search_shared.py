@@ -63,6 +63,7 @@ def shared_env(tmp_path, monkeypatch):
     monkeypatch.setenv("RPG_SEARCH_SHARED", "1")
     monkeypatch.setenv("RPG_SEARCH_SHARED_ALLOW_TEST_SPAWN", "1")
     monkeypatch.setenv("RPG_SEARCH_IDLE_SECONDS", "30")
+    monkeypatch.setenv(ss.CODE_ROOT_ENV, str(_TOOLS.parent))  # the stub server hashes this checkout's tools
     monkeypatch.setattr(ss, "_server_argv", lambda d: [sys.executable, str(stub), str(d)])
     yield db
     state = ss._read_state(ss.state_dir(db))
@@ -376,6 +377,7 @@ def test_a_reload_during_a_search_in_flight_never_mixes_generations(tmp_path):
 
 
 def test_the_server_refuses_to_serve_a_database_other_than_the_one_it_searches(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / "run"))
     class Mcp:
         _DB_PATH = tmp_path / "searched.db"
 
@@ -389,6 +391,7 @@ def test_the_server_refuses_to_serve_a_database_other_than_the_one_it_searches(t
 
 
 def test_the_server_accepts_the_database_it_searches_under_any_spelling(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / "run"))
     real = tmp_path / "real"
     real.mkdir()
     (tmp_path / "alias").symlink_to(real)
@@ -402,3 +405,224 @@ def test_the_server_accepts_the_database_it_searches_under_any_spelling(tmp_path
 
     monkeypatch.setattr(ss, "_load_search_mcp", lambda: Mcp)
     assert ss._main(["serve", "--db", str(tmp_path / "alias" / "knowledge.db")]) == 1  # reached _ensure_loaded
+
+
+# ── TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT ──────────────
+
+_SLOW_STUB = '''
+import importlib.util, os, sys, time
+from pathlib import Path
+spec = importlib.util.spec_from_file_location("search_shared", {path!r})
+ss = importlib.util.module_from_spec(spec); sys.modules["search_shared"] = ss; spec.loader.exec_module(ss)
+db = Path(sys.argv[1])
+with open({launches!r}, "a") as f:
+    f.write("launch\\n")
+directory = ss.state_dir(db)
+assert ss._ensure_private_dir(directory)
+if not ss._claim_single_instance(directory):
+    sys.exit(0)
+with open({launches!r}, "a") as f:
+    f.write("won\\n")
+ss._write_starting(directory, os.getpid())
+time.sleep(float(os.environ["STUB_LOAD_SECONDS"]))   # the model load, longer than SPAWN_WAIT_SECONDS
+def fake(query, top_k=8, section=None, mode="hybrid"):
+    return [{{"doc_id": query}}]
+sys.exit(ss.serve(fake, db, 30.0))
+'''
+
+
+def _git(cwd, *args):
+    import subprocess
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t"}
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, env=env)
+
+
+@pytest.fixture
+def two_checkouts(tmp_path, monkeypatch):
+    """A main checkout and a linked worktree, each with a tools/ holding search_shared.py (the worktree's differs)."""
+    main = tmp_path / "main"
+    (main / "tools").mkdir(parents=True)
+    (main / "tools" / "search_shared.py").write_text("main\n")
+    _git(main, "init", "-q", "-b", "main")
+    _git(main, "add", "-A")
+    _git(main, "commit", "-q", "-m", "init")
+    wt = tmp_path / "wt"
+    _git(main, "worktree", "add", "-q", "-b", "wt", str(wt))
+    (wt / "tools" / "search_shared.py").write_text("an edit in the worktree\n")
+    monkeypatch.delenv(ss.CODE_ROOT_ENV, raising=False)
+    monkeypatch.setattr(ss, "_TOOLS_DIR", wt / "tools")
+    ss._own_main_root.cache_clear()
+    yield main, wt
+    ss._own_main_root.cache_clear()
+
+
+def test_code_root_is_the_main_checkout_from_a_worktree_never_the_cwd(two_checkouts, tmp_path, monkeypatch):
+    main, wt = two_checkouts
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+    main_index = main / "agent-working" / ".index" / "knowledge.db"
+    assert ss.code_tools_dir(main_index) == main / "tools"
+    assert ss.code_tools_dir(tmp_path / "somewhere" / "knowledge.db") == main / "tools"
+
+
+def test_a_worktree_with_its_own_index_keeps_its_own_code(two_checkouts):
+    main, wt = two_checkouts
+    assert ss.code_tools_dir(wt / "agent-working" / ".index" / "knowledge.db") == wt / "tools"
+
+
+def test_code_root_falls_back_to_the_own_dir_outside_git_and_the_override_wins(tmp_path, monkeypatch):
+    plain = tmp_path / "plain" / "tools"
+    plain.mkdir(parents=True)
+    monkeypatch.delenv(ss.CODE_ROOT_ENV, raising=False)
+    monkeypatch.setattr(ss, "_TOOLS_DIR", plain)
+    ss._own_main_root.cache_clear()
+    try:
+        assert ss.code_tools_dir(tmp_path / "knowledge.db") == plain
+        monkeypatch.setenv(ss.CODE_ROOT_ENV, str(tmp_path / "chosen"))
+        assert ss.code_tools_dir(tmp_path / "knowledge.db") == tmp_path / "chosen" / "tools"
+    finally:
+        ss._own_main_root.cache_clear()
+
+
+def test_the_server_argv_runs_the_main_checkouts_search_shared(two_checkouts):
+    main, wt = two_checkouts
+    argv = ss._server_argv(main / "knowledge.db")
+    assert argv[1] == str(main / "tools" / "search_shared.py") and argv[2:] == ["serve", "--db", str(main / "knowledge.db")]
+
+
+def test_clients_whose_own_tools_differ_still_attach_to_the_one_server(shared_env, tmp_path, monkeypatch):
+    """Two worktree clients with edited tools/ and one main client hash the SAME code root, so none falls back."""
+    other = tmp_path / "edited" / "tools"
+    other.mkdir(parents=True)
+    for name in ss._CODE_FILES:
+        (other / name).write_text("an edit that changes this copy's own hash")
+    answers = [ss.try_search_ex(shared_env, "a", 2, None, "hybrid")]
+    monkeypatch.setattr(ss, "_TOOLS_DIR", other)  # a worktree client: its own copy differs, the code root is pinned
+    answers += [ss.try_search_ex(shared_env, "b", 2, None, "hybrid"), ss.try_search_ex(shared_env, "c", 2, None, "hybrid")]
+    assert [a[1] for a in answers] == [None, None, None] and answers[2][0] == _fake_search("c", 2)
+    assert len({ss._read_state(ss.state_dir(shared_env))["pid"]}) == 1
+
+
+def _slow_server(tmp_path, monkeypatch, load_seconds: float):
+    launches = tmp_path / "launches.log"
+    stub = tmp_path / "slow_stub.py"
+    stub.write_text(_SLOW_STUB.format(path=str(_TOOLS / "search_shared.py"), launches=str(launches)))
+    monkeypatch.setenv("STUB_LOAD_SECONDS", str(load_seconds))
+    monkeypatch.setattr(ss, "_server_argv", lambda d: [sys.executable, str(stub), str(d)])
+    monkeypatch.setattr(ss, "SPAWN_WAIT_SECONDS", 0.6)
+    return launches
+
+
+def _wait_ready_for_teardown(db):
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline and ss._read_state(ss.state_dir(db)) is None:
+        time.sleep(0.1)
+
+
+def test_clients_racing_a_slow_start_end_with_one_server_and_none_loads_a_model(shared_env, tmp_path, monkeypatch):
+    launches = _slow_server(tmp_path, monkeypatch, load_seconds=2.0)
+    results: list = []
+    barrier = threading.Barrier(3)
+
+    def client(i: int) -> None:
+        barrier.wait()
+        results.append(ss.try_search_ex(shared_env, f"q{i}", 2, None, "hybrid"))
+
+    threads = [threading.Thread(target=client, args=(i,)) for i in range(3)]
+    [t.start() for t in threads]
+    [t.join(30) for t in threads]
+    assert sorted(r[1] for r in results) == [ss.REASON_STARTING] * 3 and all(r[0] is None for r in results)
+    _wait_ready_for_teardown(shared_env)
+    lines = launches.read_text().split()
+    assert lines.count("won") == 1 and lines.count("launch") == 1  # not even a losing second launch
+    assert ss.try_search_ex(shared_env, "later", 2, None, "hybrid") == ([{"doc_id": "later"}], None)
+
+
+def test_a_second_server_on_the_same_state_dir_exits_zero_without_loading(shared_env, monkeypatch):
+    directory = ss.state_dir(shared_env)
+    assert ss._ensure_private_dir(directory) and ss._claim_single_instance(directory)
+    try:
+        monkeypatch.setattr(ss, "_load_search_mcp", lambda: pytest.fail("a losing server must not load anything"))
+        assert ss._main(["serve", "--db", str(shared_env)]) == 0
+        assert ss._server_lock_held(directory)  # the holder's lock is untouched
+    finally:
+        ss._release_single_instance()
+    assert not ss._server_lock_held(directory)
+
+
+def test_a_killed_holders_lock_vanishes_with_its_pid(shared_env):
+    import subprocess
+    directory = ss.state_dir(shared_env)
+    assert ss._ensure_private_dir(directory)
+    code = ("import importlib.util,sys,time;from pathlib import Path;"
+            f"s=importlib.util.spec_from_file_location('ss',{str(_TOOLS / 'search_shared.py')!r});m=importlib.util.module_from_spec(s);"
+            "sys.modules['ss']=m;s.loader.exec_module(m);"
+            f"assert m._claim_single_instance(Path({str(directory)!r}));print('held',flush=True);time.sleep(60)")
+    child = subprocess.Popen([sys.executable, "-c", code], stdout=subprocess.PIPE, text=True)
+    try:
+        assert child.stdout.readline().strip() == "held"
+        assert ss._server_lock_held(directory) and not ss._claim_single_instance(directory)
+        child.kill()
+        child.wait(10)
+        assert not ss._server_lock_held(directory)
+        assert ss._claim_single_instance(directory)  # the successor takes it with no manual cleanup
+    finally:
+        ss._release_single_instance()
+        if child.poll() is None:
+            child.kill()
+
+
+def test_a_starting_record_with_a_dead_pid_is_stale_and_cleared_then_respawned(shared_env, monkeypatch):
+    import subprocess
+    dead = subprocess.Popen([sys.executable, "-c", "pass"])
+    dead.wait()
+    directory = ss.state_dir(shared_env)
+    assert ss._ensure_private_dir(directory)
+    ss._write_starting(directory, dead.pid)
+    spawned: list = []
+    monkeypatch.setattr(ss, "_spawn", lambda d, db: spawned.append(1) or os.getpid())
+    monkeypatch.setattr(ss, "SPAWN_WAIT_SECONDS", 0.2)
+    state, why = ss._attach_or_spawn(directory, shared_env)
+    assert spawned == [1] and state is None and why == ss.REASON_STARTING
+
+
+def test_a_live_young_starting_record_is_never_unlinked_or_respawned(shared_env, monkeypatch):
+    directory = ss.state_dir(shared_env)
+    assert ss._ensure_private_dir(directory)
+    ss._write_starting(directory, os.getpid())
+    monkeypatch.setattr(ss, "_spawn", lambda *a: pytest.fail("must not spawn over a starting server"))
+    monkeypatch.setattr(ss, "SPAWN_WAIT_SECONDS", 0.2)
+    assert ss._attach_or_spawn(directory, shared_env) == (None, ss.REASON_STARTING)
+    assert ss._read_starting(directory)["pid"] == os.getpid()
+
+
+def test_a_server_that_holds_the_lock_but_is_past_the_start_grace_is_reported_unresponsive(shared_env, monkeypatch):
+    directory = ss.state_dir(shared_env)
+    assert ss._ensure_private_dir(directory) and ss._claim_single_instance(directory)
+    try:
+        ss._write_state(directory, {"state": "starting", "pid": os.getpid(), "started": time.time() - ss.START_GRACE_SECONDS - 5})
+        monkeypatch.setattr(ss, "_spawn", lambda *a: pytest.fail("a hung server still holds the lock: no second server"))
+        monkeypatch.setattr(ss, "SPAWN_WAIT_SECONDS", 0.2)
+        assert ss._attach_or_spawn(directory, shared_env) == (None, ss.REASON_UNRESPONSIVE)
+    finally:
+        ss._release_single_instance()
+
+
+def test_two_indexes_get_two_servers_and_neither_respawns_on_repeat_queries(shared_env, tmp_path, monkeypatch):
+    other = tmp_path / "other" / "knowledge.db"
+    other.parent.mkdir()
+    other.write_bytes(b"y")
+    spawns: list = []
+    real = ss._spawn
+    monkeypatch.setattr(ss, "_spawn", lambda d, db: spawns.append(db) or real(d, db))
+    for _ in range(3):
+        for db in (shared_env, other):
+            assert ss.try_search_ex(db, "q", 2, None, "hybrid")[0] == _fake_search("q", 2)
+    pids = {ss._read_state(ss.state_dir(db))["pid"] for db in (shared_env, other)}
+    assert len(spawns) == 2 and len(pids) == 2
+    try:
+        os.kill(ss._read_state(ss.state_dir(other))["pid"], signal.SIGTERM)
+    except OSError:
+        pass

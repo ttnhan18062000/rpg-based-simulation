@@ -7683,6 +7683,26 @@
   - performance
   - benchmarking
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT.md
+  ticket_id: TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT
+  title: One shared search server per host, served from the main checkout's code.
+    Clients that time out or see a code mismatch stop loading their own model.
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/search_shared.py, tools/search_mcp.py, tools/start_*_mcp.sh (read only unless
+    needed)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT/test_plan.md
+  tags:
+  - ai
+  - mcp
+  - bug
+  - root-cause
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-TEMPO-TRACE-BACKEND.md
   ticket_id: TCK-20261018-TEMPO-TRACE-BACKEND
   title: 'Compose: Grafana Tempo in the observability profile as the OTLP trace backend,
@@ -7756,23 +7776,6 @@
   tags:
   - platform
   - delivery
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT.md
-  ticket_id: TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT
-  title: One shared search server per host, served from the main checkout's code.
-    Clients that time out or see a code mismatch stop loading their own model.
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-18'
-  related_code_areas:
-  - tools/search_shared.py, tools/search_mcp.py, tools/start_*_mcp.sh (read only unless
-    needed)
-  artifact_files: []
-  tags:
-  - ai
-  - mcp
-  - bug
-  - root-cause
 - type: ticket
   path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
   ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF

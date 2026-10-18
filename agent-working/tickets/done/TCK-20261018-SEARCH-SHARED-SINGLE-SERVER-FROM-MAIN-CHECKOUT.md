@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT
-phase: open
+phase: done
 date: 2026-10-18
 tags: [ai, mcp, bug, root-cause]
 ---
@@ -15,7 +15,7 @@ tags: [ai, mcp, bug, root-cause]
 One shared search server per host, served from the main checkout's code. Clients that time out or see a code mismatch stop loading their own model.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -86,6 +86,22 @@ The root causes are in `investigation.md`. In short:
 - Lexical-only versus in-process fallback while the server starts: the implementer proposes in plan.md, and the planner decides at review.
 
 ## Implementation Notes
+Details and deviations are in `plan.md` ("Implementer refinements"). Summary:
+- `search_shared.code_tools_dir(db_path)` pins the server argv and the client's code hash to the main checkout's `tools/` (git-common-dir of the module's own path); exception for a worktree's own index; `RPG_SEARCH_SHARED_CODE_ROOT` override.
+- The server takes `flock` on `server.lock` first thing in `_main` (before importing search_mcp or loading), writes a `starting` record, and holds the lock for life. Clients write the `starting` record with the child's pid right after the spawn, wait outside the client lock, and treat "lock held" or "young live starting record" as a server being present (never respawn).
+- `try_search_ex` returns `(answer, reason)`; `try_search` stays as the printing wrapper. `search_mcp` logs one line per move between shared / lexical-only / in-process, and answers lexical-only (`degraded: lexical_only_server_starting`, no model load) while a server is starting inside the 180 s grace.
+- `docs/guidelines/agent_working_environment.md` § One shared search model updated. `make knowledge-index-update` was not run (it loads the model; needs lead's clearance).
+
 ## Test Summary
+`tests/tools/test_search_shared.py`, `test_search_mcp.py`, `test_knowledge_search.py`: green (skips are the model-dependent ones). 22 new tests: code root (4 + argv), clients with differing own tools attach to one server, 3 clients racing a slow start end with one launch (mutation-checked: dropping the client's `starting` record makes it fail), second serve exits 0 without loading, SIGKILLed holder's lock recovers, dead/young/hung starting records, two indexes → two servers without respawn, lexical-only vs in-process load counts (0 vs 1), one log line per transition, degraded answer keeps the stale field, `_search_lexical` ranking. All with a tmp `XDG_RUNTIME_DIR` and stubs; no real model, no live state.
+
 ## Files Changed
+- tools/search_shared.py
+- tools/search_mcp.py
+- tests/tools/test_search_shared.py
+- tests/tools/test_search_mcp.py
+- docs/guidelines/agent_working_environment.md
+- agent-working/stored_artifacts/TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT/ (plan, investigation, test_plan)
+
 ## Completion Summary
+One shared search server per index, run from the main checkout's code; a slow start is waited for instead of producing a second server or fat clients.
