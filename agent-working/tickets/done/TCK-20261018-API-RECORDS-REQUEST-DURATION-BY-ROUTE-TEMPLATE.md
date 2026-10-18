@@ -53,6 +53,7 @@ There are no HTTP request metrics, so no API dashboard or latency SLO. Add http_
 ## Assumptions / Open Questions
 - The histogram is on the manager's registry: visible on /metrics (API key) and, once R1 lands, on port 9109. Buckets 5 ms to 10 s are a first guess for platform to tune.
 - A mounted sub-app would label by its mount prefix (still bounded).
+- Guard: tests/unit/api/test_router_prefixes_hold_no_path_parameter.py fails if any APIRouter/include_router prefix under src/ holds "{" or is not a literal (a parameterised prefix would leak raw ids into the route label); shown failing on a temporary bad prefix.
 - Both stacks: FastAPI 0.143 (lazy included routers) gives the matched route only its prefix-less path; route_template() takes the include prefix from the raw request path, so the same code gives full templates on 0.128/starlette 0.52 and on 0.143.5/starlette 1.8.0 (checked on a scratch copy of deps-starlette1 c19e5dc62 with R2 applied: 9 passed on both).
 
 ## Implementation Notes
