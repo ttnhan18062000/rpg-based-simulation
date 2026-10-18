@@ -126,7 +126,7 @@ None.
 
 ## Test Summary
 - PASS: tests/tools/test_loadtest_summary.py (14 tests, under a 800M cap).
-- PASS: `PYTHONPATH=. tools/sessions/validate.py` generated-drift findings fixed by regenerating the cards (re-run needed after commit).
+- PASS: `PYTHONPATH=. tools/sessions/validate.py` generated-drift findings fixed by regenerating the cards; 0 findings on the merged head.
 - Cleared run 2026-10-18 (3G cap, own basetemp, one suite at a time, main checkout venv which still has requests 2.32.3, so the `requests` 2.34.2 bump is NOT exercised by these runs):
   - `tests/static`: 96 passed (includes `test_ci_uv_install`).
   - `tests/tools`: 4994 passed, 56 skipped, 1 xfailed (17m14s).
