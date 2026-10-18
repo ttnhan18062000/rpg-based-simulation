@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL
-phase: inprogress
+phase: done
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 Runbooks for the base alerts, the docs/runbooks index, and one recorded drill (stop Loki, alert reaches ntfy, recover)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -81,11 +81,15 @@ None.
 - The drill record (`docs/runbooks/records/<run date>-target-down-drill.md`), the `docker stats` peak table and `make knowledge-index-update` come after the single stack run.
 
 ## Test Summary
-- **validated:** frontmatter of the four new docs (`validate_frontmatter.py`: no violations).
-- Not yet run: the drill (stop Loki, T0..T5), the disk-query proof, the `docker stats` peak table. They need the single stack run, asked of platform-planner/lead after the two pulls.
+- **validated:** frontmatter of the four runbook docs and the drill record (`validate_frontmatter.py`: no violations); each rule's `runbook_url` points at an existing runbook.
+- **running locally** (two stack runs on 2026-10-18, 8-service subset): the target-down drill with timestamps (T0 12:47:19Z stop loki; firing message 12:50:58Z, about 3 m 39 s; recovery message 12:55:58Z, about 4 m 42 s after the restart); the second run proved the rendered summary ("Scrape target loki is down") and the failed-notification path (counter, `GrafanaAlertingFailures` firing, delivery after ntfy returned). Record: `docs/runbooks/records/2026-10-18-target-down-drill.md`.
+- Disk rule proven by query only (the expression with a threshold above the current free percent, output recorded); the committed 15 percent stays, no override.
+- `docker stats` peak table recorded for the 8-service subset (grafana 559 MiB of 768 m is the driver).
+- Gaps: the `[resolved] GrafanaAlertingFailures` message was not seen before `down`; the table is the subset, not the full profile; `make knowledge-index-update` is run by lead-planner in the main checkout after merge.
 
 ## Files Changed
-(open)
+`docs/runbooks/README.md`, `target-down.md`, `disk-space.md`, `alerting-pipeline.md`, `docs/runbooks/records/2026-10-18-target-down-drill.md` (new), this ticket and its staging artifacts, `TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES` is the rule source.
 
 ## Completion Summary
-(open)
+Runbooks for TargetDown, the disk alerts and the alerting pipeline, a runbook index, and the recorded drill (stop Loki). Running locally on 2026-10-18 (two runs): TargetDown fired 3 m 39 s after the stop and reached ntfy; the resolved message arrived about 4 m 42 s after the restart (group_interval); the second run proved the rendered summary and the failed-notification path. DiskSpaceLow is proven by query only (lead decision), committed threshold 15 percent. The record lists what the rules and runbook got wrong on the first run and how it was fixed, plus the docker stats table.
+Gaps: the `[resolved] GrafanaAlertingFailures` message was not seen before the stack was taken down (resolved delivery itself is shown by TargetDown); the stats table is the 8-service subset, not the full profile; one local host. Staging artifacts were written by platform-planner at filing and updated at close. Knowledge index refreshed by lead-planner in the main checkout after merge.

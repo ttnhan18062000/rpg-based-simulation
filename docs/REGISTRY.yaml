@@ -7716,6 +7716,20 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL.md
+  ticket_id: TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL
+  title: Runbooks for the base alerts, the docs/runbooks index, and one recorded drill
+    (stop Loki, alert reaches ntfy, recover)
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docs/runbooks/**
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES.md
   ticket_id: TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES
   title: 'Grafana alerting provisioned as files: local ntfy service, ntfy contact
@@ -7726,7 +7740,10 @@
   date: '2026-10-18'
   related_code_areas:
   - docker/grafana/provisioning/alerting/
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES/test_plan.md
   tags:
   - platform
   - observability
@@ -7807,20 +7824,6 @@
   tags:
   - architecture
   - documentation
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL.md
-  ticket_id: TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL
-  title: Runbooks for the base alerts, the docs/runbooks index, and one recorded drill
-    (stop Loki, alert reaches ntfy, recover)
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - docs/runbooks/**
-  artifact_files: []
-  tags:
-  - platform
-  - observability
 - type: ticket
   path: agent-working/tickets/inprogress/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
   ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24

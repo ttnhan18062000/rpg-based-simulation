@@ -12,10 +12,10 @@ Every alert rule in `docker/grafana/provisioning/alerting/rules-base.yaml` has a
 
 | Alert | Rule `for` | Runbook | Drill record |
 |---|---|---|---|
-| `TargetDown` | 2m | [target-down.md](target-down.md) | the target-down drill in `records/` (stop Loki) |
+| `TargetDown` | 2m | [target-down.md](target-down.md) | [2026-10-18 target-down drill](records/2026-10-18-target-down-drill.md) (stop Loki) |
 | `PrometheusUnreachable` | 2m | [alerting-pipeline.md](alerting-pipeline.md) | not drilled |
 | `GrafanaAlertingFailures` | 0s | [alerting-pipeline.md](alerting-pipeline.md) | not drilled |
-| `DiskSpaceLow` | 10m | [disk-space.md](disk-space.md) | proven by query only (see the drill record) |
+| `DiskSpaceLow` | 10m | [disk-space.md](disk-space.md) | proven by query only ([drill record](records/2026-10-18-target-down-drill.md), section 5) |
 | `DiskWillFillIn24h` | 30m | [disk-space.md](disk-space.md) | proven by query only |
 
 Records of measured runs and drills are in `records/`.
