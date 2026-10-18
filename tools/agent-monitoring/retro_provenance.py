@@ -6,7 +6,8 @@ The rules, all report-only:
 - the headline average duration uses measured and declared durations only: a run with `duration_source: tool_activity`
   is DERIVED and is averaged beside it, labelled, with its n; it is excluded from Slow Runs and duration outliers;
 - a run with `duration_source: unknown` has a null duration, is COUNTED wherever an average is shown, and never averaged;
-- a row with no `duration_source` is unlabelled (it predates the field) and keeps its old treatment;
+- a row with no `duration_source` is unlabelled (it predates the field) and keeps its old treatment, except a hand closure
+  whose duration is 0 or missing: the old recorder wrote 0 for "no evidence", so it counts as unknown;
 - a `cost_source: session_window` event is one ticket-level total, not phase-resolved: it stays out of the spend tables and is
   reported on its own line.
 Everything here is inert when no run carries `duration_source`, so reports for earlier weeks render unchanged.
@@ -21,7 +22,13 @@ LABELS = {"declared": "Declared", "tool_activity": "Derived (tool activity)", "u
 
 def source_of(run: dict) -> str:
     value = run.get("duration_source")
-    return value if value in SOURCES else "unlabelled"
+    if value in SOURCES:
+        return value
+    # TCK-20261015-TOOLS-TELEMETRY-FAILURES-AND-DURATIONS: a hand closure from before the field with a zero or missing
+    # duration was never measured (the recorder wrote 0 for "no evidence"), so it is unknown, not a 0-second run.
+    if value is None and run.get("execution_mode") == "hand" and not run.get("duration_s"):
+        return "unknown"
+    return "unlabelled"
 
 
 def is_derived(run: dict) -> bool:
@@ -56,7 +63,7 @@ def summary(runs: list[dict], events: list[dict]) -> dict | None:
     return {
         "first_week": weeks[0] if weeks else None,
         "headline": {"n": len([r for r in headline if r.get("duration_s")]), "avg_min": avg_minutes(headline),
-                     "unknown": len([r for r in runs if r.get("duration_source") == "unknown"])},
+                     "unknown": len([r for r in runs if source_of(r) == "unknown"])},
         "derived": {"n": len([r for r in runs if is_derived(r) and r.get("duration_s")]), "avg_min": avg_minutes([r for r in runs if is_derived(r)])},
         "by_source": {s: {"count": len(rs), "with_duration": len([r for r in rs if r.get("duration_s")]),
                           "avg_min": None if s == "unknown" else avg_minutes(rs)} for s, rs in by_source.items()},

@@ -14,6 +14,28 @@ the committed crops). Every number says which view it comes from: **exact** (the
 Sources: the data files `reports/visual_assets/sample_map/<world>/world_data.json` and `render_stats.json` (`python -m tools.visual_assets_sample_map data --all` and `render --all`, seed 42,
 `src/api/engine_manager.py:133-136`), the registry `visual_assets/catalog/definitions/visual_keys.yaml` and the rc-0009 runtime export.
 
+## Update 2026-10-18: what is open now, and the owner's two answers
+
+Nothing here was re-rendered or re-measured; every number below is the one already in this report. This section is the first screen: read it, and the older updates only for the history.
+
+**Owner decisions (2026-10-18, via lead-planner, asked with neutral options):**
+
+- **G6, "Keep scaled icons".** No 16 x 16 building map glyph. Buildings stay 24 x 24 panel icons scaled to one cell (the choice the 2026-10-14 update left open). Closed by owner choice.
+- **G4, "Leave as is".** No grassland redraw with different feature offsets per variant; the six detail axes of rc-0010 stand as shipped. Closed by owner choice.
+
+Either can reopen on the owner's word.
+
+**Open now** (one line per gap: whose it is, and what blocks it):
+
+- **G5, connecting tiles (roads, rivers, coasts):** a design question for rpg-designer; the client cannot draw connecting tiles live. The read-only questions in [#519](https://github.com/ttnhan18062000/rpg-based-simulation/issues/519) are closed (answered 2026-10-11); the design question itself is not.
+- **G7, multi-tile structures:** a design question for rpg-designer, and the client needs support first (not supported live).
+- **G10, entities:** gated on rpg's [#523](https://github.com/ttnhan18062000/rpg-based-simulation/issues/523) and the owner's choice between role-id keys and species + size (rpg's [#548](https://github.com/ttnhan18062000/rpg-based-simulation/issues/548)); the tickets wait in `agent-working/tickets/todos/visual-asset-entity-markers/`. Nothing is drawn for entities.
+- **G11, chests:** no data (the three worlds hold 0).
+- **G12, world shape:** rpg's to judge (rectangular regions over one default fill); not art.
+- **Client alias resolution:** registry-only. The live client does not resolve registry aliases (Known gap in `docs/assets/store_contract.md`); the client-side resolution is rpg's, with #523.
+
+Closed and shipped: G1 to G3 (registry aliases, rc-0010), G4 and G6 (above), G8 and G9 (rc-0011). The two sections the earlier report left as questions are marked answered below.
+
 ## Update after the terrain-variants batch (2026-10-13, rc-0010)
 
 The numbers below were measured on rc-0009 (2026-10-11 and 2026-10-12) and stay as that record. `TCK-20261012-EPIC-VISUAL-ASSET-TERRAIN-VARIANTS` changed three things, re-measured on rc-0010 (87 entries):
@@ -83,9 +105,9 @@ registry growth a new key or a detail axis causes (see "Input list for candidate
 | G1 | `PLAIN` and `plain` have no key | 60,239 of 73,808 cells (81.6 %) draw as gap in the exact view; both fill the whole world outside regions | 0 tiles if both alias to `terrain.grassland`; 1 tile (16 x 16), or 3 with a forest-style detail axis, for a new `terrain.plain` | vocabulary, terrain variants | registry alias since 2026-10-12 (offline only; the client does not resolve it); grassland has 4 variants since rc-0010; the `PLAIN`/`plain` duplicate is rpg's to resolve (#523) |
 | G2 | `ruin` is not `ruins` | 3,362 cells (frontier 1,681, dungeon 1,681) | 0 tiles: a name mapping | vocabulary | registry alias `terrain.ruin` to `terrain.ruins` since 2026-10-12 (offline only; the client does not resolve it); the vocabulary decision is rpg's (#523) |
 | G3 | `river` has no key | 1,271 cells (highland, one 41 x 31 rectangle) | 0 tiles if it aliases to `terrain.shallow_water` or `terrain.water`; 1 tile for a new `terrain.river` | vocabulary | registry alias `terrain.river` to `terrain.shallow_water` since 2026-10-12 (offline only; the client does not resolve it); rpg's (#523) |
-| G4 | one tile repeated: no terrain variants outside forest | in the alias view `terrain.grassland` repeats one 16 x 16 tile over 60,239 cells; only `terrain.forest` declares a detail axis (3 values); visible as a regular texture in the renders | 2 extra tiles per key for the 7 terrains the samples use (grassland, ruins, mountain, water or shallow_water, cave, road, swamp) = 14 tiles, plus one detail axis per key | terrain variants | DONE for six terrains in rc-0010 (14 variants adopted 2026-10-12, axes declared, registry 30,943 B): road has none, and the features sit at the same offset in every variant (see the update above); the client supports no variants live (#519) |
-| G5 | no connecting tiles (roads, rivers, coasts) | `road` 947 cells and `river` 1,271 cells appear as plain rectangles (regions painted as rectangles), so the data does not yet need them; the client cannot draw them live (#519) | 16 edge-connection tiles (a 4-side mask) per family x 3 families (road, river or water, coast) = 48 tiles; the 9 border masks cover rank fringes only | connecting tiles | design question for rpg-designer (#519); unconfirmed |
-| G6 | **closed in rc-0011, see the update above:** building kinds with no icon | healer_hut (2 in the samples; 21 in all worlds per rpg), town_hall (1; 19), mine_entrance (1; 7), watchtower (1; 4) have no `icon.building.*`; `shop` (3; 24) has none exactly (alias `icon.building.store`, unconfirmed); `blacksmith` 2 and `inn` 3 draw | 4 icons (24 x 24) exact; 4 if the `shop` alias holds; 5 if it does not | A markers | `guild`, `hero_house`, `class_hall` exist but no world uses them; rpg: hero retires in M1 (D63), do not invest |
+| G4 | one tile repeated: no terrain variants outside forest | in the alias view `terrain.grassland` repeats one 16 x 16 tile over 60,239 cells; only `terrain.forest` declares a detail axis (3 values); visible as a regular texture in the renders | 2 extra tiles per key for the 7 terrains the samples use (grassland, ruins, mountain, water or shallow_water, cave, road, swamp) = 14 tiles, plus one detail axis per key | terrain variants | DONE for six terrains in rc-0010 (14 variants adopted 2026-10-12, axes declared, registry 30,943 B): road has none, and the features sit at the same offset in every variant (see the update above); the client supports no variants live (#519); **closed by owner choice (2026-10-18, "Leave as is"):** no grassland redraw with different feature offsets per variant |
+| G5 | no connecting tiles (roads, rivers, coasts) | `road` 947 cells and `river` 1,271 cells appear as plain rectangles (regions painted as rectangles), so the data does not yet need them; the client cannot draw them live (#519) | 16 edge-connection tiles (a 4-side mask) per family x 3 families (road, river or water, coast) = 48 tiles; the 9 border masks cover rank fringes only | connecting tiles | design question for rpg-designer (#519 closed 2026-10-11; the design question is not); unconfirmed |
+| G6 | **closed in rc-0011, see the update above:** building kinds with no icon | healer_hut (2 in the samples; 21 in all worlds per rpg), town_hall (1; 19), mine_entrance (1; 7), watchtower (1; 4) have no `icon.building.*`; `shop` (3; 24) has none exactly (alias `icon.building.store`, unconfirmed); `blacksmith` 2 and `inn` 3 draw | 4 icons (24 x 24) exact; 4 if the `shop` alias holds; 5 if it does not | A markers | `guild`, `hero_house`, `class_hall` exist but no world uses them; rpg: hero retires in M1 (D63), do not invest; **owner choice (2026-10-18, "Keep scaled icons"):** no 16 x 16 building map glyph, the 24 x 24 icons stay scaled to one cell |
 | G7 | every building is one tile, no multi-tile structures | the town of the frontier world is 8 buildings on one flat terrain (`frontier_town_*` crops); the data gives each building one position; the client draws a lettered square (#519) | 7 structure sprites at 32 x 32 (a 2 x 2 footprint), one per building kind in the samples (town_hall, shop, blacksmith, inn, healer_hut, mine_entrance, watchtower), if structures are to span cells | multi-tile structures | design question for rpg-designer; not supported live; unconfirmed |
 | G8 | **closed in rc-0011, see the update above:** resource-node kinds have no marker | 9 kinds, 15 nodes in the samples (berry_thicket 2, crystal_outcrop 1, frost_shard_cluster 1, healing_flower_patch 1, herb_patch 3, iron_vein 3, silver_vein 1, spirit_wisp 1, wood_node 2); no exact or aliased key | 9 icons (16 x 16), or one shared grove glyph plus per-kind variants; `icon.marker.resource_grove` exists but nothing maps to it (rpg: no world produces it) | A markers | unconfirmed by rpg-planner (#519) |
 | G9 | **closed in rc-0011, see the update above:** place kinds: CITY and NEST have no glyph; CAMP and RUIN only by alias | CITY 2, NEST 1 (no key); CAMP 1, RUIN 2 (alias `enemy_camp`, `ruins`, unconfirmed); LAIR, DUNGEON, LANDMARK unused in the samples; the live API puts no places on the map (`locations: []`) | 1 glyph for NEST (CITY may be the plate alone); LAIR to `boss_arena` and DUNGEON to `dungeon_entrance` are rpg's suggestions with a question mark | A markers | unconfirmed by rpg-planner (#519) |
@@ -98,7 +120,9 @@ are in each `render_stats.json` (`objects_gap`) and on the page.
 
 Not gaps (stock to know about): 18 of the 23 terrain keys have art that no sample world draws in the exact view; `guild`, `hero_house` and `class_hall` icons are unused by every world.
 
-## The owner's art-priority question (drafted; asset-planner asks it)
+## The owner's art-priority question (ANSWERED; kept as the record of what was asked)
+
+**Answered.** The terrain variants were drawn first and shipped in rc-0010 ([#545](https://github.com/ttnhan18062000/rpg-based-simulation/pull/545), merged 2026-10-13, `06aa3a20c`); the map markers followed in rc-0011 ([#596](https://github.com/ttnhan18062000/rpg-based-simulation/pull/596), merged 2026-10-14, `51b044c69`). Entities moved to their own batch on the owner's answer of 2026-10-14 ("Objects now, entities later"). The question below is the original wording.
 
 > The sample map shows the art covering 12.1 % of the sampled cells by exact name and all of them by the proposed aliases, and lists what is missing (and, in G12, that the sampled worlds are a few rectangles over one default fill, which is rpg's to judge). Which should the next asset batch draw first, given the
 > counts above? (Options in a fixed order, none recommended.)
@@ -108,7 +132,9 @@ Not gaps (stock to know about): 18 of the 23 terrain keys have art that no sampl
 > 4. **Multi-tile structures** (G7: about 7 sprites; needs rpg-designer's design and client support first).
 > 5. Wait for rpg's vocabulary decision (#523) before drawing anything that depends on terrain or entity names.
 
-## Input list for candidate A (entity and object markers)
+## Input list for candidate A (entity and object markers) (ANSWERED for objects; entities still open)
+
+**Answered for the object half.** The object markers shipped in rc-0011 (#596) after the registry budget review (`docs/assets/budgets.md`; the registry is 42,024 B after them). The entity half moved to `agent-working/tickets/todos/visual-asset-entity-markers/` and still waits on #523 and the owner's choice (see the 2026-10-18 update). The list below is the original input list; its registry size (30,943 B) is the pre-rc-0011 figure.
 
 - The vocabulary decision (#523): asset terrain and entity keys follow V2's names, or V2 maps onto the 23-code set. A should not start before it.
 - The kinds and counts above (G6, G8, G9, G10) and rpg's counts over all worlds (#519); rpg's note that markers keyed on diet and size outlast markers keyed on role (M1 moves kinds to properties).

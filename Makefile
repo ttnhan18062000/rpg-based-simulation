@@ -304,6 +304,10 @@ code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (repor
 import-contracts: ## Run the import-linter contracts in codebase/structure/importlinter.toml (advisory; also the `Import contracts` step of the code-health CI job). Prints the result, always exits 0
 	$(PYTHON3) -m codebase.structure.import_contracts advisory --annotate
 
+.PHONY: replay-check
+replay-check: ## Reviewer demo: run the same seed twice under the Canonical signal contract and compare the final state hashes (about 1 minute; see docs/guides/reviewer_replay_check.md)
+	$(PYTHON3) -m codebase.reports.replay_check
+
 .PHONY: lint-imports
 lint-imports: ## Run every import-linter contract in codebase/structure/importlinter.toml with lint-imports' own full output and exit code (the `import-contracts` target prints only the one-line summary and always exits 0)
 	$(PYTHON3) -m codebase.structure.import_contracts report

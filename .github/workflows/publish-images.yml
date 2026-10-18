@@ -144,6 +144,13 @@ jobs:
       - name: Install cosign
         if: env.PUSH == 'true'
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          # Pinned (TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED). The installer's default was v3.0.6, which published
+          # the SBOM referrer annotated `https://sigstore.dev/cosign/sign/v1` instead of `https://spdx.dev/Document`, so
+          # `verify-attestation --type spdxjson` failed on those images. v3.1.3 labels it `https://spdx.dev/Document` and
+          # verify-attestation passes (local repro). To bump: change this value, then confirm the "Verify signature and
+          # SBOM attestation" step below stays green on the next main run.
+          cosign-release: v3.1.3
       - name: Attest SBOM and sign (keyless)
         if: env.PUSH == 'true'
         env:
@@ -151,6 +158,21 @@ jobs:
         run: |
           cosign attest --yes --type spdxjson --predicate "sbom-${{ matrix.image }}.spdx.json" "$REF"
           cosign sign --yes "$REF"
+      - name: Verify signature and SBOM attestation
+        # A missing or mislabelled signature/attestation turns this job red instead of shipping an unverifiable image.
+        if: env.PUSH == 'true'
+        env:
+          REF: ${{ steps.target.outputs.ref }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cosign version
+          cosign verify "$REF" \
+            --certificate-identity-regexp "^https://github.com/${REPO}/" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
+          cosign verify-attestation --type spdxjson "$REF" \
+            --certificate-identity-regexp "^https://github.com/${REPO}/" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
       - name: How to verify
         if: env.PUSH == 'true'
         env:
@@ -159,6 +181,7 @@ jobs:
         run: |
           {
             echo "### Verify (${{ matrix.image }})"
+            echo "Needs cosign v3.1.3 or later (this job passed both commands below, run with that version)."
             echo '```'
             echo "cosign verify $REF \\"
             echo "  --certificate-identity-regexp '^https://github.com/${REPO}/' \\"

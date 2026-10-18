@@ -70,7 +70,7 @@ class SimulationWatchdog:
             end_time = int(time.time() * 1e9)
             start_time = end_time - (POLL_INTERVAL * 2 * 10**9)
             
-            params = {'query': query, 'start': start_time, 'end': end_time, 'limit': 3}
+            params: dict[str, str | int] = {'query': query, 'start': start_time, 'end': end_time, 'limit': 3}
             resp = requests.get(f"{LOKI_URL}/loki/api/v1/query_range", params=params, timeout=5)
             if resp.status_code == 200:
                 results = resp.json().get('data', {}).get('result', [])

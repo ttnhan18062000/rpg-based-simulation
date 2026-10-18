@@ -1,0 +1,8 @@
+# Compose override for load tests: gives the backend the hashes of the load-test key pool.
+# Usage: LOADTEST_API_KEY_HASHES="$(python3 tools/loadtest/keys.py -n 990)" \
+#        docker compose -f compose.yaml -f tools/loadtest/compose.loadtest.yaml up -d backend
+# The env var name is RPG_API_KEY_HASHES (src/config/loader.py, prefix RPG_ + field api_key_hashes). Only hashes go here, never keys.
+services:
+  backend:
+    environment:
+      - RPG_API_KEY_HASHES=${LOADTEST_API_KEY_HASHES:?run tools/loadtest/keys.py and export its output as LOADTEST_API_KEY_HASHES}

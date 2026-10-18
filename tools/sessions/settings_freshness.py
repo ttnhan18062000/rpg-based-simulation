@@ -23,6 +23,17 @@ OK, MISMATCH, UNKNOWN = "ok", "mismatch", "unknown"
 SETTINGS, AGENTS = ".claude/settings.json", ".claude/agents"
 EXIT = {OK: 0, MISMATCH: 1, UNKNOWN: 2}
 
+#: The code and registries SessionStart itself runs from the session's own worktree
+#: (TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START). A worktree that lags origin/main here injects the wrong
+#: role or handover note without any sign of it.
+SESSION_CODE_PATHS = (
+    "tools/sessions",
+    "tools/handover_home.py",
+    "tools/agent-monitoring/session_start_handover_hook.py",
+    "registries/session_roles.yaml",
+    "registries/session_authority.yaml",
+)
+
 
 @dataclass
 class Report:
@@ -113,6 +124,43 @@ def check(directory: Path | str, ref: str = "origin/main") -> Report:
         elif path.read_bytes() != content:
             report.fail(f"{name} differs from {ref}")
     return report
+
+
+def stale_session_code(directory: Path | str, ref: str = "origin/main") -> list[str] | None:
+    """Session code or registries that changed on `ref` since this checkout diverged from it, so this worktree
+    does not have them yet. `[]` when it is current, `None` when that cannot be told (no repo, no ref).
+
+    One `merge-base` and one `diff`, offline, never a fetch. It compares against the merge base, not against the
+    ref's content, so a branch that itself edits session code is not reported as stale (the launch-time settings
+    check above compares content on purpose; this one runs on every start and must not cry wolf on its authors).
+    Files this branch also changed still show: they need the merge too."""
+    directory = Path(directory)
+    top = _git(["rev-parse", "--show-toplevel"], directory) if directory.is_dir() else None
+    if top is None or top.returncode != 0:
+        return None
+    root = Path(top.stdout.strip())
+    base = _git(["merge-base", "HEAD", ref], root)
+    if base.returncode != 0 or not base.stdout.strip():
+        return None
+    diff = _git(["diff", "--name-only", base.stdout.strip(), ref, "--", *SESSION_CODE_PATHS], root)
+    if diff.returncode != 0:
+        return None
+    return sorted(line for line in diff.stdout.splitlines() if line)
+
+
+def session_code_line(directory: Path | str, ref: str = "origin/main") -> str:
+    """The one SessionStart warning line ("" when current), failing open but saying so."""
+    try:
+        stale = stale_session_code(directory, ref)
+    except Exception as exc:  # the hook must never fail a session
+        return f"session-roles: the session-code freshness check failed ({type(exc).__name__}); not verified."
+    if stale is None:
+        return f"session-roles: could not verify session-code freshness (no {ref} here; `git fetch origin` first)."
+    if not stale:
+        return ""
+    shown = ", ".join(stale[:4]) + (f" and {len(stale) - 4} more" if len(stale) > 4 else "")
+    return (f"session-roles: STALE SESSION CODE: {len(stale)} file(s) changed on {ref} are missing from this worktree "
+            f"({shown}), so this hook may inject the wrong role or handover note. Sync this worktree to {ref}.")
 
 
 def main(argv: list[str] | None = None) -> int:

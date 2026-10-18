@@ -1,0 +1,718 @@
+{
+  "identity": {
+    "baseline_ref": null,
+    "config": {
+      "flags": {
+        "no_frame_pacing": true,
+        "no_replay": true
+      },
+      "profile_hash": "0ac2a108b42555ef5664f504be3f944beb37216e83565e4904b96795e8dc337d",
+      "profile_name": "PERF_2GB_LOCAL_CANONICAL"
+    },
+    "content": {
+      "content_hash": "unknown",
+      "rules_version": "unknown",
+      "world_id": null
+    },
+    "contract": {
+      "signal_contract": "canonical",
+      "verification_level": "unknown",
+      "work_model_version": "WORK_MODEL_V1"
+    },
+    "engine": {
+      "commit": "9accca4adccd132b89b0545c9e1d84d5252489db",
+      "dirty_src": false
+    },
+    "executor": {
+      "backend": "sequential",
+      "worker_count": 0
+    },
+    "gate": {
+      "projection": "tripwire_paired",
+      "tier": "tripwire"
+    },
+    "observer": {
+      "level": "bare"
+    },
+    "rng": {
+      "seed": 42
+    },
+    "runner": {
+      "controlled": false,
+      "name": "ubuntu"
+    },
+    "runtime": {
+      "arch": "x86_64",
+      "build_flavor": "gil",
+      "cpu_model": "11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz",
+      "declared_hardware_class": "class_b",
+      "det_port_tier": "unknown",
+      "hardware_class": "class_b",
+      "implementation": "CPython",
+      "logical_cores": 6,
+      "native_kernels": {},
+      "os": "Linux 6.17.0-41-generic",
+      "python_version": "3.13.7",
+      "ram_mb": 9942
+    },
+    "scenario": {
+      "builder": "unknown",
+      "builder_version": "unknown",
+      "checkpoint_id": null,
+      "id": "combat_10"
+    },
+    "workload": {
+      "entity_count": 20,
+      "region_count": null,
+      "unit": "entities"
+    }
+  },
+  "promotion": {
+    "after": {
+      "identity": {
+        "baseline_ref": null,
+        "config": {
+          "flags": {
+            "no_frame_pacing": true,
+            "no_replay": true
+          },
+          "profile_hash": "0ac2a108b42555ef5664f504be3f944beb37216e83565e4904b96795e8dc337d",
+          "profile_name": "PERF_2GB_LOCAL_CANONICAL"
+        },
+        "content": {
+          "content_hash": "unknown",
+          "rules_version": "unknown",
+          "world_id": null
+        },
+        "contract": {
+          "signal_contract": "canonical",
+          "verification_level": "unknown",
+          "work_model_version": "WORK_MODEL_V1"
+        },
+        "engine": {
+          "commit": "9accca4adccd132b89b0545c9e1d84d5252489db",
+          "dirty_src": false
+        },
+        "executor": {
+          "backend": "sequential",
+          "worker_count": 0
+        },
+        "gate": {
+          "projection": "tripwire_paired",
+          "tier": "tripwire"
+        },
+        "observer": {
+          "level": "bare"
+        },
+        "rng": {
+          "seed": 42
+        },
+        "runner": {
+          "controlled": false,
+          "name": "ubuntu"
+        },
+        "runtime": {
+          "arch": "x86_64",
+          "build_flavor": "gil",
+          "cpu_model": "11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz",
+          "declared_hardware_class": "class_b",
+          "det_port_tier": "unknown",
+          "hardware_class": "class_b",
+          "implementation": "CPython",
+          "logical_cores": 6,
+          "native_kernels": {},
+          "os": "Linux 6.17.0-41-generic",
+          "python_version": "3.13.7",
+          "ram_mb": 9942
+        },
+        "scenario": {
+          "builder": "unknown",
+          "builder_version": "unknown",
+          "checkpoint_id": null,
+          "id": "combat_10"
+        },
+        "workload": {
+          "entity_count": 20,
+          "region_count": null,
+          "unit": "entities"
+        }
+      },
+      "record_digest": "b8daf091643a453e924e75f3968f144e71b51808270b748c0bf44c62890d90b6"
+    },
+    "before": null,
+    "cause": {
+      "id": "TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES",
+      "kind": "ticket"
+    },
+    "name": "combat_10_local",
+    "note": "combat_10_local: median of 5 fresh-process runs (promoted run 3); spread 6.1 % over the middle 3 of 5 (all 5: 16.4 %, owner rule 2026-10-16); run 1: avg 47.906 ms, loadavg1 1.29, swap 543.1 MB, probe median of 5 36.936 -> 37.382 ms (before the state build); run 2: avg 41.162 ms, loadavg1 1.33, swap 543.1 MB, probe median of 5 28.673 -> 40.524 ms (before the state build); run 3: avg 45.793 ms, loadavg1 1.3, swap 543.1 MB, probe median of 5 41.134 -> 33.825 ms (before the state build); run 4: avg 46.961 ms, loadavg1 1.26, swap 543.1 MB, probe median of 5 33.985 -> 36.981 ms (before the state build); run 5: avg 44.276 ms, loadavg1 1.24, swap 543.1 MB, probe median of 5 34.898 -> 44.529 ms (before the state build); host ubuntu / 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz / 6 vCPU; canonical variant, provisional, claims none (runner.controlled=false) Re-recorded under TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES with the spread rule 'middle_3' (spread 6.1 %, all-runs spread 16.4 %); every run started with loadavg1 below 1.5 (enforced wait). Owner decision 2026-10-16: \"(a) Promote all four\" (AskUserQuestion via lead-planner).",
+    "promoted_at": "2026-10-16T10:19:06.378800+00:00",
+    "version": 1
+  },
+  "result": {
+    "cost_accounting_version": "DEV-017",
+    "latency_ms": {
+      "avg": 45.793,
+      "max": 71.728,
+      "min": 29.809,
+      "p50": 45.336,
+      "p95": 60.505,
+      "p99": 66.779
+    },
+    "memory_mb": {
+      "allocated_blocks_delta": 40036.0,
+      "declared_ram_mb": 2048.0,
+      "gc_collect_s": 0.0545,
+      "gc_collected_objects": 74941.0,
+      "peak_rss_over_declared": 0.0385,
+      "rss_after_collect_mb": 80.51,
+      "rss_after_trim_mb": 79.2,
+      "rss_before_window_mb": 60.09,
+      "rss_delta": 18.69,
+      "rss_high_water": 78.79,
+      "rss_over_declared": 0.0387,
+      "rss_over_declared_basis_trim": 1.0,
+      "rss_trim_delta_mb": 19.11,
+      "sample_every_ticks": 10
+    },
+    "outcome": {
+      "reason": "single measurement: no comparison was made",
+      "state": "NOT_APPLICABLE"
+    },
+    "phases": {
+      "advancement": {
+        "avg": 4.932,
+        "max": 10.491,
+        "min": 1.997,
+        "p50": 4.482,
+        "p95": 9.112,
+        "p99": 10.439
+      },
+      "cleanup": {
+        "avg": 0.04,
+        "max": 0.598,
+        "min": 0.009,
+        "p50": 0.011,
+        "p95": 0.21,
+        "p99": 0.536
+      },
+      "collection": {
+        "avg": 4.635,
+        "max": 19.161,
+        "min": 0.789,
+        "p50": 3.678,
+        "p95": 10.67,
+        "p99": 13.533
+      },
+      "combat_engagement": {
+        "avg": 7.952,
+        "max": 15.915,
+        "min": 3.07,
+        "p50": 7.635,
+        "p95": 12.338,
+        "p99": 15.249
+      },
+      "contracts_production": {
+        "avg": 0.156,
+        "max": 1.029,
+        "min": 0.059,
+        "p50": 0.106,
+        "p95": 0.387,
+        "p99": 0.953
+      },
+      "cooperation": {
+        "avg": 8.902,
+        "max": 18.267,
+        "min": 3.45,
+        "p50": 8.539,
+        "p95": 13.659,
+        "p99": 18.071
+      },
+      "diplomatic_transitions": {
+        "avg": 0.02,
+        "max": 0.057,
+        "min": 0.015,
+        "p50": 0.018,
+        "p95": 0.034,
+        "p99": 0.054
+      },
+      "economy": {
+        "avg": 0.291,
+        "max": 4.628,
+        "min": 0.142,
+        "p50": 0.18,
+        "p95": 0.606,
+        "p99": 1.51
+      },
+      "faction_awareness": {
+        "avg": 0.041,
+        "max": 1.588,
+        "min": 0.015,
+        "p50": 0.023,
+        "p95": 0.035,
+        "p99": 0.224
+      },
+      "faction_decision": {
+        "avg": 0.005,
+        "max": 0.015,
+        "min": 0.003,
+        "p50": 0.004,
+        "p95": 0.007,
+        "p99": 0.009
+      },
+      "faction_sentiment": {
+        "avg": 0.019,
+        "max": 0.148,
+        "min": 0.013,
+        "p50": 0.016,
+        "p95": 0.03,
+        "p99": 0.035
+      },
+      "final_integrity": {
+        "avg": 0.099,
+        "max": 1.412,
+        "min": 0.05,
+        "p50": 0.064,
+        "p95": 0.148,
+        "p99": 0.863
+      },
+      "governance_ecology": {
+        "avg": 0.11,
+        "max": 0.61,
+        "min": 0.069,
+        "p50": 0.083,
+        "p95": 0.252,
+        "p99": 0.315
+      },
+      "habit_bias_action_style": {
+        "avg": 0.003,
+        "max": 0.005,
+        "min": 0.002,
+        "p50": 0.003,
+        "p95": 0.004,
+        "p99": 0.004
+      },
+      "information_belief": {
+        "avg": 0.033,
+        "max": 0.275,
+        "min": 0.022,
+        "p50": 0.029,
+        "p95": 0.046,
+        "p99": 0.051
+      },
+      "information_intent_execution": {
+        "avg": 0.003,
+        "max": 0.013,
+        "min": 0.002,
+        "p50": 0.003,
+        "p95": 0.004,
+        "p99": 0.005
+      },
+      "information_propagation": {
+        "avg": 0.008,
+        "max": 0.337,
+        "min": 0.003,
+        "p50": 0.004,
+        "p95": 0.006,
+        "p99": 0.025
+      },
+      "init": {
+        "avg": 0.158,
+        "max": 0.541,
+        "min": 0.083,
+        "p50": 0.118,
+        "p95": 0.355,
+        "p99": 0.508
+      },
+      "interaction": {
+        "avg": 0.201,
+        "max": 0.945,
+        "min": 0.103,
+        "p50": 0.145,
+        "p95": 0.514,
+        "p99": 0.696
+      },
+      "locomotion": {
+        "avg": 2.991,
+        "max": 7.886,
+        "min": 1.078,
+        "p50": 2.404,
+        "p95": 6.911,
+        "p99": 7.783
+      },
+      "memory_update": {
+        "avg": 0.037,
+        "max": 0.299,
+        "min": 0.01,
+        "p50": 0.033,
+        "p95": 0.051,
+        "p99": 0.225
+      },
+      "military_conflict": {
+        "avg": 0.018,
+        "max": 0.225,
+        "min": 0.009,
+        "p50": 0.011,
+        "p95": 0.018,
+        "p99": 0.178
+      },
+      "persistence": {
+        "avg": 0.028,
+        "max": 0.231,
+        "min": 0.015,
+        "p50": 0.022,
+        "p95": 0.041,
+        "p99": 0.17
+      },
+      "progression_conversion": {
+        "avg": 0.004,
+        "max": 0.051,
+        "min": 0.002,
+        "p50": 0.003,
+        "p95": 0.01,
+        "p99": 0.021
+      },
+      "resolution_overhead": {
+        "avg": 14.461,
+        "max": 28.992,
+        "min": 8.868,
+        "p50": 13.925,
+        "p95": 20.828,
+        "p99": 23.98
+      },
+      "role_model_selection": {
+        "avg": 0.002,
+        "max": 0.004,
+        "min": 0.002,
+        "p50": 0.002,
+        "p95": 0.003,
+        "p99": 0.003
+      },
+      "scheduling": {
+        "avg": 0.424,
+        "max": 1.047,
+        "min": 0.174,
+        "p50": 0.371,
+        "p95": 0.72,
+        "p99": 0.953
+      },
+      "self_model": {
+        "avg": 0.005,
+        "max": 0.009,
+        "min": 0.004,
+        "p50": 0.005,
+        "p95": 0.008,
+        "p99": 0.009
+      },
+      "trust_validity": {
+        "avg": 0.21,
+        "max": 0.676,
+        "min": 0.091,
+        "p50": 0.175,
+        "p95": 0.463,
+        "p99": 0.563
+      },
+      "world_emergence": {
+        "avg": 0.005,
+        "max": 0.026,
+        "min": 0.003,
+        "p50": 0.005,
+        "p95": 0.008,
+        "p99": 0.009
+      }
+    },
+    "protocol": {
+      "clock": "perf_counter",
+      "gc_disabled": true,
+      "measured_ticks": 100,
+      "percentile_method": "nearest_rank",
+      "repetitions": 1,
+      "warmup_ticks": 10
+    },
+    "recorded_at": "2026-10-16T09:10:56.922701+00:00",
+    "runtime_mode_sequence": [
+      {
+        "mode": "NORMAL",
+        "ticks": 100
+      }
+    ],
+    "samples": {
+      "sha256": null,
+      "tick_compute_ms": [
+        52.9886,
+        50.2596,
+        50.1269,
+        50.676,
+        58.3349,
+        60.102,
+        60.5049,
+        53.98,
+        56.3046,
+        66.7786,
+        59.6685,
+        47.1626,
+        42.9909,
+        47.2723,
+        56.6893,
+        46.7055,
+        55.9213,
+        41.5198,
+        55.753,
+        50.4679,
+        54.8389,
+        53.8412,
+        47.0354,
+        47.8302,
+        48.6562,
+        49.6052,
+        39.4349,
+        50.0477,
+        38.3236,
+        44.7627,
+        53.0851,
+        50.8119,
+        42.215,
+        50.8056,
+        53.2741,
+        48.4344,
+        34.166,
+        41.4489,
+        38.23,
+        61.0176,
+        44.2624,
+        42.9888,
+        46.5428,
+        50.4699,
+        41.5697,
+        61.2514,
+        50.2131,
+        39.9133,
+        47.3839,
+        51.432,
+        46.0116,
+        57.6274,
+        48.314,
+        43.9551,
+        63.1964,
+        71.7284,
+        48.375,
+        41.0866,
+        40.6518,
+        42.226,
+        41.1689,
+        40.7107,
+        36.1621,
+        46.356,
+        45.2492,
+        43.7358,
+        45.3364,
+        49.5133,
+        38.474,
+        47.9341,
+        37.4037,
+        39.5841,
+        43.0691,
+        48.1234,
+        40.1867,
+        49.1198,
+        42.8427,
+        39.8179,
+        47.13,
+        39.7042,
+        37.8816,
+        37.127,
+        40.9893,
+        33.0823,
+        31.5497,
+        29.8094,
+        34.8938,
+        33.6136,
+        31.0756,
+        34.6245,
+        41.5653,
+        31.8868,
+        37.7639,
+        38.3907,
+        34.5787,
+        35.5826,
+        35.0378,
+        35.5611,
+        36.111,
+        55.2766
+      ],
+      "tick_wall_ms": [
+        53.1132,
+        50.3699,
+        50.2284,
+        50.7812,
+        58.4446,
+        60.2932,
+        60.6142,
+        54.0962,
+        56.4522,
+        66.9217,
+        59.929,
+        47.2792,
+        43.1035,
+        47.379,
+        56.8111,
+        46.8294,
+        56.0599,
+        41.6231,
+        55.8577,
+        50.5782,
+        54.9492,
+        53.9389,
+        47.1436,
+        48.0579,
+        48.7577,
+        49.7135,
+        39.5288,
+        50.1509,
+        38.4327,
+        44.8666,
+        53.5571,
+        50.9235,
+        42.3252,
+        50.9484,
+        53.3906,
+        48.592,
+        34.3942,
+        41.5736,
+        38.3344,
+        61.1281,
+        44.5841,
+        43.1722,
+        46.6426,
+        50.5773,
+        41.6831,
+        61.4206,
+        50.3463,
+        40.0379,
+        47.7282,
+        51.5473,
+        46.1243,
+        57.77,
+        48.4465,
+        44.0596,
+        63.7515,
+        71.8519,
+        48.5139,
+        41.196,
+        40.7991,
+        42.3304,
+        41.272,
+        40.8235,
+        36.261,
+        46.4724,
+        45.3601,
+        43.8468,
+        45.4508,
+        49.6394,
+        38.6878,
+        48.0976,
+        37.5274,
+        39.7008,
+        43.1732,
+        48.2451,
+        40.2911,
+        49.4126,
+        42.9607,
+        39.928,
+        47.3515,
+        39.8121,
+        38.0159,
+        37.229,
+        41.0909,
+        33.183,
+        31.6724,
+        29.9,
+        34.9929,
+        33.7089,
+        31.1745,
+        35.5986,
+        41.6927,
+        31.9874,
+        37.8724,
+        38.8765,
+        34.6855,
+        35.6888,
+        35.1647,
+        35.8546,
+        36.2128,
+        55.6286
+      ],
+      "uri": null
+    },
+    "scaling_slope": null,
+    "throughput": {
+      "compute_tps": 21.84,
+      "wall_tps": 21.74
+    },
+    "time_s": {
+      "cpu_system": 0.72,
+      "cpu_user": 4.74,
+      "wall": 4.6007
+    },
+    "validity": null,
+    "work": {
+      "compacted_entity_updates": 9.19,
+      "cooperation_evaluations": 16.61,
+      "cooperation_phase_ms": 8.83,
+      "movement_candidates": 3.03,
+      "phase_runs": 32.27,
+      "phase_skips": 2.73,
+      "raw_entity_updates": 9.19,
+      "run_action_routing": 1.0,
+      "run_actor_validity": 1.0,
+      "run_belief_staleness_decay": 1.0,
+      "run_blacksmith": 1.0,
+      "run_building_sabotage": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "run_clan_lifecycle": 1.0,
+      "run_combat_engagement": 1.0,
+      "run_contracts": 1.0,
+      "run_cooperation": 1.0,
+      "run_diplomatic_transitions": 1.0,
+      "run_evolution": 1.0,
+      "run_expired_offers": 1.0,
+      "run_faction_awareness": 1.0,
+      "run_faction_sentiment": 1.0,
+      "run_groups": 1.0,
+      "run_guild_visit": 1.0,
+      "run_information_belief": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "run_interaction_routing": 1.0,
+      "run_lead_contradiction": 1.0,
+      "run_lifecycle": 1.0,
+      "run_military_conflict": 1.0,
+      "run_movement_routing": 1.0,
+      "run_near_death_hardening": 1.0,
+      "run_occupancy_resolution": 1.0,
+      "run_paid_information": 1.0,
+      "run_position_swaps": 1.0,
+      "run_quest_rewards": 1.0,
+      "run_resource_transactions": 1.0,
+      "run_shop": 1.0,
+      "run_strategic_intelligence": 1.0,
+      "run_town_resolution": 1.0,
+      "run_trust_boundary": 1.0,
+      "run_world_dynamics": 1.0,
+      "skip_building_sabotage": 1.0,
+      "skip_evolution": 1.0,
+      "skip_habit_bias_action_style": 1.0,
+      "skip_information_intent_execution": 1.0,
+      "skip_information_propagation": 1.0,
+      "skip_memory_update": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "skip_progression_conversion": 1.0,
+      "skip_role_model_selection": 1.0,
+      "skip_self_model": 1.0,
+      "skip_shop": 1.0,
+      "skip_world_emergence": 1.0,
+      "spatial_index_hits": 2064.67,
+      "spatial_index_misses": 60.5
+    }
+  },
+  "schema_version": "1.2"
+}

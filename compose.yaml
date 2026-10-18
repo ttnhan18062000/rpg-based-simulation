@@ -2,19 +2,33 @@
 #
 # Profiles:
 #   default (`docker compose up`)                  backend, redis, ai_worker, frontend
-#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, watchdog
-# watchdog sits in the observability profile because it depends_on loki and prometheus and polls Loki.
+#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, docker-socket-proxy, tempo, watchdog
+# watchdog sits in the observability profile because it depends_on promtail (healthy only once loki is ready) and prometheus, and polls Loki.
+# Grafana's admin password is a compose secret file (gitignored). Create it once before `--profile observability up`:
+#   mkdir -p docker/secrets && openssl rand -base64 24 > docker/secrets/grafana_admin_password
+# A missing file fails only the observability profile (Grafana's start), never the default profile; an empty file or the value `admin` makes Grafana exit at start (guard in the grafana entrypoint).
+# Grafana applies the admin password only when it first creates its database: to change it later, run `grafana cli admin reset-admin-password` in the container or remove the grafana_data volume.
+# Host ports of redis, prometheus, grafana and loki bind to 127.0.0.1 (redis has no auth); services reach each other by service name.
+# backend, ai_worker and watchdog run as a non-root user (uid/gid 1000). On a host whose user is not 1000, build with APP_UID/APP_GID set
+# (for example `APP_UID=$(id -u) APP_GID=$(id -g) docker compose build`) so the bind-mounted ./data stays writable and files in it stay yours.
 # Every service has a memory limit (mem_limit); see TCK-20261014-COMPOSE-OBSERVABILITY-PROFILE-AND-LIMITS.
 services:
   backend:
     build: 
       context: .
       dockerfile: docker/backend.Dockerfile
+      args:
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     restart: unless-stopped
     environment:
       - REDIS_URL=redis://redis:6379/0
+      # Tracing is off while the endpoint is empty (ADR D4). With the observability profile set it to http://tempo:4318 (or :4317, matching rpg's exporter, #622).
+      # The sampling variable is added once rpg's middleware defines its name.
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      - OTEL_SERVICE_NAME=rpg-backend
     volumes:
       # Optional: mount data directory for persistent game state / config changes
       - ./data:/app/data
@@ -35,7 +49,7 @@ services:
     # so a new 7.x patch cannot change the observability stream, anomaly worker or readiness behaviour with no diff here. Bump deliberately.
     image: redis:7.4.11-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -51,6 +65,9 @@ services:
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
+      args:
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
     # Override FastAPI command to run the V2 live anomaly worker
     command: python -m src.observability.anomaly.worker
     environment:
@@ -88,10 +105,10 @@ services:
   prometheus:
     profiles: ["observability"]
     # Third-party images are pinned by digest (the multi-arch index current on 2026-10-14; no version change); Dependabot bumps them.
-    image: prom/prometheus:v2.50.0@sha256:042258e3578a558ce41b036104dfa997b2d25151ab6889a3f4d6187e27b1176c
+    image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
     mem_limit: 512m
     ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -110,12 +127,21 @@ services:
 
   grafana:
     profiles: ["observability"]
-    image: grafana/grafana:10.3.3@sha256:8640e5038e83ca4554ed56b9d76375158bcd51580238c6f5d8adaf3f20dd5379
-    mem_limit: 256m
+    image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
+    # Grafana 13 needs more than the 10.x limit of 256m: it hit 256m and restarted once, then peaked at 480 MiB during first start (317 MiB settled).
+    mem_limit: 768m
     ports:
-      - "${GRAFANA_PORT:-3000}:3000"
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
+    secrets:
+      - grafana_admin_password
+    # Fail-fast guard: Grafana falls back to admin/admin when the password file is empty (shown on 2026-10-18), so refuse to start on an
+    # empty file or on the literal "admin". /run.sh is the image's own entrypoint.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - 'p=$$(tr -d "[:space:]" < /run/secrets/grafana_admin_password); if [ -z "$$p" ] || [ "$$p" = admin ]; then echo "docker/secrets/grafana_admin_password is empty or admin; see the top of compose.yaml" >&2; exit 1; fi; exec /run.sh'
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
@@ -126,43 +152,78 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 120s # Grafana 13 runs a long first-start migration
     depends_on:
       prometheus:
         condition: service_healthy
 
   loki:
     profiles: ["observability"]
-    image: grafana/loki:3.0.0@sha256:757b5fadf816a1396f1fea598152947421fa49cb8b2db1ddd2a6e30fae003253
+    image: grafana/loki:3.7.8@sha256:1107dd5274e0ada47e42472b7a7e71f3b2a2fe878878108f3e2f9e51528f0193
     mem_limit: 512m
     ports:
-      - "${LOKI_PORT:-3100}:3100"
+      - "127.0.0.1:${LOKI_PORT:-3100}:3100"
     command: -config.file=/etc/loki/local-config.yaml
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    # No healthcheck: the loki 3.7 image has neither wget nor sh, so nothing in the image can probe itself.
+    # Loki readiness is probed from promtail (below), which has bash.
 
   promtail:
     profiles: ["observability"]
-    image: grafana/promtail:3.0.0@sha256:d3de3da9431cfbe74a6a94555050df5257f357e827be8e63f8998d509c37af8b
+    image: grafana/promtail:3.6.8@sha256:6cfa64ec432b24a912d640e2edb940eeae2666f61861a66c121d763dd7241381
     mem_limit: 128m
     healthcheck:
       # The promtail image has bash but no wget/curl: read the first line of GET /ready over /dev/tcp and require HTTP 200.
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/9080 && printf 'GET /ready HTTP/1.0\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200 '"]
+      # Healthy means promtail's own :9080/ready AND loki:3100/ready both answer 200 (loki has no healthcheck of its own).
+      test: ["CMD", "bash", "-c", "( exec 3<>/dev/tcp/localhost/9080 && printf 'GET /ready HTTP/1.0\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200 ' ) && ( exec 3<>/dev/tcp/loki/3100 && printf 'GET /ready HTTP/1.0\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200 ' )"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     volumes:
       - ./docker/promtail-config.yml:/etc/promtail/config.yml
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: -config.file=/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml -config.expand-env=true
+    environment:
+      - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
     restart: unless-stopped
     depends_on:
       loki:
-        condition: service_healthy
+        condition: service_started
+      docker-socket-proxy:
+        condition: service_started
+
+  docker-socket-proxy:
+    profiles: ["observability"]
+    # The only service that mounts the Docker socket, read-only, behind an allow-list: container list/inspect/logs, no POST (no exec, stop or create).
+    # Remaining risk: GET on /containers/*/json still exposes every container's environment (including secrets passed as env) to promtail,
+    # and the socket itself is still reachable by this proxy process. Internal network only (no published port).
+    image: tecnativa/docker-socket-proxy:v0.4.1@sha256:3400c429c5f9e1b21d62130fb93b16e2e772d4fb7695bd52fc2b743800b9fe9e
+    mem_limit: 64m
+    environment:
+      - CONTAINERS=1
+      - POST=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
+  tempo:
+    profiles: ["observability"]
+    # Latest stable at least two weeks old on 2026-10-18 (3.0.3, 2026-08-13; 3.0.4 is two days old); multi-arch index digest from a registry query.
+    image: grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5
+    # mem_limit is a start value; set it from the measured peak.
+    mem_limit: 512m
+    command: -config.file=/etc/tempo/tempo.yaml
+    # OTLP gRPC 4317 and HTTP 4318, query 3200: compose network only, no host port.
+    expose:
+      - "4317"
+      - "4318"
+      - "3200"
+    volumes:
+      - ./docker/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    restart: unless-stopped
+    # No healthcheck: like loki, the tempo image has no shell or probe tool. Readiness (GET :3200/ready) is probed from another container
+    # on the compose network, and by Grafana's Tempo datasource "Test".
 
   watchdog:
     profiles: ["observability"]
@@ -171,6 +232,9 @@ services:
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
+      args:
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
     command: python -m src.observability.watchdog
     environment:
       - BACKEND_URL=http://backend:8000
@@ -182,13 +246,18 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      loki:
+      promtail:
         condition: service_healthy
       prometheus:
         condition: service_healthy
     restart: unless-stopped
 
+secrets:
+  grafana_admin_password:
+    file: ./docker/secrets/grafana_admin_password
+
 volumes:
   prometheus_data:
   grafana_data:
   redis_data:
+  tempo_data:

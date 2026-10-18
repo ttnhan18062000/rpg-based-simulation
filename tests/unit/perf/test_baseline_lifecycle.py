@@ -159,7 +159,7 @@ def test_the_committed_baselines_directory_passes_and_matches_the_allowlist() ->
     assert lifecycle.check() == []
     committed = {p.name for p in lifecycle.DEFAULT_BASELINES_DIR.glob("*.json")}
     assert committed <= lifecycle.LEGACY_TRIPWIRE_REFERENCES | {n for n in committed if lifecycle._VERSIONED_RE.match(n)}
-    assert len(lifecycle.LEGACY_TRIPWIRE_REFERENCES) == 10  # 15 before PERF-M2-T08 promoted five
+    assert len(lifecycle.LEGACY_TRIPWIRE_REFERENCES) == 6  # 15 before PERF-M2-T08 promoted five; 10 before PERF-M2-T08-NOISY promoted combat_10_local and simq_corpus_crowded_frontier (both legacy files deleted; the crowded_frontier one by TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS); 8 before TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES promoted idle_100_local and movement_100_local
 
 
 def test_a_file_that_is_neither_a_record_nor_listed_fails(baselines) -> None:
@@ -169,7 +169,7 @@ def test_a_file_that_is_neither_a_record_nor_listed_fails(baselines) -> None:
 
 
 def test_a_listed_legacy_file_passes_without_being_a_record(baselines) -> None:
-    (baselines / "idle_100_local.json").write_text(json.dumps({"profile": "PERF_1GB_LOCAL"}), encoding="utf-8")
+    (baselines / "strategic_100_local.json").write_text(json.dumps({"profile": "PERF_1GB_LOCAL"}), encoding="utf-8")
     assert lifecycle.check(baselines) == []
 
 

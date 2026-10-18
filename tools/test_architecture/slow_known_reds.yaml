@@ -171,9 +171,9 @@ known_reds:
     kind: flaky
     note: "population_stability measures the throttled kernel by design (not an anchor, out of scope of the audit_mode ticket), plus the same-second run-dir collision: see TCK-20261011-DEFAULT-RUN-ID-CANNOT-COLLIDE-ACROSS-SAME-SEED-PROCESSES"
   - match: "tests.unit.worldassembly.test_corpus_diversity*"
-    ticket: TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE
+    ticket: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
     owner: testing-implementer
     added_on: "2026-10-07"
     expires_on: "2026-11-04"
     kind: flaky
-    note: "catch-all, keep LAST; covers the stale-anchor reds until the re-anchor commit lands, and after it only the 3 class-(c) COGNITION anchors from the #408 measurement (simq_routing 500t and 1000t, hero_guild_routing 1000t), which the audit_mode ticket makes deterministic; the 3 population_stability entries above are specific; superseded TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED (issue #511)"
+    note: "re-anchor moved to baseline v1 (designer, 2026-10-14); catch-all, keep LAST; covers the stale-anchor reds until the re-anchor commit lands, and after it only the 3 class-(c) COGNITION anchors from the #408 measurement (simq_routing 500t and 1000t, hero_guild_routing 1000t), which the audit_mode ticket makes deterministic; the 3 population_stability entries above are specific; superseded TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED (issue #511)"

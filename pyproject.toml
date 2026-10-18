@@ -90,6 +90,12 @@ profiling = [
     "py-spy>=0.3.14",
 ]
 
+# Load-test runner (TCK-20261018-LOCUST-API-LOAD-TEST): opt-in with `uv sync --group loadtest`, not a runtime dependency and not in a
+# default group, so no CI job installs it. Pinned exactly (2.46.7, 2026-10-04): a new release can change the measured numbers.
+loadtest = [
+    "locust==2.46.7",
+]
+
 [project.scripts]
 rpg-sim = "src.__main__:main"
 rpg-world = "src.worldbuilding.cli:main"

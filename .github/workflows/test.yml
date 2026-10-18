@@ -28,8 +28,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -94,8 +94,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -158,8 +158,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # Split into one step per test directory, each with if: always(), so a failure names its
@@ -302,8 +302,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -338,8 +338,8 @@ jobs:
     name: "Tools · a–e"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
       # TCK-20261003-CI-SPLIT-API-TOOLS-JOB: tests/tools (211 flat files, about 275-340 s of the old
@@ -357,7 +357,7 @@ jobs:
                  --junit-xml=reports/junit/tools-a-e.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tools-a-e-junit-${{ github.sha }}
           path: reports/junit/tools-a-e*.xml
@@ -389,8 +389,8 @@ jobs:
     name: "Tools · f–z"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # Sibling of `tools-a-e` (TCK-20261003-CI-SPLIT-API-TOOLS-JOB); see the comment there for why
@@ -402,7 +402,7 @@ jobs:
                  --junit-xml=reports/junit/tools-f-z.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tools-f-z-junit-${{ github.sha }}
           path: reports/junit/tools-f-z*.xml
@@ -435,8 +435,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # Split into one step per test directory, each with if: always(), so a failure names its
@@ -494,7 +494,7 @@ jobs:
                  reports/junit/api-cli-engine-visual_assets.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-cli-engine-junit-${{ github.sha }}
           path: reports/junit/api-cli-engine*.xml
@@ -542,8 +542,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -602,14 +602,14 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # Every Python job installs from uv.lock (TCK-20261002-UV-FIRST-CI-JOB,
       # TCK-20261002-UV-REMAINING-CI-JOBS). setup-uv provides Python 3.13 and puts .venv on PATH,
       # so the pytest/python3 steps are unchanged. --no-install-project keeps the old behaviour of
       # no editable install; extras (knowledge stack) are not selected. Only tools-a-e syncs the
       # `lint` group (ruff, complexipy), which the code-health tests invoke; the rest pass
       # --no-group lint.
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -644,8 +644,8 @@ jobs:
     name: "Architecture / docs / static"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -723,7 +723,7 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_frontend == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -750,7 +750,7 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_docker_build == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Build checks
         run: docker build --check -f docker/backend.Dockerfile .
       - name: Build
@@ -779,7 +779,7 @@ jobs:
       run_docker_build: ${{ steps.diff.outputs.run_docker_build }}
       run_scenario_lane: ${{ steps.diff.outputs.run_scenario_lane }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
       - id: diff
         run: |
@@ -863,7 +863,7 @@ jobs:
     outputs:
       pr_content_unchanged: ${{ steps.decide.outputs.pr_content_unchanged }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0, filter: "blob:none" }
       - id: decide
         continue-on-error: true
@@ -887,8 +887,8 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -934,8 +934,8 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || (needs.changed-files.outputs.run_scenario_lane == 'true' && needs.changed-files.outputs.run_perf_cert_arena != 'true')) && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - id: started
@@ -959,8 +959,8 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Fast lanes
@@ -976,8 +976,8 @@ jobs:
     # 96 s (average 34 s, 40 runs of 2026-10-03/04), so 10 minutes leaves wide headroom.
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # TCK-20261003-MYPY-BASELINE-ADVISORY, blocking since TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING: runs
@@ -1011,8 +1011,8 @@ jobs:
     # acceptance of the historical backlog.
     if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: SimQ full audit (engine re-run + anchor diff + regression tests + coverage scan)
@@ -1037,9 +1037,9 @@ jobs:
     # runs took at most 183 s (average 118 s, 40 runs of 2026-10-03/04), so 20 minutes leaves wide headroom.
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
       # jscpd runs through `npx` (version pinned by JSCPD_VERSION in the Makefile); same Node as the frontend job.
@@ -1091,9 +1091,9 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0, persist-credentials: false }
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
       # The list is written to a temporary name and moved into place only when git succeeds: the shell creates the
@@ -1115,7 +1115,7 @@ jobs:
         continue-on-error: true
       - name: Upload SARIF to code scanning
         if: ${{ steps.sarif.outcome == 'success' }}
-        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           sarif_file: reports/code_health/code-health.sarif
           category: code-health
