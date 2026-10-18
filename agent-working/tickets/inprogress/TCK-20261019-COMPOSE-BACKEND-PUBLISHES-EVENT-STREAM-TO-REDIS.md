@@ -38,13 +38,17 @@ depend on the stream actually flowing. Announced on #618 (comment 6253821018).
 ## Scope
 - `compose.yaml` backend `environment:`: add `SIM_STREAM_BACKEND=redis` and `SIM_REDIS_URL=redis://redis:6379/0`, with a
   one-line comment saying why (the producer reads `SIM_*`, not `REDIS_URL`; ai_worker consumes `simulation:events`).
+- Replace the unused `REDIS_URL=redis://redis:6379/0` on **backend and ai_worker** with `SIM_REDIS_URL=redis://redis:6379/0`.
+  rpg-planner confirmed on 2026-10-19, on the #646 tip, that nothing in `src/` reads plain `REDIS_URL`: the producer
+  reads `SIM_*`/`RPG_*` (`src/observability/config.py:308,321`), and the anomaly worker reads `SIM_*`
+  (`worker.py:417-419`). A variable nothing reads looks like configuration but does nothing, which is how this bug
+  went unnoticed. Set `SIM_STREAM_BACKEND=redis` on ai_worker as well, explicitly, even though its default matches.
 - Make sure the backend waits for redis `service_healthy` (add the dependency if it is missing). The adapter degrades
   without Redis, but at startup it should connect.
 
 ## Out of Scope
 `SIM_DEPLOYMENT_PROFILE=production`, which also changes queue sizes and other defaults. Any `src/**` change: the
-producer's defaults stay as they are. Whether `REDIS_URL` itself is still read by anything goes to rpg as a question
-if the implementer finds it unused. Observability-profile services and prometheus.yml are ubuntu's (step 2).
+producer's defaults stay as they are. Observability-profile services and prometheus.yml are ubuntu's (step 2).
 
 ## Acceptance Criteria
 - `docker compose config -q` passes (validated in CI).
