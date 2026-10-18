@@ -7661,6 +7661,19 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-FOLDED-RED-PERF-INVENTORIES.md
+  ticket_id: TCK-20261018-FOLDED-RED-PERF-INVENTORIES
+  title: Regenerate the phase and wall-clock perf inventories for the folded rpg-next
+    tree
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-18'
+  related_code_areas:
+  - docs/performance/phase_inventory.md, phase_inventory.json, wall_clock_inventory.md,
+    wall_clock_inventory.json
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-FOLDED-REDS-TERRAIN-ID-AND-GENERATOR-SPECIES.md
   ticket_id: TCK-20261018-FOLDED-REDS-TERRAIN-ID-AND-GENERATOR-SPECIES
   title: 'Fix two reds on rpg-next b23e78128: a test staging a terrain id the catalog
@@ -7690,6 +7703,17 @@
   - platform
   - performance
   - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-REPLAY-NON-AUTHORITATIVE-TEST-INDEPENDENT-OF-HOST-MEMORY.md
+  ticket_id: TCK-20261018-REPLAY-NON-AUTHORITATIVE-TEST-INDEPENDENT-OF-HOST-MEMORY
+  title: Make test_replay_is_non_authoritative independent of host memory
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-18'
+  related_code_areas:
+  - tests/unit/kernel/test_replay_contract.py
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-TEMPO-TRACE-BACKEND.md
   ticket_id: TCK-20261018-TEMPO-TRACE-BACKEND
