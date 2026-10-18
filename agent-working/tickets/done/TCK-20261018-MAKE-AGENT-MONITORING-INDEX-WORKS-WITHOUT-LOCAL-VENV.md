@@ -82,3 +82,4 @@ Only L509 contained the `[ -x "$$py" ]` pattern. The diff to the lead-owned Make
 
 ## Completion Summary
 `make agent-monitoring-index` now uses `$(PYTHON3)` and builds the index in a worktree with no `.venv` of its own.
+Known limit: `PYTHON3` resolves to empty when no candidate interpreter imports pydantic, and then this recipe fails the old way; that is the same for every `$(PYTHON3)` target, so it is not this ticket's to fix.
