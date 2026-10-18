@@ -81,8 +81,8 @@ def _first_attack(state: AuthoritativeState):
 
 ATTACK = {"action": "ATTACK", "target_id": H}
 A_POS, D_POS = (1.0, 1.0), (3.0, 1.0)  # two tiles apart (range 3)
-# The tile check_cover reads is the one adjacent to the defender on the ATTACKER's side, (2, 1) here (an obstacle between them). The Bible and the
-# docstring say "behind the target, away from the attacker"; the code has never done that (pinned by test_terrain_declares_cover_and_high_ground).
+# The tile check_cover reads is the one adjacent to the defender on the ATTACKER's side, (2, 1) here: an obstacle between them (designer ruling 2026-10-18).
+# The far side and the flanks do not count.
 
 
 def test_a_cover_tile_next_to_the_defender_on_the_attackers_side_reduces_the_damage_of_a_real_attack():

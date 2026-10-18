@@ -2812,9 +2812,9 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: "Corrected 2026-10-14 (divergence 2.129). The earlier 'proven via exhaustive checklist audit' claim was stale: check_cover named upper-case WALL, FOREST and MOUNTAIN, while terrain is lower-case catalog ids, so cover never fired. Each terrain now declares gives_cover in content (forest, mountain, ruin, cave) and LegalityServiceV2.check_cover reads it through src/content/terrain_cost.py; the code names no terrain."
+  v2_evidence: "Corrected 2026-10-14 (divergence 2.129). The earlier 'proven via exhaustive checklist audit' claim was stale: check_cover named upper-case WALL, FOREST and MOUNTAIN, while terrain is lower-case catalog ids, so cover never fired. Each terrain now declares gives_cover in content (forest, mountain, ruin, cave) and LegalityServiceV2.check_cover reads it through src/content/terrain_cost.py; the code names no terrain. Geometry (designer ruling 2026-10-18, fiction of cover, D33): cover is an obstacle BETWEEN attacker and defender, the tile next to the defender on the attacker's side; the Bible row and the docstring said 'behind the target, away from the attacker', and their wording was fixed to match the code (no code change). Proven through the kernel by tests/unit/combat/test_terrain_mechanics_forced_scenarios.py and at the helper by tests/unit/engine/test_terrain_declares_cover_and_high_ground.py."
   proof_type: null
-  test_path: tests/unit/engine/test_terrain_declares_cover_and_high_ground.py
+  test_path: tests/unit/combat/test_terrain_mechanics_forced_scenarios.py; tests/unit/engine/test_terrain_declares_cover_and_high_ground.py
   divergence_note: null
   support_boundary: null
 - id: COMB-263

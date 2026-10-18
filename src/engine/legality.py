@@ -481,7 +481,7 @@ class LegalityServiceV2:
     @staticmethod
     def check_cover(attacker_pos: Tuple[float, float], defender_pos: Tuple[float, float], state: AuthoritativeState) -> bool:
         """
-        Verify if the defender has terrain cover (declared in content) on the side the attacker is not.
+        Verify if the defender has terrain cover (declared in content): the tile next to the defender on the attacker's side, an obstacle between a non-adjacent attacker and the defender.
         Logic ID: COMB-262 (Cover behavior is explicit)
         """
         # VERIFIED v2: cover_geometric

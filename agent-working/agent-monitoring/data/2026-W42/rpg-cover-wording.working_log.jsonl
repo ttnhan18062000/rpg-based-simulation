@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-18T10:32:22.799367Z", "ticket_id": "TCK-20261018-COVER-WORDING-MATCHES-THE-CODE-GEOMETRY", "title": "Cover wording matches the code geometry", "status": "DONE", "summary": "Bible row, check_cover docstring and COMB-262 reworded to an obstacle between attacker and defender; no logic change", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}
