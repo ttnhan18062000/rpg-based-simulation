@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER
-phase: inprogress
+phase: done
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 Prometheus: scrape the observability services and a new node-exporter; drop the always-401 backend:8000 job
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -81,11 +81,13 @@ None.
 - Lead's note 4: record the RSS before fixing `mem_limit`, and confirm series for both `/` and `/data`.
 
 ## Test Summary
-- **validated:** `docker compose config -q` for the default and the observability profile; YAML parse; `promtool check config` from the pinned Prometheus image (`SUCCESS: valid prometheus config file syntax`).
-- Not yet run (needs the node-exporter pull and the single stack run, both asked of platform-planner/lead): targets `up`, `node_filesystem_avail_bytes` for `/` and `/data`, node-exporter RSS and the `mem_limit`, Grafana `/metrics` without auth.
+- **validated:** `docker compose config -q` for the default and the observability profile; YAML parse; `promtool check config` from the pinned Prometheus image (SUCCESS, also with the ntfy job).
+- **running locally** (two stack runs on 2026-10-18, 8-service subset): all six jobs `up` (prometheus, grafana, loki, tempo, node-exporter, ntfy); `node_filesystem_avail_bytes` has `mountpoint="/"` (sda2) and `"/data"` (sdb1) with no `/host` prefix, and the three `/etc/*` bind mounts that the rule regex excludes; Grafana `/metrics` answers without auth; no job targets `backend:8000`.
+- node-exporter measured peak 11.4 MiB (idle 7.8); `mem_limit` set to 32m (about 3x headroom); the limit change itself was validated by `config -q`, not re-run live.
+- Details: `docs/runbooks/records/2026-10-18-target-down-drill.md`.
 
 ## Files Changed
-(open)
+`docker/prometheus.yml`, `compose.yaml` (node-exporter service and its limit), this ticket, its staging artifacts, `docs/runbooks/records/2026-10-18-target-down-drill.md` (shared evidence).
 
 ## Completion Summary
-(open)
+Prometheus now scrapes `prometheus`, `grafana`, `loki`, `tempo`, `node-exporter` and `ntfy` (the last added in the alerting ticket); the always-401 `backend:8000` job is gone (`backend:9109` returns with rpg R1, #622). node-exporter `prom/node-exporter:v1.12.1` (tag plus index digest, read-only rslave rootfs, filesystem collector only, no privileges or ports) shows series for `/` and `/data`; its measured peak was 11.4 MiB and `mem_limit` is 32m. All checks ran on 2026-10-18 on the 8-service subset (running locally; config checks validated). Evidence: `docs/runbooks/records/2026-10-18-target-down-drill.md`. Gaps: none beyond the drill record's limits (one host, subset not full profile). Staging artifacts were written by platform-planner at filing and updated at close. Knowledge index refreshed by lead-planner in the main checkout after merge.

@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P2
 audience: agent
@@ -22,3 +22,8 @@ Written by platform-planner at filing (2026-10-18); the implementer updates it a
 | node-exporter fits | running locally | `docker stats` | measured | RSS recorded, mem_limit set from it | `docker stats --no-stream` |
 
 No `tests/**` changes (D-4: tests/** is rpg's).
+
+## Results (2026-10-18)
+- validated: `compose config -q` both profiles; YAML parse; `promtool check config` from the pinned image: SUCCESS.
+- running locally (8-service subset, two runs): targets `prometheus`, `grafana`, `loki`, `tempo`, `node-exporter`, `ntfy` all `up`; `node_filesystem_avail_bytes` has `mountpoint="/"` and `"/data"` (no `/host` prefix); Grafana `/metrics` answers without auth; no job targets `backend:8000`.
+- node-exporter measured peak 11.4 MiB; `mem_limit` set to 32m (about 3x headroom).

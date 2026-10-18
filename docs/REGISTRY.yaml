@@ -7146,6 +7146,36 @@
   - determinism
   - visualization
 - type: doc
+  path: docs/runbooks/README.md
+  title: Runbooks (local observability stack)
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/alerting-pipeline.md
+  title: 'Runbook: alerting pipeline (PrometheusUnreachable, GrafanaAlertingFailures)'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/disk-space.md
+  title: 'Runbook: disk space (DiskSpaceLow, DiskWillFillIn24h)'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
   path: docs/runbooks/records/2026-10-18-api-load-test.md
   title: 'API load test (2026-10-18): age effect, /entities page cap and proposed
     SLO'
@@ -7157,6 +7187,26 @@
   - platform
   - observability
   - performance
+- type: doc
+  path: docs/runbooks/records/2026-10-18-target-down-drill.md
+  title: 'Target-down drill (2026-10-18): stop Loki, the alert reaches ntfy, recover'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/target-down.md
+  title: 'Runbook: TargetDown'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
 - type: doc
   path: docs/simulation/domains/perception_contract.md
   title: Perception Domain Contract
@@ -7649,6 +7699,20 @@
   - platform
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER.md
+  ticket_id: TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER
+  title: 'Prometheus: scrape the observability services and a new node-exporter; drop
+    the always-401 backend:8000 job'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-LOCUST-API-LOAD-TEST.md
   ticket_id: TCK-20261018-LOCUST-API-LOAD-TEST
   title: 'tools/loadtest: a Locust API scenario and a runner that records the method,
@@ -7726,6 +7790,35 @@
   - architecture
   - documentation
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL.md
+  ticket_id: TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL
+  title: Runbooks for the base alerts, the docs/runbooks index, and one recorded drill
+    (stop Loki, alert reaches ntfy, recover)
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docs/runbooks/**
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES.md
+  ticket_id: TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES
+  title: 'Grafana alerting provisioned as files: local ntfy service, ntfy contact
+    point (topic from a gitignored secret), notification policy, and the base rule
+    group'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/grafana/provisioning/alerting/
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
   ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24
   title: Platform workflows on the Ubuntu 26 runner migration (observe publish-images,
@@ -7740,6 +7833,67 @@
   tags:
   - platform
   - delivery
+- type: ticket
+  path: agent-working/tickets/todos/devops-s4-base-alerts-local/TCK-20261018-EPIC-DEVOPS-S4-BASE-ALERTS-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-S4-BASE-ALERTS-LOCAL
+  title: 'DevOps S4 (host ubuntu): base alerts with no rpg metrics (target down, observability
+    self-health, disk), Grafana alerting to a local ntfy, runbooks and one recorded
+    drill'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE
+  title: 'DevOps S5 (host ubuntu): Terraform for the amendment''s 5b/5c AWS shape,
+    written and validated in CI ($0, no account, no plan, no apply)'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - infra/terraform/**
+  artifact_files: []
+  tags:
+  - platform
+  - delivery
+  - security
+- type: ticket
+  path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-IAC-WORKFLOW-AND-ROLES.md
+  ticket_id: TCK-20261018-IAC-WORKFLOW-AND-ROLES
+  title: 'CI: .github/workflows/iac.yml (fmt, validate, tflint, trivy config report-only;
+    no credentials) and the D8 roles diff for infra/** and iac.yml'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - .github/workflows/iac.yml
+  artifact_files: []
+  tags:
+  - platform
+  - delivery
+  - security
+- type: ticket
+  path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-TERRAFORM-AWS-SKELETON.md
+  ticket_id: TCK-20261018-TERRAFORM-AWS-SKELETON
+  title: 'Terraform: infra/terraform bootstrap (OIDC role, budget alarm and deny action)
+    and service (one Fargate task in the default VPC) roots, written and validated,
+    never applied'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - infra/terraform/**
+  artifact_files: []
+  tags:
+  - platform
+  - delivery
+  - security
 - type: ticket
   path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
   ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF

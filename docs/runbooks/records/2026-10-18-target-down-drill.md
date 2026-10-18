@@ -57,9 +57,9 @@ Peak seen over the run and the `mem_limit`:
 | prometheus | 88 | 512 m | |
 | tempo | 44 | 512 m | |
 | promtail | 42 | 128 m | |
-| ntfy | 26 | 128 m | placeholder limit, measured 26 |
+| ntfy | 26 | 64 m (was a 128 m placeholder) | limit now set from the measurement, about 2.5x headroom |
 | docker-socket-proxy | 19 | 64 m | |
-| node-exporter | 11 | 64 m | placeholder limit, measured 11 |
+| node-exporter | 11 | 32 m (was a 64 m placeholder) | limit now set from the measurement, about 3x headroom; the limit change itself was not re-run live |
 
 Sum of peaks about 970 MiB, above the 500 to 700 MiB estimate; Grafana is the driver. **Full profile:** this subset omits backend, redis, ai_worker, frontend and watchdog. The earlier full-profile idle total was about 710 MiB (hardening and Tempo tickets); the full figure is that plus the new containers' measured peaks (node-exporter 11, ntfy 26) and Grafana's higher peak with alerting loaded, not a new measurement of the full profile.
 
@@ -68,12 +68,28 @@ Sum of peaks about 970 MiB, above the 500 to 700 MiB estimate; Grafana is the dr
 - No root-owned files under this worktree's `data/runs` afterwards. The stack was taken down without `-v`; volumes were kept.
 
 ## 8. What the runbook and rules got wrong
-- The `$$labels` text in the summary (above). Fixed in the source to a single `$labels`; re-check below.
+- The `$$labels` text in the summary (above). Fixed in the source to a single `$labels`; proven in section 9.
 - The compose header told the user to create the secrets with `umask 077`, which breaks Grafana. Fixed to `chmod 644` with the reason.
 - `grafana_alerting_notifications_failed_total` does not appear in `/metrics` at zero (Grafana skips zero-valued series); the name is right and the series appears after a first failure. Failure detection is validated by source only.
 
-## 9. Re-check (pending)
-To be filled after the short re-check run: the rendered summary in ntfy, the fixed rule evaluating without error, the deletion of the temporary `drillreader` user, and the time `down` ran.
+## 9. Re-check (second run, 2026-10-18, same 8-service subset, running locally)
+After the fixes in section 8. Timeline (UTC):
+| time | event |
+|---|---|
+| 13:01:14 | `docker compose stop loki` (T0) |
+| 13:03:58 | ntfy `[firing] TargetDown`, message **"Scrape target loki is down"** plus the runbook path |
+| 13:04:08 | ntfy stopped while TargetDown was firing; loki started again (T4) |
+| 13:07:06 | `grafana_alerting_notifications_failed_total{integration="webhook",org="1"}` first seen in Grafana `/metrics` (value 1; 2 at the end) |
+| 13:09:27 | `GrafanaAlertingFailures` firing; ntfy started again |
+| 13:09:54 | ntfy `[firing] GrafanaAlertingFailures`, delivered after ntfy returned |
+| 13:13:58 | ntfy `[resolved] TargetDown` ("Scrape target loki is down") |
+| 13:14:27 | `TargetDown`, `GrafanaAlertingFailures`, `PrometheusUnreachable` all Normal; all 6 targets up |
+| 13:15:28 | `down` (no `-v`); the temporary ntfy user `drillreader` was deleted first |
+
+- **L1 PASS:** a single `$labels` renders as the job name; the provisioned-template fallback was not needed.
+- **L4 PASS (live):** the failed-notifications counter has the labels `integration` and `org`, is a `counter`, and is absent until the first failure. `GrafanaAlertingFailures` fired on it and its notification was delivered after ntfy came back (Grafana retries).
+- **Not shown:** the `[resolved] GrafanaAlertingFailures` message did not arrive before `down`; the rule was Normal at 13:14:27 and the resolved message follows at the next group flush (up to group_interval, 5 min). The stack was stopped instead of holding the host longer.
+- Idle memory on this run: grafana 306 MiB, loki 72, prometheus 84, tempo 48, promtail 27, ntfy 23, proxy 12, node-exporter 11.
 
 ## 10. Limits
 One local host, no on-call; the stack subset, not the full profile; one drill run; the resolved message is delayed by group_interval; no failure of the notifier itself was induced.
