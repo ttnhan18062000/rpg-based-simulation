@@ -60,7 +60,7 @@ Wording only.
 See the closing commit message and report.
 
 ## Files Changed
-docs/mechanics/02_combat_laws.md, docs/parity_ledger/combat_movement.yaml, src/engine/legality.py (docstring), tests/unit/combat/test_terrain_mechanics_forced_scenarios.py (comment).
+docs/mechanics/02_combat_laws.md, docs/parity_ledger/combat_movement.yaml, docs/guidelines/intentional_divergences.md (dated line under 2.129), src/engine/legality.py (docstring; local renamed behind to between), tests/unit/combat/test_terrain_mechanics_forced_scenarios.py (comment).
 
 ## Completion Summary
 Done; no behaviour change.

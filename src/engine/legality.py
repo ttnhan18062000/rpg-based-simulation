@@ -494,12 +494,12 @@ class LegalityServiceV2:
         x, y = int(defender_pos[0]), int(defender_pos[1])
 
         if abs(dx) > abs(dy):
-            behind = (x - (1 if dx > 0 else -1), y)
+            between = (x - (1 if dx > 0 else -1), y)
         else:
-            behind = (x, y - (1 if dy > 0 else -1))
+            between = (x, y - (1 if dy > 0 else -1))
 
         # Cover is declared by the terrain in content (`gives_cover`), never named here. A tile with no terrain gives none.
-        tile = state.terrain.get(behind)
+        tile = state.terrain.get(between)
         return tile is not None and terrain_gives_cover(tile)
 
     @staticmethod

@@ -33,7 +33,7 @@ Before damage is calculated, the base `Atk` and `Def` values are modified by the
 | **High Ground** | `+0.20` Atk | Attacker stands on a terrain declared `high_ground` in content (mountain only) and the target does not. |
 | **Flanking** | `+0.15` Atk | Attacker is behind the target's current focus. |
 | **Surrounded** | `+0.25` Atk | Target is surrounded by multiple enemies. |
-| **Cover** | `+0.30` Def | The tile next to the target on the attacker's side (an obstacle between a non-adjacent attacker and the target) is a terrain declared `gives_cover` in content (forest, mountain, ruin, cave). |
+| **Cover** | `+0.30` Def | The tile next to the target on the attacker's side (an obstacle between a non-adjacent attacker and the target; on an exact diagonal, the tile on the vertical axis) is a terrain declared `gives_cover` in content (forest, mountain, ruin, cave). |
 | **Shatter** | `x1.50` Atk | Target is currently in the `Frozen` state. |
 | **Exhaustion** | `x0.80` Atk | Attacker's `Sleep Debt` is greater than 80. |
 | **Bond Synergy** | `+0.10` Atk | Adjacent ally has >0.5 Familiarity with the attacker. |

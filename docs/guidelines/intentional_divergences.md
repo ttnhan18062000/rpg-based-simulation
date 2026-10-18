@@ -3518,6 +3518,8 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Rationale**: **Intentional Gameplay Change** (designer application of D33/D56/D72), with a **Bug Fix** for the never-firing checks.
 - **Verification**: `tests/unit/engine/test_terrain_declares_cover_and_high_ground.py` (ruled flags per catalog id, the whole catalog covered, a missing flag fails to load, unknown id raises, cover on both axes, no cover from no tile or an adjacent attacker, high ground against a defender on mountain, no terrain name in either check), `tests/unit/world/test_local_environment_semantics.py::test_high_ground_bonus`, `tests/unit/engine/test_terrain_cost_from_content.py`.
 
+2026-10-18: geometry wording corrected; cover = obstacle between attacker and defender, as the code has always done (COMB-262).
+
 
 ### 2.130 Chokepoints Are Found From Blocked Tiles, Not From Terrain Named WALL (designer application of D56) (TCK-20261014-CHOKEPOINTS-ARE-FOUND-FROM-BLOCKED-TILES)
 
