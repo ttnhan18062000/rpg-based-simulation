@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ
-phase: inprogress
+phase: done
 date: 2026-10-15
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 test.yml's `FRONTEND_RE` also covers the files outside `frontend/` that the frontend tests read, and a static test keeps the two in step
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -58,7 +58,7 @@ The filter is a skip optimisation. A path the tests read that the filter misses 
 - [x] AC2: the static test derives the read paths from the frontend tests, asserts each is covered, and fails on zero derived paths.
 - [x] AC3: there is a regression case showing the old pattern fails on `visual_keys.yaml`.
 - [x] AC4: `pytest tests/static/test_ci_narrow_path_filtered_jobs.py tests/tools/test_delivery_ci_lanes.py` passes.
-- [ ] AC5: the PR's own CI runs the Frontend job (its own test.yml change triggers it), and its result is recorded. A red from #598 is expected until asset fixes it, and is not this ticket's to fix.
+- [x] AC5: the PR's own CI runs the Frontend job (its own test.yml change triggers it), and its result is recorded. A red from #598 is expected until asset fixes it, and is not this ticket's to fix.
 
 ## Related Tickets
 - #596 (51b044c69), #598 (asset; the iconScene red)
@@ -89,3 +89,4 @@ tests/static + tests/tools/test_delivery_ci_lanes.py + test_ci_split_tools_jobs.
 - tests/static/test_ci_narrow_path_filtered_jobs.py
 
 ## Completion Summary
+Done in PR #637 (closes #607). FRONTEND_RE now covers visual_assets/ and the M5 criteria doc; a static test derives the outside-frontend files the vitest suite reads (3 today) and asserts each is covered, with a zero-path positive control and a regression case for the old pattern. AC5: on head 403c943d8 the Frontend job RAN (triggered by this PR's own test.yml change) and concluded success; 21 checks success, 2 skipped, 0 failing.

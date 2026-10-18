@@ -7956,6 +7956,21 @@
   - data-quality
   - workflows
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ.md
+  ticket_id: TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ
+  title: test.yml's `FRONTEND_RE` also covers the files outside `frontend/` that the
+    frontend tests read, and a static test keeps the two in step
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - FRONTEND_RE
+  - tests/static/test_ci_narrow_path_filtered_jobs.py
+  - frontend/src/visualAssets/__tests__/iconScene.test.ts (read-only)
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE.md
   ticket_id: TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE
   title: A benchmark record's memory describes the engine, not the harness's disabled
@@ -8170,21 +8185,6 @@
   artifact_files: []
   tags:
   - platform
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ.md
-  ticket_id: TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ
-  title: test.yml's `FRONTEND_RE` also covers the files outside `frontend/` that the
-    frontend tests read, and a static test keeps the two in step
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-10-15'
-  related_code_areas:
-  - FRONTEND_RE
-  - tests/static/test_ci_narrow_path_filtered_jobs.py
-  - frontend/src/visualAssets/__tests__/iconScene.test.ts (read-only)
-  artifact_files: []
-  tags:
-  - testing
 - type: ticket
   path: agent-working/tickets/inprogress/TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL.md
   ticket_id: TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL
