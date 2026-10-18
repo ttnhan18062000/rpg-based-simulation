@@ -20,6 +20,17 @@ variable "github_branch" {
   default     = "main"
 }
 
+variable "name_prefix" {
+  description = "Prefix of the resource names the service root creates. It must equal the service root's name_prefix: the deploy role may only manage roles named <name_prefix>-task-* and log groups under /<name_prefix>/."
+  type        = string
+  default     = "rpg"
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{0,20}$", var.name_prefix))
+    error_message = "name_prefix must be lowercase letters, digits and hyphens, starting with a letter."
+  }
+}
+
 variable "deploy_role_name" {
   description = "Name of the IAM role GitHub Actions assumes through OIDC."
   type        = string

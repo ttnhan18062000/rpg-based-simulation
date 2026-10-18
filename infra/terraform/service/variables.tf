@@ -36,7 +36,7 @@ variable "container_environment" {
 }
 
 variable "name_prefix" {
-  description = "Prefix for the names of the resources."
+  description = "Prefix for the names of the resources. Keep it equal to the bootstrap root's name_prefix: the deploy role is scoped to <name_prefix>-task-* roles and /<name_prefix>/ log groups."
   type        = string
   default     = "rpg"
 }

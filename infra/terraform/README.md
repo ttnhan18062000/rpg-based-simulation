@@ -40,3 +40,9 @@ trivy config infra/terraform
 ## Cost notes (amendment step 5)
 
 5b (this evidence): about $0, since nothing is created. 5c (not run): a few cents per apply, test and destroy cycle of one Fargate task, with no NAT gateway or load balancer.
+
+**Limit of the cost cap:** the Budgets action attaches a deny-all policy to the deploy role. That stops further deploys but does not stop an already-running Fargate task; stopping or destroying it then needs an admin.
+
+## Deploy role scope
+
+The bootstrap deploy role is scoped so it cannot escalate: it manages only roles named `<name_prefix>-task-*`, attaches only `AmazonECSTaskExecutionRolePolicy` to them, passes them only to `ecs-tasks.amazonaws.com`, and touches only log groups under `/<name_prefix>/`. `ecs:*` and the `ec2` actions are still on `"*"` for this evidence-only skeleton and must be scoped before any apply. Use the same `name_prefix` in both roots.

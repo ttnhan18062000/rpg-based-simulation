@@ -40,18 +40,61 @@ resource "aws_iam_role" "deploy" {
 }
 
 # The permissions the service root needs: one ECS cluster, task and service, a log group, a security group in the default VPC,
-# and the task execution role it passes. Resource "*" is broad on purpose for an evidence-only skeleton; scope it before any apply.
+# and the task execution role it passes. The IAM statements are scoped so this role cannot escalate: it can only create and manage
+# roles named "<name_prefix>-task-*", attach only the ECS task execution policy to them, and pass them only to ECS tasks.
+# ecs:* and the ec2 actions stay on "*" for this evidence-only skeleton; scope them (by cluster, service and tag) before any apply.
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "deploy_permissions" {
   statement {
-    sid       = "EcsAndLogs"
-    actions   = ["ecs:*", "logs:*", "ec2:Describe*", "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup", "ec2:AuthorizeSecurityGroup*", "ec2:RevokeSecurityGroup*", "ec2:CreateTags"]
+    sid       = "EcsAndNetwork"
+    actions   = ["ecs:*", "ec2:Describe*", "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup", "ec2:AuthorizeSecurityGroup*", "ec2:RevokeSecurityGroup*", "ec2:CreateTags"]
     resources = ["*"]
   }
 
   statement {
-    sid       = "ExecutionRole"
-    actions   = ["iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:PassRole", "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:ListAttachedRolePolicies", "iam:ListRolePolicies", "iam:TagRole"]
+    sid     = "LogGroup"
+    actions = ["logs:CreateLogGroup", "logs:DeleteLogGroup", "logs:PutRetentionPolicy", "logs:TagResource", "logs:ListTagsForResource"]
+    resources = [
+      "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/${var.name_prefix}/*",
+      "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/${var.name_prefix}/*:*",
+    ]
+  }
+
+  statement {
+    sid       = "LogGroupDescribe"
+    actions   = ["logs:DescribeLogGroups"]
     resources = ["*"]
+  }
+
+  statement {
+    sid       = "TaskExecutionRoleLifecycle"
+    actions   = ["iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:TagRole", "iam:ListAttachedRolePolicies", "iam:ListRolePolicies"]
+    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-task-*"]
+  }
+
+  statement {
+    sid       = "AttachOnlyTheTaskExecutionPolicy"
+    actions   = ["iam:AttachRolePolicy", "iam:DetachRolePolicy"]
+    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-task-*"]
+
+    condition {
+      test     = "ArnEquals"
+      variable = "iam:PolicyARN"
+      values   = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]
+    }
+  }
+
+  statement {
+    sid       = "PassTaskExecutionRoleToEcsTasksOnly"
+    actions   = ["iam:PassRole"]
+    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-task-*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["ecs-tasks.amazonaws.com"]
+    }
   }
 }
 
