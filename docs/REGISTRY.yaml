@@ -7725,7 +7725,10 @@
   date: '2026-10-18'
   related_code_areas:
   - docs/runbooks/**
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-BASE-ALERTS-RUNBOOKS-AND-DRILL/test_plan.md
   tags:
   - platform
   - observability
@@ -7800,6 +7803,21 @@
   - architecture
   - testing
 - type: ticket
+  path: agent-working/tickets/done/devops-s4-base-alerts-local/TCK-20261018-EPIC-DEVOPS-S4-BASE-ALERTS-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-S4-BASE-ALERTS-LOCAL
+  title: 'DevOps S4 (host ubuntu): base alerts with no rpg metrics (target down, observability
+    self-health, disk), Grafana alerting to a local ntfy, runbooks and one recorded
+    drill'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/visual-asset-docs-sync/TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT.md
   ticket_id: TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT
   title: 'Sample-map gap report: say what is open now, and record the owner''s 2026-10-18
@@ -7839,21 +7857,6 @@
   tags:
   - platform
   - delivery
-- type: ticket
-  path: agent-working/tickets/todos/devops-s4-base-alerts-local/TCK-20261018-EPIC-DEVOPS-S4-BASE-ALERTS-LOCAL.md
-  ticket_id: TCK-20261018-EPIC-DEVOPS-S4-BASE-ALERTS-LOCAL
-  title: 'DevOps S4 (host ubuntu): base alerts with no rpg metrics (target down, observability
-    self-health, disk), Grafana alerting to a local ntfy, runbooks and one recorded
-    drill'
-  tier: epic
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - docker/prometheus.yml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
 - type: ticket
   path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE.md
   ticket_id: TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE
