@@ -6,7 +6,7 @@ audience: agent
 tags: [platform, observability, performance]
 ---
 
-# API load test, run 1: method finding (2026-10-18)
+# API load test (2026-10-18): age effect, /entities page cap and proposed SLO
 
 **Label: measured**, running locally (VM host, Locust on the same host). Ticket: `TCK-20261018-API-LOAD-TEST-MEASURED-RUN`.
 Raw CSVs, manifests, `profile*.raw` and the speedscope JSON are in
@@ -139,7 +139,9 @@ Per-route latency at 10 users (aged, context only; three repeats, ms; p95 median
 | `/api/v1/observability/live/health` | 14–15 | 99–110 (110) | 170 | 27.8–30.7 |
 | all (aggregated) | 56–57 | 190–200 (200) | 280 | 139.7–145.1 |
 
-## 7. Proposed SLO (proposed, pending lead review; the owner approves the text at PR time)
+`/health` and `/api/v1/state` are tiny yet show p95 220 ms: at the cap, cheap routes queue behind `/entities` in the one process.
+
+## 7. Proposed SLO (accepted by lead-planner 2026-10-18 as proposed; the owner approves the text at PR time)
 
 > API p95 ≤ 300 ms over 5 min and 5xx < 1%, at the `/entities` page cap (100 entities, about 745 KB), on this host spec, load-test route mix,
 > concurrency ≤ 10 clients (about 145 req/s ceiling).
@@ -149,7 +151,7 @@ The alert ticket stays BLOCKED until `rpg` R2 (#622); this record wires nothing.
 
 ## 8. Other stack checks (running locally)
 
-- **Observability on** (fresh stack, `--users 50,100 --duration 60 --repeats 1`): 421.5 and 424.0 req/s, p95 220 and 420 ms. Peak CPU: Grafana 121%, backend 168%, everything else under 9%. Compared with the fresh-backend curve (415–510 req/s) there is no visible overhead on throughput; the overhead is the Grafana CPU and the extra memory of the stack.
+- **Observability on** (fresh stack, `--users 50,100 --duration 60 --repeats 1`): 421.5 and 424.0 req/s, p95 220 and 420 ms. Peak CPU: Grafana 121%, backend 168%, everything else under 9%. Throughput is within the fresh curve's spread (415–510 req/s); this is not a paired comparison (the runs were taken at different times). The visible cost is the Grafana CPU and the extra memory of the stack.
 - **Grafana whitespace guard:** PASS. A whitespace-only secret makes Grafana exit with `docker/secrets/grafana_admin_password is empty or admin` and restart-loop; the secret was restored (sha256 identical) and Grafana returned healthy.
 - **Grafana fresh-volume check:** PENDING, it needs the owner's direct yes to remove `platform_grafana_data`.
 - **Watchdog:** `exec watchdog id` is `uid=1000(app) gid=1000(app)` on the rebuilt image. The first observability start in this window showed uid 0 because the `platform-watchdog` image was stale (built before the non-root change; an earlier build ran without the observability profile).
