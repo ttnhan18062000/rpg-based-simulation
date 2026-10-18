@@ -7745,6 +7745,31 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-DEPS-REDIS-8.md
+  ticket_id: TCK-20261018-DEPS-REDIS-8
+  title: 'redis-py 7.3.0 to 8.1.0 together with the Redis 8.10.2 image (#579 + #566)'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-18'
+  related_code_areas:
+  - pyproject.toml, uv.lock, compose.yaml, src/core, src/config, src/engine/movement.py,
+    tests/api
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-DEPS-UV-MINOR-PATCH-GROUP.md
+  ticket_id: TCK-20261018-DEPS-UV-MINOR-PATCH-GROUP
+  title: 'uv minor/patch group (#578): mypy 2.4, pydantic 2.14, fastapi 0.143 and
+    19 more'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-18'
+  related_code_areas:
+  - pyproject.toml, uv.lock, compose.yaml, src/core, src/config, src/engine/movement.py,
+    tests/api
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-EPIC-STALENESS-READY-TO-CLOSE-BUCKET.md
   ticket_id: TCK-20261018-EPIC-STALENESS-READY-TO-CLOSE-BUCKET
   title: '`epic_staleness_check` reports epics whose children are all done as "ready
@@ -7870,6 +7895,18 @@
   - ai
   - agent-monitoring
   - setup
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-REDIS-ADAPTER-MISSING-LIBRARY-TEST-BLOCKS-THE-IMPORT.md
+  ticket_id: TCK-20261018-REDIS-ADAPTER-MISSING-LIBRARY-TEST-BLOCKS-THE-IMPORT
+  title: test_redis_adapter_resilient_missing_library really blocks the redis import,
+    so it passes with or without a live server on :6379
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-18'
+  related_code_areas:
+  - src/observability/stream/adapters.py (unchanged), tests/unit/observability/test_event_stream_adapters.py
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-REPLAY-NON-AUTHORITATIVE-TEST-INDEPENDENT-OF-HOST-MEMORY.md
   ticket_id: TCK-20261018-REPLAY-NON-AUTHORITATIVE-TEST-INDEPENDENT-OF-HOST-MEMORY
