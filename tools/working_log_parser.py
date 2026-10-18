@@ -337,6 +337,32 @@ def parse_working_log(path: Path) -> ParseResult:
     )
 
 
+VOID_ROW_KIND = "void"
+
+
+def apply_voids(rows: list) -> tuple[list, list]:
+    """(rows still standing, [(void row, voided row or None), ...]) for a list of pending shard rows.
+
+    TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW: a pending row of a ticket that never shipped is not edited
+    away; a typed `row_kind: "void"` row (ticket_id, timestamp, reason, voided_by) is appended beside it. A void
+    removes every earlier-or-equal-timestamp row of that ticket_id (a later re-record of the same ticket stands) and
+    is never itself a CSV row. A void that matches nothing is returned with `None`, so the caller can report it."""
+    voids = [r for r in rows if isinstance(r, dict) and r.get("row_kind") == VOID_ROW_KIND]
+    normal = [r for r in rows if not (isinstance(r, dict) and r.get("row_kind") == VOID_ROW_KIND)]
+    kept, applied = [], []
+    matched: set[int] = set()
+    for row in normal:
+        hit = next((i for i, v in enumerate(voids)
+                    if v.get("ticket_id") == row.get("ticket_id") and str(row.get("timestamp", "")) <= str(v.get("timestamp", ""))), None)
+        if hit is None:
+            kept.append(row)
+        else:
+            matched.add(hit)
+            applied.append((voids[hit], row))
+    applied.extend((v, None) for i, v in enumerate(voids) if i not in matched)
+    return kept, applied
+
+
 def parse_pending_working_log_shards(data_root: Path = AGENT_MONITORING / "data") -> list:
     """Read-only: every row still staged in a `<batch-id>.working_log.jsonl` shard under
     `data_root`, not yet folded into the canonical CSV by
@@ -359,7 +385,7 @@ def parse_pending_working_log_shards(data_root: Path = AGENT_MONITORING / "data"
                 rows.append(json.loads(line))
             except (ValueError, TypeError):
                 continue
-    return rows
+    return apply_voids(rows)[0]
 
 
 if __name__ == "__main__":

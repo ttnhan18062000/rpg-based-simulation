@@ -264,31 +264,59 @@ def read_bound_worktree(root: Path, instance: str) -> tuple[str, bool] | None:
 # ---- bindings and instance ---------------------------------------------------------------------
 
 def append_binding(root: Path, binding: Binding) -> None:
-    """Atomic append: one O_APPEND write of one line under a lock, so parallel writers never interleave."""
+    """Atomic append: one O_APPEND write of one line under a lock, so parallel writers never interleave.
+
+    A file that does not end in a newline holds a torn tail (a short write when the disk filled). Under the same lock
+    the fragment is moved to a `bindings.jsonl.torn-<UTC time>` sidecar next to the file and the file is cut back to its
+    last complete line, so the history stays fully readable on every later start instead of turning the fragment into a
+    middle line that raises (TCK-20261015-SESSION-BINDINGS-TORN-TAIL). Nothing is discarded: the sidecar keeps the bytes."""
     path = role_dir(root, binding.role) / BINDINGS
     line = json.dumps(asdict(binding), sort_keys=True) + "\n"
     with _locked(path.with_suffix(".lock")):
-        fd = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+        fd = os.open(path, os.O_RDWR | os.O_APPEND | os.O_CREAT, 0o644)
         try:
+            size = os.fstat(fd).st_size
+            if size and os.pread(fd, 1, size - 1) != b"\n":
+                data = os.pread(fd, size, 0)
+                keep = data.rfind(b"\n") + 1
+                sidecar = path.with_name(f"{BINDINGS}.torn-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}")
+                with open(sidecar, "ab") as side:
+                    side.write(data[keep:])
+                os.ftruncate(fd, keep)
             os.write(fd, line.encode("utf-8"))
         finally:
             os.close(fd)
 
 
-def read_bindings(root: Path, role: str) -> list[Binding]:
+def read_bindings_report(root: Path, role: str) -> tuple[list[Binding], str | None]:
+    """The bindings plus a one-line warning when an unparseable LAST line was skipped.
+
+    Only the last line is forgiven: a short write (a full disk) tears the tail and nothing else, so a bad line
+    anywhere else is still a `StateError`. A line that parses as JSON but is not a binding also still raises
+    (TCK-20261015-SESSION-BINDINGS-TORN-TAIL)."""
     path = role_dir(root, role) / BINDINGS
     if not path.is_file():
-        return []
-    out = []
-    for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        if line.strip():
-            try:
-                out.append(_binding_from(json.loads(line), f"{path}:{n}"))
-            except ValueError as exc:
-                if isinstance(exc, StateError):
-                    raise
-                raise StateError(f"{path}:{n}: not valid JSON ({exc})") from exc
-    return out
+        return [], None
+    lines = path.read_text(encoding="utf-8").splitlines()
+    last = max((n for n, line in enumerate(lines, start=1) if line.strip()), default=0)
+    out: list[Binding] = []
+    warning = None
+    for n, line in enumerate(lines, start=1):
+        if not line.strip():
+            continue
+        try:
+            raw = json.loads(line)
+        except ValueError as exc:
+            if n == last:
+                warning = f"{path}:{n}: skipped an unparseable last line ({exc}); the bindings history is otherwise intact"
+                continue
+            raise StateError(f"{path}:{n}: not valid JSON ({exc})") from exc
+        out.append(_binding_from(raw, f"{path}:{n}"))
+    return out, warning
+
+
+def read_bindings(root: Path, role: str) -> list[Binding]:
+    return read_bindings_report(root, role)[0]
 
 
 def record_start(root: Path, binding: Binding) -> Instance:

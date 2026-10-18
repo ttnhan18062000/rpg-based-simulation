@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""PostToolUse hook: appends one tool-call record to agent-working/agent-monitoring/data/<ISO-week>/tools.jsonl."""
+"""PostToolUse / PostToolUseFailure hook: appends one tool-call record to
+agent-working/agent-monitoring/data/<ISO-week>/tools.jsonl.
+
+TCK-20261015-TOOLS-TELEMETRY-FAILURES-AND-DURATIONS: a PostToolUseFailure payload (`hook_event_name`, `error`,
+`is_interrupt`) writes `status: failed` plus a short `error_class`; the duration comes from the payload's own
+`duration_ms` when Claude Code sends one, else from this call's own start stamp (see pre_tool_hook.py), else null.
+"""
 import json
 import sys
 import time
@@ -23,6 +29,64 @@ from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 # end" hook in this repo to delete it precisely, so any subsequent hook invocation from any
 # session opportunistically sweeps up scoped files this old, bounding growth.
 _SIDECAR_STALE_SECONDS = 24 * 3600
+_STAMP_STALE_SECONDS = 24 * 3600   # a call whose post hook never ran leaves its start stamp behind; swept like the sidecars
+
+
+def _error_class(error_text: str, is_interrupt: bool = False) -> str:
+    """A short, closed-set class for a failed call (never the raw error text, which can carry paths and secrets)."""
+    import re
+
+    if is_interrupt:
+        return "interrupt"
+    text = (error_text or "").strip()
+    match = re.match(r"Exit code (\d+)", text)
+    if match:
+        return f"exit_{match.group(1)}"
+    low = text.lower()
+    if re.search(r"timed? ?out|timeout|deadline exceeded", low):
+        return "timeout"
+    if re.search(r"\btls\b|ssl|certificate|handshake", low):
+        return "tls"
+    if re.search(r"\b50[234]\b|bad gateway|service unavailable", low):
+        return "http_5xx"
+    if re.search(r"permission denied|not permitted|forbidden|\b40[13]\b", low):
+        return "permission"
+    if re.search(r"no such file|not found|\b404\b", low):
+        return "not_found"
+    return "error"
+
+
+def _call_duration_ms(payload: dict, session_id: str, tool_use_id: str, now_dt) -> int | None:
+    """This call's duration in ms: the payload's own figure, else this call's own start stamp (read once and
+    deleted), else None. Never a figure from another call's stamp."""
+    own = payload.get("duration_ms")
+    if isinstance(own, (int, float)) and not isinstance(own, bool) and own >= 0:
+        return int(own)
+    if not (session_id and tool_use_id):
+        return None
+    try:
+        from pre_tool_hook import stamp_path
+
+        path = stamp_path(session_id, tool_use_id)
+        started = datetime.fromisoformat(json.loads(path.read_text())["ts"].replace("Z", "+00:00"))
+        path.unlink(missing_ok=True)
+        ms = int((now_dt - started).total_seconds() * 1000)
+        return ms if ms >= 0 else None
+    except Exception:
+        return None
+
+
+def _prune_stale_start_stamps() -> None:
+    try:
+        now = time.time()
+        for path in Path(".claude/tool_starts").glob("*"):
+            try:
+                if now - path.stat().st_mtime > _STAMP_STALE_SECONDS:
+                    path.unlink()
+            except OSError:
+                pass
+    except Exception:
+        pass
 
 
 def _prune_stale_scoped_sidecars() -> None:
@@ -75,15 +139,8 @@ try:
     now_dt = datetime.now(timezone.utc)
     now = now_dt.isoformat().replace("+00:00", "Z")
 
-    # Compute duration from pre-hook timestamp
-    duration_ms = None
-    try:
-        start_data = json.loads(Path(".claude/.tool_start").read_text())
-        pre = datetime.fromisoformat(start_data["ts"].replace("Z", "+00:00"))
-        post = datetime.fromisoformat(now.replace("Z", "+00:00"))
-        duration_ms = int((post - pre).total_seconds() * 1000)
-    except Exception:
-        pass
+    tool_use_id = payload.get("tool_use_id") or ""
+    duration_ms = _call_duration_ms(payload, session_id, tool_use_id, now_dt)
 
     # Read workflow sidecar for run_id / seq. tools/retrieval_cache.py previously carried a
     # separate reader of the same file convention (read_current_run_sidecar(), for the KGMCP
@@ -147,14 +204,22 @@ try:
         pass
 
     _prune_stale_scoped_sidecars()
+    _prune_stale_start_stamps()
 
-    # Determine status from tool response
+    # Determine status: a PostToolUseFailure payload is a failure by definition; otherwise from the tool response
     status = "ok"
-    if isinstance(tool_response, dict):
+    error_text = ""
+    event_name = payload.get("hook_event_name") or "PostToolUse"
+    if event_name == "PostToolUseFailure" or payload.get("error"):
+        status = "failed"
+        error_text = str(payload.get("error") or "")
+    elif isinstance(tool_response, dict):
         if tool_response.get("is_error") or tool_response.get("error"):
             status = "failed"
+            error_text = str(tool_response.get("error") or "")
     elif isinstance(tool_response, str) and tool_response.startswith("ERROR"):
         status = "failed"
+        error_text = tool_response
 
     record = {
         "session_id": session_id,
@@ -172,6 +237,8 @@ try:
         "provider": provider,
         "ticket_id": ticket_id,
     }
+    if status == "failed":
+        record["error_class"] = _error_class(error_text, bool(payload.get("is_interrupt")))
 
     # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: per-PR/batch write target (superseding the
     # prior per-ticket key, and reconciling this file's own former ticket_id-based branch with
@@ -199,7 +266,7 @@ try:
 
         disk_line = mid_session_line(session_id, Path(".claude"))
         if disk_line:
-            print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": disk_line}}))
+            print(json.dumps({"hookSpecificOutput": {"hookEventName": event_name, "additionalContext": disk_line}}))
     except Exception:
         pass
 

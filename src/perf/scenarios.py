@@ -306,6 +306,9 @@ def build_mixed_state(
 ) -> AuthoritativeState:
     """
     Build a realistic mixed simulation state.
+
+    ``entity_count`` is the size requested, not the number of entities built: 40 % heroes and 30 % monsters become entities, the other 30 % are
+    resource nodes (``state.resource_nodes``), so ``entity_count=200`` gives 140 entities and 60 nodes (``mixed_200_*`` keeps the requested size in its name).
     """
     # Simplified mix: 40% heroes, 30% monsters, 30% nodes
     hero_count = int(entity_count * 0.4)

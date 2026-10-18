@@ -1,0 +1,17 @@
+14:14:15 GAP mono 2.0s wall 2.0s steal=0 load 2.48
+14:14:15 load 2.48 steal=0
+ 364664 Sl   -                81.6       2 /data/vboxuser/Work/rpg-based-simulation/.venv/bin/python -m pytest -p phasep
+14:14:27 GAP mono 12.0s wall 12.0s steal=0 load 1.93
+14:14:46 GAP mono 18.0s wall 18.0s steal=0 load 16.35
+14:15:07 GAP mono 20.2s wall 20.2s steal=0 load 17.49
+14:15:11 GAP mono 3.0s wall 3.0s steal=0 load 28.34
+14:15:34 GAP mono 22.2s wall 22.2s steal=0 load 32.50
+14:15:35 load 32.50 steal=0
+ 364664 Sl   poll_schedule_ti  2.3      81 /data/vboxuser/Work/rpg-based-simulation/.venv/bin/python -m pytest -p phasep
+ 365275 S    poll_schedule_ti  0.0       0 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+ 365280 Ss   do_wait           0.0       0 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+ 365284 R    -                 0.0       0 bwrap --unshare-all --die-with-parent --new-session --clearenv --setenv HOME 
+14:16:14 GAP mono 37.8s wall 37.8s steal=0 load 58.58
+14:16:15 load 58.58 steal=0
+ 364664 R    -                 1.6     122 /data/vboxuser/Work/rpg-based-simulation/.venv/bin/python -m pytest -p phasep
+14:16:17 GAP mono 1.8s wall 1.8s steal=0 load 62.06

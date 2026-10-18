@@ -10,7 +10,7 @@
   "guarded_files": [
     {
       "path": "tests/visual_assets/conftest.py",
-      "sha256": "sha256:c1670c1ceae8cdb60a11fea8cde4bc35275cf4fe01ba6776943c98bcd5d35b57"
+      "sha256": "sha256:01f47647b503f2da98579939d02deabe9cee99e3814924cbbe99b144df082432"
     },
     {
       "path": "tests/visual_assets/drawing/conftest.py",
@@ -74,7 +74,7 @@
     },
     {
       "path": "tests/visual_assets/strict_aseprite.py",
-      "sha256": "sha256:196bc3d52b010b977ede92f35257d24970a33c1827f0474e8b8aabdfecfbcb47"
+      "sha256": "sha256:b9b050f0a3b0b33ed0c7dc0431eb56e3632c1e6ee743c301d86965b6d342f428"
     },
     {
       "path": "tests/visual_assets/test_aseprite_licence_guard.py",
@@ -86,7 +86,7 @@
     },
     {
       "path": "tests/visual_assets/test_strict_aseprite.py",
-      "sha256": "sha256:4e7a101aa55aa40f51ac1d21a491ce903e8b001b468f1dd73d5e465a04d259a0"
+      "sha256": "sha256:b1581e625c8c2ea1458e6ae7763d9d3fe44c51fd496d4a8d1dc32567787000ff"
     },
     {
       "path": "tools/visual_assets_aseprite_local.py",
@@ -122,7 +122,7 @@
     },
     {
       "path": "visual_assets/drawing/backend/sandbox.py",
-      "sha256": "sha256:7242b258306e09bebe866cec11ab780a0c77ad3b116959338b263ef3d662e9b8"
+      "sha256": "sha256:27b7bf89faafb7df45d356f70df3081c07b901579f85e17b40a2cbab501edba7"
     },
     {
       "path": "visual_assets/drawing/colors.py",
@@ -461,7 +461,7 @@
       "sha256": "sha256:273e79ef546f44ef25d9cc94980b1b620aac3cd1b1e35ebff334529e92b8d3b5"
     }
   ],
-  "guarded_hash": "sha256:322169ac46cf3df67f8fc70d4466735f9795599dfb5398b6ccd17c0d8d484c8c",
+  "guarded_hash": "sha256:2e83321e2f466c81ec3e88fe29e7614c0e3c7038dec2c03cff5334a9bb2dc6e9",
   "make_target": "visual-assets-aseprite-local",
   "record_type": "aseprite_local_proof",
   "release_rebuild": {
@@ -470,8 +470,8 @@
     "identical": 105,
     "release": "pilot/rc-0011"
   },
-  "run_at_utc": "2026-10-14T17:58:18Z",
-  "run_commit": "b0af3c90d3c0cb69bb9888978d167348038720a3",
+  "run_at_utc": "2026-10-16T08:03:29Z",
+  "run_commit": "817cc27be4ad78da7358325d3853c5f0c8f7f658",
   "schema_version": 1,
   "strict": true
 }

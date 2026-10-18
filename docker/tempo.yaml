@@ -1,0 +1,25 @@
+# Single-binary Grafana Tempo (monolithic, -target=all), local filesystem storage, for the local observability profile.
+# TCK-20261018-TEMPO-TRACE-BACKEND. No metrics-generator: span metrics would be skewed by the 10 % head sampling.
+stream_over_http_enabled: true
+server:
+  http_listen_port: 3200
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+# Tempo 3.0 removed the `compactor` block (v2 config fails: "field compactor not found in type app.Config"); block retention is
+# set on the backend worker.
+backend_worker:
+  compaction:
+    block_retention: 24h
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks

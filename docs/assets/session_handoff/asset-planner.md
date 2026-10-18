@@ -3,77 +3,52 @@ status: active
 layer: architecture
 authority: P2
 audience: agent
-date: 2026-10-15
+date: 2026-10-18
 tags: [architecture, documentation]
 ---
 
 # Handover — asset-planner
 
-> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-15 at the review of the map-markers batch (the planner's live handover is authoritative; its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261013-VISUAL-ASSETS-MARKERS-RC-AND-CLOSE`.
+> Snapshot of the gitignored `.claude/handover/asset-planner.md` taken on 2026-10-18 while the visual-asset-docs-sync batch was in flight (the planner's live handover is authoritative; its own `Updated:` line below says how current it is); on a new machine copy it to `.claude/handover/asset-planner.md`. Refreshed in `TCK-20261018-VISUAL-ASSETS-HANDOFF-SNAPSHOTS`. Paths of the form `/data/...` or `rpg-asset-planner` name the machine that wrote it; the repo-relative paths work anywhere.
 
-Role: asset-planner · Domain/worktree: asset / /data/vboxuser/Work/rpg-asset-planner (clean, on local branch visual-asset-map-markers @ ecedda71d, upstream unset)
-Branch / PR: visual-asset-map-markers (planning 16fe7012c + child 5 filing ecedda71d, unpushed; batch branch visual-asset-map-markers-impl) · PR none. Previous batch #545 merged as 06aa3a20c.
-Updated: 2026-10-15 (batch A head 39ee26895 REVIEWED + APPROVED with 3 asks; waiting on implementer's fix-up head, then owner push/PR question). Full prior note: .claude/handover/archive/asset-planner-2026-10-13-full.md
+Role: asset-planner · Domain/worktree: asset / this machine's worktree `rpg-asset-planner` (clean, detached at 13e5d97ef, the batch branch tip; a path on the machine that wrote this note)
+Branch / PR: visual-asset-docs-sync (local, 13e5d97ef off origin/main 013a9f275), no PR yet · previous batch #608 MERGED as d7831efab
+Updated: 2026-10-18 (owner "continue asset" via lead; batch visual-asset-docs-sync filed and dispatched to asset-implementer on the user's "Dispatch now").
 
 ## Open
-- ADOPTED 2026-10-14: sa-6690e2619d4abb3e (18, CLEARED, verify 0). Child 2 CLOSED at 8ff9c2603 (impl branch). PROVENANCE DEFECT: all 18 records hold my
-  template placeholders (<your name>/<your role>/<your own licence evidence reference>). OWNER: "Keep, add an owner erratum" (nhan / owner;
-  licence "Own pixels, Aseprite + API" = "Own pixels drawn in this repo with the Aseprite MCP tools and the visual_assets drawing API they wrap,
-  from palette icons-v1; no outside art copied or traced, no AI generator (ADR D20, theme D21)"); store guard "Yes, queue a store fix".
-  Child 5 DONE at 3b4a2ad5d (after merge 250a8614d of my ecedda71d), APPROVED: guard placeholder_value; erratum in store_contract.md.
-  #548 ANSWERED (rpg-planner: key on the role id `kind` today; rpg-designer: present `species` + `size`, not emitted yet). #523 still OPEN.
-  OWNER 2026-10-14: "Objects now, entities later" (child 3 moves to todos/visual-asset-entity-markers/, OPEN, in child 4's closure);
-  "Assemble rc-0011 (105)". Child 4 DONE at 20ae9f54f (+ main merge db4c63269, fixes b0af3c90d, proof 39ee26895). REVIEWED 2026-10-15: rc-0011 = 87 byte-identical
-  + 18 (rc-0010.json unchanged vs 06aa3a20c), 0 gaps in all 3 worlds, CITY plate_only, alias crops dropped (alias view == exact), gap report
-  G6/G8/G9 closed, G10 moved; batch folder in done/, entity-markers folder OPEN. Guard moved to identities.py (layer boundary) ACCEPTED.
-  ASKS sent: (1) child 5 done ticket note on the move, (2) store_list ceiling per item not a fixed 30,000, (3) one full tests/visual_assets
-  run under the 3G cap. My planner snapshot refreshed on my branch for the implementer to merge. NEXT: confirm the fix-up head -> owner
-  push/PR question -> CI -> lead review -> --admin merge.
-- #559 CLOSED: frame-one-only ticket QUEUED in the backlog (P3, trigger = client animation). #555 ACKED (open as tracker): affects u24desktop only;
-  this host works via the packaged /etc/apparmor.d/bwrap-userns-restrict; QUEUED: sandbox.py clear error + test skip in the next sandbox-touching batch.
-- Batch A in flight (see Next). Lead ACKED the plan 2026-10-13; keep 16fe7012c local, it goes in the batch PR.
-- RESOURCE RULE (lead = machine-resource owner since 2026-10-13): while perf T08 runs, heavy suites (tests/tools, full visual_assets)
-  run under `systemd-run --user --scope -p MemoryMax=3G`, never two at once across asset-planner + asset-implementer. Small targeted files OK.
-- Terrain variants MERGED #545 -> 06aa3a20c.
-- Pending user decisions: delete leftover LOCAL branches (visual-asset-terrain-variants, visual-asset-slices,
-  visual-asset-real-art-proof, visual-asset-sample-map); confirm my worktree.
-- Code health "import contracts" advisory warning shows on main too; lead sent it to codebase. Not ours.
-- #519 CLOSED. #543 OPEN until the item-icon ticket (grass_cover, raw_meat) is filed; decision is posted on the issue.
+- IN FLIGHT: batch visual-asset-docs-sync (docs only, 2 hotfix tickets, agent-working/tickets/todos/visual-asset-docs-sync/SEQUENCE.md):
+  TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT (committed 178de1ea4, reviewed and approved by asset-planner), then
+  TCK-20261018-VISUAL-ASSETS-HANDOFF-SNAPSHOTS (in progress). Dispatched to the asset-implementer seat 2026-10-18.
+  The implementer asks the planner before `make knowledge-index-update` (the lead sequences heavy work this week). Push/PR only on the owner's yes via lead.
+- OWNER DECISIONS 2026-10-18 (via lead, neutral options): G6 "Keep scaled icons" (no 16x16 building glyph); G4 "Leave as is" (no grassland
+  offset redraw). Recorded in docs/assets/sample_map/gap_report.md (2026-10-18 update, "Open now" list).
+- NEW BACKLOG: TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD (todos/, P3, standard): the 30 s JOB_TIMEOUT_S vs a 0.258 s
+  slowest job means a hang, not load; guarded drawing/** so proof refresh + lead heavy-run OK. Waits for a quieter week (lead).
+- DONE: batch visual-asset-main-green (#608, d7831efab): TCK-20261015-VISUAL-ASSETS-ICON-SCENE-RC11-KEYS (#598 closed) and
+  TCK-20261015-VISUAL-ASSETS-SANDBOX-BWRAP-USERNS-ERROR (#555 closed; the host fix on u24desktop is still the owner's, with sudo).
+  The Frontend path-filter gap is #607 (testing-planner owns it, not us). Proof record refreshed by a real run (215/0/0).
+- LESSON: a guarded-file change (sandbox.py, visual_assets conftest/strict_aseprite) needs the Aseprite local proof refresh, and a new
+  numeric bound needs a budgets.md row. Put both in the ticket's AC and get lead's heavy-run OK up front.
+- GATED: entity markers, agent-working/tickets/todos/visual-asset-entity-markers/ (TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS, OPEN).
+  Waits on rpg #523 merging AND an owner choice: key on role id (`kind`, rpg-planner, emitted today) vs species+size (rpg-designer,
+  not emitted yet). #548 answered with those two views.
+- Item icons: NO batch (owner 2026-10-15). Items stay on six icon.item.<family> keys. #543 CLOSED with a correction.
+- Backlog (not started): TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY (P3, trigger = client animation activation, parked);
+  registry comment nit ("mapped to existing art by these aliases (registry-only)"), carry into a batch that edits the registry anyway;
+  16x16 building map glyph: owner said no on 2026-10-18 (G6).
+- Pending user decisions: push/PR of visual-asset-docs-sync when ready. Awaiting: the asset-implementer seat (batch).
+- Resource rule (lead): heavy suites one at a time across both asset seats, under systemd-run --user --scope -q -p MemoryMax=3G.
+- Issues: #523 OPEN (rpg's), #548 OPEN (rpg's, entity keys; answered with two views), #607 OPEN (testing's, the filter fix); #519 CLOSED
+  (answered 2026-10-11); #555, #598, #543, #559 closed.
 
-## Next, in order
-Batch A = TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS (agent-working/tickets/todos/visual-asset-map-markers/, SEQUENCE.md has the decisions).
-1. DONE: child 1 at d2ce35b8d on the implementer's branch visual-asset-map-markers-impl (= the batch branch, based on my 16fe7012c). APPROVED by me.
-   Option (b) withdrawn (pickDetail picks per cell). ~543 B per key, 95 keys = 47,231 B (10.3 %), 0.10 s. Fix for child 3: 11 entity kinds incl. wild_creature.
-   OWNER ANSWERS 2026-10-13: nodes "13 keys, one per kind"; buildings "24x24 panel icons only" (16x16 building map glyph = later choice);
-   aliases shop->store, camp->enemy_camp, ruin->ruins, dungeon->dungeon_entrance, lair->boss_arena; CITY "Location plate alone".
-2. Child 2 at bd0b1db77 (impl branch): 18 keys + 5 aliases (83 keys, 8 aliases, 42,024 B), 18 specs + `node` family, silhouette sheet tool.
-   RED SET (expected, re-point in child 4): 14 failed + 14 errors = registry_mismatch exports of rc-0010 (test_atlas x5, release_byte_repro x7,
-   sample_map_render x4) + registry/icon count pins (x10) + icon spec pins (x2). Specs/keys APPROVED.
-   Silhouette sheet sent back once (bd0b1db77: layout + misreads), revised at 39e54745f.
-   OWNER 2026-10-13: silhouettes "Approve all as shown" (saw the weak list: nest, wood_node, spirit_wisp, iron_vein, moon_resin_tree);
-   town hall "A: charter scroll"; mine entrance "A: pickaxe".
-   DRAWN at 390b5eba5: draft set object-markers-v1 (18, intakes PASS). Blind check round 4: 16/18 right; berry_thicket ("bug") and spirit_wisp
-   ("gem") misread -> OWNER 2026-10-14: keep both silhouettes. My ruling: 17 icons applied via drawing.api (same Lua pin, MCP for lint/export) accepted.
-   Sheet 01 fixed at a45983e42. OWNER 2026-10-14: "Adopt, give me the command" -> command given; owner runs adopt-set object-markers-v1 in
-   ~/Work/rpg-aseprite-mcp. Implementer told to HOLD. NEXT: confirm adoption (store list), then child 2 close + child 4 (rc-0011 question).
-3. Child 3 ENTITY-MARKER-DRAFTS GATED: #523 merged + rpg-planner answers #548 (filed 2026-10-13). If still shut when child 2 is adopted -> owner question
-   "objects only, entities in their own batch".
-4. Child 4 RC-AND-CLOSE: rc-0011 (owner), the renderer draws markers, gap report, closure. Then push/PR owner question, then lead review, then --admin merge.
-5. After A: item-icon ticket (grass_cover, raw_meat), then close #543.
-
-## Not started
-- Registry comment nit ("mapped to existing art by these aliases (registry-only)"): carry to a later batch that edits the registry anyway.
-- Backlog: TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY.
-
-## Decisions recorded this batch (owner, 2026-10-12/13)
-- Detail values: grassland tufts/flowers/clover/bare; mountain crag/scree; cave stalagmite/rubble; ruins moss/fallen;
-  swamp reeds/puddle; shallow_water ripple/pebbles (default base). adopt-set sa-34445853fa87089b (14). "Assemble rc-0010".
-- "Accept detail: base"; "Registry-only aliases" terrain.plain->grassland, ruin->ruins, river->shallow_water (Known gap in
-  store_contract: no runtime consumer; #523 is rpg's colour-by-name fix).
-- My closed-gate ruling (lead-accepted, narrowed): closed fixtures exact; a fresh export may only ADD a details row for the 6 keys in
-  AXES_DECLARED_AFTER_THE_GATES (forest excluded) equal to the registry axis; zero fixture bytes; test_closed_details_rule.py.
+## State after batch A (for reference)
+- rc-0011 = 105 entries (rc-0010's 87 byte-identical + 18 object markers), no alias entries; set-adoption sa-6690e2619d4abb3e (18).
+  Its records hold literal template placeholders; owner erratum in docs/assets/store_contract.md ("Provenance errata"); store now
+  refuses placeholders (check_not_placeholder in visual_assets/store/identities.py, code placeholder_value).
+- Sample map: 0 gaps on all three worlds; CITY = plate only; alias view == exact view. Gap report G6/G8/G9 closed, G10 moved.
+- Known flaky: tests/visual_assets/drawing/integration/test_ops.py Aseprite 30 s timeout under host load (passes alone).
 
 ## Pointers
-- agent-working/tickets/done/visual-asset-terrain-variants/ (SEQUENCE.md + 5 tickets)
-- docs/assets/{budgets.md,store_contract.md,sample_map/}; issues #519, #523, #543
-- Env: my venv lacks complexipy (one tests/codebase env failure; CI covers). MCP restart confirmed (pin_check_scratch2).
+- agent-working/tickets/done/visual-asset-map-markers/ (SEQUENCE.md, epic) + done child tickets TCK-20261013-VISUAL-ASSETS-*, TCK-20261014-*
+- agent-working/tickets/todos/visual-asset-entity-markers/
+- docs/assets/{store_contract.md,budgets.md,sample_map/gap_report.md,icon_style_guide.md,session_handoff/}

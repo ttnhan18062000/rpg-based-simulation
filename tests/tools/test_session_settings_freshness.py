@@ -126,3 +126,77 @@ def test_an_unverifiable_ref_only_warns(tmp_path):
     git(tmp_path, "init", "-q", "-b", "main", str(r))
     go, lines = ln.preflight(r, allow_stale=False)
     assert go is True and "could not be verified" in lines[-1]
+
+
+# ---- TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START ---------------------------------------------------
+
+def _code_repo(repo):
+    (repo / "tools" / "sessions").mkdir(parents=True)
+    (repo / "registries").mkdir()
+    (repo / "tools" / "sessions" / "session_start_hook.py").write_text("v1\n")
+    (repo / "registries" / "session_roles.yaml").write_text("roles: v1\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "session code v1")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    return repo
+
+
+def _advance_origin(repo, tmp_path, name="hook.py"):
+    """Move origin/main ahead by one commit that changes session code, without moving `repo`'s branch."""
+    other = tmp_path / "other"
+    git(repo, "worktree", "add", "-q", "--detach", str(other), "origin/main")
+    (other / "tools" / "sessions" / "session_start_hook.py").write_text("v2\n")
+    git(other, "commit", "-aq", "-m", "session code v2")
+    git(repo, "update-ref", "refs/remotes/origin/main", git(other, "rev-parse", "HEAD").stdout.strip())
+    git(repo, "worktree", "remove", "--force", str(other))
+
+
+def test_a_current_worktree_has_no_stale_session_code_and_no_line(repo):
+    _code_repo(repo)
+    assert sf.stale_session_code(repo) == []
+    assert sf.session_code_line(repo) == ""
+
+
+def test_a_worktree_behind_origin_names_the_stale_files_in_one_line(repo, tmp_path):
+    _code_repo(repo)
+    _advance_origin(repo, tmp_path)
+    assert sf.stale_session_code(repo) == ["tools/sessions/session_start_hook.py"]
+    line = sf.session_code_line(repo)
+    assert line.count("\n") == 0 and "STALE SESSION CODE" in line
+    assert "tools/sessions/session_start_hook.py" in line and "Sync this worktree" in line
+
+
+def test_a_branch_that_edits_session_code_itself_is_not_called_stale(repo):
+    _code_repo(repo)
+    (repo / "tools" / "sessions" / "session_start_hook.py").write_text("my own edit\n")
+    git(repo, "commit", "-aq", "-m", "my edit")  # ahead of origin/main, never behind
+    assert sf.stale_session_code(repo) == []
+
+
+def test_no_origin_ref_or_no_repo_says_it_could_not_verify(repo, tmp_path):
+    git(repo, "update-ref", "-d", "refs/remotes/origin/main")
+    assert sf.stale_session_code(repo) is None
+    assert "could not verify" in sf.session_code_line(repo)
+    assert sf.stale_session_code(tmp_path / "nowhere") is None
+
+
+def test_a_crash_in_the_check_fails_open_and_says_so(repo, monkeypatch):
+    monkeypatch.setattr(sf, "stale_session_code", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
+    assert "check failed (RuntimeError); not verified" in sf.session_code_line(repo)
+
+
+def test_the_check_is_offline_and_fast(repo, tmp_path):
+    import time
+    _code_repo(repo)
+    _advance_origin(repo, tmp_path)
+    calls = []
+    real = sf._git
+    sf._git = lambda args, cwd, binary=False: (calls.append(args[0]), real(args, cwd, binary))[1]
+    try:
+        t0 = time.perf_counter()
+        sf.session_code_line(repo)
+        elapsed = time.perf_counter() - t0
+    finally:
+        sf._git = real
+    assert not {"fetch", "pull", "ls-remote", "clone"} & set(calls) and len(calls) == 3
+    assert elapsed < 2.0

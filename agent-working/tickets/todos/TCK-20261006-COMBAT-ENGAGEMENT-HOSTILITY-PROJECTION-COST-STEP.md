@@ -69,6 +69,9 @@ The CI traceback (run 37403688489, `test_perf_movement[5000]` and `test_perf_pas
 ## Implementation Notes
 None yet.
 
+### Evidence from TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION (2026-10-15)
+**Confirmed with call-site evidence.** `is_hostile_compat` (`faction.py:206/207/226`) and `project_relation` (`relation.py:75/76/190`) are 29 to 62 % of the tick in synthetic profiles (36 % at `idle_100`, 59 % at `movement_1000`; self-time of the two about 43 % at `movement_500`). `combat_engagement` at `movement`: 55 ms (100 entities), 989 ms (500), 3632 ms (1000), 7279 ms (2000): exponent about 1.8 to 1.9 up to 1000 entities. With full trees (`src config content registries data`) it is **absent at `c84352465`** and **2.2 s at `132bf09ca`** (1000 entities, live contract, loaded host), 2.2 s at `d135dd6be`, 3.5 s at `dc9b63c99`, 2.5 s now: introduced between `c84352465` and `132bf09ca`, no second jump since. The 5000-entity 3.2 s of this ticket is not reproducible on this host (the ticket records 3.2 s versus 16 s on another box for the same code); a pinned 5000-entity tick is estimated at 25 to 100 s. The fix stays with rpg Lane B; hand-off item 2 in `docs/performance/tick_cost_growth.md` section 7.
+
 ## Test Summary
 None yet.
 

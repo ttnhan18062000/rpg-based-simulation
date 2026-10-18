@@ -216,3 +216,92 @@ def test_cli_show_and_release(repo, capsys, monkeypatch):
     st.main(["show", "r-one"])
     assert "released" in capsys.readouterr().out
     assert st.main(["release", "ghost"]) == 1
+
+
+# ---- TCK-20261015-SESSION-BINDINGS-TORN-TAIL ---------------------------------------------------
+
+def _torn_file(root, n_good=2):
+    """n_good valid records, then half a record with no newline (what a full disk leaves)."""
+    for i in range(n_good):
+        st.append_binding(root, _binding(sid=f"good-{i}"))
+    path = root / "r-one" / st.BINDINGS
+    with path.open("ab") as fh:
+        fh.write(b'{"session_id": "torn", "role": "r-o')
+    return path
+
+
+def test_a_torn_last_line_is_skipped_and_reported(repo):
+    root = st.state_root(repo)
+    _torn_file(root)
+    bindings, warning = st.read_bindings_report(root, "r-one")
+    assert [b.session_id for b in bindings] == ["good-0", "good-1"]
+    assert warning and "bindings.jsonl:3" in warning and "unparseable last line" in warning
+    assert [b.session_id for b in st.read_bindings(root, "r-one")] == ["good-0", "good-1"]
+
+
+def test_an_intact_file_reports_no_warning(repo):
+    root = st.state_root(repo)
+    st.append_binding(root, _binding(sid="a"))
+    assert st.read_bindings_report(root, "r-one")[1] is None
+    assert st.read_bindings_report(root, "never-bound")[0] == []
+
+
+def test_a_torn_middle_line_still_raises(repo):
+    root = st.state_root(repo)
+    st.append_binding(root, _binding(sid="a"))
+    path = root / "r-one" / st.BINDINGS
+    good = path.read_text()
+    path.write_text(good + '{"session_id": "torn", "ro\n' + good)
+    with pytest.raises(st.StateError, match="bindings.jsonl:2"):
+        st.read_bindings(root, "r-one")
+
+
+def test_a_last_line_that_is_json_but_not_a_binding_still_raises(repo):
+    root = st.state_root(repo)
+    (root / "r-one").mkdir(parents=True, exist_ok=True)
+    (root / "r-one" / st.BINDINGS).write_text('{"session_id": "x"}\n')
+    with pytest.raises(st.StateError, match="bindings.jsonl:1"):
+        st.read_bindings(root, "r-one")
+
+
+def test_append_after_a_torn_tail_moves_the_fragment_to_a_sidecar_and_keeps_the_history_readable(repo):
+    root = st.state_root(repo)
+    path = _torn_file(root)
+    st.append_binding(root, _binding(sid="after"))
+    # the file is whole again: every later start reads it with no warning and no error
+    bindings, warning = st.read_bindings_report(root, "r-one")
+    assert [b.session_id for b in bindings] == ["good-0", "good-1", "after"] and warning is None
+    assert path.read_text().endswith("\n") and "torn" not in path.read_text()
+    # nothing is discarded: the bytes are in a sidecar beside the file
+    (sidecar,) = list(path.parent.glob(f"{st.BINDINGS}.torn-*"))
+    assert sidecar.read_bytes() == b'{"session_id": "torn", "role": "r-o'
+
+
+def test_a_file_that_is_only_a_torn_fragment_is_emptied_into_the_sidecar(repo):
+    root = st.state_root(repo)
+    (root / "r-one").mkdir(parents=True, exist_ok=True)
+    path = root / "r-one" / st.BINDINGS
+    path.write_bytes(b'{"session_id": "tor')
+    st.append_binding(root, _binding(sid="only"))
+    assert [b.session_id for b in st.read_bindings(root, "r-one")] == ["only"]
+    (sidecar,) = list(path.parent.glob(f"{st.BINDINGS}.torn-*"))
+    assert sidecar.read_bytes() == b'{"session_id": "tor'
+
+
+def test_two_tears_in_the_same_second_share_one_sidecar_without_losing_either(repo):
+    root = st.state_root(repo)
+    path = _torn_file(root, n_good=1)
+    st.append_binding(root, _binding(sid="a"))
+    with path.open("ab") as fh:
+        fh.write(b"{second")
+    st.append_binding(root, _binding(sid="b"))
+    sidecars = list(path.parent.glob(f"{st.BINDINGS}.torn-*"))
+    assert b"".join(p.read_bytes() for p in sorted(sidecars)).count(b"torn") == 1 and b"{second" in b"".join(p.read_bytes() for p in sidecars)
+    assert [b.session_id for b in st.read_bindings(root, "r-one")] == ["good-0", "a", "b"]
+
+
+def test_append_to_a_clean_file_adds_no_blank_line(repo):
+    root = st.state_root(repo)
+    st.append_binding(root, _binding(sid="a"))
+    st.append_binding(root, _binding(sid="b"))
+    assert len((root / "r-one" / st.BINDINGS).read_text().splitlines()) == 2
