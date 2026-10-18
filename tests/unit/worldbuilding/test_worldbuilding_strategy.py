@@ -32,8 +32,8 @@ def get_base_test_data() -> dict:
             "coordinate_system": "grid"
         },
         "regions": [
-            {"id": "valley", "type": "wilderness", "bounds": [0, 0, 50, 50], "terrain": "GRASS"},
-            {"id": "camp", "type": "town", "bounds": [60, 60, 80, 80], "terrain": "PLAIN"}
+            {"id": "valley", "type": "wilderness", "bounds": [0, 0, 50, 50], "terrain": "grass"},
+            {"id": "camp", "type": "town", "bounds": [60, 60, 80, 80], "terrain": "plain"}
         ],
         "factions": [
             {"id": "settlers", "type": "civilian"},

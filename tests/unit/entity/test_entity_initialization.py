@@ -21,8 +21,8 @@ _MULTI_ROLE_SPEC = {
     "name": "Init Test World",
     "topology": {"width": 50, "height": 50, "coordinate_system": "grid"},
     "regions": [
-        {"id": "town", "type": "town", "bounds": [0, 0, 20, 20], "terrain": "GRASS"},
-        {"id": "wilds", "type": "wilderness", "bounds": [25, 25, 45, 45], "terrain": "FOREST"},
+        {"id": "town", "type": "town", "bounds": [0, 0, 20, 20], "terrain": "grass"},
+        {"id": "wilds", "type": "wilderness", "bounds": [25, 25, 45, 45], "terrain": "forest"},
     ],
     "factions": [
         {"id": "hero_guild", "type": "hero"},

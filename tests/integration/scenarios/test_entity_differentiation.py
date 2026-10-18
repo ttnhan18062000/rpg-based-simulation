@@ -71,13 +71,13 @@ def _build_differentiation_spec() -> WorldSpec:
                 "id": "arena",
                 "type": "wilderness",
                 "bounds": [0, 0, 45, 45],
-                "terrain": "GRASS",
+                "terrain": "grass",
             },
             {
                 "id": "village",
                 "type": "town",
                 "bounds": [46, 46, 89, 89],
-                "terrain": "GRASS",
+                "terrain": "grass",
             },
         ],
         "factions": [

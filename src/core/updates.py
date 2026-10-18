@@ -18,7 +18,9 @@ if TYPE_CHECKING:
 from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage, ItemInstance
 from src.core.models.social import RelationshipRole
 from src.core.movement_modes import MovementMode
+from src.core.death_cause import DeathRecord
 from src.core.enums import ReasonCode, DiplomaticState
+from src.core.spawn_source import SpawnSource
 from src.core.update_models.buildings import BuildingUpdate  # noqa: F401  (re-exported: updates.py is where callers import it from)
 from src.core.update_models.inventory import InventoryUpdate, ItemInstanceUpdate
 from src.core.update_models.quests import QuestUpdate
@@ -54,7 +56,7 @@ class EquipmentUpdate:
         """Merge another EquipmentUpdate into this one."""
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.slot_updates:
             changes["slot_updates"] = {**self.slot_updates, **other.slot_updates}
         if other.durability_delta:
@@ -80,7 +82,7 @@ class InteractionUpdate:
     def merge(self, other: InteractionUpdate) -> InteractionUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.target_node_id is not None: changes["target_node_id"] = other.target_node_id
         if other.progress_delta != 0.0: changes["progress_delta"] = self.progress_delta + other.progress_delta
         if other.reset: changes["reset"] = True
@@ -137,7 +139,7 @@ class CombatUpdate:
         """Merges another CombatUpdate into this one, aggregating results."""
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.damage_taken != 0: changes["damage_taken"] = self.damage_taken + other.damage_taken
         if other.hp_delta != 0: changes["hp_delta"] = self.hp_delta + other.hp_delta
         if other.attacker_id is not None: changes["attacker_id"] = other.attacker_id
@@ -179,9 +181,10 @@ class NavigationUpdate:
     oscillation_count_delta: int = 0
     last_position_set: Optional[tuple[float, float]] = None
     region_id_set: Optional[str] = None
+    step_ready_tick_set: Optional[float] = None  # D75: the earliest tick of the entity's next step
 
     def is_noop(self) -> bool:
-        return (self.target_set is None and not self.target_clear and self.path_set is None and 
+        return (self.target_set is None and not self.target_clear and self.path_set is None and self.step_ready_tick_set is None and 
                 self.moved_recently_set is None and self.movement_mode_set is None and 
                 self.failure_reason is None and not self.clear_target and not self.clear_path and 
                 self.wait_count_delta == 0 and self.oscillation_count_delta == 0 and 
@@ -190,7 +193,7 @@ class NavigationUpdate:
     def merge(self, other: NavigationUpdate) -> NavigationUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.target_set is not None: changes["target_set"] = other.target_set
         if other.target_clear: changes["target_clear"] = True
         if other.path_set is not None: changes["path_set"] = other.path_set
@@ -203,6 +206,7 @@ class NavigationUpdate:
         if other.oscillation_count_delta != 0: changes["oscillation_count_delta"] = self.oscillation_count_delta + other.oscillation_count_delta
         if other.last_position_set is not None: changes["last_position_set"] = other.last_position_set
         if other.region_id_set is not None: changes["region_id_set"] = other.region_id_set
+        if other.step_ready_tick_set is not None: changes["step_ready_tick_set"] = other.step_ready_tick_set
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
@@ -217,7 +221,7 @@ class TaskUpdate:
     def merge(self, other: TaskUpdate) -> TaskUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.work_kind_set is not None: changes["work_kind_set"] = other.work_kind_set
         if other.payload_set:
             new_payload = dict(self.payload_set or {})
@@ -259,7 +263,7 @@ class IdentityUpdate:
     def merge(self, other: IdentityUpdate) -> IdentityUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.role_set is not None: changes["role_set"] = other.role_set
         if other.faction_set is not None: changes["faction_set"] = other.faction_set
         if other.recipes_learned: changes["recipes_learned"] = list(set(self.recipes_learned + other.recipes_learned))
@@ -432,7 +436,7 @@ class AttributeUpdate:
     def merge(self, other: AttributeUpdate) -> AttributeUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.strength_delta != 0: changes["strength_delta"] = self.strength_delta + other.strength_delta
         if other.agility_delta != 0: changes["agility_delta"] = self.agility_delta + other.agility_delta
         if other.vitality_delta != 0: changes["vitality_delta"] = self.vitality_delta + other.vitality_delta
@@ -444,6 +448,11 @@ class AttributeUpdate:
         if other.charisma_delta != 0: changes["charisma_delta"] = self.charisma_delta + other.charisma_delta
         return replace(self, **changes)
 
+# The scalar fields a later update overwrites (a None leaves the earlier value); the list and dict fields accumulate.
+_LIFECYCLE_SET_FIELDS = ("is_permadeath_set", "death_tick_set", "death_reason_set", "death_record_set", "heir_entity_id_set", "parent_a_entity_id_set",
+                         "parent_b_entity_id_set", "birth_tick_set", "birth_city_id_set", "genetic_profile_set")
+
+
 @dataclass(frozen=True, slots=True)
 class LifecycleUpdate:
     """Updates to aging and death mechanics."""
@@ -451,6 +460,7 @@ class LifecycleUpdate:
     is_permadeath_set: Optional[bool] = None
     death_tick_set: Optional[int] = None
     death_reason_set: Optional[str] = None
+    death_record_set: Optional[DeathRecord] = None
     heir_entity_id_set: Optional[int] = None
     heirlooms_add: list[str] = field(default_factory=list)
     parent_a_entity_id_set: Optional[int] = None
@@ -464,7 +474,7 @@ class LifecycleUpdate:
     def is_noop(self) -> bool:
         return (self.age_delta == 0 and
                 self.is_permadeath_set is None and self.death_tick_set is None and
-                self.death_reason_set is None and self.heir_entity_id_set is None and
+                self.death_reason_set is None and self.death_record_set is None and self.heir_entity_id_set is None and
                 not self.heirlooms_add and self.parent_a_entity_id_set is None and
                 self.parent_b_entity_id_set is None and not self.dependent_entity_ids_add and
                 self.birth_tick_set is None and
@@ -474,21 +484,13 @@ class LifecycleUpdate:
     def merge(self, other: LifecycleUpdate) -> LifecycleUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.age_delta != 0: changes["age_delta"] = self.age_delta + other.age_delta
-        if other.is_permadeath_set is not None: changes["is_permadeath_set"] = other.is_permadeath_set
-        if other.death_tick_set is not None: changes["death_tick_set"] = other.death_tick_set
-        if other.death_reason_set is not None: changes["death_reason_set"] = other.death_reason_set
-        if other.heir_entity_id_set is not None: changes["heir_entity_id_set"] = other.heir_entity_id_set
+        changes.update({name: getattr(other, name) for name in _LIFECYCLE_SET_FIELDS if getattr(other, name) is not None})
         if other.heirlooms_add: changes["heirlooms_add"] = self.heirlooms_add + other.heirlooms_add
-        if other.parent_a_entity_id_set is not None: changes["parent_a_entity_id_set"] = other.parent_a_entity_id_set
-        if other.parent_b_entity_id_set is not None: changes["parent_b_entity_id_set"] = other.parent_b_entity_id_set
         if other.dependent_entity_ids_add: changes["dependent_entity_ids_add"] = self.dependent_entity_ids_add + other.dependent_entity_ids_add
-        if other.birth_tick_set is not None: changes["birth_tick_set"] = other.birth_tick_set
-        if other.birth_city_id_set is not None: changes["birth_city_id_set"] = other.birth_city_id_set
         if other.reproduction_cooldowns_add:
             changes["reproduction_cooldowns_add"] = {**self.reproduction_cooldowns_add, **other.reproduction_cooldowns_add}
-        if other.genetic_profile_set is not None: changes["genetic_profile_set"] = other.genetic_profile_set
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
@@ -507,7 +509,7 @@ class RewardUpdate:
     def merge(self, other: RewardUpdate) -> RewardUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.xp_gain != 0: changes["xp_gain"] = self.xp_gain + other.xp_gain
         if other.evolution_points_delta != 0: changes["evolution_points_delta"] = self.evolution_points_delta + other.evolution_points_delta
         return replace(self, **changes)
@@ -642,7 +644,7 @@ class StaminaUpdate:
     def merge(self, other: StaminaUpdate) -> StaminaUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.current_delta != 0.0: changes["current_delta"] = self.current_delta + other.current_delta
         if other.current_set is not None: changes["current_set"] = other.current_set
         if other.max_stamina_set is not None: changes["max_stamina_set"] = other.max_stamina_set
@@ -661,7 +663,7 @@ class WoundUpdate:
     def merge(self, other: WoundUpdate) -> WoundUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.wounds_add: changes["wounds_add"] = self.wounds_add + other.wounds_add
         if other.wounds_heal: changes["wounds_heal"] = self.wounds_heal + other.wounds_heal
         if other.scars_add: changes["scars_add"] = self.scars_add + other.scars_add
@@ -679,7 +681,7 @@ class StatusEffectUpdate:
     def merge(self, other: StatusEffectUpdate) -> StatusEffectUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.effects_add: changes["effects_add"] = self.effects_add + other.effects_add
         if other.effects_remove: changes["effects_remove"] = self.effects_remove + other.effects_remove
         return replace(self, **changes)
@@ -760,7 +762,7 @@ class EntityUpdate:
         if self.entity_id != other.entity_id:
             raise ValueError("Cannot merge EntityUpdates for different entities")
             
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.kind_set is not None: changes["kind_set"] = other.kind_set
         if other.new_position is not None: changes["new_position"] = other.new_position
         if other.moved_this_tick: changes["moved_this_tick"] = True
@@ -992,6 +994,16 @@ class ClanUpdate:
         )
 
 
+def _merged_spawn_sources(first: "StateUpdate", others: List["StateUpdate"]) -> Dict[int, SpawnSource]:
+    """The union of the declared spawn sources of ``first`` and ``others``; two different sources for one id is a producer error, never a silent drop."""
+    merged = dict(first.entity_spawn_sources)
+    for other in others:
+        for add_id, source in other.entity_spawn_sources.items():
+            if merged.setdefault(add_id, source) != source:
+                raise ValueError(f"entity {add_id} has two different declared spawn sources")
+    return merged
+
+
 @dataclass(frozen=True, slots=True)
 class StateUpdate:
     """
@@ -1000,6 +1012,7 @@ class StateUpdate:
     """
     entity_updates: Dict[int, EntityUpdate] = field(default_factory=dict)
     entities_add: List[EntityState] = field(default_factory=list)
+    entity_spawn_sources: Dict[int, SpawnSource] = field(default_factory=dict)  # the declared source of an add, keyed by the added entity's id (M0 gate V8); an add with none is unsourced
     entities_remove: List[int] = field(default_factory=list)
     nodes_add: List[ResourceNodeState] = field(default_factory=list)
     node_updates: Dict[int, ResourceNodeUpdate] = field(default_factory=dict)
@@ -1024,6 +1037,7 @@ class StateUpdate:
     groups_remove: List[int] = field(default_factory=list)
     maturity_set: Optional[int] = None
     last_calamity_tick_set: Optional[int] = None
+    grief_drained_tick_set: Optional[int] = None
     rng_checkpoint: Any = None
     transaction_trace: List[str] = field(default_factory=list)
     rejections_delta: Dict[str, int] = field(default_factory=dict) # Rejection counters for this tick
@@ -1062,7 +1076,7 @@ class StateUpdate:
                 not self.camp_updates and not self.world_updates and
                 not self.resource_updates and not self.home_storage_updates and
                 not self.groups_add_or_update and not self.groups_remove and
-                self.maturity_set is None and self.last_calamity_tick_set is None and
+                self.maturity_set is None and self.last_calamity_tick_set is None and self.grief_drained_tick_set is None and
                 self.rng_checkpoint is None and not self.transaction_trace and
                 not self.rejections_delta and self.pressure_signals_set is None and
                 self.current_mode_set is None and self.current_policy_set is None and
@@ -1094,8 +1108,6 @@ class StateUpdate:
         valid_others = [o for o in others if o and not o.is_noop()]
         if not valid_others:
             return self
-
-        
         # 1. Merge dictionaries
         new_entity_updates = dict(self.entity_updates)
         new_world_updates = dict(self.world_updates)
@@ -1139,6 +1151,7 @@ class StateUpdate:
         # Single values
         maturity = self.maturity_set
         calamity = self.last_calamity_tick_set
+        grief_drained = self.grief_drained_tick_set
         node_id = self.next_node_id_set
         ent_id = self.next_entity_id_set
         item_inst_id = self.next_item_instance_id_set
@@ -1212,6 +1225,7 @@ class StateUpdate:
             # Single values
             if other.maturity_set is not None: maturity = other.maturity_set
             if other.last_calamity_tick_set is not None: calamity = other.last_calamity_tick_set
+            if other.grief_drained_tick_set is not None: grief_drained = other.grief_drained_tick_set
             if other.next_node_id_set is not None: node_id = other.next_node_id_set
             if other.next_entity_id_set is not None: ent_id = other.next_entity_id_set
             if other.next_item_instance_id_set is not None: item_inst_id = other.next_item_instance_id_set
@@ -1235,6 +1249,7 @@ class StateUpdate:
             rejections_delta=new_rejections_delta,
             resource_updates=new_resource_updates,
             entities_add=new_entities_add,
+            entity_spawn_sources=_merged_spawn_sources(self, valid_others),
             entities_remove=list(new_entities_remove),
             nodes_add=new_nodes_add,
             groups_add_or_update=new_groups_add_or_update,
@@ -1253,6 +1268,7 @@ class StateUpdate:
             processed_transaction_ids=list(new_processed_ids),
             maturity_set=maturity,
             last_calamity_tick_set=calamity,
+            grief_drained_tick_set=grief_drained,
             next_node_id_set=node_id,
             next_entity_id_set=ent_id,
             rng_checkpoint=rng,

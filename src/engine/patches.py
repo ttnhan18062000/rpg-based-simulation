@@ -82,6 +82,7 @@ class LifecyclePatch(ComponentPatch):
                 is_permadeath=u_life.is_permadeath_set if u_life.is_permadeath_set is not None else new_lifecycle.is_permadeath,
                 death_tick=u_life.death_tick_set if u_life.death_tick_set is not None else new_lifecycle.death_tick,
                 death_reason=u_life.death_reason_set if u_life.death_reason_set is not None else new_lifecycle.death_reason,
+                death_record=u_life.death_record_set if u_life.death_record_set is not None else new_lifecycle.death_record,
                 heir_entity_id=u_life.heir_entity_id_set if u_life.heir_entity_id_set is not None else new_lifecycle.heir_entity_id,
                 heirlooms=tuple(new_heirlooms),
                 parent_a_entity_id=u_life.parent_a_entity_id_set if u_life.parent_a_entity_id_set is not None else new_lifecycle.parent_a_entity_id,
@@ -288,7 +289,8 @@ class NavigationPatch(ComponentPatch):
                 region_id=u_nav.region_id_set if u_nav.region_id_set is not None else new_nav.region_id,
                 wait_count=new_nav.wait_count + u_nav.wait_count_delta,
                 oscillation_count=new_nav.oscillation_count + u_nav.oscillation_count_delta,
-                last_position=u_nav.last_position_set if u_nav.last_position_set is not None else new_nav.last_position
+                last_position=u_nav.last_position_set if u_nav.last_position_set is not None else new_nav.last_position,
+                step_ready_tick=u_nav.step_ready_tick_set if u_nav.step_ready_tick_set is not None else new_nav.step_ready_tick,
             )
         if self.new_position:
             if self.new_position != entity.navigation.position:
@@ -323,9 +325,12 @@ class CombatPatch(ComponentPatch):
             u_com = self.combat
             new_max_hp = new_combat.max_hp + u_com.max_hp_delta
             new_hp = min(new_max_hp, max(0, new_combat.hp + u_com.hp_delta))  # health never exceeds max_hp: the one point every CombatUpdate goes through
+            # The last body to take hp from this one by a hit (a damaging resolution only: a hazard drain carries no attacker).
+            last_attacker = u_com.attacker_id if (u_com.attacker_id is not None and u_com.damage_taken > 0) else new_combat.last_attacker_id
             new_combat = replace(new_combat, 
                 hp=new_hp, 
                 max_hp=new_max_hp,
+                last_attacker_id=last_attacker,
                 permanent_max_hp_bonus=new_combat.permanent_max_hp_bonus + u_com.permanent_max_hp_bonus_delta,
                 alive=(new_hp > 0) if u_com.alive_set is None else u_com.alive_set,
                 atk=new_combat.atk + u_com.atk_delta,

@@ -431,3 +431,43 @@ def test_no_events_when_prior_entity_missing():
     upd = _update({1: _entity_update(property_updates={"last_routing_family": "hunt"})})
     events = StrategyShaper().shape(prior, upd, tick=10)
     assert events == []
+
+
+def _diverged_prior(project_kind="harvesting"):
+    lead = _lead("l1", "VAGUE")
+    proj = _project("p1", project_kind)
+    return _prior_state({1: _entity(_strategic_component(leads={"l1": lead}, projects={"p1": proj}, current_project_id="p1"))})
+
+
+def _diverged_events(prior, tick):
+    upd = _update({1: _entity_update(strategic=_strategic_update(current_project_id_set="p1"))})
+    return [e for e in StrategyShaper().shape(prior, upd, tick=tick) if e.event_type == "decision_diverged_by_belief"]
+
+
+def test_a_held_divergence_emits_once_per_episode_not_once_per_update():
+    """INFORMATION counted every update an entity stayed diverged (30 points each); one divergence episode is one event."""
+    from src.observability.event_extractor import EventExtractor
+    EventExtractor.reset_run_state()
+    prior = _diverged_prior()
+    emitted = [len(_diverged_events(prior, tick)) for tick in range(10, 20)]  # the same entity, diverged for ten updates
+    assert emitted == [1] + [0] * 9
+
+
+def test_a_new_episode_emits_again_after_the_entity_stops_diverging():
+    from src.observability.event_extractor import EventExtractor
+    EventExtractor.reset_run_state()
+    diverged, resolved = _diverged_prior(), _diverged_prior(project_kind="information")  # an information project is not a divergence
+    assert len(_diverged_events(diverged, 10)) == 1
+    assert len(_diverged_events(diverged, 11)) == 0
+    assert len(_diverged_events(resolved, 12)) == 0  # the episode ends here
+    assert len(_diverged_events(diverged, 13)) == 1  # a new episode
+
+
+def test_episodes_are_tracked_per_entity_and_cleared_at_run_start():
+    from src.observability.divergence_episode import DivergenceEpisodes
+    from src.observability.event_extractor import EventExtractor
+    EventExtractor.reset_run_state()
+    assert DivergenceEpisodes.started(1, "harvesting") and DivergenceEpisodes.started(2, "harvesting")
+    assert not DivergenceEpisodes.started(1, "harvesting")
+    EventExtractor.reset_run_state()  # the kernel's run-start reset clears the episodes too
+    assert DivergenceEpisodes.started(1, "harvesting")  # a new run starts every entity's history afresh

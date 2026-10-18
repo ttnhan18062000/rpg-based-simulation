@@ -201,7 +201,7 @@ def _run_internal_serve(args: argparse.Namespace) -> None:
     # Only this subprocess's own module namespace is patched -- never
     # src/api/server.py itself. See module docstring point 1.
     server_module.V2EngineManager = functools.partial(
-        RealV2EngineManager, entities_count=args.entities, seed=args.seed
+        RealV2EngineManager, seed=args.seed  # entities_count was removed (D69): the live world is the authored world; --entities no longer scales it
     )
 
     profile = ConfigLoader.load_profile(profile_name="cli_default", cli_overrides={})
@@ -227,7 +227,7 @@ def _compute_synthetic_full_scan(entities: int, seed: int) -> Dict[str, Any]:
     from src.config.loader import ConfigLoader
 
     profile = ConfigLoader.load_profile(profile_name="cli_default", cli_overrides={})
-    manager = V2EngineManager(profile, entities_count=entities, seed=seed)
+    manager = V2EngineManager(profile, seed=seed)  # entities_count was removed (D69): the count is the authored world's
     state = manager.kernel.state
 
     changed = [

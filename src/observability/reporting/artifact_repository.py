@@ -36,6 +36,11 @@ class RunManifest(BaseModel):
     verification_level: Optional[str] = None
     # How the governors' cost inputs were produced (PERF-D1): contract, effective source, work-model version and status. Absent in older manifests.
     signal_contract: Optional[Dict[str, str]] = None
+    # Whether the run was host-independent (typed record, not a log line). ``audit_mode`` is the flag; ``signals_zeroed`` is the effect (audit_mode or a pinned
+    # governor): True means no wall-clock reader could change what the run computed. None in older manifests; a tool that compares two runs refuses a run
+    # that is not True (``require_host_independent_runs``).
+    audit_mode: Optional[bool] = None
+    signals_zeroed: Optional[bool] = None
 
 class RunArtifactRepository:
     def __init__(self, base_dir: str = "data/runs"):

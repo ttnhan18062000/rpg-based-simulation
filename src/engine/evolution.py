@@ -1,6 +1,6 @@
 # Compliance IDs: PROG-001, PROG-002, PROG-003, PROG-004, PROG-007, PROG-008
 # src/engine/evolution.py
-# Phase 8 Implementation: Handles Entity Growth Milestones and Role Transformations (LEG-RPG-143).
+# Phase 8 Implementation: Handles Entity Growth Milestones (LEG-RPG-143). A level-up never renames an entity kind (D79).
 from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 class EvolutionSystem:
     """
-    Law: Entities transform upon reaching growth milestones (LEG-RPG-143).
-    Ensures that identity transformations are authoritative and auditable.
+    Law: Entities grow upon reaching growth milestones (LEG-RPG-143): levels and stats rise,
+    the kind stays what content declared (D79; no name-keyed rename).
     """
 
     @staticmethod
@@ -79,7 +79,6 @@ class EvolutionSystem:
                 new_reward = replace(ent_upd.reward, xp_gain=0)
             
             # Default state (no level up)
-            new_kind = entity.kind
             new_level = current_eval_level
             total_ap_gain = 0
             new_slots = eq_upd.slot_updates
@@ -95,16 +94,14 @@ class EvolutionSystem:
                         evolved = True
                         break
                 
-                new_kind = EvolutionSystem._get_evolved_kind(entity.kind) if evolved else entity.kind
-                
                 # Stat & Gear Growth
                 if evolved:
                     new_slots = dict(eq_upd.slot_updates)
-                    if "goblin" in new_kind.lower():
-                        if "1" in new_kind:
+                    if "goblin" in entity.kind.lower():
+                        if "1" in entity.kind:
                             new_slots[EquipSlot.MAIN_HAND] = "iron_sword"
                             new_slots[EquipSlot.TORSO] = "leather_armor"
-                        elif "2" in new_kind:
+                        elif "2" in entity.kind:
                             new_slots[EquipSlot.MAIN_HAND] = "steel_sword"
                             new_slots[EquipSlot.TORSO] = "chainmail"
                 
@@ -135,7 +132,6 @@ class EvolutionSystem:
 
             update.entity_updates[e_id] = replace(
                 ent_upd,
-                kind_set=new_kind,
                 identity=replace(id_upd, 
                     evolution_level_set=new_level,
                     evolution_points_delta=remaining_points - entity.identity.evolution_points
@@ -146,24 +142,8 @@ class EvolutionSystem:
                 property_updates={
                     **ent_upd.property_updates,
                     "evolved_this_tick": levels_gained > 0, 
-                    "levels_gained": levels_gained,
-                    "previous_kind": entity.kind
+                    "levels_gained": levels_gained
                 }
             )
         
         return update
-
-    @staticmethod
-    def _get_evolved_kind(kind: str) -> str:
-        """Determines the next semantic stage for an entity kind."""
-        mapping = {
-            "GOBLIN": "GOBLIN_WARRIOR",
-            "GOBLIN_WARRIOR": "ORC_SCOUT",
-            "WOLF": "DIRE_WOLF",
-            "HERO": "LEGEND_HERO"
-        }
-        if "_" in kind:
-            parts = kind.rsplit("_", 1)
-            if parts[1].isdigit():
-                return f"{parts[0]}_{int(parts[1]) + 1}"
-        return mapping.get(kind.upper(), kind + "_EVOLVED")

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
+from src.content.terrain_cost import DEFAULT_TERRAIN_ID, terrain_gives_cover, terrain_is_high_ground
 from src.core.region_resolution import is_inside_world
 from src.content_semantics.faction import (
     are_entities_hostile,
@@ -18,7 +19,6 @@ from src.core.enums import EntityRole, ReasonCode
 from src.core.skills import SKILL_REGISTRY
 from src.engine.domain.view import DomainView
 from src.engine.hostility import attack_allowed
-from src.engine.rpg_depth import TerrainCostService
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.tile_distance import manhattan_tile_distance
 from src.world.environment import EnvironmentService
@@ -185,12 +185,9 @@ class LegalityServiceV2:
         if not ok:
             return False, reason
 
-        # 2. Terrain Cost Check
-        tile = (int(target_pos[0]), int(target_pos[1]))
-        terrain_cost = TerrainCostService.get_tile_cost(tile, state_or_context)
-        
-        # Combined cost
-        readiness_cost = (entity.combat.move_cost * terrain_cost) / max(0.1, move_speed_mult)
+        # 2. Readiness cost. The terrain's cost is NOT here (D75): it is time, not a readiness charge. A step onto a tile of cost N takes
+        # N ticks (MovementSystem.resolve_move, NavigationComponent.step_ready_tick).
+        readiness_cost = entity.combat.move_cost / max(0.1, move_speed_mult)
         
         if entity.combat.readiness < readiness_cost:
             return False, ReasonCode.ACTION_EXHAUSTION
@@ -431,11 +428,11 @@ class LegalityServiceV2:
         atk_pos = (int(attacker_pos[0]), int(attacker_pos[1]))
         def_pos = (int(defender_pos[0]), int(defender_pos[1]))
         
-        attacker_tile = state.terrain.get(atk_pos, "PLAIN")
-        defender_tile = state.terrain.get(def_pos, "PLAIN")
-        
-        high_ground_tiles = {"HILL", "MOUNTAIN"}
-        return attacker_tile in high_ground_tiles and defender_tile not in high_ground_tiles
+        attacker_tile = state.terrain.get(atk_pos, DEFAULT_TERRAIN_ID)
+        defender_tile = state.terrain.get(def_pos, DEFAULT_TERRAIN_ID)
+
+        # High ground is declared by the terrain in content (`high_ground`), never named here.
+        return terrain_is_high_ground(attacker_tile) and not terrain_is_high_ground(defender_tile)
 
     @staticmethod
     def get_engagement_state(entity_id: int, state: AuthoritativeState) -> Optional[Any]:
@@ -484,7 +481,7 @@ class LegalityServiceV2:
     @staticmethod
     def check_cover(attacker_pos: Tuple[float, float], defender_pos: Tuple[float, float], state: AuthoritativeState) -> bool:
         """
-        Verify if defender is behind wall cover relative to attacker.
+        Verify if the defender has terrain cover (declared in content): the tile next to the defender on the attacker's side, an obstacle between a non-adjacent attacker and the defender.
         Logic ID: COMB-262 (Cover behavior is explicit)
         """
         # VERIFIED v2: cover_geometric
@@ -495,19 +492,15 @@ class LegalityServiceV2:
         dy = defender_pos[1] - attacker_pos[1]
         
         x, y = int(defender_pos[0]), int(defender_pos[1])
-        
+
         if abs(dx) > abs(dy):
-            check_x = x - (1 if dx > 0 else -1)
-            tile = state.terrain.get((check_x, y))
-            if tile in {"WALL", "FOREST", "MOUNTAIN"}:
-                return True
+            between = (x - (1 if dx > 0 else -1), y)
         else:
-            check_y = y - (1 if dy > 0 else -1)
-            tile = state.terrain.get((x, check_y))
-            if tile in {"WALL", "FOREST", "MOUNTAIN"}:
-                return True
-                
-        return False
+            between = (x, y - (1 if dy > 0 else -1))
+
+        # Cover is declared by the terrain in content (`gives_cover`), never named here. A tile with no terrain gives none.
+        tile = state.terrain.get(between)
+        return tile is not None and terrain_gives_cover(tile)
 
     @staticmethod
     def get_entity_priority(entity: EntityState, state: Optional[Any] = None) -> int:

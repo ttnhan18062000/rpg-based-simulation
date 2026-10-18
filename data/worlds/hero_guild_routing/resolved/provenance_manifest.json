@@ -1,5 +1,5 @@
 {
-  "manifest_id": "prov_014cd629f8437fea",
+  "manifest_id": "prov_a638591094e10d0b",
   "world_id": "hero_guild_routing",
   "source_schema_version": "provenancemanifest.v1",
   "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
@@ -7,14 +7,14 @@
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "goblin_camp_forage": "79af965c2ca3a71404f844c2f02753c21149e5cff4e6f21707e6223e1dac63cb",
-    "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
+    "hero_adventurers": "9b0ff1d383b294faebd459136cfd085f19277a5b0f0bc57c18438ef3b8956c84",
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
     "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71"
   },
   "composition_fingerprint": "bbd93ea144e4daa4ee19a9c1c06ce12127dca067109e06693cd2d61155246b17",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "014cd629f8437fea042ac93ffb21e9602272fc8e554e10a959c3c71fbd08ddf6",
-  "created_at": "2026-10-12T14:35:31.645128Z",
+  "content_fingerprint": "a638591094e10d0bf084fdecbda933156e1af82a1d0652cf9df34cb523e1a93c",
+  "created_at": "2026-10-13T10:26:29.660884Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

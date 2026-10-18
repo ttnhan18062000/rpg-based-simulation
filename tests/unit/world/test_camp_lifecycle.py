@@ -9,7 +9,7 @@ from src.core.updates import StateUpdate, CampUpdate
 from src.world.camp import CampService
 from src.domains.optimization.feature_flags import FeatureFlagManager, FeatureMode
 
-def test_camp_maturity_and_spawn():
+def test_camp_maturity_grows_and_an_undersized_camp_spawns_nothing():
     # Setup state with a goblin camp
     state = AuthoritativeState(
         tick=30, # Match spawn interval
@@ -27,10 +27,8 @@ def test_camp_maturity_and_spawn():
     # Base 0.05 * 1.5 = 0.075
     assert update.camp_updates["camp_1"].maturity_delta == pytest.approx(0.075)
     
-    # 3. Verify monster spawn (since tick 30 % 30 == 0)
-    assert len(update.entities_add) > 0
-    goblin = next(e for e in update.entities_add if e.kind == "goblin_warrior")
-    assert goblin.position == (50, 50)
+    # 3. D70: a camp below its cap no longer spawns a monster from nothing, even on the old spawn tick (30 % 30 == 0)
+    assert update.entities_add == []
 
 def test_camp_clearing_reward():
     from src.world.camp import CampService
@@ -50,10 +48,9 @@ def test_camp_clearing_reward():
     # Verify regional trauma reduction
     assert update.world_updates["forest"].trauma_delta == -10.0
 
-def test_camp_raid_trigger():
-    # Setup state with high maturity camp and a real settlement to raid
-    # (TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX: a raid with no CITY place to target is skipped
-    # entirely -- no maturity cost, no cooldown reset -- so this test seeds one).
+def test_a_raid_eligible_camp_spawns_no_raiders_and_pays_no_cost():
+    """D70 (TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70): a camp at raid maturity with a city to target conjures no raiders, so it
+    is charged no maturity and its raid clock is not reset; it only grows."""
     from src.world.camp import CampService
     state = AuthoritativeState(
         tick=500,
@@ -62,20 +59,14 @@ def test_camp_raid_trigger():
         camps={"camp_1": CampState(id="camp_1", kind="goblin", position=(50, 50), maturity=90.0, last_raid_tick=0)},
         places={"town_1": PlaceState(place_id="town_1", region_id="forest", kind=PlaceKind.CITY, position=(10, 10))},
     )
-    generator = EntityGenerator(seed=42)
+    update = CampService.process_camps(state, EntityGenerator(seed=42))
 
-    update = CampService.process_camps(state, generator)
-
-    # Verify maturity reduction (raid cost)
-    assert update.camp_updates["camp_1"].maturity_delta == -20.0
-    # Verify last_raid_tick updated
-    assert update.camp_updates["camp_1"].last_raid_tick_set == 500
-    # Verify raiders were actually spawned (TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX: this used
-    # to be silently discarded -- the whole point of the fix).
-    assert any(e.kind == "goblin_raider" for e in update.entities_add)
+    assert update.camp_updates["camp_1"].maturity_delta == pytest.approx(0.05)
+    assert update.camp_updates["camp_1"].last_raid_tick_set is None
+    assert update.entities_add == []
 
 
-def test_camp_raid_trigger_skips_entirely_with_no_city_place_no_cost_charged():
+def test_a_camp_with_no_city_place_is_charged_nothing_either():
     """
     TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX: a raid-eligible camp in a world with no CITY place
     to target must skip the raid entirely -- no raiders, AND critically no maturity cost or
@@ -116,7 +107,7 @@ def test_nest_flag_registered_in_feature_flag_manager_default_off():
     assert manager.get_flag_mode("ENABLE_CAMP_NEST_SPREAD") == FeatureMode.OFF
 
 
-def test_camp_flag_off_nest_kind_camp_still_raids():
+def test_camp_flag_off_nest_kind_camp_neither_raids_nor_spreads():
     """Regression / flag-off no-op: a Nest-eligible kind ('wolf') at raid maturity with the
     flag left at its default OFF still produces the existing raid outcome."""
     state = AuthoritativeState(
@@ -130,12 +121,12 @@ def test_camp_flag_off_nest_kind_camp_still_raids():
 
     update = CampService.process_camps(state, generator)
 
-    assert update.camp_updates["camp_1"].maturity_delta == -20.0
-    assert update.camp_updates["camp_1"].last_raid_tick_set == 500
-    assert all(e.kind != "wolf" for e in update.entities_add)
+    assert update.camp_updates["camp_1"].maturity_delta == pytest.approx(0.05)
+    assert update.camp_updates["camp_1"].last_raid_tick_set is None
+    assert update.entities_add == []
 
 
-def test_camp_flag_on_camp_kind_still_raids():
+def test_camp_flag_on_camp_kind_does_not_spread_or_raid():
     """A Camp-classified kind ('goblin') at raid maturity, with the new flag ON, still takes
     the raid outcome -- proves the fork keys off classification, not just the flag."""
     state = AuthoritativeState(
@@ -150,8 +141,9 @@ def test_camp_flag_on_camp_kind_still_raids():
 
     update = CampService.process_camps(state, generator)
 
-    assert update.camp_updates["camp_1"].maturity_delta == -20.0
-    assert update.camp_updates["camp_1"].last_raid_tick_set == 500
+    assert update.camp_updates["camp_1"].maturity_delta == pytest.approx(0.05)
+    assert update.camp_updates["camp_1"].last_raid_tick_set is None
+    assert update.entities_add == []
 
 
 def test_camp_flag_on_nest_kind_spreads_instead_of_raiding():
@@ -288,7 +280,7 @@ def test_campservice_process_camps_operates_on_world_gen_seeded_camp():
     assert update.camp_updates["camp_1"].maturity_delta is not None
 
 
-def test_campservice_raid_and_spawn_branches_not_newly_flag_gated():
+def test_a_world_gen_seeded_camp_spawns_and_raids_nothing_with_no_flags_set():
     """This ticket seeds real data into an already-unconditional CampService.process_camps
     -- it must not add any new flag check wrapping the raid-trigger/monster-spawn branches.
     Proven behaviorally: a matured, world-gen-seeded camp still raids with NO feature
@@ -322,8 +314,9 @@ def test_campservice_raid_and_spawn_branches_not_newly_flag_gated():
 
     update = CampService.process_camps(state, generator)
 
-    assert update.camp_updates["camp_1"].maturity_delta == -20.0
-    assert update.camp_updates["camp_1"].last_raid_tick_set == 500
+    assert update.camp_updates["camp_1"].maturity_delta == pytest.approx(0.05)
+    assert update.camp_updates["camp_1"].last_raid_tick_set is None
+    assert update.entities_add == []
 
 
 # TCK-20260904-FACTION-EXPAND-DIRECTIVE: EXPAND_TERRITORY directive consumption -- a
@@ -412,7 +405,7 @@ def test_authoritative_state_to_readonly_wraps_world_gen_seeded_camps():
 
 
 @pytest.mark.parametrize("camp_kind, spawned", [("goblin", "goblin_warrior"), ("orc", "orc_warrior"), ("wolf", "wolf")])
-def test_a_camp_spawns_the_kind_it_declares_not_an_orc_warrior(camp_kind, spawned):
+def test_a_camp_of_any_kind_adds_no_entity_on_the_old_spawn_tick(camp_kind, spawned):
     state = AuthoritativeState(
         tick=30, seed=42,
         regions={"forest": RegionState(id="forest", name="The Deep Woods", kind="forest", bounds=(0, 0, 100, 100), trauma_score=60.0)},
@@ -420,7 +413,7 @@ def test_a_camp_spawns_the_kind_it_declares_not_an_orc_warrior(camp_kind, spawne
     )
     from src.engine.cadence import SystemCadence
     update = WorldDynamicsSystem.resolve_dynamics(state, StateUpdate(), EntityGenerator(seed=42), cadence=SystemCadence(world_dynamics=30))
-    assert {e.kind for e in update.entities_add} == {spawned}
+    assert update.entities_add == []
 
 
 def test_every_declared_camp_spawn_kind_resolves_to_a_spawn_kind_the_generator_knows():

@@ -1,5 +1,5 @@
 {
-  "manifest_id": "prov_5bf73e50f729e6f3",
+  "manifest_id": "prov_03106759193f7091",
   "world_id": "frontier_marches",
   "source_schema_version": "provenancemanifest.v1",
   "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
@@ -8,7 +8,7 @@
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "goblin_camp_forage": "79af965c2ca3a71404f844c2f02753c21149e5cff4e6f21707e6223e1dac63cb",
-    "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
+    "hero_adventurers": "9b0ff1d383b294faebd459136cfd085f19277a5b0f0bc57c18438ef3b8956c84",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
     "sunken_swamp_border": "11e37d8a23ded39f278c7bcb0acedc5dcbe626076765d6caa18fcd4b4befb8fd",
@@ -17,8 +17,8 @@
   },
   "composition_fingerprint": "21303aed08d8c7e447812e725c080de5fa0f9c9d067e6c02d02d19183ce57a91",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "5bf73e50f729e6f314c5541529ce606b5d26524a58c68264fd304c4331ce95db",
-  "created_at": "2026-10-12T14:35:28.554933Z",
+  "content_fingerprint": "03106759193f70916dbe8096ec50ca9ec094ed1314bd4a4346bc5fdbd64dfff2",
+  "created_at": "2026-10-13T10:26:27.694052Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
