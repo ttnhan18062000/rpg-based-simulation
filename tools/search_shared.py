@@ -57,6 +57,7 @@ CLAIM_WINDOW_SECONDS = 20.0
 RETIRE_WAIT_SECONDS = 5.0
 REASON_OLD_CODE = "server was started from different code"
 CODE_ROOT_ENV = "RPG_SEARCH_SHARED_CODE_ROOT"
+TEST_REAL_BASE_ENV = "RPG_SEARCH_TEST_REAL_RUNTIME_BASE"  # set by tests/tools/conftest.py: the one base no test may use
 REASON_STARTING = "server starting"
 REASON_UNRESPONSIVE = "server not responding"
 _SILENT_REASONS = frozenset({"shared search not used"})
@@ -131,6 +132,9 @@ def state_dir(db_path: Path) -> Path:
     """Per-user directory for this index, keyed by the database's resolved path."""
     runtime = os.environ.get("XDG_RUNTIME_DIR")
     base = Path(runtime) if runtime else Path(tempfile.gettempdir()) / f"rpg-search-{os.getuid()}"
+    real = os.environ.get(TEST_REAL_BASE_ENV)
+    if real and "PYTEST_CURRENT_TEST" in os.environ and base.resolve() == Path(real):
+        raise RuntimeError(f"a test reached the real runtime dir {base}: point XDG_RUNTIME_DIR at a tmp dir")
     key = hashlib.sha256(str(db_path.resolve()).encode()).hexdigest()[:12]
     return base / "rpg-search" / key
 
@@ -275,13 +279,19 @@ def _server_argv(db_path: Path) -> list[str]:
     return [sys.executable, str(code_tools_dir(db_path) / "search_shared.py"), "serve", "--db", str(db_path)]
 
 
+def _server_cwd(db_path: Path) -> Path:
+    """Where the detached server runs: the main checkout, never the spawning client's worktree (a removed worktree
+    would leave the fleet's server with a deleted cwd)."""
+    return _own_main_root() or code_tools_dir(db_path).parent
+
+
 def _spawn(directory: Path, db_path: Path) -> int:
     """Start the detached server and return its pid; its stdout/stderr go to `server.log` in the private directory."""
     log_fd = os.open(directory / "server.log", os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
     try:
         return subprocess.Popen(  # noqa: S603 - fixed argv built from the code root's own path
             _server_argv(db_path), stdin=subprocess.DEVNULL, stdout=log_fd, stderr=log_fd,
-            start_new_session=True, close_fds=True,
+            start_new_session=True, close_fds=True, cwd=_server_cwd(db_path),
         ).pid
     finally:
         os.close(log_fd)

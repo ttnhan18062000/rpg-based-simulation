@@ -772,3 +772,74 @@ def test_a_live_pid_whose_start_time_differs_is_never_signalled(shared_env, code
     monkeypatch.setattr(ss, "RETIRE_WAIT_SECONDS", 0.3)
     assert ss.try_search_ex(shared_env, "b", 2, None, "hybrid") == (None, ss.REASON_STARTING)
     assert sent == [] and _alive(record["pid"]) and launches.read_text().split() == ["launch"]
+
+
+# ── TCK-20261018-SEARCH-SHARED-SERVER-CWD-AND-TEST-RUNTIME-ISOLATION ─────────
+
+def test_the_spawn_runs_the_server_in_the_main_checkout_not_the_spawning_cwd(shared_env, two_checkouts, monkeypatch, tmp_path):
+    main, wt = two_checkouts
+    seen: dict = {}
+
+    class FakePopen:
+        pid = 4242
+
+        def __init__(self, argv, **kwargs):
+            seen.update(kwargs)
+
+    ss._own_main_root()  # resolve (one git call) before Popen is faked
+    monkeypatch.setattr(ss.subprocess, "Popen", FakePopen)
+    monkeypatch.chdir(tmp_path)  # the spawning client's cwd is somewhere else entirely
+    directory = ss.state_dir(shared_env)
+    assert ss._ensure_private_dir(directory)
+    assert ss._spawn(directory, shared_env) == 4242
+    assert Path(seen["cwd"]).resolve() == main.resolve()
+
+
+def test_the_spawn_cwd_falls_back_to_the_code_roots_parent_outside_git(tmp_path, monkeypatch):
+    tools = tmp_path / "plain" / "tools"
+    tools.mkdir(parents=True)
+    monkeypatch.delenv(ss.CODE_ROOT_ENV, raising=False)
+    monkeypatch.setattr(ss, "_TOOLS_DIR", tools)
+    ss._own_main_root.cache_clear()
+    try:
+        assert ss._server_cwd(tmp_path / "knowledge.db") == tools.parent
+    finally:
+        ss._own_main_root.cache_clear()
+
+
+def test_every_tools_test_runs_in_a_tmp_runtime_dir_not_the_real_one(tmp_path):
+    real = Path(os.environ[ss.TEST_REAL_BASE_ENV])
+    assert Path(os.environ["XDG_RUNTIME_DIR"]).resolve() != real
+    assert Path(os.environ["XDG_RUNTIME_DIR"]).resolve().is_relative_to(tmp_path.resolve())
+
+
+def test_state_dir_refuses_the_real_runtime_dir_under_pytest(tmp_path, monkeypatch):
+    """The guard is deterministic: it compares the base path with the one captured at conftest import, and never looks
+    at what live sessions have written there."""
+    db = tmp_path / "knowledge.db"
+    real = os.environ[ss.TEST_REAL_BASE_ENV]
+    monkeypatch.setenv("XDG_RUNTIME_DIR", real)
+    with pytest.raises(RuntimeError, match="real runtime dir"):
+        ss.state_dir(db)
+    monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / "ok"))
+    assert ss.state_dir(db).parent == tmp_path / "ok" / "rpg-search"
+    monkeypatch.delenv("XDG_RUNTIME_DIR")  # the tempdir fallback is guarded too when it is the captured base
+    monkeypatch.setenv(ss.TEST_REAL_BASE_ENV, str(Path(ss.tempfile.gettempdir()) / f"rpg-search-{os.getuid()}"))
+    with pytest.raises(RuntimeError):
+        ss.state_dir(db)
+
+
+def test_the_server_main_creates_its_lock_only_inside_the_tmp_runtime_dir(tmp_path, monkeypatch):
+    """The two tests that call `_main` created `server.lock`-only dirs in the real runtime dir (batch 1, before they set
+    their own XDG_RUNTIME_DIR). With the autouse tmp dir, the same call lands in tmp."""
+    class Mcp:
+        _DB_PATH = tmp_path / "other.db"
+
+        @staticmethod
+        def _ensure_loaded() -> bool:
+            return False
+
+    monkeypatch.setattr(ss, "_load_search_mcp", lambda: Mcp)
+    assert ss._main(["serve", "--db", str(tmp_path / "knowledge.db")]) == 1
+    assert (ss.state_dir(tmp_path / "knowledge.db") / "server.lock").exists()
+    assert ss.state_dir(tmp_path / "knowledge.db").is_relative_to(tmp_path)
