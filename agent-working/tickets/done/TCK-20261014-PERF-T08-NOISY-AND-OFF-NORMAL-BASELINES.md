@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES
-phase: open
+phase: done
 date: 2026-10-14
 tags: [performance, benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 Finish the baselines PERF-M2-T08 could not promote: diagnose the intrinsic noise first, then re-record the NOISY and off-NORMAL records
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -90,4 +90,9 @@ tests/unit/perf/test_rerun_baselines.py (probe series and counters, P3, the trip
 tools/perf/rerun_baselines.py, tools/perf/baseline_lifecycle.py, src/perf/scenarios.py (docstring only), tests/unit/perf/test_rerun_baselines.py, tests/unit/perf/test_baseline_lifecycle.py, tests/perf/baselines/ (two v0001 added, combat_10_local.json deleted), docs/performance/perf_baseline_policy.md (2.1 draft, 4), docs/performance/baseline_invalidation_ledger.md; staging artifacts under agent-working/staging_artifacts/ (investigation.md, plan.md, test_plan.md, an2_reproduce_ac1.py). Commits are on `perf-t08-noisy-baselines`.
 
 ## Completion Summary
-NOT CLOSED. Open: promotion of `idle_100_local` and `movement_100_local` (owner-approved, waiting for testing-planner's agreement on #613); the ticket closes when they are promoted or the owner decides otherwise. AC1 (diagnosis written) met; AC2 (policy and tripwire agreement) met for P2 (owner) and open for the tripwire lane (testing); AC3 met for two of four records, the two others owner-approved and pending; AC4 met; AC5 followed.
+CLOSED 2026-10-18. `idle_100_local` and `movement_100_local` promoted through `baseline_lifecycle.py promote --cause TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES` from the `reports/perf/t08_noisy2/` re-records (no new run). Their legacy files are deleted; `LEGACY_TRIPWIRE_REFERENCES` is 6 (length pin updated; two tests that used `idle_100_local` as the committed legacy example now use `strategic_100_local`); `baseline_lifecycle.py check` rc=0. Ledger rows and policy section 4 updated.
+- AC1 met (diagnosis in investigation.md, 2026-10-16).
+- AC2 met: the P2 policy paragraph by the owner (2026-10-16); the tripwire/nightly-lane agreement by the owner in testing's place on #613 (2026-10-18); testing to review after the fact.
+- AC3 met: all four NOISY records promoted under the agreed protocol (`combat_10_local`, `simq_corpus_crowded_frontier` on 2026-10-16; `idle_100_local`, `movement_100_local` on 2026-10-18). The off-NORMAL six stay "not a baseline under canonical" in the ledger, as the ticket allows. Caveat recorded in the ledger: `movement_100_local` has two clusters (about 95 and 109 ms), so it is one of two plausible values.
+- AC4 met (`mixed_200` documented, not renamed). AC5 followed (no run in this closing PR).
+- Side effect: the nightly slow lane now compares the head with these two records (non-blocking). Under a host load of about 40 during the closing test run it warned REGRESSION for `movement_100_local` (head 151.98 ms vs base 107.86); that is host load, not a measurement, and the lane only warns.
