@@ -7832,7 +7832,10 @@
   date: '2026-10-18'
   related_code_areas:
   - infra/terraform/**
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-TERRAFORM-AWS-SKELETON/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-TERRAFORM-AWS-SKELETON/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-TERRAFORM-AWS-SKELETON/test_plan.md
   tags:
   - platform
   - delivery
