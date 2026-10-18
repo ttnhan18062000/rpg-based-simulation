@@ -2153,6 +2153,16 @@
   - hard-law
   - eventbus
 - type: doc
+  path: docs/guides/reviewer_replay_check.md
+  title: Reviewer replay check
+  status: active
+  layer: testing
+  authority: P1
+  audience: agent
+  tags:
+  - determinism
+  - testing
+- type: doc
   path: docs/guides/simulation.md
   title: Simulation — Getting Started Guide
   status: ''
@@ -7802,6 +7812,20 @@
   tags:
   - platform
   - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261016-REPLAY-CHECK-REVIEWER-DEMO.md
+  ticket_id: TCK-20261016-REPLAY-CHECK-REVIEWER-DEMO
+  title: '`make replay-check`: a one-command reviewer demo that the same seed gives
+    the same final state hash under the Canonical signal contract'
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-16'
+  related_code_areas:
+  - codebase/reports/, tests/codebase/, Makefile, README.md, docs/guides/
+  artifact_files: []
+  tags:
+  - determinism
+  - testing
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS.md
   ticket_id: TCK-20261016-PERF-BENCH-COLLECTOR-ON-MEMORY-PASS
