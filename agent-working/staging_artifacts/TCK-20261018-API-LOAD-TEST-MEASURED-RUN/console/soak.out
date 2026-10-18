@@ -1,0 +1,12 @@
+key pool: 990 keys; ceiling 2970 req/s before per-key 429s (3/s per key); steps above 1485 req/s are flagged
+pool ceiling 2970 req/s
+users      req/s med (min-max)    p50    p95    p99    429    5xx  flags
+   50      177.4 (139.9-445.6)    255    575    725   0.0%   0.0%  
+engine per step (status key, read at the start and end of every repeat): ticks/s median, governor / health / observability mode
+   50      8.0 ticks/s  CONSTRAINED, DEGRADED, SURVIVAL / DEGRADED, HEALTHY / LIGHT
+saturation (throughput gain < 10 % while p95 rises >= 50 %): no knee within the tested steps
+peak per container (CPU % of one core / memory MiB), max over steps:
+  platform-backend-1                         153.8      151
+  platform-redis-1                             5.8       10
+Locust shares the 6 vCPUs with the backend; its own peak CPU is in summary.json. Output: /data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/tools/loadtest/runs/20261018T035236Z
+ALLDONE

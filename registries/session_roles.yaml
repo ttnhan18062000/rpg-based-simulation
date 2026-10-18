@@ -148,6 +148,7 @@ domains:
       - .github/workflows/publish-images.yml
       - .github/dependabot.yml
       - tools/loadtest/**
+      - docs/runbooks/**
     owns_not: []
     routes:
       "src/**": rpg-planner                   # the engine stays one process
