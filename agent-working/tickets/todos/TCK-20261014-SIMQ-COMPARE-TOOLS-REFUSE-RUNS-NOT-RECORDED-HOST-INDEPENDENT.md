@@ -15,7 +15,7 @@ tags: [testing, simulation-quality, determinism]
 `simq_reanchor` and `simq_pillar_compare` refuse a run whose manifest does not record it as host-independent
 
 ## Status
-BLOCKED (on rpg's determinism fix reaching main; see Assumptions)
+OPEN
 
 ## Tier
 hotfix
@@ -68,7 +68,7 @@ rpg's TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-THROUGH-PHASE-BUDGETS-EVE
 - the `rows.jsonl` producer (to be located)
 
 ## Assumptions / Open Questions
-- Blocked until rpg's fix (fef0ae77f on rpg-next) is on main. Unblock by moving Status to OPEN when the RPG PR carrying it merges.
+- UNBLOCKED 2026-10-19: rpg's fix is on main via #645 (3597c08d3, squash of rpg-next). `src/observability/reporting/run_determinism.py` (`NonAuditRunError`, `run_is_host_independent`, `require_host_independent_runs`), `src/engine/signal_source.py::ZeroedSignalSource` / `signals_are_zeroed`, and the `audit_mode` / `signals_zeroed` fields in `artifact_repository.py` are all present on main.
 - Should land before the v1 re-anchor runs, so AC1 of TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1 is mechanically checked.
 
 ## Implementation Notes
