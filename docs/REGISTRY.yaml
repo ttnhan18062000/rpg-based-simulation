@@ -7649,6 +7649,22 @@
   - platform
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-LAUNCH-RESUME-MISSING-WORKTREE-REFUSE.md
+  ticket_id: TCK-20261018-LAUNCH-RESUME-MISSING-WORKTREE-REFUSE
+  title: '`launch.py` crashes with FileNotFoundError on `os.chdir` when the manifest
+    worktree is missing and not recreated'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-18'
+  related_code_areas:
+  - main
+  - read_bound_worktree
+  artifact_files: []
+  tags:
+  - ai
+  - bug
+  - workflows
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-LOCUST-API-LOAD-TEST.md
   ticket_id: TCK-20261018-LOCUST-API-LOAD-TEST
   title: 'tools/loadtest: a Locust API scenario and a runner that records the method,
@@ -7740,6 +7756,23 @@
   tags:
   - platform
   - delivery
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT.md
+  ticket_id: TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT
+  title: One shared search server per host, served from the main checkout's code.
+    Clients that time out or see a code mismatch stop loading their own model.
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/search_shared.py, tools/search_mcp.py, tools/start_*_mcp.sh (read only unless
+    needed)
+  artifact_files: []
+  tags:
+  - ai
+  - mcp
+  - bug
+  - root-cause
 - type: ticket
   path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
   ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF

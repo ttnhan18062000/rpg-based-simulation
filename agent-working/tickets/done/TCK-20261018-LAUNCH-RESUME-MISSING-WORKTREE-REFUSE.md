@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-LAUNCH-RESUME-MISSING-WORKTREE-REFUSE
-phase: open
+phase: done
 date: 2026-10-18
 tags: [ai, bug, workflows]
 ---
@@ -15,7 +15,7 @@ tags: [ai, bug, workflows]
 `launch.py` crashes with FileNotFoundError on `os.chdir` when the manifest worktree is missing and not recreated
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -79,6 +79,14 @@ Every seat on ubuntu hits this, because seats there launch from the main checkou
 - The bound worktree is trusted only if it exists and is a git worktree of this repo (`git -C <q> rev-parse` succeeds).
 
 ## Implementation Notes
+New `resolve_missing_worktree()` in `tools/sessions/launch.py`, called from `main()` after `plan_launch` and before `preflight`, `link_shared_graph`, `write_bound_worktree` and `os.chdir`. Skipped only for a dry run with `--branch` (it prints the worktree it would create). A bound worktree is accepted only if it is a directory and `git rev-parse --git-dir` succeeds there. The fallback keeps the bound record's own `explicit` flag.
+
 ## Test Summary
+`tests/tools/test_session_launch.py`: 59 passed (6 new test functions, 7 cases): fallback to the bound worktree, refusal with no or gone bound path (non-zero exit, filled hint on stderr, no `<role>`, no traceback, nothing exec'd or written), session id in the hint, explicit `--worktree` never falls back, dry run refuses, existing worktree unchanged.
+
 ## Files Changed
+- tools/sessions/launch.py
+- tests/tools/test_session_launch.py
+
 ## Completion Summary
+`launch.py <role> --action resume` with a missing manifest worktree no longer raises `FileNotFoundError`: it launches in the existing bound worktree or exits `EXIT_REFUSED` with the real role/instance in the fix hint.
