@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-IAC-WORKFLOW-AND-ROLES
-phase: open
+phase: inprogress
 date: 2026-10-18
 tags: [platform, delivery, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, delivery, security]
 CI: .github/workflows/iac.yml (fmt, validate, tflint, trivy config report-only; no credentials) and the D8 roles diff for infra/** and iac.yml
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
