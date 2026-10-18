@@ -122,7 +122,10 @@ generated session cards
 (open)
 
 ## Test Summary
-(open)
+- deploy-docs.yml bump: **validated (static) only; not exercised, because the workflow is dispatch-only with Pages off; first real run is under TCK-20260916-REENABLE-DOCS-PAGES-PUBLISHING.** Two lines changed, YAML parses, tests/static 96 passed. Release notes v5-v7.1 read; no breaking change affects the step (investigation.md).
+- Roles diff: `route.py` returns platform for deploy-docs.yml; sessions validate 0 findings; tests/tools session tests and registry tests plus tests/static: 873 passed after the registry regen.
+- ACTIONS-MAJORS-COMBINED evidence check: see investigation.md (item 4 met; gate-report shard/aggregate and deploy-docs not yet shown).
+- publish-images observation (item 1): open, after 2026-10-19.
 
 ## Files Changed
 (open)
