@@ -418,12 +418,16 @@ def disk_warning(root: Path) -> list[str]:
 
 
 def resolve_missing_worktree(wt: Path, target: Target, sroot: Path, root: Path, sid: str | None,
-                             explicit_arg: bool) -> tuple[Path, bool, list[str]]:
+                             explicit_arg: bool, holder_wt: str | None = None) -> tuple[Path, bool, list[str]]:
     """The worktree is still missing after self-heal: (path, explicit, refusal lines). Falls back to the role's recorded
+    holder's own worktree when resuming (`claude --resume` finds a transcript only from the cwd it was written in), then the
     bound worktree (never when --worktree named this one); otherwise a refusal with the real role and instance filled in,
     so the launch never reaches os.chdir with a path that is not there (GitHub #620 part 2)."""
     why = f"worktree {wt} does not exist"
     if not explicit_arg:
+        if holder_wt and Path(holder_wt).is_dir() and _run(["git", "rev-parse", "--git-dir"], Path(holder_wt)).returncode == 0:
+            print(f"manifest worktree {wt} missing; resuming in the dead holder's worktree {holder_wt}")
+            return Path(holder_wt), False, []
         bound = st.read_bound_worktree(sroot, target.instance)
         if bound and Path(bound[0]).is_dir() and _run(["git", "rev-parse", "--git-dir"], Path(bound[0])).returncode == 0:
             print(f"manifest worktree {wt} missing; using the recorded bound worktree {bound[0]}")
@@ -479,7 +483,8 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
         return code
     explicit = bool(a.worktree)
     if not wt.is_dir() and not (a.dry_run and a.branch):  # a dry run with --branch only prints the worktree it would create
-        wt, explicit, refusal = resolve_missing_worktree(wt, target, sroot, root, sid, bool(a.worktree))
+        holder_wt = recorded.holder.worktree if recorded and sid else None  # a resume: its transcript lives under the holder's cwd
+        wt, explicit, refusal = resolve_missing_worktree(wt, target, sroot, root, sid, bool(a.worktree), holder_wt)
         if refusal:
             print("\n".join(refusal), file=sys.stderr)
             return EXIT_REFUSED

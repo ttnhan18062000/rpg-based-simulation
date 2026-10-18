@@ -579,7 +579,7 @@ def test_a_missing_worktree_without_a_usable_bound_one_refuses_with_the_filled_h
 def test_the_hint_names_the_resolved_session_id(repo, tmp_path, monkeypatch, capsys):
     _launch_env(repo, tmp_path, monkeypatch)
     sroot = tmp_path / "sr"
-    st.record_start(sroot, _binding(repo, sid="sess-42"))
+    st.record_start(sroot, dataclasses.replace(_binding(repo, sid="sess-42"), worktree=str(tmp_path / "gone-holder")))
     assert ln.main([ROLE, "--action", "resume", "--session-id", "sess-42"], root=REAL_ROOT) == ln.EXIT_REFUSED
     assert "claude --resume sess-42 --name" in capsys.readouterr().err
 
@@ -602,3 +602,13 @@ def test_an_existing_worktree_still_launches_unchanged(repo, seat_worktree, tmp_
     calls = _launch_env(repo, tmp_path, monkeypatch)
     assert ln.main([ROLE, "--worktree", str(seat_worktree)], root=REAL_ROOT) == 0
     assert calls["chdir"] == [seat_worktree] and "bound worktree" not in capsys.readouterr().out
+
+
+def test_a_resume_prefers_the_dead_holders_worktree_over_the_bound_one(repo, seat_worktree, tmp_path, monkeypatch, capsys):
+    calls = _launch_env(repo, tmp_path, monkeypatch)
+    bound = tmp_path / "bound"
+    git(repo, "worktree", "add", "-q", "-b", "bound-b", str(bound))
+    st.write_bound_worktree(tmp_path / "sr", ROLE, str(bound), False)
+    st.record_start(tmp_path / "sr", dataclasses.replace(_binding(repo, sid="sess-9"), worktree=str(seat_worktree)))
+    assert ln.main([ROLE, "--action", "resume", "--session-id", "sess-9"], root=REAL_ROOT) == 0
+    assert calls["chdir"] == [seat_worktree] and "dead holder's worktree" in capsys.readouterr().out

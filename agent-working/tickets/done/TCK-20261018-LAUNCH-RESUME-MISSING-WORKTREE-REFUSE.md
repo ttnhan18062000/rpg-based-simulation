@@ -79,10 +79,10 @@ Every seat on ubuntu hits this, because seats there launch from the main checkou
 - The bound worktree is trusted only if it exists and is a git worktree of this repo (`git -C <q> rev-parse` succeeds).
 
 ## Implementation Notes
-New `resolve_missing_worktree()` in `tools/sessions/launch.py`, called from `main()` after `plan_launch` and before `preflight`, `link_shared_graph`, `write_bound_worktree` and `os.chdir`. Skipped only for a dry run with `--branch` (it prints the worktree it would create). A bound worktree is accepted only if it is a directory and `git rev-parse --git-dir` succeeds there. The fallback keeps the bound record's own `explicit` flag.
+New `resolve_missing_worktree()` in `tools/sessions/launch.py`, called from `main()` after `plan_launch` and before `preflight`, `link_shared_graph`, `write_bound_worktree` and `os.chdir`. Skipped only for a dry run with `--branch` (it prints the worktree it would create). On a resume (a session id is resolved) the dead holder's own worktree comes first, since `claude --resume` only finds a transcript from the cwd it was written in (planner review). A bound worktree is accepted only if it is a directory and `git rev-parse --git-dir` succeeds there. The fallback keeps the bound record's own `explicit` flag.
 
 ## Test Summary
-`tests/tools/test_session_launch.py`: 59 passed (6 new test functions, 7 cases): fallback to the bound worktree, refusal with no or gone bound path (non-zero exit, filled hint on stderr, no `<role>`, no traceback, nothing exec'd or written), session id in the hint, explicit `--worktree` never falls back, dry run refuses, existing worktree unchanged.
+`tests/tools/test_session_launch.py`: 60 passed (7 new test functions, 8 cases): fallback to the bound worktree, refusal with no or gone bound path (non-zero exit, filled hint on stderr, no `<role>`, no traceback, nothing exec'd or written), session id in the hint, a resume prefers the holder's worktree over the bound one, explicit `--worktree` never falls back, dry run refuses, existing worktree unchanged.
 
 ## Files Changed
 - tools/sessions/launch.py
