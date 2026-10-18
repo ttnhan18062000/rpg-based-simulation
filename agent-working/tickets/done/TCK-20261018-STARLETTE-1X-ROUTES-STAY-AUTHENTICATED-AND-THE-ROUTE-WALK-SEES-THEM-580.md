@@ -51,7 +51,7 @@ agent-working/stored_artifacts/TCK-20261018-STARLETTE-1X-ROUTES-STAY-AUTHENTICAT
 pyproject.toml; uv.lock; tests/api; tests/helpers/api_routes.py
 
 ## Assumptions / Open Questions
-fastapi>=0.143.5 is the version tested, not necessarily the lowest fastapi that allows starlette 1.x. The overlay stack, not a synced venv, ran the tests; CI's `uv sync --locked` is the first run on the synced lock.
+
 
 ## Implementation Notes
 Runtime auth held on the bare upgrade (ws closed 1008, REST 401). What 1.x breaks is route introspection: app.routes holds _IncludedRouter nodes and a ws effective context has an empty path and no dependant. See investigation.md.

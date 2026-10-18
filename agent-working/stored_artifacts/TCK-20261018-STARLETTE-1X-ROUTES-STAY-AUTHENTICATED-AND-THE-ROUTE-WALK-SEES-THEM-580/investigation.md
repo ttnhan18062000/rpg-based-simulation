@@ -26,3 +26,8 @@ Two existing tests broke on the bare upgrade: `test_api_key_auth.py::test_only_d
 - tests/api (not slow) on 1.8.0: 166 passed. tests/unit/api on 1.8.0: 63 passed. Both dirs on 0.52.1: 229 passed.
 - Before the test fixes, 1.8.0 had exactly the 2 failures above.
 - lint-imports: 17 kept, 0 broken.
+
+## Addendum: rebased onto the uv group branch (rpg-deps-uv-redis 31328d709), proof on the synced stack
+- B's `tests/api/route_table.py::flat_routes` is removed; `test_api_key_auth.py` and `test_scenario_runtime_api.py` use `tests/helpers/api_routes.py` (the one helper; it also covers ws and has the OpenAPI cross-check).
+- uv.lock = B's lock + `uv lock --upgrade-package starlette --upgrade-package fastapi==0.143.5`. Package diff vs B's lock: fastapi 0.143.0 -> 0.143.5, starlette 0.52.1 -> 1.8.0, nothing else (opentelemetry-api is already in B's lock). A bare `--upgrade-package fastapi` resolves 0.144.0, which was not tested here.
+- Proof on `uv sync --locked` (starlette 1.8.0 / fastapi 0.143.5; the overlay is no longer used): all-routes auth test + coverage test 2 passed; tests/api + tests/unit/api (not slow) 229 passed; lint-imports 17 kept, 0 broken.
