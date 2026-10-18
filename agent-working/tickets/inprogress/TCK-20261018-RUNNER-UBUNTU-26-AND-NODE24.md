@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24
-phase: open
+phase: inprogress
 date: 2026-10-18
 tags: [platform, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [platform, delivery]
 Platform workflows on the Ubuntu 26 runner migration (observe publish-images, pin only reactively) and deploy-docs off Node 20 (setup-node bump, Node 24, roles move to platform)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
