@@ -82,6 +82,7 @@ When the docs are ready to publish:
 - Whether Pages should serve from a branch or from the Actions artifact is undecided; the existing
   workflow assumes the Actions path (`Configure Pages` / `Upload Pages artifact` /
   `Deploy to GitHub Pages`), so that is the default unless someone chooses otherwise.
+- The first real run must also confirm actions/upload-pages-artifact@v5 (#588) and setup-node@v7 with Node 24 (TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24); neither has executed. deploy-docs.yml is platform-owned since 2026-10-18.
 
 ## Implementation Notes
 Blocked. Do not pick this up without the user explicitly saying the docs are ready to publish.
