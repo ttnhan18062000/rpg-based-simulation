@@ -16,7 +16,7 @@ tags: [performance]
 scale — REPORT ONLY, not investigated
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -68,6 +68,9 @@ apply/hash/checkpoint-adjacent work) — which phase specifically was not determ
   a decision that it applies.
 - If a real opportunity is confirmed, route it through the existing performance-optimization epic's
   own Gate-A process, not as a standalone fix decided from this one measurement.
+
+### Scope (2026-10-18)
+perf-planner dispatch, lead-approved, `tools/perf` only (no `src/` edit): settle the ticket by **measuring replay on versus off**. `tick_cost_growth.md` section 4 found `fingerprint` at 0.0 % of the tick with replay off and 3.5 % under audit (strategic_100); every profile so far ran `no_replay`, so two replay-only paths are unmeasured: (a) `kernel.py:654-664`, `REFINED_UPDATE` carries `self._state.fingerprint()` every tick when `policy.replay_allowed`; (b) `kernel.py:1130`, the `CanonicalHashScheduler` digest when `replay_allowed` and (audit or `replay_richness == "FULL"`); plus the replay writer. Tool change: `--replay` on `tools/perf/profile_tick.py` (default stays replay off), recording per tick whether replay was allowed, the richness and the manager's `get_stats()`. Measurement (canonical contract, seed 42, fresh process per run): `strategic_100` and `corpus:frontier_extended` (or `simq_corpus_crowded_frontier` if replay is mostly disallowed), 5 runs replay-off and 5 replay-on each with `--sampler none` (median run, middle-3 spread), plus 1 py-spy run with `--replay` for the shares of fingerprint, digest and replay emit/encode. Close rule: fingerprint + digest under about 2 % of the tick with replay on at both scales means "not material at realistic scale" and the ticket closes; otherwise record the number, keep it open and route it to the PERF-M5-T04 Gate-A candidate (hierarchical hashing) as evidence. Everything is PROVISIONAL: single host, `src/` not lifted.
 
 ## Out of Scope
 - Any fix or optimization attempt — none was investigated, and none is authorized by this ticket.

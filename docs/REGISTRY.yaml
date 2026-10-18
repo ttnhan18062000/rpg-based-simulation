@@ -23195,6 +23195,21 @@
   - ai
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED.md
+  ticket_id: TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED
+  title: '`src/core/state.py::fingerprint()` measured as a real, material per-call
+    cost at 1000-entity
+
+    scale — REPORT ONLY, not investigated'
+  tier: standard
+  ticket_type: chore
+  date: '2026-09-14'
+  related_code_areas:
+  - src/core/state.py::fingerprint()
+  artifact_files: []
+  tags:
+  - performance
+- type: ticket
   path: agent-working/tickets/todos/TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES.md
   ticket_id: TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES
   title: '`calamity_intensity` never left `0.0` in any region across a real 5000-tick
@@ -23259,21 +23274,6 @@
   - strategy
   - cognition
   - world
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED.md
-  ticket_id: TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED
-  title: '`src/core/state.py::fingerprint()` measured as a real, material per-call
-    cost at 1000-entity
-
-    scale — REPORT ONLY, not investigated'
-  tier: standard
-  ticket_type: chore
-  date: '2026-09-14'
-  related_code_areas:
-  - src/core/state.py::fingerprint()
-  artifact_files: []
-  tags:
-  - performance
 - type: ticket
   path: agent-working/tickets/done/TCK-20260913-ADVENTURE-ASK-INFORMATION-CHARGES-GOLD-DELIVERS-NOTHING.md
   ticket_id: TCK-20260913-ADVENTURE-ASK-INFORMATION-CHARGES-GOLD-DELIVERS-NOTHING
