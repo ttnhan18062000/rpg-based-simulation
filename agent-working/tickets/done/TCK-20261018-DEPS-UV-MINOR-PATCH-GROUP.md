@@ -33,7 +33,7 @@ Content of dependabot #578 plus the fixes it needs. Correction (rpg-planner, PR 
 Dependency window on branch rpg-deps-uv-redis (local, dispatched by rpg-planner).
 
 ## Out of Scope
-Pushing, merging.
+Pushing, merging. requirements-knowledge.txt: it is pinned by agent-working (#590), so the #578 bumps there (torch 2.12.1+cpu to 2.14.1, which drops the +cpu guard; graphifyy 0.8.39 to 0.9.88; headroom-ai 0.37.0 to 0.40.0) were reverted to origin/main's file, together with the matching graphifyy pin in tests/tools/test_code_test_index.py. requirements-knowledge is left to agent-working.
 
 ## Acceptance Criteria
 mypy gate, lint-imports, code health and the touched-area tests green.
