@@ -1,0 +1,29 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT
+artifact_type: test_plan
+tags: [ai, mcp, bug]
+---
+
+# Test plan — TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT
+
+All tests set `XDG_RUNTIME_DIR` to `tmp_path`, use the stub server command or fake embedder (which counts loads), and set `RPG_SEARCH_SHARED_ALLOW_TEST_SPAWN=1` only where a real child process is needed. None loads the real model or touches the live state dir.
+
+| # | Test | Proves |
+|---|---|---|
+| 1 | `code_root()` from a temp git repo plus a linked worktree resolves the main checkout's tools; from a non-git dir → own dir; the env override wins | (a) resolution |
+| 2 | Clients with differing worktree `tools/search_*.py` compute the main-root code_version and attach to one stub server; the fake embedder load count is 0 | AC1 |
+| 3 | A slow stub server (sleeps > SPAWN_WAIT) with 3 concurrent clients → exactly one server process (count pids / `serve` invocations), every client gets `None` with reason "server starting" and zero embedder loads | AC2, cause 1 |
+| 4 | A second `serve` on the same dir while the first holds `server.lock` exits 0 without calling the loader | (b) |
+| 5 | SIGKILL the first `serve`, start another → it takes the lock and serves; no manual cleanup | (b) stale recovery |
+| 6 | A `starting` record with a dead pid → treated as stale and cleared; one with a live pid younger than the grace → not unlinked and not respawned | (b) |
+| 7 | The `search_mcp` transition log prints exactly one line per proxy↔in-process change over a 5-query sequence | (c) |
+| 8 | The "server starting" fallback follows the decision in plan.md (lexical-only: no embedder load, and results flagged as degraded) | (c) |
+| 9 | Regression: kill switch `RPG_SEARCH_SHARED=0`, the pytest no-spawn guard, and proxy/in-process result parity | unchanged |
+
+Run: `.venv-knowledge/bin/python3 -m pytest tests/tools/test_search_shared.py tests/tools/test_search_mcp.py tests/tools/test_knowledge_search.py -q --basetemp=<own dir>`. This is light: no model and no full tools suite.
+
+Post-merge (planner, not the implementer): one live repro on the real model with two clients from different worktrees, through lead-planner, alone, under `systemd-run --user --scope -p MemoryMax=…`. Expected: one server, both clients under 70 MB.
