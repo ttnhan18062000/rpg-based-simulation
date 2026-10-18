@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P2
 audience: agent
 ticket_id: TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE
-phase: open
+phase: done
 date: 2026-09-15
 tags: [combat, faction]
 ---
@@ -18,7 +18,7 @@ already-thin downstream systems — faction pairwise tension accumulation and re
 the world-boss maturity gate — neither of which this ticket fixes; filed to make the risk visible
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -174,6 +174,8 @@ _(none yet — no code changed for the faction-chain half; boss-gate half not st
 _(none yet)_
 
 ## Completion Summary
+**Closed by triage, no implementation (2026-10-18, https://github.com/ttnhan18062000/rpg-based-simulation/issues/636).** The faction-chain half was already resolved. The boss-gate half has no live question: the owner deferred both world bosses (2026-10-05), so nothing downstream is measured. The question comes back with the world-boss work (owner memo row 10), not this ticket.
+
 _(not started)_
 
 **Boss-gate half, verdict as of 2026-09-30: `CONDITION` (corpus run length)** — gate reached at tick 2101 with the posture gate ON and OFF alike; risk not observed; see Implementation Notes. Faction-chain half unchanged. Still `OPEN`.

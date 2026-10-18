@@ -9022,19 +9022,6 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES.md
-  ticket_id: TCK-20261014-ARENA-GOLD-ASSERTIONS-PREDATE-THE-536-TREASURY-RULES
-  title: 'Three slow arena tests assert gold payouts from before #536''s treasury
-    rules (coin no longer minted). Re-state each one under the new rules, or find
-    a real defect.'
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-10-14'
-  related_code_areas:
-  - tests/arena/test_arena_quests.py; tests/arena/test_arena_regional_control.py.
-  artifact_files: []
-  tags: []
-- type: ticket
   path: agent-working/tickets/todos/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1.md
   ticket_id: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
   title: One SimQ grade-anchor re-anchor, taken on baseline v1. Testing runs the mechanics,
@@ -21786,6 +21773,33 @@
   - documentation
   - schema
 - type: ticket
+  path: agent-working/tickets/done/progression-starvation-chain/TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN.md
+  ticket_id: TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN
+  title: 'Group the five tickets that together measured one causal chain — combat
+    is incidental, not
+
+    decisional; few kills; XP never accumulates; no level-ups; `stats_dirty` never
+    fires; agility never
+
+    reaches `readiness_speed` — so whoever picks up any one of them can see the other
+    four'
+  tier: epic
+  ticket_type: repair
+  date: '2026-09-18'
+  related_code_areas:
+  - src/engine/tactical.py
+  - src/engine/movement.py
+  - src/engine/domain/action_router.py
+  - src/engine/evolution.py
+  - registries/mechanisms.yaml
+  - evolution
+  artifact_files: []
+  tags:
+  - combat
+  - faction
+  - progression
+  - investigation
+- type: ticket
   path: agent-working/tickets/todos/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS.md
   ticket_id: TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS
   title: 'Record: axes attach to mechanisms, not systems — resolved independent of
@@ -21819,33 +21833,6 @@
   tags:
   - architecture
   - schema
-- type: ticket
-  path: agent-working/tickets/todos/progression-starvation-chain/TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN.md
-  ticket_id: TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN
-  title: 'Group the five tickets that together measured one causal chain — combat
-    is incidental, not
-
-    decisional; few kills; XP never accumulates; no level-ups; `stats_dirty` never
-    fires; agility never
-
-    reaches `readiness_speed` — so whoever picks up any one of them can see the other
-    four'
-  tier: epic
-  ticket_type: repair
-  date: '2026-09-18'
-  related_code_areas:
-  - src/engine/tactical.py
-  - src/engine/movement.py
-  - src/engine/domain/action_router.py
-  - src/engine/evolution.py
-  - registries/mechanisms.yaml
-  - evolution
-  artifact_files: []
-  tags:
-  - combat
-  - faction
-  - progression
-  - investigation
 - type: ticket
   path: agent-working/tickets/done/TCK-20260917-CLAIMS-AS-TESTS-INITIATIVE-DANGLING-CITATION.md
   ticket_id: TCK-20260917-CLAIMS-AS-TESTS-INITIATIVE-DANGLING-CITATION
@@ -22790,6 +22777,29 @@
   tags:
   - combat
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE.md
+  ticket_id: TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE
+  title: 'The real ~58% combat-volume reduction from
+
+    `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`''s gate further
+    starves two
+
+    already-thin downstream systems — faction pairwise tension accumulation and regional-trauma
+    feeding
+
+    the world-boss maturity gate — neither of which this ticket fixes; filed to make
+    the risk visible'
+  tier: standard
+  ticket_type: repair
+  date: '2026-09-15'
+  related_code_areas:
+  - src/domains/faction/diplomatic_state_machine.py
+  - src/domains/faction/sentiment.py
+  artifact_files: []
+  tags:
+  - combat
+  - faction
+- type: ticket
   path: agent-working/tickets/done/TCK-20260915-DUPLICATE-RUN-RECORDS.md
   ticket_id: TCK-20260915-DUPLICATE-RUN-RECORDS
   title: 60 runs are written twice with identical `run_id`, `execution_id` and `start_ts`
@@ -23282,29 +23292,6 @@
   - architecture
   - documentation
   - schema
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE.md
-  ticket_id: TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE
-  title: 'The real ~58% combat-volume reduction from
-
-    `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`''s gate further
-    starves two
-
-    already-thin downstream systems — faction pairwise tension accumulation and regional-trauma
-    feeding
-
-    the world-boss maturity gate — neither of which this ticket fixes; filed to make
-    the risk visible'
-  tier: standard
-  ticket_type: repair
-  date: '2026-09-15'
-  related_code_areas:
-  - src/domains/faction/diplomatic_state_machine.py
-  - src/domains/faction/sentiment.py
-  artifact_files: []
-  tags:
-  - combat
-  - faction
 - type: ticket
   path: agent-working/tickets/todos/TCK-20260915-COMBAT-RISK-EVALUATION-ACCEPTABLE-AT-3X-MISMATCH.md
   ticket_id: TCK-20260915-COMBAT-RISK-EVALUATION-ACCEPTABLE-AT-3X-MISMATCH

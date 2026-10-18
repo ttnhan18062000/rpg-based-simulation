@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN
-phase: open
+phase: done
 date: 2026-09-18
 tags: [combat, faction, progression, investigation]
 ---
@@ -17,7 +17,7 @@ decisional; few kills; XP never accumulates; no level-ups; `stats_dirty` never f
 reaches `readiness_speed` — so whoever picks up any one of them can see the other four
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -203,4 +203,6 @@ None (epic — grouping only; individual child tickets are not modified by this 
 a cross-reference to this epic where a child's own `Related Tickets` section is updated).
 
 ## Completion Summary
+**Closed by triage, no implementation (2026-10-18, https://github.com/ttnhan18062000/rpg-based-simulation/issues/636).** The chain's root cause is fixed: COMBAT_ENGAGE is no longer discarded at dispatch, and deliberate attacks dominate (878 resolve_attack vs 203 multi_attack, seed 42, 3 gate worlds, rpg-next a1e4b6f3a). Children: COMBAT-GATE-DOWNSTREAM boss half CLOSED (world bosses deferred by the owner 2026-10-05); CROSS-FACTION-COMBAT-RARITY MERGED after v1 into faction tension from real acts + the D33 faction_tension_overrides removal; XP-LEVEL-UP-THRESHOLD RE-SEQUENCED after v1 (balancing, D7); CAMPAIGN-EPISODE-COMBAT-TEST-RED STANDALONE (strict xfail, 2 of 3 deliberate attacks, v1 disclosure). TCK-20261007-BEHAVIORAL-5K-REBASELINE is the food chain, not this one, and is unlinked. Semantic read by rpg-designer; triage by rpg-planner.
+
 Open.
