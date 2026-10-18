@@ -18,7 +18,7 @@ tags: [testing, simulation-quality, determinism]
 OPEN
 
 ## Tier
-hotfix
+standard (re-tiered 2026-10-19: Scope 1 adds a new committed tool)
 
 ## Type
 repair
@@ -32,9 +32,9 @@ P1
 rpg's TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-THROUGH-PHASE-BUDGETS-EVEN-WITH-THE-PINNED-NORMAL-GOVERNOR (rpg-next fef0ae77f) adds typed `audit_mode` and `signals_zeroed` fields to RunManifest and the replay manifest, plus `src/observability/reporting/run_determinism.py::require_host_independent_runs`, which raises `NonAuditRunError`. No comparison tool reads those fields yet, and rpg-planner left wiring them in to testing (2026-10-14).
 
 ## Scope
-1. The rows that `simq_reanchor` and `simq_pillar_compare` read carry the run manifest's `audit_mode` and `signals_zeroed`, copied from the manifest and never inferred from flags or file names. Find which producer writes `rows.jsonl` (investigate first) and add the fields there.
+1. The rows that `simq_reanchor` reads carry the run manifest's `audit_mode` and `signals_zeroed`, copied from the manifest and never inferred from flags or file names. Investigation (testing-implementer, 2026-10-19) found that no committed producer of `rows.jsonl` exists: the #531 rows came from a session-local driver. So this ticket commits one, `tools/test_architecture/simq_audit_rows.py`. It runs each key x 2 under `--audit-mode` and reads `<run dir>/manifest.json` before deleting only the run ids it created. Its row shape is documented and pinned by a test. It decides nothing; the refusal stays in `simq_reanchor`.
 2. `simq_reanchor`: before comparing the pair, refuse with `ReanchorRefused` (naming the key and the run) unless both runs have `audit_mode is True`. Anchors are an audit_mode contract (#531). A pinned-governor run counts as host-independent, but it does not count as an anchor run. Use `run_is_host_independent` / `require_host_independent_runs` for the zeroed-signal half, so there is one definition of "host-independent".
-3. `simq_pillar_compare`: refuse a before/after comparison unless both sides are recorded as host-independent (`signals_zeroed is True`). A missing field, as in an older manifest, counts as not recorded, the same as in rpg's helper.
+3. `simq_pillar_compare`: refuse a comparison unless the LIVE side's manifest records it as host-independent (`signals_zeroed is True`), through rpg's `require_host_independent_runs`. A missing field, or a missing manifest, counts as not recorded. The anchor side is not checked by manifest: committed anchors carry none, and their host-independence is a write-time guarantee (#531 provenance now, and from v1 on the refusal in Scope 2). Adding manifest fields to `grade_anchors.json` is an anchor-format change for the D77 rebuild (testing-planner ruling, 2026-10-19). Wire it in where `test_grade_regression` / `evaluate_simq` call `compare_report`.
 4. The refusal says what to do: re-run under audit_mode. There is no `--allow-unaudited` escape hatch. If one is ever needed, it is a separate owner decision.
 
 ## Out of Scope
@@ -43,11 +43,11 @@ rpg's TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-THROUGH-PHASE-BUDGETS-EVE
 - Anchor values, tolerances, bands (baseline_change_policy.md rules 6 and 8).
 
 ## Acceptance Criteria
-- [ ] AC1: a rows producer writes `audit_mode` and `signals_zeroed` from the manifest. A unit test shows it copies them, including the field-absent case (None).
+- [ ] AC1: `tools/test_architecture/simq_audit_rows.py` writes `audit_mode` and `signals_zeroed` from the manifest. Unit tests use a fake run dir (manifest present, a field absent so the value is None, manifest missing) and run no simulation. It deletes only its own run ids.
 - [ ] AC2: `simq_reanchor` refuses a pair where either run has `audit_mode` not True, naming key and run. Separate tests cover: both audit runs accepted; one live run refused; a pinned run (signals_zeroed True, audit_mode False) refused for anchors; an old row with no fields refused.
-- [ ] AC3: `simq_pillar_compare` refuses when either side is not recorded host-independent, with the same three negative cases.
+- [ ] AC3: `simq_pillar_compare` refuses when the live side is not recorded host-independent, with three negative cases on the live side (live run, old manifest with no fields, no manifest), and the callers pass the manifest. The anchor side is covered by the Scope 2 write-time refusal.
 - [ ] AC4: the existing simq_reanchor / simq_pillar_compare tests pass unchanged except for fixtures that gain the two fields. No assertion is weakened.
-- [ ] AC5: `docs/plans/test_architecture/reference/baseline_change_policy.md` states the refusal in one line, citing this ticket and rpg's.
+- [ ] AC5: `docs/plans/test_architecture/reference/baseline_change_policy.md` states both halves (anchors are refused at write time, the live run is refused at compare time), citing this ticket and rpg's.
 
 ## Related Tickets
 - TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-THROUGH-PHASE-BUDGETS-EVEN-WITH-THE-PINNED-NORMAL-GOVERNOR (rpg; provides the fields and helper)
