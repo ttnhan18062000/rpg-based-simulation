@@ -18,7 +18,7 @@ The v1 baseline artifact cites this file at the baseline's pinned commit; it doe
 VERBATIM are owner or designer rulings and are not reworded. Every row names its source ruling (memo
 row or roadmap item in `owner_decision_memo.md` / `roadmap.md`) and what happens after v1.
 
-**Measured on.** rpg-next 74a310b6e (merged to main as #645) unless a row says otherwise: the three gate
+**Measured on.** rpg-next 74a310b6e, an ancestor of #645's merged tip 6d7bd1509 (main 3597c08d3); the later commits change no simulation behaviour (type annotations, test isolation, perf inventories, ticket files) unless a row says otherwise: the three gate
 worlds (`frontier_living_world`, `urban_political`, `crowded_frontier`), seeds 42-46 (10-seed rows say
 42-51), 5,000 ticks, audit_mode.
 
@@ -67,7 +67,7 @@ worlds (`frontier_living_world`, `urban_political`, `crowded_frontier`), seeds 4
 | # | Disclosure | Source | After v1 |
 |---|---|---|---|
 | S1 | VERBATIM: "Trust never rises within an episode (its positive writers are unwired). Grief and trust-gated party composition therefore never fire. The other social rules run on bond sentiment, or on a fixed 0.5 trust default that is a constant, not earned trust." | designer, 2026-10-17 | step (ii): trust rises only from real outcome records, never from the per-tick cooperation posture |
-| S2 | One abandonment cuts trust every tick until the group dissolves (to -1.0 after about 4 ticks; grudge to its 5.0 cap after about 17). Partner fit and group-objective propagation read the result. | owner, 2026-10-18 | step (i): one cut per abandonment episode, as a typed episode record |
+| S2 | One abandonment cuts trust every tick until the group dissolves (to -1.0 after about 4 hits, 1-3 ticks apart, 3-56 hits per pair measured on seed 42; grudge to its 5.0 cap after about 17 hits, counted from the code, not measured). Partner fit and group-objective propagation read the result. | owner, 2026-10-18 | step (i): one cut per abandonment episode, as a typed episode record |
 | S3 | Rules with no bond to fall back on read trust (stored -1..1) as if it were 0..1. | owner, 2026-10-18 | step (i): one trust scale contract for every reader |
 | S4 | Faction pairwise tension never rises within an episode (0.0 in 3 of 4 corpus worlds). | #636 triage, 2026-10-18 | merged into "faction tension from real acts", after the Q1 override removal |
 
