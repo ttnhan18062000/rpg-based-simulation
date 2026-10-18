@@ -94,6 +94,7 @@ GitHub #620 part 1. **Owner decision 2026-10-18, option (a)**, relayed by lead-p
 - **For u24 (on #634):** the current worktree paths and the staffing of each u24 seat.
 
 ## Implementation Notes
+- 2026-10-18 (lead-planner): moved out of batch 2 into batch 3; still gated on u24's answer on #634 (worktree paths, staffing). Not dispatched. It rides batch 2's PR as filed-but-open (left out of `Closes:`).
 ## Test Summary
 ## Files Changed
 ## Completion Summary
