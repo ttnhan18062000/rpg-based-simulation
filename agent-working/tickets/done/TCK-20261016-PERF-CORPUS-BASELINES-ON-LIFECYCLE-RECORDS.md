@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS
-phase: open
+phase: done
 date: 2026-10-16
 tags: [performance, benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking]
 The corpus baseline test and bench_corpus_world.py --commit use the promoted lifecycle records, so legacy corpus files can be retired
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -65,15 +65,25 @@ So a legacy file sits beside a promoted version, and the name stays in `LEGACY_T
 
 ## Assumptions / Open Questions
 - `tests/tools/test_corpus_perf_baseline.py` sits under `tests/tools/`. If another session owns that file, the plan names that owner and gets their agreement.
+  Owner: agent-working (`registries/session_roles.yaml`); the gate is GitHub issue #623 (for:agent-working-designer). The edit is drafted locally and not committed until perf-planner relays agreement or an owner override.
+- Ordering: the T08 close (TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES, #613) lands with this ticket or after it. tests/tools/test_corpus_perf_baseline.py reads idle_100_local.json as its shape reference until this ticket removes that read.
+- Decision (perf-planner dispatch, owner GO 2026-10-18): `bench_corpus_world.py --commit` is removed, not converted; promotion has one path (`rerun_baselines.py` candidate, then `baseline_lifecycle.py promote`).
 
 ## Implementation Notes
+
+- tests/tools/test_corpus_perf_baseline.py is an agent-working path; edited on the owner's override, 2026-10-18 (#623).
 (empty until the plan)
 
 ## Test Summary
-(empty until implementation)
+tests/unit/perf/test_corpus_bench_tool.py (new): `--commit` exits 2; the writer guard bites a snippet shaped like the removed writer (and matched HEAD's old tool); `bench_corpus_world` has no writes and no `BASELINES_DIR`; no other tool or src module writes a corpus baseline. tests/tools/test_corpus_perf_baseline.py: promoted worlds are asserted through `tripwire.load_baseline` (scenario id, schema version, avg latency, `rss_high_water`), raw-dict worlds by the fixed key set. tests/unit/perf/test_baseline_lifecycle.py: length pin 9 to 8. Runs (2026-10-18): guard tests over tests/tools + tests/unit/tools 319 passed, 1 skipped; corpus test + tests/unit/perf 310 passed; `baseline_lifecycle.py check` rc=0. Commit 2 was also verified green on its own in a throwaway worktree.
 
 ## Files Changed
-(empty until implementation)
+tools/bench_corpus_world.py (`--commit` and the write removed), tests/unit/perf/test_corpus_bench_tool.py (new), tests/perf/baselines/simq_corpus_crowded_frontier.json (deleted), tools/perf/baseline_lifecycle.py (list 9 to 8), tests/unit/perf/test_baseline_lifecycle.py (pin), tests/tools/test_corpus_perf_baseline.py (owner override #623), docs/performance/perf_baseline_policy.md, baseline_invalidation_ledger.md, benchmark_identity_schema.md, performance_clause_inventory.md. Commits on `perf-corpus-records-and-memory-pass`: 34d0e688a, b666e5bcd plus the closure commit.
 
 ## Completion Summary
-(empty until close)
+All four ACs met, with the doc approval pending.
+- AC1 MET: the corpus test passes with the legacy file deleted, reading `simq_corpus_crowded_frontier.v0001`.
+- AC2 MET: `--commit` is removed and a pin test bites on the old writer's shape.
+- AC3 MET: `baseline_lifecycle.py check` rc=0; `LEGACY_TRIPWIRE_REFERENCES` is 8 and the pin says 8.
+- AC4: ledger, policy section 4 and schema F1/F3/F4 updated; owner approval pending in the PR (the merge waits for it).
+Cross-domain edit: tests/tools/test_corpus_perf_baseline.py is an agent-working path, edited on the owner's override, 2026-10-18 (#623).
