@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ
-phase: open
+phase: inprogress
 date: 2026-10-15
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 test.yml's `FRONTEND_RE` also covers the files outside `frontend/` that the frontend tests read, and a static test keeps the two in step
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 hotfix
@@ -54,10 +54,10 @@ The filter is a skip optimisation. A path the tests read that the filter misses 
 - `tools/delivery/ci_lanes.py`. Its guard test (`tests/tools/test_delivery_ci_lanes.py`) checks regex names, not values, and must still pass unchanged.
 
 ## Acceptance Criteria
-- [ ] AC1: FRONTEND_RE matches `frontend/x`, `.github/workflows/test.yml`, every path under `visual_assets/`, and `docs/assets/pilot_terrain_m5_criteria.md`. It does not match e.g. `src/core/x.py` or `docs/mechanics/x.md`.
-- [ ] AC2: the static test derives the read paths from the frontend tests, asserts each is covered, and fails on zero derived paths.
-- [ ] AC3: there is a regression case showing the old pattern fails on `visual_keys.yaml`.
-- [ ] AC4: `pytest tests/static/test_ci_narrow_path_filtered_jobs.py tests/tools/test_delivery_ci_lanes.py` passes.
+- [x] AC1: FRONTEND_RE matches `frontend/x`, `.github/workflows/test.yml`, every path under `visual_assets/`, and `docs/assets/pilot_terrain_m5_criteria.md`. It does not match e.g. `src/core/x.py` or `docs/mechanics/x.md`.
+- [x] AC2: the static test derives the read paths from the frontend tests, asserts each is covered, and fails on zero derived paths.
+- [x] AC3: there is a regression case showing the old pattern fails on `visual_keys.yaml`.
+- [x] AC4: `pytest tests/static/test_ci_narrow_path_filtered_jobs.py tests/tools/test_delivery_ci_lanes.py` passes.
 - [ ] AC5: the PR's own CI runs the Frontend job (its own test.yml change triggers it), and its result is recorded. A red from #598 is expected until asset fixes it, and is not this ticket's to fix.
 
 ## Related Tickets
@@ -79,9 +79,13 @@ The filter is a skip optimisation. A path the tests read that the filter misses 
 - None. testing-planner owns test.yml and ruled the shape above.
 
 ## Implementation Notes
+`FRONTEND_RE` is now `^(frontend/|visual_assets/|docs/assets/pilot_terrain_m5_criteria\.md$|\.github/workflows/test\.yml$)`. In tests/static/test_ci_narrow_path_filtered_jobs.py: `_frontend_test_outside_reads()` scans frontend/src/**/*.test.ts(x) for `read('<root>', ...)` and `resolve(__dirname, '../…')` and returns the paths outside frontend/ (today 3: visual_keys.yaml, pilot_colour_vision.py, pilot_terrain_m5_criteria.md); `test_frontend_path_set_covers_every_file_outside_frontend_that_its_tests_read` asserts each is matched and that the set is non-empty; `test_the_old_frontend_pattern_missed_visual_keys_and_the_new_one_catches_it` is the regression case. Mutation check: with the old pattern put back, exactly those two tests fail.
 
 ## Test Summary
+tests/static + tests/tools/test_delivery_ci_lanes.py + test_ci_split_tools_jobs.py: 142 passed (delivery_ci_lanes unchanged). After merge of main: static narrow-path + ci_lanes + generate_registry: 117 passed.
 
 ## Files Changed
+- .github/workflows/test.yml
+- tests/static/test_ci_narrow_path_filtered_jobs.py
 
 ## Completion Summary
