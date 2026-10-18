@@ -34,8 +34,9 @@ Carry-in 1 on #618. `docker/prometheus.yml` scrapes `backend:8000/metrics`, whic
 platform-planner reviews. This ticket switches the scrape job and proves the target is up.
 
 ## Scope
-- `docker/prometheus.yml`: job `rpg-backend` targets `backend:9109`. Remove the 8000 target; don't keep a job that
-  always fails.
+- `docker/prometheus.yml`: add job `rpg-backend` targeting `backend:9109`. (The always-401 `backend:8000` job was
+  already removed by S4's `TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER`, amended 2026-10-18; S4's `TargetDown`
+  rule then covers this job too.)
 - Review rpg's R1 compose hunk (`expose: ["9109"]`, the env var, no host port) as platform-planner. The implementer
   doesn't duplicate it.
 - A Prometheus rule file is **not** added here (alerts are step 3).
