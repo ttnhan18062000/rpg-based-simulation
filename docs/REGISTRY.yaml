@@ -7969,6 +7969,21 @@
   - bug
   - root-cause
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-STARLETTE-1X-ROUTES-STAY-AUTHENTICATED-AND-THE-ROUTE-WALK-SEES-THEM-580.md
+  ticket_id: TCK-20261018-STARLETTE-1X-ROUTES-STAY-AUTHENTICATED-AND-THE-ROUTE-WALK-SEES-THEM-580
+  title: 'Prepare the starlette 1.x bump (#580): every route stays authenticated and
+    the route walk sees them'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - pyproject.toml; uv.lock; tests/api; tests/helpers/api_routes.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-STARLETTE-1X-ROUTES-STAY-AUTHENTICATED-AND-THE-ROUTE-WALK-SEES-THEM-580/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-STARLETTE-1X-ROUTES-STAY-AUTHENTICATED-AND-THE-ROUTE-WALK-SEES-THEM-580/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-STARLETTE-1X-ROUTES-STAY-AUTHENTICATED-AND-THE-ROUTE-WALK-SEES-THEM-580/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-TEMPO-TRACE-BACKEND.md
   ticket_id: TCK-20261018-TEMPO-TRACE-BACKEND
   title: 'Compose: Grafana Tempo in the observability profile as the OTLP trace backend,
@@ -8451,6 +8466,21 @@
   - platform
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ.md
+  ticket_id: TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ
+  title: test.yml's `FRONTEND_RE` also covers the files outside `frontend/` that the
+    frontend tests read, and a static test keeps the two in step
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - FRONTEND_RE
+  - tests/static/test_ci_narrow_path_filtered_jobs.py
+  - frontend/src/visualAssets/__tests__/iconScene.test.ts (read-only)
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL.md
   ticket_id: TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL
   title: 'Observability profile: take Loki 3.7.8 / Promtail 3.6.8 and probe Loki readiness
@@ -8573,6 +8603,20 @@
   - hooks
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT.md
+  ticket_id: TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT
+  title: '`test_every_new_job_installs_with_uv_from_the_lockfile` compares the setup-uv
+    action by name, not by its exact version'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - tests/tools/test_ci_split_tools_jobs.py
+  - _action_name
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-STANDARD-PAIRED-MEASUREMENT-COMMAND-FOR-BEHAVIOUR-STEPS.md
   ticket_id: TCK-20261015-STANDARD-PAIRED-MEASUREMENT-COMMAND-FOR-BEHAVIOUR-STEPS
   title: One standard command measures a behaviour step as a paired run (base arm
@@ -8684,20 +8728,6 @@
   tags:
   - hooks
   - data-quality
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT.md
-  ticket_id: TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT
-  title: '`test_every_new_job_installs_with_uv_from_the_lockfile` compares the setup-uv
-    action by name, not by its exact version'
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-10-15'
-  related_code_areas:
-  - tests/tools/test_ci_split_tools_jobs.py
-  - _action_name
-  artifact_files: []
-  tags:
-  - testing
 - type: ticket
   path: agent-working/tickets/done/TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71.md
   ticket_id: TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71
