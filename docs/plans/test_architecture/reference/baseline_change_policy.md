@@ -58,6 +58,11 @@ disagree, this page holds until the testing planner and that domain's planner ag
 7. **Determinism before recording.** A baseline is recorded only from runs that reproduce. At least two isolated processes on the same SHA must
    give identical values. A key that does not reproduce is a determinism finding for its owner and is left out. Noise is never absorbed by
    widening a tolerance. A tolerance or band widened to make a run pass falls under principle 5 and is refused.
+   For the SimQ grade anchors the run's own manifest must record it: `simq_reanchor` refuses a pair unless both runs record `audit_mode` and `signals_zeroed` as True at write
+   time, and `simq_pillar_compare` (and `evaluate_simq`) refuse a live run whose record (`quality_report.run_determinism.json`, copied from the run manifest) is not
+   `signals_zeroed` True at compare time. A missing or null field is not recorded; there is no override (TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT,
+   on rpg's TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-THROUGH-PHASE-BUDGETS-EVEN-WITH-THE-PINNED-NORMAL-GOVERNOR). The committed anchors carry no manifest: their
+   host independence is the write-time guarantee.
 8. **Validity is absolute.** Rows that check a law (0 violations, conservation, a contract bound) are never normalised by a re-record, and no
    ruling overrides that. A validity failure is owned in the matching known-reds registry (`tools/test_architecture/known_reds.py`), with a
    ticket, an owner and an expiry.

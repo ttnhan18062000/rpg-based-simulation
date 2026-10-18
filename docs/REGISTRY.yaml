@@ -9130,6 +9130,27 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT.md
+  ticket_id: TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT
+  title: '`simq_reanchor` and `simq_pillar_compare` refuse a run whose manifest does
+    not record it as host-independent'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-14'
+  related_code_areas:
+  - audit_values
+  - tools/test_architecture/simq_pillar_compare.py
+  - src/observability/reporting/run_determinism.py (rpg, read-only here)
+  - rows.jsonl
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT/plan.md
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT/test_plan.md
+  tags:
+  - testing
+  - simulation-quality
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261014-SOME-MOVE-STEPS-LOSE-THEIR-STEP-TIME-BETWEEN-RESOLVE-MOVE-AND-APPLY.md
   ticket_id: TCK-20261014-SOME-MOVE-STEPS-LOSE-THEIR-STEP-TIME-BETWEEN-RESOLVE-MOVE-AND-APPLY
   title: About 0.03% of frontier steps move an entity with an ordinary move update
