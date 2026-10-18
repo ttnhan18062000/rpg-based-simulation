@@ -15,7 +15,7 @@ tags: [architecture, testing]
 Find why a sub-second Aseprite job hits the 30 s `JOB_TIMEOUT_S` under host load (flaky `tests/visual_assets/drawing/integration/test_ops.py`)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
