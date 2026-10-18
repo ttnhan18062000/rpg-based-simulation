@@ -56,7 +56,7 @@ class EquipmentUpdate:
         """Merge another EquipmentUpdate into this one."""
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.slot_updates:
             changes["slot_updates"] = {**self.slot_updates, **other.slot_updates}
         if other.durability_delta:
@@ -82,7 +82,7 @@ class InteractionUpdate:
     def merge(self, other: InteractionUpdate) -> InteractionUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.target_node_id is not None: changes["target_node_id"] = other.target_node_id
         if other.progress_delta != 0.0: changes["progress_delta"] = self.progress_delta + other.progress_delta
         if other.reset: changes["reset"] = True
@@ -139,7 +139,7 @@ class CombatUpdate:
         """Merges another CombatUpdate into this one, aggregating results."""
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.damage_taken != 0: changes["damage_taken"] = self.damage_taken + other.damage_taken
         if other.hp_delta != 0: changes["hp_delta"] = self.hp_delta + other.hp_delta
         if other.attacker_id is not None: changes["attacker_id"] = other.attacker_id
@@ -193,7 +193,7 @@ class NavigationUpdate:
     def merge(self, other: NavigationUpdate) -> NavigationUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.target_set is not None: changes["target_set"] = other.target_set
         if other.target_clear: changes["target_clear"] = True
         if other.path_set is not None: changes["path_set"] = other.path_set
@@ -221,7 +221,7 @@ class TaskUpdate:
     def merge(self, other: TaskUpdate) -> TaskUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.work_kind_set is not None: changes["work_kind_set"] = other.work_kind_set
         if other.payload_set:
             new_payload = dict(self.payload_set or {})
@@ -263,7 +263,7 @@ class IdentityUpdate:
     def merge(self, other: IdentityUpdate) -> IdentityUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.role_set is not None: changes["role_set"] = other.role_set
         if other.faction_set is not None: changes["faction_set"] = other.faction_set
         if other.recipes_learned: changes["recipes_learned"] = list(set(self.recipes_learned + other.recipes_learned))
@@ -436,7 +436,7 @@ class AttributeUpdate:
     def merge(self, other: AttributeUpdate) -> AttributeUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.strength_delta != 0: changes["strength_delta"] = self.strength_delta + other.strength_delta
         if other.agility_delta != 0: changes["agility_delta"] = self.agility_delta + other.agility_delta
         if other.vitality_delta != 0: changes["vitality_delta"] = self.vitality_delta + other.vitality_delta
@@ -484,7 +484,7 @@ class LifecycleUpdate:
     def merge(self, other: LifecycleUpdate) -> LifecycleUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.age_delta != 0: changes["age_delta"] = self.age_delta + other.age_delta
         changes.update({name: getattr(other, name) for name in _LIFECYCLE_SET_FIELDS if getattr(other, name) is not None})
         if other.heirlooms_add: changes["heirlooms_add"] = self.heirlooms_add + other.heirlooms_add
@@ -509,7 +509,7 @@ class RewardUpdate:
     def merge(self, other: RewardUpdate) -> RewardUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.xp_gain != 0: changes["xp_gain"] = self.xp_gain + other.xp_gain
         if other.evolution_points_delta != 0: changes["evolution_points_delta"] = self.evolution_points_delta + other.evolution_points_delta
         return replace(self, **changes)
@@ -644,7 +644,7 @@ class StaminaUpdate:
     def merge(self, other: StaminaUpdate) -> StaminaUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.current_delta != 0.0: changes["current_delta"] = self.current_delta + other.current_delta
         if other.current_set is not None: changes["current_set"] = other.current_set
         if other.max_stamina_set is not None: changes["max_stamina_set"] = other.max_stamina_set
@@ -663,7 +663,7 @@ class WoundUpdate:
     def merge(self, other: WoundUpdate) -> WoundUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.wounds_add: changes["wounds_add"] = self.wounds_add + other.wounds_add
         if other.wounds_heal: changes["wounds_heal"] = self.wounds_heal + other.wounds_heal
         if other.scars_add: changes["scars_add"] = self.scars_add + other.scars_add
@@ -681,7 +681,7 @@ class StatusEffectUpdate:
     def merge(self, other: StatusEffectUpdate) -> StatusEffectUpdate:
         if not other or other.is_noop():
             return self
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.effects_add: changes["effects_add"] = self.effects_add + other.effects_add
         if other.effects_remove: changes["effects_remove"] = self.effects_remove + other.effects_remove
         return replace(self, **changes)
@@ -762,7 +762,7 @@ class EntityUpdate:
         if self.entity_id != other.entity_id:
             raise ValueError("Cannot merge EntityUpdates for different entities")
             
-        changes = {}
+        changes: Dict[str, Any] = {}
         if other.kind_set is not None: changes["kind_set"] = other.kind_set
         if other.new_position is not None: changes["new_position"] = other.new_position
         if other.moved_this_tick: changes["moved_this_tick"] = True

@@ -98,7 +98,7 @@ class MovementSystem:
             y_ok, _ = LegalityServiceV2.verify_occupancy(yield_tile, state_or_context, ignore_entity_id=occupant_id)
             if y_ok:
                 return EntityUpdate(
-                    entity_id=occupant_id, new_position=yield_tile, moved_this_tick=True,
+                    entity_id=occupant.id, new_position=yield_tile, moved_this_tick=True,
                     navigation=NavigationUpdate(moved_recently_set=True, failure_reason=ReasonCode.YIELDING,
                                                 step_ready_tick_set=MovementSystem._step_ready_tick(occupant, True, yield_tile, current_tick, state_or_context))
                 )

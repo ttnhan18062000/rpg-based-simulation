@@ -1133,7 +1133,8 @@ class EntityState:
         combat_comp = self.combat
         if type(combat_comp.wounds) is not tuple or type(combat_comp.scars) is not tuple:
             # status_effects is not carried (as before this rewrite); every other field, including the ones added later, is.
-            combat_comp = replace(combat_comp, wounds=tuple(combat_comp.wounds), scars=tuple(combat_comp.scars), status_effects=[])
+            # wounds/scars are declared List[...] but frozen to tuples in the read-only view (runtime-intended; mypy 2.4 now checks replace() kwargs).
+            combat_comp = replace(combat_comp, wounds=tuple(combat_comp.wounds), scars=tuple(combat_comp.scars), status_effects=[])  # type: ignore[arg-type]
 
         equip_comp = self.equipment
         if type(equip_comp.slots) is not ReadOnlyDict or type(equip_comp.durability) is not ReadOnlyDict:
