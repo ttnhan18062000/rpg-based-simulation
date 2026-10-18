@@ -14,6 +14,8 @@ def walk_routes(app: Any) -> Iterator[Any]:
     """Every effective route of the app (leaf routes only, no router nodes)."""
     def _walk(routes: Any) -> Iterator[Any]:
         for route in routes:
+            # Private fastapi/starlette API, written against starlette 1.8.0 / fastapi 0.143.5 (`_IncludedRouter.effective_candidates`). A later
+            # bump that renames it makes this walk see nothing; tests/api/test_all_routes_require_auth.py fails loudly on a missed route.
             candidates = getattr(route, "effective_candidates", None)
             if candidates is not None:
                 yield from _walk(candidates())
