@@ -66,6 +66,15 @@ class WorldProceduralGenerator:
         self.catalog_repo = catalog_repo
         self.module_repo = module_repo
 
+    def _archetype_for(self, faction: str, role: str) -> Optional[str]:
+        """The catalog archetype a population of `faction` and `role` spawns from: same faction, the same role when one exists, else the first of the
+        faction by id. None when the catalog holds no archetype of that faction (the world validator then names the population)."""
+        of_faction = sorted(a_id for a_id, a in self.catalog_repo.entity_archetypes.items() if a.faction == faction)
+        for a_id in of_faction:
+            if self.catalog_repo.entity_archetypes[a_id].role == role:
+                return a_id
+        return of_faction[0] if of_faction else None
+
     def generate(self, intent: GenerationIntentSpec) -> ResolvedWorldBundle:
         """
         Main procedural pipeline compiling random distributions into stable spec formats.
@@ -263,7 +272,7 @@ class WorldProceduralGenerator:
             count=pop_count_citizen,
             role=citizen_role,
             faction=civilian_faction,
-            spawn_region="town_center"
+            spawn_region="town_center", archetype_id=self._archetype_for(civilian_faction, citizen_role),  # diet rule 2.127: name a species
         ))
         prov_records["citizens"] = ProvenanceRecord(
             element_id="citizens",
@@ -281,7 +290,7 @@ class WorldProceduralGenerator:
             count=pop_count_monster,
             role=hostile_role,
             faction=hostile_faction,
-            spawn_region="wilderness_forest"
+            spawn_region="wilderness_forest", archetype_id=self._archetype_for(hostile_faction, hostile_role),
         ))
         prov_records["monsters"] = ProvenanceRecord(
             element_id="monsters",
