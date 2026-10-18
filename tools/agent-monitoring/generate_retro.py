@@ -2222,10 +2222,10 @@ def _ledger_blocks(week_str):
 
         data_dir = DEFAULT_TOOLS_FILE if DEFAULT_TOOLS_FILE.is_dir() else DEFAULT_TOOLS_FILE.parent
         view = gate_ledger.resolved_view(gate_ledger.load_rows(data_dir))
-        weeks = {w for w in (gate_ledger._week_of(v.get("ts")) for v in view) if w}
+        weeks = {w for w in (gate_ledger.week_of(v.get("ts")) for v in view) if w}
         if not weeks or week_str < min(weeks):
             return None
-        inside = [v for v in view if gate_ledger._week_of(v.get("ts")) == week_str]
+        inside = [v for v in view if gate_ledger.week_of(v.get("ts")) == week_str]
         blocking = [v for v in inside if v.get("blocking")]
         return {"verdicts": len(inside), "blocking": len(blocking),
                 "overridden": sum(1 for v in blocking if v["outcome"] == "overridden"),

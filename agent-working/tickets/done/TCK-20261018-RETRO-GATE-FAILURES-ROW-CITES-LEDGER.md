@@ -74,6 +74,7 @@ Owner decision 2026-10-18 (via lead-planner), from the RETRO-2026-W42 final note
 - `_ledger_blocks(week)` now returns `{verdicts, blocking, overridden, unresolved}` for an ISO week, or `None` when the report has no ledger window: `--all`/`--days` (no week), no ledger rows at all, a week before the ledger's first verdict, or an unreadable ledger. A ledger that exists but holds no verdict for the week is a real reading with zeros (lead's extra test), not the "no gate ledger" label.
 - Run Summary: `| Gate failures | N blocking verdicts of M (ledger: O overridden, U without an outcome); R runs ended in a gate failure |`; the separate "Blocking gate verdicts (ledger)" row is gone. Without a ledger window: `| Gate failures (runs; no gate ledger for this window) | R |`.
 - Index column: `NL` (ledger blocking verdicts) for a week with ledger data, the plain run count elsewhere (ALL, LASTnD, earlier weeks), with a one-line note under the table. A plain number keeps every existing index cell unchanged, so this was the least noisy option.
+- `generate_retro` uses the public `gate_ledger.week_of` (a new alias of `_week_of`), not the private name (planner nit).
 - The per-tag "Gate failures" column is unchanged. `_update_index`'s signature is unchanged (it calls the module-level `_ledger_blocks`; tests patch that).
 - Real-data reading (this tree, W42): 28 blocking verdicts of 133, 6 overridden, 1 without an outcome. No real RETRO report was regenerated or committed.
 
@@ -82,6 +83,7 @@ Owner decision 2026-10-18 (via lead-planner), from the RETRO-2026-W42 final note
 
 ## Files Changed
 - tools/agent-monitoring/generate_retro.py
+- tools/agent-monitoring/gate_ledger.py
 - tests/tools/test_generate_retro.py
 - tests/tools/test_closure_recorder_phase_evidence.py
 - docs/guides/agent_monitoring.md
