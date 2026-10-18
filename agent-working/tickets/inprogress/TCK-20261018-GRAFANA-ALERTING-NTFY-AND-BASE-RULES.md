@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES
-phase: open
+phase: inprogress
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 Grafana alerting provisioned as files: local ntfy service, ntfy contact point (topic from a gitignored secret), notification policy, and the base rule group
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -88,10 +88,15 @@ None.
   platform-planner before choosing another mechanism.
 
 ## Implementation Notes
-(open)
+- **Provisioning mechanism (lead's note 3), confirmed from the v13.2.4 source before any run:** `pkg/services/provisioning/values` runs every provisioned string through `setting.ExpandVar`, which supports `$__file{path}` (it has a test for it), and alerting contact-point `settings` are `values.JSONValue`, so the expansion applies. So `$__file{/run/secrets/ntfy_topic}` and `$__file{/run/secrets/ntfy_token}` are used; the env-file fallback is not needed unless the live check shows otherwise. A literal `$` in a provisioned value must be written `$$` (summaries use `$$labels`).
+- **Webhook fields**, checked against grafana/alerting `receivers/webhook/v1/config.go` (the commit pinned in Grafana 13.2.4's go.mod): `url`, `httpMethod`, `authorization_scheme`, `authorization_credentials`, `payload.template`, `payload.vars` (`.Vars.<key>`). The payload is ntfy's JSON publish body (topic in the body, posted to the root URL), built with `coll.Dict ... | data.ToJSON`. The template functions and the exact JSON are confirmed only at the live check.
+- **ntfy** `binwiederhier/ntfy:v2.28.0` (2026-08-27; v2.29-v2.31 are under two weeks old), tag plus index digest from a registry query (no pull). Env config: `NTFY_AUTH_FILE`, `NTFY_AUTH_DEFAULT_ACCESS=deny-all` (lead's note 2), `NTFY_CACHE_FILE`, `NTFY_METRICS_LISTEN_HTTP=:9091` (a dedicated in-network metrics port outside the auth; the `ntfy` scrape job is added to `docker/prometheus.yml`), host port `127.0.0.1:${NTFY_PORT:-2586}`. Healthcheck is the documented `/v1/health` wget. `mem_limit: 128m` is a PLACEHOLDER until the peak is measured. Named volume `ntfy_data`.
+- **Credential (lead's note 2):** Grafana sends `Authorization: Bearer <token>` for a regular ntfy user `grafana` that has write-only access to the one topic. The user, the ACL and the token are created with ntfy's own CLI inside the container; the steps are in the `compose.yaml` header (no real values). The topic and the token are gitignored files `docker/secrets/ntfy_topic` and `docker/secrets/ntfy_token`; the grafana entrypoint guard refuses to start on an empty one, like the admin-password guard.
+- **Rules** (`docker/grafana/provisioning/alerting/rules-base.yaml`, group `base`, interval 1m): TargetDown (`min by (job) (up) < 1`, for 2m), PrometheusUnreachable (`vector(1)`, `execErrState: Alerting`, for 2m), GrafanaAlertingFailures (increase of `grafana_alerting_rule_evaluation_failures_total` + `grafana_alerting_notifications_failed_total` over 5m; the first name is in the 13.2.4 source, the second is confirmed at the live check), DiskSpaceLow (free % < 15, for 10m, mounts `/` and `/data`), DiskWillFillIn24h (`predict_linear` 6h at +24h < 0, for 30m). `noDataState`/`execErrState` choices are in the file header and go into the runbook. Policy: default route to ntfy, group_by alertname+job, group_wait 30s, group_interval 5m, repeat 4h.
 
 ## Test Summary
-(open)
+- **validated:** `docker compose config -q` for both profiles; YAML parse of the four provisioning files; `promtool check config` from the pinned image (SUCCESS, with the `ntfy` job); `git check-ignore` shows `docker/secrets/ntfy_topic` and `ntfy_token` are ignored.
+- Not yet run (needs the ntfy pull and the single stack run): provisioning loads with no error, rules/contact point/policy appear provisioned, the test notification reaches ntfy, `$__file{}` expansion, the exact metric names, the webhook template output.
 
 ## Files Changed
 (open)

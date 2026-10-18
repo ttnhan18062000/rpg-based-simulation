@@ -22,3 +22,6 @@ Written by platform-planner at filing (2026-10-18); the implementer updates it a
 
 ## Scope guards
 No Alertmanager. No real topic in git. No `tests/**`. Datasources by uid only.
+
+## Update (implementer, 2026-10-18)
+Lead's notes applied: deny-all plus a write-only token for the topic via the gitignored secrets mechanism, created with ntfy's CLI (steps in the compose header); `$__file{}` confirmed from the Grafana 13.2.4 source and used first; node-exporter RSS and `/` + `/data` series are C1's live check. Config validated; the live checks wait for the pull and the single stack run.
