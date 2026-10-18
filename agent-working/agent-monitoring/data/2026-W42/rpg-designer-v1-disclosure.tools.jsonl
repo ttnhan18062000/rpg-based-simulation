@@ -1,0 +1,1 @@
+{"session_id":"ca84f6e1-8efe-49c1-bc4c-abdaaa53908a","run_id":null,"seq":null,"phase":null,"agent":null,"ts":"2026-10-18T18:18:39.838698Z","tool":"Bash","input_summary":"git status --short | head; git rebase origin/main 2>&1|tail -1 && git switch -c ","read_ranged":null,"status":"ok","duration_ms":199,"execution_id":null,"provider":null,"ticket_id":null}
