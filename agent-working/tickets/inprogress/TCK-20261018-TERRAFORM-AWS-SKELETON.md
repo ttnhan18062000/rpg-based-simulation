@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-TERRAFORM-AWS-SKELETON
-phase: open
+phase: inprogress
 date: 2026-10-18
 tags: [platform, delivery, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, delivery, security]
 Terraform: infra/terraform bootstrap (OIDC role, budget alarm and deny action) and service (one Fargate task in the default VPC) roots, written and validated, never applied
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -82,7 +82,9 @@ None.
   default is fine: it names a public repo, not an account).
 
 ## Implementation Notes
-(open)
+- Written (no downloads): `infra/terraform/bootstrap/` (GitHub OIDC provider, role trusted only for `repo:<repo>:ref:refs/heads/<branch>`, broad-on-purpose deploy permissions, monthly budget with 80 and 100 percent email notifications, deny-all policy, a Budgets-assumed role limited to attaching that one policy to the deploy role, and the `aws_budgets_budget_action`), `infra/terraform/service/` (default VPC and subnets by data source, security group with ingress/egress rules as separate resources, ECS cluster, task execution role, Fargate task 256/512, service desired 1 with a public IP, log group with 1 day retention), per-root `versions.tf` (`>= 1.11`, aws `~> 6.67.0`, which resolves to 6.67.0, a release over two weeks old on 2026-10-18), `backend.tf` (`backend "s3" {}`), `backend.hcl.example` (`use_lockfile = true`, placeholders only), `variables.tf` with validations, `outputs.tf`; `infra/terraform/.tflint.hcl` (aws ruleset 0.49.0); `infra/terraform/README.md`; `.gitignore` entries.
+- Pins: Terraform 1.16.5 (2026-10-02; 1.16.6 is from 10-14); tflint v0.64.0; tflint-ruleset-aws 0.49.0; trivy v0.70.0, which is trivy-action v0.36.0's own default `version` input (action.yaml at the SHA publish-images uses), so local and CI findings match.
+- D-3 (lead): the 5b plus 5c shape is written; the README says apply/test/destroy (5c) is a future owner decision. Note 5: trivy config will flag the public IP and the CIDR-variable ingress; those are listed in the Test Summary as accepted for the evidence-only skeleton.
 
 ## Test Summary
 (open)
