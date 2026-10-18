@@ -538,3 +538,77 @@ def test_an_unreadable_record_reads_as_none(repo):
     assert st.read_bound_worktree(sroot, ROLE) is None
     (st.role_dir(sroot, ROLE) / "worktree.json").write_text("{not json")
     assert st.read_bound_worktree(sroot, ROLE) is None
+
+
+# ---- TCK-20261018-LAUNCH-RESUME-MISSING-WORKTREE-REFUSE (GitHub #620 part 2) -----------------------
+
+def _launch_env(repo, tmp_path, monkeypatch):
+    """A repo whose manifest worktree for ROLE does not exist; exec/chdir are recorded, never run."""
+    monkeypatch.setattr(st, "state_root", lambda *_: tmp_path / "sr")
+    monkeypatch.setattr(ln, "main_checkout", lambda *_a, **_k: repo)
+    calls = {"exec": [], "chdir": []}
+    monkeypatch.setattr(os, "execvpe", lambda *a, **k: calls["exec"].append(a))
+    monkeypatch.setattr(os, "chdir", lambda p: calls["chdir"].append(Path(p)))
+    return calls
+
+
+def test_a_missing_manifest_worktree_falls_back_to_the_existing_bound_worktree(repo, seat_worktree, tmp_path, monkeypatch, capsys):
+    calls = _launch_env(repo, tmp_path, monkeypatch)
+    st.write_bound_worktree(tmp_path / "sr", ROLE, str(seat_worktree), False)
+    assert ln.main([ROLE], root=REAL_ROOT) == 0
+    out = capsys.readouterr().out
+    assert f"using the recorded bound worktree {seat_worktree}" in out
+    assert calls["chdir"] == [seat_worktree] and len(calls["exec"]) == 1
+
+
+@pytest.mark.parametrize("bound", [None, "gone"])
+def test_a_missing_worktree_without_a_usable_bound_one_refuses_with_the_filled_hint(repo, tmp_path, monkeypatch, capsys, bound):
+    calls = _launch_env(repo, tmp_path, monkeypatch)
+    if bound:
+        st.write_bound_worktree(tmp_path / "sr", ROLE, str(tmp_path / bound), False)
+    code = ln.main([ROLE], root=REAL_ROOT)
+    cap = capsys.readouterr()
+    text = cap.out + cap.err
+    assert code == ln.EXIT_REFUSED and code != 0
+    assert f"SESSION_ROLE={ROLE} claude" in text and f"--name {ROLE} --agent session-{ROLE}" in text
+    assert "<role>" not in cap.err and "Traceback" not in text and "--branch <topic>" in cap.err  # ensure_worktree's own note is stdout
+    assert calls["chdir"] == [] and calls["exec"] == []
+    assert st.read_bound_worktree(tmp_path / "sr", ROLE) == ((str(tmp_path / bound), False) if bound else None)
+
+
+def test_the_hint_names_the_resolved_session_id(repo, tmp_path, monkeypatch, capsys):
+    _launch_env(repo, tmp_path, monkeypatch)
+    sroot = tmp_path / "sr"
+    st.record_start(sroot, dataclasses.replace(_binding(repo, sid="sess-42"), worktree=str(tmp_path / "gone-holder")))
+    assert ln.main([ROLE, "--action", "resume", "--session-id", "sess-42"], root=REAL_ROOT) == ln.EXIT_REFUSED
+    assert "claude --resume sess-42 --name" in capsys.readouterr().err
+
+
+def test_an_explicit_missing_worktree_is_refused_without_a_silent_fallback(repo, seat_worktree, tmp_path, monkeypatch, capsys):
+    calls = _launch_env(repo, tmp_path, monkeypatch)
+    st.write_bound_worktree(tmp_path / "sr", ROLE, str(seat_worktree), False)
+    assert ln.main([ROLE, "--worktree", str(tmp_path / "nowhere")], root=REAL_ROOT) == ln.EXIT_REFUSED
+    assert "using the recorded bound worktree" not in capsys.readouterr().out
+    assert calls["chdir"] == []
+
+
+def test_a_dry_run_also_refuses_instead_of_printing_a_launch_into_nothing(repo, tmp_path, monkeypatch, capsys):
+    _launch_env(repo, tmp_path, monkeypatch)
+    assert ln.main([ROLE, "--dry-run"], root=REAL_ROOT) == ln.EXIT_REFUSED
+    assert "DRY RUN" not in capsys.readouterr().out
+
+
+def test_an_existing_worktree_still_launches_unchanged(repo, seat_worktree, tmp_path, monkeypatch, capsys):
+    calls = _launch_env(repo, tmp_path, monkeypatch)
+    assert ln.main([ROLE, "--worktree", str(seat_worktree)], root=REAL_ROOT) == 0
+    assert calls["chdir"] == [seat_worktree] and "bound worktree" not in capsys.readouterr().out
+
+
+def test_a_resume_prefers_the_dead_holders_worktree_over_the_bound_one(repo, seat_worktree, tmp_path, monkeypatch, capsys):
+    calls = _launch_env(repo, tmp_path, monkeypatch)
+    bound = tmp_path / "bound"
+    git(repo, "worktree", "add", "-q", "-b", "bound-b", str(bound))
+    st.write_bound_worktree(tmp_path / "sr", ROLE, str(bound), False)
+    st.record_start(tmp_path / "sr", dataclasses.replace(_binding(repo, sid="sess-9"), worktree=str(seat_worktree)))
+    assert ln.main([ROLE, "--action", "resume", "--session-id", "sess-9"], root=REAL_ROOT) == 0
+    assert calls["chdir"] == [seat_worktree] and "dead holder's worktree" in capsys.readouterr().out
