@@ -10,6 +10,7 @@ from src.core.state import AuthoritativeState
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.config.profiles import RuntimeProfile
+from src.api.metrics_port import MetricsPort, start_metrics_port
 from src.api.read_model_cache import ReadModelCache
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
@@ -55,12 +56,18 @@ class V2EngineManager:
         self._metrics_registry = CollectorRegistry()
         self._metrics_collector = PrometheusMetricsCollector(self)
         self._metrics_registry.register(self._metrics_collector)
+        self._metrics_port: Optional[MetricsPort] = None
         self._errors_total = 0
         self._total_spawned = 0
         self._total_deaths = 0
         self._started_at: Optional[float] = None
         
         self._build()
+
+    @property
+    def metrics_port(self) -> Optional[MetricsPort]:
+        """The running internal metrics port, or None before start, after stop, or when it could not be bound."""
+        return self._metrics_port
 
     @property
     def metrics_registry(self) -> Any:
@@ -226,6 +233,7 @@ class V2EngineManager:
         self._running.set()
         self._thread = threading.Thread(target=self._run_loop, name="v2-engine-loop", daemon=True)
         self._thread.start()
+        self._metrics_port = start_metrics_port(self._metrics_registry)  # issue #622 R1: the internal, unauthenticated metrics port
         logger.info("V2EngineManager started.")
 
     def stop(self):
@@ -234,6 +242,9 @@ class V2EngineManager:
         self._running.clear()
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=5.0)
+        if self._metrics_port is not None:
+            self._metrics_port.stop()
+            self._metrics_port = None
         if self._kernel:
             self._kernel.shutdown()
         logger.info("V2EngineManager stopped.")
