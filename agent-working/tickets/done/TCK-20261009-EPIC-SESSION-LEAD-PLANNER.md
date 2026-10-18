@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-EPIC-SESSION-LEAD-PLANNER
-phase: open
+phase: done
 date: 2026-10-09
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 Epic E — Session lead-planner: one cross-domain seat (project manager + technical lead) that tracks every session on every host, owns the cross-domain dependency and priority board, governs the tech stack, and advises the planners
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -231,4 +231,4 @@ Defined by child tickets.
 (Child tickets.)
 
 ## Completion Summary
-(Open.)
+Closed 2026-10-18 by agent-working-planner (host ubuntu) on the owner's decision relayed by lead-planner (#634 stale-epic triage): all 8 children named in this epic and its SEQUENCE.md are in agent-working/tickets/done/; nothing remained, so it was idle because it was finished. Evidence: RETRO-2026-W42 final note (81 runs) Gates, Run Summary coverage and Paths sections.
