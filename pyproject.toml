@@ -13,8 +13,8 @@ requires-python = ">=3.12"
 # See docs/guidelines/agent_working_environment.md.
 dependencies = [
     "xxhash>=3.4.0",
-    "fastapi>=0.115.0",
-    "starlette>=0.40.0",
+    "fastapi>=0.143.5",
+    "starlette>=1.0.0,<2",
     "uvicorn[standard]>=0.30.0",
     "pydantic>=2.0.0",
     "typing-extensions>=4.8.0",

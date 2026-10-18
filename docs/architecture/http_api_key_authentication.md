@@ -126,6 +126,16 @@ websocket-scoped dependency would raise an `HTTPException` that
 do not "simplify" this back to a single shared dependency function without
 re-verifying this FastAPI/Starlette exception-handling behavior first.
 
+**Re-verified on starlette 1.8.0 / fastapi 0.143.5** (the v1 dependency window): a websocket upgrade without a
+key is still closed with code 1008 on all 3 routes, and an ordinary REST route still answers 401. What changed is
+how the route table is read, not how a request is authenticated. From starlette 1.x `app.routes` holds one
+`_IncludedRouter` node per `include_router` call (no `.path`), and a websocket route's effective context has an
+empty `path` and `dependant = None`: its path and its auth `Dependant` live on `starlette_route`. A test that
+walks `app.routes[i].path` / `.dependant` therefore sees none of the included routes, or sees the ws routes
+without their auth dependencies. `tests/helpers/api_routes.py` is the one walker for both starlette lines, and
+`tests/api/test_all_routes_require_auth.py` calls every registered HTTP and WS route without a key and fails if
+any is reachable (it also fails if its walk misses a route the OpenAPI document lists).
+
 `require_api_key_ws` shares `_resolve_client_id`'s lookup logic and accepts
 the same header-or-query channel as the dashboard dependency (Section 3) — a
 browser's native `WebSocket()` constructor also cannot set custom headers, so
