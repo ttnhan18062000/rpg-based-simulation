@@ -7649,6 +7649,22 @@
   - platform
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-EPIC-STALENESS-READY-TO-CLOSE-BUCKET.md
+  ticket_id: TCK-20261018-EPIC-STALENESS-READY-TO-CLOSE-BUCKET
+  title: '`epic_staleness_check` reports epics whose children are all done as "ready
+    to close", not "stale"'
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/agent-monitoring/epic_staleness_check.py, its tests under tests/tools/ (or
+    tests/unit/tools/)
+  artifact_files: []
+  tags:
+  - ai
+  - agent-monitoring
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-LAUNCH-RESUME-MISSING-WORKTREE-REFUSE.md
   ticket_id: TCK-20261018-LAUNCH-RESUME-MISSING-WORKTREE-REFUSE
   title: '`launch.py` crashes with FileNotFoundError on `os.chdir` when the manifest
@@ -7776,22 +7792,6 @@
   tags:
   - architecture
   - documentation
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261018-EPIC-STALENESS-READY-TO-CLOSE-BUCKET.md
-  ticket_id: TCK-20261018-EPIC-STALENESS-READY-TO-CLOSE-BUCKET
-  title: '`epic_staleness_check` reports epics whose children are all done as "ready
-    to close", not "stale"'
-  tier: hotfix
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - tools/agent-monitoring/epic_staleness_check.py, its tests under tests/tools/ (or
-    tests/unit/tools/)
-  artifact_files: []
-  tags:
-  - ai
-  - agent-monitoring
-  - process-improvement
 - type: ticket
   path: agent-working/tickets/inprogress/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
   ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24

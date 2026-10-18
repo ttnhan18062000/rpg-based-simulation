@@ -81,3 +81,4 @@ test_search_shared + test_search_mcp + test_knowledge_search: 159 passed, 35 ski
 
 ## Completion Summary
 The shared server runs with the main checkout as its cwd, and no tools test can reach the real runtime dir: every test gets a tmp one and `state_dir()` refuses the real base under pytest.
+The guard is armed only where `tests/tools/conftest.py` sets the env var, so a search module imported from another test tree needs the same two lines in that tree's conftest.

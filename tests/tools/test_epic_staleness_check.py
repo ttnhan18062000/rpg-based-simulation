@@ -965,3 +965,108 @@ def test_dead_flat_runs_jsonl_path_is_no_longer_referenced():
     source = module_path.read_text()
     assert 'Path("agent-working/agent-monitoring/runs.jsonl")' not in source
     assert "agent-working/agent-monitoring/data" in source
+
+
+# ---------------------------------------------------------------------------
+# TCK-20261018-EPIC-STALENESS-READY-TO-CLOSE-BUCKET: "Ready to close" for a finished epic that only looks idle
+# ---------------------------------------------------------------------------
+
+def _tickets_tree(tmp_path: Path):
+    inprogress, todos, done = tmp_path / "inprogress", tmp_path / "todos", tmp_path / "done"
+    for d in (inprogress, todos, done):
+        d.mkdir()
+    (tmp_path / "working_log.csv").write_text("timestamp,ticket_id\n2026-06-01T00:00:00Z,TCK-20260601-CHILD-A\n")
+    (tmp_path / "runs").mkdir()
+    return inprogress, todos, done
+
+
+def _report(tmp_path: Path) -> str:
+    return compute_stale_epics_report(tmp_path / "inprogress", tmp_path / "todos", tmp_path / "working_log.csv",
+                                      tmp_path / "runs", now=NOW)
+
+
+def _section(report: str, title: str) -> str:
+    head = report.split(title, 1)[1]
+    return head.split("\n\n", 1)[0]
+
+
+def _folder_epic(todos: Path, name: str, children: list, body_status: str = ""):
+    folder = todos / name
+    folder.mkdir()
+    epic_id = f"TCK-20260601-EPIC-{name.upper()}"
+    _write_ticket(folder / f"{epic_id}.md", epic_id, "epic", "2026-06-01", body_status=body_status)
+    (folder / "SEQUENCE.md").write_text("\n".join(f"- {c}" for c in children) + "\n")
+    return folder, epic_id
+
+
+def test_an_epic_with_every_child_in_done_is_ready_to_close_not_stale(tmp_path):
+    """The 2026-10-18 triage shape: an epic file plus SEQUENCE.md in todos/<folder>, all children already in done/."""
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    _, epic_id = _folder_epic(todos, "finished", ["TCK-20260601-CHILD-A", "TCK-20260601-CHILD-B"])
+    for child in ("TCK-20260601-CHILD-A", "TCK-20260601-CHILD-B"):
+        _write_ticket(done / f"{child}.md", child, "standard", "2026-06-01")
+    report = _report(tmp_path)
+    assert epic_id in _section(report, "Ready to close")
+    assert epic_id not in _section(report, "Stale epics:")
+    assert find_stale_epics(inprogress, todos, tmp_path / "working_log.csv", tmp_path / "runs", now=NOW) == []
+
+
+def test_one_open_child_keeps_the_epic_stale(tmp_path):
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    folder, epic_id = _folder_epic(todos, "unfinished", ["TCK-20260601-CHILD-A", "TCK-20260601-CHILD-B"])
+    _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
+    _write_ticket(folder / "TCK-20260601-CHILD-B.md", "TCK-20260601-CHILD-B", "standard", "2026-06-01")
+    report = _report(tmp_path)
+    assert epic_id not in _section(report, "Ready to close")
+    assert epic_id in _section(report, "Stale epics:")
+
+
+def test_a_child_id_that_resolves_nowhere_blocks_the_bucket_and_is_named(tmp_path):
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    _, epic_id = _folder_epic(todos, "typo", ["TCK-20260601-CHILD-A", "TCK-20260601-CHILD-GHOST"])
+    _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
+    report = _report(tmp_path)
+    assert epic_id not in _section(report, "Ready to close")
+    assert "unresolved: TCK-20260601-CHILD-GHOST" in report and epic_id in report.split("exist nowhere:")[1]
+
+
+def test_a_cross_referenced_epic_id_is_not_a_child(tmp_path):
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
+    _write_ticket(done / "TCK-20260501-OTHER-EPIC.md", "TCK-20260501-OTHER-EPIC", "epic", "2026-05-01")
+    _, epic_id = _folder_epic(todos, "crossref", ["TCK-20260601-CHILD-A", "TCK-20260501-OTHER-EPIC"])
+    assert epic_id in _section(_report(tmp_path), "Ready to close")
+    # an epic that is only elsewhere (still open in inprogress/) is ignored the same way
+    _write_ticket(inprogress / "TCK-20260502-LIVE-EPIC.md", "TCK-20260502-LIVE-EPIC", "epic", "2026-05-02")
+    _, second = _folder_epic(todos, "crossref2", ["TCK-20260601-CHILD-A", "TCK-20260502-LIVE-EPIC"])
+    assert second in _section(_report(tmp_path), "Ready to close")
+
+
+def test_blocked_wins_over_ready_to_close(tmp_path):
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
+    _, epic_id = _folder_epic(todos, "parked", ["TCK-20260601-CHILD-A"], body_status="BLOCKED")
+    report = _report(tmp_path)
+    assert epic_id not in _section(report, "Ready to close")
+    assert epic_id in report.split("BLOCKED epics")[1]
+
+
+def test_an_epic_with_no_children_is_not_ready(tmp_path):
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    _, epic_id = _folder_epic(todos, "empty", [])
+    assert epic_id not in _section(_report(tmp_path), "Ready to close")
+
+
+def test_a_sibling_ticket_file_left_in_the_folder_blocks_the_bucket(tmp_path):
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    folder, epic_id = _folder_epic(todos, "leftover", ["TCK-20260601-CHILD-A"])
+    _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
+    _write_ticket(folder / "TCK-20260601-STRAY.md", "TCK-20260601-STRAY", "standard", "2026-06-01")
+    assert epic_id not in _section(_report(tmp_path), "Ready to close")
+
+
+def test_the_hook_nudge_never_counts_a_ready_epic(tmp_path):
+    inprogress, todos, done = _tickets_tree(tmp_path)
+    _write_ticket(done / "TCK-20260601-CHILD-A.md", "TCK-20260601-CHILD-A", "standard", "2026-06-01")
+    _folder_epic(todos, "finished", ["TCK-20260601-CHILD-A"])
+    assert find_stale_epics(inprogress, todos, tmp_path / "working_log.csv", tmp_path / "runs", now=NOW) == []

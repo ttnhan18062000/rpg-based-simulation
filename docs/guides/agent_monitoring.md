@@ -212,6 +212,15 @@ is the concrete real example — parked pending an explicit owner decision, with
 a dated rationale in its own body — and is the case that motivated this
 distinction (`TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC`).
 
+**Ready to close — a finished epic is not a stale one.** A non-`BLOCKED` epic goes into its own
+"Ready to close (every child done; close the epic and move its folder to done/):" section, instead of
+stale or never-started, when its folder holds no ticket file other than the epic itself (folder mode; `SEQUENCE.md` and
+non-ticket files are ignored) and every child ID it names (at least one) resolves under `agent-working/tickets/done/`.
+The epic's own ID and any epic-tier ticket it cross-references are not children. A child ID that exists nowhere keeps the
+epic out of the bucket and is named under "Not ready to close: … these child IDs exist nowhere" (only when at least one
+child resolves and all resolvable children are done). The hook nudge (`find_stale_epics`) never counts ready epics
+(`TCK-20261018-EPIC-STALENESS-READY-TO-CLOSE-BUCKET`). Report-only: nothing is closed for you.
+
 Advisory-only and read-only, matching `retro_nudge_hook.py`'s contract: it
 never mutates a ticket file's `Status`/`phase`, never raises past its own
 entry point, and never blocks a tool call.
