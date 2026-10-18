@@ -93,3 +93,50 @@ def test_a_request_with_no_active_histogram_still_succeeds():
         return {}
 
     assert TestClient(app).get("/ok").status_code == 200
+
+
+def test_two_routers_sharing_an_inner_path_give_two_distinct_fully_prefixed_labels(served):
+    """include_router prefixes must be part of the label: /api/v1/a/{entity_id} and /api/v1/b/{entity_id} are two series, never one inner '/{entity_id}'."""
+    from fastapi import APIRouter
+
+    client, registry = served
+    app = client.app
+    for prefix in ("/api/v1/a", "/api/v1/b"):
+        router = APIRouter()
+
+        @router.get("/{entity_id}")
+        def get_one(entity_id: str):
+            return {"id": entity_id}
+
+        app.include_router(router, prefix=prefix)
+    assert client.get("/api/v1/a/1").status_code == client.get("/api/v1/b/2").status_code == 200
+    assert set(_series(registry)) == {("GET", "/api/v1/a/{entity_id}", "2xx"), ("GET", "/api/v1/b/{entity_id}", "2xx")}
+
+
+def test_nested_routers_a_path_converter_and_the_root_route_keep_their_full_templates(served):
+    from fastapi import APIRouter
+
+    client, registry = served
+    app = client.app
+    inner = APIRouter()
+
+    @inner.get("/x/{k}")
+    def deep(k: str):
+        return {}
+
+    @inner.get("/files/{rest:path}")
+    def files(rest: str):
+        return {}
+
+    outer = APIRouter(prefix="/o")
+    outer.include_router(inner, prefix="/i")
+    app.include_router(outer, prefix="/api")
+
+    @app.get("/")
+    def root():
+        return {}
+
+    assert client.get("/api/o/i/x/9").status_code == 200
+    assert client.get("/api/o/i/files/a/b/c.txt").status_code == 200
+    assert client.get("/").status_code == 200
+    assert set(_series(registry)) == {("GET", "/api/o/i/x/{k}", "2xx"), ("GET", "/api/o/i/files/{rest}", "2xx"), ("GET", "/", "2xx")}

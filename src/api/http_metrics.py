@@ -38,6 +38,31 @@ class HttpRequestMetrics:
         self._histogram.labels(method if method in _METHODS else "OTHER", route or UNMATCHED_ROUTE, status_class(status_code)).observe(seconds)
 
 
+def route_template(scope: Any) -> Optional[str]:
+    """The FULL template of the route that served `scope` (`/api/v1/entities/{entity_id}`), or None when no route matched.
+
+    FastAPI before 0.143 puts the whole path on the matched route; from 0.143 an included router is lazy and the matched route
+    carries only its own, prefix-less path (`/{entity_id}`), so two routers sharing an inner path would collide on one label. The
+    prefix is therefore taken from the request path itself: the matched route's template covers the last N segments of the raw path
+    (N from the template and the matched parameter values, a `:path` parameter counting its own slashes), and everything before that
+    is the include prefix. That is one rule for both stacks: on the old one the route covers the whole path and the prefix is empty."""
+    route = scope.get("route")
+    inner = getattr(route, "path_format", None) or getattr(route, "path", None)
+    if not inner:
+        return None
+    raw = scope.get("path") or ""
+    params = scope.get("path_params") or {}
+    covered = 0
+    for segment in inner.strip("/").split("/"):
+        name = segment[1:-1] if segment.startswith("{") and segment.endswith("}") else None
+        covered += max(1, str(params.get(name, "")).strip("/").count("/") + 1) if name is not None and name in params else 1
+    raw_segments = raw.strip("/").split("/") if raw.strip("/") else []
+    if not 0 < covered <= len(raw_segments):
+        return inner
+    prefix = "/" + "/".join(raw_segments[: len(raw_segments) - covered]) if len(raw_segments) > covered else ""
+    return prefix + (inner if inner.startswith("/") else "/" + inner)
+
+
 _active: Optional[HttpRequestMetrics] = None
 
 
@@ -84,7 +109,6 @@ class RequestDurationMiddleware:
         if metrics is None:
             return
         try:
-            route = getattr(scope.get("route"), "path", None)  # set by the router once a route matched
-            metrics.observe(scope.get("method", ""), route, status_code, seconds)
+            metrics.observe(scope.get("method", ""), route_template(scope), status_code, seconds)
         except Exception:  # metrics never fail a request
             logger.debug("request duration not recorded", exc_info=True)
