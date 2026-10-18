@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-AI-FIRST-HARDENING-FOLLOWON-EPIC
-phase: open
+phase: done
 date: 2026-09-04
 tags: [governance, ai, agent-monitoring]
 ---
@@ -33,7 +33,7 @@ tags: [governance, ai, agent-monitoring]
 AI-First Hardening — Bucket B/C follow-on tracking epic (not yet scoped into child tickets)
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -216,3 +216,4 @@ None yet — no code investigation performed for this epic's remaining scope.
 ## Files Changed
 
 ## Completion Summary
+Closed 2026-10-18 on the owner's decision (via lead-planner, #634), following u24's assessment in the RETRO-2026-W41 final note (#605). Items 13, 14 and 15 are done (TCK-20260907-FILTERED-REPLAY-EVAL-PILOT, TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING, TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN); items 18 and 19 were scoped into experiment specs that are done (TCK-20260923-MODEL-ROUTING-MECHANICAL-AGENTS-EXPERIMENT-SPEC, TCK-20260923-TASK-SUCCESS-RATE-METRIC-EXPERIMENT-SPEC); item 12 (provider-portability conformance test) is done. The four items with no ticket move to idea rows in docs/plans/agent_infrastructure/agent_working_direction.md: item 16 (model-diverse reviewer shadow comparison and cutover) and item 17 (Bash secret-exposure hook blocking escalation) and item 20 (full agent-behavior eval platform) under Self-diagnosing; item 21 (live Codex provider pilot) under Adaptable.
