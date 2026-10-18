@@ -27,7 +27,7 @@ chore
 P2
 
 ## Request Summary
-Content of dependabot #578 plus the fixes it needs. mypy 2.1.0 to 2.4.0 alone broke Type check (dataclasses.replace kwargs now checked): types-only code fixes. pydantic 2.14 annotation typing: cast in config/loader.py. fastapi 0.143 lazy include_router: tests/api route-walking tests use a flat-routes helper. graphifyy pin test moved to 0.9.88.
+Content of dependabot #578 plus the fixes it needs. Correction (rpg-planner, PR #645): the 6 dataclasses.replace / entity_id errors fixed in 54649f3f7 are NOT caused by the mypy 2.4 bump. They reproduce on rpg-next with the locked mypy 2.1.0 (rpg-next's folds introduced them; main is clean), and the fix was cherry-picked to rpg-next as 6d7bd1509. My earlier 'mypy 2.4 is the culprit' was wrong: I never ran the baseline filter on 2.1.0 first. Still to re-check on the rebased branch (after 54649f3f7 is dropped as already applied): which errors are really mypy 2.4's; known so far: config/loader.py issubclass on the pydantic 2.14 TypeForm annotation (135bb967e). pydantic 2.14 annotation typing: cast in config/loader.py. fastapi 0.143 lazy include_router: tests/api route-walking tests use a flat-routes helper. graphifyy pin test moved to 0.9.88.
 
 ## Scope
 Dependency window on branch rpg-deps-uv-redis (local, dispatched by rpg-planner).
