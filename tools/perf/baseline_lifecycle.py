@@ -57,7 +57,6 @@ LEGACY_TRIPWIRE_REFERENCES = frozenset(
         "mixed_200_concurrent.json",
         "mixed_200_local.json",
         "movement_100_local.json",
-        "simq_corpus_crowded_frontier.json",
         "simq_corpus_frontier_extended.json",
         "simq_corpus_frontier_marches.json",
         "strategic_100_concurrent.json",

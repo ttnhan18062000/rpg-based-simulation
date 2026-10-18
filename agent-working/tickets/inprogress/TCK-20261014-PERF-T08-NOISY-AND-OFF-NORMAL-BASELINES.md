@@ -69,6 +69,7 @@ PERF-M2-T08 (#591) promoted 5 of 15 records. The other 10 remain legacy referenc
 - tools/perf/rerun_baselines.py, tools/perf/baseline_lifecycle.py, tools/perf/tripwire.py, src/perf/scenarios.py
 
 ## Assumptions / Open Questions
+- Ordering: do not delete idle_100_local.json before TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS lands, or in the same PR; tests/tools/test_corpus_perf_baseline.py reads it as a shape reference until then.
 - A1: T08's `reports/perf/t08/*/samples/` per-tick data is still on disk in ~/Work/rpg-perf. If it was cleaned, the diagnosis re-runs the 6 records with `--keep-samples` (seconds each).
 
 ## Implementation Notes
