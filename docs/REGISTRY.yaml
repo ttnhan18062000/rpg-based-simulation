@@ -7956,6 +7956,37 @@
   - data-quality
   - workflows
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED.md
+  ticket_id: TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED
+  title: 'publish-images: the SBOM attestation fails `cosign verify-attestation --type
+    spdxjson`; pin cosign and gate the job on verification'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - .github/workflows/publish-images.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED/plan.md
+  - agent-working/stored_artifacts/TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED/test_plan.md
+  tags:
+  - platform
+  - security
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL.md
+  ticket_id: TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL
+  title: 'Observability profile: take Loki 3.7.8 / Promtail 3.6.8 and probe Loki readiness
+    from Promtail'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE.md
   ticket_id: TCK-20261015-PERF-BENCH-RSS-AFTER-COLLECT-AND-DECLARED-MEMORY-NOTE
   title: A benchmark record's memory describes the engine, not the harness's disabled
@@ -8130,20 +8161,6 @@
   - agent-monitoring
   - data-quality
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED.md
-  ticket_id: TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED
-  title: 'publish-images: the SBOM attestation fails `cosign verify-attestation --type
-    spdxjson`; pin cosign and gate the job on verification'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-15'
-  related_code_areas:
-  - .github/workflows/publish-images.yml
-  artifact_files: []
-  tags:
-  - platform
-  - security
-- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261015-DEPENDABOT-DOCKER-IGNORE-PYTHON-MINOR-AND-UV.md
   ticket_id: TCK-20261015-DEPENDABOT-DOCKER-IGNORE-PYTHON-MINOR-AND-UV
   title: 'Dependabot docker ecosystem: stop proposing Python minor-line moves and
@@ -8156,20 +8173,6 @@
   artifact_files: []
   tags:
   - platform
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL.md
-  ticket_id: TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL
-  title: 'Observability profile: take Loki 3.7.8 / Promtail 3.6.8 and probe Loki readiness
-    from Promtail'
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-10-15'
-  related_code_areas:
-  - compose.yaml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
 - type: ticket
   path: agent-working/tickets/inprogress/TCK-20261015-SESSION-BINDINGS-TORN-TAIL.md
   ticket_id: TCK-20261015-SESSION-BINDINGS-TORN-TAIL

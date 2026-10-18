@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED
-phase: inprogress
+phase: done
 date: 2026-10-15
 tags: [platform, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, security]
 publish-images: the SBOM attestation fails `cosign verify-attestation --type spdxjson`; pin cosign and gate the job on verification
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -83,10 +83,13 @@ TCK-20261014-IMAGE-SBOM-SCAN-SIGN (#561, introduced the step); TCK-20261014-ACTI
 - **running locally (reproduction, read-only, cosign v3.1.3):** `cosign verify` on backend `154b5d5f…` exits 0; `cosign verify-attestation --type spdxjson` on the same digest exits 1: `none of the attestations matched the predicate type: spdxjson, found: https://sigstore.dev/cosign/sign/v1`. This is test_plan check 4 (the verify step fails on the current mislabelled digests).
 - **running locally (scratch image, local stand-in registry on localhost:5055, keyed, `--use-signing-config=false --tlog-upload=false`, cosign v3.1.3):** referrer 1 (attest) `https://spdx.dev/Document`, referrer 2 (sign) `https://sigstore.dev/cosign/sign/v1`; `cosign verify-attestation --key cosign.pub --type spdxjson --insecure-ignore-tlog=true` exits 0. Limits: keyed, no Rekor, one tiny image; the keyless/GitHub-OIDC path is proved only by the main run below. The cosign v3.0.6 comparison on the scratch image could not be run (the binary download failed and Docker Hub pulls fail here on a TLS error).
 - **validated (static):** `actionlint` on the workflow is clean; the YAML parses. No test in `tests/` references publish-images.
-- **Not yet observed (post-merge, ticket stays INPROGRESS):** the main publish run is green with the verify step; `verify` and `verify-attestation --type spdxjson` pass from a clean machine on the new digests; the step summary shows the same commands. If the main run's verify step fails, the pin does not fix it under keyless: record that and reopen the investigation.
+- **validated (CI), post-merge:** the main publish run 38868911100 at c9f8a7f36 was green: on both images `Install cosign` (v3.1.3), `Attest SBOM and sign (keyless)`, the new `Verify signature and SBOM attestation` and `How to verify` all succeeded, so the keyless path with the pin works. The PR run (#610) skipped all four cosign steps, as designed.
+- **running locally, clean machine (cosign v3.1.3, new digests published by that run):** backend `sha256:ee324f15c642bb6b6ef4a3ac4862cf5b5c2fa8d3479ea660a0555a71d9022053` and frontend `sha256:c2be782c96d509f884f7dc771790a528ebe727a8660406adecceeb28cb9054df`: `cosign verify` and `cosign verify-attestation --type spdxjson` (the commands printed by the step summary, with the workflow identity regexp and the GitHub OIDC issuer) exit 0 on both; the attestation predicateType is `https://spdx.dev/Document`, SPDX-2.3, 129 packages (backend) and 72 (frontend). Several attempts first failed with a host-side TLS error reaching ghcr.io (`x509: certificate is not valid for any names`); that is this host's network, not a verification result, and retries passed.
+- The step summary's commands were not re-read from the run page; they come from the workflow text and are the commands run above (not separately verified in the run's summary UI).
 - PR runs (push: false) skip the sign, attest and verify steps (all gated on `env.PUSH == 'true'`); confirm on this PR's run.
 
 ## Files Changed
 - `.github/workflows/publish-images.yml`
 
 ## Completion Summary
+publish-images pins cosign v3.1.3, verifies the signature and the SPDX attestation after signing (the job goes red otherwise), and prints commands that pass. The first main run with it was green and both new digests verify. The earlier images (cosign v3.0.6, mislabelled referrer) stay as published and are not re-attested; `verify-attestation --type spdxjson` still fails on them.
