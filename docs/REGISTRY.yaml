@@ -7767,6 +7767,24 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-IAC-WORKFLOW-AND-ROLES.md
+  ticket_id: TCK-20261018-IAC-WORKFLOW-AND-ROLES
+  title: 'CI: .github/workflows/iac.yml (fmt, validate, tflint, trivy config report-only;
+    no credentials) and the D8 roles diff for infra/** and iac.yml'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - .github/workflows/iac.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-IAC-WORKFLOW-AND-ROLES/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-IAC-WORKFLOW-AND-ROLES/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-IAC-WORKFLOW-AND-ROLES/test_plan.md
+  tags:
+  - platform
+  - delivery
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-LAUNCH-RESUME-MISSING-WORKTREE-REFUSE.md
   ticket_id: TCK-20261018-LAUNCH-RESUME-MISSING-WORKTREE-REFUSE
   title: '`launch.py` crashes with FileNotFoundError on `os.chdir` when the manifest
@@ -7853,6 +7871,25 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-TERRAFORM-AWS-SKELETON.md
+  ticket_id: TCK-20261018-TERRAFORM-AWS-SKELETON
+  title: 'Terraform: infra/terraform bootstrap (OIDC role, budget alarm and deny action)
+    and service (one Fargate task in the default VPC) roots, written and validated,
+    never applied'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - infra/terraform/**
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-TERRAFORM-AWS-SKELETON/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-TERRAFORM-AWS-SKELETON/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-TERRAFORM-AWS-SKELETON/test_plan.md
+  tags:
+  - platform
+  - delivery
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD.md
   ticket_id: TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD
   title: Find why a sub-second Aseprite job hits the 30 s `JOB_TIMEOUT_S` under host
@@ -7884,6 +7921,21 @@
   tags:
   - platform
   - observability
+- type: ticket
+  path: agent-working/tickets/done/devops-s5-terraform-validate/TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE
+  title: 'DevOps S5 (host ubuntu): Terraform for the amendment''s 5b/5c AWS shape,
+    written and validated in CI ($0, no account, no plan, no apply)'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - infra/terraform/**
+  artifact_files: []
+  tags:
+  - platform
+  - delivery
+  - security
 - type: ticket
   path: agent-working/tickets/done/visual-asset-docs-sync/TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT.md
   ticket_id: TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT
@@ -7939,52 +7991,6 @@
   - ai
   - process-improvement
   - governance
-- type: ticket
-  path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE.md
-  ticket_id: TCK-20261018-EPIC-DEVOPS-S5-TERRAFORM-VALIDATE
-  title: 'DevOps S5 (host ubuntu): Terraform for the amendment''s 5b/5c AWS shape,
-    written and validated in CI ($0, no account, no plan, no apply)'
-  tier: epic
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - infra/terraform/**
-  artifact_files: []
-  tags:
-  - platform
-  - delivery
-  - security
-- type: ticket
-  path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-IAC-WORKFLOW-AND-ROLES.md
-  ticket_id: TCK-20261018-IAC-WORKFLOW-AND-ROLES
-  title: 'CI: .github/workflows/iac.yml (fmt, validate, tflint, trivy config report-only;
-    no credentials) and the D8 roles diff for infra/** and iac.yml'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - .github/workflows/iac.yml
-  artifact_files: []
-  tags:
-  - platform
-  - delivery
-  - security
-- type: ticket
-  path: agent-working/tickets/todos/devops-s5-terraform-validate/TCK-20261018-TERRAFORM-AWS-SKELETON.md
-  ticket_id: TCK-20261018-TERRAFORM-AWS-SKELETON
-  title: 'Terraform: infra/terraform bootstrap (OIDC role, budget alarm and deny action)
-    and service (one Fargate task in the default VPC) roots, written and validated,
-    never applied'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - infra/terraform/**
-  artifact_files: []
-  tags:
-  - platform
-  - delivery
-  - security
 - type: ticket
   path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
   ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF
