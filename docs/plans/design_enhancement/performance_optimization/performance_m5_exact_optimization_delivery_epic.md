@@ -36,6 +36,8 @@ that outcome.
 | PERF-M5-T07 | Narrow SoA/data-oriented Collection view | Homogeneous hot loop remains material including view construction | Disposable derived view, rebuild/bypass path, exact output parity |
 | PERF-M5-T08 | Server projection/interest management handoff | Material serving cost and live-map ownership agreement | Separate serving ticket under existing epic, passive-client and resnapshot/backpressure proof |
 
+**Evidence for PERF-M5-T04 (2026-10-18, PROVISIONAL: single host, `src/` not lifted).** Replay-on profiles (`profile_tick.py --replay`, `TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED`): the phase-7 digest (`kernel.py:1131` to `CanonicalHashScheduler.compute_digest` to `CanonicalStateHasher.get_hash`) is **9.2 %** of the tick-thread samples on `strategic_100` held in NORMAL (`--contract pinned`) and **27.1 %** on `corpus:frontier_extended` (canonical), with replay allowed and richness FULL; the `REFINED_UPDATE` fingerprint (`kernel.py:664`) is about **1 %**. This is input to the "flat hashing is material" trigger only: PERF-D5 still has to permit hierarchical hashing and nothing is decided. Open question for the gate: which production run modes have replay allowed with richness FULL (NORMAL and CONSTRAINED do, SURVIVAL does not). Source: `docs/performance/tick_cost_growth.md` section 4 and the ticket's `evidence.md`.
+
 The table is a candidate eligibility menu, not authorization or commitment. Authorization requires
 reconciled P1 authority plus the normal real-ticket workflow. Unselected rows do not become backlog.
 Several families may need multiple tickets after investigation—for example schema/foundation,

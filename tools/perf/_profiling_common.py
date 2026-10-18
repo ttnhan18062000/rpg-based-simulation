@@ -434,9 +434,13 @@ PINNED_NOTE = (
 )
 
 
-def contract_kernel_args(profile: Any, contract: str) -> Tuple[Any, Optional[Any], Dict[str, Any]]:
-    """The ``(profile, governor, flags)`` a kernel is built with under ``contract``. No ``src/`` edit: every variant is a ``Kernel`` argument."""
-    flags: Dict[str, Any] = {"no_replay": True, "no_frame_pacing": True, "audit_mode": False}
+def contract_kernel_args(profile: Any, contract: str, replay: bool = False) -> Tuple[Any, Optional[Any], Dict[str, Any]]:
+    """The ``(profile, governor, flags)`` a kernel is built with under ``contract``. No ``src/`` edit: every variant is a ``Kernel`` argument.
+
+    ``replay=True`` turns ``no_replay`` off (TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED), so the replay-only work (the per-tick REFINED_UPDATE
+    fingerprint, the phase-7 digest and the replay writer) runs whenever the governor policy allows replay. The default keeps every existing caller unchanged.
+    """
+    flags: Dict[str, Any] = {"no_replay": not replay, "no_frame_pacing": True, "audit_mode": False}
     governor = None
     if contract == "live":
         pass
@@ -457,8 +461,12 @@ def contract_kernel_args(profile: Any, contract: str) -> Tuple[Any, Optional[Any
 
 def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, ticks: int,
                        flag: Optional[str] = None, flag_mode: Optional[str] = None,
-                       profile_name: str = "PROD_LARGE", contract: str = "live") -> Dict[str, Any]:
+                       profile_name: str = "PROD_LARGE", contract: str = "live",
+                       replay: bool = False, replay_dir: Optional[Path] = None) -> Dict[str, Any]:
     """Run warmup plus measured ticks in this process and return per-tick data.
+
+    With ``replay`` a ``ReplayManager`` writing under ``replay_dir`` is injected, so nothing lands in ``data/runs/``; each measured tick records
+    whether the governor policy allowed replay and the richness, and the manager's ``get_stats()`` is read at the end.
 
     The measured loop is ``_measured_ticks``; profile_tick filters sampled stacks to ones that contain
     that frame so setup and import time are excluded from the profile.
@@ -471,8 +479,9 @@ def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, tic
     override = None
     if flag and flag_mode:
         state, override = apply_flag_override(state, flag, flag_mode)
-    profile, governor, flags = contract_kernel_args(getattr(profiles_module, profile_name), contract)
-    kernel = Kernel(profile, state, DeterministicRNG(seed), governor=governor, flags=flags)
+    profile, governor, flags = contract_kernel_args(getattr(profiles_module, profile_name), contract, replay=replay)
+    replay_manager = make_replay_manager(profile, flags, replay_dir) if replay else None
+    kernel = Kernel(profile, state, DeterministicRNG(seed), governor=governor, flags=flags, replay=replay_manager)
     events: Dict[str, int] = {}
     tick_events = [0]
 
@@ -488,6 +497,8 @@ def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, tic
             kernel.tick_once()
         events.clear()
         data = _measured_ticks(kernel, ticks, tick_events)
+        if replay_manager is not None:
+            data["replay_stats"] = dict(replay_manager.get_stats())
     finally:
         kernel.shutdown()
     data["events"] = dict(sorted(events.items()))
@@ -496,6 +507,18 @@ def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, tic
 
     data["peak_rss_mb"] = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0, 1)  # the child's own high-water mark (Linux: KiB)
     return data
+
+
+def make_replay_manager(profile: Any, flags: Dict[str, Any], replay_dir: Optional[Path]) -> Any:
+    """The ``ReplayManager`` a ``--replay`` run injects, configured as the kernel's default one is but rooted at ``replay_dir`` (required)."""
+    if replay_dir is None:
+        raise ValueError("a replay run needs a replay_dir (under the run's out-dir) so nothing lands in data/runs/")
+    from src.engine.replay_manager import ReplayManager
+    from src.engine.signal_source import signal_contract_record
+
+    Path(replay_dir).mkdir(parents=True, exist_ok=True)
+    return ReplayManager(run_dir=Path(replay_dir), profile_name=profile.name, buffer_capacity_kb=profile.max_replay_buffer_kb,
+                         signal_contract=signal_contract_record(profile, bool(flags.get("audit_mode", False))))
 
 
 def _measured_ticks(kernel: Any, ticks: int, tick_events: List[int]) -> Dict[str, Any]:
@@ -512,8 +535,25 @@ def _measured_ticks(kernel: Any, ticks: int, tick_events: List[int]) -> Dict[str
             "mode": kernel.status.current_mode.name,
             "work": {k: kernel._metrics.get(k) for k in WORK_COUNTER_KEYS if k in kernel._metrics},
             "events": tick_events[0],
+            # The policy the tick just ran under (replay can be switched off by the governor under pressure).
+            "replay_allowed": bool(kernel._current_policy.replay_allowed),
+            "replay_richness": str(kernel._current_policy.replay_richness),
         })
     return {"ticks": per_tick}
+
+
+def replay_summary(data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Per-tick replay policy counts and the manager's final stats; ``None`` for a run without ``--replay``."""
+    if "replay_stats" not in data:
+        return None
+    ticks = data["ticks"]
+    allowed = sum(1 for t in ticks if t.get("replay_allowed"))
+    return {
+        "replay_allowed_ticks": allowed,
+        "replay_disallowed_ticks": len(ticks) - allowed,
+        "replay_richness": sorted({t.get("replay_richness") for t in ticks if t.get("replay_richness")}),
+        "replay_stats": data["replay_stats"],
+    }
 
 
 def summarize_ticks(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -530,6 +570,7 @@ def summarize_ticks(data: Dict[str, Any]) -> Dict[str, Any]:
         "work_mean_per_tick": {k: mean([t["work"].get(k) or 0 for t in ticks]) for k in work_keys},
         "events": data.get("events", {}),
         "flag_override": data.get("flag_override"),
+        "replay": replay_summary(data),
     }
 
 
