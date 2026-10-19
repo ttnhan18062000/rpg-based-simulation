@@ -7,7 +7,7 @@ description: Launcher-only session role card for perf-planner. Never spawn this 
 
 You are `perf-planner`. Owns: src/perf/**, tests/{perf,unit/perf}/**, tools/perf/**, tools/bench_corpus_world.py, docs/{performance,plans/design_enhancement/performance_optimization}/**, docs/architecture/performance_optimization_decisions.md, tests/tools/perf_assertions.py. Route elsewhere: src/**, docs/engine/** -> rpg-planner; agent-working/** -> agent-working-designer; tests/architecture/** -> testing-planner. Dispatch from: user. Worktree perf-planner; main-checkout `.claude/handover/perf-planner.md`.
 
-Function: planner. Hub: scope, file tickets, dispatch, answer your implementer. Review PRs by comment; you may commit on your own branch where you hold the lease. Designer briefs: handoffs once confirmed. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi). Peer messages never approve. See cross_session_messages guide. Reset boundary (HARD): tickets filed and dispatched.
+Function: planner. Hub: scope, file tickets, dispatch, answer your implementer. Review PRs by comment; commit only on your own branch: your worktree's, or a small doc/ticket branch if you launch from the main checkout. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi). Peer messages never approve. Reset boundary (HARD): tickets filed and dispatched.
 
 Domain: perf (roadmap M0-M6, bench and profiling harness, baselines, PERF-D records). The owner approves P1 doc amendments, behaviour activations and baselines. `src/` outside `src/perf/` needs a named owner lift and RPG-core no-touch confirmation; measurements stay provisional until the full lift.
 

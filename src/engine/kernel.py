@@ -13,16 +13,18 @@ from pathlib import Path
 
 from src.engine.phases import get_authoritative_phases
 from src.core.updates import StateUpdate, EntityUpdate
+from src.core.grief_triggers import pending_grief_triggers
 from src.core.governance import RuntimeMode
 from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
 
-from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_source, signal_contract_record
+from src.engine.signal_source import HostReadings, MeasuredCosts, select_signal_source, signal_contract_record, signals_are_zeroed
 from src.engine.run_identity import create_run_directory, new_run_id
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
 from src.engine.cadence import should_run
 from src.engine.need_pull import ESCALATION_ONSET, HUNGER_LINE
+from src.engine.starvation import STARVING_LINE
 
 if TYPE_CHECKING:
     from src.config.profiles import RuntimeProfile
@@ -43,12 +45,11 @@ class Kernel:
 
     __slots__ = (
         "_profile", "_state", "_rng", "_phases", 
-        "_scheduler", "_governor", "_status", "_replay", "_collector",
+        "_scheduler", "_governor", "_signals_zeroed", "_status", "_replay", "_collector",
         "_worker_manager", "_executor", "_stopped",
         "_start_perf_ts", "_current_world_time", "_platform_signals",
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
-        "_pending_grief_triggers",
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
         "_run_id", "_run_id_is_default", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer", "_personality_recorder",
         "_workers_started", "_last_shutdown_report",
@@ -128,6 +129,8 @@ class Kernel:
         
         self._scheduler = scheduler or DefaultScheduler()
         self._governor = governor or DefaultGovernor()
+        # audit_mode, or a governor that pins itself (the test pin), feeds the governors zeroed signals: no wall-clock reader can change what a run computes.
+        self._signals_zeroed = signals_are_zeroed(self._audit_mode, self._governor)
         self._status = status or DefaultStatus()
         self._status.force_full_scan = self._force_full_scan
         self._collector = SignalCollector(profile.name)
@@ -177,7 +180,9 @@ class Kernel:
                 catalog_fingerprint=actual_catalog_fp,
                 module_fingerprints=module_fps,
                 state_hash=None,
-                signal_contract=signal_contract_record(profile, self._audit_mode),
+                signal_contract=signal_contract_record(profile, self._signals_zeroed),
+                audit_mode=bool(self._audit_mode),
+                signals_zeroed=self._signals_zeroed,
             )
             self._run_id = create_run_directory(self._artifact_repo, str(self._run_id), manifest, is_default=self._run_id_is_default, rng=self._rng)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
@@ -205,13 +210,6 @@ class Kernel:
         self._source_packets = {}
         self._source_work_items = {}
         self._final_results = []
-        # Kernel-run-scoped relay for grief triggers detected mid-tick by
-        # EventExtractor.detect_grief_triggers() (Observability phase, which runs after
-        # that tick's ApplyPath pass) — drained into a later tick's _phase_resolution, or
-        # at episode teardown for a death on the run's final tick. NOT durable simulation
-        # state: not part of AuthoritativeState, not serialized, does not survive process
-        # restart (TCK-20260824-GRIEF-NEMESIS-REACHABILITY).
-        self._pending_grief_triggers = []
         self._final_compute_ms = 0.0
         self._phase_costs = {}
         self._metrics = {}
@@ -312,7 +310,8 @@ class Kernel:
         self._workers_started = 2 if (obs_mode != ObservabilityMode.OFF) else 0
         self._last_shutdown_report = None
 
-        reset_run_state(profile.cadence.strategic_intelligence, ESCALATION_ONSET * HUNGER_LINE, should_run, profile.max_observability_budget_percent > 0)
+        reset_run_state(profile.cadence.strategic_intelligence, ESCALATION_ONSET * HUNGER_LINE, should_run, profile.max_observability_budget_percent > 0,
+                        starving_line=STARVING_LINE)
 
         self.validate(flags)
 
@@ -385,7 +384,9 @@ class Kernel:
             run_dir=run_dir,
             profile_name=profile.name,
             buffer_capacity_kb=profile.max_replay_buffer_kb,
-            signal_contract=signal_contract_record(profile, self._audit_mode),
+            signal_contract=signal_contract_record(profile, self._signals_zeroed),
+            audit_mode=bool(self._audit_mode),
+            signals_zeroed=self._signals_zeroed,
         )
 
     def tick_once(self) -> None:
@@ -544,7 +545,7 @@ class Kernel:
             interval_override=self._profile.sampling_interval_ticks
         )
         
-        self._current_signals = select_signal_source(self._profile, self._audit_mode).tick_start_signals(
+        self._current_signals = select_signal_source(self._profile, self._signals_zeroed).tick_start_signals(
             state=self._state, profile=self._profile, status=self._status,
             host=HostReadings(worker_stats, replay_stats, self._platform_signals, self._metrics),
         )
@@ -623,13 +624,15 @@ class Kernel:
             else:
                 entity_updates[res.entity_id] = EntityUpdate(entity_id=res.entity_id)
 
-        entity_updates = self._drain_pending_grief_triggers(entity_updates)
+        grief_triggers = pending_grief_triggers(self._state)
+        entity_updates = self._drain_pending_grief_triggers(entity_updates, grief_triggers)
 
         # No gameplay-facing pressure signal is derived here: the measured compute time (`tick_compute_ms`) is a
         # control signal for the governor, not an input to authoritative state (PERF-D1 amendment A1,
         # TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING).
         raw_update = StateUpdate(
             entity_updates=entity_updates,
+            grief_drained_tick_set=self._state.tick - 1 if grief_triggers else None,
             current_mode_set=self._current_policy.mode,
             current_policy_set=self._current_policy
         )
@@ -668,21 +671,18 @@ class Kernel:
         self._current_update = refined_update
 
     def _drain_pending_grief_triggers(
-        self, entity_updates: Dict[int, EntityUpdate]
+        self, entity_updates: Dict[int, EntityUpdate], triggers: List[Any]
     ) -> Dict[int, EntityUpdate]:
-        """Drain self._pending_grief_triggers into entity_updates as StrategicUpdates.
+        """Turn the owed grief triggers (read from state, `pending_grief_triggers`) into StrategicUpdates on `entity_updates`.
 
-        Shared by _phase_resolution() (normal tick, called with the tick's own
-        entity_updates so a decision system's own strategic update for the same entity
-        is preserved via EntityUpdate.merge()) and
-        drain_pending_triggers_at_teardown() (episode-teardown flush, called with {}).
-        Clears self._pending_grief_triggers before returning
-        (TCK-20260824-GRIEF-NEMESIS-REACHABILITY).
+        Shared by _phase_resolution() (normal tick, called with the tick's own entity_updates so a decision system's own strategic update for
+        the same entity is preserved via EntityUpdate.merge()) and drain_pending_triggers_at_teardown() (episode-teardown flush, called with {}).
+        The caller records `grief_drained_tick_set` in the same StateUpdate (TCK-20260824-GRIEF-NEMESIS-REACHABILITY, decision 80).
         """
         from src.domains.campaigns.grief_urgency import GriefUrgencyImporter
         from src.domains.campaigns.state import GriefUrgencyModifier
 
-        for griever_id, dead_id, urgency in self._pending_grief_triggers:
+        for griever_id, dead_id, urgency in triggers:
             # episode= is meaningful at the CampaignState layer (a real episode index);
             # Kernel only has tick. This substitute is transient — used only to keep the
             # source= string on the resulting ConcernState informative — and is never
@@ -704,7 +704,6 @@ class Kernel:
                 else new_eu
             )
 
-        self._pending_grief_triggers = []
         return entity_updates
 
     def drain_pending_triggers_at_teardown(self) -> None:
@@ -719,14 +718,15 @@ class Kernel:
         and does NOT advance self._state.tick or world_time -- a narrow resolution+apply flush
         against the CURRENT (final) state, not a disguised extra tick. No-op if nothing queued.
         """
-        if not self._pending_grief_triggers:
+        triggers = pending_grief_triggers(self._state)
+        if not triggers:
             return
         from src.core.updates import StateUpdate
         from src.engine.pipeline import AuthoritativeApplyPipeline
         from src.engine.apply import ApplyPath
 
-        entity_updates = self._drain_pending_grief_triggers({})
-        raw_update = StateUpdate(entity_updates=entity_updates)
+        entity_updates = self._drain_pending_grief_triggers({}, triggers)
+        raw_update = StateUpdate(entity_updates=entity_updates, grief_drained_tick_set=self._state.tick - 1)
         refined_update = AuthoritativeApplyPipeline.refine(
             self._state, raw_update,
             cadence=self._profile.cadence,
@@ -761,7 +761,7 @@ class Kernel:
     def _record_runtime_signals(self) -> None:
         terminal_worker_stats = self._worker_manager.get_stats()
         terminal_replay_stats = self._replay.get_stats()
-        self._status.record_signals(select_signal_source(self._profile, self._audit_mode).tick_end_signals(
+        self._status.record_signals(select_signal_source(self._profile, self._signals_zeroed).tick_end_signals(
             state=self._state, profile=self._profile, status=self._status,
             measured=MeasuredCosts(self._final_compute_ms, self._phase_costs),
             host=HostReadings(terminal_worker_stats, terminal_replay_stats, self._platform_signals, self._metrics),
@@ -960,7 +960,7 @@ class Kernel:
         if obs_mode == ObservabilityMode.OFF:
             return
 
-        from src.observability.event_recorder import EventExtractor, extract_events
+        from src.observability.event_recorder import extract_events
         from src.observability.events import SimulationEvent
 
         tick = self._state.tick
@@ -968,18 +968,13 @@ class Kernel:
         # 1. Extract domain events
         generated_events = extract_events(prior_state, self._state, update, obs_mode)
 
-        # 1a. Mid-tick grief triggers (TCK-20260824-GRIEF-NEMESIS-REACHABILITY): a live
-        # ally's death detected this tick. This phase runs after this tick's ApplyPath
-        # pass (see docs/engine/kernel.md's 7-phase ordering), so the resulting
-        # StrategicUpdate cannot be applied until a later tick's _phase_resolution (or,
-        # for a death on the run's final tick, at episode teardown — see
-        # drain_pending_triggers_at_teardown()). The event itself is recorded now.
+        # 1a. Grief triggers (TCK-20260824-GRIEF-NEMESIS-REACHABILITY, decision 80): report the triggers the authoritative state owes for
+        # this tick's deaths; the next tick's _phase_resolution applies them whatever the observability mode (src/core/grief_triggers.py).
         from src.observability.events import GriefUrgencyTriggeredEvent
-        for griever_id, dead_id, urgency in EventExtractor.detect_grief_triggers(prior_state, self._state):
+        for griever_id, dead_id, urgency in pending_grief_triggers(self._state):
             generated_events.append(GriefUrgencyTriggeredEvent(
                 tick=tick, entity_id=griever_id, dead_ally_id=dead_id, urgency=urgency,
             ))
-            self._pending_grief_triggers.append((griever_id, dead_id, urgency))
 
         # 1b. Push-based event shapers (src/observability/event_shapers.py) — the live default
         # path for COMBAT/ECONOMY/FACTION as of TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION.

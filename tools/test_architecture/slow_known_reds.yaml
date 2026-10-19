@@ -16,13 +16,6 @@ known_reds:
     expires_on: "2026-11-15"
     kind: broken
     note: "#407 closed the attribution ticket (measurement only); rebaseline after SURV-07 and decision 25; rpg-planner warns before 11-15 if it slips"
-  - match: "tests.integration.campaigns.test_catalog_entity_spawn_wiring::test_real_campaign_episode_event_mix_is_not_dominated_by_cooperation"
-    ticket: TCK-20261010-CAMPAIGN-EPISODE-COOPERATION-SHARE-CROSSES-HALF-ON-MAIN-AFTER-BATCH-2
-    owner: rpg-planner
-    added_on: "2026-10-09"
-    expires_on: "2026-10-31"
-    kind: broken
-    note: "first red in slow run 37952552217 (20af2959a); probable cause: cooperation_event fires for any help need and hunger creates one; the ticket bisects 2364b058a..20af2959a and rules out the module-fixture leak first; the 0.5 line is not moved. Since the episode runs under audit_mode (TCK-20261009-CAMPAIGN-EPISODE-DELIBERATE-ATTACKS-STRICT-XFAIL-DEPENDS-ON-TEST-ORDER) the value is deterministic: pooled 0.5050 (801 of 1586; seed 42 0.4949, seed 1337 0.5151), was 0.5167 outside audit_mode (seed 42 0.5180). Still red"
   - match: "tests.perf.test_perf_movement*"
     ticket: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
     owner: rpg-implementer-2
@@ -177,10 +170,17 @@ known_reds:
     expires_on: "2026-11-04"
     kind: flaky
     note: "population_stability measures the throttled kernel by design (not an anchor, out of scope of the audit_mode ticket), plus the same-second run-dir collision: see TCK-20261011-DEFAULT-RUN-ID-CANNOT-COLLIDE-ACROSS-SAME-SEED-PROCESSES"
+  - match: "tests.integration.certification.test_catalog_arena_smoke::test_catalog_arena_small_can_tick"
+    ticket: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
+    owner: rpg-implementer
+    added_on: "2026-10-19"
+    expires_on: "2026-11-30"
+    kind: broken
+    note: "tick-3 wall-clock budget 479.5ms > 150ms in the first slow run after #645 (39172879323); one sample, quiet-host repro pending; reclassify flaky if it does not reproduce"
   - match: "tests.unit.worldassembly.test_corpus_diversity*"
-    ticket: TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE
+    ticket: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
     owner: testing-implementer
     added_on: "2026-10-07"
     expires_on: "2026-11-04"
     kind: flaky
-    note: "catch-all, keep LAST; covers the stale-anchor reds until the re-anchor commit lands, and after it only the 3 class-(c) COGNITION anchors from the #408 measurement (simq_routing 500t and 1000t, hero_guild_routing 1000t), which the audit_mode ticket makes deterministic; the 3 population_stability entries above are specific; superseded TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED (issue #511)"
+    note: "re-anchor moved to baseline v1 (designer, 2026-10-14); catch-all, keep LAST; covers the stale-anchor reds until the re-anchor commit lands, and after it only the 3 class-(c) COGNITION anchors from the #408 measurement (simq_routing 500t and 1000t, hero_guild_routing 1000t), which the audit_mode ticket makes deterministic; the 3 population_stability entries above are specific; superseded TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED (issue #511)"

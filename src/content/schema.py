@@ -370,7 +370,9 @@ class ServiceProfileDefinition(CatalogBaseDefinition):
 
 class TerrainDefinition(CatalogBaseDefinition):
     """Schema for ground terrain speed, hazard multipliers and descriptions."""
-    move_cost_multiplier: float = Field(1.0, gt=0.0, description="Cost factor for movement speed through this terrain")
+    move_cost_multiplier: float = Field(..., gt=0.0, description="Readiness cost factor for one step onto this terrain (D72). Required: a terrain without a declared cost is a content error, never a silent 1.0")
+    gives_cover: bool = Field(..., description="Whether a defender standing against this terrain is behind cover (the combat cover check reads it). Required: a terrain that does not say is a content error")
+    high_ground: bool = Field(..., description="Whether an attacker standing on this terrain has the high-ground edge (the combat high-ground check reads it). Required: a terrain that does not say is a content error")
     hazard_multiplier: float = Field(1.0, ge=0.0, description="Scaling factor for hazard damage")
 
 
@@ -401,7 +403,7 @@ class ItemDefinition(CatalogBaseDefinition):
     """Schema for item definitions under the dynamic content catalog."""
     categories: List[str] = Field(..., description="Category tags (e.g. weapon, melee, material)")
     rarity: str = Field("COMMON", description="Item rarity")
-    base_value: float = Field(0.0, ge=0.0, description="Base value in gold")
+    base_value: float = Field(..., ge=0.0, description="Base value in gold; required (a missing value is a gap, not a default of 0)")
     materials: List[str] = Field(default_factory=list, description="Materials composing this item")
     use_kind: Optional[str] = Field(None, description="Explicit runtime usage kind")
     class_fit: List[str] = Field(default_factory=list, description="Explicit class fit tags")

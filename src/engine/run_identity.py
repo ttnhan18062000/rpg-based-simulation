@@ -23,7 +23,8 @@ def default_run_id(seeded_suffix: int) -> str:
 
 def new_run_id(rng: Any) -> str:
     """A fresh default run id; the suffix is a stateless draw (a pure function of the seed), so it moves no other draw."""
-    return default_run_id(rng.get_int(Domain.INIT, 0, 0, 1000, 9999))
+    draw = rng.get_int(Domain.INIT, 0, 0, 1000, 9999)
+    return default_run_id(draw if isinstance(draw, int) else 0)  # a stand-in rng (a test mock) returns an object whose repr must never name a directory
 
 
 def create_run_directory(repo: Any, run_id: str, manifest: Any, *, is_default: bool, rng: Any) -> str:

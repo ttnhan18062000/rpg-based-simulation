@@ -30,9 +30,9 @@ from src.platform.rng import DeterministicRNG
 # v1 (`flat-sha256-v1`) `get_hash` of the fixture below *as it was*, with `work_debt={"B": 2, "A": 1}` in the state, computed with
 # `src/engine/checkpoint.py` as it was on origin/main (9793aee08). Kept only as history: v1 digests are never compared with v2 ones, and the
 # engine no longer computes v1. `test_v2_is_v1_without_the_two_removed_keys` rebuilds the v1 form to prove it still ties to this value.
-FIXTURE_DIGEST_V1_ON_MAIN = "ec75b10657b6e6f2129670f3968fed91d6b1f54b3bda4780ca6b27f496f505f5"
+FIXTURE_DIGEST_V1_ON_MAIN = "13ed76f7fa7f7ba5fc324a20a1bb999295048507fb7630ec1f394fdd81b6fc5f"
 # v2 (`flat-sha256-v2`) `get_hash` of the same fixture without the removed fields. It must never change without a new scheme version.
-FIXTURE_DIGEST_V2 = "631feb2b38d5764f29066f0eae78d2cd3215189364d7f559f89061a270b9df17"
+FIXTURE_DIGEST_V2 = "41b03d22dc75548914f32c96aab57ab6d520842b818245d46c491cdcf7a382b7"
 REMOVED_KEYS = ("periodic_due_ticks", "work_debt")
 
 

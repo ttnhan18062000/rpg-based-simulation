@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from src.domains.fame.legend import LegendFact
     from src.domains.belief_institution.model import BeliefInstitution
 from src.core.strategic import StrategicComponent
+from src.core.death_cause import DeathRecord
 from src.core.enums import Faction, EntityRole, DiplomaticState, PassiveDeathCause
 from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
@@ -173,6 +174,8 @@ class LifecycleComponent:
     # (CAUSE-05 / TIME-02). Ignored and cleared once another death_reason is recorded.
     passive_death_cause: Optional[PassiveDeathCause] = None
     passive_death_cause_tick: Optional[int] = None
+    # The typed record of the death (cause, tick, last attacker, hazard kind), written once by resolve_lifecycle (TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH).
+    death_record: Optional[DeathRecord] = None
     heir_entity_id: Optional[int] = None
     heirlooms: list[str] = field(default_factory=list)
     parent_a_entity_id: Optional[int] = None
@@ -196,6 +199,7 @@ class LifecycleComponent:
             "death_reason": self.death_reason,
             "passive_death_cause": self.passive_death_cause.value if self.passive_death_cause is not None else None,
             "passive_death_cause_tick": self.passive_death_cause_tick,
+            "death_record": self.death_record.to_dict() if self.death_record is not None else None,
             "heir_entity_id": self.heir_entity_id,
             "heirlooms": sorted(list(self.heirlooms)),
             "parent_a_entity_id": self.parent_a_entity_id,
@@ -438,6 +442,8 @@ class CombatComponent:
     # Accumulated permanent max-HP grants (near-death hardening). Kept apart from base_hp so the
     # grant stays traceable (CAUSE-05 / HP-02); the derivation adds it as its own term.
     permanent_max_hp_bonus: int = 0
+    # The body that last took hp from this one by a hit, written by CombatPatch; a hazard or starvation death still names who last hit it.
+    last_attacker_id: Optional[int] = None
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -449,6 +455,7 @@ class CombatComponent:
             "base_def": self.base_def,
             "base_evasion": self.base_evasion,
             "permanent_max_hp_bonus": self.permanent_max_hp_bonus,
+            "last_attacker_id": self.last_attacker_id,
             "hp": self.hp,
             "max_hp": self.max_hp,
             "atk": self.atk,
@@ -472,18 +479,7 @@ class CombatComponent:
 
 
 
-# Terrain cost weights for pathfinding
-TERRAIN_COST: Dict[str, float] = {
-    "ROAD": 0.5,
-    "PLAIN": 1.0,
-    "FLOOR": 1.0,
-    "GRASS": 1.0,
-    "FOREST": 1.5,
-    "SWAMP": 3.0,
-    "HILL": 2.0,
-    "MOUNTAIN": 4.0,
-    "SAND": 1.5,
-}
+# (The terrain move-cost table that lived here was retired by D72: each terrain declares its cost in content, read through src/content/terrain_cost.py.)
 
 
 @dataclass(frozen=True, slots=True)
@@ -514,6 +510,35 @@ class NavigationComponent:
     # Idea 66: cached place_id back-reference, same rationale as region_id above --
     # avoids an O(N) scan of PlaceState.entity_ids for fast Place lookup.
     place_id: Optional[str] = None
+
+    # D75 (MOV-04): terrain cost is time. The earliest tick this entity may take its next step: a step onto a tile of cost N sets it to
+    # (the carried previous value, or the step tick) + N, so cost N takes N ticks and the entity never takes more than one step per tick.
+    # 0.0 = never stepped (free to step).
+    step_ready_tick: float = 0.0
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        """The navigation block of the entity's canonical form. `step_ready_tick` (D75) is present only once non-zero, so the form of an
+        entity that never stepped is unchanged."""
+        res = {
+            "target": self.target,
+            "path": self.path,
+            "moved_recently": self.moved_recently,
+            "place_id": self.place_id,
+            "movement_mode": str(self.movement_mode),
+            "last_failure_reason": self.last_failure_reason,
+            "wait_count": self.wait_count,
+            "oscillation_count": self.oscillation_count,
+            "last_position": self.last_position,
+            "home_position": self.home_position,
+            "leash_radius": self.leash_radius,
+            "region_id": self.region_id,
+            "chase_ticks": self.chase_ticks,
+            "max_chase_ticks": self.max_chase_ticks,
+            "returning_home": self.returning_home,
+        }
+        if self.step_ready_tick:
+            res["step_ready_tick"] = self.step_ready_tick
+        return res
 
 
 @dataclass(frozen=True, slots=True)
@@ -1005,23 +1030,7 @@ class EntityState:
             "combat": self.combat.to_canonical_dict(),
             "biological": self.biological.to_canonical_dict(),
             "lifecycle": self.lifecycle.to_canonical_dict(),
-            "navigation": {
-                "target": self.navigation.target,
-                "path": self.navigation.path,
-                "moved_recently": self.navigation.moved_recently,
-                "place_id": self.navigation.place_id,
-                "movement_mode": str(self.navigation.movement_mode),
-                "last_failure_reason": self.navigation.last_failure_reason,
-                "wait_count": self.navigation.wait_count,
-                "oscillation_count": self.navigation.oscillation_count,
-                "last_position": self.navigation.last_position,
-                "home_position": self.navigation.home_position,
-                "leash_radius": self.navigation.leash_radius,
-                "region_id": self.navigation.region_id,
-                "chase_ticks": self.navigation.chase_ticks,
-                "max_chase_ticks": self.navigation.max_chase_ticks,
-                "returning_home": self.navigation.returning_home,
-            },
+            "navigation": self.navigation.to_canonical_dict(),
             "task": {
                 "work_kind": self.task.work_kind,
                 "payload": dict(sorted(self.task.payload.items()))
@@ -1123,29 +1132,9 @@ class EntityState:
             
         combat_comp = self.combat
         if type(combat_comp.wounds) is not tuple or type(combat_comp.scars) is not tuple:
-            combat_comp = CombatComponent(
-                hp=combat_comp.hp,
-                max_hp=combat_comp.max_hp,
-                atk=combat_comp.atk,
-                def_stat=combat_comp.def_stat,
-                speed=combat_comp.speed,
-                range=combat_comp.range,
-                evasion=combat_comp.evasion,
-                move_cost=combat_comp.move_cost,
-                tactical_role=combat_comp.tactical_role,
-                action_style=combat_comp.action_style,
-                alive=combat_comp.alive,
-                readiness=combat_comp.readiness,
-                readiness_speed=combat_comp.readiness_speed,
-                wounds=tuple(combat_comp.wounds),
-                scars=tuple(combat_comp.scars),
-                latest_result=combat_comp.latest_result,
-                base_hp=combat_comp.base_hp,
-                base_atk=combat_comp.base_atk,
-                base_def=combat_comp.base_def,
-                base_evasion=combat_comp.base_evasion,
-                permanent_max_hp_bonus=combat_comp.permanent_max_hp_bonus,
-            )
+            # status_effects is not carried (as before this rewrite); every other field, including the ones added later, is.
+            # wounds/scars are declared List[...] but frozen to tuples in the read-only view (runtime-intended; mypy 2.4 now checks replace() kwargs).
+            combat_comp = replace(combat_comp, wounds=tuple(combat_comp.wounds), scars=tuple(combat_comp.scars), status_effects=[])  # type: ignore[arg-type]
 
         equip_comp = self.equipment
         if type(equip_comp.slots) is not ReadOnlyDict or type(equip_comp.durability) is not ReadOnlyDict:
@@ -1367,6 +1356,8 @@ class AuthoritativeState:
     _occupancy_map_cache: Any = field(default=None, repr=False, compare=False)
     occupancy_snapshot: Any = field(default=None, repr=False, compare=False)
     movement_cache: Any = field(default=None, repr=False, compare=False)
+    # D75 route step (src/engine/route_search.py): the route plans and search counters. Not world state: a derived, droppable cache, outside the hash.
+    route_plans: Any = field(default=None, repr=False, compare=False)
     world_indexes: Any = field(default=None, repr=False, compare=False)
     semantic_entity_indexes: Any = field(default=None, repr=False, compare=False)
     _index_hits: int = field(default=0, repr=False, compare=False)
@@ -1395,6 +1386,7 @@ class AuthoritativeState:
     movement_count: int = 0  # Milestone 2: Throughput truth
     maturity: int = 0
     last_calamity_tick: int = 0
+    grief_drained_tick: int = -1  # the newest death tick whose grief triggers have been applied (D80 grief-as-state); -1 = none
     blocked_tiles: set[tuple[int, int]] = field(default_factory=set) # Spatial truth
     town_tiles: set[tuple[int, int]] = field(default_factory=set)    # Social truth
     building_tiles: Dict[tuple[int, int], str] = field(default_factory=dict) # Service mapping
@@ -1590,6 +1582,7 @@ class AuthoritativeState:
             _building_map_cache=self._building_map_cache,
             occupancy_snapshot=self.occupancy_snapshot,
             movement_cache=self.movement_cache,
+            route_plans=self.route_plans,
             world_indexes=self.world_indexes,
             semantic_entity_indexes=self.semantic_entity_indexes
         )

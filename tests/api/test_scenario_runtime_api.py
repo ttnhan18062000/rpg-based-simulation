@@ -219,7 +219,8 @@ def test_route_registered_in_server():
         max_tick_budget_ms=200.0,
     )
     app = create_v2_app(profile=profile)
-    routes = [r.path for r in app.routes]
+    from tests.helpers.api_routes import route_path, walk_routes
+    routes = [route_path(r) for r in walk_routes(app)]
     assert any("/scenarios" in r for r in routes)
 
 

@@ -46,6 +46,10 @@ async def get_quality_status() -> Dict[str, Any]:
         "tick_count": report.tick_count,
         "overall_score": report.overall_score,
         "overall_grade": report.overall_grade,
+        "overall_status": report.overall_status,
+        "overall_reason": report.overall_reason,
+        "pillars_scored": report.pillars_scored,
+        "pillars_no_data": report.pillars_no_data,
     }
 
 
@@ -65,9 +69,11 @@ async def get_quality_pillars() -> Dict[str, Any]:
     for pillar_id, snap in report.pillars.items():
         pillars_out.append({
             "pillar_id": pillar_id,
+            "status": snap.status,
             "normalized_score": snap.normalized_score,
             "grade": snap.grade,
             "event_count": snap.event_count,
+            "min_events": snap.min_events,
             "loop_detected": snap.loop_detected,
         })
     return {"enabled": True, "tick_count": report.tick_count, "pillars": pillars_out}
@@ -111,6 +117,8 @@ async def get_quality_pillar_detail(pillar_id: str) -> Dict[str, Any]:
     return {
         "enabled": True,
         "pillar_id": pillar_id,
+        "status": snap.status,
+        "min_events": snap.min_events,
         "raw_score": snap.raw_score,
         "normalized_score": snap.normalized_score,
         "grade": snap.grade,

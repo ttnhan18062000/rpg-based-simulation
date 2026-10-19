@@ -193,7 +193,7 @@ def test_the_real_known_reds_file_is_loadable_and_lints_clean():
         ("frontier_extended_seed42_200t_narrative", "TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE"),
         ("urban_political_seed42_1000t_social", "TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE"),
         ("unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative", "TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE"),
-        ("simq_routing_test_seed42_1000t_cognition", "TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE"),
+        ("simq_routing_test_seed42_1000t_cognition", "TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1"),
     ],
 )
 def test_real_file_resolves_each_corpus_anchor_to_its_own_entry_not_the_catch_all(anchor, ticket):
@@ -201,7 +201,7 @@ def test_real_file_resolves_each_corpus_anchor_to_its_own_entry_not_the_catch_al
     known = srr.load_known_reds(REAL_KNOWN_REDS)
     entry = srr.owner_of(f"{CORPUS}{anchor}_grade_stability", known)
     assert entry is not None and entry["ticket"] == ticket
-    assert (entry["kind"] == "flaky") == (ticket == "TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE")
+    assert (entry["kind"] == "flaky") == (ticket == "TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1")
 
 
 def test_real_file_keeps_the_corpus_catch_all_last():

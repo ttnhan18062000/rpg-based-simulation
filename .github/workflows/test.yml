@@ -28,8 +28,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -94,8 +94,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -158,8 +158,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # Split into one step per test directory, each with if: always(), so a failure names its
@@ -302,14 +302,14 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
         run: |
           pytest tests/integration \
-                 -m "not slow and not extra_slow" --tb=short -q \
+                 -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup --durations=15 \
                  --junit-xml=reports/junit/integration.xml
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
@@ -338,8 +338,8 @@ jobs:
     name: "Tools · a–e"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
       # TCK-20261003-CI-SPLIT-API-TOOLS-JOB: tests/tools (211 flat files, about 275-340 s of the old
@@ -357,7 +357,7 @@ jobs:
                  --junit-xml=reports/junit/tools-a-e.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tools-a-e-junit-${{ github.sha }}
           path: reports/junit/tools-a-e*.xml
@@ -389,8 +389,8 @@ jobs:
     name: "Tools · f–z"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # Sibling of `tools-a-e` (TCK-20261003-CI-SPLIT-API-TOOLS-JOB); see the comment there for why
@@ -398,11 +398,34 @@ jobs:
       - name: "Run: tests/tools (f–z)"
         if: always()
         run: |
-          pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/tools-f-z.xml
+          pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
+                 --ignore=tests/tools/test_implement_ticket_native_refusal.py \
+                 --ignore=tests/tools/test_simq_long_run_observation.py \
+                 -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
+                 --junit-xml=reports/junit/tools-f-z-parallel.xml
+      # Serial on purpose (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS): this file writes one fixed-name temp copy of
+      # .claude/workflows/implement-ticket.js into the real workflows directory and deletes it afterwards, so its parametrized tests,
+      # spread over xdist workers, delete each other's copy (FileNotFoundError). Fix needs a per-test tmp name: agent-working's file,
+      # TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH. Remove this step and the --ignore line above once it uses tmp_path or a unique name.
+      # Also serial (TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL): test_observe_world_cleans_up_its_own_run_dir snapshots the WHOLE
+      # data/runs listing before and after observe_world, so a run directory another xdist worker creates in that window reads as leftover scratch
+      # data. Fix: snapshot only the run id observe_world made (agent-working's file, tests/tools; TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR). Remove this path and its --ignore line once it does.
+      - name: "Run: tests/tools (f–z, workflow-file test, serial)"
+        if: always()
+        run: |
+          pytest tests/tools/test_implement_ticket_native_refusal.py \
+                 tests/tools/test_simq_long_run_observation.py \
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/tools-f-z-serial.xml
+      - name: Merge JUnit XML
+        if: always()
+        run: |
+          python3 tools/ci_junit_merge.py --out reports/junit/tools-f-z.xml \
+                 reports/junit/tools-f-z-parallel.xml \
+                 reports/junit/tools-f-z-serial.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tools-f-z-junit-${{ github.sha }}
           path: reports/junit/tools-f-z*.xml
@@ -423,6 +446,8 @@ jobs:
         run: |
           if [ -d /tmp/base-checkout ]; then
             cd /tmp/base-checkout && pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
+                   tests/tools/test_implement_ticket_native_refusal.py \
+                   tests/tools/test_simq_long_run_observation.py \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary
@@ -435,8 +460,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # Split into one step per test directory, each with if: always(), so a failure names its
@@ -450,38 +475,51 @@ jobs:
       - name: "Run: tests/api"
         if: always()
         run: |
-          pytest tests/api -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/api -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-api.xml
       - name: "Run: tests/cli"
         if: always()
         run: |
-          pytest tests/cli -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/cli -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-cli.xml
       - name: "Run: tests/logging"
         if: always()
         run: |
-          pytest tests/logging -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/logging -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-logging.xml
       - name: "Run: tests/engine"
         if: always()
         run: |
-          pytest tests/engine -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/engine -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-engine.xml
       - name: "Run: tests/observability"
         if: always()
         run: |
-          pytest tests/observability -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/observability -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-observability.xml
       # TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT: the drawing tools' unit tests and the boundary guard run
       # here; the Aseprite-backed integration tests skip cleanly (no Aseprite in CI, ADR D10).
       - name: "Run: tests/visual_assets"
         if: always()
         run: |
-          pytest tests/visual_assets -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/visual_assets \
+                 --ignore=tests/visual_assets/store \
+                 --ignore=tests/visual_assets/test_review_cli.py \
+                 --ignore=tests/visual_assets/test_key_usage.py \
+                 -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-visual_assets.xml
-      - name: "Note: needs_aseprite skips (ADR D10)"
+      # Serial on purpose (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS): every writing store command takes an exclusive flock on the one
+      # real visual_assets/catalog/.store.lock, so two xdist workers collide (store_locked, exit 2). The fixture fix is issue #657;
+      # remove this step, and the three --ignore lines above, once it is on main. The two steps together collect exactly what the
+      # single `tests/visual_assets` step did.
+      - name: "Run: tests/visual_assets (store lock, serial)"
         if: always()
-        run: python3 tools/ci_aseprite_skip_line.py reports/junit/api-cli-engine-visual_assets.xml >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          pytest tests/visual_assets/store \
+                 tests/visual_assets/test_review_cli.py \
+                 tests/visual_assets/test_key_usage.py \
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-cli-engine-visual_assets-serial.xml
       - name: Merge JUnit XML
         if: always()
         run: |
@@ -491,10 +529,15 @@ jobs:
                  reports/junit/api-cli-engine-logging.xml \
                  reports/junit/api-cli-engine-engine.xml \
                  reports/junit/api-cli-engine-observability.xml \
-                 reports/junit/api-cli-engine-visual_assets.xml
+                 reports/junit/api-cli-engine-visual_assets.xml \
+                 reports/junit/api-cli-engine-visual_assets-serial.xml
+      # After the merge so it counts the Aseprite skips of both visual_assets steps.
+      - name: "Note: needs_aseprite skips (ADR D10)"
+        if: always()
+        run: python3 tools/ci_aseprite_skip_line.py reports/junit/api-cli-engine.xml >> "$GITHUB_STEP_SUMMARY"
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-cli-engine-junit-${{ github.sha }}
           path: reports/junit/api-cli-engine*.xml
@@ -517,7 +560,7 @@ jobs:
             # A base branch from before TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT lacks the
             # visual_assets test directory, and pytest aborts the whole collection on a missing
             # path, so create it empty in the base checkout first. The path list below stays
-            # identical to the head 'Run' steps.
+            # identical to the head 'Run' steps (the three store-lock paths overlap the whole-directory path, and pytest collects a node once).
             mkdir -p /tmp/base-checkout/tests/visual_assets
             cd /tmp/base-checkout && pytest tests/api \
                    tests/cli \
@@ -525,6 +568,9 @@ jobs:
                    tests/engine \
                    tests/observability \
                    tests/visual_assets \
+                   tests/visual_assets/store \
+                   tests/visual_assets/test_review_cli.py \
+                   tests/visual_assets/test_key_usage.py \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary
@@ -542,8 +588,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -602,14 +648,14 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # Every Python job installs from uv.lock (TCK-20261002-UV-FIRST-CI-JOB,
       # TCK-20261002-UV-REMAINING-CI-JOBS). setup-uv provides Python 3.13 and puts .venv on PATH,
       # so the pytest/python3 steps are unchanged. --no-install-project keeps the old behaviour of
       # no editable install; extras (knowledge stack) are not selected. Only tools-a-e syncs the
       # `lint` group (ruff, complexipy), which the code-health tests invoke; the rest pass
       # --no-group lint.
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -644,8 +690,8 @@ jobs:
     name: "Architecture / docs / static"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -723,10 +769,10 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_frontend == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
@@ -750,7 +796,7 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_docker_build == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Build checks
         run: docker build --check -f docker/backend.Dockerfile .
       - name: Build
@@ -779,7 +825,7 @@ jobs:
       run_docker_build: ${{ steps.diff.outputs.run_docker_build }}
       run_scenario_lane: ${{ steps.diff.outputs.run_scenario_lane }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
       - id: diff
         run: |
@@ -818,7 +864,7 @@ jobs:
           # modules. Re-derive the list when a folder is added or an import edge into one of these appears.
           PERF_RE='^(tests/(perf|certification|arena)/|src/(?!(?:actions|lab|rendering|runtime|testing|views|worldgeneration)/)|Makefile$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
           MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|platform|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
-          FRONTEND_RE='^(frontend/|\.github/workflows/test\.yml$)'
+          FRONTEND_RE='^(frontend/|visual_assets/|docs/assets/pilot_terrain_m5_criteria\.md$|\.github/workflows/test\.yml$)'
           DOCKER_RE='^(docker/backend\.Dockerfile$|\.dockerignore$|pyproject\.toml$|uv\.lock$|\.github/workflows/test\.yml$)'
           # grep exits 0 on a match, 1 on none and >=2 on an error (a broken pattern): an error must fail OPEN
           # (run the lane), never skip it silently.
@@ -863,7 +909,7 @@ jobs:
     outputs:
       pr_content_unchanged: ${{ steps.decide.outputs.pr_content_unchanged }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0, filter: "blob:none" }
       - id: decide
         continue-on-error: true
@@ -887,8 +933,8 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -934,8 +980,8 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || (needs.changed-files.outputs.run_scenario_lane == 'true' && needs.changed-files.outputs.run_perf_cert_arena != 'true')) && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - id: started
@@ -959,8 +1005,8 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Fast lanes
@@ -976,8 +1022,8 @@ jobs:
     # 96 s (average 34 s, 40 runs of 2026-10-03/04), so 10 minutes leaves wide headroom.
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # TCK-20261003-MYPY-BASELINE-ADVISORY, blocking since TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING: runs
@@ -1011,8 +1057,8 @@ jobs:
     # acceptance of the historical backlog.
     if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: SimQ full audit (engine re-run + anchor diff + regression tests + coverage scan)
@@ -1037,15 +1083,15 @@ jobs:
     # runs took at most 183 s (average 118 s, 40 runs of 2026-10-03/04), so 20 minutes leaves wide headroom.
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
       # jscpd runs through `npx` (version pinned by JSCPD_VERSION in the Makefile); same Node as the frontend job.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       # Keep this step's continue-on-error: it truncates /tmp/changed.txt first, and a failed diff only changes the
       # order of the job summary (changed files first), so it must never fail the required check.
       - name: Paths this PR changed
@@ -1091,9 +1137,9 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0, persist-credentials: false }
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
       # The list is written to a temporary name and moved into place only when git succeeds: the shell creates the
@@ -1115,7 +1161,7 @@ jobs:
         continue-on-error: true
       - name: Upload SARIF to code scanning
         if: ${{ steps.sarif.outcome == 'success' }}
-        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           sarif_file: reports/code_health/code-health.sarif
           category: code-health

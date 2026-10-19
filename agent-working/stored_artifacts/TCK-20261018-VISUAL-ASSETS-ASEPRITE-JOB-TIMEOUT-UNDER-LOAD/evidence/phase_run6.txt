@@ -1,0 +1,56 @@
+bwrap --script took mono 0.374s wall 0.374s load 2.48
+bwrap --script took mono 0.194s wall 0.194s load 2.48
+  +  11.3s mono, +  11.3s wall, load 1.93 PSI some avg10=0.00 avg60=0.11 avg300=0.33 total=177788879 | full avg10=0.00 avg60=0.11 avg300=0.27 total=137523842 | some avg10=11.48 avg60=5.51 avg300=10.04 total=1549025266 | full avg10=0.00 avg60=0.00 avg300=0.00 total=0 | 
+bwrap --script took mono 11.467s wall 11.467s load 1.93
+bwrap --script took mono 0.207s wall 0.207s load 1.93
+     364664 Sl   poll_schedule_timeou 12.3 /data/vboxuser/Work/rpg-based-simulation/
+     364749 R    -                    40.0 ps -o pid,stat,wchan:20,pcpu,args --ppid
+     11817   11576 S    poll_schedule_timeou  0.0 bwrap --unshare-all --die-with-pa
+     11849   11817 S    do_wait               0.0 bwrap --unshare-all --die-with-pa
+bwrap --script took mono 0.266s wall 0.266s load 1.93
+  +  18.4s mono, +  18.4s wall, load 16.35 PSI some avg10=0.00 avg60=0.08 avg300=0.31 total=177791132 | full avg10=0.00 avg60=0.07 avg300=0.25 total=137524386 | some avg10=9.89 avg60=6.95 avg300=10.10 total=1550225881 | full avg10=0.00 avg60=0.00 avg300=0.00 total=0 | 
+bwrap --script took mono 18.648s wall 18.648s load 17.68
+bwrap --script took mono 0.265s wall 0.265s load 17.68
+bwrap --script took mono 0.078s wall 0.078s load 17.68
+     364664 Sl   poll_schedule_timeou  5.3 /data/vboxuser/Work/rpg-based-simulation/
+     364867 R    -                    28.5 ps -o pid,stat,wchan:20,pcpu,args --ppid
+     11817   11576 S    poll_schedule_timeou  0.0 bwrap --unshare-all --die-with-pa
+     11849   11817 S    do_wait               0.0 bwrap --unshare-all --die-with-pa
+bwrap --script took mono 0.231s wall 0.231s load 17.68
+bwrap --script took mono 0.402s wall 0.402s load 17.68
+  +  19.8s mono, +  19.8s wall, load 17.49 PSI some avg10=0.14 avg60=0.18 avg300=0.32 total=177863659 | full avg10=0.05 avg60=0.10 avg300=0.24 total=137556648 | some avg10=10.31 avg60=8.04 avg300=10.17 total=1552762273 | full avg10=0.00 avg60=0.00 avg300=0.00 total=0 | 
+bwrap --script took mono 19.914s wall 19.914s load 17.49
+bwrap --script took mono 0.218s wall 0.218s load 17.49
+     364664 Sl   poll_schedule_timeou  3.3 /data/vboxuser/Work/rpg-based-simulation/
+     364990 R    -                    15.3 ps -o pid,stat,wchan:20,pcpu,args --ppid
+     365012 S    poll_schedule_timeou  0.0 bwrap --unshare-all --die-with-parent --n
+     11817   11576 S    poll_schedule_timeou  0.0 bwrap --unshare-all --die-with-pa
+     11849   11817 S    do_wait               0.0 bwrap --unshare-all --die-with-pa
+bwrap --script took mono 0.125s wall 0.125s load 17.49
+bwrap --script took mono 0.162s wall 0.162s load 17.49
+bwrap --script took mono 0.567s wall 0.567s load 17.49
+bwrap --script took mono 2.973s wall 2.973s load 28.34
+bwrap --script took mono 0.765s wall 0.765s load 28.34
+  +  21.5s mono, +  21.5s wall, load 32.50 PSI some avg10=0.00 avg60=0.11 avg300=0.29 total=177863659 | full avg10=0.00 avg60=0.06 avg300=0.22 total=137556648 | some avg10=6.66 avg60=10.21 avg300=10.69 total=1555803482 | full avg10=0.00 avg60=0.00 avg300=0.00 total=0 | 
+bwrap --script took mono 21.565s wall 21.565s load 32.50
+bwrap --script took mono 0.065s wall 0.065s load 32.50
+bwrap --script took mono 0.137s wall 0.137s load 32.50
+     364664 Rl   -                     2.2 /data/vboxuser/Work/rpg-based-simulation/
+     365169 R    -                     300 ps -o pid,stat,wchan:20,pcpu,args --ppid
+     11817   11576 S    poll_schedule_timeou  0.0 bwrap --unshare-all --die-with-pa
+     11849   11817 S    do_wait               0.0 bwrap --unshare-all --die-with-pa
+bwrap --script took mono 0.097s wall 0.097s load 32.50
+bwrap --script took mono 0.152s wall 0.152s load 32.50
+bwrap --script took mono 0.115s wall 0.115s load 32.50
+bwrap --script took mono 0.611s wall 0.611s load 32.50
+bwrap --script took mono 0.482s wall 0.482s load 32.50
+  +  38.6s mono, +  38.6s wall, load 58.58 PSI some avg10=0.00 avg60=0.05 avg300=0.25 total=177864205 | full avg10=0.00 avg60=0.03 avg300=0.19 total=137556671 | some avg10=15.76 avg60=9.09 avg300=10.26 total=1559098806 | full avg10=0.00 avg60=0.00 avg300=0.00 total=0 | 
+     364664 Rl   -                     1.5 /data/vboxuser/Work/rpg-based-simulation/
+     365327 T    do_signal_stop        0.0 bwrap --unshare-all --die-with-parent --n
+     365396 R    -                    21.0 ps -o pid,stat,wchan:20,pcpu,args --ppid
+     11817   11576 S    poll_schedule_timeou  0.0 bwrap --unshare-all --die-with-pa
+     11849   11817 S    do_wait               0.0 bwrap --unshare-all --die-with-pa
+     365327  364664 T    do_signal_stop        0.0 bwrap --unshare-all --die-with-pa
+     365329  365327 Ss   do_wait               0.0 bwrap --unshare-all --die-with-pa
+     365330  365329 Rl   -                     0.0 /usr/bin/aseprite -b --script /lu
+bwrap --script took mono 39.077s wall 39.077s load 58.58

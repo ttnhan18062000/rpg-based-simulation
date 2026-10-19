@@ -9,6 +9,8 @@ from src.observability.config import ObservabilityMode as _RunObservabilityMode
 from src.observability.event_extractor import EventExtractor
 from src.observability.event_shapers import FactionShaper, ProgressionShaper, SocialShaper, StrategyShaper
 from src.observability.events import SimulationEvent
+from src.observability.death_ledger import DeathLedger
+from src.observability.run_ledger import RunLedger
 from src.observability.starvation_record import StarvationRecorder
 from src.config.optimization_profiles import SubsystemBudget, SubsystemPressureReport, DEFAULT_OBSERVABILITY_BUDGET
 
@@ -77,6 +79,8 @@ class EventRecorder:
         self.run_dir = run_dir
         self.events: List[SimulationEvent] = []
         self.dropped_event_count = 0
+        self.buffer_evicted_count = 0  # in-memory buffer evictions only (never a loss to the file); mode drops and queue drops have their own counters
+        self._sev_counts: Dict[str, int] = {}
         self.event_count_by_type: Dict[str, int] = {}
         self._file_handle = None
         self.filepath = None
@@ -204,33 +208,9 @@ class EventRecorder:
                 self._events_dropped_by_mode += 1
                 return
 
-        # NORMAL or passed mode filter — apply capacity management then record.
-        # Capacity management for in-memory buffer
-        if len(self.events) >= self.max_events:
-            # Find the oldest event of the lowest severity that is not CRITICAL
-            evict_index = -1
-            lowest_sev_val = 5
-
-            for idx, ev in enumerate(self.events):
-                sev_val = SEVERITY_ORDER.get(ev.severity, 1)
-                if sev_val < 4 and sev_val < lowest_sev_val:
-                    lowest_sev_val = sev_val
-                    evict_index = idx
-
-            if evict_index != -1:
-                self.events.pop(evict_index)
-                self.dropped_event_count += 1
-            else:
-                # Buffer is full of CRITICAL events
-                if event.severity == "CRITICAL":
-                    self.events.pop(0)
-                    self.dropped_event_count += 1
-                else:
-                    # Drop incoming non-critical event
-                    self.dropped_event_count += 1
-                    return
-
-        self.events.append(event)
+        # NORMAL or passed mode filter: bound the in-memory buffer, then ALWAYS push to the queue (file, stream, SimQ). The buffer is a diagnostic
+        # view; nothing that happens to it may stop an event that passed the mode filter from reaching the file.
+        self._bound_buffer(event)
 
         # Push to the non-blocking observability queue
         from src.observability.events import ObservabilityEventEnvelope
@@ -238,6 +218,54 @@ class EventRecorder:
         
         # Pushing into BoundedObservabilityQueue is thread-safe and non-blocking
         self.queue.try_push(envelope)
+
+    def _bound_buffer(self, event: SimulationEvent) -> None:
+        """Keep the in-memory ``events`` buffer within ``max_events`` and store ``event`` in it.
+
+        The buffer is a diagnostic view only: whatever happens here, the caller still pushes the event to the queue (file, stream, SimQ). When the
+        buffer is full the oldest event of the lowest severity below CRITICAL is evicted; when it holds only CRITICAL events an incoming CRITICAL
+        evicts the oldest, and an incoming non-critical event is simply not stored. Each eviction (or not-stored event) is counted in
+        ``buffer_evicted_count`` (``dropped_event_count`` is kept equal for existing readers); it is never a loss to the file.
+        """
+        if len(self.events) >= self.max_events:
+            evict_index = self._eviction_index()
+            if evict_index != -1:
+                self._forget(self.events.pop(evict_index))
+            elif event.severity == "CRITICAL":
+                self._forget(self.events.pop(0))
+            else:
+                self._count_buffer_eviction()
+                return
+            self._count_buffer_eviction()
+        self.events.append(event)
+        self._sev_counts[event.severity] = self._sev_counts.get(event.severity, 0) + 1
+
+    def _count_buffer_eviction(self) -> None:
+        self.buffer_evicted_count += 1
+        self.dropped_event_count += 1
+
+    def _forget(self, event: SimulationEvent) -> None:
+        self._sev_counts[event.severity] = self._sev_counts.get(event.severity, 1) - 1
+
+    def _eviction_index(self) -> int:
+        """Index of the oldest event of the lowest severity below CRITICAL, or -1 when the buffer holds only CRITICAL events.
+
+        Per-severity counts say which severity that is, so the scan stops at its first (oldest) event instead of reading the whole buffer on every
+        record(). The counts are rebuilt when they no longer add up to the buffer (something replaced ``events`` from outside).
+        """
+        if sum(self._sev_counts.values()) != len(self.events):
+            self._sev_counts = {}
+            for ev in self.events:
+                self._sev_counts[ev.severity] = self._sev_counts.get(ev.severity, 0) + 1
+        present = [sev for sev in self._sev_counts if self._sev_counts[sev] > 0 and SEVERITY_ORDER.get(sev, 1) < 4]
+        if not present:
+            return -1
+        lowest = min(present, key=lambda sev: SEVERITY_ORDER.get(sev, 1))
+        lowest_val = SEVERITY_ORDER.get(lowest, 1)
+        for idx, ev in enumerate(self.events):
+            if SEVERITY_ORDER.get(ev.severity, 1) == lowest_val:
+                return idx
+        return -1
 
     def pressure_report(self) -> SubsystemPressureReport:
         """
@@ -300,6 +328,7 @@ class EventRecorder:
         return {
             "total_events_in_memory": len(self.events),
             "dropped_events_count": self.dropped_event_count,
+            "buffer_evicted_count": self.buffer_evicted_count,
             "event_count_by_type": self.event_count_by_type.copy(),
             "filepath": self.filepath,
             "queue_size": self.queue.get_size(),
@@ -311,7 +340,9 @@ class EventRecorder:
     def clear(self) -> None:
         """Clears the in-memory buffer and queue."""
         self.events.clear()
+        self._sev_counts = {}
         self.dropped_event_count = 0
+        self.buffer_evicted_count = 0
         self.event_count_by_type.clear()
         self.queue.drain()
 
@@ -361,15 +392,20 @@ class EventRecorder:
             self._file_handle = None
 
 
-EventRecorder.closing_event_sources.append(StarvationRecorder.closing_event)
+EventRecorder.closing_event_sources.extend([StarvationRecorder.closing_event, RunLedger.closing_event, DeathLedger.closing_event])
 
 
-def reset_run_state(strategic_cadence: int, escalated_hunger: float, cadence_gate: Callable[[int, Optional[int], int], bool], live: bool = True) -> None:
+def reset_run_state(strategic_cadence: int, escalated_hunger: float, cadence_gate: Callable[[int, Optional[int], int], bool], live: bool = True,
+                    starving_line: float = float("inf")) -> None:
     """Clear every run-scoped observability cache at run start. The three arguments are what the kernel (engine side) tells the starvation-death
     recorder: the profile's strategic re-decision period, the hunger the pull escalates at, and the cadence's per-subject stagger (``live`` False when the profile has no observability budget)."""
     EventExtractor.reset_run_state()
     StarvationRecorder.reset_run_state()
     StarvationRecorder.configure(strategic_cadence, escalated_hunger, cadence_gate, live)
+    RunLedger.reset_run_state()
+    RunLedger.configure(live)
+    DeathLedger.reset_run_state()
+    DeathLedger.configure(starving_line, live)
     StrategyShaper.reset_run_state()
     ProgressionShaper.reset_run_state()
     SocialShaper.reset_run_state()
@@ -377,8 +413,8 @@ def reset_run_state(strategic_cadence: int, escalated_hunger: float, cadence_gat
 
 
 def extract_events(prior: AuthoritativeState, current: AuthoritativeState, update: Any, mode: _RunObservabilityMode = _RunObservabilityMode.LIGHT) -> List[SimulationEvent]:
-    """One tick's curated events plus the starvation-death record channel (silent when observability is OFF: no header, so the channel reads as not live)."""
+    """One tick's curated events plus the starvation-death record channel and the run ledger (silent when observability is OFF: no header, so the channel reads as not live)."""
     events = EventExtractor.extract(prior, current, update, mode)
     if mode != _RunObservabilityMode.OFF:
-        events = events + StarvationRecorder.observe(prior, current, update)
+        events = events + StarvationRecorder.observe(prior, current, update) + RunLedger.observe(prior, current, update) + DeathLedger.observe(prior, current, update)
     return events

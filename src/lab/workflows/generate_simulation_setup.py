@@ -281,7 +281,7 @@ class GenerateSimulationSetupWorkflow:
                     id=r,
                     type="settlement" if r == "village" else "wilderness",
                     bounds=(min_x, min_y, max_x, max_y),
-                    terrain="GRASS",
+                    terrain="grass",
                     hazard_level=0.0
                 )
             )

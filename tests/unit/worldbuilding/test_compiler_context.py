@@ -23,8 +23,8 @@ def create_base_spec() -> dict:
             "coordinate_system": "grid"
         },
         "regions": [
-            {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "GRASS"},
-            {"id": "wilds", "type": "wilderness", "bounds": [15, 15, 40, 40], "terrain": "FOREST"}
+            {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "grass"},
+            {"id": "wilds", "type": "wilderness", "bounds": [15, 15, 40, 40], "terrain": "forest"}
         ],
         "factions": [
             {"id": "villagers", "type": "civilian"},
@@ -86,7 +86,8 @@ def test_compiler_with_full_context():
         atk=35,
         def_stat=15,
         attack_range=3,
-        readiness=85.0
+        readiness=85.0,
+        species_id="human",  # every compiled body names its species: its diet is declared (TCK-20261014-EVERY-COMPILED-LIVING-BODY-...)
     ))
     context.register_entity("horde", ResolvedEntityProfile(
         legacy_role=int(EntityRole.MONSTER),
@@ -96,7 +97,8 @@ def test_compiler_with_full_context():
         atk=60,
         def_stat=25,
         attack_range=2,
-        readiness=95.0
+        readiness=95.0,
+        species_id="goblin",
     ))
 
     # 2. Register overridden building profile

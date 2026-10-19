@@ -18,16 +18,20 @@ def reset_content_singletons():
     """Reset all content singletons before and after each test."""
     import src.content_semantics.faction as faction_mod
     from src.content.repository import _tick_context_active
+    from src.content.terrain_cost import reset_terrain_costs
     from src.engine.behavior_consumers import reset_behavior_consumers
     faction_mod._semantics_service_cache = None
     _tick_context_active.active = False
     reset_behavior_consumers()
+    reset_terrain_costs()
     yield
     faction_mod._semantics_service_cache = None
     _tick_context_active.active = False
     # warmup(repo=<mock>) also configures the behavior consumers with that mock; without this reset the mock catalog outlives the test and the next
     # kernel built in the same process fails in common_knowledge_seed ("Mock object has no attribute 'species'")
     reset_behavior_consumers()
+    # warmup(repo=<mock>) also installs that repo's terrain catalog; clear it for the same reason
+    reset_terrain_costs()
 
 
 # ---------------------------------------------------------------------------
@@ -44,6 +48,7 @@ class TestContentWarmupService:
         assert faction_mod._semantics_service_cache is None
 
         mock_repo = MagicMock(spec=CatalogRepository)
+        mock_repo.terrain = {}  # an instance attribute set in __init__, so the class spec lacks it; warmup installs the terrain catalog
         ContentWarmupService.warmup(repo=mock_repo)
 
         assert faction_mod._semantics_service_cache is not None
@@ -58,6 +63,7 @@ class TestContentWarmupService:
         from unittest.mock import MagicMock
 
         mock_repo = MagicMock(spec=CatalogRepository)
+        mock_repo.terrain = {}  # an instance attribute set in __init__, so the class spec lacks it; warmup installs the terrain catalog
         ContentWarmupService.warmup(repo=mock_repo)
         assert ContentWarmupService.is_warm() is True
 
@@ -67,6 +73,7 @@ class TestContentWarmupService:
         from unittest.mock import MagicMock
 
         mock_repo = MagicMock(spec=CatalogRepository)
+        mock_repo.terrain = {}  # an instance attribute set in __init__, so the class spec lacks it; warmup installs the terrain catalog
         ContentWarmupService.warmup(repo=mock_repo)
         assert ContentWarmupService.is_warm() is True
 
@@ -161,6 +168,7 @@ class TestNoContentLoadInTickHotPath:
         from unittest.mock import MagicMock, patch
 
         mock_repo = MagicMock(spec=CatalogRepository)
+        mock_repo.terrain = {}  # an instance attribute set in __init__, so the class spec lacks it; warmup installs the terrain catalog
         ContentWarmupService.warmup(repo=mock_repo)
 
         # Now simulate what tick_once does with the context flag

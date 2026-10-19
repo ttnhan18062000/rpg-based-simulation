@@ -828,7 +828,7 @@ def compute_retro_metrics(
         group_durations = [r["duration_s"] for r in group if r.get("duration_s") and not retro_provenance.is_derived(r)]
         execution_mode_summary[mode] = {
             "count": len(group),
-            "unknown": sum(1 for r in group if r.get("duration_source") == "unknown"),
+            "unknown": sum(1 for r in group if retro_provenance.source_of(r) == "unknown"),
             "done_count": sum(1 for r in group if _resolve_status(r) == "DONE"),
             "avg_duration_min": (
                 (int(sum(group_durations) / len(group_durations)) // 60)
@@ -1368,7 +1368,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
-    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None, failures=None,
+    raw_run_count=None, deduped_run_count=None, real_token_report=None, session_layer=None, gates=None, paths=None, failures=None, ledger_blocks=None, reset_declarations=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -1443,7 +1443,20 @@ def generate(
     lines.append("|---|---|")
     lines.append(f"| Total runs | {rs['total']} |")
     lines.append(f"| Completed (DONE) | {rs['done_count']} ({fmt_pct(rs['done_count'], rs['total'])}) |")
-    lines.append(f"| Gate failures | {rs['gate_fail_count']} |")
+    if ledger_blocks is not None:
+        # TCK-20261018-RETRO-GATE-FAILURES-ROW-CITES-LEDGER: runs almost never END in a gate failure (a hand closure fixes
+        # and reruns, or overrides), so the run-based count read "0" while the ledger held tens of blocking verdicts. The
+        # row cites the ledger; the run count follows as a trailing clause.
+        lines.append(f"| Gate failures | {ledger_blocks['blocking']} blocking verdicts of {ledger_blocks['verdicts']} "
+                     f"(ledger: {ledger_blocks['overridden']} overridden, {ledger_blocks['unresolved']} without an outcome); "
+                     f"{rs['gate_fail_count']} runs ended in a gate failure |")
+    else:
+        lines.append(f"| Gate failures (runs; no gate ledger for this window) | {rs['gate_fail_count']} |")
+    if reset_declarations is not None:
+        # TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP: a count, 0 included, from the first week
+        # the declaration command exists; earlier weeks are not instrumented, so they show no row
+        lines.append(f"| Reset-boundary declarations | {reset_declarations['total']} "
+                     f"(HARD {reset_declarations['HARD']}, SOFT {reset_declarations['SOFT']}, NEVER {reset_declarations['NEVER']}) |")
     if prov:
         lines.extend(retro_provenance.run_summary_rows(prov))
     else:
@@ -2170,6 +2183,57 @@ def _session_layer_section(runs, week_str, cutoff, latency_prs):
         return None
 
 
+_RESET_DECLARATIONS_FROM = "2026-W42"
+
+
+def _reset_declarations(week_str):
+    """{"total", "HARD", "SOFT", "NEVER"} of the week's `reset_boundary.jsonl` (0s when none), or None for a report that is
+    not one week, or a week before the command existed (never fails the retro)."""
+    try:
+        if not week_str or week_str < _RESET_DECLARATIONS_FROM:
+            return None
+        data_dir = DEFAULT_TOOLS_FILE if DEFAULT_TOOLS_FILE.is_dir() else DEFAULT_TOOLS_FILE.parent
+        path = Path(data_dir) / week_str / "reset_boundary.jsonl"
+        counts = {"HARD": 0, "SOFT": 0, "NEVER": 0}
+        if path.is_file():
+            for line in path.read_text(encoding="utf-8").splitlines():
+                try:
+                    kind = json.loads(line).get("kind")
+                except ValueError:
+                    continue
+                if kind in counts:
+                    counts[kind] += 1
+        return {"total": sum(counts.values()), **counts}
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _ledger_blocks(week_str):
+    """{"verdicts", "blocking", "overridden", "unresolved"} over the gate ledger's verdicts of the ISO week `week_str`, or
+    None when the report has no ledger window: no week (`--all`/`--days`), no ledger rows at all, a week before the
+    ledger's first verdict, or a ledger that cannot be read (never fails the retro).
+
+    A ledger that exists but holds no verdict for this week is a real reading, zeros included
+    (TCK-20261018-RETRO-GATE-FAILURES-ROW-CITES-LEDGER): "0 blocking verdicts of 0" is not "no gate ledger"."""
+    if not week_str:
+        return None
+    try:
+        import gate_ledger
+
+        data_dir = DEFAULT_TOOLS_FILE if DEFAULT_TOOLS_FILE.is_dir() else DEFAULT_TOOLS_FILE.parent
+        view = gate_ledger.resolved_view(gate_ledger.load_rows(data_dir))
+        weeks = {w for w in (gate_ledger.week_of(v.get("ts")) for v in view) if w}
+        if not weeks or week_str < min(weeks):
+            return None
+        inside = [v for v in view if gate_ledger.week_of(v.get("ts")) == week_str]
+        blocking = [v for v in inside if v.get("blocking")]
+        return {"verdicts": len(inside), "blocking": len(blocking),
+                "overridden": sum(1 for v in blocking if v["outcome"] == "overridden"),
+                "unresolved": sum(1 for v in blocking if v["outcome"] is None)}
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _gates_section(week_str):
     """The rendered Gates section (TCK-20261006-GATE-PRECISION-REPORT-AND-RETRO), or None when it cannot be built
     (never fails the retro). A `--days`/`--all` report is not week-scoped, so it reads every week."""
@@ -2287,13 +2351,15 @@ def main():
 
     session_layer = _session_layer_section(runs, week_str, cutoff if args.days else None, args.latency_prs)
     gates = _gates_section(None if (args.all or args.days) else week_str)
+    ledger_blocks = _ledger_blocks(None if (args.all or args.days) else week_str)
+    reset_declarations = _reset_declarations(None if (args.all or args.days) else week_str)
     paths = _paths_section(runs, events, all_runs)
     failures = _failures_section(runs, events)
 
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
         raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
-        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths, failures=failures,
+        real_token_report=real_token_report, session_layer=session_layer, gates=gates, paths=paths, failures=failures, ledger_blocks=ledger_blocks, reset_declarations=reset_declarations,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)
@@ -2336,6 +2402,9 @@ def _resolve_report_run_population(name, all_runs, runs_by_week):
     return dedupe_to_latest_per_execution(pop)
 
 
+_ISO_WEEK_RE = re.compile(r"^\d{4}-W\d{2}$")
+
+
 def _update_index(all_runs, all_tools=None):
     all_tools = all_tools or []
 
@@ -2371,11 +2440,16 @@ def _update_index(all_runs, all_tools=None):
         read_calls = build_raw_investigation_count_section(week_tools)["total"]
         skill_invocations = build_skill_usage_section(week_tools)["total_skill_invocations"]
 
+        ledger = _ledger_blocks(name) if _ISO_WEEK_RE.match(name) else None
+        gate_cell = f"{ledger['blocking']}L" if ledger is not None else str(fails)
         lines.append(
-            f"| [{name}]({f.name}) | {n} | {done} | {fails} | {search_calls} | {read_calls} | "
+            f"| [{name}]({f.name}) | {n} | {done} | {gate_cell} | {search_calls} | {read_calls} | "
             f"{skill_invocations} |"
         )
 
+    lines.append("")
+    lines.append("Gate failures: `NL` is the number of blocking verdicts in the gate ledger for that week; a plain number counts "
+                 "runs that ended in a gate failure (no gate ledger for that window).")
     (RETRO_DIR / "index.md").write_text("\n".join(lines) + "\n")
 
 

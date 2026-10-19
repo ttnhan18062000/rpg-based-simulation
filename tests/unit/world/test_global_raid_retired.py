@@ -11,7 +11,6 @@ and bit-identical regional influence. It had never once produced a raid.
 Retiring it stops the creation of regionless, inert entities. The camp-triggered path, which has
 real provenance, survives and is asserted here to still work.
 """
-import pytest
 
 from src.core.state import AuthoritativeState, RegionState
 from src.core.updates import StateUpdate
@@ -66,23 +65,7 @@ def test_no_entity_is_created_at_the_world_origin_ring_on_the_cadence_tick():
     assert outside == [], f"entities created outside every region: {outside}"
 
 
-def test_camp_triggered_spawn_raid_still_works():
-    """`spawn_raid` survives: it is the camp path's composition logic, which is unaffected.
-
-    This is the positive control for the retirement -- it proves the two tests above pass because
-    the global cadence path is gone, not because raid composition itself broke.
-    """
-    region = RegionState(id="hometown", name="Hometown", bounds=(100, 100, 160, 160))
-    state = AuthoritativeState(tick=500, seed=42, regions={"hometown": region})
-
-    update = RaidService.spawn_raid(
-        state, EntityGenerator(seed=42),
-        origin=(120.0, 120.0), target=(130.0, 130.0), raid_size=3,
-    )
-
-    assert len(update.entities_add) == 3
-    for mob in update.entities_add:
-        assert mob.kind == "goblin_raider"
-        assert mob.navigation.target == (130.0, 130.0)
-        # TCK-20260913: a raid mob carries no strategic project, so capacity-gated scorers no-op.
-        assert mob.strategic.profile.max_active_projects == 0
+def test_camp_triggered_spawn_raid_is_retired_too():
+    """D70 (TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70): the camp path's `spawn_raid` is gone as well, so no raid composition
+    survives and no raider can be conjured at a camp."""
+    assert not hasattr(RaidService, "spawn_raid")

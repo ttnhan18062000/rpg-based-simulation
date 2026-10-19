@@ -47,6 +47,12 @@ Core laws: [Simulation Kernel](docs/engine/kernel.md) · [Authoritative Pipeline
 
 ---
 
+## For reviewers
+
+- Determinism demo: [`make replay-check`](docs/guides/reviewer_replay_check.md) runs one seed twice and compares the final state hashes.
+
+---
+
 ## Documentation Site
 
 The project has a unified Docusaurus 3 documentation site that covers all content layers: mechanics laws, engine contracts, architecture, tickets, stored artifacts, and archived historical docs.

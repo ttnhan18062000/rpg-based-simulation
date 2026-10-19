@@ -105,3 +105,69 @@ def test_two_same_seed_runs_in_one_second_get_distinct_run_dirs(monkeypatch, tmp
         for run_dir, _ in dirs:
             if Path(run_dir).parent.name == "runs":
                 shutil.rmtree(run_dir, ignore_errors=True)  # exactly the directories this test created
+
+
+# TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT: calibrate_simq records the run's host-independence beside the report it writes, and the
+# comparison tools refuse a calibration directory that does not carry it.
+def _calibrate(tmp_path, *flags):
+    import os
+
+    from tools.gate_checks.done_checker_static import delete_data_run_paths
+
+    out = tmp_path / "cal"
+    old_argv = sys.argv[:]
+    sys.argv = ["calibrate_simq", "--name", "generic", "--ticks", "5", "--entities", "4", "--output", str(out), *flags]
+    try:
+        cal_mod.main()
+    finally:
+        sys.argv = old_argv
+    from tools.test_architecture.simq_run_record import load_sidecar
+
+    record = load_sidecar(out)
+    assert (out / "quality_report.json").exists()
+    if record and record.get("run_id") and os.path.isdir(os.path.join("data", "runs", record["run_id"])):
+        delete_data_run_paths([record["run_id"]])  # this test's own run, by exact id
+    return record
+
+
+def test_calibrate_simq_writes_the_run_record_beside_the_report_from_the_runs_own_manifest(tmp_path):
+    record = _calibrate(tmp_path, "--audit-mode")
+    assert record["audit_mode"] is True and record["signals_zeroed"] is True and record["run_id"]
+
+
+def test_calibrate_simq_without_audit_mode_records_it_as_not_audit_mode(tmp_path):
+    record = _calibrate(tmp_path)
+    assert record["audit_mode"] is False and record["signals_zeroed"] is not True
+
+
+def _evaluate_dry_run(monkeypatch, tmp_path, sidecar):
+    import json
+
+    from tools.test_architecture.simq_run_record import SIDECAR_NAME
+
+    run_key = "sandbox_world_seed42_5t"
+    cal = tmp_path / "calibration" / run_key
+    cal.mkdir(parents=True)
+    (cal / "quality_report.json").write_text(json.dumps({"pillars": {"COMBAT": {"grade": "B", "normalized_score": 0.0, "event_count": 9}}}))
+    if sidecar is not None:
+        (cal / SIDECAR_NAME).write_text(json.dumps(sidecar))
+    anchors = tmp_path / "anchors.json"
+    anchors.write_text(json.dumps({run_key: {"COMBAT": {"grade": "B", "score": 0.0}}}))
+    monkeypatch.setattr(ev_mod, "CALIBRATION_ROOT", tmp_path / "calibration")
+    monkeypatch.setattr(sys, "argv", ["evaluate_simq", "--dry-run", "--scenario", run_key, "--anchors", str(anchors)])
+    with pytest.raises(SystemExit) as caught:
+        ev_mod.main()
+    return caught.value.code
+
+
+def test_evaluate_simq_compares_a_calibration_dir_recorded_host_independent(monkeypatch, tmp_path):
+    assert _evaluate_dry_run(monkeypatch, tmp_path, {"run_id": "r", "audit_mode": True, "signals_zeroed": True}) == 0
+
+
+@pytest.mark.parametrize(
+    "sidecar", [None, {"run_id": "r", "audit_mode": None, "signals_zeroed": None}, {"run_id": "r", "audit_mode": False, "signals_zeroed": False}],
+    ids=["no sidecar (a stale directory)", "nulls", "a live run"],
+)
+def test_evaluate_simq_refuses_a_calibration_dir_not_recorded_host_independent(monkeypatch, tmp_path, capsys, sidecar):
+    assert _evaluate_dry_run(monkeypatch, tmp_path, sidecar) == 2
+    assert "not recorded as host-independent" in capsys.readouterr().err

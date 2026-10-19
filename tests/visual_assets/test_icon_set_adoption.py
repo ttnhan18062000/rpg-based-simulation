@@ -28,11 +28,11 @@ def test_the_draft_set_still_hashes_to_what_the_adoption_recorded_and_every_entr
 
 def test_each_icon_source_is_in_the_catalog_with_its_own_source_and_the_icon_keys_stay_optional():
     sources = sorted(p.name for p in (config.CATALOG_ROOT / "sources").iterdir() if p.name != ".gitkeep")
-    assert [s for s in sources if s.startswith("icon_")] == sorted(af.ICON_SOURCES + af.ICON_V2_SOURCES)
+    assert [s for s in sources if s.startswith("icon_")] == sorted(af.ICON_SOURCES + af.ICON_V2_SOURCES + af.OBJECT_SOURCES)  # the 36 icons + the 18 object markers
     registry = load_registry()
     from visual_assets.review import icon_v2_keys as v2
 
-    icon_keys = sorted(k for k in registry.keys if k.startswith("icon.") and k not in v2.KEYS)  # the 14 key-set keys; the 22 v2 keys are checked below and in test_icon_v2_keys
+    icon_keys = sorted(k for k in registry.keys if k.startswith("icon.") and k not in v2.KEYS and k not in af.OBJECT_KEYS)  # the 14 key-set keys; the 22 v2 keys are checked below and in test_icon_v2_keys
     assert [k.replace(".", "_") for k in icon_keys] == af.ICON_SOURCES
     assert sorted(k.replace(".", "_") for k in v2.KEYS) == af.ICON_V2_SOURCES
     assert all(registry.keys[k].optional and registry.keys[k].variant_axes == () for k in icon_keys)  # nothing requires them: a missing image leaves today's fallback
@@ -63,12 +63,14 @@ def test_the_icons_are_built_but_only_rc_0008_and_later_cover_an_icon_slot():
     """The adoption is a record of the owner's decision; `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE` then built the 36 icons (one `x1` artifact each, on top of the 34 terrain-era ones) and the owner approved `pilot/rc-0008`.
     rc-0001 to rc-0007 stay as they were: only terrain and border slots (rc-0006 and rc-0007: 34)."""
     generated = sorted(p.name for p in (config.CATALOG_ROOT / "generated").iterdir() if p.name != ".gitkeep")
-    assert generated == af.GENERATED and sorted(g for g in generated if g.startswith("icon_")) == af.ICON_GENERATED  # the 14 key-set icons and the 22 v2 icons are built
+    assert generated == af.GENERATED and sorted(g for g in generated if g.startswith("icon_")) == sorted(af.ICON_GENERATED + af.OBJECT_GENERATED)  # (the 18 object markers are built too) the 14 key-set icons and the 22 v2 icons are built
     candidates = config.CATALOG_ROOT / "manifests" / "candidates" / "pilot"
     for path in sorted(candidates.glob("rc-*.json")):
         keys = {e["visual_key"] for e in json.loads(path.read_text())["entries"]}
         if path.name in ("rc-0008.json", "rc-0009.json", "rc-0010.json"):  # rc-0009 and rc-0010 keep rc-0008's 36 icons
             assert len([k for k in keys if k.startswith("icon.")]) == af.RC_0008_ICON_ENTRIES, path.name
+        elif path.name == "rc-0011.json":  # rc-0011 adds the 18 object markers (13 nodes, the nest, 4 buildings)
+            assert len([k for k in keys if k.startswith("icon.")]) == af.RC_0008_ICON_ENTRIES + len(af.OBJECT_KEYS), path.name
         else:
             assert not [k for k in keys if k.startswith("icon.")], path.name
     assert len(json.loads((candidates / "rc-0006.json").read_text())["entries"]) == 34

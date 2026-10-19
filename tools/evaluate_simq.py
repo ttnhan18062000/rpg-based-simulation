@@ -274,8 +274,19 @@ def main() -> None:
         if args.dry_run:
             _warn_if_run_health_guard_failed(run_key)
 
+        from tools.test_architecture.simq_pillar_compare import HostIndependenceRefused, anchor_grade_label, require_host_independent
+        from tools.test_architecture.simq_run_record import load_sidecar
+
+        # A live run that is not recorded host-independent (a stale calibration dir from before the record, or a non-audit run) is refused, not compared
+        # (TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT); re-run without --dry-run.
+        try:
+            require_host_independent(run_key, load_sidecar(CALIBRATION_ROOT / run_key))
+        except HostIndependenceRefused as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            error_count += 1
+            continue
+
         actual_grades = _extract_pillar_grades(report)
-        from tools.test_architecture.simq_pillar_compare import anchor_grade_label
 
         anchor_grades = {p: anchor_grade_label(p, v) for p, v in all_anchors[run_key].items()}
         rows = _compare(run_key, actual_grades, anchor_grades)

@@ -88,6 +88,14 @@ Conquest and liberation trigger at `CONQUEST_THRESHOLD = -50.0` / `LIBERATION_TH
 
 **Impact of Ownership**: Faction-owned regions may provide safe zones for allies, trigger reinforcement spawns, or apply special economic modifiers to local trade.
 
+**A conquest adds no body (owner ruling D71, TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71).**
+A region taken by the Monster Horde changes owner and nothing else: no stronghold entity is created, so a conquest adds no
+entity and does not move `next_entity_id`. The one recovery path is unchanged: an invader-owned region is freed when its
+influence climbs back to `LIBERATION_THRESHOLD = +50.0`, and influence moves only on deaths. The "Aura of Despair" read
+(`world/environment.py`) still looks for stronghold-kind entities, so it applies only where a world authors one. Interim: the
+influence-from-deaths trigger and the Monster Horde as a taker are label-driven; they are re-anchored with caused war and
+peace (not before M3).
+
 ### Hazard Impacts
 As `Hazard Level` increases, entities within the region suffer (`Hazard Level` is open-ended: authored values run to 4.0 and the generator authors above 1.0; owner decision 12):
 *   **Passive HP Drain**: Health is lost every tick based on the hazard's intensity.
@@ -408,6 +416,16 @@ cohort data, or no region at all, is treated as eligible (not suppressed) rather
 case. On a successful birth, this path also nudges the birth region's `young`-bracket count by `+1`
 via `WorldUpdate.population_young_births_delta` — see "Individual-Birth Population-Pressure Nudge"
 below (`TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE`).
+
+### Camps Spawn Nothing and Raid Nothing (owner ruling D70, TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70)
+
+A camp matures and nothing else. The two parentless sources that used to run in `CampService.process_camps()` are removed: the
+every-30-ticks reinforcement (one monster whenever fewer than `max(2, maturity/10)` members stood within 10 tiles) and the camp raid
+(`3 + maturity` raiders conjured at the camp for a 20-maturity cost, `RaidService.spawn_raid`). A camp's members change by death alone,
+so a camp shrinks as its members die until real births (M1) or recruits refill it, and a camp raids again only when a later rule lets
+its existing members set out together. Camp maturity is no longer drained by a raid cost, so it only grows. Whatever the sections
+below say about a camp's raid outcome describes the retired path; the Nest-spread fork and the Natural-Creature path stay flag-gated
+OFF and are retired with the M1 births.
 
 ### Camp/Nest Classification & Nest Spread (TCK-20260904-CAMP-NEST-CLASSIFICATION)
 

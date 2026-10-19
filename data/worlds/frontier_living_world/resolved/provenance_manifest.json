@@ -1,5 +1,5 @@
 {
-  "manifest_id": "prov_3211b2a8a308fba2",
+  "manifest_id": "prov_d157650b88df04a9",
   "world_id": "frontier_living_world",
   "source_schema_version": "provenancemanifest.v1",
   "catalog_fingerprint": "db0cd1bff0c3623cb6291155577e09bae4dc7a4ba5217da2128e50a30a3a079f",
@@ -9,14 +9,14 @@
     "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "goblin_camp_forage": "79af965c2ca3a71404f844c2f02753c21149e5cff4e6f21707e6223e1dac63cb",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
-    "trading_company_hub": "154fc6ef87e46522880df12f548520ebc2564b1b6a2d44c14a37284b1a390c8d",
+    "trading_company_hub": "555572694bcb8ad723476f31abb84a62d8889e2098b585d434a48fdec6aac28c",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
     "wolf_den_near_forest": "705d6afb6e0b2992d1fde612cc46a9f55d6e9eddd4cda6c15e864b76f3e62d81"
   },
   "composition_fingerprint": "fa948a3e7096e84458702add738376b02f5187afc9b2c2c24c506a77899ece97",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "3211b2a8a308fba26a6233b982a755ab5592a2c1c4a903bbcbaff737f2084832",
-  "created_at": "2026-10-12T14:35:26.993916Z",
+  "content_fingerprint": "d157650b88df04a99401486f2b471383760d2378870d23592c6f952d4d159069",
+  "created_at": "2026-10-13T10:26:25.757616Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

@@ -45,7 +45,7 @@ def run_turbo():
     print(f"Targeting {target_ticks} ticks with an inline headless kernel...")
 
     # 2. Configure headless
-    mgr = V2EngineManager(PROD_LARGE, seed=111, entities_count=25, world_id="dungeon_crawl")
+    mgr = V2EngineManager(PROD_LARGE, seed=111, world_id="dungeon_crawl")
     kernel = mgr.kernel
 
     start_time = time.time()

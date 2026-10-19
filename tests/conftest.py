@@ -249,6 +249,36 @@ def _reset_catalog_registries():
 
 
 @pytest.fixture(autouse=True)
+def _mocked_rng_kernel_output_goes_to_tmp_path(request, monkeypatch, tmp_path):
+    """A Kernel built on a MOCKED rng writes its run output under tmp_path, never into the real data/runs.
+
+    Such a kernel used to leave run folders named after the mock in the working copy. Only a kernel that draws its own default run id from a
+    mock rng is affected (the draw is where the kernel names its run); every kernel on a real rng, one with an explicit run_id, and a repository
+    that names its own base_dir keep their behaviour, and a test that deliberately checks data/runs opts out with ``@pytest.mark.real_data_runs``."""
+    if request.node.get_closest_marker("real_data_runs"):
+        return
+    from unittest.mock import NonCallableMock
+
+    from src.engine import kernel as kernel_module
+    from src.observability.reporting import artifact_repository as repo_module
+
+    state = {"mocked": False}
+    original_new_run_id = kernel_module.new_run_id
+    original_init = repo_module.RunArtifactRepository.__init__
+    default_base = original_init.__defaults__[0] if original_init.__defaults__ else "data/runs"
+
+    def new_run_id(rng):
+        state["mocked"] = isinstance(rng, NonCallableMock)
+        return original_new_run_id(rng)
+
+    def redirected(self, base_dir: str = default_base):
+        original_init(self, str(tmp_path / "data_runs") if state["mocked"] and base_dir == default_base else base_dir)
+
+    monkeypatch.setattr(kernel_module, "new_run_id", new_run_id)
+    monkeypatch.setattr(repo_module.RunArtifactRepository, "__init__", redirected)
+
+
+@pytest.fixture(autouse=True)
 def _no_gate_verdict_recording(monkeypatch):
     """Keep gate CLIs from appending to the real agent-monitoring data root during tests
     (TCK-20261006-GATE-VERDICT-RECORD-AND-HAND-SITES). A test of the recorder itself deletes this env var."""

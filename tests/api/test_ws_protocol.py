@@ -9,6 +9,8 @@ import websockets
 import msgpack
 import os
 
+from tests.helpers.live_server import start_server, stop_server
+
 _TEST_CLIENT_ID = "ws-protocol-test-client"
 _TEST_RAW_KEY = "ws-protocol-test-key"
 _TEST_KEY_HASH = hashlib.sha256(_TEST_RAW_KEY.encode("utf-8")).hexdigest()
@@ -17,10 +19,7 @@ _TEST_KEY_HASH = hashlib.sha256(_TEST_RAW_KEY.encode("utf-8")).hexdigest()
 async def test_ws_json_handshake():
     """Verify WebSocket handshake and streaming in JSON mode."""
     port = 8004
-    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
-    env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
-    server = subprocess.Popen(cmd, env=env)
-    time.sleep(3)
+    server, log = start_server(port, env={"RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"})
 
     try:
         async with websockets.connect(
@@ -41,17 +40,13 @@ async def test_ws_json_handshake():
             assert "tick" in data
             
     finally:
-        server.terminate()
-        server.wait()
+        stop_server(server, log)
 
 @pytest.mark.anyio
 async def test_ws_msgpack_handshake():
     """Verify WebSocket handshake and streaming in MessagePack mode."""
     port = 8005
-    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
-    env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
-    server = subprocess.Popen(cmd, env=env)
-    time.sleep(3)
+    server, log = start_server(port, env={"RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"})
 
     try:
         async with websockets.connect(
@@ -67,18 +62,14 @@ async def test_ws_msgpack_handshake():
             assert data["tick"] >= 0
             
     finally:
-        server.terminate()
-        server.wait()
+        stop_server(server, log)
 
 @pytest.mark.anyio
 async def test_ws_msgpack_delta_payload_shape():
     """Verify the per-tick entity-delta broadcast round-trips over msgpack with the expected
     changed/removed/tick/snapshot_as_of_tick shape (TCK-20260821-WS-ENTITY-DELTA-BROADCAST)."""
     port = 8006
-    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
-    env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
-    server = subprocess.Popen(cmd, env=env)
-    time.sleep(3)
+    server, log = start_server(port, env={"RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"})
 
     try:
         async with websockets.connect(
@@ -108,8 +99,7 @@ async def test_ws_msgpack_delta_payload_shape():
             assert data["region_id"] is None
 
     finally:
-        server.terminate()
-        server.wait()
+        stop_server(server, log)
 
 
 @pytest.mark.anyio
@@ -117,10 +107,7 @@ async def test_ws_delta_envelope_includes_null_spatial_placeholder_field():
     """Verify the per-tick entity-delta broadcast carries the reserved, always-null region_id
     placeholder over the json format too (TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD)."""
     port = 8007
-    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
-    env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
-    server = subprocess.Popen(cmd, env=env)
-    time.sleep(3)
+    server, log = start_server(port, env={"RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"})
 
     try:
         async with websockets.connect(
@@ -141,8 +128,7 @@ async def test_ws_delta_envelope_includes_null_spatial_placeholder_field():
             assert data["region_id"] is None
 
     finally:
-        server.terminate()
-        server.wait()
+        stop_server(server, log)
 
 
 @pytest.mark.anyio
@@ -150,10 +136,7 @@ async def test_ws_delta_envelope_new_field_does_not_change_existing_field_semant
     """Verify the new region_id placeholder is purely additive -- tick/changed/removed/events/
     snapshot_as_of_tick keep their pre-existing types and values (TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD)."""
     port = 8008
-    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
-    env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
-    server = subprocess.Popen(cmd, env=env)
-    time.sleep(3)
+    server, log = start_server(port, env={"RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"})
 
     try:
         async with websockets.connect(
@@ -176,8 +159,7 @@ async def test_ws_delta_envelope_new_field_does_not_change_existing_field_semant
             assert data["region_id"] is None
 
     finally:
-        server.terminate()
-        server.wait()
+        stop_server(server, log)
 
 
 if __name__ == "__main__":
