@@ -4995,7 +4995,7 @@
   - architecture
   - world
   - content
-  last_verified: '2026-10-08'
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/agent-monitoring/codebase_health_history_schema.md
   title: Codebase Health History — Schema Reference
@@ -6961,7 +6961,7 @@
   - architecture
   - documentation
   - roadmap
-  last_verified: '2026-10-09'
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/plans/systemic_world/review_history/external-ai-instruction-execute-first-systemic-world-batch.md
   title: External AI instruction — execute and self-review the first systemic-world
@@ -7090,7 +7090,7 @@
   - architecture
   - documentation
   - roadmap
-  last_verified: '2026-10-09'
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/plans/systemic_world/ticket_planner_handoff.md
   title: Systemic World First Wave — Ticket-Planner Handoff
@@ -7103,6 +7103,18 @@
   - documentation
   - roadmap
   last_verified: '2026-09-28'
+- type: doc
+  path: docs/plans/systemic_world/v1_disclosure.md
+  title: Baseline v1 disclosure list
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - documentation
+  - roadmap
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/plans/visual-asset-foundation/README.md
   title: Visual Asset Foundation — Structure Proposal (drawing tools + asset store)
@@ -7678,6 +7690,20 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY.md
+  ticket_id: TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY
+  title: V8's examples name each unsourced entity and its tick, the way V5's out-of-world
+    examples already do
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - _count_adds
+  - _check_unsourced_adds
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
   ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
   title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
@@ -7696,6 +7722,32 @@
   - workflows
   - performance
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-RECORD-BASELINE-V1.md
+  ticket_id: TCK-20261019-RECORD-BASELINE-V1
+  title: 'Record baseline v1: paired fingerprints, gate V1-V8 rows and the behavioral_5k
+    rebaseline, all on one commit, with v1_disclosure.md as what v1 does not claim'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - tools/rpg_measure/paired.py
+  - tests/regression/test_behavioral_5k.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING.md
+  ticket_id: TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING
+  title: 'The #646 soak logged 30 tick budget overruns; read them again on a quiet
+    host before calling them a defect'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - _report_budget_overrun
+  - create_watchdog_trip
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
   ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
   title: 'The measured API load-test run on host ubuntu: req/s and p50/p95/p99 with
@@ -7713,6 +7765,18 @@
   - platform
   - performance
   - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-API-RECORDS-REQUEST-DURATION-BY-ROUTE-TEMPLATE.md
+  ticket_id: TCK-20261018-API-RECORDS-REQUEST-DURATION-BY-ROUTE-TEMPLATE
+  title: 'The API records a request-duration histogram labelled by method, route template
+    and status class (issue #622, R2).'
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - src/api/http_metrics.py, src/api/engine_manager.py, src/api/server.py
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER.md
   ticket_id: TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER
@@ -8961,6 +9025,22 @@
   - ai
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE.md
+  ticket_id: TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE
+  title: Every compiled living body resolves to a declared diet, or the world does
+    not compile (the diet slice of SURV-05 provenance; prerequisite of the free-meal
+    removal).
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-14'
+  related_code_areas:
+  - data/content/world_modules/*.yaml (population_recipes), src/worldmodules/schema.py,
+    src/worldassembly/resolver.py (the no-archetype branch ~1090), src/worldassembly/entity_spawner.py
+    (_spawn_legacy_guard), src/worldbuilding/compiler.py, src/content/validator.py,
+    src/engine/appraisal.py.
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH.md
   ticket_id: TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH
   title: 'Every death carries a typed cause, recorded at death in a durable field:
@@ -9414,22 +9494,6 @@
   tags:
   - platform
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE.md
-  ticket_id: TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE
-  title: Every compiled living body resolves to a declared diet, or the world does
-    not compile (the diet slice of SURV-05 provenance; prerequisite of the free-meal
-    removal).
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-14'
-  related_code_areas:
-  - data/content/world_modules/*.yaml (population_recipes), src/worldmodules/schema.py,
-    src/worldassembly/resolver.py (the no-archetype branch ~1090), src/worldassembly/entity_spawner.py
-    (_spawn_legacy_guard), src/worldbuilding/compiler.py, src/content/validator.py,
-    src/engine/appraisal.py.
-  artifact_files: []
-  tags: []
-- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261014-INFORMATION-DIVERGENCE-EVENT-FIRES-ON-ENTERING-THE-DIVERGED-STATE-NOT-EVERY-UPDATE.md
   ticket_id: TCK-20261014-INFORMATION-DIVERGENCE-EVENT-FIRES-ON-ENTERING-THE-DIVERGED-STATE-NOT-EVERY-UPDATE
   title: '`decision_diverged_by_belief` fires once per divergence episode (on the
@@ -9650,6 +9714,32 @@
   - governance
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK.md
+  ticket_id: TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK
+  title: The rpg gate gets V8, "every entity added mid-run has a declared source".
+    A validity row the metric module leaves out reads as no-data, not as a pass. A
+    gate self-test proves V8 fires.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-13'
+  related_code_areas:
+  - tools/test_architecture/rpg_gate_report.py, rpg_gate_candidate.py, rpg_gate_baseline.py
+    (config lint)
+  - tests/helpers/rpg_gate_stub_metrics.py
+  - tests/simulation_quality/rpg_gate/ (config.yaml is rpg-owned; the new test file
+    is testing's)
+  - tests/architecture/
+  - 'src/engine/apply.py (~L293), src/engine/world_dynamics.py (~L260), src/world/{boss,calamity,camp,creature_territory,raid,spawn,influence}.py:
+    read only'
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK/investigation.md
+  - agent-working/stored_artifacts/TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK/plan.md
+  - agent-working/stored_artifacts/TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK/test_plan.md
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261013-SEARCH-MCP-FILES-OWNED.md
   ticket_id: TCK-20261013-SEARCH-MCP-FILES-OWNED
   title: agent-working owns the search MCP files and the MCP launch scripts; platform
@@ -9774,29 +9864,6 @@
   - architecture
   - planning
   - live-map
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK.md
-  ticket_id: TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK
-  title: The rpg gate gets V8, "every entity added mid-run has a declared source".
-    A validity row the metric module leaves out reads as no-data, not as a pass. A
-    gate self-test proves V8 fires.
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-13'
-  related_code_areas:
-  - tools/test_architecture/rpg_gate_report.py, rpg_gate_candidate.py, rpg_gate_baseline.py
-    (config lint)
-  - tests/helpers/rpg_gate_stub_metrics.py
-  - tests/simulation_quality/rpg_gate/ (config.yaml is rpg-owned; the new test file
-    is testing's)
-  - tests/architecture/
-  - 'src/engine/apply.py (~L293), src/engine/world_dynamics.py (~L260), src/world/{boss,calamity,camp,creature_territory,raid,spawn,influence}.py:
-    read only'
-  artifact_files: []
-  tags:
-  - testing
-  - regression
-  - simulation-quality
 - type: ticket
   path: agent-working/tickets/todos/visual-asset-entity-markers/TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS.md
   ticket_id: TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS
