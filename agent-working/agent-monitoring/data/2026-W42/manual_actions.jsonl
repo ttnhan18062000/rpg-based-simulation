@@ -3,3 +3,4 @@
 {"ts":"2026-10-14T07:59:55.577620Z","category":"handover_recovery","source":"sample","session_id":"1139d8d9-4615-42cf-9d10-54ffee8bb3a3","session_role":"lead-planner-u24","batch":null,"count":1}
 {"ts":"2026-10-15T02:13:00.289773Z","category":"handover_recovery","source":"sample","session_id":"e6a8e84c-e78c-4dc3-99f4-beaee4988bbf","session_role":"agent-working-planner","batch":null,"count":1}
 {"ts":"2026-10-15T07:05:04.464877Z","category":"handover_recovery","source":"sample","session_id":"dd36a60e-ee21-493c-9d35-7aa14f5502ae","session_role":"agent-working-planner","batch":null,"count":1}
+{"ts":"2026-10-15T07:44:43.508543Z","category":"handover_recovery","source":"sample","session_id":"ca84f6e1-8efe-49c1-bc4c-abdaaa53908a","session_role":"rpg-designer","batch":null,"count":1}

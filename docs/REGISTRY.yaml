@@ -4995,7 +4995,7 @@
   - architecture
   - world
   - content
-  last_verified: '2026-10-08'
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/agent-monitoring/codebase_health_history_schema.md
   title: Codebase Health History — Schema Reference
@@ -6961,7 +6961,7 @@
   - architecture
   - documentation
   - roadmap
-  last_verified: '2026-10-09'
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/plans/systemic_world/review_history/external-ai-instruction-execute-first-systemic-world-batch.md
   title: External AI instruction — execute and self-review the first systemic-world
@@ -7090,7 +7090,7 @@
   - architecture
   - documentation
   - roadmap
-  last_verified: '2026-10-09'
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/plans/systemic_world/ticket_planner_handoff.md
   title: Systemic World First Wave — Ticket-Planner Handoff
@@ -7103,6 +7103,18 @@
   - documentation
   - roadmap
   last_verified: '2026-09-28'
+- type: doc
+  path: docs/plans/systemic_world/v1_disclosure.md
+  title: Baseline v1 disclosure list
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - documentation
+  - roadmap
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/plans/visual-asset-foundation/README.md
   title: Visual Asset Foundation — Structure Proposal (drawing tools + asset store)
@@ -7677,6 +7689,46 @@
   tags:
   - platform
   - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY.md
+  ticket_id: TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY
+  title: V8's examples name each unsourced entity and its tick, the way V5's out-of-world
+    examples already do
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - _count_adds
+  - _check_unsourced_adds
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-RECORD-BASELINE-V1.md
+  ticket_id: TCK-20261019-RECORD-BASELINE-V1
+  title: 'Record baseline v1: paired fingerprints, gate V1-V8 rows and the behavioral_5k
+    rebaseline, all on one commit, with v1_disclosure.md as what v1 does not claim'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - tools/rpg_measure/paired.py
+  - tests/regression/test_behavioral_5k.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING.md
+  ticket_id: TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING
+  title: 'The #646 soak logged 30 tick budget overruns; read them again on a quiet
+    host before calling them a defect'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - _report_budget_overrun
+  - create_watchdog_trip
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
   ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
@@ -8955,6 +9007,22 @@
   - ai
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE.md
+  ticket_id: TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE
+  title: Every compiled living body resolves to a declared diet, or the world does
+    not compile (the diet slice of SURV-05 provenance; prerequisite of the free-meal
+    removal).
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-14'
+  related_code_areas:
+  - data/content/world_modules/*.yaml (population_recipes), src/worldmodules/schema.py,
+    src/worldassembly/resolver.py (the no-archetype branch ~1090), src/worldassembly/entity_spawner.py
+    (_spawn_legacy_guard), src/worldbuilding/compiler.py, src/content/validator.py,
+    src/engine/appraisal.py.
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH.md
   ticket_id: TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH
   title: 'Every death carries a typed cause, recorded at death in a durable field:
@@ -9407,22 +9475,6 @@
   artifact_files: []
   tags:
   - platform
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE.md
-  ticket_id: TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE
-  title: Every compiled living body resolves to a declared diet, or the world does
-    not compile (the diet slice of SURV-05 provenance; prerequisite of the free-meal
-    removal).
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-14'
-  related_code_areas:
-  - data/content/world_modules/*.yaml (population_recipes), src/worldmodules/schema.py,
-    src/worldassembly/resolver.py (the no-archetype branch ~1090), src/worldassembly/entity_spawner.py
-    (_spawn_legacy_guard), src/worldbuilding/compiler.py, src/content/validator.py,
-    src/engine/appraisal.py.
-  artifact_files: []
-  tags: []
 - type: ticket
   path: agent-working/tickets/inprogress/TCK-20261014-INFORMATION-DIVERGENCE-EVENT-FIRES-ON-ENTERING-THE-DIVERGED-STATE-NOT-EVERY-UPDATE.md
   ticket_id: TCK-20261014-INFORMATION-DIVERGENCE-EVENT-FIRES-ON-ENTERING-THE-DIVERGED-STATE-NOT-EVERY-UPDATE
