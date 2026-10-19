@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD
-phase: open
+phase: inprogress
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 The recorded drill: stop Redis under Locust load, follow the runbook, and record detection time, recovery time and a short post-mortem
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
