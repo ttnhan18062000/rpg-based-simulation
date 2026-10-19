@@ -7690,6 +7690,22 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY.md
+  ticket_id: TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY
+  title: V8's gate self-test, case (a), asserts that the example names the unsourced
+    entity, and the format doc drops its "not yet emitted" line.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/simulation_quality/rpg_gate/test_v8_fires.py
+  - src/observability/run_ledger.py, src/observability/rpg_gate_metrics.py (read only)
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY.md
   ticket_id: TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY
   title: V8's examples name each unsourced entity and its tick, the way V5's out-of-world
