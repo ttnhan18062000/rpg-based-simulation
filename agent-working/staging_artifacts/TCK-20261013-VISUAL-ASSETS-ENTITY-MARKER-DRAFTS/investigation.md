@@ -105,3 +105,22 @@ Guard C lantern: FLAG (padlock x2). Guard D large gate key: PASS (key x2). Scout
 
 ## Consumers of `icon_lookalikes.all_icon_sprites()` (r0001 art for the 7 owner-fix keys), for the backlog ticket
 Without the owner-fix overlay: `visual_assets/review/review_sheets.py:509` (adopted pictures on every review folder), `visual_assets/review/icon_silhouette_sheet.py:49`, `visual_assets/review/icon_recognition.py:211`, `visual_assets/review/icon_owner_fixes_draft_set.py:51` (its own base, then overlaid), tests `tests/visual_assets/test_icon_lookalikes.py:55`, `test_icon_recognition.py:13`, `test_icon_silhouette_sheet.py:27,39`, `test_icon_compliance.py:62,85,98` and `test_icon_owner_fixes_draft_set.py:59,73`. Some of those tests read r0001 deliberately (`test_icon_compliance.py:155,186-192` compare old against new). This batch's `tools/visual_assets_entity_marker_sheet.py:41` overlays `proposed_sprites()` itself.
+
+## Colour drafts: compliance and final blind check (2026-10-19, set entity-markers-v1, draft set hash sha256:2f734b3feb9abff7285d321a5d3f1b04e441230f8e49e02912a3756433e88135)
+Compliance (measured from the pixels of the kept drafts; 11 sprites, icons-v1 palette only, margin >= 2 px):
+
+| kind | intake | bbox (w x h) | margin to edge (px) | colours / budget 8 | off-palette | fill mean L* (grass L* 38) | fill px weak against grass (contrast < 1.5) | weakest fill colour vs outline (contrast) | opaque px | fits live area (margin >= 2) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `icon.entity.alpha` | in-c18162e3a80693aa | 12 x 11 | 2 | 4 / 8 | none | 54 | 2 % | 2.8 | 102 | yes |
+| `icon.entity.blacksmith` | in-c4c6e7646b850a3c | 12 x 11 | 2 | 4 / 8 | none | 52 | 15 % | 2.8 | 114 | yes |
+| `icon.entity.guard` | in-bf7c72dbb48338ac | 8 x 12 | 2 | 3 / 8 | none | 59 | 0 % | 4.6 | 78 | yes |
+| `icon.entity.leader` | in-f8b0e2e22f511692 | 12 x 8 | 2 | 5 / 8 | none | 72 | 2 % | 4.0 | 84 | yes |
+| `icon.entity.merchant` | in-011ccc4be2bb89e5 | 12 x 12 | 2 | 4 / 8 | none | 72 | 0 % | 4.6 | 90 | yes |
+| `icon.entity.predator_hunter` | in-338661ff2c6e9e12 | 12 x 11 | 2 | 3 / 8 | none | 46 | 100 % | 1.9 | 87 | yes |
+| `icon.entity.raider` | in-f2a13d7d0371f7f0 | 11 x 12 | 2 | 4 / 8 | none | 48 | 76 % | 1.9 | 84 | yes |
+| `icon.entity.scout` | in-d537975588e4c29f | 12 x 8 | 2 | 4 / 8 | none | 76 | 25 % | 2.2 | 80 | yes |
+| `icon.entity.sentinel` | in-afe0e401c69c498e | 12 x 12 | 2 | 5 / 8 | none | 61 | 21 % | 2.7 | 136 | yes |
+| `icon.entity.wild_creature` | in-dcc955af54c9ec2f | 12 x 12 | 2 | 5 / 8 | none | 42 | 88 % | 2.8 | 99 | yes |
+| `icon.entity.worker` | in-73b77edca6e2faf8 | 11 x 12 | 2 | 5 / 8 | none | 72 | 0 % | 1.6 | 74 | yes |
+
+Map-crop blind check (two fresh agents, 19 markers on a real map crop: the 11 entity markers, 4 resource nodes and 4 item icons as controls; question: what it depicts, and UNIT / ITEM / RESOURCE). Controls: 8 of 8 right in both. Entity markers: PASS (read as UNIT by both): alpha, scout, sentinel, wild_creature. FLAG (read as ITEM by both): blacksmith (horseshoe or magnet), guard (key), leader (crown), merchant (balance scale), raider (banner), worker (pitchfork or trident). FLAG (read as RESOURCE by both): predator_hunter (claw marks or red sticks). 4 of 11 read as a unit. Object naming right for 10 of 11 (predator_hunter split). The full per-agent table is at the top of the review folder's README.txt (~/Work/asset-review/entity-markers-v1/). Worker was redrawn once for contrast (lighter tines) before this check.
