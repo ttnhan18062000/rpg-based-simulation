@@ -170,7 +170,7 @@ known_reds:
     expires_on: "2026-11-04"
     kind: flaky
     note: "population_stability measures the throttled kernel by design (not an anchor, out of scope of the audit_mode ticket), plus the same-second run-dir collision: see TCK-20261011-DEFAULT-RUN-ID-CANNOT-COLLIDE-ACROSS-SAME-SEED-PROCESSES"
-  - match: "tests.integration.certification.test_catalog_arena_smoke*"
+  - match: "tests.integration.certification.test_catalog_arena_smoke::test_catalog_arena_small_can_tick"
     ticket: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
     owner: rpg-implementer
     added_on: "2026-10-19"
