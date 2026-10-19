@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK
-phase: open
+phase: done
 date: 2026-10-13
 tags: [testing, regression, simulation-quality]
 ---
@@ -15,7 +15,7 @@ tags: [testing, regression, simulation-quality]
 The rpg gate gets V8, "every entity added mid-run has a declared source". A validity row the metric module leaves out reads as no-data, not as a pass. A gate self-test proves V8 fires.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -104,10 +104,10 @@ After those steps the only live source is INITIAL, unless the conquest stronghol
 - [x] AC1: config `required_validity` format, lint and tests. The report gives no-data `contract_error` "required validity row <id> missing" for each missing id in each world, listed in the markdown. Tests cover: one row missing, all present, a malformed value, a duplicate id.
 - [x] AC2: the candidate refuses when a required validity row is missing and no owned fail covers it, and accepts when one does. Unit tests cover both.
 - [x] AC3: the format doc documents V8 (id, scope, group, oracle, the three violation kinds, the example fields, the no-data rule) and the required-row guard. The stub can emit the V8 variants and the report and candidate tests use them.
-- [ ] AC4 (needs rpg's pieces on main): `test_v8_fires.py` cases (a)-(g) pass against the real observer and `compute()`. It is never skipped, never xfailed, and never fed a hand-built tally.
-- [ ] AC5 (needs rpg's `SpawnSource` on main): the static spawn-site guard passes on main. Its allowlist holds only the not-yet-ruled sites, each with a ticket. A synthetic unsourced site in a test fixture fails it, and a stale allowlist entry fails it.
-- [ ] AC6: no existing gate is relaxed. A missing row or a silent tally is never read as a pass, and no oracle, k or floor changes.
-- [ ] AC7: `SEQUENCE.md` and the epic are updated. Every testing commit lands on the single testing PR.
+- [x] AC4 (needs rpg's pieces on main): `test_v8_fires.py` cases (a)-(g) pass against the real observer and `compute()`. It is never skipped, never xfailed, and never fed a hand-built tally.
+- [x] AC5 (needs rpg's `SpawnSource` on main): the static spawn-site guard passes on main. Its allowlist holds only the not-yet-ruled sites, each with a ticket. A synthetic unsourced site in a test fixture fails it, and a stale allowlist entry fails it.
+- [x] AC6: no existing gate is relaxed. A missing row or a silent tally is never read as a pass, and no oracle, k or floor changes.
+- [x] AC7: `SEQUENCE.md` and the epic are updated. Every testing commit lands on the single testing PR.
 
 ## Related Tickets
 - TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC (parent)
@@ -141,17 +141,25 @@ After those steps the only live source is INITIAL, unless the conquest stronghol
 - A spawn site the designer rules "not legitimate" is removed by rpg. Its allowlist entry then goes stale and must be deleted, which is the ratchet working as intended.
 
 ## Implementation Notes
+- **UNBLOCKED 2026-10-19 (testing-planner, checked on main 94ff6b0bc):** rpg's pieces landed in #645 (3597c08d3): `src/core/spawn_source.py` (`SpawnSource`, `SpawnKind` INITIAL/BIRTH/AUTHORED_ARRIVAL), `StateUpdate.entity_spawn_sources` (a map keyed by the added id; `merge` refuses two different sources for one id), the observer in `src/observability/run_ledger.py`, V8's `compute()` in `src/observability/rpg_gate_metrics.py`, and the duplicate-id refusal `src/engine/apply.py::DuplicateEntityIdError` (a `ValueError`, **raised**). Case (g) therefore asserts `pytest.raises(DuplicateEntityIdError)` on the real apply path, and that the tally and state carry no overwrite.
+- Site changes since filing, for the AC5 allowlist: the conquest stronghold is gone (D71, #645), so there is no "UNRULED (live)" entry. `raid.py`, `spawn.py`'s top-up and `influence.py` no longer call `generator.spawn_*`. Remaining untagged `generator.spawn_*` sites in `src/world/`: `calamity.py`, `creature_territory.py`, `boss.py` (ruled OFF; allowlist with their ruling refs) and **`camp.py` `spawn_natural_creature_offspring` (L72, L98)**, which is neither tagged nor in the original OFF list. RULED by rpg-planner (2026-10-19): both calls are OFF and are allowlisted. L72 is nest-spread behind `ENABLE_CAMP_NEST_SPREAD` (D70, TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70; only the non-gate calibration world camp_maturity_calibration_pilot turns it on). L98 is natural-creature reproduction behind `ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH` (DEV-002 default-OFF, TCK-20260902-REPRODUCTION-NATURAL-CREATURE-PATH). It is parentless, so it gets no BIRTH tag; turning it on needs D70 plus BIRTH-with-parents first. **Each OFF allowlist entry names its gating flag** (where one exists). The guard asserts the flag's default in `src/core/feature_flags.py` is OFF and that no gate world in `tests/simulation_quality/rpg_gate/config.yaml` enables it. If the flag goes ON, the guard fails loudly. Add a regression case that flips a flag default in a fixture and fails. `reproduction_humanoid.py` is tagged BIRTH and needs no entry. `src/certification/scenarios.py` builds tick-0 worlds; the investigation says whether the guard's scope excludes it or it counts as INITIAL.
 AC1-AC3 are done on the single testing PR (#531); AC4 and AC5 wait for rpg's `SpawnSource` and observer on main, so the ticket stays open.
 - `GateConfig.required_validity` (tuple, default empty); `load_config` refuses a non-list, a duplicate and an id not of the form `V<n>`. The report (`rpg_gate_report.evaluate`) gives each required id missing from a seed or pooled document `no-data` / `contract_error` / "required validity row <id> missing", and the markdown carries a banner naming the ids. The candidate (`rpg_gate_candidate._missing_required`) refuses while a document lacks a required row unless a current, unexpired `state: fail` entry owns the id (then one `omitted_validity` row per world, `<id>:run:<world>:*`, so the `--known` re-check covers it).
 - `rpg_gate_baseline_format.md` documents the required-row guard and V8 (id, class, scope, group, oracle, the three violation kinds, the example fields, the no-data rule). The stub (`tests/helpers/rpg_gate_stub_metrics.py`) emits V8 through `RPG_GATE_STUB_V8` (`absent` default, `clean`, `violations`); the report and candidate tests use it.
 - No oracle, k or floor changes; the verdict rule is unchanged (no-data is not red by itself). The harness hash is not touched (the config file is rpg's and is not edited here).
 
+- **AC4 gap (testing-planner review of #653):** case (a) fires (violations >= 1) but its example does not yet name the entity: `compute` emits `{adds, count}`, not `{entity_id, tick, kind_group, check}`. That is an rpg gap (per-add examples), tracked as TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY; the required example fields stay as the doc states them. Case (a) gets an entity-id assert in a later tighten once that lands, not in #653.
+- **AC4/AC5 pass (2026-10-19):** `tests/simulation_quality/rpg_gate/test_v8_fires.py` (cases a-g, real apply path, real RunLedger and StarvationRecorder, real `compute`). Cases (b) and (c): `SpawnSource.__post_init__` already refuses a malformed source, so the test asserts that refusal and that the only unruled add is an unsourced one. `tests/architecture/test_spawn_sites_declare_source.py` carries the OFF ratchet (boss, calamity x2, creature_territory, camp x2 with their gating flags and rulings) and the gate check. Flag registry is `src/domains/optimization/feature_flags.py`, not `src/core/feature_flags.py`; gate worlds can enable a flag only through a profile yaml, world files or the harness `PIN_SETTINGS["flags"]`, and the guard reads all three. Staging artifacts: agent-working/staging_artifacts/TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK/.
 
 ## Test Summary
+AC4/AC5: test_v8_fires.py 7 passed; test_spawn_sites_declare_source.py 11 passed; with test_rpg_gate_metrics.py and test_run_ledger.py 53 passed. Earlier AC1-AC3 run:
 `tests/unit/tools/test_rpg_gate_baseline.py`, `test_rpg_gate_report.py`, `test_rpg_gate_candidate.py`, `test_rpg_gate_harness.py`, `test_rpg_gate_workflow_support.py`: 136 passed (new: config lint, one row missing, all present, a seed-only gap, the markdown banner, the candidate refusal and the owned-fail acceptance, stub V8 modes).
 
 ## Files Changed
+`tests/simulation_quality/rpg_gate/test_v8_fires.py`, `tests/architecture/test_spawn_sites_declare_source.py` (both new); this ticket; the staging artifacts; the epic notes.
+
+(earlier AC1-AC3 files above)
 `tools/test_architecture/rpg_gate_baseline.py`, `rpg_gate_report.py`, `rpg_gate_candidate.py`; `tests/helpers/rpg_gate_stub_metrics.py`; the three rpg_gate unit test files; `docs/plans/test_architecture/reference/rpg_gate_baseline_format.md`.
 
 ## Completion Summary
-(implementer)
+V8 is now shown to fire end to end, and a new untagged spawn site fails at unit-test time. camp.py L72/L98 are allowlisted OFF per rpg-planner's ruling. Reported: the planner's note named the wrong flag-registry path.
