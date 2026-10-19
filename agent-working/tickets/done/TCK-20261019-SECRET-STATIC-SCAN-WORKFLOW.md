@@ -142,3 +142,9 @@ docs/REGISTRY.yaml (regenerated).
 Report-only gitleaks (every PR/push, redacted) and path-gated Semgrep CE workflow landed in PR #665 with the roles diff for owner confirmation.
 Gap: the weekly/full-history baseline is unobserved until the first post-merge run. Semgrep baseline findings (mutable action tags, shell injection) need routing.
 
+Pins: gitleaks 8.30.1 (`gitleaks_8.30.1_linux_x64.tar.gz`, SHA-256 `551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb`); Semgrep CE 1.179.0 image
+`semgrep/semgrep@sha256:93963d9295a366f59e4850127b1550400ee7b388f04fe144e4a1f6325d96e01b`; `actions/checkout` `3d3c42e5aac5ba805825da76410c181273ba90b1` (v7.0.1),
+`actions/upload-artifact` `cf430e030ddbb5b0abf93d22962f4752f3646cd9` (v7.0.2), `github/codeql-action/upload-sarif` `24c54180a607b1449ed407dd24f251e4e9147c8d` (v4.38.3).
+Redaction: with 8.30.1 the report has no key holding the raw line (Match and Secret are `REDACTED`); the public artifact is still jq-filtered to RuleID, File, StartLine, Commit, Fingerprint.
+Capacity: each PR or push event now starts 1-2 more jobs (gitleaks always, Semgrep when the gate passes) against the 20-concurrent-job limit.
+Gate status: the "Semgrep OSS" code-scanning check is not a required gate and can go red on a new error-level alert; it is advisory.
