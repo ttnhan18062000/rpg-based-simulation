@@ -60,6 +60,13 @@ The first main run of `security-scan.yml` (#665, run 39233931697) reported two p
 5. **`docs/guides/delivery_process.md`**: one line recording the rule (owner, 2026-10-19), placed where CI conventions
    are described. This path is unregistered; lead-planner-u24 suggested this doc.
 
+6. **Scope addition A (owner, 2026-10-19; relayed by platform-planner-u24)**: `.github/workflows/security-scan.yml` strips in-source-suppressed results
+   (`suppressions[].kind == "inSource"`) from the copy of the SARIF uploaded to code scanning (`semgrep-upload.sarif`); the full `semgrep.sarif` stays the artifact;
+   the summary counts unsuppressed findings and adds a "Suppressed in source: N" line. Root cause: PR #667 run 39234929819 (Semgrep writes `# nosemgrep` results
+   into its SARIF and code scanning alerts on them anyway).
+7. **Scope addition B**: one more line in `docs/guides/delivery_process.md` next to the pin rule: the Semgrep OSS and code-health check runs are advisory (failure
+   threshold None, set by the owner, not by this ticket), and the suppression convention is `# nosemgrep: <rule id>` plus a reason, never a Security-tab dismissal.
+
 ## Out of Scope
 - Pinning any other workflow (test.yml, slow-regression*, rpg-gate-report.yml: testing's; pr-body-lint.yml:
   agent-working's).
@@ -104,7 +111,14 @@ service), `docs/guides/delivery_process.md`
   it by name.
 
 ## Implementation Notes
-(filled by the implementer)
+Pins (tag -> commit, deploy-docs.yml): checkout v7.0.1 `3d3c42e5aac5ba805825da76410c181273ba90b1`; setup-node v7.1.0 `949feb2413d6458794dcd2491c4babbbce0c15c1`;
+configure-pages v6.0.0 `45bfe0192ca1faeb007ade9deae92b16b8254a0d`; upload-pages-artifact v5.0.0 `fc324d3547104276b827a68afc52ff2a11cc49c9`;
+deploy-pages v5.0.1 `368f82528645a54fb793d4d04e342629a3f51346`. Release notes of configure-pages v6 and deploy-pages v5: Node 24 upgrade, no input changes; upload-pages-artifact v5
+adds an optional `include-hidden-files` input (unused). Frontend base: `nginxinc/nginx-unprivileged:1.31.6-alpine3.24@sha256:884e0b7f42f303641b0f4e78755aea647521dca0b89ca3be7992ad78b5c07434`.
+Local compose test used a scratch `./data` override because `data/runs` in this worktree is root-owned by an older container (environmental, untouched).
+Every `/api` route needs an API key, so the proxy check compared the backend's 401 body through the frontend with the direct call (identical).
+Addition A tested on #667's artifact: 89 results -> 87 uploaded; the two inSource `use-defused-xml-parse` results dropped and the other 4 stayed.
+Repo settings (code scanning check-run failure threshold) are the owner's to set; not changed here.
 
 ## Test Summary
 (filled by the implementer)
