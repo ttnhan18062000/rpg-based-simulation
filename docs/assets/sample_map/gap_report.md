@@ -29,7 +29,7 @@ Either can reopen on the owner's word.
 
 - **G5, connecting tiles (roads, rivers, coasts):** a design question for rpg-designer; the client cannot draw connecting tiles live. The read-only questions in [#519](https://github.com/ttnhan18062000/rpg-based-simulation/issues/519) are closed (answered 2026-10-11); the design question itself is not.
 - **G7, multi-tile structures:** a design question for rpg-designer, and the client needs support first (not supported live).
-- **G10, entities (art closed in rc-0012, 2026-10-19; the map still draws none):** was gated on rpg's [#523](https://github.com/ttnhan18062000/rpg-based-simulation/issues/523) and the owner's choice between role-id keys and species + size (rpg's [#548](https://github.com/ttnhan18062000/rpg-based-simulation/issues/548)); the tickets wait in `agent-working/tickets/todos/visual-asset-entity-markers/`. Nothing is drawn for entities.
+- **G10, entities (art closed in rc-0012, 2026-10-19; the map still draws none):** decided `kind` on 2026-10-18 ([#548](https://github.com/ttnhan18062000/rpg-based-simulation/issues/548)); 11 markers adopted (`sa-1d9d71206b95652d`) and released in rc-0012; the map still draws none until activation.
 - **G11, chests:** no data (the three worlds hold 0).
 - **G12, world shape:** rpg's to judge (rectangular regions over one default fill); not art.
 - **Client alias resolution:** registry-only. The live client does not resolve registry aliases (Known gap in `docs/assets/store_contract.md`); the client-side resolution is rpg's, with #523.
