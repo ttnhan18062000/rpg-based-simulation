@@ -373,3 +373,13 @@ def test_floors_may_differ_between_worlds_but_not_between_the_seeds_of_one(tmp_p
     assert "metrics" in _build(_write(tmp_path / "ok", same_per_world), config=two)
     drift = {**world("w", {1: 1.0, 2: 1.0, 3: 1.0}), **world("x", {1: 3.0, 2: 3.1, 3: 3.0})}
     _refused(_write(tmp_path / "bad", drift), r"threshold mismatch for O1 in x", config=two)
+
+
+def test_the_candidate_records_its_own_thresholds():
+    """TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD AC5: a new baseline carries the candidate's k and floor, not any reference's."""
+    docs = {**{("w", s): _seed_doc(s, k=3.5, floor=7.0) for s in SEEDS}, ("w", None): _pooled_doc()}
+    candidate = _build(_write(Path(__import__("tempfile").mkdtemp()) / "d", docs))
+    row = next(r for r in candidate["metrics"] if r["id"] == "O1")
+    assert (row["k"], row["floor"]) == (3.5, 7.0)
+    pooled = next(r for r in candidate["metrics"] if r["id"] == "O9")
+    assert pooled["floor"] == 0.1

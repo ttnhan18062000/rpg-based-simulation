@@ -174,19 +174,35 @@ def _compare(label: str, baseline: Mapping[str, Any], reasons: Sequence[str], ro
     base = _baseline_row(baseline, cur_row, world)
     if base is None:
         return {**result, "state": NO_DATA, "detail": "no row for this metric in the baseline"}
-    floor = cur_row["floor"]
-    if cur_row.get("scope") == "pooled":
+    pooled = cur_row.get("scope") == "pooled"
+    floor, k = base.get("floor"), base.get("k")
+    if not _is_number(floor) or (not pooled and not _is_number(k)):  # the reference's own thresholds judge it; never the candidate's (TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD)
+        return {**result, "state": NO_DATA, "reason": "contract_error", "detail": "reference row has no recorded threshold"}
+    moved = _threshold_moved(cur_row, base, pooled)
+    extra = {"threshold_moved": moved} if moved else {}
+    if pooled:
         diff = row_values["value"] - base["value"]
-        return {**result, "state": DRIFT if abs(diff) > floor else PASS, "diff": diff, "floor": floor}
+        return {**result, "state": DRIFT if abs(diff) > floor else PASS, "diff": diff, "floor": floor, **extra}
     base_seeds = base.get("per_seed") or {}
     diffs = [row_values["per_seed"][seed] - base_seeds[str(seed)] for seed in sorted(row_values["per_seed"]) if str(seed) in base_seeds]
     if len(diffs) < 2:
-        return {**result, "state": NO_DATA, "n": len(diffs), "of": len(config.seeds), "detail": f"judged on {len(diffs)}/{len(config.seeds)} seeds; at least 2 are needed for a standard error"}
+        return {**result, "state": NO_DATA, "n": len(diffs), "of": len(config.seeds), "detail": f"judged on {len(diffs)}/{len(config.seeds)} seeds; at least 2 are needed for a standard error", **extra}
     mean = statistics.fmean(diffs)
     se = statistics.stdev(diffs) / math.sqrt(len(diffs))
-    k = cur_row["k"]
     drift = abs(mean) > k * se and abs(mean) > floor
-    return {**result, "state": DRIFT if drift else PASS, "diff": mean, "se": se, "k": k, "floor": floor, "threshold": k * se, "n": len(diffs), "of": len(config.seeds)}
+    return {**result, "state": DRIFT if drift else PASS, "diff": mean, "se": se, "k": k, "floor": floor, "threshold": k * se, "n": len(diffs), "of": len(config.seeds), **extra}
+
+
+def _threshold_moved(cur_row: Mapping[str, Any], base: Mapping[str, Any], pooled: bool) -> Dict[str, Dict[str, Any]]:
+    """``{field: {"candidate": c, "reference": r}}`` for each of ``k`` / ``floor`` / ``oracle`` that differs between the candidate and the reference row. Reported, never
+    used to judge. ``oracle`` is compared whenever either side carries one (a missing side is ``None``); ``k`` is not part of a pooled row."""
+    moved: Dict[str, Dict[str, Any]] = {}
+    for name in ("floor",) if pooled else ("k", "floor"):
+        if cur_row.get(name) != base.get(name):
+            moved[name] = {"candidate": cur_row.get(name), "reference": base.get(name)}
+    if (cur_row.get("oracle") or base.get("oracle")) and cur_row.get("oracle") != base.get("oracle"):
+        moved["oracle"] = {"candidate": cur_row.get("oracle"), "reference": base.get("oracle")}
+    return moved
 
 
 def _outcome(cur_row: dict, world: str, refs: Optional[References], reasons_by_version: Mapping[int, Sequence[str]], config: GateConfig) -> dict:
@@ -202,6 +218,10 @@ def _outcome(cur_row: dict, world: str, refs: Optional[References], reasons_by_v
     ]
     states = {r["state"] for r in results}
     state = DRIFT if DRIFT in states else STALE if STALE in states else NO_DATA if NO_DATA in states else PASS
+    if state == NO_DATA:  # a contract error of a reference must reach the no-data tally; when the state is DRIFT or STALE the per-reference text still names it
+        broken = next((r for r in results if r["state"] == NO_DATA and r.get("reason") == "contract_error"), None)
+        if broken is not None:
+            return {**finding, "state": state, "reason": "contract_error", "detail": broken["detail"], "refs": results}
     return {**finding, "state": state, "refs": results}
 
 
@@ -272,7 +292,7 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
                 if r.get("class") == "outcome":
                     key = (r["id"], r.get("group", "*"), r.get("key"), r.get("tick"))
                     row = grouped.setdefault(key, {"id": r["id"], "group": r.get("group", "*"), "key": r.get("key"), "tick": r.get("tick"), "scope": "run",
-                                                   "k": r.get("k"), "floor": r.get("floor"), "per_seed": {}})
+                                                   "k": r.get("k"), "floor": r.get("floor"), **({"oracle": r["oracle"]} if r.get("oracle") else {}), "per_seed": {}})
                     row["per_seed"][seed] = r["value"] if _is_number(r.get("value")) else r.get("mean")
         for row in grouped.values():
             problem = problems.get((world, row["id"], row["group"]))
@@ -429,11 +449,15 @@ def _detail(f: Mapping[str, Any]) -> str:
             parts.append(f"oracle: {f['oracle']}")
     if f["state"] == UNSTABLE:
         parts.append(f"was {f['first_state']}, rerun {f['rerun_state']}; route: {f['route']}")
+    shown: set = set()
     for r in f.get("refs", []):
         numbers = f" d={r['diff']:.4g}" + (f" se={r['se']:.4g} k*se={r['threshold']:.4g}" if "se" in r else "") + f" floor={r['floor']:.4g}" if "diff" in r else ""
         judged = f", judged on {r['n']}/{r['of']} seeds" if "n" in r else ""
-        parts.append(f"vs {r['ref']} v{r['version']}: {r['state']}{numbers}{judged}")
-    if f.get("detail"):
+        moved = "".join(f"; threshold moved: {n} {m['reference']} -> {m['candidate']}" for n, m in sorted((r.get("threshold_moved") or {}).items()))
+        cause = (f" [{r['reason']}] {r['detail']}" if r.get("reason") else f" {r['detail']}") if r.get("detail") and r["state"] == "no-data" else ""
+        shown.add(r.get("detail"))
+        parts.append(f"vs {r['ref']} v{r['version']}: {r['state']}{numbers}{judged}{moved}{cause}")
+    if f.get("detail") and f["detail"] not in shown:
         parts.append((f"[{f['reason']}] " if f.get("reason") else "") + f["detail"])
     if f.get("ownership"):
         parts.append(f"{f['ownership']}{' ' + f['ticket'] if f.get('ticket') else ''}")
