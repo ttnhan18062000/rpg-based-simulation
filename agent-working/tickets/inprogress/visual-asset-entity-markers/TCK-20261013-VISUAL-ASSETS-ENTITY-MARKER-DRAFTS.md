@@ -15,7 +15,7 @@ tags: [architecture, testing, mcp]
 Map markers: entity role markers keyed on the presenter's `kind` (gated on rpg's #523)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard

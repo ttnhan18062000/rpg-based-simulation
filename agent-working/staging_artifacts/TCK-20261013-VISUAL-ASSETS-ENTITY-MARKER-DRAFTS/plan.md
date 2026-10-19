@@ -1,0 +1,38 @@
+---
+status: active
+layer: architecture
+authority: P2
+audience: agent
+ticket_id: TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS
+artifact_type: plan
+tags: [architecture, testing, mcp]
+---
+
+# Plan
+
+## Constraint until the owner names the key family
+No registry edit, no key names in any committed file, no change to `tools/visual_assets_sample_map.py`. Specs, sheets and filenames are keyed by `kind` only. A literal placeholder is never committed.
+
+## Precedent
+The 2026-10-13 batch-A decision: the owner answered the key-set question in `TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN` and no D-record was written. The family answer here follows that route.
+
+## Byte budget (arithmetic)
+- Registry now: 42,024 B (`visual_assets/catalog/definitions/visual_keys.yaml`), 83 keys plus 8 aliases; bound `MAX_REGISTRY_BYTES` = 458,752 B.
+- Average per key today: 42,024 / 83 = 506 B (the budgets row's own ~450 B per real icon key is lower; 506 B is the conservative figure, a label entry included).
+- 11 keys x 506 B = 5,566 B -> about 47,590 B = 10.4 % of the bound (11 keys x 450 B = 4,950 B -> 46,974 B, 10.2 %). It fits with more than 89 % headroom; no bound raise, no owner budget question.
+- Key count: 83 + 11 = 94 of `MAX_VISUAL_KEYS` 4096 (realistic 1024).
+- Runtime manifest and evidence crops: the manifest is 27,268 B at rc-0011 and grows by about one entry per key. The committed evidence crops (120,273 B of 262,144 B) are only re-rendered in the later rc batch; this batch re-renders none.
+
+## Guarded files
+Nothing under `visual_assets/store`, `drawing` or the build config changes. The registry (`visual_assets/catalog/definitions/`), `icon_specs.yaml`, tests that are not marked guarded, `tools/visual_assets_sample_map.py` and docs are outside the guarded set. If any guarded file comes into scope: STOP and tell asset-planner (that means a proof refresh).
+
+## Phases
+1. Now (no art, no key names): this plan, `investigation.md`, `test_plan.md`. Review by asset-planner.
+2. Specs and reference study per kind (theme D21; reads as / must not read as, class-icon and place-glyph collisions, distractors). The committed form waits for the family name; until then they live here.
+3. Silhouette sheet for the owner: large labelled PNG canvases plus README in `~/Work/asset-review/entity-markers-silhouettes/`. Asks asset-planner for an art slot first (one run, foreground, `systemd-run --user --scope -q -p MemoryMax=3G`).
+4. After the owner approves silhouettes and the family name arrives: registry keys (label, `safety_class`, `fallback` = today's coloured circle), `icon_specs.yaml` entries, drawing with the MCP tools (intake by the store CLI from this worktree, then `draft keep`), compliance table, blind naming check by two fresh agents.
+5. Sample-map tool: entity kinds map to the new family instead of the class icons (my ownership, after the family answer).
+6. Owner review folder `~/Work/asset-review/entity-markers-v1/` and owner `adopt-set` (neutral options, filled commands, via asset-planner and lead). No push; push and PR go through lead.
+
+## Scope guard
+No `src/` or `frontend/` change; no item icons; no species/size markers; no animation; no bound raise.
