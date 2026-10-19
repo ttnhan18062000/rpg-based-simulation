@@ -141,11 +141,13 @@ jobs:
             if [ ! -f semgrep.sarif ]; then
               echo "Semgrep did not produce a report."
             else
+              echo "Findings: $(jq '[.runs[].results[]?] | length' semgrep.sarif)"
+              echo
               echo "| Level | Count |"
               echo "|---|---|"
-              for lvl in error warning note; do
-                echo "| $lvl | $(jq "[.runs[].results[]? | select(.level==\"$lvl\")] | length" semgrep.sarif) |"
-              done
+              # a Semgrep SARIF result carries no level of its own; it comes from the rule's default configuration
+              jq -r '([.runs[].tool.driver.rules[]? | {key: .id, value: (.defaultConfiguration.level // "unset")}] | from_entries) as $lv
+                | [.runs[].results[]? | ($lv[.ruleId] // "unset")] | group_by(.) | map({l: .[0], n: length})[] | "| \(.l) | \(.n) |"' semgrep.sarif
               echo
               echo "| Rule | Count |"
               echo "|---|---|"

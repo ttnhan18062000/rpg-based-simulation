@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW
-phase: open
+phase: done
 date: 2026-10-19
 tags: [platform, delivery, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, delivery, security]
 CI: .github/workflows/security-scan.yml — gitleaks (secrets) on every PR and Semgrep (static) path-gated, both report-only, plus the roles diff for the new paths
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -119,13 +119,26 @@ workflow + D8 roles diff precedent), `TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK
 - Dependabot's existing `github-actions` ecosystem picks up the new action pins; no `dependabot.yml` edit expected.
 
 ## Implementation Notes
-(filled by the implementer)
+Pins: gitleaks v8.30.1 (linux_x64 tarball, SHA-256 verified in the job), Semgrep CE 1.179.0 as the `semgrep/semgrep` image by digest
+(`sha256:93963d92...e01b`); actions reuse the SHAs already in `iac.yml`. Semgrep rulesets: `p/python`, `p/typescript`, `p/dockerfile`,
+`p/github-actions` (no login needed). gitleaks writes JSON (no SARIF upload: GitHub's own secret scanning owns that surface). A Semgrep SARIF
+result carries no level, so the summary maps each result to its rule's default level (fixed after the first CI run showed zeros).
+The workflow_dispatch/full-history baseline cannot run before merge (a dispatch needs the file on the default branch); the first weekly or manual run
+after merge is the full-history baseline.
 
 ## Test Summary
-(filled by the implementer)
+validated (local): static shape (YAML, SHA pins, no `secrets.*`, no `--error`, `security-events` only on semgrep); redaction on a synthetic secret in a
+throwaway repo (1 finding, 0 occurrences of the value in report or stdout); Semgrep gate both ways (docs-only: `run=false` + skip line; `src/a.py` and the
+workflow file: `run=true`); `tests/static` 106 passed; session tests 776 passed; `tools.sessions.validate` 0 findings; route returns platform.
+running on CI (PR #665, run 39226194890): gitleaks and semgrep jobs both success, every step success including SARIF upload. Baseline: gitleaks 0 findings
+(PR commits); Semgrep 109 findings (23 error, 83 warning, 3 note by rule level), top rules github-actions-mutable-action-tag 64, run-shell-injection 11,
+insecure-hash-algorithm-md5 9. Findings are to be filed to owning domains, not fixed here.
 
 ## Files Changed
-(filled by the implementer)
+.github/workflows/security-scan.yml (new); registries/session_roles.yaml; .claude/agents/session-platform-{planner,implementer}{,-u24}.md (regenerated);
+docs/REGISTRY.yaml (regenerated).
 
 ## Completion Summary
-(filled by the implementer)
+Report-only gitleaks (every PR/push, redacted) and path-gated Semgrep CE workflow landed in PR #665 with the roles diff for owner confirmation.
+Gap: the weekly/full-history baseline is unobserved until the first post-merge run. Semgrep baseline findings (mutable action tags, shell injection) need routing.
+
