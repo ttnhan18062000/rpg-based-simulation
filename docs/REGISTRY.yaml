@@ -7773,6 +7773,20 @@
   tags:
   - observability
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
+  ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
+  title: 'A panic whose destination resolves to the subject''s own tile is not taken:
+    the tick falls through the existing order (in-place survival, then the arrival
+    at a building) (V3 pre-v1 step, designer ruling "a flight with no destination
+    is not flight").'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/engine/tactical.py, src/engine/tactical_destinations.py, src/engine/tactical_rest.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
   ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
   title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
@@ -7841,6 +7855,18 @@
   related_code_areas:
   - tools/rpg_measure/paired.py
   - tests/regression/test_behavioral_5k.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-RETREAT-DESTINATION-NEEDS-A-REGION-WOUNDED-SUBJECTS-IN-UNCLAIMED-SPACE-CANNOT-FLEE.md
+  ticket_id: TCK-20261019-RETREAT-DESTINATION-NEEDS-A-REGION-WOUNDED-SUBJECTS-IN-UNCLAIMED-SPACE-CANNOT-FLEE
+  title: 'retreat_destination needs a region: wounded subjects in unclaimed space
+    cannot flee.'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/engine/tactical_destinations.py:38, :80+; src/engine/tactical.py:107.
   artifact_files: []
   tags: []
 - type: ticket
