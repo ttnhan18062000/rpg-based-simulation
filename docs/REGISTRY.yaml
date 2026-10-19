@@ -7727,6 +7727,21 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES.md
+  ticket_id: TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES
+  title: test.yml's Frontend and jscpd steps run Node 24, the same as the frontend
+    image, instead of Node 20.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/test.yml
+  - tests/static/test_ci_step_summary_reporting.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE.md
   ticket_id: TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE
   title: Tools tests that run a hook with `cwd=tmp_path` read the real main checkout's
