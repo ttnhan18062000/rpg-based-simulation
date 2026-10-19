@@ -5565,6 +5565,17 @@
   - process-improvement
   - governance
 - type: doc
+  path: docs/guidelines/session_roles/host_suffixed_twins.md
+  title: Host-suffixed twins
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: doc
   path: docs/guides/diagram_index.md
   title: Diagram Index
   status: active
