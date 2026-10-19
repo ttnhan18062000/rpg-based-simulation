@@ -47,6 +47,8 @@ testing-planner ruling, 2026-10-19: each required id is required at the level(s)
 6. **Stub metrics** (`tests/helpers/rpg_gate_stub_metrics.py`): only if the stub's documents don't already follow the per-level shape.
 7. **Re-run the report offline** on rpg's run-39212800104 documents (`/mnt/data/scratch-rpg-planner/gate_v1/`, read-only; copy into the scratchpad first). Show the 36 contract_error rows are gone and nothing else changed. The 4 real validity fails, V2 crowded/43, V3 frontier/42 and V4 frontier/44 and /45, must still show.
 
+8. **Mixed-version check is per world** (added 2026-10-19, after rpg's count check). The report's header says `contract_error: 69`. Required-missing explains 36; the other 33 are `mixed metric module versions` on `O2.population` / `meat+plant+prepared`, 11 ticks × 3 worlds. `_threshold_problems` keys `seen` on `(id, group)` across the whole run set, so it compares floors across worlds: crowded 3.8, urban 3.0, frontier 3.1–3.3. Floors may differ by world (the row key includes `world`), so key the comparison on `(world, id, group)`, plus `tick` if the row carries one. Apply the same change in the candidate if it has the same check. The format doc's "mismatch across documents" becomes "across the documents of one world".
+   - **What stays a real contract_error:** within `frontier_living_world` the floor differs by SEED (s42 3.3, s43 and s45 3.1, s44 and s46 3.2). A row has one threshold across seeds, or pooling is meaningless, so that stays `contract_error` after the fix. It is rpg's to resolve (a fixed floor, or a ruling that the floor is relative); testing-planner has asked rpg-planner.
 ## Out of Scope
 - rpg's metric module and any V row's values or thresholds.
 - The 4 real validity fails (rpg's, going to the designer).
@@ -57,7 +59,8 @@ testing-planner ruling, 2026-10-19: each required id is required at the level(s)
 - [ ] AC1: `load_config` accepts the per-level mapping and refuses the plain list, an unknown level, a duplicate within a level and a bad id. Each case has a unit test.
 - [ ] AC2: in the report and candidate tests, a seed document with no V7 and a pooled document with only V7 give no `required_missing` rows when the config says `{run: [.., V8], pooled: [V7]}`.
 - [ ] AC3: a regression test fixes the mutation: drop V3 from one seed document, and the report gives exactly one `contract_error` row for that (world, seed). The candidate refuses, unless an owned `state: fail` entry exists, in which case the label is `V3:run:<world>:*`. The same goes for dropping V7 from a pooled document (label `V7:pooled:<world>:*`).
-- [ ] AC4: the offline re-run on run 39212800104's documents shows 0 "required validity row" rows (was 36), with the 4 real validity fails unchanged. Quote the before and after counts in the Test Summary.
+- [ ] AC4: the offline re-run on run 39212800104's documents shows 0 "required validity row" rows (was 36). It shows **total contract_error = 11** (was 69): only frontier_living_world's per-seed O2.population floor, 11 ticks. The 4 real validity fails are unchanged. Quote before and after counts by detail in the Test Summary. Any other contract_error left over is a stop-and-report, not a fix-up.
+- [ ] AC4b: a test where two worlds have different floors for one (id, group) gives no mixed-version row, and two seeds of one world with different floors still do.
 - [ ] AC5: the format doc states the per-level rule and V8's level. No doc or code line still says "every seed document and the pooled one".
 - [ ] AC6: rpg-planner's yes on the config.yaml values is on the PR (comment link).
 - [ ] AC7: `tests/simulation_quality/rpg_gate/` and the rpg_gate tool tests pass.
