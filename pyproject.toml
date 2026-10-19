@@ -69,6 +69,9 @@ dev = [
     # Git hook runner for the opt-in `make install-prek-hooks` (TCK-20261003-PREK-GIT-HOOKS-OPT-IN); a single
     # binary wheel. In `dev` so every CI job and the installer tests have it.
     "prek==0.5.5",
+    # Runs the Integration, API/CLI/engine and Tools f-z jobs in parallel inside the job (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS);
+    # `--dist loadgroup` honours xdist_group. Exact version is the one uv.lock resolves.
+    "pytest-xdist>=3.6.0",
 ]
 # Code-health tools (TCK-20261002-CODE-HEALTH-TOOL-CONFIG). Pinned exactly: a new release can
 # add or retune rules, which would change the measured baseline without a code change.

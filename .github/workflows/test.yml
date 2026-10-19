@@ -309,7 +309,7 @@ jobs:
       - name: Run
         run: |
           pytest tests/integration \
-                 -m "not slow and not extra_slow" --tb=short -q \
+                 -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/integration.xml
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
@@ -398,7 +398,7 @@ jobs:
       - name: "Run: tests/tools (f–z)"
         if: always()
         run: |
-          pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/tools-f-z.xml
       - name: Upload JUnit XML
         if: always()
@@ -450,38 +450,51 @@ jobs:
       - name: "Run: tests/api"
         if: always()
         run: |
-          pytest tests/api -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/api -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-api.xml
       - name: "Run: tests/cli"
         if: always()
         run: |
-          pytest tests/cli -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/cli -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-cli.xml
       - name: "Run: tests/logging"
         if: always()
         run: |
-          pytest tests/logging -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/logging -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-logging.xml
       - name: "Run: tests/engine"
         if: always()
         run: |
-          pytest tests/engine -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/engine -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-engine.xml
       - name: "Run: tests/observability"
         if: always()
         run: |
-          pytest tests/observability -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/observability -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-observability.xml
       # TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT: the drawing tools' unit tests and the boundary guard run
       # here; the Aseprite-backed integration tests skip cleanly (no Aseprite in CI, ADR D10).
       - name: "Run: tests/visual_assets"
         if: always()
         run: |
-          pytest tests/visual_assets -m "not slow and not extra_slow" --tb=short -q \
+          pytest tests/visual_assets \
+                 --ignore=tests/visual_assets/store \
+                 --ignore=tests/visual_assets/test_review_cli.py \
+                 --ignore=tests/visual_assets/test_key_usage.py \
+                 -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-visual_assets.xml
-      - name: "Note: needs_aseprite skips (ADR D10)"
+      # Serial on purpose (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS): every writing store command takes an exclusive flock on the one
+      # real visual_assets/catalog/.store.lock, so two xdist workers collide (store_locked, exit 2). The fixture fix is issue #657;
+      # remove this step, and the three --ignore lines above, once it is on main. The two steps together collect exactly what the
+      # single `tests/visual_assets` step did.
+      - name: "Run: tests/visual_assets (store lock, serial)"
         if: always()
-        run: python3 tools/ci_aseprite_skip_line.py reports/junit/api-cli-engine-visual_assets.xml >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          pytest tests/visual_assets/store \
+                 tests/visual_assets/test_review_cli.py \
+                 tests/visual_assets/test_key_usage.py \
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-cli-engine-visual_assets-serial.xml
       - name: Merge JUnit XML
         if: always()
         run: |
@@ -491,7 +504,12 @@ jobs:
                  reports/junit/api-cli-engine-logging.xml \
                  reports/junit/api-cli-engine-engine.xml \
                  reports/junit/api-cli-engine-observability.xml \
-                 reports/junit/api-cli-engine-visual_assets.xml
+                 reports/junit/api-cli-engine-visual_assets.xml \
+                 reports/junit/api-cli-engine-visual_assets-serial.xml
+      # After the merge so it counts the Aseprite skips of both visual_assets steps.
+      - name: "Note: needs_aseprite skips (ADR D10)"
+        if: always()
+        run: python3 tools/ci_aseprite_skip_line.py reports/junit/api-cli-engine.xml >> "$GITHUB_STEP_SUMMARY"
       - name: Upload JUnit XML
         if: always()
         uses: actions/upload-artifact@v7
@@ -517,7 +535,7 @@ jobs:
             # A base branch from before TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT lacks the
             # visual_assets test directory, and pytest aborts the whole collection on a missing
             # path, so create it empty in the base checkout first. The path list below stays
-            # identical to the head 'Run' steps.
+            # identical to the head 'Run' steps (the three store-lock paths overlap the whole-directory path, and pytest collects a node once).
             mkdir -p /tmp/base-checkout/tests/visual_assets
             cd /tmp/base-checkout && pytest tests/api \
                    tests/cli \
@@ -525,6 +543,9 @@ jobs:
                    tests/engine \
                    tests/observability \
                    tests/visual_assets \
+                   tests/visual_assets/store \
+                   tests/visual_assets/test_review_cli.py \
+                   tests/visual_assets/test_key_usage.py \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary
