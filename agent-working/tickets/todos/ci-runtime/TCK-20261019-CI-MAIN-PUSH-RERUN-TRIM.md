@@ -72,6 +72,8 @@ Child 3 of TCK-20261019-CI-RUNTIME-EPIC. Measured over 7 days: 70 main pushes, a
 - tests/static/ (the new push-lane guard)
 
 ## Assumptions / Open Questions
+- **platform-planner (u24) ANSWERED 2026-10-19:** "nothing I own reads main-push runs, statuses or artifacts of test.yml". Moving simq-grade-drift to schedule plus workflow_dispatch is fine from platform's side. What they checked: publish-images.yml has its own push trigger with no workflow_run/needs on test.yml; deploy-docs is dispatch-only; iac has its own triggers; compose, docker, infra, loadtest and runbooks don't reference test.yml. The repo ruleset `protect_branches` requires only the "Code health" and "Type check" checks (repo settings, the user's call). The ubuntu observability stack (#618) is ubuntu's to answer. If the write-up proposes making publish-images wait on test.yml, route that part to platform-planner. Copy this verbatim into investigation.md.
+- **lead-planner (ubuntu):** asked on issue #652, not yet answered.
 - If TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED shows the drift job was put on push on purpose, to catch a red on main within one merge, then (a) needs testing-planner's ruling. Do not decide it yourself.
 
 ## Implementation Notes
