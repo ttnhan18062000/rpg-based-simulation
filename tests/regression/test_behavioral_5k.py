@@ -54,6 +54,7 @@ def collect_behavioral_metrics(
     from src.engine.metrics import MetricsService
     from src.config.profiles import RuntimeProfile, HardwareClass
     from src.platform.rng import DeterministicRNG
+    from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
     repo = WorldRepository("data/worlds")
     spec = repo.load_world(world_id)
@@ -77,8 +78,9 @@ def collect_behavioral_metrics(
     )
     # no_frame_pacing disables the kernel's tick-rate sleep (which pads each tick to
     # max_tick_budget_ms). Without this flag, 5000 ticks × 500ms = ~45 minutes.
+    # audit_mode with a pinned NORMAL governor: no wall-clock throttle, so the metrics do not depend on host speed (the baseline is recorded host-independently).
     kernel = Kernel(profile=profile, state=state, rng=DeterministicRNG(seed),
-                    flags={"no_frame_pacing": True})
+                    governor=PinnedNormalGovernor(), flags={"no_frame_pacing": True, "audit_mode": True})
 
     samples: list[dict[str, Any]] = []
     try:
