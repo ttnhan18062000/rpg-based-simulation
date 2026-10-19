@@ -99,6 +99,8 @@ not real behaviour shifts. So:
 
 ## Assumptions / Open Questions
 - Baseline v1's SHA is announced by rpg-planner. The runs wait for main, so the anchors match what CI runs.
+- **rpg-planner ANNOUNCED 2026-10-19: the baseline-v1 SHA is 864f7b281** (not 5c9b84505; #647 and #659 between them change tests/CI only). The gate dispatch run 39212800104 used that commit, and every v1 record uses it. The code is fixed, so run the producer at exactly 864f7b281 now. The v1 PR has not merged yet, so send rpg the re-anchor tables BEFORE any commit, and don't commit anchors until the v1 PR is on main.
+- **Host rule (rpg, 2026-10-19):** run with `--workers 1` while rpg's 10-seed paired base (`--jobs 1`, about 4-6 h) and their behavioral_5k rebaseline are running. That keeps the host under the reaper's 3 heavy processes. Move to `--workers 2` only after rpg says they're done. Time a 2000t pair first to estimate the cost.
 
 ## Implementation Notes
 (implementer)
