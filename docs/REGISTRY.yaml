@@ -7825,6 +7825,24 @@
   - workflows
   - performance
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD.md
+  ticket_id: TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD
+  title: The rpg gate report judges an outcome row's drift against each reference
+    using the k and floor recorded in that reference, not the candidate run's own.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - _compare
+  - tools/test_architecture/rpg_gate_candidate.py (read only, plus a test)
+  - tests/helpers/rpg_gate_stub_metrics.py
+  - tests/unit/tools/test_rpg_gate_report.py
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645.md
   ticket_id: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
   title: 'The catalog arena smoke fails its tick budget at tick 3 (479.5 ms > 150
