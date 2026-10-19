@@ -133,7 +133,7 @@ def test_restore_endpoint_returns_tick_and_state(client, mock_scenario_svc, monk
 
     monkeypatch.setattr(
         "src.api.routes.scenarios.ScenarioCheckpointer.restore",
-        lambda path, spec: restored_svc,
+        lambda path, spec, observers=(): restored_svc,
     )
     response = client.post("/api/v1/scenarios/test-scenario/restore/my-save")
     assert response.status_code == 200
@@ -147,7 +147,7 @@ def test_restore_endpoint_returns_tick_and_state(client, mock_scenario_svc, monk
 # ---------------------------------------------------------------------------
 
 def test_restore_endpoint_404_when_file_not_found(client, mock_scenario_svc, monkeypatch):
-    def _raise(path, spec):
+    def _raise(path, spec, observers=()):
         raise FileNotFoundError("not found")
 
     monkeypatch.setattr("src.api.routes.scenarios.ScenarioCheckpointer.restore", _raise)
@@ -160,7 +160,7 @@ def test_restore_endpoint_404_when_file_not_found(client, mock_scenario_svc, mon
 # ---------------------------------------------------------------------------
 
 def test_restore_endpoint_400_on_spec_id_mismatch(client, mock_scenario_svc, monkeypatch):
-    def _raise(path, spec):
+    def _raise(path, spec, observers=()):
         raise ValueError("spec_id mismatch")
 
     monkeypatch.setattr("src.api.routes.scenarios.ScenarioCheckpointer.restore", _raise)
@@ -247,7 +247,7 @@ def test_restore_endpoint_accepts_in_bounds_spec_path(client, mock_scenario_svc,
     restored_svc.objective_state.value = "RUNNING"
     monkeypatch.setattr(
         "src.api.routes.scenarios.ScenarioCheckpointer.restore",
-        lambda path, spec: restored_svc,
+        lambda path, spec, observers=(): restored_svc,
     )
 
     response = client.post(
@@ -305,7 +305,7 @@ def test_restore_endpoint_default_spec_branch_unaffected_by_containment(client, 
     restored_svc.objective_state.value = "RUNNING"
     monkeypatch.setattr(
         "src.api.routes.scenarios.ScenarioCheckpointer.restore",
-        lambda path, spec: restored_svc,
+        lambda path, spec, observers=(): restored_svc,
     )
 
     response = client.post("/api/v1/scenarios/test-scenario/restore/my-save")

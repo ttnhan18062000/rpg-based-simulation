@@ -121,6 +121,7 @@ class ScenarioRuntimeService:
 
     __slots__ = (
         "_spec",
+        "_observers",
         "_kernel",
         "_state",
         "_tick",

@@ -135,3 +135,16 @@ def test_a_kernel_without_observers_never_imports_the_simq_package():
     """)
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, cwd=str(ROOT), env={**os.environ, "PYTHONPATH": str(ROOT)}, timeout=120)
     assert "SIMQ_IMPORTED []" in out.stdout, out.stdout + out.stderr
+
+
+def test_a_scenario_service_and_a_restored_one_carry_the_observers_to_their_kernel():
+    from unittest.mock import MagicMock
+
+    from src.engine.scenario_runtime import ScenarioRuntimeService
+
+    def factory(ctx):
+        return None
+
+    service = ScenarioRuntimeService(MagicMock(), observers=[factory])
+    assert service._observers == (factory,)
+    assert ScenarioRuntimeService(MagicMock())._observers == ()
