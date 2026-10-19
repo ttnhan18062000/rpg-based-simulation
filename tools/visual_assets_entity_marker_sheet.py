@@ -144,10 +144,11 @@ def treatment_entries(data: dict) -> list[tuple[str, str, list[list[Rgb | None]]
     out = []
     for kind in COMPARE:
         slot = data["kinds"][kind]
-        name = slot["A"]["name"]
-        out.append((f"{kind.upper()} A (A) BARE OBJECT", name, grid(slot["bare"]), slot["nearest"]))
-        out.append((f"{kind.upper()} A (B) EMBLEM ON TOKEN", name, grid(data["token"], slot["A"]["emblem"]), slot["nearest"]))
-        out.append((f"{kind.upper()} A (C) FIGURE", name + ", as a figure", grid(slot["figure"]), slot["nearest"]))
+        opt = slot.get("treatment", "A")
+        name = slot[opt]["name"]
+        out.append((f"{kind.upper()} {opt} (A) BARE OBJECT", name, grid(slot["bare"]), slot["nearest"]))
+        out.append((f"{kind.upper()} {opt} (B) EMBLEM ON TOKEN", name, grid(data["token"], slot[opt]["emblem"]), slot["nearest"]))
+        out.append((f"{kind.upper()} {opt} (C) FIGURE", name + ", as a figure", grid(slot["figure"]), slot["nearest"]))
     return out
 
 
