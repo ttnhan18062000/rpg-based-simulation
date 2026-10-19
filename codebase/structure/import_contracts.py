@@ -53,6 +53,7 @@ _ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 _TOTALS_RE = re.compile(r"Contracts: (\d+) kept, (\d+) broken")
 _BROKEN_RE = re.compile(r"^(.+?) BROKEN(?: \(\d+ ignored imports\))?$", re.M)
 _STALE_RE = re.compile(r"No matches for ignored import")
+_STALE_PAIR_RE = re.compile(r"No matches for ignored import (\S+) -> (\S+)")
 _SECTION_RE = re.compile(r"((?:[^\n]+\n)+?)-{5,}\n")
 
 
@@ -123,6 +124,31 @@ def broken_pairs(output: str) -> dict[str, list[str]]:
     return found
 
 
+def stale_pairs(output: str) -> list[str]:
+    """`importer -> imported` pairs from lint-imports' "No matches for ignored import A -> B." warnings, in order.
+
+    The text is joined on whitespace first, so a warning wrapped at the terminal width still parses.
+    """
+    text = " ".join(_ANSI_RE.sub("", output).split())
+    return [f"{importer} -> {imported.rstrip('.')}" for importer, imported in _STALE_PAIR_RE.findall(text)]
+
+
+def locate_stale(root: Path, pair: str) -> str:
+    """Where to delete a stale ignored import: its line in the baseline file, else in the config, else a note.
+
+    A baseline pair also sits in the generated block of the config, so the baseline is checked first: deleting
+    the baseline line and running the rewrite removes both.
+    """
+    for rel in (BASELINE_REL_PATH, CONFIG_REL_PATH):
+        path = root / rel
+        if not path.exists():
+            continue
+        for number, line in enumerate(path.read_text().splitlines(), start=1):
+            if line.strip().strip(",").strip('"') == pair:
+                return f"{rel.name} l.{number}"
+    return "not found in the baseline or the config"
+
+
 def splice_block(config: str, block: str) -> str:
     """Replace the generated block in `config`; raise if the markers are missing or out of order."""
     start, end = config.find(BEGIN_MARKER), config.find(END_MARKER)
@@ -182,6 +208,7 @@ class Report:
     stale: int  # `ignore_imports` entries that no longer match anything
     stale_block: bool  # the generated `layers` block differs from the registry and baseline
     could_not_run: bool
+    stale_entries: tuple[str, ...] = ()  # each stale pair with where to delete it: `a -> b (file l.N)`
 
     @property
     def findings(self) -> bool:
@@ -210,14 +237,16 @@ def check_contracts(root: Path, lint_imports: str, label: str) -> Report:
     # The section's own headings carry the full name; the `X BROKEN` status lines wrap at the terminal width.
     names = sorted(pairs) or sorted({" ".join(name.split()) for name in _BROKEN_RE.findall(text)})
     stale = len(_STALE_RE.findall(text))
+    stale_entries = tuple(f"{pair} ({locate_stale(root, pair)})" for pair in stale_pairs(text))
     head = f"**Import contracts ({label}):** {kept} kept, {broken} broken"
     lines = [head + (f", {stale} stale ignored import(s)" if stale else "")] + lines
+    lines += [f"- stale: `{entry}`" for entry in stale_entries]
     for name in names:
         lines.append(f"- broken: `{name}`")
         lines += [f"  - `{pair}`" for pair in pairs.get(name, [])]
     if broken:
         lines.append("- run `make lint-imports` for the full report")
-    return Report("\n".join(lines), {name: pairs.get(name, []) for name in names}, stale, stale_block, False)
+    return Report("\n".join(lines), {name: pairs.get(name, []) for name in names}, stale, stale_block, False, stale_entries)
 
 
 def advisory_report(root: Path, lint_imports: str) -> tuple[str, bool]:
@@ -258,7 +287,9 @@ def run_ci(root: Path, lint_imports: str, summary_out: Path | None, annotate: bo
     if annotate:
         for name, entries in report.broken.items():
             print(_annotation(f"::error::import contracts: `{name}` is broken: " + "; ".join(entries or ["see the job summary"])))
-        if report.stale:
+        for entry in report.stale_entries:
+            print(_annotation(f"::error::import contracts: stale ignored import `{entry}`: delete the line, then run `python3 -m codebase.structure.import_contracts`"))
+        if report.stale > len(report.stale_entries):
             print(f"::error::import contracts: {report.stale} stale ignored import(s): remove the `ignore_imports` entries that no longer match")
         if report.stale_block:
             print("::error::import contracts: the generated `layers` block is out of date: run `python3 -m codebase.structure.import_contracts`")
