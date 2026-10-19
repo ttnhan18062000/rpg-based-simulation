@@ -72,6 +72,8 @@ Child 3 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner's #523 answer
 - Standard tier: the dispatch asks for plan.md, investigation.md and test_plan.md up front. The registry byte budget (`MAX_REGISTRY_BYTES`, about 450 B per key) for 11 keys is checked in plan.md. If it doesn't fit, STOP and raise it as an owner question; no bound raise inside this ticket.
 
 ## Implementation Notes
+- **Step-1 miss, fixed (2026-10-19):** commit `0cfc1e56c` added 11 `icon.entity.*` registry keys whose `description` was about 350 characters. The registry caps a key's description at 256 characters, so that commit's `visual_keys.yaml` does not load (`registry_unreadable ... keys.83.description: String should have at most 256 characters`). `draft keep` found it first. Commit `061b3ed6c` shortens all 11. A squash merge keeps `0cfc1e56c` off `main`. Nothing in step 1 loaded the registry; from now on, after any `visual_keys.yaml` edit, load it once (light) before committing.
+- **Drafts:** 11 colour drafts kept in set `entity-markers-v1` (bare object, owner treatment (a)); the worker was redrawn once (lighter steel tines for contrast on grass, planner review) and kept with `draft keep --replace`.
 
 
 ## Test Summary
