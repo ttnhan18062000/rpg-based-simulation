@@ -7696,6 +7696,18 @@
   - performance
   - benchmarking
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-API-RECORDS-REQUEST-DURATION-BY-ROUTE-TEMPLATE.md
+  ticket_id: TCK-20261018-API-RECORDS-REQUEST-DURATION-BY-ROUTE-TEMPLATE
+  title: 'The API records a request-duration histogram labelled by method, route template
+    and status class (issue #622, R2).'
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - src/api/http_metrics.py, src/api/engine_manager.py, src/api/server.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER.md
   ticket_id: TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER
   title: 'Backend image: run backend, ai_worker and watchdog as a non-root user, so
