@@ -16,7 +16,7 @@ describe('the key list matches the registry', () => {
   const yaml = read('visual_assets', 'catalog', 'definitions', 'visual_keys.yaml')
   const registered = yaml.split('\n  - key: ').slice(1).map((block) => [block.split('\n')[0], /description: (.*)/.exec(block)![1]] as const).filter(([k]) => k.startsWith('icon.'))
 
-  it('every drawn key of the page (ICON_SIZES) is in the registry with the size its description states; the 22 icon set v2 keys and the 18 object markers (rc-0011) are registered but not drawn yet', () => {
+  it('every drawn key of the page (ICON_SIZES) is in the registry with the size its description states; the 22 icon set v2 keys, the 18 object markers (rc-0011) and the 11 entity markers are registered but not drawn yet', () => {
     const drawn = registered.filter(([k]) => k in ICON_SIZES)
     expect(drawn.map(([k]) => k).sort()).toEqual([...ICON_KEYS])
     for (const [key, description] of drawn) {
@@ -24,12 +24,12 @@ describe('the key list matches the registry', () => {
       expect(description, key).toContain(`${size}x${size}`)
     }
     expect(ICON_KEYS).toHaveLength(14)
-    expect(registered).toHaveLength(14 + 22 + 18) // the key set, icon set v2 (TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC) and the object markers (TCK-20261013-VISUAL-ASSETS-MARKERS-RC-AND-CLOSE)
+    expect(registered).toHaveLength(14 + 22 + 18 + 11) // the key set, icon set v2 (TCK-20261007-VISUAL-ASSETS-ICON-V2-KEYS-AND-RC), the object markers (TCK-20261013-VISUAL-ASSETS-MARKERS-RC-AND-CLOSE) and the entity markers (TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS)
   })
 
-  it('the 22 icon set v2 keys and the 18 object markers (40 undrawn keys) each have a declared fallback that matches the registry description', () => {
+  it('the 22 icon set v2 keys, the 18 object markers and the 11 entity markers (51 undrawn keys) each have a declared fallback that matches the registry description', () => {
     const v2 = registered.filter(([k]) => !(k in ICON_SIZES))
-    expect(v2).toHaveLength(22 + 18)
+    expect(v2).toHaveLength(22 + 18 + 11)
     for (const [key, description] of v2) {
       const fb = fallbackFor(key)
       expect(fb.note, key).toMatch(/^identifying/)
