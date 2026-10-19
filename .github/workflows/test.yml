@@ -400,16 +400,21 @@ jobs:
         run: |
           pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
                  --ignore=tests/tools/test_implement_ticket_native_refusal.py \
+                 --ignore=tests/tools/test_simq_long_run_observation.py \
                  -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/tools-f-z-parallel.xml
       # Serial on purpose (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS): this file writes one fixed-name temp copy of
       # .claude/workflows/implement-ticket.js into the real workflows directory and deletes it afterwards, so its parametrized tests,
       # spread over xdist workers, delete each other's copy (FileNotFoundError). Fix needs a per-test tmp name: agent-working's file,
       # TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH. Remove this step and the --ignore line above once it uses tmp_path or a unique name.
+      # Also serial (TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL): test_observe_world_cleans_up_its_own_run_dir snapshots the WHOLE
+      # data/runs listing before and after observe_world, so a run directory another xdist worker creates in that window reads as leftover scratch
+      # data. Fix: snapshot only the run id observe_world made (agent-working's file, tests/tools; TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR). Remove this path and its --ignore line once it does.
       - name: "Run: tests/tools (f–z, workflow-file test, serial)"
         if: always()
         run: |
           pytest tests/tools/test_implement_ticket_native_refusal.py \
+                 tests/tools/test_simq_long_run_observation.py \
                  -m "not slow and not extra_slow" --tb=short -q \
                  --junit-xml=reports/junit/tools-f-z-serial.xml
       - name: Merge JUnit XML
@@ -442,6 +447,7 @@ jobs:
           if [ -d /tmp/base-checkout ]; then
             cd /tmp/base-checkout && pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
                    tests/tools/test_implement_ticket_native_refusal.py \
+                   tests/tools/test_simq_long_run_observation.py \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary
