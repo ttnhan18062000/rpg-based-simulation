@@ -4,7 +4,7 @@ layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-RECORD-BASELINE-V1
-phase: open
+phase: active
 date: 2026-10-19
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Record baseline v1: paired fingerprints, gate V1-V8 rows and the behavioral_5k rebaseline, all on one commit, with v1_disclosure.md as what v1 does not claim
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
