@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
-phase: open
+phase: inprogress
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 Prometheus: scrape the backend's internal metrics port 9109 instead of the admission-gated /metrics on 8000
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -73,10 +73,13 @@ None.
 - R1 is requested from rpg-planner in issue #622 (filed by lead-planner, 2026-10-18).
 
 ## Implementation Notes
-(open)
+- `docker/prometheus.yml`: job `rpg-backend` -> `backend:9109` added (its comment says the old 8000 job was removed by S4 because that route is admission-gated). No rule file here.
+- `compose.yaml`: the backend gets `expose: ["9109"]` (never `ports`); `BACKEND_METRICS_PORT` and `BACKEND_METRICS_HOST` are left at their code defaults (9109, every interface inside the container; `src/api/metrics_port.py`). rpg's R1 did not touch compose, so this hunk is this ticket's.
+- The 0.3 s bucket the SLO alert needs is NOT on main yet (`src/api/http_metrics.py` `_BUCKETS` has 0.25 and 0.5); that gates the SLO fire test, not this ticket.
 
 ## Test Summary
-(open)
+- **validated:** `docker compose config -q` for both profiles; the rendered backend service has `expose: ['9109']` and the only published port is `8000:8000`; `promtool check config` from the pinned image (SUCCESS, with the `rpg-backend` job).
+- Not yet run (needs the single full-profile stack run): `rpg-backend` target `up`, `sim_current_tick` returns a series, `localhost:8000/metrics` still 401, 9109 unreachable from the host, and the `simulation.json` panel list.
 
 ## Files Changed
 (open)
