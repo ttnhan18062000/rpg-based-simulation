@@ -99,3 +99,9 @@ Two fresh subagents, free text, no list, 22 shuffled unlabelled emblems on the t
 
 
 Finding: `icon_lookalikes.all_icon_sprites()` (key-set + v2 drafts) holds r0001 art; the seven owner-fix revisions (r0002: item.tool hammer and tongs, class.rogue, ...) are only in `icon_owner_fixes_draft_set.proposed_sprites()`. The entity sheet overlays them; other consumers of `all_icon_sprites()` still see the old wrench.
+
+## Round 2 (guard and scout, new objects C and D), blind check with 4 passing distractors
+Guard C lantern: FLAG (padlock x2). Guard D large gate key: PASS (key x2). Scout C open eye: PASS (eye x2). Scout D boot: PASS (boot x2). Distractors: crown PASS, hare PASS, horseshoe PASS (magnet risk), predator_hunter A claws read as steam or heat waves by both (it passed in round 1: borderline). Every kind now has a passing candidate (11 of 11); flagged shapes remain on the sheet, marked flagged. Guard A (spear) stays the treatment-comparison object on `01_treatments.png`.
+
+## Consumers of `icon_lookalikes.all_icon_sprites()` (r0001 art for the 7 owner-fix keys), for the backlog ticket
+Without the owner-fix overlay: `visual_assets/review/review_sheets.py:509` (adopted pictures on every review folder), `visual_assets/review/icon_silhouette_sheet.py:49`, `visual_assets/review/icon_recognition.py:211`, `visual_assets/review/icon_owner_fixes_draft_set.py:51` (its own base, then overlaid), tests `tests/visual_assets/test_icon_lookalikes.py:55`, `test_icon_recognition.py:13`, `test_icon_silhouette_sheet.py:27,39`, `test_icon_compliance.py:62,85,98` and `test_icon_owner_fixes_draft_set.py:59,73`. Some of those tests read r0001 deliberately (`test_icon_compliance.py:155,186-192` compare old against new). This batch's `tools/visual_assets_entity_marker_sheet.py:41` overlays `proposed_sprites()` itself.

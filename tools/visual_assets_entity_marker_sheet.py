@@ -41,12 +41,17 @@ def glyphs() -> dict:
     return {**la.all_icon_sprites(), **fixes.proposed_sprites()}
 
 
+def options(slot: dict) -> list[str]:
+    """The candidate letters a kind has: A and B, plus C and D where a first round misread (guard, scout)."""
+    return [o for o in "ABCD" if o in slot]
+
+
 def load(path: Path = SILHOUETTES) -> dict:
     data = yaml.safe_load(path.read_text())
     token = data["token"]
     _check_rows(token, LIVE, LIVE, "token")
     for kind, slot in data["kinds"].items():
-        for option in ("A", "B"):
+        for option in options(slot):
             _check_rows(slot[option]["emblem"], EMBLEM, EMBLEM, f"{kind} {option} emblem", exact=False)
         if kind in COMPARE:
             _check_rows(slot["bare"], LIVE, LIVE, f"{kind} bare")
@@ -150,7 +155,7 @@ def candidate_entries(data: dict) -> list[tuple[str, str, list[list[Rgb | None]]
     out = []
     for kind in data["kinds"]:
         slot = data["kinds"][kind]
-        for option in ("A", "B"):
+        for option in options(slot):
             out.append((f"{kind.upper()} {option}", slot[option]["name"], grid(data["token"], slot[option]["emblem"]), slot["nearest"]))
     return out
 
