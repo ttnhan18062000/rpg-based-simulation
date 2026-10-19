@@ -55,6 +55,7 @@ function App() {
               buildings={sim.buildings}
               resourceNodes={sim.resourceNodes}
               regions={sim.regions}
+              manifest={sim.manifest}
               selectedEntityId={sim.selectedEntityId}
               onEntityClick={handleSelectEntity}
               onGroundItemClick={handleGroundItemClick}

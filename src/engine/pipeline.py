@@ -338,8 +338,7 @@ class AuthoritativeApplyPipeline:
         t_start = time.perf_counter_ns()
         update = run_phase("town_resolution", update, lambda u: TownResolutionSystem.resolve(state, u, cadence=cadence))
 
-        generator = EntityGenerator(state.seed + state.tick)
-        generator._last_id = state.next_entity_id - 1
+        generator = EntityGenerator.for_state(state, update)
         update = run_phase("world_dynamics", update, lambda u: WorldDynamicsSystem.resolve_dynamics(state, u, generator, cadence=cadence, faction_directives=faction_directives))
         costs["governance_ecology"] = (time.perf_counter_ns() - t_start) / 1e6
 

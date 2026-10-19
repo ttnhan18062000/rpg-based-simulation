@@ -281,7 +281,7 @@ def test_combat_trace_consistency(base_state):
     # 1. High Ground
     state_hg = replace(base_state, 
         entities={1: attacker, 2: target},
-        terrain={(10, 10): "HILL", (11, 10): "PLAIN"}
+        terrain={(10, 10): "mountain", (11, 10): "plain"}
     )
     update_hg = CombatResolutionSystem.resolve_attack(attacker, target, state_hg)
     assert "HIGH_GROUND" in update_hg.trace
@@ -293,7 +293,7 @@ def test_combat_trace_consistency(base_state):
     target_far = create_mock_entity(2, pos=(12, 10), faction="MONSTER")
     state_cover = replace(base_state,
         entities={1: attacker_far, 2: target_far},
-        terrain={(11, 10): "FOREST"}
+        terrain={(11, 10): "forest"}
     )
     update_cover = CombatResolutionSystem.resolve_attack(attacker_far, target_far, state_cover)
     assert "COVER_REDUCTION" in update_cover.trace

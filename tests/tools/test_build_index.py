@@ -13,6 +13,8 @@ Groups:
 import hashlib
 import importlib.util
 import json
+import os
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -491,6 +493,31 @@ class TestMakeTarget:
                     f"'agent-monitoring-index' must not be a dependency of CI targets, "
                     f"found in: {target_line!r}"
                 )
+
+    def test_agent_monitoring_index_recipe_has_no_inline_x_interpreter_loop(self):
+        """`[ -x "$$py" ]` on a bare `python3` tests a file of that name in the cwd and never matches, so make then tried to
+        exec the .py file (error 127) in any worktree without its own .venv
+        (TCK-20261018-MAKE-AGENT-MONITORING-INDEX-WORKS-WITHOUT-LOCAL-VENV)."""
+        lines = (_REPO_ROOT / "Makefile").read_text(encoding="utf-8").splitlines()
+        start = next(i for i, line in enumerate(lines) if line.startswith("agent-monitoring-index:"))
+        recipe = []
+        for line in lines[start + 1:]:
+            if not line.startswith("\t"):
+                break
+            recipe.append(line)
+        assert recipe and all('[ -x "$$py" ]' not in line for line in recipe)
+        assert recipe[0].strip() == "$(PYTHON3) tools/agent-monitoring/build_index.py"
+
+    def test_agent_monitoring_index_resolves_a_real_interpreter_without_a_local_venv(self, tmp_path):
+        """A dry run from a directory that has no .venv prints a command whose interpreter exists on PATH."""
+        shutil.copy(_REPO_ROOT / "Makefile", tmp_path / "Makefile")
+        env = {**os.environ, "PATH": f"{Path(sys.executable).parent}{os.pathsep}{os.environ['PATH']}"}
+        result = subprocess.run(["make", "-n", "agent-monitoring-index"], capture_output=True, text=True,
+                                cwd=str(tmp_path), env=env)
+        assert result.returncode == 0, result.stderr
+        command = [line for line in result.stdout.splitlines() if "build_index.py" in line][-1].split()
+        assert command[-1] == "tools/agent-monitoring/build_index.py" and len(command) == 2
+        assert shutil.which(command[0], path=env["PATH"]) is not None
 
     def test_makefile_dry_run_agent_monitoring_index(self):
         result = subprocess.run(

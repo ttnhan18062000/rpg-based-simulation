@@ -25,7 +25,6 @@ from src.core.state import (
     EntityState, AuthoritativeState, StaminaComponent, WoundState, ScarState,
     CombatComponent, NavigationComponent, InventoryComponent, AttributeComponent,
     IdentityComponent, BiologicalComponent, LifecycleComponent, TaskComponent,
-    TERRAIN_COST
 )
 from src.core.enums import Faction, EntityRole
 from src.core.movement_modes import MovementMode
@@ -336,30 +335,30 @@ class TestTerrainCost:
     def test_road_is_cheap(self):
         """Road tiles cost 0.5x."""
         # VERIFIED v2: terrain_cost_pathfinding
-        state = make_state(terrain={(3, 3): "ROAD"})
+        state = make_state(terrain={(3, 3): "road"})
         assert TerrainCostService.get_tile_cost((3, 3), state) == 0.5
 
     def test_swamp_is_expensive(self):
         """Swamp tiles cost 3.0x."""
-        state = make_state(terrain={(3, 3): "SWAMP"})
+        state = make_state(terrain={(3, 3): "swamp"})
         assert TerrainCostService.get_tile_cost((3, 3), state) == 3.0
 
     def test_plain_is_default(self):
-        """Unknown/plain tiles cost 1.0x."""
+        """A tile with no terrain recorded costs the default terrain (plain) 1.0x."""
         state = make_state(terrain={})
         assert TerrainCostService.get_tile_cost((3, 3), state) == 1.0
 
     def test_terrain_cost_table(self):
-        """All terrain types have correct costs."""
-        assert TERRAIN_COST["ROAD"] == 0.5
-        assert TERRAIN_COST["FOREST"] == 1.5
-        assert TERRAIN_COST["SWAMP"] == 3.0
-        assert TERRAIN_COST["HILL"] == 2.0
-        assert TERRAIN_COST["MOUNTAIN"] == 4.0
+        """Costs are the ones each terrain declares in content (D72), read by catalog id."""
+        from src.content.terrain_cost import terrain_cost
+        assert terrain_cost("road") == 0.5
+        assert terrain_cost("forest") == 1.5
+        assert terrain_cost("swamp") == 3.0
+        assert terrain_cost("mountain") == 4.0
 
     def test_path_cost_calculation(self):
         """Path cost sums individual tile costs."""
-        state = make_state(terrain={(1, 1): "ROAD", (2, 1): "SWAMP", (3, 1): "PLAIN"})
+        state = make_state(terrain={(1, 1): "road", (2, 1): "swamp", (3, 1): "plain"})
         cost = TerrainCostService.get_path_cost([(1, 1), (2, 1), (3, 1)], state)
         assert cost == 0.5 + 3.0 + 1.0
 

@@ -205,3 +205,28 @@ class TestReportEndpoint:
             with TestClient(app) as c:
                 resp = c.get("/api/v1/quality/report")
         assert resp.json() == {"enabled": False}
+
+
+class TestNoDataPillar:
+    def test_no_data_pillar_and_overall_pass_through_as_null(self) -> None:
+        snap = PillarSnapshot(
+            pillar_id="PROGRESSION", raw_score=-8.0, normalized_score=None, grade=None, event_count=1,
+            negative_count=1, loop_detected=False, loop_flags=frozenset(), worst_events=(),
+            status="no-data", min_events=3, reason="below_min_events",
+        )
+        report = QualityReport(
+            run_id="r", tick_count=200, overall_score=None, overall_grade=None, generated_at="t",
+            pillars={"PROGRESSION": snap}, overall_status="no-data", overall_reason="too_few_pillars_scored",
+            pillars_scored=0, pillars_no_data=1,
+        )
+        hub = MagicMock()
+        hub.get_quality_report.return_value = report
+        with patch("src.simulation_quality.api.routes.get_quality_hub", return_value=hub):
+            with TestClient(_make_app()) as c:
+                status = c.get("/api/v1/quality/status").json()
+                pillars = c.get("/api/v1/quality/pillars").json()["pillars"]
+                alerts = c.get("/api/v1/quality/alerts").json()
+        assert status["overall_score"] is None and status["overall_status"] == "no-data"
+        assert (status["pillars_scored"], status["pillars_no_data"]) == (0, 1)
+        assert pillars[0]["status"] == "no-data" and pillars[0]["grade"] is None and pillars[0]["normalized_score"] is None
+        assert alerts["alert_count"] == 0

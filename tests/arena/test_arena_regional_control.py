@@ -2,7 +2,24 @@ import pytest
 from src.certification.harness import CertificationHarness
 from src.certification.scenarios import build_scenario_state, get_scenario_expectations
 from src.config.profiles import RuntimeProfile, HardwareClass
+from dataclasses import replace
 from src.core.enums import Faction
+from src.core.treasury import treasury_key
+
+# EXCH-02 (#536, divergences 2.108-2.112): coin is never minted. A kill pays nothing to the killer; the dead keep their purse on the corpse until
+# someone loots it. The per-head levy is retired (tax is a tenth of a sale or a wage, paid to the place holder's treasury), and the +10 building mint is gone.
+MONSTER_PURSE = 5
+HERO_PURSE = 100
+
+
+def _stage_purse(state, gold=MONSTER_PURSE):
+    """Give the monster (id 14) a real purse, so the coin a kill moves is visible and conserved."""
+    monster = state.entities[14]
+    return replace(state, entities={**state.entities, 14: replace(monster, inventory=replace(monster.inventory, gold=gold))})
+
+
+def _corpse_gold(state):
+    return sum(c.gold for c in state.corpses.values())
 
 @pytest.mark.extra_slow
 def test_arena_regional_control():
@@ -15,7 +32,7 @@ def test_arena_regional_control():
     )
     
     scenario_id = "COMBAT_ARENA_REGIONAL"
-    state = build_scenario_state(scenario_id)
+    state = _stage_purse(build_scenario_state(scenario_id))
     expectations = get_scenario_expectations(scenario_id)
     
     harness = CertificationHarness(profile, output_dir="reports/arena_regional")
@@ -34,16 +51,18 @@ def test_arena_regional_control():
     # 1. Verify Influence Shift
     assert region.influence == -40.0
     
-    # 2. Verify Gold (No Taxation yet because prior_tick was 99)
-    # Hero had 100 gold. Kill gives 5.0 gold.
+    # 2. Verify Gold: the kill moves the monster's purse onto its corpse. It is not minted and not paid to the hero.
     hero = final_state.entities[13]
-    assert hero.inventory.gold == 105 # 100 + 5
-    
+    assert hero.inventory.gold == HERO_PURSE
+    assert _corpse_gold(final_state) == MONSTER_PURSE
+    assert hero.inventory.gold + _corpse_gold(final_state) == HERO_PURSE + MONSTER_PURSE  # conserved
+
     # 3. Now run one more tick (prior_tick will be 100)
     result2 = harness.run_scenario(scenario_id, final_state, expectations, ticks=1)
     hero2 = result2.final_state.entities[13]
-    # No taxation because region is still unowned (Influence -40.0)
-    assert hero2.inventory.gold == 105 
+    # No taxation because region is still unowned (Influence -40.0); the corpse purse stays where it fell.
+    assert hero2.inventory.gold == HERO_PURSE
+    assert _corpse_gold(result2.final_state) == MONSTER_PURSE
 
 @pytest.mark.extra_slow
 def test_arena_conquest_and_debuff():
@@ -78,7 +97,7 @@ def test_arena_conquest_and_debuff():
         - debuff uses wrong multiplier
         - test falsely adds attribute-derived bonuses that are not part of
           arena scenario combat initialization
-        - taxation is skipped when region ownership is forced before the tick
+        - a per-head levy or a minted kill reward comes back (EXCH-02: coin moves, it is not created)
     """
     profile = RuntimeProfile(
         name="CONQUEST_ARENA_TEST",
@@ -93,9 +112,7 @@ def test_arena_conquest_and_debuff():
     )
 
     scenario_id = "COMBAT_ARENA_REGIONAL"
-    state = build_scenario_state(scenario_id)
-
-    from dataclasses import replace
+    state = _stage_purse(build_scenario_state(scenario_id))
 
     region = state.regions["test_wilderness"]
 
@@ -133,11 +150,11 @@ def test_arena_conquest_and_debuff():
     assert hero.combat.def_stat == 16
     assert hero.combat.speed == 9
 
-    # Hero had 100 gold.
-    # Tax is 2.0.
-    # Kill reward gives 5.0.
-    # Final: 100 - 2 + 5 = 103.
-    assert hero.inventory.gold == 103
+    # No per-head levy any more (it was 2.0 to the holder's treasury) and no minted kill reward (it was 5.0 to the hero): the hero keeps
+    # exactly the coin it had, the monster's purse lies on its corpse, and the holding faction's treasury is untouched.
+    assert hero.inventory.gold == HERO_PURSE
+    assert _corpse_gold(final_state) == MONSTER_PURSE
+    assert hero.inventory.gold + _corpse_gold(final_state) == HERO_PURSE + MONSTER_PURSE  # conserved
 
-    faction_key = f"faction_{Faction.MONSTER_HORDE.name.lower()}_gold"
-    assert final_state.global_resources.get(faction_key, 0.0) == 2.0
+    faction_key = treasury_key(Faction.MONSTER_HORDE)
+    assert final_state.global_resources.get(faction_key, 0.0) == 0.0

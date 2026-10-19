@@ -1443,12 +1443,15 @@ def generate(
     lines.append("|---|---|")
     lines.append(f"| Total runs | {rs['total']} |")
     lines.append(f"| Completed (DONE) | {rs['done_count']} ({fmt_pct(rs['done_count'], rs['total'])}) |")
-    lines.append(f"| Gate failures | {rs['gate_fail_count']} |")
     if ledger_blocks is not None:
-        # TCK-20261015-CLOSURE-RECORDER-PHASE-EVIDENCE-AND-PARITY-SKIP-REASON: the line above counts runs whose
-        # final_status is a gate failure only, so "0" hid 22 blocking Finalize verdicts in W42. Two labelled numbers.
-        lines.append(f"| Blocking gate verdicts (ledger) | {ledger_blocks['blocking']} of {ledger_blocks['verdicts']} verdicts "
-                     f"({ledger_blocks['unresolved']} without a recorded outcome) |")
+        # TCK-20261018-RETRO-GATE-FAILURES-ROW-CITES-LEDGER: runs almost never END in a gate failure (a hand closure fixes
+        # and reruns, or overrides), so the run-based count read "0" while the ledger held tens of blocking verdicts. The
+        # row cites the ledger; the run count follows as a trailing clause.
+        lines.append(f"| Gate failures | {ledger_blocks['blocking']} blocking verdicts of {ledger_blocks['verdicts']} "
+                     f"(ledger: {ledger_blocks['overridden']} overridden, {ledger_blocks['unresolved']} without an outcome); "
+                     f"{rs['gate_fail_count']} runs ended in a gate failure |")
+    else:
+        lines.append(f"| Gate failures (runs; no gate ledger for this window) | {rs['gate_fail_count']} |")
     if reset_declarations is not None:
         # TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP: a count, 0 included, from the first week
         # the declaration command exists; earlier weeks are not instrumented, so they show no row
@@ -2206,18 +2209,27 @@ def _reset_declarations(week_str):
 
 
 def _ledger_blocks(week_str):
-    """{"verdicts", "blocking", "unresolved"} over the gate ledger's verdicts of `week_str` (every week when None), or None
-    when the ledger holds none or cannot be read (never fails the retro)."""
+    """{"verdicts", "blocking", "overridden", "unresolved"} over the gate ledger's verdicts of the ISO week `week_str`, or
+    None when the report has no ledger window: no week (`--all`/`--days`), no ledger rows at all, a week before the
+    ledger's first verdict, or a ledger that cannot be read (never fails the retro).
+
+    A ledger that exists but holds no verdict for this week is a real reading, zeros included
+    (TCK-20261018-RETRO-GATE-FAILURES-ROW-CITES-LEDGER): "0 blocking verdicts of 0" is not "no gate ledger"."""
+    if not week_str:
+        return None
     try:
         import gate_ledger
 
         data_dir = DEFAULT_TOOLS_FILE if DEFAULT_TOOLS_FILE.is_dir() else DEFAULT_TOOLS_FILE.parent
-        readings = gate_ledger.report(gate_ledger.load_rows(data_dir), week_str)
-        verdicts = sum(g["verdicts"] for g in readings)
-        if not verdicts:
+        view = gate_ledger.resolved_view(gate_ledger.load_rows(data_dir))
+        weeks = {w for w in (gate_ledger.week_of(v.get("ts")) for v in view) if w}
+        if not weeks or week_str < min(weeks):
             return None
-        return {"verdicts": verdicts, "blocking": sum(g["blocking"] for g in readings),
-                "unresolved": sum(g["unresolved"] for g in readings)}
+        inside = [v for v in view if gate_ledger.week_of(v.get("ts")) == week_str]
+        blocking = [v for v in inside if v.get("blocking")]
+        return {"verdicts": len(inside), "blocking": len(blocking),
+                "overridden": sum(1 for v in blocking if v["outcome"] == "overridden"),
+                "unresolved": sum(1 for v in blocking if v["outcome"] is None)}
     except Exception:  # noqa: BLE001
         return None
 
@@ -2390,6 +2402,9 @@ def _resolve_report_run_population(name, all_runs, runs_by_week):
     return dedupe_to_latest_per_execution(pop)
 
 
+_ISO_WEEK_RE = re.compile(r"^\d{4}-W\d{2}$")
+
+
 def _update_index(all_runs, all_tools=None):
     all_tools = all_tools or []
 
@@ -2425,11 +2440,16 @@ def _update_index(all_runs, all_tools=None):
         read_calls = build_raw_investigation_count_section(week_tools)["total"]
         skill_invocations = build_skill_usage_section(week_tools)["total_skill_invocations"]
 
+        ledger = _ledger_blocks(name) if _ISO_WEEK_RE.match(name) else None
+        gate_cell = f"{ledger['blocking']}L" if ledger is not None else str(fails)
         lines.append(
-            f"| [{name}]({f.name}) | {n} | {done} | {fails} | {search_calls} | {read_calls} | "
+            f"| [{name}]({f.name}) | {n} | {done} | {gate_cell} | {search_calls} | {read_calls} | "
             f"{skill_invocations} |"
         )
 
+    lines.append("")
+    lines.append("Gate failures: `NL` is the number of blocking verdicts in the gate ledger for that week; a plain number counts "
+                 "runs that ended in a gate failure (no gate ledger for that window).")
     (RETRO_DIR / "index.md").write_text("\n".join(lines) + "\n")
 
 

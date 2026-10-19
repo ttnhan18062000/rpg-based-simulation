@@ -231,4 +231,6 @@ Defined by child tickets.
 (Child tickets.)
 
 ## Completion Summary
-(Open.)
+(Open. Reopened 2026-10-18, see the note below.)
+
+**Reopened 2026-10-18 (owner decision via lead-planner).** This epic was closed in error in #639 (b18c28a29) by agent-working-planner (host ubuntu): the stale-epic triage counted only filed child ticket IDs, while SEQUENCE.md says E2, E3, E5 and E6 are not filed yet, and u24's agent-working-planner had already advised keeping it (#634, 2026-10-18 12:38Z). The hand-closure run record from that close stays in the monitoring data (records are append-only); its pending working_log row is voided. Remaining: E2 (fleet view), E3 (cross-host heartbeat), E5 (measurement hook-in), E6 (tech-stack governance). Proposed order in SEQUENCE.md.

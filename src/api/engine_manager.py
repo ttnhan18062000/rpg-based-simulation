@@ -10,7 +10,6 @@ from src.core.state import AuthoritativeState
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.config.profiles import RuntimeProfile
-from src.systems.world_systems.generator import EntityGenerator
 from src.api.read_model_cache import ReadModelCache
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
@@ -22,10 +21,9 @@ class V2EngineManager:
     V2 drop-in replacement for legacy EngineManager.
     Wraps the V2 Kernel and manages the background execution loop.
     """
-    def __init__(self, profile: RuntimeProfile, seed: int = 42, entities_count: int = 10, world_id: str = "dungeon_crawl"):
+    def __init__(self, profile: RuntimeProfile, seed: int = 42, world_id: str = "dungeon_crawl"):
         self._profile = profile
         self._seed = seed
-        self._entities_count = entities_count
         self._world_id = world_id
         
         self._kernel: Optional[Kernel] = None
@@ -113,58 +111,18 @@ class V2EngineManager:
                     logger.exception("Error in tick listener")
 
     def _build(self):
-        """Construct the initial kernel and state.
+        """Construct the initial kernel and state: the authored world, compiled the way the simulation and the gate compile it.
 
-        Loads and compiles a real world (terrain, regions, resource nodes, buildings) via
-        WorldCompiler -- previously this constructed a bare AuthoritativeState with no terrain
-        argument at all (terrain defaulting to an empty dict), so every route/consumer reading
-        state.terrain (e.g. GET /api/v1/map) always saw an empty map, live-confirmed via
-        TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX's Playwright e2e check. The compiled
-        world's own entities (quest-givers, NPCs, etc.) are deliberately discarded in favor of
-        the existing hero+goblin-diagonal spawn logic below -- that logic's entities_count
-        semantics and spawn-collision fix (TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-
-        MONSTER-DIAGONAL) are an established, tested contract this change must not disturb; only
-        the terrain/regions/statics layer was missing.
+        D69 (owner ruling 2026-10-14, issue #519): what a viewer watches is what gets measured, so the live server runs the SAME compiled world
+        (`load_world_with_context` + `WorldCompiler.compile(..., context=...)`), with its authored entities, buildings, nodes and regions. There is
+        no demo spawn (it was one hero and a diagonal of goblins that discarded the authored entities) and no switch that brings it back.
         """
-        from src.api.presenters.state_presenter import StatePresenter
-
         rng = DeterministicRNG(self._seed)
-        gen = EntityGenerator(self._seed)
 
-        repo = WorldRepository("data/worlds")
-        spec = repo.load_world(self._world_id)
-        compiled_state, _compile_report = WorldCompiler.compile(spec, seed=self._seed)
+        spec, context = WorldRepository("data/worlds").load_world_with_context(self._world_id)
+        compiled_state, _compile_report = WorldCompiler.compile(spec, seed=self._seed, context=context)
 
-        entities = {}
-        # Spawn hero at center
-        hero_pos = (64.0, 64.0)
-        hero = gen.spawn_hero(hero_pos)
-        entities[hero.id] = hero
-
-        # Spawn monsters along a diagonal from (60, 60). Skip any offset whose tile
-        # (LAW-SPAWN-OCCUPANCY collides on int(x)/int(y), not exact float equality) would
-        # land on the hero's own tile -- with entities_count=10 (the default used by
-        # src/api/server.py's real startup path), offset 4 lands exactly on hero_pos,
-        # producing a deterministic spawn-placement collision (TCK-20260817-STANDARD-
-        # SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL).
-        hero_tile = (int(hero_pos[0]), int(hero_pos[1]))
-        placed = 0
-        offset = 0
-        while placed < self._entities_count - 1:
-            pos = (60.0 + offset, 60.0 + offset)
-            offset += 1
-            if (int(pos[0]), int(pos[1])) == hero_tile:
-                continue
-            monster = gen.spawn_goblin(pos)
-            entities[monster.id] = monster
-            placed += 1
-
-        state = dataclasses.replace(
-            compiled_state,
-            tick=0,
-            seed=self._seed,
-            entities=entities,
-        )
+        state = dataclasses.replace(compiled_state, tick=0, seed=self._seed)
 
         self._kernel = Kernel(profile=self._profile, state=state, rng=rng)
         self._kernel._event_listeners = self._event_listeners

@@ -22,6 +22,7 @@ from src.core.enums import EntityRole
 from src.core.state import AuthoritativeState
 from src.core.updates import StateUpdate, decode_owner_faction_id_set
 from src.observability.config import ObservabilityMode
+from src.observability.divergence_episode import DivergenceEpisodes
 from src.observability.entity_kind_constants import BOSS_ENTITY_KINDS, SPAWN_CADENCE_EXCLUDED_KINDS
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.observability.event_extractor import (
@@ -894,27 +895,20 @@ class StrategyShaper:
 
             # Information: decision_diverged_by_belief — pursuing a non-information project while
             # holding a VAGUE/EXHAUSTED lead.
-            has_vague_lead = any(
-                getattr(lead.certainty, "value", str(lead.certainty)) in ("VAGUE", "EXHAUSTED")
-                for lead in current_leads.values()
-            )
             current_projects = dict(getattr(prior_strategic, "projects", None) or {})
             for proj in (getattr(strategic_upd, "projects_add_or_update", None) or []):
                 current_projects[proj.id] = proj
             for pid in (getattr(strategic_upd, "projects_remove", None) or ()):
                 current_projects.pop(pid, None)
 
-            if curr_proj_id and has_vague_lead:
-                curr_proj = current_projects.get(curr_proj_id)
-                proj_kind = getattr(getattr(curr_proj, "kind", None), "value",
-                                     str(getattr(curr_proj, "kind", ""))) if curr_proj else ""
-                if proj_kind and proj_kind not in ("information", "information_seeking"):
-                    events.append(SimulationEvent(
-                        event_type="decision_diverged_by_belief", event_category="strategy",
-                        tick=tick, entity_id=eid, severity="INFO",
-                        source_system="event_shapers", message="",
-                        payload={"project_kind": proj_kind},
-                    ))
+            proj_kind = DivergenceEpisodes.project_kind(curr_proj_id, current_projects, current_leads)
+            if DivergenceEpisodes.started(eid, proj_kind):
+                events.append(SimulationEvent(
+                    event_type="decision_diverged_by_belief", event_category="strategy",
+                    tick=tick, entity_id=eid, severity="INFO",
+                    source_system="event_shapers", message="",
+                    payload={"project_kind": proj_kind},
+                ))
 
             # Cognition: decision_divergence_detected — active project kind inconsistent with
             # top-urgency DANGER concern.
