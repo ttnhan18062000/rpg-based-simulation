@@ -61,13 +61,12 @@ Owner ruling D70: a monster spawner with no parent and no cost is nothing-from-n
 | group | the kind group (D42, property-based), or `*` for the whole run |
 | oracle | `docs/plans/test_architecture/reference/rpg_gate_baseline_format.md#v8-every-entity-added-mid-run-has-a-declared-source` (this section), and D70 |
 
-Every entity put into the world after tick 0 through the authoritative apply path (`entities_add`) must carry a `SpawnSource` (rpg's frozen type, carried beside the entry, not on the entity). A violation is one of:
+Every entity put into the world after tick 0 through the authoritative apply path (`entities_add`) must carry a `SpawnSource` (rpg's frozen type, carried beside the entry, not on the entity). The only runtime violation is an **unsourced add**: an add with no SpawnSource. The two other shapes are refused at construction by `SpawnSource.__post_init__` and so cannot reach the tally:
 
-1. **unsourced**: an add with no SpawnSource;
-2. **AUTHORED_ARRIVAL without a `rule_id`**: an authored arrival that names no declaring definition (`rule_kind` and `rule_id` are both required);
-3. **BIRTH without parents**: a BIRTH whose `parent_ids` is empty.
+- an `AUTHORED_ARRIVAL` without `rule_kind` and `rule_id` (an authored arrival must name its declaring definition);
+- a `BIRTH` with empty `parent_ids` (and parents on any other kind).
 
-`INITIAL` (tick-0 worldgen) is not judged. The tally is one closing event per run, keyed `(kind_group, source.kind)` plus an `unsourced` count, with a liveness header. Each example names the entity id, the tick, the site or `rule_kind`, and which check failed (`{entity_id, tick, site, check}`).
+`tests/simulation_quality/rpg_gate/test_v8_fires.py` cases (b) and (c) assert that refusal; case (a) asserts the unsourced violation. `INITIAL` (tick-0 worldgen) is not judged. The tally is one closing event per run, keyed `(kind_group, source.kind)` plus an `unsourced` count, with a liveness header. Each example is `{entity_id, tick, kind_group, check}` with `check` = `"unsourced"`. There is no `site` key: the ledger cannot know the call site. **Not yet emitted:** `compute` currently gives `{adds, count}` (the tally key and its count, for example `{"adds": "<group>|unsourced", "count": 2}`); per-add examples are rpg's follow-up, TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY (a bounded ledger `unsourced_examples` list). Until it lands, case (a) of `test_v8_fires.py` fires on the count and does not yet check the entity.
 
 No-data rule: a missing or silent tally is `no-data` (`harness_error`), never 0 violations. A required V8 row that the module does not emit is `no-data` (`contract_error`) by the section above.
 

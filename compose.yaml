@@ -33,7 +33,10 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     restart: unless-stopped
     environment:
-      - REDIS_URL=redis://redis:6379/0
+      # The event-stream producer reads SIM_* (src/observability/config.py), not REDIS_URL. Without these two it falls back to the
+      # in-process stream and `simulation:events` stays empty, so ai_worker (which consumes that stream) idles.
+      - SIM_STREAM_BACKEND=redis
+      - SIM_REDIS_URL=redis://redis:6379/0
       # Tracing is off while the endpoint is empty (ADR D4). With the observability profile set it to http://tempo:4318 (or :4317, matching rpg's exporter, #622).
       # The sampling variable is added once rpg's middleware defines its name.
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
@@ -54,9 +57,10 @@ services:
       start_period: 20s
 
   redis:
-    # Pinned to the exact 7.4.11 build, by digest (the multi-arch index; `redis:7-alpine` and `redis:7.4.11-alpine` resolve to it on 2026-10-13),
-    # so a new 7.x patch cannot change the observability stream, anomaly worker or readiness behaviour with no diff here. Bump deliberately.
-    image: redis:7.4.11-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    # Pinned to the exact 8.10.2 build, by digest (multi-arch index, verified by pull on 2026-10-18); moves together with redis-py 8
+    # (TCK-20261018-DEPS-REDIS-8). A new 8.x patch cannot change the observability stream, anomaly worker or readiness behaviour
+    # with no diff here. Bump deliberately.
+    image: redis:8.10.2-alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0
     ports:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     restart: unless-stopped
@@ -80,7 +84,9 @@ services:
     # Override FastAPI command to run the V2 live anomaly worker
     command: python -m src.observability.anomaly.worker
     environment:
-      - REDIS_URL=redis://redis:6379/0
+      # Same SIM_* variables as the backend (the worker reads these, not REDIS_URL); the backend setting is the one that matters, this one is explicit.
+      - SIM_STREAM_BACKEND=redis
+      - SIM_REDIS_URL=redis://redis:6379/0
       - AI_WORKER_METRICS_PORT=9108
     expose:
       - "9108"

@@ -3,7 +3,7 @@ import os
 import yaml
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, cast
 
 from src.config.profiles import RuntimeProfile, HardwareClass
 
@@ -64,7 +64,7 @@ class ConfigLoader:
                         base_data[field] = float(val)
                     elif field_type == bool:
                         base_data[field] = val.lower() in ("true", "1", "yes")
-                    elif issubclass(field_type, str): # Handle HardwareClass Enum
+                    elif issubclass(cast(type, field_type), str): # Handle HardwareClass Enum
                         base_data[field] = val
                 except ValueError:
                     logger.warning(f"Invalid environment value for {env_key}: {val}")

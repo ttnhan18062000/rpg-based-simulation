@@ -25,7 +25,7 @@ def _ledger(**over: Any) -> Dict[str, Any]:
     base: Dict[str, Any] = {
         "first_tick": 1, "last_tick": 100, "coin_first": 100.0, "coin_last": 100.0, "declared_coin": 0.0,
         "population": {"1": {PEOPLE: 10, WOLF: 4, DEER: 6}}, "transfers": {}, "hunger_drops": {}, "deaths": {}, "adds": {},
-        "world_events": {}, "meat": {}, "attacks": {}, "out_of_world": {}, "out_of_world_examples": [],
+        "world_events": {}, "meat": {}, "attacks": {}, "out_of_world": {}, "out_of_world_examples": [], "unsourced_examples": [],
     }
     base.update(over)
     return base
@@ -113,7 +113,10 @@ def test_v6_coin_created_beyond_declared_world_creation_is_minted_coin(tmp_path)
 def test_v8_every_mid_run_add_needs_a_declared_source(tmp_path):
     assert _violations(tmp_path, "V8", adds={f"{PEOPLE}|BIRTH": 3}) == 0
     row = _row(m.compute(_run(tmp_path, _ledger(adds={f"{PEOPLE}|BIRTH": 3, f"{WOLF}|unsourced": 2, f"{DEER}|unsourced": 1}))), "V8")
-    assert row["violations"] == 3 and len(row["examples"]) == 2
+    assert row["violations"] == 3 and "examples" not in row
+    named = [{"entity_id": 9, "tick": 4, "kind_group": WOLF, "check": "unsourced"}]
+    row = _row(m.compute(_run(tmp_path, _ledger(adds={f"{WOLF}|unsourced": 1}, unsourced_examples=named))), "V8")
+    assert row["violations"] == 1 and row["examples"] == named
 
 
 def test_silence_is_no_data_never_zero_violations(tmp_path):

@@ -5,8 +5,9 @@ anchor moves, each run key needs TWO isolated runs that are identical on every p
 pair differs is never re-anchored (it is a determinism finding for rpg, not a value). A ``(run_key, pillar)`` row on the exclusion list keeps its committed
 anchor (for example a FACTION=0 that rpg rules a regression the stale anchor had hidden; that row gets an rpg-owned known-red instead).
 
-Input rows (``rows.jsonl``, one per run): ``{"key", "rep", "exit", "pillars": {PILLAR: {"grade", "norm", "raw", "events"}}, "overall": [grade, score]}``, the
-shape the proof driver writes. A pillar the scorer reports as no-data is ``{"status": "no-data", "grade": null, "norm": null, "events": n, "min_events": k}``
+Input rows (``rows.jsonl``, one per run): ``{"key", "rep", "exit", "run_id", "audit_mode", "signals_zeroed", "pillars": {PILLAR: {"grade", "norm", "raw", "events"}},
+"overall": [grade, score]}``, the shape ``simq_audit_rows`` writes. A pair is refused unless BOTH rows record ``audit_mode`` True and ``signals_zeroed`` True (copied from the
+run manifest; a missing or null field is not recorded; a pinned-governor run is not an anchor run; there is no override: re-run under ``--audit-mode``). A pillar the scorer reports as no-data is ``{"status": "no-data", "grade": null, "norm": null, "events": n, "min_events": k}``
 (TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION): it is written as the no-data anchor ``{"status": "no-data", "reason": "below_min_events", "min_events": k}``, a
 change of status (ok to no-data or back) is always a moved row, and the pair-identity check compares status and ``min_events`` with everything else. A pillar that is
 neither a letter and a number nor a well-formed no-data pillar refuses the re-anchor. Output: the new fixture (same layout as the committed one: ``indent=2`` and a final newline, metadata keys first and untouched,
@@ -33,6 +34,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
+from src.observability.reporting.run_determinism import NonAuditRunError, require_host_independent_runs
 from tools.test_architecture.simq_pillar_compare import (  # noqa: E402  (one reading of a pillar and one comparison, shared with the regression tests)
     BELOW_MIN_EVENTS, GRADE_ORDER, NO_DATA, OK, SCORE_ABS_FLOOR, SCORE_REL_PCT, Pillar, PillarContractError, compare_pillar, parse_anchor, parse_row_pillar,
     within_band, within_score,
@@ -70,6 +72,17 @@ def audit_values(run_key: str, runs: Mapping[int, dict]) -> Dict[str, dict]:
     if not a or not b:
         raise ReanchorRefused(f"{run_key}: needs 2 isolated audit_mode runs, has {sorted(runs)}")
     for rep, row in ((1, a), (2, b)):
+        # An anchor is an audit_mode contract (#531): both runs must RECORD audit_mode True, copied from the run manifest. A pinned-governor run is host-independent but not
+        # an anchor run; an older row with no field is not recorded. No switch skips this (TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT).
+        if row.get("audit_mode") is not True:
+            raise ReanchorRefused(
+                f"{run_key}: run {rep} (run id {row.get('run_id')}) is not recorded as audit_mode (audit_mode={row.get('audit_mode')!r}); "
+                "an anchor is measured under audit_mode: re-run it with calibrate_simq --audit-mode"
+            )
+        try:
+            require_host_independent_runs({f"{run_key} run {rep} ({row.get('run_id')})": {"signals_zeroed": row.get("signals_zeroed")}})
+        except NonAuditRunError as exc:
+            raise ReanchorRefused(f"{run_key}: {exc}; re-run it with calibrate_simq --audit-mode") from exc
         if row.get("exit") != 0 or not row.get("pillars"):
             raise ReanchorRefused(f"{run_key}: run {rep} did not complete (exit {row.get('exit')}); no report to anchor on")
     if a["pillars"] != b["pillars"] or a.get("overall") != b.get("overall"):
