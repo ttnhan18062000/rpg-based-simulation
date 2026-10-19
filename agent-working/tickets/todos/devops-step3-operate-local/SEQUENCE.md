@@ -21,3 +21,12 @@ Redis stops, and the API SLO probably won't (see the epic's Assumptions), so the
 1, 3 and 4 register or edit `compose.yaml` / `registries/session_roles.yaml` in sequence, to avoid self-conflict.
 
 Heavy runs (2, the fire tests in 3 and 4, 5) are asked of lead-planner first, one at a time, under the host rules.
+
+## Update 2026-10-19 (R1 #648 and R2 #654 on main)
+
+- 1, 1b and 2 are done (#627). The batch `platform-implementer-local-slo-alerts` (one PR) runs 3, 4 and 5, together with
+  step-2's TCK-20261018-SCRAPE-BACKEND-METRICS-PORT first. Staging artifacts for all four were written at dispatch.
+- 3 (SLO alert) needs rpg's 0.3 bucket on main (owner decision 2026-10-19; requested on #622) before its stack run.
+- 6 (ai_worker lag) stays blocked.
+- Host slots, one at a time via lead-planner: (a) redis_exporter pull; (b) one full-profile heavy run (9109 checks, age
+  soak, server-side SLO numbers, SLO fire test), after the 0.3 bucket lands; (c) the Redis-stop drill under load.

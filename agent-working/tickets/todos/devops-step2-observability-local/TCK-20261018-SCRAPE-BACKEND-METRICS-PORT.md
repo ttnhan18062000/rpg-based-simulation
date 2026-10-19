@@ -37,8 +37,9 @@ platform-planner reviews. This ticket switches the scrape job and proves the tar
 - `docker/prometheus.yml`: add job `rpg-backend` targeting `backend:9109`. (The always-401 `backend:8000` job was
   already removed by S4's `TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER`, amended 2026-10-18; S4's `TargetDown`
   rule then covers this job too.)
-- Review rpg's R1 compose hunk (`expose: ["9109"]`, the env var, no host port) as platform-planner. The implementer
-  doesn't duplicate it.
+- (amended 2026-10-19) rpg's R1 (#648) did not touch `compose.yaml`, so the compose hunk is this ticket's: the backend gets
+  `expose: ["9109"]` (never `ports`). `BACKEND_METRICS_PORT` is left at its code default 9109 unless setting it explicitly
+  makes the file clearer; `BACKEND_METRICS_HOST` stays at its default (all interfaces inside the container).
 - A Prometheus rule file is **not** added here (alerts are step 3).
 - Check the existing `docker/grafana/dashboards/simulation.json`: list which panels now show data and which still use
   metric names the collector doesn't export (for example "Redis & Kafka Latency Distribution"). Record the list only;
