@@ -58,8 +58,8 @@ def test_card_carries_role_ownership_routes_and_handover():
 
 
 def test_unstaffed_seat_names_its_holder_on_the_card():
-    card = compose_card("agent-working-planner", ROSTER, AUTHORITY, ROOT)
-    assert "unstaffed, held by agent-working-designer" in card
+    card = compose_card("agent-working-designer", ROSTER, AUTHORITY, ROOT)
+    assert "unstaffed, held by agent-working-planner" in card
 
 
 def test_only_the_card_section_is_injected(tmp_path):
