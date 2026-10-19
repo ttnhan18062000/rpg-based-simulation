@@ -24,9 +24,9 @@ def _edit(path):
     return {"tool_name": "Edit", "session_id": "s", "cwd": str(REPO), "tool_input": {"file_path": path}}
 
 
-def test_the_validator_reports_no_findings_for_eighteen_roles():
+def test_the_validator_reports_no_findings_for_the_whole_roster():
     assert validate.validate(REPO) == []
-    assert len(ROSTER.roles) == 20
+    assert len(ROSTER.roles) == 25
 
 
 def test_the_u24_seat_is_a_main_checkout_planner_that_nobody_dispatches_to():

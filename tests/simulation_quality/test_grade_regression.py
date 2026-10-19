@@ -58,6 +58,7 @@ from typing import Any
 import pytest
 
 from tools.test_architecture.simq_pillar_compare import BAND, SCORE, compare_report, parse_anchor, parse_report_pillar
+from tools.test_architecture.simq_run_record import load_sidecar
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -249,16 +250,17 @@ def _ceiling_note(run_key: str, pillar: str) -> str:
     return f" [known {ceiling.ceiling_kind}: {ceiling.reason}" + (f" — {ceiling.since_ticket}" if ceiling.since_ticket else "") + "]"
 
 
-def _pillar_failures(run_key: str, anchors: dict, report: dict[str, Any]) -> tuple[list[str], list[str], list[str]]:
+def _pillar_failures(run_key: str, anchors: dict, report: dict[str, Any], manifest: dict[str, Any] | None) -> tuple[list[str], list[str], list[str]]:
     """Compare every anchored pillar of ``run_key`` with ``report`` through ``simq_pillar_compare`` (TCK-20261013-SIMQ-NO-DATA-PILLAR-IN-GRADE-REGRESSION).
 
     Returns ``(band_failures, score_failures, other_failures)``. A pillar missing from the report, a pillar that lost or gained its data, a changed ``min_events``
-    and a malformed pillar are ``other_failures``: there is no default grade or score, so none of them can read as a pass. Anchor ok / live ok keeps the band check
+    and a malformed pillar are ``other_failures``: there is no default grade or score, so none of them can read as a pass. ``manifest`` is the live run's host-independence record (the calibration sidecar); a run not recorded as host-independent, or with no
+    record, raises ``HostIndependenceRefused`` (TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT). Anchor ok / live ok keeps the band check
     and the score tolerance (with the per-row override) exactly as before. A run with no-data pillars warns, naming them, so no-data cannot grow unseen."""
     import warnings
 
     verdicts, sets = compare_report(
-        run_key, anchors, report, floor_overrides={(run_key, p): v for (k, p), v in SCORE_TOLERANCE_OVERRIDES.items() if k == run_key},
+        run_key, anchors, report, live_manifest=manifest, floor_overrides={(run_key, p): v for (k, p), v in SCORE_TOLERANCE_OVERRIDES.items() if k == run_key},
     )
     band, score, other = [], [], []
     for verdict in verdicts:
@@ -275,11 +277,20 @@ def _pillar_failures(run_key: str, anchors: dict, report: dict[str, Any]) -> tup
     return band, score, other
 
 
-def _assert_pillars(run_key: str, anchors: dict, report: dict[str, Any]) -> None:
-    band, score, other = _pillar_failures(run_key, anchors, report)
+def _assert_pillars(run_key: str, anchors: dict, report: dict[str, Any], manifest: dict[str, Any] | None) -> None:
+    band, score, other = _pillar_failures(run_key, anchors, report, manifest)
     assert not other, f"{run_key} — {len(other)} pillar(s) missing, malformed or changed their data status:\n" + "\n".join(other)
     assert not band, f"{run_key} — {len(band)} pillar(s) drifted beyond anchor band:\n" + "\n".join(band)
     assert not score, f"{run_key} — {len(score)} pillar(s) drifted beyond score tolerance:\n" + "\n".join(score)
+
+
+def _load_calibration_manifest(run_key: str) -> dict[str, Any] | None:
+    """The host-independence record ``calibrate_simq`` wrote beside ``data/calibration/{run_key}/quality_report.json``, or None for a directory that has none (a stale
+    one from before the record): the comparison refuses it, so re-run the key (``make evaluate-full``)."""
+    return load_sidecar(_CALIBRATION_ROOT / run_key)
+
+
+_AUDIT_MANIFEST = {"audit_mode": True, "signals_zeroed": True}  # the live-side record of the synthetic-report tests below (they run no engine)
 
 
 def _load_calibration_report(run_key: str) -> dict[str, Any] | None:
@@ -323,7 +334,7 @@ def test_grade_within_anchor_band(run_key: str, grade_anchors: dict) -> None:
     if report is None:
         pytest.skip(f"Calibration report not found: data/calibration/{run_key}/quality_report.json")
 
-    _assert_pillars(run_key, grade_anchors[run_key], report)
+    _assert_pillars(run_key, grade_anchors[run_key], report, _load_calibration_manifest(run_key))
 
 
 # ---------------------------------------------------------------------------
@@ -349,7 +360,7 @@ def test_grade_within_anchor_band_long_run(run_key: str, grade_anchors: dict) ->
     if report is None:
         pytest.skip(f"Calibration report not found: data/calibration/{run_key}/quality_report.json")
 
-    _assert_pillars(run_key, grade_anchors[run_key], report)
+    _assert_pillars(run_key, grade_anchors[run_key], report, _load_calibration_manifest(run_key))
 
 
 # ---------------------------------------------------------------------------
@@ -381,7 +392,7 @@ def test_urban_political_selfmodel_cognition_isolated_grade_anchor(grade_anchors
     if report is None:
         pytest.skip(f"Calibration report not found: data/calibration/{run_key}/quality_report.json")
 
-    _assert_pillars(run_key, grade_anchors[run_key], report)  # a missing or no-data COGNITION fails here, naming it
+    _assert_pillars(run_key, grade_anchors[run_key], report, _load_calibration_manifest(run_key))  # a missing or no-data COGNITION fails here, naming it
     assert parse_report_pillar("COGNITION", report["pillars"]["COGNITION"]).grade == "S"
 
 
@@ -412,7 +423,7 @@ def test_urban_political_selfmodel_execution_isolated_grade_anchor(grade_anchors
     if report is None:
         pytest.skip(f"Calibration report not found: data/calibration/{run_key}/quality_report.json")
 
-    _assert_pillars(run_key, grade_anchors[run_key], report)
+    _assert_pillars(run_key, grade_anchors[run_key], report, _load_calibration_manifest(run_key))
 
 
 def test_information_intent_execution_fires_through_kernel_tick_once() -> None:
@@ -626,41 +637,70 @@ def test_a_pillar_missing_from_the_report_fails_naming_it_not_reading_as_c() -> 
     anchors = {"COMBAT": {"grade": "C", "score": 0.0}, "FACTION": {"grade": "C", "score": 0.0}}
     report = {"pillars": {"COMBAT": {"grade": "C", "normalized_score": 0.0}}}
     with pytest.raises(AssertionError, match="FACTION: pillar missing from the report"):
-        _assert_pillars("k", anchors, report)
+        _assert_pillars("k", anchors, report, _AUDIT_MANIFEST)
 
 
 def test_status_less_reports_compare_as_before() -> None:
     anchors = {"COMBAT": {"grade": "B", "score": 1.0}, "FACTION": {"grade": "A", "score": 2.0}}
     ok = {"pillars": {"COMBAT": {"grade": "A", "normalized_score": 1.1}, "FACTION": {"grade": "A", "normalized_score": 2.0}}}
-    _assert_pillars("k", anchors, ok)
+    _assert_pillars("k", anchors, ok, _AUDIT_MANIFEST)
     band = {"pillars": {"COMBAT": {"grade": "D", "normalized_score": 1.0}, "FACTION": {"grade": "A", "normalized_score": 2.0}}}
     with pytest.raises(AssertionError, match="outside ±1 band"):
-        _assert_pillars("k", anchors, band)
+        _assert_pillars("k", anchors, band, _AUDIT_MANIFEST)
     score = {"pillars": {"COMBAT": {"grade": "B", "normalized_score": 1.0}, "FACTION": {"grade": "A", "normalized_score": 3.5}}}
     with pytest.raises(AssertionError, match="outside tolerance"):
-        _assert_pillars("k", anchors, score)
+        _assert_pillars("k", anchors, score, _AUDIT_MANIFEST)
 
 
 def test_no_data_pillars_pass_only_as_still_no_data_and_are_listed() -> None:
     anchors = {"INFORMATION": _ND_ANCHOR, "COMBAT": {"grade": "B", "score": 1.0}}
     good = {"pillars": {"INFORMATION": _ND_LIVE, "COMBAT": {"grade": "B", "normalized_score": 1.0}}}
     with pytest.warns(UserWarning, match=r"no-data pillars: anchor=\['INFORMATION'\] live=\['INFORMATION'\]"):
-        _assert_pillars("k", anchors, good)
+        _assert_pillars("k", anchors, good, _AUDIT_MANIFEST)
     lost = {"pillars": {"INFORMATION": {"grade": "B", "normalized_score": 1.0}, "COMBAT": _ND_LIVE}}
     with pytest.raises(AssertionError) as exc:
-        _assert_pillars("k", anchors, lost)
+        _assert_pillars("k", anchors, lost, _AUDIT_MANIFEST)
     assert "COMBAT: pillar lost its data" in str(exc.value) and "INFORMATION: pillar gained data" in str(exc.value)
     with pytest.raises(AssertionError, match="threshold changed"):
-        _assert_pillars("k", {"INFORMATION": _ND_ANCHOR}, {"pillars": {"INFORMATION": {**_ND_LIVE, "min_events": 5}}})
+        _assert_pillars("k", {"INFORMATION": _ND_ANCHOR}, {"pillars": {"INFORMATION": {**_ND_LIVE, "min_events": 5}}}, _AUDIT_MANIFEST)
     with pytest.raises(AssertionError, match="no-data must carry no grade or score"):
-        _assert_pillars("k", {"INFORMATION": _ND_ANCHOR}, {"pillars": {"INFORMATION": {**_ND_LIVE, "grade": "C"}}})
+        _assert_pillars("k", {"INFORMATION": _ND_ANCHOR}, {"pillars": {"INFORMATION": {**_ND_LIVE, "grade": "C"}}}, _AUDIT_MANIFEST)
 
 
 def test_a_report_with_no_grade_for_an_ok_looking_pillar_is_a_contract_failure_not_a_default() -> None:
     with pytest.raises(AssertionError, match="contract"):
-        _assert_pillars("k", {"COMBAT": {"grade": "C", "score": 0.0}}, {"pillars": {"COMBAT": {"normalized_score": 0.0}}})
+        _assert_pillars("k", {"COMBAT": {"grade": "C", "score": 0.0}}, {"pillars": {"COMBAT": {"normalized_score": 0.0}}}, _AUDIT_MANIFEST)
 
 
 def test_a_known_ceiling_still_annotates_a_score_failure() -> None:
-    _band, score, _other = _pillar_failures("k", {"COMBAT": {"grade": "B", "score": 1.0}}, {"pillars": {"COMBAT": {"grade": "B", "normalized_score": 9.0}}})
+    _band, score, _other = _pillar_failures("k", {"COMBAT": {"grade": "B", "score": 1.0}}, {"pillars": {"COMBAT": {"grade": "B", "normalized_score": 9.0}}}, _AUDIT_MANIFEST)
     assert score and "outside tolerance of anchor_score=1.0" in score[0]
+
+
+# TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT: the sidecar path. A calibration directory whose record has nulls, no record at all, or a live
+# run is refused before anything is compared; there is no skip.
+@pytest.mark.parametrize(
+    "sidecar", [None, {"run_id": "r", "audit_mode": None, "signals_zeroed": None}, {"run_id": "r", "audit_mode": False, "signals_zeroed": False}],
+    ids=["no sidecar", "nulls", "a live run"],
+)
+def test_a_calibration_dir_not_recorded_host_independent_is_refused_not_compared(tmp_path, monkeypatch, sidecar):
+    from tools.test_architecture.simq_pillar_compare import HostIndependenceRefused
+    from tools.test_architecture.simq_run_record import SIDECAR_NAME
+
+    run_key = "k"
+    (tmp_path / run_key).mkdir()
+    if sidecar is not None:
+        (tmp_path / run_key / SIDECAR_NAME).write_text(json.dumps(sidecar))
+    monkeypatch.setitem(globals(), "_CALIBRATION_ROOT", tmp_path)
+    report = {"pillars": {"COMBAT": {"grade": "B", "normalized_score": 1.0}}}
+    with pytest.raises(HostIndependenceRefused, match="not recorded as host-independent"):
+        _assert_pillars(run_key, {"COMBAT": {"grade": "B", "score": 1.0}}, report, _load_calibration_manifest(run_key))
+
+
+def test_a_calibration_dir_recorded_host_independent_is_compared(tmp_path, monkeypatch):
+    from tools.test_architecture.simq_run_record import SIDECAR_NAME
+
+    (tmp_path / "k").mkdir()
+    (tmp_path / "k" / SIDECAR_NAME).write_text(json.dumps({"run_id": "r", "audit_mode": True, "signals_zeroed": True}))
+    monkeypatch.setitem(globals(), "_CALIBRATION_ROOT", tmp_path)
+    _assert_pillars("k", {"COMBAT": {"grade": "B", "score": 1.0}}, {"pillars": {"COMBAT": {"grade": "B", "normalized_score": 1.0}}}, _load_calibration_manifest("k"))

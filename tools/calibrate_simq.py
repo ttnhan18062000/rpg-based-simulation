@@ -599,6 +599,11 @@ def main():
     report = hub.get_quality_report()
     persistence.write_report(report)
     persistence.shutdown()
+    # The run's own host-independence record (audit_mode / signals_zeroed, copied from its run manifest) is written right after the report of this same run, so it can
+    # never describe an earlier or later run than the report beside it; a comparison tool refuses a run that is not recorded host-independent
+    # (TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT).
+    from tools.test_architecture.simq_run_record import write_sidecar  # noqa: PLC0415
+    write_sidecar(cal_dir, engine_run_dir)
 
     print(f"\n=== Quality Report: {run_tag} ===")
     print(

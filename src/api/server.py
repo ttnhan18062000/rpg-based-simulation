@@ -21,6 +21,7 @@ from src.api.dependencies import (
     set_catalog_repository,
 )
 from src.api.engine_manager import V2EngineManager
+from src.api.http_metrics import RequestDurationMiddleware
 from src.api.schemas import WorldStateResponse, EntityPageResponse, EntityDetailResponse
 from src.config.profiles import RuntimeProfile
 
@@ -109,8 +110,8 @@ def create_v2_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
     app.add_middleware(GZipMiddleware, minimum_size=512)
+    app.add_middleware(RequestDurationMiddleware)  # outermost: times the whole stack (issue #622 R2)
 
     from src.api.ws import stream
     app.include_router(stream.router, prefix="/api/v1", dependencies=[Depends(require_api_key_ws), Depends(require_admission_ws)])

@@ -66,6 +66,7 @@ P1
 
 ## Assumptions / Open Questions
 - The catalog terrain kinds are plain, forest, swamp, cave, mountain, ruin, road, snow, volcanic, river and grass. No catalog terrain is "WALL" or "HILL", so every check that names them is dead today (checked on rpg-next 56cefc2f4).
+- AC1 unmet: src/engine/legality.py:40 _static_obstruction still reads 'WALL' (dead branch, listed in v1_disclosure D1); removal after v1 as its own measured step. LOS reads at 395/411 are a separate dead rule.
 
 ## Implementation Notes
 

@@ -170,6 +170,13 @@ known_reds:
     expires_on: "2026-11-04"
     kind: flaky
     note: "population_stability measures the throttled kernel by design (not an anchor, out of scope of the audit_mode ticket), plus the same-second run-dir collision: see TCK-20261011-DEFAULT-RUN-ID-CANNOT-COLLIDE-ACROSS-SAME-SEED-PROCESSES"
+  - match: "tests.integration.certification.test_catalog_arena_smoke::test_catalog_arena_small_can_tick"
+    ticket: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
+    owner: rpg-implementer
+    added_on: "2026-10-19"
+    expires_on: "2026-11-30"
+    kind: broken
+    note: "tick-3 wall-clock budget 479.5ms > 150ms in the first slow run after #645 (39172879323); one sample, quiet-host repro pending; reclassify flaky if it does not reproduce"
   - match: "tests.unit.worldassembly.test_corpus_diversity*"
     ticket: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
     owner: testing-implementer
