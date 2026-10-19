@@ -15,7 +15,7 @@ tags: [testing, regression, simulation-quality]
 V8's gate self-test, case (a), asserts that the example names the unsourced entity, and the format doc drops its "not yet emitted" line.
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 hotfix
@@ -31,7 +31,7 @@ P2
 
 rpg's TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY (PR #658) emits the ruled shape `{entity_id, tick, kind_group, check: "unsourced"}`, which has no `site` key (testing-planner ruling, 2026-10-19). Once that is on main, the test and the doc catch up.
 
-**BLOCKED until #658 is on main.** testing-planner dispatches this ticket then.
+**UNBLOCKED 2026-10-19:** rpg's change landed on main in 5c9b84505 (the pre-v1 batch). `run_ledger.py` keeps `_unsourced_examples` (L181-182: `{entity_id, tick, kind_group, check: UNSOURCED}`, capped at `run_ledger.MAX_EXAMPLES` = 5). `rpg_gate_metrics._check_unsourced_adds` returns `ledger["unsourced_examples"]`. Read `MAX_EXAMPLES` from `src.observability.run_ledger`.
 
 ## Scope
 1. `tests/simulation_quality/rpg_gate/test_v8_fires.py` case (a) asserts that an example equals `{"entity_id": 500, "tick": <the applied tick>, "kind_group": <kind_group of the added entity>, "check": "unsourced"}`, and that no example has a `site` key.
