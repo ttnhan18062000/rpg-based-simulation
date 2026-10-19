@@ -362,7 +362,7 @@ def _map_classname(classname: str, name: str, known: set) -> Optional[str]:
 def parse_junit(path: Path, known_files: set) -> Dict[str, Any]:
     digest = _sha256_file(path)
     run_id = f"{path.stem}-{digest[:12]}"
-    root = ET.parse(path).getroot()
+    root = ET.parse(path).getroot()  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse -- parses this repo's own pytest junit XML; no untrusted input
     per_file: Dict[str, Dict[str, int]] = {}
     outcomes = {"passed": 0, "failed": 0, "errors": 0, "skipped": 0}
     failing: List[str] = []

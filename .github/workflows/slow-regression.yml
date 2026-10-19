@@ -59,10 +59,13 @@ jobs:
       - name: Decide
         id: decide
         if: ${{ github.event_name == 'schedule' }}
+        env:
+          HEAD_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -o pipefail  # without it a crashing gate hides behind `| tee`: empty decision, no red signal
           python3 -m tools.test_architecture.slow_regression_gate decide \
-            --head-sha "${{ github.sha }}" --exclude-run-id "${{ github.run_id }}" | tee decision.txt
+            --head-sha "${HEAD_SHA}" --exclude-run-id "${RUN_ID}" | tee decision.txt
           cat decision.txt >> "$GITHUB_OUTPUT"
           {
             echo "### Slow regression gate"
@@ -125,15 +128,18 @@ jobs:
       - name: Report failing-set changes
         if: ${{ !cancelled() }}
         env:
+          HEAD_SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
           GH_TOKEN: ${{ github.token }}
         run: |
           # `-m` from the repo root: the report imports the shared known_reds module as tools.test_architecture.known_reds
           # (TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE); run by path it would not find it.
           python3 -m tools.test_architecture.slow_regression_report \
             --junit-dir reports/slow \
-            --repo "${{ github.repository }}" \
-            --run-id "${{ github.run_id }}" \
-            --sha "${{ github.sha }}" \
+            --repo "${REPOSITORY}" \
+            --run-id "${RUN_ID}" \
+            --sha "${HEAD_SHA}" \
             --known-reds tools/test_architecture/slow_known_reds.yaml
       - name: Upload certification report
         uses: actions/upload-artifact@v7
