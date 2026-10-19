@@ -7720,6 +7720,24 @@
   tags:
   - observability
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
+  ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
+  title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
+    run their tests in parallel with pytest-xdist inside the job, after an audit shows
+    the tests are safe to parallelise. No jobs are added.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - integration
+  - tests/conftest.py (resource budget, run-dir creation)
+  - tools/ci_junit_summary.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+  - performance
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261019-RECORD-BASELINE-V1.md
   ticket_id: TCK-20261019-RECORD-BASELINE-V1
   title: 'Record baseline v1: paired fingerprints, gate V1-V8 rows and the behavioral_5k
