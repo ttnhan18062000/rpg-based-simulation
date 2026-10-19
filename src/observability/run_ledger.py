@@ -18,7 +18,7 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional
 
-from src.ai.goals.kind_group import is_person, kind_group
+from src.ai.goals.kind_group import eats_outside_its_diet, is_person, kind_group
 from src.ai.goals.scorers_support import perceived_hostiles
 from src.core.movement_modes import MovementMode
 from src.core.region_resolution import is_inside_world
@@ -60,6 +60,7 @@ class RunLedger:
     _declared_coin: float = 0.0  # gold the world creates by declaration: an added entity's starting purse
     _population: Dict[int, Dict[str, int]] = {}
     _transfers: Dict[str, int] = {}  # group|source_kind|accepted
+    _diet_breaches: Dict[str, int] = {}  # group|source_kind|item_id: an accepted EAT of food whose class is outside the eater's diet (a consumption, never a pickup)
     _hunger_drops: Dict[str, int] = {}  # group|with_accepted_transfer / group|without_transfer
     _deaths: Dict[str, int] = {}  # group|cause
     _adds: Dict[str, int] = {}  # group|SpawnKind or unsourced
@@ -83,6 +84,7 @@ class RunLedger:
         cls._population = {}
         cls._transfers = {}
         cls._hunger_drops = {}
+        cls._diet_breaches = {}
         cls._deaths = {}
         cls._adds = {}
         cls._world_events = {}
@@ -144,6 +146,7 @@ class RunLedger:
             group = kind_group(entity)
             results = getattr(upd, "intent_results", None) or []
             cls._count_results(group, results)
+            cls._count_diet_breaches(entity, group, getattr(upd, "resource_transfers", None) or [], results)
             if entity.biological.hunger < prior_ent.biological.hunger:
                 cls._count_hunger_drop(group, results, cls._inventory_moved(prior_ent, entity) or cls._corpse_moved(prior, current, results))
 
@@ -177,6 +180,21 @@ class RunLedger:
             return 0 if corpse is None else sum(st.quantity for st in getattr(corpse, "items", ()))
         return any(held(prior, r.source_id) != held(current, r.source_id) for r in results
                    if getattr(r, "accepted", False) and getattr(r, "source_kind", "") in ("CORPSE", "CORPSE_FOOD"))
+
+    @classmethod
+    def _count_diet_breaches(cls, entity: Any, group: str, intents: List[Any], results: List[Any]) -> None:
+        """V4 reads CONSUMPTION: an EAT intent that removes a food item from a carried stack or a body, accepted, whose food class the eater's diet lacks."""
+        for intent in intents:
+            if getattr(intent, "transfer_kind", "") != "EAT":
+                continue
+            accepted = any(getattr(r, "accepted", False) and getattr(r, "source_kind", None) == intent.source_kind
+                           and getattr(r, "source_id", None) == intent.source_id for r in results)
+            if not accepted:
+                continue
+            for stack in (getattr(intent, "items_remove", None) or []):
+                if eats_outside_its_diet(entity, stack.item_id):
+                    key = _key(group, intent.source_kind, stack.item_id)
+                    cls._diet_breaches[key] = cls._diet_breaches.get(key, 0) + 1
 
     @classmethod
     def _count_hunger_drop(cls, group: str, results: List[Any], moved: bool = True) -> None:
@@ -326,7 +344,7 @@ class RunLedger:
             "first_tick": cls._first_tick, "last_tick": cls._last_tick,
             "coin_first": cls._coin_first, "coin_last": cls._coin_last, "declared_coin": cls._declared_coin,
             "population": {str(t): dict(sorted(g.items())) for t, g in sorted(cls._population.items())},
-            "transfers": dict(sorted(cls._transfers.items())), "hunger_drops": dict(sorted(cls._hunger_drops.items())),
+            "transfers": dict(sorted(cls._transfers.items())), "hunger_drops": dict(sorted(cls._hunger_drops.items())), "diet_breaches": dict(sorted(cls._diet_breaches.items())),
             "deaths": dict(sorted(cls._deaths.items())), "adds": dict(sorted(cls._adds.items())),
             "world_events": dict(sorted(cls._world_events.items())), "meat": dict(sorted(cls._meat.items())),
             "attacks": dict(sorted(cls._attacks.items())), "behaviour": dict(sorted(cls._behaviour.items())), "perception_samples": cls._perception_samples, "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples), "unsourced_examples": list(cls._unsourced_examples),
