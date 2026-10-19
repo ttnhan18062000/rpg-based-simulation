@@ -8182,6 +8182,19 @@
   - architecture
   - documentation
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261018-CODEBASE-SELF-LINT.md
+  ticket_id: TCK-20261018-CODEBASE-SELF-LINT
+  title: '`codebase/` meets its own Python code standard: clear the 54 ruff findings
+    and pin it at zero'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-18'
+  related_code_areas:
+  - codebase/reports/
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
   ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24
   title: Platform workflows on the Ubuntu 26 runner migration (observe publish-images,
