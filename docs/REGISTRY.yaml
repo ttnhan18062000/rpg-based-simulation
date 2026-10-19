@@ -7767,6 +7767,26 @@
   - regression
   - simulation-quality
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW.md
+  ticket_id: TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW
+  title: 'CI: .github/workflows/security-scan.yml — gitleaks (secrets) on every PR
+    and Semgrep (static) path-gated, both report-only, plus the roles diff for the
+    new paths'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/security-scan.yml
+  - .github/workflows/iac.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW/test_plan.md
+  tags:
+  - platform
+  - delivery
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES.md
   ticket_id: TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES
   title: test.yml's Frontend and jscpd steps run Node 24, the same as the frontend

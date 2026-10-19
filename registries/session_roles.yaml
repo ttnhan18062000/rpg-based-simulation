@@ -148,6 +148,7 @@ domains:
       - .github/workflows/deploy-docs.yml     # moved from lead: owner decision on #560 (2026-10-16); the owner confirms in the PR
       - infra/**                              # TCK-20261018-IAC-WORKFLOW-AND-ROLES (D8): the Terraform roots; the owner confirms in the PR
       - .github/workflows/iac.yml
+      - .github/workflows/security-scan.yml
       - .github/dependabot.yml
       - tools/loadtest/**
       - docs/runbooks/**
