@@ -96,7 +96,7 @@ Both are due on the first scheduled run after rpg's metric module (`src/observab
 - The full-run wall time for 3 worlds x 5 seeds.
 
 ## Implementation Notes
-(implementer)
+- V8 (item 7, TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK) landed 2026-10-19: "every entity added mid-run has a declared source". Required-validity guard in the report and candidate, a self-test that drives rpg's real recorders and `compute` (test_v8_fires.py), and a static spawn-site guard with an OFF ratchet (tests/architecture/test_spawn_sites_declare_source.py).
 
 ## Test Summary
 (implementer)
