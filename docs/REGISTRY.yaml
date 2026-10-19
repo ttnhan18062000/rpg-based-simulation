@@ -8046,6 +8046,19 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-CODEBASE-SELF-LINT.md
+  ticket_id: TCK-20261018-CODEBASE-SELF-LINT
+  title: '`codebase/` meets its own Python code standard: clear the 54 ruff findings
+    and pin it at zero'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-18'
+  related_code_areas:
+  - codebase/reports/
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-COVER-WORDING-MATCHES-THE-CODE-GEOMETRY.md
   ticket_id: TCK-20261018-COVER-WORDING-MATCHES-THE-CODE-GEOMETRY
   title: 'The cover wording (Bible row, check_cover docstring, parity row) now says
@@ -8422,19 +8435,6 @@
   tags:
   - architecture
   - documentation
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261018-CODEBASE-SELF-LINT.md
-  ticket_id: TCK-20261018-CODEBASE-SELF-LINT
-  title: '`codebase/` meets its own Python code standard: clear the 54 ruff findings
-    and pin it at zero'
-  tier: hotfix
-  ticket_type: chore
-  date: '2026-10-18'
-  related_code_areas:
-  - codebase/reports/
-  artifact_files: []
-  tags:
-  - testing
 - type: ticket
   path: agent-working/tickets/inprogress/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
   ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24

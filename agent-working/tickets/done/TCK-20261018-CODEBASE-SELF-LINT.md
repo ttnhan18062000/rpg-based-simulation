@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-CODEBASE-SELF-LINT
-phase: open
+phase: done
 date: 2026-10-18
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 `codebase/` meets its own Python code standard: clear the 54 ruff findings and pin it at zero
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -58,6 +58,7 @@ None (hotfix).
 
 ## Assumptions / Open Questions
 - N818 grep (`git grep -n "GateCannotRun\|HookSkipped"`, whole repo, run 2026-10-18 at 013a9f275): users only in `codebase/gates/mypy_gate.py`, `codebase/gates/staged_ratchet.py`, `codebase/hooks/edit_ratchet_hook.py`, `tests/codebase/test_mypy_gate.py`, `tests/codebase/test_edit_ratchet_hook.py`. Nothing in `tools/`, `.claude/` or live `docs/`. The only other hits are the closed ticket `TCK-20261004-EDIT-RATCHET-HOOK` and its stored artifacts, which are history and stay as written. So both are renamed (`GateCannotRunError`, `HookSkippedError`) rather than noqa'd. `edit_ratchet_hook.py` (also ours) needed the rename too.
+- Related tidy (codebase-planner's request): the 8.11 notice line in `docs/plans/codebase_health/handoffs/handoff_to_testing.md` now reads "**Sent 2026-10-19 as issue #672** (PR #671)." instead of the DRAFT line.
 - The pin fails on this branch with exactly one finding (`import_contracts.py` D103) until the flip merges.
 
 ## Implementation Notes
@@ -66,10 +67,10 @@ None (hotfix).
 - `affected_runner` typed `Callable[[str, int, Path], str]`; `argv` typed `list[str] | None`.
 
 ## Test Summary
-See Completion Summary (filled at close).
+After the flip (#671, 309715a72) merged and main was merged in: `ruff check codebase --no-cache` (ruff 0.17.0): All checks passed (0 findings). `tests/codebase` and `tests/static` (venv on PATH, MemoryMax 3G): 607 passed, 2 skipped, including the new pin.
 
 ## Files Changed
 See `git show --stat` of the batch commit.
 
 ## Completion Summary
-Filled at close, after the flip merges.
+`ruff check codebase` went from 55 findings to 0: 54 cleared here (33 docstrings, 9 annotations, 3 BLE001, 3 PLR0913, 2 N818 renamed, 2 I001, C901, PLR0912, PLR1702 with reasoned noqa) and the last one (import_contracts.py D103) by the flip (#671). `GateCannotRun` and `HookSkipped` are now `GateCannotRunError` and `HookSkippedError` (no user outside codebase/ and tests/codebase/). The pin `tests/codebase/test_codebase_self_lint.py` keeps the package at zero. Tidy: the 8.11 notice line in `handoff_to_testing.md` now says it was sent as #672.
