@@ -33,3 +33,16 @@ def _tmp_runtime_dir_for_every_tools_test(tmp_path_factory, monkeypatch):
     runtime = tmp_path_factory.mktemp("xdg_runtime")  # outside the test's own tmp_path: some tests assert it is empty
     runtime.chmod(0o700)
     monkeypatch.setenv("XDG_RUNTIME_DIR", str(runtime))
+
+
+@pytest.fixture(autouse=True)
+def _git_never_looks_above_the_tests_tmp_dir(tmp_path, monkeypatch):
+    """A test that runs git or a hook with `cwd=tmp_path` must not find a repository ABOVE its tmp dir.
+
+    Without this, a pytest basetemp inside a git repo (a gitignored dir of a worktree, or any scratch repo) made git
+    resolve that repo, so hooks listed the real main checkout's handover notes and the "outside git" tests saw a repo
+    (TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE). `GIT_CEILING_DIRECTORIES` = the tmp dir's parent
+    makes git stop there; a repo the test creates inside its own tmp dir is still found. Subprocesses inherit it."""
+    ceiling = str(tmp_path.resolve().parent)
+    existing = os.environ.get("GIT_CEILING_DIRECTORIES")
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", f"{ceiling}{os.pathsep}{existing}" if existing else ceiling)

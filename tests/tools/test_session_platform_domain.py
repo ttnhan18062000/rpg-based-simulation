@@ -29,7 +29,7 @@ def test_lead_keeps_the_other_stack_roots():
 
 def test_platform_has_a_planner_and_an_implementer_but_no_designer():
     roles = {r.role for r in ROSTER.roles if r.domain == "platform"}
-    assert roles == {"platform-planner", "platform-implementer"}
+    assert roles == {"platform-planner", "platform-implementer", "platform-planner-u24", "platform-implementer-u24"}  # -u24: host u24desktop (#620)
 
 
 def test_platform_implementer_is_dispatched_by_its_planner_and_the_user():

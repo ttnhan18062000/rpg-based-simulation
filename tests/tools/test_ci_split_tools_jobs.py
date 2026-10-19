@@ -52,7 +52,8 @@ def test_the_slow_job_is_not_in_this_workflow_any_more():
 
 @pytest.mark.parametrize(("job", "ignored"), _TOOLS_JOBS.items())
 def test_each_tools_job_runs_tests_tools_with_the_other_halfs_glob_ignored(job, ignored):
-    (step,) = _run_steps(_jobs()[job])
+    # tools-f-z also has a serial step for the one test that writes a fixed-name temp file into the real workflows dir
+    (step,) = [s for s in _run_steps(_jobs()[job]) if "serial" not in s["name"]]
     run = step["run"]
     assert "pytest tests/tools " in run
     assert f"--ignore-glob='{ignored}'" in run
@@ -78,7 +79,9 @@ def test_the_two_globs_are_complementary_so_no_file_can_be_skipped():
 
 def test_the_api_job_keeps_the_per_directory_steps_and_merges_their_junit():
     job = _jobs()["api-cli-engine"]
-    assert [s["name"] for s in _run_steps(job)] == [f"Run: tests/{d}" for d in _OTHER_DIRS]
+    # visual_assets has a second, serial step: every writing store command takes the one real store flock, so two xdist workers collide
+    # (issue #657; TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS). Remove it with the three --ignore lines once the fixture fix is on main.
+    assert [s["name"] for s in _run_steps(job)] == [f"Run: tests/{d}" for d in _OTHER_DIRS] + ["Run: tests/visual_assets (store lock, serial)"]
     assert all(s.get("if") == "always()" for s in _run_steps(job))
     merge = next(s for s in job["steps"] if s.get("name") == "Merge JUnit XML")
     assert "reports/junit/api-cli-engine.xml" in merge["run"]
@@ -132,10 +135,13 @@ def test_setup_uv_is_matched_by_action_name_not_version(steps, expected):
 def test_the_coverage_parser_reads_tests_tools_for_both_tools_jobs_and_ignores_the_glob_word():
     paths = parse_job_pytest_paths(_WORKFLOW.read_text(encoding="utf-8"))
     # tools-a-e also runs tests/codebase (the lint group is installed there; TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE).
-    expected = {"tools-a-e": {"tests/tools", "tests/codebase"}, "tools-f-z": {"tests/tools"}}
+    # tools-f-z also names the one workflow-file test it runs serially (it writes a fixed-name temp copy into the real workflows dir)
+    expected = {"tools-a-e": {"tests/tools", "tests/codebase"}, "tools-f-z": {"tests/tools", "tests/tools/test_implement_ticket_native_refusal.py"}}
     for job in _TOOLS_JOBS:
         assert paths[job] == expected[job], "a --ignore-glob word must not be collected as a covered path"
-    assert paths["api-cli-engine"] == {f"tests/{d}" for d in _OTHER_DIRS}
+    # plus the serial store-lock paths (issue #657); the parallel visual_assets step excludes them with --ignore, which the parser strips
+    serial = {"tests/visual_assets/store", "tests/visual_assets/test_review_cli.py", "tests/visual_assets/test_key_usage.py"}
+    assert paths["api-cli-engine"] == {f"tests/{d}" for d in _OTHER_DIRS} | serial
 
 
 def test_the_parser_does_not_collect_an_ignore_glob_word_in_a_synthetic_job():

@@ -11,4 +11,6 @@ Function: planner. Hub: scope, file tickets, dispatch, answer your implementer. 
 
 Domain: platform (deployment and runtime: compose, images, CI/CD for images, Kubernetes/Helm, Terraform, observability stack, runbooks). Engine stays one process; src/** changes go to rpg-planner; ADR changes go to lead-planner for review.
 
+Host ubuntu; twin `-u24`.
+
 Needs the user: merge, push_default_branch, delete_remote_branch, delete_worktree_or_data.

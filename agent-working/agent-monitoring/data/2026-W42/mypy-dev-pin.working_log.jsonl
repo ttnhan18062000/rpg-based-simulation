@@ -1,1 +1,0 @@
-{"timestamp": "2026-10-12T14:32:39.739627Z", "ticket_id": "TCK-20261012-MYPY-DEV-PIN", "title": "dev group pins mypy exactly", "status": "DONE", "summary": "mypy==2.1.0 pinned, one uv.lock metadata line, gate test requires exact pin", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}
