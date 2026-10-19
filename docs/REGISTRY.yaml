@@ -9602,7 +9602,10 @@
   - tests/architecture/
   - 'src/engine/apply.py (~L293), src/engine/world_dynamics.py (~L260), src/world/{boss,calamity,camp,creature_territory,raid,spawn,influence}.py:
     read only'
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK/investigation.md
+  - agent-working/stored_artifacts/TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK/plan.md
+  - agent-working/stored_artifacts/TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK/test_plan.md
   tags:
   - testing
   - regression
