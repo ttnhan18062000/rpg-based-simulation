@@ -20,7 +20,7 @@ tags: [testing, regression, simulation-quality]
 6. Aggregation in `_outcome`: DRIFT wins over STALE over NO_DATA over PASS. A reference that is no-data for a missing threshold therefore does not hide a DRIFT on the other reference ("for that reference only").
 
 ## Decisions
-- `threshold_moved` is `{"k": {"candidate": c, "reference": r}, "floor": {...}, "oracle": {...}}` listing only the fields that differ. Pooled rows have no `k` (only floor). Oracle is a validity-row field and outcome rows do not carry it in the baseline, so it is compared only when both sides have it.
+- `threshold_moved` is `{"k": {"candidate": c, "reference": r}, "floor": {...}, "oracle": {...}}` listing only the fields that differ. Pooled rows have no `k` (only floor). Oracle is compared whenever EITHER side carries it (testing-planner ruling): one side present and the other absent is a move, with null for the missing side. It is skipped only when neither side has one.
 - A missing threshold: run row without numeric `k` or `floor`, pooled row without numeric `floor` -> `{"state": no-data, "reason": "contract_error", "detail": "reference row has no recorded threshold"}` for that reference.
 - No fallback to the candidate's values anywhere.
 
