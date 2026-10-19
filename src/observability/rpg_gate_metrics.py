@@ -69,7 +69,7 @@ ORACLES: Dict[str, str] = {
     "V1": "Bible 03 atomic conservation, gate H3: a hunger drop has an accepted transfer from a source behind it",
     "V2": "Bible 03 conservation, gate H7: meat leaves a body only by being taken, by the whole body being looted, or through the MEAT_DECAYED sink, and made = taken + looted + vanished + remaining",
     "V3": "SURV-06/07, gate H6, memo rows 54/56: no starvation death with a way the subject judged open and never attempted",
-    "V4": "D43, D44, gate H4: a kind whose diet lacks a food class never takes it (inn meals need prepared; meat-only kinds take no node food)",
+    "V4": "D43, D44, gate H4: a kind whose diet lacks a food class never eats it (the inn's meal needs prepared, checked by the transfer it was served through; every other meal is a consumption of an item, counted when its class is outside the eater's diet). Picking up or carrying a non-diet item is not a V4 breach",
     "V5": "LAW-POSITION-IN-WORLD, Bible 06 topology: a moved, alive entity stays inside the world extent",
     "V6": "EXCH-02, D38, gate H7: total coin changes only by declared world creation (an added entity's starting purse), so the net change beyond it is exactly 0",
     "V7": "SURV-06, D44/D48, gate H5: a declared way is used at least once in a world where it can be (the hunt instance: every feeding kill is eaten from somewhere)",
@@ -176,7 +176,7 @@ def _check_untried_way(records: Sequence[Mapping[str, Any]]) -> Tuple[int, List[
 def _breaks_a_diet_gate(group: str, source: str) -> bool:
     if source == INN_SOURCE:
         return group != "undeclared" and not _group_has(group, PEOPLE_CLASS)
-    return source == FOOD_NODE_SOURCE and group == MEAT_CLASS
+    return False
 
 
 def _check_diet_gates(ledger: Mapping[str, Any]) -> Tuple[int, List[Any]]:
@@ -186,7 +186,12 @@ def _check_diet_gates(ledger: Mapping[str, Any]) -> Tuple[int, List[Any]]:
         group, source, outcome = _split(key, 3)
         if outcome == "accepted" and _breaks_a_diet_gate(group, source):
             found[key] = n
-    return sum(found.values()), [{"transfer": k, "count": n} for k, n in sorted(found.items())]
+    examples = [{"transfer": k, "count": n} for k, n in sorted(found.items())]
+    for key, n in sorted(ledger.get("diet_breaches", {}).items()):
+        group, source, item = _split(key, 3)
+        found[key] = n
+        examples.append({"consumption": key, "count": n, "group": group, "source": source, "item": item})
+    return sum(found.values()), examples
 
 
 def _check_minted_coin(ledger: Mapping[str, Any]) -> Tuple[int, List[Any]]:

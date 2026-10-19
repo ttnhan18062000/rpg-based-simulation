@@ -24,7 +24,7 @@ PEOPLE, WOLF, DEER = "meat+plant+prepared", "meat", "graze+plant"
 def _ledger(**over: Any) -> Dict[str, Any]:
     base: Dict[str, Any] = {
         "first_tick": 1, "last_tick": 100, "coin_first": 100.0, "coin_last": 100.0, "declared_coin": 0.0,
-        "population": {"1": {PEOPLE: 10, WOLF: 4, DEER: 6}}, "transfers": {}, "hunger_drops": {}, "deaths": {}, "adds": {},
+        "population": {"1": {PEOPLE: 10, WOLF: 4, DEER: 6}}, "transfers": {}, "hunger_drops": {}, "diet_breaches": {}, "deaths": {}, "adds": {},
         "world_events": {}, "meat": {}, "attacks": {}, "out_of_world": {}, "out_of_world_examples": [], "unsourced_examples": [],
     }
     base.update(over)
@@ -93,10 +93,12 @@ def test_v3_a_death_beside_a_way_judged_open_and_never_tried_is_a_violation(tmp_
     assert row["violations"] == 1 and row["examples"][0]["untried"] == ["INN_MEAL"]
 
 
-def test_v4_diet_gates_an_inn_meal_by_a_kind_without_prepared_food_and_node_food_by_a_meat_only_kind(tmp_path):
+def test_v4_diet_gates_an_inn_meal_by_a_kind_without_prepared_food_and_counts_a_consumption_outside_the_diet(tmp_path):
     assert _violations(tmp_path, "V4", transfers={f"{PEOPLE}|TOWN_SERVICE|accepted": 9, f"{DEER}|NODE|accepted": 9}) == 0
     assert _violations(tmp_path, "V4", transfers={f"{WOLF}|TOWN_SERVICE|accepted": 1}) == 1
-    assert _violations(tmp_path, "V4", transfers={f"{WOLF}|NODE|accepted": 3}) == 3
+    # an acquisition is not a breach (a wolf at a herb node, issue: v1 gate V4 false positive): only a consumption counts
+    assert _violations(tmp_path, "V4", transfers={f"{WOLF}|NODE|accepted": 3}) == 0
+    assert _violations(tmp_path, "V4", diet_breaches={f"{WOLF}|CARRIED_FOOD|wild_berries": 2}) == 2  # a meat-only body ate plant-class food
     assert _violations(tmp_path, "V4", transfers={f"{WOLF}|TOWN_SERVICE|rejected": 4}) == 0  # a refused try is the gate working
 
 

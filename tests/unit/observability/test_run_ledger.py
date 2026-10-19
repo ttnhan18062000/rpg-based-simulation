@@ -86,6 +86,36 @@ def test_accepted_and_rejected_transfers_are_counted_by_group_and_source():
     assert payload["transfers"] == {f"{group}|CARRIED_FOOD|accepted": 1, f"{group}|TOWN_SERVICE|rejected": 1}
 
 
+def _eat(source_kind, item_id):
+    return SimpleNamespace(transfer_kind="EAT", source_kind=source_kind, source_id="x", items_remove=[SimpleNamespace(item_id=item_id, quantity=1)])
+
+
+def _update_with_intents(intents, results):
+    return SimpleNamespace(entity_updates={WHO: SimpleNamespace(intent_results=list(results), resource_transfers=list(intents))},
+                           entities_add=[], entity_spawn_sources={}, world_events_add=[])
+
+
+def test_a_meat_only_body_at_a_herb_node_is_not_a_diet_breach():
+    """A node pickup is an acquisition; herb is not food at all. V4 reads consumption."""
+    state = _at_tick(_world(species="wolf"), 10)
+    pickup = SimpleNamespace(transfer_kind="AUTO", source_kind="NODE", source_id="x", items_add=[SimpleNamespace(item_id="herb", quantity=1)], items_remove=[])
+    payload = _tally(state, update=_update_with_intents([pickup], [_result("NODE")]))
+    assert payload["diet_breaches"] == {}
+
+
+def test_a_meat_only_body_eating_plant_class_food_is_a_diet_breach_and_a_refused_try_is_not():
+    state = _at_tick(_world(species="wolf"), 10)
+    group = kind_group(state.entities[WHO])
+    payload = _tally(state, update=_update_with_intents([_eat("CARRIED_FOOD", "wild_berries")], [_result("CARRIED_FOOD")]))
+    assert payload["diet_breaches"] == {f"{group}|CARRIED_FOOD|wild_berries": 1}
+    RunLedger.reset_run_state(); RunLedger.configure(True)
+    refused = _tally(state, update=_update_with_intents([_eat("CARRIED_FOOD", "wild_berries")], [_result("CARRIED_FOOD", accepted=False)]))
+    assert refused["diet_breaches"] == {}
+    RunLedger.reset_run_state(); RunLedger.configure(True)
+    in_diet = _tally(state, update=_update_with_intents([_eat("CORPSE_FOOD", "raw_meat")], [_result("CORPSE_FOOD")]))
+    assert in_diet["diet_breaches"] == {}
+
+
 def test_a_hunger_drop_is_counted_with_or_without_an_accepted_transfer():
     state = _at_tick(_world(carry=["bread"], hunger=80.0), 10)
     group = kind_group(state.entities[WHO])
