@@ -8481,6 +8481,20 @@
   tags:
   - testing
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-FRONTIER-3-42-EXTENDED-POPULATION-STABILITY-NEEDS-LARGE-BUDGET.md
+  ticket_id: TCK-20261015-FRONTIER-3-42-EXTENDED-POPULATION-STABILITY-NEEDS-LARGE-BUDGET
+  title: Mark `test_generated_frontier_3_42_extended_population_stability` `resource_budget_large`,
+    like the other 1000t tests in the file
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tests/conftest.py (budget selection, read-only here)
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL.md
   ticket_id: TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL
   title: 'Observability profile: take Loki 3.7.8 / Promtail 3.6.8 and probe Loki readiness

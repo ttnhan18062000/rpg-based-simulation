@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-FRONTIER-3-42-EXTENDED-POPULATION-STABILITY-NEEDS-LARGE-BUDGET
-phase: open
+phase: done
 date: 2026-10-15
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Mark `test_generated_frontier_3_42_extended_population_stability` `resource_budget_large`, like the other 1000t tests in the file
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -42,9 +42,9 @@ Every other 1000t guard in the same file carries `@pytest.mark.slow` plus `@pyte
 - Other tests' markers.
 
 ## Acceptance Criteria
-- [ ] AC1: the test carries `slow` and `resource_budget_large`, and nothing else changes in the file.
-- [ ] AC2: `pytest tests/unit/worldassembly/test_corpus_diversity.py -m slow --collect-only -q` collects the same node count before and after (>=32).
-- [ ] AC3: a bare local run (`pytest <nodeid>`, no `--resource-budget`) is no longer killed by the 60 s budget. Record its result (pass, or the same known-red failure) and wall time in Test Summary. A failure other than the budget kill is reported, not fixed here.
+- [x] AC1: the test carries `slow` and `resource_budget_large`, and nothing else changes in the file.
+- [x] AC2: `pytest tests/unit/worldassembly/test_corpus_diversity.py -m slow --collect-only -q` collects the same node count before and after (>=32).
+- [x] AC3: a bare local run (`pytest <nodeid>`, no `--resource-budget`) is no longer killed by the 60 s budget. Record its result (pass, or the same known-red failure) and wall time in Test Summary. A failure other than the budget kill is reported, not fixed here.
 
 ## Related Tickets
 - TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2 (owns the known-red entry)
@@ -65,9 +65,14 @@ Every other 1000t guard in the same file carries `@pytest.mark.slow` plus `@pyte
 - None. Owner's ruling (testing-planner) is in the Request Summary.
 
 ## Implementation Notes
+Added `@pytest.mark.resource_budget_large` under `@pytest.mark.slow` on the test; one line, no other change.
 
 ## Test Summary
+- AC2: `-m slow --collect-only` collects 32/95 before and after.
+- AC3: bare `pytest <nodeid>` (no `--resource-budget`) PASSED in 124.78 s (wall 2m05.9s), not killed by the 60 s budget. Faster than the 270-350 s the ticket cites (this machine, shared venv); no non-budget failure seen.
 
 ## Files Changed
+- tests/unit/worldassembly/test_corpus_diversity.py
 
 ## Completion Summary
+The 1000t frontier_3_42 population-stability test now carries the same `slow` + `resource_budget_large` pair as the other 1000t guards. Known-red entry untouched.
