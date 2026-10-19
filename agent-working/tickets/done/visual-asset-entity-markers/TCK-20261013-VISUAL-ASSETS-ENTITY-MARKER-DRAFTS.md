@@ -12,7 +12,7 @@ tags: [architecture, testing, mcp]
 # TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS
 
 ## Title
-Map markers: entity role markers keyed on the presenter's `kind` (gated on rpg's #523)
+Map markers: entity role markers keyed on the presenter's `kind`, released in rc-0012
 
 ## Status
 DONE
@@ -28,6 +28,8 @@ P2
 
 ## Request Summary
 Child 3 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner's #523 answer: markers follow V2 kind names as the presenter emits them. rpg (#519): M1 moves kinds to properties (diet, size), so markers keyed on properties would outlast role markers; hero retires in M1 (D63). The sample worlds hold 11 entity kinds today, including `wild_creature`, which arrived in #536.
+
+Update 2026-10-19: the #523 gate cleared on 2026-10-19 (rpg #645).
 
 ## Scope
 - **Moved out of the map-markers batch (owner, 2026-10-14, "Objects now, entities later").** The object markers (batch A: `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`, rc-0011) shipped without entities. This ticket now waits in its own batch folder, `agent-working/tickets/todos/visual-asset-entity-markers/`; its parent epic's Completion Summary says "child 3 moved out on the owner's answer".

@@ -10068,8 +10068,8 @@
 - type: ticket
   path: agent-working/tickets/done/visual-asset-entity-markers/TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS.md
   ticket_id: TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS
-  title: 'Map markers: entity role markers keyed on the presenter''s `kind` (gated
-    on rpg''s #523)'
+  title: 'Map markers: entity role markers keyed on the presenter''s `kind`, released
+    in rc-0012'
   tier: standard
   ticket_type: feature
   date: '2026-10-13'
