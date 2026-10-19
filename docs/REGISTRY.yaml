@@ -6308,6 +6308,27 @@
   - architecture
   - audit
 - type: doc
+  path: docs/plans/codebase_health/import_linter_flip_batch_brief.md
+  title: 'Brief: batch `import-linter-flip` (codebase-planner → codebase-implementer)'
+  status: active
+  layer: testing
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/codebase_health/import_linter_soak_review.md
+  title: Import-linter soak review (FINAL, 2026-10-19)
+  status: active
+  layer: testing
+  authority: P2
+  audience: agent
+  tags:
+  - delivery
+  - planning
+- type: doc
   path: docs/plans/codebase_health/knowledge_lock_transit_test_brief.md
   title: 'Batch brief: knowledge-lock-transit-test (codebase-planner, 2026-10-11)'
   status: active
@@ -8556,6 +8577,23 @@
   artifact_files: []
   tags:
   - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/phase19-off-mode-check/TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK.md
+  ticket_id: TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK
+  title: A runtime test that an OFF-mode kernel imports none of the four heavy observability
+    modules the phase19 import-linter ignores rely on
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tests/architecture/test_phase19_observability_boundaries.py
+  - src/engine/kernel.py (function-local imports behind the OFF guard)
+  - codebase/structure/importlinter.toml
+  artifact_files: []
+  tags:
+  - testing
+  - architecture
   - observability
 - type: ticket
   path: agent-working/tickets/done/TCK-20261017-FORCED-SCENARIOS-FOR-COVER-CHOKEPOINTS-AND-HIGH-GROUND.md
@@ -14839,6 +14877,24 @@
   - world
   - investigation
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT.md
+  ticket_id: TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT
+  title: Make the import-linter step blocking and required, then retire the class
+    E tests whose contract is required
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-05'
+  related_code_areas:
+  - tests/architecture/
+  - codebase/structure/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT/plan.md
+  - agent-working/stored_artifacts/TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT/test_plan.md
+  tags:
+  - architecture
+  - delivery
+- type: ticket
   path: agent-working/tickets/done/TCK-20261005-LAW-OCCUPANCY-COLLISION-HARD-LAW-ERRORS-ON-MAIN.md
   ticket_id: TCK-20261005-LAW-OCCUPANCY-COLLISION-HARD-LAW-ERRORS-ON-MAIN
   title: 'Ten `LAW-OCCUPANCY-COLLISION` hard-law errors fire on untouched `origin/main`
@@ -15288,21 +15344,6 @@
   tags:
   - world
   - investigation
-- type: ticket
-  path: agent-working/tickets/todos/python-code-craft-structure/TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT.md
-  ticket_id: TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT
-  title: Make the import-linter step blocking and required, then retire the class
-    E tests whose contract is required
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-05'
-  related_code_areas:
-  - tests/architecture/
-  - codebase/structure/
-  artifact_files: []
-  tags:
-  - architecture
-  - delivery
 - type: ticket
   path: agent-working/tickets/done/TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE.md
   ticket_id: TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE

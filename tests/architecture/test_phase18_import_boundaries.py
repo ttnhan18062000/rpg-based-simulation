@@ -95,26 +95,6 @@ def _assert_pinned_exactly(
         )
 
 
-def test_entity_models_do_not_import_domain_services():
-    # Enforce static analysis check: src/core/ must never import src/domains/
-    for path, rel_path in _iter_py_files("src/core"):
-        tree = _parse(path)
-        skip_lines = _type_checking_lines(tree)
-        for node in ast.walk(tree):
-            if not isinstance(node, (ast.Import, ast.ImportFrom)):
-                continue
-            if node.lineno in skip_lines:
-                continue
-            if isinstance(node, ast.ImportFrom):
-                if node.module and node.module.startswith("src.domains"):
-                    assert False, f"Violation: core file {rel_path} imports domain services! ({node.module})"
-            else:
-                for alias in node.names:
-                    assert not alias.name.startswith("src.domains"), (
-                        f"Violation: core file {rel_path} imports domain services! ({alias.name})"
-                    )
-
-
 def test_observability_engine_imports_go_through_kernel_facade():
     # src/observability/'s src.engine coupling must route through the Kernel facade only
     # (established by TCK-20260627-P2G-KERNEL-FACADE) -- never a lower-level engine internal

@@ -12,12 +12,10 @@ docs/architecture/http_admission_control.md for the mechanism this file guards.
 """
 from __future__ import annotations
 
-import ast
 import hashlib
 import time
 
 import pytest
-from fastapi import Depends
 from fastapi.testclient import TestClient
 
 import src.api.admission_control as admission_control
@@ -285,16 +283,3 @@ def test_admission_control_covers_every_authenticated_route():
 
     assert neither_paths == {"/health"}
 
-
-def test_admission_control_does_not_reach_into_governor_internals():
-    """Static guard: src/api/admission_control.py must never import from
-    src.engine.governor or src.engine.phase_governor -- the hysteresis logic is
-    pattern-mirrored, never imported, per the ticket's Out of Scope."""
-    with open("src/api/admission_control.py", "r", encoding="utf-8") as f:
-        tree = ast.parse(f.read(), filename="src/api/admission_control.py")
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom):
-            module = node.module or ""
-            assert not module.startswith("src.engine.governor")
-            assert not module.startswith("src.engine.phase_governor")
