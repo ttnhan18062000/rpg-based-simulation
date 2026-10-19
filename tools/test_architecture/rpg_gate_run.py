@@ -101,7 +101,7 @@ def run(args: argparse.Namespace) -> int:
         _write(out, _no_data(args, "metric_error", exc, args.seed))
         return 0
     metrics = result["metrics"] if isinstance(result, dict) else result  # rpg returns a whole document; the harness writes the header itself
-    doc = {"schema": SCHEMA, "status": "ok", "world": args.world, "seed": args.seed, "ticks": args.ticks, "sha": args.sha, "harness_hash": args.harness_hash, "metrics": list(metrics)}
+    doc = {"schema": SCHEMA, "status": "ok", "world": args.world, "seed": args.seed, "ticks": args.ticks, "sha": args.sha, "harness_hash": args.harness_hash, "floor_seeds": list(args.seeds), "metrics": list(metrics)}
     _write(out, doc)
     _write(out.with_name(out.name + ".cost.json"), {"peak_rss_mb": _peak_rss_mb()})
     return 0
@@ -115,7 +115,7 @@ def pool(args: argparse.Namespace) -> int:
     except Exception as exc:  # noqa: BLE001
         _write(Path(args.out), _no_data(args, "metric_error", exc, None))
         return 0
-    _write(Path(args.out), {"schema": SCHEMA, "status": "ok", "world": args.world, "ticks": args.ticks, "sha": args.sha, "harness_hash": args.harness_hash, "metrics": list(metrics)})
+    _write(Path(args.out), {"schema": SCHEMA, "status": "ok", "world": args.world, "ticks": args.ticks, "sha": args.sha, "harness_hash": args.harness_hash, "floor_seeds": list(args.seeds), "metrics": list(metrics)})
     return 0
 
 
@@ -132,6 +132,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     r.add_argument("--seeds", type=int, nargs="+", default=[])
     p = sub.add_parser("pool", parents=[common])
     p.add_argument("--docs", nargs="+", required=True)
+    p.add_argument("--seeds", type=int, nargs="+", default=[])
     args = parser.parse_args(argv)
     return run(args) if args.cmd == "run" else pool(args)
 
