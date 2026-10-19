@@ -13,4 +13,4 @@ Moved out of `visual-asset-map-markers` on the owner's answer of 2026-10-14 ("Ob
 
 ## Status
 
-OPEN, dispatch-ready (2026-10-18): waiting only on #523 merging. The key is `kind` (owner decision, #548). Earlier status (2026-10-14): waiting on #523 and the owner's choice. Carries the batch-A decisions: names follow the presenter, aliases are registry-only, `fallback` = today's coloured circle, process rule as for the object markers.
+DONE (2026-10-19): entity markers drafted, adopted (`sa-1d9d71206b95652d`) and released in rc-0012 (116 entries). The ticket is in this folder; nothing is left to do.

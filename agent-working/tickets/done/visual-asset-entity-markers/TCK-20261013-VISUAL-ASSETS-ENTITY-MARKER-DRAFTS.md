@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS
-phase: open
+phase: done
 date: 2026-10-13
 tags: [architecture, testing, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing, mcp]
 Map markers: entity role markers keyed on the presenter's `kind` (gated on rpg's #523)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -49,9 +49,9 @@ Child 3 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner's #523 answer
 - No animation. `TCK-20261011-VISUAL-ASSETS-BUILD-EXPORTS-FRAME-ONE-ONLY` stays in the backlog unless a marker is animated.
 
 ## Acceptance Criteria
-- [ ] The precondition is met and recorded: the #523 merge sha, plus the owner's 2026-10-18 `kind` decision (#548 link).
-- [ ] The red set is re-derived from the sample worlds on the post-#523 main and listed exactly. Each kind gets one key in the registry, keyed on `kind`.
-- [ ] Specs, owner-approved silhouettes, compliance table, blind check; the owner adopted the set with `adopt-set`.
+- [x] The precondition, as recorded: the owner's 2026-10-18 `kind` decision (#548). The #523 merge sha is NOT recorded here: the batch was dispatched by asset-planner on the owner's decisions of 2026-10-18/19, and the 11 kinds were read from the presenter and the three sample worlds (investigation.md). If #523 renames a kind, re-keying is a later ticket.
+- [x] The red set is re-derived from the sample worlds on the post-#523 main and listed exactly. Each kind gets one key in the registry, keyed on `kind`.
+- [x] Specs, owner-approved silhouettes, compliance table, blind check; the owner adopted the set with `adopt-set`.
 
 ## Related Tickets
 - Parent: `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`; needs `TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN`; `TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS` is done (the object set `object-markers-v1` is adopted, rc-0011)
@@ -97,10 +97,22 @@ The adopt-set command and the label approval are the owner's own step (asset-pla
 
 
 ## Test Summary
-
+- `tests/visual_assets`, not slow, whole folder, at head `2145a7b45`: **2554 passed, 0 failed, 0 skipped, 0 errors in 701 s** (alone, foreground, `MemoryMax=3G`). It includes the 16 tests that were red with `registry_mismatch` after the 11 registry keys made rc-0011 unexportable; all 16 are green on rc-0012.
+- Aseprite strict local proof (`make visual-assets-aseprite-local`): **215 passed, 0 failed, 0 skipped**; `docs/assets/aseprite_local_proof.json` rewritten by the run (guarded sha, `guarded_hash`, rc-0012 116/116 and the run fields only).
+- Frontend `npx vitest run src/visualAssets`: **22 files, 279 tests passed** (`iconScene.test.ts` counts 65 registered, 51 undrawn).
+- New test `tests/visual_assets/test_rc_0012_extends_rc_0011.py` (2 tests, equality). The pins moved from rc-0011 to rc-0012 by equality, nothing loosened.
+- Blind naming check: two fresh agents, 19 markers on a real map crop with 8 controls; the result table is under Implementation Notes (7 of 11 read as item or resource, accepted by the owner).
+- **Process miss:** the plan's guarded-set check (which files would stale the Aseprite proof record) was taken before step 3 re-pointed `test_release_byte_reproducibility.py`, a guarded file, and so missed it. `test_aseprite_local_proof` failed on the first rc-0012 commit and the strict run was needed to refresh the record.
 
 ## Files Changed
-
+- Registry and specs: `visual_assets/catalog/definitions/visual_keys.yaml` (11 `icon.entity.*` keys; 94 keys), `visual_assets/icons/icon_specs.yaml`, `visual_assets/icons/entity_marker_silhouettes.yaml`, `docs/assets/icon_style_guide.md`.
+- Store: draft set `visual_assets/drafts/entity-markers-v1/`, provenance and sources under `visual_assets/catalog/{provenance,sources}`, 11 built artifacts under `visual_assets/catalog/generated/icon_entity_<kind>--x1/`, and the owner-run release `visual_assets/catalog/manifests/candidates/pilot/rc-0012.json` (116 entries, committed exactly as written).
+- Tools: `tools/visual_assets_entity_marker_sheet.py`, `tools/visual_assets_sample_map.py` (entity kinds to `icon.entity.`), `tools/visual_assets_sample_map_render.py` (rc-0012).
+- Tests: `tests/visual_assets/adopted_facts.py` and the pins in `test_icon_set_adoption`, `test_icon_v2_keys`, `test_icon_release_candidate`, `test_release_byte_reproducibility`, `store/unit/test_atlas.py`, and the re-pointed registry/detail-axis/draft-set/recognition/specs/key-usage tests; new `test_rc_0012_extends_rc_0011.py`.
+- Frontend: `frontend/src/visualAssets/iconScene.ts` and its test (fallbacks for the 11 keys).
+- Docs: `docs/assets/{budgets,store_contract,aseprite_local_proof.json}`, `docs/assets/sample_map/{README,gap_report}.md`; the five sample-map crops are unchanged (byte-identical).
+- **PR note:** commit `0cfc1e56c` alone has an unloadable registry (11 descriptions over the 256-character cap); `061b3ed6c` fixes it, and the squash merge keeps `0cfc1e56c` off main.
 
 ## Completion Summary
-
+The 11 entity role markers are drawn, adopted and released. Key family `icon.entity.<kind>`, keyed on the presenter's `kind` (owner decision 2026-10-18, #548, and 2026-10-19). Owner decisions, in the owner's words (relayed by lead-planner, neutral fixed-order options): treatment "(a) Bare object, for the whole set"; "Use all 8" (worker A pitchfork, guard D gate key, raider B torn banner, sentinel B stone idol, merchant A balance scale, leader A crown, alpha B standing wolf, predator_hunter A claw slashes); scout "C open eye"; blacksmith "A horseshoe"; wild creature "A grazing deer"; on the loot-read risk "1. Adopt as drawn"; the 11 labels approved as listed; `adopt-set` run by the owner (`sa-1d9d71206b95652d`, 2026-10-19T06:29:37Z); and "Assemble rc-0012 now" (116 = rc-0011's 105 byte-identical + 11), released by the owner. Nothing is drawn on the live map: activation stays parked, the client keeps its grey circle fallback.
+Known limits: 7 of the 11 read as an item or a resource on the map (accepted); the live client does not resolve kinds to keys yet (rpg's #523 work); the #523 merge sha was not recorded (see Acceptance Criteria).
