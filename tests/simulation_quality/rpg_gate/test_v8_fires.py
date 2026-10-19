@@ -31,6 +31,13 @@ Tick = Tuple[Sequence[Any], Dict[int, SpawnSource]]  # (entities_add, entity_spa
 
 
 @pytest.fixture(autouse=True)
+def _no_world_compile(monkeypatch):
+    """The self-test world has no spec: the O2.population floor's tick-0 counts (a world compile) are not under test here."""
+    monkeypatch.setattr(metrics, "_gate_seeds", lambda: (1,))
+    monkeypatch.setattr(metrics, "_tick0_alive", lambda world, seed: {})
+
+
+@pytest.fixture(autouse=True)
 def _clean():
     def reset() -> None:
         RunLedger.reset_run_state()

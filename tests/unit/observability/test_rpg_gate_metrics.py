@@ -182,12 +182,69 @@ def test_a_person_who_hunts_is_a_person_and_a_wild_meat_eater_has_no_trade_trait
     assert _row({"metrics": rows}, "O3.attacks_on_people", WOLF)["value"] == 2
 
 
-def test_the_population_floor_is_a_tenth_of_the_first_tick_population_and_never_under_three(tmp_path):
+_REAL_TICK0_ALIVE = m._tick0_alive
+
+
+@pytest.fixture(autouse=True)
+def _no_world_compile(monkeypatch):
+    """The fake world "w" has no spec: the floor's tick-0 counts default to none (the base floor) unless a test sets them with ``_tick0``."""
+    monkeypatch.setattr(m, "_gate_seeds", lambda: (1,))
+    monkeypatch.setattr(m, "_tick0_alive", lambda world, seed: {})
+
+
+def _tick0(monkeypatch, per_seed):
+    """Patch the gate's seed set and each seed's compiled tick-0 counts."""
+    monkeypatch.setattr(m, "_gate_seeds", lambda: tuple(per_seed))
+    monkeypatch.setattr(m, "_tick0_alive", lambda world, seed: dict(per_seed[seed]))
+
+
+def _floors(result, group):
+    return {r["floor"] for r in result["metrics"] if r["id"] == "O2.population" and r["group"] == group}
+
+
+def test_the_population_floor_is_a_tenth_of_the_tick0_mean_and_never_under_three(tmp_path, monkeypatch):
     assert m.population_floor(10) == 3.0 and m.population_floor(29) == 3.0  # small: the base floor holds
     assert m.population_floor(100) == 10.0 and m.population_floor(250) == 25.0  # large: a tenth
-    rows = m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 200, WOLF: 4}})))["metrics"]
-    assert {r["floor"] for r in rows if r["id"] == "O2.population" and r["group"] == PEOPLE} == {20.0}
-    assert {r["floor"] for r in rows if r["id"] == "O2.population" and r["group"] == WOLF} == {3.0}
+    _tick0(monkeypatch, {1: {PEOPLE: 190, WOLF: 4}, 2: {PEOPLE: 210, WOLF: 4}})
+    result = m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 200, WOLF: 4}})))
+    assert _floors(result, PEOPLE) == {20.0} and _floors(result, WOLF) == {3.0}
+
+
+def test_the_floor_is_identical_in_every_seed_document_and_at_every_tick(tmp_path, monkeypatch):
+    """Two seeds whose own tick-0 counts differ (as frontier's do) get the same floor, on every tick row."""
+    _tick0(monkeypatch, {1: {PEOPLE: 310}, 2: {PEOPLE: 330}})
+    docs = [m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: n}, "50": {PEOPLE: n - 5}}))) for n in (310, 330)]
+    floors = [r["floor"] for d in docs for r in d["metrics"] if r["id"] == "O2.population" and r["group"] == PEOPLE]
+    assert len(floors) > 2 and set(floors) == {32.0}
+
+
+def test_a_paired_arms_floor_does_not_move_when_only_the_other_arms_tick0_changes(tmp_path, monkeypatch):
+    base = {1: {PEOPLE: 100}, 2: {PEOPLE: 100}}
+    _tick0(monkeypatch, base)
+    before = _floors(m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 100}}))), PEOPLE)
+    _tick0(monkeypatch, {1: {PEOPLE: 400}, 2: {PEOPLE: 400}})  # the new arm's world: a different tick-0
+    assert _floors(m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 400}}))), PEOPLE) == {40.0}
+    _tick0(monkeypatch, base)  # the base arm, read again
+    assert _floors(m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 100}}))), PEOPLE) == before == {10.0}
+
+
+def test_the_compiled_tick0_population_equals_the_ledgers_first_observed_population():
+    """The floor's base (a compile, no ticks) is what the ledger's first sample sees, on the gate worlds."""
+    import shutil
+    from pathlib import Path
+    from tools.test_architecture.rpg_gate_run import build_kernel
+    from src.observability.run_ledger import RunLedger
+    for world in ("frontier_living_world", "urban_political", "crowded_frontier"):
+        run_id = f"floor-tick0-{world}"
+        kernel = build_kernel(world, 42, run_id)
+        try:
+            kernel.tick_once()
+            payload = RunLedger.tally_event().payload
+            first = payload["population"][str(payload["first_tick"])]
+        finally:
+            kernel.shutdown()
+            shutil.rmtree(Path("data") / "runs" / run_id, ignore_errors=True)
+        assert _REAL_TICK0_ALIVE(world, 42) == first, world
 
 
 def test_an_outcome_row_never_carries_a_verdict_and_pooled_outcomes_are_values_only(tmp_path):

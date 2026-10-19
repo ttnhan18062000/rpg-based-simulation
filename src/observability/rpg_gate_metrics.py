@@ -24,8 +24,11 @@ Floors and k are practical thresholds with a fiction reason each (``OUTCOME_THRE
 from __future__ import annotations
 
 import json
+import os
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
+
+import yaml
 
 from src.ai.goals.kind_group import kind_group
 from src.observability.run_ledger import (
@@ -38,6 +41,8 @@ from src.observability.starvation_record import (
     CHANNEL_TALLY_EVENT,
     RECORD_EVENT,
 )
+from src.worldbuilding.compiler import WorldCompiler
+from src.worldbuilding.repository import WorldRepository
 
 MAX_EXAMPLES = 5
 COIN_EPSILON = 1e-6
@@ -143,9 +148,34 @@ def _outcome(oid: str, world: str, group: str, value: float, **where: Any) -> Di
     return {"id": oid, "class": "outcome", "scope": "run", "world": world, "group": group, "value": float(value), "k": k, "floor": floor, **where}
 
 
-def population_floor(first_tick_population: int) -> float:
-    """O2.population's floor: a tenth of the group's first-tick population, and never under the base floor (three)."""
-    return max(OUTCOME_THRESHOLDS["O2.population"][1], 0.10 * first_tick_population)
+def population_floor(tick0_mean_population: float) -> float:
+    """O2.population's floor: a tenth of the group's tick-0 population, and never under the base floor (three).
+    Relative floor, computed once per world from the pooled tick-0 mean of the gate config's seed set (identical in every seed document and at every tick)."""
+    return max(OUTCOME_THRESHOLDS["O2.population"][1], 0.10 * tick0_mean_population)
+
+
+GATE_CONFIG = "tests/simulation_quality/rpg_gate/config.yaml"
+
+
+def _gate_seeds() -> Tuple[int, ...]:
+    """The gate config's seed set (D54): the run set the floor is pooled over."""
+    with open(GATE_CONFIG, encoding="utf-8") as fh:
+        return tuple(int(s) for s in (yaml.safe_load(fh) or {})["seeds"])
+
+
+def _tick0_alive(world: str, seed: int) -> Dict[str, int]:
+    """The alive count by kind group of the world compiled for ``seed``, before any tick (what the ledger's first sample sees)."""
+    spec, context = WorldRepository(os.path.join("data", "worlds")).load_world_with_context(world)
+    state, _report = WorldCompiler.compile(spec, seed, context=context)
+    return _final_alive_by_group(state)
+
+
+def tick0_means(world: str) -> Dict[str, float]:
+    """The pooled tick-0 mean population per kind group over the gate config's seeds (a group absent from a seed counts 0 there)."""
+    seeds = _gate_seeds()
+    per_seed = [_tick0_alive(world, seed) for seed in seeds]
+    groups = {g for counts in per_seed for g in counts}
+    return {g: sum(counts.get(g, 0) for counts in per_seed) / len(seeds) for g in groups}
 
 
 def _check_food_source(ledger: Mapping[str, Any]) -> Tuple[int, List[Any]]:
@@ -215,6 +245,7 @@ def _population_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: A
     rows: List[Dict[str, Any]] = []
     population = ledger["population"]
     first = population[str(ledger["first_tick"])] if population else {}
+    means = tick0_means(world)
     final = _final_alive_by_group(state)
     starved: Dict[str, int] = defaultdict(int)
     for key, n in ledger["deaths"].items():
@@ -224,7 +255,7 @@ def _population_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: A
     for group in sorted(set(first) | set(final) | {g for t in population.values() for g in t}):
         rows.append(_outcome("O1.starvation_share", world, group, starved[group] / max(1, first.get(group, 0))))
         rows.append(_outcome("O2.survivors", world, group, 1.0 if final.get(group, 0) > 0 else 0.0))
-        floor = population_floor(first.get(group, 0))
+        floor = population_floor(means.get(group, 0.0))
         rows += [_outcome("O2.population", world, group, at.get(group, 0), tick=int(t), floor=floor) for t, at in sorted(population.items(), key=lambda kv: int(kv[0]))]
         rows.append(_outcome("O2.population", world, group, final.get(group, 0), tick=ticks, floor=floor))
     return rows
