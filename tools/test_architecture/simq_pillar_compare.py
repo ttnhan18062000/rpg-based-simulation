@@ -20,6 +20,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional
 
+from src.observability.reporting.run_determinism import NonAuditRunError, require_host_independent_runs
+
 GRADE_ORDER = ("F", "D", "C", "B", "A", "S")
 SCORE_ABS_FLOOR, SCORE_REL_PCT = 0.05, 0.20  # mirrors test_grade_regression; a test pins that they agree
 
@@ -37,6 +39,22 @@ MISSING, LOST_DATA, GAINED_DATA, THRESHOLD_CHANGED, CONTRACT = "missing", "lost-
 
 class PillarContractError(ValueError):
     """A pillar (report, anchor or row) is malformed; the message names what is wrong."""
+
+
+class HostIndependenceRefused(ValueError):
+    """The live run is not recorded as host-independent, so a comparison of it with an anchor would measure host speed as well (TCK-20261014-SIMQ-COMPARE-TOOLS-...)."""
+
+
+def require_host_independent(run_key: str, live_manifest: Optional[Mapping[str, Any]]) -> None:
+    """Refuse unless ``live_manifest`` records ``signals_zeroed is True`` (``audit_mode`` or a pinned governor), through rpg's one definition of host-independent.
+
+    ``live_manifest`` is the run's own record (``simq_run_record.load_sidecar`` or a run manifest). No manifest at all, a missing field and a null field all count as not recorded.
+    The anchor side is not checked here: anchors carry no manifest, and they can only be written by ``simq_reanchor``, which refuses a run that is not audit_mode.
+    There is no switch that skips this: re-run the run under ``--audit-mode``."""
+    try:
+        require_host_independent_runs({run_key: live_manifest if live_manifest is not None else {}})
+    except NonAuditRunError as exc:
+        raise HostIndependenceRefused(f"{run_key}: the live run is not recorded as host-independent; re-run it under audit_mode (calibrate_simq --audit-mode). {exc}") from exc
 
 
 @dataclass(frozen=True)
@@ -185,12 +203,14 @@ def no_data_sets_equal(anchor: Mapping[str, Pillar], live: Mapping[str, Pillar])
 
 
 def compare_report(
-    run_key: str, anchors: Mapping[str, Any], report: Mapping[str, Any], *,
+    run_key: str, anchors: Mapping[str, Any], report: Mapping[str, Any], *, live_manifest: Optional[Mapping[str, Any]],
     band_overrides: Optional[Mapping[tuple, int]] = None, floor_overrides: Optional[Mapping[tuple, float]] = None,
 ) -> tuple[list[Verdict], dict[str, list[str]]]:
     """Every anchored pillar of ``run_key`` against ``report`` -> ``(verdicts, {"anchor_no_data": [...], "live_no_data": [...]})``.
 
-    A malformed anchor or live pillar is a contract verdict, not an exception. ``report["pillars"]`` is read without any default per pillar."""
+    A malformed anchor or live pillar is a contract verdict, not an exception. ``report["pillars"]`` is read without any default per pillar.
+    ``live_manifest`` is required (no default): a live run that is not recorded host-independent raises :class:`HostIndependenceRefused` before anything is compared."""
+    require_host_independent(run_key, live_manifest)
     band_overrides, floor_overrides = band_overrides or {}, floor_overrides or {}
     live_raw = report.get("pillars")
     verdicts: list[Verdict] = []
