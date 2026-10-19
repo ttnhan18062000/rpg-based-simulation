@@ -318,23 +318,41 @@ def _cfg_text(extra):
     return "worlds: [w]\nseeds: [1, 2]\nticks: 5000\nstale_after_days: 30\n" + extra
 
 
-def test_required_validity_loads_as_a_tuple_and_defaults_to_empty(tmp_path):
+def test_required_validity_loads_as_a_level_mapping_and_defaults_to_empty(tmp_path):
     cfg = tmp_path / "config.yaml"
     cfg.write_text(_cfg_text(""))
-    assert rgb.load_config(cfg).required_validity == ()
-    cfg.write_text(_cfg_text("required_validity: [V1, V8]\n"))
-    assert rgb.load_config(cfg).required_validity == ("V1", "V8")
+    assert rgb.load_config(cfg).required_validity == {}
+    cfg.write_text(_cfg_text("required_validity: {run: [V1, V8], pooled: [V7]}\n"))
+    loaded = rgb.load_config(cfg)
+    assert loaded.required_validity == {"run": ("V1", "V8"), "pooled": ("V7",)}
+    assert loaded.required_at("run") == ("V1", "V8") and loaded.required_at("pooled") == ("V7",)
+    cfg.write_text(_cfg_text("required_validity: {run: [V1], pooled: [V1]}\n"))  # an id may be required at both levels
+    assert rgb.load_config(cfg).required_at("pooled") == ("V1",)
+    cfg.write_text(_cfg_text("required_validity: {run: [V1]}\n"))
+    assert rgb.load_config(cfg).required_at("pooled") == ()
 
 
 @pytest.mark.parametrize("text, match", [
-    ("required_validity: V8\n", "must be a list"),
-    ("required_validity: [V8, V8]\n", "duplicate"),
-    ("required_validity: [O1]\n", r"V<n>"),
-    ("required_validity: [V]\n", r"V<n>"),
-    ("required_validity: [8]\n", r"V<n>"),
+    ("required_validity: [V1, V8]\n", "plain list is refused"),
+    ("required_validity: V8\n", "must map a level"),
+    ("required_validity: {seed: [V1]}\n", "unknown level"),
+    ("required_validity: {run: [V1], world: [V2]}\n", "unknown level"),
+    ("required_validity: {run: V8}\n", "must be a list"),
+    ("required_validity: {run: [V8, V8]}\n", "duplicate"),
+    ("required_validity: {pooled: [V7, V7]}\n", "duplicate"),
+    ("required_validity: {run: [O1]}\n", r"V<n>"),
+    ("required_validity: {run: [V]}\n", r"V<n>"),
+    ("required_validity: {pooled: [8]}\n", r"V<n>"),
 ])
 def test_a_malformed_required_validity_is_refused(tmp_path, text, match):
     cfg = tmp_path / "config.yaml"
     cfg.write_text(_cfg_text(text))
     with pytest.raises(rgb.BaselineError, match=match):
         rgb.load_config(cfg)
+
+
+def test_the_committed_gate_config_requires_v7_pooled_and_the_rest_per_run():
+    from pathlib import Path
+
+    loaded = rgb.load_config(Path(__file__).resolve().parents[3] / "tests" / "simulation_quality" / "rpg_gate" / "config.yaml")
+    assert loaded.required_validity == {"run": ("V1", "V2", "V3", "V4", "V5", "V6", "V8"), "pooled": ("V7",)}
