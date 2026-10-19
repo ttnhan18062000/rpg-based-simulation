@@ -21,3 +21,8 @@ Written by platform-planner at dispatch (2026-10-19); the implementer updates it
 | fire and resolve | running locally | Locust step above knee | Grafana state + ntfy | pending, firing, ntfy message with route and runbook link, resolved after load stops | Grafana alert API; ntfy poll |
 | error rule evaluates | running locally | rule state | Grafana | Normal under normal load, no exec error | Grafana alert API |
 | docs valid | static | frontmatter | docs schema | OK | `validate_frontmatter.py` |
+
+## Live row added at planner review (2026-10-19)
+| # | check | oracle | expected |
+|---|---|---|---|
+| L-N | while the SLO is NOT violated the rules show Normal | `GET /api/prometheus/grafana/api/v1/rules` (state/health of `ApiLatencyP95High` and `ApiErrorRateHigh`) before the fire step | state Normal (NoData mapped to OK), health ok; never NoData or Error |

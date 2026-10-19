@@ -2,7 +2,7 @@
 #
 # Profiles:
 #   default (`docker compose up`)                  backend, redis, ai_worker, frontend
-#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, docker-socket-proxy, tempo, watchdog, node-exporter, ntfy
+#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, docker-socket-proxy, tempo, watchdog, node-exporter, ntfy, redis-exporter
 # watchdog sits in the observability profile because it depends_on promtail (healthy only once loki is ready) and prometheus, and polls Loki.
 # Grafana's admin password is a compose secret file (gitignored). Create it once before `--profile observability up`:
 #   mkdir -p docker/secrets && openssl rand -base64 24 > docker/secrets/grafana_admin_password
@@ -172,6 +172,18 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+
+  redis-exporter:
+    profiles: ["observability"]
+    # Redis metrics for the Redis-down cause alert (TCK-20261018-REDIS-DOWN-CAUSE-ALERT, cause alert added 2026-10-18 by lead review): `redis_up`,
+    # memory, clients and stream lengths. oliver006/redis_exporter v1.93.0 (2026-10-01, over two weeks old), pinned by tag and index digest; Dependabot bumps it.
+    # The README names Valkey 7-9 "and Redis" but not Redis 8: compatibility with this file's redis:8.10.2 is proven by the live run. The image is a scratch
+    # image with no shell, so there is no healthcheck; Prometheus' `up{job="redis"}` is the probe. No host port.
+    image: oliver006/redis_exporter:v1.93.0@sha256:6ca518a72f30f7f576ef92963de1b91d3c3f5fd3aeac949f878bfda183587820
+    mem_limit: 32m # placeholder until the measured peak is recorded (see the ticket)
+    command:
+      - '--redis.addr=redis://redis:6379'
+    restart: unless-stopped
 
   node-exporter:
     profiles: ["observability"]

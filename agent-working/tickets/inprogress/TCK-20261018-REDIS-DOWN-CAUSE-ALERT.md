@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-REDIS-DOWN-CAUSE-ALERT
-phase: open
+phase: inprogress
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 A Redis-down cause alert, so the Redis-stop drill has something that fires when the API SLO stays green
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -80,10 +80,15 @@ None.
   it is what makes the drill meaningful. Lead tells the owner.
 
 ## Implementation Notes
-(open)
+- Option A (lead review, 2026-10-18): `redis-exporter` service in `compose.yaml`: `oliver006/redis_exporter:v1.93.0@sha256:6ca518a7...` (2026-10-01, over two weeks old; v1.94.0 from 10-15 is too new; scratch image, about 4.5 MB compressed), observability profile, `--redis.addr=redis://redis:6379`, no host port, no shell so no healthcheck (`up{job="redis"}` is the probe), `mem_limit: 32m` as a PLACEHOLDER until the peak is measured.
+- Redis 8 compatibility: the exporter README says "Valkey 7.x, 8.x, 9.x (and Redis)" and never names Redis 8, but main's image is `redis:8.10.2-alpine`; this is not confirmed by the docs and is proven or refuted by the live run (`redis_up == 1` and the INFO metrics). A failure there means stop and report.
+- `docker/prometheus.yml`: job `redis` -> `redis-exporter:9121`.
+- `docker/grafana/provisioning/alerting/rules-redis.yaml`: group `cause` (folder "Cause alerts", interval 30s), rule `RedisDown`: `redis_up == 0`, `for: 30s`, noData/execErr OK, labelled a cause alert in its summary and labels (`alert_kind: cause`), runbook_url `docs/runbooks/redis-down.md`. It uses S4's contact point and policy.
+- `docs/runbooks/redis-down.md` + a README row; the runbook states the drill hypotheses as hypotheses.
 
 ## Test Summary
-(open)
+- **validated:** YAML parse of `rules-redis.yaml`; `docker compose --profile observability config -q`; `promtool check config` (with the `redis` job): SUCCESS; frontmatter of the new runbook and README.
+- Not yet run (needs the exporter pull and the stack run): `redis_up == 1` on Redis 8.10.2, the `redis` target `up`, the exporter's peak memory, the alert firing within its `for` window and resolving, with timestamps (the drill ticket records them).
 
 ## Files Changed
 (open)

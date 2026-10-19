@@ -36,3 +36,7 @@ scrape_configs:
   - job_name: "rpg-backend"
     static_configs:
       - targets: ["backend:9109"]
+
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
