@@ -7,10 +7,10 @@ date: 2026-10-08
 tags: [delivery, planning]
 ---
 
-# Import-linter soak review (INTERIM, 2026-10-08)
+# Import-linter soak review (FINAL, 2026-10-19)
 
 Covers `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT` (scope bullet 1, acceptance criterion 1). Window: from
-`e9585eb02` (PR #351 merged, 2026-10-05T13:40:06Z) to 2026-10-19T13:40Z. This draft reads the window up to
+`e9585eb02` (PR #351 merged, 2026-10-05T13:40:06Z) to 2026-10-19T13:40Z. Sections 1-6 below read the window up to
 2026-10-08 (`origin/main` `0d75424dc`, 3.9 days of 14); the flip ticket finishes it on 2026-10-19. Method as in
 `python_code_craft_structure_soak_review.md`, with one difference: the `Code health` job logs **were** readable through
 `gh api repos/<r>/actions/jobs/<id>/logs` in this session, so each run's outcome below is the step's own summary line
@@ -65,6 +65,23 @@ section 3).
 - Clean before the first break: `c8c355459` (#329), `f8f1b69fd`, `80811968a`, and the two earliest runs
   `e9585eb02` and `eb5ebf03b`: all `17 kept, 0 broken`.
 
+### 1b. 2026-10-08T11:43Z to 2026-10-19 (finished 2026-10-19)
+
+`Tests` workflow, `push` events on `main`, every run created after `0d75424dc` up to `9b485e83e` (2026-10-19T09:57Z):
+146 runs (108 `success`, 15 `failure`, 23 `cancelled`). Method as above: the `Code health` job's own log line
+`**Import contracts (advisory):** N kept, M broken`, one lookup per run.
+
+| Outcome | Runs |
+|---|---|
+| `17 kept, 0 broken` | 138 (all 123 `success` and `failure` runs, plus 15 cancelled runs that had already reported) |
+| no line (cancelled before the step reported) | 8 |
+| `N kept, M broken` with M > 0 | **0** |
+
+The 15 `failure` runs failed on other jobs; every one of them reported `17 kept, 0 broken`. Over the whole window
+(both parts) that is 182 counted runs: 11 broken, all inside the first 3.9 days (the five real breaks of section 3,
+fixed in #420), then no broken contract in any later counted run: the clean runs from `753f98ea9` (2026-10-08T03:17Z) in the first
+part, and all 123 counted runs of this part, up to `9b485e83e`.
+
 ## 2. Broken-contract runs on PRs
 
 `Tests` run on each PR's last head commit, `Code health` job, `Import contracts` step:
@@ -80,6 +97,8 @@ Each of #406, #412 and #414 merged with the advisory step showing the break, as 
 that touched `src/` in the window (the main-branch runs in section 1 cover every merged commit).
 
 ## 3. Breaks found
+
+No new break after 2026-10-08 (section 1b). The five below are the whole list.
 
 All 5 module pairs are **real** layer-order violations (the `Registry layer order` contract), not false positives. All
 were fixed in #420 (`753f98ea9`, `TCK-20261008-CORE-STRATEGIC-IMPORTS-AI-GOALS-FOR-A-TYPE-HINT`), whose diff touches
@@ -126,6 +145,14 @@ At `origin/main` `0d75424dc` (this branch's base), run once under a 2 GB memory 
 Nothing is stale. #420 moved `need_pull.py` and added `common_knowledge_seed.py`, but no baselined pair involved either
 module, so no entry became unmatched. Report only; no config changed.
 
+Re-run at the merged head on the flip day (2026-10-19, `origin/main` `9b485e83e` merged into the flip branch):
+`lint-imports` 17 kept, 0 broken, with the advisory `No matches for ignored import src.engine.world_dynamics ->
+src.world.spawn`, and `import_contracts ci` exits 1 with `1 stale ignored import(s)`. Cause: main #645 (merged
+2026-10-18) removed that import, and the count line (contracts, not ignores) could not show it during the soak. It was a
+baseline entry for a violation that no longer exists, so it was deleted (one line from `import_layers_baseline.txt`,
+one from the generated block, plain rewrite, not `seed-baseline`); `ci` then exits 0 with 17 kept, 0 broken, 0 stale.
+This is a finding of the new blocking step's stale check; no contract was relaxed.
+
 ## 5. False-positive classes
 
 None so far. The contracts count a `TYPE_CHECKING` import on purpose (`exclude_type_checking_imports = false`, see the
@@ -135,16 +162,18 @@ it closes a real loop (`src/ai/goals/base.py` imports `GoalKind` from `src.core.
 were real and fixed at the source. No contract was relaxed and no `ignore_imports` or baseline entry was added during
 the window.
 
-## 6. Verdict (interim, 2026-10-08)
+## 6. Verdict (FINAL, 2026-10-19)
 
-No false-positive class and no stale entry so far; 5 real breaks were found and fixed by the code owner within 37 min to
-about 20 h, with no baseline added. The evidence is 3.9 of 14 days, so the flip is not yet supported on soak alone.
-Remaining before the flip (earliest 2026-10-19T13:40Z):
+The 14-day window is complete (2026-10-05T13:40Z to 2026-10-19T13:40Z). Evidence: 182 counted runs on `main`; 11
+`16 kept, 1 broken` runs, all in the first 3.9 days, from five real layer breaks that the code owner fixed at the
+source (#420) with no baseline added; then clean on every counted run from #420 on (123 in the second part). No false-positive class (section 5). One stale
+ignored import surfaced on the flip day (section 4) and was cleared as a ratchet-down. The step has been advisory
+throughout, so no PR was ever blocked by a contract in the window.
 
-1. The window's remaining runs on `main` to 2026-10-19T13:40Z, re-read the same way (count line per run, then
-   `lint-imports` at any broken commit), and a re-run of section 4 at the flip commit.
-2. The owner's yes to making the step a required check on `main` (ruleset change and merge in one sitting; never before
-   `main` has produced the check name).
-3. `phase19`'s `test_hot_path_does_not_import_heavy_analyzers` still waits on rpg's decision about `kernel.py`'s
-   function-local imports (`handoff_to_rpg.md`); it is an expectation change, not a retirement.
-4. Decided 2026-10-08 (codebase-planner): the summary names broken pairs; in the flip ticket's scope.
+Verdict: the soak supports the flip. The `Import contracts` step becomes blocking (`ci`), in the already-required
+`Code health` job (no ruleset change; see the flip batch brief 1c), together with the seven class E retirements
+(`e5cf25404` and `0a12a0152` are one unit). The phase19 hot-path test stays a test; its OFF-mode condition is
+UNENFORCED until `TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK` lands (owner decision 2026-10-18, #547).
+
+Not scanned in the second part of the window: the PR-head runs (section 2 covers only the first part); every merged
+commit is covered by the `main` runs in section 1b. 8 cancelled runs never reported.
