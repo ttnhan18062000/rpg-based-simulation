@@ -89,10 +89,12 @@ To be created: the drill's raw Locust CSVs and log export.
 - The record goes to `docs/runbooks/records/` (lead, 2026-10-18).
 
 ## Implementation Notes
-(open)
+- `tools/loadtest/drill_redis_stop.sh` is written (syntax checked). It starts Locust headless with `--csv --csv-full-history` at a steady step below the knee (default 10 users), waits HEAD_SECONDS, stops Redis (T0), polls the ntfy topic with a READ token for a `[firing] RedisDown` message (T1), holds the outage for OUTAGE_SECONDS (default 180 s), starts Redis (T2), polls for `[resolved] RedisDown` (T3), runs a tail, then writes captures: `events.txt` (UTC timestamps), `samples.csv` (backend `/health` code, `redis_up`, and the Grafana state of `RedisDown`, `ApiLatencyP95High`, `ApiErrorRateHigh` every 5 s), Locust CSVs (per-second history, to be cut into 10 s windows), the topic's messages with the topic redacted, and the backend's Loki logs for the window. The topic, the reader token and the Grafana password come from gitignored files and are never printed.
+- Hypotheses (written before the run, from the ticket): (H1) the API SLO stays green and the cause alert fires; (H2) events published during the outage are lost, not replayed; (H3) ai_worker reconnects by itself.
 
 ## Test Summary
-(open)
+- **validated:** `bash -n` on the script; README section added.
+- Not yet run: the drill itself (host slot (c)), which needs the RedisDown rule and the SLO rules provisioned and the redis-exporter running.
 
 ## Files Changed
 (open)
