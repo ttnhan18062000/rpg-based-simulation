@@ -814,6 +814,31 @@ others, not a reflex.
     cadence, not every tick, so there is no wake/collapse loop
     (`tests/unit/engine/test_hunger_wakes_a_sleeper.py`).
 
+- **Amendment, starvation that is already taking health is a present threat (decided by
+  rpg-designer under owner delegation, 2026-10-19; row 83 of the memo; refines row 24). In effect
+  after baseline v1, disclosed in v1.** Lane C traced the one starvation death of the v1 gate run
+  (`frontier_marches`, seed 42, merchant 37, t4081, on 864f7b281): wounded below its flee line,
+  it held a panic retreat in place beside an inn for about 1900 ticks, with a hunter beside it
+  that never engaged, and never ate.
+  - **The rule:** once hunger is past its consequence line and is taking the subject's health,
+    starvation is itself a present threat to its life (Bible 04 §1 Tier 1, not only Tier 2). The
+    subject weighs it against the threat it appraises (flight against food); neither wins by
+    default. A threat counts as present by the subject's appraisal (decision 47), not by
+    adjacency alone.
+  - **Not a timer:** a threat does not stop counting after some number of ticks. A timer has no
+    fiction behind it; the desperation line does.
+  - **In effect now, as a reading of this Rule, not a change:** a flight with no destination
+    (a panic retreat that resolves to the subject's own tile) is not acting on the threat, so it
+    does not pre-empt a pressing need. The pre-v1 fix for merchant 37 is that one case, a hard
+    bug (decisions 7 and 78).
+  - **Also after v1, its own step:** a subject under threat may take a meal at a service building
+    already in reach as an in-place act, like eating carried food; service still passes the
+    relationship gate (EXCH-02), payment and opening.
+  - **Alternatives not taken:** a threat that expires after N ticks (no fiction); starvation
+    overriding every threat (the alternative already rejected above, against Bible 04 §1);
+    the whole amendment before v1 (it changes the flee decision for every wounded subject in
+    every world, where the broken case is only the destinationless panic).
+
 - **Amendment, providing for a coming need (decided by the owner directly, 2026-10-09; row 55 of
   the memo):**
 
