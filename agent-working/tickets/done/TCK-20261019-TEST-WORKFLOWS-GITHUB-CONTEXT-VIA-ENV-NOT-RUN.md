@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN
-phase: inprogress
+phase: done
 date: 2026-10-19
 tags: [testing, workflows]
 ---
@@ -15,7 +15,7 @@ tags: [testing, workflows]
 testing's workflows pass `${{ github.* }}` values to shell steps through `env:`, never interpolated into `run:`, and a static test keeps it that way.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -49,11 +49,11 @@ Moving them to `env:` is still the cheap and correct pattern. It clears the aler
 - Workflows testing does not own.
 
 ## Acceptance Criteria
-- [ ] AC1: `grep -n '\${{ *github\.' .github/workflows/test.yml` shows no hit inside a `run:` block.
-- [ ] AC2: the new static test passes on the branch and fails on its regression snippet.
-- [ ] AC3: CI on the PR is green, including the changed-files gate. The gate's "changed files" output for the PR lists the same files it would have listed before the change; quote it.
-- [ ] AC4: the first main-push run after merge shows the security-scan's semgrep `run-shell-injection` count for test.yml at 0 and no `use-defused-xml-parse` finding in testing's tools. Quote the run id.
-- [ ] AC5: each `nosemgrep` names the exact rule id and carries the reason; the tools' existing tests pass.
+- [x] AC1: `grep -n '\${{ *github\.' .github/workflows/test.yml` shows no hit inside a `run:` block.
+- [x] AC2: the new static test passes on the branch and fails on its regression snippet.
+- [x] AC3: CI on the PR is green, including the changed-files gate. The gate's "changed files" output for the PR lists the same files it would have listed before the change; quote it.
+- [ ] AC4 (post-merge check, tracked by testing-planner, who records the run id): the first main-push run after merge shows the security-scan's semgrep `run-shell-injection` count for test.yml at 0 and no `use-defused-xml-parse` finding in testing's tools. Quote the run id.
+- [x] AC5: each `nosemgrep` names the exact rule id and carries the reason; the tools' existing tests pass.
 
 ## Related Tickets
 - TCK-20260819-CI-NARROW-PATH-FILTERED-JOBS (the changed-files gate)
@@ -77,10 +77,13 @@ Moving them to `env:` is still the cheap and correct pattern. It clears the aler
 - nosemgrep: rule id from main run 39233931697's code-scanning alerts: `python.lang.security.use-defused-xml-parse.use-defused-xml-parse` on core_rpg_report.py:365 and slow_regression_report.py:127, with the reason on the same line.
 
 ## Test Summary
-445 passed, 64 skipped over tests/static and the workflow-reading tests under tests/tools and tests/unit/tools (impact_report, delivery_ci_lanes, ci_workflow_test_coverage, split-tools, rpg-gate workflow support, slow-regression and core-rpg report tests). AC3 and AC4 evidence below once CI and the first main run exist.
+445 passed, 64 skipped over tests/static and the workflow-reading tests under tests/tools and tests/unit/tools (impact_report, delivery_ci_lanes, ci_workflow_test_coverage, split-tools, rpg-gate workflow support, slow-regression and core-rpg report tests). 
+- CI on 417ead6f6 (Tests run 39236116876): 23 pass, 2 skipped; the one failure is Semgrep OSS (not required; Semgrep writes suppressed findings into the SARIF as inSource and GitHub flags them anyway; platform's TCK-20261019-DEPLOY-DOCS-SHA-PINS-AND-FRONTEND-NONROOT addresses that). An earlier head failed Tools f-z on registry drift (the in-progress ticket changed the registry inputs): fixed by regenerating docs/REGISTRY.yaml.
+- AC3: the changed-files gate (job 118005474743) listed exactly the PR's 8 files: .github/workflows/{rpg-gate-report,slow-regression,test}.yml, this ticket, docs/REGISTRY.yaml, tests/static/test_workflow_run_blocks_take_github_context_via_env.py, tools/test_architecture/{core_rpg_report,slow_regression_report}.py. The gate runs `git diff --name-only base...head`; the step now reads the SHAs from env, same command and values.
+- AC4 is a post-merge check (first main-push run: semgrep run-shell-injection count for test.yml at 0, no use-defused-xml-parse finding in testing's tools); testing-planner records the run id.
 
 ## Files Changed
-(implementer)
+.github/workflows/test.yml, slow-regression.yml, rpg-gate-report.yml; tests/static/test_workflow_run_blocks_take_github_context_via_env.py; tools/test_architecture/core_rpg_report.py, slow_regression_report.py.
 
 ## Completion Summary
-(implementer)
+GitHub context reaches shell steps through env only, guarded by a static test; the two junit parses carry their nosemgrep rule id and reason. AC4 is checked after the merge by testing-planner.

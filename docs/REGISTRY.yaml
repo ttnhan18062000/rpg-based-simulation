@@ -7787,6 +7787,21 @@
   - delivery
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN.md
+  ticket_id: TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN
+  title: testing's workflows pass `${{ github.* }}` values to shell steps through
+    `env:`, never interpolated into `run:`, and a static test keeps it that way.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/test.yml, slow-regression.yml, slow-regression-watchdog.yml
+  - tests/static/
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES.md
   ticket_id: TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES
   title: test.yml's Frontend and jscpd steps run Node 24, the same as the frontend
@@ -7865,21 +7880,6 @@
   - testing
   - workflows
   - performance
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN.md
-  ticket_id: TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN
-  title: testing's workflows pass `${{ github.* }}` values to shell steps through
-    `env:`, never interpolated into `run:`, and a static test keeps it that way.
-  tier: hotfix
-  ticket_type: chore
-  date: '2026-10-19'
-  related_code_areas:
-  - .github/workflows/test.yml, slow-regression.yml, slow-regression-watchdog.yml
-  - tests/static/
-  artifact_files: []
-  tags:
-  - testing
-  - workflows
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645.md
   ticket_id: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
