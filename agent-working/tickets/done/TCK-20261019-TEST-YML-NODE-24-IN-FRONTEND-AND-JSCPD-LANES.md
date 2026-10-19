@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES
-phase: open
+phase: done
 date: 2026-10-19
 tags: [testing, workflows]
 ---
@@ -15,7 +15,7 @@ tags: [testing, workflows]
 test.yml's Frontend and jscpd steps run Node 24, the same as the frontend image, instead of Node 20.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -46,10 +46,10 @@ The action major (`setup-node@v4` -> `@v7`) is Dependabot #609, CI green. testin
 - `deploy-docs.yml` (platform's) and `rpg-gate-report.yml` (ownership being added to testing in `registries/session_roles.yaml`, agent-working's file).
 
 ## Acceptance Criteria
-- [ ] AC1: both `setup-node` steps in `test.yml` request Node 24. `grep -n 'node-version' .github/workflows/test.yml` shows no 20.
-- [ ] AC2: the Frontend job and the jscpd step pass on the PR. The job logs show Node v24.x. Quote the line in the Test Summary.
-- [ ] AC3: no static test pins a setup-node version by exact literal, or one that did is changed to match by name, with a regression case.
-- [ ] AC4: no other job or step changes.
+- [x] AC1: both `setup-node` steps in `test.yml` request Node 24. `grep -n 'node-version' .github/workflows/test.yml` shows no 20.
+- [x] AC2: the Frontend job and the jscpd step pass on the PR. The job logs show Node v24.x. Quote the line in the Test Summary.
+- [x] AC3: no static test pins a setup-node version by exact literal, or one that did is changed to match by name, with a regression case.
+- [x] AC4: no other job or step changes.
 
 ## Related Tickets
 - TCK-20261014-FRONTEND-NODE-24-LTS (frontend image on Node 24)
@@ -75,10 +75,14 @@ The action major (`setup-node@v4` -> `@v7`) is Dependabot #609, CI green. testin
 Both `setup-node` steps (Frontend job L729, jscpd step L1048) now request `node-version: 24`; `cache` and `cache-dependency-path` untouched. #609 (setup-node v7) was still open, so the action stays on `@v4`. `tests/static/test_ci_step_summary_reporting.py` lists `actions/setup-node` by name only, and no other test or tool pins a Node version (AC3 holds with no change). jscpd 5.4.0 (the Makefile pin) runs on Node v24.10.0 locally.
 
 ## Test Summary
-(implementer)
+- AC1: `grep -n node-version .github/workflows/test.yml` shows 24 at both steps (L729, L1048), no 20.
+- AC2 (run 39196691759): Frontend job, `node-version: 24` then `Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64`; Code health job (the jscpd step), the same two lines. Both jobs passed.
+- AC3: `tests/static/test_ci_step_summary_reporting.py` 13 passed; it lists `actions/setup-node` by name only, no test pins a Node version or the action ref.
+- AC4: only the two `node-version` lines changed in test.yml. The closing commit adds the ticket move and the regenerated `docs/REGISTRY.yaml`.
+- The first CI run's Tools f-z failure (`test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry`) was registry drift from filing the ticket without regenerating `docs/REGISTRY.yaml`; fixed by this commit.
 
 ## Files Changed
-(implementer)
+`.github/workflows/test.yml`; this ticket; `docs/REGISTRY.yaml`.
 
 ## Completion Summary
-(implementer)
+test.yml's Frontend job and jscpd step run Node 24, the Node the frontend image ships on. The action stays on `@v4` (Dependabot #609 still open).
