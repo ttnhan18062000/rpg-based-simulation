@@ -7729,6 +7729,18 @@
   - testing
   - bug
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-V4-COUNTS-CONSUMPTION-NOT-ACQUISITION.md
+  ticket_id: TCK-20261019-V4-COUNTS-CONSUMPTION-NOT-ACQUISITION
+  title: The gate's V4 counts a consumption outside the eater's diet, not any node
+    transfer by a meat-only body.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/run_ledger.py, src/observability/rpg_gate_metrics.py, src/ai/goals/kind_group.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY.md
   ticket_id: TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY
   title: V8's examples name each unsourced entity and its tick, the way V5's out-of-world
@@ -7800,6 +7812,20 @@
   artifact_files: []
   tags:
   - observability
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-MEAT-ONLY-BODIES-GATHER-NON-FOOD-NODES-GATHER-CAPABILITY-IS-NOT-DECLARED.md
+  ticket_id: TCK-20261019-MEAT-ONLY-BODIES-GATHER-NON-FOOD-NODES-GATHER-CAPABILITY-IS-NOT-DECLARED
+  title: 'A meat-only body gets a `harvesting` goal at a non-food node: harvesting
+    is open to every body; it must be open only to a kind that declares the capability
+    (D56).'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/ai/goals/scorers.py (HarvestScorer, _may_gather), src/systems/strategic_systems/intelligence.py
+    (goal selection, blocker_node), src/engine/interaction.py.
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-RECORD-BASELINE-V1.md
   ticket_id: TCK-20261019-RECORD-BASELINE-V1
