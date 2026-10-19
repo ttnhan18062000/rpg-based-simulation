@@ -272,29 +272,29 @@ def _full(directory):
 
 
 def test_a_required_validity_row_present_everywhere_does_not_refuse(tmp_path):
-    candidate = _build(_write(tmp_path / "d"), config=_config(required_validity=("V3",)))
+    candidate = _build(_write(tmp_path / "d"), config=_config(required_validity={"run": ("V3",), "pooled": ("V3",)}))
     assert "omitted_validity" not in candidate
 
 
 def test_a_missing_required_validity_row_refuses_without_an_owner(tmp_path):
     docs = _write(tmp_path / "d", _without(_full(tmp_path), "V3"))
-    _refused(docs, "required validity row V3 is missing and has no owner", config=_config(required_validity=("V3",)))
+    _refused(docs, "required validity row V3 is missing and has no owner", config=_config(required_validity={"run": ("V3",), "pooled": ("V3",)}))
 
 
 def test_a_missing_required_row_is_accepted_when_an_owned_fail_covers_it_and_is_listed(tmp_path):
     docs = _write(tmp_path / "d", _without(_full(tmp_path), "V3"))
     known = [_entry(match="V3", ticket="TCK-OWN-V3")]
-    candidate = _build(docs, known, config=_config(required_validity=("V3",)), milestone="M0")
-    assert candidate["omitted_validity"] == [{"row": "V3:run:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}]
+    candidate = _build(docs, known, config=_config(required_validity={"run": ("V3",), "pooled": ("V3",)}), milestone="M0")
+    assert candidate["omitted_validity"] == [{"row": "V3:pooled:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}, {"row": "V3:run:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}]  # one per level
     assert not [r for r in candidate["metrics"] if r["id"] == "V3"]
     baselines = tmp_path / "b"
-    base.rebaseline(candidate, _config(required_validity=("V3",)), baselines, pr=None, cites=["TCK-METRIC-SET"], known=known, today=TODAY)
+    base.rebaseline(candidate, _config(required_validity={"run": ("V3",), "pooled": ("V3",)}), baselines, pr=None, cites=["TCK-METRIC-SET"], known=known, today=TODAY)
     assert base.lint_dir(baselines) == []
 
 
 def test_an_expired_or_wrong_state_owner_does_not_cover_a_missing_required_row(tmp_path):
     docs = _write(tmp_path / "d", _without(_full(tmp_path), "V3"))
-    cfg = _config(required_validity=("V3",))
+    cfg = _config(required_validity={"run": ("V3",), "pooled": ("V3",)})
     _refused(docs, "expired", [_entry(match="V3", expires="2026-10-01")], config=cfg)
     _refused(docs, "no owner", [{**_entry(match="V3"), "state": "flaky"}], config=cfg)
 
@@ -302,7 +302,7 @@ def test_an_expired_or_wrong_state_owner_does_not_cover_a_missing_required_row(t
 def test_a_row_missing_from_only_the_pooled_document_refuses_too(tmp_path):
     docs = _full(tmp_path)
     docs[("w", None)] = {**docs[("w", None)], "metrics": [m for m in docs[("w", None)]["metrics"] if m["id"] != "V3"]}
-    _refused(_write(tmp_path / "d", docs), r"w__pooled\.json: required validity row V3 is missing", config=_config(required_validity=("V3",)))
+    _refused(_write(tmp_path / "d", docs), r"w__pooled\.json: required validity row V3 is missing", config=_config(required_validity={"run": ("V3",), "pooled": ("V3",)}))
 
 
 def _with_stub_v8(mode):
@@ -313,10 +313,63 @@ def _with_stub_v8(mode):
 
 
 def test_the_stub_v8_row_clean_is_recorded_and_violating_needs_an_owner(tmp_path):
-    cfg = _config(required_validity=("V8",))
+    cfg = _config(required_validity={"run": ("V8",), "pooled": ("V8",)})
     candidate = _build(_write(tmp_path / "ok", _with_stub_v8("clean")), config=cfg)
     assert [r["id"] for r in candidate["metrics"] if r["id"] == "V8"]
     _refused(_write(tmp_path / "bad", _with_stub_v8("violations")), "validity row V8 has 1 violation", config=cfg)
     _refused(_write(tmp_path / "gone", _with_stub_v8("absent")), "required validity row V8 is missing", config=cfg)
     owned = _build(_write(tmp_path / "own", _with_stub_v8("violations")), [_entry(match="V8", ticket="TCK-RPG-V8")], config=cfg)
     assert [o["known_match"] for o in owned["omitted_validity"]] and not [r for r in owned["metrics"] if r["id"] == "V8"]
+
+
+# ---- TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL: a row is required at the level it is judged at
+
+PER_LEVEL = {"run": ("V1", "V3"), "pooled": ("V3",)}  # the fixture's seed documents carry V1 and V3, its pooled document only V3 (no V1)
+
+
+def _drop(doc, rid):
+    return {**doc, "metrics": [m for m in doc["metrics"] if m["id"] != rid]}
+
+
+def test_a_pooled_document_without_a_run_only_row_and_seed_documents_without_a_pooled_only_row_do_not_refuse(tmp_path):
+    docs = _full(tmp_path)
+    docs = {k: (_drop(d, "V3") if k[1] is not None else d) for k, d in docs.items()}  # seeds lack V3, which is required at the pooled level only
+    candidate = _build(_write(tmp_path / "d", docs), config=_config(required_validity={"run": ("V1",), "pooled": ("V3",)}))
+    assert "omitted_validity" not in candidate
+
+
+def test_dropping_a_run_row_from_one_seed_refuses_and_an_owner_lists_it_as_run_level(tmp_path):
+    docs = _full(tmp_path)
+    docs[("w", 2)] = _drop(docs[("w", 2)], "V3")
+    cfg = _config(required_validity={"run": ("V3",), "pooled": ()})
+    _refused(_write(tmp_path / "d", docs), r"w__s2\.json: required validity row V3 is missing and has no owner", config=cfg)
+    candidate = _build(_write(tmp_path / "o", docs), [_entry(match="V3", ticket="TCK-OWN-V3")], config=cfg)
+    assert candidate["omitted_validity"] == [{"row": "V3:run:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}]
+
+
+def test_dropping_a_pooled_row_refuses_and_an_owner_lists_it_as_pooled_level(tmp_path):
+    docs = _full(tmp_path)
+    docs[("w", None)] = _drop(docs[("w", None)], "V3")
+    cfg = _config(required_validity={"run": (), "pooled": ("V3",)})
+    _refused(_write(tmp_path / "d", docs), r"w__pooled\.json: required validity row V3 is missing and has no owner", config=cfg)
+    candidate = _build(_write(tmp_path / "o", docs), [_entry(match="V3", ticket="TCK-OWN-V3")], config=cfg)
+    assert candidate["omitted_validity"] == [{"row": "V3:pooled:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}]
+
+
+def test_a_pooled_only_row_is_not_asked_of_the_seed_documents(tmp_path):
+    cfg = _config(required_validity={"run": ("V1",), "pooled": ("V7",)})
+    _refused(_write(tmp_path / "d"), r"w__pooled\.json: required validity row V7 is missing", config=cfg)  # only the pooled document is asked for V7
+
+
+def test_floors_may_differ_between_worlds_but_not_between_the_seeds_of_one(tmp_path):
+    two = _config(worlds=("w", "x"))
+
+    def world(name, floor_by_seed):
+        out = {(name, s): {**_seed_doc(s, floor=floor_by_seed[s]), "world": name} for s in SEEDS}
+        out[(name, None)] = {**_pooled_doc(), "world": name}
+        return out
+
+    same_per_world = {**world("w", {1: 1.0, 2: 1.0, 3: 1.0}), **world("x", {1: 3.0, 2: 3.0, 3: 3.0})}
+    assert "metrics" in _build(_write(tmp_path / "ok", same_per_world), config=two)
+    drift = {**world("w", {1: 1.0, 2: 1.0, 3: 1.0}), **world("x", {1: 3.0, 2: 3.1, 3: 3.0})}
+    _refused(_write(tmp_path / "bad", drift), r"threshold mismatch for O1 in x", config=two)

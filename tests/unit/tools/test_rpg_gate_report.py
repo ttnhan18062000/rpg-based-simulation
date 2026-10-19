@@ -404,12 +404,12 @@ def _missing_required(report):
 
 
 def test_a_required_validity_row_that_every_document_has_adds_nothing():
-    report = _build(_docs_with_pooled_v1(), config=_config(required_validity=("V1",)))
+    report = _build(_docs_with_pooled_v1(), config=_config(required_validity={"run": ("V1",), "pooled": ("V1",)}))
     assert _missing_required(report) == []
 
 
 def test_a_required_validity_row_missing_is_no_data_contract_error_in_every_document():
-    report = _build(_docs_with_pooled_v1(), config=_config(required_validity=("V1", "V8")))
+    report = _build(_docs_with_pooled_v1(), config=_config(required_validity={"run": ("V1", "V8"), "pooled": ("V1", "V8")}))
     missing = _missing_required(report)
     assert len(missing) == len(SEEDS) + 1  # each seed document and the pooled one
     assert all(f["state"] == "no-data" and f["reason"] == "contract_error" and f["id"] == "V8" and f["class"] == "validity" for f in missing)
@@ -420,14 +420,14 @@ def test_a_required_validity_row_missing_is_no_data_contract_error_in_every_docu
 
 
 def test_the_markdown_lists_the_missing_required_row_prominently():
-    text = rep.render_markdown(_build(_docs(), config=_config(required_validity=("V8",))))
+    text = rep.render_markdown(_build(_docs(), config=_config(required_validity={"run": ("V8",), "pooled": ("V8",)})))
     assert "Required validity row(s) missing: V8" in text and "no-data" in text and "required validity row V8 missing" in text
 
 
 def test_a_required_row_missing_in_one_seed_only_is_named_for_that_seed():
     docs = _docs_with_pooled_v1()
     docs[("w", 3)] = {**docs[("w", 3)], "metrics": [m for m in docs[("w", 3)]["metrics"] if m["id"] != "V1"]}
-    missing = _missing_required(_build(docs, config=_config(required_validity=("V1",))))
+    missing = _missing_required(_build(docs, config=_config(required_validity={"run": ("V1",), "pooled": ("V1",)})))
     assert [(f["id"], f.get("seed")) for f in missing] == [("V1", 3)]
 
 
@@ -442,7 +442,7 @@ def _v8_docs(mode):
 
 @pytest.mark.parametrize("mode, expected", [("clean", "pass"), ("violations", "fail")])
 def test_the_stub_v8_row_is_judged_absolutely(mode, expected):
-    report = _build(_v8_docs(mode), config=_config(required_validity=("V8",)))
+    report = _build(_v8_docs(mode), config=_config(required_validity={"run": ("V8",), "pooled": ("V8",)}))
     states = {f["state"] for f in report["findings"] if f["id"] == "V8"}
     assert states == {expected} and _missing_required(report) == []
     if mode == "violations":
@@ -450,5 +450,60 @@ def test_the_stub_v8_row_is_judged_absolutely(mode, expected):
 
 
 def test_a_module_without_the_required_v8_row_is_no_data_not_a_pass():
-    report = _build(_v8_docs("absent"), config=_config(required_validity=("V8",)))
+    report = _build(_v8_docs("absent"), config=_config(required_validity={"run": ("V8",), "pooled": ("V8",)}))
     assert {f["state"] for f in _missing_required(report)} == {"no-data"} and not [f for f in report["findings"] if f["id"] == "V8" and f["state"] == "pass"]
+
+
+# ---- TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL: a row is required at the level it is judged at
+
+PER_LEVEL = {"run": ("V1",), "pooled": ("V7",)}  # _docs_with_pooled_v1 carries V1 in every seed document and V7 in the pooled one, as rpg's module does
+
+
+def test_a_seed_document_without_a_pooled_only_row_and_a_pooled_document_without_a_run_only_row_are_not_missing():
+    docs = _docs()  # seed documents have V1 and no V7; the pooled document has V7 and no V1
+    assert _missing_required(_build(docs, config=_config(required_validity=PER_LEVEL))) == []
+
+
+def test_the_plain_list_semantics_would_have_flagged_it_and_the_per_level_config_does_not():
+    docs = _docs()
+    both = _config(required_validity={"run": ("V1", "V7"), "pooled": ("V1", "V7")})
+    assert len(_missing_required(_build(docs, config=both))) == len(SEEDS) + 1  # V7 in every seed, V1 in the pooled one
+    assert _missing_required(_build(docs, config=_config(required_validity=PER_LEVEL))) == []
+
+
+def test_dropping_a_run_row_from_one_seed_gives_exactly_one_contract_error_for_that_seed():
+    docs = _docs()
+    docs[("w", 4)] = {**docs[("w", 4)], "metrics": [m for m in docs[("w", 4)]["metrics"] if m["id"] != "V1"]}
+    report = _build(docs, config=_config(required_validity=PER_LEVEL))
+    missing = _missing_required(report)
+    assert [(f["id"], f.get("seed"), f["scope"], f["state"], f["reason"]) for f in missing] == [("V1", 4, "run", "no-data", "contract_error")]
+
+
+def test_dropping_the_pooled_row_gives_exactly_one_pooled_contract_error():
+    docs = _docs()
+    docs[("w", None)] = {**docs[("w", None)], "metrics": []}
+    missing = _missing_required(_build(docs, config=_config(required_validity=PER_LEVEL)))
+    assert [(f["id"], f.get("seed"), f["scope"], f["state"], f["reason"]) for f in missing] == [("V7", None, "pooled", "no-data", "contract_error")]
+
+
+def _world_docs(world, floor_by_seed):
+    docs = {(world, s): {**_seed_doc(s, floor=floor_by_seed[s]), "world": world} for s in SEEDS}
+    docs[(world, None)] = {**_pooled_doc(), "world": world}
+    return docs
+
+
+def _mixed(report):
+    return [f for f in report["findings"] if f.get("detail") == "mixed metric module versions"]
+
+
+def test_two_worlds_with_different_floors_for_one_row_are_not_mixed_versions():
+    flat = lambda v: {s: v for s in SEEDS}
+    docs = {**_world_docs("w", flat(1.0)), **_world_docs("x", flat(3.0))}
+    assert _mixed(_build(docs, config=_config(worlds=("w", "x")))) == []
+
+
+def test_two_seeds_of_one_world_with_different_floors_are_still_mixed_versions():
+    flat = lambda v: {s: v for s in SEEDS}
+    docs = {**_world_docs("w", flat(1.0)), **_world_docs("x", {**flat(3.0), 2: 3.1})}
+    mixed = _mixed(_build(docs, config=_config(worlds=("w", "x"))))
+    assert mixed and {f["world"] for f in mixed} == {"x"}
