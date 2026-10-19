@@ -26,3 +26,6 @@ Written by platform-planner at dispatch (2026-10-19); the implementer updates it
 
 ## Scope guards
 No threshold edit for the test. No `tests/**`. No Alertmanager. Single-`$` in annotations.
+
+## Update (implementer, 2026-10-19)
+- Preflight added to slots (b) and (c) after the first (b) attempt stopped at the live checks: the local `platform-backend` image (2026-10-18 03:02) predated R1/R2 and had no `src/api/http_metrics.py`, so `rpg-backend:9109` was refused and `le="0.3"` was absent. Before anything else: `docker image inspect platform-backend --format '{{.Created}}'` must be after the build, and `docker compose exec backend python -c "import src.api.http_metrics"` must succeed. A `docker compose build backend ai_worker` (alone, `COMPOSE_PARALLEL_LIMIT=1`) is slot (b0).

@@ -88,7 +88,8 @@ None.
 
 ## Test Summary
 - **validated:** YAML parse of `rules-redis.yaml`; `docker compose --profile observability config -q`; `promtool check config` (with the `redis` job): SUCCESS; frontmatter of the new runbook and README.
-- Not yet run (needs the exporter pull and the stack run): `redis_up == 1` on Redis 8.10.2, the `redis` target `up`, the exporter's peak memory, the alert firing within its `for` window and resolving, with timestamps (the drill ticket records them).
+- **running locally** (first slot-(b) attempt, 2026-10-19, stopped early for an unrelated reason): the exporter pull is done (digest matches the pin, 4,457,721 bytes); `redis_up == 1` and `redis_instance_info` reports `redis_version=8.10.2` (`redis_mode=standalone`), so the Redis 8 caveat is closed; the `redis` target is `up`. Idle `docker stats`: redis-exporter 8.3 MiB (limit 32m, about 3.9x headroom), redis 19 MiB.
+- Still not run: `redis_up == 1` on Redis 8.10.2, the `redis` target `up`, the exporter's peak memory, the alert firing within its `for` window and resolving, with timestamps (the drill ticket records them).
 
 ## Files Changed
 (open)
