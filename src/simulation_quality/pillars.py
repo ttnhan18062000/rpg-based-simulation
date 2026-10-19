@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections.abc import Mapping
 from enum import Enum
 from typing import Any
 
@@ -14,6 +15,12 @@ class PillarId(str, Enum):
     INFORMATION = "INFORMATION"
     WORLD = "WORLD"
     NARRATIVE = "NARRATIVE"
+
+
+# Below this many events a pillar reports no-data instead of a grade: a pillar scored from one or two events
+# (for example the single PROGRESSION plateau penalty of a run with no XP) cannot tell "nothing happened" from "bad".
+DEFAULT_MIN_EVENTS = 3
+PILLAR_MIN_EVENTS: Mapping[PillarId, int] = {pillar: DEFAULT_MIN_EVENTS for pillar in PillarId}
 
 
 PILLAR_METADATA: dict[str, dict[str, Any]] = {

@@ -1,0 +1,1 @@
+{"backend_cpu_pct": 110.01, "backend_mem_mb": 125.6, "locust_cpu_pct": 0.0, "host_cpu_pct": 14, "run_queue": 3, "swap_kb_s_mean": 4.066666666666666, "disk_kb_s_mean": 83.5, "containers": {"platform-backend-1": {"cpu_pct_peak": 110.01, "mem_mb_peak": 125.6}, "platform-redis-1": {"cpu_pct_peak": 4.04, "mem_mb_peak": 9.75}}}

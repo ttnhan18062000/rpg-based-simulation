@@ -364,7 +364,7 @@ class MovementCandidateSelector:
             is_dirty = (e_id in dirty_movement_ids)
 
             # 3. Current tile is blocked
-            tile_blocked = MovementCandidateSelector._is_static_position_blocked(state, entity.navigation.position)
+            tile_blocked = MovementCandidateSelector.is_static_position_blocked(state, entity.navigation.position)
 
             # 4. Interaction requires movement
             interaction_req = (ent_upd and ent_upd.interaction is not None) or (entity.interaction and entity.interaction.target_node_id is not None)
@@ -410,10 +410,9 @@ class MovementCandidateSelector:
         return tuple(sorted(final_set))
 
     @staticmethod
-    def _is_static_position_blocked(state: AuthoritativeState, pos: tuple[float, float]) -> bool:
+    def is_static_position_blocked(state: AuthoritativeState, pos: tuple[float, float]) -> bool:
+        """True when the tile holds a compiled blocker: a blocked tile or a building."""
         tile = (int(pos[0]), int(pos[1]))
-        if getattr(state, "terrain", {}).get(tile) == "WALL":
-            return True
         if tile in getattr(state, "blocked_tiles", set()):
             return True
         for building in getattr(state, "buildings", {}).values():

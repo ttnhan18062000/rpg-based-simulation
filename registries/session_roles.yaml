@@ -131,7 +131,6 @@ domains:
       - dashboard-frontend/**
       - website/**
       - .mcp.json
-      - .github/workflows/deploy-docs.yml
       - docs/architecture/**                 # asset's ADR and perf's PERF-D file are split below
       - agent-working/lead/**
     owns_not: []
@@ -146,7 +145,12 @@ domains:
       - compose.yaml
       - docker/**
       - .github/workflows/publish-images.yml
+      - .github/workflows/deploy-docs.yml     # moved from lead: owner decision on #560 (2026-10-16); the owner confirms in the PR
+      - infra/**                              # TCK-20261018-IAC-WORKFLOW-AND-ROLES (D8): the Terraform roots; the owner confirms in the PR
+      - .github/workflows/iac.yml
       - .github/dependabot.yml
+      - tools/loadtest/**
+      - docs/runbooks/**
     owns_not: []
     routes:
       "src/**": rpg-planner                   # the engine stays one process

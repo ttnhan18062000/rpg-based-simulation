@@ -250,8 +250,8 @@ def test_high_ground_bonus():
         seed=42,
         entities={1: attacker, 2: target},
         terrain={
-            (10, 10): "HILL",
-            (10, 11): "PLAIN",
+            (10, 10): "mountain",
+            (10, 11): "plain",
         },
     )
 

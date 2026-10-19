@@ -176,8 +176,8 @@ channel, but capability-agnostic: it does not scale with the killed (or killing)
 level, kind, or significance, only with the raw fact that a kill occurred in that region.
 `ThreatService.process_threat_evolution()` further ties peaceful-state trauma decay to the
 absence of a live `entity.kind == "world_boss"` — a real, if narrowly kind-string-keyed, example
-of an evolved/special kind mattering to regional dynamics. (2) `entity.kind` (mutated by
-`EvolutionSystem._get_evolved_kind()` on level-threshold crossing) is read broadly across
+of an evolved/special kind mattering to regional dynamics. (2) `entity.kind` (formerly mutated by
+`EvolutionSystem._get_evolved_kind()` on level-threshold crossing; a level-up no longer renames the kind, divergence 2.133, TCK-20261014-LEVEL-UP-NO-LONGER-RENAMES-AN-ENTITY-KIND-D79) is read broadly across
 `src/world/ecology.py`, `src/world/creature_territory.py` (`CreatureTerritoryService`'s
 per-kind territory-maturity rate), `src/world/boss.py`, and `src/world/calamity.py` — but
 mostly through hardcoded kind-string branches rather than a general function of the entity's
@@ -339,7 +339,7 @@ slot (Batch 01). Per the batch instruction's own §12 explicit guidance, major s
 transformation (human → vampire) stays with Magic; this entry only confirms that
 progression-driven kind-change is TRANS-01's own principle at work, not a new Rule.**
 
-**Repository evidence: SUPPORTED.** `EvolutionSystem._get_evolved_kind()` maps a real,
+**Repository evidence: SUPERSEDED (D79 step 3, divergence 2.133, TCK-20261014-LEVEL-UP-NO-LONGER-RENAMES-AN-ENTITY-KIND-D79).** The text below describes the retired rename: `EvolutionSystem._get_evolved_kind()` is deleted and a level-up keeps the declared kind. It mapped a real,
 declared level-threshold trigger (`[10, 25, 50]`, crossed via `IdentityUpdate`) to a new
 `entity.kind` (`GOBLIN → GOBLIN_WARRIOR → ORC_SCOUT`, `WOLF → DIRE_WOLF`, `HERO → LEGEND_HERO`,
 or a generic numeric-suffix increment) — a real, TRANS-01-compliant transformation, gated on a

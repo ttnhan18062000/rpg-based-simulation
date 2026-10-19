@@ -397,9 +397,9 @@ def test_the_real_render_counts_its_gaps_against_the_data_and_every_png_decodes(
     data, stats, first, _ = rendered_twice
     by_name = {row["name"]: row["count"] for row in data["terrain"]}
     exact, alias = stats["views"]["exact"], stats["views"]["alias"]
-    # the exact view resolves terrain names through the registry aliases (`PLAIN` -> grassland, `ruin` -> ruins), so the terrain gap is empty in both views
+    # the exact view resolves terrain names through the registry aliases (`plain` -> grassland, `ruin` -> ruins; the base fill is the catalog id `plain` since D72, divergence 2.124), so the terrain gap is empty in both views
     assert exact["terrain_no_key"] == {} and exact["terrain_cells_in_gap"] == 0 and alias["terrain_cells_in_gap"] == 0
-    assert exact["terrain_drawn"] == alias["terrain_drawn"] and alias["terrain_drawn"]["terrain.grassland"] == by_name["PLAIN"] and alias["terrain_drawn"]["terrain.ruins"] == by_name["ruin"]
+    assert exact["terrain_drawn"] == alias["terrain_drawn"] and alias["terrain_drawn"]["terrain.grassland"] == by_name["plain"] and alias["terrain_drawn"]["terrain.ruins"] == by_name["ruin"]
     assert exact["objects_gap"] == {} and alias["objects_gap"] == {} and exact["objects_drawn"] == alias["objects_drawn"] == {"place:RUIN": 1}  # RUIN resolves through the registry alias `icon.marker.ruin`
     for view in (exact, alias):
         assert view["cells"] == data["width"] * data["height"]

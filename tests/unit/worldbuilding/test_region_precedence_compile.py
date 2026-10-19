@@ -24,10 +24,10 @@ def _spec(regions):
 
 # road crossing a forest, a town nested in a forest, and an undeclared partial overlap (the scenarios LOC-08 owed)
 REGIONS = [
-    {"id": "town", "type": "town", "bounds": [10, 10, 20, 20], "terrain": "FLOOR"},        # nested in forest
-    {"id": "road", "type": "road", "bounds": [0, 24, 59, 28], "terrain": "SAND"},          # crosses the forest
-    {"id": "forest", "type": "wilderness", "bounds": [5, 5, 40, 40], "terrain": "FOREST"}, # container + crossed
-    {"id": "marsh", "type": "wilderness", "bounds": [35, 35, 55, 55], "terrain": "SWAMP"}, # partial, undeclared
+    {"id": "town", "type": "town", "bounds": [10, 10, 20, 20], "terrain": "ruin"},        # nested in forest
+    {"id": "road", "type": "road", "bounds": [0, 24, 59, 28], "terrain": "road"},          # crosses the forest
+    {"id": "forest", "type": "wilderness", "bounds": [5, 5, 40, 40], "terrain": "forest"}, # container + crossed
+    {"id": "marsh", "type": "wilderness", "bounds": [35, 35, 55, 55], "terrain": "swamp"}, # partial, undeclared
 ]
 
 
@@ -37,7 +37,7 @@ def compiled():
 
 
 def test_every_tile_terrain_matches_the_region_the_lookup_returns(compiled):
-    flat = {"town": "FLOOR", "road": "SAND", "forest": "FOREST", "marsh": "SWAMP"}
+    flat = {"town": "ruin", "road": "road", "forest": "forest", "marsh": "swamp"}
     regions = list(compiled.regions.values())
     checked = 0
     for (x, y), terrain in compiled.terrain.items():

@@ -60,8 +60,8 @@ def test_mutation_lab_orchestrator_end_to_end(temp_mutation_lab_repos):
             "coordinate_system": "grid"
         },
         "regions": [
-            {"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "GRASS"},
-            {"id": "wilds", "type": "wilderness", "bounds": (15, 15, 40, 40), "terrain": "FOREST"}
+            {"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "grass"},
+            {"id": "wilds", "type": "wilderness", "bounds": (15, 15, 40, 40), "terrain": "forest"}
         ],
         "factions": [
             {"id": "villagers", "type": "civilian"}
@@ -240,7 +240,7 @@ def test_mutation_lab_budget_blocked(temp_mutation_lab_repos):
         "world_id": "test_valley",
         "name": "Test Valley",
         "topology": {"width": 50, "height": 50, "coordinate_system": "grid"},
-        "regions": [{"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "GRASS"}],
+        "regions": [{"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "grass"}],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [{"id": "citizen_group", "count": 5, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],
         "resources": [{"id": "wood_zone", "resource_type": "wood", "count": 5, "region": "town_square"}],
@@ -323,7 +323,7 @@ def test_mutation_lab_invalid_spec_blocked(temp_mutation_lab_repos):
         "world_id": "test_valley",
         "name": "Test Valley",
         "topology": {"width": 50, "height": 50, "coordinate_system": "grid"},
-        "regions": [{"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "GRASS"}],
+        "regions": [{"id": "town_square", "type": "town", "bounds": (0, 0, 10, 10), "terrain": "grass"}],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [{"id": "citizen_group", "count": 5, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"}],
         "resources": [{"id": "wood_zone", "resource_type": "wood", "count": 5, "region": "town_square"}],

@@ -142,7 +142,7 @@ def test_combat_trace_modifiers():
     defender = create_mock_entity(2, (2.0, 1.0), faction=Faction.MONSTER_HORDE)
     
     # Force High Ground
-    state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender}, terrain={(1, 1): "HILL"})
+    state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender}, terrain={(1, 1): "mountain"})
     
     combat_up = CombatResolutionSystem.resolve_attack(attacker, defender, state)
     

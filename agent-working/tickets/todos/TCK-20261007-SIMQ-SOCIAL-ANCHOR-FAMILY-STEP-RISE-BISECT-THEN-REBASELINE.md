@@ -11,6 +11,14 @@ tags: [simulation-quality, social, regression]
 
 # TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
 
+## Ruling 2026-10-14 (rpg-planner)
+
+Do NOT bisect or rebaseline this family. The first scheduled slow run with audit_mode anchors (run 38532053464, main 7fa1fc7bc) passed rows in this family that were known red. That fits host-speed noise in the earlier unaudited runs: PhaseBudgetGovernor throttled scans from measured wall-clock time even under PinnedNormalGovernor (TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-THROUGH-PHASE-BUDGETS-EVEN-WITH-THE-PINNED-NORMAL-GOVERNOR).
+- Rows are re-derived under audit_mode only.
+- If the rows keep passing, this ticket closes as "host-speed noise" through rpg-planner by the slow-known-reds green-count rule, possibly before the v1 re-anchor.
+- Only rows still red under audit_mode fold into TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1.
+- NARRATIVE anchors leave with the SimQ rebuild after v1 (owner ruling D77: NARRATIVE retired as a grade).
+
 ## Title
 Five SOCIAL corpus anchors went red in step changes (about 17-22 rising to 25-39). Bisect each onset to one PR, rebaseline the intended rises and file a fix for any that start on a neutral PR.
 

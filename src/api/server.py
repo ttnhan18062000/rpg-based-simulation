@@ -21,6 +21,7 @@ from src.api.dependencies import (
     set_catalog_repository,
 )
 from src.api.engine_manager import V2EngineManager
+from src.api.http_metrics import RequestDurationMiddleware
 from src.api.schemas import WorldStateResponse, EntityPageResponse, EntityDetailResponse
 from src.config.profiles import RuntimeProfile
 
@@ -29,12 +30,11 @@ logger = logging.getLogger(__name__)
 def create_v2_app(
     profile: RuntimeProfile,
     seed: Optional[int] = None,
-    entities_count: Optional[int] = None,
     world_id: Optional[str] = None,
 ) -> FastAPI:
     """Build and return the V2 FastAPI application.
 
-    seed/entities_count/world_id are optional overrides for V2EngineManager's own defaults --
+    seed/world_id are optional overrides for V2EngineManager's own defaults --
     None (the default here, matching every existing caller) means "use V2EngineManager's class
     default for that field," so this stays a fully backward-compatible signature extension.
     """
@@ -44,8 +44,6 @@ def create_v2_app(
     manager_kwargs: Dict[str, Any] = {}
     if seed is not None:
         manager_kwargs["seed"] = seed
-    if entities_count is not None:
-        manager_kwargs["entities_count"] = entities_count
     if world_id is not None:
         manager_kwargs["world_id"] = world_id
 
@@ -112,8 +110,8 @@ def create_v2_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
     app.add_middleware(GZipMiddleware, minimum_size=512)
+    app.add_middleware(RequestDurationMiddleware)  # outermost: times the whole stack (issue #622 R2)
 
     from src.api.ws import stream
     app.include_router(stream.router, prefix="/api/v1", dependencies=[Depends(require_api_key_ws), Depends(require_admission_ws)])

@@ -13,30 +13,36 @@ This document serves as the master structural directory for the entire RPG Simul
 
 ## 🗺️ 1. Global Ecosystem Topology
 
-The simulation ecosystem is designed around a strict separation of concerns: **Authoritative State Execution** resides in the backend kernel, **Asynchronous Telemetry & Analysis** runs out-of-loop via event streams, and **Visual Inspection** is handled by a reactive TypeScript client.
+The simulation ecosystem is designed around a strict separation of concerns: **Authoritative State Execution** resides in the backend kernel (one process, one writer), **Asynchronous Telemetry & Analysis** runs out-of-loop via the Redis event stream, and **Visual Inspection** is handled by a reactive TypeScript client.
 
 ```mermaid
 graph TD
     %% Frontend Layer
-    Client["React Web UI (frontend/)"] <-->|REST / WebSockets| API["API Backend (src/api/)"]
-    
-    %% Core Loop Layer
-    API <-->|Read-Only Snapshots| Kernel["Simulation Kernel (src/engine/)"]
-    Kernel -->|1. Scheduled Tasks| WorkerPool["AI Worker Pool (src/workers/)"]
-    WorkerPool -->|2. Deliberations| Kernel
-    Kernel -->|3. Authoritative State Updates| ApplyPath["ApplyPath (src/core/state.py)"]
-    ApplyPath -->|4. Generation-Based State| Kernel
+    Client["React Web UI (frontend/)"] <-->|REST / WebSockets| API["API Backend (src/api/server.py, read models only)"]
 
-    %% Telemetry & Observability Layer
-    Kernel -->|Trace Events| Redis[("Redis Cache & Streams")]
-    Redis -->|Pub/Sub Telemetry| Prom["Prometheus (Time-Series)"]
-    Redis -->|Audit Archival| Clickhouse[("Warehouse (ClickHouse / Parquet)")]
-    Clickhouse -->|Analytical Mining| SweepEngine["Simulation Mining Platform (src/observability/)"]
-    
-    %% Monitoring & Self-Healing
-    Prom -->|Metric Dashboards| Grafana["Grafana Visualization"]
-    WD["Watchdog Service (src/utils/)"] -.->|Monitor Status & Restarts| API
-    WD -.->|Query Log Anomalies| Loki["Loki Log Aggregator"]
+    %% Core Loop Layer (one process, one writer)
+    API <-->|Read-only snapshots| Mgr["V2EngineManager (src/api/engine_manager.py)<br/>thread v2-engine-loop"]
+    Mgr -->|tick_once, serial| Kernel["Simulation Kernel (src/engine/)<br/>7-phase tick"]
+    Kernel -->|"Collection: decisions as proposals that read state"| Kernel
+    Kernel -->|"Resolution: single-writer authoritative apply path"| State[("AuthoritativeState (src/core/state.py)<br/>immutable generations")]
+
+    %% Telemetry out of the loop
+    Kernel -->|"events, async and non-blocking<br/>(RedisStreamAdapter, XADD)"| Redis[("Redis Stream simulation:events")]
+    Redis -->|consumer group| AIW["ai_worker<br/>python -m src.observability.anomaly.worker<br/>anomaly rules, alerts"]
+
+    %% Metrics and logs
+    API -->|"/metrics, /health"| Prom["Prometheus (scrapes backend:/metrics and ai_worker:9108/metrics; does not read Redis)"]
+    Prom --> Grafana["Grafana"]
+    Container["Container stdout"] -->|Promtail| Loki["Loki"]
+
+    %% Watchdog
+    WD["Watchdog (src/observability/watchdog.py)"] -.->|poll /health and /metrics| API
+    WD -.->|query log anomalies| Loki
+
+    %% Batch runs and analytics (not in the live loop)
+    CLI["CLI batch runs and sweeps (src/cli/)"] --> Kernel
+    CLI -->|run outputs| Duck[("DuckDB analytics<br/>src/observability/analytics/, mining/")]
+    Duck -.->|"optional: a ClickHouse adapter exists (src/observability/warehouse/clickhouse.py)<br/>but is not in the compose stack"| CH[("ClickHouse")]
 ```
 
 ---
@@ -53,7 +59,6 @@ src/
 ├── observability/    # Telemetry, alerting, baseline comparison, and simulation mining
 ├── api/              # Presenters, schemas, and REST/WebSocket gateways
 ├── cli/              # Execution entry points for scenarios and sweeps
-└── workers/          # Background daemons for async calculations
 ```
 
 ### Subsystem Directory:
@@ -68,8 +73,8 @@ src/
 #### 2. Deterministic Kernel Layer (`src/engine/`)
 *   **Role**: The authoritative conductor running the simulation loop.
 *   **Key Modules**:
-    *   `kernel.py`: Orchestrates the strict 6-phase tick loop.
-    *   `apply_pipeline.py`: Pure-functional pipeline applying proposed updates to transition to the next state generation.
+    *   `kernel.py`: Orchestrates the strict 7-phase tick loop (`phases.py`, `TickPhase`: Init, Scheduling, Collection, Resolution, Cleanup, Advancement, Persistence).
+    *   `pipeline.py` and `pipeline_phases/`: the authoritative refinement and apply pipeline that turns proposed updates into the next state generation.
     *   `world_index.py`: High-performance spatial indexing structure utilizing spatial hashing.
 *   **Deep-Dive Reference**: See [docs/engine/kernel.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/kernel.md) for phase contracts, and [docs/engine/authoritative_apply_contract.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/authoritative_apply_contract.md) for transaction guarantees.
 
@@ -152,6 +157,7 @@ The complete production-grade system is deployed via Docker Compose to manage lo
 *   **`frontend`**: The TypeScript React client served via Nginx.
 *   **`redis`**: Handles live in-memory caching and real-time state broadcasts, and is the sole event-stream transport (`RedisStreamConsumer`).
 *   **`ai_worker`**: Scaling pool executing computationally intense AI predictions.
+    *   **Saturation metrics**: `ai_worker` serves `/metrics` on port `9108` (`AI_WORKER_METRICS_PORT`; compose `expose` only, scraped on the compose network). Per stream and consumer group it reports `sim_stream_consumer_lag` and `sim_stream_pending_messages`, read from Redis (`XINFO GROUPS`) at scrape time, plus `sim_stream_consumer_up` (0 when Redis cannot be read, with no gauges emitted). It never imports the engine (`src/observability/stream/lag_metrics.py`).
 *   **`prometheus`**: Time-series database scraping runtime TPS and performance counters.
 *   **`grafana`**: Provisioned dashboards showing live simulation metrics.
 *   **`loki` & `promtail`**: Multi-container centralized log aggregator.

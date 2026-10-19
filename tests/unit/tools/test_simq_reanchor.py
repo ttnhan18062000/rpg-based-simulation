@@ -21,8 +21,8 @@ def _pillars(faction=(0.0, "C"), economy=(3.58, "S")):
 
 
 def _pair(key, **kw):
-    row = {"key": key, "exit": 0, "pillars": _pillars(**kw), "overall": ["B", 1.0]}
-    return {1: {**copy.deepcopy(row), "rep": 1}, 2: {**copy.deepcopy(row), "rep": 2}}
+    row = {"key": key, "exit": 0, "pillars": _pillars(**kw), "overall": ["B", 1.0], "audit_mode": True, "signals_zeroed": True}
+    return {1: {**copy.deepcopy(row), "rep": 1, "run_id": f"{key}-a"}, 2: {**copy.deepcopy(row), "rep": 2, "run_id": f"{key}-b"}}
 
 
 def _rows(**kw):
@@ -141,8 +141,8 @@ ND_ANCHOR = {"status": "no-data", "reason": "below_min_events", "min_events": 3}
 
 def _nd_rows(key="w_seed1_200t", faction=ND_ROW):
     pillars = {**_pillars(faction=(1.02, "A")), "FACTION": faction}
-    row = {"key": key, "exit": 0, "pillars": pillars, "overall": ["B", 1.0]}
-    return {1: {**copy.deepcopy(row), "rep": 1}, 2: {**copy.deepcopy(row), "rep": 2}}
+    row = {"key": key, "exit": 0, "pillars": pillars, "overall": ["B", 1.0], "audit_mode": True, "signals_zeroed": True}
+    return {1: {**copy.deepcopy(row), "rep": 1, "run_id": f"{key}-a"}, 2: {**copy.deepcopy(row), "rep": 2, "run_id": f"{key}-b"}}
 
 
 def _fixture_with(anchor):
@@ -202,3 +202,47 @@ def test_ok_only_measurements_are_unchanged_by_the_status_columns():
     new, table = ra.reanchor(FIXTURE, _rows())
     assert all(r["committed_status"] == r["audit_status"] == "ok" for r in table)
     assert new["w_seed1_200t"]["FACTION"] == {"grade": "C", "score": 0.0}
+
+
+# TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT (AC2): an anchor is an audit_mode contract, read from the rows' own record.
+def _with(rows, rep, **fields):
+    rows["w_seed1_200t"][rep].update(fields)
+    return rows
+
+
+def test_a_pair_recorded_audit_mode_is_accepted():
+    new, _ = ra.reanchor(FIXTURE, _rows())
+    assert new["w_seed1_200t"]["FACTION"] == {"grade": "C", "score": 0.0}
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"audit_mode": False, "signals_zeroed": False},  # a live run
+        {"audit_mode": False, "signals_zeroed": True},  # a pinned-governor run: host-independent, but not an anchor run
+        {"audit_mode": None, "signals_zeroed": None},  # recorded as nothing
+    ],
+)
+@pytest.mark.parametrize("rep", [1, 2])
+def test_either_run_not_recorded_audit_mode_refuses_naming_key_and_run(fields, rep):
+    with pytest.raises(ra.ReanchorRefused, match=rf"w_seed1_200t: run {rep} \(run id w_seed1_200t-{'a' if rep == 1 else 'b'}\) is not recorded as audit_mode.*--audit-mode"):
+        ra.reanchor(FIXTURE, _with(_rows(), rep, **fields))
+
+
+def test_an_old_row_with_no_fields_is_refused():
+    rows = _rows()
+    for rep in (1, 2):
+        del rows["w_seed1_200t"][rep]["audit_mode"], rows["w_seed1_200t"][rep]["signals_zeroed"]
+    with pytest.raises(ra.ReanchorRefused, match="not recorded as audit_mode"):
+        ra.reanchor(FIXTURE, rows)
+
+
+def test_audit_mode_true_with_signals_not_zeroed_is_refused_through_rpgs_definition():
+    with pytest.raises(ra.ReanchorRefused, match=r"not recorded as host-independent.*w_seed1_200t run 2 \(w_seed1_200t-b\)"):
+        ra.reanchor(FIXTURE, _with(_rows(), 2, signals_zeroed=False))
+
+
+def test_the_cli_has_no_escape_hatch_for_unaudited_runs(tmp_path, capsys):
+    with pytest.raises(SystemExit) as caught:
+        ra.main(["--rows", str(tmp_path / "r.jsonl"), "--fixture", str(tmp_path / "f.json"), "--out", str(tmp_path / "o.json"), "--table", str(tmp_path / "t.tsv"), "--allow-unaudited"])
+    assert caught.value.code == 2 and "unrecognized arguments: --allow-unaudited" in capsys.readouterr().err

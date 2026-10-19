@@ -506,8 +506,7 @@ codebase-health-pr-impact: ## Print a batched PR/AI change-impact report for one
 	python3 -m codebase.reports.pr_impact_report $(ARGS)
 
 agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
-	$(shell for py in .venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
-	  tools/agent-monitoring/build_index.py
+	$(PYTHON3) tools/agent-monitoring/build_index.py
 
 parity-index: ## Rebuild the derived read-only SQLite index over docs/parity_ledger/*.yaml (on-demand only — not CI)
 	python3 tools/parity_index.py build

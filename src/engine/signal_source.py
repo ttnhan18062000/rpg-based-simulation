@@ -182,6 +182,11 @@ _ZEROED = ZeroedSignalSource()
 _CANONICAL = CanonicalSignalSource()
 
 
+def signals_are_zeroed(audit_mode: bool, governor: object) -> bool:
+    """True when the governors must see zeroed signals: ``audit_mode``, or a governor that pins itself (``zeroes_signals``, the test pin)."""
+    return bool(audit_mode or getattr(governor, "zeroes_signals", False))
+
+
 def select_signal_source(profile: RuntimeProfile, audit_mode: bool) -> LiveSignalSource:
     """Precedence: ``audit_mode`` -> zeroed signals; else the profile's ``signal_contract``. A flag cannot override the profile's contract."""
     if audit_mode:

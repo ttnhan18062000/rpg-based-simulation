@@ -81,19 +81,16 @@ class TestRealRaidMobNeverScoresGuild:
     """
 
     def test_real_spawned_raid_mob_scores_zero_guild_utility(self):
+        from dataclasses import replace
         from src.systems.world_systems.generator import EntityGenerator
-        from src.world.raid import RaidService
 
+        # D70: `RaidService.spawn_raid` is retired, so the raid mob is composed the way it was: a goblin_raider with no project capacity.
         generator = EntityGenerator(seed=42)
         state = AuthoritativeState(tick=500, seed=42, maturity=0)
-        # TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION: the global
-        # world-clock raid (check_for_raid) is retired. spawn_raid is the surviving composition
-        # entry point -- the camp path's -- and is what actually produces the mob this test needs.
-        update = RaidService.spawn_raid(
-            state, generator, origin=(120.0, 120.0), target=(130.0, 130.0), raid_size=3,
-        )
-        assert update.entities_add, "sanity: raid must actually spawn mobs for this test to mean anything"
-
+        mob = generator.spawn_monster(pos=(120, 120), state=state, kind="goblin_raider", difficulty_tier=4)
+        mob = replace(mob, navigation=replace(mob.navigation, target=(130.0, 130.0)),
+                      strategic=replace(mob.strategic, profile=replace(mob.strategic.profile, max_active_projects=0)))
+        update = type("U", (), {"entities_add": [mob]})()
         raider = update.entities_add[0]
         scored_state = _state_with_town_hall(
             {raider.id: raider}, flags={"ENABLE_GUILD_QUEST_GENERATION": "ON"}

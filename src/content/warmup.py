@@ -12,8 +12,9 @@ from __future__ import annotations
 import sys
 from typing import Optional
 
-from src.content.repository import CatalogRepository
 from src.content.paths import ContentPathConfig
+from src.content.repository import CatalogRepository
+from src.content.terrain_cost import configure_terrain_costs, reset_terrain_costs
 
 
 class ContentWarmupService:
@@ -40,12 +41,14 @@ class ContentWarmupService:
         if repo is not None:
             configure_faction_semantics_service(repo)
             configure_behavior_consumers(repo)
+            configure_terrain_costs(repo)
         else:
             # Load content once and share across all consumers (WORLD-CAT-004).
             _repo = CatalogRepository(ContentPathConfig().content_root)
             _repo.load_all()
             configure_faction_semantics_service(_repo)
             configure_behavior_consumers(_repo)
+            configure_terrain_costs(_repo)
 
     @staticmethod
     def is_warm() -> bool:
@@ -68,3 +71,4 @@ class ContentWarmupService:
         from src.engine.behavior_consumers import reset_behavior_consumers
         reset_faction_semantics_service()
         reset_behavior_consumers()
+        reset_terrain_costs()

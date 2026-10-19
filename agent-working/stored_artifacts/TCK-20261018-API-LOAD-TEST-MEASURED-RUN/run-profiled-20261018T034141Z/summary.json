@@ -1,0 +1,67 @@
+{
+  "is_measurement": true,
+  "pool_ceiling_rps": 2970.0,
+  "baseline": {
+    "backend_cpu_pct": 0.0,
+    "backend_mem_mb": 0.0,
+    "locust_cpu_pct": 0.0,
+    "host_cpu_pct": 0.0,
+    "run_queue": 0.0,
+    "swap_kb_s_mean": 0.0,
+    "disk_kb_s_mean": 0.0
+  },
+  "steps": {
+    "25": {
+      "spread": {
+        "rps": {
+          "median": 376.9617499262498,
+          "min": 376.9617499262498,
+          "max": 376.9617499262498
+        },
+        "p50": {
+          "median": 55.0,
+          "min": 55.0,
+          "max": 55.0
+        },
+        "p95": {
+          "median": 130.0,
+          "min": 130.0,
+          "max": 130.0
+        },
+        "p99": {
+          "median": 200.0,
+          "min": 200.0,
+          "max": 200.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 204.23,
+        "backend_mem_mb": 122.0,
+        "locust_cpu_pct": 49.8,
+        "host_cpu_pct": 75,
+        "run_queue": 14
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 204.23,
+          "mem_mb_peak": 122.0
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 5.57,
+          "mem_mb_peak": 4.152
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": 1.1322314049586777,
+      "disk_delta_kb_s": 174.73553719008265,
+      "ceiling_warning": false,
+      "flags": []
+    }
+  },
+  "saturation": null
+}

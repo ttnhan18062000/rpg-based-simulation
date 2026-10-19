@@ -58,7 +58,7 @@ def test_grade_regression_failure_message_includes_ceiling_when_known():
     run_key = "dungeon_crawl_seed42_1000t"
     anchors = {"COMBAT": {"grade": "C", "score": 0.0}}
     report = {"pillars": {"COMBAT": {"grade": "C", "normalized_score": 5.0}}}  # score far outside tolerance, same band: forces a score failure line
-    _band, lines, _other = _pillar_failures(run_key, anchors, report)
+    _band, lines, _other = _pillar_failures(run_key, anchors, report, {"audit_mode": True, "signals_zeroed": True})
     assert len(lines) == 1
     assert "known flag_gated" in lines[0]
     assert "TCK-20260806-SIMQ-COMBAT-ENGAGEMENT-GATE-CORPUS-VALIDITY" in lines[0]

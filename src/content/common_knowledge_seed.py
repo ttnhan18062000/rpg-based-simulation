@@ -79,6 +79,11 @@ def _warmed_catalog() -> Any:
     return _fallback_catalog
 
 
+def warmed_catalog() -> Any:
+    """The warmed content catalog (for a content check that must read species and body models without importing the engine)."""
+    return _warmed_catalog()
+
+
 def default_self_model() -> SelfModelBundle:
     """The self-model a new subject starts with: empty except for the common knowledge from the warmed catalog.
 

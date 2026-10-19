@@ -37,6 +37,23 @@ anyway (a `bwrap --unshare-all ... aseprite -b --script /lua/ops.lua` with paren
 Kill only a process whose `--bind` names a `.jobs/` directory of a workspace you own, never another session's, with `kill -9 <pid>`;
 SIGTERM does nothing to it. The tests scope their leak checks to their own workspace, so a stray from elsewhere cannot fail them.
 
+### A sub-second job that "times out" under load is a host stall
+
+Symptom: a job that normally needs 0.1-2 s (the slowest measured is 0.258 s, `budgets.md`) fails on the 30 s `JOB_TIMEOUT_S` or the
+60 s per-test budget of `tests/conftest.py`, on a machine whose load average is far above its core count, and passes when rerun alone.
+That is not a slow or hung phase: `bwrap` start, Aseprite start, the script and the pipe drain were each timed at under 2.2 s in every
+non-stalled call, even at load 35-45, and `communicate()` drains both pipes. The whole guest stalls for tens of seconds to minutes
+(swap thrash, host contention) and every wall-clock bound trips although the job needed 0.2 s
+(`TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD`, `investigation.md`).
+
+Confirm it: run a trivial sampler outside the test's process and cgroup while the test runs, for example
+`timeout 330 python3 agent-working/stored_artifacts/TCK-20261018-VISUAL-ASSETS-ASEPRITE-JOB-TIMEOUT-UNDER-LOAD/evidence/extsamp.py /tmp/gaps.log`
+in a second terminal. A line `GAP mono N s` at the time of the failing call, with N about the call's duration, means the guest was not
+scheduled for N seconds. No such gap means a real job problem: look at the phases instead.
+
+What to do: rerun when the host is quiet (`cut -d. -f1 /proc/loadavg` below the core count). Do not raise `JOB_TIMEOUT_S`, skip the test
+or add a retry: stalls reached 172 s, so a higher bound only moves the line, and a skip hides real failures.
+
 ### Strict local run (ADR D10)
 
 Real Aseprite runs only on the licence holder's own machine (`docs/assets/aseprite_licence_review.md`); CI never

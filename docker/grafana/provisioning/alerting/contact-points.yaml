@@ -1,0 +1,25 @@
+apiVersion: 1
+
+# ntfy as a Grafana webhook contact point (ADR D5; Grafana has no native ntfy integration).
+# TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES. The publish topic and the access token are NEVER in git: they are read at
+# provisioning time from the gitignored compose secret files docker/secrets/ntfy_topic and docker/secrets/ntfy_token
+# (Grafana's $__file{} expander in provisioning files; see the top of compose.yaml for creating them).
+# ntfy runs with auth-default-access deny-all; the token belongs to a write-only user for that one topic.
+# The JSON goes to the ntfy root URL, where ntfy's JSON publish format takes the topic from the body.
+contactPoints:
+  - orgId: 1
+    name: ntfy
+    receivers:
+      - uid: ntfy-webhook
+        type: webhook
+        disableResolveMessage: false
+        settings:
+          url: http://ntfy:80
+          httpMethod: POST
+          authorization_scheme: Bearer
+          authorization_credentials: $__file{/run/secrets/ntfy_token}
+          payload:
+            template: >-
+              {{ coll.Dict "topic" .Vars.topic "title" (printf "[%s] %s" .Status .CommonLabels.alertname) "message" (printf "%s\nRunbook: %s" .CommonAnnotations.summary .CommonAnnotations.runbook_url) "priority" 4 "tags" (coll.Slice "bell") | data.ToJSON }}
+            vars:
+              topic: $__file{/run/secrets/ntfy_topic}

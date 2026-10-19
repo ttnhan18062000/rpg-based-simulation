@@ -28,7 +28,7 @@ def _spec(resource_type: str) -> WorldSpec:
         "world_id": "yield_item_probe",
         "name": "Yield Item Probe",
         "topology": {"width": 50, "height": 50, "coordinate_system": "grid"},
-        "regions": [{"id": "wilds", "type": "wilderness", "bounds": [0, 0, 40, 40], "terrain": "FOREST"}],
+        "regions": [{"id": "wilds", "type": "wilderness", "bounds": [0, 0, 40, 40], "terrain": "forest"}],
         "factions": [{"id": "villagers", "type": "civilian"}],
         "entities": [{"id": "g", "count": 1, "role": "citizen", "faction": "villagers", "spawn_region": "wilds"}],
         "resources": [{"id": "node_a", "resource_type": resource_type, "count": 3, "region": "wilds"}],

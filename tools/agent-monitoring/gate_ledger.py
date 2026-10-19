@@ -283,6 +283,9 @@ def _week_of(ts: object) -> str | None:
         return None
 
 
+week_of = _week_of  # the public name other modules use (generate_retro)
+
+
 def report(rows: list[dict], week: str | None = None) -> list[dict]:
     """One reading per `gate_id` over the verdicts of `week` (all rows when None), sorted by gate_id.
 

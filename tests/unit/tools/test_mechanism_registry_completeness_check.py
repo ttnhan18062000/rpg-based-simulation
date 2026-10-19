@@ -156,7 +156,8 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     (`strategic_systems/town_targeting`). The 8 left are `domains/motivation` (Child B) and seven modules with no
     caller in `src/`, filed for deletion as
     TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE. Taken by running the
-    check."""
+    check.
+    """
     data = _real_registry_data()
     report = build_report(data)
     assert report.total_targets == 65
@@ -259,7 +260,16 @@ def test_wider_scope_numbers_pinned():
     # src/observability/starvation_record.py is outside the scope globs. rpg-planner binds and recomputes at the fold.
     # 335 -> 338 on 2026-10-13 (code-health extractions, behaviour-free): +src/engine/run_identity.py (out of kernel.py),
     # +src/worldassembly/spawn_position.py (out of resolver.py) and +src/core/update_models/buildings.py (BuildingUpdate out of updates.py).
-    assert wider["scope_files"] == 338
+    # 338 -> 337 on 2026-10-14 (D67/D70): -src/world/spawn.py (the density top-up SpawnService, removed; divergence 2.122).
+    # 337 -> 338 on 2026-10-13 (M0 gate V8): +src/core/spawn_source.py (SpawnKind, SpawnSource: a record of where an add came from).
+    # 338 -> 339 (run ledger): +src/ai/goals/kind_group.py (the kind group from the declared diet; functions only). src/observability/run_ledger.py is outside the scope globs.
+    # 339 -> 340 on 2026-10-14 (D72, folded into rpg-next): +src/content/terrain_cost.py (the content-declared terrain cost accessor).
+    # 340 -> 341 on 2026-10-14 (diet slice of SURV-05): +src/worldbuilding/diet_declaration.py (two checks: a compiled body names a declared diet; a recipe names a known species; functions only).
+    # 341 -> 342 on 2026-10-15 (typed death cause): +src/core/death_cause.py (DeathCause, HpLossSource, DeathRecord: enums and one frozen record). src/observability/death_ledger.py is outside the scope globs.
+    # 342 -> 343 on 2026-10-16 (D75 route step, divergence 2.128): +src/engine/route_search.py (RoutePlanStore and the bounded terrain-cost search).
+    # 343 -> 344 on 2026-10-17 (grief-as-state, decision 80, divergence 2.134): +src/core/grief_triggers.py (pending_grief_triggers, a pure read of
+    # death records and trust), bound under `cross_episode_grief_nemesis`, so unbound_files is unchanged.
+    assert wider["scope_files"] == 344
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -286,12 +296,27 @@ def test_wider_scope_numbers_pinned():
     # 246 -> 247 on 2026-10-13 (H6): src/ai/goals/ways.py is an unbound helper (a pure read); rpg-planner binds and recomputes at the fold.
     # 247 -> 250 on 2026-10-13 (code-health extractions): the three moved-out modules above are unbound helpers; the code they hold was
     # already unbound in its old module, and candidates are unchanged.
-    assert wider["unbound_files"] == 250
+    # 250 -> 251 on 2026-10-13 (M0 gate V8): +src/core/spawn_source.py is unbound (two names, a record of where an add came from); rpg-planner binds it.
+    # 251 -> 252 (run ledger): +src/ai/goals/kind_group.py is unbound (a lookup, functions only); rpg-planner binds it.
+    # 252 -> 250 on 2026-10-14 (rpg-planner binding): src/ai/goals/kind_group.py::kind_group is bound under `attributes_biology` (the kind group
+    # read from the declared diet), and src/core/spawn_source.py::SpawnSource under `humanoid_reproduction` (its one live BIRTH producer).
+    # 250 -> 251 on 2026-10-14 (D72): src/content/terrain_cost.py is an unbound helper (a content-backed lookup). Left unbound on purpose:
+    # D75 moves where terrain cost is paid (time, then route), so it is bound with that step's mechanism, not the pre-check's.
+    # 251 -> 252 on 2026-10-14 (D70, 2.125): src/world/raid.py is no longer cited; `faction_raid` is a gap (the raid spawner is deleted, the module
+    # keeps only its constants for the raid that returns with caused war, M3).
+    # 252 -> 253 on 2026-10-14 (diet slice of SURV-05): +src/worldbuilding/diet_declaration.py is unbound; rpg-planner binds it.
+    # 253 -> 254 on 2026-10-15 (typed death cause): src/core/death_cause.py is in scope and bound to no mechanism; rpg-planner binds it at the fold.
+    # 254 -> 255 on 2026-10-16 (D75 route step): +src/engine/route_search.py, in scope and unbound.
+    # 255 -> 251 on 2026-10-16 (rpg-planner binding at the fold): route_search.py::route_next_step and content/terrain_cost.py::terrain_cost
+    # under `movement` (terrain cost is now paid in step time and route weighting, so it is movement's), death_cause.py::DeathRecord under
+    # `aging_death` (the record resolve_lifecycle writes at death), diet_declaration.py::require_declared_diet under `attributes_biology`.
+    assert wider["unbound_files"] == 251
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
     # 71 -> 70 on 2026-10-11 (treasury batch): GoldSinkSystem is gone.
-    assert wider["candidates"] == 70  # unbound mechanism-shaped classes, wired or not
+    # 70 -> 71 on 2026-10-14 (D70, 2.125): RaidService is no longer cited (`faction_raid` is a gap), so it is an unbound candidate again.
+    assert wider["candidates"] == 71  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
     assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 3
 

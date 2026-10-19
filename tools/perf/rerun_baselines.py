@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import gc
 import json
 import os
 import platform
@@ -37,7 +38,7 @@ if str(_SELF_ROOT) not in sys.path:
 from tools.perf import capacity_run, tripwire  # noqa: E402
 from tools.perf.capacity_run import CapacityRunError, RunSpec  # noqa: E402
 
-from src.perf.benchmark_record import BenchmarkRecord, GateTier, RecordOptions, Runner  # noqa: E402
+from src.perf.benchmark_record import BenchmarkRecord, BenchmarkRecordError, GateTier, MemoryPassReading, RecordOptions, Runner, with_working_set, working_set_mismatch  # noqa: E402
 
 #: Runs per record, each a fresh process.
 RUNS = 3
@@ -150,10 +151,8 @@ def load_corpus_state(world: str, seed: int) -> Tuple[Any, Any]:
     return state, report
 
 
-def measure_record(name: str, samples_dir: Optional[Path] = None) -> BenchmarkRecord:
-    """One measured record of ``name`` in this process. ``samples_dir`` keeps every sampled tick's latency in a file the record points to (OD-6)."""
-    from src.perf.bench_harness import BenchHarness
-
+def _build_run(name: str) -> Tuple[RunSpec, Any, str, Optional[str], Optional[int]]:
+    """The spec, the freshly built state, the scenario id, the corpus world (or ``None``) and its region count of baseline ``name``: shared by the timed run and the memory pass, so both build the same run."""
     spec = spec_for(name)
     world: Optional[str] = None
     if spec.scenario.startswith("corpus:"):
@@ -165,6 +164,14 @@ def measure_record(name: str, samples_dir: Optional[Path] = None) -> BenchmarkRe
         state = build_state(spec.scenario, spec.entities, spec.seed)
         scenario_id = f"{spec.scenario}_{spec.entities}"
         region_count = None
+    return spec, state, scenario_id, world, region_count
+
+
+def measure_record(name: str, samples_dir: Optional[Path] = None) -> BenchmarkRecord:
+    """One measured record of ``name`` in this process. ``samples_dir`` keeps every sampled tick's latency in a file the record points to (OD-6)."""
+    from src.perf.bench_harness import BenchHarness
+
+    spec, state, scenario_id, world, region_count = _build_run(name)
     options = RecordOptions(GateTier(spec.gate_tier), spec.gate_projection, samples_dir, Runner(controlled=False, name=platform.node() or "unknown"))
     harness = BenchHarness(capacity_run._profile(spec))
     harness.run_benchmark(scenario_id, state, spec.warmup, spec.ticks, record_options=options)
@@ -176,6 +183,53 @@ def measure_record(name: str, samples_dir: Optional[Path] = None) -> BenchmarkRe
         workload = dataclasses.replace(record.identity.workload, region_count=region_count)
         record = dataclasses.replace(record, identity=dataclasses.replace(record.identity, content=content, workload=workload))
     return record
+
+
+def measure_memory_pass(name: str) -> MemoryPassReading:
+    """The untimed, collector-on pass of ``name`` in this process (run it in a fresh one); it echoes the identity it ran under."""
+    from src.perf.bench_harness import run_memory_pass
+
+    spec, state, scenario_id, _world, _regions = _build_run(name)
+    return run_memory_pass(capacity_run._profile(spec), state, scenario_id, spec.warmup, spec.ticks)
+
+
+def spawn_memory_pass(name: str, out: Path) -> int:
+    """Run the pass in a fresh process and return its exit code; the reading is in ``out``."""
+    argv = [sys.executable, str(Path(__file__).resolve()), "memory-pass", "--name", name, "--out", str(out)]
+    return subprocess.run(argv, env=_child_env(), check=False).returncode
+
+
+def apply_memory_pass(name: str, record_path: Path) -> Tuple[bool, str]:
+    """Add the pass's ``working_set_*`` keys to the record file at ``record_path``; the unmerged record is kept as ``<stem>.timed.json``.
+
+    Never fails the measurement: a child that fails, or whose echoed identity differs from the timed record's, leaves the record as it was and the
+    message says why. The pass runs once, after the timed run(s), in its own process (it is untimed, so it costs time but touches no timed field).
+    """
+    reading_path = record_path.with_suffix(".memory_pass.json")
+    try:
+        record = BenchmarkRecord.from_dict(json.loads(record_path.read_text(encoding="utf-8")))
+        gc.collect()  # a process that has just run the timed pass holds its arenas while the child runs; give them back first
+        _trim()
+        code = spawn_memory_pass(name, reading_path)
+        if code != 0 or not reading_path.exists():
+            return False, f"memory pass of {name} exited {code}: the record keeps no working_set_* keys"
+        reading = MemoryPassReading.from_dict(json.loads(reading_path.read_text(encoding="utf-8")))
+        mismatch = working_set_mismatch(record, reading)
+        if mismatch is not None:
+            return False, f"memory pass of {name} refused, not a pass of this record: {mismatch}"
+        declared = float(capacity_run._profile(spec_for(name)).max_ram_mb)
+        merged = with_working_set(record, reading, declared)
+    except (OSError, ValueError, KeyError, TypeError, BenchmarkRecordError) as exc:
+        return False, f"memory pass of {name} could not be applied: {exc}"
+    record_path.with_suffix(".timed.json").write_text(json.dumps(record.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    record_path.write_text(json.dumps(merged.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return True, f"working_set_mb {merged.result.memory_mb['working_set_mb']} (delta {merged.result.memory_mb['working_set_delta_mb']}) added to {record_path.name}"
+
+
+def _trim() -> None:
+    from src.perf.bench_harness import _malloc_trim
+
+    _malloc_trim()
 
 
 def host_load() -> Dict[str, Any]:
@@ -349,7 +403,7 @@ def _child_env() -> Dict[str, str]:
     return {**os.environ, "PYTHONHASHSEED": os.environ.get("PYTHONHASHSEED", "0")}
 
 
-def cmd_measure(name: str, out: Path, samples_dir: Optional[Path] = None) -> int:
+def cmd_measure(name: str, out: Path, samples_dir: Optional[Path] = None, memory_pass: bool = False) -> int:
     started = host_load()
     counters_before = cpu_counters()
     probe_before = host_speed_series()
@@ -363,10 +417,18 @@ def cmd_measure(name: str, out: Path, samples_dir: Optional[Path] = None) -> int
             "probe_before": probe_before, "probe_after": probe_after,
             "probe_note": "the before-probe runs before the state build and warm-up (BenchHarness.run_benchmark does both in one call); both sides are outside the sampled ticks", "cpu_before": counters_before, "cpu_after": counters_after}
     out.with_suffix(".meta.json").write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if memory_pass:
+        applied, message = apply_memory_pass(name, out)
+        print(message, file=sys.stdout if applied else sys.stderr)
     return 0
 
 
-def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False, wait_s: float = QUIET_WAIT_S) -> int:
+def cmd_memory_pass(name: str, out: Path) -> int:
+    out.write_text(json.dumps(measure_memory_pass(name).to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return 0
+
+
+def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False, wait_s: float = QUIET_WAIT_S, memory_pass: bool = False) -> int:
     spec_for(name)  # raises RerunError for an unknown name before anything runs
     out_dir = out_root / name
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -392,6 +454,9 @@ def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False
     median = Path(runs[summary.median_index].path)
     candidate = out_dir / "candidate.json"
     candidate.write_text(median.read_text(encoding="utf-8"), encoding="utf-8")
+    if memory_pass:  # once per record, after the last timed run, merged into the candidate only (the pass is untimed: per-run passes would only cost time)
+        applied, message = apply_memory_pass(name, candidate)
+        print(message, file=sys.stdout if applied else sys.stderr)
     cand = BenchmarkRecord.from_dict(json.loads(candidate.read_text(encoding="utf-8")))
     cpu = cand.identity.runtime.cpu_model
     off_normal = sorted({m.mode for m in cand.result.runtime_mode_sequence} - {"NORMAL"})
@@ -418,11 +483,16 @@ def _parser() -> argparse.ArgumentParser:
     rec.add_argument("--cause", required=True, help="the ticket id the re-record belongs to; printed into the promote command (there is no default: a hard-coded one named the wrong ticket)")
     rec.add_argument("--out-root", type=Path, default=OUT_ROOT)
     rec.add_argument("--wait-s", type=float, default=QUIET_WAIT_S, help="how long to wait before each run for loadavg1 < 1.5 and 2.5 GB available (0 = check once); a run never starts outside that window")
+    rec.add_argument("--memory-pass", action="store_true", help="once, after the last timed run, add the working_set_* keys to the candidate (a fresh untimed collector-on process; off by default)")
     rec.add_argument("--keep-samples", action="store_true", help="keep every sampled tick's latency of each run under <out>/<name>/samples/ (for a noise diagnosis)")
     mea = sub.add_parser("measure", help="one measured record in this process (the worker of ``record``)")
     mea.add_argument("--name", required=True, choices=known_names())
     mea.add_argument("--out", required=True, type=Path)
     mea.add_argument("--samples-dir", type=Path)
+    mea.add_argument("--memory-pass", action="store_true", help="after the timed run, read the engine working set in a fresh, untimed, collector-on process and add the working_set_* keys (off by default)")
+    mp = sub.add_parser("memory-pass", help="(internal) the untimed collector-on pass of one baseline, in this process; writes its reading")
+    mp.add_argument("--name", required=True, choices=known_names())
+    mp.add_argument("--out", required=True, type=Path)
     sub.add_parser("list", help="the baseline names this tool knows")
     return parser
 
@@ -434,8 +504,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             print("\n".join(known_names()))
             return 0
         if args.command == "measure":
-            return cmd_measure(args.name, args.out, args.samples_dir)
-        return cmd_record(args.name, args.out_root, args.cause, args.keep_samples, args.wait_s)
+            return cmd_measure(args.name, args.out, args.samples_dir, args.memory_pass)
+        if args.command == "memory-pass":
+            return cmd_memory_pass(args.name, args.out)
+        return cmd_record(args.name, args.out_root, args.cause, args.keep_samples, args.wait_s, args.memory_pass)
     except (RerunError, CapacityRunError) as exc:
         print(f"cannot run: {exc}", file=sys.stderr)
         return 1
