@@ -7727,6 +7727,46 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD.md
+  ticket_id: TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD
+  title: The rpg gate report judges an outcome row's drift against each reference
+    using the k and floor recorded in that reference, not the candidate run's own.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - _compare
+  - tools/test_architecture/rpg_gate_candidate.py (read only, plus a test)
+  - tests/helpers/rpg_gate_stub_metrics.py
+  - tests/unit/tools/test_rpg_gate_report.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/test_plan.md
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL.md
+  ticket_id: TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL
+  title: The rpg gate's required-validity check asks for each V row only at the level
+    it is judged at (per-seed `run` or `pooled`), not in every document.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - load_config
+  - missing_required
+  - _missing_required
+  - tests/simulation_quality/rpg_gate/config.yaml (rpg's values)
+  - tests/helpers/rpg_gate_stub_metrics.py
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW.md
   ticket_id: TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW
   title: 'CI: .github/workflows/security-scan.yml — gitleaks (secrets) on every PR
