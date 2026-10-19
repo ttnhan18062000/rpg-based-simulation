@@ -135,8 +135,8 @@ def test_setup_uv_is_matched_by_action_name_not_version(steps, expected):
 def test_the_coverage_parser_reads_tests_tools_for_both_tools_jobs_and_ignores_the_glob_word():
     paths = parse_job_pytest_paths(_WORKFLOW.read_text(encoding="utf-8"))
     # tools-a-e also runs tests/codebase (the lint group is installed there; TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE).
-    # tools-f-z also names the one workflow-file test it runs serially (it writes a fixed-name temp copy into the real workflows dir)
-    expected = {"tools-a-e": {"tests/tools", "tests/codebase"}, "tools-f-z": {"tests/tools", "tests/tools/test_implement_ticket_native_refusal.py"}}
+    # tools-f-z also names the two tests it runs serially: the workflow-file test (a fixed-name temp copy in the real workflows dir) and the run-dir observation test (it snapshots all of data/runs)
+    expected = {"tools-a-e": {"tests/tools", "tests/codebase"}, "tools-f-z": {"tests/tools", "tests/tools/test_implement_ticket_native_refusal.py", "tests/tools/test_simq_long_run_observation.py"}}
     for job in _TOOLS_JOBS:
         assert paths[job] == expected[job], "a --ignore-glob word must not be collected as a covered path"
     # plus the serial store-lock paths (issue #657); the parallel visual_assets step excludes them with --ignore, which the parser strips
