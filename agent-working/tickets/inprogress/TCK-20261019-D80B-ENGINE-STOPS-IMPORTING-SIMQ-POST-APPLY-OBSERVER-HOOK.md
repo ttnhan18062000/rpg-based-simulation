@@ -71,6 +71,9 @@ Decision 80 (B). The kernel builds SimQ itself: src/engine/kernel.py:230-272 imp
 - Fold the decay-record withdrawal (rpg-v2-decay-record, `ResourceTransactionSystem.resolve_all` in `src/engine/economy.py`) into the post-apply hook: emit once from the applied outcome. (Added on rpg-planner's instruction after the designer accepted V2; the intent-versus-outcome emitter list in TCK-20261019-MEAT-DECAYED-IS-WRITTEN-FROM-THE-APPLIED-OUTCOME-V2 is the starting set for the 80(A) audit, not findings.)
 
 ## Test Summary
+- Scoped, serial (rpg-d80b e1986db65): tests/unit/engine/test_run_observers.py + tests/simulation_quality + tests/api/test_scenario_runtime_api.py: 568 passed, 85 skipped. lint-imports 18 kept, 0 broken (c16 red on the base tree, green here). mypy gate exit 0.
+- A wide mixed batch (tests/api, unit/api, unit/kernel, unit/observability, unit/tools, tests/tools, architecture, unit/core, unit/cli, integration/kernel) showed 8 failures that pass in isolation on both rpg-d80b and the V2 branch (rpg-v2-decay-record): mixed-process ordering/host exposure, not D80B. Names: tests/integration/kernel/test_authoritative_outcome_truth.py::test_replay_sources_from_refined_update; tests/unit/core/test_startup_validation.py::test_aggressive_budget_warning; tests/tools/test_shadow_reviewer_call_site.py::test_architecture_verify_shadow_call_emits_distinct_joinable_event and ::test_security_review_shadow_call_emits_distinct_joinable_event; tests/tools/test_skill_usage_metric.py::test_live_corpus_loads_nonempty and ::test_causes_zero_diff_on_real_corpus; tests/tools/test_verify_referential_integrity.py::test_real_corpus_smoke_run; tests/tools/test_verify_temporal_week_consistency.py::test_real_corpus_smoke_run.
+- To do after v1 is recorded: rebase onto v1, rerun the wide batch once (clean, or the same 8 also fail on main), then the hash ON/OFF check (3 worlds x seed 42, 5000t) and the calibrate_simq diff against v1.
 
 ## Files Changed
 
