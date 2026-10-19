@@ -38,6 +38,10 @@ In the 2026-10-19 SLO run, the Redis drill and the re-measure, Loki held no data
 - Prove it live: promtail targets > 0 and ready; Loki labels include `container`; a backend log line is queryable; `promtail_sent_entries_total` > 0. Re-run the runbook's Loki first check from target-down.md / api-latency-slo.md / redis-down.md.
 - Update the runbooks: remove the "docker compose logs fallback" note once Loki works.
 
+- Fold in two stale compose.yaml comments (lead review of the R1/R2 batch, 2026-10-20):
+  - redis-exporter `mem_limit: 32m # placeholder until the measured peak is recorded`: replace it with the measured figure (re-measure 2026-10-19: docker stats 12 MiB, anon 10 MiB, anon + active_file 12 MiB, 36 %).
+  - grafana "Slot (c) verifies the new headroom": replace it with the result (re-measure anon 23 % of 1024m; the long-run slot (b) figure of 654 MiB is 64 %).
+
 ## Out of Scope
 - Promtail → Alloy migration itself (separate follow-up).
 - Loki retention or limits.
@@ -69,7 +73,14 @@ In the 2026-10-19 SLO run, the Redis drill and the re-measure, Loki held no data
 - Did Loki ever receive docker logs in this stack? Unknown. Check older records first.
 
 ## Implementation Notes
-Not started. Standard tier: plan.md, investigation.md and test_plan.md at dispatch.
+Not started.
+- Plan requirements (lead, 2026-10-20). The plan must state:
+  - the exact proxy env change and every endpoint it opens;
+  - whether `docker_sd` can avoid `/networks` (a config option, or a file-based log path such as /var/lib/docker/containers), so we can compare against not widening the proxy;
+  - the promtail release-notes line (or code reference) that proves or disproves the 3.6.8 hypothesis;
+  - the targets > 0 guard (in scope).
+  The `NETWORKS=1` decision goes to the owner through lead, with platform-planner's recommendation.
+ Standard tier: plan.md, investigation.md and test_plan.md at dispatch.
 
 ## Test Summary
 Not started.
