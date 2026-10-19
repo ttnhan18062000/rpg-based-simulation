@@ -5565,6 +5565,17 @@
   - process-improvement
   - governance
 - type: doc
+  path: docs/guidelines/session_roles/host_suffixed_twins.md
+  title: Host-suffixed twins
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: doc
   path: docs/guides/diagram_index.md
   title: Diagram Index
   status: active
@@ -7676,6 +7687,18 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM.md
+  ticket_id: TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM
+  title: 'The request-duration histogram gets a 0.3 s bucket so the API SLO alert
+    measures exactly "p95 <= 300 ms" (issue #622, R2 follow-up).'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - src/api/http_metrics.py, tests/unit/api/test_http_metrics.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS.md
   ticket_id: TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS
   title: 'Default compose stack: the backend publishes the event stream to Redis,
@@ -7705,6 +7728,22 @@
   - testing
   - regression
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE.md
+  ticket_id: TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE
+  title: Tools tests that run a hook with `cwd=tmp_path` read the real main checkout's
+    state whenever pytest's basetemp is inside a git repo
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/tools/test_session_start_handover_hook.py, tests/tools/conftest.py, tools/handover_home.py,
+    tools/agent-monitoring/session_start_handover_hook.py, tools/sessions/session_start_hook.py
+  artifact_files: []
+  tags:
+  - ai
+  - testing
+  - bug
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY.md
   ticket_id: TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY
   title: V8's examples name each unsourced entity and its tick, the way V5's out-of-world
@@ -7715,6 +7754,64 @@
   related_code_areas:
   - _count_adds
   - _check_unsourced_adds
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
+  ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
+  title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
+    run their tests in parallel with pytest-xdist inside the job, after an audit shows
+    the tests are safe to parallelise. No jobs are added.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - integration
+  - tests/conftest.py (resource budget, run-dir creation)
+  - tools/ci_junit_summary.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+  - performance
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645.md
+  ticket_id: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
+  title: 'The catalog arena smoke fails its tick budget at tick 3 (479.5 ms > 150
+    ms) in the first slow run after #645'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/integration/certification/test_catalog_arena_smoke.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE.md
+  ticket_id: TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE
+  title: SimQ reads the run's lossless simulation_events.jsonl offline, never the
+    live stream (D80 C)
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/event_recorder.py
+  - src/simulation_quality/
+  - tools/ (calibrate_simq, simq compare)
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-D80D-UNGRADED-SIMQ-DATA-REVIEW-ON-THE-V1-RECORD.md
+  ticket_id: TCK-20261019-D80D-UNGRADED-SIMQ-DATA-REVIEW-ON-THE-V1-RECORD
+  title: The first SimQ deliverable is an ungraded end-to-end data review of the v1
+    record (D80 D)
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-19'
+  related_code_areas:
+  - src/simulation_quality/
   artifact_files: []
   tags:
   - observability
@@ -8074,6 +8171,24 @@
   - bug
   - root-cause
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS.md
+  ticket_id: TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS
+  title: Register host-suffixed `-u24` roles for the platform and agent-working seats
+    that run on host u24desktop
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - registries/session_roles.yaml, tools/sessions/{validate,generate_agents,route,boundary,launch}.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS/test_plan.md
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-STARLETTE-1X-ROUTES-STAY-AUTHENTICATED-AND-THE-ROUTE-WALK-SEES-THEM-580.md
   ticket_id: TCK-20261018-STARLETTE-1X-ROUTES-STAY-AUTHENTICATED-AND-THE-ROUTE-WALK-SEES-THEM-580
   title: 'Prepare the starlette 1.x bump (#580): every route stays authenticated and
@@ -8211,21 +8326,6 @@
   tags:
   - platform
   - delivery
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS.md
-  ticket_id: TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS
-  title: Register host-suffixed `-u24` roles for the platform and agent-working seats
-    that run on host u24desktop
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - registries/session_roles.yaml, tools/sessions/{validate,generate_agents,route,boundary,launch}.py
-  artifact_files: []
-  tags:
-  - ai
-  - process-improvement
-  - governance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261018-TWO-BARE-KERNEL-TESTS-DEPEND-ON-HOST-MEMORY.md
   ticket_id: TCK-20261018-TWO-BARE-KERNEL-TESTS-DEPEND-ON-HOST-MEMORY
@@ -8582,6 +8682,20 @@
   - FRONTEND_RE
   - tests/static/test_ci_narrow_path_filtered_jobs.py
   - frontend/src/visualAssets/__tests__/iconScene.test.ts (read-only)
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261015-FRONTIER-3-42-EXTENDED-POPULATION-STABILITY-NEEDS-LARGE-BUDGET.md
+  ticket_id: TCK-20261015-FRONTIER-3-42-EXTENDED-POPULATION-STABILITY-NEEDS-LARGE-BUDGET
+  title: Mark `test_generated_frontier_3_42_extended_population_stability` `resource_budget_large`,
+    like the other 1000t tests in the file
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tests/conftest.py (budget selection, read-only here)
   artifact_files: []
   tags:
   - testing
