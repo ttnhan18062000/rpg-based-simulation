@@ -73,6 +73,23 @@ Child 3 of `TCK-20261013-EPIC-VISUAL-ASSET-MAP-MARKERS`. The owner's #523 answer
 
 ## Implementation Notes
 - **Step-1 miss, fixed (2026-10-19):** commit `0cfc1e56c` added 11 `icon.entity.*` registry keys whose `description` was about 350 characters. The registry caps a key's description at 256 characters, so that commit's `visual_keys.yaml` does not load (`registry_unreadable ... keys.83.description: String should have at most 256 characters`). `draft keep` found it first. Commit `061b3ed6c` shortens all 11. A squash merge keeps `0cfc1e56c` off `main`. Nothing in step 1 loaded the registry; from now on, after any `visual_keys.yaml` edit, load it once (light) before committing.
+- **Owner decision on the loot-read risk, 2026-10-19 (via lead-planner, neutral fixed-order options): "1. Adopt as drawn"**, accepting that 7 of 11 markers read as an item or a resource on the map. The accepted read (two fresh agents, 19 markers on a real map crop with 8 controls, all 8 controls read right):
+
+| kind | object drawn | read as (agent 1 / agent 2) | named as | result |
+|---|---|---|---|---|
+| alpha | standing wolf | UNIT / UNIT | wolf or dog | PASS (dog risk) |
+| scout | open eye | UNIT / UNIT | eye | PASS |
+| sentinel | stone idol face | UNIT / UNIT | golem or cube creature | PASS |
+| wild_creature | grazing deer | UNIT / UNIT | deer | PASS |
+| blacksmith | horseshoe | ITEM / ITEM | horseshoe or magnet | accepted: reads as loot |
+| guard | gate key | ITEM / ITEM | key | accepted: reads as loot |
+| leader | gold crown | ITEM / ITEM | crown | accepted: reads as loot |
+| merchant | balance scale | ITEM / ITEM | balance scale | accepted: reads as loot |
+| raider | torn banner | ITEM / ITEM | banner | accepted: reads as loot |
+| worker | pitchfork | ITEM / ITEM | pitchfork or trident | accepted: reads as loot |
+| predator_hunter | three claw slashes | RESOURCE / RESOURCE | claw marks or red sticks | accepted: reads as a resource |
+
+The adopt-set command and the label approval are the owner's own step (asset-planner gives a filled command through lead). Nothing is adopted yet; the draft set `entity-markers-v1` is not to be touched until the owner has run it.
 - **Drafts:** 11 colour drafts kept in set `entity-markers-v1` (bare object, owner treatment (a)); the worker was redrawn once (lighter steel tines for contrast on grass, planner review) and kept with `draft keep --replace`.
 
 
