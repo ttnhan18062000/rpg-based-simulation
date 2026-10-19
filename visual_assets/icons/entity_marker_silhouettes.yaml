@@ -6,6 +6,7 @@
 #   c  a figure silhouette, 12x12 live area                       (given for the three kinds in `compare`, candidate A)
 # `nearest` is the existing adopted glyph the new marker is shown beside (the collision map in the investigation).
 record_type: entity_marker_silhouettes
+# OWNER GATE 2026-10-19 (via lead, neutral options): treatment (a) the bare object for the whole set; chosen candidate per kind in `chosen` (worker A, guard D, scout C, raider B, sentinel B, merchant A, blacksmith A, leader A, alpha B, predator_hunter A, wild_creature A). The `bare` rows of worker, guard and sentinel are the chosen shapes at 12x12; the other eight are drawn from the 8x8 emblem in colour.
 token:
 - '....####....'
 - '..########..'
@@ -22,6 +23,7 @@ token:
 kinds:
   worker:
     nearest: icon.item.tool
+    chosen: A  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     A:
       name: three-tine pitchfork
       emblem: ['#..#..#', '#..#..#', '#..#..#', '#######', '...#...', '...#...', '...#...', '...#...']
@@ -56,6 +58,7 @@ kinds:
     - '..###.###.#.'
   guard:
     nearest: icon.class.warrior
+    chosen: D  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     treatment: D  # the candidate shown in the three treatments (the spear A is flagged by the blind check)
     A:
       name: spear with a pennant
@@ -97,6 +100,7 @@ kinds:
     - '..##..##.#..'
   sentinel:
     nearest: icon.marker.boss_arena
+    chosen: B  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     treatment: B  # shown in the three treatments (coffin A is flagged by the blind check)
     A:
       name: iron-bound coffin, blue glow at the seam
@@ -132,6 +136,7 @@ kinds:
     - '..###..###..'
   scout:
     nearest: icon.class.ranger
+    chosen: C  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     A:
       name: brass spyglass
       emblem: ['......##', '...##.##', '.#.##.##', '.#.##.##', '...##.##', '......##']
@@ -146,6 +151,7 @@ kinds:
       emblem: ['.###....', '.###....', '.###....', '.####...', '.#####..', '.#######', '.#######', '########']
   raider:
     nearest: icon.marker.enemy_camp
+    chosen: B  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     A:
       name: one bearded axe
       emblem: ['.#......', '.####...', '.######.', '.######.', '.#####..', '.#.##...', '.#......', '.#......']
@@ -154,6 +160,7 @@ kinds:
       emblem: ['#.......', '######..', '#######.', '######..', '#####...', '#.###...', '#..#....', '#.......']
   merchant:
     nearest: icon.building.store
+    chosen: A  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     A:
       name: balance scale
       emblem: ['...##...', '########', '.#.##.#.', '.#.##.#.', '###..###', '...##...', '...##...', '..####..']
@@ -162,6 +169,7 @@ kinds:
       emblem: ['..####..', '.######.', '########', '##.##.##', '#.#.#.#.', '#......#', '#......#', '########']
   blacksmith:
     nearest: icon.building.blacksmith
+    chosen: A  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     A:
       name: horseshoe
       emblem: ['###..###', '##....##', '##....##', '##....##', '##....##', '###..###', '.######.', '..####..']
@@ -170,6 +178,7 @@ kinds:
       emblem: ['########', '.#######', '...####.', '...####.', '...####.', '..#####.', '.#######', '.#######']
   leader:
     nearest: icon.building.guild
+    chosen: A  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     A:
       name: gold crown with three points
       emblem: ['#..##..#', '##.##.##', '########', '########', '########']
@@ -178,6 +187,7 @@ kinds:
       emblem: ['..####..', '.#....#.', '#..##..#', '#..##..#', '.#....#.', '..####..', '..#..#..', '.##..##.']
   alpha:
     nearest: icon.class.rogue
+    chosen: B  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     A:
       name: wolf head, ears up, notched ear
       emblem: ['#.#.....', '####....', '.######.', '.#######', '.######.', '..####..', '..###...']
@@ -186,6 +196,7 @@ kinds:
       emblem: ['.....#.#', '....####', '##.####.', '#######.', '.######.', '.#.##.#.', '.#.##.#.', '.#.##.#.']
   predator_hunter:
     nearest: icon.marker.boss_arena
+    chosen: A  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     A:
       name: three claw slashes
       emblem: ['#..#..#.', '#..#..#.', '#..#..#.', '.#..#..#', '.#..#..#', '.#..#..#']
@@ -194,6 +205,7 @@ kinds:
       emblem: ['#######.', '#######.', '#.#.#.#.', '#.......', '#.......', '#.#.#.#.', '#######.', '#######.']
   wild_creature:
     nearest: icon.marker.resource_grove
+    chosen: A  # owner gate 2026-10-19; every other option of this kind is rejected and kept only so the sheet stays reproducible
     A:
       name: grazing deer
       emblem: ['#.#.#...', '#####...', '.###....', '.#######', '..######', '..######', '..#.#.#.', '..#.#.#.']

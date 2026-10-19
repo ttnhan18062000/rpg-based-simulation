@@ -711,6 +711,105 @@ keys:
     fallback: {kind: "glyph_and_text", glyph: "inset square (#7dd3a0)", text: "the resource node name as text"}
     label_key: label.icon.node.moon_resin_tree
     label: "Moon resin tree"
+  - key: icon.entity.worker
+    family: icon
+    description: Map glyph for the `worker` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.worker
+    label: "Worker"
+  - key: icon.entity.guard
+    family: icon
+    description: Map glyph for the `guard` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.guard
+    label: "Guard"
+  - key: icon.entity.scout
+    family: icon
+    description: Map glyph for the `scout` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.scout
+    label: "Scout"
+  - key: icon.entity.raider
+    family: icon
+    description: Map glyph for the `raider` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.raider
+    label: "Raider"
+  - key: icon.entity.sentinel
+    family: icon
+    description: Map glyph for the `sentinel` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.sentinel
+    label: "Sentinel"
+  - key: icon.entity.merchant
+    family: icon
+    description: Map glyph for the `merchant` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.merchant
+    label: "Merchant"
+  - key: icon.entity.blacksmith
+    family: icon
+    description: Map glyph for the `blacksmith` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.blacksmith
+    label: "Blacksmith"
+  - key: icon.entity.leader
+    family: icon
+    description: Map glyph for the `leader` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.leader
+    label: "Leader"
+  - key: icon.entity.alpha
+    family: icon
+    description: Map glyph for the `alpha` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.alpha
+    label: "Alpha"
+  - key: icon.entity.predator_hunter
+    family: icon
+    description: Map glyph for the `predator_hunter` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.predator_hunter
+    label: "Predator hunter"
+  - key: icon.entity.wild_creature
+    family: icon
+    description: Map glyph for the `wild_creature` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    variant_axes: []
+    optional: true
+    safety_class: identifying
+    fallback: {kind: "glyph_and_text", glyph: "grey circle (#888888) with the state ring", text: "the entity kind name as text"}
+    label_key: label.icon.entity.wild_creature
+    label: "Wild creature"
 # Aliases (TCK-20261012-VISUAL-ASSETS-V2-TERRAIN-ALIASES, owner answer on #523, 2026-10-12): V2 terrain names are canonical and their art is reused through these aliases.
 # The name -> key rule is lower case with spaces to underscores, so `PLAIN` and `plain` both resolve through `terrain.plain` (a key cannot be upper case, `identities.py`); whether
 # `PLAIN` and `plain` stay two names is rpg's to dedupe (#523: no two V2 terrain names may differ only by case). REGISTRY-ONLY: no release, runtime export or client carries an alias
