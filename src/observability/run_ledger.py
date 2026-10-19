@@ -145,7 +145,7 @@ class RunLedger:
             results = getattr(upd, "intent_results", None) or []
             cls._count_results(group, results)
             if entity.biological.hunger < prior_ent.biological.hunger:
-                cls._count_hunger_drop(group, results, cls._inventory_moved(prior_ent, entity))
+                cls._count_hunger_drop(group, results, cls._inventory_moved(prior_ent, entity) or cls._corpse_moved(prior, current, results))
 
     @classmethod
     def _count_results(cls, group: str, results: List[Any]) -> None:
@@ -167,6 +167,16 @@ class RunLedger:
                 held[st.item_id] = held.get(st.item_id, 0) + st.quantity
             return held
         return stacks(before) != stacks(after)
+
+    @staticmethod
+    def _corpse_moved(prior: AuthoritativeState, current: AuthoritativeState, results: List[Any]) -> bool:
+        """Whether a body an accepted CORPSE / CORPSE_FOOD transfer named lost food this tick: a meal eaten where the body lies moves the corpse's stack, not the
+        eater's inventory."""
+        def held(state: AuthoritativeState, cid: Any) -> int:
+            corpse = (getattr(state, "corpses", None) or {}).get(cid)
+            return 0 if corpse is None else sum(st.quantity for st in getattr(corpse, "items", ()))
+        return any(held(prior, r.source_id) != held(current, r.source_id) for r in results
+                   if getattr(r, "accepted", False) and getattr(r, "source_kind", "") in ("CORPSE", "CORPSE_FOOD"))
 
     @classmethod
     def _count_hunger_drop(cls, group: str, results: List[Any], moved: bool = True) -> None:

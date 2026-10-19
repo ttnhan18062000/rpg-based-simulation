@@ -61,7 +61,9 @@ V1 read 0 on the v1 gate run while the free meal is still in the code: the inn's
 The applied amount is derived in the observer from the intent and the gold the eater held at the prior tick.
 
 ## Test Summary
+Regression tests: broke eater at the inn -> without_transfer; eater holding gold who pays -> with_accepted_transfer; corpse meal in place (corpse stack lost food) -> with_accepted_transfer. tests/unit/observability + tests/observability 1176 passed; full mypy gate exit 0. Proof, seed 42, 5000 ticks, serial: final hashes identical to the base (frontier db7ade49, urban a44bac86, crowded 3f967587). V1 violations: urban_political 23 (of 43 drops), frontier_living_world 2, crowded_frontier 2. Classification of every unbacked drop (probe): all are TOWN_SERVICE inn meals by an eater holding 0 gold (23/2/2); the first version (eater inventory only) also flagged CORPSE_FOOD meals (frontier 9, crowded 8) and a meat-only corpse eater; widened to the corpse's stack.
 
 ## Files Changed
+src/observability/run_ledger.py, tests/unit/observability/test_run_ledger.py, tools/test_architecture/rpg_gate_known.yaml
 
 ## Completion Summary

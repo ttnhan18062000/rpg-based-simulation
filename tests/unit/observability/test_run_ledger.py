@@ -120,6 +120,17 @@ def test_a_broke_eater_at_the_inn_is_a_hunger_drop_without_transfer():
     assert RunLedger.tally_event().payload["hunger_drops"] == {f"{group}|without_transfer": 1}
 
 
+def test_a_meal_eaten_at_a_corpse_in_place_is_backed_by_the_body_losing_its_food():
+    """Eating where the body lies moves the corpse's stack, not the eater's inventory: it is not a free meal."""
+    state = _inn_state(0)
+    object.__setattr__(state, "corpses", {9: _corpse(9, 3)})
+    eaten = _paid(state, 0)
+    object.__setattr__(eaten, "corpses", {9: _corpse(9, 2)})
+    RunLedger.observe(state, eaten, _update([_result("CORPSE_FOOD", source_id=9)]))
+    group = kind_group(state.entities[WHO])
+    assert RunLedger.tally_event().payload["hunger_drops"] == {f"{group}|with_accepted_transfer": 1}
+
+
 def test_an_eater_holding_gold_who_pays_at_the_inn_is_backed():
     state = _inn_state(5)
     RunLedger.observe(state, _paid(state, 0), _update([_result("TOWN_SERVICE", source_id=3)]))
