@@ -32,7 +32,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 OUT_ROOT = REPO / "reports" / "visual_assets" / "sample_map"
-RELEASE_ID = "rc-0011"  # the current release candidate: rc-0010 plus the 18 object markers
+RELEASE_ID = "rc-0012"  # the current release candidate: rc-0011 plus the 11 entity markers
 EXPORT_DIR = OUT_ROOT / f"{RELEASE_ID}-runtime"
 TILE = 16
 
@@ -471,12 +471,12 @@ def write_page(results: list[dict], datas: dict[str, dict], out_root: Path | Non
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Sample map: the adopted art on three compiled worlds</title>",
         "<style>body{font:14px/1.45 system-ui,sans-serif;margin:16px;background:#14161c;color:#e6e6e6}h1,h2,h3{margin:.6em 0 .3em}img{image-rendering:pixelated;max-width:100%;height:auto;border:1px solid #444}",
         "table{border-collapse:collapse;margin:.4em 0}td,th{border:1px solid #444;padding:2px 8px;text-align:left}.alias{outline:2px dashed #d9a441}.note{color:#d9a441}code{background:#222;padding:0 3px}.row{display:flex;flex-wrap:wrap;gap:16px}</style></head><body>",
-        "<h1>Sample map: the adopted art (rc-0011) on three compiled worlds</h1>",
+        "<h1>Sample map: the adopted art (rc-0012) on three compiled worlds</h1>",
         "<p><b>Evidence, not a shipped asset</b>: this picture is never intaken, adopted or put in a release candidate; nothing is wired into the Live Map. Cells are drawn by terrain <i>name</i> (the presenter's own code table), not by <code>present_map</code>'s per-world integer code.</p>",
         "<h2>Legend</h2><ul>",
         "<li><b>Exact view</b> (primary evidence): a name draws with its own key when that key is registered, or through a <b>registry alias</b> (terrain: <code>plain</code> and <code>PLAIN</code> to grassland, <code>ruin</code> to ruins, <code>river</code> to shallow water; objects: <code>shop</code> to store, <code>CAMP</code> to enemy camp, <code>RUIN</code> to ruins), resolved offline with <code>Registry.resolve</code>: <b>the live client does NOT resolve aliases</b> (registry-only; a runtime consumer is needed at activation). A name with no key or alias is a <b>diagonal-striped plum cell</b> (a gap).</li>",
         "<li><b class=\"note\">Alias view (dashed outline) - unconfirmed: asset-planner proposal for rpg-planner (#519)</b>: an object kind with no key draws with its proposed alias. Every earlier proposal (<code>shop</code>, <code>CAMP</code>, <code>RUIN</code>) is now a registry alias, so the alias view is shown below only for a world where it differs from the exact view.</li>",
-        "<li>A key with no art in the release would be the Live Map flat fill with a white diagonal line (none occurs in rc-0011: all 23 terrain keys have art).</li>",
+        "<li>A key with no art in the release would be the Live Map flat fill with a white diagonal line (none occurs in rc-0012: all 23 terrain keys have art).</li>",
         "<li>An object with no art (building, place, resource node) is a <b>checkered magenta and black 10 x 10 marker</b>. Buildings are drawn from their 24 x 24 icon scaled to one 16 x 16 cell (nearest neighbour); places are the location plate with their marker glyph, and a <code>CITY</code> is the plate alone (no key, alias or glyph); resource nodes are their 16 x 16 <code>icon.node.&lt;kind&gt;</code> tile with no plate. Entities are counted in the data, not drawn.</li>",
         "<li>Borders: the composition rule of <code>terrainBorders.ts</code> ported to Python and proven on the rule's own test vectors; only cells whose terrain has a Live Map rank fringe. Scale: 16 px per cell (x1); the x2 files double it.</li></ul>",
     ]

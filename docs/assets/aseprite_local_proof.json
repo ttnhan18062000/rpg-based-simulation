@@ -82,7 +82,7 @@
     },
     {
       "path": "tests/visual_assets/test_release_byte_reproducibility.py",
-      "sha256": "sha256:2ebd6bf2f46e7eb22a9c73c8ab1a4fcb0575756d59ae5ec0642ebc4ac93cec46"
+      "sha256": "sha256:3f7a0df955e1662c3c711f38929ed8e69197cb504a843ebfd38164866d7e88c9"
     },
     {
       "path": "tests/visual_assets/test_strict_aseprite.py",
@@ -461,17 +461,17 @@
       "sha256": "sha256:273e79ef546f44ef25d9cc94980b1b620aac3cd1b1e35ebff334529e92b8d3b5"
     }
   ],
-  "guarded_hash": "sha256:2e83321e2f466c81ec3e88fe29e7614c0e3c7038dec2c03cff5334a9bb2dc6e9",
+  "guarded_hash": "sha256:8df2b3f5bec1aac91ca29dedd952eb7be2443cf030ed9744a90a7859cf1283d0",
   "make_target": "visual-assets-aseprite-local",
   "record_type": "aseprite_local_proof",
   "release_rebuild": {
     "bytes_differ_pixels_match": 0,
-    "entries": 105,
-    "identical": 105,
-    "release": "pilot/rc-0011"
+    "entries": 116,
+    "identical": 116,
+    "release": "pilot/rc-0012"
   },
-  "run_at_utc": "2026-10-16T08:03:29Z",
-  "run_commit": "817cc27be4ad78da7358325d3853c5f0c8f7f658",
+  "run_at_utc": "2026-10-19T13:53:40Z",
+  "run_commit": "08e58856500070791d91e6b0cef74b600fac9044",
   "schema_version": 1,
   "strict": true
 }
