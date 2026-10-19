@@ -5565,6 +5565,17 @@
   - process-improvement
   - governance
 - type: doc
+  path: docs/guidelines/session_roles/host_suffixed_twins.md
+  title: Host-suffixed twins
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: doc
   path: docs/guides/diagram_index.md
   title: Diagram Index
   status: active
@@ -7690,6 +7701,22 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE.md
+  ticket_id: TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE
+  title: Tools tests that run a hook with `cwd=tmp_path` read the real main checkout's
+    state whenever pytest's basetemp is inside a git repo
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/tools/test_session_start_handover_hook.py, tests/tools/conftest.py, tools/handover_home.py,
+    tools/agent-monitoring/session_start_handover_hook.py, tools/sessions/session_start_hook.py
+  artifact_files: []
+  tags:
+  - ai
+  - testing
+  - bug
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY.md
   ticket_id: TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY
   title: V8's gate self-test, case (a), asserts that the example names the unsourced
@@ -7719,6 +7746,24 @@
   artifact_files: []
   tags:
   - observability
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
+  ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
+  title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
+    run their tests in parallel with pytest-xdist inside the job, after an audit shows
+    the tests are safe to parallelise. No jobs are added.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - integration
+  - tests/conftest.py (resource budget, run-dir creation)
+  - tools/ci_junit_summary.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+  - performance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-RECORD-BASELINE-V1.md
   ticket_id: TCK-20261019-RECORD-BASELINE-V1
@@ -8075,6 +8120,24 @@
   - bug
   - root-cause
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS.md
+  ticket_id: TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS
+  title: Register host-suffixed `-u24` roles for the platform and agent-working seats
+    that run on host u24desktop
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - registries/session_roles.yaml, tools/sessions/{validate,generate_agents,route,boundary,launch}.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS/test_plan.md
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-STARLETTE-1X-ROUTES-STAY-AUTHENTICATED-AND-THE-ROUTE-WALK-SEES-THEM-580.md
   ticket_id: TCK-20261018-STARLETTE-1X-ROUTES-STAY-AUTHENTICATED-AND-THE-ROUTE-WALK-SEES-THEM-580
   title: 'Prepare the starlette 1.x bump (#580): every route stays authenticated and
@@ -8212,21 +8275,6 @@
   tags:
   - platform
   - delivery
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS.md
-  ticket_id: TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS
-  title: Register host-suffixed `-u24` roles for the platform and agent-working seats
-    that run on host u24desktop
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - registries/session_roles.yaml, tools/sessions/{validate,generate_agents,route,boundary,launch}.py
-  artifact_files: []
-  tags:
-  - ai
-  - process-improvement
-  - governance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261018-TWO-BARE-KERNEL-TESTS-DEPEND-ON-HOST-MEMORY.md
   ticket_id: TCK-20261018-TWO-BARE-KERNEL-TESTS-DEPEND-ON-HOST-MEMORY
