@@ -179,7 +179,7 @@ class RunLedger:
             key = _key(kind_group(entity), kind)
             cls._adds[key] = cls._adds.get(key, 0) + 1
             if kind == UNSOURCED and len(cls._unsourced_examples) < MAX_EXAMPLES:
-                cls._unsourced_examples.append({"entity_id": entity.id, "tick": tick, "kind_group": kind_group(entity)})
+                cls._unsourced_examples.append({"entity_id": entity.id, "tick": tick, "kind_group": kind_group(entity), "check": UNSOURCED})
             cls._declared_coin += float(entity.inventory.gold)
 
     @classmethod

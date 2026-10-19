@@ -118,7 +118,7 @@ def test_an_unsourced_add_is_named_by_entity_tick_and_group_and_a_sourced_add_is
     state = _at_tick(_world(), 10)
     sourced, bare = V2EntityBuilder(500).build(), V2EntityBuilder(501).build()
     payload = _tally(state, update=_update(adds=[sourced, bare], sources={500: SpawnSource(SpawnKind.BIRTH, parent_ids=(1, 2))}))
-    assert payload["unsourced_examples"] == [{"entity_id": 501, "tick": 10, "kind_group": kind_group(bare)}]
+    assert payload["unsourced_examples"] == [{"entity_id": 501, "tick": 10, "kind_group": kind_group(bare), "check": "unsourced"}]
 
 
 def test_unsourced_examples_are_capped_and_reset_between_runs():

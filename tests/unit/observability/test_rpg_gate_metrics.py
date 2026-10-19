@@ -114,7 +114,7 @@ def test_v8_every_mid_run_add_needs_a_declared_source(tmp_path):
     assert _violations(tmp_path, "V8", adds={f"{PEOPLE}|BIRTH": 3}) == 0
     row = _row(m.compute(_run(tmp_path, _ledger(adds={f"{PEOPLE}|BIRTH": 3, f"{WOLF}|unsourced": 2, f"{DEER}|unsourced": 1}))), "V8")
     assert row["violations"] == 3 and "examples" not in row
-    named = [{"entity_id": 9, "tick": 4, "kind_group": WOLF}]
+    named = [{"entity_id": 9, "tick": 4, "kind_group": WOLF, "check": "unsourced"}]
     row = _row(m.compute(_run(tmp_path, _ledger(adds={f"{WOLF}|unsourced": 1}, unsourced_examples=named))), "V8")
     assert row["violations"] == 1 and row["examples"] == named
 
