@@ -16,6 +16,7 @@ from pathlib import Path
 import yaml
 
 from visual_assets.review import icon_lookalikes as la
+from visual_assets.review import icon_owner_fixes_draft_set as fixes
 from visual_assets.review.review_sheets import DARK, DIM, GREEN, INK, LIGHT, PAGE, Canvas, wrap
 
 REPO = Path(__file__).resolve().parents[1]
@@ -33,6 +34,11 @@ CELL_W = 520
 COLS = 3
 COMPARE = ("worker", "guard", "sentinel")
 Rgb = tuple[int, int, int]
+
+
+def glyphs() -> dict:
+    """The adopted glyphs: the key-set and v2 drawings (r0001) with the owner-fixes drawings (r0002, adopted 2026-10-08) over them, so item.tool is the hammer and tongs, not the old wrench."""
+    return {**la.all_icon_sprites(), **fixes.proposed_sprites()}
 
 
 def load(path: Path = SILHOUETTES) -> dict:
@@ -84,7 +90,7 @@ def _paint(c: Canvas, cell: list[list[Rgb | None]], x: int, y: int, zoom: int, b
 
 def _glyph(c: Canvas, key: str, x: int, y: int, zoom: int, bg: Rgb) -> int:
     """Draw the adopted glyph `key` at `zoom` on a `bg` panel (its own size, at least a 16 px cell); return the panel side."""
-    sprite = la.all_icon_sprites()[key]
+    sprite = glyphs()[key]
     side = max(sprite.width, CELL) * zoom
     c.rect(x, y, side, side, bg)
     c.sprite(sprite, x + (side - sprite.width * zoom) // 2, y + (side - sprite.height * zoom) // 2, zoom)
@@ -104,14 +110,14 @@ def draw_cell(c: Canvas, x0: int, y0: int, head: str, name: str, cell: list[list
     c.text(gx, y1 + side + 8, "NEXT TO " + nearest.split(".", 1)[1].upper(), DIM, 2)
     rx = gx + side + 16
     _paint(c, cell, rx, y1, 1, GRASS, one_ink)
-    sprite = la.all_icon_sprites()[nearest]
+    sprite = glyphs()[nearest]
     c.rect(rx + CELL + 8, y1, max(sprite.width, CELL), max(sprite.height, CELL), GRASS)
     c.sprite(sprite, rx + CELL + 8 + (max(sprite.width, CELL) - sprite.width) // 2, y1 + (max(sprite.height, CELL) - sprite.height) // 2, 1)
     c.text(rx, y1 + big // 2, "X1", DIM, 2)
 
 
 def cell_size() -> tuple[int, int]:
-    side = max(max(s.width, CELL) for s in la.all_icon_sprites().values()) * ZOOM
+    side = max(max(s.width, CELL) for s in glyphs().values()) * ZOOM
     return CELL_W, 26 + 26 * 2 + 8 + side + 40
 
 

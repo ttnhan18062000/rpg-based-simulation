@@ -68,3 +68,34 @@ Open design point (not decided here, an owner question at the silhouette gate): 
 ## Not established
 - Which candidate the owner prefers: the owner gate decides.
 - The key family name: pending the owner's answer via lead (no key names are committed until it arrives).
+
+## Blind naming check of the 22 silhouette emblems (after the redraw of cdd08be93's review)
+Two fresh subagents, free text, no list, 22 shuffled unlabelled emblems on the token at x8 and 1:1. PASS = both named the intended object. 11 pass, 11 flagged; flagged shapes still go to the owner, marked as flagged.
+
+| kind | cand. | intended | answers (agent 1 / agent 2) | result |
+|---|---|---|---|---|
+| worker | A | three-tine pitchfork | trident or pitchfork / same | PASS (trident risk) |
+| worker | B | wooden spade | swan or duck / swan or snake | FLAG |
+| guard | A | spear with a pennant | signpost or flag on a pole / same | FLAG |
+| guard | B | nasal helm | helmet or archway / archway or doorway | FLAG |
+| scout | A | brass spyglass | horn or megaphone / same | FLAG |
+| scout | B | hunting horn | bowl or horned helmet / bird or bat, or a helmet | FLAG |
+| raider | A | one bearded axe | flag on a pole / same | FLAG |
+| raider | B | torn banner | banner or pennant / same | PASS |
+| sentinel | A | iron-bound coffin | keyhole or lightbulb or map pin / key or lightbulb | FLAG |
+| sentinel | B | stone idol face | face or mask / blank stone face | PASS |
+| merchant | A | balance scale | scales of justice or a tree / same | PASS |
+| merchant | B | striped market awning | crowned chest or fortress / treasure chest or fortress | FLAG |
+| blacksmith | A | horseshoe | horseshoe or magnet / same | PASS (magnet risk) |
+| blacksmith | B | anvil | anvil or hourglass / same | PASS (hourglass risk) |
+| leader | A | gold crown | crown / crown | PASS |
+| leader | B | signet seal | figure with a halo / figure with round head | FLAG |
+| alpha | A | wolf head | bird head or fox/boar head / boar or bear head or a fish | FLAG |
+| alpha | B | standing wolf | dog or wolf / same | PASS (dog risk) |
+| predator_hunter | A | three claw slashes | claw marks / claw marks or bars | PASS |
+| predator_hunter | B | fanged jaw | castle wall or gate / castle wall or jaws | FLAG |
+| wild_creature | A | grazing deer | deer or stag / deer or horse | PASS |
+| wild_creature | B | hare | rabbit or hare / same | PASS |
+
+
+Finding: `icon_lookalikes.all_icon_sprites()` (key-set + v2 drafts) holds r0001 art; the seven owner-fix revisions (r0002: item.tool hammer and tongs, class.rogue, ...) are only in `icon_owner_fixes_draft_set.proposed_sprites()`. The entity sheet overlays them; other consumers of `all_icon_sprites()` still see the old wrench.
