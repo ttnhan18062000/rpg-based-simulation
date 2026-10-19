@@ -3,7 +3,8 @@
 # A scripted manual drill, not chaos tooling: Locust holds a steady step BELOW the knee, Redis is stopped (T0), the RedisDown alert is awaited in the
 # local ntfy topic (T1), Redis is started after a fixed outage (T2), the resolved message is awaited (T3), and Locust runs on for a tail.
 # Every event prints a UTC timestamp and is appended to events.txt. During the run it also samples, every SAMPLE_SECONDS: the backend /health
-# status, redis_up from Prometheus, and the Grafana state of RedisDown and the two API SLO rules (to show whether the SLO stays green).
+# status, redis_up from Prometheus, and the Grafana state of RedisDown and the two API SLO rules (to show whether the SLO stays green). Its memory sampler
+# (sample_stats.sh) writes docker_stats.csv and cgroup_mem.csv (anon vs file page cache) to the same directory.
 # It is one heavy run: run it ALONE, after the observability stack (with the load-test key override) is up and healthy.
 #
 # Needs (all gitignored, never printed): docker/secrets/ntfy_topic, docker/secrets/grafana_admin_password and a READ token for the ntfy topic in
@@ -89,6 +90,11 @@ try: print(json.load(sys.stdin)['data']['result'][0]['value'][1])
 except Exception: print('na')"
 }
 
+# --- memory sampler (docker stats + cgroup anon/file/peak for every platform-* container) ---
+STATS_PID=""
+tools/loadtest/sample_stats.sh "$OUT" "$SAMPLE_SECONDS" > /dev/null 2>&1 &
+STATS_PID=$!
+
 # --- background sampler: health, redis_up, rule states every SAMPLE_SECONDS ---
 echo "ts,backend_health_http,redis_up,rules" > "$OUT/samples.csv"
 sampler() {
@@ -102,6 +108,8 @@ sampler() {
 LOCUST_PID=""
 SAMPLER_PID=""
 cleanup() {
+  touch "$OUT/sample_stats.stop" 2>/dev/null || true
+  [ -n "$STATS_PID" ] && kill "$STATS_PID" 2>/dev/null || true
   [ -n "$SAMPLER_PID" ] && kill "$SAMPLER_PID" 2>/dev/null || true
   [ -n "$LOCUST_PID" ] && kill "$LOCUST_PID" 2>/dev/null || true
 }
@@ -164,5 +172,9 @@ START_NS=$(( (T0_EPOCH - 60) * 1000000000 ))
 END_NS=$(( ( $(date +%s) ) * 1000000000 ))
 curl -s -G "${LOKI}/loki/api/v1/query_range" --data-urlencode 'query={container=~".*backend.*"}' --data-urlencode "start=${START_NS}" \
   --data-urlencode "end=${END_NS}" --data-urlencode 'limit=5000' --data-urlencode 'direction=forward' > "$OUT/loki_backend.json" || true
+LOKI_STREAMS="$(python3 -c "import json,sys; print(len(json.load(open(sys.argv[1])).get('data', {}).get('result', [])))" "$OUT/loki_backend.json" 2>/dev/null || echo 0)"
+if [ "$LOKI_STREAMS" = "0" ]; then
+  ev "WARN loki export has 0 streams: Loki returned no backend log lines for the window (labels: $(curl -s "${LOKI}/loki/api/v1/labels" | tr -d '\n' | cut -c1-120)); the backend logs for this run must come from docker compose logs"
+fi
 ev "captures written to ${OUT} (events.txt, samples.csv, locust*_stats*.csv, ntfy_messages.jsonl, loki_backend.json)"
 ev "detection T1-T0 and recovery T3-T2 are read from the timestamps above; the record is written by hand from these files"
