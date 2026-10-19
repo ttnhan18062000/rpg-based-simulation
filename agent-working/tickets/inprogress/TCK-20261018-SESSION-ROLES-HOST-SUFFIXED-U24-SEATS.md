@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 Register host-suffixed `-u24` roles for the platform and agent-working seats that run on host u24desktop
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -44,7 +44,14 @@ GitHub #620 part 1. **Owner decision 2026-10-18, option (a)**, relayed by lead-p
    - Each one mirrors its plain twin's identity/function/capability/handover, with:
      - `session_name` = the role id; `legacy_session_name: null`;
      - `handover: .claude/handover/<role>.md`;
-     - `placement.worktree: <role>`, a new distinct worktree, because a worktree hosts exactly one writer role. The u24 seats relaunch once with `launch.py <role>-u24 --worktree <their existing path>` or a fresh `--branch`; document both in the ticket's Completion Summary for u24.
+     - `placement.worktree: <role>`: a distinct **logical** worktree name, added to `worktrees:` with the `-u24` role as its writer, because a worktree name hosts exactly one writer role. The names are `platform-planner-u24`, `platform-u24`, `agent-working-designer-u24`, `agent-working-planner-u24` and `agent-working-u24`.
+   - The **physical** paths stay as they are on u24 (u24's answer on #634, 2026-10-19). `launch.py --worktree` takes a physical path and records the binding, the same pattern as asset's `--worktree ~/Work/rpg-aseprite-mcp`. Each u24 seat relaunches once:
+     - `python3 tools/sessions/launch.py platform-planner-u24 --worktree /mnt/data/Working/rpg-based-simulation/.claude/worktrees/platform-planner`
+     - `python3 tools/sessions/launch.py platform-implementer-u24 --worktree /mnt/data/Working/rpg-based-simulation/.claude/worktrees/platform`
+     - `python3 tools/sessions/launch.py agent-working-designer-u24 --worktree /mnt/data/Working/rpg-based-simulation/.claude/worktrees/agent-working-designer`
+     - `python3 tools/sessions/launch.py agent-working-planner-u24 --worktree /mnt/data/Working/rpg-based-simulation/.claude/worktrees/agent-working-planner`
+     - `python3 tools/sessions/launch.py agent-working-implementer-u24 --worktree /mnt/data/Working/rpg-based-simulation/.claude/worktrees/agent-working`
+   - Before relaunching, each u24 seat renames its own local handover, `.claude/handover/<role>.md` → `.claude/handover/<role>-u24.md`. The handover is gitignored and per-host, so u24 does this itself.
    - `accepts_dispatch_from`, host-local:
      - `agent-working-planner-u24` ← [user, agent-working-designer-u24];
      - `agent-working-implementer-u24` ← [user, agent-working-designer-u24, agent-working-planner-u24];
@@ -53,9 +60,9 @@ GitHub #620 part 1. **Owner decision 2026-10-18, option (a)**, relayed by lead-p
    - The plain roles' `accepts_dispatch_from` are unchanged unless the owner answers the open question below.
    - `seat_status`/`interim_holder`:
      - plain `agent-working-planner` becomes `staffed` (held on ubuntu since 2026-10-18), and its `interim_holder` is removed;
-     - `agent-working-planner-u24` takes `interim_holder: agent-working-designer-u24` unless u24 says it's staffed;
+     - all five `-u24` roles are `staffed`. **Owner decision 2026-10-19: `agent-working-planner-u24` is staffed, with no `interim_holder`;**
      - plain `agent-working-designer` becomes `unstaffed` (there's no ubuntu designer).
-   - **Confirm the u24 rows with u24's designer on #634 before implementation starts.**
+   - The u24 rows were confirmed on #634 (u24, 2026-10-19 02:28Z): the current paths are kept, and the staffing is above.
 2. `card_note` (the existing generator field) on each `-u24` role and its plain twin: one line naming the host and pointing at the twin. Stay within the 400-token card budget.
 3. Regenerate `.claude/agents/` (`tools/sessions/generate_agents.py`), so `session-<role>-u24.md` exist.
 4. `docs/guidelines/session_roles/`: one short paragraph on host-suffixed twins (when to add one, worktree, handover, shard naming), citing lead-planner-u24 as the first case.
@@ -64,6 +71,7 @@ GitHub #620 part 1. **Owner decision 2026-10-18, option (a)**, relayed by lead-p
    - `tools.sessions.route` still routes each owned path to the **plain** seat (the domain's primary) and doesn't fail or become ambiguous because of a twin;
    - each `-u24` card contains its card note and is ≤ 400 tokens;
    - `launch.py <role>-u24 --dry-run` resolves its own worktree path and handover;
+   - `launch.py <role>-u24 --dry-run --worktree <a dir named like the plain twin's worktree>` resolves the `-u24` role, its handover and its lease, never the plain twin;
    - `boundary.py`: each `-u24` role's write grant equals its twin's.
 
 ## Out of Scope
@@ -90,11 +98,12 @@ GitHub #620 part 1. **Owner decision 2026-10-18, option (a)**, relayed by lead-p
 
 ## Assumptions / Open Questions
 - **Owner decision 2026-10-18 (via lead-planner): no change to `accepts_dispatch_from`.** Work flows from the owner to the domain planner, with lead relaying decisions and approving plans; lead-planner is not added to any planner's dispatch list.
-- **Dispatch waits for u24's answer on #634** (lead-planner): no defaults. The relaunch commands in this ticket and in the PR body carry u24's real worktree paths, never placeholders.
-- **For u24 (on #634):** the current worktree paths and the staffing of each u24 seat.
+- **Answered on #634 by u24 (2026-10-19 02:28Z):** the worktree paths are listed in Scope §1; each `-u24` role keeps its current u24 path. The staffing of `agent-working-planner-u24` was an owner call: **staffed** (owner, 2026-10-19, via lead-planner).
+- **Risk, to state in the PR body:** handover-transit bundles are keyed by role name. Bundles u24 sent before the relaunch carry the plain names, for example `agent-working-implementer: 15`. Until u24 sends under the `-u24` names, an ubuntu seat imports only items meant for it.
 
 ## Implementation Notes
 - 2026-10-18 (lead-planner): moved out of batch 2 into batch 3; still gated on u24's answer on #634 (worktree paths, staffing). Not dispatched. It rides batch 2's PR as filed-but-open (left out of `Closes:`).
+- 2026-10-19 (agent-working-planner): batch 5, commit 2, after the W42 close-week (commit 1). Lead approved the plan. Dispatched to agent-working-implementer.
 ## Test Summary
 ## Files Changed
 ## Completion Summary
