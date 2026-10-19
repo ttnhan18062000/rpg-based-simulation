@@ -405,7 +405,7 @@ jobs:
       # Serial on purpose (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS): this file writes one fixed-name temp copy of
       # .claude/workflows/implement-ticket.js into the real workflows directory and deletes it afterwards, so its parametrized tests,
       # spread over xdist workers, delete each other's copy (FileNotFoundError). Fix needs a per-test tmp name: agent-working's file,
-      # no ticket yet. Remove this step and the --ignore line above once it uses tmp_path or a unique name.
+      # TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH. Remove this step and the --ignore line above once it uses tmp_path or a unique name.
       - name: "Run: tests/tools (f–z, workflow-file test, serial)"
         if: always()
         run: |
