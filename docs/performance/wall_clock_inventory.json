@@ -62,7 +62,7 @@
     },
     {
       "file": "src/api/engine_manager.py",
-      "line": 230,
+      "line": 235,
       "enclosing_function": "V2EngineManager.start",
       "source": "time.time",
       "kind": "wall-clock",
@@ -77,7 +77,7 @@
     },
     {
       "file": "src/api/engine_manager.py",
-      "line": 290,
+      "line": 297,
       "enclosing_function": "V2EngineManager._run_loop",
       "source": "time.time",
       "kind": "wall-clock",
@@ -95,7 +95,7 @@
     },
     {
       "file": "src/api/engine_manager.py",
-      "line": 355,
+      "line": 362,
       "enclosing_function": "V2EngineManager.last_tick_age_seconds",
       "source": "time.time",
       "kind": "wall-clock",
@@ -110,7 +110,7 @@
     },
     {
       "file": "src/api/engine_manager.py",
-      "line": 365,
+      "line": 372,
       "enclosing_function": "V2EngineManager.get_health_status",
       "source": "time.time",
       "kind": "wall-clock",
@@ -122,6 +122,36 @@
       "note": "",
       "reachable_from_kernel": false,
       "ordinal": 7
+    },
+    {
+      "file": "src/api/http_metrics.py",
+      "line": 93,
+      "enclosing_function": "RequestDurationMiddleware.__call__",
+      "source": "time.perf_counter",
+      "kind": "wall-clock",
+      "call": "time.perf_counter",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 8
+    },
+    {
+      "file": "src/api/http_metrics.py",
+      "line": 104,
+      "enclosing_function": "RequestDurationMiddleware.__call__",
+      "source": "time.perf_counter",
+      "kind": "wall-clock",
+      "call": "time.perf_counter",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 9
     },
     {
       "file": "src/api/metrics_port.py",
@@ -138,7 +168,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 8
+      "ordinal": 10
     },
     {
       "file": "src/api/metrics_port.py",
@@ -155,7 +185,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 9
+      "ordinal": 11
     },
     {
       "file": "src/api/ws/stream.py",
@@ -173,7 +203,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 10
+      "ordinal": 12
     },
     {
       "file": "src/certification/hardware.py",
@@ -188,7 +218,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 11
+      "ordinal": 13
     },
     {
       "file": "src/certification/hardware.py",
@@ -203,7 +233,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 12
+      "ordinal": 14
     },
     {
       "file": "src/certification/hardware.py",
@@ -218,7 +248,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 13
+      "ordinal": 15
     },
     {
       "file": "src/certification/hardware.py",
@@ -233,7 +263,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 14
+      "ordinal": 16
     },
     {
       "file": "src/certification/hardware.py",
@@ -248,7 +278,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 15
+      "ordinal": 17
     },
     {
       "file": "src/certification/hardware.py",
@@ -263,7 +293,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 16
+      "ordinal": 18
     },
     {
       "file": "src/certification/hardware.py",
@@ -280,7 +310,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 17
+      "ordinal": 19
     },
     {
       "file": "src/certification/harness.py",
@@ -295,7 +325,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 18
+      "ordinal": 20
     },
     {
       "file": "src/certification/harness.py",
@@ -310,7 +340,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 19
+      "ordinal": 21
     },
     {
       "file": "src/certification/harness.py",
@@ -325,7 +355,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 20
+      "ordinal": 22
     },
     {
       "file": "src/certification/harness.py",
@@ -340,7 +370,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 21
+      "ordinal": 23
     },
     {
       "file": "src/certification/harness.py",
@@ -355,7 +385,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 22
+      "ordinal": 24
     },
     {
       "file": "src/cli/entry.py",
@@ -370,7 +400,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 23
+      "ordinal": 25
     },
     {
       "file": "src/cli/entry.py",
@@ -385,7 +415,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 24
+      "ordinal": 26
     },
     {
       "file": "src/config/loader.py",
@@ -400,7 +430,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 25
+      "ordinal": 27
     },
     {
       "file": "src/config/loader.py",
@@ -417,7 +447,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 26
+      "ordinal": 28
     },
     {
       "file": "src/config/loader.py",
@@ -432,7 +462,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 27
+      "ordinal": 29
     },
     {
       "file": "src/config/loader.py",
@@ -447,7 +477,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 28
+      "ordinal": 30
     },
     {
       "file": "src/core/certification_reporter.py",
@@ -462,7 +492,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 29
+      "ordinal": 31
     },
     {
       "file": "src/core/certification_reporter.py",
@@ -477,7 +507,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 30
+      "ordinal": 32
     },
     {
       "file": "src/domains/campaigns/runner.py",
@@ -492,7 +522,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 31
+      "ordinal": 33
     },
     {
       "file": "src/domains/campaigns/runner.py",
@@ -507,7 +537,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 32
+      "ordinal": 34
     },
     {
       "file": "src/domains/campaigns/runner.py",
@@ -522,7 +552,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 33
+      "ordinal": 35
     },
     {
       "file": "src/domains/campaigns/runner.py",
@@ -537,7 +567,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 34
+      "ordinal": 36
     },
     {
       "file": "src/domains/campaigns/runner.py",
@@ -552,7 +582,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 35
+      "ordinal": 37
     },
     {
       "file": "src/domains/campaigns/runner.py",
@@ -567,7 +597,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 36
+      "ordinal": 38
     },
     {
       "file": "src/domains/campaigns/runner.py",
@@ -582,7 +612,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 37
+      "ordinal": 39
     },
     {
       "file": "src/domains/campaigns/runner.py",
@@ -597,7 +627,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 38
+      "ordinal": 40
     },
     {
       "file": "src/domains/campaigns/runner.py",
@@ -612,7 +642,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 39
+      "ordinal": 41
     },
     {
       "file": "src/domains/campaigns/runner.py",
@@ -627,7 +657,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 40
+      "ordinal": 42
     },
     {
       "file": "src/domains/cooperation/phase.py",
@@ -642,7 +672,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 41
+      "ordinal": 43
     },
     {
       "file": "src/domains/cooperation/phase.py",
@@ -657,7 +687,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 42
+      "ordinal": 44
     },
     {
       "file": "src/domains/world_emergence/phase.py",
@@ -672,7 +702,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 43
+      "ordinal": 45
     },
     {
       "file": "src/domains/world_emergence/phase.py",
@@ -687,7 +717,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 44
+      "ordinal": 46
     },
     {
       "file": "src/engine/kernel.py",
@@ -704,7 +734,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 45
+      "ordinal": 47
     },
     {
       "file": "src/engine/kernel.py",
@@ -719,7 +749,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 46
+      "ordinal": 48
     },
     {
       "file": "src/engine/kernel.py",
@@ -739,7 +769,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 47
+      "ordinal": 49
     },
     {
       "file": "src/engine/kernel.py",
@@ -754,7 +784,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 48
+      "ordinal": 50
     },
     {
       "file": "src/engine/kernel.py",
@@ -769,7 +799,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 49
+      "ordinal": 51
     },
     {
       "file": "src/engine/kernel.py",
@@ -784,7 +814,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 50
+      "ordinal": 52
     },
     {
       "file": "src/engine/kernel.py",
@@ -799,7 +829,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 51
+      "ordinal": 53
     },
     {
       "file": "src/engine/kernel.py",
@@ -814,7 +844,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 52
+      "ordinal": 54
     },
     {
       "file": "src/engine/kernel.py",
@@ -829,7 +859,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 53
+      "ordinal": 55
     },
     {
       "file": "src/engine/kernel.py",
@@ -844,7 +874,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 54
+      "ordinal": 56
     },
     {
       "file": "src/engine/kernel.py",
@@ -861,7 +891,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 55
+      "ordinal": 57
     },
     {
       "file": "src/engine/kernel.py",
@@ -879,7 +909,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 56
+      "ordinal": 58
     },
     {
       "file": "src/engine/kernel.py",
@@ -894,7 +924,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 57
+      "ordinal": 59
     },
     {
       "file": "src/engine/kernel.py",
@@ -909,7 +939,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 58
+      "ordinal": 60
     },
     {
       "file": "src/engine/kernel.py",
@@ -926,7 +956,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 59
+      "ordinal": 61
     },
     {
       "file": "src/engine/kernel.py",
@@ -941,7 +971,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 60
+      "ordinal": 62
     },
     {
       "file": "src/engine/kernel.py",
@@ -958,7 +988,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 61
+      "ordinal": 63
     },
     {
       "file": "src/engine/kernel.py",
@@ -975,7 +1005,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 62
+      "ordinal": 64
     },
     {
       "file": "src/engine/observability.py",
@@ -990,7 +1020,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 63
+      "ordinal": 65
     },
     {
       "file": "src/engine/observability.py",
@@ -1005,7 +1035,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 64
+      "ordinal": 66
     },
     {
       "file": "src/engine/observability.py",
@@ -1023,7 +1053,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 65
+      "ordinal": 67
     },
     {
       "file": "src/engine/observability.py",
@@ -1038,7 +1068,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 66
+      "ordinal": 68
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1053,7 +1083,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 67
+      "ordinal": 69
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1068,7 +1098,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 68
+      "ordinal": 70
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1083,7 +1113,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 69
+      "ordinal": 71
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1098,7 +1128,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 70
+      "ordinal": 72
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1113,7 +1143,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 71
+      "ordinal": 73
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1128,7 +1158,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 72
+      "ordinal": 74
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1143,7 +1173,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 73
+      "ordinal": 75
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1158,7 +1188,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 74
+      "ordinal": 76
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1173,7 +1203,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 75
+      "ordinal": 77
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1188,7 +1218,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 76
+      "ordinal": 78
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1203,7 +1233,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 77
+      "ordinal": 79
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1218,7 +1248,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 78
+      "ordinal": 80
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1233,7 +1263,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 79
+      "ordinal": 81
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1248,7 +1278,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 80
+      "ordinal": 82
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1263,7 +1293,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 81
+      "ordinal": 83
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1278,7 +1308,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 82
+      "ordinal": 84
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1293,7 +1323,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 83
+      "ordinal": 85
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1308,7 +1338,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 84
+      "ordinal": 86
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1323,7 +1353,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 85
+      "ordinal": 87
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1338,7 +1368,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 86
+      "ordinal": 88
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1353,7 +1383,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 87
+      "ordinal": 89
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1368,7 +1398,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 88
+      "ordinal": 90
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1383,7 +1413,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 89
+      "ordinal": 91
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1398,7 +1428,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 90
+      "ordinal": 92
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1413,7 +1443,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 91
+      "ordinal": 93
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1428,7 +1458,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 92
+      "ordinal": 94
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1443,7 +1473,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 93
+      "ordinal": 95
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1458,7 +1488,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 94
+      "ordinal": 96
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1473,7 +1503,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 95
+      "ordinal": 97
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1488,7 +1518,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 96
+      "ordinal": 98
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1503,7 +1533,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 97
+      "ordinal": 99
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1518,7 +1548,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 98
+      "ordinal": 100
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1533,7 +1563,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 99
+      "ordinal": 101
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1548,7 +1578,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 100
+      "ordinal": 102
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1563,7 +1593,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 101
+      "ordinal": 103
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1578,7 +1608,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 102
+      "ordinal": 104
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1593,7 +1623,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 103
+      "ordinal": 105
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1608,7 +1638,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 104
+      "ordinal": 106
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1623,7 +1653,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 105
+      "ordinal": 107
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1638,7 +1668,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 106
+      "ordinal": 108
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1653,7 +1683,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 107
+      "ordinal": 109
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1668,7 +1698,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 108
+      "ordinal": 110
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1683,7 +1713,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 109
+      "ordinal": 111
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1698,7 +1728,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 110
+      "ordinal": 112
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1713,7 +1743,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 111
+      "ordinal": 113
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1728,7 +1758,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 112
+      "ordinal": 114
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1743,7 +1773,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 113
+      "ordinal": 115
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1758,7 +1788,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 114
+      "ordinal": 116
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1773,7 +1803,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 115
+      "ordinal": 117
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1788,7 +1818,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 116
+      "ordinal": 118
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1803,7 +1833,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 117
+      "ordinal": 119
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1818,7 +1848,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 118
+      "ordinal": 120
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1833,7 +1863,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 119
+      "ordinal": 121
     },
     {
       "file": "src/engine/pipeline.py",
@@ -1848,7 +1878,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 120
+      "ordinal": 122
     },
     {
       "file": "src/engine/replay_manager.py",
@@ -1863,7 +1893,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 121
+      "ordinal": 123
     },
     {
       "file": "src/engine/replay_manager.py",
@@ -1878,7 +1908,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 122
+      "ordinal": 124
     },
     {
       "file": "src/engine/replay_manager.py",
@@ -1895,7 +1925,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 123
+      "ordinal": 125
     },
     {
       "file": "src/engine/replay_manager.py",
@@ -1912,7 +1942,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 124
+      "ordinal": 126
     },
     {
       "file": "src/engine/replay_manager.py",
@@ -1927,7 +1957,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 125
+      "ordinal": 127
     },
     {
       "file": "src/engine/run_identity.py",
@@ -1942,7 +1972,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 126
+      "ordinal": 128
     },
     {
       "file": "src/engine/run_identity.py",
@@ -1957,7 +1987,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": true,
-      "ordinal": 127
+      "ordinal": 129
     },
     {
       "file": "src/engine/worker_manager.py",
@@ -1972,7 +2002,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 128
+      "ordinal": 130
     },
     {
       "file": "src/engine/worker_manager.py",
@@ -1989,7 +2019,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 129
+      "ordinal": 131
     },
     {
       "file": "src/engine/worker_manager.py",
@@ -2004,7 +2034,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 130
+      "ordinal": 132
     },
     {
       "file": "src/engine/worker_manager.py",
@@ -2021,7 +2051,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 131
+      "ordinal": 133
     },
     {
       "file": "src/lab/audit.py",
@@ -2036,7 +2066,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 132
+      "ordinal": 134
     },
     {
       "file": "src/lab/audit.py",
@@ -2051,7 +2081,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 133
+      "ordinal": 135
     },
     {
       "file": "src/lab/cli.py",
@@ -2073,7 +2103,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 134
+      "ordinal": 136
     },
     {
       "file": "src/lab/cli.py",
@@ -2102,7 +2132,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 135
+      "ordinal": 137
     },
     {
       "file": "src/lab/mutation_orchestrator.py",
@@ -2117,7 +2147,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 136
+      "ordinal": 138
     },
     {
       "file": "src/lab/mutation_orchestrator.py",
@@ -2132,7 +2162,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 137
+      "ordinal": 139
     },
     {
       "file": "src/lab/mutation_orchestrator.py",
@@ -2147,7 +2177,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 138
+      "ordinal": 140
     },
     {
       "file": "src/lab/mutation_orchestrator.py",
@@ -2162,7 +2192,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 139
+      "ordinal": 141
     },
     {
       "file": "src/lab/mutation_orchestrator.py",
@@ -2177,7 +2207,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 140
+      "ordinal": 142
     },
     {
       "file": "src/lab/orchestrator.py",
@@ -2192,7 +2222,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 141
+      "ordinal": 143
     },
     {
       "file": "src/lab/orchestrator.py",
@@ -2209,7 +2239,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 142
+      "ordinal": 144
     },
     {
       "file": "src/lab/repository.py",
@@ -2226,7 +2256,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 143
+      "ordinal": 145
     },
     {
       "file": "src/lab/repository.py",
@@ -2243,7 +2273,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 144
+      "ordinal": 146
     },
     {
       "file": "src/lab/repository.py",
@@ -2260,7 +2290,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 145
+      "ordinal": 147
     },
     {
       "file": "src/lab/repository.py",
@@ -2277,7 +2307,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 146
+      "ordinal": 148
     },
     {
       "file": "src/lab/repository.py",
@@ -2294,7 +2324,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 147
+      "ordinal": 149
     },
     {
       "file": "src/lab/repository.py",
@@ -2309,7 +2339,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 148
+      "ordinal": 150
     },
     {
       "file": "src/lab/repository.py",
@@ -2326,7 +2356,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 149
+      "ordinal": 151
     },
     {
       "file": "src/lab/repository.py",
@@ -2343,7 +2373,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 150
+      "ordinal": 152
     },
     {
       "file": "src/lab/session.py",
@@ -2358,7 +2388,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 151
+      "ordinal": 153
     },
     {
       "file": "src/lab/session.py",
@@ -2373,7 +2403,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 152
+      "ordinal": 154
     },
     {
       "file": "src/lab/workflows/update_simulation_knowledge.py",
@@ -2388,7 +2418,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 153
+      "ordinal": 155
     },
     {
       "file": "src/lab/workflows/update_simulation_knowledge.py",
@@ -2403,7 +2433,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 154
+      "ordinal": 156
     },
     {
       "file": "src/logging/formatter.py",
@@ -2418,7 +2448,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 155
+      "ordinal": 157
     },
     {
       "file": "src/observability/alerts/deduplicator.py",
@@ -2435,7 +2465,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 156
+      "ordinal": 158
     },
     {
       "file": "src/observability/alerts/deduplicator.py",
@@ -2452,7 +2482,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 157
+      "ordinal": 159
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2469,7 +2499,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 158
+      "ordinal": 160
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2487,7 +2517,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 159
+      "ordinal": 161
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2504,7 +2534,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 160
+      "ordinal": 162
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2522,7 +2552,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 161
+      "ordinal": 163
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2539,7 +2569,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 162
+      "ordinal": 164
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2557,7 +2587,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 163
+      "ordinal": 165
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2574,7 +2604,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 164
+      "ordinal": 166
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2592,7 +2622,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 165
+      "ordinal": 167
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2609,7 +2639,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 166
+      "ordinal": 168
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2627,7 +2657,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 167
+      "ordinal": 169
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2644,7 +2674,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 168
+      "ordinal": 170
     },
     {
       "file": "src/observability/alerts/manager.py",
@@ -2662,7 +2692,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 169
+      "ordinal": 171
     },
     {
       "file": "src/observability/alerts/models.py",
@@ -2677,7 +2707,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": true,
-      "ordinal": 170
+      "ordinal": 172
     },
     {
       "file": "src/observability/alerts/models.py",
@@ -2692,7 +2722,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 171
+      "ordinal": 173
     },
     {
       "file": "src/observability/alerts/sinks.py",
@@ -2709,7 +2739,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 172
+      "ordinal": 174
     },
     {
       "file": "src/observability/alerts/sinks.py",
@@ -2726,7 +2756,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 173
+      "ordinal": 175
     },
     {
       "file": "src/observability/alerts/sinks.py",
@@ -2744,7 +2774,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 174
+      "ordinal": 176
     },
     {
       "file": "src/observability/analytics/dataset.py",
@@ -2761,7 +2791,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 175
+      "ordinal": 177
     },
     {
       "file": "src/observability/analytics/exporter.py",
@@ -2776,7 +2806,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 176
+      "ordinal": 178
     },
     {
       "file": "src/observability/anomaly/rules.py",
@@ -2791,7 +2821,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 177
+      "ordinal": 179
     },
     {
       "file": "src/observability/anomaly/rules_engine.py",
@@ -2806,7 +2836,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 178
+      "ordinal": 180
     },
     {
       "file": "src/observability/anomaly/triage.py",
@@ -2823,7 +2853,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 179
+      "ordinal": 181
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -2838,7 +2868,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 180
+      "ordinal": 182
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -2855,7 +2885,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 181
+      "ordinal": 183
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -2870,7 +2900,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 182
+      "ordinal": 184
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -2885,7 +2915,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 183
+      "ordinal": 185
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -2902,7 +2932,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 184
+      "ordinal": 186
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -2919,7 +2949,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 185
+      "ordinal": 187
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -2936,7 +2966,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 186
+      "ordinal": 188
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -2951,7 +2981,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 187
+      "ordinal": 189
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -2966,7 +2996,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 188
+      "ordinal": 190
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -2983,7 +3013,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 189
+      "ordinal": 191
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -3000,7 +3030,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 190
+      "ordinal": 192
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -3017,7 +3047,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 191
+      "ordinal": 193
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -3034,7 +3064,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 192
+      "ordinal": 194
     },
     {
       "file": "src/observability/anomaly/worker.py",
@@ -3051,7 +3081,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 193
+      "ordinal": 195
     },
     {
       "file": "src/observability/behavior/episode_detector.py",
@@ -3069,7 +3099,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 194
+      "ordinal": 196
     },
     {
       "file": "src/observability/behavior/episode_detector.py",
@@ -3088,7 +3118,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 195
+      "ordinal": 197
     },
     {
       "file": "src/observability/behavior/episode_detector.py",
@@ -3107,7 +3137,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 196
+      "ordinal": 198
     },
     {
       "file": "src/observability/behavior/episode_detector.py",
@@ -3125,7 +3155,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 197
+      "ordinal": 199
     },
     {
       "file": "src/observability/behavior/episode_detector.py",
@@ -3143,7 +3173,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 198
+      "ordinal": 200
     },
     {
       "file": "src/observability/behavior/episode_detector.py",
@@ -3160,7 +3190,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 199
+      "ordinal": 201
     },
     {
       "file": "src/observability/behavior/episode_detector.py",
@@ -3177,7 +3207,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 200
+      "ordinal": 202
     },
     {
       "file": "src/observability/behavior/pattern_detectors.py",
@@ -3194,7 +3224,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 201
+      "ordinal": 203
     },
     {
       "file": "src/observability/behavior/pattern_detectors.py",
@@ -3209,7 +3239,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 202
+      "ordinal": 204
     },
     {
       "file": "src/observability/behavior/pattern_detectors.py",
@@ -3226,7 +3256,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 203
+      "ordinal": 205
     },
     {
       "file": "src/observability/config.py",
@@ -3241,7 +3271,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 204
+      "ordinal": 206
     },
     {
       "file": "src/observability/config.py",
@@ -3256,7 +3286,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 205
+      "ordinal": 207
     },
     {
       "file": "src/observability/config.py",
@@ -3273,7 +3303,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 206
+      "ordinal": 208
     },
     {
       "file": "src/observability/config.py",
@@ -3288,7 +3318,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 207
+      "ordinal": 209
     },
     {
       "file": "src/observability/config.py",
@@ -3305,7 +3335,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 208
+      "ordinal": 210
     },
     {
       "file": "src/observability/config.py",
@@ -3320,7 +3350,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 209
+      "ordinal": 211
     },
     {
       "file": "src/observability/config.py",
@@ -3337,7 +3367,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 210
+      "ordinal": 212
     },
     {
       "file": "src/observability/config.py",
@@ -3352,7 +3382,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 211
+      "ordinal": 213
     },
     {
       "file": "src/observability/config.py",
@@ -3369,7 +3399,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 212
+      "ordinal": 214
     },
     {
       "file": "src/observability/config.py",
@@ -3384,7 +3414,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 213
+      "ordinal": 215
     },
     {
       "file": "src/observability/config.py",
@@ -3401,7 +3431,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 214
+      "ordinal": 216
     },
     {
       "file": "src/observability/config.py",
@@ -3416,7 +3446,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 215
+      "ordinal": 217
     },
     {
       "file": "src/observability/config.py",
@@ -3433,7 +3463,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 216
+      "ordinal": 218
     },
     {
       "file": "src/observability/config.py",
@@ -3448,7 +3478,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 217
+      "ordinal": 219
     },
     {
       "file": "src/observability/config.py",
@@ -3465,7 +3495,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 218
+      "ordinal": 220
     },
     {
       "file": "src/observability/config.py",
@@ -3480,7 +3510,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 219
+      "ordinal": 221
     },
     {
       "file": "src/observability/config.py",
@@ -3497,7 +3527,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 220
+      "ordinal": 222
     },
     {
       "file": "src/observability/config.py",
@@ -3512,7 +3542,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 221
+      "ordinal": 223
     },
     {
       "file": "src/observability/config.py",
@@ -3529,7 +3559,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 222
+      "ordinal": 224
     },
     {
       "file": "src/observability/config.py",
@@ -3544,7 +3574,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 223
+      "ordinal": 225
     },
     {
       "file": "src/observability/config.py",
@@ -3561,7 +3591,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 224
+      "ordinal": 226
     },
     {
       "file": "src/observability/config.py",
@@ -3576,7 +3606,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 225
+      "ordinal": 227
     },
     {
       "file": "src/observability/config.py",
@@ -3593,7 +3623,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 226
+      "ordinal": 228
     },
     {
       "file": "src/observability/config.py",
@@ -3608,7 +3638,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 227
+      "ordinal": 229
     },
     {
       "file": "src/observability/config.py",
@@ -3625,7 +3655,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 228
+      "ordinal": 230
     },
     {
       "file": "src/observability/config.py",
@@ -3640,7 +3670,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 229
+      "ordinal": 231
     },
     {
       "file": "src/observability/config.py",
@@ -3657,7 +3687,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 230
+      "ordinal": 232
     },
     {
       "file": "src/observability/config.py",
@@ -3672,7 +3702,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 231
+      "ordinal": 233
     },
     {
       "file": "src/observability/config.py",
@@ -3689,7 +3719,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 232
+      "ordinal": 234
     },
     {
       "file": "src/observability/death_ledger.py",
@@ -3704,7 +3734,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 233
+      "ordinal": 235
     },
     {
       "file": "src/observability/event_extractor.py",
@@ -3719,7 +3749,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 234
+      "ordinal": 236
     },
     {
       "file": "src/observability/event_shapers.py",
@@ -3734,7 +3764,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 235
+      "ordinal": 237
     },
     {
       "file": "src/observability/event_shapers.py",
@@ -3749,7 +3779,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 236
+      "ordinal": 238
     },
     {
       "file": "src/observability/events.py",
@@ -3764,7 +3794,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": true,
-      "ordinal": 237
+      "ordinal": 239
     },
     {
       "file": "src/observability/live/snapshot_provider.py",
@@ -3782,7 +3812,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 238
+      "ordinal": 240
     },
     {
       "file": "src/observability/mining/auditor.py",
@@ -3797,7 +3827,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 239
+      "ordinal": 241
     },
     {
       "file": "src/observability/mining/auditor.py",
@@ -3812,7 +3842,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 240
+      "ordinal": 242
     },
     {
       "file": "src/observability/mining/controller.py",
@@ -3829,7 +3859,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 241
+      "ordinal": 243
     },
     {
       "file": "src/observability/mining/controller.py",
@@ -3846,7 +3876,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 242
+      "ordinal": 244
     },
     {
       "file": "src/observability/mining/controller.py",
@@ -3861,7 +3891,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 243
+      "ordinal": 245
     },
     {
       "file": "src/observability/mining/controller.py",
@@ -3878,7 +3908,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 244
+      "ordinal": 246
     },
     {
       "file": "src/observability/mining/controller.py",
@@ -3893,7 +3923,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 245
+      "ordinal": 247
     },
     {
       "file": "src/observability/mining/dataset.py",
@@ -3908,7 +3938,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 246
+      "ordinal": 248
     },
     {
       "file": "src/observability/mining/evidence.py",
@@ -3923,7 +3953,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 247
+      "ordinal": 249
     },
     {
       "file": "src/observability/mining/evidence.py",
@@ -3938,7 +3968,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 248
+      "ordinal": 250
     },
     {
       "file": "src/observability/mining/orchestrator.py",
@@ -3953,7 +3983,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 249
+      "ordinal": 251
     },
     {
       "file": "src/observability/mining/orchestrator.py",
@@ -3968,7 +3998,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 250
+      "ordinal": 252
     },
     {
       "file": "src/observability/mining/orchestrator.py",
@@ -3983,7 +4013,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 251
+      "ordinal": 253
     },
     {
       "file": "src/observability/mining/patterns.py",
@@ -3998,7 +4028,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 252
+      "ordinal": 254
     },
     {
       "file": "src/observability/mining/priority.py",
@@ -4013,7 +4043,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 253
+      "ordinal": 255
     },
     {
       "file": "src/observability/mining/recommender.py",
@@ -4028,7 +4058,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 254
+      "ordinal": 256
     },
     {
       "file": "src/observability/mining/workflow.py",
@@ -4045,7 +4075,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 255
+      "ordinal": 257
     },
     {
       "file": "src/observability/mining/workflow.py",
@@ -4060,7 +4090,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 256
+      "ordinal": 258
     },
     {
       "file": "src/observability/performance/profiler.py",
@@ -4077,7 +4107,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 257
+      "ordinal": 259
     },
     {
       "file": "src/observability/performance/profiler.py",
@@ -4092,7 +4122,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 258
+      "ordinal": 260
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4107,7 +4137,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 259
+      "ordinal": 261
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4124,7 +4154,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 260
+      "ordinal": 262
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4141,7 +4171,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 261
+      "ordinal": 263
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4158,7 +4188,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 262
+      "ordinal": 264
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4175,7 +4205,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 263
+      "ordinal": 265
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4190,7 +4220,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 264
+      "ordinal": 266
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4207,7 +4237,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 265
+      "ordinal": 267
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4222,7 +4252,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 266
+      "ordinal": 268
     },
     {
       "file": "src/observability/reporting/baseline_generator.py",
@@ -4237,7 +4267,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 267
+      "ordinal": 269
     },
     {
       "file": "src/observability/reporting/retention.py",
@@ -4252,7 +4282,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 268
+      "ordinal": 270
     },
     {
       "file": "src/observability/reporting/retention.py",
@@ -4271,7 +4301,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 269
+      "ordinal": 271
     },
     {
       "file": "src/observability/reporting/retention.py",
@@ -4286,7 +4316,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 270
+      "ordinal": 272
     },
     {
       "file": "src/observability/reporting/run_report.py",
@@ -4301,7 +4331,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 271
+      "ordinal": 273
     },
     {
       "file": "src/observability/run_ledger.py",
@@ -4316,7 +4346,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 272
+      "ordinal": 274
     },
     {
       "file": "src/observability/starvation_record.py",
@@ -4331,7 +4361,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 273
+      "ordinal": 275
     },
     {
       "file": "src/observability/stream/adapters.py",
@@ -4348,7 +4378,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 274
+      "ordinal": 276
     },
     {
       "file": "src/observability/stream/adapters.py",
@@ -4365,7 +4395,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 275
+      "ordinal": 277
     },
     {
       "file": "src/observability/stream/adapters.py",
@@ -4380,7 +4410,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 276
+      "ordinal": 278
     },
     {
       "file": "src/observability/stream/adapters.py",
@@ -4395,7 +4425,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 277
+      "ordinal": 279
     },
     {
       "file": "src/observability/stream/consumer.py",
@@ -4412,7 +4442,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 278
+      "ordinal": 280
     },
     {
       "file": "src/observability/stream/lag_metrics.py",
@@ -4429,7 +4459,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 279
+      "ordinal": 281
     },
     {
       "file": "src/observability/sweeper.py",
@@ -4446,7 +4476,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 280
+      "ordinal": 282
     },
     {
       "file": "src/observability/sweeper.py",
@@ -4463,7 +4493,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 281
+      "ordinal": 283
     },
     {
       "file": "src/observability/sweeper.py",
@@ -4478,7 +4508,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 282
+      "ordinal": 284
     },
     {
       "file": "src/observability/sweeper.py",
@@ -4495,7 +4525,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 283
+      "ordinal": 285
     },
     {
       "file": "src/observability/understanding/balance/models.py",
@@ -4510,7 +4540,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 284
+      "ordinal": 286
     },
     {
       "file": "src/observability/understanding/domain/base.py",
@@ -4525,7 +4555,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 285
+      "ordinal": 287
     },
     {
       "file": "src/observability/understanding/domain/base.py",
@@ -4540,7 +4570,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 286
+      "ordinal": 288
     },
     {
       "file": "src/observability/understanding/domain/base.py",
@@ -4557,7 +4587,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 287
+      "ordinal": 289
     },
     {
       "file": "src/observability/understanding/domain/base.py",
@@ -4572,7 +4602,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 288
+      "ordinal": 290
     },
     {
       "file": "src/observability/understanding/pipeline.py",
@@ -4587,7 +4617,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 289
+      "ordinal": 291
     },
     {
       "file": "src/observability/understanding/pipeline.py",
@@ -4602,7 +4632,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 290
+      "ordinal": 292
     },
     {
       "file": "src/observability/understanding/quality/baseline_evolution.py",
@@ -4617,7 +4647,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 291
+      "ordinal": 293
     },
     {
       "file": "src/observability/understanding/quality/quality_report.py",
@@ -4632,7 +4662,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 292
+      "ordinal": 294
     },
     {
       "file": "src/observability/understanding/review/models.py",
@@ -4647,7 +4677,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 293
+      "ordinal": 295
     },
     {
       "file": "src/observability/understanding/review/models.py",
@@ -4662,7 +4692,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 294
+      "ordinal": 296
     },
     {
       "file": "src/observability/understanding/rootcause/models.py",
@@ -4677,7 +4707,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 295
+      "ordinal": 297
     },
     {
       "file": "src/observability/understanding/stories/models.py",
@@ -4692,7 +4722,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 296
+      "ordinal": 298
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4707,7 +4737,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 297
+      "ordinal": 299
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4722,7 +4752,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 298
+      "ordinal": 300
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4737,7 +4767,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 299
+      "ordinal": 301
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4752,7 +4782,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 300
+      "ordinal": 302
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4771,7 +4801,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 301
+      "ordinal": 303
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4786,7 +4816,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 302
+      "ordinal": 304
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4801,7 +4831,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 303
+      "ordinal": 305
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4816,7 +4846,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 304
+      "ordinal": 306
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4833,7 +4863,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 305
+      "ordinal": 307
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4848,7 +4878,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 306
+      "ordinal": 308
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4866,7 +4896,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 307
+      "ordinal": 309
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4881,7 +4911,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 308
+      "ordinal": 310
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4898,7 +4928,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 309
+      "ordinal": 311
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4913,7 +4943,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 310
+      "ordinal": 312
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4928,7 +4958,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 311
+      "ordinal": 313
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4948,7 +4978,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 312
+      "ordinal": 314
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4967,7 +4997,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 313
+      "ordinal": 315
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4982,7 +5012,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 314
+      "ordinal": 316
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4997,7 +5027,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 315
+      "ordinal": 317
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -5012,7 +5042,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 316
+      "ordinal": 318
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -5029,7 +5059,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 317
+      "ordinal": 319
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -5044,7 +5074,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 318
+      "ordinal": 320
     },
     {
       "file": "src/observability/warehouse/models.py",
@@ -5059,7 +5089,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 319
+      "ordinal": 321
     },
     {
       "file": "src/observability/watchdog.py",
@@ -5074,7 +5104,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 320
+      "ordinal": 322
     },
     {
       "file": "src/observability/watchdog.py",
@@ -5089,7 +5119,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 321
+      "ordinal": 323
     },
     {
       "file": "src/observability/watchdog.py",
@@ -5104,7 +5134,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 322
+      "ordinal": 324
     },
     {
       "file": "src/observability/watchdog.py",
@@ -5119,7 +5149,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 323
+      "ordinal": 325
     },
     {
       "file": "src/observability/watchdog.py",
@@ -5136,7 +5166,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 324
+      "ordinal": 326
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5151,7 +5181,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 325
+      "ordinal": 327
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5166,7 +5196,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 326
+      "ordinal": 328
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5183,7 +5213,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 327
+      "ordinal": 329
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5200,7 +5230,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 328
+      "ordinal": 330
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5218,7 +5248,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 329
+      "ordinal": 331
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5233,7 +5263,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 330
+      "ordinal": 332
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5250,7 +5280,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 331
+      "ordinal": 333
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5267,7 +5297,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 332
+      "ordinal": 334
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5285,7 +5315,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 333
+      "ordinal": 335
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5303,7 +5333,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 334
+      "ordinal": 336
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5320,7 +5350,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 335
+      "ordinal": 337
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5337,7 +5367,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 336
+      "ordinal": 338
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5354,7 +5384,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 337
+      "ordinal": 339
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5369,7 +5399,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 338
+      "ordinal": 340
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5384,7 +5414,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 339
+      "ordinal": 341
     },
     {
       "file": "src/perf/bench_harness.py",
@@ -5399,7 +5429,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 340
+      "ordinal": 342
     },
     {
       "file": "src/perf/benchmark_record.py",
@@ -5414,7 +5444,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 341
+      "ordinal": 343
     },
     {
       "file": "src/perf/benchmark_record.py",
@@ -5429,7 +5459,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 342
+      "ordinal": 344
     },
     {
       "file": "src/perf/benchmark_record.py",
@@ -5444,7 +5474,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 343
+      "ordinal": 345
     },
     {
       "file": "src/perf/benchmark_record.py",
@@ -5459,7 +5489,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 344
+      "ordinal": 346
     },
     {
       "file": "src/perf/benchmark_record.py",
@@ -5474,7 +5504,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 345
+      "ordinal": 347
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5489,7 +5519,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 346
+      "ordinal": 348
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5504,7 +5534,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 347
+      "ordinal": 349
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5519,7 +5549,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 348
+      "ordinal": 350
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5534,7 +5564,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 349
+      "ordinal": 351
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5549,7 +5579,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 350
+      "ordinal": 352
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5566,7 +5596,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 351
+      "ordinal": 353
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5581,7 +5611,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 352
+      "ordinal": 354
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5598,7 +5628,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 353
+      "ordinal": 355
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5613,7 +5643,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 354
+      "ordinal": 356
     },
     {
       "file": "src/perf/profile_governance.py",
@@ -5628,7 +5658,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 355
+      "ordinal": 357
     },
     {
       "file": "src/perf/profile_governance.py",
@@ -5643,7 +5673,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 356
+      "ordinal": 358
     },
     {
       "file": "src/simulation_quality/api/routes.py",
@@ -5658,7 +5688,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 357
+      "ordinal": 359
     },
     {
       "file": "src/simulation_quality/feed.py",
@@ -5673,7 +5703,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 358
+      "ordinal": 360
     },
     {
       "file": "src/simulation_quality/feed.py",
@@ -5688,7 +5718,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 359
+      "ordinal": 361
     },
     {
       "file": "src/simulation_quality/feed.py",
@@ -5705,7 +5735,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 360
+      "ordinal": 362
     },
     {
       "file": "src/simulation_quality/feed.py",
@@ -5722,7 +5752,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 361
+      "ordinal": 363
     },
     {
       "file": "src/simulation_quality/feed.py",
@@ -5739,7 +5769,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 362
+      "ordinal": 364
     },
     {
       "file": "src/simulation_quality/quality_hub.py",
@@ -5754,7 +5784,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 363
+      "ordinal": 365
     },
     {
       "file": "src/simulation_quality/quality_report.py",
@@ -5769,7 +5799,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 364
+      "ordinal": 366
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5784,7 +5814,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 365
+      "ordinal": 367
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5799,7 +5829,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 366
+      "ordinal": 368
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5814,7 +5844,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 367
+      "ordinal": 369
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5829,7 +5859,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 368
+      "ordinal": 370
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5844,7 +5874,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 369
+      "ordinal": 371
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5859,7 +5889,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 370
+      "ordinal": 372
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5874,7 +5904,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 371
+      "ordinal": 373
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5889,7 +5919,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 372
+      "ordinal": 374
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5904,7 +5934,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 373
+      "ordinal": 375
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5919,7 +5949,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 374
+      "ordinal": 376
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5934,7 +5964,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 375
+      "ordinal": 377
     },
     {
       "file": "src/testing/scenario_runner.py",
@@ -5949,7 +5979,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 376
+      "ordinal": 378
     },
     {
       "file": "src/testing/scenario_runner.py",
@@ -5964,7 +5994,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 377
+      "ordinal": 379
     },
     {
       "file": "src/worldassembly/resolver.py",
@@ -5979,7 +6009,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 378
+      "ordinal": 380
     },
     {
       "file": "src/worldbuilding/compiler.py",
@@ -5994,7 +6024,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 379
+      "ordinal": 381
     },
     {
       "file": "src/worldbuilding/compiler.py",
@@ -6009,7 +6039,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 380
+      "ordinal": 382
     },
     {
       "file": "src/worldbuilding/repository.py",
@@ -6024,7 +6054,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 381
+      "ordinal": 383
     },
     {
       "file": "src/worldbuilding/repository.py",
@@ -6044,7 +6074,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 382
+      "ordinal": 384
     },
     {
       "file": "src/worldbuilding/repository.py",
@@ -6063,7 +6093,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 383
+      "ordinal": 385
     },
     {
       "file": "src/worldgeneration/generator.py",
@@ -6078,7 +6108,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 384
+      "ordinal": 386
     },
     {
       "file": "src/worldgeneration/generator.py",
@@ -6093,7 +6123,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 385
+      "ordinal": 387
     }
   ],
   "unresolved_candidates": [
