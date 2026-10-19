@@ -39,12 +39,12 @@ Moving them to `env:` is still the cheap and correct pattern. It clears the aler
    - the changed-files gate's `event_name`, `base.sha` and `head.sha`;
    - the L1100/L1101 and L1150 diff lines.
    Leave `name:`, `if:`, `concurrency:` and `with:` uses alone; they are not shell.
-2. Do the same in `slow-regression.yml` and `slow-regression-watchdog.yml` if any exist there (Semgrep reported none).
+2. Do the same in `slow-regression.yml`, `slow-regression-watchdog.yml` and `rpg-gate-report.yml` if any exist there (Semgrep reported none). rpg-gate-report.yml runs testing's gate harness and testing takes it (registration pending in session_roles.yaml); include it in the static guard's file list.
 3. Add a static test, `tests/static/test_workflow_run_blocks_take_github_context_via_env.py`, over testing's workflows (test.yml, slow-regression*.yml). It fails if any `run:` string contains `${{ github.` or `${{ inputs.`, and it includes a regression case on an in-memory YAML snippet.
 4. Behaviour is unchanged: same commands, same values.
 
 ## Out of Scope
-- Pinning actions by SHA. The 43 + 6 `mutable-action-tag` findings wait on a repo-wide pin policy (platform-planner and lead), because the same choice applies to every workflow and to Dependabot's update flow. testing follows that policy once it exists.
+- Pinning actions by SHA. The 43 + 6 (+ 9 in rpg-gate-report.yml) `mutable-action-tag` findings wait on a repo-wide pin policy (platform-planner and lead), because the same choice applies to every workflow and to Dependabot's update flow. testing follows that policy once it exists.
 - Workflows testing does not own.
 
 ## Acceptance Criteria
