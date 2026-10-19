@@ -18,7 +18,7 @@ _PYPROJECT = _ROOT / "pyproject.toml"
 XDIST_JOBS = ("integration", "tools-f-z", "api-cli-engine")
 FLAGS = "-n auto --dist loadgroup"
 SERIAL_STEP = "Run: tests/visual_assets (store lock, serial)"
-JOB_COUNT = 21  # test.yml's job count when xdist was added; a new job needs a deliberate edit here (free plan: 20 concurrent jobs)
+MAX_JOB_COUNT = 21  # test.yml's job count when xdist was added: a ceiling, so removing a job is free and adding one needs a deliberate edit (free plan: 20 concurrent jobs)
 
 
 def _jobs() -> dict:
@@ -31,7 +31,7 @@ def _pytest_run_steps(job: dict) -> list[dict]:
 
 
 def test_the_job_count_does_not_grow():
-    assert len(_jobs()) == JOB_COUNT
+    assert len(_jobs()) <= MAX_JOB_COUNT
 
 
 @pytest.mark.parametrize("job", XDIST_JOBS)
