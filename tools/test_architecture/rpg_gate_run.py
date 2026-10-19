@@ -10,7 +10,7 @@ import resource
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 SCHEMA = "rpg-gate-metrics/v1"
 
@@ -40,6 +40,7 @@ class RunArtifacts:
     sha: str
     state: Any
     run_dir: Path
+    seeds: Tuple[int, ...] = ()  # the gate config's seed set (the run set a pooled floor is computed over); handed in, never read from a file by the metric module
 
     @property
     def events_path(self) -> Path:
@@ -95,7 +96,7 @@ def run(args: argparse.Namespace) -> int:
             kernel.shutdown()  # flushes the recorded event stream before the metrics read it
     run_dir = Path("data") / "runs" / args.run_id
     try:
-        result = compute(RunArtifacts(args.world, args.seed, args.ticks, args.sha, kernel.state, run_dir))
+        result = compute(RunArtifacts(args.world, args.seed, args.ticks, args.sha, kernel.state, run_dir, tuple(args.seeds)))
     except Exception as exc:  # noqa: BLE001
         _write(out, _no_data(args, "metric_error", exc, args.seed))
         return 0
@@ -128,6 +129,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     r = sub.add_parser("run", parents=[common])
     r.add_argument("--seed", type=int, required=True)
     r.add_argument("--run-id", required=True)
+    r.add_argument("--seeds", type=int, nargs="+", default=[])
     p = sub.add_parser("pool", parents=[common])
     p.add_argument("--docs", nargs="+", required=True)
     args = parser.parse_args(argv)

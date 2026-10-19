@@ -30,11 +30,10 @@ from tests.unit.observability.test_starvation_death_record import WHO, _world
 Tick = Tuple[Sequence[Any], Dict[int, SpawnSource]]  # (entities_add, entity_spawn_sources) for one tick
 
 
-@pytest.fixture(autouse=True)
-def _no_world_compile(monkeypatch):
-    """The self-test world has no spec: the O2.population floor's tick-0 counts (a world compile) are not under test here."""
-    monkeypatch.setattr(metrics, "_gate_seeds", lambda: (1,))
-    monkeypatch.setattr(metrics, "_tick0_alive", lambda world, seed: {})
+@pytest.fixture
+def _fake_floors(monkeypatch):
+    """Self-test world has no spec; V8 cases assert validity rows only, never O2 floors (the floor is the fixed base, 3.0)."""
+    monkeypatch.setattr(metrics, "tick0_means", lambda world, seeds: {})
 
 
 @pytest.fixture(autouse=True)
@@ -69,7 +68,7 @@ def _drive(tmp_path: Path, ticks: Sequence[Tick], ledger_live: bool = True) -> T
     events.append(StarvationRecorder.tally_event())
     path = tmp_path / "simulation_events.jsonl"
     path.write_text("\n".join(json.dumps({"event_type": e.event_type, "payload": e.payload}, default=str) for e in events) + "\n", encoding="utf-8")
-    run = SimpleNamespace(world="v8_self_test", seed=1, ticks=len(ticks), state=prior, events_path=path, run_dir=tmp_path, first=first)
+    run = SimpleNamespace(world="v8_self_test", seed=1, ticks=len(ticks), state=prior, events_path=path, run_dir=tmp_path, first=first, seeds=(1,))
     return run, prior
 
 
@@ -86,6 +85,7 @@ def _arrival() -> SpawnSource:
     return SpawnSource(SpawnKind.AUTHORED_ARRIVAL, rule_kind="calamity", rule_id="calamity.test_rule")
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_a_an_add_with_no_spawn_source_is_a_violation_that_names_the_entity(tmp_path):
     run, _ = _drive(tmp_path, [([_new(500)], {})])
     row = _v8(run)
@@ -94,6 +94,7 @@ def test_a_an_add_with_no_spawn_source_is_a_violation_that_names_the_entity(tmp_
     assert any("unsourced" in str(example) for example in row["examples"])
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_b_an_authored_arrival_cannot_be_built_without_its_rule_so_the_only_unruled_add_is_an_unsourced_one(tmp_path):
     for bad in (dict(rule_kind="calamity"), dict(rule_id="calamity.x"), dict()):
         with pytest.raises(ValueError):
@@ -102,6 +103,7 @@ def test_b_an_authored_arrival_cannot_be_built_without_its_rule_so_the_only_unru
     assert _v8(run)["violations"] == 0
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_c_a_birth_cannot_be_built_without_parents_so_the_only_parentless_add_is_an_unsourced_one(tmp_path):
     with pytest.raises(ValueError):
         SpawnSource(SpawnKind.BIRTH, parent_ids=())
@@ -111,6 +113,7 @@ def test_c_a_birth_cannot_be_built_without_parents_so_the_only_parentless_add_is
     assert _v8(run)["violations"] == 0
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_d_fully_sourced_adds_of_every_kind_leave_zero_violations(tmp_path):
     ticks: List[Tick] = [
         ([_new(500)], {500: SpawnSource(SpawnKind.INITIAL)}),
@@ -122,12 +125,14 @@ def test_d_fully_sourced_adds_of_every_kind_leave_zero_violations(tmp_path):
     assert RunLedger.tally_event().payload["adds"], "the run must have counted its adds, or zero would mean nothing"
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_e_a_silent_ledger_is_no_data_never_zero_violations(tmp_path):
     run, _ = _drive(tmp_path, [([_new(500)], {})], ledger_live=False)
     with pytest.raises(metrics.GateDataMissingError):
         metrics.compute(run)
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_f_the_tally_counts_sum_to_the_number_of_adds_applied(tmp_path):
     ticks: List[Tick] = [
         ([_new(500), _new(501)], {500: _birth(), 501: _arrival()}),

@@ -28,8 +28,6 @@ import os
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
-import yaml
-
 from src.ai.goals.kind_group import kind_group
 from src.observability.run_ledger import (
     LEDGER_LIVE_EVENT,
@@ -42,7 +40,7 @@ from src.observability.starvation_record import (
     RECORD_EVENT,
 )
 from src.worldbuilding.compiler import WorldCompiler
-from src.worldbuilding.repository import WorldRepository
+from src.worldbuilding.repository import WorldRepository, WorldRepositoryError
 
 MAX_EXAMPLES = 5
 COIN_EPSILON = 1e-6
@@ -154,25 +152,20 @@ def population_floor(tick0_mean_population: float) -> float:
     return max(OUTCOME_THRESHOLDS["O2.population"][1], 0.10 * tick0_mean_population)
 
 
-GATE_CONFIG = "tests/simulation_quality/rpg_gate/config.yaml"
-
-
-def _gate_seeds() -> Tuple[int, ...]:
-    """The gate config's seed set (D54): the run set the floor is pooled over."""
-    with open(GATE_CONFIG, encoding="utf-8") as fh:
-        return tuple(int(s) for s in (yaml.safe_load(fh) or {})["seeds"])
-
-
 def _tick0_alive(world: str, seed: int) -> Dict[str, int]:
     """The alive count by kind group of the world compiled for ``seed``, before any tick (what the ledger's first sample sees)."""
-    spec, context = WorldRepository(os.path.join("data", "worlds")).load_world_with_context(world)
+    try:
+        spec, context = WorldRepository(os.path.join("data", "worlds")).load_world_with_context(world)
+    except WorldRepositoryError as exc:
+        raise GateDataMissingError(f"world {world!r} has no spec to compile for the O2.population floor (tick-0 counts): {exc}") from exc
     state, _report = WorldCompiler.compile(spec, seed, context=context)
     return _final_alive_by_group(state)
 
 
-def tick0_means(world: str) -> Dict[str, float]:
-    """The pooled tick-0 mean population per kind group over the gate config's seeds (a group absent from a seed counts 0 there)."""
-    seeds = _gate_seeds()
+def tick0_means(world: str, seeds: Sequence[int]) -> Dict[str, float]:
+    """The pooled tick-0 mean population per kind group over the gate config's seed set, handed in by the harness (a group absent from a seed counts 0 there)."""
+    if not seeds:
+        raise GateDataMissingError("the run carries no seed set: the O2.population floor is pooled over the gate config's seeds")
     per_seed = [_tick0_alive(world, seed) for seed in seeds]
     groups = {g for counts in per_seed for g in counts}
     return {g: sum(counts.get(g, 0) for counts in per_seed) / len(seeds) for g in groups}
@@ -241,11 +234,11 @@ def _validity_rows(world: str, ledger: Mapping[str, Any], records: Sequence[Mapp
     return [_validity(vid, world, count, examples) for vid, (count, examples) in checks.items()]
 
 
-def _population_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: Any) -> List[Dict[str, Any]]:
+def _population_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: Any, seeds: Sequence[int]) -> List[Dict[str, Any]]:
     rows: List[Dict[str, Any]] = []
     population = ledger["population"]
     first = population[str(ledger["first_tick"])] if population else {}
-    means = tick0_means(world)
+    means = tick0_means(world, seeds)
     final = _final_alive_by_group(state)
     starved: Dict[str, int] = defaultdict(int)
     for key, n in ledger["deaths"].items():
@@ -294,8 +287,8 @@ def _way_rows(world: str, ledger: Mapping[str, Any]) -> List[Dict[str, Any]]:
     return [_outcome("O4.accepted", world, group, n, key=source) for (group, source), n in sorted(ways.items())]
 
 
-def _outcome_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: Any) -> List[Dict[str, Any]]:
-    return _population_rows(world, ticks, ledger, state) + _death_rows(world, ledger) + _combat_rows(world, ledger) + _way_rows(world, ledger)
+def _outcome_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: Any, seeds: Sequence[int]) -> List[Dict[str, Any]]:
+    return _population_rows(world, ticks, ledger, state, seeds) + _death_rows(world, ledger) + _combat_rows(world, ledger) + _way_rows(world, ledger)
 
 
 def compute(run: Any) -> Dict[str, Any]:
@@ -307,7 +300,7 @@ def compute(run: Any) -> Dict[str, Any]:
     if int(starvation["starvation_deaths_seen"]) != len(records) or int(starvation["records_emitted"]) != len(records):
         raise GateDataMissingError(f"starvation-death record: {starvation['starvation_deaths_seen']} deaths seen, {len(records)} records on file (some were dropped)")
     rows = _validity_rows(run.world, ledger, records, run.state, float(ledger["world_events"].get("meat_decayed_quantity", 0.0)))
-    rows += _outcome_rows(run.world, run.ticks, ledger, run.state)
+    rows += _outcome_rows(run.world, run.ticks, ledger, run.state, tuple(getattr(run, "seeds", ())))
     rows.sort(key=lambda r: (r["id"], r["group"], str(r.get("key", "")), r.get("tick") or 0))
     return {"metrics": rows}
 

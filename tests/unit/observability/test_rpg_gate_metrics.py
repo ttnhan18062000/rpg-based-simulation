@@ -41,7 +41,7 @@ def _state():
     return _world()
 
 
-def _run(tmp_path: Path, ledger: Dict[str, Any], records: List[Dict[str, Any]] = (), starvation=None, state=None, ledger_live=True, starvation_live=True):
+def _run(tmp_path: Path, ledger: Dict[str, Any], records: List[Dict[str, Any]] = (), starvation=None, state=None, ledger_live=True, starvation_live=True, seeds=(1,)):
     events = []
     if starvation_live:
         events.append({"event_type": CHANNEL_LIVE_EVENT, "payload": {}})
@@ -52,7 +52,7 @@ def _run(tmp_path: Path, ledger: Dict[str, Any], records: List[Dict[str, Any]] =
     events.append({"event_type": LEDGER_TALLY_EVENT, "payload": ledger})
     path = tmp_path / "simulation_events.jsonl"
     path.write_text("\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8")
-    return SimpleNamespace(world="w", seed=1, ticks=100, sha="s", state=state or _state(), events_path=path, run_dir=tmp_path)
+    return SimpleNamespace(world="w", seed=1, ticks=100, sha="s", state=state or _state(), events_path=path, run_dir=tmp_path, seeds=seeds)
 
 
 def _row(result, vid, group="*"):
@@ -188,13 +188,11 @@ _REAL_TICK0_ALIVE = m._tick0_alive
 @pytest.fixture(autouse=True)
 def _no_world_compile(monkeypatch):
     """The fake world "w" has no spec: the floor's tick-0 counts default to none (the base floor) unless a test sets them with ``_tick0``."""
-    monkeypatch.setattr(m, "_gate_seeds", lambda: (1,))
     monkeypatch.setattr(m, "_tick0_alive", lambda world, seed: {})
 
 
 def _tick0(monkeypatch, per_seed):
-    """Patch the gate's seed set and each seed's compiled tick-0 counts."""
-    monkeypatch.setattr(m, "_gate_seeds", lambda: tuple(per_seed))
+    """Patch each seed's compiled tick-0 counts (the seed set itself is handed to ``compute`` by ``_run(seeds=...)``)."""
     monkeypatch.setattr(m, "_tick0_alive", lambda world, seed: dict(per_seed[seed]))
 
 
@@ -206,14 +204,14 @@ def test_the_population_floor_is_a_tenth_of_the_tick0_mean_and_never_under_three
     assert m.population_floor(10) == 3.0 and m.population_floor(29) == 3.0  # small: the base floor holds
     assert m.population_floor(100) == 10.0 and m.population_floor(250) == 25.0  # large: a tenth
     _tick0(monkeypatch, {1: {PEOPLE: 190, WOLF: 4}, 2: {PEOPLE: 210, WOLF: 4}})
-    result = m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 200, WOLF: 4}})))
+    result = m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 200, WOLF: 4}}), seeds=(1, 2)))
     assert _floors(result, PEOPLE) == {20.0} and _floors(result, WOLF) == {3.0}
 
 
 def test_the_floor_is_identical_in_every_seed_document_and_at_every_tick(tmp_path, monkeypatch):
     """Two seeds whose own tick-0 counts differ (as frontier's do) get the same floor, on every tick row."""
     _tick0(monkeypatch, {1: {PEOPLE: 310}, 2: {PEOPLE: 330}})
-    docs = [m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: n}, "50": {PEOPLE: n - 5}}))) for n in (310, 330)]
+    docs = [m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: n}, "50": {PEOPLE: n - 5}}), seeds=(1, 2))) for n in (310, 330)]
     floors = [r["floor"] for d in docs for r in d["metrics"] if r["id"] == "O2.population" and r["group"] == PEOPLE]
     assert len(floors) > 2 and set(floors) == {32.0}
 
@@ -221,11 +219,21 @@ def test_the_floor_is_identical_in_every_seed_document_and_at_every_tick(tmp_pat
 def test_a_paired_arms_floor_does_not_move_when_only_the_other_arms_tick0_changes(tmp_path, monkeypatch):
     base = {1: {PEOPLE: 100}, 2: {PEOPLE: 100}}
     _tick0(monkeypatch, base)
-    before = _floors(m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 100}}))), PEOPLE)
+    before = _floors(m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 100}}), seeds=(1, 2))), PEOPLE)
     _tick0(monkeypatch, {1: {PEOPLE: 400}, 2: {PEOPLE: 400}})  # the new arm's world: a different tick-0
-    assert _floors(m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 400}}))), PEOPLE) == {40.0}
+    assert _floors(m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 400}}), seeds=(1, 2))), PEOPLE) == {40.0}
     _tick0(monkeypatch, base)  # the base arm, read again
-    assert _floors(m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 100}}))), PEOPLE) == before == {10.0}
+    assert _floors(m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 100}}), seeds=(1, 2))), PEOPLE) == before == {10.0}
+
+
+def test_a_world_with_no_spec_is_no_data_never_a_silent_floor():
+    with pytest.raises(m.GateDataMissingError, match="has no spec"):
+        _REAL_TICK0_ALIVE("no_such_world_for_the_floor", 42)
+
+
+def test_a_run_with_no_seed_set_is_no_data_never_a_floor_from_nowhere(tmp_path):
+    with pytest.raises(m.GateDataMissingError):
+        m.compute(_run(tmp_path, _ledger(), seeds=()))
 
 
 def test_the_compiled_tick0_population_equals_the_ledgers_first_observed_population():
