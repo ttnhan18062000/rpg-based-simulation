@@ -23,6 +23,7 @@ import sys
 from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from src.simulation_quality.observer import default_observer_factories
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT_ROOT = Path("reports/perf")  # already git-ignored (reports/*); nothing generated is committed
@@ -481,7 +482,7 @@ def run_scenario_ticks(scenario: str, entities: int, seed: int, warmup: int, tic
         state, override = apply_flag_override(state, flag, flag_mode)
     profile, governor, flags = contract_kernel_args(getattr(profiles_module, profile_name), contract, replay=replay)
     replay_manager = make_replay_manager(profile, flags, replay_dir) if replay else None
-    kernel = Kernel(profile, state, DeterministicRNG(seed), governor=governor, flags=flags, replay=replay_manager)
+    kernel = Kernel(profile, state, DeterministicRNG(seed), governor=governor, flags=flags, replay=replay_manager, observers=default_observer_factories())
     events: Dict[str, int] = {}
     tick_events = [0]
 

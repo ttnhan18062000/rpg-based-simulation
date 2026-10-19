@@ -19,6 +19,7 @@ import time
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Dict, List, Any
+from src.simulation_quality.observer import default_observer_factories
 
 # Ensure project root on path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -120,7 +121,7 @@ def run_measurement(ticks: int = 1000, seed: int = 42, world_id: str = "urban_po
     state = replace(state, feature_flags=enabled_flags)
 
     _install_blocker_patch()
-    kernel = Kernel(profile=profile, state=state, rng=rng)
+    kernel = Kernel(profile=profile, state=state, rng=rng, observers=default_observer_factories())
 
     # Per-tick tracking
     entity_count_start = len([e for e in kernel.state.entities.values() if e.combat.alive])

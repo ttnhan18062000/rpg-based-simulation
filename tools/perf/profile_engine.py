@@ -22,6 +22,7 @@ from src.core.strategic import ProjectStatus
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.perf.scenarios import SCENARIO_BUILDERS
+from src.simulation_quality.observer import default_observer_factories
 
 OUT_DIR = Path("reports/profile")
 
@@ -56,7 +57,8 @@ class ProfilingHarness:
             profile,
             state,
             DeterministicRNG(42),
-            flags=flags
+            flags=flags,
+            observers=default_observer_factories(),
         )
         self.last_kernel = kernel
 

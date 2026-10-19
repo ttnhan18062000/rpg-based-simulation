@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
+from src.simulation_quality.observer import default_observer_factories
 
 SEED = 42
 WORLD_ID = "urban_political"
@@ -71,6 +72,7 @@ def _run_simulation(ticks: int, seed: int, world_id: str) -> str:
             state=state,
             rng=DeterministicRNG(seed),
             flags={"no_frame_pacing": True},
+            observers=default_observer_factories(),
         )
         run_id = kernel._run_id
 

@@ -11,6 +11,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
+from src.simulation_quality.observer import default_observer_factories
 
 SCHEMA = "rpg-gate-metrics/v1"
 
@@ -63,6 +64,7 @@ def build_kernel(world: str, seed: int, run_id: str):
         PROD_SMALL.model_copy(update={"max_tick_budget_ms": 1e9}), state, DeterministicRNG(seed),
         governor=PinnedNormalGovernor(), executor=LocalSequentialExecutor(),
         flags={"audit_mode": True, "no_frame_pacing": True}, run_id=run_id,
+        observers=default_observer_factories(),
     )
 
 

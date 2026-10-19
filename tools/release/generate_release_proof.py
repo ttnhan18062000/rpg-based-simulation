@@ -13,6 +13,7 @@ from src.core.state import AuthoritativeState, EntityState, ResourceNodeState
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.platform.rng import DeterministicRNG
 from src.engine.kernel import Kernel
+from src.simulation_quality.observer import default_observer_factories
 
 PROOF_BUNDLE_DIR = "reports/release_proof"
 MANIFEST_PATH = "docs/engine/manifest.json"
@@ -73,7 +74,7 @@ def run_scenario(profile_name, scenario_id):
             .build())
     })
     rng = DeterministicRNG(42)
-    kernel = Kernel(profile, state, rng)
+    kernel = Kernel(profile, state, rng, observers=default_observer_factories())
     
     # Run 10 ticks
     for _ in range(10):

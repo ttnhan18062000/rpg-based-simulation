@@ -23,6 +23,7 @@ import os
 import sys
 import time
 import uuid
+from src.simulation_quality.observer import default_observer_factories
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("calibrate_simq")
@@ -306,7 +307,7 @@ def _run_engine(
     # A unique run id per call: the Kernel's default id is ``run_<unix second>_<seeded suffix>``, the same for every run with one seed, so two same-seed runs
     # starting within one second (xdist workers, parallel processes) would share one ``data/runs/<id>`` directory and double each other's events.
     unique_run_id = f"{name}_{seed}_{ticks}_{os.getpid()}_{uuid.uuid4().hex[:8]}"
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True, **({"audit_mode": True} if audit_mode else {})}, run_id=unique_run_id)
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True, **({"audit_mode": True} if audit_mode else {})}, run_id=unique_run_id, observers=default_observer_factories())
 
     run_id = getattr(kernel, "_run_id", None)
     start = time.perf_counter()
@@ -439,7 +440,7 @@ def _run_campaign_engine(
     # data/runs/{episode_run_id}/simulation_events.jsonl and appended below -- confirmed
     # by that ticket's investigation not to be missing from SimQ's replay input.
     campaign_recorder = EventRecorder(run_dir=campaign_run_dir, max_events=5000, enabled=True)
-    orchestrator = CampaignOrchestrator(manifest, scenario_event_recorder=campaign_recorder)
+    orchestrator = CampaignOrchestrator(manifest, scenario_event_recorder=campaign_recorder, observers=default_observer_factories())
 
     start = time.perf_counter()
     episode_run_ids: list[str] = []

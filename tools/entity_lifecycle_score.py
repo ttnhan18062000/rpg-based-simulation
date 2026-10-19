@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 import yaml
+from src.simulation_quality.observer import default_observer_factories
 
 _TOOLS_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TOOLS_DIR.parent
@@ -113,7 +114,7 @@ def _run_for_analysis(
         existing.update(combined)
         state = dc_replace(state, feature_flags=existing)
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True}, observers=default_observer_factories())
     run_id = getattr(kernel, "_run_id", None)
     for _ in range(ticks):
         kernel.tick_once()

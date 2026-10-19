@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
+from src.simulation_quality.observer import default_observer_factories
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -133,6 +134,7 @@ def _run_one_world_under_coverage(world: str, seed: int, ticks: int, data_file: 
         kernel = Kernel(
             profile=PROD_SMALL, state=state, rng=DeterministicRNG(seed),
             flags={"no_frame_pacing": True},
+            observers=default_observer_factories(),
         )
         try:
             for _ in range(ticks):

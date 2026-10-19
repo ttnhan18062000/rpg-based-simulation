@@ -54,6 +54,7 @@ from src.core.state import AuthoritativeState
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.perf.scenarios import SCENARIO_BUILDERS
+from src.simulation_quality.observer import default_observer_factories
 
 OUT_DIR = Path("reports/profile")
 CORPUS_ROOT = Path("data/worlds")
@@ -287,6 +288,7 @@ def run_one(
         state,
         DeterministicRNG(42),
         flags={"no_replay": True, "no_frame_pacing": True, "audit_mode": False},
+        observers=default_observer_factories(),
     )
 
     tick_durations_ms: List[float] = []
@@ -355,6 +357,7 @@ def run_corpus_world(
         state,
         DeterministicRNG(seed),
         flags={"no_replay": True, "no_frame_pacing": True, "audit_mode": False},
+        observers=default_observer_factories(),
     )
 
     tick_durations_ms: List[float] = []
