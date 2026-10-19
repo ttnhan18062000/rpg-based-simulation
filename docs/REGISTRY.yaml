@@ -7713,6 +7713,18 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-MEAT-DECAYED-IS-WRITTEN-FROM-THE-APPLIED-OUTCOME-V2.md
+  ticket_id: TCK-20261019-MEAT-DECAYED-IS-WRITTEN-FROM-THE-APPLIED-OUTCOME-V2
+  title: A body that decays and is looted whole on the same tick yields no MEAT_DECAYED
+    record (v1 gate V2, crowded/43)
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - _meat_decayed_events
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE.md
   ticket_id: TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE
   title: Tools tests that run a hook with `cwd=tmp_path` read the real main checkout's
@@ -7772,6 +7784,29 @@
   - testing
   - workflows
   - performance
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261019-O2-POPULATION-FLOOR-IS-ONE-VALUE-PER-WORLD.md
+  ticket_id: TCK-20261019-O2-POPULATION-FLOOR-IS-ONE-VALUE-PER-WORLD
+  title: O2.population's floor is one value per (world, group), computed from the
+    gate seed set's pooled tick-0 mean
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/rpg_gate_metrics.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261019-V1-COUNTS-A-HUNGER-DROP-AS-BACKED-ONLY-WHEN-AN-ACCEPTED-TRANSFER-MOVED-SOMETHING.md
+  ticket_id: TCK-20261019-V1-COUNTS-A-HUNGER-DROP-AS-BACKED-ONLY-WHEN-AN-ACCEPTED-TRANSFER-MOVED-SOMETHING
+  title: V1 counts a hunger drop as backed only when an accepted transfer moved something
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/run_ledger.py, src/observability/rpg_gate_metrics.py (V1), tools/test_architecture/rpg_gate_known.yaml
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645.md
   ticket_id: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
