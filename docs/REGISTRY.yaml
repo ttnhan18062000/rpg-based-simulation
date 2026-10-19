@@ -7727,6 +7727,25 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL.md
+  ticket_id: TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL
+  title: The rpg gate's required-validity check asks for each V row only at the level
+    it is judged at (per-seed `run` or `pooled`), not in every document.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - load_config
+  - missing_required
+  - _missing_required
+  - tests/simulation_quality/rpg_gate/config.yaml (rpg's values)
+  - tests/helpers/rpg_gate_stub_metrics.py
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES.md
   ticket_id: TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES
   title: test.yml's Frontend and jscpd steps run Node 24, the same as the frontend

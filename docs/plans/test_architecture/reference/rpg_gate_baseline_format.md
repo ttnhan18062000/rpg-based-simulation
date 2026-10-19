@@ -44,10 +44,10 @@ the two files and stored in the record.
 
 ## Required validity rows
 
-The config may carry `required_validity: [V1, V8, ...]`, ids of the form `V<n>` (a non-list, a duplicate or another shape is refused by `load_config`). The values are rpg's; the format and behaviour are testing's. A metric module that leaves a required row out would otherwise pass silently, so:
+The config may carry `required_validity`, a mapping from a **level** to the ids required there: `{run: [V1, V2, V3, V4, V5, V6, V8], pooled: [V7]}`. The levels are `run` and `pooled` only. A seed document is the `run` level and the pooled document is the `pooled` level; an id is required in the documents of the level(s) it is listed under, and may be listed under both. `load_config` refuses the plain-list form (it does not say which documents carry which id), an unknown level, a non-list value, a duplicate within a level, and an id that is not of the form `V<n>`. The values are rpg's; the format and behaviour are testing's. A metric module that leaves a required row out would otherwise pass silently, so:
 
-- the report gives each required id missing from a document (every seed document and the pooled one, in every world) the state `no-data`, reason `contract_error`, detail `required validity row <id> missing`, and the markdown names the missing ids in a banner. It never reads as a pass; the job's verdict rule is unchanged (no-data is not red by itself);
-- the candidate refuses while any required row is missing from any document, unless a current, unexpired `state: fail` entry in `rpg_gate_known.yaml` owns that id (then the row is listed in `omitted_validity`, once per world, as `<id>:run:<world>:*`).
+- the report gives each id required at a document's level but missing from that document (in every world) the state `no-data`, reason `contract_error`, detail `required validity row <id> missing`, and the markdown names the missing ids in a banner. A row that is not required at that level is not asked for. It never reads as a pass; the job's verdict rule is unchanged (no-data is not red by itself);
+- the candidate refuses while any row required at a document's level is missing from it, unless a current, unexpired `state: fail` entry in `rpg_gate_known.yaml` owns that id (then the row is listed in `omitted_validity`, once per world and level, as `<id>:run:<world>:*` or `<id>:pooled:<world>:*`).
 
 ## V8: every entity added mid-run has a declared source
 
@@ -57,7 +57,7 @@ Owner ruling D70: a monster spawner with no parent and no cost is nothing-from-n
 |---|---|
 | id | `V8` |
 | class | `validity` |
-| scope | `run` and `pooled` (the pooled row sums the seeds' violations) |
+| scope | `run` (required at that level). A pooled V8 row is optional; if a module emits one, its `violations` must equal the sum of the seeds' rows |
 | group | the kind group (D42, property-based), or `*` for the whole run |
 | oracle | `docs/plans/test_architecture/reference/rpg_gate_baseline_format.md#v8-every-entity-added-mid-run-has-a-declared-source` (this section), and D70 |
 
@@ -84,7 +84,7 @@ by `rebaseline`). Run outcome rows carry `per_seed`, `mean`, `se` and the row's 
 (0) and `oracle`. The same inputs give the same bytes.
 
 It refuses (exit 2, nothing written) on any `no-data` document, a missing or unexpected (world, seed), a `sha` / `harness_hash` / ticks disagreement, a
-`k` / `floor` / `oracle` mismatch across documents, a row absent from a seed, fewer than 2 seeds, and a validity fail with no current owner. A validity
+`k` / `floor` / `oracle` mismatch across the documents of one world (floors may differ between worlds, never between the seeds of one), a row absent from a seed, fewer than 2 seeds, and a validity fail with no current owner. A validity
 fail with a current, unexpired `state: fail` entry in `rpg_gate_known.yaml` is instead left out of `metrics` and listed in `omitted_validity`
 (`{row, known_match, ticket}`), because validity is judged absolutely on every run and never against a baseline. The lint rejects a listed row still present in `metrics`, and `rebaseline --known FILE` re-checks each omission's owner against the current registry (refuses when it is gone, no longer `state: fail`, or expired).
 

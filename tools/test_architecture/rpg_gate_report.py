@@ -108,16 +108,16 @@ def _is_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
-def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str], str]:
-    """``(id, group) -> reason`` for rows that break the threshold contract: an outcome row without a numeric ``k`` / ``floor`` (a pooled one needs only the
-    floor), or rows of one (id, group) that disagree on ``k``, ``floor`` or ``oracle`` across the documents of the run set."""
-    seen: Dict[Tuple[str, str], set] = {}
-    problems: Dict[Tuple[str, str], str] = {}
-    for doc in docs.values():
+def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str, str], str]:
+    """``(world, id, group) -> reason`` for rows that break the threshold contract: an outcome row without a numeric ``k`` / ``floor`` (a pooled one needs only the
+    floor), or rows of one (world, id, group) that disagree on ``k``, ``floor`` or ``oracle`` across that world's documents (floors may differ between worlds; the row key carries the world)."""
+    seen: Dict[Tuple[str, str, str], set] = {}
+    problems: Dict[Tuple[str, str, str], str] = {}
+    for (world, _seed), doc in docs.items():
         if doc.get("status") != "ok":
             continue
         for row in doc["metrics"]:
-            key = (row["id"], row.get("group", "*"))
+            key = (world, row["id"], row.get("group", "*"))
             if row.get("class") == "outcome":
                 pooled = row.get("scope") == "pooled"
                 need = ("floor", "value") if pooled else ("k", "floor")
@@ -234,15 +234,15 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
     problems = _threshold_problems(docs)
 
     def validity(row: Mapping[str, Any], world: str, seed: Optional[int]) -> dict:
-        problem = problems.get((row["id"], row.get("group", "*")))
+        problem = problems.get((world, row["id"], row.get("group", "*")))
         return _contract_no_data(world, row, seed, problem) if problem else _validity(row, world, seed, config)
 
     def missing_required(doc: Mapping[str, Any], world: str, seed: Optional[int]) -> List[dict]:
-        """A validity row the config requires but the document leaves out is ``no-data``, never a pass: a metric module that drops a check must not look clean."""
+        """A validity row the config requires at this document's level (``run`` for a seed document, ``pooled`` for the pooled one) but the document leaves out is ``no-data``, never a pass: a metric module that drops a check must not look clean."""
         present = {r.get("id") for r in doc["metrics"] if r.get("class") == "validity"}
         return [{**_contract_no_data(world, {"id": rid, "class": "validity", "scope": "pooled" if seed is None else "run", "group": "*"}, seed, f"required validity row {rid} missing"),
                  "required_missing": True}
-                for rid in config.required_validity if rid not in present]
+                for rid in config.required_at("pooled" if seed is None else "run") if rid not in present]
 
     for world in config.worlds:
         seed_docs = {seed: docs.get((world, seed)) for seed in config.seeds}
@@ -262,7 +262,7 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
             findings.extend(missing_required(pooled, world, None))
             for r in pooled["metrics"]:
                 if r.get("class") == "outcome":
-                    problem = problems.get((r["id"], r.get("group", "*")))
+                    problem = problems.get((world, r["id"], r.get("group", "*")))
                     findings.append(_contract_no_data(world, r, None, problem) if problem else _outcome(r, world, refs, reasons_by_version, config))
         if not all_ok:
             continue  # a partial seed set would change what an outcome means; the missing seeds already report as no-data
@@ -275,7 +275,7 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
                                                    "k": r.get("k"), "floor": r.get("floor"), "per_seed": {}})
                     row["per_seed"][seed] = r["value"] if _is_number(r.get("value")) else r.get("mean")
         for row in grouped.values():
-            problem = problems.get((row["id"], row["group"]))
+            problem = problems.get((world, row["id"], row["group"]))
             findings.append(_contract_no_data(world, row, None, problem) if problem else _outcome(row, world, refs, reasons_by_version, config))
     return findings
 
