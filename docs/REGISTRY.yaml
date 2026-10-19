@@ -7713,6 +7713,18 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-MEAT-DECAYED-IS-WRITTEN-FROM-THE-APPLIED-OUTCOME-V2.md
+  ticket_id: TCK-20261019-MEAT-DECAYED-IS-WRITTEN-FROM-THE-APPLIED-OUTCOME-V2
+  title: A body that decays and is looted whole on the same tick yields no MEAT_DECAYED
+    record (v1 gate V2, crowded/43)
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - _meat_decayed_events
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE.md
   ticket_id: TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE
   title: Tools tests that run a hook with `cwd=tmp_path` read the real main checkout's
