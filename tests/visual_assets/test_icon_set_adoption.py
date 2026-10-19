@@ -63,7 +63,7 @@ def test_the_icons_are_built_but_only_rc_0008_and_later_cover_an_icon_slot():
     """The adoption is a record of the owner's decision; `TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE` then built the 36 icons (one `x1` artifact each, on top of the 34 terrain-era ones) and the owner approved `pilot/rc-0008`.
     rc-0001 to rc-0007 stay as they were: only terrain and border slots (rc-0006 and rc-0007: 34)."""
     generated = sorted(p.name for p in (config.CATALOG_ROOT / "generated").iterdir() if p.name != ".gitkeep")
-    assert generated == af.GENERATED and sorted(g for g in generated if g.startswith("icon_")) == sorted(af.ICON_GENERATED + af.OBJECT_GENERATED)  # (the 18 object markers are built too) the 14 key-set icons and the 22 v2 icons are built
+    assert generated == af.GENERATED and sorted(g for g in generated if g.startswith("icon_")) == sorted(af.ICON_GENERATED + af.OBJECT_GENERATED + af.ENTITY_GENERATED)  # (the 18 object markers and the 11 entity markers are built too) the 14 key-set icons and the 22 v2 icons are built
     candidates = config.CATALOG_ROOT / "manifests" / "candidates" / "pilot"
     for path in sorted(candidates.glob("rc-*.json")):
         keys = {e["visual_key"] for e in json.loads(path.read_text())["entries"]}
@@ -71,6 +71,8 @@ def test_the_icons_are_built_but_only_rc_0008_and_later_cover_an_icon_slot():
             assert len([k for k in keys if k.startswith("icon.")]) == af.RC_0008_ICON_ENTRIES, path.name
         elif path.name == "rc-0011.json":  # rc-0011 adds the 18 object markers (13 nodes, the nest, 4 buildings)
             assert len([k for k in keys if k.startswith("icon.")]) == af.RC_0008_ICON_ENTRIES + len(af.OBJECT_KEYS), path.name
+        elif path.name == "rc-0012.json":  # rc-0012 adds the 11 entity markers
+            assert len([k for k in keys if k.startswith("icon.")]) == af.RC_0008_ICON_ENTRIES + len(af.OBJECT_KEYS) + len(af.ENTITY_KEYS), path.name
         else:
             assert not [k for k in keys if k.startswith("icon.")], path.name
     assert len(json.loads((candidates / "rc-0006.json").read_text())["entries"]) == 34

@@ -181,6 +181,21 @@ A key of the real icon shape (a description of about 200 characters and a label)
 
 A real key costs 543 B in the registry (as measured on 2026-10-13); the 18 keys and 5 aliases added 11,081 B, 616 B per key counting the aliases and the comments of the new `node` family.
 
+## rc-0012 measured (2026-10-19)
+
+`TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS`. Measured on the committed store after the 11 entity markers were adopted, built and released; a measurement only, no bound changed.
+
+| What | Value | Of the bound | Note |
+|---|---|---|---|
+| the registry `visual_keys.yaml` (94 keys, 8 aliases, 6 detail axes) | 48,312 B | 10.5 % of `MAX_REGISTRY_BYTES` 458,752 | the 11 `icon.entity.*` keys added 6,288 B, 572 B per key |
+| keys, aliases | 94, 8 | 9.2 % of `MAX_VISUAL_KEYS` 1,024; 0.8 % of `MAX_ALIASES` 1,024 | |
+| `load_registry` (median of 11 runs, this machine, other sessions running) | 0.118 s | far under the 2 s line | 0.153 s was measured for 83 keys on 2026-10-14 under more load |
+| the candidate manifest `rc-0012.json` (116 entries) | 19,949 B | 3.8 % of `MAX_MANIFEST_BYTES` 524,288 | 172 B per entry, as for rc-0011 |
+| the runtime manifest of the export (`runtime_manifest.json`, 116 entries) | 29,962 B | 5.7 % | 258 B per entry |
+| the 11 entity sources | 302 to 412 B each | 0.4 % of `MAX_SOURCE_BYTES` 102,400 | |
+
+The committed sample-map crops are measured again when they are regenerated on rc-0012 (the next step of the batch); the row above does not cover them.
+
 ## Registry re-measurement for the map-markers batch (2026-10-13)
 
 `TCK-20261013-VISUAL-ASSETS-MARKER-BUDGET-AND-KEY-DESIGN`, the review the standing rule asks for before the key set grows. No bound is changed and no committed registry file is edited by this step. Measured with the real `load_registry` on a scratch registry in a temporary directory: the committed `visual_keys.yaml` (65 keys, 3 aliases, 6 detail axes) plus new keys of the real shape (a description of about 200 characters, `safety_class`, a structured `glyph_and_text` fallback, `label_key`, `label`) and 5 new aliases, median of 5 loads.

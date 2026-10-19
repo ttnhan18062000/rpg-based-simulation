@@ -27,7 +27,7 @@ def _verdict(rc7: list[dict], rc8: list[dict]) -> list[str]:
     if [e for e in rc8 if not e["visual_key"].startswith("icon.")] != rc7:
         problems.append("the non-icon entries are not rc-0007's")
     icons = [e for e in rc8 if e["visual_key"].startswith("icon.")]
-    keys = sorted(k for k in load_registry().keys if k.startswith("icon.") and k not in af.OBJECT_KEYS and k not in af.ENTITY_KEYS)  # rc-0008 predates the 18 object markers (rc-0011 adds them) and the 11 entity markers (adopted, not built)
+    keys = sorted(k for k in load_registry().keys if k.startswith("icon.") and k not in af.OBJECT_KEYS and k not in af.ENTITY_KEYS)  # rc-0008 predates the 18 object markers (rc-0011 adds them) and the 11 entity markers (rc-0012 adds them)
     if sorted(e["visual_key"] for e in icons) != keys or len(icons) != af.RC_0008_ICON_ENTRIES:
         problems.append("the icon entries are not exactly one per icon key")
     for entry in icons:
