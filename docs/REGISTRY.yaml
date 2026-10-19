@@ -8303,7 +8303,7 @@
   ticket_type: feature
   date: '2026-10-18'
   related_code_areas:
-  - compose.yaml
+  - docker/grafana/provisioning/alerting/rules-slo.yaml
   artifact_files: []
   tags:
   - platform

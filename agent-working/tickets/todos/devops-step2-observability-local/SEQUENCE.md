@@ -25,3 +25,12 @@ Epic: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL (closes last).
 (the owner decides at PR time).
 
 Every stack run, image pull or build on this host is asked of lead-planner first, one at a time (host rules, 2026-10-18).
+
+## Update 2026-10-19 (R1 #648 and R2 #654 on main)
+
+- 1 and 2 are done (#627). 3 (SCRAPE-BACKEND-METRICS-PORT) runs now, in the batch `platform-implementer-local-slo-alerts`
+  together with step-3's SLO alert, Redis cause alert and Redis drill (one PR). rpg's R1 did not touch compose, so the
+  `expose: ["9109"]` hunk is ticket 3's.
+- 4 (API-DASHBOARD-AND-TRACE-PROOF) still waits for R3 (OTel). It now follows step-3's
+  TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK and copies its PromQL (the rule file is the single source; equality checked in
+  ticket 4's test plan, no tests/**).
