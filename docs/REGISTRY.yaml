@@ -7690,6 +7690,21 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH.md
+  ticket_id: TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH
+  title: The native-refusal test writes its temp script copy under tmp_path, not a
+    fixed name in the real `.claude/workflows/`
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/tools/test_implement_ticket_native_refusal.py
+  - .claude/workflows/implement-ticket.js
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY.md
   ticket_id: TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY
   title: V8's examples name each unsourced entity and its tick, the way V5's out-of-world
