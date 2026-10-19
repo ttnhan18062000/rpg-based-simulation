@@ -218,6 +218,10 @@ def _outcome(cur_row: dict, world: str, refs: Optional[References], reasons_by_v
     ]
     states = {r["state"] for r in results}
     state = DRIFT if DRIFT in states else STALE if STALE in states else NO_DATA if NO_DATA in states else PASS
+    if state == NO_DATA:  # a contract error of a reference must reach the no-data tally; when the state is DRIFT or STALE the per-reference text still names it
+        broken = next((r for r in results if r["state"] == NO_DATA and r.get("reason") == "contract_error"), None)
+        if broken is not None:
+            return {**finding, "state": state, "reason": "contract_error", "detail": broken["detail"], "refs": results}
     return {**finding, "state": state, "refs": results}
 
 
@@ -445,12 +449,15 @@ def _detail(f: Mapping[str, Any]) -> str:
             parts.append(f"oracle: {f['oracle']}")
     if f["state"] == UNSTABLE:
         parts.append(f"was {f['first_state']}, rerun {f['rerun_state']}; route: {f['route']}")
+    shown: set = set()
     for r in f.get("refs", []):
         numbers = f" d={r['diff']:.4g}" + (f" se={r['se']:.4g} k*se={r['threshold']:.4g}" if "se" in r else "") + f" floor={r['floor']:.4g}" if "diff" in r else ""
         judged = f", judged on {r['n']}/{r['of']} seeds" if "n" in r else ""
         moved = "".join(f"; threshold moved: {n} {m['reference']} -> {m['candidate']}" for n, m in sorted((r.get("threshold_moved") or {}).items()))
-        parts.append(f"vs {r['ref']} v{r['version']}: {r['state']}{numbers}{judged}{moved}")
-    if f.get("detail"):
+        cause = (f" [{r['reason']}] {r['detail']}" if r.get("reason") else f" {r['detail']}") if r.get("detail") and r["state"] == "no-data" else ""
+        shown.add(r.get("detail"))
+        parts.append(f"vs {r['ref']} v{r['version']}: {r['state']}{numbers}{judged}{moved}{cause}")
+    if f.get("detail") and f["detail"] not in shown:
         parts.append((f"[{f['reason']}] " if f.get("reason") else "") + f["detail"])
     if f.get("ownership"):
         parts.append(f"{f['ownership']}{' ' + f['ticket'] if f.get('ticket') else ''}")

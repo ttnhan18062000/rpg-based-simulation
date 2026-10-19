@@ -88,7 +88,7 @@ v1 itself is unaffected, because there is no reference. This must land before th
 - Candidate unchanged (AC5 pinned by a test).
 
 ## Test Summary
-- `pytest tests/simulation_quality/rpg_gate tests/unit/tools -k "rpg_gate or v8" -m "not slow and not extra_slow"`: 173 passed.
+- `pytest tests/simulation_quality/rpg_gate tests/unit/tools -k "rpg_gate or v8" -m "not slow and not extra_slow"`: 176 passed (after the review fix: `_detail` prints `[reason] detail` per reference; a finding whose references are all no-data with a contract error carries `contract_error` so the tally counts it; AC3 tests extended).
 - The `_baseline` test helper (and one hand-built baseline row in `test_floor_keyed_by_id_applies_to_every_key_and_tick`) now record `k` / `floor`, because a recorded baseline carries them by contract (format doc); this is not editing tests to pass. Their defaults equal the fixture documents' thresholds, so unrelated tests read as before. AC3 keeps baselines that LACK them (`k=None` / `floor=None`, and a pooled one without a floor).
 - No baseline file exists in the repo, so the "existing baseline lacks k/floor" stop condition did not arise.
 

@@ -599,3 +599,28 @@ def test_the_markdown_shows_the_moved_threshold_without_changing_the_state():
     report = _build(docs, refs=_refs(_baseline(2, floor=3.0)))
     text = rep.render_markdown(report)
     assert "threshold moved: floor 3.0 -> 9.0" in text and _o1(report)["state"] == "drift"
+
+
+def test_a_missing_reference_threshold_is_named_in_the_markdown_and_counted_in_the_tally():
+    docs = _docs((15, 15.1, 14.9, 15.1, 14.9), floor=0.5)
+    both_bare = _build(docs, refs=_refs(_baseline(3, floor=None, milestone="M2"), _baseline(1, floor=None, milestone="M2")))
+    finding = _o1(both_bare)
+    assert finding["state"] == "no-data" and finding["reason"] == "contract_error" and finding["detail"] == "reference row has no recorded threshold"
+    assert both_bare["no_data_reasons"]["contract_error"] >= 1
+    text = rep.render_markdown(both_bare)
+    assert text.count("[contract_error] reference row has no recorded threshold") >= 2  # named for each reference, not repeated for the finding
+    assert "vs last v3: no-data" in text and "vs milestone-first v1: no-data" in text
+
+
+def test_one_bare_reference_beside_a_drifting_one_keeps_the_drift_state_and_still_names_the_cause():
+    docs = _docs((15, 15.1, 14.9, 15.1, 14.9), floor=0.5)
+    report = _build(docs, refs=_refs(_baseline(3, floor=None, milestone="M2"), _baseline(1, milestone="M2")))
+    finding = _o1(report)
+    assert finding["state"] == "drift" and "reason" not in finding
+    assert "[contract_error] reference row has no recorded threshold" in rep.render_markdown(report)
+
+
+def test_the_no_row_in_the_baseline_detail_is_shown_for_its_reference():
+    base = _baseline(2)
+    base["metrics"] = [m for m in base["metrics"] if m["id"] != "O1"]
+    assert "no row for this metric in the baseline" in rep.render_markdown(_build(_docs(), refs=_refs(base)))
