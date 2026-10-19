@@ -11,6 +11,7 @@ from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.config.profiles import RuntimeProfile
 from src.api.metrics_port import MetricsPort, start_metrics_port
+from src.api.http_metrics import HttpRequestMetrics, activate, deactivate
 from src.api.read_model_cache import ReadModelCache
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
@@ -57,6 +58,7 @@ class V2EngineManager:
         self._metrics_collector = PrometheusMetricsCollector(self)
         self._metrics_registry.register(self._metrics_collector)
         self._metrics_port: Optional[MetricsPort] = None
+        self._http_metrics = HttpRequestMetrics(self._metrics_registry)
         self._errors_total = 0
         self._total_spawned = 0
         self._total_deaths = 0
@@ -68,6 +70,9 @@ class V2EngineManager:
     def metrics_port(self) -> Optional[MetricsPort]:
         """The running internal metrics port, or None before start, after stop, or when it could not be bound."""
         return self._metrics_port
+    def http_metrics(self) -> HttpRequestMetrics:
+        """The request-duration histogram registered on metrics_registry."""
+        return self._http_metrics
 
     @property
     def metrics_registry(self) -> Any:
@@ -234,12 +239,14 @@ class V2EngineManager:
         self._thread = threading.Thread(target=self._run_loop, name="v2-engine-loop", daemon=True)
         self._thread.start()
         self._metrics_port = start_metrics_port(self._metrics_registry)  # issue #622 R1: the internal, unauthenticated metrics port
+        activate(self._http_metrics)
         logger.info("V2EngineManager started.")
 
     def stop(self):
         self._stop_requested.set()
         self._paused.clear()
         self._running.clear()
+        deactivate(self._http_metrics)
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=5.0)
         if self._metrics_port is not None:

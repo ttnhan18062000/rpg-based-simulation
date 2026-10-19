@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-EVERY-COMPILED-LIVING-BODY-RESOLVES-TO-A-DECLARED-DIET-OR-THE-WORLD-DOES-NOT-COMPILE
-phase: open
+phase: done
 date: 2026-10-14
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Every compiled living body resolves to a declared diet, or the world does not compile (the diet slice of SURV-05 provenance; prerequisite of the free-meal removal).
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -73,7 +73,9 @@ tests/unit/worldbuilding/test_every_compiled_body_has_a_declared_diet.py (6, inc
 src/worldbuilding/{recipe,compiler,diet_declaration}.py; src/worldassembly/resolver.py; src/content/common_knowledge_seed.py (warmed_catalog); src/engine/appraisal.py (comments); data/content/world_modules/{hero_adventurers,trading_company_hub,scalable_bandit_camp}.yaml; data/worlds/*/resolved/* (14 worlds); tests as above and two hand-built profiles that now name a species.
 
 ## Completion Summary
-TBD
+Folded on main in #645 (3597c08d3). Closed by hand on branch rpg-pre-v1 after checking every acceptance criterion against main df3cb7256 / 436de5b43: (1) compile of every data world has zero undeclared-diet bodies, proved by tests/unit/worldbuilding/test_every_compiled_body_has_a_declared_diet.py (6 passed on main, including the slow corpus test and the content-error tests for a body with no species, an unknown species and a body model with no diet); (2) the paired measurement (5 seeds x 3 worlds at 1500 and 5000 ticks, and the 10-seed rerun) is recorded above and in this ticket's stored artifacts (paired_cause_of_death_*.tsv, present on main); (3) the divergence entry is docs/guidelines/intentional_divergences.md section 2.127 (decision 74). Designer ruling D74 (decision memo row 74) is satisfied: the three recipes take their role archetype's species, human.
+
+done_checker_static FAIL: migration_complete/staging; the standard-tier staging artifacts (plan, investigation, test_plan) were never written; only the paired tsvs exist. Not back-filled.
 
 ## Designer ruling D74 (SURV-06, memo row 74)
 
