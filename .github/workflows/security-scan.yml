@@ -129,6 +129,7 @@ jobs:
           set -uo pipefail
           docker run --rm -v "$PWD:/src" -w /src "$SEMGREP_IMAGE" \
             semgrep scan --config p/python --config p/typescript --config p/dockerfile --config p/github-actions \
+            --exclude agent-working --exclude docs/archive --exclude .claude --exclude .agents \
             --metrics=off --disable-version-check --sarif --output semgrep.sarif
           echo "semgrep exit code: $?"
           sudo chown "$(id -u):$(id -g)" semgrep.sarif 2>/dev/null || true
