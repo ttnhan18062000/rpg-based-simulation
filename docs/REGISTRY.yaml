@@ -7690,6 +7690,22 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE.md
+  ticket_id: TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE
+  title: Tools tests that run a hook with `cwd=tmp_path` read the real main checkout's
+    state whenever pytest's basetemp is inside a git repo
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/tools/test_session_start_handover_hook.py, tests/tools/conftest.py, tools/handover_home.py,
+    tools/agent-monitoring/session_start_handover_hook.py, tools/sessions/session_start_hook.py
+  artifact_files: []
+  tags:
+  - ai
+  - testing
+  - bug
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY.md
   ticket_id: TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY
   title: V8's examples name each unsourced entity and its tick, the way V5's out-of-world
