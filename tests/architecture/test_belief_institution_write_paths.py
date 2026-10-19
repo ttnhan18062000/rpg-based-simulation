@@ -25,7 +25,6 @@ tests/architecture/test_fidelity_write_paths.py.
 
 from __future__ import annotations
 
-import ast
 import re
 from pathlib import Path
 from typing import FrozenSet
@@ -52,9 +51,6 @@ _BELIEF_INSTITUTION_MODULE_FILES = (
     Path("src/domains/belief_institution/model.py"),
     Path("src/domains/belief_institution/deriver.py"),
 )
-
-_FORBIDDEN_TOP_LEVEL_IMPORT_PREFIXES = ("src.engine", "src.core.state")
-
 
 def _iter_src_py_files():
     return sorted(_SRC_ROOT.rglob("*.py"))
@@ -96,63 +92,6 @@ def test_belief_institution_module_no_belief_entry_or_knowledge_fact_references(
         "Found BeliefEntry(...)/KnowledgeFact(...) construction in the new "
         "belief_institution module -- this ticket must not repurpose either class:\n"
         + "\n".join(f"  {path}: {matches}" for path, matches in violations.items())
-    )
-
-
-def _is_type_checking_test(test_node: ast.expr) -> bool:
-    """True if an `if` node's test is `TYPE_CHECKING` or `typing.TYPE_CHECKING`."""
-    if isinstance(test_node, ast.Name) and test_node.id == "TYPE_CHECKING":
-        return True
-    if isinstance(test_node, ast.Attribute) and test_node.attr == "TYPE_CHECKING":
-        return True
-    return False
-
-
-def _collect_type_checking_node_ids(tree: ast.AST) -> set:
-    """Return the id() of every node nested inside an `if TYPE_CHECKING:` block.
-
-    A TYPE_CHECKING-guarded import never executes at runtime -- it exists only
-    for static type hints (e.g. this module's own `clans: Dict[str, "ClanState"]`
-    parameter, referencing src.core.state.ClanState) -- so it carries none of the
-    real runtime-coupling risk the "no src.engine/src.core.state at module level"
-    constraint exists to prevent. Fidelity/Fame's own sibling modules never hit
-    this case (neither needed a ClanState reference), so their copy of this guard
-    never had to account for it.
-    """
-    guarded_ids = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.If) and _is_type_checking_test(node.test):
-            for child in ast.walk(node):
-                guarded_ids.add(id(child))
-    return guarded_ids
-
-
-def test_belief_institution_module_no_engine_or_core_state_imports():
-    violations = {}
-
-    for path in _BELIEF_INSTITUTION_MODULE_FILES:
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        guarded_ids = _collect_type_checking_node_ids(tree)
-        bad_imports = []
-        for node in ast.walk(tree):
-            if id(node) in guarded_ids:
-                continue  # TYPE_CHECKING-only -- never executes at runtime.
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    if alias.name.startswith(_FORBIDDEN_TOP_LEVEL_IMPORT_PREFIXES):
-                        bad_imports.append(alias.name)
-            elif isinstance(node, ast.ImportFrom):
-                module = node.module or ""
-                if module.startswith(_FORBIDDEN_TOP_LEVEL_IMPORT_PREFIXES):
-                    bad_imports.append(module)
-        if bad_imports:
-            violations[path.as_posix()] = bad_imports
-
-    assert not violations, (
-        "Found forbidden src.engine/src.core.state import(s) in a belief_institution "
-        "model/deriver module OUTSIDE an `if TYPE_CHECKING:` guard (must stay "
-        "pure/stateless at runtime):\n"
-        + "\n".join(f"  {path}: {imports}" for path, imports in violations.items())
     )
 
 

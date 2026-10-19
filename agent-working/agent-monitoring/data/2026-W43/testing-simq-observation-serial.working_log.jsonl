@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-19T07:59:13.993554Z", "ticket_id": "TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL", "title": "test_observe_world_cleans_up_its_own_run_dir runs in the serial step of Tools f\u2013z", "status": "DONE", "summary": "serial step for the whole-data/runs snapshot test under xdist", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

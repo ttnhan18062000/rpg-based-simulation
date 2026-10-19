@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 METRIC_NAME = "http_request_duration_seconds"
 UNMATCHED_ROUTE = "unmatched"
 _METHODS = frozenset({"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
-_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
+_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.3, 0.5, 1.0, 2.5, 5.0, 10.0)
 
 
 def status_class(status_code: int) -> str:

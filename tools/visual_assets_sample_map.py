@@ -14,7 +14,7 @@ and never runs `world-compile` (it writes `world_compile_report.json` next to th
 registry descriptions cite. Cells are therefore stored as terrain NAMES (the presenter's own codes are inverted through the same `terrain_code_map`) and mapped to keys
 by name: a name maps to `terrain.<name>` when that key is registered, or, offline, through a REGISTRY alias (`terrain.plain` -> `terrain.grassland`, `Registry.resolve`; the live client does NOT do this). The rule is exact (lower case, spaces to underscores); a near match is listed as `near`
 and is NEVER applied, so no key is guessed. The same exact rule maps building kinds to `icon.building.<kind>`, place kinds to
-`icon.marker.<kind>`, resource-node kinds to `icon.node.<kind>` and entity kinds to `icon.class.<kind>`; since `TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS` the registry aliases `icon.building.shop`,
+`icon.marker.<kind>`, resource-node kinds to `icon.node.<kind>` and entity kinds to `icon.entity.<kind>` (owner decision 2026-10-19; before it the rule pointed at `icon.class.<kind>`, which never matched a role kind); since `TCK-20261013-VISUAL-ASSETS-OBJECT-MARKER-DRAFTS` the registry aliases `icon.building.shop`,
 `icon.marker.camp`, `icon.marker.ruin` (and `dungeon`, `lair`) resolve the same way, offline. A CITY place is the location plate ALONE (the owner's answer of 2026-10-13: no key, alias or glyph): its row says `plate_only`.
 
 Output goes only under the gitignored `reports/visual_assets/sample_map/`; the file is deterministic (same world -> byte-identical). This tool is evidence tooling: it
@@ -185,7 +185,7 @@ def build_data(world_id: str) -> dict:
             "building": key_rows(building_kinds, "icon.building.", keys, PROPOSED_ALIASES["building"], registry_aliases=reg_aliases),
             "resource_node": key_rows(node_kinds, "icon.node.", keys),
             "place": key_rows(place_kinds, "icon.marker.", keys, PROPOSED_ALIASES["place"], registry_aliases=reg_aliases, plate_only=PLATE_ONLY_PLACES),
-            "entity": key_rows(entity_kinds, "icon.class.", keys),
+            "entity": key_rows(entity_kinds, "icon.entity.", keys),
         },
         "proposed_aliases": {"label": ALIAS_LABEL, "applies_only_to_names_without_an_exact_key": True, **PROPOSED_ALIASES},
         "sources": sources(),

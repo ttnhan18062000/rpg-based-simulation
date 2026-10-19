@@ -11,4 +11,6 @@ Function: implementer. Sole writer to your worktree; two instances never share o
 
 Domain: agent-working (process incl. tickets, tooling, monitoring, delivery). Designer reviews.
 
+Host ubuntu; twin `-u24`.
+
 Needs the user: push_default_branch, merge, delete_remote_branch, delete_worktree_or_data. Granted: push/open_pr (2026-10-04).

@@ -15,7 +15,7 @@ SPRITES = la.all_icon_sprites()
 
 def test_specs_are_complete_consistent_and_match_the_registry():
     assert specs_mod.problems(SPECS, specs_mod.registered_icon_keys()) == []
-    assert len(SPECS) == 54  # 36 icons + the 18 object markers
+    assert len(SPECS) == 65  # 36 icons + the 18 object markers + the 11 entity markers
 
 
 def test_images_are_neutral_shuffled_and_reproducible(tmp_path):

@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from prometheus_client import CollectorRegistry
 
 from src.api.http_metrics import (
-    METRIC_NAME, UNMATCHED_ROUTE, HttpRequestMetrics, RequestDurationMiddleware, activate, deactivate, status_class,
+    _BUCKETS, METRIC_NAME, UNMATCHED_ROUTE, HttpRequestMetrics, RequestDurationMiddleware, activate, deactivate, status_class,
 )
 
 
@@ -140,3 +140,9 @@ def test_nested_routers_a_path_converter_and_the_root_route_keep_their_full_temp
     assert client.get("/api/o/i/files/a/b/c.txt").status_code == 200
     assert client.get("/").status_code == 200
     assert set(_series(registry)) == {("GET", "/api/o/i/x/{k}", "2xx"), ("GET", "/api/o/i/files/{rest}", "2xx"), ("GET", "/", "2xx")}
+
+
+def test_the_buckets_hold_an_exact_300_ms_edge_for_the_p95_slo_alert():
+    """Owner decision 2026-10-19 (issue #622): the API SLO is "p95 <= 300 ms"; histogram_quantile interpolates linearly inside a bucket, so 0.3 must be a bucket edge."""
+    assert 0.3 in _BUCKETS
+    assert list(_BUCKETS) == sorted(_BUCKETS)
