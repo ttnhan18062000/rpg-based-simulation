@@ -4995,7 +4995,7 @@
   - architecture
   - world
   - content
-  last_verified: '2026-10-08'
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/agent-monitoring/codebase_health_history_schema.md
   title: Codebase Health History — Schema Reference
@@ -6961,7 +6961,7 @@
   - architecture
   - documentation
   - roadmap
-  last_verified: '2026-10-09'
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/plans/systemic_world/review_history/external-ai-instruction-execute-first-systemic-world-batch.md
   title: External AI instruction — execute and self-review the first systemic-world
@@ -7090,7 +7090,7 @@
   - architecture
   - documentation
   - roadmap
-  last_verified: '2026-10-09'
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/plans/systemic_world/ticket_planner_handoff.md
   title: Systemic World First Wave — Ticket-Planner Handoff
@@ -7103,6 +7103,18 @@
   - documentation
   - roadmap
   last_verified: '2026-09-28'
+- type: doc
+  path: docs/plans/systemic_world/v1_disclosure.md
+  title: Baseline v1 disclosure list
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - documentation
+  - roadmap
+  last_verified: '2026-10-19'
 - type: doc
   path: docs/plans/visual-asset-foundation/README.md
   title: Visual Asset Foundation — Structure Proposal (drawing tools + asset store)
