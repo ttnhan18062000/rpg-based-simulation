@@ -1,9 +1,11 @@
 import { useRef, useEffect, useCallback, useState, useMemo } from 'react';
-import type { Entity, EntitySlim, GroundItem, Building, ResourceNode } from '@/types/api';
+import type { Entity, EntitySlim, GroundItem, Building, ResourceNode, Location } from '@/types/api';
 import type { DecodedMapData } from '@/hooks/useSimulation';
 import {
-  TILE_COLORS, KIND_COLORS, STATE_COLORS, CELL_SIZE, LOOT_COLOR, RESOURCE_COLORS, TILE_NAMES,
+  KIND_COLORS, STATE_COLORS, CELL_SIZE, LOOT_COLOR, RESOURCE_COLORS,
 } from '@/constants/colors';
+import { buildTerrainPalette, type TerrainPalette } from '@/constants/terrainPalette';
+import { drawPlaces } from '@/lib/placeMarks';
 
 export interface HoverInfo {
   screenX: number;
@@ -24,6 +26,8 @@ export function useCanvas(
   onBuildingClick?: (building: Building) => void,
   zoom: number = 1.0,
   isDraggingRef?: React.RefObject<boolean>,
+  palette: TerrainPalette = buildTerrainPalette(null),
+  places: ReadonlyArray<Location> = [],
 ) {
   const gridRef = useRef<HTMLCanvasElement>(null);
   const entityRef = useRef<HTMLCanvasElement>(null);
@@ -40,7 +44,7 @@ export function useCanvas(
 
   // Draw grid once
   useEffect(() => {
-    if (!mapData || gridDrawnRef.current) return;
+    if (!mapData) return;
     const gc = gridRef.current;
     if (!gc) return;
     const ctx = gc.getContext('2d');
@@ -67,7 +71,7 @@ export function useCanvas(
     for (let y = 0; y < mapData.height; y++) {
       for (let x = 0; x < mapData.width; x++) {
         const tile = mapData.grid[y][x];
-        ctx.fillStyle = TILE_COLORS[tile] || TILE_COLORS[0];
+        ctx.fillStyle = palette.fill(tile);
         ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
       }
     }
@@ -88,8 +92,10 @@ export function useCanvas(
       ctx.stroke();
     }
 
+    drawPlaces(ctx, places); // the world's places, outlined over their tiles and labelled (D69)
+
     gridDrawnRef.current = true;
-  }, [mapData]);
+  }, [mapData, palette, places]); // redrawn when the manifest arrives or changes: a tile's colour follows its terrain's meaning
 
   // Draw entities + ground items every update
   useEffect(() => {
@@ -591,7 +597,7 @@ export function useCanvas(
     if (mapData && gx >= 0 && gx < mapData.width && gy >= 0 && gy < mapData.height) {
       const tile = mapData.grid[gy]?.[gx];
       if (tile != null) {
-        const tileName = TILE_NAMES[tile] || `Tile ${tile}`;
+        const tileName = palette.name(tile);
         lines.push(`🗺 ${tileName} (${gx}, ${gy})`);
       }
     }
@@ -669,7 +675,7 @@ export function useCanvas(
     } else {
       setHoverInfo(null);
     }
-  }, [entities, groundItems, resourceNodes, buildings, mapData, selectedEntityId, selectedEnt, buildVisibleSet, zoom]);
+  }, [entities, groundItems, resourceNodes, buildings, mapData, selectedEntityId, selectedEnt, buildVisibleSet, zoom, palette]);
 
   const handleCanvasLeave = useCallback(() => {
     hoveredEntityIdRef.current = null;

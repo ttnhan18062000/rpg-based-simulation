@@ -167,6 +167,8 @@ _(none yet — filed as a finding, not yet investigated)_
   composition comparison)
 
 ## Assumptions / Open Questions
+**Triage 2026-10-18 (#636): AFTER v1, merged.** Premise gone (combat is now decisional). The remainder, pairwise_tension 0.0 in 3 of 4 worlds, is real; it is taken up after v1 with the owner's 'faction tension from real acts' item and the D33 removal of faction_tension_overrides. v1 discloses it with the trust/social lines.
+
 - Not yet known whether `quest_dense_frontier`'s zero-interaction result is even a real instance
   of this problem (it is deliberately population-minimal, likely single-faction-dominant by
   design) or a false positive that shouldn't be weighted the same as `crowded_frontier`'s.

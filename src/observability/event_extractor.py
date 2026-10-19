@@ -10,6 +10,7 @@ from src.core.updates import StateUpdate, decode_owner_faction_id_set
 from src.domains.commitment.abandonment import AbandonmentEvaluator, AbandonmentCategory
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.observability.config import ObservabilityConfig, ObservabilityMode
+from src.observability.divergence_episode import DivergenceEpisodes
 from src.observability.entity_kind_constants import BOSS_ENTITY_KINDS, SPAWN_CADENCE_EXCLUDED_KINDS
 from src.observability.events import (
     SimulationEvent, CombatDamageEvent, CombatKillEvent,
@@ -67,7 +68,7 @@ _CAPABILITY_STALL_TICKS = 300
 # Project kinds inconsistent with a high-urgency DANGER concern (decision_divergence_detected)
 _NON_SURVIVAL_PROJECT_KINDS = frozenset(("harvesting", "exploration", "social", "crafting"))
 
-# Spawn interval (must match SpawnService.SPAWN_INTERVAL)
+# Spawn interval (the retired SpawnService's 50-tick interval; kept as this extractor's own cadence for the spawn-density events, 2.122)
 _SPAWN_INTERVAL = 50
 
 
@@ -109,6 +110,7 @@ class EventExtractor:
         cls._emitted_contract_milestones.clear()
         cls._last_capability_growth_tick.clear()
         cls._emitted_capability_stalled.clear()
+        DivergenceEpisodes.reset_run_state()
 
     @staticmethod
     def extract(
@@ -877,21 +879,14 @@ class EventExtractor:
                 # decision_diverged_by_belief: entity pursuing non-information project while
                 # holding VAGUE/EXHAUSTED leads — indicates stale belief driving sub-optimal choice
                 _curr_proj_id = entity.strategic.current_project_id
-                _has_vague_lead = any(
-                    getattr(l.certainty, "value", str(l.certainty)) in ("VAGUE", "EXHAUSTED")
-                    for l in curr_leads.values()
-                )
-                if _curr_proj_id and _has_vague_lead:
-                    _curr_proj = entity.strategic.projects.get(_curr_proj_id)
-                    _proj_kind = getattr(getattr(_curr_proj, "kind", None), "value",
-                                         str(getattr(_curr_proj, "kind", ""))) if _curr_proj else ""
-                    if _proj_kind and _proj_kind not in ("information", "information_seeking"):
-                        events.append(SimulationEvent(
-                            event_type="decision_diverged_by_belief", event_category="strategy",
-                            tick=tick, entity_id=eid, severity="INFO",
-                            source_system="event_extractor", message="",
-                            payload={"project_kind": _proj_kind},
-                        ))
+                _proj_kind = DivergenceEpisodes.project_kind(_curr_proj_id, entity.strategic.projects, curr_leads)
+                if DivergenceEpisodes.started(eid, _proj_kind):
+                    events.append(SimulationEvent(
+                        event_type="decision_diverged_by_belief", event_category="strategy",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"project_kind": _proj_kind},
+                    ))
 
                 # decision_divergence_detected (COGNITION): active project kind inconsistent with
                 # top-urgency concern — e.g., harvesting while DANGER concern is critical
@@ -1699,46 +1694,3 @@ class EventExtractor:
                     ))
 
         return events
-
-    @staticmethod
-    def detect_grief_triggers(
-        prior_state: AuthoritativeState,
-        current_state: AuthoritativeState,
-    ) -> List[Any]:
-        """Detect mid-tick grief-urgency triggers from a live ally's death.
-
-        Re-walks the same lifecycle.active True→False transition condition used above
-        (line ~483's death-detection block) independently, as a second bounded pass over
-        current_state.entities — EventExtractor.extract()'s own List[SimulationEvent]
-        return type must not change (regression risk to its many callers/tests), so this
-        lives as a sibling method rather than folded into extract() itself.
-
-        Returns (griever_id, dead_ally_id, urgency) triples for every currently-alive
-        entity whose entity.social.trust_history toward the newly-dead entity meets
-        ALLY_TRUST_THRESHOLD. Urgency uses the exact same formula as
-        CampaignOrchestrator._advance_grief_urgencies() (min(1.0, trust * 0.8)) so the
-        mid-episode and episode-boundary trigger paths cannot drift apart.
-
-        Called from Kernel._phase_observability, immediately after this class's own
-        extract() call (TCK-20260824-GRIEF-NEMESIS-REACHABILITY) — the caller builds
-        GriefUrgencyTriggeredEvent from each triple and queues the triple onto
-        Kernel._pending_grief_triggers for a later tick's _phase_resolution to drain
-        through StrategicPatch/ApplyPath.
-        """
-        from src.core.social_constants import ALLY_TRUST_THRESHOLD
-
-        triggers: List[Any] = []
-        for eid, entity in current_state.entities.items():
-            prior_ent = prior_state.entities.get(eid)
-            if prior_ent is None:
-                continue
-            if not (prior_ent.lifecycle.active and not entity.lifecycle.active):
-                continue
-            for other_id, other in current_state.entities.items():
-                if other_id == eid or not other.lifecycle.active:
-                    continue
-                trust = getattr(other.social, "trust_history", {}).get(eid, 0.0)
-                if trust >= ALLY_TRUST_THRESHOLD:
-                    urgency = round(min(1.0, trust * 0.8), 6)
-                    triggers.append((other_id, eid, urgency))
-        return triggers

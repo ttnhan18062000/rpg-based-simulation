@@ -1334,8 +1334,8 @@
     at level thresholds 10/25/50, reading EntityUpdate.kind_set directly -- diffed
     against prior_ent.kind, not id_upd, since kind_set lives on EntityUpdate itself,
     not IdentityUpdate like the other 7 events). Verified against the real EvolutionSystem.evaluate()
-    output (src/engine/evolution.py) via tests/unit/progression/test_evolution.py::
-    test_goblin_evolution_emits_entity_evolved_observability_event. Same rollback-path
+    output (src/engine/evolution.py). Superseded 2026-10-15 (D79 step 3, divergence 2.133): EvolutionSystem no longer writes
+    kind_set, so entity_evolved can no longer be emitted from production. Same rollback-path
     convention as the other 7: event_extractor.py also carries a flag-gated (_push_shapers_phase2_active)
     mirror block.'
   status: verified
@@ -1599,7 +1599,7 @@
     ProgressionScorer as a new species_evolution signal (+10, config/simulation_quality/scoring_weights.yaml)
     -- PROGRESSION''s own Question already names "evolving their playstyle" as part
     of what this pillar tracks.'
-  status: verified
+  status: divergent
   priority: P2
   legacy_evidence: null
   v2_evidence: 'src/observability/event_shapers.py::ProgressionShaper.shape() (new
@@ -1612,8 +1612,8 @@
     tick budgets; a real, disclosed gap for a future calibration ticket, matching
     route_new_query''s own precedent (SOC/INFRA entries from TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES).'
   proof_type: regression
-  test_path: tests/unit/progression/test_evolution.py::test_goblin_evolution_emits_entity_evolved_observability_event
-  divergence_note: null
+  test_path: tests/unit/progression/test_evolution.py::test_a_real_level_up_emits_no_entity_evolved_event
+  divergence_note: 'Intentional divergence 2.133 (D79 step 3): a level-up no longer renames an entity kind, EvolutionSystem no longer writes kind_set, so the shaper block never fires from production. The wiring is kept for a later declared-role advancement.'
   support_boundary: Covers wiring correctness (the event fires and carries the right
     payload when EvolutionSystem genuinely evolves an entity). Does not cover real-corpus
     calibration reachability -- out of this ticket's own scope, disclosed as a known
@@ -1737,3 +1737,44 @@
   test_path: tests/unit/engine/test_building_services_serve_only_people.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.119.
   support_boundary: 'Trait only (D68); the relationship half is a later ticket. A person who holds less than a service costs is still served with the charge clamped to what it holds (free meal or bed) until M0 step 4 (TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL).'
+- id: PROG-134
+  text: "TCK-20261012-A-HELD-GATHERER-ON-A-REGROWING-PATCH-IS-NEVER-RELEASED-TO-EAT: a held INTERACT whose subject is at or past the SURV-07 hunger onset and carries food its diet can eat is woken for the brain on the strategic cadence, so a grazer held on a regrowing patch is released to eat (SURV-06, SURV-07)."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/engine/scheduler.py (_is_need_woken, _carries_edible_food). Measured in docs/guidelines/intentional_divergences.md Section 2.120; docs/mechanics/04_strategic_cognition.md."
+  proof_type: regression
+  test_path: tests/unit/engine/test_pressing_hunger_releases_a_held_gatherer.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.120.
+  support_boundary: "Only a gatherer that carries edible food is woken; a held gather making no progress with an empty pocket is a later ticket (typed progress signal)."
+- id: PROG-135
+  text: "TCK-20261014-A-CONQUEST-STRONGHOLD-OVERWRITES-ENTITY-1: a mid-run entity add never reuses an existing id. Every mid-run generator comes from EntityGenerator.for_state, the apply raises DuplicateEntityIdError for a duplicate-id add, and next_entity_id advances past every added id."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/systems/world_systems/generator.py (for_state), src/engine/apply.py (DuplicateEntityIdError, the next_entity_id advance), src/systems/lifecycle_systems/lifecycle.py and src/engine/pipeline.py (the call sites). docs/guidelines/intentional_divergences.md Section 2.121; docs/core/entities.md."
+  proof_type: regression
+  test_path: tests/unit/engine/test_mid_run_adds_never_reuse_an_entity_id.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.121.
+  support_boundary: "The refusal is a raised exception. Whether a monster conquest should spawn a stronghold is a designer question (V1/V8)."
+
+- id: PROG-136
+  text: "TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71: a monster conquest flips region ownership at influence <= -50 and adds no entity; an invader-owned region is freed at influence >= +50. No stronghold body is spawned."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/world/influence.py (process_influence_shift unchanged; process_conquest_lifecycle removed), src/systems/lifecycle_systems/lifecycle.py (no conquest entity merge), src/systems/world_systems/generator.py (spawn_stronghold removed). docs/guidelines/intentional_divergences.md Section 2.123; docs/mechanics/05_world_evolution.md Section 3."
+  proof_type: regression
+  test_path: tests/unit/world/test_conquest_adds_no_entity.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.123.
+  support_boundary: "Dormant in the baseline (0 conquests in 10 runs of 5000 ticks); proved by forced-conquest tests. The influence trigger and MONSTER_HORDE as a taker are label-driven until caused war and peace (not before M3)."
+- id: PROG-137
+  text: "TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH: every death writes one durable typed LifecycleComponent.death_record (cause, tick, last_attacker_id, hazard_kind) through resolve_lifecycle and the authoritative patch. last_attacker_id is the most recent hit at any time before death; recency is not recorded. The behaviour is unchanged: the canonical state with the two new fields removed is byte-identical to the state before this step."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/core/death_cause.py (DeathCause, HpLossSource, DeathRecord), src/core/state.py (LifecycleComponent.death_record, CombatComponent.last_attacker_id, canonical dicts), src/systems/lifecycle_systems/lifecycle.py (_death_record), src/engine/patches.py (LifecyclePatch and CombatPatch apply), src/observability/death_ledger.py (hp loss by typed source; UNATTRIBUTED expected 0). docs/mechanics/01_entity_anatomy.md Death Record. Projection proof 15/15 pairs (3 worlds x seeds 42-46 x 5000 ticks) and the 15 post-step full fingerprints: agent-working/stored_artifacts/TCK-20261014-EVERY-DEATH-CARRIES-A-TYPED-CAUSE-RECORDED-AT-DEATH/probes/projection_proof_table.md."
+  proof_type: regression
+  test_path: tests/unit/progression/test_death_record.py
+  divergence_note: null
+  support_boundary: "Recency of the last attacker is not recorded (no last_attacker_tick); a follow-up if testing or SimQ need it."

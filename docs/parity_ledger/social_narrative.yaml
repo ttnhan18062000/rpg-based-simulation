@@ -4297,3 +4297,13 @@
     format). Confirmed via a full-repo grep before renaming that no live file (code,
     ledger entry, or cross-reference) named the old id -- only historical done-ticket
     prose does, left as-is.'
+- id: SOC-277
+  text: 'Mid-episode grief is a function of authoritative state, not of the observability mode (decision 80, ch04 Path 2): a body inactive with death_record.tick == state.tick - 1 and above AuthoritativeState.grief_drained_tick owes a trigger (griever, dead, min(1.0, trust * 0.8)) to every active entity whose trust toward it is at least ALLY_TRUST_THRESHOLD; Kernel._phase_resolution and the teardown flush turn the owed triggers into StrategicUpdates and write grief_drained_tick through StateUpdate.grief_drained_tick_set and ApplyPath, so each trigger applies exactly once, also after a checkpoint resume. The observability phase only reports the GriefUrgencyTriggeredEvent. The field is in the canonical data and the replay fingerprint only once it is not -1.'
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/core/grief_triggers.py (pending_grief_triggers); src/core/state.py (grief_drained_tick); src/core/updates.py (grief_drained_tick_set); src/engine/apply.py; src/engine/kernel.py (_phase_resolution, _drain_pending_grief_triggers, drain_pending_triggers_at_teardown, _phase_observability). Divergence 2.134. (TCK-20261016-GRIEF-AS-STATE-GRIEF-TRIGGERS-ARE-DETECTED-AND-CARRIED-IN-AUTHORITATIVE-STATE-D80)'
+  proof_type: parity
+  test_path: tests/integration/campaigns/test_mid_episode_grief_trigger.py::test_observability_off_and_on_give_the_same_authoritative_outcome
+  divergence_note: 'Divergence 2.134: the owed triggers are derived from state and drained by a typed watermark instead of a kernel list built in the observability phase.'
+  support_boundary: null

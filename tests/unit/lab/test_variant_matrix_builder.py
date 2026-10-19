@@ -25,7 +25,7 @@ def base_world_dict():
                 "id": "wood_zone",
                 "type": "forest",
                 "bounds": [0, 0, 50, 50],
-                "terrain": "GRASS",
+                "terrain": "grass",
                 "hazard_level": 0.1
             }
         ],

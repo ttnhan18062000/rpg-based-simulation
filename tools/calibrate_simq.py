@@ -492,6 +492,13 @@ def _replay_jsonl_through_hub(run_dir: str, hub) -> int:
     return event_count
 
 
+
+def pillar_line(pillar_id: str, snap) -> str:
+    """One line of the pillar breakdown; a no-data pillar prints its event count against the minimum."""
+    if snap.normalized_score is None:
+        return f"    {pillar_id:20s}  no-data ({snap.event_count} events < {snap.min_events})"
+    return f"    {pillar_id:20s}  grade={snap.grade}  norm={snap.normalized_score:+.4f}  events={snap.event_count}"
+
 def main():
     parser = argparse.ArgumentParser(description="SimQ calibration runner")
     parser.add_argument("--ticks", type=int, default=100)
@@ -598,10 +605,13 @@ def main():
         f"  ticks={args.ticks} events={event_count} elapsed={elapsed:.2f}s profile={profile}"
         f" window_size={weights.detection.window_size} loop_threshold={weights.detection.loop_threshold}"
     )
-    print(f"  overall_grade={report.overall_grade} overall_score={report.overall_score:.4f}")
+    if report.overall_score is None:
+        print(f"  overall=no-data ({report.overall_reason}; {report.pillars_scored} pillars scored, {report.pillars_no_data} no-data)")
+    else:
+        print(f"  overall_grade={report.overall_grade} overall_score={report.overall_score:.4f}")
     print("\n  Pillar breakdown:")
     for pillar_id, snap in sorted(report.pillars.items()):
-        print(f"    {pillar_id:20s}  grade={snap.grade}  norm={snap.normalized_score:+.4f}  events={snap.event_count}")
+        print(pillar_line(pillar_id, snap))
     print(f"\n  Report written: {os.path.join(cal_dir, 'quality_report.json')}")
     return report
 

@@ -33,7 +33,7 @@ def test_evolution_trigger_and_stat_boost():
     result = EvolutionSystem.evaluate(state, update)
     
     hero_up = result.entity_updates[1]
-    assert hero_up.kind_set == "LEGEND_HERO"
+    assert hero_up.kind_set is None  # D79: a level-up never renames the kind
     assert hero_up.identity.evolution_level_set == 10
     # Level 2..10 (9 levels) = 45 AP. Milestones at 5 and 10 = 10 AP. Total 55.
     assert hero_up.identity.unspent_ap_delta == 55

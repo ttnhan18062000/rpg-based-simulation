@@ -54,7 +54,7 @@ def test_wolf_den_near_forest_compiles_with_per_tile_terrain_variation(compiled_
     state = compiled_state
 
     # Base fill outside any region.
-    assert state.terrain[(0, 0)] == "PLAIN"
+    assert state.terrain[(0, 0)] == "plain"
 
     # frontier_village_core's hometown region (x:[10,40], y:[10,40]) does not overlap
     # either wolf-den region and declares no terrain_variants, so it keeps its own flat
