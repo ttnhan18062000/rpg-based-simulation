@@ -5,7 +5,7 @@
     "source_root": "src",
     "unparsed_files": [],
     "kernel_module": "src.engine.kernel",
-    "modules_reachable_from_kernel": 457
+    "modules_reachable_from_kernel": 466
   },
   "reads": [
     {
@@ -62,7 +62,7 @@
     },
     {
       "file": "src/api/engine_manager.py",
-      "line": 265,
+      "line": 223,
       "enclosing_function": "V2EngineManager.start",
       "source": "time.time",
       "kind": "wall-clock",
@@ -77,7 +77,7 @@
     },
     {
       "file": "src/api/engine_manager.py",
-      "line": 321,
+      "line": 279,
       "enclosing_function": "V2EngineManager._run_loop",
       "source": "time.time",
       "kind": "wall-clock",
@@ -95,7 +95,7 @@
     },
     {
       "file": "src/api/engine_manager.py",
-      "line": 386,
+      "line": 344,
       "enclosing_function": "V2EngineManager.last_tick_age_seconds",
       "source": "time.time",
       "kind": "wall-clock",
@@ -110,7 +110,7 @@
     },
     {
       "file": "src/api/engine_manager.py",
-      "line": 396,
+      "line": 354,
       "enclosing_function": "V2EngineManager.get_health_status",
       "source": "time.time",
       "kind": "wall-clock",
@@ -325,7 +325,7 @@
     },
     {
       "file": "src/cli/entry.py",
-      "line": 248,
+      "line": 247,
       "enclosing_function": "_run_cli",
       "source": "time.time",
       "kind": "wall-clock",
@@ -340,7 +340,7 @@
     },
     {
       "file": "src/cli/entry.py",
-      "line": 262,
+      "line": 261,
       "enclosing_function": "_run_cli",
       "source": "time.time",
       "kind": "wall-clock",
@@ -657,7 +657,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 166,
+      "line": 169,
       "enclosing_function": "Kernel.__init__",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -674,7 +674,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 218,
+      "line": 216,
       "enclosing_function": "Kernel.__init__",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -689,7 +689,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 247,
+      "line": 245,
       "enclosing_function": "Kernel.__init__",
       "source": "os.environ.get",
       "kind": "environment",
@@ -709,7 +709,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 410,
+      "line": 411,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -724,7 +724,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 415,
+      "line": 416,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -739,7 +739,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 430,
+      "line": 431,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -754,7 +754,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 439,
+      "line": 440,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -769,7 +769,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 448,
+      "line": 449,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -784,7 +784,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 455,
+      "line": 456,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -799,7 +799,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 459,
+      "line": 460,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -814,7 +814,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 464,
+      "line": 465,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -831,7 +831,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 468,
+      "line": 469,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -849,7 +849,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 476,
+      "line": 477,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -864,7 +864,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 478,
+      "line": 479,
       "enclosing_function": "Kernel._tick_once_inner",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -879,7 +879,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 611,
+      "line": 612,
       "enclosing_function": "Kernel._phase_resolution",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -911,7 +911,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 1224,
+      "line": 1219,
       "enclosing_function": "Kernel.shutdown",
       "source": "psutil.Process",
       "kind": "CPU/host topology",
@@ -928,7 +928,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 1253,
+      "line": 1248,
       "enclosing_function": "Kernel.shutdown",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -1533,7 +1533,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 344,
+      "line": 343,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1548,7 +1548,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 347,
+      "line": 346,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1563,7 +1563,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 351,
+      "line": 350,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1578,7 +1578,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 355,
+      "line": 354,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1593,7 +1593,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 377,
+      "line": 376,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1608,7 +1608,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 380,
+      "line": 379,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1623,7 +1623,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 383,
+      "line": 382,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1638,7 +1638,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 386,
+      "line": 385,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1653,7 +1653,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 388,
+      "line": 387,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1668,7 +1668,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 391,
+      "line": 390,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1683,7 +1683,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 394,
+      "line": 393,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1698,7 +1698,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 406,
+      "line": 405,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1713,7 +1713,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 408,
+      "line": 407,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1728,7 +1728,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 410,
+      "line": 409,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1743,7 +1743,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 412,
+      "line": 411,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1758,7 +1758,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 423,
+      "line": 422,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1773,7 +1773,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 431,
+      "line": 430,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1788,7 +1788,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 440,
+      "line": 439,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1803,7 +1803,7 @@
     },
     {
       "file": "src/engine/pipeline.py",
-      "line": 460,
+      "line": 459,
       "enclosing_function": "AuthoritativeApplyPipeline.refine",
       "source": "time.perf_counter_ns",
       "kind": "wall-clock",
@@ -1818,7 +1818,7 @@
     },
     {
       "file": "src/engine/replay_manager.py",
-      "line": 62,
+      "line": 64,
       "enclosing_function": "ReplayManager.__init__",
       "source": "time.time",
       "kind": "wall-clock",
@@ -1833,7 +1833,7 @@
     },
     {
       "file": "src/engine/replay_manager.py",
-      "line": 131,
+      "line": 137,
       "enclosing_function": "ReplayManager.finalize",
       "source": "time.perf_counter",
       "kind": "wall-clock",
@@ -1848,7 +1848,7 @@
     },
     {
       "file": "src/engine/replay_manager.py",
-      "line": 144,
+      "line": 150,
       "enclosing_function": "ReplayManager.finalize",
       "source": "time.perf_counter",
       "kind": "wall-clock",
@@ -1865,7 +1865,7 @@
     },
     {
       "file": "src/engine/replay_manager.py",
-      "line": 158,
+      "line": 164,
       "enclosing_function": "ReplayManager.finalize",
       "source": "time.perf_counter",
       "kind": "wall-clock",
@@ -1882,7 +1882,7 @@
     },
     {
       "file": "src/engine/replay_manager.py",
-      "line": 167,
+      "line": 173,
       "enclosing_function": "ReplayManager.finalize",
       "source": "time.time",
       "kind": "wall-clock",
@@ -3658,9 +3658,9 @@
       "ordinal": 230
     },
     {
-      "file": "src/observability/event_extractor.py",
-      "line": 167,
-      "enclosing_function": "EventExtractor.extract",
+      "file": "src/observability/death_ledger.py",
+      "line": 143,
+      "enclosing_function": "DeathLedger._event",
       "source": "time.time",
       "kind": "wall-clock",
       "call": "time.time",
@@ -3673,9 +3673,9 @@
       "ordinal": 231
     },
     {
-      "file": "src/observability/event_shapers.py",
-      "line": 133,
-      "enclosing_function": "CombatShaper.shape",
+      "file": "src/observability/event_extractor.py",
+      "line": 169,
+      "enclosing_function": "EventExtractor.extract",
       "source": "time.time",
       "kind": "wall-clock",
       "call": "time.time",
@@ -3689,8 +3689,8 @@
     },
     {
       "file": "src/observability/event_shapers.py",
-      "line": 1723,
-      "enclosing_function": "NarrativeShaper.shape",
+      "line": 134,
+      "enclosing_function": "CombatShaper.shape",
       "source": "time.time",
       "kind": "wall-clock",
       "call": "time.time",
@@ -3701,6 +3701,21 @@
       "note": "",
       "reachable_from_kernel": true,
       "ordinal": 233
+    },
+    {
+      "file": "src/observability/event_shapers.py",
+      "line": 1717,
+      "enclosing_function": "NarrativeShaper.shape",
+      "source": "time.time",
+      "kind": "wall-clock",
+      "call": "time.time",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "note": "",
+      "reachable_from_kernel": true,
+      "ordinal": 234
     },
     {
       "file": "src/observability/events.py",
@@ -3715,7 +3730,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": true,
-      "ordinal": 234
+      "ordinal": 235
     },
     {
       "file": "src/observability/live/snapshot_provider.py",
@@ -3733,7 +3748,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 235
+      "ordinal": 236
     },
     {
       "file": "src/observability/mining/auditor.py",
@@ -3748,7 +3763,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 236
+      "ordinal": 237
     },
     {
       "file": "src/observability/mining/auditor.py",
@@ -3763,7 +3778,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 237
+      "ordinal": 238
     },
     {
       "file": "src/observability/mining/controller.py",
@@ -3780,7 +3795,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 238
+      "ordinal": 239
     },
     {
       "file": "src/observability/mining/controller.py",
@@ -3797,7 +3812,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 239
+      "ordinal": 240
     },
     {
       "file": "src/observability/mining/controller.py",
@@ -3812,7 +3827,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 240
+      "ordinal": 241
     },
     {
       "file": "src/observability/mining/controller.py",
@@ -3829,7 +3844,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 241
+      "ordinal": 242
     },
     {
       "file": "src/observability/mining/controller.py",
@@ -3844,7 +3859,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 242
+      "ordinal": 243
     },
     {
       "file": "src/observability/mining/dataset.py",
@@ -3859,7 +3874,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 243
+      "ordinal": 244
     },
     {
       "file": "src/observability/mining/evidence.py",
@@ -3874,7 +3889,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 244
+      "ordinal": 245
     },
     {
       "file": "src/observability/mining/evidence.py",
@@ -3889,7 +3904,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 245
+      "ordinal": 246
     },
     {
       "file": "src/observability/mining/orchestrator.py",
@@ -3904,7 +3919,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 246
+      "ordinal": 247
     },
     {
       "file": "src/observability/mining/orchestrator.py",
@@ -3919,7 +3934,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 247
+      "ordinal": 248
     },
     {
       "file": "src/observability/mining/orchestrator.py",
@@ -3934,7 +3949,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 248
+      "ordinal": 249
     },
     {
       "file": "src/observability/mining/patterns.py",
@@ -3949,7 +3964,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 249
+      "ordinal": 250
     },
     {
       "file": "src/observability/mining/priority.py",
@@ -3964,7 +3979,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 250
+      "ordinal": 251
     },
     {
       "file": "src/observability/mining/recommender.py",
@@ -3979,7 +3994,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 251
+      "ordinal": 252
     },
     {
       "file": "src/observability/mining/workflow.py",
@@ -3996,7 +4011,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 252
+      "ordinal": 253
     },
     {
       "file": "src/observability/mining/workflow.py",
@@ -4011,7 +4026,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 253
+      "ordinal": 254
     },
     {
       "file": "src/observability/performance/profiler.py",
@@ -4028,7 +4043,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 254
+      "ordinal": 255
     },
     {
       "file": "src/observability/performance/profiler.py",
@@ -4043,7 +4058,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 255
+      "ordinal": 256
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4058,7 +4073,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 256
+      "ordinal": 257
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4075,7 +4090,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 257
+      "ordinal": 258
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4092,7 +4107,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 258
+      "ordinal": 259
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4109,7 +4124,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 259
+      "ordinal": 260
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4126,7 +4141,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 260
+      "ordinal": 261
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4141,7 +4156,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 261
+      "ordinal": 262
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4158,7 +4173,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 262
+      "ordinal": 263
     },
     {
       "file": "src/observability/readiness/harness.py",
@@ -4173,7 +4188,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 263
+      "ordinal": 264
     },
     {
       "file": "src/observability/reporting/baseline_generator.py",
@@ -4188,7 +4203,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 264
+      "ordinal": 265
     },
     {
       "file": "src/observability/reporting/retention.py",
@@ -4203,7 +4218,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 265
+      "ordinal": 266
     },
     {
       "file": "src/observability/reporting/retention.py",
@@ -4222,7 +4237,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 266
+      "ordinal": 267
     },
     {
       "file": "src/observability/reporting/retention.py",
@@ -4237,7 +4252,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 267
+      "ordinal": 268
     },
     {
       "file": "src/observability/reporting/run_report.py",
@@ -4252,7 +4267,22 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 268
+      "ordinal": 269
+    },
+    {
+      "file": "src/observability/run_ledger.py",
+      "line": 310,
+      "enclosing_function": "RunLedger._event",
+      "source": "time.time",
+      "kind": "wall-clock",
+      "call": "time.time",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "note": "",
+      "reachable_from_kernel": true,
+      "ordinal": 270
     },
     {
       "file": "src/observability/starvation_record.py",
@@ -4267,7 +4297,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 269
+      "ordinal": 271
     },
     {
       "file": "src/observability/stream/adapters.py",
@@ -4284,7 +4314,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 270
+      "ordinal": 272
     },
     {
       "file": "src/observability/stream/adapters.py",
@@ -4301,7 +4331,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 271
+      "ordinal": 273
     },
     {
       "file": "src/observability/stream/adapters.py",
@@ -4316,7 +4346,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 272
+      "ordinal": 274
     },
     {
       "file": "src/observability/stream/adapters.py",
@@ -4331,7 +4361,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 273
+      "ordinal": 275
     },
     {
       "file": "src/observability/stream/consumer.py",
@@ -4348,7 +4378,24 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 274
+      "ordinal": 276
+    },
+    {
+      "file": "src/observability/stream/lag_metrics.py",
+      "line": 23,
+      "enclosing_function": "metrics_port_from_env",
+      "source": "os.environ (whole mapping)",
+      "kind": "environment",
+      "call": "os.environ if environ is None else environ",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "if environ is None (conditional expression)"
+      ],
+      "guarded": true,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 277
     },
     {
       "file": "src/observability/sweeper.py",
@@ -4365,7 +4412,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 275
+      "ordinal": 278
     },
     {
       "file": "src/observability/sweeper.py",
@@ -4382,7 +4429,7 @@
       "guarded": true,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 276
+      "ordinal": 279
     },
     {
       "file": "src/observability/sweeper.py",
@@ -4397,7 +4444,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 277
+      "ordinal": 280
     },
     {
       "file": "src/observability/sweeper.py",
@@ -4414,7 +4461,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 278
+      "ordinal": 281
     },
     {
       "file": "src/observability/understanding/balance/models.py",
@@ -4429,7 +4476,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 279
+      "ordinal": 282
     },
     {
       "file": "src/observability/understanding/domain/base.py",
@@ -4444,7 +4491,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 280
+      "ordinal": 283
     },
     {
       "file": "src/observability/understanding/domain/base.py",
@@ -4459,7 +4506,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 281
+      "ordinal": 284
     },
     {
       "file": "src/observability/understanding/domain/base.py",
@@ -4476,7 +4523,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 282
+      "ordinal": 285
     },
     {
       "file": "src/observability/understanding/domain/base.py",
@@ -4491,7 +4538,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 283
+      "ordinal": 286
     },
     {
       "file": "src/observability/understanding/pipeline.py",
@@ -4506,7 +4553,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 284
+      "ordinal": 287
     },
     {
       "file": "src/observability/understanding/pipeline.py",
@@ -4521,7 +4568,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 285
+      "ordinal": 288
     },
     {
       "file": "src/observability/understanding/quality/baseline_evolution.py",
@@ -4536,7 +4583,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 286
+      "ordinal": 289
     },
     {
       "file": "src/observability/understanding/quality/quality_report.py",
@@ -4551,7 +4598,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 287
+      "ordinal": 290
     },
     {
       "file": "src/observability/understanding/review/models.py",
@@ -4566,7 +4613,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 288
+      "ordinal": 291
     },
     {
       "file": "src/observability/understanding/review/models.py",
@@ -4581,7 +4628,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 289
+      "ordinal": 292
     },
     {
       "file": "src/observability/understanding/rootcause/models.py",
@@ -4596,7 +4643,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 290
+      "ordinal": 293
     },
     {
       "file": "src/observability/understanding/stories/models.py",
@@ -4611,7 +4658,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 291
+      "ordinal": 294
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4626,7 +4673,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 292
+      "ordinal": 295
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4641,7 +4688,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 293
+      "ordinal": 296
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4656,7 +4703,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 294
+      "ordinal": 297
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4671,7 +4718,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 295
+      "ordinal": 298
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4690,7 +4737,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 296
+      "ordinal": 299
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4705,7 +4752,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 297
+      "ordinal": 300
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4720,7 +4767,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 298
+      "ordinal": 301
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4735,7 +4782,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 299
+      "ordinal": 302
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4752,7 +4799,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 300
+      "ordinal": 303
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4767,7 +4814,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 301
+      "ordinal": 304
     },
     {
       "file": "src/observability/warehouse/adapters.py",
@@ -4785,7 +4832,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 302
+      "ordinal": 305
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4800,7 +4847,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 303
+      "ordinal": 306
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4817,7 +4864,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 304
+      "ordinal": 307
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4832,7 +4879,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 305
+      "ordinal": 308
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4847,7 +4894,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 306
+      "ordinal": 309
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4867,7 +4914,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 307
+      "ordinal": 310
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4886,7 +4933,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 308
+      "ordinal": 311
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4901,7 +4948,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 309
+      "ordinal": 312
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4916,7 +4963,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 310
+      "ordinal": 313
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4931,7 +4978,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 311
+      "ordinal": 314
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4948,7 +4995,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 312
+      "ordinal": 315
     },
     {
       "file": "src/observability/warehouse/clickhouse.py",
@@ -4963,7 +5010,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 313
+      "ordinal": 316
     },
     {
       "file": "src/observability/warehouse/models.py",
@@ -4978,7 +5025,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 314
+      "ordinal": 317
     },
     {
       "file": "src/observability/watchdog.py",
@@ -4993,7 +5040,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 315
+      "ordinal": 318
     },
     {
       "file": "src/observability/watchdog.py",
@@ -5008,7 +5055,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 316
+      "ordinal": 319
     },
     {
       "file": "src/observability/watchdog.py",
@@ -5023,7 +5070,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 317
+      "ordinal": 320
     },
     {
       "file": "src/observability/watchdog.py",
@@ -5038,7 +5085,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 318
+      "ordinal": 321
     },
     {
       "file": "src/observability/watchdog.py",
@@ -5055,12 +5102,27 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 319
+      "ordinal": 322
     },
     {
       "file": "src/perf/bench_harness.py",
-      "line": 70,
-      "enclosing_function": "BenchHarness.__init__",
+      "line": 45,
+      "enclosing_function": "_gc_collected_total",
+      "source": "gc.get_stats",
+      "kind": "memory",
+      "call": "gc.get_stats",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 323
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 92,
+      "enclosing_function": "run_memory_pass",
       "source": "psutil.Process",
       "kind": "CPU/host topology",
       "call": "psutil.Process",
@@ -5070,90 +5132,18 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 320
-    },
-    {
-      "file": "src/perf/bench_harness.py",
-      "line": 116,
-      "enclosing_function": "BenchHarness.run_benchmark",
-      "source": "psutil.Process.cpu_times",
-      "kind": "CPU time",
-      "call": "self._process.cpu_times",
-      "env_var": null,
-      "receiver_resolved_by_name": true,
-      "guards": [
-        "try"
-      ],
-      "guarded": true,
-      "note": "",
-      "reachable_from_kernel": false,
-      "ordinal": 321
-    },
-    {
-      "file": "src/perf/bench_harness.py",
-      "line": 131,
-      "enclosing_function": "BenchHarness.run_benchmark",
-      "source": "time.perf_counter",
-      "kind": "wall-clock",
-      "call": "time.perf_counter",
-      "env_var": null,
-      "receiver_resolved_by_name": true,
-      "guards": [
-        "try"
-      ],
-      "guarded": true,
-      "note": "",
-      "reachable_from_kernel": false,
-      "ordinal": 322
-    },
-    {
-      "file": "src/perf/bench_harness.py",
-      "line": 135,
-      "enclosing_function": "BenchHarness.run_benchmark",
-      "source": "time.perf_counter",
-      "kind": "wall-clock",
-      "call": "time.perf_counter",
-      "env_var": null,
-      "receiver_resolved_by_name": true,
-      "guards": [
-        "try",
-        "try"
-      ],
-      "guarded": true,
-      "note": "",
-      "reachable_from_kernel": false,
-      "ordinal": 323
-    },
-    {
-      "file": "src/perf/bench_harness.py",
-      "line": 137,
-      "enclosing_function": "BenchHarness.run_benchmark",
-      "source": "time.perf_counter",
-      "kind": "wall-clock",
-      "call": "time.perf_counter",
-      "env_var": null,
-      "receiver_resolved_by_name": true,
-      "guards": [
-        "try",
-        "try"
-      ],
-      "guarded": true,
-      "note": "",
-      "reachable_from_kernel": false,
       "ordinal": 324
     },
     {
       "file": "src/perf/bench_harness.py",
-      "line": 148,
-      "enclosing_function": "BenchHarness.run_benchmark",
+      "line": 100,
+      "enclosing_function": "run_memory_pass",
       "source": "psutil.Process.memory_info",
       "kind": "memory",
-      "call": "self._process.memory_info",
+      "call": "process.memory_info",
       "env_var": null,
       "receiver_resolved_by_name": true,
       "guards": [
-        "if i % 10 == 0",
-        "try",
         "try"
       ],
       "guarded": true,
@@ -5163,11 +5153,11 @@
     },
     {
       "file": "src/perf/bench_harness.py",
-      "line": 153,
-      "enclosing_function": "BenchHarness.run_benchmark",
-      "source": "time.perf_counter",
-      "kind": "wall-clock",
-      "call": "time.perf_counter",
+      "line": 107,
+      "enclosing_function": "run_memory_pass",
+      "source": "psutil.Process.memory_info",
+      "kind": "memory",
+      "call": "process.memory_info",
       "env_var": null,
       "receiver_resolved_by_name": true,
       "guards": [
@@ -5180,7 +5170,40 @@
     },
     {
       "file": "src/perf/bench_harness.py",
-      "line": 154,
+      "line": 109,
+      "enclosing_function": "run_memory_pass",
+      "source": "psutil.Process.memory_info",
+      "kind": "memory",
+      "call": "process.memory_info",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "if trimmed (conditional expression)",
+        "try"
+      ],
+      "guarded": true,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 327
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 165,
+      "enclosing_function": "BenchHarness.__init__",
+      "source": "psutil.Process",
+      "kind": "CPU/host topology",
+      "call": "psutil.Process",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 328
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 209,
       "enclosing_function": "BenchHarness.run_benchmark",
       "source": "psutil.Process.cpu_times",
       "kind": "CPU time",
@@ -5193,11 +5216,98 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 327
+      "ordinal": 329
     },
     {
       "file": "src/perf/bench_harness.py",
-      "line": 192,
+      "line": 225,
+      "enclosing_function": "BenchHarness.run_benchmark",
+      "source": "time.perf_counter",
+      "kind": "wall-clock",
+      "call": "time.perf_counter",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "try"
+      ],
+      "guarded": true,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 330
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 229,
+      "enclosing_function": "BenchHarness.run_benchmark",
+      "source": "time.perf_counter",
+      "kind": "wall-clock",
+      "call": "time.perf_counter",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "try",
+        "try"
+      ],
+      "guarded": true,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 331
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 231,
+      "enclosing_function": "BenchHarness.run_benchmark",
+      "source": "time.perf_counter",
+      "kind": "wall-clock",
+      "call": "time.perf_counter",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "try",
+        "try"
+      ],
+      "guarded": true,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 332
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 247,
+      "enclosing_function": "BenchHarness.run_benchmark",
+      "source": "time.perf_counter",
+      "kind": "wall-clock",
+      "call": "time.perf_counter",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "try"
+      ],
+      "guarded": true,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 333
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 248,
+      "enclosing_function": "BenchHarness.run_benchmark",
+      "source": "psutil.Process.cpu_times",
+      "kind": "CPU time",
+      "call": "self._process.cpu_times",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [
+        "try"
+      ],
+      "guarded": true,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 334
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 290,
       "enclosing_function": "BenchHarness.run_benchmark",
       "source": "time.time",
       "kind": "wall-clock",
@@ -5210,11 +5320,56 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 328
+      "ordinal": 335
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 318,
+      "enclosing_function": "BenchHarness._collect_and_read",
+      "source": "time.perf_counter",
+      "kind": "wall-clock",
+      "call": "time.perf_counter",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 336
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 320,
+      "enclosing_function": "BenchHarness._collect_and_read",
+      "source": "time.perf_counter",
+      "kind": "wall-clock",
+      "call": "time.perf_counter",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 337
+    },
+    {
+      "file": "src/perf/bench_harness.py",
+      "line": 328,
+      "enclosing_function": "BenchHarness._rss_mb",
+      "source": "psutil.Process.memory_info",
+      "kind": "memory",
+      "call": "self._process.memory_info",
+      "env_var": null,
+      "receiver_resolved_by_name": true,
+      "guards": [],
+      "guarded": false,
+      "note": "",
+      "reachable_from_kernel": false,
+      "ordinal": 338
     },
     {
       "file": "src/perf/benchmark_record.py",
-      "line": 538,
+      "line": 613,
       "enclosing_function": "collect_runtime",
       "source": "psutil.cpu_count",
       "kind": "CPU/host topology",
@@ -5225,11 +5380,11 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 329
+      "ordinal": 339
     },
     {
       "file": "src/perf/benchmark_record.py",
-      "line": 539,
+      "line": 614,
       "enclosing_function": "collect_runtime",
       "source": "psutil.virtual_memory",
       "kind": "memory",
@@ -5240,11 +5395,11 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 330
+      "ordinal": 340
     },
     {
       "file": "src/perf/benchmark_record.py",
-      "line": 591,
+      "line": 666,
       "enclosing_function": "utc_now",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -5255,11 +5410,11 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 331
+      "ordinal": 341
     },
     {
       "file": "src/perf/benchmark_record.py",
-      "line": 596,
+      "line": 671,
       "enclosing_function": "default_samples_dir",
       "source": "os.environ.get",
       "kind": "environment",
@@ -5270,11 +5425,11 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 332
+      "ordinal": 342
     },
     {
       "file": "src/perf/benchmark_record.py",
-      "line": 613,
+      "line": 688,
       "enclosing_function": "write_samples_file",
       "source": "uuid.uuid4",
       "kind": "entropy",
@@ -5285,7 +5440,7 @@
       "guarded": false,
       "note": "beyond the ticket's minimum list; listed because host entropy can reach ids and seeds",
       "reachable_from_kernel": false,
-      "ordinal": 333
+      "ordinal": 343
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5300,7 +5455,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 334
+      "ordinal": 344
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5315,7 +5470,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 335
+      "ordinal": 345
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5330,7 +5485,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 336
+      "ordinal": 346
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5345,7 +5500,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 337
+      "ordinal": 347
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5360,7 +5515,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 338
+      "ordinal": 348
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5377,7 +5532,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 339
+      "ordinal": 349
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5392,7 +5547,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 340
+      "ordinal": 350
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5409,7 +5564,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 341
+      "ordinal": 351
     },
     {
       "file": "src/perf/long_run_harness.py",
@@ -5424,7 +5579,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 342
+      "ordinal": 352
     },
     {
       "file": "src/perf/profile_governance.py",
@@ -5439,7 +5594,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 343
+      "ordinal": 353
     },
     {
       "file": "src/perf/profile_governance.py",
@@ -5454,7 +5609,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 344
+      "ordinal": 354
     },
     {
       "file": "src/simulation_quality/api/routes.py",
@@ -5469,7 +5624,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 345
+      "ordinal": 355
     },
     {
       "file": "src/simulation_quality/feed.py",
@@ -5484,7 +5639,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 346
+      "ordinal": 356
     },
     {
       "file": "src/simulation_quality/feed.py",
@@ -5499,7 +5654,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 347
+      "ordinal": 357
     },
     {
       "file": "src/simulation_quality/feed.py",
@@ -5516,7 +5671,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 348
+      "ordinal": 358
     },
     {
       "file": "src/simulation_quality/feed.py",
@@ -5533,7 +5688,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 349
+      "ordinal": 359
     },
     {
       "file": "src/simulation_quality/feed.py",
@@ -5550,7 +5705,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 350
+      "ordinal": 360
     },
     {
       "file": "src/simulation_quality/quality_hub.py",
@@ -5565,11 +5720,11 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 351
+      "ordinal": 361
     },
     {
       "file": "src/simulation_quality/quality_report.py",
-      "line": 130,
+      "line": 160,
       "enclosing_function": "QualityReportBuilder.build",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -5580,7 +5735,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 352
+      "ordinal": 362
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5595,7 +5750,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 353
+      "ordinal": 363
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5610,7 +5765,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 354
+      "ordinal": 364
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5625,7 +5780,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 355
+      "ordinal": 365
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5640,7 +5795,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 356
+      "ordinal": 366
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5655,7 +5810,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 357
+      "ordinal": 367
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5670,7 +5825,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 358
+      "ordinal": 368
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5685,7 +5840,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 359
+      "ordinal": 369
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5700,7 +5855,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 360
+      "ordinal": 370
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5715,7 +5870,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 361
+      "ordinal": 371
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5730,7 +5885,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 362
+      "ordinal": 372
     },
     {
       "file": "src/simulation_quality/worker.py",
@@ -5745,7 +5900,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 363
+      "ordinal": 373
     },
     {
       "file": "src/testing/scenario_runner.py",
@@ -5760,7 +5915,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 364
+      "ordinal": 374
     },
     {
       "file": "src/testing/scenario_runner.py",
@@ -5775,11 +5930,11 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 365
+      "ordinal": 375
     },
     {
       "file": "src/worldassembly/resolver.py",
-      "line": 709,
+      "line": 711,
       "enclosing_function": "WorldAssemblyResolver.assemble",
       "source": "datetime.datetime.now",
       "kind": "wall-clock",
@@ -5790,11 +5945,11 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 366
+      "ordinal": 376
     },
     {
       "file": "src/worldbuilding/compiler.py",
-      "line": 468,
+      "line": 470,
       "enclosing_function": "WorldCompiler.compile",
       "source": "time.perf_counter",
       "kind": "wall-clock",
@@ -5805,11 +5960,11 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 367
+      "ordinal": 377
     },
     {
       "file": "src/worldbuilding/compiler.py",
-      "line": 918,
+      "line": 927,
       "enclosing_function": "WorldCompiler.compile",
       "source": "time.perf_counter",
       "kind": "wall-clock",
@@ -5820,7 +5975,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 368
+      "ordinal": 378
     },
     {
       "file": "src/worldbuilding/repository.py",
@@ -5835,7 +5990,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 369
+      "ordinal": 379
     },
     {
       "file": "src/worldbuilding/repository.py",
@@ -5855,7 +6010,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 370
+      "ordinal": 380
     },
     {
       "file": "src/worldbuilding/repository.py",
@@ -5874,7 +6029,7 @@
       "guarded": true,
       "note": "",
       "reachable_from_kernel": true,
-      "ordinal": 371
+      "ordinal": 381
     },
     {
       "file": "src/worldgeneration/generator.py",
@@ -5889,7 +6044,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 372
+      "ordinal": 382
     },
     {
       "file": "src/worldgeneration/generator.py",
@@ -5904,7 +6059,7 @@
       "guarded": false,
       "note": "",
       "reachable_from_kernel": false,
-      "ordinal": 373
+      "ordinal": 383
     }
   ],
   "unresolved_candidates": [
@@ -5918,7 +6073,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 540,
+      "line": 541,
       "enclosing_function": "Kernel._phase_init",
       "call": "self._worker_manager.get_stats",
       "reason": "method name matches a clock or host source but the receiver is not a known module by name",
@@ -5926,7 +6081,7 @@
     },
     {
       "file": "src/engine/kernel.py",
-      "line": 541,
+      "line": 542,
       "enclosing_function": "Kernel._phase_init",
       "call": "self._replay.get_stats",
       "reason": "method name matches a clock or host source but the receiver is not a known module by name",
@@ -5966,7 +6121,7 @@
     },
     {
       "file": "src/engine/replay_manager.py",
-      "line": 120,
+      "line": 126,
       "enclosing_function": "ReplayManager.on_tick_end",
       "call": "self.get_stats",
       "reason": "method name matches a clock or host source but the receiver is not a known module by name",
@@ -5974,7 +6129,7 @@
     },
     {
       "file": "src/engine/replay_manager.py",
-      "line": 171,
+      "line": 177,
       "enclosing_function": "ReplayManager.finalize",
       "call": "self.get_stats",
       "reason": "method name matches a clock or host source but the receiver is not a known module by name",
@@ -5982,7 +6137,7 @@
     },
     {
       "file": "src/engine/replay_manager.py",
-      "line": 352,
+      "line": 358,
       "enclosing_function": "ReplayManager.get_stats",
       "call": "self._buffer.get_stats",
       "reason": "method name matches a clock or host source but the receiver is not a known module by name",

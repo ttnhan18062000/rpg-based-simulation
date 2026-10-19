@@ -50,6 +50,8 @@ domains:
       - tools/graphify_prune.py
       - tools/search_*.py          # search_mcp, search_server, search_shared (owner 2026-10-13)
       - tools/start_*_mcp.sh       # start_search_mcp, start_headroom_mcp
+      - tools/*_search.py          # exactly knowledge_search.py and eval_search.py today
+      - requirements-knowledge.txt
       - tests/tools/**
       - tests/docs/**
     owns_not:
@@ -129,7 +131,6 @@ domains:
       - dashboard-frontend/**
       - website/**
       - .mcp.json
-      - .github/workflows/deploy-docs.yml
       - docs/architecture/**                 # asset's ADR and perf's PERF-D file are split below
       - agent-working/lead/**
     owns_not: []
@@ -143,6 +144,13 @@ domains:
     owns:     # compose.yaml and docker/** moved from lead; each DevOps step adds the globs it creates (infra/**, deploy/k8s/**, charts/**, docs/runbooks/**, tools/loadtest/**, publish-images.yml, iac.yml, k8s-validate.yml, dependabot.yml) in its own PR; the owner confirms the diff there
       - compose.yaml
       - docker/**
+      - .github/workflows/publish-images.yml
+      - .github/workflows/deploy-docs.yml     # moved from lead: owner decision on #560 (2026-10-16); the owner confirms in the PR
+      - infra/**                              # TCK-20261018-IAC-WORKFLOW-AND-ROLES (D8): the Terraform roots; the owner confirms in the PR
+      - .github/workflows/iac.yml
+      - .github/dependabot.yml
+      - tools/loadtest/**
+      - docs/runbooks/**
     owns_not: []
     routes:
       "src/**": rpg-planner                   # the engine stays one process

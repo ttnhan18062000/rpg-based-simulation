@@ -13,6 +13,9 @@ purpose.
 
 **HARD** — everything that matters is durable (ticket/artifact files, a pushed branch, the PR,
 memory) and nothing is in flight. Write the handover note, then say "safe to `/clear`."
+Say it AND record it: `python3 tools/sessions/reset_boundary.py declare --kind HARD --row "<the boundary-map row>"` (same for
+SOFT and NEVER; it appends to `reset_boundary.jsonl` and never fails). The next SessionStart after a `/clear` adds one advisory
+line if the previous session declared no HARD, or if its handover note changed after the declaration; the retro counts declarations.
 
 **SOFT** — durable artifacts already hold the working state, so compaction is harmless. Don't
 propose a full `/clear`.
@@ -72,7 +75,7 @@ Updated: <date>
 
 ## Reachability
 
-`.claude/handover/*.md` (gitignored, one file per role, so it exists only in the **main checkout**; the launcher,
+`.claude/handover/*.md` (gitignored, one file per role, plus `<stem>-N.md` for each numbered instance (`rpg-implementer-2` reads `rpg-implementer-2.md`), so it exists only in the **main checkout**; a note over the hook's 8000-character cap is cut, and SessionStart says so with its size; the launcher,
 the hooks and `tools/handover_transit.py` resolve it there via `tools/handover_home.py`, never against a worktree's cwd). The `SessionStart` hook
 `tools/sessions/session_start_hook.py` (`startup`, `resume`, `clear`, `compact`) resolves the session's role
 from the harness signals, binds the session to it and injects that role's card and **only that role's**
@@ -122,6 +125,15 @@ Check any directory without launching: `python3 tools/sessions/settings_freshnes
 commit distance, so a branch that itself edits `.claude/settings.json` reports a difference; `launch.py --allow-stale`
 overrides that, but never a directory outside the repo. **A `/clear` resume note should include this check** (run it,
 and relaunch through the launcher if it reports a mismatch).
+
+The launcher is not the only check. On `startup`, `resume` and `clear` (not `compact`) the SessionStart hook itself adds one
+`STALE SESSION CODE` line when `tools/sessions/**`, `tools/handover_home.py`, `session_start_handover_hook.py` or
+`registries/session_{roles,authority}.yaml` changed on the local `origin/main` ref since this worktree diverged from it
+(one `merge-base` and one `diff`, offline, never a fetch; `settings_freshness.stale_session_code`). A plain `claude --resume` and
+a `/clear` therefore no longer start silently on old session code, which is how a lagging worktree injected another instance's
+handover note (2026-10-15, TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START). It compares against the merge base, so a
+branch that edits session code itself is not called stale; the fix for a real warning is to sync that worktree to
+`origin/main` (each seat syncs its own). If the check cannot run it says so in one line instead of failing the session.
 
 ## Moving sessions between machines
 

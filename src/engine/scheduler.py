@@ -6,6 +6,8 @@ from src.core.state import AuthoritativeState
 from src.core.work import WorkItem, WorkClass
 from src.engine.candidate_selector import MovementCandidateSelector
 from src.engine.cadence import SystemCadence, should_run
+from src.core.items import food_hunger_recovery
+from src.engine.appraisal import can_eat_item
 from src.engine.need_pull import hunger_is_pressing, need_is_pressing
 from src.engine.sleep_debt import is_asleep
 
@@ -19,6 +21,11 @@ NEED_WAKE_CADENCE: int = SystemCadence.model_fields["strategic_intelligence"].de
 if TYPE_CHECKING:
     from src.core.state import EntityState
     from src.engine.policy import GovernorPolicy
+
+
+def _carries_edible_food(ent: "EntityState") -> bool:
+    """True when the entity carries food its body can eat (SURV-06 carried food, decision 44 diet gate)."""
+    return any(slot.quantity > 0 and food_hunger_recovery(slot.item_id) > 0.0 and can_eat_item(ent, slot.item_id) for slot in ent.inventory.items)
 
 
 class DeterministicScheduler:
@@ -71,6 +78,12 @@ class DeterministicScheduler:
             # A sleeper's debt is high by nature, so only hunger wakes it (decision 41 x SURV-07, owner ruling 2026-10-11). Waking is a re-decision: while
             # the debt is at the collapse line the decision is the collapse again (it holds), below it the hunger goal decides: eat if a way is open, else sleep.
             return hunger_is_pressing(ent.biological.hunger) and should_run(state.tick, ent.id, NEED_WAKE_CADENCE)
+        if work_kind == "ENTITY_ACT" and ent.task.payload.get("action") == "INTERACT":
+            # A gatherer on a node that still has charges holds its INTERACT with no brain, so a grazer on a regrowing patch is never released to eat
+            # (TCK-20261012-A-HELD-GATHERER-ON-A-REGROWING-PATCH-IS-NEVER-RELEASED-TO-EAT). Hunger wakes it on the same cadence only when it carries food its
+            # diet can eat: waking is a re-decision, so the hunger goal then decides EAT; with nothing to eat the gathering is the way to meet the need.
+            return (hunger_is_pressing(ent.biological.hunger) and _carries_edible_food(ent)
+                    and should_run(state.tick, ent.id, NEED_WAKE_CADENCE))
         return (
             work_kind == "ENTITY_MOVE"
             and need_is_pressing(ent.biological.hunger, ent.biological.sleep_debt)

@@ -53,29 +53,31 @@ class PositioningService:
         radius: int = 8
     ) -> List[Tuple[float, float]]:
         """
-        Identifies 'chokepoints' (1-tile gaps between walls) within a radius.
+        Identifies 'chokepoints' (1-tile gaps between blocked tiles) within a radius.
+
+        A wall is a blocked tile (`state.blocked_tiles`: the tiles structures occupy), never a terrain name (D56).
         """
         center_x, center_y = int(entity.navigation.position[0]), int(entity.navigation.position[1])
         chokepoints = []
 
-        terrain = getattr(state, 'terrain', {})
+        blocked = getattr(state, 'blocked_tiles', None) or set()
 
         for dx in range(-radius, radius + 1):
             for dy in range(-radius, radius + 1):
                 tx, ty = center_x + dx, center_y + dy
-                
+
                 # Only check walkable tiles
-                if terrain.get((tx, ty)) == "WALL":
+                if (tx, ty) in blocked:
                     continue
 
                 # Check for 1-tile gap (horizontal or vertical)
-                # Vertical gap: Wall at (tx-1, ty) and (tx+1, ty)
-                if terrain.get((tx - 1, ty)) == "WALL" and terrain.get((tx + 1, ty)) == "WALL":
+                # Vertical gap: blocked tile at (tx-1, ty) and (tx+1, ty)
+                if (tx - 1, ty) in blocked and (tx + 1, ty) in blocked:
                     chokepoints.append((float(tx), float(ty)))
                     continue
 
-                # Horizontal gap: Wall at (tx, ty-1) and (tx, ty+1)
-                if terrain.get((tx, ty - 1)) == "WALL" and terrain.get((tx, ty + 1)) == "WALL":
+                # Horizontal gap: blocked tile at (tx, ty-1) and (tx, ty+1)
+                if (tx, ty - 1) in blocked and (tx, ty + 1) in blocked:
                     chokepoints.append((float(tx), float(ty)))
 
         return chokepoints

@@ -99,15 +99,17 @@ def test_id_generation_integrity(base_state):
     [RPG-AUTH-005] Every world object is identified by a stable unique ID.
     """
     from src.systems.world_systems.generator import EntityGenerator
-    from src.world.spawn import SpawnService
+    from src.core.updates import StateUpdate
     from src.world.ecology import ResourceEcologyService
     
     generator = EntityGenerator(base_state.seed)
     
     # 1. Spawn some entities
-    # Force spawn interval
-    state = replace(base_state, tick=50) 
-    spawn_upd = SpawnService.process_spawns(state, generator)
+    # (the regional density top-up that used to produce these was removed, 2.122; any update that adds an entity exercises the id counter)
+    state = replace(base_state, tick=50)
+    generator._last_id = state.next_entity_id - 1
+    mob = generator.spawn_monster((5.0, 5.0), state, "goblin", 1)
+    spawn_upd = StateUpdate(entities_add=[mob], next_entity_id_set=generator._last_id + 1)
     
     assert len(spawn_upd.entities_add) > 0
     assert spawn_upd.next_entity_id_set is not None

@@ -1412,7 +1412,7 @@ _FIXED_CORPUS_EXPECTED_REPORT = (
     "|---|---|\n"
     "| Total runs | 3 |\n"
     "| Completed (DONE) | 1 (33%) |\n"
-    "| Gate failures | 2 |\n"
+    "| Gate failures (runs; no gate ledger for this window) | 2 |\n"
     "| Avg duration | 20 min |\n"
     "| Avg agents per run | 3.3 |\n"
     "| Total agent calls | 2 |\n"
@@ -3314,3 +3314,89 @@ def test_generate_retro_no_longer_imports_the_consolidator():
     text = (Path(generate_retro.__file__)).read_text(encoding="utf-8")
     assert "consolidate_all" not in text.split("def main", 1)[1]
     assert "from monitoring_consolidation import" not in text
+
+
+# ---------------------------------------------------------------------------
+# TCK-20261018-RETRO-GATE-FAILURES-ROW-CITES-LEDGER: the "Gate failures" row and index column cite the gate ledger
+# ---------------------------------------------------------------------------
+
+import json as _json  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _no_real_gate_ledger_by_default(monkeypatch, request):
+    """Existing tests render with no ledger reading; the ledger tests below point DEFAULT_TOOLS_FILE at a tmp tree."""
+    if "ledger_tree" not in request.fixturenames:
+        monkeypatch.setattr(generate_retro, "_ledger_blocks", lambda week: None)
+
+
+def _ledger_row(vid, ts, blocking, ticket="TCK-1", gate="cli:g"):
+    return {"ts": ts, "gate_verdict_id": vid, "execution_mode": "hand", "ticket_id": ticket, "gate_id": gate,
+            "gate_type": "static_check", "verdict": "FAIL" if blocking else "PASS", "blocking": blocking,
+            "inputs_ref": {"cmd_sha": vid}}
+
+
+@pytest.fixture
+def ledger_tree(tmp_path, monkeypatch):
+    """A tmp monitoring data tree whose gate ledger starts in 2026-W41: W42 has 3 verdicts (2 blocking: one overridden, one
+    without an outcome), W43 is a week the ledger covers but with no verdict at all."""
+    data = tmp_path / "data"
+    (data / "2026-W41").mkdir(parents=True)
+    (data / "2026-W42").mkdir()
+    rows = [_ledger_row("a", "2026-10-12T08:00:00Z", True), _ledger_row("b", "2026-10-13T08:00:00Z", True, ticket="TCK-2", gate="cli:h"),
+            _ledger_row("c", "2026-10-14T08:00:00Z", False, ticket="TCK-3", gate="cli:i")]
+    (data / "2026-W42" / "gate_verdicts.jsonl").write_text("\n".join(_json.dumps(r) for r in rows) + "\n")
+    (data / "2026-W41" / "gate_verdicts.jsonl").write_text(_json.dumps(_ledger_row("z", "2026-10-05T08:00:00Z", False)) + "\n")
+    with (data / "2026-W42" / "gate_verdicts.jsonl").open("a") as f:
+        f.write(_json.dumps({"ts": "2026-10-15T08:00:00Z", "row_kind": "outcome", "gate_verdict_id": "a",
+                             "outcome": "overridden", "followup_verdict_id": None, "note": None}) + "\n")
+    monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", data)
+    return data
+
+
+def test_ledger_blocks_counts_the_week_with_overridden_and_unresolved(ledger_tree):
+    assert generate_retro._ledger_blocks("2026-W42") == {"verdicts": 3, "blocking": 2, "overridden": 1, "unresolved": 1}
+
+
+def test_a_ledger_that_exists_but_is_empty_for_the_week_is_zeros_not_no_ledger(ledger_tree):
+    blocks = generate_retro._ledger_blocks("2026-W43")
+    assert blocks == {"verdicts": 0, "blocking": 0, "overridden": 0, "unresolved": 0}
+    run = {"run_id": "A", "ticket_id": "A", "start_ts": "2026-10-20T08:00:00Z", "end_ts": "2026-10-20T09:00:00Z",
+           "workflow": "implement-ticket", "tier": "standard", "final_status": "DONE", "agent_count": 2,
+           "execution_mode": "hand", "duration_s": 60}
+    text = generate_retro.generate([run], [], "2026-W43", week_str="2026-W43", ledger_blocks=blocks)
+    assert "| Gate failures | 0 blocking verdicts of 0 (ledger: 0 overridden, 0 without an outcome); 0 runs ended in a gate failure |" in text
+    assert "no gate ledger" not in text
+
+
+def test_no_ledger_window_is_none_for_all_days_before_the_ledger_and_no_ledger_at_all(ledger_tree, tmp_path, monkeypatch):
+    assert generate_retro._ledger_blocks(None) is None  # --all / --days
+    assert generate_retro._ledger_blocks("2026-W30") is None  # before the ledger's first verdict
+    monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tmp_path / "empty")
+    assert generate_retro._ledger_blocks("2026-W42") is None
+
+
+def test_the_index_gate_failures_cell_cites_the_ledger_where_it_exists_and_keeps_the_run_count_elsewhere(
+        ledger_tree, tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path / "retro")
+    (tmp_path / "retro").mkdir()
+    for name in ("2026-W30", "2026-W42", "ALL"):
+        (tmp_path / "retro" / f"RETRO-{name}.md").write_text("placeholder")
+    runs = [{"run_id": "R1", "start_ts": "2026-07-20T00:00:00Z", "final_status": "DOD_BLOCKED"},
+            {"run_id": "R2", "start_ts": "2026-10-13T00:00:00Z", "final_status": "DONE"}]
+    generate_retro._update_index(runs, [])
+    text = (tmp_path / "retro" / "index.md").read_text()
+    cell = lambda name: next(l for l in text.splitlines() if f"[{name}]" in l).split("|")[4].strip()  # noqa: E731
+    assert cell("2026-W42") == "2L" and cell("2026-W30") == "1" and cell("ALL") == "1"
+    assert "`NL` is the number of blocking verdicts in the gate ledger" in text
+
+
+def test_regenerating_keeps_the_notes_section(ledger_tree, tmp_path, monkeypatch):
+    """The existing Notes-preservation behaviour holds with the new row."""
+    blocks = generate_retro._ledger_blocks("2026-W42")
+    run = {"run_id": "A", "ticket_id": "A", "start_ts": "2026-10-14T08:00:00Z", "end_ts": "2026-10-14T09:00:00Z",
+           "workflow": "implement-ticket", "tier": "standard", "final_status": "DONE", "agent_count": 2,
+           "execution_mode": "hand", "duration_s": 60}
+    text = generate_retro.generate([run], [], "2026-W42", week_str="2026-W42", ledger_blocks=blocks)
+    assert "| Gate failures | 2 blocking verdicts of 3 (ledger: 1 overridden, 1 without an outcome); 0 runs ended in a gate failure |" in text
+    assert "## Notes" in text

@@ -25,7 +25,7 @@ from tests.helpers.scenario import DEFAULT_FLAGS, DEFAULT_SEED, compile_world, e
 
 WORLD_ID = "mechanic_scenario_combat_judgement_withdrawal"
 F, H = 2, 1
-F_POS, H_POS = (1.0, 1.0), (1.0, 3.0)  # walls at (0, 1) and (2, 1) make (1, 1) a one-tile gap; the target is 2 tiles away, range 1
+F_POS, H_POS = (1.0, 1.0), (1.0, 3.0)  # blocked tiles at (0, 1) and (2, 1) make (1, 1) a one-tile gap; the target is 2 tiles away, range 1
 
 
 def _staged() -> AuthoritativeState:
@@ -41,7 +41,7 @@ def _staged() -> AuthoritativeState:
                            tactical_role="VANGUARD" if eid == F else e.combat.tactical_role),
             task=TaskComponent(work_kind="ENTITY_ACT", payload={}))
     object.__setattr__(state, "entities", entities)
-    object.__setattr__(state, "terrain", {(0, 1): "WALL", (2, 1): "WALL"})
+    object.__setattr__(state, "blocked_tiles", {(0, 1), (2, 1)})
     object.__setattr__(state, "feature_flags", {**(state.feature_flags or {}), "ENABLE_COMBAT_ENGAGEMENT": "OFF"})
     return state
 

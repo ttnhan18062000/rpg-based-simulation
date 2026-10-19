@@ -214,7 +214,7 @@ class ArenaInjector:
         
         # Terrain: Add a MOUNTAIN at (10,9) for Hero 1 high ground
         new_terrain = dict(state.terrain)
-        new_terrain[(10, 9)] = "MOUNTAIN"
+        new_terrain[(10, 9)] = "mountain"
         
         return replace(state, entities=new_entities, terrain=new_terrain)
 

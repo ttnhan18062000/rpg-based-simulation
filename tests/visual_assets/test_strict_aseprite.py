@@ -51,6 +51,30 @@ def test_strict_problem_names_the_cause(kwargs, needle):
     assert needle in strict.strict_problem(**{**facts, **kwargs}, pinned=PINNED)
 
 
+def test_strict_problem_fails_when_bwrap_cannot_run():
+    facts = {"binary_present": True, "bwrap_present": True, "version_output": f"Aseprite {PINNED}-x64", "pinned": PINNED}
+    problem = strict.strict_problem(**facts, bwrap_problem="AppArmor userns restriction (#555)")
+    assert problem is not None and problem.startswith("strict mode:") and "#555" in problem
+
+
+def test_skip_reason_names_a_bwrap_that_cannot_run_and_keeps_the_ci_marker(monkeypatch, tmp_path):
+    from tests.visual_assets import conftest as shared
+    from tools.ci_aseprite_skip_line import SKIP_MARKER
+
+    binary = tmp_path / "aseprite"
+    binary.write_text("")
+    monkeypatch.setattr(shared.drawing_config, "ASEPRITE", binary)
+    monkeypatch.setattr(shared.shutil, "which", lambda name: "/usr/bin/bwrap")
+    monkeypatch.setattr(shared.sandbox, "bwrap_problem", lambda: "AppArmor userns restriction, see #555")
+    assert not shared.aseprite_available()
+    reason = shared.skip_reason()
+    assert reason.startswith(SKIP_MARKER) and "AppArmor" in reason and "#555" in reason
+    monkeypatch.setattr(shared.sandbox, "bwrap_problem", lambda: None)
+    assert shared.aseprite_available()
+    monkeypatch.setattr(shared.shutil, "which", lambda name: None)
+    assert shared.skip_reason().startswith(SKIP_MARKER) and "bwrap cannot run" not in shared.skip_reason()
+
+
 def test_strict_problem_none_when_all_present_and_pinned():
     assert strict.strict_problem(
         binary_present=True, bwrap_present=True, version_output=f"Aseprite {PINNED}-x64", pinned=PINNED

@@ -93,3 +93,13 @@ def test_the_id_is_naming_only_same_seed_runs_end_with_the_same_state_hash(made)
         finally:
             k.shutdown()
     assert hashes[0] == hashes[1]
+
+
+def test_a_stand_in_rng_never_puts_its_repr_in_a_run_directory_name():
+    """Tests that build a kernel on a MagicMock rng produced run folders named run_<ts>_<MagicMock name=...>_...: the suffix is taken only from an int."""
+    from unittest.mock import MagicMock
+
+    from src.engine.run_identity import new_run_id
+    run_id = new_run_id(MagicMock())
+    assert "Mock" not in run_id and "<" not in run_id and " " not in run_id
+    assert run_id.startswith("run_") and run_id.split("_")[2] == "0"

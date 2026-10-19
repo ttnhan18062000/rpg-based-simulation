@@ -1,0 +1,233 @@
+apiVersion: 1
+
+# Base alert rules (TCK-20261018-GRAFANA-ALERTING-NTFY-AND-BASE-RULES), Grafana-managed on the prometheus datasource (uid prometheus).
+# Each rule's noDataState/execErrState is chosen on purpose and repeated in the runbook:
+#   TargetDown            noData OK (a vanished series is a config change, not an outage), execErr OK (PrometheusUnreachable covers a dead Prometheus)
+#   PrometheusUnreachable noData OK, execErr Alerting (a failing query IS the signal)
+#   GrafanaAlertingFailures, DiskSpaceLow, DiskWillFillIn24h: noData OK, execErr OK (TargetDown covers a missing exporter)
+# Annotations use a single-dollar {{ $labels.x }}. A doubled $$labels is NOT an escape here: the first drill (2026-10-18) delivered the literal text $$labels.
+# If a single $labels is eaten by the provisioning env expansion, the fallback is a provisioned notification template (templates: under provisioning/alerting).
+# GrafanaAlertingFailures: grafana_alerting_notifications_failed_total is a real 13.2.4 metric (pkg/services/ngalert/metrics/multi_org_alertmanager.go at v13.2.4: the
+# numFailedNotifications desc, sent with WithSkipZeroValueMetrics), so the series only appears after a first failure; `or vector(0)` keeps the rule evaluating until then.
+# runbook_url values are repo-relative paths until a docs host exists (docs/runbooks/README.md is the index).
+groups:
+  - orgId: 1
+    name: base
+    folder: Base alerts
+    interval: 1m
+    rules:
+      - uid: base-target-down
+        title: TargetDown
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: 'min by (job) (up)'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+        noDataState: OK
+        execErrState: OK
+        for: 2m
+        isPaused: false
+        annotations:
+          summary: "Scrape target {{ $labels.job }} is down"
+          runbook_url: docs/runbooks/target-down.md
+        labels:
+          severity: critical
+      - uid: base-prometheus-unreachable
+        title: PrometheusUnreachable
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: 'vector(1)'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [1]
+        noDataState: OK
+        execErrState: Alerting
+        for: 2m
+        isPaused: false
+        annotations:
+          summary: "Grafana cannot query Prometheus"
+          runbook_url: docs/runbooks/alerting-pipeline.md
+        labels:
+          severity: critical
+      - uid: base-grafana-alerting-failures
+        title: GrafanaAlertingFailures
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: '(sum(increase(grafana_alerting_rule_evaluation_failures_total[5m])) or vector(0)) + (sum(increase(grafana_alerting_notifications_failed_total[5m])) or vector(0))'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        noDataState: OK
+        execErrState: OK
+        for: 0s
+        isPaused: false
+        annotations:
+          summary: "Grafana rule evaluations or notifications are failing"
+          runbook_url: docs/runbooks/alerting-pipeline.md
+        labels:
+          severity: warning
+      - uid: base-disk-space-low
+        title: DiskSpaceLow
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: '100 * node_filesystem_avail_bytes{mountpoint=~"^(/|/data)$"} / node_filesystem_size_bytes{mountpoint=~"^(/|/data)$"}'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [15]
+        noDataState: OK
+        execErrState: OK
+        for: 10m
+        isPaused: false
+        annotations:
+          summary: "Free space on {{ $labels.mountpoint }} is below 15 percent"
+          runbook_url: docs/runbooks/disk-space.md
+        labels:
+          severity: warning
+      - uid: base-disk-will-fill
+        title: DiskWillFillIn24h
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: 'predict_linear(node_filesystem_avail_bytes{mountpoint=~"^(/|/data)$"}[6h], 86400)'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [0]
+        noDataState: OK
+        execErrState: OK
+        for: 30m
+        isPaused: false
+        annotations:
+          summary: "{{ $labels.mountpoint }} is predicted to fill within 24 hours"
+          runbook_url: docs/runbooks/disk-space.md
+        labels:
+          severity: warning

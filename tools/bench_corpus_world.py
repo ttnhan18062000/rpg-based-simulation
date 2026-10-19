@@ -7,10 +7,9 @@ no synthetic scenario needed. This IS a separate, dedicated engine execution fro
 calibration run (BenchHarness runs its own warmup+sample tick loop) — see investigation.md for why
 this isn't a truly free byproduct of an existing calibration run.
 
-Writes the SAME raw-dict shape as the existing committed baselines under tests/perf/baselines/
-(avg_tick_compute_ms, tick_ms{}, mem_rss_mb{}, phase_breakdown{}, etc.) — NOT src/perf/regression_gate.py's
-PerfBaseline/PerfResult dataclasses, which were found to have zero real consumers anywhere in this
-repo (see investigation.md). Matches what tests/perf/test_perf_regression_baseline.py actually reads.
+Prints the harness result dict; it writes nothing. A corpus baseline comes only from
+``tools/perf/rerun_baselines.py record`` (a candidate) followed by ``tools/perf/baseline_lifecycle.py promote``
+(TCK-20261016-PERF-CORPUS-BASELINES-ON-LIFECYCLE-RECORDS removed the old ``--commit`` raw-dict writer).
 """
 from __future__ import annotations
 
@@ -21,8 +20,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from calibrate_simq import _load_world_state  # noqa: E402
-
-BASELINES_DIR = Path("tests/perf/baselines")
 
 
 def bench_corpus_world(world_name: str, seed: int, warmup_ticks: int, sample_ticks: int) -> dict:
@@ -64,20 +61,10 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--warmup-ticks", type=int, default=100)
     parser.add_argument("--sample-ticks", type=int, default=1000)
-    parser.add_argument(
-        "--commit", action="store_true",
-        help="Write the result to tests/perf/baselines/simq_corpus_{world}.json "
-             "(default: print only, never silently overwrite a committed baseline)",
-    )
     args = parser.parse_args()
 
     result = bench_corpus_world(args.world, args.seed, args.warmup_ticks, args.sample_ticks)
     print(json.dumps(result, indent=2, default=str))
-
-    if args.commit:
-        out_path = BASELINES_DIR / f"simq_corpus_{args.world}.json"
-        out_path.write_text(json.dumps(result, indent=2, default=str))
-        print(f"\nCommitted: {out_path}")
 
 
 if __name__ == "__main__":

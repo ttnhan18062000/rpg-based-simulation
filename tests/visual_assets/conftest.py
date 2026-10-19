@@ -17,10 +17,19 @@ import pytest
 
 from tests.visual_assets import strict_aseprite
 from visual_assets.drawing import config as drawing_config
+from visual_assets.drawing.backend import sandbox
 
 
 def aseprite_available() -> bool:
-    return Path(drawing_config.ASEPRITE).exists() and shutil.which("bwrap") is not None
+    """Binary and bwrap are present and bwrap can actually build a sandbox here (cached probe, see `sandbox.bwrap_problem`)."""
+    return Path(drawing_config.ASEPRITE).exists() and shutil.which("bwrap") is not None and sandbox.bwrap_problem() is None
+
+
+def skip_reason() -> str:
+    """Starts with `requires aseprite and bwrap`, which `tools/ci_aseprite_skip_line.SKIP_MARKER` counts."""
+    if Path(drawing_config.ASEPRITE).exists() and shutil.which("bwrap") is not None and (problem := sandbox.bwrap_problem()):
+        return f"requires aseprite and bwrap (bwrap cannot run on this host: {problem})"
+    return "requires aseprite and bwrap (real Aseprite runs locally only, ADR D10)"
 
 
 @cache
@@ -31,6 +40,7 @@ def _strict_problem(binary: str, pinned: str) -> str | None:
         bwrap_present=shutil.which("bwrap") is not None,
         version_output=strict_aseprite.read_version(binary) if present else "",
         pinned=pinned,
+        bwrap_problem=sandbox.bwrap_problem() if present and shutil.which("bwrap") is not None else None,
     )
 
 
@@ -41,7 +51,7 @@ def pytest_configure(config):
 def pytest_collection_modifyitems(items):
     if strict_aseprite.strict_requested() or aseprite_available():
         return
-    skip = pytest.mark.skip(reason="requires aseprite and bwrap (real Aseprite runs locally only, ADR D10)")
+    skip = pytest.mark.skip(reason=skip_reason())
     for item in items:
         if "needs_aseprite" in item.keywords:
             item.add_marker(skip)

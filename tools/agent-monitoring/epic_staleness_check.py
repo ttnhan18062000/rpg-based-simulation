@@ -55,6 +55,17 @@ genuinely parked work stays visible without re-triggering the idle-activity
 nudge. See docs/plans/archive/epic_staleness_status_aware_epic.md and
 TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC.
 
+**Ready to close (TCK-20261018-EPIC-STALENESS-READY-TO-CLOSE-BUCKET)**: an epic that looks idle only because every
+filed child is done is reported in its own fourth bucket ("All filed children done") instead of as stale or never-started. A non-BLOCKED candidate is "ready
+to close" when (a) in folder mode its folder holds no ticket file other than the epic itself (`SEQUENCE.md` and
+non-ticket files are ignored), and (b) it names at least one child and every child ID it names resolves under
+`agent-working/tickets/done/`. Child IDs exclude the epic's own ID and any ID whose ticket is epic-tier or another
+candidate's epic (a cross-referenced epic is not a child). An ID that resolves nowhere keeps the epic out of the bucket
+and is named in a separate section. An epic whose own SEQUENCE.md or body says a plan item is `not filed` / `not yet
+filed` / `unfiled` is not ready either: it is listed, with that line, under "plan items not filed yet" (all filed
+children done does not mean the plan is done). A BLOCKED epic stays BLOCKED. Report-only: the hook nudge (`find_stale_epics`) never
+counts ready-to-close epics.
+
 Advisory only — mirrors retro_nudge_hook.py's shape (session-scoped state
 file, bare try/except:pass hook wrapper, additionalContext only). Never
 mutates a ticket file, never raises past its own entry points, never blocks
@@ -387,23 +398,125 @@ def _read_runs_records(runs_data_root: Path) -> list:
         return []
 
 
+def _ticket_index(tickets_root: Path) -> dict:
+    """ticket id -> every path of a `TCK-*.md` file with that stem under `tickets_root` (done/, inprogress/, todos/, ...)."""
+    index: dict = {}
+    try:
+        for path in tickets_root.rglob("TCK-*.md"):
+            index.setdefault(path.stem, []).append(path)
+    except Exception:
+        pass
+    return index
+
+
+def _in_done(paths: list, tickets_root: Path) -> bool:
+    for path in paths:
+        try:
+            if path.relative_to(tickets_root).parts[0] == "done":
+                return True
+        except ValueError:
+            continue
+    return False
+
+
+def _is_epic_ticket(paths: list) -> bool:
+    for path in paths:
+        try:
+            if _section_body(path.read_text(), "Tier").strip().lower() == "epic":
+                return True
+        except Exception:
+            continue
+    return False
+
+
+_UNFILED_PATTERN = re.compile(r"not\s+(?:yet\s+)?filed|unfiled", re.IGNORECASE)
+
+
+def _unfiled_plan_lines(candidate: EpicCandidate) -> list:
+    """Lines of the epic's own SEQUENCE.md or body that say a plan item is not filed yet (case-insensitive `not filed` /
+    `not yet filed` / `unfiled`), trimmed. All filed children done does not mean the plan is done."""
+    sources = []
+    if candidate.mode == "folder":
+        sources.append(candidate.source_path / "SEQUENCE.md")
+        sources.extend(p for p in sorted(candidate.source_path.glob("TCK-*.md")) if p.stem == candidate.epic_id)
+    else:
+        sources.append(candidate.source_path)
+    lines = []
+    for path in sources:
+        try:
+            text = path.read_text()
+        except Exception:
+            continue
+        lines.extend(line.strip() for line in text.splitlines() if _UNFILED_PATTERN.search(line))
+    return _dedupe_preserve_order(lines)
+
+
+def _ready_to_close_verdict(candidate: EpicCandidate, index: dict, tickets_root: Path, other_epic_ids: set) -> tuple:
+    """("ready", [n real children]) | ("unfiled", [lines]) | ("unresolved", [ids]) | ("no", []). "unresolved": condition (a)
+    holds, at least one child resolves and every child that does resolve is done, so only the named ID(s), which exist
+    nowhere, keep it out of the ready bucket. "unfiled": it would be ready, but its own plan says an item is not filed yet."""
+    if candidate.mode == "folder":
+        epic_file = next((p for p in sorted(candidate.source_path.glob("TCK-*.md"))
+                          if p.stem == candidate.epic_id), None)
+        for p in candidate.source_path.glob("TCK-*.md"):
+            if p != epic_file and p.stem != candidate.epic_id:
+                return "no", []  # a ticket file other than the epic itself is still in the folder
+    children = [c for c in candidate.child_ids if c != candidate.epic_id and c not in other_epic_ids]
+    unresolved, open_ = [], False
+    real_children = 0
+    for child in children:
+        paths = index.get(child)
+        if not paths:
+            unresolved.append(child)
+            continue
+        if _is_epic_ticket(paths):
+            continue  # a cross-referenced epic is not a child
+        real_children += 1
+        if not _in_done(paths, tickets_root):
+            open_ = True
+    if open_ or real_children == 0:
+        return "no", []  # an open child, or nothing resolvable at all (a not-yet-filed plan is not "nearly done")
+    if unresolved:
+        return "unresolved", unresolved
+    unfiled = _unfiled_plan_lines(candidate)
+    if unfiled:
+        return "unfiled", unfiled
+    return "ready", [real_children]
+
+
 def _classify_candidates(inprogress_dir, todos_dir, working_log_path, runs_data_root, now, window_days):
     candidates = discover_candidate_epics(inprogress_dir, todos_dir)
     working_log_rows = _read_working_log_rows(working_log_path)
     runs_records = _read_runs_records(runs_data_root)
+    tickets_root = inprogress_dir.parent
+    index = _ticket_index(tickets_root)
+    epic_ids = {c.epic_id for c in candidates}
 
     stale = []
     never_started = []
     blocked = []
+    ready = []
+    unresolved = []
+    unfiled = []
     for candidate in candidates:
         most_recent = resolve_child_activity(candidate.child_ids, working_log_rows, runs_records)
         if is_epic_blocked(candidate):
             blocked.append((candidate, most_recent))
-        elif is_epic_stale(candidate, most_recent, now, window_days):
+            continue
+        verdict, missing = _ready_to_close_verdict(candidate, index, tickets_root, epic_ids - {candidate.epic_id})
+        if verdict == "ready":
+            ready.append((candidate, missing[0]))
+            continue
+        if verdict == "unfiled":
+            unfiled.append((candidate, missing))
+            continue
+        if verdict == "unresolved":
+            unresolved.append((candidate, missing))
+        if is_epic_stale(candidate, most_recent, now, window_days):
             stale.append((candidate, most_recent))
         elif is_epic_never_started(candidate, most_recent):
             never_started.append(candidate)
-    return stale, never_started, blocked
+    return stale, never_started, blocked, ready, unresolved, unfiled
 
 
 def find_stale_epics(
@@ -420,7 +533,7 @@ def find_stale_epics(
     here regardless of idle time (see is_epic_blocked/is_epic_stale)."""
     try:
         now = now or datetime.now(timezone.utc)
-        stale, _, _ = _classify_candidates(inprogress_dir, todos_dir, working_log_path, runs_data_root, now, window_days)
+        stale = _classify_candidates(inprogress_dir, todos_dir, working_log_path, runs_data_root, now, window_days)[0]
         return [candidate for candidate, _ in stale]
     except Exception:
         return []
@@ -440,7 +553,7 @@ def compute_stale_epics_report(
 ) -> str:
     try:
         now = now or datetime.now(timezone.utc)
-        stale, never_started, blocked = _classify_candidates(
+        stale, never_started, blocked, ready, unresolved, unfiled = _classify_candidates(
             inprogress_dir, todos_dir, working_log_path, runs_data_root, now, window_days
         )
 
@@ -451,6 +564,26 @@ def compute_stale_epics_report(
                 lines.append(f"  {_format_epic_line(candidate)} — {days_idle} days idle")
         else:
             lines.append("  none")
+
+        lines.append("")
+        lines.append("All filed children done (check SEQUENCE.md for unfiled plan items, then close the epic and move its folder to done/):")
+        if ready:
+            for candidate, n_children in ready:
+                lines.append(f"  {_format_epic_line(candidate)} — {n_children} child ticket(s), all in done/")
+        else:
+            lines.append("  none")
+
+        if unfiled:
+            lines.append("")
+            lines.append("Not ready to close: plan items not filed yet:")
+            for candidate, matching in unfiled:
+                lines.append(f"  {_format_epic_line(candidate)} — {matching[0]}" + (f" (+{len(matching) - 1} more line(s))" if len(matching) > 1 else ""))
+
+        if unresolved:
+            lines.append("")
+            lines.append("Not ready to close: every resolvable child is done, but these child IDs exist nowhere:")
+            for candidate, missing in unresolved:
+                lines.append(f"  {_format_epic_line(candidate)} — unresolved: {', '.join(missing)}")
 
         lines.append("")
         lines.append("Informational: never-started epics (not stale — no child activity recorded yet):")

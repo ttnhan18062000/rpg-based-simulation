@@ -21,8 +21,8 @@ def create_base_valid_spec() -> dict:
             "coordinate_system": "grid"
         },
         "regions": [
-            {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "GRASS"},
-            {"id": "wilds", "type": "wilderness", "bounds": [15, 15, 40, 40], "terrain": "FOREST"}
+            {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "grass"},
+            {"id": "wilds", "type": "wilderness", "bounds": [15, 15, 40, 40], "terrain": "forest"}
         ],
         "factions": [
             {"id": "villagers", "type": "civilian"},
@@ -575,9 +575,9 @@ def test_compile_town_center_derivation_with_multiple_town_regions():
     every town region, and not the last one declared."""
     data = create_base_valid_spec()
     data["regions"] = [
-        {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "GRASS"},
-        {"id": "trading_post", "type": "town", "bounds": [45, 10, 80, 45], "terrain": "GRASS"},
-        {"id": "wilds", "type": "wilderness", "bounds": [15, 15, 40, 40], "terrain": "FOREST"},
+        {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "grass"},
+        {"id": "trading_post", "type": "town", "bounds": [45, 10, 80, 45], "terrain": "grass"},
+        {"id": "wilds", "type": "wilderness", "bounds": [15, 15, 40, 40], "terrain": "forest"},
     ]
     spec = WorldSpec.model_validate(data)
 
@@ -729,7 +729,7 @@ def test_compiler_faction_bravery_bias_produces_real_population_skew():
     bravery than a neutral civilian faction's, while individual per-entity RNG variance is
     preserved (not every entity identical)."""
     data = create_base_valid_spec()
-    data["regions"].append({"id": "predator_zone", "type": "wilderness", "bounds": [20, 20, 40, 40], "terrain": "FOREST"})
+    data["regions"].append({"id": "predator_zone", "type": "wilderness", "bounds": [20, 20, 40, 40], "terrain": "forest"})
     data["factions"] = [
         {"id": "wild_beast_pack", "type": "hostile"},
         {"id": "merchant_league", "type": "civilian"},
@@ -777,8 +777,8 @@ def test_compiler_terrain_variants_declared_produces_per_tile_variation():
     not a degenerate single-value fill (TCK-20260821-COMPILER-NOISE-FILL)."""
     data = create_base_valid_spec()
     data["regions"][1]["terrain_variants"] = [
-        {"terrain": "FOREST", "weight": 1.0},
-        {"terrain": "SWAMP", "weight": 1.0},
+        {"terrain": "forest", "weight": 1.0},
+        {"terrain": "swamp", "weight": 1.0},
     ]
     spec = WorldSpec.model_validate(data)
     state, _ = WorldCompiler.compile(spec, seed=42)
@@ -795,8 +795,8 @@ def test_compiler_terrain_variants_deterministic_same_seed():
     report["state_hash"] as one additional signal (mirroring test_compiler_seeding_determinism)."""
     data = create_base_valid_spec()
     data["regions"][1]["terrain_variants"] = [
-        {"terrain": "FOREST", "weight": 1.0},
-        {"terrain": "SWAMP", "weight": 1.0},
+        {"terrain": "forest", "weight": 1.0},
+        {"terrain": "swamp", "weight": 1.0},
     ]
     spec = WorldSpec.model_validate(data)
 
@@ -815,8 +815,8 @@ def test_compiler_terrain_variants_different_seed_differs():
     measurably different per-tile terrain distribution within the same bounds."""
     data = create_base_valid_spec()
     data["regions"][1]["terrain_variants"] = [
-        {"terrain": "FOREST", "weight": 1.0},
-        {"terrain": "SWAMP", "weight": 1.0},
+        {"terrain": "forest", "weight": 1.0},
+        {"terrain": "swamp", "weight": 1.0},
     ]
     spec = WorldSpec.model_validate(data)
 
@@ -836,12 +836,12 @@ def test_compiler_terrain_variants_never_writes_outside_bounds():
     noise-fill write path exactly as it does the flat-fill path."""
     data = create_base_valid_spec()
     data["regions"] = [
-        {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "GRASS"},
+        {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "grass"},
         {
-            "id": "edge_region", "type": "wilderness", "bounds": [45, 45, 60, 60], "terrain": "FOREST",
+            "id": "edge_region", "type": "wilderness", "bounds": [45, 45, 60, 60], "terrain": "forest",
             "terrain_variants": [
-                {"terrain": "FOREST", "weight": 1.0},
-                {"terrain": "SWAMP", "weight": 1.0},
+                {"terrain": "forest", "weight": 1.0},
+                {"terrain": "swamp", "weight": 1.0},
             ],
         },
     ]
@@ -870,8 +870,8 @@ def test_compiler_terrain_variants_town_tiles_membership_unaffected_by_terrain_c
     independent of which terrain string each tile is painted with."""
     data = create_base_valid_spec()
     data["regions"][0]["terrain_variants"] = [
-        {"terrain": "GRASS", "weight": 1.0},
-        {"terrain": "DIRT", "weight": 1.0},
+        {"terrain": "grass", "weight": 1.0},
+        {"terrain": "plain", "weight": 1.0},
     ]
     spec = WorldSpec.model_validate(data)
 
@@ -904,14 +904,14 @@ def test_compiler_terrain_variants_reuses_weighted_choice_respects_weight():
     actually consumed by rng.weighted_choice, not ignored/uniform."""
     data = create_base_valid_spec()
     data["regions"][1]["terrain_variants"] = [
-        {"terrain": "FOREST", "weight": 99.0},
-        {"terrain": "SWAMP", "weight": 1.0},
+        {"terrain": "forest", "weight": 99.0},
+        {"terrain": "swamp", "weight": 1.0},
     ]
     spec = WorldSpec.model_validate(data)
     state, _ = WorldCompiler.compile(spec, seed=42)
 
     tiles = [(x, y) for x in range(15, 41) for y in range(15, 41)]
-    forest_count = sum(1 for t in tiles if state.terrain[t] == "FOREST")
+    forest_count = sum(1 for t in tiles if state.terrain[t] == "forest")
     assert forest_count / len(tiles) > 0.8, (
         f"heavily weighted terrain (99:1) should dominate the fill ({forest_count}/{len(tiles)})"
     )
@@ -925,8 +925,8 @@ def test_domain_world_entity_resource_building_draws_unaffected_by_terrain_varia
     data_without = create_base_valid_spec()
     data_with = create_base_valid_spec()
     data_with["regions"][1]["terrain_variants"] = [
-        {"terrain": "FOREST", "weight": 1.0},
-        {"terrain": "SWAMP", "weight": 1.0},
+        {"terrain": "forest", "weight": 1.0},
+        {"terrain": "swamp", "weight": 1.0},
     ]
 
     spec_without = WorldSpec.model_validate(data_without)
@@ -987,10 +987,10 @@ def test_compiler_terrain_variants_tile_offset_injective_across_wide_regions():
     data["topology"]["height"] = 305
     data["regions"] = [
         {
-            "id": "wide_region", "type": "wilderness", "bounds": [0, 0, 5, 300], "terrain": "FOREST",
+            "id": "wide_region", "type": "wilderness", "bounds": [0, 0, 5, 300], "terrain": "forest",
             "terrain_variants": [
-                {"terrain": "FOREST", "weight": 1.0},
-                {"terrain": "SWAMP", "weight": 1.0},
+                {"terrain": "forest", "weight": 1.0},
+                {"terrain": "swamp", "weight": 1.0},
             ],
         },
     ]
@@ -1027,7 +1027,7 @@ def test_compiler_faction_bravery_bias_produces_real_action_style_skew():
     (previously every entity defaulted to BALANCED regardless of faction) -- the real mechanism
     that activates dormant kiting-distance and opportunity-attack-escape differentiation."""
     data = create_base_valid_spec()
-    data["regions"].append({"id": "predator_zone", "type": "wilderness", "bounds": [20, 20, 40, 40], "terrain": "FOREST"})
+    data["regions"].append({"id": "predator_zone", "type": "wilderness", "bounds": [20, 20, 40, 40], "terrain": "forest"})
     data["factions"] = [{"id": "wild_beast_pack", "type": "hostile"}]
     data["entities"] = [
         {"id": "predators", "count": 30, "role": "monster", "faction": "wild_beast_pack", "spawn_region": "predator_zone"},
@@ -1099,7 +1099,7 @@ def test_compiler_zero_population_spec_region_no_crash_and_cohorts_empty():
     continue`) no-ops via plain dict-truthiness."""
     data = create_base_valid_spec()
     data["regions"].append(
-        {"id": "empty_outpost", "type": "wilderness", "bounds": [45, 45, 49, 49], "terrain": "PLAIN"}
+        {"id": "empty_outpost", "type": "wilderness", "bounds": [45, 45, 49, 49], "terrain": "plain"}
     )
     spec = WorldSpec.model_validate(data)
     state, _ = WorldCompiler.compile(spec, seed=42)

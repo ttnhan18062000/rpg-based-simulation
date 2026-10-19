@@ -2458,12 +2458,12 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: '`src/engine/shop_sale.py` (`plan_sale`, `spare_quantity`), `src/ai/goals/opening_steps.py` (`_earn_then_buy_step`),
+  v2_evidence: '`src/engine/shop_sale.py` (`plan_sale`, `spare_quantity`: MATERIAL sells whole, spare WEAPON and ARMOR beyond the last, no name list), `src/core/items.py` (`ItemRegistry.bootstrap` rejects an item with no categories), `src/ai/goals/opening_steps.py` (`_earn_then_buy_step`),
     `src/engine/building_services.py` (`service_delta`, `with_service`), `src/engine/domain/action_router.py`, `src/engine/tactical.py` (arrival dispatch), `src/engine/building_arrival.py`, `src/systems/economy_systems/market.py`;
     `docs/mechanics/03_economic_laws.md` section 4; `docs/guidelines/intentional_divergences.md` section 2.100'
   proof_type: parity
   test_path: tests/unit/world/test_sell_is_a_chosen_act.py
-  divergence_note: 'Intentional divergence 2.100 (Intentional Gameplay Change and Bug Fix).'
+  divergence_note: 'Intentional divergence 2.100 (Intentional Gameplay Change and Bug Fix); the spare rule reads the content kind, 2.131; the price reads the catalog value, 2.132.'
   support_boundary: 'Dormant in the measured worlds while the free meal stands (the ladder runs only when no inn is in reach); the end-to-end chain (ME-S19) is on the parked removal stack. Held out: paid work lives in TOWN-204.'
 - id: TOWN-203
   text: 'A building service (a bed, a meal at the inn, a sale at the shop) lands when its action executes (SURV-06, EXCH-02), on whatever tick the

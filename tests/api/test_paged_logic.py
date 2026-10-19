@@ -13,13 +13,13 @@ from src.config.profiles import PROD_DEFAULT
 
 def test_api_paged():
     profile = PROD_DEFAULT
-    manager = V2EngineManager(profile, entities_count=50)
+    manager = V2EngineManager(profile, world_id="sandbox_world")  # the live world is the authored world (D69): sandbox_world authors 24 entities
     try:
         # Test paged retrieval
         page1 = manager.get_entities_paged(offset=0, limit=10)
         print(f"Page 1 entities: {len(page1['entities'])}")
         assert len(page1['entities']) == 10
-        assert page1['total'] == 50
+        assert page1['total'] == 24
 
         page2 = manager.get_entities_paged(offset=10, limit=10)
         print(f"Page 2 entities: {len(page2['entities'])}")

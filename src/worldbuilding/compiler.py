@@ -30,7 +30,9 @@ from src.core.enums import EntityRole, Faction
 from src.core.treasury import treasury_key
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
+from src.content.terrain_cost import DEFAULT_TERRAIN_ID, UnknownTerrainError, validate_terrain_ids
 from src.worldassembly.region_precedence import first_region_at
+from src.worldbuilding.diet_declaration import require_declared_diet
 from src.worldbuilding.schema import InvalidWorldSpecError, WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
 from src.core.strategic import ProjectKind
@@ -477,7 +479,7 @@ class WorldCompiler:
         terrain: Dict[tuple[int, int], str] = {}
         for x in range(spec.topology.width):
             for y in range(spec.topology.height):
-                terrain[(x, y)] = "PLAIN"
+                terrain[(x, y)] = DEFAULT_TERRAIN_ID
 
         # 1a. Aggregate declared population per region from spec.entities (PopulationSpec.count),
         # summed by spawn_region. Must run before step 2 constructs RegionState, since RegionState
@@ -500,8 +502,8 @@ class WorldCompiler:
         for r_spec in spec.regions:
             min_x, min_y, max_x, max_y = r_spec.bounds
             
-            # Default to "GRASS" if terrain not specified on RegionSpec
-            r_terrain = getattr(r_spec, "terrain", "GRASS")
+            # Default to the catalog's "grass" if terrain not specified on RegionSpec
+            r_terrain = getattr(r_spec, "terrain", "grass")
             region_hash = 0
             if r_spec.terrain_variants:
                 for ch in r_spec.id:
@@ -761,6 +763,7 @@ class WorldCompiler:
                             ent_properties["faction_id"] = resolved.faction_id
                         if hasattr(resolved, "species_id") and resolved.species_id:
                             ent_properties["species_id"] = resolved.species_id
+                        require_declared_diet(spec.world_id, pop_key, pop_spec, ent_properties.get("species_id"))
 
                     builder = (
                         V2EntityBuilder(next_entity_id)
@@ -879,6 +882,12 @@ class WorldCompiler:
         warnings.extend(pending_info_warnings)
 
         # Assemble final AuthoritativeState
+        # D72: every tile carries a terrain id the content catalog declares (with a move cost); anything else is a content error, never a silent default.
+        try:
+            validate_terrain_ids(set(terrain.values()))
+        except UnknownTerrainError as exc:
+            raise InvalidWorldSpecError(f"world '{spec.world_id}': {exc}") from exc
+
         state = AuthoritativeState(
             tick=0,
             seed=seed,

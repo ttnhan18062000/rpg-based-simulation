@@ -30,13 +30,15 @@ Before damage is calculated, the base `Atk` and `Def` values are modified by the
 
 | Modifier | Impact | Condition |
 | :--- | :--- | :--- |
-| **High Ground** | `+0.20` Atk | Attacker is at a higher elevation than the target. |
+| **High Ground** | `+0.20` Atk | Attacker stands on a terrain declared `high_ground` in content (mountain only) and the target does not. |
 | **Flanking** | `+0.15` Atk | Attacker is behind the target's current focus. |
 | **Surrounded** | `+0.25` Atk | Target is surrounded by multiple enemies. |
-| **Cover** | `+0.30` Def | Target is behind environmental cover relative to the attacker. |
+| **Cover** | `+0.30` Def | The tile next to the target on the attacker's side (an obstacle between a non-adjacent attacker and the target; on an exact diagonal, the tile on the vertical axis) is a terrain declared `gives_cover` in content (forest, mountain, ruin, cave). |
 | **Shatter** | `x1.50` Atk | Target is currently in the `Frozen` state. |
 | **Exhaustion** | `x0.80` Atk | Attacker's `Sleep Debt` is greater than 80. |
 | **Bond Synergy** | `+0.10` Atk | Adjacent ally has >0.5 Familiarity with the attacker. |
+
+*Terrain declares both flags (owner/designer application of D33/D56/D72, divergence 2.129).* `gives_cover` and `high_ground` are required fields of each terrain in `data/content/world/terrain.yaml`; a terrain that omits either fails to load, and code names no terrain. Before this change the two checks named upper-case `WALL`, `FOREST`, `MOUNTAIN` and `HILL`, so on the lower-case catalog ids neither modifier ever fired (this table described behavior that did not run). The modifier sizes are unchanged.
 
 ---
 
@@ -233,3 +235,33 @@ tactical pass has always chosen).
     `outcome` is an earlier annotation and is dropped before the new one is written
     (`TCK-20261005-SILENT-NO-OP-RETURNS-IN-ACTIONROUTER-HOLD-THE-TASK-AND-ANNOTATE-FALSE-SUCCESS`).
     The gate's policy is unchanged; only its return shape and the resulting annotation.
+
+## 8. Terrain Movement Cost (D72, divergence 2.124; time, D75, divergence 2.126)
+Each terrain declares its own movement cost in content: `move_cost_multiplier` on its entry in
+`data/content/world/terrain.yaml` (`TerrainDefinition`, required, greater than zero). A terrain with no
+declared cost is a compile-time content error, never a silent 1.0. The factor is TIME (D75): a step
+onto a tile of cost N holds the entity's next step back N ticks (`MovementSystem.resolve_move` sets
+`NavigationComponent.step_ready_tick` to the carried previous value, or the step's tick, plus N, and holds
+the entity, with no failure and no wait count, while the tick is earlier). A position swap and a yield
+displacement pay the cost of the tile they move the entity onto and respect the hold. An entity takes at most one
+step per tick, so a cost below 1.0 (road 0.5) is no faster than plain until route weighting or multi-step
+ticks exist; forest, cave and ruin (1.5) alternate one and two ticks. The legality pre-check no longer
+reads the factor: it stays the plain `move_cost / speed` readiness check. The cost is looked up by exact catalog id through
+`src/content/terrain_cost.py` (`terrain_cost`); there is no name table in code and no case folding
+(D56). `WorldCompiler` refuses a world whose terrain holds an id the catalog does not declare
+(`InvalidWorldSpecError`, naming each one), and its base fill is the catalog id `plain`.
+
+| Terrain | Cost | | Terrain | Cost |
+|---|---|---|---|---|
+| plain, grass | 1.0 | | road | 0.5 |
+| forest, cave, ruin | 1.5 | | swamp, river | 3.0 |
+| mountain | 4.0 | | snow 1.6, volcanic 1.4 | (kept as declared; no owner ruling) |
+
+A river stays walkable (3.0). Cave, ruin and river are D33 placeholders. Per-body movement styles
+are a later change (M1). The numbers `terrain.yaml` declared before D72 were read by nothing; they
+are replaced by the ruled values above.
+
+**Routes weigh the cost (D75 route step, divergence 2.128).** The route toward a target is the greedy axis-dominant walk unless a bounded A* over the declared
+terrain cost (`src/engine/route_search.py`, node cap `ROUTE_NODE_CAP`) finds a cheaper one, in which case the entity takes the first tile of that route. A road
+(0.5) therefore draws a walk toward it when it saves cost. The search reads the true terrain map as common knowledge of the land, weighs terrain cost only (no hazard;
+walls, buildings and other entities stay with the sidestep and reroute ladder), and a search over its cap falls back to the greedy step and is counted.

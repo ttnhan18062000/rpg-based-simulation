@@ -8,7 +8,7 @@ from tests.tools.perf_assertions import assert_perf_threshold
 @pytest.mark.slow
 def test_api_projection_performance_benchmark():
     # Instantiate engine with 200 entities
-    manager = V2EngineManager(profile=PROD_DEFAULT, entities_count=200)
+    manager = V2EngineManager(profile=PROD_DEFAULT)
 
     try:
         # Let manager build initial state and cache

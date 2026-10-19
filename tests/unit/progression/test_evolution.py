@@ -55,7 +55,7 @@ def make_goblin_stage(
 
 def test_goblin_evolution():
     """
-    Verify goblin_0 evolves into goblin_1 when crossing level 10.
+    Verify goblin_0 keeps its kind and gets no stage gear when crossing level 10 (D79).
 
     Logic under test:
         EvolutionSystem evolves species only when a level-up crosses one of
@@ -97,10 +97,11 @@ def test_goblin_evolution():
     new_state = ApplyPath.apply_generation(state, refined)
     new_entity = new_state.entities[1]
 
-    assert new_entity.kind == "goblin_1"
+    assert new_entity.kind == "goblin_0"
     assert new_entity.identity.evolution_level == 10
-    assert new_entity.equipment.slots[EquipSlot.MAIN_HAND] == "iron_sword"
-    assert new_entity.equipment.slots[EquipSlot.TORSO] == "leather_armor"
+    # The stage gear is keyed on a digit in the kind and no production kind carries one; pin it as dead.
+    assert new_entity.equipment.slots.get(EquipSlot.MAIN_HAND) != "iron_sword"
+    assert new_entity.equipment.slots.get(EquipSlot.TORSO) != "leather_armor"
 
 
 def test_no_evolution_before_threshold():
@@ -151,13 +152,9 @@ def test_no_evolution_before_threshold():
     assert new_entity.identity.evolution_level == 9
 
 
-def test_goblin_evolution_emits_entity_evolved_observability_event():
-    """TCK-20260906-ENTITY-EVOLVED-EVENT-GAP: EvolutionSystem's real, production `kind_set` output
-    must wire into the real ProgressionShaper observability layer, not just a hand-built mock
-    update. Reuses the exact same real EvolutionSystem.evaluate() call as test_goblin_evolution()
-    above -- this test's own value is proving the *observability* half of that same real
-    transition, not re-proving the evolution mechanic itself.
-    """
+def test_a_real_level_up_emits_no_entity_evolved_event():
+    """D79: a level-up never changes the kind, so the kind-diff `entity_evolved` event cannot fire from a real
+    EvolutionSystem output (the synthetic shaper/extractor tests still pin the event itself)."""
     from src.observability.event_shapers import ProgressionShaper
 
     entity = make_goblin_stage(1, kind="goblin_0", level=9, points=0)
@@ -172,5 +169,5 @@ def test_goblin_evolution_emits_entity_evolved_observability_event():
     refined = EvolutionSystem.evaluate(state, state_upd)
 
     events = ProgressionShaper().shape(state, refined, tick=0)
-    ev = next(e for e in events if e.event_type == "entity_evolved")
-    assert ev.payload == {"previous_kind": "goblin_0", "new_kind": "goblin_1"}
+    assert refined.entity_updates[1].identity.evolution_level_set == 10
+    assert not [e for e in events if e.event_type == "entity_evolved"]

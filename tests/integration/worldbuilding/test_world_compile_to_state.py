@@ -19,8 +19,8 @@ def create_base_integration_spec() -> dict:
             "coordinate_system": "grid"
         },
         "regions": [
-            {"id": "village", "type": "town", "bounds": [0, 0, 20, 20], "terrain": "GRASS"},
-            {"id": "forest", "type": "wilderness", "bounds": [30, 30, 80, 80], "terrain": "FOREST"}
+            {"id": "village", "type": "town", "bounds": [0, 0, 20, 20], "terrain": "grass"},
+            {"id": "forest", "type": "wilderness", "bounds": [30, 30, 80, 80], "terrain": "forest"}
         ],
         "factions": [
             {"id": "villagers", "type": "civilian"},

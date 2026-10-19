@@ -19,7 +19,7 @@ _HERO_ARCHETYPE_SPEC = {
     "name": "Archetype Test World",
     "topology": {"width": 50, "height": 50, "coordinate_system": "grid"},
     "regions": [
-        {"id": "town", "type": "town", "bounds": [0, 0, 20, 20], "terrain": "GRASS"},
+        {"id": "town", "type": "town", "bounds": [0, 0, 20, 20], "terrain": "grass"},
     ],
     "factions": [
         {"id": "hero_guild", "type": "hero"},

@@ -342,12 +342,12 @@ class TestResolveIndexDir:
 class TestSharedServerWiring:
     def test_a_shared_answer_is_used_and_the_local_search_is_not_run(self, monkeypatch):
         shared = [{"doc_id": "from-server"}]
-        monkeypatch.setattr(_mod._ss, "try_search", lambda *a, **k: shared)
+        monkeypatch.setattr(_mod._ss, "try_search_ex", lambda *a, **k: (shared, None))
         monkeypatch.setattr(_mod, "_search", lambda *a, **k: pytest.fail("must not search in-process"))
         assert _mod._run_search("q") == shared
 
     def test_no_shared_answer_falls_back_to_the_in_process_search(self, monkeypatch):
-        monkeypatch.setattr(_mod._ss, "try_search", lambda *a, **k: None)
+        monkeypatch.setattr(_mod._ss, "try_search_ex", lambda *a, **k: (None, "no server ready"))
         monkeypatch.setattr(_mod, "_search", lambda *a, **k: [{"doc_id": "local"}])
         assert _mod._run_search("q") == [{"doc_id": "local"}]
 
@@ -356,8 +356,9 @@ class TestSharedServerWiring:
 
         def fake(db, query, top_k, section, mode):
             seen.update(db=db, query=query, top_k=top_k, section=section, mode=mode)
+            return None, "no server ready"
 
-        monkeypatch.setattr(_mod._ss, "try_search", fake)
+        monkeypatch.setattr(_mod._ss, "try_search_ex", fake)
         monkeypatch.setattr(_mod, "_search", lambda *a, **k: [])
         _mod._run_search("damage", top_k=3, section="mechanics", mode="vector")
         assert seen == {"db": _mod._DB_PATH, "query": "damage", "top_k": 3, "section": "mechanics", "mode": "vector"}
@@ -399,3 +400,87 @@ class TestSearchReadsOneLexicalGeneration:
         _mod._search("anything", top_k=3)
         assert (captured["bm25"], captured["ids"][0]) in {("bm25-gen1", "ids-gen1"), ("bm25-gen2", "ids-gen2")}
         assert captured["bm25"].split("-")[1] == captured["ids"][0].split("-")[1]
+
+
+# --- TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT: starting server, degraded answers, one log line per transition ---
+
+
+class TestSingleServerFallbacks:
+    @pytest.fixture(autouse=True)
+    def _fresh_mode(self, monkeypatch):
+        monkeypatch.setitem(_mod._LAST_MODE, "mode", None)
+
+    @pytest.fixture
+    def loads(self, monkeypatch):
+        """A fake embedder: counts every model load the in-process path attempts. Never the real model."""
+        count = {"n": 0}
+
+        def ensure() -> bool:
+            count["n"] += 1
+            return False  # `_search` then answers "index not found" without any model
+
+        monkeypatch.setattr(_mod, "_ensure_loaded", ensure)
+        return count
+
+    def test_a_starting_server_gets_a_lexical_only_degraded_answer_and_no_model_load(self, monkeypatch, loads):
+        monkeypatch.setattr(_mod._ss, "try_search_ex", lambda *a, **k: (None, _mod._ss.REASON_STARTING))
+        monkeypatch.setattr(_mod, "_search_lexical", lambda q, **k: [{"doc_id": "kw"}])
+        out = _mod._search_shared_or_local("q")
+        assert out == {"results": [{"doc_id": "kw"}], "degraded": "lexical_only_server_starting"}
+        assert loads["n"] == 0
+
+    @pytest.mark.parametrize("reason", ["server not responding", "server was started from different code",
+                                        "request failed: boom", "state directory is not private to this user"])
+    def test_any_other_reason_searches_in_process_loading_the_model_once(self, monkeypatch, loads, reason):
+        monkeypatch.setattr(_mod._ss, "try_search_ex", lambda *a, **k: (None, reason))
+        _mod._search_shared_or_local("q")
+        assert loads["n"] == 1
+
+    def test_without_a_usable_lexical_index_a_starting_server_falls_back_in_process(self, monkeypatch, loads):
+        monkeypatch.setattr(_mod._ss, "try_search_ex", lambda *a, **k: (None, _mod._ss.REASON_STARTING))
+        monkeypatch.setattr(_mod, "_search_lexical", lambda q, **k: {"error": "lexical index not available"})
+        _mod._search_shared_or_local("q")
+        assert loads["n"] == 1
+
+    def test_one_stderr_line_per_move_between_shared_lexical_and_in_process(self, monkeypatch, loads, capsys):
+        script = iter([([1], None), ([2], None), (None, _mod._ss.REASON_STARTING), (None, _mod._ss.REASON_STARTING),
+                       (None, "request failed: x"), (None, "request failed: x"), ([3], None)])
+        monkeypatch.setattr(_mod._ss, "try_search_ex", lambda *a, **k: next(script))
+        monkeypatch.setattr(_mod, "_search_lexical", lambda q, **k: [])
+        for _ in range(7):
+            _mod._search_shared_or_local("q")
+        lines = capsys.readouterr().err.strip().splitlines()
+        assert len(lines) == 4  # shared, lexical-only, in-process, shared again: never one per query
+        assert lines[0].endswith("using shared server") and "lexical-only" in lines[1]
+        assert "in-process fallback: request failed: x" in lines[2] and lines[3].endswith("using shared server")
+
+    def test_the_degraded_answer_still_carries_the_staleness_warning(self, monkeypatch):
+        monkeypatch.setattr(_mod._ss, "try_search_ex", lambda *a, **k: (None, _mod._ss.REASON_STARTING))
+        monkeypatch.setattr(_mod, "_search_lexical", lambda q, **k: [{"doc_id": "kw"}])
+        monkeypatch.setattr(_mod._ks, "index_staleness", lambda db: {"changed": 2, "new": 0, "removed": 0})
+        out = _mod._run_search("q", with_staleness=True)
+        assert out["degraded"] == "lexical_only_server_starting" and out["stale"]["changed"] == 2
+
+    def test_search_lexical_ranks_by_bm25_alone_without_the_model(self, tmp_path, monkeypatch):
+        db = tmp_path / "knowledge.db"
+        con = sqlite3.connect(db)
+        con.execute("CREATE TABLE knowledge_docs (doc_id TEXT, path TEXT, heading TEXT, section TEXT, text TEXT, source_type TEXT)")
+        con.executemany("INSERT INTO knowledge_docs VALUES (?,?,?,?,?,?)", [
+            ("a", "docs/a.md", "A", "mechanics", "damage formula text", "doc"),
+            ("b", "docs/b.md", "B", "engine", "kernel loop", "doc"),
+            ("c", "docs/c.md", "C", "mechanics", "unrelated", "doc")])
+        con.commit()
+        con.close()
+
+        class Bm25:
+            @staticmethod
+            def get_scores(tokens):
+                return [2.0, 1.0, 0.0]
+
+        monkeypatch.setattr(_mod, "_DB_PATH", db)
+        monkeypatch.setattr(_mod._STATE, "lexical", (Bm25, ["a", "b", "c"]))
+        monkeypatch.setattr(_mod, "_ensure_loaded", lambda: pytest.fail("the lexical path must not load the model"))
+        out = _mod._search_lexical("damage", top_k=5)
+        assert [r["doc_id"] for r in out] == ["a", "b"]  # zero-score "c" is not a hit
+        assert out[0]["semantic_score"] == 0.0 and out[0]["score"] == 1.0 and out[0]["source_path"] == "docs/a.md"
+        assert [r["doc_id"] for r in _mod._search_lexical("damage", top_k=5, section="engine")] == ["b"]

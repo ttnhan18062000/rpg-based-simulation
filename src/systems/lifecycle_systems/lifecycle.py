@@ -3,7 +3,9 @@ from typing import TYPE_CHECKING, List, Optional
 from dataclasses import replace
 from src.core.updates import StateUpdate, EntityUpdate, LifecycleUpdate, InventoryUpdate, IdentityUpdate
 from src.core.state import LifeStage
+from src.core.death_cause import DeathCause, DeathRecord, death_cause_of
 from src.core.enums import EntityRole
+from src.core.region_resolution import resolve_region_among
 from src.ai.life_stage import LifeStageService
 from src.ai.coming_of_age import choose_archetype, is_excluded_no_birth_record
 from src.domains.demographics.cohort import compute_elder_attribute_update
@@ -137,6 +139,19 @@ class LifecycleSystem:
         return replace(heir_upd, cognition_bundle_set=new_cognition)
 
     @staticmethod
+    def _death_record(state: AuthoritativeState, entity: EntityState, ent_upd: EntityUpdate, death_reason: Optional[str]) -> DeathRecord:
+        """The typed record of this death: the cause, the tick, who last hit the body (this tick's damaging attacker, else the one it remembers) and, for a hazard death, the hazard kind of the region it stood in."""
+        cause = death_cause_of(death_reason)
+        combat = ent_upd.combat if ent_upd else None
+        attacker = combat.attacker_id if (combat is not None and combat.attacker_id is not None and combat.damage_taken > 0) else entity.combat.last_attacker_id
+        hazard_kind = None
+        if cause is DeathCause.HAZARD:
+            x, y = entity.navigation.position
+            region = resolve_region_among(state.regions.values(), x, y)
+            hazard_kind = getattr(region, "hazard_kind", None)
+        return DeathRecord(cause=cause, tick=state.tick, last_attacker_id=attacker, hazard_kind=hazard_kind)
+
+    @staticmethod
     def _select_default_heir(state: AuthoritativeState, deceased: EntityState) -> Optional[int]:
         candidates = []
         for target_id, bond in deceased.social.bonds.items():
@@ -258,7 +273,8 @@ class LifecycleSystem:
                     lifecycle=replace(life_upd,
                         is_permadeath_set=True,
                         death_tick_set=state.tick,
-                        death_reason_set=death_reason
+                        death_reason_set=death_reason,
+                        death_record_set=LifecycleSystem._death_record(state, entity, ent_upd, death_reason),
                     )
                 )
                 
@@ -288,20 +304,16 @@ class LifecycleSystem:
 
                         refined_entity_updates[heir_id] = heir_upd
 
-        # Apply Influence Shifts and Conquest Lifecycle
+        # Apply Influence Shifts
         if recent_deaths:
             from src.world.influence import FactionInfluenceService
             from src.economy.vacancy import EconomicVacancyService
             # Influence Shift
             inf_update = FactionInfluenceService.process_influence_shift(state, recent_deaths)
-            # Conquest/Stronghold Lifecycle (Requires generator)
-            from src.systems.world_systems.generator import EntityGenerator
-            generator = EntityGenerator(state.seed + state.tick)
-            inf_update = FactionInfluenceService.process_conquest_lifecycle(state, inf_update, generator)
             # Economic Vacancy Signal (TCK-20260903-ECONOMIC-VACANCY-SIGNAL)
             vac_update = EconomicVacancyService.check_and_emit(state, recent_deaths)
 
-            # Merge world updates and new entities
+            # Merge world updates (a conquest flips ownership only; it adds no entity, D71)
             new_world_updates = dict(update.world_updates)
             for r_id, extra_upd in inf_update.world_updates.items():
                 if r_id in new_world_updates:
@@ -311,8 +323,6 @@ class LifecycleSystem:
 
             update = replace(update,
                 world_updates=new_world_updates,
-                entities_add=list(update.entities_add) + list(inf_update.entities_add),
-                entities_remove=list(update.entities_remove) + list(inf_update.entities_remove),
                 world_events_add=list(update.world_events_add) + list(vac_update.world_events_add),
             )
                         

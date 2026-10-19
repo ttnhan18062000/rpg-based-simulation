@@ -1,0 +1,193 @@
+name: publish-images
+
+# Build the backend and frontend images and publish them to GHCR (TCK-20261014-PUBLISH-IMAGES-TO-GHCR).
+# Pull requests only build (push: false); main and v* tags publish, then SBOM + Trivy scan + keyless cosign signing by
+# digest (TCK-20261014-IMAGE-SBOM-SCAN-SIGN). Trivy is report-only (ADR D3). Amd64 only.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "docker/**"
+      - "compose.yaml"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "src/**"
+      - "frontend/**"
+      - ".github/workflows/publish-images.yml"
+
+concurrency:
+  group: publish-images-${{ github.ref }}
+  # Only PR runs are cancelled: cancelling a main/tag run between push and `cosign sign` would leave an unsigned image.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+      id-token: write # keyless cosign signing (GitHub OIDC); no keys or secrets are stored
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: backend
+            dockerfile: docker/backend.Dockerfile
+          - image: frontend
+            dockerfile: docker/frontend.Dockerfile
+    env:
+      # Publish only from main and v* tags; a workflow_dispatch on any other branch (and every PR) builds and scans only.
+      PUSH: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Log in to GHCR
+        if: env.PUSH == 'true'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.image }}
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Build (and push on main / tags)
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: ${{ env.PUSH == 'true' }}
+          load: ${{ env.PUSH != 'true' }} # PRs: keep the image locally so it can be scanned
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+      - name: Resolve scan target
+        id: target
+        env:
+          REPO: ${{ github.repository }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          repo="${REPO,,}"
+          if [ "$PUSH" = "true" ]; then
+            echo "ref=ghcr.io/${repo}/${{ matrix.image }}@${DIGEST}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=$(echo "$TAGS" | head -n1)" >> "$GITHUB_OUTPUT"
+          fi
+      # --- Trivy: report-only (exit-code 0, ADR D3); runs on PRs against the locally built image too ---
+      - name: Trivy scan
+        continue-on-error: true # report-only: a DB download or scan error must not skip SBOM/attest/sign
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          image-ref: ${{ steps.target.outputs.ref }}
+          format: json
+          output: trivy-${{ matrix.image }}.json
+          severity: HIGH,CRITICAL
+          exit-code: "0"
+      - name: Trivy summary
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ ! -f trivy-${{ matrix.image }}.json ]; then
+            echo "Trivy (${{ matrix.image }}) did not produce a report" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo "### Trivy (${{ matrix.image }}) - report only"
+            echo "Image: \`${{ steps.target.outputs.ref }}\`"
+            echo
+            echo "| Severity | Count |"
+            echo "|---|---|"
+            for sev in CRITICAL HIGH; do
+              n=$(jq "[.Results[]?.Vulnerabilities[]? | select(.Severity==\"$sev\")] | length" trivy-${{ matrix.image }}.json)
+              echo "| $sev | $n |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload Trivy report
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: trivy-${{ matrix.image }}
+          path: trivy-${{ matrix.image }}.json
+      # --- SBOM, attestation and signature: published images only, always by digest ---
+      - name: SBOM (SPDX JSON)
+        if: env.PUSH == 'true'
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: ${{ steps.target.outputs.ref }}
+          format: spdx-json
+          output-file: sbom-${{ matrix.image }}.spdx.json
+          artifact-name: sbom-${{ matrix.image }}.spdx.json
+      - name: Install cosign
+        if: env.PUSH == 'true'
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          # Pinned (TCK-20261015-COSIGN-SBOM-ATTESTATION-MISLABELLED). The installer's default was v3.0.6, which published
+          # the SBOM referrer annotated `https://sigstore.dev/cosign/sign/v1` instead of `https://spdx.dev/Document`, so
+          # `verify-attestation --type spdxjson` failed on those images. v3.1.3 labels it `https://spdx.dev/Document` and
+          # verify-attestation passes (local repro). To bump: change this value, then confirm the "Verify signature and
+          # SBOM attestation" step below stays green on the next main run.
+          cosign-release: v3.1.3
+      - name: Attest SBOM and sign (keyless)
+        if: env.PUSH == 'true'
+        env:
+          REF: ${{ steps.target.outputs.ref }}
+        run: |
+          cosign attest --yes --type spdxjson --predicate "sbom-${{ matrix.image }}.spdx.json" "$REF"
+          cosign sign --yes "$REF"
+      - name: Verify signature and SBOM attestation
+        # A missing or mislabelled signature/attestation turns this job red instead of shipping an unverifiable image.
+        if: env.PUSH == 'true'
+        env:
+          REF: ${{ steps.target.outputs.ref }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cosign version
+          cosign verify "$REF" \
+            --certificate-identity-regexp "^https://github.com/${REPO}/" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
+          cosign verify-attestation --type spdxjson "$REF" \
+            --certificate-identity-regexp "^https://github.com/${REPO}/" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
+      - name: How to verify
+        if: env.PUSH == 'true'
+        env:
+          REF: ${{ steps.target.outputs.ref }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            echo "### Verify (${{ matrix.image }})"
+            echo "Needs cosign v3.1.3 or later (this job passed both commands below, run with that version)."
+            echo '```'
+            echo "cosign verify $REF \\"
+            echo "  --certificate-identity-regexp '^https://github.com/${REPO}/' \\"
+            echo "  --certificate-oidc-issuer https://token.actions.githubusercontent.com"
+            echo "cosign verify-attestation --type spdxjson $REF \\"
+            echo "  --certificate-identity-regexp '^https://github.com/${REPO}/' \\"
+            echo "  --certificate-oidc-issuer https://token.actions.githubusercontent.com"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

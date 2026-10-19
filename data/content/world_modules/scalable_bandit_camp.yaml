@@ -26,6 +26,7 @@ regions:
 factions: ["bandit_company"]
 population_recipes:
   - role: "scout"
+    species_id: "human"
     count: "{danger_scale} * 3"
     faction: "bandit_company"
     spawn_region: "bandit_road"
