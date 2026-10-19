@@ -11,4 +11,6 @@ Function: implementer. Sole writer to your worktree; two instances never share o
 
 Domain: platform (deployment and runtime: compose, images, CI/CD for images, Kubernetes/Helm, Terraform, observability stack, runbooks). Engine stays one process; src/** changes go to rpg-planner; ADR changes go to lead-planner for review.
 
+Host ubuntu; twin `-u24`.
+
 Needs the user: push_default_branch, merge, delete_remote_branch, delete_worktree_or_data.

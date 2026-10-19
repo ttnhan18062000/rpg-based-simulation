@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS
-phase: open
+phase: done
 date: 2026-10-18
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 Register host-suffixed `-u24` roles for the platform and agent-working seats that run on host u24desktop
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -105,5 +105,21 @@ GitHub #620 part 1. **Owner decision 2026-10-18, option (a)**, relayed by lead-p
 - 2026-10-18 (lead-planner): moved out of batch 2 into batch 3; still gated on u24's answer on #634 (worktree paths, staffing). Not dispatched. It rides batch 2's PR as filed-but-open (left out of `Closes:`).
 - 2026-10-19 (agent-working-planner): batch 5, commit 2, after the W42 close-week (commit 1). Lead approved the plan. Dispatched to agent-working-implementer.
 ## Test Summary
+- New `tests/tools/test_session_u24_twins.py` covers test-plan rows 1-7 (including 4b: a `--worktree` dir named like the plain twin still launches the `-u24` role, its handover, its logical worktree). 41 tests.
+- Updated roster-count and platform-set assertions (20 -> 25 roles), the unstaffed-holder test (now the designer) and the host-lead budget test name.
+- `tests/tools/test_session_*.py`, the paths guard, the host-path launcher guard, the write-path guard and `tests/docs`: 882 passed, 2 skipped, 1 xfailed. Validator: 0 findings, 25 roles.
+
 ## Files Changed
+- `registries/session_roles.yaml`: five `-u24` roles, their five logical worktrees, `card_note` on the twins, plain planner staffed, plain designer unstaffed (interim holder: agent-working-planner).
+- `.claude/agents/session-*-u24.md` (five new) and regenerated cards of the touched roles; the designer cards of all domains changed (see below).
+- `docs/guidelines/session_roles/host_suffixed_twins.md` (new), `functions/designer.md`.
+- `tests/tools/test_session_u24_twins.py` and four updated session tests.
+
 ## Completion Summary
+Registered `platform-planner-u24`, `platform-implementer-u24`, `agent-working-designer-u24`, `agent-working-planner-u24` and `agent-working-implementer-u24`, each with its own logical worktree and handover path; physical paths stay as u24 uses them. `route` needed no code change: the plain planner precedes its twin in the manifest, and a test pins that. All five twins and the plain planner are staffed; the plain designer is unstaffed.
+
+Decisions to confirm:
+- An unstaffed seat must name an `interim_holder` (validator rule), so the plain `agent-working-designer` names `agent-working-planner`.
+- The 400-token budget was not raised. The unstaffed marker and the notes pushed the designer cards over, so the designer function card dropped "See cross_session_messages guide." (moved to a non-injected Reference section, as the planner card did on 2026-10-16) and shortened two phrases. This changes all designer cards. The plain designer carries no `card_note`: its "unstaffed, held by ..." marker says it, and there was no room. Notes are a few words ("Host ubuntu; twin `-u24`.").
+- `make knowledge-index-update` was not run in this worktree (lead's instruction): lead runs it in the main checkout after the merge.
+- The relaunch comments on #620/#634 are posted by the planner after the merge.

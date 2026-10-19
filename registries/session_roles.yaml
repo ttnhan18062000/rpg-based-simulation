@@ -210,7 +210,8 @@ roles:
     handover: .claude/handover/rpg-implementer.md
   - role: agent-working-designer
     identity: {domain: agent-working, function: designer, session_name: agent-working-designer,
-               legacy_session_name: agent-working-design, seat_status: staffed}
+               legacy_session_name: agent-working-design, seat_status: unstaffed,
+               interim_holder: agent-working-planner}   # no designer runs on host ubuntu (owner 2026-10-18); the u24 twin holds the seat on its host
     responsibility:
       accepts_dispatch_from: [user]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/agent_infrastructure/**"]}
@@ -218,13 +219,13 @@ roles:
     handover: .claude/handover/agent-working-designer.md
   - role: agent-working-planner
     identity: {domain: agent-working, function: planner, session_name: agent-working-planner,
-               legacy_session_name: agent-working-design, seat_status: unstaffed,
-               interim_holder: agent-working-designer}   # named holder until the seat is staffed
+               legacy_session_name: agent-working-design, seat_status: staffed}   # held on host ubuntu since 2026-10-18
     responsibility:
       accepts_dispatch_from: [user, agent-working-designer]
     capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**"]}
     placement: {worktree: agent-working-planner, max_sessions: 1}
     handover: .claude/handover/agent-working-planner.md
+    card_note: "Host ubuntu; twin `-u24`."
   - role: agent-working-implementer
     identity: {domain: agent-working, function: implementer, session_name: agent-working-implementer,
                legacy_session_name: agent-working-implementer, seat_status: staffed}
@@ -233,6 +234,7 @@ roles:
     capability: {may_write: ["**"]}
     placement: {worktree: agent-working, max_sessions: 1}
     handover: .claude/handover/agent-working-implementer.md
+    card_note: "Host ubuntu; twin `-u24`."
   - role: testing-designer
     identity: {domain: testing, function: designer, session_name: testing-designer,
                legacy_session_name: null, seat_status: unstaffed,
@@ -357,6 +359,7 @@ roles:
                              "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
     placement: {worktree: platform-planner, max_sessions: 1}
     handover: .claude/handover/platform-planner.md
+    card_note: "Host ubuntu; twin `-u24`."
   - role: platform-implementer
     identity: {domain: platform, function: implementer, session_name: platform-implementer,
                legacy_session_name: null, seat_status: staffed}
@@ -365,6 +368,56 @@ roles:
     capability: {may_write: ["**"]}
     placement: {worktree: platform, max_sessions: 1}
     handover: .claude/handover/platform-implementer.md
+    card_note: "Host ubuntu; twin `-u24`."
+
+  # Host-suffixed twins (#620, owner 2026-10-18): same function as the plain role, run on host u24desktop.
+  # Each has its own logical worktree name; the physical path stays what u24 already uses (--worktree).
+  - role: platform-planner-u24   # runs on host u24desktop (#620, owner 2026-10-18)
+    identity: {domain: platform, function: planner, session_name: platform-planner-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**",
+                             "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
+    placement: {worktree: platform-planner-u24, max_sessions: 1}
+    handover: .claude/handover/platform-planner-u24.md
+    card_note: "Host u24desktop; twin is plain."
+  - role: platform-implementer-u24   # runs on host u24desktop (#620, owner 2026-10-18)
+    identity: {domain: platform, function: implementer, session_name: platform-implementer-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, platform-planner-u24]
+    capability: {may_write: ["**"]}
+    placement: {worktree: platform-u24, max_sessions: 1}
+    handover: .claude/handover/platform-implementer-u24.md
+    card_note: "Host u24desktop; twin is plain."
+  - role: agent-working-designer-u24   # runs on host u24desktop (#620, owner 2026-10-18)
+    identity: {domain: agent-working, function: designer, session_name: agent-working-designer-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/agent_infrastructure/**"]}
+    placement: {worktree: agent-working-designer-u24, max_sessions: 1}
+    handover: .claude/handover/agent-working-designer-u24.md
+    card_note: "Host u24desktop."
+  - role: agent-working-planner-u24   # runs on host u24desktop (#620, owner 2026-10-18)
+    identity: {domain: agent-working, function: planner, session_name: agent-working-planner-u24,
+               legacy_session_name: null, seat_status: staffed}   # owner 2026-10-19: staffed
+    responsibility:
+      accepts_dispatch_from: [user, agent-working-designer-u24]
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**"]}
+    placement: {worktree: agent-working-planner-u24, max_sessions: 1}
+    handover: .claude/handover/agent-working-planner-u24.md
+    card_note: "Host u24desktop; twin is plain."
+  - role: agent-working-implementer-u24   # runs on host u24desktop (#620, owner 2026-10-18)
+    identity: {domain: agent-working, function: implementer, session_name: agent-working-implementer-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, agent-working-designer-u24, agent-working-planner-u24]
+    capability: {may_write: ["**"]}
+    placement: {worktree: agent-working-u24, max_sessions: 1}
+    handover: .claude/handover/agent-working-implementer-u24.md
+    card_note: "Host u24desktop; twin is plain."
 
 # Exclusive resources. The writer slot belongs to the worktree; a worktree hosts exactly one role, its
 # writer (every designer, planner and implementer has its own worktree and lands its own PR, except a role
@@ -388,3 +441,8 @@ worktrees:
   perf-planner: {writer: perf-planner}
   platform: {writer: platform-implementer}
   platform-planner: {writer: platform-planner}
+  platform-u24: {writer: platform-implementer-u24}
+  platform-planner-u24: {writer: platform-planner-u24}
+  agent-working-u24: {writer: agent-working-implementer-u24}
+  agent-working-designer-u24: {writer: agent-working-designer-u24}
+  agent-working-planner-u24: {writer: agent-working-planner-u24}
