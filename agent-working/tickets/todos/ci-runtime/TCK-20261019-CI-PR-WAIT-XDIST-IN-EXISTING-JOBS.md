@@ -78,6 +78,13 @@ Splitting jobs is not an option: Tests already starts 21 jobs against the free p
 - The runner is 4 vCPU (ubuntu-latest, public repo). `-n auto` is the starting point; if memory pressure shows, use a measured `-n`.
 - The local resource budget in conftest (60 s/8 GB) applies per test and must still apply per worker.
 
+- **agent-working-planner's scan of tests/tools, 2026-10-19 (input to the audit, not a substitute for it):**
+  - There are no raw `os.chdir` calls and no `os.environ` writes; env changes go through monkeypatch or a subprocess env.
+  - The fixed `/tmp` strings are never written to.
+  - `test_disk_warning.py` uses cwd=tmp_path, so it is isolated. `test_generate_registry.py` only reads the real REGISTRY.
+  - To look at: modules loaded via sys.path insertion plus module-level `_REPO_ROOT` / tools/agent-monitoring path constants. These are safe under process workers but matter for any in-process cache reset.
+  - Rebase Tools f–z onto #647.
+
 ## Implementation Notes
 (implementer)
 
