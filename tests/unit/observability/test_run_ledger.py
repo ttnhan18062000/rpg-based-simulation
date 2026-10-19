@@ -30,17 +30,17 @@ def _clean():
     RunLedger.reset_run_state()
 
 
-def _entity_update(*results):
-    return SimpleNamespace(intent_results=list(results))
+def _entity_update(*results, transfers=()):
+    return SimpleNamespace(intent_results=list(results), resource_transfers=list(transfers))
 
 
-def _update(results=(), adds=(), sources=None, world_events=()):
-    return SimpleNamespace(entity_updates={WHO: _entity_update(*results)}, entities_add=list(adds), entity_spawn_sources=sources or {},
+def _update(results=(), adds=(), sources=None, world_events=(), transfers=()):
+    return SimpleNamespace(entity_updates={WHO: _entity_update(*results, transfers=transfers)}, entities_add=list(adds), entity_spawn_sources=sources or {},
                            world_events_add=list(world_events))
 
 
-def _result(source_kind, accepted=True):
-    return SimpleNamespace(source_kind=source_kind, accepted=accepted, source_id="x")
+def _result(source_kind, accepted=True, source_id="x"):
+    return SimpleNamespace(source_kind=source_kind, accepted=accepted, source_id=source_id)
 
 
 def _fed(state, hunger):
@@ -89,9 +89,42 @@ def test_accepted_and_rejected_transfers_are_counted_by_group_and_source():
 def test_a_hunger_drop_is_counted_with_or_without_an_accepted_transfer():
     state = _at_tick(_world(carry=["bread"], hunger=80.0), 10)
     group = kind_group(state.entities[WHO])
-    RunLedger.observe(state, _fed(state, 60.0), _update([_result("CARRIED_FOOD")]))
+    eaten = _fed(state, 60.0)  # the bread is consumed: the inventory moved
+    ent = eaten.entities[WHO]
+    object.__setattr__(eaten, "entities", {WHO: replace(ent, inventory=replace(ent.inventory, items=[]))})
+    RunLedger.observe(state, eaten, _update([_result("CARRIED_FOOD")]))
     RunLedger.observe(state, _fed(state, 50.0), _update([]))
     assert RunLedger.tally_event().payload["hunger_drops"] == {f"{group}|with_accepted_transfer": 1, f"{group}|without_transfer": 1}
+
+
+def _paid(state, gold_after):
+    e = state.entities[WHO]
+    cur = _fed(state, 20.0)
+    ent = cur.entities[WHO]
+    object.__setattr__(cur, "entities", {WHO: replace(ent, inventory=replace(ent.inventory, gold=gold_after))})
+    return cur
+
+
+def _inn_state(gold):
+    state = _at_tick(_world(hunger=80.0), 10)
+    e = state.entities[WHO]
+    object.__setattr__(state, "entities", {WHO: replace(e, inventory=replace(e.inventory, gold=gold))})
+    return state
+
+
+def test_a_broke_eater_at_the_inn_is_a_hunger_drop_without_transfer():
+    """The inn charge is accepted at 0 gold and its -5 is clamped to 0 when applied: nothing moved, so the meal is not backed (V1 sees the free meal)."""
+    state = _inn_state(0)
+    RunLedger.observe(state, _paid(state, 0), _update([_result("TOWN_SERVICE", source_id=3)]))
+    group = kind_group(state.entities[WHO])
+    assert RunLedger.tally_event().payload["hunger_drops"] == {f"{group}|without_transfer": 1}
+
+
+def test_an_eater_holding_gold_who_pays_at_the_inn_is_backed():
+    state = _inn_state(5)
+    RunLedger.observe(state, _paid(state, 0), _update([_result("TOWN_SERVICE", source_id=3)]))
+    group = kind_group(state.entities[WHO])
+    assert RunLedger.tally_event().payload["hunger_drops"] == {f"{group}|with_accepted_transfer": 1}
 
 
 def test_a_death_is_counted_by_group_and_cause():

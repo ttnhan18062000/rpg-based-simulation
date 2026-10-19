@@ -145,7 +145,7 @@ class RunLedger:
             results = getattr(upd, "intent_results", None) or []
             cls._count_results(group, results)
             if entity.biological.hunger < prior_ent.biological.hunger:
-                cls._count_hunger_drop(group, results)
+                cls._count_hunger_drop(group, results, cls._inventory_moved(prior_ent, entity))
 
     @classmethod
     def _count_results(cls, group: str, results: List[Any]) -> None:
@@ -154,9 +154,24 @@ class RunLedger:
             key = _key(group, getattr(result, "source_kind", ""), outcome)
             cls._transfers[key] = cls._transfers.get(key, 0) + 1
 
+    @staticmethod
+    def _inventory_moved(prior_ent: Any, entity: Any) -> bool:
+        """Whether the eater's inventory actually changed this tick: the gold or any item stack differs between the two states. This is the quantity APPLIED after
+        the clamp (an inn charge of 5 on a subject holding 0 moves nothing), never the requested delta, which the intent and the transaction record carry."""
+        before, after = prior_ent.inventory, entity.inventory
+        if before.gold != after.gold:
+            return True
+        def stacks(inv: Any) -> Dict[str, int]:
+            held: Dict[str, int] = {}
+            for st in inv.items:
+                held[st.item_id] = held.get(st.item_id, 0) + st.quantity
+            return held
+        return stacks(before) != stacks(after)
+
     @classmethod
-    def _count_hunger_drop(cls, group: str, results: List[Any]) -> None:
-        backed = any(getattr(r, "accepted", False) for r in results)
+    def _count_hunger_drop(cls, group: str, results: List[Any], moved: bool = True) -> None:
+        """A drop is backed only when an accepted transfer exists AND the eater's inventory actually moved: an accepted inn charge at 0 gold is not a source."""
+        backed = moved and any(getattr(r, "accepted", False) for r in results)
         key = _key(group, "with_accepted_transfer" if backed else "without_transfer")
         cls._hunger_drops[key] = cls._hunger_drops.get(key, 0) + 1
 
