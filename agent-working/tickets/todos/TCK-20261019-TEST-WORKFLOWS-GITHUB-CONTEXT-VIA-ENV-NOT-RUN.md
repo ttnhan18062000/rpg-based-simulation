@@ -42,6 +42,7 @@ Moving them to `env:` is still the cheap and correct pattern. It clears the aler
 2. Do the same in `slow-regression.yml`, `slow-regression-watchdog.yml` and `rpg-gate-report.yml` if any exist there (Semgrep reported none). rpg-gate-report.yml runs testing's gate harness and testing takes it (registration pending in session_roles.yaml); include it in the static guard's file list.
 3. Add a static test, `tests/static/test_workflow_run_blocks_take_github_context_via_env.py`, over testing's workflows (test.yml, slow-regression*.yml). It fails if any `run:` string contains `${{ github.` or `${{ inputs.`, and it includes a regression case on an in-memory YAML snippet.
 4. Behaviour is unchanged: same commands, same values.
+5. **Semgrep `use-defused-xml-parse` (2 findings, testing's tools):** `tools/test_architecture/core_rpg_report.py:365` and `tools/test_architecture/slow_regression_report.py:127` parse our own pytest junit XML. testing-planner ruling, 2026-10-19: ACCEPT, do not fix. defusedxml is not a dependency, adding one is a pyproject/uv.lock change for lead-planner (ubuntu), and the input is never untrusted. Mark each line with `# nosemgrep: <the exact rule id from the SARIF>` plus a one-line reason: "parses this repo's own pytest junit XML; no untrusted input". That is platform's in-code suppression convention; never dismiss in the Security tab. Keep the parse calls otherwise unchanged.
 
 ## Out of Scope
 - Pinning actions by SHA. The 43 + 6 (+ 9 in rpg-gate-report.yml) `mutable-action-tag` findings wait on a repo-wide pin policy (platform-planner and lead), because the same choice applies to every workflow and to Dependabot's update flow. testing follows that policy once it exists.
@@ -51,7 +52,8 @@ Moving them to `env:` is still the cheap and correct pattern. It clears the aler
 - [ ] AC1: `grep -n '\${{ *github\.' .github/workflows/test.yml` shows no hit inside a `run:` block.
 - [ ] AC2: the new static test passes on the branch and fails on its regression snippet.
 - [ ] AC3: CI on the PR is green, including the changed-files gate. The gate's "changed files" output for the PR lists the same files it would have listed before the change; quote it.
-- [ ] AC4: the first main-push run after merge shows the security-scan's semgrep `run-shell-injection` count for test.yml at 0. Quote the run id.
+- [ ] AC4: the first main-push run after merge shows the security-scan's semgrep `run-shell-injection` count for test.yml at 0 and no `use-defused-xml-parse` finding in testing's tools. Quote the run id.
+- [ ] AC5: each `nosemgrep` names the exact rule id and carries the reason; the tools' existing tests pass.
 
 ## Related Tickets
 - TCK-20260819-CI-NARROW-PATH-FILTERED-JOBS (the changed-files gate)
