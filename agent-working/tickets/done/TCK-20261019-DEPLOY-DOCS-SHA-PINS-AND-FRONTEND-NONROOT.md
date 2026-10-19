@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-DEPLOY-DOCS-SHA-PINS-AND-FRONTEND-NONROOT
-phase: open
+phase: done
 date: 2026-10-19
 tags: [platform, delivery, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, delivery, security]
 Platform's two Semgrep baseline findings: pin deploy-docs.yml's actions by commit SHA, run the frontend image as non-root; record the repo-wide pin rule
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -121,10 +121,14 @@ Addition A tested on #667's artifact: 89 results -> 87 uploaded; the two inSourc
 Repo settings (code scanning check-run failure threshold) are the owner's to set; not changed here.
 
 ## Test Summary
-(filled by the implementer)
+running locally: `docker compose up` of the frontend with its backend: frontend healthy, `id -u` 101, SPA 200 on the host port, `/api` returns the backend's own 401 body identically through the proxy and directly;
+`tests/static` 106 passed; addition A filter verified on #667's SARIF (89 -> 87, 4 defused-xml results kept).
+running on CI (PR #668): security-scan Semgrep SARIF has 0 findings in deploy-docs.yml and frontend.Dockerfile (94 total elsewhere); publish-images builds the frontend image and Trivy steps succeed.
+Tools f-z failed once on registry drift (test_generate_registry), caused by the in-progress ticket missing from docs/REGISTRY.yaml; the close regenerates it.
 
 ## Files Changed
-(filled by the implementer)
+.github/workflows/deploy-docs.yml, .github/workflows/security-scan.yml, docker/frontend.Dockerfile, docker/nginx.conf, compose.yaml (frontend only), docs/guides/delivery_process.md, docs/REGISTRY.yaml.
 
 ## Completion Summary
-(filled by the implementer)
+Deploy-docs actions pinned by SHA (configure-pages v6, deploy-pages v5), frontend runs non-root on 8080, security-scan uploads only unsuppressed results, delivery_process records the pin rule, the advisory checks and the nosemgrep convention (PR #668). Repo setting for the code-scanning threshold is the owner's.
+
