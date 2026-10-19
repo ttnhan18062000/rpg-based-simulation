@@ -7748,6 +7748,19 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-IMPORT-CONTRACTS-NAME-STALE-ENTRIES.md
+  ticket_id: TCK-20261019-IMPORT-CONTRACTS-NAME-STALE-ENTRIES
+  title: '`import_contracts ci` names the stale ignored import and where to delete
+    it'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - codebase/structure/import_contracts.py
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD.md
   ticket_id: TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD
   title: The rpg gate report judges an outcome row's drift against each reference
