@@ -7699,6 +7699,20 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL.md
+  ticket_id: TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL
+  title: test_observe_world_cleans_up_its_own_run_dir runs in the serial step of Tools
+    f–z, because it reads the whole shared data/runs directory.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/test.yml (tools-f-z)
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS.md
   ticket_id: TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS
   title: 'Default compose stack: the backend publishes the event stream to Redis,
