@@ -1,0 +1,170 @@
+name: security-scan
+
+# Secret and static-analysis scan, report-only (TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW; issue #541 item 3; ADR D3: neither scanner blocks).
+# gitleaks runs on EVERY pull request and every push to main (owner decision 2026-10-19: a secret can land in any file) and scans only the
+# new commits; Semgrep CE is path-gated by a git-diff step inside its job. A weekly schedule scans the full history (gitleaks) and the whole tree (Semgrep).
+# Logs, summaries and artifacts of this public repository are readable by anyone, so gitleaks always runs with --redact and the summary
+# prints only the rule id and file:line, never a match. No secret other than the default GITHUB_TOKEN is used. Actions are pinned by SHA
+# (like iac.yml), gitleaks by release + SHA-256, Semgrep by image digest. The runner label is not pinned (TCK-20261009-UBUNTU-26-RUNNER-PRECHECK).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 4 * * 1" # weekly, Monday 04:23 UTC (off-peak)
+  workflow_dispatch:
+
+concurrency:
+  group: security-scan-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  GITLEAKS_VERSION: "8.30.1"
+  GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb" # gitleaks_8.30.1_linux_x64.tar.gz
+  SEMGREP_IMAGE: "semgrep/semgrep@sha256:93963d9295a366f59e4850127b1550400ee7b388f04fe144e4a1f6325d96e01b" # 1.179.0
+
+jobs:
+  gitleaks:
+    name: gitleaks (report-only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install gitleaks (pinned, checksum verified)
+        run: |
+          set -euo pipefail
+          curl -fsSL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/gitleaks"
+          tar -xzf gitleaks.tgz -C "$RUNNER_TEMP/gitleaks" gitleaks
+          rm gitleaks.tgz
+      - name: Scan (--redact, exit 0)
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
+        run: |
+          set -uo pipefail
+          range=""
+          scope="full history"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            range="${PR_BASE}..${PR_HEAD}"
+            scope="PR commits ${range}"
+          elif [ "$EVENT_NAME" = "push" ] && [ "${PUSH_BEFORE//0/}" != "" ] && git cat-file -e "${PUSH_BEFORE}^{commit}" 2>/dev/null; then
+            range="${PUSH_BEFORE}..${PUSH_AFTER}"
+            scope="push commits ${range}"
+          fi
+          echo "scope=${scope}" >> "$GITHUB_ENV"
+          args=(git --redact --exit-code 0 --no-banner --report-format json --report-path gitleaks.json)
+          if [ -n "$range" ]; then args+=(--log-opts "$range"); fi
+          "$RUNNER_TEMP/gitleaks/gitleaks" "${args[@]}" .
+          echo "gitleaks exit code: $?"
+      - name: Summary (rule and location only, never the match)
+        if: always()
+        run: |
+          {
+            echo "### gitleaks - report only"
+            echo
+            echo "Scope: ${scope:-unknown}"
+            echo
+            if [ ! -f gitleaks.json ]; then
+              echo "gitleaks did not produce a report."
+            else
+              echo "Findings: $(jq 'length' gitleaks.json)"
+              echo
+              echo "| Rule | File:line | Commit |"
+              echo "|---|---|---|"
+              jq -r '.[] | "| \(.RuleID) | \(.File):\(.StartLine) | \(.Commit[0:8]) |"' gitleaks.json | head -100
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload gitleaks report (redacted)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gitleaks
+          path: gitleaks.json
+          if-no-files-found: warn
+
+  semgrep:
+    name: semgrep (report-only)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # SARIF upload only; guarded below to same-repository PRs
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Path gate
+        id: gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "${PR_BASE}...${PR_HEAD}")
+          if printf '%s\n' "$changed" | grep -Eq '^(src/|tools/|frontend/|docker/|infra/|\.github/workflows/|compose\.yaml$)|\.py$'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Semgrep skipped: no code paths changed" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Semgrep scan (registry security rulesets)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          set -uo pipefail
+          docker run --rm -v "$PWD:/src" -w /src "$SEMGREP_IMAGE" \
+            semgrep scan --config p/python --config p/typescript --config p/dockerfile --config p/github-actions \
+            --metrics=off --disable-version-check --sarif --output semgrep.sarif
+          echo "semgrep exit code: $?"
+          sudo chown "$(id -u):$(id -g)" semgrep.sarif 2>/dev/null || true
+      - name: Summary
+        if: always() && steps.gate.outputs.run == 'true'
+        run: |
+          {
+            echo "### Semgrep CE - report only"
+            echo
+            if [ ! -f semgrep.sarif ]; then
+              echo "Semgrep did not produce a report."
+            else
+              echo "| Level | Count |"
+              echo "|---|---|"
+              for lvl in error warning note; do
+                echo "| $lvl | $(jq "[.runs[].results[]? | select(.level==\"$lvl\")] | length" semgrep.sarif) |"
+              done
+              echo
+              echo "| Rule | Count |"
+              echo "|---|---|"
+              jq -r '[.runs[].results[]?.ruleId] | group_by(.) | map({r: .[0], n: length}) | sort_by(-.n)[:15][] | "| \(.r) | \(.n) |"' semgrep.sarif
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload Semgrep report
+        if: always() && steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: semgrep
+          path: semgrep.sarif
+          if-no-files-found: warn
+      - name: Upload SARIF to code scanning
+        if: >-
+          always() && steps.gate.outputs.run == 'true' &&
+          (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) &&
+          hashFiles('semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
