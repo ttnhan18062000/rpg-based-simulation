@@ -36,22 +36,18 @@ def test_in_process_adapter():
         adapter.close()
 
 
-def test_redis_adapter_resilient_missing_library():
-    """Ensures RedisStreamAdapter handles the absence of redis library gracefully."""
-    # Temporarily remove redis module from sys.modules if it exists
-    original_redis = sys.modules.get("redis")
-    if "redis" in sys.modules:
-        del sys.modules["redis"]
-        
-    try:
-        adapter = RedisStreamAdapter("redis://localhost:6379/0", "test:events", 100)
-        assert adapter.health()["status"] == "degraded"
-        # Should gracefully drop events rather than crashing
-        adapter.publish(MagicMock())
-        adapter.close()
-    finally:
-        if original_redis is not None:
-            sys.modules["redis"] = original_redis
+def test_redis_adapter_resilient_missing_library(monkeypatch):
+    """Ensures RedisStreamAdapter handles the absence of redis library gracefully.
+
+    `sys.modules["redis"] = None` makes `import redis` raise ImportError, so the test passes whether or not a live
+    server answers on :6379 (deleting the module entry only forced a re-import, which succeeds)."""
+    monkeypatch.setitem(sys.modules, "redis", None)
+
+    adapter = RedisStreamAdapter("redis://localhost:6379/0", "test:events", 100)
+    assert adapter.health()["status"] == "degraded"
+    # Should gracefully drop events rather than crashing
+    adapter.publish(MagicMock())
+    adapter.close()
 
 
 def test_redis_adapter_publish_resilience():
