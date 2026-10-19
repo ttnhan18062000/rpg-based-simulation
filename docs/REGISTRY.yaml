@@ -8729,6 +8729,49 @@
   - hooks
   - data-quality
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ.md
+  ticket_id: TCK-20261015-FRONTEND-PATH-FILTER-MISSES-FILES-OUTSIDE-FRONTEND-THAT-ITS-TESTS-READ
+  title: test.yml's `FRONTEND_RE` also covers the files outside `frontend/` that the
+    frontend tests read, and a static test keeps the two in step
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - FRONTEND_RE
+  - tests/static/test_ci_narrow_path_filtered_jobs.py
+  - frontend/src/visualAssets/__tests__/iconScene.test.ts (read-only)
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261015-FRONTIER-3-42-EXTENDED-POPULATION-STABILITY-NEEDS-LARGE-BUDGET.md
+  ticket_id: TCK-20261015-FRONTIER-3-42-EXTENDED-POPULATION-STABILITY-NEEDS-LARGE-BUDGET
+  title: Mark `test_generated_frontier_3_42_extended_population_stability` `resource_budget_large`,
+    like the other 1000t tests in the file
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tests/conftest.py (budget selection, read-only here)
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT.md
+  ticket_id: TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT
+  title: '`test_every_new_job_installs_with_uv_from_the_lockfile` compares the setup-uv
+    action by name, not by its exact version'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-15'
+  related_code_areas:
+  - tests/tools/test_ci_split_tools_jobs.py
+  - _action_name
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71.md
   ticket_id: TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71
   title: A conquest no longer spawns a stronghold body from nothing. The region still
@@ -9420,6 +9463,24 @@
   - data/content/world/terrain.yaml, src/content/schema.py (TerrainDefinition)
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT.md
+  ticket_id: TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT
+  title: '`simq_reanchor` and `simq_pillar_compare` refuse a run whose manifest does
+    not record it as host-independent'
+  tier: 'standard (re-tiered 2026-10-19: Scope 1 adds a new committed tool)'
+  ticket_type: repair
+  date: '2026-10-14'
+  related_code_areas:
+  - audit_values
+  - tools/test_architecture/simq_pillar_compare.py
+  - src/observability/reporting/run_determinism.py (rpg, read-only here)
+  - rows.jsonl
+  artifact_files: []
+  tags:
+  - testing
+  - simulation-quality
+  - determinism
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1.md
   ticket_id: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
