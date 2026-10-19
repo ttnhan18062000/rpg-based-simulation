@@ -7746,6 +7746,21 @@
   - regression
   - simulation-quality
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES.md
+  ticket_id: TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES
+  title: test.yml's Frontend and jscpd steps run Node 24, the same as the frontend
+    image, instead of Node 20.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/test.yml
+  - tests/static/test_ci_step_summary_reporting.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE.md
   ticket_id: TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE
   title: Tools tests that run a hook with `cwd=tmp_path` read the real main checkout's
@@ -7761,6 +7776,22 @@
   - ai
   - testing
   - bug
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY.md
+  ticket_id: TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY
+  title: V8's gate self-test, case (a), asserts that the example names the unsourced
+    entity, and the format doc drops its "not yet emitted" line.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/simulation_quality/rpg_gate/test_v8_fires.py
+  - src/observability/run_ledger.py, src/observability/rpg_gate_metrics.py (read only)
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY.md
   ticket_id: TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY
