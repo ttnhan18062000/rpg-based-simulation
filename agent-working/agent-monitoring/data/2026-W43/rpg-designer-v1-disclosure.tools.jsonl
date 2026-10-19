@@ -1,0 +1,1 @@
+{"session_id":"ca84f6e1-8efe-49c1-bc4c-abdaaa53908a","run_id":null,"seq":null,"phase":null,"agent":null,"ts":"2026-10-19T02:19:16.038283Z","tool":"Bash","input_summary":"grep -n \"^| D1[45] \\|^| D-TODO\\|Open before v1\" -A0 docs/plans/systemic_world/v1","read_ranged":null,"status":"ok","duration_ms":68,"execution_id":null,"provider":null,"ticket_id":null}

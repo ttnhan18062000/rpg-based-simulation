@@ -103,7 +103,10 @@ code reading no names (decision 56). Limits: the scan is lexical, and the covera
 | D13 | rpg_depth PHYSICAL | `rpg_depth.py:349` | |
 | D14 | Equipment and world-emergence name checks | `core/equipment.py`, `world_emergence/services.py` | |
 | D15 | Species evolution gear by kind name ("goblin", "1"/"2") at levels 10/25/50 | `evolution.py` | never reached: nothing passes level 2 (P1) |
-| D-TODO | Four groups still to check row by row: adventure caution/curiosity (`scoring.py:124`, likely a false positive); faction alignment buckets (`faction.py:178`, `hostility.py:53`); navigation TOWN / world_boss (`navigation.py:33`); intelligence 'gold', action_router TRADE | | **TODO (rpg-planner / Lane A)**: walk each; list or drop |
+| D16 | Navigation to a world boss: the branch needs target_kind "WORLD_BOSS", but its only caller (`movement.py`) passes "TOWN" and no content declares a boss kind; the line never ran | `navigation.py:41` | a content-declared boss kind, or remove the fallback |
+| D17 | TRADE action dispatch: nothing emits action "TRADE" (the only other "TRADE" is a SHOP service list in `town/buildings.py`); the check runs, its body never does | `action_router.py:69-70` | wire a producer, or remove the dispatch (a cognition/action step) |
+
+Checked and dropped (Lane A walk on origin/main 94ff6b0bc, seed 42 × 2000t × 3 worlds): adventure caution/curiosity (`scoring.py:124-137`, derived stats, caution = 1 − bravery, run in urban and crowded); faction alignment buckets (`faction.py:178/181`, `hostility.py:53`, a content-declared field, run in all 3 worlds; no code reads the shipped 'rival' bucket); navigation 'TOWN' (`navigation.py:33`, an internal pathing constant, runs in all 3 worlds); intelligence 'gold' (`intelligence.py:314`, a currency-field sentinel; the blocker at line 291 and the return at 315 never ran, because entities always held the gold cost).
 
 Not listed, by design: the tactical roles VANGUARD / SKIRMISHER / PROTECTOR / SUPPORT / STRIKER are live
 (a code enum, not content ids; backlog: should content declare them); the code-held item and recipe
@@ -144,4 +147,4 @@ fallback tables are row Y3; schema defaults, harness, observability mode names a
 
 ## Open before v1
 
-- D-TODO: the four check-per-row groups (rpg-planner / Lane A).
+None. M2 and D-TODO closed 2026-10-19.
