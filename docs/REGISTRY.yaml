@@ -7713,6 +7713,18 @@
   - platform
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-BACKEND-SERVES-ITS-METRICS-REGISTRY-ON-INTERNAL-PORT-9109.md
+  ticket_id: TCK-20261018-BACKEND-SERVES-ITS-METRICS-REGISTRY-ON-INTERNAL-PORT-9109
+  title: 'The backend serves its metrics registry on an internal, unauthenticated
+    port 9109 (issue #622, R1).'
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - src/api/metrics_port.py, src/api/engine_manager.py (start/stop, metrics_port property)
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER.md
   ticket_id: TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER
   title: 'Prometheus: scrape the observability services and a new node-exporter; drop

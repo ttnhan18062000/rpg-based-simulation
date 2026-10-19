@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-18T12:43:39.971088Z", "ticket_id": "TCK-20261018-BACKEND-SERVES-ITS-METRICS-REGISTRY-ON-INTERNAL-PORT-9109", "title": "Backend metrics registry on internal port 9109", "status": "DONE", "summary": "New src/api/metrics_port.py started from the API lifespan; 7 tests; /metrics on 8000 unchanged", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}
