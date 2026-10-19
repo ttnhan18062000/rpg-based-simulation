@@ -713,7 +713,7 @@ keys:
     label: "Moon resin tree"
   - key: icon.entity.worker
     family: icon
-    description: Map glyph for the `worker` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the worker entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
@@ -722,7 +722,7 @@ keys:
     label: "Worker"
   - key: icon.entity.guard
     family: icon
-    description: Map glyph for the `guard` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the guard entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
@@ -731,7 +731,7 @@ keys:
     label: "Guard"
   - key: icon.entity.scout
     family: icon
-    description: Map glyph for the `scout` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the scout entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
@@ -740,7 +740,7 @@ keys:
     label: "Scout"
   - key: icon.entity.raider
     family: icon
-    description: Map glyph for the `raider` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the raider entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
@@ -749,7 +749,7 @@ keys:
     label: "Raider"
   - key: icon.entity.sentinel
     family: icon
-    description: Map glyph for the `sentinel` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the sentinel entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
@@ -758,7 +758,7 @@ keys:
     label: "Sentinel"
   - key: icon.entity.merchant
     family: icon
-    description: Map glyph for the `merchant` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the merchant entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
@@ -767,7 +767,7 @@ keys:
     label: "Merchant"
   - key: icon.entity.blacksmith
     family: icon
-    description: Map glyph for the `blacksmith` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the blacksmith entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
@@ -776,7 +776,7 @@ keys:
     label: "Blacksmith"
   - key: icon.entity.leader
     family: icon
-    description: Map glyph for the `leader` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the leader entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
@@ -785,7 +785,7 @@ keys:
     label: "Leader"
   - key: icon.entity.alpha
     family: icon
-    description: Map glyph for the `alpha` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the alpha entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
@@ -794,7 +794,7 @@ keys:
     label: "Alpha"
   - key: icon.entity.predator_hunter
     family: icon
-    description: Map glyph for the `predator_hunter` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the predator_hunter entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
@@ -803,7 +803,7 @@ keys:
     label: "Predator hunter"
   - key: icon.entity.wild_creature
     family: icon
-    description: Map glyph for the `wild_creature` entity role (the presenter's role kind), one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object (owner decision 2026-10-19); identifying class, the fallback is today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring plus the kind name as text
+    description: Map glyph for the wild_creature entity role, one 16x16 image at scale x1, live area 12x12 centred (2 px margin), no plate, a bare object; identifying class, the fallback is today's grey circle (#888888) with the state ring plus the kind name as text
     variant_axes: []
     optional: true
     safety_class: identifying
