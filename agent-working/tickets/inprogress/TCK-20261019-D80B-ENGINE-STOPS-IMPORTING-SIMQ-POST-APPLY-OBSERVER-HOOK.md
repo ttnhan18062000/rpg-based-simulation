@@ -67,6 +67,8 @@ Decision 80 (B). The kernel builds SimQ itself: src/engine/kernel.py:230-272 imp
 - Order and guards per memo row 82 (rpg-designer, user-confirmed 2026-10-19). B, C and D73 may share batch 1 under the PR size rule, each as its own measured step.
 
 ## Implementation Notes
+- Naming (rpg-planner): the hook is a *run observer* (an envelope sink with a four-stage lifecycle: start, on_envelope, stop_intake, finish); the title keeps "post-apply observer hook". RunLedger and DeathLedger are not moved: they are event producers upstream of SimQ, not sinks.
+- Fold the decay-record withdrawal (rpg-v2-decay-record, `ResourceTransactionSystem.resolve_all` in `src/engine/economy.py`) into the post-apply hook: emit once from the applied outcome. (Added on rpg-planner's instruction after the designer accepted V2; the intent-versus-outcome emitter list in TCK-20261019-MEAT-DECAYED-IS-WRITTEN-FROM-THE-APPLIED-OUTCOME-V2 is the starting set for the 80(A) audit, not findings.)
 
 ## Test Summary
 
