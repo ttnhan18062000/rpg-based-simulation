@@ -1,0 +1,97 @@
+---
+status: active
+layer: testing
+authority: P1
+audience: agent
+ticket_id: TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL
+phase: open
+date: 2026-10-19
+tags: [testing, regression, simulation-quality]
+---
+
+# TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL
+
+## Title
+The rpg gate's required-validity check asks for each V row only at the level it is judged at (per-seed `run` or `pooled`), not in every document.
+
+## Status
+OPEN
+
+## Tier
+hotfix
+
+## Type
+bug
+
+## Priority
+P1
+
+## Request Summary
+rpg-planner's v1 gate dispatch (run 39212800104 on 864f7b281) came out red, with 36 `no-data (contract_error)` rows reading "required validity row <id> missing". The 36 come from 3 worlds × (5 seeds × V7 + pooled × V1-V6, V8) = 15 + 21.
+
+The metric module emits per-seed documents with V1-V6 and V8 (scope `run`) and a pooled document with V7 only (scope `pooled`). That is the right shape.
+
+The fault is testing's. `rpg_gate_baseline_format.md` ("Required validity rows") says that every required id must be in "every seed document and the pooled one". Both `rpg_gate_report.missing_required` and `rpg_gate_candidate._missing_required` apply `config.required_validity` to every document, with no notion of level. So the v1 baseline cannot be recorded, though nothing is actually missing.
+
+testing-planner ruling, 2026-10-19: each required id is required at the level(s) the config declares. Nothing else changes: a row that is truly missing is still `no-data`/`contract_error`, still refuses the candidate, and still shows in the banner.
+
+## Scope
+1. **Config shape** (`load_config` in `tools/test_architecture/rpg_gate_baseline.py`): `required_validity` becomes a mapping from level to ids, for example `{run: [V1, V2, V3, V4, V5, V6, V8], pooled: [V7]}`. The keys are `run` and `pooled` only. An id can appear under both. The plain-list form is refused with a message that names the new shape, because the list form is the ambiguity that caused this. The existing checks still apply: refuse a duplicate within a level, a bad id or a non-list value.
+2. **Report** (`rpg_gate_report.py`, `missing_required`): a seed document is checked against `run` ids and the pooled document against `pooled` ids.
+3. **Candidate** (`rpg_gate_candidate.py`, `_missing_required`): same split. The `omitted_validity` label uses the real level, `<id>:run:<world>:*` or `<id>:pooled:<world>:*`, instead of always `run`.
+4. **Config values** (`tests/simulation_quality/rpg_gate/config.yaml`, rpg's file): rewrite L16 to `{run: [V1, V2, V3, V4, V5, V6, V8], pooled: [V7]}`, which is exactly what rpg's module emits on 864f7b281. **rpg-planner must say yes to these values on the PR before merge.** The values are rpg's; the shape is testing's.
+5. **Format doc** (`docs/plans/test_architecture/reference/rpg_gate_baseline_format.md`):
+   - Rewrite "Required validity rows" to the per-level rule.
+   - V8 section: scope is `run`. A pooled V8 row is optional; if a module emits one, its `violations` must equal the sum of the seeds' rows.
+   - While there, remove the stale "Not yet emitted" sentence about V8 examples, if #660 has not landed it first. Whichever merges second rebases.
+6. **Stub metrics** (`tests/helpers/rpg_gate_stub_metrics.py`): only if the stub's documents don't already follow the per-level shape.
+7. **Re-run the report offline** on rpg's run-39212800104 documents (`/mnt/data/scratch-rpg-planner/gate_v1/`, read-only; copy into the scratchpad first). Show the 36 contract_error rows are gone and nothing else changed. The 4 real validity fails, V2 crowded/43, V3 frontier/42 and V4 frontier/44 and /45, must still show.
+
+## Out of Scope
+- rpg's metric module and any V row's values or thresholds.
+- The 4 real validity fails (rpg's, going to the designer).
+- The V1 free-meal entry in `rpg_gate_known.yaml` that matches nothing (rpg is checking it).
+- Re-running the simulation. The fix is checked by re-reading the existing documents.
+
+## Acceptance Criteria
+- [ ] AC1: `load_config` accepts the per-level mapping and refuses the plain list, an unknown level, a duplicate within a level and a bad id. Each case has a unit test.
+- [ ] AC2: in the report and candidate tests, a seed document with no V7 and a pooled document with only V7 give no `required_missing` rows when the config says `{run: [.., V8], pooled: [V7]}`.
+- [ ] AC3: a regression test fixes the mutation: drop V3 from one seed document, and the report gives exactly one `contract_error` row for that (world, seed). The candidate refuses, unless an owned `state: fail` entry exists, in which case the label is `V3:run:<world>:*`. The same goes for dropping V7 from a pooled document (label `V7:pooled:<world>:*`).
+- [ ] AC4: the offline re-run on run 39212800104's documents shows 0 "required validity row" rows (was 36), with the 4 real validity fails unchanged. Quote the before and after counts in the Test Summary.
+- [ ] AC5: the format doc states the per-level rule and V8's level. No doc or code line still says "every seed document and the pooled one".
+- [ ] AC6: rpg-planner's yes on the config.yaml values is on the PR (comment link).
+- [ ] AC7: `tests/simulation_quality/rpg_gate/` and the rpg_gate tool tests pass.
+
+## Related Tickets
+- TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK (done; added V8 to required_validity)
+- TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY (PR #660; touches the same doc)
+- TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC
+
+## Related Docs
+- docs/plans/test_architecture/reference/rpg_gate_baseline_format.md
+
+## Related Stored Artifacts
+- agent-working/stored_artifacts/TCK-20261013-RPG-GATE-V8-SPAWN-SOURCE-CHECK/
+
+## Related Code Areas
+- tools/test_architecture/rpg_gate_baseline.py (`load_config`, `GateConfig.required_validity`)
+- tools/test_architecture/rpg_gate_report.py (`missing_required`)
+- tools/test_architecture/rpg_gate_candidate.py (`_missing_required`)
+- tests/simulation_quality/rpg_gate/config.yaml (rpg's values)
+- tests/helpers/rpg_gate_stub_metrics.py
+
+## Assumptions / Open Questions
+- Only the v1 baseline record is blocked, so this goes ahead of the re-anchor's commit step but not ahead of its runs.
+- If rpg prefers to emit every row at both levels instead, this ticket stops. That is rpg's call on values, but the shape ruling above stands as the default.
+
+## Implementation Notes
+(implementer)
+
+## Test Summary
+(implementer)
+
+## Files Changed
+(implementer)
+
+## Completion Summary
+(implementer)
