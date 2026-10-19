@@ -10,7 +10,7 @@ any gate world (its profile, its world files, or the harness flags), so an OFF s
 the camp raid spawn, the density top-up) are never listed: once they are gone there is nothing to find.
 
 Scope: ``src/certification/`` builds tick-0 scenario worlds (INITIAL, never an ``entities_add``) and ``generator.py`` defines the spawners; both are
-excluded. The AST matches a call ``<receiver named generator>.spawn_*(...)`` anywhere in a function; it does not follow a result across functions,
+excluded. The AST matches a call ``<receiver named generator>.spawn_*(...)`` anywhere in a function; it does not follow a result across functions, and "tagged" (`_mentions_tag`) is function-wide: any mention of `entity_spawn_sources` in the enclosing function counts for every spawn call in it, so a function with two spawn calls and one tag is read as tagged,
 which is why a site that returns its spawn to a caller (``CalamityService._spawn_world_boss``) is listed at the function that makes the call.
 """
 from __future__ import annotations
