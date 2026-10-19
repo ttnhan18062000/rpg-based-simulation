@@ -49,19 +49,21 @@ Subject = one object or one small creature head upright and centred in the 16 px
 
 | kind | candidate A (reads as) | candidate B | must not read as | distractors for the blind check |
 |---|---|---|---|---|
-| worker | a three-tine pitchfork, upright | a wooden spade | a trident, a pickaxe, a fork | trident, rake, cutlery |
-| guard | a spear with a pennant, planted upright | a kettle helm with a nose bar | a shield, a flag, a javelin | flag, lance, sword |
+| worker | a three-tine pitchfork, upright | a wooden spade | a trident, a pickaxe (mine icon), a fork | trident, rake, cutlery |
+| guard | a spear with a pennant, planted upright (primary) | a kettle helm with a nose bar | a shield (warrior class), a flag, a javelin | flag, lance, sword |
 | scout | a brass spyglass, diagonal | a hunting horn | a telescope on a stand, a rifle | rifle, trumpet, flashlight |
-| raider | a single bearded axe, head right | a torn red banner | crossed axes (enemy camp), a hatchet tool | hammer, flag, pickaxe |
-| sentinel (undead guardian) | an iron helm with two blue glowing eye slits | a bone-white gauntlet | the guard helm, a skull alone | helmet, mask, robot head |
-| merchant | a balance scale | a pack mule's laden pack | a coin purse, a pair of pans | purse, scales of justice emblem, cup |
-| blacksmith | a glowing ingot held in tongs | a horseshoe | an anvil building icon, crossed tool icon | horseshoe, pliers, magnet |
+| raider | one bearded axe, head right (never crossed) | a torn red banner | crossed swords (enemy camp), a hatchet tool, the sword item | hammer, flag, pickaxe |
+| sentinel (undead guardian) | an upright iron-bound coffin with a blue glow at the seam | a square stone idol face with two blue eye slits | any skull or bone (boss arena), the guard helm, a tombstone, a door | tombstone, door, violin case, robot head |
+| merchant | a balance scale | a striped market awning on two poles | a coin purse (store), a pair of pans, a tent | purse, scales-of-justice emblem, tent |
+| blacksmith | a horseshoe | an anvil | the blacksmith building icon (anvil with hammer, so B is the nearest collision), the crossed hammer and tongs tool | magnet, pliers, anvil-building |
 | leader | a gold crown with three points | a signet seal | a tiara, a party crown | tiara, comb, flame |
 | alpha | a wolf head, ears up, a notched ear | a standing wolf | a dog, a fox | dog, fox, cat |
 | predator_hunter | three red claw slashes | a fanged snarling jaw | a scratch mark, a skull | scratch, rake, lightning |
 | wild_creature | a grazing deer, side view | a hare | a horse, a goat, a nest | horse, goat, dog |
 
-Open design points for the silhouette sheet (not decided here): whether people-kinds are objects (above) or small figure silhouettes; the sentinel sits at the edge of the skull and helm collisions, so its sheet shows both.
+**Collision resolutions (asset-planner's review of ca3696cc0):** blacksmith dropped "tongs with ingot" (the crossed hammer and tongs tool, D21); merchant B dropped the laden pack (too close to the coin purse); sentinel has no skull, no bone and no helm (boss arena skull; guard's kettle helm), so it is a coffin or an idol face; raider is one weapon, never crossed (enemy camp).
+
+Open design point (not decided here, an owner question at the silhouette gate): the treatment for the whole set. On a map cell a bare object can read as a dropped item or a resource node, not as a unit. The sheet shows, for worker, guard and sentinel, (a) a bare object emblem, (b) the emblem on a shared round unit token, (c) a figure silhouette; the other 8 kinds show A/B in treatment (b) as a preview. Every row is drawn on a 16 px cell beside the nearest existing glyph from the collision map, at 1:1 and x8.
 
 ## Not established
 - Which candidate the owner prefers: the owner gate decides.
