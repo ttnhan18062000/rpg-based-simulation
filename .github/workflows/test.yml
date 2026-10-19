@@ -309,7 +309,7 @@ jobs:
       - name: Run
         run: |
           pytest tests/integration \
-                 -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
+                 -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup --durations=15 \
                  --junit-xml=reports/junit/integration.xml
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
