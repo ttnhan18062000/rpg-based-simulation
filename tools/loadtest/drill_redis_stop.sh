@@ -8,7 +8,7 @@
 #
 # Needs (all gitignored, never printed): docker/secrets/ntfy_topic, docker/secrets/grafana_admin_password and a READ token for the ntfy topic in
 # $NTFY_READER_TOKEN_FILE (a regular ntfy user with read-only access to the topic, created with the ntfy CLI as described at the top of compose.yaml).
-# The messages saved to the output directory have the topic redacted.
+# The messages saved to the output directory have the topic redacted. Secrets never appear on a command line: curl reads them from its stdin config.
 #
 #   LOADTEST_API_KEY_HASHES="$(python3 tools/loadtest/keys.py -n 990)" docker compose -f compose.yaml -f tools/loadtest/compose.loadtest.yaml \
 #       --profile observability up -d ...
@@ -50,10 +50,13 @@ mkdir -p "$OUT"
 EVENTS="$OUT/events.txt"
 ts() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 ev() { echo "$(ts) $*" | tee -a "$EVENTS"; }
-redact() { sed "s/${TOPIC}/<topic>/g"; }
+# The topic is passed through the environment, not argv (a sed script with the topic in it would show in `ps`).
+redact() { TOPIC="$TOPIC" python3 -c "import os, sys; t = os.environ['TOPIC']; sys.stdout.write(sys.stdin.read().replace(t, '<topic>'))"; }
 
 ntfy_messages() { # one JSON object per line, all cached messages of the topic
-  curl -s -H "Authorization: Bearer ${READ_TOKEN}" "${NTFY}/${TOPIC}/json?poll=1&since=all" || true
+  # The token and the topic (part of the URL) go through curl's stdin config (-K -), never argv, so `ps` cannot show them.
+  curl -s -K - <<<"header = \"Authorization: Bearer ${READ_TOKEN}\"
+url = \"${NTFY}/${TOPIC}/json?poll=1&since=all\"" || true
 }
 ntfy_count() { # $1 = title prefix, e.g. "[firing] RedisDown"
   ntfy_messages | python3 -c "
@@ -66,7 +69,9 @@ for line in sys.stdin:
 print(n)" "$1"
 }
 rule_states() { # state of the three rules of interest, one line
-  curl -s -u "admin:${GRAFANA_PW}" "${GRAFANA}/api/prometheus/grafana/api/v1/rules" | python3 -c "
+  # The Grafana password goes through curl's stdin config (-K -), never argv.
+  curl -s -K - <<<"user = \"admin:${GRAFANA_PW}\"
+url = \"${GRAFANA}/api/prometheus/grafana/api/v1/rules\"" | python3 -c "
 import sys, json
 want = ('RedisDown', 'ApiLatencyP95High', 'ApiErrorRateHigh')
 out = []
