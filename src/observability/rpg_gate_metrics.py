@@ -200,7 +200,7 @@ def _check_minted_coin(ledger: Mapping[str, Any]) -> Tuple[int, List[Any]]:
 def _check_unsourced_adds(ledger: Mapping[str, Any]) -> Tuple[int, List[Any]]:
     """Mid-run adds with no declared source."""
     found = {k: n for k, n in ledger["adds"].items() if k.endswith(f"|{UNSOURCED}")}
-    return sum(found.values()), [{"adds": k, "count": n} for k, n in sorted(found.items())]
+    return sum(found.values()), list(ledger["unsourced_examples"])
 
 
 def _validity_rows(world: str, ledger: Mapping[str, Any], records: Sequence[Mapping[str, Any]], state: Any, decayed_quantity: float) -> List[Dict[str, Any]]:

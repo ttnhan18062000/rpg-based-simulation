@@ -70,6 +70,7 @@ class RunLedger:
     _perception_samples: int = 0  # ticks on which perception was sampled
     _out_of_world: Dict[str, int] = {}  # group -> entity-ticks of a moved, alive entity outside the world extent
     _out_of_world_examples: List[Dict[str, Any]] = []
+    _unsourced_examples: List[Dict[str, Any]] = []
 
     @classmethod
     def reset_run_state(cls) -> None:
@@ -91,6 +92,7 @@ class RunLedger:
         cls._perception_samples = 0
         cls._out_of_world = {}
         cls._out_of_world_examples = []
+        cls._unsourced_examples = []
 
     @classmethod
     def configure(cls, live: bool) -> None:
@@ -115,7 +117,7 @@ class RunLedger:
             cls._population[tick] = cls._alive_by_group(current)
         cls._count_transfers(prior, current, update)
         cls._count_deaths(prior, current)
-        cls._count_adds(update)
+        cls._count_adds(update, tick)
         cls._count_world_events(update)
         cls._count_meat(prior, current, update)
         cls._count_positions(current, update)
@@ -169,13 +171,15 @@ class RunLedger:
                 cls._deaths[key] = cls._deaths.get(key, 0) + 1
 
     @classmethod
-    def _count_adds(cls, update: Any) -> None:
+    def _count_adds(cls, update: Any, tick: int) -> None:
         sources = getattr(update, "entity_spawn_sources", None) or {}
         for entity in (getattr(update, "entities_add", None) or []):
             source = sources.get(entity.id)
             kind = source.kind.value if source is not None and isinstance(source.kind, SpawnKind) else UNSOURCED
             key = _key(kind_group(entity), kind)
             cls._adds[key] = cls._adds.get(key, 0) + 1
+            if kind == UNSOURCED and len(cls._unsourced_examples) < MAX_EXAMPLES:
+                cls._unsourced_examples.append({"entity_id": entity.id, "tick": tick, "kind_group": kind_group(entity)})
             cls._declared_coin += float(entity.inventory.gold)
 
     @classmethod
@@ -300,7 +304,7 @@ class RunLedger:
             "transfers": dict(sorted(cls._transfers.items())), "hunger_drops": dict(sorted(cls._hunger_drops.items())),
             "deaths": dict(sorted(cls._deaths.items())), "adds": dict(sorted(cls._adds.items())),
             "world_events": dict(sorted(cls._world_events.items())), "meat": dict(sorted(cls._meat.items())),
-            "attacks": dict(sorted(cls._attacks.items())), "behaviour": dict(sorted(cls._behaviour.items())), "perception_samples": cls._perception_samples, "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples),
+            "attacks": dict(sorted(cls._attacks.items())), "behaviour": dict(sorted(cls._behaviour.items())), "perception_samples": cls._perception_samples, "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples), "unsourced_examples": list(cls._unsourced_examples),
         }
         return cls._event(LEDGER_TALLY_EVENT, cls._last_tick, payload)
 
