@@ -81,6 +81,9 @@ testing-planner ruling, 2026-10-19: each required id is required at the level(s)
 - tests/helpers/rpg_gate_stub_metrics.py
 
 ## Assumptions / Open Questions
+- **rpg-planner said YES, 2026-10-19,** to the scope including the config.yaml L16 values `{run: [V1, V2, V3, V4, V5, V6, V8], pooled: [V7]}`. They'll confirm on the PR (AC6 still needs that comment).
+- **Ordering constraint (rpg):** config.yaml is hashed into the gate harness, so this PR moves the harness hash. That is fine because no v1 baseline exists yet, but it **must merge before rpg's 5x3 v1 rerun on main**, so v1 is recorded on the new harness. Tell testing-planner the PR number as soon as it is up.
+- V8 is `run` only. rpg won't emit a pooled V8 for now, and the optional-pooled rule stays in the doc.
 - Only the v1 baseline record is blocked, so this goes ahead of the re-anchor's commit step but not ahead of its runs.
 - If rpg prefers to emit every row at both levels instead, this ticket stops. That is rpg's call on values, but the shape ruling above stands as the default.
 
