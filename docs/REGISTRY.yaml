@@ -6320,7 +6320,7 @@
   - planning
 - type: doc
   path: docs/plans/codebase_health/import_linter_soak_review.md
-  title: Import-linter soak review (INTERIM, 2026-10-08)
+  title: Import-linter soak review (FINAL, 2026-10-19)
   status: active
   layer: testing
   authority: P2
@@ -14877,6 +14877,24 @@
   - world
   - investigation
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT.md
+  ticket_id: TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT
+  title: Make the import-linter step blocking and required, then retire the class
+    E tests whose contract is required
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-05'
+  related_code_areas:
+  - tests/architecture/
+  - codebase/structure/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT/plan.md
+  - agent-working/stored_artifacts/TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT/test_plan.md
+  tags:
+  - architecture
+  - delivery
+- type: ticket
   path: agent-working/tickets/done/TCK-20261005-LAW-OCCUPANCY-COLLISION-HARD-LAW-ERRORS-ON-MAIN.md
   ticket_id: TCK-20261005-LAW-OCCUPANCY-COLLISION-HARD-LAW-ERRORS-ON-MAIN
   title: 'Ten `LAW-OCCUPANCY-COLLISION` hard-law errors fire on untouched `origin/main`
@@ -15266,21 +15284,6 @@
   - architecture
   - live-map
   - planning
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT.md
-  ticket_id: TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT
-  title: Make the import-linter step blocking and required, then retire the class
-    E tests whose contract is required
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-05'
-  related_code_areas:
-  - tests/architecture/
-  - codebase/structure/
-  artifact_files: []
-  tags:
-  - architecture
-  - delivery
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261005-LEGALITY-RAW-FACTION-EQUALITY-FALLBACK-IS-DEAD-BUT-LATENT.md
   ticket_id: TCK-20261005-LEGALITY-RAW-FACTION-EQUALITY-FALLBACK-IS-DEAD-BUT-LATENT

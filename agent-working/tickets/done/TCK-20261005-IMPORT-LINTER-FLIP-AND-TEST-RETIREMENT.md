@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT
-phase: open
+phase: done
 date: 2026-10-05
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 Make the import-linter step blocking and required, then retire the class E tests whose contract is required
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -27,6 +27,8 @@ chore
 P3
 
 ## Request Summary
+Done 2026-10-19: the soak passed (final review in `docs/plans/codebase_health/import_linter_soak_review.md`), the `Import contracts` step is blocking in the required `Code health` job, and the seven class E tests are retired with their contracts. The phase19 OFF-mode condition stays UNENFORCED until the testing follow-up (#621, `TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK`) lands.
+
 Follow-up to `TCK-20261004-IMPORT-LINTER-ADOPTION`. BLOCKED until a two-week soak from that batch's merge has passed (import-linter adoption merged 2026-10-05 as PR #351, squash `e9585eb02` at 2026-10-05T13:40:06Z; soak ends 2026-10-19T13:40Z; earliest flip 2026-10-19, after the gates-flip PR #329 merges on or after 2026-10-18). Then the advisory step becomes blocking, the owner makes it a required check, and the class E tests whose contract is required are retired. Testing condition 1 (#322): a class E test is retired only in or after the PR that makes its replacement contract a required check.
 
 ## Scope
@@ -172,5 +174,5 @@ After retirement: the 7 touched test files plus `tests/codebase/test_import_cont
 - Nothing under `src/`.
 
 ## Completion Summary
-(Fill on the day, after the final re-merge: soak review final, owner's yes to the blocking step with date, the PR number, the closure record. Draft:)
-The Import contracts step is blocking: `python3 -m codebase.structure.import_contracts ci` exits 1 on a broken contract, a stale ignored import or a stale generated `layers` block, and 2 when it cannot run; the step has no `continue-on-error`, in the already-required `Code health` job (no ruleset change, no new check name). The step summary and one `::error::` line per broken contract name every `importer -> imported (l.N)` pair. Seven class E tests were retired with their replacement contracts (c01, c08 belief/fame/fidelity, c09, c13, c15); the parity proof (37 injections, the contract caught all 37, the tests missed 9) is in the Test Summary. The phase19 hot-path test and the 42 other import rules stay tests; rpg's four per-edge reasons are on the phase19 ignores, and the OFF-mode condition they rely on is enforced only if testing's #547 pick lands. Retirements and the blocking step are one unit: dropping one drops the other. Owed: `make knowledge-index-update`, the closure record, the live probe-PR demo (owner's yes).
+Flip day 2026-10-19 (codebase-planner's GO at 13:52Z, soak review FINAL in `docs/plans/codebase_health/import_linter_soak_review.md`). Final tests on the flip head after merging origin/main `9b485e83e`: `tests/codebase`, `tests/static`, `tests/docs`, `tests/architecture`: 815 passed, 2 skipped, 1 xfailed; `tests/tools` (alone, MemoryMax 2G): 5114 passed, 56 skipped, 1 xfailed, 0 failed; `import_contracts ci`: 17 kept, 0 broken, 0 stale; `ruff check codebase/structure`: clean. One day-of finding: a stale ignored import left by main #645, cleared as a ratchet-down (Implementation Notes). The PR number and the owner's go to push are recorded on the PR; `make knowledge-index-update` is run by lead in the main checkout after the merge.
+The Import contracts step is blocking: `python3 -m codebase.structure.import_contracts ci` exits 1 on a broken contract, a stale ignored import or a stale generated `layers` block, and 2 when it cannot run; the step has no `continue-on-error`, in the already-required `Code health` job (no ruleset change, no new check name). The step summary and one `::error::` line per broken contract name every `importer -> imported (l.N)` pair. Seven class E tests were retired with their replacement contracts (c01, c08 belief/fame/fidelity, c09, c13, c15); the parity proof (37 injections, the contract caught all 37, the tests missed 9) is in the Test Summary. The phase19 hot-path test and the 42 other import rules stay tests; rpg's four per-edge reasons are on the phase19 ignores, and the OFF-mode condition they rely on is enforced only if testing's #547 pick lands. Retirements and the blocking step are one unit: dropping one drops the other. Owed after the merge: `make knowledge-index-update` (lead, main checkout) and the live probe-PR demo (owner's yes).
