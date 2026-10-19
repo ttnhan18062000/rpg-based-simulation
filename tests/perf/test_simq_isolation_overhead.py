@@ -56,6 +56,8 @@ import pytest
 from src.perf.bench_harness import BenchHarness
 from src.config.profiles import PROD_SMALL
 from tests.tools.perf_assertions import assert_perf_threshold
+from src.simulation_quality.observer import default_observer_factories
+from tests.helpers.simq import quality_feed_of, quality_hub_of
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -119,13 +121,13 @@ def _assert_mode_a_is_not_observability_off(monkeypatch, tmp_path) -> None:
 
     state = _build_state()
     rng = DeterministicRNG(state.seed)
-    kernel = Kernel(PROD_SMALL, state, rng, flags={"no_replay": True, "no_frame_pacing": True})
+    kernel = Kernel(PROD_SMALL, state, rng, flags={"no_replay": True, "no_frame_pacing": True}, observers=default_observer_factories())
     try:
         assert kernel.event_recorder.enabled is True, (
             "QUALITY_SCORING_DISABLED=1 must not disable EventRecorder itself -- "
             "that would silently conflate mode (a) with ObservabilityMode.OFF"
         )
-        assert kernel._quality_hub is None, "mode (a) must build zero in-engine QualityHub"
+        assert quality_hub_of(kernel) is None, "mode (a) must build zero in-engine QualityHub"
         for _ in range(10):
             kernel.tick_once()
         jsonl_path = kernel.event_recorder.filepath

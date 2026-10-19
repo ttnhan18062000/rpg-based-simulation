@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING, List, Dict, Optional, Any
+from typing import TYPE_CHECKING, List, Dict, Optional, Any, Sequence
 import json
 import time
 import logging
@@ -23,6 +23,7 @@ from src.engine.run_identity import create_run_directory, new_run_id
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
 from src.engine.cadence import should_run
+from src.engine.run_observers import RunContext, RunObserverFactory, RunObservers
 from src.engine.need_pull import ESCALATION_ONSET, HUNGER_LINE
 from src.engine.starvation import STARVING_LINE
 
@@ -53,7 +54,7 @@ class Kernel:
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
         "_run_id", "_run_id_is_default", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer", "_personality_recorder",
         "_workers_started", "_last_shutdown_report",
-        "_quality_hub", "_quality_feed",
+        "_run_observers",
     )
 
     def __init__(
@@ -77,7 +78,8 @@ class Kernel:
         runtime_content_source: Optional[str] = None,
         catalog_fingerprint: Optional[str] = None,
         module_fingerprints: Optional[Dict[str, str]] = None,
-        world_id: Optional[str] = None
+        world_id: Optional[str] = None,
+        observers: Sequence[RunObserverFactory] = (),
     ) -> None:
         self._stopped = False
         self._profile = profile
@@ -227,49 +229,19 @@ class Kernel:
         elif hasattr(self._replay, "_run_dir"):
             run_dir_str = str(self._replay._run_dir)
 
-        # Build SimQ hub before EventRecorder so quality_fn is wired at worker construction.
-        self._quality_hub = None
-        self._quality_feed = None
-        _quality_fn = None
-        if obs_mode != ObservabilityMode.OFF:
-            from src.simulation_quality.feed import build_feed_from_env, BrokerQualityFeed
-            _feed = build_feed_from_env()
-            if _feed is not None:
-                self._quality_feed = _feed
-                if not isinstance(_feed, BrokerQualityFeed):
-                    from src.simulation_quality.weights import ScoringWeights
-                    from src.simulation_quality.quality_hub import QualityHub
-                    from src.simulation_quality.persistence import QualityPersistence
-                    from src.simulation_quality.scorers import build_all_scorers
-                    try:
-                        _q_profile = os.environ.get("QUALITY_PROFILE", "default")
-                        _weights = ScoringWeights.load(
-                            "config/simulation_quality/scoring_weights.yaml",
-                            "config/simulation_quality/grade_thresholds.yaml",
-                            "config/simulation_quality/detection_params.yaml",
-                            _q_profile,
-                        )
-                        _q_run_dir = run_dir_str or f"data/runs/{self._run_id}"
-                        _hub = QualityHub(
-                            scorers=build_all_scorers(_weights),
-                            weights=_weights,
-                            persistence=QualityPersistence(_q_run_dir),
-                            run_id=self._run_id,
-                        )
-                        _quality_fn = _hub.on_envelope
-                        self._quality_hub = _hub
-                    except Exception:
-                        logger.warning("SimQ hub construction failed (non-fatal) — quality scoring disabled for this run")
+        # Run observers (decision 80 B) are built before the EventRecorder so their fan-out is wired at worker construction.
+        self._run_observers = RunObservers()
+        if obs_mode != ObservabilityMode.OFF and observers:
+            self._run_observers = RunObservers.build(observers, RunContext(run_id=str(self._run_id), run_dir=run_dir_str or ""))
 
         self._event_recorder = EventRecorder(
             run_dir=run_dir_str,
             max_events=5000,
             enabled=(obs_mode != ObservabilityMode.OFF),
-            quality_fn=_quality_fn,
+            quality_fn=self._run_observers.on_envelope if len(self._run_observers) else None,
         )
 
-        if self._quality_feed is not None and self._quality_hub is not None:
-            self._quality_feed.start(self._quality_hub)
+        self._run_observers.start()
         self._entity_timeline_store = EntityTimelineStore(mode=obs_mode)
 
         self._metric_recorder = None
@@ -326,11 +298,9 @@ class Kernel:
         self._run_initial_placement_check()
 
     @property
-    def quality_hub(self):
-        """Read-only access to the QualityHub instance (None if SimQ is disabled or
-        QUALITY_FEED_MODE=broker — broker-mode scoring runs in the external QualityWorker
-        process, not in-engine)."""
-        return self._quality_hub
+    def observers(self) -> RunObservers:
+        """The run observers built for this run (empty when none were passed or observability is OFF)."""
+        return self._run_observers
 
     def validate(self, flags: Optional[Dict[str, bool]] = None) -> None:
         from src.config.validator import ProfileValidator
@@ -1145,32 +1115,18 @@ class Kernel:
 
         self._worker_manager.shutdown()
 
-        if hasattr(self, "_quality_feed") and self._quality_feed is not None:
-            try:
-                self._quality_feed.stop()
-            except Exception:
-                logger.warning("SimQ feed stop failed (non-fatal)")
+        if hasattr(self, "_run_observers"):
+            self._run_observers.stop_intake()
 
-        # EventRecorder's background drain worker calls quality_fn (-> QualityPersistence.write)
-        # asynchronously on its own thread. It MUST be fully stopped (and its own final
-        # synchronous drain completed) before QualityPersistence.shutdown() closes the
-        # persistence file handle below — otherwise an in-flight write from the drain
-        # worker's thread can race persistence teardown and silently no-op instead of
-        # persisting or erroring loudly. See
-        # TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD.
+        # EventRecorder's background drain worker calls the run observers asynchronously on its own thread. It MUST be fully stopped (and its own final
+        # synchronous drain completed) before an observer's finish() closes the files that thread writes: otherwise an in-flight write can race teardown and
+        # silently no-op instead of persisting or erroring loudly. See TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD.
         if hasattr(self, "_event_recorder") and self._event_recorder:
             self._event_recorder.shutdown()
             workers_stopped += 1
 
-        if hasattr(self, "_quality_hub") and self._quality_hub is not None:
-            try:
-                _quality_report = self._quality_hub.get_quality_report()
-                _persistence = getattr(self._quality_hub, "_persistence", None)
-                if _persistence is not None:
-                    _persistence.write_report(_quality_report)
-                    _persistence.shutdown()
-            except Exception:
-                logger.warning("SimQ final report write failed during shutdown (non-fatal)")
+        if hasattr(self, "_run_observers"):
+            self._run_observers.finish()
 
         if hasattr(self, "_metric_recorder") and self._metric_recorder:
             self._metric_recorder.shutdown(self._state.tick)

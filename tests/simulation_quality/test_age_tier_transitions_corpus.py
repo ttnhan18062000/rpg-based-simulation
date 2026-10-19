@@ -25,6 +25,7 @@ from src.core.state import AuthoritativeState, LifeStage
 from src.domains.demographics.cohort import ADULT_ELDER_BOUNDARY_TICKS, YOUNG_ADULT_BOUNDARY_TICKS
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
+from src.simulation_quality.observer import default_observer_factories
 
 
 def _child_about_to_come_of_age(entity_id: int) -> "EntityState":
@@ -61,7 +62,7 @@ def test_young_adult_transition_and_coming_of_age_fire_at_real_threshold():
     child = _child_about_to_come_of_age(1)
     state = AuthoritativeState(tick=0, seed=42, entities={1: child})
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True}, observers=default_observer_factories())
     try:
         kernel.tick_once()
     finally:
@@ -90,7 +91,7 @@ def test_adult_elder_transition_and_elder_attribute_deltas_fire_at_real_threshol
     pre_strength = adult.attributes.strength
     pre_agility = adult.attributes.agility
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True}, observers=default_observer_factories())
     try:
         kernel.tick_once()
     finally:

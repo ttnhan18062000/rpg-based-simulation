@@ -19,6 +19,7 @@ from tools.calibrate_simq import _load_world_state
 from src.config.profiles import PROD_SMALL
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
+from src.simulation_quality.observer import default_observer_factories
 
 
 def test_regional_reputation_carries_distinct_per_region_values_through_a_real_world_and_tick():
@@ -34,7 +35,7 @@ def test_regional_reputation_carries_distinct_per_region_values_through_a_real_w
     new_social = replace(entity.social, regional_reputation=dict(seeded_values))
     state = replace(state, entities={**state.entities, entity_id: replace(entity, social=new_social)})
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True}, observers=default_observer_factories())
     try:
         kernel.tick_once()
     finally:

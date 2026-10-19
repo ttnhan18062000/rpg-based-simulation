@@ -9,6 +9,7 @@ from src.engine.kernel import Kernel
 from src.config.profiles import PROD_DEFAULT
 from src.platform.rng import DeterministicRNG
 from src.engine.cadence import SystemCadence
+from src.simulation_quality.observer import default_observer_factories
 
 def profile_governance():
     # Setup a heavy governance state
@@ -24,7 +25,8 @@ def profile_governance():
         profile,
         state,
         DeterministicRNG(42),
-        flags={"audit_mode": False, "no_frame_pacing": True, "no_replay": True, "force_full_scan": True}
+        flags={"audit_mode": False, "no_frame_pacing": True, "no_replay": True, "force_full_scan": True},
+        observers=default_observer_factories(),
     )
     
     print("Starting profile...")

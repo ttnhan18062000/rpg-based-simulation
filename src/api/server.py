@@ -15,6 +15,7 @@ from src.api.admission_control import (
     configure_admission_control, require_admission,
     require_admission_header_or_query, require_admission_ws,
 )
+from src.simulation_quality.observer import QualityRunObserver
 from src.api.dependencies import (
     set_engine_manager, get_engine_manager,
     set_quality_hub, set_quality_persistence,
@@ -60,9 +61,10 @@ def create_v2_app(
 
         # G2 fix: wire quality hub into dependency container after kernel is ready
         _k = manager.kernel
-        if _k is not None and _k.quality_hub is not None:
-            set_quality_hub(_k.quality_hub)
-            set_quality_persistence(getattr(_k.quality_hub, "_persistence", None))
+        _quality = _k.observers.of_type(QualityRunObserver) if _k is not None else None
+        if _quality is not None and _quality.hub is not None:
+            set_quality_hub(_quality.hub)
+            set_quality_persistence(_quality.persistence)
 
         # Register LiveAnomalyCounter as subscriber to publisher
         from src.observability.live.event_publisher import LiveEventPublisher

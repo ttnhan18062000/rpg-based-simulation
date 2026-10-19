@@ -18,7 +18,7 @@ Both AuthoritativeState.seed and DeterministicRNG use this value (INFRA-101/102)
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -140,6 +140,7 @@ class CampaignOrchestrator:
         self,
         manifest: CampaignManifest,
         scenario_event_recorder: Optional["EventRecorder"] = None,
+        observers: Sequence[Callable[..., Any]] = (),
     ) -> None:
         """
         `scenario_event_recorder` is a narrow, scenario/campaign-bookkeeping-only side
@@ -154,6 +155,7 @@ class CampaignOrchestrator:
         """
         self._manifest = manifest
         self._scenario_event_recorder = scenario_event_recorder
+        self._observers = tuple(observers)
         self._state = CampaignState(
             campaign_id=manifest.id,
             episode_index=0,
@@ -223,7 +225,8 @@ class CampaignOrchestrator:
         from src.engine.scenario_runtime import ScenarioRuntimeService
 
         svc = ScenarioRuntimeService(
-            spec, initial_state=initial_state, scenario_event_recorder=self._scenario_event_recorder
+            spec, initial_state=initial_state, scenario_event_recorder=self._scenario_event_recorder,
+            observers=self._observers,
         )
         try:
             svc.start()

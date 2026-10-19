@@ -19,7 +19,9 @@ Out of scope (see sibling tickets):
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Sequence
+
+from src.engine.run_observers import RunObserverFactory
 
 if TYPE_CHECKING:
     from src.scenarios.schema import SimulationScenarioDefinition
@@ -136,6 +138,7 @@ class ScenarioRuntimeService:
         initial_state: Optional["AuthoritativeState"] = None,
         scenario_event_recorder: Optional["EventRecorder"] = None,
         governor: Optional["ResourceGovernor"] = None,
+        observers: Sequence["RunObserverFactory"] = (),
     ) -> None:
         """
         `governor`, when given, is handed to the `Kernel` this service builds (None keeps the kernel's own default),
@@ -155,6 +158,7 @@ class ScenarioRuntimeService:
         self._initial_state = initial_state
         self._scenario_event_recorder = scenario_event_recorder
         self._governor = governor
+        self._observers = tuple(observers)
         self._state: ScenarioObjectiveState = ScenarioObjectiveState.RUNNING
         self._tick: int = 0
         self._paused: bool = False
@@ -421,7 +425,7 @@ class ScenarioRuntimeService:
         else:
             state = AuthoritativeState(tick=0, seed=0)
             rng = DeterministicRNG(base_seed=0)
-        return Kernel(profile, state, rng, flags={"no_replay": True}, governor=self._governor)
+        return Kernel(profile, state, rng, flags={"no_replay": True}, governor=self._governor, observers=self._observers)
 
 
 # E31C: re-export so callers can do `from src.engine.scenario_runtime import ScenarioCheckpointer`

@@ -21,6 +21,7 @@ from src.worldbuilding.validator import WorldValidator
 from src.lab.validator import ScenarioValidator, ExperimentValidator
 from src.observability.config import ObservabilityConfig, ObservabilityMode
 from src.config.loader import ConfigLoader
+from src.simulation_quality.observer import default_observer_factories
 
 logger = logging.getLogger(__name__)
 
@@ -227,7 +228,8 @@ class ScenarioLabOrchestrator:
                             provenance_manifest_path=str(provenance_manifest_path),
                             assembly_report_path=str(assembly_report_path),
                             validation_report_path=str(validation_report_path) if validation_report_path.is_file() else None,
-                            compile_report_path=str(compile_report_path)
+                            compile_report_path=str(compile_report_path),
+                            observers=default_observer_factories(),
                         )
                     else:
                         kernel = Kernel(
@@ -235,7 +237,8 @@ class ScenarioLabOrchestrator:
                             state=initial_state,
                             rng=rng,
                             run_id=run_id,
-                            world_id=scenario_spec.world_id
+                            world_id=scenario_spec.world_id,
+                            observers=default_observer_factories(),
                         )
 
                     try:

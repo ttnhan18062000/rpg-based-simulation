@@ -69,3 +69,23 @@ Tests that touch the kernel's SimQ attributes directly (must change): `tests/sim
 2. **No hidden global registration.** A module-level registry that SimQ fills on import would be implicit durable behaviour (CLAUDE.md); the plan uses an explicit constructor argument instead.
 3. **Hook name.** "Post-apply observer" is a misnomer for an envelope sink; the plan names it `RunObserver` and states why.
 4. Memo row 82 guards (rpg-designer-after-v1 ff0a4a9df): this ticket adds no typed record and no event, so guard 1 is satisfied trivially; guard 2 (reported, not required) does not apply. Its SimQ criterion is "the report is unchanged".
+
+## 7. Caller inventory (planner's ruling: behaviour-neutral at the harness level)
+
+Rule used: before this change SimQ was built by `Kernel.__init__` iff `ObservabilityConfig.get_mode() != OFF` and `build_feed_from_env()` returned a feed. The mode defaults to LIGHT and is OFF only where a caller or the environment sets it, so every caller carried SimQ unless it ran with observability OFF. The kernel keeps the OFF gate and the env gates (`QUALITY_SCORING_DISABLED`, `QUALITY_FEED_MODE`), so **every caller that constructs a Kernel passes `default_observer_factories()`** and gets exactly what it got. A caller that runs OFF still gets nothing, because the kernel does not build observers then.
+
+| caller | writes quality_scores.jsonl today | passes now |
+|---|---|---|
+| `src/api/engine_manager.py` (live API) | yes (LIGHT default); `server.py` reads the hub for the quality routes | `default_observer_factories()`; server finds `QualityRunObserver` in `kernel.observers` |
+| `src/cli/entry.py` | yes | passes it |
+| `src/observability/sweeper.py`, `readiness/harness.py`, `mining/controller.py`, `src/lab/orchestrator.py` | per config: they `set_override_mode(config mode)`; yes unless the config mode is OFF | passes it; OFF configs still build nothing |
+| `src/perf/long_run_harness.py` (3), `bench_harness.py` (2), `profile_governance.py`, `tools/perf/{_profiling_common,profile_sweep,profile_engine}.py` | yes (LIGHT default); the perf numbers and `test_simq_isolation_overhead` include SimQ | passes it, so perf numbers do not move |
+| `src/certification/harness.py` (3) | yes (audit_mode zeroes signals, not observability) | passes it |
+| `src/engine/scenario_runtime.py`, `scenario_checkpoint.py` (engine modules, cannot import SimQ) | yes | take `observers=` (default empty); `src/domains/campaigns/orchestrator.py`, `src/api/routes/scenarios.py` (restore) and `tools/calibrate_simq.py` pass it |
+| `src/domains/campaigns/runner.py` (`SimulationAnalysisRunner`) | yes, but its only callers are tests | takes `observers=` (default empty); the layers contract forbids domains importing SimQ or the engine's observer type, so the parameter is untyped `Callable` |
+| tools `calibrate_simq`, `entity_lifecycle_score`, `balance_measure`, `personality_audit`, `execution_census`, `release/generate_release_proof`, `test_architecture/rpg_gate_run` (gate and paired runs, `rpg_measure/arm_child`) | yes | pass it |
+| tests that build a `Kernel` | yes, into their run dir | only the tests that read SimQ output pass it (`tests/simulation_quality/*`, `tests/perf/test_simq_isolation_overhead.py`); the other tests construct a Kernel for something else and no longer write `quality_scores.jsonl` into their temp run dir. This is the one place the change is not byte-for-byte neutral; it affects test scratch output only and was checked by running the suites that read SimQ files (see Test Summary). |
+
+## 8. Note for the later decision (not this ticket): which runs should not carry SimQ
+
+Candidates, proposed for the ticket that makes SimQ offline (D80 C) or after it, when dropping the observer from a harness is a one-line change: gate and paired runs (`rpg_gate_run`, `arm_child`), lab, sweeper, mining, readiness, certification, scenario runtime and campaigns. They read only state, events or hashes, never `quality_scores.jsonl`. Keep it for: the API, the CLI, `calibrate_simq`/`evaluate_simq`/long-run observation, and perf harnesses until the overhead test is rewritten. Every drop must be a measured step: the thread and file I/O leave the run, so tick timing moves even though the hash does not.

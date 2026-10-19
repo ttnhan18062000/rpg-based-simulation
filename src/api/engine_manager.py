@@ -15,6 +15,7 @@ from src.api.http_metrics import HttpRequestMetrics, activate, deactivate
 from src.api.read_model_cache import ReadModelCache
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
+from src.simulation_quality.observer import default_observer_factories
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +137,7 @@ class V2EngineManager:
 
         state = dataclasses.replace(compiled_state, tick=0, seed=self._seed)
 
-        self._kernel = Kernel(profile=self._profile, state=state, rng=rng)
+        self._kernel = Kernel(profile=self._profile, state=state, rng=rng, observers=default_observer_factories())
         self._kernel._event_listeners = self._event_listeners
         self._update_latest_state(state)
 

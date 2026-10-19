@@ -18,6 +18,7 @@ from src.config.profiles import PROD_SMALL
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.world.displacement import DisplacementService
+from src.simulation_quality.observer import default_observer_factories
 
 
 def test_displaced_entity_retains_fled_from_region_as_home():
@@ -47,7 +48,7 @@ def test_displaced_entity_retains_fled_from_region_as_home():
     assert resident_ids, "crowded_frontier must have at least one living, home-unset resident in the struck region"
     resident_id = resident_ids[0]
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True}, observers=default_observer_factories())
     try:
         kernel.tick_once()
     finally:

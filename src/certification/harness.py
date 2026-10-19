@@ -27,6 +27,7 @@ import json
 import subprocess
 from dataclasses import asdict
 from pathlib import Path
+from src.simulation_quality.observer import default_observer_factories
 
 
 class CertificationHarness:
@@ -85,7 +86,7 @@ class CertificationHarness:
         
         # 1. Reproducibility Check (Run 1)
         baseline_hash = self._get_baseline_hash(initial_state, ticks)
-        kernel = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed), flags={"audit_mode": True})
+        kernel = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed), flags={"audit_mode": True}, observers=default_observer_factories())
         
         # M10 Law: Boot state must be captured before tick mutations
         mode_sequence = [kernel.status.current_mode.name]
@@ -169,7 +170,7 @@ class CertificationHarness:
         if expectations.reproducibility_required:
             logger.info(f"Scenario {scenario_id}: executing 2nd run for reproducibility proof.")
             # Fresh state, fresh RNG with same seed
-            kernel2 = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed), flags={"audit_mode": True})
+            kernel2 = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed), flags={"audit_mode": True}, observers=default_observer_factories())
             try:
                 for t in range(1, ticks + 1):
                     # Phase 9 Fix: Reproducibility must respect the same stop conditions
@@ -297,7 +298,7 @@ class CertificationHarness:
         profile_dict["max_worker_count"] = 0 # Forced sequential
         baseline_profile = RuntimeProfile(**profile_dict)
 
-        kernel = Kernel(baseline_profile, state, DeterministicRNG(state.seed), flags={"audit_mode": True})
+        kernel = Kernel(baseline_profile, state, DeterministicRNG(state.seed), flags={"audit_mode": True}, observers=default_observer_factories())
         try:
             for t in range(1, ticks + 1):
                 # Phase 9 Fix: Baseline must respect the same stop conditions as the subject run

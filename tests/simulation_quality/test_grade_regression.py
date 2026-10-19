@@ -59,6 +59,7 @@ import pytest
 
 from tools.test_architecture.simq_pillar_compare import BAND, SCORE, compare_report, parse_anchor, parse_report_pillar
 from tools.test_architecture.simq_run_record import load_sidecar
+from src.simulation_quality.observer import default_observer_factories
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -474,7 +475,7 @@ def test_information_intent_execution_fires_through_kernel_tick_once() -> None:
     )
 
     ActionIntentAdapter.clear_traces()
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True}, observers=default_observer_factories())
     try:
         kernel.tick_once()
     finally:

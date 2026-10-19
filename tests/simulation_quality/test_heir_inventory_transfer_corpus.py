@@ -10,6 +10,7 @@ from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, ItemStack
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
+from src.simulation_quality.observer import default_observer_factories
 
 
 def test_heir_inherits_deceased_inventory_on_old_age_death():
@@ -30,7 +31,7 @@ def test_heir_inherits_deceased_inventory_on_old_age_death():
 
     state = AuthoritativeState(tick=0, seed=42, entities={1: deceased, 2: heir})
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True}, observers=default_observer_factories())
     try:
         kernel.tick_once()
     finally:

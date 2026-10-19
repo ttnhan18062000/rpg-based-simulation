@@ -6,7 +6,9 @@ import json
 import pickle
 import struct
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
+
+from src.engine.run_observers import RunObserverFactory
 
 if TYPE_CHECKING:
     from src.engine.scenario_runtime import ScenarioRuntimeService
@@ -51,6 +53,7 @@ class ScenarioCheckpointer:
     def restore(
         path: "str | Path",
         spec: "SimulationScenarioDefinition",
+        observers: Sequence["RunObserverFactory"] = (),
     ) -> "ScenarioRuntimeService":
         """Restore a ScenarioRuntimeService from a checkpoint file.
 
@@ -106,9 +109,10 @@ class ScenarioCheckpointer:
             rng,
             flags={"no_replay": True},
             run_id=f"restored_{spec.id}",
+            observers=observers,
         )
 
-        svc = ScenarioRuntimeService(spec)
+        svc = ScenarioRuntimeService(spec, observers=observers)
         svc._kernel = kernel
         svc._tick = header["tick"]
         return svc

@@ -11,6 +11,7 @@ from src.engine.kernel import Kernel
 from src.core.state import AuthoritativeState
 from src.platform.rng import DeterministicRNG
 from src.systems.world_systems.generator import EntityGenerator
+from src.simulation_quality.observer import default_observer_factories
 
 logger = logging.getLogger(__name__)
 
@@ -238,7 +239,7 @@ def _run_cli(args):
             buffer_capacity_kb=profile.max_replay_buffer_kb
         )
     
-    kernel = Kernel(profile=profile, state=state, rng=rng, replay=replay_manager, world_id=world_id)
+    kernel = Kernel(profile=profile, state=state, rng=rng, replay=replay_manager, world_id=world_id, observers=default_observer_factories())
     
     print(f"V2 Simulation Started: seed={seed}, entities={len(state.entities)}, ticks={ticks}")
     if args.replay:

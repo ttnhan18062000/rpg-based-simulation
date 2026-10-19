@@ -19,6 +19,7 @@ from src.config.loader import ConfigLoader
 from src.perf.scenarios import SCENARIO_BUILDERS
 from src.platform.rng import DeterministicRNG
 from src.engine.kernel import Kernel
+from src.simulation_quality.observer import default_observer_factories
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +200,8 @@ class ScenarioSweeper:
                         profile=profile,
                         state=initial_state,
                         rng=rng,
-                        run_id=spec.run_id
+                        run_id=spec.run_id,
+                        observers=default_observer_factories(),
                     )
 
                     try:

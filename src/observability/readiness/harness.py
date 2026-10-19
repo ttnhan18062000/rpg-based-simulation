@@ -19,6 +19,7 @@ from src.config.profiles import RuntimeProfile, HardwareClass
 from src.platform.rng import DeterministicRNG
 from src.core.builder import V2EntityBuilder
 from src.observability.config import ObservabilityConfig, ObservabilityMode
+from src.simulation_quality.observer import default_observer_factories
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ class ProductionReadinessHarness:
         state = AuthoritativeState(tick=1, seed=self.seed, world_time=100, entities=entities)
         rng = DeterministicRNG(self.seed)
 
-        return Kernel(profile, state, rng, run_id=run_id)
+        return Kernel(profile, state, rng, run_id=run_id, observers=default_observer_factories())
 
     def run_overhead_scenario(self) -> ScenarioResult:
         """

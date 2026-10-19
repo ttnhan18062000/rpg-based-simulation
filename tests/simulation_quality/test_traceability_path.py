@@ -19,6 +19,8 @@ from src.core.state import AuthoritativeState
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.engine.kernel import Kernel
 from src.observability.events import SimulationEvent
+from src.simulation_quality.observer import default_observer_factories
+from tests.helpers.simq import quality_feed_of, quality_hub_of
 
 RUN_ID = "simq-traceability-test"
 
@@ -44,7 +46,7 @@ def minimal_kernel(monkeypatch):
 
     state = AuthoritativeState(tick=0, seed=42)
     rng = MagicMock()
-    kernel = Kernel(_make_profile(), state, rng, run_id=RUN_ID, flags={"no_replay": True})
+    kernel = Kernel(_make_profile(), state, rng, run_id=RUN_ID, flags={"no_replay": True}, observers=default_observer_factories())
     yield kernel
     kernel.shutdown()
     filepath = kernel._event_recorder.filepath
@@ -70,7 +72,7 @@ def _inject_combat_hard_law_violation(kernel) -> None:
 def test_worst_event_id_resolves_in_simulation_events_jsonl(minimal_kernel):
     _inject_combat_hard_law_violation(minimal_kernel)
 
-    report = minimal_kernel._quality_hub.get_quality_report()
+    report = quality_hub_of(minimal_kernel).get_quality_report()
     assert report.pillars["COMBAT"].worst_events, (
         "COMBAT pillar has no worst_events after injecting a combat_hard_law_violation event — "
         "expected an unconditional -30.0 weight (config/simulation_quality/scoring_weights.yaml:38)"
@@ -90,7 +92,7 @@ def test_worst_event_id_resolves_in_simulation_events_jsonl(minimal_kernel):
 def test_worst_event_id_matches_originating_envelope_exactly(minimal_kernel):
     _inject_combat_hard_law_violation(minimal_kernel)
 
-    report = minimal_kernel._quality_hub.get_quality_report()
+    report = quality_hub_of(minimal_kernel).get_quality_report()
     assert report.pillars["COMBAT"].worst_events, (
         "COMBAT pillar has no worst_events after injecting a combat_hard_law_violation event — "
         "expected an unconditional -30.0 weight (config/simulation_quality/scoring_weights.yaml:38)"
@@ -114,7 +116,7 @@ def test_worst_event_id_matches_originating_envelope_exactly(minimal_kernel):
 def test_run_directory_cleaned_up_after_test():
     state = AuthoritativeState(tick=0, seed=42)
     rng = MagicMock()
-    kernel = Kernel(_make_profile(), state, rng, run_id=RUN_ID, flags={"no_replay": True})
+    kernel = Kernel(_make_profile(), state, rng, run_id=RUN_ID, flags={"no_replay": True}, observers=default_observer_factories())
     filepath = kernel._event_recorder.filepath
     kernel.shutdown()
     run_dir = os.path.dirname(filepath)
@@ -154,7 +156,7 @@ def test_spawn_occupancy_violation_reaches_world_pillar_via_minimal_kernel(minim
     the event in production (that real-wiring path is covered separately below)."""
     _inject_spawn_occupancy_violation(minimal_kernel)
 
-    report = minimal_kernel._quality_hub.get_quality_report()
+    report = quality_hub_of(minimal_kernel).get_quality_report()
     assert report.pillars["WORLD"].worst_events, (
         "WORLD pillar has no worst_events after injecting a LAW-SPAWN-OCCUPANCY InvariantViolation — "
         "expected a -30.0 weight (config/simulation_quality/scoring_weights.yaml, WORLD: spawn_occupancy_violation)"
@@ -213,10 +215,10 @@ def test_spawn_occupancy_violation_reaches_world_pillar_via_real_kernel_construc
 
     rng = MagicMock()
     run_id = "simq-traceability-real-wiring-test"
-    kernel = Kernel(_make_profile(), state, rng, run_id=run_id, flags={"no_replay": True})
+    kernel = Kernel(_make_profile(), state, rng, run_id=run_id, flags={"no_replay": True}, observers=default_observer_factories())
     try:
         time.sleep(0.15)
-        report = kernel._quality_hub.get_quality_report()
+        report = quality_hub_of(kernel).get_quality_report()
         assert report.pillars["WORLD"].worst_events, (
             "WORLD pillar has no worst_events after constructing a real Kernel against the "
             "seed=42 unit_information_density collision — expected "

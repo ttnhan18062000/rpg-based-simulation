@@ -5,7 +5,7 @@ Phase 9 — Simulation Analysis Runner.
 """
 
 import time
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, Callable, List, Tuple, Optional, Sequence
 from src.domains.campaigns.schema import (
     CampaignSpec,
     CampaignResult,
@@ -27,7 +27,8 @@ from src.core.builder import V2EntityBuilder
 
 
 class SimulationAnalysisRunner:
-    def __init__(self):
+    def __init__(self, observers: Sequence[Callable[..., Any]] = ()):
+        self._observers = tuple(observers)
         self.classifier = LifeArcClassifier()
         self.behavior_detector = BehaviorChangeProofDetector()
         self.diversity_analyzer = RouteDiversityAnalyzer()
@@ -90,7 +91,7 @@ class SimulationAnalysisRunner:
         if feature_flags:
             kernel_flags.update(feature_flags)
 
-        kernel = Kernel(profile, state, rng, flags=kernel_flags)
+        kernel = Kernel(profile, state, rng, flags=kernel_flags, observers=self._observers)
 
         events: List[CampaignEvent] = []
         if injected_events:

@@ -485,3 +485,18 @@ forbidden_modules = [
 allow_indirect_imports = true
 unmatched_ignore_imports_alerting = "warn"
 
+
+[[tool.importlinter.contracts]]
+id = "c16_engine_core_no_simq"
+name = "src.engine and src.core do not import src.simulation_quality (decision 80 B)"
+type = "forbidden"
+source_modules = [
+    "src.engine",
+    "src.core",
+]
+forbidden_modules = [
+    "src.simulation_quality",
+]
+# Direct imports only: the composition roots (api, cli, tools) import SimQ and pass it to the kernel as run observers; the kernel never does.
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = "warn"

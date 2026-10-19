@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from src.observability.reporting.history_query import sanitize_id
 from src.engine.scenario_registry import get, register
 from src.engine.scenario_checkpoint import ScenarioCheckpointer
+from src.simulation_quality.observer import default_observer_factories
 from src.api.presenters.scenarios import ScenarioPresenter
 
 router = APIRouter(prefix="/scenarios", tags=["Scenarios"])
@@ -96,7 +97,7 @@ async def restore_checkpoint(scenario_id: str, checkpoint_name: str, body: Optio
         )
 
     try:
-        restored_svc = ScenarioCheckpointer.restore(path, spec)
+        restored_svc = ScenarioCheckpointer.restore(path, spec, observers=default_observer_factories())
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:

@@ -20,6 +20,7 @@ from src.domains.demographics.cohort import PopulationCohort
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.systems.lifecycle_systems.genetics import GeneticsSystem
+from src.simulation_quality.observer import default_observer_factories
 
 # ENABLE_REPRODUCTION_HUMANOID_PATH is OFF by default in frontier_living_world's own registered
 # profile (config/simulation_quality/profiles/frontier_living_world.yaml only turns on
@@ -44,7 +45,7 @@ def test_a_real_birth_produces_a_correctly_blended_genetic_profile_within_range(
     state = replace(state, feature_flags={"ENABLE_REPRODUCTION_HUMANOID_PATH": "ON"})
     starting_ids = set(state.entities.keys())
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True}, observers=default_observer_factories())
     try:
         born_entity = None
         for _tick in range(_RUN_TICKS):

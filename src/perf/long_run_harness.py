@@ -41,6 +41,7 @@ from src.perf.benchmark_record import (
     utc_now,
     write_samples_file,
 )
+from src.simulation_quality.observer import default_observer_factories
 
 logger = logging.getLogger(__name__)
 
@@ -201,7 +202,7 @@ class LongRunStabilityHarness:
             effective_flags.update(flags)
             
         rng = DeterministicRNG(seed)
-        kernel = Kernel(self._profile, initial_state, rng, flags=effective_flags)
+        kernel = Kernel(self._profile, initial_state, rng, flags=effective_flags, observers=default_observer_factories())
         read_cache = ReadModelCache()
         
         # Initial GC Baseline
@@ -398,14 +399,14 @@ class LongRunStabilityHarness:
         
         # Run 1
         state1 = builder(entity_count=entity_count, seed=seed)
-        kernel1 = Kernel(self._profile, state1, DeterministicRNG(seed), flags=effective_flags)
+        kernel1 = Kernel(self._profile, state1, DeterministicRNG(seed), flags=effective_flags, observers=default_observer_factories())
         for _ in range(total_ticks):
             kernel1.tick_once()
         hash1 = kernel1.shutdown().final_hash
         
         # Run 2
         state2 = builder(entity_count=entity_count, seed=seed)
-        kernel2 = Kernel(self._profile, state2, DeterministicRNG(seed), flags=effective_flags)
+        kernel2 = Kernel(self._profile, state2, DeterministicRNG(seed), flags=effective_flags, observers=default_observer_factories())
         for _ in range(total_ticks):
             kernel2.tick_once()
         hash2 = kernel2.shutdown().final_hash

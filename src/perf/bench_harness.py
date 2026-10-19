@@ -36,6 +36,7 @@ from src.perf.benchmark_record import (
     utc_now,
     write_samples_file,
 )
+from src.simulation_quality.observer import default_observer_factories
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ def run_memory_pass(
     """
     process = psutil.Process(os.getpid())
     rng = DeterministicRNG(initial_state.seed)
-    kernel = Kernel(profile, initial_state, rng, flags={"no_replay": True, "no_frame_pacing": True})  # the M1 defaults of ``run_benchmark``
+    kernel = Kernel(profile, initial_state, rng, flags={"no_replay": True, "no_frame_pacing": True}, observers=default_observer_factories())  # the M1 defaults of ``run_benchmark``
     gc_was_enabled = gc.isenabled()
     try:
         for _ in range(warmup_ticks):
@@ -203,7 +204,7 @@ class BenchHarness:
 
         # Initialize Kernel — always shut down to release EventRecorder thread
         rng = DeterministicRNG(initial_state.seed)
-        kernel = Kernel(self._profile, initial_state, rng, flags=effective_flags)
+        kernel = Kernel(self._profile, initial_state, rng, flags=effective_flags, observers=default_observer_factories())
 
         try:
             cpu_start = self._process.cpu_times()

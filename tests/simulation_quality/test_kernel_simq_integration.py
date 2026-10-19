@@ -12,6 +12,8 @@ from unittest.mock import MagicMock
 from src.core.state import AuthoritativeState
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.engine.kernel import Kernel
+from src.simulation_quality.observer import default_observer_factories
+from tests.helpers.simq import quality_feed_of, quality_hub_of
 
 
 @pytest.fixture()
@@ -33,21 +35,21 @@ def minimal_kernel(tmp_path, monkeypatch):
     )
     state = AuthoritativeState(tick=0, seed=42)
     rng = MagicMock()
-    kernel = Kernel(profile, state, rng, run_id="simq-wire-test", flags={"no_replay": True})
+    kernel = Kernel(profile, state, rng, run_id="simq-wire-test", flags={"no_replay": True}, observers=default_observer_factories())
     yield kernel
     kernel.shutdown()
 
 
 def test_simq_hub_wired_into_kernel(minimal_kernel):
     """Kernel must expose a non-None quality_hub after __init__."""
-    assert minimal_kernel._quality_hub is not None, (
+    assert quality_hub_of(minimal_kernel) is not None, (
         "Kernel._quality_hub is None — quality_fn was not wired into EventRecorder's worker"
     )
 
 
 def test_no_second_drain_worker(minimal_kernel):
     """InProcessQualityFeed must not create a competing QueueDrainWorker."""
-    feed = minimal_kernel._quality_feed
+    feed = quality_feed_of(minimal_kernel)
     assert feed is not None
     assert not hasattr(feed, "_worker") or getattr(feed, "_worker", None) is None, (
         "InProcessQualityFeed still owns a QueueDrainWorker — G3 not fixed"
@@ -87,7 +89,7 @@ def test_20_tick_run_produces_nonzero_tick_count(minimal_kernel):
     # Give the drain worker time to process the queue
     time.sleep(0.15)
 
-    hub = minimal_kernel._quality_hub
+    hub = quality_hub_of(minimal_kernel)
     report = hub.get_quality_report()
 
     assert report.tick_count > 0, (
@@ -120,7 +122,7 @@ def _build_kernel(monkeypatch, tmp_path, feed_mode=None, scoring_disabled=False,
     )
     state = AuthoritativeState(tick=0, seed=42)
     rng = MagicMock()
-    kernel = Kernel(profile, state, rng, run_id=run_id, flags={"no_replay": True})
+    kernel = Kernel(profile, state, rng, run_id=run_id, flags={"no_replay": True}, observers=default_observer_factories())
     return kernel
 
 
@@ -152,7 +154,7 @@ def test_kernel_shutdown_persists_in_flight_quality_write(monkeypatch, tmp_path)
         monkeypatch, tmp_path, feed_mode="inprocess", run_id="kernel-shutdown-ordering-hazard-test",
     )
     recorder = kernel._event_recorder
-    hub = kernel._quality_hub
+    hub = quality_hub_of(kernel)
     assert hub is not None, "test setup requires a wired QualityHub (feed_mode=inprocess)"
     persistence = hub._persistence
     run_dir = persistence._run_dir
@@ -195,7 +197,7 @@ def test_kernel_broker_mode_builds_zero_quality_hub(monkeypatch, tmp_path):
     """TCK-20260702-OBSISO-BROKER-CONFIG G3: broker mode must not construct a QualityHub."""
     kernel = _build_kernel(monkeypatch, tmp_path, feed_mode="broker")
     try:
-        assert kernel._quality_hub is None
+        assert quality_hub_of(kernel) is None
     finally:
         kernel.shutdown()
 
@@ -218,10 +220,10 @@ def test_kernel_inprocess_mode_unaffected_by_g3_fix(monkeypatch, tmp_path):
     instead of the resolved _feed instance's concrete type."""
     kernel = _build_kernel(monkeypatch, tmp_path, feed_mode="inprocess")
     try:
-        assert kernel._quality_hub is not None
+        assert quality_hub_of(kernel) is not None
         registered_scorers = {
             id(scorer)
-            for scorer_list in kernel._quality_hub.SCORER_REGISTRY.values()
+            for scorer_list in quality_hub_of(kernel).SCORER_REGISTRY.values()
             for scorer in scorer_list
         }
         assert len(registered_scorers) == 10, (
@@ -242,7 +244,7 @@ def test_quality_scoring_disabled_still_wins_in_both_modes(monkeypatch, tmp_path
             run_id=f"disabled-{feed_mode}",
         )
         try:
-            assert kernel._quality_hub is None
+            assert quality_hub_of(kernel) is None
             thread_names = {t.name for t in threading.enumerate()}
             assert "broker-quality-feed" not in thread_names
         finally:

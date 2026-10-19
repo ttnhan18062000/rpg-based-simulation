@@ -28,6 +28,7 @@ from src.core.strategic import ContractKind, ContractState, ContractStatus
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.systems.social_systems.appraisal import SocialAppraisalSystem
+from src.simulation_quality.observer import default_observer_factories
 
 # Tuned so baseline trust_score = 0.7*public_trust + 0.3*0.5 + (0.5-0.5)*0.2 lands just above 0.5
 # (public_reputation=1.04 -> public_trust=0.52 -> 0.7*0.52 + 0.15 = 0.514), so
@@ -84,7 +85,7 @@ def test_defection_degrades_clan_reputation_and_flips_stranger_loan_decision():
     )
 
     state = _two_clans_of_four(defector_grievances=3)
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True}, observers=default_observer_factories())
     try:
         kernel.tick_once()
     finally:
