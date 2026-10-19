@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, documentation, roadmap]
-last_verified: "2026-10-09"
+last_verified: "2026-10-19"
 ---
 
 # Systemic World Roadmap — PROPOSED / FOR REVIEW
@@ -895,11 +895,13 @@ fifty-one entries (row 27 lands with the decision-27 PR):
 72. terrain movement cost (decided 2026-10-13: declared per terrain in content, a missing one is an error; fixed before baseline v1 as its own measured step, MOV-04);
 73. what a paid inn meal gives once the free part goes (decided 2026-10-13: 60 hunger for 5 gold, paid atomically or refused, SURV-06).
 74. which species the species-less people get (decided 2026-10-13: human, one per recipe, from each role archetype; other peoples later as their own recipes; before v1, SURV-06).
-75. what the terrain cost does (decided 2026-10-14: a step costing N takes N times as long, and routes weigh the cost; before v1, time then route, each measured alone; MOV-04).
-76. how the steps before the milestone-0 gate are measured (decided 2026-10-14: once at fold; a cumulative watch with a stop-and-ask trigger; byte-identical proof for neutral steps and reused arms; §12.3).
-77. what SimQ grades once rebuilt (decided 2026-10-14: outcome measures from the paired table; NARRATIVE retired; COGNITION and INFORMATION no-data until milestone 1; after v1).
+75. what the terrain cost does (decided 2026-10-14: a step costing N takes N times as long, and routes weigh the cost; before v1, time then route, each measured alone; MOV-04; route folded 2026-10-16 at 10 seeds, with three v1 disclosures).
+76. how the steps before the milestone-0 gate are measured (decided 2026-10-14: once at fold; a cumulative watch with a stop-and-ask trigger; byte-identical proof for neutral steps and reused arms; amended 2026-10-15/16: a floor of 1 people death per seed per world, only more deaths stop, stop base 903239fbe, the extinction line as is; §12.3).
+77. what SimQ grades once rebuilt (decided 2026-10-14: outcome measures from the paired table; NARRATIVE retired; COGNITION and INFORMATION no-data until milestone 1; after v1; amended by decision 80: read from the lossless record, on top of an ungraded data review).
 78. when dead name-checked rules are switched on (decided 2026-10-14: before v1 only the gate path, earning and eating, plus the ruled terrain work; the rest listed in v1's disclosure and switched on after v1, each measured alone).
 79. the gate-path name rows (decided 2026-10-14: material-category items sell as spare; content base value is the only price, its own step; the level-up role rename is switched off; all before v1, each measured alone; amended 2026-10-15: spare weapons and armor still sell by kind, and a category-less tool or trinket is not defaulted to material but is a disclosed gap).
+80. what SimQ observes end to end (decided 2026-10-16: a typed event catalog, a generic observer hook, offline reading of the lossless record, an ungraded data review first; before v1 only the catalog inventory, the grief trigger as typed state and the event-drop fix; SimQ-motivated seeds disclosed in v1 and removed after).
+81. how trust moves (decided 2026-10-18: after v1, disclosed; one cut per abandonment episode with one trust-scale contract as one step, then trust rising only from real outcome records).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
@@ -1157,6 +1159,20 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    - **Tiered cost:** a step claimed neutral needs byte-identical proof only. A behaviour step
      keeps 3 worlds, 5 seeds and 5,000 ticks per arm. Step N's child arm is step N+1's parent
      arm, cached by commit. Runs keep summaries, not full logs.
+   - **The stop line (amended by the owner, 2026-10-15/16):** cumulative people deaths above
+     2 SE (the SD of the per-seed paired difference divided by √n) and above a floor of 1 death
+     per seed per world. Only more deaths stop work; fewer is report-only. The extinction line has
+     no minimum base count and is revisited at v1. A kind is base-state, exempt from the line, only
+     while the step's own parent has it at 0 in every seed. Every stop so far was settled by a
+     10-seed rerun, then the owner's ruling.
+   - **The base:** 903239fbe, the commit just before the first step in the owner's order. Steps
+     2.120-2.123 came before decision 76 and are shown by one report-only reading against
+     c3f6202b9 (v1 disclosure M2). A neutral step that adds durable state proves neutrality by
+     projection (decision 76's application). At baseline v1 the v1 fingerprints (10 seeds,
+     audit_mode) become the base for milestone 1.
+   - **Baseline v1** (TCK-20261019-RECORD-BASELINE-V1) records the meal-ON world, together with
+     `v1_disclosure.md`, which lists everything v1 records but does not claim. The free-meal
+     removal (decision 73) is measured against v1 as the gate's own step.
 1. **Kinds by properties.**
    - The property model in coarse bands, as schema and content.
    - The appraisal.

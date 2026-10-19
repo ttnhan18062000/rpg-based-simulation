@@ -114,6 +114,27 @@ def test_an_add_is_counted_by_its_declared_source_or_as_unsourced_and_its_purse_
     assert payload["declared_coin"] == 7.0
 
 
+def test_an_unsourced_add_is_named_by_entity_tick_and_group_and_a_sourced_add_is_not():
+    state = _at_tick(_world(), 10)
+    sourced, bare = V2EntityBuilder(500).build(), V2EntityBuilder(501).build()
+    payload = _tally(state, update=_update(adds=[sourced, bare], sources={500: SpawnSource(SpawnKind.BIRTH, parent_ids=(1, 2))}))
+    assert payload["unsourced_examples"] == [{"entity_id": 501, "tick": 10, "kind_group": kind_group(bare), "check": "unsourced"}]
+
+
+def test_unsourced_examples_are_capped_and_reset_between_runs():
+    from src.observability.run_ledger import MAX_EXAMPLES
+    state = _at_tick(_world(), 10)
+    bare = [V2EntityBuilder(600 + i).build() for i in range(MAX_EXAMPLES + 3)]
+    payload = _tally(state, update=_update(adds=bare))
+    assert len(payload["unsourced_examples"]) == MAX_EXAMPLES
+    assert sum(payload["adds"].values()) == MAX_EXAMPLES + 3
+    assert [x["entity_id"] for x in payload["unsourced_examples"]] == [600 + i for i in range(MAX_EXAMPLES)]
+    RunLedger.reset_run_state()
+    RunLedger.configure(True)
+    RunLedger.observe(state, state, _update())
+    assert RunLedger.tally_event().payload["unsourced_examples"] == []
+
+
 def test_coin_is_recorded_at_the_first_and_the_last_observed_tick():
     state = _at_tick(_world(), 10)
     richer = replace(state)
