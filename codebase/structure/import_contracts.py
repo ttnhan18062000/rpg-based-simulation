@@ -185,6 +185,7 @@ class Report:
 
     @property
     def findings(self) -> bool:
+        """True when a contract is broken or the ignore list or generated block is out of date; the `ci` step fails on it."""
         return bool(self.broken or self.stale or self.stale_block)
 
 
