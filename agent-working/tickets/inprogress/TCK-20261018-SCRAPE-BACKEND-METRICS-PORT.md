@@ -79,7 +79,9 @@ None.
 
 ## Test Summary
 - **validated:** `docker compose config -q` for both profiles; the rendered backend service has `expose: ['9109']` and the only published port is `8000:8000`; `promtool check config` from the pinned image (SUCCESS, with the `rpg-backend` job).
-- Not yet run (needs the single full-profile stack run): `rpg-backend` target `up`, `sim_current_tick` returns a series, `localhost:8000/metrics` still 401, 9109 unreachable from the host, and the `simulation.json` panel list.
+- **running locally** (2026-10-19, second attempt; the first stopped because the local backend image predated R1; images rebuilt 16:32:14Z; record `docs/runbooks/records/2026-10-19-api-slo-alert-fire-test.md`): the `rpg-backend` target is `up`; `sim_current_tick` returns a series (851 at the first check); `count by (le) (..._bucket{le="0.3"})` is 1; `GET :8000/metrics` returns 401; `:9109` from the host is unreachable (HTTP code 000).
+- **`simulation.json` panels** (instant queries one minute after a fresh start; a young world): with data: World Age, Difficulty Mult, Active Entities, TPS, Calamity Status, Global Gold Circulation, Blacksmith & Shop Volume, Raw Events, Technical Errors (`sim_errors_total`). No series: Faction Populations, Entity Level Distribution, Total Combat Casualties, Detailed Phase Profiling, Redis & Kafka Latency Distribution, Worker Health and the invalid-actions query (the two Loki panels were not evaluated). Recorded for the dashboard ticket; no dashboard edit.
+- Evidence files: `agent-working/stored_artifacts/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK/run-2026-10-19/live_checks_2.txt`, `dashboard_panels.txt`.
 
 ## Files Changed
 (open)

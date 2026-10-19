@@ -110,8 +110,14 @@ None.
 - Gate: the 0.3 s bucket is not on main yet (`src/api/http_metrics.py` `_BUCKETS` has 0.25 and 0.5), so the fire test waits for rpg's change; main must be merged first and `le="0.3"` confirmed in `/metrics` before the run.
 
 ## Test Summary
-- **validated:** YAML parse of `rules-slo.yaml`; `docker compose --profile observability config -q`; frontmatter of the new runbook and the README (no violations).
-- Not yet run (needs the single full-profile stack run after the 0.3 bucket is on main): provisioning loads with no error, the rules appear as provisioned, the server-side p50/p95/p99 next to Locust per step, and the fire test with ntfy timestamps.
+- **validated:** YAML parse of `rules-slo.yaml`; `docker compose --profile observability config -q`; frontmatter of the runbook, the README and the record (no violations).
+- **running locally / measured** (2026-10-19, full-profile subset, second attempt; record `docs/runbooks/records/2026-10-19-api-slo-alert-fire-test.md`; evidence files `agent-working/stored_artifacts/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK/run-2026-10-19/`):
+  - Provisioning loaded: group `slo` with `ApiLatencyP95High` and `ApiErrorRateHigh`, `for` 2m, noData/execErr OK. **L-N:** while not violated both rules showed state inactive, health ok, instance "Normal (NoData)" (never NoData or Error as a state).
+  - Server-side p50/p95/p99 next to Locust's per step (aged curve, one 60 s repeat each): 10 users server SLI 4/125/228 ms vs Locust 29/130/190; 25 users 4/241/393 vs 84/290/400; 50 users 4/434/706 vs 170/510/680. The server p95 is 3.8, 17 and 15 percent below the client p95; the server SLI is the SLO input, the client number a conservative bound.
+  - **Fire test** (committed thresholds untouched, no override): 25 users for 9 minutes did NOT fire (server p95 0.222 to 0.239 s); 50 users from 17:28:05Z: pending 17:31:18, firing first seen 17:32:55, ntfy `[firing]` stamped 17:33:05 (about 5 minutes after the step started), load stopped 17:32:58, Normal 17:42:52, ntfy `[resolved]` 17:43:05. An incidental fire during the soak: `[firing]` 17:01:05, `[resolved]` 17:16:17 (about 15 minutes after the load stopped: the 5 minute rate window plus the 5 minute group_interval).
+  - Soak finding: `/entities` plateaued at about 691.5 KB with 12 entities (about 57 KB per entity), so the 100-entity page cap is not the limiter in the current build.
+  - Side finding: `DiskWillFillIn24h` fired 17:14:51Z to 17:29:51Z during heavy local work (no rule change; a tuning follow-up is filed by the planner).
+- Abort watcher verified (dry run printed WOULD DOWN; 60 real log lines, never triggered).
 
 ## Files Changed
 (open)

@@ -1,0 +1,4 @@
+step | client req/s ; p50/p95/p99 ms | server SLI (2xx, excl /health+unmatched) p50/p95/p99 ms | server all-routes p50/p95/p99 ms | server req/s
+10 users | 228.3 req/s ; 29/130/190 | 4/125/228 | 5/100/223 | 231.1
+25 users | 170.4 req/s ; 84/290/400 | 4/241/393 | 10/237/372 | 176.9
+50 users | 234.5 req/s ; 170/510/680 | 4/434/706 | 20/417/635 | 236.6

@@ -1,0 +1,8 @@
+  base TargetDown state= inactive health= ok lastError= - alerts= ['Normal', 'Normal', 'Normal', 'Normal', 'Normal', 'Normal', 'Normal', 'Normal']
+  base PrometheusUnreachable state= inactive health= ok lastError= - alerts= ['Normal']
+  base GrafanaAlertingFailures state= inactive health= ok lastError= - alerts= ['Normal']
+  base DiskSpaceLow state= inactive health= ok lastError= - alerts= ['Normal', 'Normal']
+  base DiskWillFillIn24h state= pending health= ok lastError= - alerts= ['Pending', 'Normal']
+  cause RedisDown state= inactive health= ok lastError= - alerts= ['Normal (NoData)']
+  slo ApiLatencyP95High state= inactive health= ok lastError= - alerts= ['Normal (NoData)']
+  slo ApiErrorRateHigh state= inactive health= ok lastError= - alerts= ['Normal (NoData)']

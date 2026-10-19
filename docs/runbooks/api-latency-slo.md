@@ -27,7 +27,7 @@ The rules are evaluated every minute. The rate windows are 5 minutes, so a short
 `ApiLatencyP95High`: the 95th percentile of successful API responses was above 300 ms over the last 5 minutes. `ApiErrorRateHigh`: more than 1 percent of responses were 5xx over the last 5 minutes. The API is slow or failing for real callers.
 
 ## First three checks
-1. Grafana Explore on the `prometheus` datasource: the latency expression without the `> 0.3`, by route (`sum by (le, route)`), to see which route is slow. On the load-test mix the slow route is `/api/v1/entities` once the world has aged (the response grows to the 100-entity page cap, about 745 KB; see the 2026-10-18 load-test record).
+1. Grafana Explore on the `prometheus` datasource: the latency expression without the `> 0.3`, by route (`sum by (le, route)`), to see which route is slow. On the load-test mix the slow route is `/api/v1/entities` once the world has aged: its response grows with the world's age to about 690 to 745 KB (see the [2026-10-18 load-test record](records/2026-10-18-api-load-test.md) and the [2026-10-19 fire-test record](records/2026-10-19-api-slo-alert-fire-test.md)).
 2. The Loki query on backend logs (`{container=~".*backend.*"}`): errors, tracebacks, admission pressure messages.
 3. Tempo search for slow traces: tracing is wired in compose but the spans arrive only after rpg's R3 (OpenTelemetry) lands; until then this step finds nothing.
 
@@ -35,7 +35,7 @@ The rules are evaluated every minute. The rate windows are 5 minutes, so a short
 - **Engine tick contention in the same process:** the API and the engine share one Python process; a slow tick delays requests.
 - **Admission pressure mode** (the governor): sustained load puts the server in a restrictive mode; check the governor state in `/api/v1/status`.
 - **Host saturation:** this is a VM host with the whole stack and other sessions on it; check `docker stats` and the host load.
-- **Payload growth with world age:** `GET /api/v1/entities` at the page cap is the dominant cost in the measured mix.
+- **Payload growth with world age:** `GET /api/v1/entities` is the dominant cost in the measured mix. What grows it: on 2026-10-19 the response went from about 12 KB to a plateau of about 691 KB within a few minutes of 50-user load while the world held only 12 entities (about 57 KB per entity), so the per-entity payload grows with age; the 2026-10-18 world had 100 entities at about 7.4 KB each. The cause of the per-entity growth was not investigated.
 
 ## Mitigations
 Reduce the load (stop the load test or the client), restart the backend only if it is stuck (`docker compose restart backend`; this resets the world age), and check that the metrics port `backend:9109` is still scraped (job `rpg-backend`, [target-down.md](target-down.md)). Do not raise the threshold to make the alert go away: the thresholds are the SLO and are not edited, not even for a test.

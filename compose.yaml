@@ -208,7 +208,7 @@ services:
     profiles: ["observability"]
     image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
     # Grafana 13 needs more than the 10.x limit of 256m: it hit 256m and restarted once, then peaked at 480 MiB during first start (317 MiB settled).
-    mem_limit: 768m # measured peak 559 MiB (73 %) with the base alert rules and ntfy contact point loaded, 2026-10-18; watch when the SLO rules are added. Not raised.
+    mem_limit: 1024m # measured peak 654 MiB (85 % of the old 768m) in slot (b), 2026-10-19; raised to 1024m (lead, 2026-10-20). Slot (c) verifies the new headroom.
     ports:
       - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
     environment:

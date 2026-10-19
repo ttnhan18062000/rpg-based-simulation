@@ -1,0 +1,43 @@
+16:25:29 start ntfy
+16:26:19 start stack
+16:28:01 stack up
+16:29:28 DOWN (stopped: backend image predates R1/R2)
+16:42:21 restart: start stack (images rebuilt 16:32:14Z)
+16:46:11 watcher verified (dry-run WOULD DOWN at 99000 MiB shown; real 1500/7500 logging every 60 s to tools/loadtest/runs/20261019T162529Z-slo-fire/guard.log, >=3 lines)
+load started 16:46:11
+bytes fresh 11885
+16:47:13 step soak-1 done
+16:48:15 step soak-2 done
+16:49:28 step soak-3 done
+16:50:30 step soak-4 done
+16:51:33 step soak-5 done
+16:52:35 step soak-6 done
+16:53:37 step soak-7 done
+16:54:39 step soak-8 done
+16:55:41 step soak-9 done
+16:56:43 step soak-10 done
+16:57:45 step soak-11 done
+16:58:48 step soak-12 done
+16:59:50 step soak-13 done
+17:00:52 step soak-14 done
+17:01:54 step soak-15 done
+17:02:56 step soak-16 done
+17:03:58 step soak-17 done
+17:05:01 step soak-18 done
+17:06:03 step soak-19 done
+17:07:05 step soak-20 done
+CAP NOT REACHED after 20
+SOAKDONE
+17:07:16 curve start (soak plateau ~691.5 KB accepted: six consecutive readings within 0.01 percent)
+17:08:18 step curve-10 done
+17:09:29 step curve-25 done
+17:10:31 step curve-50 done
+LOADDONE 17:10:31
+17:18:54 FIRE T_load_start users=25
+17:28:05 FIRE not fired at users=25 within the window
+17:28:05 FIRE T_load_start users=50
+17:32:55 FIRE firing observed at users=50
+17:32:55 FIRE stop load (fired) users=50
+17:32:58 FIRE load stopped; draining to resolved
+17:42:57 FIREDONE
+17:44:06 DOWN slot (b) complete
