@@ -43,18 +43,41 @@ Locust sent 217,618 requests over the whole run with **0 failures**, 409.9 req/s
 - **H3 confirmed:** ai_worker was not restarted (RestartCount 0, StartedAt 17:47:35 before and after). It logged `RedisStreamConsumer read error: Connection closed by server` and then repeated `failed to connect/create group ... name resolution` during the outage; afterwards the consumer group had 1 consumer, pending 0, lag 0, entries-read 26,293.
 
 ## 6. Memory: what is and is not known
-The drill script of this first run did not sample `docker stats`. At the end of the run `docker stats` showed Grafana at 713 MiB of 1 GiB. The cgroup `memory.peak` since container start read exactly the limit for Grafana (1024 MiB), promtail (128 MiB) and ntfy (64 MiB), but **`memory.peak` includes page cache, which the kernel reclaims, so it does not show real use and is not comparable with the `docker stats` figures of the earlier records**. No container was OOM-killed (all `OOMKilled=false`, restarts 0). The headroom of Grafana's new 1024m limit (the 2026-10-19 SLO record measured 654 MiB, 85 percent of the old 768m) was therefore **not measured here**. A re-measure with a memory sampler (anon, active and inactive file, peak) is pending; its result goes in section 8.
+The drill script of this first run did not sample `docker stats`. At the end of the run `docker stats` showed Grafana at 713 MiB of 1 GiB. The cgroup `memory.peak` since container start read exactly the limit for Grafana (1024 MiB), promtail (128 MiB) and ntfy (64 MiB), but **`memory.peak` includes page cache, which the kernel reclaims, so it does not show real use and is not comparable with the `docker stats` figures of the earlier records**. No container was OOM-killed (all `OOMKilled=false`, restarts 0). The headroom of Grafana's new 1024m limit (the 2026-10-19 SLO record measured 654 MiB, 85 percent of the old 768m) was therefore **not measured here**. The re-measure with a memory sampler is in section 8.
 
-## 7. Loki had no data in this run
-`/loki/api/v1/labels` returned no labels and the backend-log export was empty (0 streams) although promtail reported healthy. The log evidence in section 5 comes from `docker compose logs`. The cause is not investigated here; a snapshot of promtail and Loki is pending (section 8).
+## 7. Loki had no data in this run: the cause (snapshot, no fix applied)
+`/loki/api/v1/labels` returned no labels and the backend-log export was empty although promtail reported healthy. A read-only snapshot in the re-measure run (section 8; files in `remeasure-2026-10-19/loki/`) shows why:
+- Promtail `/targets`: `docker/tcp://docker-socket-proxy:2375:80 (0/0 ready)`, so discovery found **0 targets**. `promtail_sent_entries_total` and `promtail_sent_bytes_total` are 0 (nothing dropped, nothing sent); Loki is `ready`, its labels list is empty and `loki_ingester_chunks_created_total` is 0.
+- Promtail's log repeats every 5 s (13 times in its last 50 lines): `msg="Unable to refresh target groups" discovery=docker ... err="error while computing network labels: Error response from daemon: <html><body><h1>403 Forbidden</h1> Request forbidden by administrative rules."`.
+- Reading it: promtail's `docker_sd_configs` calls the Docker **networks** API to build network labels on every refresh. The `docker-socket-proxy` allows `CONTAINERS=1` and `POST=0` only (the `NETWORKS` section defaults to off), so `GET /networks` returns 403 and the whole refresh fails. A direct probe from inside the promtail container confirmed it: `GET /containers/json` through the proxy returns 200 (the project filter works, `COMPOSE_PROJECT_NAME` is `platform` inside the container), `GET /networks` returns 403.
+- It is therefore neither a starved promtail nor a wrong project filter: it is the proxy allow-list missing `NETWORKS`. Whether this changed with a newer promtail or proxy, or never worked, was not checked. No fix was applied (a `NETWORKS=1` change widens the proxy's read surface and is a decision, filed as a follow-up by the planner).
 
-## 8. Pending re-measure
-Grafana, promtail and ntfy memory with the anon and file split, and the promtail and Loki ingestion snapshot: to be filled after the re-measure run.
+## 8. Re-measure: memory (sampler on from before `up`) and the load
+Run `remeasure`, 2026-10-19 18:03:50Z to 18:12:46Z, the same 12-service stack as the drill, **9 minutes**. Load: 10 users for 180 s (65,812 requests, 0 failures, 366.5 req/s, p50/p95/p99 20/61/96 ms) then 50 users for 240 s (104,501 requests, 0 failures, 436.6 req/s, 100/220/320 ms). The abort watcher (dry run printed WOULD DOWN; 2+ real lines before any load; never triggered, 3.2 to 3.9 GB available, swap 5.5 GB) and the sampler (docker stats every 5 s; cgroup memory.current, anon, active and inactive file, file and peak) ran throughout; the sampler started before `up`, so first-start peaks are included. No container was OOM-killed (12 of 12 `oom=false`, restarts 0). The drill script's new lines (the sampler start and stop, the Loki WARN) have **not** been run end to end; here the sampler ran on its own.
+
+Peaks over the whole run, MiB (limit; `docker stats` already leaves out inactive file cache; "anon + active_file" is the figure to judge a limit on; `memory.peak` is for reference only because it includes cache):
+
+| service | limit | docker stats | anon | anon + active_file | anon % | anon + active % | memory.peak (ref) |
+|---|---|---|---|---|---|---|---|
+| grafana | 1024 | 247 | 234 | 239 | 23 | 23 | 351 |
+| backend | 1024 | 157 | 134 | 151 | 13 | 15 | 196 |
+| prometheus | 512 | 119 | 93 | 117 | 18 | 23 | 130 |
+| loki | 512 | 102 | 71 | 100 | 14 | 20 | 118 |
+| promtail | 128 | 46 | 23 | 45 | 18 | 35 | 58 |
+| ai_worker | 512 | 45 | 37 | 42 | 7 | 8 | 52 |
+| tempo | 512 | 40 | 38 | 38 | 8 | 8 | 40 |
+| ntfy | 64 | 29 | 21 | 27 | 33 | 43 | 44 |
+| redis | 256 | 25 | 7 | 23 | 3 | 9 | 32 |
+| docker-socket-proxy | 64 | 14 | 11 | 12 | 17 | 19 | 15 |
+| node-exporter | 32 | 13 | 7 | 12 | 22 | 38 | 15 |
+| redis-exporter | 32 | 12 | 10 | 12 | 32 | 36 | 14 |
+
+**Limit verdicts (no limit was changed):** grafana, promtail and ntfy are all far below the 85 percent line on anon alone (23, 18 and 33 percent) and on anon + active_file (23, 35 and 43 percent). The `memory.peak` readings at exactly 1024, 128 and 64 MiB in the drill run were page cache and file cache, not use. **Caveat for Grafana:** this run lasted 9 minutes with no alert firing and no notification sent; Grafana's higher figures (654 MiB `docker stats` under the old 768m limit in the SLO record, 713 MiB at the end of the drill) came from runs of an hour or more with alert evaluation and firing. So this run does not reproduce the highest Grafana use, and it says nothing about what it grows to over a long session. The 1024m limit stays; a longer observation is the open question.
 
 ## 9. What the runbook got wrong, and follow-ups
 - The runbook said the ai_worker is "expected to reconnect by itself"; it did, and the record now marks it confirmed.
-- The runbook's first check names Loki logs; in this stack Loki had no data (section 7), so the `docker compose logs backend` form should be given as the fallback once the cause is known.
-- Follow-ups: the Loki ingestion ticket (planner), the memory limits decision after the re-measure, and an rpg question (not a platform fix): the stream publish error is logged per attempt (184 warnings in 5 minutes) and there is no drop counter, so the loss is visible only in logs.
+- The runbook's first check names Loki logs; in this stack Loki had no data (section 7: promtail's discovery is denied by the proxy), so `docker compose logs backend` is the working fallback until that is fixed.
+- Follow-ups: the Loki ingestion ticket (planner; the `NETWORKS` allow-list decision), a longer Grafana observation, and an rpg question (not a platform fix): the stream publish error is logged per attempt (184 warnings in 5 minutes) and there is no drop counter, so the loss is visible only in logs.
 
 ## 10. Limits
-One local host with Locust on it; one drill run at one load step; the outage was 183 s; H2 is supported by logs only; the memory headroom and the Loki state are pending.
+One local host with Locust on it; one drill run at one load step; the outage was 183 s; H2 is supported by logs only; the memory re-measure was 9 minutes and did not reproduce Grafana's higher use of longer runs.

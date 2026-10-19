@@ -1,0 +1,31 @@
+## loki /ready
+ready
+
+## loki labels
+{"status":"success"}
+
+## loki ingester streams / received
+loki_ingester_chunks_created_total 0
+loki_ingester_memory_streams_labels_bytes 0
+## 403 sources: proxy env (compose.yaml lines)
+  docker-socket-proxy:
+    profiles: ["observability"]
+    # The only service that mounts the Docker socket, read-only, behind an allow-list: container list/inspect/logs, no POST (no exec, stop or create).
+    # Remaining risk: GET on /containers/*/json still exposes every container's environment (including secrets passed as env) to promtail,
+    # and the socket itself is still reachable by this proxy process. Internal network only (no published port).
+    image: tecnativa/docker-socket-proxy:v0.4.1@sha256:3400c429c5f9e1b21d62130fb93b16e2e772d4fb7695bd52fc2b743800b9fe9e
+    mem_limit: 64m
+    environment:
+      - CONTAINERS=1
+      - POST=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
+  tempo:
+    profiles: ["observability"]
+    # Latest stable at least two weeks old on 2026-10-18 (3.0.3, 2026-08-13; 3.0.4 is two days old); multi-arch index digest from a registry query.
+## the 403 as seen from promtail
+err="error while computing network labels: Error response from daemon: <html><body><h1>403 Forbidden</h1>\nRequest forbidden by administrative rules.\n</body></html>"
+## how many consecutive refresh errors
+13

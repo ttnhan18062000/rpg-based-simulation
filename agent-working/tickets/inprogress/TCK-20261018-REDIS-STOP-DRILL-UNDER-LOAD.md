@@ -93,8 +93,11 @@ To be created: the drill's raw Locust CSVs and log export.
 - Hypotheses (written before the run, from the ticket): (H1) the API SLO stays green and the cause alert fires; (H2) events published during the outage are lost, not replayed; (H3) ai_worker reconnects by itself.
 
 ## Test Summary
-- **validated:** `bash -n` on the script; README section added.
-- Not yet run: the drill itself (host slot (c)), which needs the RedisDown rule and the SLO rules provisioned and the redis-exporter running.
+- **validated:** `bash -n` on `drill_redis_stop.sh` and `sample_stats.sh`; the sampler was exercised on its own against a probe container and in the re-measure run; the drill script's new lines (sampler start/stop, the Loki WARN) have not run end to end.
+- **running locally** (drill run 2026-10-19 17:47Z to 18:00Z; record `docs/runbooks/records/2026-10-19-redis-stop-drill-under-load.md`; evidence `agent-working/stored_artifacts/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD/run-2026-10-19/`): Locust 10 users (below the knee), 217,618 requests, 0 failures, 409.9 req/s, p50/p95/p99 18/52/79 ms; Prometheus saw 218,054 responses, all `2xx`; backend `/health` 200 throughout; T0 17:51:29, T1 (ntfy published) 17:52:50, T2 17:54:32, T3 17:57:50; detection 81 s, recovery 3 m 19 s (not a like-for-like speed-up against S4's Loki drill: different rule, `for` and group interval). `ApiErrorRateHigh` and `ApiLatencyP95High` never fired.
+- Hypotheses: H1 confirmed (SLO green, cause alert fired); H2 supported, not proven (184 `Redis offline or unreachable` warnings and 1 publish error in the outage window, no replay; the 1000-entry stream cap trimmed the window); H3 confirmed (ai_worker RestartCount 0, consumer group lag 0 afterwards).
+- Re-measure (`agent-working/stored_artifacts/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD/remeasure-2026-10-19/`, 9 minutes, 10 then 50 users, sampler from before `up`): grafana, promtail and ntfy all below 85 percent on anon (23, 18 and 33 percent) and on anon + active_file (23, 35 and 43 percent); no limit changed; the drill-run `memory.peak` readings at the limits were page cache. The run did not reproduce Grafana's higher use of longer runs.
+- Loki finding (read-only snapshot): promtail's Docker discovery finds 0 targets because the `docker-socket-proxy` returns 403 on `GET /networks` (it allows `CONTAINERS=1` only); nothing was sent to Loki. No fix applied.
 
 ## Files Changed
 (open)

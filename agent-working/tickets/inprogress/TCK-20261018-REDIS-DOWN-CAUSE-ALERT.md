@@ -88,8 +88,8 @@ None.
 
 ## Test Summary
 - **validated:** YAML parse of `rules-redis.yaml`; `docker compose --profile observability config -q`; `promtool check config` (with the `redis` job): SUCCESS; frontmatter of the new runbook and README.
-- **running locally** (first slot-(b) attempt, 2026-10-19, stopped early for an unrelated reason): the exporter pull is done (digest matches the pin, 4,457,721 bytes); `redis_up == 1` and `redis_instance_info` reports `redis_version=8.10.2` (`redis_mode=standalone`), so the Redis 8 caveat is closed; the `redis` target is `up`. Idle `docker stats`: redis-exporter 8.3 MiB (limit 32m, about 3.9x headroom), redis 19 MiB.
-- Still not run: `redis_up == 1` on Redis 8.10.2, the `redis` target `up`, the exporter's peak memory, the alert firing within its `for` window and resolving, with timestamps (the drill ticket records them).
+- **running locally** (2026-10-19; record `docs/runbooks/records/2026-10-19-redis-stop-drill-under-load.md`): `redis_up == 1` and `redis_instance_info` reports `redis_version=8.10.2`, so the exporter works on Redis 8; the `redis` target is `up`. `docker compose stop redis` at 17:51:29Z: `redis_up` 0 at 17:51:32, `RedisDown` Pending 17:52:03, Alerting 17:52:34, ntfy `[firing] RedisDown` published 17:52:50 (81 s after the stop: 30 s evaluation, 30 s `for`, group wait); `docker compose start redis` at 17:54:32: Normal at 17:54:54, ntfy `[resolved]` published 17:57:50 (3 m 19 s, the `group_interval` wait). The message carries the summary and `Runbook: docs/runbooks/redis-down.md`.
+- redis-exporter peak (the re-measure run, 9 minutes): 12 MiB of its 32m limit (anon 10, anon + active file 12); no host port; no healthcheck (scratch image).
 
 ## Files Changed
 (open)
