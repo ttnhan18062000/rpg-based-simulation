@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-10-08"
+last_verified: "2026-10-19"
 ---
 
 # World Rule Family: Movement / Navigation
@@ -186,6 +186,17 @@ tiles mispriced). Cave, ruin and river had no cost at all.
     high ground land before baseline v1 as one measured step after the terrain route step, then
     chokepoints. Each reports cover and high-ground hits, perception, flight and pursuit counts
     per world. The rendering checks are a separate presentation cleanup.
+  - **Outcome (measured 2026-10-17/18; ruled by the owner 2026-10-17):** all three landed and
+    are dormant in the gate worlds. Cover (2.129) never applies there. Chokepoints (2.130): the
+    finder now reads structures' `blocked_tiles`, finds no chokepoint, and the step is
+    byte-identical on 20 of 20 runs, so it folded as neutral by proof. High ground: every attack
+    goes through the shared tactical multipliers (1,081 attacks, all through
+    `_get_tactical_multipliers`), but the only mountain world, `highland_traverse`, has no fights.
+    Each mechanic is proven by a forced-geometry scenario test that fails with the mechanic off
+    (`tests/unit/combat/test_terrain_mechanics_forced_scenarios.py`) and is disclosed in v1
+    (`docs/plans/systemic_world/v1_disclosure.md` C1). The skill and area attack paths never run
+    and would bypass these multipliers; when they are switched on after v1 they go through the
+    same multipliers (decision 78, ONE DAMAGE LAW).
 
 **Scenarios:** [SPC-S08](../scenarios/space-environment-batch-04.md#spc-s08).
 
