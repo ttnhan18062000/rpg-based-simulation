@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS
-phase: inprogress
+phase: done
 date: 2026-10-19
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 Default compose stack: the backend publishes the event stream to Redis, so ai_worker has work
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -78,9 +78,22 @@ None.
 - Ubuntu may prefer to fold this into a step-2 branch; check #618 before starting.
 
 ## Implementation Notes
+- #618 advance notice: platform-planner's comment of 2026-10-18T18:56Z covers exactly this backend `environment:` edit; no objection from ubuntu before the edit.
+- Backend `environment:` now sets `SIM_STREAM_BACKEND=redis` and `SIM_REDIS_URL=redis://redis:6379/0`, with a comment that the producer reads `SIM_*`, not `REDIS_URL`.
+- ai_worker: the unused `REDIS_URL` is replaced by the same two `SIM_*` variables (explicit; its defaults already matched).
+- The backend and ai_worker already had `depends_on: redis: service_healthy`, so nothing was added.
+- `src/**` untouched. Nothing was found that reads the stream back into the engine.
 
 ## Test Summary
+Checked in an isolated compose project built from the branch (`git archive` of the tip plus this compose.yaml), default services only (backend, redis, ai_worker), own volume, no override file, a live simulation running:
+- `docker compose config -q` passes and shows the two `SIM_*` variables on both services.
+- **Steady state, 6 samples over 5 min:** XLEN 132, 165, 198, 232, 282, 324 (grows, about 33 per min). The consumer group `observatory:consumers` had lag 0 and pending 0 at every sample (entries-read equal to XLEN). Backend health 200, 0 restarts on any service.
+- **Redis stopped 30 s:** the backend stayed up (health 200, `Up ... (healthy)`) and ai_worker stayed up (0 restarts). The backend logged 1 ERROR (`RedisStreamAdapter failed to publish event`) and 23 WARNING lines (`Redis offline or unreachable ... running in degraded mode`). ai_worker logged 7 connect errors and 1 `Connection closed by server` while Redis was away. All of them were name-resolution failures during the outage.
+- **After Redis restarted:** the stream resumed and the group had lag 0 and pending 0 at every sample over the next 2 min (XLEN 377 to 426, entries-read equal to XLEN). Events published during the outage were dropped: about 53 entries arrived in the 110 s window around the outage, where the steady rate predicts about 60. This is an estimate, not an exact count, since the adapter has no drop counter.
+- Not run: the whole pytest suite (YAML-only change; CI runs the static checks).
 
 ## Files Changed
+`compose.yaml` (backend and ai_worker `environment:`); this ticket.
 
 ## Completion Summary
+The default compose stack now publishes the simulation event stream to Redis, so ai_worker has work and the lag and pending checks (#541 item 2, #618 step 3) have a flowing stream to observe. Verified in an isolated stack: XLEN grows, lag and pending stay 0, and a 30 s Redis outage leaves both services up with the stream resuming (a few events dropped during the outage, approximately 7 by estimate).

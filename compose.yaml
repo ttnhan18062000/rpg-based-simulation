@@ -33,7 +33,10 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     restart: unless-stopped
     environment:
-      - REDIS_URL=redis://redis:6379/0
+      # The event-stream producer reads SIM_* (src/observability/config.py), not REDIS_URL. Without these two it falls back to the
+      # in-process stream and `simulation:events` stays empty, so ai_worker (which consumes that stream) idles.
+      - SIM_STREAM_BACKEND=redis
+      - SIM_REDIS_URL=redis://redis:6379/0
       # Tracing is off while the endpoint is empty (ADR D4). With the observability profile set it to http://tempo:4318 (or :4317, matching rpg's exporter, #622).
       # The sampling variable is added once rpg's middleware defines its name.
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
@@ -81,7 +84,9 @@ services:
     # Override FastAPI command to run the V2 live anomaly worker
     command: python -m src.observability.anomaly.worker
     environment:
-      - REDIS_URL=redis://redis:6379/0
+      # Same SIM_* variables as the backend (the worker reads these, not REDIS_URL); the backend setting is the one that matters, this one is explicit.
+      - SIM_STREAM_BACKEND=redis
+      - SIM_REDIS_URL=redis://redis:6379/0
       - AI_WORKER_METRICS_PORT=9108
     expose:
       - "9108"
