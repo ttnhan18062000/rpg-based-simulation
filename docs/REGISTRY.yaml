@@ -7676,6 +7676,17 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
+  ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
+  title: Tune DiskWillFillIn24h so short bursts of heavy local work don't trip it
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - docker/grafana/provisioning/alerting/rules-base.yaml
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS.md
   ticket_id: TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS
   title: 'Default compose stack: the backend publishes the event stream to Redis,
