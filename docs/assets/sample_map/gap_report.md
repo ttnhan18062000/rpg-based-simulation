@@ -29,7 +29,7 @@ Either can reopen on the owner's word.
 
 - **G5, connecting tiles (roads, rivers, coasts):** a design question for rpg-designer; the client cannot draw connecting tiles live. The read-only questions in [#519](https://github.com/ttnhan18062000/rpg-based-simulation/issues/519) are closed (answered 2026-10-11); the design question itself is not.
 - **G7, multi-tile structures:** a design question for rpg-designer, and the client needs support first (not supported live).
-- **G10, entities:** gated on rpg's [#523](https://github.com/ttnhan18062000/rpg-based-simulation/issues/523) and the owner's choice between role-id keys and species + size (rpg's [#548](https://github.com/ttnhan18062000/rpg-based-simulation/issues/548)); the tickets wait in `agent-working/tickets/todos/visual-asset-entity-markers/`. Nothing is drawn for entities.
+- **G10, entities (art closed in rc-0012, 2026-10-19; the map still draws none):** was gated on rpg's [#523](https://github.com/ttnhan18062000/rpg-based-simulation/issues/523) and the owner's choice between role-id keys and species + size (rpg's [#548](https://github.com/ttnhan18062000/rpg-based-simulation/issues/548)); the tickets wait in `agent-working/tickets/todos/visual-asset-entity-markers/`. Nothing is drawn for entities.
 - **G11, chests:** no data (the three worlds hold 0).
 - **G12, world shape:** rpg's to judge (rectangular regions over one default fill); not art.
 - **Client alias resolution:** registry-only. The live client does not resolve registry aliases (Known gap in `docs/assets/store_contract.md`); the client-side resolution is rpg's, with #523.
@@ -45,6 +45,10 @@ The numbers below were measured on rc-0009 (2026-10-11 and 2026-10-12) and stay 
 - **Registry size.** `visual_keys.yaml` is 30,943 B of `MAX_REGISTRY_BYTES` 458,752 B (6.7 %), after the six axes (see `budgets.md`, "Registry re-measurement for the terrain-variants batch").
 
 Still open and unchanged: G5 to G12 (connecting tiles, multi-tile structures, markers, rpg's world generation).
+
+## Update after the entity-marker batch (2026-10-19, rc-0012)
+
+`TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS` adopted 11 entity role markers (set-adoption `sa-1d9d71206b95652d`, key family `icon.entity.<kind>` on the presenter's `kind`, owner decision 2026-10-19) and the owner released `pilot/rc-0012`: 116 entries, rc-0011's 105 byte-identical + the 11. **G10 is closed on the art side:** every entity kind of the samples (alpha, blacksmith, guard, leader, merchant, predator_hunter, raider, scout, sentinel, worker, wild_creature) has a registered key and a built marker; the owner accepted that 7 of the 11 read as an item or a resource on the map. The picture is unchanged: the sample map still counts entities and draws none (the live client keeps its coloured circles until activation, which is parked), so the five committed crops are byte-identical to rc-0011's (120,273 B, 45.9 % of the 262,144 B cap). Drawn objects per world, gaps and terrain counts are those of rc-0011 below.
 
 ## Update after the map-markers batch (2026-10-14, rc-0011)
 

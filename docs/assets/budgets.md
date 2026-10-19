@@ -194,7 +194,7 @@ A real key costs 543 B in the registry (as measured on 2026-10-13); the 18 keys 
 | the runtime manifest of the export (`runtime_manifest.json`, 116 entries) | 29,962 B | 5.7 % | 258 B per entry |
 | the 11 entity sources | 302 to 412 B each | 0.4 % of `MAX_SOURCE_BYTES` 102,400 | |
 
-The committed sample-map crops are measured again when they are regenerated on rc-0012 (the next step of the batch); the row above does not cover them.
+The committed sample-map crops, regenerated on rc-0012 (`python -m tools.visual_assets_sample_map evidence`): 5 files, 120,273 B, 45.9 % of the 262,144 B cap, byte-identical to rc-0011's (entities are counted in the data, not drawn).
 
 ## Registry re-measurement for the map-markers batch (2026-10-13)
 

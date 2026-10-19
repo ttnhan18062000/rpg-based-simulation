@@ -7,7 +7,7 @@ date: 2026-10-13
 tags: [architecture, documentation, live-map]
 ---
 
-# Sample map: the adopted art (rc-0011) on three compiled worlds
+# Sample map: the adopted art (rc-0012) on three compiled worlds
 
 What this is: an OFFLINE picture of how far the adopted visual art goes on three real, compiled worlds, made by `TCK-20261011-EPIC-VISUAL-ASSET-SAMPLE-MAP`
 (`TCK-20261011-VISUAL-ASSETS-SAMPLE-MAP-DATA`, `-RENDER`, `-GAP-REPORT`). It is **evidence, not an asset**: nothing here is intaken, adopted or put in a release
@@ -31,11 +31,11 @@ The state is built exactly as the API builds it (`src/api/engine_manager.py:133-
 (`src/api/presenters/state_presenter.py:186`, `:221`). Nothing is written by that path (`compile` writes only when given `output_report_path`, which is never given; `world-compile`
 and `world-list` are not run because they write into `data/worlds`). `present_map`'s integer codes are PER WORLD (`terrain_code_map`, `state_presenter.py:183`), so cells are
 stored and drawn by terrain NAME, never by the integer. Every terrain name, building kind, place kind, resource-node kind and entity kind is mapped to a registered key by an
-exact name rule (lower case, spaces to underscores, `terrain.<name>`, `icon.building.<kind>`, `icon.marker.<kind>`, `icon.class.<kind>`); a near key is listed and never applied.
+exact name rule (lower case, spaces to underscores, `terrain.<name>`, `icon.building.<kind>`, `icon.marker.<kind>`, `icon.node.<kind>`, `icon.entity.<kind>`); a near key is listed and never applied.
 
 ## Two views, always named
 
-- **Exact view (primary evidence)**: a terrain name draws when `terrain.<name>` is registered OR when the REGISTRY aliases it (`plain` and `PLAIN` to grassland, `ruin` to ruins, `river` to shallow water, since 2026-10-12; objects since 2026-10-14: building `shop` to store, place `CAMP` to enemy camp, place `RUIN` to ruins), resolved offline with `Registry.resolve`. **The live client does NOT resolve aliases** (registry-only; no release or runtime export carries them; a runtime consumer is needed at activation). A name with no key or alias is a plum, diagonal-striped gap cell; an object with no art is a checkered magenta and black marker. On rc-0011 every terrain name of the three worlds resolves (0 gap cells of 73,808) and every building, place and resource node draws (0 object gaps). A `CITY` place is the location plate alone (the owner's answer, 2026-10-13); resource nodes are their 16 x 16 `icon.node.<kind>` tiles; entities are counted, not drawn (the entity-marker batch).
+- **Exact view (primary evidence)**: a terrain name draws when `terrain.<name>` is registered OR when the REGISTRY aliases it (`plain` and `PLAIN` to grassland, `ruin` to ruins, `river` to shallow water, since 2026-10-12; objects since 2026-10-14: building `shop` to store, place `CAMP` to enemy camp, place `RUIN` to ruins), resolved offline with `Registry.resolve`. **The live client does NOT resolve aliases** (registry-only; no release or runtime export carries them; a runtime consumer is needed at activation). A name with no key or alias is a plum, diagonal-striped gap cell; an object with no art is a checkered magenta and black marker. On rc-0012 every terrain name of the three worlds resolves (0 gap cells of 73,808) and every building, place and resource node draws (0 object gaps). A `CITY` place is the location plate alone (the owner's answer, 2026-10-13); resource nodes are their 16 x 16 `icon.node.<kind>` tiles; entities are counted, not drawn: rc-0012 carries the 11 `icon.entity.*` keys and every entity kind now maps to one, but drawing them on the map is live-app activation (parked), so the committed crops are byte-identical to rc-0011's.
 - **Alias view (UNCONFIRMED: asset-planner proposal for rpg-planner, [#519](https://github.com/ttnhan18062000/rpg-based-simulation/issues/519))**: a name with no exact key draws with its proposed
   alias. **No proposal is left**: `shop`, `CAMP` and `RUIN` became registry aliases on 2026-10-14 (the exact view resolves them), so the alias view equals the exact view in all three worlds (same image
   hash) and only the exact crops are committed. The mechanism stays for a future proposal (`proposed_aliases` in the data).
@@ -52,7 +52,7 @@ python -m tools.visual_assets_sample_map evidence          # the committed x1 cr
 python -m pytest tests/visual_assets/test_sample_map_data.py tests/visual_assets/test_sample_map_render.py -q
 ```
 
-`render` exports the current release (rc-0011) once into `reports/visual_assets/sample_map/rc-0011-runtime/` with the store's own `export-runtime` and reads the PNGs with the store's decoder. Everything but the
+`render` exports the current release (rc-0012) once into `reports/visual_assets/sample_map/rc-0012-runtime/` with the store's own `export-runtime` and reads the PNGs with the store's decoder. Everything but the
 crops in this folder goes to the gitignored `reports/visual_assets/sample_map/`. A full render takes about 20 s and 640 MB. Scale: 16 px per cell at x1 (x2 doubles it). Buildings are drawn from
 their 24 x 24 icon scaled to one 16 x 16 cell by nearest neighbour; places are the `icon.plate.location` plate with their marker glyph; entities are counted in the data, not drawn.
 
@@ -72,5 +72,5 @@ frontend's own esbuild and compares overlays on seeded random maps (skipped, wit
 | `highland_river_*_x1.png` | `highland_traverse`, (124,26)-(172,58) | River Ford: `river` is one rectangle of one terrain name (no key) |
 | `dungeon_ruin_*_x1.png` | `dungeon_crawl`, (60,80)-(98,112) | the ruin block (`ruin`, no key), its RUIN marker and the forest edge |
 
-On rc-0011 the alias view equals the exact view, so no `_alias_` crop is committed. Three boxes were shrunk from the rc-0009 ones to stay under the cap now that the exact view draws terrain everywhere. Measured and unmeasured: the full-world sheets (59,603 to 231,054 B at x1) are not committed; the numbers of every full render are in the gap report. This is the picture of three worlds at one seed, not of
+On rc-0012 the alias view equals the exact view, so no `_alias_` crop is committed. Three boxes were shrunk from the rc-0009 ones to stay under the cap now that the exact view draws terrain everywhere. Measured and unmeasured: the full-world sheets (59,603 to 231,054 B at x1) are not committed; the numbers of every full render are in the gap report. This is the picture of three worlds at one seed, not of
 every world.
