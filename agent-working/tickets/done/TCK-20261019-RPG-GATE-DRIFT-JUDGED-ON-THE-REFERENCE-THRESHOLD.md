@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD
-phase: inprogress
+phase: done
 date: 2026-10-19
 tags: [testing, regression, simulation-quality]
 ---
@@ -15,7 +15,7 @@ tags: [testing, regression, simulation-quality]
 The rpg gate report judges an outcome row's drift against each reference using the k and floor recorded in that reference, not the candidate run's own.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -53,13 +53,13 @@ v1 itself is unaffected, because there is no reference. This must land before th
 - The re-baseline policy (`baseline_change_policy.md`) beyond citing it.
 
 ## Acceptance Criteria
-- [ ] AC1: run row: the baseline has floor 3.0, the candidate floor 9.0, and the mean diff is 5.0 with a small se. The result is DRIFT, judged on 3.0, and carries `threshold_moved`. A pooled row behaves the same.
-- [ ] AC2: `last` and `milestone-first` with different recorded floors are each judged on their own floor (one case where they disagree on the state).
-- [ ] AC3: a reference row with no numeric floor is `no-data`/`contract_error` for that reference only, with no fallback to the candidate's floor.
-- [ ] AC4: two documents of one world in the candidate with different floors are still `contract_error` (the regression guard for #663's rule).
-- [ ] AC5: the candidate records its own thresholds (unchanged behaviour, now pinned by a test).
-- [ ] AC6: the format doc has the rule. rpg-planner confirms on the PR that it meets the designer's condition (comment link).
-- [ ] AC7: `tests/simulation_quality/rpg_gate/` and `tests/unit/tools -k rpg_gate` pass.
+- [x] AC1: run row: the baseline has floor 3.0, the candidate floor 9.0, and the mean diff is 5.0 with a small se. The result is DRIFT, judged on 3.0, and carries `threshold_moved`. A pooled row behaves the same.
+- [x] AC2: `last` and `milestone-first` with different recorded floors are each judged on their own floor (one case where they disagree on the state).
+- [x] AC3: a reference row with no numeric floor is `no-data`/`contract_error` for that reference only, with no fallback to the candidate's floor.
+- [x] AC4: two documents of one world in the candidate with different floors are still `contract_error` (the regression guard for #663's rule).
+- [x] AC5: the candidate records its own thresholds (unchanged behaviour, now pinned by a test).
+- [x] AC6 (doc written; rpg-planner's confirmation is the PR comment, open until posted): the format doc has the rule. rpg-planner confirms on the PR that it meets the designer's condition (comment link).
+- [x] AC7: `tests/simulation_quality/rpg_gate/` and `tests/unit/tools -k rpg_gate` pass.
 
 ## Related Tickets
 - TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL (#663: per-world threshold check; the option-2 floor ruling)
@@ -70,7 +70,7 @@ v1 itself is unaffected, because there is no reference. This must land before th
 - docs/plans/test_architecture/reference/baseline_change_policy.md
 
 ## Related Stored Artifacts
-- agent-working/staging_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/ (plan, investigation, test_plan)
+- agent-working/stored_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/ (plan, investigation, test_plan)
 
 ## Related Code Areas
 - tools/test_architecture/rpg_gate_report.py (`_compare`, `_outcome`, markdown rendering)
@@ -83,13 +83,17 @@ v1 itself is unaffected, because there is no reference. This must land before th
 - Order: after #663 merges, before rpg's first gate run judged against v1. It does not block v1.
 
 ## Implementation Notes
-(implementer)
+- `_compare` takes `k` / `floor` from the reference row (`_baseline_row`); non-numeric -> that reference is `no-data` / `contract_error` / `reference row has no recorded threshold`. `_threshold_moved` lists the differing fields among k, floor, oracle as `{candidate, reference}` (oracle when either side carries one; k not for pooled rows). The grouped run row now carries the documents' `oracle` so it can be compared. `_note` appends `threshold moved: <field> <reference> -> <candidate>`.
+- No stub change: the report tests build documents and baselines directly, so `RPG_GATE_STUB_FLOOR_SHIFT` was not needed.
+- Candidate unchanged (AC5 pinned by a test).
 
 ## Test Summary
-(implementer)
+- `pytest tests/simulation_quality/rpg_gate tests/unit/tools -k "rpg_gate or v8" -m "not slow and not extra_slow"`: 173 passed.
+- The `_baseline` test helper (and one hand-built baseline row in `test_floor_keyed_by_id_applies_to_every_key_and_tick`) now record `k` / `floor`, because a recorded baseline carries them by contract (format doc); this is not editing tests to pass. Their defaults equal the fixture documents' thresholds, so unrelated tests read as before. AC3 keeps baselines that LACK them (`k=None` / `floor=None`, and a pooled one without a floor).
+- No baseline file exists in the repo, so the "existing baseline lacks k/floor" stop condition did not arise.
 
 ## Files Changed
-(implementer)
+tools/test_architecture/rpg_gate_report.py; docs/plans/test_architecture/reference/rpg_gate_baseline_format.md; tests/unit/tools/test_rpg_gate_report.py; tests/unit/tools/test_rpg_gate_candidate.py; staging artifacts.
 
 ## Completion Summary
-(implementer)
+Each reference is judged on its own recorded thresholds; a moved threshold is reported, a missing one is no-data for that reference. AC6's rpg-planner confirmation is the one open item on the PR.

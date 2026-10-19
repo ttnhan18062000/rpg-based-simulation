@@ -23,6 +23,15 @@ content (metric ids, groups, values), the config and the stop lines. The module 
 
 A run is compared with the LAST baseline and the FIRST baseline of the current milestone. Re-baselining every time would otherwise hide a slow drift.
 
+## Thresholds come from the reference
+
+The thresholds recorded in a baseline are the thresholds that baseline is judged with (TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD; the designer's condition for the relative O2.population floor). For each reference (`last` and `milestone-first` separately) the report judges an outcome row's drift with that reference row's own `k` and `floor`, never the candidate's:
+
+- A run row needs a numeric `k` and `floor` in the reference row, a pooled row a numeric `floor`. Without them that reference is `no-data`, reason `contract_error`, detail `reference row has no recorded threshold`; there is no fallback to the candidate's values, and the other reference is judged as usual.
+- When the candidate's `k`, `floor` or `oracle` differ from the reference row's, the reference result carries `threshold_moved: {field: {candidate, reference}}` for the fields that differ, and the markdown shows `threshold moved: floor 3.0 -> 9.0` on the row. An `oracle` counts whenever either side carries one (a missing side is null). A moved threshold is reported, not used, and does not change the state.
+- A relative floor (O2.population: `max(3.0, 0.10 * tick-0 population)`) is computed by the metric module from its own run set, so it is fixed once recorded; it changes only through a re-baseline (`baseline_change_policy.md`). The module never reads baseline artifacts.
+- The within-run-set rule is unchanged: one `k` / `floor` / `oracle` per (world, id, group) across a world's documents, else `contract_error`. The candidate is unchanged: a new baseline records the candidate's own thresholds.
+
 ## Staleness
 
 A baseline is stale past `stale_after`, when its harness hash differs from the current harness (an unknown current hash also counts), or when
