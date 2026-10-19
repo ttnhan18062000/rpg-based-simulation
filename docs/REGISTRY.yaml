@@ -7664,7 +7664,7 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE.md
+  path: agent-working/tickets/done/TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE.md
   ticket_id: TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE
   title: Tools tests that run a hook with `cwd=tmp_path` read the real main checkout's
     state whenever pytest's basetemp is inside a git repo
