@@ -42,3 +42,6 @@ Which treatment for all 11 markers on a map cell? Neutral fixed-order options: (
 
 ## Scope guard
 No `src/` or `frontend/` change; no item icons; no species/size markers; no animation; no bound raise.
+
+## Owner decision 2026-10-19 (via lead)
+The key family is `icon.entity.<kind>`, 16x16 on the map cell like `icon.node.*` (neutral fixed-order options). It sits beside the 2026-10-13 precedent (`icon.node.<kind>`, `icon.marker.nest`). Key names may now appear in specs and files. The silhouette sheet (`visual_assets/icons/entity_marker_silhouettes.yaml`, `tools/visual_assets_entity_marker_sheet.py`) is built; the registry edit and the sample-map change follow as separate commits after the owner approves silhouettes and the set-wide treatment.
