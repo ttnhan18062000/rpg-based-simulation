@@ -114,7 +114,9 @@ def test_row4b_a_reused_plain_named_path_still_launches_the_u24_role(u24, seats,
     assert f"/.claude/handover/{twin}.md" not in out
     resolved = ln.resolve_target(u24, ROSTER)
     assert resolved.role.role == u24 and resolved.instance == u24 and resolved.role.worktree == logical
-    assert ROSTER.worktrees[logical] == u24 if isinstance(ROSTER.worktrees, dict) else True
+    slots = {w.name: w.writer for w in ROSTER.worktrees}
+    assert slots[logical] == u24 and slots[ROSTER.role(twin).worktree] == twin
+    assert logical not in out.replace(u24, "")  # the dry run prints no lease or slot line, so the slot is asserted on the roster above
 
 
 @pytest.mark.parametrize("u24,twin", [(k, v[0]) for k, v in TWINS.items()])

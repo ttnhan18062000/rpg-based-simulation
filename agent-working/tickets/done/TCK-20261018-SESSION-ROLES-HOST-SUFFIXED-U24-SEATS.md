@@ -105,7 +105,7 @@ GitHub #620 part 1. **Owner decision 2026-10-18, option (a)**, relayed by lead-p
 - 2026-10-18 (lead-planner): moved out of batch 2 into batch 3; still gated on u24's answer on #634 (worktree paths, staffing). Not dispatched. It rides batch 2's PR as filed-but-open (left out of `Closes:`).
 - 2026-10-19 (agent-working-planner): batch 5, commit 2, after the W42 close-week (commit 1). Lead approved the plan. Dispatched to agent-working-implementer.
 ## Test Summary
-- New `tests/tools/test_session_u24_twins.py` covers test-plan rows 1-7 (including 4b: a `--worktree` dir named like the plain twin still launches the `-u24` role, its handover, its logical worktree). 41 tests.
+- New `tests/tools/test_session_u24_twins.py` covers test-plan rows 1-7 (including 4b: a `--worktree` dir named like the plain twin still launches the `-u24` role, its handover, its logical worktree). 41 tests. `launch.py --dry-run` prints no lease or worktree-slot line (the lease is taken at a real launch), so row 4b asserts the slot on the roster (`worktrees:` maps the logical name to the `-u24` writer) and the handover line in the dry-run output.
 - Updated roster-count and platform-set assertions (20 -> 25 roles), the unstaffed-holder test (now the designer) and the host-lead budget test name.
 - `tests/tools/test_session_*.py`, the paths guard, the host-path launcher guard, the write-path guard and `tests/docs`: 882 passed, 2 skipped, 1 xfailed. Validator: 0 findings, 25 roles.
 

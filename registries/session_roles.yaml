@@ -211,7 +211,7 @@ roles:
   - role: agent-working-designer
     identity: {domain: agent-working, function: designer, session_name: agent-working-designer,
                legacy_session_name: agent-working-design, seat_status: unstaffed,
-               interim_holder: agent-working-planner}   # no designer runs on host ubuntu (owner 2026-10-18); the u24 twin holds the seat on its host
+               interim_holder: agent-working-planner}   # no designer on host ubuntu (owner 2026-10-18); interim holder: the ubuntu planner
     responsibility:
       accepts_dispatch_from: [user]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/agent_infrastructure/**"]}
