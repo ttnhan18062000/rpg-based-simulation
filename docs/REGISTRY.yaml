@@ -7687,6 +7687,18 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM.md
+  ticket_id: TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM
+  title: 'The request-duration histogram gets a 0.3 s bucket so the API SLO alert
+    measures exactly "p95 <= 300 ms" (issue #622, R2 follow-up).'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - src/api/http_metrics.py, tests/unit/api/test_http_metrics.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS.md
   ticket_id: TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS
   title: 'Default compose stack: the backend publishes the event stream to Redis,
@@ -7748,6 +7760,46 @@
   - testing
   - workflows
   - performance
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645.md
+  ticket_id: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
+  title: 'The catalog arena smoke fails its tick budget at tick 3 (479.5 ms > 150
+    ms) in the first slow run after #645'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/integration/certification/test_catalog_arena_smoke.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE.md
+  ticket_id: TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE
+  title: SimQ reads the run's lossless simulation_events.jsonl offline, never the
+    live stream (D80 C)
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/event_recorder.py
+  - src/simulation_quality/
+  - tools/ (calibrate_simq, simq compare)
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-D80D-UNGRADED-SIMQ-DATA-REVIEW-ON-THE-V1-RECORD.md
+  ticket_id: TCK-20261019-D80D-UNGRADED-SIMQ-DATA-REVIEW-ON-THE-V1-RECORD
+  title: The first SimQ deliverable is an ungraded end-to-end data review of the v1
+    record (D80 D)
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-19'
+  related_code_areas:
+  - src/simulation_quality/
+  artifact_files: []
+  tags:
+  - observability
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-RECORD-BASELINE-V1.md
   ticket_id: TCK-20261019-RECORD-BASELINE-V1
