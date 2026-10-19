@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-REDIS-DOWN-CAUSE-ALERT
-phase: inprogress
+phase: done
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 A Redis-down cause alert, so the Redis-stop drill has something that fires when the API SLO stays green
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -92,7 +92,7 @@ None.
 - redis-exporter peak (the re-measure run, 9 minutes): 12 MiB of its 32m limit (anon 10, anon + active file 12); no host port; no healthcheck (scratch image).
 
 ## Files Changed
-(open)
+`compose.yaml` (redis-exporter), `docker/prometheus.yml` (job `redis`), `docker/grafana/provisioning/alerting/rules-redis.yaml` (new), `docs/runbooks/redis-down.md` (new), `docs/runbooks/README.md`, this ticket and its stored artifacts.
 
 ## Completion Summary
-(open)
+A cause alert (added 2026-10-18 by lead review, not the step-3 SLO alert): `redis-exporter` v1.93.0 (pinned, scratch, no host port, mem_limit 32m, measured peak 12 MiB), Prometheus job `redis`, rule `RedisDown` (`redis_up == 0`, for 30s, group `cause`) on S4's ntfy contact point, and `docs/runbooks/redis-down.md`. Running locally on 2026-10-19: the exporter works against Redis 8.10.2 (`redis_up == 1`, `redis_version=8.10.2`); `docker compose stop redis` made `RedisDown` fire (ntfy published 81 s after the stop) and `docker compose start redis` resolved it (3 m 19 s, the group_interval wait); the API SLO stayed green (see the drill record). Gaps: the exporter's README never names Redis 8 (proven by the live run only); the alert was drilled once. Staging artifacts were written by platform-planner at dispatch and updated at close. Knowledge index refreshed by lead-planner in the main checkout after merge.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
-phase: inprogress
+phase: done
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 Prometheus: scrape the backend's internal metrics port 9109 instead of the admission-gated /metrics on 8000
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -84,7 +84,7 @@ None.
 - Evidence files: `agent-working/stored_artifacts/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK/run-2026-10-19/live_checks_2.txt`, `dashboard_panels.txt`.
 
 ## Files Changed
-(open)
+`compose.yaml` (backend `expose: ["9109"]`), `docker/prometheus.yml` (job `rpg-backend`), this ticket and its stored artifacts, `docs/runbooks/records/2026-10-19-api-slo-alert-fire-test.md` (shared evidence).
 
 ## Completion Summary
-(open)
+Prometheus scrapes the backend on its internal metrics port 9109 (rpg R1, #648) as job `rpg-backend`; the compose backend has `expose: ["9109"]` and still publishes only 8000. Running locally on 2026-10-19: the target is `up`, `sim_current_tick` returns a series, `le="0.3"` is present, the public `:8000/metrics` still returns 401 and `:9109` is unreachable from the host. The first attempt stopped at the live checks because the local backend image predated R1 (rebuilt afterwards; a preflight now checks the image age). The `simulation.json` panels with and without data are listed in the SLO record for the dashboard ticket (no dashboard edit). Staging artifacts were written by platform-planner at dispatch and updated at close. Knowledge index refreshed by lead-planner in the main checkout after merge.

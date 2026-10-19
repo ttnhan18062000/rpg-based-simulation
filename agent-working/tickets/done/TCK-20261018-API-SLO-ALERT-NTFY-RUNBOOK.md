@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK
-phase: inprogress
+phase: done
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 One API SLO alert as a provisioned Grafana alert rule, a local ntfy container as its contact point, and the runbook it links to
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -120,7 +120,7 @@ None.
 - Abort watcher verified (dry run printed WOULD DOWN; 60 real log lines, never triggered).
 
 ## Files Changed
-(open)
+`docker/grafana/provisioning/alerting/rules-slo.yaml` (new), `docs/runbooks/api-latency-slo.md` (new), `docs/runbooks/README.md`, `docs/runbooks/records/2026-10-19-api-slo-alert-fire-test.md` (new), this ticket and its stored artifacts (incl. `run-2026-10-19/`).
 
 ## Completion Summary
-(open)
+The API SLO (owner-approved text at #627) is provisioned as group `slo` (`ApiLatencyP95High`, `ApiErrorRateHigh`) in `rules-slo.yaml`, routed through S4's ntfy contact point and policy, with `docs/runbooks/api-latency-slo.md` and index rows. The PromQL carries its thresholds (0.3 s on 2xx excluding /health and unmatched; 5xx over all above 1 percent), `for` 2m, noData and execErr OK. Measured and running locally on 2026-10-19: L-N passed (Normal, never NoData or Error as a state); server-side p50/p95/p99 beside Locust's per step (server p95 is 3.8, 17 and 15 percent below the client p95 at 10, 25 and 50 users, so the server SLI is the SLO input); the 25-user step did not fire (server p95 0.222 to 0.239 s), the 50-user step did (pending 17:31:18Z, firing 17:32:55Z, ntfy 17:33:05Z, resolved 17:43:05Z), thresholds never edited. Findings: the `/entities` payload plateaus at about 691.5 KB with 12 entities (about 57 KB per entity), so the 100-entity page cap is not the limiter in the current build (cause not investigated); `DiskWillFillIn24h` fired 17:14:51Z to 17:29:51Z during heavy local work (follow-up `TCK-20261020-DISK-FILL-ALERT-TUNING`, no rule change); the simulation.json panels without series are listed for the dashboard ticket. Grafana's mem_limit was raised to 1024m (lead, 2026-10-20). Gaps: one 60 s repeat per curve step, one fire run, one host with Locust on it. Staging artifacts were written by platform-planner at dispatch and updated at close. Knowledge index refreshed by lead-planner in the main checkout after merge.

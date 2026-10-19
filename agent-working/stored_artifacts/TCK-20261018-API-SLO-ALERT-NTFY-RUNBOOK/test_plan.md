@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P2
 audience: agent
@@ -26,3 +26,6 @@ Written by platform-planner at dispatch (2026-10-19); the implementer updates it
 | # | check | oracle | expected |
 |---|---|---|---|
 | L-N | while the SLO is NOT violated the rules show Normal | `GET /api/prometheus/grafana/api/v1/rules` (state/health of `ApiLatencyP95High` and `ApiErrorRateHigh`) before the fire step | state Normal (NoData mapped to OK), health ok; never NoData or Error |
+
+## Results (2026-10-19)
+- L-N passed (Normal, health ok, never NoData/Error as a state). Server-side vs Locust per step recorded; the 25-user step did not fire (server p95 0.222 to 0.239 s), the 50-user step fired (ntfy `[firing]` 17:33:05Z, `[resolved]` 17:43:05Z); thresholds never edited. Record: `docs/runbooks/records/2026-10-19-api-slo-alert-fire-test.md`; run files in `run-2026-10-19/`.

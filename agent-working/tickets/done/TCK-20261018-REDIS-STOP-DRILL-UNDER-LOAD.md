@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD
-phase: inprogress
+phase: done
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 The recorded drill: stop Redis under Locust load, follow the runbook, and record detection time, recovery time and a short post-mortem
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -100,7 +100,7 @@ To be created: the drill's raw Locust CSVs and log export.
 - Loki finding (read-only snapshot): promtail's Docker discovery finds 0 targets because the `docker-socket-proxy` returns 403 on `GET /networks` (it allows `CONTAINERS=1` only); nothing was sent to Loki. No fix applied.
 
 ## Files Changed
-(open)
+`tools/loadtest/drill_redis_stop.sh` and `tools/loadtest/sample_stats.sh` (new), `tools/loadtest/README.md`, `docs/runbooks/records/2026-10-19-redis-stop-drill-under-load.md` (new), this ticket and its stored artifacts (incl. `run-2026-10-19/`, `remeasure-2026-10-19/`).
 
 ## Completion Summary
-(open)
+The drill ran once end to end on 2026-10-19 (10 users, below the knee): Redis stopped for 183 s; `RedisDown` fired in 81 s (ntfy published 17:52:50Z) and resolved 3 m 19 s after the restart (17:57:50Z), against 3 m 39 s and 4 m 42 s in the S4 Loki drill, which is not a like-for-like speed-up (different rule, `for` and group interval). User impact: 217,618 requests, 0 failures, all responses 2xx, the API SLO rules never fired. Hypotheses: H1 confirmed; H2 (events lost, not replayed) supported by 184 offline warnings and one publish error, not proven at the stream level because the stream is capped at about 1000 entries; H3 confirmed (ai_worker RestartCount 0, consumer lag 0). A re-measure with a memory sampler found grafana, promtail and ntfy far below 85 percent on anon (no limit changed; the drill-run memory.peak readings at the limits were page cache; Grafana's long-run headroom is only partly measured, 654 MiB is 64 percent of 1024m) and a read-only Loki snapshot found the cause of the empty Loki: promtail's Docker discovery is denied by the socket proxy on /networks (filed as `TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY`). Gaps: the drill script's new lines (sampler start/stop, the Loki WARN) have not run end to end; the S4 ad hoc drill curl calls passed the Grafana password and reader token on argv (the committed script now uses stdin config). Staging artifacts were written by platform-planner at dispatch and updated at close. Knowledge index refreshed by lead-planner in the main checkout after merge.
