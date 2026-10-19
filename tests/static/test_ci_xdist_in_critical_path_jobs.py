@@ -31,7 +31,10 @@ def _pytest_run_steps(job: dict) -> list[dict]:
 
 
 def test_the_job_count_does_not_grow():
-    assert len(_jobs()) <= MAX_JOB_COUNT
+    assert len(_jobs()) <= MAX_JOB_COUNT, (
+        f"test.yml has {len(_jobs())} jobs, over the {MAX_JOB_COUNT} it had when xdist was added (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS): the free plan runs 20 jobs at once and Tests already "
+        "starts more than that, so a new job queues behind the others. Parallelise inside a job instead, or raise MAX_JOB_COUNT deliberately."
+    )
 
 
 @pytest.mark.parametrize("job", XDIST_JOBS)
