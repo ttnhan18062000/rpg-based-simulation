@@ -7678,6 +7678,46 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY.md
+  ticket_id: TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY
+  title: V8's examples name each unsourced entity and its tick, the way V5's out-of-world
+    examples already do
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - _count_adds
+  - _check_unsourced_adds
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-RECORD-BASELINE-V1.md
+  ticket_id: TCK-20261019-RECORD-BASELINE-V1
+  title: 'Record baseline v1: paired fingerprints, gate V1-V8 rows and the behavioral_5k
+    rebaseline, all on one commit, with v1_disclosure.md as what v1 does not claim'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - tools/rpg_measure/paired.py
+  - tests/regression/test_behavioral_5k.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING.md
+  ticket_id: TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING
+  title: 'The #646 soak logged 30 tick budget overruns; read them again on a quiet
+    host before calling them a defect'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - _report_budget_overrun
+  - create_watchdog_trip
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
   ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
   title: 'The measured API load-test run on host ubuntu: req/s and p50/p95/p99 with
