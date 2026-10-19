@@ -28,11 +28,11 @@ def test_the_draft_set_still_hashes_to_what_the_adoption_recorded_and_every_entr
 
 def test_each_icon_source_is_in_the_catalog_with_its_own_source_and_the_icon_keys_stay_optional():
     sources = sorted(p.name for p in (config.CATALOG_ROOT / "sources").iterdir() if p.name != ".gitkeep")
-    assert [s for s in sources if s.startswith("icon_")] == sorted(af.ICON_SOURCES + af.ICON_V2_SOURCES + af.OBJECT_SOURCES)  # the 36 icons + the 18 object markers
+    assert [s for s in sources if s.startswith("icon_")] == sorted(af.ICON_SOURCES + af.ICON_V2_SOURCES + af.OBJECT_SOURCES + af.ENTITY_SOURCES)  # the 36 icons + the 18 object markers + the 11 entity markers
     registry = load_registry()
     from visual_assets.review import icon_v2_keys as v2
 
-    icon_keys = sorted(k for k in registry.keys if k.startswith("icon.") and k not in v2.KEYS and k not in af.OBJECT_KEYS)  # the 14 key-set keys; the 22 v2 keys are checked below and in test_icon_v2_keys
+    icon_keys = sorted(k for k in registry.keys if k.startswith("icon.") and k not in v2.KEYS and k not in af.OBJECT_KEYS and k not in af.ENTITY_KEYS)  # the 14 key-set keys; the 22 v2 keys are checked below and in test_icon_v2_keys
     assert [k.replace(".", "_") for k in icon_keys] == af.ICON_SOURCES
     assert sorted(k.replace(".", "_") for k in v2.KEYS) == af.ICON_V2_SOURCES
     assert all(registry.keys[k].optional and registry.keys[k].variant_axes == () for k in icon_keys)  # nothing requires them: a missing image leaves today's fallback

@@ -39,7 +39,7 @@ def test_counts_by_family_are_the_approved_5_5_3_3_6():
 
 def test_the_key_set_keys_are_unchanged_and_no_v2_key_collides_with_them():
     registry = load_registry()
-    key_set = sorted(k for k in registry.keys if k.startswith("icon.") and k not in v2.SIZES and k not in af.OBJECT_KEYS)  # the 18 object markers are their own set (`object-markers-v1`)
+    key_set = sorted(k for k in registry.keys if k.startswith("icon.") and k not in v2.SIZES and k not in af.OBJECT_KEYS and k not in af.ENTITY_KEYS)  # the 18 object markers are their own set (`object-markers-v1`)
     assert [k.replace(".", "_") for k in key_set] == af.ICON_SOURCES and len(key_set) == 14
 
 
