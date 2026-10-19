@@ -1,0 +1,106 @@
+apiVersion: 1
+
+# The API SLO (TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK; owner-approved text at #627): "API p95 <= 300 ms over 5 min and 5xx < 1 percent",
+# measured server-side on rpg's R2 histogram http_request_duration_seconds{method, route, status_class} scraped from backend:9109.
+# THIS FILE IS THE SINGLE SOURCE OF THE PROMQL: the dashboard ticket copies these expressions. Each expression already carries its
+# comparison (> 0.3 and > 0.01), so it returns a series only while the SLO is violated; Grafana's condition is then "result > 0".
+#   latency SLI (lead D-B, 2026-10-19): status_class="2xx" only, excluding route="/health" and route="unmatched". 429 cannot be separated
+#   from other 4xx, so 4xx is out of the latency SLI. The 0.3 threshold needs a bucket edge at 0.3 in the histogram (owner decision 2026-10-19, #622).
+#   error SLI: 5xx over all requests.
+# Both rules: group interval 1m, for 2m, noDataState OK (no traffic, or a backend that is down, is TargetDown's job, not an SLO breach), execErrState OK
+# (a dead Prometheus is PrometheusUnreachable's job). Annotations are static: a single-dollar label template would also work (S4), but nothing here needs a label.
+# The committed thresholds are never edited or overridden for the fire test (a Locust step above the knee does it).
+groups:
+  - orgId: 1
+    name: slo
+    folder: SLO alerts
+    interval: 1m
+    rules:
+      - uid: slo-api-latency-p95
+        title: ApiLatencyP95High
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: 'histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{status_class="2xx",route!~"/health|unmatched"}[5m]))) > 0.3'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        noDataState: OK
+        execErrState: OK
+        for: 2m
+        isPaused: false
+        annotations:
+          summary: "API p95 latency above 300 ms (2xx, excluding /health and unmatched)"
+          runbook_url: docs/runbooks/api-latency-slo.md
+        labels:
+          severity: critical
+          slo: api
+      - uid: slo-api-error-rate
+        title: ApiErrorRateHigh
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: 'sum(rate(http_request_duration_seconds_count{status_class="5xx"}[5m])) / sum(rate(http_request_duration_seconds_count[5m])) > 0.01'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        noDataState: OK
+        execErrState: OK
+        for: 2m
+        isPaused: false
+        annotations:
+          summary: "API 5xx error rate above 1 percent"
+          runbook_url: docs/runbooks/api-latency-slo.md
+        labels:
+          severity: critical
+          slo: api

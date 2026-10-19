@@ -4,7 +4,7 @@ layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK
-phase: open
+phase: inprogress
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability]
 One API SLO alert as a provisioned Grafana alert rule, a local ntfy container as its contact point, and the runbook it links to
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -104,10 +104,14 @@ None.
   record the version used.
 
 ## Implementation Notes
-(open)
+- `docker/grafana/provisioning/alerting/rules-slo.yaml`: group `slo` (folder "SLO alerts", interval 1m), two rules with the exact PromQL of the ticket (each expression carries its `> 0.3` or `> 0.01`, so it returns a series only while the SLO is violated; the Grafana condition is `result > 0`). `for: 2m` for both; `noDataState: OK` and `execErrState: OK` (no data is TargetDown's job, a dead Prometheus is PrometheusUnreachable's), stated in the file header and the runbook. Annotations are static, with `runbook_url` pointing at `docs/runbooks/api-latency-slo.md`. No `$` appears in the file, so the S4 `$$` lesson cannot bite. The committed thresholds are never edited or overridden for the fire test.
+- The contact point and policy are S4's (`ntfy`, default route); this ticket adds only the rule group.
+- `docs/runbooks/api-latency-slo.md` and the `README.md` index rows are written (what it means, SLI scope incl. "4xx is out of the latency SLI", the availability SLO without an alert, first three checks, causes, mitigations, silence, escalation, risks with the Trivy baseline note from #561).
+- Gate: the 0.3 s bucket is not on main yet (`src/api/http_metrics.py` `_BUCKETS` has 0.25 and 0.5), so the fire test waits for rpg's change; main must be merged first and `le="0.3"` confirmed in `/metrics` before the run.
 
 ## Test Summary
-(open)
+- **validated:** YAML parse of `rules-slo.yaml`; `docker compose --profile observability config -q`; frontmatter of the new runbook and the README (no violations).
+- Not yet run (needs the single full-profile stack run after the 0.3 bucket is on main): provisioning loads with no error, the rules appear as provisioned, the server-side p50/p95/p99 next to Locust per step, and the fire test with ntfy timestamps.
 
 ## Files Changed
 (open)
