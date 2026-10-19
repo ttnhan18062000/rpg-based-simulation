@@ -18,6 +18,8 @@ _PYPROJECT = _ROOT / "pyproject.toml"
 XDIST_JOBS = ("integration", "tools-f-z", "api-cli-engine")
 FLAGS = "-n auto --dist loadgroup"
 SERIAL_STEP = "Run: tests/visual_assets (store lock, serial)"
+TOOLS_SERIAL_STEP = "Run: tests/tools (f–z, workflow-file test, serial)"
+SERIAL_STEPS = (SERIAL_STEP, TOOLS_SERIAL_STEP)
 MAX_JOB_COUNT = 21  # test.yml's job count when xdist was added: a ceiling, so removing a job is free and adding one needs a deliberate edit (free plan: 20 concurrent jobs)
 
 
@@ -43,7 +45,7 @@ def test_every_pytest_step_of_a_critical_path_job_runs_under_xdist_except_the_se
     assert steps, job
     for step in steps:
         run = " ".join(step["run"].split())
-        if step.get("name") == SERIAL_STEP:
+        if step.get("name") in SERIAL_STEPS:
             assert "-n " not in run and "xdist" not in run, "the store-lock step must stay serial"
         else:
             assert FLAGS in run, f"{job}: step {step.get('name')!r} must run with {FLAGS}"
@@ -60,6 +62,16 @@ def test_the_serial_store_lock_step_exists_only_in_the_api_job_and_the_parallel_
         assert path in steps[SERIAL_STEP]
         assert f"--ignore={path}" in steps["Run: tests/visual_assets"]
     assert "--ignore=" not in steps[SERIAL_STEP]
+
+
+def test_the_workflow_file_test_runs_serially_in_tools_f_z_and_the_parallel_step_ignores_it():
+    steps = {s.get("name"): " ".join(s["run"].split()) for s in _pytest_run_steps(_jobs()["tools-f-z"])}
+    serial = steps[TOOLS_SERIAL_STEP]
+    assert "tests/tools/test_implement_ticket_native_refusal.py" in serial and "-n " not in serial
+    parallel = next(v for k, v in steps.items() if k not in SERIAL_STEPS)
+    assert "--ignore=tests/tools/test_implement_ticket_native_refusal.py" in parallel
+    merge = next(s for s in _jobs()["tools-f-z"]["steps"] if s.get("name") == "Merge JUnit XML")["run"]
+    assert "tools-f-z-parallel.xml" in merge and "tools-f-z-serial.xml" in merge and "--out reports/junit/tools-f-z.xml" in merge
 
 
 def test_both_visual_assets_junit_files_reach_the_merged_report():

@@ -52,7 +52,8 @@ def test_the_slow_job_is_not_in_this_workflow_any_more():
 
 @pytest.mark.parametrize(("job", "ignored"), _TOOLS_JOBS.items())
 def test_each_tools_job_runs_tests_tools_with_the_other_halfs_glob_ignored(job, ignored):
-    (step,) = _run_steps(_jobs()[job])
+    # tools-f-z also has a serial step for the one test that writes a fixed-name temp file into the real workflows dir
+    (step,) = [s for s in _run_steps(_jobs()[job]) if "serial" not in s["name"]]
     run = step["run"]
     assert "pytest tests/tools " in run
     assert f"--ignore-glob='{ignored}'" in run
@@ -134,7 +135,8 @@ def test_setup_uv_is_matched_by_action_name_not_version(steps, expected):
 def test_the_coverage_parser_reads_tests_tools_for_both_tools_jobs_and_ignores_the_glob_word():
     paths = parse_job_pytest_paths(_WORKFLOW.read_text(encoding="utf-8"))
     # tools-a-e also runs tests/codebase (the lint group is installed there; TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE).
-    expected = {"tools-a-e": {"tests/tools", "tests/codebase"}, "tools-f-z": {"tests/tools"}}
+    # tools-f-z also names the one workflow-file test it runs serially (it writes a fixed-name temp copy into the real workflows dir)
+    expected = {"tools-a-e": {"tests/tools", "tests/codebase"}, "tools-f-z": {"tests/tools", "tests/tools/test_implement_ticket_native_refusal.py"}}
     for job in _TOOLS_JOBS:
         assert paths[job] == expected[job], "a --ignore-glob word must not be collected as a covered path"
     # plus the serial store-lock paths (issue #657); the parallel visual_assets step excludes them with --ignore, which the parser strips

@@ -398,8 +398,26 @@ jobs:
       - name: "Run: tests/tools (f–z)"
         if: always()
         run: |
-          pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
-                 --junit-xml=reports/junit/tools-f-z.xml
+          pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
+                 --ignore=tests/tools/test_implement_ticket_native_refusal.py \
+                 -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
+                 --junit-xml=reports/junit/tools-f-z-parallel.xml
+      # Serial on purpose (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS): this file writes one fixed-name temp copy of
+      # .claude/workflows/implement-ticket.js into the real workflows directory and deletes it afterwards, so its parametrized tests,
+      # spread over xdist workers, delete each other's copy (FileNotFoundError). Fix needs a per-test tmp name: agent-working's file,
+      # no ticket yet. Remove this step and the --ignore line above once it uses tmp_path or a unique name.
+      - name: "Run: tests/tools (f–z, workflow-file test, serial)"
+        if: always()
+        run: |
+          pytest tests/tools/test_implement_ticket_native_refusal.py \
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/tools-f-z-serial.xml
+      - name: Merge JUnit XML
+        if: always()
+        run: |
+          python3 tools/ci_junit_merge.py --out reports/junit/tools-f-z.xml \
+                 reports/junit/tools-f-z-parallel.xml \
+                 reports/junit/tools-f-z-serial.xml
       - name: Upload JUnit XML
         if: always()
         uses: actions/upload-artifact@v7
@@ -423,6 +441,7 @@ jobs:
         run: |
           if [ -d /tmp/base-checkout ]; then
             cd /tmp/base-checkout && pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
+                   tests/tools/test_implement_ticket_native_refusal.py \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary
