@@ -38,7 +38,7 @@ def run_gate_metrics(run_id: str, ticks: int, prepare: Optional[Callable[[Any], 
     finally:
         kernel.shutdown()  # flushes the recorded event stream before the metrics read it
     try:
-        result = rpg_gate_metrics.compute(RunArtifacts(world, seed, ticks, "test", kernel.state, run_dir))
+        result = rpg_gate_metrics.compute(RunArtifacts(world, seed, ticks, "test", kernel.state, run_dir, seeds=(seed,)))
         return list(result["metrics"] if isinstance(result, dict) else result)
     finally:
         shutil.rmtree(run_dir, ignore_errors=True)
