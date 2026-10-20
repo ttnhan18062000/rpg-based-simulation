@@ -133,7 +133,7 @@ historical records.
 
 ### Triage 2026-10-20 (testing-implementer, read-only)
 - STILL REAL. tests/unit/rendering/frozen_dungeon_crawl.py still loads tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml, and the connectivity, density, variants and shape tests use it. docs/visual_quality/scoring_contract.md records no decision (AC1 untouched). No other ticket covers it.
-- Routes: tests/unit/rendering/** goes to rpg; docs/visual_quality/scoring_contract.md is unowned. testing-planner asked rpg-planner (2026-10-20) who takes it.
+- Routes: tests/unit/rendering/** goes to rpg; docs/visual_quality/scoring_contract.md is unowned. rpg-planner, 2026-10-20: docs/visual_quality/ is not rpg's, so the USER must assign an owner. rpg's recommendation (input only): keep the frozen fixture as a pinned regression and ADD a separate live-corpus check. BLOCKED on the user naming an owner.
 
 ## Implementation Notes
 

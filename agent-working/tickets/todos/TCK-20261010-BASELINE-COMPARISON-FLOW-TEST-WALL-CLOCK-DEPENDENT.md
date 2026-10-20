@@ -71,7 +71,11 @@ None.
 
 ### Triage 2026-10-20 (testing-implementer, read-only)
 - STILL REAL on main b753a9b08. One local run failed at tests/integration/observability/test_baseline_comparison_flow.py:55, `assert res_run.status == "PASS"`, which came back 'WARNING'. The test runs a real ScenarioSweeper sweep (L15-30); the watchdog's wall-clock tick time feeds health_score, and nothing pins timing. A loaded host reproduces it deterministically (a good AC1 reproducer).
-- The file routes to rpg (tests/**). testing-planner asked rpg-planner (2026-10-20) whether rpg takes it or OKs a test-only fix by testing.
+- The file routes to rpg (tests/**). **rpg-planner OK'd it, 2026-10-20: testing-implementer fixes it test-only.** Conditions:
+  - the comparison assertion stays unchanged;
+  - timing is pinned or injected through an EXISTING seam (a fixture or monkeypatch on the watchdog clock); a new seam in src/ needs rpg-planner first;
+  - fold in rpg's sibling TCK-20261020-BASELINE-GENERATION-FLOW-HEALTH-SCORE-MEAN-IS-99-NOT-100 (the generation-flow health_score mean is 99, not 100; likely the same wall-clock cause) if one injection fixes both. rpg hands over the ticket text, and the PR closes it.
+  - Not sim behaviour, so it can go before or after v1.
 
 ## Implementation Notes
 (Open.)
