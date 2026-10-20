@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 ticket_id: TCK-20261020-VISUAL-ASSETS-STORE-TESTS-REAL-LOCK
-phase: open
+phase: done
 date: 2026-10-20
 tags: [testing, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [testing, determinism]
 visual_assets store tests take their write lock in tmp, never on the real `visual_assets/catalog/.store.lock`
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -81,9 +81,13 @@ The owner chose to scope it this week (2026-10-20, via lead-planner). It is a te
 - Reproduction: with an external process holding flock on the real lock, the affected files give 1313 passed (was 6 failed).
 
 ## Test Summary
-- 3 new tests; affected files with the real lock held by another process: 1313 passed, 0 failed. `tests/visual_assets` not-slow full run and the paths guard: pending (heavy slot via planner).
+- Baseline on main with the real lock held by another process: 6 failed in 4 files (`test_animation_metadata.py` 1, `test_atlas.py` 1, `test_cli.py` 3, `test_runtime_slices.py` 1), all `store_locked`.
+- With the fix, same lock held: `store/unit` + `test_review_cli.py` + `test_key_usage.py` 1313 passed.
+- `test_lock_isolation.py` 3 passed (also with the real lock held by an external process, the `busy` path); with `test_lock.py` 41 passed; `test_lock`, `test_deletion_log`, `test_kill_mid_publish` and the two top-level files 106 passed, unchanged. Two of the three new tests fail without the conftest line.
+- `tests/visual_assets -m "not slow"` at c6b235841: 2558 passed, 0 failed, 0 skipped, 403.71 s. Paths guard 11 passed. `tests/unit/tools` + `tests/tools`: slot 2, recorded by the planner.
 
 ## Files Changed
 - tests/visual_assets/store/lock_isolation.py (new); store/unit/test_lock_isolation.py (new); store/unit/conftest.py; test_review_cli.py; test_key_usage.py; this ticket.
 
 ## Completion Summary
+Store tests that run a writing command while `config.CATALOG_ROOT` is the real catalog now take their write lock under `tmp_path` (autouse fixture from `tests/visual_assets/store/lock_isolation.py`, wired in `store/unit/conftest.py`, `test_review_cli.py`, `test_key_usage.py`). Tests on a tmp catalog keep `<tmp catalog>/.store.lock`. Only test code changed; `lock.py`, `visual_assets/**`, the catalog and both guarded conftests are untouched. A regression test holds the real lock in a child process. No known gap. After merge, tell testing the serial CI step can go (via lead).
