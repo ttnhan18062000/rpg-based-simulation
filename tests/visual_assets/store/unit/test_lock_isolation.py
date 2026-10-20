@@ -11,8 +11,11 @@ from visual_assets.store import cli, config, lock
 HOLD = (
     "import fcntl, os, sys, time\n"
     "fd = os.open(sys.argv[1], os.O_RDWR | os.O_CREAT, 0o600)\n"
-    "fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)\n"
-    "print('ready', flush=True)\n"
+    "try:\n"
+    "    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)\n"
+    "    print('ready', flush=True)\n"
+    "except BlockingIOError:\n"
+    "    print('busy', flush=True)\n"
     "time.sleep(60)\n"
 )
 
@@ -31,9 +34,10 @@ def test_a_writing_command_passes_while_another_process_holds_the_real_lock(tmp_
     real = REAL_CATALOG_ROOT / ".store.lock"
     holder = subprocess.Popen([sys.executable, "-c", HOLD, str(real)], stdout=subprocess.PIPE, text=True)
     try:
-        assert holder.stdout.readline().strip() == "ready"
+        assert holder.stdout.readline().strip() in {"ready", "busy"}  # busy: a real store command already holds it; either way another process holds the real lock
         cli.main(["export-runtime", "--catalog-id", "pilot", "--release-id", "rc-0001", "--out", str(tmp_path / "o")])
-        assert "store_locked" not in capsys.readouterr().err  # the command may still refuse for its own reasons; the lock is taken first
+        assert "store_locked" not in capsys.readouterr().err  # the command may still refuse for its own reasons (here: the registry changed since rc-0001)
+        assert (tmp_path / ".store.lock").exists()  # O_CREAT happens only inside store_write_lock: the redirected lock was acquired, so this did not pass vacuously
     finally:
         holder.kill()
         holder.wait()
