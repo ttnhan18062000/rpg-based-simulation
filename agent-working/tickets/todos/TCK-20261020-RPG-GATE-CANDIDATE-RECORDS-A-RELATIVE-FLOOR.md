@@ -15,7 +15,7 @@ tags: [testing, regression, simulation-quality]
 A run outcome row may carry `floor_rel`. The candidate records `floor = max(floor, floor_rel × mean of the run set's per-seed values)`, keeping `floor_base` and `floor_rel`, and the report's threshold-moved check compares base and rel, not the computed floor.
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 hotfix
@@ -31,7 +31,7 @@ testing-planner's post-merge review of #682 (2523cd118), 2026-10-20: `rpg_gate_m
 
 A seed document cannot carry the relative part, because it needs the other seeds' outcomes. So the candidate fixes it once, from the run set it records, and the baseline keeps it. This keeps the #666 rule: thresholds come from the reference, and the module never reads a baseline.
 
-**BLOCKED** on rpg-designer choosing option (a), asked through rpg-planner on 2026-10-20. If the designer picks (b), recording 3.0 now, close this ticket as not needed and record the ruling.
+**UNBLOCKED 2026-10-20: rpg-designer ruled (a)**, relayed by rpg-planner. `floor_rel: 0.10` goes on O1.starved and O1.at_risk ONLY. No widening to other rows without a later row-by-row ruling. rpg's PR: TCK-20261020-O1-COUNT-FLOORS-CARRY-THEIR-RELATIVE-PART. The designer's note: O1.at_risk at 30-100 per seed gets a floor of 3-10, and O1.starved stays bound by 3.
 
 ## Scope
 1. **Contract** (format doc, next to "Thresholds come from the reference"): a run outcome row may carry a numeric `floor_rel` (0 < r ≤ 1). The candidate records:
