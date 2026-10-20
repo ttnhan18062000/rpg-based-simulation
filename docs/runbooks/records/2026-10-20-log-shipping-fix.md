@@ -85,7 +85,7 @@ Both alerts reach ntfy for a stopped promtail: `TargetDown` after about 3 minute
 | redis-exporter | 32 | 22 | 11 | 21 | 24 |
 | docker-socket-proxy | 64 | 20 | 11 | 18 | 21 |
 | redis | 256 | 17 | 8 | 16 | 43 |
-No container was OOM-killed (11 of 11 `oom=false`, restarts 0). Promtail with working shipping peaked at 62 MiB (49 percent of 128m), so 128m stays. **ntfy reached 61 of 64 MiB on the `docker stats` basis (95 percent) but only 26 MiB anon**: its message cache and a long run of notifications fill file cache; the kernel reclaims it and nothing was killed, but the headroom on this basis is thin and a limit decision (keep 64m or raise) is left to the planner. Grafana ran at 350 MiB (34 percent of 1024m) over the hour.
+No container was OOM-killed (11 of 11 `oom=false`, restarts 0). Promtail with working shipping peaked at 62 MiB (49 percent of 128m), so 128m stays. **ntfy reached 61 of 64 MiB on the `docker stats` basis and 58 MiB on anon + active_file (91 percent of 64m), with 26 MiB anon**: its message cache fills file pages that count as active file. Nothing was killed, but the headroom on the basis used to judge limits was thin, so the limit was raised from 64m to 96m (platform-planner's decision, in this PR; the new value was not re-run). Grafana ran at 350 MiB (34 percent of 1024m) over the hour.
 
 ## 8. Limits
 One local host; promtail was verified on the five-container A/B and on the 11-container proof; the proof used one run per failure case; the resolved messages depend on the policy's `group_interval`; the 10-18 observation was not reproduced and its explanation is a hypothesis.
