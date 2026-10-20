@@ -196,11 +196,12 @@ class TestCLIWritesRealRecords:
         assert run_record["run_id"] == "TCK-FAKE-CLI"
         assert run_record["tier"] == "hotfix"
         assert run_record["final_status"] == "DONE"
-        assert run_record["agent_count"] == 3
+        assert run_record["agent_count"] == 3  # the recorder-added Document-Update is not an agent call
 
         event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
-        assert len(event_lines) == 3
-        assert [e["seq"] for e in event_lines] == [1, 2, 3]
+        # the three narrated phases plus the recorder-added Document-Update (hotfix plan: full; TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED), not counted in agent_count
+        assert [e["phase"] for e in event_lines].count("Document-Update") == 1 and len(event_lines) == 4
+        assert [e["seq"] for e in event_lines] == [1, 2, 3, 4]
 
     def test_invalid_tier_rejected_by_argparse_choices(self, tmp_path):
         result = self._run(
@@ -749,7 +750,7 @@ class TestRealClosureProducesExactlyThreePerPRFiles:
         run_record = json.loads(runs_file.read_text().strip())
         assert run_record["run_id"] == "TCK-REAL-CLOSURE-TEST"
         event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
-        assert len(event_lines) == len(_MINIMAL_EVENTS)
+        assert len(event_lines) == len(_MINIMAL_EVENTS) + 1  # + the recorder-added Document-Update (hotfix)
 
         # The pre-existing shared files are byte-identical to their seeded content -- untouched.
         assert (week_dir / "runs.jsonl").read_text() == seeded_runs
