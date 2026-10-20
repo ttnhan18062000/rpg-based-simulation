@@ -148,13 +148,18 @@ def _thresholds(docs: Mapping[Any, dict]) -> None:
         name = f"{key[0]}__s{key[1]}.json" if key[1] is not None else f"{key[0]}__pooled.json"
         for row in doc["metrics"]:
             ident = (key[0], row.get("id"), row.get("group", "*"))
-            triple = (row.get("k"), row.get("floor"), row.get("oracle"))
+            triple = (row.get("k"), row.get("floor"), row.get("oracle"), row.get("floor_rel"))
+            if row.get("class") == "outcome" and "floor_rel" in row:
+                if row.get("scope") == "pooled":
+                    raise CandidateRefused(f"{name}: pooled outcome row {ident[1]} carries floor_rel; a relative floor belongs to a run row (it needs the seeds' mean)")
+                if not _is_number(row["floor_rel"]) or not 0 < row["floor_rel"] <= 1:
+                    raise CandidateRefused(f"{name}: outcome row {ident[1]} has floor_rel {row['floor_rel']!r}; it must be a number in (0, 1]")
             if row.get("class") == "outcome" and row.get("scope") != "pooled" and not (_is_number(row.get("k")) and _is_number(row.get("floor"))):
                 raise CandidateRefused(f"{name}: outcome row {ident[1]} has no numeric k and floor (the metric module must carry them)")
             if row.get("class") == "outcome" and row.get("scope") == "pooled" and not _is_number(row.get("floor")):
                 raise CandidateRefused(f"{name}: pooled outcome row {ident[1]} has no numeric floor")
             if ident in seen and seen[ident] != triple:
-                raise CandidateRefused(f"{name}: threshold mismatch for {ident[1]} in {ident[0]}: k/floor/oracle {triple} differ from {seen[ident]} in an earlier document (mixed metric module versions)")
+                raise CandidateRefused(f"{name}: threshold mismatch for {ident[1]} in {ident[0]}: k/floor/oracle/floor_rel {triple} differ from {seen[ident]} in an earlier document (mixed metric module versions)")
             seen.setdefault(ident, triple)
 
 
@@ -272,7 +277,7 @@ def build_candidate(
                     value = row.get("value") if _is_number(row.get("value")) else row.get("mean")
                     if not _is_number(value):
                         raise CandidateRefused(f"{name}: outcome row {row['id']} has no numeric value or mean")
-                    entry = run_rows.setdefault(("outcome", *ident), {"k": row["k"], "floor": row["floor"], "per_seed": {}})
+                    entry = run_rows.setdefault(("outcome", *ident), {"k": row["k"], "floor": row["floor"], "floor_rel": row.get("floor_rel"), "per_seed": {}})
                     entry["per_seed"][seed] = value
         for (klass, mid, group, key, tick), entry in run_rows.items():
             missing = [s for s in config.seeds if s not in entry["per_seed"]]
@@ -288,8 +293,11 @@ def build_candidate(
             if klass == "validity":
                 rows.append({**base, "per_seed": per_seed, "violations": sum(values), "oracle": entry["oracle"]})
             else:
-                rows.append({**base, "per_seed": per_seed, "mean": statistics.fmean(values), "se": statistics.stdev(values) / math.sqrt(len(values)),
-                             "k": entry["k"], "floor": entry["floor"]})
+                mean = statistics.fmean(values)
+                floor = {"floor": entry["floor"]}
+                if entry["floor_rel"] is not None:  # the relative part needs the other seeds' outcomes, so it is applied once, here, and recorded with its two parts
+                    floor = {"floor": max(entry["floor"], entry["floor_rel"] * mean), "floor_base": entry["floor"], "floor_rel": entry["floor_rel"]}
+                rows.append({**base, "per_seed": per_seed, "mean": mean, "se": statistics.stdev(values) / math.sqrt(len(values)), "k": entry["k"], **floor})
         for row in docs[(world, None)]["metrics"]:
             name = f"{world}__pooled.json"
             base = {"id": row["id"], "class": row.get("class"), "scope": "pooled", "world": world, "group": row.get("group", "*")}
