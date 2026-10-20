@@ -88,7 +88,7 @@ Owner decision 2026-10-20 (via lead-planner): scope AS FILED, a review-tool corr
 - Guarded-set check against `docs/assets/aseprite_local_proof.json` after the repoint edits: none of the changed files is guarded; `test_aseprite_local_proof.py` + `test_aseprite_licence_guard.py` 54 passed.
 - Static grep: `grep -rn all_icon_sprites` in py/md/yaml leaves exactly one code match, the stored-artifact script named above (plus prose in this ticket, its artifacts and the REGISTRY title).
 - Slot (a) at a5dbce8f2: `tests/visual_assets -m "not slow"` 2564 passed, 0 failed, 0 skipped, 637.62 s (10:37); host at the end MemAvailable 5121 MB, swap 3004 MB.
-- Slot (b) `tests/unit/tools` + `tests/tools`: pending.
+- Slot (b) at 5641d6a3d: `tests/unit/tools` + `tests/tools` 6124 passed, 0 failed, 53 skipped, 1 xfailed, 1291.08 s (21:31), 8 warnings; host at the end MemAvailable 5863 MB, swap 2722 MB. The py-spy sampling test that failed once in an earlier ticket's tools run passed (its fix #695 is in this branch).
 
 ## Files Changed
 - visual_assets/review/icon_lookalikes.py (accessor, rename), icon_compliance.py, icon_recognition.py, icon_owner_fixes_draft_set.py, icon_silhouette_sheet.py, review_sheets.py; tools/visual_assets_entity_marker_sheet.py.
