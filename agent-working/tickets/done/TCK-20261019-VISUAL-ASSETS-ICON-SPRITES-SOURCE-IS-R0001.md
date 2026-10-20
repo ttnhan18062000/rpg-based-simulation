@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001
-phase: open
+phase: done
 date: 2026-10-19
 tags: [architecture, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, testing]
 `icon_lookalikes.all_icon_sprites()` returns r0001 art for the 7 revised icon keys; find which consumers mean "adopted now" and point them at the current art
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -65,7 +65,7 @@ Owner decision 2026-10-20 (via lead-planner): scope AS FILED, a review-tool corr
 - `docs/assets/icon_style_guide.md` (D21, the item.tool row)
 
 ## Related Stored Artifacts
-- None yet
+- agent-working/stored_artifacts/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001/ (investigation.md: the classification of every call site; plan.md; test_plan.md)
 
 ## Related Code Areas
 - `visual_assets/review/icon_lookalikes.py`, `visual_assets/review/icon_owner_fixes_draft_set.py`, `visual_assets/review/icon_compliance.py`, `tests/visual_assets/test_icon_*.py`
@@ -76,9 +76,24 @@ Owner decision 2026-10-20 (via lead-planner): scope AS FILED, a review-tool corr
 - If a "now" site turns out to need the r0001 art for an owner-visible reason (e.g. a before/after panel), keep it on r0001 and say so; do not decide it silently.
 
 ## Implementation Notes
+- `icon_lookalikes.adopted_icon_sprites()` is the one accessor for the art adopted now: the r0001 drawings with the seven owner-fix revisions (`icon_owner_fixes_draft_set.fix_sprites()` for `PROPOSED`) in place of theirs. It imports `icon_owner_fixes_draft_set` inside the function (that module imports `icon_compliance`, which imports `icon_lookalikes`).
+- `all_icon_sprites` is renamed `r0001_icon_sprites` at the definition and every r0001 site in one commit. 26 call sites were classified (investigation.md): 8 "adopted now" repointed (`icon_compliance.py` 253 and 314, `icon_recognition.py:211`, `icon_lookalikes.py` `__main__`, `tools/visual_assets_entity_marker_sheet.py`, `test_icon_recognition.py:13`, `test_icon_compliance.py:98`, `test_icon_lookalikes.py:55`); the rest stay r0001 on purpose. `icon_compliance.py:442` (the debuff's "differs from the round buff frame", 28 px against the r0001 and the r0002 frame) stays r0001 because committed records carry that row (`docs/assets/icon_set_v2_review.md:217`, `icondraft_fixes/rule_result.json`, compared byte for byte by `test_icon_owner_fixes_draft_set.py:87`). `review_sheets.py:509` and `icon_silhouette_sheet.py:49` stay r0001: they reproduce recorded owner gates; a future revision set needs an "adopted now" base in `review_sheets`, which is that set's own ticket.
+- `tests/visual_assets/test_icon_adopted_art.py` (5 tests, read-only: no lock, no CLI, no write, no build): the expected revision is derived from the store (newest non-revoked revision under `sources/<source>/` via `records.list_revisions` + `records.is_eligible`), the built artifact's `source_revision` and `pixel_hash` must match it and the accessor's pixels; the 65 store icon sources are the 36 accessor keys plus an explicit excluded set of 29 (18 object markers, 11 entity markers); unknown, missing and stale-excluded keys fail.
+- The historic script `agent-working/stored_artifacts/TCK-20261008-VISUAL-ASSETS-ICON-THEME-FIT/drawing/fix.py:169` still says `all_icon_sprites`; stored artifacts are records and are not edited.
 
 ## Test Summary
+- Review outputs whose expected value was stale art: **none**. The 8 "adopted now" sites do not depend on the seven revised keys (the tier badges, the blind-set and renders, the 36-icon count, the edge-case bead), and `icon_compliance.py:442` stays on r0001. No fixture, doc or expected value changed.
+- Pin shown to fail: with `icon.item.tool` dropped from the overlay, `pin_mismatches` returns `['icon.item.tool']` (permanent test `test_dropping_one_adopted_revision_from_the_accessor_is_reported_as_that_key`); an adopted but unbuilt r0003 on `icon_item_tool` is reported (`test_an_adopted_revision_that_is_not_built_yet_is_reported`); the old r0001 art mismatches exactly the 7 revised keys.
+- Scoped light runs: `test_icon_adopted_art.py` 5 passed; `test_icon*`, `test_review*`, `test_sample_map*` not slow 214 passed (211 s, before the pin fix).
+- Guarded-set check against `docs/assets/aseprite_local_proof.json` after the repoint edits: none of the changed files is guarded; `test_aseprite_local_proof.py` + `test_aseprite_licence_guard.py` 54 passed.
+- Static grep: `grep -rn all_icon_sprites` in py/md/yaml leaves exactly one code match, the stored-artifact script named above (plus prose in this ticket, its artifacts and the REGISTRY title).
+- Slot (a) at a5dbce8f2: `tests/visual_assets -m "not slow"` 2564 passed, 0 failed, 0 skipped, 637.62 s (10:37); host at the end MemAvailable 5121 MB, swap 3004 MB.
+- Slot (b) `tests/unit/tools` + `tests/tools`: pending.
 
 ## Files Changed
+- visual_assets/review/icon_lookalikes.py (accessor, rename), icon_compliance.py, icon_recognition.py, icon_owner_fixes_draft_set.py, icon_silhouette_sheet.py, review_sheets.py; tools/visual_assets_entity_marker_sheet.py.
+- tests/visual_assets/test_icon_adopted_art.py (new); test_icon_compliance.py, test_icon_lookalikes.py, test_icon_owner_fixes_draft_set.py, test_icon_recognition.py, test_icon_silhouette_sheet.py.
+- This ticket, its staging artifacts (moved to stored_artifacts), monitoring shards, docs/REGISTRY.yaml.
 
 ## Completion Summary
+Review tools that mean "the art adopted now" read it from one accessor, `adopted_icon_sprites()`; the r0001 drawings keep a name that says so, `r0001_icon_sprites()`. A read-only test pins the accessor against the store for all 36 icon keys, derived from the store's newest adopted revision, with the 65 icon sources fully accounted for. No art, adoption, registry or catalog change; no review output changed. Known gaps: none stated; the two recorded gate sites (review_sheets, silhouette sheet) stay on r0001 by design.
