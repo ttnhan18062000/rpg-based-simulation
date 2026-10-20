@@ -7927,6 +7927,23 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-VISUAL-ASSETS-STORE-TESTS-REAL-LOCK.md
+  ticket_id: TCK-20261020-VISUAL-ASSETS-STORE-TESTS-REAL-LOCK
+  title: visual_assets store tests take their write lock in tmp, never on the real
+    `visual_assets/catalog/.store.lock`
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - lock_path
+  - roots
+  - tests/visual_assets/store/kill_helper.py (holds the lock in a child process)
+  - tests/visual_assets/test_review_cli.py, tests/visual_assets/test_key_usage.py
+  artifact_files: []
+  tags:
+  - testing
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT.md
   ticket_id: TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT
   title: test_observability_websocket_suite step 5 waits for the synthetic walk event
