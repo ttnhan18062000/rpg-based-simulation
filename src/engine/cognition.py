@@ -44,7 +44,7 @@ class SensoryFilter:
             score += 100.0 / dist
             
             # 2. Hostility
-            if are_entities_hostile(subject, ent, RelationContext(distance=dist, combat_engaged=True)):
+            if ent.combat.alive and are_entities_hostile(subject, ent, RelationContext(distance=dist, combat_engaged=True)):
                 score += 200.0
                 # Nemesis modifier (Domain 4)
                 if ent.id in subject.social.nemesis_ids:
@@ -101,6 +101,7 @@ class AppraisalSystem:
         """
         panic = 0.0
         aggression = 0.0
+        neighbors = [n for n in neighbors if n.combat.alive]  # a dead body is in the view but is neither a hostile, an ally nor a nemesis to fear
         
         # 0. Regional Dread (Pillar 4.2, AGENCY-06): bounded, never decides flight alone.
         panic += regional_dread(region_trauma)
