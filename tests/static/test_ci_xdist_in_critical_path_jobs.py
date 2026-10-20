@@ -20,6 +20,7 @@ FLAGS = "-n auto --dist loadgroup"
 SERIAL_STEP = "Run: tests/visual_assets (store lock, serial)"
 TOOLS_SERIAL_STEP = "Run: tests/tools (f–z, workflow-file test, serial)"
 SERIAL_STEPS = (SERIAL_STEP, TOOLS_SERIAL_STEP)
+SERIAL_TOOLS_TESTS = ("tests/tools/test_implement_ticket_native_refusal.py", "tests/tools/test_simq_long_run_observation.py")  # fixed-name temp file / whole-data/runs snapshot
 MAX_JOB_COUNT = 21  # test.yml's job count when xdist was added: a ceiling, so removing a job is free and adding one needs a deliberate edit (free plan: 20 concurrent jobs)
 
 
@@ -64,12 +65,15 @@ def test_the_serial_store_lock_step_exists_only_in_the_api_job_and_the_parallel_
     assert "--ignore=" not in steps[SERIAL_STEP]
 
 
-def test_the_workflow_file_test_runs_serially_in_tools_f_z_and_the_parallel_step_ignores_it():
+def test_the_serial_tools_tests_run_serially_in_tools_f_z_and_the_parallel_step_ignores_them():
     steps = {s.get("name"): " ".join(s["run"].split()) for s in _pytest_run_steps(_jobs()["tools-f-z"])}
     serial = steps[TOOLS_SERIAL_STEP]
-    assert "tests/tools/test_implement_ticket_native_refusal.py" in serial and "-n " not in serial
+    assert "-n " not in serial
+    for path in SERIAL_TOOLS_TESTS:
+        assert path in serial
     parallel = next(v for k, v in steps.items() if k not in SERIAL_STEPS)
-    assert "--ignore=tests/tools/test_implement_ticket_native_refusal.py" in parallel
+    for path in SERIAL_TOOLS_TESTS:
+        assert f"--ignore={path}" in parallel
     merge = next(s for s in _jobs()["tools-f-z"]["steps"] if s.get("name") == "Merge JUnit XML")["run"]
     assert "tools-f-z-parallel.xml" in merge and "tools-f-z-serial.xml" in merge and "--out reports/junit/tools-f-z.xml" in merge
 

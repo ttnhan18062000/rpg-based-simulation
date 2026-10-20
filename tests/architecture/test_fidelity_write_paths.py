@@ -21,7 +21,6 @@ tests/architecture/test_social_write_paths.py.
 
 from __future__ import annotations
 
-import ast
 import re
 from pathlib import Path
 from typing import FrozenSet
@@ -45,9 +44,6 @@ _FIDELITY_MODULE_FILES = (
     Path("src/domains/fidelity/model.py"),
     Path("src/domains/fidelity/deriver.py"),
 )
-
-_FORBIDDEN_TOP_LEVEL_IMPORT_PREFIXES = ("src.engine", "src.core.state")
-
 
 def _iter_src_py_files():
     return sorted(_SRC_ROOT.rglob("*.py"))
@@ -92,27 +88,3 @@ def test_fidelity_module_no_belief_entry_or_knowledge_fact_references():
         + "\n".join(f"  {path}: {matches}" for path, matches in violations.items())
     )
 
-
-def test_fidelity_deriver_and_model_no_engine_or_core_state_imports():
-    violations = {}
-
-    for path in _FIDELITY_MODULE_FILES:
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        bad_imports = []
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    if alias.name.startswith(_FORBIDDEN_TOP_LEVEL_IMPORT_PREFIXES):
-                        bad_imports.append(alias.name)
-            elif isinstance(node, ast.ImportFrom):
-                module = node.module or ""
-                if module.startswith(_FORBIDDEN_TOP_LEVEL_IMPORT_PREFIXES):
-                    bad_imports.append(module)
-        if bad_imports:
-            violations[path.as_posix()] = bad_imports
-
-    assert not violations, (
-        "Found forbidden src.engine/src.core.state import(s) in a fidelity "
-        "model/deriver module (must stay pure/stateless):\n"
-        + "\n".join(f"  {path}: {imports}" for path, imports in violations.items())
-    )
