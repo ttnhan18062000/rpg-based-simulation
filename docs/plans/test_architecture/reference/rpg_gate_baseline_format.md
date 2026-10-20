@@ -85,6 +85,25 @@ The stub metric module (`tests/helpers/rpg_gate_stub_metrics.py`) emits a V8-sha
 
 - Config: `tests/simulation_quality/rpg_gate/config.yaml`, rpg's (agreed by rpg-planner). Stop-line shape: `name`, `metric`/`group` free fnmatch patterns (`group` is a property-based kind group, D42, never an EntityRole name), `min`/`max` on a row's value.
 
+## The run row set is declared, not observed
+
+The metric module declares, per world, the run rows `(id, group, key, tick)` it emits, so **every seed document of a world carries the same rows** (TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED).
+
+- A keyed count (`O2.deaths` by cause, `O4.accepted` by source) is emitted for every declared key on every seed, with `value: 0` when no event happened. The key domain is a declared enumeration, never "the keys seen in this run".
+- A share or rate whose denominator can be 0 on a seed has a defined value in the module, or it is not a run row. It is never left out on that seed alone.
+- Testing's tools **never impute an absent row**, and never read it as 0: a dropped row and a true zero would look the same (the blindness class V1 and V4 had).
+- The report shows the mismatch. A row key present in some seeds of a world and absent from others gives one `no-data` / `contract_error` row for that key, detail `row absent from seed(s) [..]; every seed reports the same rows`, in the markdown table and in the tally (`contract_error`). The key is not judged on the seeds that carry it. A required validity row is reported per seed by the required-validity rule instead.
+- The candidate refuses on the same condition (`row <id> (group <g>) is absent from seed(s) [..]; every seed must report the same rows`).
+
+### Shares
+
+A share is never a run row. The module carries it as two dense count run rows, a numerator and a denominator, judged like any count, and a **pooled** share row with `value = Σnum/Σden` over the seeds (a seed whose denominator is 0 contributes nothing).
+
+- When `Σden = 0` for a world, the module emits the pooled row with `value: null` and `reason: "empty_denominator"`.
+- **Report:** that row is `no-data` with reason `empty_denominator`. It is not a `contract_error`, is tallied under its own reason, and is not a failure. A pooled outcome row with a null value and any other reason, or none, stays a `contract_error`.
+- **Candidate:** the row is left out of `metrics` and listed in `undefined_rows: [{row, reason}]`; `rebaseline` carries the list into the baseline (the lint checks each entry and that a listed row is not also in `metrics`). A null value without the reason still refuses.
+- **Against a baseline where the row was undefined**, a run in which it is defined reads `no reference (undefined at baseline)`, never drift. Only a re-baseline gives it a reference.
+
 ## Candidate and recording v1
 
 A baseline is recorded from a run, never typed. `tools/test_architecture/rpg_gate_candidate.py` (child 6) turns the harness documents into the
