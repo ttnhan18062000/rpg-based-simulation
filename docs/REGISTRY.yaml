@@ -7884,6 +7884,23 @@
   - ai
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS.md
+  ticket_id: TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS
+  title: 'Five paths that route as unowned get an owner in session_roles.yaml: testing
+    takes rpg-gate-report.yml and the two ci_junit tools, and agent-working takes
+    handover_transit.py and tools/search/**'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - tools/sessions/route.py
+  - .claude/agents/session-*.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR.md
   ticket_id: TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR
   title: The observe_world cleanup test asserts that only its own run dir is gone,
@@ -8063,23 +8080,6 @@
   - tests/regression/test_behavioral_5k.py
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS.md
-  ticket_id: TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS
-  title: 'Five paths that route as unowned get an owner in session_roles.yaml: testing
-    takes rpg-gate-report.yml and the two ci_junit tools, and agent-working takes
-    handover_transit.py and tools/search/**'
-  tier: hotfix
-  ticket_type: chore
-  date: '2026-10-19'
-  related_code_areas:
-  - registries/session_roles.yaml
-  - tools/sessions/route.py
-  - .claude/agents/session-*.md
-  artifact_files: []
-  tags:
-  - ai
-  - governance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING.md
   ticket_id: TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING
