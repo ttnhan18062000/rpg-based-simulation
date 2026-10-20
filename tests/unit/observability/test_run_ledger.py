@@ -109,6 +109,21 @@ def test_a_meat_only_body_eating_plant_class_food_is_a_diet_breach_read_from_wha
     assert payload["diet_breaches"] == {f"{group}|CARRIED_FOOD|wild_berries": 1}
 
 
+def test_a_diet_breach_example_names_the_eater_the_tick_the_source_and_the_item_and_is_capped_and_reset():
+    from src.observability.run_ledger import MAX_EXAMPLES
+
+    state = _at_tick(_world(species="wolf", carry=["wild_berries"]), 10)
+    group = kind_group(state.entities[WHO])
+    payload = _tally(state, current=_without_items(state), update=_update([_result("CARRIED_FOOD")]))
+    assert payload["diet_breach_examples"] == [{"entity_id": WHO, "tick": state.tick, "kind_group": group, "source": "CARRIED_FOOD", "item": "wild_berries"}]
+    for _ in range(MAX_EXAMPLES + 3):
+        payload = _tally(state, current=_without_items(state), update=_update([_result("CARRIED_FOOD")]))
+    assert len(payload["diet_breach_examples"]) == MAX_EXAMPLES
+    assert payload["diet_breaches"][f"{group}|CARRIED_FOOD|wild_berries"] == MAX_EXAMPLES + 4  # the count is not capped, the examples are
+    RunLedger.reset_run_state(); RunLedger.configure(True)
+    assert RunLedger.tally_event().payload["diet_breach_examples"] == []
+
+
 def test_a_refused_try_an_in_diet_meal_and_a_body_with_nothing_missing_are_not_breaches():
     state = _at_tick(_world(species="wolf", carry=["wild_berries"]), 10)
     refused = _tally(state, current=_without_items(state), update=_update([_result("CARRIED_FOOD", accepted=False)]))

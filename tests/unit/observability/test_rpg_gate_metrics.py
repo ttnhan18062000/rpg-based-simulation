@@ -25,7 +25,7 @@ def _ledger(**over: Any) -> Dict[str, Any]:
     base: Dict[str, Any] = {
         "first_tick": 1, "last_tick": 100, "coin_first": 100.0, "coin_last": 100.0, "declared_coin": 0.0,
         "population": {"1": {PEOPLE: 10, WOLF: 4, DEER: 6}}, "transfers": {}, "hunger_drops": {}, "diet_breaches": {}, "deaths": {}, "adds": {},
-        "world_events": {}, "meat": {}, "attacks": {}, "out_of_world": {}, "out_of_world_examples": [], "unsourced_examples": [],
+        "world_events": {}, "meat": {}, "attacks": {}, "out_of_world": {}, "out_of_world_examples": [], "unsourced_examples": [], "diet_breach_examples": [],
     }
     base.update(over)
     return base
@@ -117,6 +117,14 @@ def test_v4_diet_gates_an_inn_meal_by_a_kind_without_prepared_food_and_counts_a_
     assert _violations(tmp_path, "V4", transfers={f"{WOLF}|NODE|accepted": 3}) == 0
     assert _violations(tmp_path, "V4", diet_breaches={f"{WOLF}|CARRIED_FOOD|wild_berries": 2}) == 2  # a meat-only body ate plant-class food
     assert _violations(tmp_path, "V4", transfers={f"{WOLF}|TOWN_SERVICE|rejected": 4}) == 0  # a refused try is the gate working
+
+
+def test_v4_examples_name_each_eater_and_its_tick_beside_the_aggregate_rows(tmp_path):
+    named = [{"entity_id": 77, "tick": 12, "kind_group": WOLF, "source": "CARRIED_FOOD", "item": "wild_berries"}]
+    row = _row(m.compute(_run(tmp_path, _ledger(diet_breaches={f"{WOLF}|CARRIED_FOOD|wild_berries": 2}, diet_breach_examples=named))), "V4")
+    assert named[0] in row["examples"]
+    assert any(e.get("consumption") == f"{WOLF}|CARRIED_FOOD|wild_berries" and e["count"] == 2 for e in row["examples"])
+    assert row["violations"] == 2  # the examples do not change the count
 
 
 def test_v5_a_moved_entity_outside_the_world_is_a_violation_with_examples(tmp_path):

@@ -214,6 +214,7 @@ def _check_diet_gates(ledger: Mapping[str, Any]) -> Tuple[int, List[Any]]:
         group, source, item = _split(key, 3)
         found[key] = n
         examples.append({"consumption": key, "count": n, "group": group, "source": source, "item": item})
+    examples += list(ledger.get("diet_breach_examples", []))  # one per breach, naming the eater and its tick (the aggregate rows above name only group|source|item)
     return sum(found.values()), examples
 
 

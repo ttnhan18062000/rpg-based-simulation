@@ -72,6 +72,7 @@ class RunLedger:
     _out_of_world: Dict[str, int] = {}  # group -> entity-ticks of a moved, alive entity outside the world extent
     _out_of_world_examples: List[Dict[str, Any]] = []
     _unsourced_examples: List[Dict[str, Any]] = []
+    _diet_breach_examples: List[Dict[str, Any]] = []  # the first MAX_EXAMPLES breaches, each naming the eater, the tick, the source and the item
 
     @classmethod
     def reset_run_state(cls) -> None:
@@ -95,6 +96,7 @@ class RunLedger:
         cls._out_of_world = {}
         cls._out_of_world_examples = []
         cls._unsourced_examples = []
+        cls._diet_breach_examples = []
 
     @classmethod
     def configure(cls, live: bool) -> None:
@@ -194,6 +196,8 @@ class RunLedger:
                 if eats_outside_its_diet(entity, item_id):
                     key = _key(group, source, item_id)
                     cls._diet_breaches[key] = cls._diet_breaches.get(key, 0) + 1
+                    if len(cls._diet_breach_examples) < MAX_EXAMPLES:
+                        cls._diet_breach_examples.append({"entity_id": entity.id, "tick": current.tick, "kind_group": group, "source": source, "item": item_id})
 
     @staticmethod
     def _items_that_left(prior: AuthoritativeState, current: AuthoritativeState, entity: Any, source: str, source_id: Any) -> List[str]:
@@ -363,7 +367,7 @@ class RunLedger:
             "transfers": dict(sorted(cls._transfers.items())), "hunger_drops": dict(sorted(cls._hunger_drops.items())), "diet_breaches": dict(sorted(cls._diet_breaches.items())),
             "deaths": dict(sorted(cls._deaths.items())), "adds": dict(sorted(cls._adds.items())),
             "world_events": dict(sorted(cls._world_events.items())), "meat": dict(sorted(cls._meat.items())),
-            "attacks": dict(sorted(cls._attacks.items())), "behaviour": dict(sorted(cls._behaviour.items())), "perception_samples": cls._perception_samples, "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples), "unsourced_examples": list(cls._unsourced_examples),
+            "attacks": dict(sorted(cls._attacks.items())), "behaviour": dict(sorted(cls._behaviour.items())), "perception_samples": cls._perception_samples, "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples), "unsourced_examples": list(cls._unsourced_examples), "diet_breach_examples": list(cls._diet_breach_examples),
         }
         return cls._event(LEDGER_TALLY_EVENT, cls._last_tick, payload)
 

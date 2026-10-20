@@ -9,7 +9,7 @@ from __future__ import annotations
 import shutil
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -18,7 +18,7 @@ pytestmark = pytest.mark.integration
 WORLD, SEED = "frontier_living_world", 42
 
 
-def _seed_hungry_meat_eater_with_berries(kernel) -> None:
+def _seed_hungry_meat_eater_with_berries(kernel) -> int:
     from src.ai.goals.kind_group import kind_group
     from src.core.state import ItemStack
 
@@ -28,16 +28,19 @@ def _seed_hungry_meat_eater_with_berries(kernel) -> None:
     entities[wolf.id] = replace(wolf, biological=replace(wolf.biological, hunger=95.0),
                                 inventory=replace(wolf.inventory, items=[ItemStack(item_id="wild_berries", quantity=2)]))
     object.__setattr__(state, "entities", entities)
+    return wolf.id
 
 
-def _v4_row(run_id: str, ticks: int = 25) -> Dict[str, Any]:
+def _v4_row(run_id: str, ticks: int = 25, eater: Optional[List[int]] = None) -> Dict[str, Any]:
     from src.observability import rpg_gate_metrics
     from tools.test_architecture.rpg_gate_run import RunArtifacts, build_kernel
 
     run_dir = Path("data") / "runs" / run_id
     kernel = build_kernel(WORLD, SEED, run_id)
     try:
-        _seed_hungry_meat_eater_with_berries(kernel)
+        seeded = _seed_hungry_meat_eater_with_berries(kernel)
+        if eater is not None:
+            eater.append(seeded)
         for _ in range(ticks):
             kernel.tick_once()
     finally:
@@ -53,14 +56,19 @@ def _v4_row(run_id: str, ticks: int = 25) -> Dict[str, Any]:
 def test_a_meat_only_body_that_eats_plant_food_in_a_real_run_fires_the_v4_row(monkeypatch):
     import src.engine.domain.core_actions as core_actions
     import src.engine.tactical_rest as tactical_rest
-    from src.observability.run_ledger import RunLedger
+    from src.observability.run_ledger import MAX_EXAMPLES, RunLedger
 
     monkeypatch.setattr(tactical_rest, "can_eat_item", lambda *a, **k: True)  # the observer is under test, so the diet gate that normally refuses is opened
     monkeypatch.setattr(core_actions, "can_eat_item", lambda *a, **k: True)
-    row = _v4_row("v4_real_pipeline_forbidden_meal")
+    eater: List[int] = []
+    row = _v4_row("v4_real_pipeline_forbidden_meal", eater=eater)
     assert row["violations"] > 0, row
     assert any(e.get("consumption") == "meat|CARRIED_FOOD|wild_berries" and e.get("group") == "meat" and e.get("source") == "CARRIED_FOOD"
                and e.get("item") == "wild_berries" for e in row["examples"]), row["examples"]
+    named = [e for e in row["examples"] if "entity_id" in e]
+    assert named and all(e["entity_id"] == eater[0] and e["source"] == "CARRIED_FOOD" and e["item"] == "wild_berries" and e["kind_group"] == "meat"
+                         and isinstance(e["tick"], int) for e in named), row["examples"]  # the example names the forced meat-only body and its tick
+    assert len(named) == min(RunLedger._diet_breaches["meat|CARRIED_FOOD|wild_berries"], MAX_EXAMPLES)
     assert RunLedger._diet_breaches.get("meat|CARRIED_FOOD|wild_berries", 0) >= 1  # the counter behind the row (no longer the proof)
 
 
