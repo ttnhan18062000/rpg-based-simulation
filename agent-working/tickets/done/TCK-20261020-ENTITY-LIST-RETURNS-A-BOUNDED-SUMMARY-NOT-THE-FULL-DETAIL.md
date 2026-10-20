@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL
-phase: open
+phase: done
 date: 2026-10-20
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 GET /api/v1/entities returns a bounded summary per entity; the full detail moves to the single-entity endpoint with capped history and paged sub-resources
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -76,3 +76,4 @@ Measured on an aged-entity fixture (tests/helpers/aged_entity.py), no live run: 
 src/api/presenters/state_presenter.py, src/api/read_model_cache.py, src/api/engine_manager.py, src/api/server.py, src/api/routes/entities.py (new), tests/helpers/aged_entity.py (new), tests/unit/api/test_entity_read_model_is_bounded.py (new), tests/api/test_entity_quest_history_route.py (new), tests/api/test_live_map_terrain_codes_resolve_through_the_manifest.py, docs/observability/read_model_service_contract.md. Frontend: none (the InspectPanel Quests tab reads `selected_entity` from /state?selected=, which this backend does not serve; nothing in the frontend calls /api/v1/entities).
 
 ## Completion Summary
+The list is a bounded summary, the detail caps its finished records with counts, the quest history is a paged sub-resource, and the summary and detail caches are separate. Presenter and API only, so the simulation and its hash are untouched. `make knowledge-index-update` was NOT run (deferred until the paired measurement 1b finishes, to protect the host's timing). Platform reruns the SLO load (p95 at 50 users) after the merge; the frontend `/state?selected=` gap is its own ticket.
