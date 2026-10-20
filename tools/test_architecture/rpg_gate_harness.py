@@ -189,7 +189,7 @@ def run_one(world: str, seed: int, config: GateConfig, out_dir: Path, *, metrics
     started = time.monotonic()
     error = _call_child(
         ["run", "--world", world, "--seed", str(seed), "--ticks", str(config.ticks), "--metrics-module", metrics_module, "--sha", sha,
-         "--harness-hash", hhash, "--run-id", run_id, "--out", str(target)],
+         "--harness-hash", hhash, "--run-id", run_id, "--out", str(target), "--seeds", *[str(sd) for sd in config.seeds]],
         timeout_s,
     )
     if error is None:
@@ -219,7 +219,7 @@ def pool_world(world: str, seed_paths: Sequence[Path], config: GateConfig, out_d
     if error is None:
         error = _call_child(
             ["pool", "--world", world, "--ticks", str(config.ticks), "--metrics-module", metrics_module, "--sha", sha, "--harness-hash", hhash,
-             "--out", str(target), "--docs", *[str(p) for p in seed_paths]],
+             "--out", str(target), "--seeds", *[str(sd) for sd in config.seeds], "--docs", *[str(p) for p in seed_paths]],
             timeout_s,
         )
     if error is None:

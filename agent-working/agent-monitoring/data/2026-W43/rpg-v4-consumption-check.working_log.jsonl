@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-19T08:54:17.853778Z", "ticket_id": "TCK-20261019-V4-COUNTS-CONSUMPTION-NOT-ACQUISITION", "title": "V4 counts consumption not acquisition", "status": "DONE", "summary": "Run ledger counts EAT intents outside the eater's diet; V4 reads them; V4=0 on frontier 44/45, hash identical.", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

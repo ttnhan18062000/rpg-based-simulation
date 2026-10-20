@@ -177,3 +177,18 @@ def test_the_real_stub_source_is_hashed_by_the_run_that_records_it(tmp_path):
 
 def test_two_invocations_on_one_sha_use_different_run_ids():
     assert h.run_id_for(WORLD, 1, SHA, "7-1") != h.run_id_for(WORLD, 1, SHA, "8-1")
+
+
+def test_every_document_records_the_seed_set_its_floor_was_computed_from(tmp_path):
+    _run(tmp_path, "a", seeds=(1, 2, 3))
+    for name in (h.doc_name(WORLD, 1), h.doc_name(WORLD, 2), h.doc_name(WORLD, 3), h.doc_name(WORLD, None)):
+        assert _doc(tmp_path, "a", name)["floor_seeds"] == [1, 2, 3], name
+
+
+def test_a_rerun_child_gets_the_full_seed_set_never_just_the_seed_it_reruns(tmp_path):
+    """The report's same-SHA rerun calls run_one for one (world, seed) with the whole config: the floor's seed set must still be all seeds, else the rerun's floor differs."""
+    cfg = _cfg(tmp_path, seeds=(1, 2, 3))
+    out = tmp_path / "rerun"
+    out.mkdir()
+    h.run_one(WORLD, 2, load_config(cfg), out, metrics_module=STUB, sha=SHA, hhash="hh", keep_runs=False, timeout_s=300, token="rerun-test")
+    assert json.loads((out / h.doc_name(WORLD, 2)).read_text())["floor_seeds"] == [1, 2, 3]
