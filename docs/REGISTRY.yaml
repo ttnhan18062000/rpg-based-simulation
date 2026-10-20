@@ -12837,6 +12837,24 @@
   - engine
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261008-PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS.md
+  ticket_id: TCK-20261008-PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS
+  title: Kernel.__init__ validates its flags only after starting the event-recorder
+    and trace-writer workers, so a Kernel that rejects a forbidden flag leaks background
+    threads
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-08'
+  related_code_areas:
+  - src/engine/kernel.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261008-PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261008-PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS/plan.md
+  - agent-working/stored_artifacts/TCK-20261008-PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS/test_plan.md
+  tags:
+  - performance
+  - engine
+- type: ticket
   path: agent-working/tickets/done/TCK-20261008-PERF-LANE-PATH-GATE-MISSES-SIMULATION-SRC-DIRS.md
   ticket_id: TCK-20261008-PERF-LANE-PATH-GATE-MISSES-SIMULATION-SRC-DIRS
   title: The Perf / cert / arena lane runs on a PR for any `src/` change except a
@@ -13300,21 +13318,6 @@
   artifact_files: []
   tags:
   - testing
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261008-PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS.md
-  ticket_id: TCK-20261008-PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS
-  title: Kernel.__init__ validates its flags only after starting the event-recorder
-    and trace-writer workers, so a Kernel that rejects a forbidden flag leaks background
-    threads
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-08'
-  related_code_areas:
-  - src/engine/kernel.py
-  artifact_files: []
-  tags:
-  - performance
-  - engine
 - type: ticket
   path: agent-working/tickets/done/TCK-20261007-A-NEED-WITH-NO-OPEN-WAY-PULLS-TOWARD-THE-STEP-THAT-OPENS-ONE-SURV-07-AMENDMENT.md
   ticket_id: TCK-20261007-A-NEED-WITH-NO-OPEN-WAY-PULLS-TOWARD-THE-STEP-THAT-OPENS-ONE-SURV-07-AMENDMENT
