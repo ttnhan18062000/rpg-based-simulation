@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA
-phase: open
+phase: done
 date: 2026-10-20
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 pr-body-lint.yml pins actions/checkout by full commit SHA, per the repo-wide pin rule
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -71,7 +71,12 @@ perf-planner spotted it; lead-planner relayed it on 2026-10-20.
 - 2026-10-20 (agent-working-planner): folded into batch 6 with TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED.
 
 ## Test Summary
+- New `tests/tools/test_pr_body_lint_workflow_pinned.py` (2 tests): every `uses:` in the workflow is a 40-hex SHA plus a `# vX.Y.Z` comment, and a literal `@v7` line is flagged (plus a missing comment; a pin and a local action pass).
+- `tests/static`, `tests/architecture` and `tests/docs` with the new file: 337 passed, 2 skipped, 1 xfailed.
+- `git grep 'actions/checkout@v' -- .github/workflows` is empty.
 
 ## Files Changed
+- `.github/workflows/pr-body-lint.yml` (checkout pinned), `tests/tools/test_pr_body_lint_workflow_pinned.py`.
 
 ## Completion Summary
+`actions/checkout` in pr-body-lint.yml is pinned to `3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1`, as everywhere else on main. The guard copies the two regexes and `unpinned()` from testing's `tests/static/test_workflow_actions_pinned_by_sha.py` (a source comment names it; testing's file is untouched). Extending testing's guard repo-wide is an fyi to testing-planner. `make knowledge-index-update` was not run here (lead runs it after the merge).

@@ -7770,6 +7770,22 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA.md
+  ticket_id: TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA
+  title: pr-body-lint.yml pins actions/checkout by full commit SHA, per the repo-wide
+    pin rule
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - .github/workflows/pr-body-lint.yml, tests/static/test_workflow_actions_pinned_by_sha.py,
+    tests/tools/
+  artifact_files: []
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR.md
   ticket_id: TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR
   title: A run outcome row may carry `floor_rel`. The candidate records `floor = max(floor,
@@ -7862,22 +7878,6 @@
   - tests/api/test_observability_websocket.py
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA.md
-  ticket_id: TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA
-  title: pr-body-lint.yml pins actions/checkout by full commit SHA, per the repo-wide
-    pin rule
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-10-20'
-  related_code_areas:
-  - .github/workflows/pr-body-lint.yml, tests/static/test_workflow_actions_pinned_by_sha.py,
-    tests/tools/
-  artifact_files: []
-  tags:
-  - ai
-  - process-improvement
-  - governance
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
   ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
