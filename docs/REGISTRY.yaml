@@ -7687,6 +7687,23 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION.md
+  ticket_id: TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION
+  title: 'Once hunger is past its consequence line and taking health, starvation is
+    itself a present threat to life: the hunger escalation is no longer dropped while
+    another threat holds; goal selection weighs it (SURV-07 amendment, memo row 83,
+    step two of the V3 fix).'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai/goals/scorers.py, src/engine/starvation.py, src/ai/goals/present_threat.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM.md
   ticket_id: TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM
   title: 'The request-duration histogram gets a 0.3 s bucket so the API SLO alert
