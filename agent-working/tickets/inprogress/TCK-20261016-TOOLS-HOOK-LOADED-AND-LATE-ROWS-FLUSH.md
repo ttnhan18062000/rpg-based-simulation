@@ -15,7 +15,7 @@ tags: [agent-monitoring, hooks, data-quality]
 Say when a session's tool-call hook is not loaded, and get late tool rows committed, so tools shards cover the sessions that close tickets
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
