@@ -42,11 +42,17 @@ def _state():
 
 
 def _run(tmp_path: Path, ledger: Dict[str, Any], records: List[Dict[str, Any]] = (), starvation=None, state=None, ledger_live=True, starvation_live=True, seeds=(1,)):
+    records = list(records)
+    if starvation is None:
+        # The starvation channel's tally must agree with the O2 count of starvation deaths (every entity): a run that has O2 starvation deaths carries as many records.
+        starved = sum(n for key, n in ledger["deaths"].items() if key.endswith("|STARVATION"))
+        records += [_record(entity_id=900 + i) for i in range(max(0, starved - len(records)))]
+        starvation = {"starvation_deaths_seen": len(records), "records_emitted": len(records)}
     events = []
     if starvation_live:
         events.append({"event_type": CHANNEL_LIVE_EVENT, "payload": {}})
     events.extend(records)
-    events.append({"event_type": CHANNEL_TALLY_EVENT, "payload": starvation or {"starvation_deaths_seen": len(records), "records_emitted": len(records)}})
+    events.append({"event_type": CHANNEL_TALLY_EVENT, "payload": starvation})
     if ledger_live:
         events.insert(0, {"event_type": LEDGER_LIVE_EVENT, "payload": {}})
     events.append({"event_type": LEDGER_TALLY_EVENT, "payload": ledger})
@@ -86,11 +92,22 @@ def test_v2_meat_may_leave_the_world_only_through_the_decay_sink_and_the_books_m
 
 
 def test_v3_a_death_beside_a_way_judged_open_and_never_tried_is_a_violation(tmp_path):
-    clean = m.compute(_run(tmp_path, _ledger(), [_record()]))
+    one_starved = _ledger(deaths={f"{PEOPLE}|STARVATION": 1})
+    clean = m.compute(_run(tmp_path, one_starved, [_record()]))
     assert _row(clean, "V3")["violations"] == 0
-    untried = m.compute(_run(tmp_path, _ledger(), [_record(union=("CARRIED_FOOD", "INN_MEAL"), tried=("CARRIED_FOOD",))]))
+    untried = m.compute(_run(tmp_path, one_starved, [_record(union=("CARRIED_FOOD", "INN_MEAL"), tried=("CARRIED_FOOD",))]))
     row = _row(untried, "V3")
     assert row["violations"] == 1 and row["examples"][0]["untried"] == ["INN_MEAL"]
+
+
+def test_v3_cannot_be_read_when_the_starvation_tally_disagrees_with_the_o2_starvation_count(tmp_path):
+    """O2 scans every entity (run_ledger._count_deaths): it is the independent count of starvation deaths. A tally below it is a silent miss."""
+    agree = m.compute(_run(tmp_path, _ledger(deaths={f"{PEOPLE}|STARVATION": 1}), [_record()]))
+    assert _row(agree, "V3")["violations"] == 0
+    with pytest.raises(m.GateDataMissingError, match=r"starvation tally 0 != O2 starvation deaths 1"):
+        m.compute(_run(tmp_path, _ledger(deaths={f"{PEOPLE}|STARVATION": 1}), [], starvation={"starvation_deaths_seen": 0, "records_emitted": 0}))
+    with pytest.raises(m.GateDataMissingError, match=r"starvation tally 1 != O2 starvation deaths 0"):
+        m.compute(_run(tmp_path, _ledger(deaths={f"{PEOPLE}|COMBAT": 3}), [_record()], starvation={"starvation_deaths_seen": 1, "records_emitted": 1}))
 
 
 def test_v4_diet_gates_an_inn_meal_by_a_kind_without_prepared_food_and_counts_a_consumption_outside_the_diet(tmp_path):

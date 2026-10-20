@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import pytest
 
+from src.ai.goals.kind_group import kind_group
 from src.core.builder import V2EntityBuilder
 from src.core.spawn_source import SpawnKind, SpawnSource
 from src.core.updates import StateUpdate
@@ -23,7 +24,7 @@ from src.engine.apply import ApplyPath, DuplicateEntityIdError
 from src.engine.cadence import SystemCadence, should_run
 from src.engine.need_pull import ESCALATION_ONSET, HUNGER_LINE
 from src.observability import rpg_gate_metrics as metrics
-from src.observability.run_ledger import RunLedger
+from src.observability.run_ledger import MAX_EXAMPLES, RunLedger
 from src.observability.starvation_record import StarvationRecorder
 from tests.unit.observability.test_starvation_death_record import WHO, _world
 
@@ -85,13 +86,19 @@ def _arrival() -> SpawnSource:
     return SpawnSource(SpawnKind.AUTHORED_ARRIVAL, rule_kind="calamity", rule_id="calamity.test_rule")
 
 
+def _unsourced_example(entity, tick: int) -> Dict[str, Any]:
+    """The ruled V8 example (testing-planner and rpg-planner, 2026-10-19): the entity, the tick, its kind group and the failed check; no `site` key."""
+    return {"entity_id": entity.id, "tick": tick, "kind_group": kind_group(entity), "check": "unsourced"}
+
+
 @pytest.mark.usefixtures("_fake_floors")
 def test_a_an_add_with_no_spawn_source_is_a_violation_that_names_the_entity(tmp_path):
-    run, _ = _drive(tmp_path, [([_new(500)], {})])
+    added = _new(500)
+    run, _ = _drive(tmp_path, [([added], {})])
     row = _v8(run)
     assert row["violations"] >= 1
-    assert row["examples"], "the row must carry examples"
-    assert any("unsourced" in str(example) for example in row["examples"])
+    assert row["examples"] == [_unsourced_example(added, run.first.tick + 1)]
+    assert not any("site" in example for example in row["examples"])
 
 
 @pytest.mark.usefixtures("_fake_floors")
@@ -143,7 +150,21 @@ def test_f_the_tally_counts_sum_to_the_number_of_adds_applied(tmp_path):
     applied = sum(len(adds) for adds, _ in ticks)
     run, final = _drive(tmp_path, ticks)
     assert sum(RunLedger.tally_event().payload["adds"].values()) == applied == len(final.entities) - len(run.first.entities)
-    assert _v8(run)["violations"] == 2  # 502, and 504 (503 alone was sourced)
+    row = _v8(run)
+    assert row["violations"] == 2  # 502, and 504 (503 alone was sourced)
+    base = run.first.tick
+    assert row["examples"] == [_unsourced_example(final.entities[502], base + 3), _unsourced_example(final.entities[504], base + 4)]
+    assert not any("site" in example for example in row["examples"])
+
+
+def test_the_example_list_is_bounded_while_the_violation_count_stays_exact(tmp_path):
+    extra = 3
+    adds = [_new(600 + i) for i in range(MAX_EXAMPLES + extra)]  # MAX_EXAMPLES is rpg's own bound, read from its module
+    run, final = _drive(tmp_path, [(adds, {})])
+    row = _v8(run)
+    assert row["violations"] == MAX_EXAMPLES + extra
+    assert len(row["examples"]) == MAX_EXAMPLES
+    assert row["examples"] == [_unsourced_example(final.entities[600 + i], run.first.tick + 1) for i in range(MAX_EXAMPLES)]
 
 
 def test_g_an_add_reusing_an_existing_id_is_refused_loudly_and_nothing_records_an_overwrite():
