@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-PLANNER-MAY-WRITE-STAGING-ARTIFACTS
-phase: open
+phase: done
 date: 2026-10-20
 tags: [governance, agent-monitoring]
 ---
@@ -15,7 +15,7 @@ tags: [governance, agent-monitoring]
 Every planner role may write agent-working/staging_artifacts/**, so starting a ticket's staging artifacts stops raising a role_boundary warning
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -70,7 +70,12 @@ Planner roles' `capability.may_write` includes `agent-working/tickets/**` but no
 - 2026-10-20 (agent-working-planner): owner yes (via lead-planner). Batch 7, dispatched to agent-working-implementer.
 
 ## Test Summary
+tests/tools/test_session_boundary.py: 12 new (every planner with a tickets grant has the staging grant; each such planner writing a staging artifact is no event; a planner writing src/x.py still is). Card/roster/twin tests pass (136); `generate_agents.py --check`: 0 drift.
 
 ## Files Changed
+- registries/session_roles.yaml (nine planner roles)
+- tests/tools/test_session_boundary.py
 
 ## Completion Summary
+Nine planner roles (rpg, agent-working, testing, codebase, perf, lead, platform, platform-u24, agent-working-u24) gained `agent-working/staging_artifacts/**` in `capability.may_write`; asset-planner already had it, lead-planner-u24 has no tickets grant. No generated card embeds `may_write`, so regeneration changed nothing (drift check: 0). The edit needed the owner to approve the permission prompt on retry (first attempt denied by the auto-mode classifier).
+
