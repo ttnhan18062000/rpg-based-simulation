@@ -103,10 +103,12 @@ DUNDER_SKIP = {
 
 
 def iter_py_files(root: Path) -> list[Path]:
+    """List the Python files under ``root`` that the audit scans."""
     return sorted(root.rglob("*.py"))
 
 
 def decorator_names(dec_list: list[ast.expr]) -> list[str]:
+    """Return the simple name of each decorator in ``dec_list``."""
     names = []
     for d in dec_list:
         if isinstance(d, ast.Name):
@@ -121,6 +123,7 @@ def decorator_names(dec_list: list[ast.expr]) -> list[str]:
 
 
 def classify_decorators(dec: list[str]) -> str:
+    """Classify decorator names as a FastAPI route, a Pydantic validator, or a real definition."""
     dset = set(dec)
     if dset & FASTAPI_DECORATORS:
         return "fastapi_route"
@@ -129,13 +132,13 @@ def classify_decorators(dec: list[str]) -> str:
     return "real"
 
 
-def collect_definitions() -> tuple[list[tuple], list[tuple]]:
+def collect_definitions() -> tuple[list[tuple], list[tuple]]:  # noqa: C901  # one AST walk; splitting it would hide the traversal
     """Returns (toplevel_defs, methods). Each toplevel def is
     (name, file, lineno, kind, decorators). Each method is
     (name, file, lineno, class_name, decorators)."""
     toplevel_defs = []
     methods = []
-    for root in SRC_ROOTS:
+    for root in SRC_ROOTS:  # noqa: PLR1702  # nested AST walk over roots, files, nodes and methods
         for f in iter_py_files(root):
             try:
                 tree = ast.parse(f.read_text(encoding="utf-8"), filename=str(f))
@@ -166,7 +169,7 @@ def build_occurrence_index() -> tuple[dict, dict]:
         for f in iter_py_files(root):
             try:
                 content = f.read_text(encoding="utf-8")
-            except Exception:
+            except (OSError, UnicodeError):
                 continue
             for tok in IDENT_RE.findall(content):
                 src_occurrences[tok][f] += 1
@@ -176,7 +179,7 @@ def build_occurrence_index() -> tuple[dict, dict]:
         for f in iter_py_files(root):
             try:
                 content = f.read_text(encoding="utf-8")
-            except Exception:
+            except (OSError, UnicodeError):
                 continue
             for tok in IDENT_RE.findall(content):
                 test_tool_occurrences[tok] += 1
@@ -185,6 +188,7 @@ def build_occurrence_index() -> tuple[dict, dict]:
 
 
 def run_audit() -> list[dict[str, Any]]:
+    """Return one row per definition with no call site outside its own definition."""
     toplevel_defs, methods = collect_definitions()
     src_occurrences, test_tool_occurrences = build_occurrence_index()
 
@@ -243,6 +247,7 @@ def run_audit() -> list[dict[str, Any]]:
 
 
 def main() -> None:
+    """Run the audit, print its report and optionally write JSON or CSV."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--json", type=Path, default=None, help="Write full structured inventory as JSON")
     parser.add_argument("--csv", type=Path, default=None, help="Write full structured inventory as CSV")

@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import pytest
 
+from src.ai.goals.kind_group import kind_group
 from src.core.builder import V2EntityBuilder
 from src.core.spawn_source import SpawnKind, SpawnSource
 from src.core.updates import StateUpdate
@@ -23,11 +24,22 @@ from src.engine.apply import ApplyPath, DuplicateEntityIdError
 from src.engine.cadence import SystemCadence, should_run
 from src.engine.need_pull import ESCALATION_ONSET, HUNGER_LINE
 from src.observability import rpg_gate_metrics as metrics
-from src.observability.run_ledger import RunLedger
+from src.observability.run_ledger import MAX_EXAMPLES, RunLedger
 from src.observability.starvation_record import StarvationRecorder
 from tests.unit.observability.test_starvation_death_record import WHO, _world
 
 Tick = Tuple[Sequence[Any], Dict[int, SpawnSource]]  # (entities_add, entity_spawn_sources) for one tick
+
+
+@pytest.fixture
+def _fake_floors(monkeypatch):
+    """Self-test world has no spec; V8 cases assert validity rows only, never O2 floors (the floor is the fixed base, 3.0). Its declaration is the groups of the
+    self-test state and of the entities the cases add (no wild meat-eater)."""
+    declared = dict(metrics._final_alive_by_group(_world()))
+    declared[kind_group(_new(1))] = declared.get(kind_group(_new(1)), 0) + 1
+    monkeypatch.setattr(metrics, "_tick0_alive", lambda world, seed: dict(declared))
+    monkeypatch.setattr(metrics, "_tick0_persons", lambda world, seed: {})
+    monkeypatch.setattr(metrics, "_spawn_kinds", lambda world, seed: [])
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +74,7 @@ def _drive(tmp_path: Path, ticks: Sequence[Tick], ledger_live: bool = True) -> T
     events.append(StarvationRecorder.tally_event())
     path = tmp_path / "simulation_events.jsonl"
     path.write_text("\n".join(json.dumps({"event_type": e.event_type, "payload": e.payload}, default=str) for e in events) + "\n", encoding="utf-8")
-    run = SimpleNamespace(world="v8_self_test", seed=1, ticks=len(ticks), state=prior, events_path=path, run_dir=tmp_path, first=first)
+    run = SimpleNamespace(world="v8_self_test", seed=1, ticks=len(ticks), state=prior, events_path=path, run_dir=tmp_path, first=first, seeds=(1,))
     return run, prior
 
 
@@ -79,14 +91,22 @@ def _arrival() -> SpawnSource:
     return SpawnSource(SpawnKind.AUTHORED_ARRIVAL, rule_kind="calamity", rule_id="calamity.test_rule")
 
 
+def _unsourced_example(entity, tick: int) -> Dict[str, Any]:
+    """The ruled V8 example (testing-planner and rpg-planner, 2026-10-19): the entity, the tick, its kind group and the failed check; no `site` key."""
+    return {"entity_id": entity.id, "tick": tick, "kind_group": kind_group(entity), "check": "unsourced"}
+
+
+@pytest.mark.usefixtures("_fake_floors")
 def test_a_an_add_with_no_spawn_source_is_a_violation_that_names_the_entity(tmp_path):
-    run, _ = _drive(tmp_path, [([_new(500)], {})])
+    added = _new(500)
+    run, _ = _drive(tmp_path, [([added], {})])
     row = _v8(run)
     assert row["violations"] >= 1
-    assert row["examples"], "the row must carry examples"
-    assert any("unsourced" in str(example) for example in row["examples"])
+    assert row["examples"] == [_unsourced_example(added, run.first.tick + 1)]
+    assert not any("site" in example for example in row["examples"])
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_b_an_authored_arrival_cannot_be_built_without_its_rule_so_the_only_unruled_add_is_an_unsourced_one(tmp_path):
     for bad in (dict(rule_kind="calamity"), dict(rule_id="calamity.x"), dict()):
         with pytest.raises(ValueError):
@@ -95,6 +115,7 @@ def test_b_an_authored_arrival_cannot_be_built_without_its_rule_so_the_only_unru
     assert _v8(run)["violations"] == 0
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_c_a_birth_cannot_be_built_without_parents_so_the_only_parentless_add_is_an_unsourced_one(tmp_path):
     with pytest.raises(ValueError):
         SpawnSource(SpawnKind.BIRTH, parent_ids=())
@@ -104,6 +125,7 @@ def test_c_a_birth_cannot_be_built_without_parents_so_the_only_parentless_add_is
     assert _v8(run)["violations"] == 0
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_d_fully_sourced_adds_of_every_kind_leave_zero_violations(tmp_path):
     ticks: List[Tick] = [
         ([_new(500)], {500: SpawnSource(SpawnKind.INITIAL)}),
@@ -115,12 +137,14 @@ def test_d_fully_sourced_adds_of_every_kind_leave_zero_violations(tmp_path):
     assert RunLedger.tally_event().payload["adds"], "the run must have counted its adds, or zero would mean nothing"
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_e_a_silent_ledger_is_no_data_never_zero_violations(tmp_path):
     run, _ = _drive(tmp_path, [([_new(500)], {})], ledger_live=False)
     with pytest.raises(metrics.GateDataMissingError):
         metrics.compute(run)
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_f_the_tally_counts_sum_to_the_number_of_adds_applied(tmp_path):
     ticks: List[Tick] = [
         ([_new(500), _new(501)], {500: _birth(), 501: _arrival()}),
@@ -131,7 +155,22 @@ def test_f_the_tally_counts_sum_to_the_number_of_adds_applied(tmp_path):
     applied = sum(len(adds) for adds, _ in ticks)
     run, final = _drive(tmp_path, ticks)
     assert sum(RunLedger.tally_event().payload["adds"].values()) == applied == len(final.entities) - len(run.first.entities)
-    assert _v8(run)["violations"] == 2  # 502, and 504 (503 alone was sourced)
+    row = _v8(run)
+    assert row["violations"] == 2  # 502, and 504 (503 alone was sourced)
+    base = run.first.tick
+    assert row["examples"] == [_unsourced_example(final.entities[502], base + 3), _unsourced_example(final.entities[504], base + 4)]
+    assert not any("site" in example for example in row["examples"])
+
+
+@pytest.mark.usefixtures("_fake_floors")
+def test_the_example_list_is_bounded_while_the_violation_count_stays_exact(tmp_path):
+    extra = 3
+    adds = [_new(600 + i) for i in range(MAX_EXAMPLES + extra)]  # MAX_EXAMPLES is rpg's own bound, read from its module
+    run, final = _drive(tmp_path, [(adds, {})])
+    row = _v8(run)
+    assert row["violations"] == MAX_EXAMPLES + extra
+    assert len(row["examples"]) == MAX_EXAMPLES
+    assert row["examples"] == [_unsourced_example(final.entities[600 + i], run.first.tick + 1) for i in range(MAX_EXAMPLES)]
 
 
 def test_g_an_add_reusing_an_existing_id_is_refused_loudly_and_nothing_records_an_overwrite():

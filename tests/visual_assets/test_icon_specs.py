@@ -16,8 +16,8 @@ GUIDE = REPO / "docs" / "assets" / "icon_style_guide.md"
 def test_there_is_one_complete_consistent_spec_for_every_registered_icon_key():
     loaded = specs.load()
     assert specs.problems(loaded, specs.registered_icon_keys()) == []
-    assert len(loaded) == 54 and {s.status for s in loaded.values()} == {"v2", "adopted", "revision"}
-    assert sum(1 for s in loaded.values() if s.status == "v2") == 35  # the 22 v2 icons minus the five that are now revisions (the ruins stay as adopted), plus the 18 object markers drawn in the v2 round
+    assert len(loaded) == 65 and {s.status for s in loaded.values()} == {"v2", "adopted", "revision"}
+    assert sum(1 for s in loaded.values() if s.status == "v2") == 46  # the 22 v2 icons minus the five that are now revisions (the ruins stay as adopted), plus the 18 object markers drawn in the v2 round, plus the 11 entity markers
     assert sorted(k for k, s in loaded.items() if s.status == "revision") == sorted(["icon.rarity.common", "icon.status.frame_buff", "icon.class.rogue", "icon.item.tool", "icon.building.hero_house", "icon.status.frame_debuff", "icon.building.inn"])  # the owner kept the adopted ruins and enemy camp; theme fit added the house, the debuff frame and the inn
 
 

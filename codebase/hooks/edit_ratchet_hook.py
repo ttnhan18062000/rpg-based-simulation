@@ -61,7 +61,7 @@ def advice(payload: object, root: Path = REPO_ROOT) -> str | None:
         result = staged_ratchet.check(
             root, [rel], python=str(venv_python) if venv_python.is_file() else None, timeout=TIME_BUDGET_S
         )
-    except staged_ratchet.HookSkipped:
+    except staged_ratchet.HookSkippedError:
         return None
     if result is None or not result.failed:
         return None

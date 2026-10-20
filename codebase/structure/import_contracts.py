@@ -4,7 +4,7 @@ The layer order comes from `codebase/structure/package_registry.jsonl` (each row
 current violations are carried as `ignore_imports` from `codebase/structure/import_layers_baseline.txt`
 (one `importer -> imported` module pair per line, sorted). Only the block between the two marker
 comments in the config is generated; the root packages, flags and the other contracts are hand-edited.
-Advisory: nothing here fails a PR (TCK-20261004-IMPORT-LINTER-ADOPTION).
+`ci` is the blocking CI step (TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT); `advisory` never fails and is for local use.
 
     python3 -m codebase.structure.import_contracts            rewrite the generated block
     python3 -m codebase.structure.import_contracts --check    exit 1 if the block is out of date
@@ -17,9 +17,12 @@ Advisory: nothing here fails a PR (TCK-20261004-IMPORT-LINTER-ADOPTION).
     python3 -m codebase.structure.import_contracts advisory [--summary-out PATH] [--annotate] [--lint-imports PATH]
                                                              run every contract; write the result to a Markdown
                                                              summary and one ::warning:: line; ALWAYS exit 0
+    python3 -m codebase.structure.import_contracts ci [--summary-out PATH] [--annotate] [--lint-imports PATH]
+                                                             the CI step: same summary, one ::error:: line per broken
+                                                             contract naming its pairs; exit 1 broken/stale, 2 could not run
 
 `seed-baseline` accepts every current layer violation, like a ratchet reseed: use it only on purpose.
-Exit 0 clean, 1 out of date, 2 could not run (`advisory` exits 0 whatever happens: it is the CI step).
+Exit 0 clean, 1 out of date, 2 could not run (`advisory` exits 0 whatever happens; `ci` fails on a finding).
 """
 
 from __future__ import annotations
@@ -29,6 +32,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
@@ -49,6 +53,8 @@ _ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 _TOTALS_RE = re.compile(r"Contracts: (\d+) kept, (\d+) broken")
 _BROKEN_RE = re.compile(r"^(.+?) BROKEN(?: \(\d+ ignored imports\))?$", re.M)
 _STALE_RE = re.compile(r"No matches for ignored import")
+_STALE_PAIR_RE = re.compile(r"No matches for ignored import (\S+) -> (\S+)")
+_SECTION_RE = re.compile(r"((?:[^\n]+\n)+?)-{5,}\n")
 
 
 def layer_packages(rows: Sequence[dict]) -> list[tuple[str, list[str]]]:
@@ -97,6 +103,52 @@ def parse_violations(output: str) -> list[str]:
     return sorted(pairs)
 
 
+def broken_pairs(output: str) -> dict[str, list[str]]:
+    """Contract name -> its `importer -> imported (l.N)` entries, from lint-imports' "Broken contracts" section.
+
+    A contract name can wrap at the terminal width, so it is joined on whitespace. An entry that is a chain
+    of several edges is kept whole.
+    """
+    text = _ANSI_RE.sub("", output)
+    start = text.find("Broken contracts")
+    if start < 0:
+        return {}
+    text = text[start:]
+    sections = list(_SECTION_RE.finditer(text))[1:]  # the first match is the "Broken contracts" header itself
+    found: dict[str, list[str]] = {}
+    for index, match in enumerate(sections):
+        end = sections[index + 1].start() if index + 1 < len(sections) else len(text)
+        name = " ".join(match.group(1).split())
+        entries = [" ".join(block.split())[2:] for block in re.split(r"\n\s*\n", text[match.end():end]) if block.strip().startswith("- ")]
+        found[name] = entries
+    return found
+
+
+def stale_pairs(output: str) -> list[str]:
+    """`importer -> imported` pairs from lint-imports' "No matches for ignored import A -> B." warnings, in order.
+
+    The text is joined on whitespace first, so a warning wrapped at the terminal width still parses.
+    """
+    text = " ".join(_ANSI_RE.sub("", output).split())
+    return [f"{importer} -> {imported.rstrip('.')}" for importer, imported in _STALE_PAIR_RE.findall(text)]
+
+
+def locate_stale(root: Path, pair: str) -> str:
+    """Where to delete a stale ignored import: its line in the baseline file, else in the config, else a note.
+
+    A baseline pair also sits in the generated block of the config, so the baseline is checked first: deleting
+    the baseline line and running the rewrite removes both.
+    """
+    for rel in (BASELINE_REL_PATH, CONFIG_REL_PATH):
+        path = root / rel
+        if not path.exists():
+            continue
+        for number, line in enumerate(path.read_text().splitlines(), start=1):
+            if line.strip().strip(",").strip('"') == pair:
+                return f"{rel.name} l.{number}"
+    return "not found in the baseline or the config"
+
+
 def splice_block(config: str, block: str) -> str:
     """Replace the generated block in `config`; raise if the markers are missing or out of order."""
     start, end = config.find(BEGIN_MARKER), config.find(END_MARKER)
@@ -134,6 +186,7 @@ def default_lint_imports() -> str:
 
 
 def lint_imports_command(root: Path, lint_imports: str) -> list[str]:
+    """The lint-imports command line for the repo's config."""
     return [lint_imports, "--config", str(root / CONFIG_REL_PATH)]
 
 
@@ -146,8 +199,25 @@ def run_report(root: Path, lint_imports: str) -> int:
         return 2
 
 
-def advisory_report(root: Path, lint_imports: str) -> tuple[str, bool]:
-    """Run every contract; return `(Markdown summary, needs_warning)`. Never raises: a crash is the summary."""
+@dataclass(frozen=True)
+class Report:
+    """One run of every contract: the Markdown summary and what it found."""
+
+    summary: str
+    broken: dict[str, list[str]]  # contract name -> its `importer -> imported (l.N)` entries
+    stale: int  # `ignore_imports` entries that no longer match anything
+    stale_block: bool  # the generated `layers` block differs from the registry and baseline
+    could_not_run: bool
+    stale_entries: tuple[str, ...] = ()  # each stale pair with where to delete it: `a -> b (file l.N)`
+
+    @property
+    def findings(self) -> bool:
+        """True when a contract is broken or the ignore list or generated block is out of date; the `ci` step fails on it."""
+        return bool(self.broken or self.stale or self.stale_block)
+
+
+def check_contracts(root: Path, lint_imports: str, label: str) -> Report:
+    """Run every contract. Never raises: a crash is `could_not_run` and its summary."""
     lines = []
     stale_block = False
     try:
@@ -157,35 +227,77 @@ def advisory_report(root: Path, lint_imports: str) -> tuple[str, bool]:
             lines.append("- the generated `layers` block is out of date: run `python3 -m codebase.structure.import_contracts`")
         result = subprocess.run([lint_imports, "--config", str(root / CONFIG_REL_PATH)], cwd=root, capture_output=True, text=True, check=False, timeout=300)
     except (OSError, ValueError, KeyError, RuntimeError, subprocess.SubprocessError) as exc:
-        return f"**Import contracts (advisory):** could not run ({exc.__class__.__name__}: {exc})", True
+        return Report(f"**Import contracts ({label}):** could not run ({exc.__class__.__name__}: {exc})", {}, 0, stale_block, True)
     text = _ANSI_RE.sub("", result.stdout)
     totals = _TOTALS_RE.search(text)
     if totals is None:
-        return f"**Import contracts (advisory):** could not run ({(result.stderr or text).strip()[-200:]})", True
+        return Report(f"**Import contracts ({label}):** could not run ({(result.stderr or text).strip()[-200:]})", {}, 0, stale_block, True)
     kept, broken = int(totals.group(1)), int(totals.group(2))
-    names = sorted({" ".join(name.split()) for name in _BROKEN_RE.findall(text)})
+    pairs = broken_pairs(text)
+    # The section's own headings carry the full name; the `X BROKEN` status lines wrap at the terminal width.
+    names = sorted(pairs) or sorted({" ".join(name.split()) for name in _BROKEN_RE.findall(text)})
     stale = len(_STALE_RE.findall(text))
-    head = f"**Import contracts (advisory):** {kept} kept, {broken} broken"
+    stale_entries = tuple(f"{pair} ({locate_stale(root, pair)})" for pair in stale_pairs(text))
+    head = f"**Import contracts ({label}):** {kept} kept, {broken} broken"
     lines = [head + (f", {stale} stale ignored import(s)" if stale else "")] + lines
-    lines += [f"- broken: `{name}`" for name in names]
+    lines += [f"- stale: `{entry}`" for entry in stale_entries]
+    for name in names:
+        lines.append(f"- broken: `{name}`")
+        lines += [f"  - `{pair}`" for pair in pairs.get(name, [])]
     if broken:
-        lines.append("- run `make lint-imports` for the import lines")
-    return "\n".join(lines), bool(broken or stale or stale_block)
+        lines.append("- run `make lint-imports` for the full report")
+    return Report("\n".join(lines), {name: pairs.get(name, []) for name in names}, stale, stale_block, False, stale_entries)
+
+
+def advisory_report(root: Path, lint_imports: str) -> tuple[str, bool]:
+    """Run every contract; return `(Markdown summary, needs_warning)`. Never raises: a crash is the summary."""
+    report = check_contracts(root, lint_imports, "advisory")
+    return report.summary, bool(report.findings or report.could_not_run)
+
+
+def _write_summary(summary: str, summary_out: Path | None) -> None:
+    print(summary)
+    if summary_out is None:
+        return
+    try:
+        with summary_out.open("a", encoding="utf-8") as handle:
+            handle.write(summary + "\n\n")
+    except OSError as exc:  # a summary that cannot be written must never fail the step
+        print(f"note: summary not written ({exc})")
 
 
 def run_advisory(root: Path, lint_imports: str, summary_out: Path | None, annotate: bool) -> int:
-    """The CI step: print and summarise the result; always return 0."""
+    """The advisory CI step: print and summarise the result; always return 0."""
     summary, warn = advisory_report(root, lint_imports)
-    print(summary)
-    if summary_out is not None:
-        try:
-            with summary_out.open("a", encoding="utf-8") as handle:
-                handle.write(summary + "\n\n")
-        except OSError as exc:  # a summary that cannot be written must never fail the step
-            print(f"note: summary not written ({exc})")
+    _write_summary(summary, summary_out)
     if annotate and warn:
         print("::warning::import contracts (advisory): a contract is broken, stale or could not run; see the job summary")
     return 0
+
+
+def _annotation(text: str) -> str:
+    """One workflow-command message: newlines, `%` and `\r` are escaped the way GitHub expects."""
+    return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def run_ci(root: Path, lint_imports: str, summary_out: Path | None, annotate: bool) -> int:
+    """The blocking CI step: 0 clean, 1 a broken or stale contract, 2 the contracts could not run."""
+    report = check_contracts(root, lint_imports, "blocking")
+    _write_summary(report.summary, summary_out)
+    if annotate:
+        for name, entries in report.broken.items():
+            print(_annotation(f"::error::import contracts: `{name}` is broken: " + "; ".join(entries or ["see the job summary"])))
+        for entry in report.stale_entries:
+            print(_annotation(f"::error::import contracts: stale ignored import `{entry}`: delete the line, then run `python3 -m codebase.structure.import_contracts`"))
+        if report.stale > len(report.stale_entries):
+            print(f"::error::import contracts: {report.stale} stale ignored import(s): remove the `ignore_imports` entries that no longer match")
+        if report.stale_block:
+            print("::error::import contracts: the generated `layers` block is out of date: run `python3 -m codebase.structure.import_contracts`")
+        if report.could_not_run:
+            print("::error::import contracts: could not run; see the job summary")
+    if report.could_not_run:
+        return 2
+    return 1 if report.findings else 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -202,11 +314,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     advisory.add_argument("--lint-imports", default=default_lint_imports())
     advisory.add_argument("--summary-out", type=Path, help="append the result to this Markdown file (GITHUB_STEP_SUMMARY)")
     advisory.add_argument("--annotate", action="store_true", help="print one GitHub ::warning:: line when a contract is broken or stale")
+    ci = sub.add_parser("ci", help="run every contract for the blocking CI step; exit 1 broken/stale, 2 could not run")
+    ci.add_argument("--lint-imports", default=default_lint_imports())
+    ci.add_argument("--summary-out", type=Path, help="append the result to this Markdown file (GITHUB_STEP_SUMMARY)")
+    ci.add_argument("--annotate", action="store_true", help="print GitHub ::error:: lines naming each broken pair")
     args = parser.parse_args(argv)
     if args.command == "report":
         return run_report(args.root, args.lint_imports)
     if args.command == "advisory":
         return run_advisory(args.root, args.lint_imports, args.summary_out, args.annotate)
+    if args.command == "ci":
+        return run_ci(args.root, args.lint_imports, args.summary_out, args.annotate)
     try:
         if args.command == "seed-baseline":
             pairs = seed_baseline(args.root, args.lint_imports)

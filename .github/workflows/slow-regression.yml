@@ -48,7 +48,7 @@ jobs:
       GH_REPO: ${{ github.repository }}
     steps:
       # Sparse checkout: only the pure decision module, not the slow suite.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: |
             tools/test_architecture/__init__.py
@@ -59,10 +59,13 @@ jobs:
       - name: Decide
         id: decide
         if: ${{ github.event_name == 'schedule' }}
+        env:
+          HEAD_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -o pipefail  # without it a crashing gate hides behind `| tee`: empty decision, no red signal
           python3 -m tools.test_architecture.slow_regression_gate decide \
-            --head-sha "${{ github.sha }}" --exclude-run-id "${{ github.run_id }}" | tee decision.txt
+            --head-sha "${HEAD_SHA}" --exclude-run-id "${RUN_ID}" | tee decision.txt
           cat decision.txt >> "$GITHUB_OUTPUT"
           {
             echo "### Slow regression gate"
@@ -82,8 +85,8 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
@@ -125,25 +128,28 @@ jobs:
       - name: Report failing-set changes
         if: ${{ !cancelled() }}
         env:
+          HEAD_SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
           GH_TOKEN: ${{ github.token }}
         run: |
           # `-m` from the repo root: the report imports the shared known_reds module as tools.test_architecture.known_reds
           # (TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE); run by path it would not find it.
           python3 -m tools.test_architecture.slow_regression_report \
             --junit-dir reports/slow \
-            --repo "${{ github.repository }}" \
-            --run-id "${{ github.run_id }}" \
-            --sha "${{ github.sha }}" \
+            --repo "${REPOSITORY}" \
+            --run-id "${RUN_ID}" \
+            --sha "${HEAD_SHA}" \
             --known-reds tools/test_architecture/slow_known_reds.yaml
       - name: Upload certification report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: certification-report-${{ github.sha }}
           path: reports/certification/
           retention-days: 30
       - name: Upload slow JUnit reports
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: slow-junit-${{ github.sha }}

@@ -1,1 +1,0 @@
-{"session_id":"59a6aadf-78c7-43a4-8361-b98096d60429","run_id":null,"seq":null,"phase":null,"agent":null,"ts":"2026-10-12T14:23:29.092766Z","tool":"Bash","input_summary":"git checkout -q -b agent-working-planner-batch3-tickets origin/main && d=agent-w","read_ranged":null,"status":"ok","duration_ms":895,"execution_id":null,"provider":null,"ticket_id":null}

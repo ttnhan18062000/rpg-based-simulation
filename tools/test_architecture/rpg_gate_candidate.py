@@ -142,19 +142,19 @@ def _single(docs: Mapping[Any, dict], field: str, what: str) -> str:
 
 
 def _thresholds(docs: Mapping[Any, dict]) -> None:
-    """k, floor and oracle must be one value per (id, group) across all documents."""
-    seen: Dict[Tuple[str, str], Tuple[Any, Any, Any]] = {}
+    """k, floor and oracle must be one value per (world, id, group) across that world's documents (floors may differ between worlds)."""
+    seen: Dict[Tuple[str, str, str], Tuple[Any, Any, Any]] = {}
     for key, doc in sorted(docs.items(), key=lambda kv: (kv[0][0], -1 if kv[0][1] is None else kv[0][1])):
         name = f"{key[0]}__s{key[1]}.json" if key[1] is not None else f"{key[0]}__pooled.json"
         for row in doc["metrics"]:
-            ident = (row.get("id"), row.get("group", "*"))
+            ident = (key[0], row.get("id"), row.get("group", "*"))
             triple = (row.get("k"), row.get("floor"), row.get("oracle"))
             if row.get("class") == "outcome" and row.get("scope") != "pooled" and not (_is_number(row.get("k")) and _is_number(row.get("floor"))):
-                raise CandidateRefused(f"{name}: outcome row {ident[0]} has no numeric k and floor (the metric module must carry them)")
+                raise CandidateRefused(f"{name}: outcome row {ident[1]} has no numeric k and floor (the metric module must carry them)")
             if row.get("class") == "outcome" and row.get("scope") == "pooled" and not _is_number(row.get("floor")):
-                raise CandidateRefused(f"{name}: pooled outcome row {ident[0]} has no numeric floor")
+                raise CandidateRefused(f"{name}: pooled outcome row {ident[1]} has no numeric floor")
             if ident in seen and seen[ident] != triple:
-                raise CandidateRefused(f"{name}: threshold mismatch for {ident[0]}: k/floor/oracle {triple} differ from {seen[ident]} in an earlier document (mixed metric module versions)")
+                raise CandidateRefused(f"{name}: threshold mismatch for {ident[1]} in {ident[0]}: k/floor/oracle {triple} differ from {seen[ident]} in an earlier document (mixed metric module versions)")
             seen.setdefault(ident, triple)
 
 
@@ -188,14 +188,15 @@ def _omissions(docs: Mapping[Any, dict], config: GateConfig, known: Sequence[dic
     return omitted
 
 
-def _missing_required(docs: Mapping[Any, dict], config: GateConfig, known: Sequence[dict], today: dt.date) -> List[Tuple[str, str, dict]]:
-    """``(world, id, owner)`` for each required validity row a document leaves out. A baseline can not be recorded from a run whose metric module dropped a
-    required check, unless a current ``state: fail`` entry owns that row (then it is listed in ``omitted_validity``, as an owned fail is). The listed row is labelled ``<id>:run:<world>:*`` once per world, even when only the pooled document lacks it."""
-    covered: List[Tuple[str, str, dict]] = []
+def _missing_required(docs: Mapping[Any, dict], config: GateConfig, known: Sequence[dict], today: dt.date) -> List[Tuple[str, str, str, dict]]:
+    """``(world, level, id, owner)`` for each required validity row a document leaves out, where the level is ``run`` for a seed document and ``pooled`` for the pooled one and each is checked against the ids the config requires at its level. A baseline can not be recorded from a run whose metric module dropped a
+    required check, unless a current ``state: fail`` entry owns that row (then it is listed in ``omitted_validity``, as an owned fail is). The listed row is labelled ``<id>:<level>:<world>:*``, once per world and level."""
+    covered: List[Tuple[str, str, str, dict]] = []
     for key, doc in sorted(docs.items(), key=lambda kv: (kv[0][0], -1 if kv[0][1] is None else kv[0][1])):
         name = f"{key[0]}__s{key[1]}.json" if key[1] is not None else f"{key[0]}__pooled.json"
         present = {r.get("id") for r in doc["metrics"] if r.get("class") == "validity"}
-        for rid in config.required_validity:
+        level = "run" if key[1] is not None else "pooled"
+        for rid in config.required_at(level):
             if rid in present:
                 continue
             entry = known_reds.owner_of(rid, known, state="fail")
@@ -203,8 +204,8 @@ def _missing_required(docs: Mapping[Any, dict], config: GateConfig, known: Seque
                 raise CandidateRefused(f"{name}: required validity row {rid} is missing and has no owner in rpg_gate_known.yaml (state: fail); a baseline can not be recorded without it")
             if known_reds.is_expired(entry, today):
                 raise CandidateRefused(f"{name}: required validity row {rid} is missing and its owner entry {entry['match']!r} expired on {entry['expires_on']}")
-            if not any(w == key[0] and r == rid for w, r, _ in covered):
-                covered.append((key[0], rid, entry))
+            if not any(w == key[0] and lv == level and r == rid for w, lv, r, _ in covered):
+                covered.append((key[0], level, rid, entry))
     return covered
 
 
@@ -236,11 +237,15 @@ def build_candidate(
     _thresholds(docs)
     omitted = _omissions(docs, config, known, today)
     omitted_rows: List[dict] = []
-    for world, rid, entry in _missing_required(docs, config, known, today):
-        label = row_label({"id": rid, "scope": "run", "world": world, "group": "*"})
+    owned_missing = set()  # (world, level, id): required, left out by some document of that level and owned; the id is then left out of every document of that world and level
+    for world, level, rid, entry in _missing_required(docs, config, known, today):
+        label = row_label({"id": rid, "scope": level, "world": world, "group": "*"})
         omitted_rows.append({"row": label, "known_match": entry["match"], "ticket": entry["ticket"]})
+        owned_missing.add((world, level, rid))
 
     def omit(row: Mapping[str, Any], world: str, scope: str) -> bool:
+        if row.get("class") == "validity" and (world, scope, row["id"]) in owned_missing:
+            return True
         entry = omitted.get((world, row["id"], row.get("group", "*")))
         if entry is None:
             return False

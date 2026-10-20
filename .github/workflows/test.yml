@@ -28,8 +28,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -53,8 +53,10 @@ jobs:
                  --junit-xml=reports/junit/unit-core-world.xml
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -94,8 +96,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -118,8 +120,10 @@ jobs:
                  --junit-xml=reports/junit/unit-gameplay.xml
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -158,8 +162,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # Split into one step per test directory, each with if: always(), so a failure names its
@@ -259,8 +263,10 @@ jobs:
         run: python3 tools/ci_junit_merge.py
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -302,8 +308,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -313,8 +319,10 @@ jobs:
                  --junit-xml=reports/junit/integration.xml
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -338,8 +346,8 @@ jobs:
     name: "Tools · a–e"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
       # TCK-20261003-CI-SPLIT-API-TOOLS-JOB: tests/tools (211 flat files, about 275-340 s of the old
@@ -357,15 +365,17 @@ jobs:
                  --junit-xml=reports/junit/tools-a-e.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tools-a-e-junit-${{ github.sha }}
           path: reports/junit/tools-a-e*.xml
           retention-days: 30
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -389,8 +399,8 @@ jobs:
     name: "Tools · f–z"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # Sibling of `tools-a-e` (TCK-20261003-CI-SPLIT-API-TOOLS-JOB); see the comment there for why
@@ -400,16 +410,21 @@ jobs:
         run: |
           pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
                  --ignore=tests/tools/test_implement_ticket_native_refusal.py \
+                 --ignore=tests/tools/test_simq_long_run_observation.py \
                  -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/tools-f-z-parallel.xml
       # Serial on purpose (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS): this file writes one fixed-name temp copy of
       # .claude/workflows/implement-ticket.js into the real workflows directory and deletes it afterwards, so its parametrized tests,
       # spread over xdist workers, delete each other's copy (FileNotFoundError). Fix needs a per-test tmp name: agent-working's file,
       # TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH. Remove this step and the --ignore line above once it uses tmp_path or a unique name.
+      # Also serial (TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL): test_observe_world_cleans_up_its_own_run_dir snapshots the WHOLE
+      # data/runs listing before and after observe_world, so a run directory another xdist worker creates in that window reads as leftover scratch
+      # data. Fix: snapshot only the run id observe_world made (agent-working's file, tests/tools; TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR). Remove this path and its --ignore line once it does.
       - name: "Run: tests/tools (f–z, workflow-file test, serial)"
         if: always()
         run: |
           pytest tests/tools/test_implement_ticket_native_refusal.py \
+                 tests/tools/test_simq_long_run_observation.py \
                  -m "not slow and not extra_slow" --tb=short -q \
                  --junit-xml=reports/junit/tools-f-z-serial.xml
       - name: Merge JUnit XML
@@ -420,15 +435,17 @@ jobs:
                  reports/junit/tools-f-z-serial.xml
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tools-f-z-junit-${{ github.sha }}
           path: reports/junit/tools-f-z*.xml
           retention-days: 30
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -442,6 +459,7 @@ jobs:
           if [ -d /tmp/base-checkout ]; then
             cd /tmp/base-checkout && pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
                    tests/tools/test_implement_ticket_native_refusal.py \
+                   tests/tools/test_simq_long_run_observation.py \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary
@@ -454,8 +472,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # Split into one step per test directory, each with if: always(), so a failure names its
@@ -531,15 +549,17 @@ jobs:
         run: python3 tools/ci_aseprite_skip_line.py reports/junit/api-cli-engine.xml >> "$GITHUB_STEP_SUMMARY"
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: api-cli-engine-junit-${{ github.sha }}
           path: reports/junit/api-cli-engine*.xml
           retention-days: 30
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -582,8 +602,8 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -604,8 +624,10 @@ jobs:
                  --junit-xml=reports/junit/agent-orchestration.xml
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -642,14 +664,14 @@ jobs:
     needs: [resync-gate]
     if: ${{ !cancelled() && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Every Python job installs from uv.lock (TCK-20261002-UV-FIRST-CI-JOB,
       # TCK-20261002-UV-REMAINING-CI-JOBS). setup-uv provides Python 3.13 and puts .venv on PATH,
       # so the pytest/python3 steps are unchanged. --no-install-project keeps the old behaviour of
       # no editable install; extras (knowledge stack) are not selected. Only tools-a-e syncs the
       # `lint` group (ruff, complexipy), which the code-health tests invoke; the rest pass
       # --no-group lint.
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -659,8 +681,10 @@ jobs:
                  --junit-xml=reports/junit/simulation-quality.xml
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -684,8 +708,8 @@ jobs:
     name: "Architecture / docs / static"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -724,8 +748,10 @@ jobs:
           make mechanism-registry-changed-code-check || true
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -763,10 +789,10 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_frontend == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
@@ -790,7 +816,7 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_docker_build == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build checks
         run: docker build --check -f docker/backend.Dockerfile .
       - name: Build
@@ -819,11 +845,15 @@ jobs:
       run_docker_build: ${{ steps.diff.outputs.run_docker_build }}
       run_scenario_lane: ${{ steps.diff.outputs.run_scenario_lane }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { fetch-depth: 0 }
       - id: diff
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
+          if [ "${EVENT_NAME}" != "pull_request" ]; then
             echo "run_perf_cert_arena=true" >> "$GITHUB_OUTPUT"
             echo "run_migration_lanes=true" >> "$GITHUB_OUTPUT"
             echo "run_frontend=true" >> "$GITHUB_OUTPUT"
@@ -831,8 +861,8 @@ jobs:
             echo "run_scenario_lane=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          BASE="${{ github.event.pull_request.base.sha }}"
-          HEAD="${{ github.event.pull_request.head.sha }}"
+          BASE="${PR_BASE_SHA}"
+          HEAD="${PR_HEAD_SHA}"
           if ! CHANGED=$(git diff --name-only "$BASE...$HEAD" 2>&1); then
             echo "::warning::changed-files diff failed ($CHANGED) — failing open, both jobs will run"
             echo "run_perf_cert_arena=true" >> "$GITHUB_OUTPUT"
@@ -903,7 +933,7 @@ jobs:
     outputs:
       pr_content_unchanged: ${{ steps.decide.outputs.pr_content_unchanged }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { fetch-depth: 0, filter: "blob:none" }
       - id: decide
         continue-on-error: true
@@ -927,8 +957,8 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Run
@@ -941,8 +971,10 @@ jobs:
                  --junit-xml=reports/junit/perf-cert-arena.xml
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+          if ! git fetch origin "${BASE_REF}" --depth=1 2>&1; then
             echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
             exit 0
           fi
@@ -974,8 +1006,8 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || (needs.changed-files.outputs.run_scenario_lane == 'true' && needs.changed-files.outputs.run_perf_cert_arena != 'true')) && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - id: started
@@ -999,8 +1031,8 @@ jobs:
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: Fast lanes
@@ -1016,8 +1048,8 @@ jobs:
     # 96 s (average 34 s, 40 runs of 2026-10-03/04), so 10 minutes leaves wide headroom.
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       # TCK-20261003-MYPY-BASELINE-ADVISORY, blocking since TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING: runs
@@ -1051,8 +1083,8 @@ jobs:
     # acceptance of the historical backlog.
     if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project --no-group lint
       - name: SimQ full audit (engine re-run + anchor diff + regression tests + coverage scan)
@@ -1077,22 +1109,26 @@ jobs:
     # runs took at most 183 s (average 118 s, 40 runs of 2026-10-03/04), so 20 minutes leaves wide headroom.
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { fetch-depth: 0 }
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
       # jscpd runs through `npx` (version pinned by JSCPD_VERSION in the Makefile); same Node as the frontend job.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 20
+          node-version: 24
       # Keep this step's continue-on-error: it truncates /tmp/changed.txt first, and a failed diff only changes the
       # order of the job summary (changed files first), so it must never fail the required check.
       - name: Paths this PR changed
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           : > /tmp/changed.txt
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git diff --name-only "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" > /tmp/changed.txt || true
+          if [ "${EVENT_NAME}" = "pull_request" ]; then
+            git diff --name-only "${PR_BASE_SHA}...${PR_HEAD_SHA}" > /tmp/changed.txt || true
           fi
         continue-on-error: true
       - name: Code health ratchet
@@ -1103,12 +1139,12 @@ jobs:
       # setting exists or is needed. Add the row in codebase/structure/package_registry.jsonl in the same PR.
       - name: Package registry
         run: python3 -m codebase.structure.packages validate --summary-out "$GITHUB_STEP_SUMMARY" --annotate
-      # TCK-20261004-IMPORT-LINTER-ADOPTION: import-linter contracts, advisory and never blocking: the command exits 0
-      # whatever it finds, and the step keeps its own continue-on-error so it stays advisory now that this job is a required check
-      # ("Code health"): a broken contract is a summary line and a warning, never a red required check.
+      # TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT: import-linter contracts, blocking. The step is part of the
+      # required "Code health" job, so a broken contract, a stale `ignore_imports` entry or a stale generated `layers` block
+      # (exit 1) or a run that cannot start (exit 2) turns the required check red. The summary and the `::error::` lines name
+      # each broken contract's importer -> imported pairs. Fix the import, or ask the codebase planner for a baseline entry with a reason.
       - name: Import contracts
-        run: python3 -m codebase.structure.import_contracts advisory --summary-out "$GITHUB_STEP_SUMMARY" --annotate
-        continue-on-error: true
+        run: python3 -m codebase.structure.import_contracts ci --summary-out "$GITHUB_STEP_SUMMARY" --annotate
 
   # ── Code health SARIF feedback (advisory, permanently) ─────────────────────
   # TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK: findings in the PR's changed src/*.py files that the code-health
@@ -1131,9 +1167,9 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { fetch-depth: 0, persist-credentials: false }
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
       # The list is written to a temporary name and moved into place only when git succeeds: the shell creates the
@@ -1141,7 +1177,10 @@ jobs:
       # "no src file changed" and would upload an empty SARIF, wrongly clearing this PR's earlier alerts.
       - name: Paths this PR changed
         id: changed
-        run: git diff --name-only "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" > /tmp/changed.partial && mv /tmp/changed.partial /tmp/changed.txt
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: git diff --name-only "${PR_BASE_SHA}...${PR_HEAD_SHA}" > /tmp/changed.partial && mv /tmp/changed.partial /tmp/changed.txt
         continue-on-error: true
       - name: Report that the changed paths are unavailable
         if: ${{ steps.changed.outcome != 'success' }}

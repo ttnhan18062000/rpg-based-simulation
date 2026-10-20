@@ -40,4 +40,4 @@ def test_the_two_declined_drafts_are_not_adopted_and_no_source_asset_was_added()
     adopted_intakes = {a.intake_id for a in _adoptions().values()}
     not_adopted = sorted(e.visual_key for e in record.entries if e.draft_id not in adopted_intakes)
     assert not_adopted == ["icon.marker.enemy_camp", "icon.marker.ruins"]
-    assert records.list_source_ids() == af.ADOPTED_SOURCES and len(_adoptions()) == af.ADOPTION_COUNT == 112
+    assert records.list_source_ids() == af.ADOPTED_SOURCES and len(_adoptions()) == af.ADOPTION_COUNT == 123

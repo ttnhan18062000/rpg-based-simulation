@@ -119,7 +119,36 @@ class GateConfig:
     ticks: int
     stale_after_days: int
     stop_lines: Tuple[StopLine, ...] = ()
-    required_validity: Tuple[str, ...] = ()
+    required_validity: Mapping[str, Tuple[str, ...]] = field(default_factory=dict)  # level ("run" | "pooled") -> ids required in documents of that level
+
+    def required_at(self, level: str) -> Tuple[str, ...]:
+        return tuple(self.required_validity.get(level, ()))
+
+
+REQUIRED_VALIDITY_LEVELS = ("run", "pooled")
+
+
+def _load_required_validity(path: Path, raw: Any) -> dict:
+    """``{level: [ids]}``. A row is judged at one level (a seed document is ``run``, the pooled document is ``pooled``), so a plain list of ids is refused: it can not
+    say which documents must carry which id (TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL)."""
+    if isinstance(raw, list):
+        raise BaselineError(f"{path}: required_validity must map a level to its ids, for example {{run: [V1, V2], pooled: [V7]}}; a plain list is refused because it does not say which documents carry which id, got {raw!r}")
+    if not isinstance(raw, dict):
+        raise BaselineError(f"{path}: required_validity must map a level to its ids, for example {{run: [V1, V2], pooled: [V7]}}, got {raw!r}")
+    unknown = sorted(str(level) for level in raw if level not in REQUIRED_VALIDITY_LEVELS)
+    if unknown:
+        raise BaselineError(f"{path}: required_validity has an unknown level {unknown}; the levels are {list(REQUIRED_VALIDITY_LEVELS)}")
+    out = {}
+    for level, ids in raw.items():
+        if not isinstance(ids, list):
+            raise BaselineError(f"{path}: required_validity[{level}] must be a list of validity row ids, got {ids!r}")
+        for rid in ids:
+            if not isinstance(rid, str) or not VALIDITY_ID_RE.match(rid):
+                raise BaselineError(f"{path}: required_validity[{level}] entry {rid!r} is not a validity row id of the form V<n>")
+        if len(set(ids)) != len(ids):
+            raise BaselineError(f"{path}: required_validity[{level}] has a duplicate: {ids!r}")
+        out[level] = tuple(ids)
+    return out
 
 
 def load_config(path: Path) -> GateConfig:
@@ -130,21 +159,14 @@ def load_config(path: Path) -> GateConfig:
     for name in ("worlds", "seeds"):
         if len(set(data[name])) != len(data[name]):
             raise BaselineError(f"{path}: {name} has a duplicate: {data[name]!r}")
-    required = data.get("required_validity", [])
-    if not isinstance(required, list):
-        raise BaselineError(f"{path}: required_validity must be a list of validity row ids, got {required!r}")
-    for rid in required:
-        if not isinstance(rid, str) or not VALIDITY_ID_RE.match(rid):
-            raise BaselineError(f"{path}: required_validity entry {rid!r} is not a validity row id of the form V<n>")
-    if len(set(required)) != len(required):
-        raise BaselineError(f"{path}: required_validity has a duplicate: {required!r}")
+    required = _load_required_validity(path, data.get("required_validity", {}))
     lines = []
     for raw in data.get("stop_lines") or []:
         if not raw.get("name") or not raw.get("metric"):
             raise BaselineError(f"{path}: a stop line needs a name and a metric: {raw!r}")
         lines.append(StopLine(raw["name"], raw["metric"], raw.get("group", "*"), raw.get("min"), raw.get("max")))
     return GateConfig(
-        tuple(data["worlds"]), tuple(data["seeds"]), int(data["ticks"]), int(data["stale_after_days"]), tuple(lines), tuple(required),
+        tuple(data["worlds"]), tuple(data["seeds"]), int(data["ticks"]), int(data["stale_after_days"]), tuple(lines), required,
     )
 
 

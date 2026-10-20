@@ -104,6 +104,11 @@ def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) ->
     ]
 
 
+def _has_tactical_hostiles(entity: "EntityState", neighbors: List["EntityState"]) -> bool:
+    """True when the tactical pass would count a perceived neighbour as a hostile (the list the engagement branch acts on), not merely a threat the subject's appraisal fears."""
+    return bool(classify_neighbours(entity, neighbors, source_identity(entity)).hostiles)
+
+
 def _destination_or_hold(entity: "EntityState", destination: Optional[Tuple[float, float]]) -> Tuple[float, float]:
     """MOV-03: with no valid destination the entity holds position; never a sentinel coordinate."""
     return destination if destination is not None else entity.navigation.position
@@ -197,10 +202,14 @@ class TacticalDecisionSystem:
         )
         
         threats = _perceived_threats(entity, neighbors)
-        if emotion.is_fleeing and threats:  # no threat in sight, no flight: low HP, dread and grudge feed the panic but never flee alone (divergence 2.114)
+        panic_destination = retreat_destination(state, entity, threats) if (emotion.is_fleeing and threats) else None
+        # A flight with no destination is not flight (designer ruling, V3): a panic that resolves to the subject's own tile is not taken, and the tick
+        # falls through the existing order (in-place survival, then the arrival at a building). A real tactical hostile keeps the old freeze, so the
+        # fall-through never turns a held panic into a fight the subject would not otherwise start.
+        if emotion.is_fleeing and threats and (panic_destination is not None or _has_tactical_hostiles(entity, neighbors)):  # no threat in sight, no flight: low HP, dread and grudge feed the panic but never flee alone (divergence 2.114)
              # PANIC: Move away from the perceived threats, inside the current region
              # (MOV-01 / LOC-01); hold position when no valid destination exists (MOV-03).
-             retreat_to = _destination_or_hold(entity, retreat_destination(state, entity, threats))
+             retreat_to = _destination_or_hold(entity, panic_destination)
              return EntityUpdate(
                  entity_id=entity.id,
                  navigation=NavigationUpdate(target_set=retreat_to, movement_mode_set=MovementMode.RETREAT),
