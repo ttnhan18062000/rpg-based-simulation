@@ -275,6 +275,9 @@ def compute(run: Any) -> Dict[str, Any]:
     records = [e for e in events if e.get("event_type") == RECORD_EVENT]
     if int(starvation["starvation_deaths_seen"]) != len(records) or int(starvation["records_emitted"]) != len(records):
         raise GateDataMissingError(f"starvation-death record: {starvation['starvation_deaths_seen']} deaths seen, {len(records)} records on file (some were dropped)")
+    o2_starved = sum(n for key, n in ledger["deaths"].items() if _split(key, 2)[1] == "STARVATION")  # O2 scans every entity: the independent count
+    if int(starvation["starvation_deaths_seen"]) != o2_starved:
+        raise GateDataMissingError(f"starvation tally {starvation['starvation_deaths_seen']} != O2 starvation deaths {o2_starved} (V3 cannot be read)")
     rows = _validity_rows(run.world, ledger, records, run.state, float(ledger["world_events"].get("meat_decayed_quantity", 0.0)))
     rows += _outcome_rows(run.world, run.ticks, ledger, run.state)
     rows.sort(key=lambda r: (r["id"], r["group"], str(r.get("key", "")), r.get("tick") or 0))

@@ -7727,6 +7727,19 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-GATE-VALIDITY-CHECKS-FIRE-THROUGH-THE-REAL-KERNEL-AND-V3-SEES-EVERY-STARVATION-DEATH.md
+  ticket_id: TCK-20261019-GATE-VALIDITY-CHECKS-FIRE-THROUGH-THE-REAL-KERNEL-AND-V3-SEES-EVERY-STARVATION-DEATH
+  title: Every gate validity check has a real-kernel positive, and V3 sees every starvation
+    death
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/starvation_record.py; src/observability/rpg_gate_metrics.py;
+    src/observability/run_ledger.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD.md
   ticket_id: TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD
   title: The rpg gate report judges an outcome row's drift against each reference
