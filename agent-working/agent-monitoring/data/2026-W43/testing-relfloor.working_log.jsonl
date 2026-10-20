@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-20T07:30:30.959969Z", "ticket_id": "TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR", "title": "The rpg gate candidate records a relative floor with its two parts", "status": "DONE", "summary": "floor_rel applied by the candidate, report compares floor_base/floor_rel, lint", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

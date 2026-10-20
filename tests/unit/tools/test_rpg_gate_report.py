@@ -703,3 +703,61 @@ def test_a_defined_share_against_a_baseline_where_it_was_undefined_has_no_refere
     assert found["state"] == "no-data" and "reason" not in found
     assert {r["detail"] for r in found["refs"]} == {"no reference (undefined at baseline)"}
     assert "no reference (undefined at baseline)" in rep.render_markdown(report)
+
+
+# ---- a relative floor (TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR)
+
+def _rel_baseline(floor, floor_base=3.0, floor_rel=0.10):
+    base = _baseline(2)
+    base["metrics"][0].update({"floor": floor, "floor_base": floor_base, "floor_rel": floor_rel})
+    return base
+
+
+def _moved(report):
+    (found,) = [f for f in report["findings"] if f["id"] == "O1" and f["scope"] == "run"]
+    return [r.get("threshold_moved") or {} for r in found["refs"]]
+
+
+def _rel_docs(**row):
+    docs = _docs()
+    for s in SEEDS:
+        docs[("w", s)]["metrics"][0].update({"floor": 3.0, "floor_rel": 0.10, **row})
+    return docs
+
+
+def test_a_computed_relative_floor_never_shows_as_moved():
+    # the reference computed floor 5.0 from its own seeds; the candidate documents carry the same base and relative part
+    assert _moved(_build(_rel_docs(), refs=_refs(_rel_baseline(5.0)))) == [{}, {}]
+
+
+def test_a_changed_floor_rel_or_floor_base_shows_as_moved():
+    assert _moved(_build(_rel_docs(floor_rel=0.2), refs=_refs(_rel_baseline(5.0))))[0] == {"floor_rel": {"candidate": 0.2, "reference": 0.1}}
+    assert _moved(_build(_rel_docs(floor=4.0), refs=_refs(_rel_baseline(5.0))))[0] == {"floor": {"candidate": 4.0, "reference": 3.0}}
+
+
+def test_judging_uses_the_references_recorded_floor():
+    # mean difference 4: over a floor of 3, under the recorded relative floor of 5 -> no drift
+    docs = _rel_docs()
+    for s in SEEDS:
+        docs[("w", s)]["metrics"][0]["value"] = 14.0 + (0.1 if s % 2 else -0.1)
+    states = _states(_build(docs, refs=_refs(_rel_baseline(5.0, floor_rel=0.10))))
+    assert states[("O1", None, "run")] == "pass"
+
+
+def test_a_reference_with_floor_rel_but_no_numeric_floor_is_the_no_recorded_threshold_contract_error():
+    base = _rel_baseline(5.0)
+    base["metrics"][0].pop("floor")
+    report = _build(_rel_docs(), refs=_refs(base))
+    (found,) = [f for f in report["findings"] if f["id"] == "O1" and f["scope"] == "run"]
+    assert (found["state"], found["reason"], found["detail"]) == ("no-data", "contract_error", "reference row has no recorded threshold")
+
+
+def test_floor_rel_outside_zero_to_one_or_on_a_pooled_row_is_a_contract_error():
+    for bad in (0, 2, "x"):
+        report = _build(_rel_docs(floor_rel=bad))
+        assert [f["reason"] for f in report["findings"] if f["id"] == "O1" and f["scope"] == "run"] == ["contract_error"], bad
+    docs = _docs()
+    docs[("w", None)] = _pooled_doc(value=1.0)
+    docs[("w", None)]["metrics"][-1]["floor_rel"] = 0.1
+    report = _build(docs)
+    assert [f["reason"] for f in report["findings"] if f["id"] == "O9"] == ["contract_error"]

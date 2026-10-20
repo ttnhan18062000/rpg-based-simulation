@@ -278,6 +278,8 @@ def _lint_metrics(metrics: Any) -> List[str]:
             problems.append(f"{label}: per_seed must map a seed to a number")
         if scope == "pooled" and per_seed is not None:
             problems.append(f"{label}: a pooled row has no per_seed")
+        if klass == "outcome" and ("floor_rel" in row or "floor_base" in row):
+            problems.extend(_lint_relative_floor(label, row, scope))
         if klass == "outcome" and scope == "pooled":
             if not _is_number(row.get("value")):
                 problems.append(f"{label}: a pooled outcome row needs a numeric value")
@@ -298,6 +300,26 @@ def _lint_metrics(metrics: Any) -> List[str]:
             elif per_seed and sum(per_seed.values()) != violations:
                 problems.append(f"{label}: violations {violations} is not the sum of per_seed {sum(per_seed.values())}")
     return problems
+
+
+def _lint_relative_floor(label: str, row: Mapping[str, Any], scope: Any) -> List[str]:
+    """``floor_base`` and ``floor_rel`` are optional and numeric and belong to a run row. With ``floor_rel``: ``floor_base`` is required, ``floor_rel`` is in (0, 1] and the
+    recorded ``floor`` is at least ``floor_base``."""
+    out: List[str] = []
+    if scope == "pooled":
+        out.append(f"{label}: a pooled row has no floor_rel / floor_base")
+    for name in ("floor_base", "floor_rel"):
+        if name in row and not _is_number(row[name]):
+            out.append(f"{label}: {name} must be a number")
+    if "floor_rel" in row:
+        rel, base, floor = row["floor_rel"], row.get("floor_base"), row.get("floor")
+        if _is_number(rel) and not 0 < rel <= 1:
+            out.append(f"{label}: floor_rel {rel} is not in (0, 1]")
+        if "floor_base" not in row:
+            out.append(f"{label}: floor_rel needs floor_base")
+        elif _is_number(base) and _is_number(floor) and floor < base:
+            out.append(f"{label}: floor {floor} is below floor_base {base}")
+    return out
 
 
 def _lint_omitted_validity(omitted: Any, metrics: Any) -> List[str]:
