@@ -7708,6 +7708,23 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION.md
+  ticket_id: TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION
+  title: 'Once hunger is past its consequence line and taking health, starvation is
+    itself a present threat to life: the hunger escalation is no longer dropped while
+    another threat holds; goal selection weighs it (SURV-07 amendment, memo row 83,
+    step two of the V3 fix).'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai/goals/scorers.py, src/engine/starvation.py, src/ai/goals/present_threat.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST.md
   ticket_id: TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST
   title: The rpg gate harness unit tests stop racing each other on `data/runs/rpg-gate-sandbox_world-s<seed>-<sha8>*`
@@ -7722,6 +7739,21 @@
   tags:
   - testing
   - regression
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS.md
+  ticket_id: TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS
+  title: Every seed of a world emits the same (id, group, key) rows, taken from declared
+    domains, with true zeros; a share is two count rows and a pooled row
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - src/observability/rpg_gate_metrics.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS/plan.md
+  - agent-working/stored_artifacts/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS/test_plan.md
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-UNIT-TESTS-SHARE-DATA-RUNS-DIRS-UNDER-XDIST.md
   ticket_id: TCK-20261020-UNIT-TESTS-SHARE-DATA-RUNS-DIRS-UNDER-XDIST
@@ -7747,6 +7779,23 @@
   related_code_areas:
   - tests/api/test_observability_websocket.py
   artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
+  ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
+  title: 'A panic whose destination resolves to the subject''s own tile is not taken:
+    the tick falls through the existing order (in-place survival, then the arrival
+    at a building) (V3 pre-v1 step, designer ruling "a flight with no destination
+    is not flight").'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/engine/tactical.py, src/engine/tactical_destinations.py, src/engine/tactical_rest.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL/test_plan.md
   tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM.md
@@ -7805,6 +7854,19 @@
   - delivery
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-GATE-VALIDITY-CHECKS-FIRE-THROUGH-THE-REAL-KERNEL-AND-V3-SEES-EVERY-STARVATION-DEATH.md
+  ticket_id: TCK-20261019-GATE-VALIDITY-CHECKS-FIRE-THROUGH-THE-REAL-KERNEL-AND-V3-SEES-EVERY-STARVATION-DEATH
+  title: Every gate validity check has a real-kernel positive, and V3 sees every starvation
+    death
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/starvation_record.py; src/observability/rpg_gate_metrics.py;
+    src/observability/run_ledger.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-IMPORT-CONTRACTS-NAME-STALE-ENTRIES.md
   ticket_id: TCK-20261019-IMPORT-CONTRACTS-NAME-STALE-ENTRIES
   title: '`import_contracts ci` names the stale ignored import and where to delete
@@ -7817,6 +7879,18 @@
   artifact_files: []
   tags:
   - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-MEAT-DECAYED-IS-WRITTEN-FROM-THE-APPLIED-OUTCOME-V2.md
+  ticket_id: TCK-20261019-MEAT-DECAYED-IS-WRITTEN-FROM-THE-APPLIED-OUTCOME-V2
+  title: A body that decays and is looted whole on the same tick yields no MEAT_DECAYED
+    record (v1 gate V2, crowded/43)
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - _meat_decayed_events
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH.md
   ticket_id: TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH
@@ -7832,6 +7906,18 @@
   tags:
   - testing
   - regression
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-O2-POPULATION-FLOOR-IS-ONE-VALUE-PER-WORLD.md
+  ticket_id: TCK-20261019-O2-POPULATION-FLOOR-IS-ONE-VALUE-PER-WORLD
+  title: O2.population's floor is one value per (world, group), computed from the
+    gate seed set's pooled tick-0 mean
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/rpg_gate_metrics.py
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD.md
   ticket_id: TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD
@@ -7956,6 +8042,29 @@
   - testing
   - bug
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-V1-COUNTS-A-HUNGER-DROP-AS-BACKED-ONLY-WHEN-AN-ACCEPTED-TRANSFER-MOVED-SOMETHING.md
+  ticket_id: TCK-20261019-V1-COUNTS-A-HUNGER-DROP-AS-BACKED-ONLY-WHEN-AN-ACCEPTED-TRANSFER-MOVED-SOMETHING
+  title: V1 counts a hunger drop as backed only when an accepted transfer moved something
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/run_ledger.py, src/observability/rpg_gate_metrics.py (V1), tools/test_architecture/rpg_gate_known.yaml
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-V4-COUNTS-CONSUMPTION-NOT-ACQUISITION.md
+  ticket_id: TCK-20261019-V4-COUNTS-CONSUMPTION-NOT-ACQUISITION
+  title: The gate's V4 counts a consumption outside the eater's diet, not any node
+    transfer by a meat-only body.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/run_ledger.py, src/observability/rpg_gate_metrics.py, src/ai/goals/kind_group.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY.md
   ticket_id: TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY
   title: V8's gate self-test, case (a), asserts that the example names the unsourced
@@ -8044,6 +8153,20 @@
   tags:
   - observability
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-MEAT-ONLY-BODIES-GATHER-NON-FOOD-NODES-GATHER-CAPABILITY-IS-NOT-DECLARED.md
+  ticket_id: TCK-20261019-MEAT-ONLY-BODIES-GATHER-NON-FOOD-NODES-GATHER-CAPABILITY-IS-NOT-DECLARED
+  title: 'A meat-only body gets a `harvesting` goal at a non-food node: harvesting
+    is open to every body; it must be open only to a kind that declares the capability
+    (D56).'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/ai/goals/scorers.py (HarvestScorer, _may_gather), src/systems/strategic_systems/intelligence.py
+    (goal selection, blocker_node), src/engine/interaction.py.
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261019-RECORD-BASELINE-V1.md
   ticket_id: TCK-20261019-RECORD-BASELINE-V1
   title: 'Record baseline v1: paired fingerprints, gate V1-V8 rows and the behavioral_5k
@@ -8054,6 +8177,18 @@
   related_code_areas:
   - tools/rpg_measure/paired.py
   - tests/regression/test_behavioral_5k.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-RETREAT-DESTINATION-NEEDS-A-REGION-WOUNDED-SUBJECTS-IN-UNCLAIMED-SPACE-CANNOT-FLEE.md
+  ticket_id: TCK-20261019-RETREAT-DESTINATION-NEEDS-A-REGION-WOUNDED-SUBJECTS-IN-UNCLAIMED-SPACE-CANNOT-FLEE
+  title: 'retreat_destination needs a region: wounded subjects in unclaimed space
+    cannot flee.'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/engine/tactical_destinations.py:38, :80+; src/engine/tactical.py:107.
   artifact_files: []
   tags: []
 - type: ticket
