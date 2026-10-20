@@ -146,7 +146,7 @@ class RunLedger:
             group = kind_group(entity)
             results = getattr(upd, "intent_results", None) or []
             cls._count_results(group, results)
-            cls._count_diet_breaches(prior, current, entity, prior_ent, group, results)
+            cls._count_diet_breaches(prior, current, entity, group, results)
             if entity.biological.hunger < prior_ent.biological.hunger:
                 cls._count_hunger_drop(group, results, cls._inventory_moved(prior_ent, entity) or cls._corpse_moved(prior, current, results))
 
@@ -182,7 +182,7 @@ class RunLedger:
                    if getattr(r, "accepted", False) and getattr(r, "source_kind", "") in ("CORPSE", "CORPSE_FOOD"))
 
     @classmethod
-    def _count_diet_breaches(cls, prior: AuthoritativeState, current: AuthoritativeState, entity: Any, prior_ent: Any, group: str, results: List[Any]) -> None:
+    def _count_diet_breaches(cls, prior: AuthoritativeState, current: AuthoritativeState, entity: Any, group: str, results: List[Any]) -> None:
         """V4 reads CONSUMPTION: an accepted carried-food or corpse-food EAT after which a food item whose class the eater's diet lacks has left the
         carried stack or the body. The ledger sees the resolved results (the intents are consumed before observation), so the eaten item is read from
         what left the inventory or the corpse between the two states."""
@@ -190,19 +190,19 @@ class RunLedger:
             source = getattr(result, "source_kind", None)
             if not getattr(result, "accepted", False) or source not in ("CARRIED_FOOD", "CORPSE_FOOD"):
                 continue
-            for item_id in cls._items_that_left(prior, current, prior_ent, entity, source, getattr(result, "source_id", None)):
+            for item_id in cls._items_that_left(prior, current, entity, source, getattr(result, "source_id", None)):
                 if eats_outside_its_diet(entity, item_id):
                     key = _key(group, source, item_id)
                     cls._diet_breaches[key] = cls._diet_breaches.get(key, 0) + 1
 
     @staticmethod
-    def _items_that_left(prior: AuthoritativeState, current: AuthoritativeState, prior_ent: Any, entity: Any, source: str, source_id: Any) -> List[str]:
+    def _items_that_left(prior: AuthoritativeState, current: AuthoritativeState, entity: Any, source: str, source_id: Any) -> List[str]:
         """The item ids whose quantity fell on the carried stack (CARRIED_FOOD) or on the named body (CORPSE_FOOD) across the tick."""
         if source == "CARRIED_FOOD":
-            before, after = prior_ent.inventory.items, entity.inventory.items
+            before, after = prior.entities[entity.id].inventory.items, entity.inventory.items
         else:
             body_before, body_after = (prior.corpses or {}).get(source_id), (current.corpses or {}).get(source_id)
-            before, after = (body_before.items if body_before else ()), (body_after.items if body_after else ())
+            before, after = (body_before.items if body_before else []), (body_after.items if body_after else [])
         remaining: Dict[str, float] = {}
         for stack in after:
             remaining[stack.item_id] = remaining.get(stack.item_id, 0.0) + stack.quantity

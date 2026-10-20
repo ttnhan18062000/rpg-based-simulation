@@ -157,6 +157,7 @@ def test_f_the_tally_counts_sum_to_the_number_of_adds_applied(tmp_path):
     assert not any("site" in example for example in row["examples"])
 
 
+@pytest.mark.usefixtures("_fake_floors")
 def test_the_example_list_is_bounded_while_the_violation_count_stays_exact(tmp_path):
     extra = 3
     adds = [_new(600 + i) for i in range(MAX_EXAMPLES + extra)]  # MAX_EXAMPLES is rpg's own bound, read from its module
