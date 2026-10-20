@@ -343,6 +343,12 @@ Checking CI status and diagnosing a failure is read-only — do it proactively o
 4. **Never edit a test's assertion or a gate's logic just to make CI pass without one of the paths above** — this is the same Gate Integrity rule (`.claude/skills/implement-ticket/SKILL.md`) applied to CI as the outermost gate, not just the local pipeline's own gates.
 5. Report the real CI status and the triage conclusion. Don't report a fix as done until CI is confirmed green (or explicitly still-pending, reported as such) — a local test pass is not the same claim as a green CI run. Once the triage conclusion is recorded, evaluate the reset boundary per `docs/guides/agent_session_reset_boundaries.md`.
 
+### Action pin rule (owner decision, 2026-10-19)
+
+Every workflow pins each `uses:` by its full 40-character commit SHA with a `# vX.Y.Z` comment, GitHub-owned actions included; Dependabot `github-actions` (grouped, monthly) keeps the pins current, and each owner converts its own workflow files.
+
+The "Semgrep OSS" and code-health code-scanning check runs are advisory: their failure threshold is None (a repo setting the owner keeps), so a red result there is not a CI failure to triage. Suppress a Semgrep finding in the code with `# nosemgrep: <rule id>` plus a reason, never with a Security-tab dismissal; `security-scan.yml` drops in-source-suppressed results from the SARIF it uploads, because code scanning would otherwise still raise them as alerts.
+
 ### PR Lifecycle (once the user has authorized landing a batch)
 
 The steps above cover diagnosing a failure; this covers the surrounding push→PR→merge→sync cadence itself, since it isn't a `Workflow` and has no other home.

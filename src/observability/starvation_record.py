@@ -154,7 +154,11 @@ class StarvationRecorder:
             events.append(cls._event(CHANNEL_LIVE_EVENT, tick, None, {"strategic_cadence": cls._period}))
         cls._sample(prior, tick)
         updates = getattr(update, "entity_updates", None) or {}
-        for eid in (updates.keys() or current.entities.keys()):
+        # A passive starvation death is applied by the lifecycle step, not as an EntityUpdate, so an entity with no update this tick can still have died
+        # of it: inspect every entity stamped with this tick's starvation cause as well as the ones that acted.
+        starved_now = [eid for eid, ent in current.entities.items() if ent.lifecycle.passive_death_cause is PassiveDeathCause.STARVATION
+                       and ent.lifecycle.passive_death_cause_tick == tick]
+        for eid in sorted(set(updates.keys() or current.entities.keys()) | set(starved_now)):
             entity = current.entities.get(eid)
             prior_ent = prior.entities.get(eid)
             if entity is None or prior_ent is None:

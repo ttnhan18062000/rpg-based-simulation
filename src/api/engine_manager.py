@@ -199,7 +199,7 @@ class V2EngineManager:
             return StatePresenter.present_full(self._latest_state)
 
     def get_entities_paged(self, offset: int = 0, limit: int = 100) -> Dict[str, Any]:
-        """Returns a paged list of entities."""
+        """Returns a paged list of BOUNDED entity summaries (the full detail is get_entity)."""
         with self._state_lock:
             if not self._latest_state:
                 return {"entities": [], "total": 0, "offset": offset, "limit": limit}
@@ -211,6 +211,14 @@ class V2EngineManager:
             if not self._latest_state or entity_id not in self._latest_state.entities:
                 return None
             return self._read_cache.get_entity_dto(self._latest_state.entities[entity_id])
+
+    def get_entity_quests(self, entity_id: int, status: str = "all", offset: int = 0, limit: int = 50) -> Optional[Dict[str, Any]]:
+        """The paged quest history of one entity (newest first), or None when the entity does not exist."""
+        from src.api.presenters.state_presenter import present_entity_quests
+        with self._state_lock:
+            if not self._latest_state or entity_id not in self._latest_state.entities:
+                return None
+            return present_entity_quests(self._latest_state.entities[entity_id], status, offset, limit)
 
     def get_entity_timeline_events(self, entity_id: int) -> List[Dict[str, Any]]:
         """Returns serialized timeline events for an entity, or [] if not found."""

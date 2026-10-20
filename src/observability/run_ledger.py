@@ -18,7 +18,7 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional
 
-from src.ai.goals.kind_group import is_person, kind_group
+from src.ai.goals.kind_group import eats_outside_its_diet, is_person, kind_group
 from src.ai.goals.scorers_support import perceived_hostiles
 from src.core.movement_modes import MovementMode
 from src.core.region_resolution import is_inside_world
@@ -60,6 +60,7 @@ class RunLedger:
     _declared_coin: float = 0.0  # gold the world creates by declaration: an added entity's starting purse
     _population: Dict[int, Dict[str, int]] = {}
     _transfers: Dict[str, int] = {}  # group|source_kind|accepted
+    _diet_breaches: Dict[str, int] = {}  # group|source_kind|item_id: an accepted EAT of food whose class is outside the eater's diet (a consumption, never a pickup)
     _hunger_drops: Dict[str, int] = {}  # group|with_accepted_transfer / group|without_transfer
     _deaths: Dict[str, int] = {}  # group|cause
     _adds: Dict[str, int] = {}  # group|SpawnKind or unsourced
@@ -83,6 +84,7 @@ class RunLedger:
         cls._population = {}
         cls._transfers = {}
         cls._hunger_drops = {}
+        cls._diet_breaches = {}
         cls._deaths = {}
         cls._adds = {}
         cls._world_events = {}
@@ -144,8 +146,9 @@ class RunLedger:
             group = kind_group(entity)
             results = getattr(upd, "intent_results", None) or []
             cls._count_results(group, results)
+            cls._count_diet_breaches(prior, current, entity, group, results)
             if entity.biological.hunger < prior_ent.biological.hunger:
-                cls._count_hunger_drop(group, results)
+                cls._count_hunger_drop(group, results, cls._inventory_moved(prior_ent, entity) or cls._corpse_moved(prior, current, results))
 
     @classmethod
     def _count_results(cls, group: str, results: List[Any]) -> None:
@@ -154,9 +157,65 @@ class RunLedger:
             key = _key(group, getattr(result, "source_kind", ""), outcome)
             cls._transfers[key] = cls._transfers.get(key, 0) + 1
 
+    @staticmethod
+    def _inventory_moved(prior_ent: Any, entity: Any) -> bool:
+        """Whether the eater's inventory actually changed this tick: the gold or any item stack differs between the two states. This is the quantity APPLIED after
+        the clamp (an inn charge of 5 on a subject holding 0 moves nothing), never the requested delta, which the intent and the transaction record carry."""
+        before, after = prior_ent.inventory, entity.inventory
+        if before.gold != after.gold:
+            return True
+        def stacks(inv: Any) -> Dict[str, int]:
+            held: Dict[str, int] = {}
+            for st in inv.items:
+                held[st.item_id] = held.get(st.item_id, 0) + st.quantity
+            return held
+        return stacks(before) != stacks(after)
+
+    @staticmethod
+    def _corpse_moved(prior: AuthoritativeState, current: AuthoritativeState, results: List[Any]) -> bool:
+        """Whether a body an accepted CORPSE / CORPSE_FOOD transfer named lost food this tick: a meal eaten where the body lies moves the corpse's stack, not the
+        eater's inventory."""
+        def held(state: AuthoritativeState, cid: Any) -> int:
+            corpse = (getattr(state, "corpses", None) or {}).get(cid)
+            return 0 if corpse is None else sum(st.quantity for st in getattr(corpse, "items", ()))
+        return any(held(prior, r.source_id) != held(current, r.source_id) for r in results
+                   if getattr(r, "accepted", False) and getattr(r, "source_kind", "") in ("CORPSE", "CORPSE_FOOD"))
+
     @classmethod
-    def _count_hunger_drop(cls, group: str, results: List[Any]) -> None:
-        backed = any(getattr(r, "accepted", False) for r in results)
+    def _count_diet_breaches(cls, prior: AuthoritativeState, current: AuthoritativeState, entity: Any, group: str, results: List[Any]) -> None:
+        """V4 reads CONSUMPTION: an accepted carried-food or corpse-food EAT after which a food item whose class the eater's diet lacks has left the
+        carried stack or the body. The ledger sees the resolved results (the intents are consumed before observation), so the eaten item is read from
+        what left the inventory or the corpse between the two states."""
+        for result in results:
+            source = getattr(result, "source_kind", None)
+            if not getattr(result, "accepted", False) or source not in ("CARRIED_FOOD", "CORPSE_FOOD"):
+                continue
+            for item_id in cls._items_that_left(prior, current, entity, source, getattr(result, "source_id", None)):
+                if eats_outside_its_diet(entity, item_id):
+                    key = _key(group, source, item_id)
+                    cls._diet_breaches[key] = cls._diet_breaches.get(key, 0) + 1
+
+    @staticmethod
+    def _items_that_left(prior: AuthoritativeState, current: AuthoritativeState, entity: Any, source: str, source_id: Any) -> List[str]:
+        """The item ids whose quantity fell on the carried stack (CARRIED_FOOD) or on the named body (CORPSE_FOOD) across the tick."""
+        if source == "CARRIED_FOOD":
+            before, after = prior.entities[entity.id].inventory.items, entity.inventory.items
+        else:
+            body_before, body_after = (prior.corpses or {}).get(source_id), (current.corpses or {}).get(source_id)
+            before, after = (body_before.items if body_before else []), (body_after.items if body_after else [])
+        remaining: Dict[str, float] = {}
+        for stack in after:
+            remaining[stack.item_id] = remaining.get(stack.item_id, 0.0) + stack.quantity
+        left: List[str] = []
+        for stack in before:
+            if stack.quantity > remaining.get(stack.item_id, 0.0):
+                left.append(stack.item_id)
+        return left
+
+    @classmethod
+    def _count_hunger_drop(cls, group: str, results: List[Any], moved: bool = True) -> None:
+        """A drop is backed only when an accepted transfer exists AND the eater's inventory actually moved: an accepted inn charge at 0 gold is not a source."""
+        backed = moved and any(getattr(r, "accepted", False) for r in results)
         key = _key(group, "with_accepted_transfer" if backed else "without_transfer")
         cls._hunger_drops[key] = cls._hunger_drops.get(key, 0) + 1
 
@@ -301,7 +360,7 @@ class RunLedger:
             "first_tick": cls._first_tick, "last_tick": cls._last_tick,
             "coin_first": cls._coin_first, "coin_last": cls._coin_last, "declared_coin": cls._declared_coin,
             "population": {str(t): dict(sorted(g.items())) for t, g in sorted(cls._population.items())},
-            "transfers": dict(sorted(cls._transfers.items())), "hunger_drops": dict(sorted(cls._hunger_drops.items())),
+            "transfers": dict(sorted(cls._transfers.items())), "hunger_drops": dict(sorted(cls._hunger_drops.items())), "diet_breaches": dict(sorted(cls._diet_breaches.items())),
             "deaths": dict(sorted(cls._deaths.items())), "adds": dict(sorted(cls._adds.items())),
             "world_events": dict(sorted(cls._world_events.items())), "meat": dict(sorted(cls._meat.items())),
             "attacks": dict(sorted(cls._attacks.items())), "behaviour": dict(sorted(cls._behaviour.items())), "perception_samples": cls._perception_samples, "out_of_world": dict(sorted(cls._out_of_world.items())), "out_of_world_examples": list(cls._out_of_world_examples), "unsourced_examples": list(cls._unsourced_examples),

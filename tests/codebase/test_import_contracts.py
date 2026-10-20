@@ -357,3 +357,56 @@ def test_advisory_summary_names_every_broken_pair(tmp_path: Path) -> None:
     text = summary.read_text()
     for pair in ("src.core.builder -> src.domains.campaigns.state (l.955)", "src.core.builder -> src.domains.fame.deriver (l.956)", "src.engine.kernel -> src.observability.reporting.retention (l.77)"):
         assert f"  - `{pair}`" in text
+
+
+# The tail of the real `lint-imports` 2.15 output for a stale ignored import (#673: the baseline line for
+# `src.engine.world_dynamics -> src.world.spawn` put back after main #645 removed the import).
+_REAL_STALE = """visual_assets imports nothing from src KEPT
+src imports nothing from visual_assets KEPT
+
+Contracts: 17 kept, 0 broken.
+
+--------
+Warnings
+--------
+
+Registry layer order (advisory)
+-------------------------------
+
+- No matches for ignored import src.engine.world_dynamics -> src.world.spawn.
+"""
+
+
+def test_stale_pairs_reads_the_real_lint_imports_warning() -> None:
+    """The pair comes out of the "No matches for ignored import A -> B." line, without its full stop."""
+    assert ic.stale_pairs(_REAL_STALE) == ["src.engine.world_dynamics -> src.world.spawn"]
+    assert ic.stale_pairs("Contracts: 17 kept, 0 broken.") == []
+    assert ic.stale_pairs("- No matches for ignored import src.a ->\nsrc.b.\n") == ["src.a -> src.b"]
+
+
+def test_locate_stale_names_the_baseline_line_for_a_baseline_pair_and_the_config_line_for_a_config_only_pair(tmp_path: Path) -> None:
+    """A baseline pair is found in the baseline file (it also sits in the generated block); a hand-written ignore only in the config."""
+    (tmp_path / "codebase/structure").mkdir(parents=True)
+    (tmp_path / ic.BASELINE_REL_PATH).write_text("# header\nsrc.a -> src.b\nsrc.c -> src.d\n")
+    (tmp_path / ic.CONFIG_REL_PATH).write_text('ignore_imports = [\n    "src.c -> src.d",\n    "src.x -> src.y",\n]\n')
+    assert ic.locate_stale(tmp_path, "src.c -> src.d") == "import_layers_baseline.txt l.3"
+    assert ic.locate_stale(tmp_path, "src.x -> src.y") == "importlinter.toml l.3"
+    assert ic.locate_stale(tmp_path, "src.no -> src.where") == "not found in the baseline or the config"
+
+
+def test_ci_names_the_stale_pair_and_where_to_delete_it_and_still_exits_1(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """#673: one ::error:: per stale pair, with the pair, its baseline line and the fix; the summary lists it too."""
+    root = _scratch_repo(tmp_path)
+    pair = "src.engine.world_dynamics -> src.world.spawn"
+    baseline = root / ic.BASELINE_REL_PATH
+    baseline.write_text("\n".join(sorted({*ic.read_baseline(baseline), pair})) + "\n")
+    assert ic.main(["--root", str(root)]) == 0  # the rewrite puts the pair into the generated block too: only the pair is stale
+    line = baseline.read_text().splitlines().index(pair) + 1
+    summary = tmp_path / "summary.md"
+    code = _run_ci(tmp_path, _REAL_STALE, 0, "--summary-out", str(summary), root=root)
+    printed = capsys.readouterr().out
+    where = f"{pair} (import_layers_baseline.txt l.{line})"
+    assert code == 1
+    assert printed.count("::error::") == 1
+    assert f"stale ignored import `{where}`: delete the line, then run `python3 -m codebase.structure.import_contracts`" in printed
+    assert "1 stale ignored import(s)" in summary.read_text() and f"- stale: `{where}`" in summary.read_text()

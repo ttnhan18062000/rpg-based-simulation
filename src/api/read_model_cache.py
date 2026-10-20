@@ -4,6 +4,7 @@ import logging
 import threading
 from typing import Dict, Any, Optional, Set, List, Tuple, TYPE_CHECKING
 
+from src.api.presenters.state_presenter import MAX_ENTITY_PAGE, StatePresenter
 from src.engine.cache_registry import ICacheable, CacheMetrics, CacheBudgetPolicy
 
 if TYPE_CHECKING:
@@ -36,7 +37,8 @@ class ReadModelCache(ICacheable):
     """
     def __init__(self):
         self._minimal_summary: Dict[str, Any] = {}
-        self._entity_dtos: Dict[int, Dict[str, Any]] = {}
+        self._entity_dtos: Dict[int, Dict[str, Any]] = {}  # the bounded DETAIL model (present_entity)
+        self._entity_summaries: Dict[int, Dict[str, Any]] = {}  # the bounded LIST model (present_entity_summary): separate, so a page never builds or caches the detail
         self._lock = threading.RLock()
         
         # Observability metrics
@@ -50,7 +52,7 @@ class ReadModelCache(ICacheable):
         with self._lock:
             return CacheMetrics(
                 name="read_model_cache",
-                current_size=len(self._entity_dtos),
+                current_size=len(self._entity_dtos) + len(self._entity_summaries),
                 hit_count=self._hits,
                 miss_count=self._misses,
                 eviction_count=self._invalidations,
@@ -63,23 +65,24 @@ class ReadModelCache(ICacheable):
         Prunes excess DTOs if size exceeds policy.max_read_dtos.
         """
         with self._lock:
-            initial_size = len(self._entity_dtos)
-            excess = initial_size - policy.max_read_dtos
-            if excess > 0:
-                # FIFO eviction by popping oldest keys
-                sorted_keys = sorted(self._entity_dtos.keys())
-                for k in sorted_keys[:excess]:
-                    self._entity_dtos.pop(k, None)
-                    self._invalidations += 1
-                return excess
-            return 0
+            evicted = 0
+            for cache in (self._entity_dtos, self._entity_summaries):
+                excess = len(cache) - policy.max_read_dtos
+                if excess > 0:
+                    # FIFO eviction by popping oldest keys
+                    for k in sorted(cache.keys())[:excess]:
+                        cache.pop(k, None)
+                        self._invalidations += 1
+                    evicted += excess
+            return evicted
 
     def clear(self) -> None:
         """Purge all cached entries."""
         with self._lock:
-            pruned = len(self._entity_dtos)
+            pruned = len(self._entity_dtos) + len(self._entity_summaries)
             self._minimal_summary.clear()
             self._entity_dtos.clear()
+            self._entity_summaries.clear()
             if pruned > 0:
                 self._invalidations += pruned
             self.reset_metrics()
@@ -89,7 +92,6 @@ class ReadModelCache(ICacheable):
         Updates minimal snapshot and invalidates dirty entity DTOs.
         Returns the set of invalidated entity IDs.
         """
-        from src.api.presenters.state_presenter import StatePresenter
         
         with self._lock:
             self._last_invalidation_tick = state.tick
@@ -109,16 +111,18 @@ class ReadModelCache(ICacheable):
                 dirty_ids = dirty_ids | set(apply_time_dirty_set.all_dirty_entities)
 
             # Prune deleted entities
-            cached_ids = set(self._entity_dtos.keys())
+            cached_ids = set(self._entity_dtos.keys()) | set(self._entity_summaries.keys())
             deleted_ids = cached_ids - all_ids
             for eid in deleted_ids:
                 self._entity_dtos.pop(eid, None)
+                self._entity_summaries.pop(eid, None)
                 
             # Invalidate dirty entities
             invalidated = set()
             for eid in dirty_ids:
-                if eid in self._entity_dtos:
+                if eid in self._entity_dtos or eid in self._entity_summaries:
                     self._entity_dtos.pop(eid, None)
+                    self._entity_summaries.pop(eid, None)
                     invalidated.add(eid)
                     
             self._invalidations += len(invalidated) + len(deleted_ids)
@@ -137,7 +141,6 @@ class ReadModelCache(ICacheable):
         a stored prior-snapshot diff. Deliberately uncached -- does not read from or write into
         _entity_dtos, which is present_entity's (heavy DTO) cache, not this method's.
         """
-        from src.api.presenters.state_presenter import StatePresenter
 
         candidate_ids = ReadModelInvalidationPolicy.get_dirty_entity_ids(
             dirty_set, set(state.entities.keys()), force_full_scan
@@ -166,7 +169,6 @@ class ReadModelCache(ICacheable):
 
     def get_minimal_summary(self, state: Optional[AuthoritativeState] = None) -> Dict[str, Any]:
         """Returns the cached minimal world summary."""
-        from src.api.presenters.state_presenter import StatePresenter
         with self._lock:
             if not self._minimal_summary and state is not None:
                 self._minimal_summary = StatePresenter.present_minimal(state)
@@ -176,7 +178,6 @@ class ReadModelCache(ICacheable):
         """
         Retrieves a cached entity DTO or generates and caches it on demand.
         """
-        from src.api.presenters.state_presenter import StatePresenter
         with self._lock:
             if entity.id in self._entity_dtos:
                 self._hits += 1
@@ -187,16 +188,29 @@ class ReadModelCache(ICacheable):
             self._entity_dtos[entity.id] = dto
             return dto
 
+    def get_entity_summary(self, entity: EntityState) -> Dict[str, Any]:
+        """The cached bounded list model of one entity (counts, no collection that grows with age)."""
+        with self._lock:
+            if entity.id in self._entity_summaries:
+                self._hits += 1
+                return self._entity_summaries[entity.id]
+            self._misses += 1
+            dto = StatePresenter.present_entity_summary(entity)
+            self._entity_summaries[entity.id] = dto
+            return dto
+
     def get_entities_paged(self, state: AuthoritativeState, offset: int = 0, limit: int = 100) -> Dict[str, Any]:
         """
-        Retrieves a paged list of entity DTOs utilizing the cache.
+        Retrieves a paged list of BOUNDED entity summaries utilizing the cache (the full detail is `get_entity_dto`, one entity at a time).
+        A page is at most MAX_ENTITY_PAGE entities whatever `limit` asks for.
         """
         with self._lock:
+            offset, limit = max(0, offset), max(0, min(limit, MAX_ENTITY_PAGE))
             all_ids = sorted(state.entities.keys())
             paged_ids = all_ids[offset : offset + limit]
             
             entities = [
-                self.get_entity_dto(state.entities[eid])
+                self.get_entity_summary(state.entities[eid])
                 for eid in paged_ids
             ]
             

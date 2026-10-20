@@ -22,8 +22,8 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from codebase.health import adapters, ratchet, registry
 from codebase.gates.sarif_feedback import changed_python_files
+from codebase.health import adapters, ratchet, registry
 
 HOW_TO = (
     "Fix the new violation. If it is genuinely owner-approved debt, `git commit --no-verify` is the bypass; "
@@ -31,7 +31,7 @@ HOW_TO = (
 )
 
 
-class HookSkipped(Exception):
+class HookSkippedError(Exception):
     """The check cannot run here; the commit must not be blocked for that reason."""
 
 
@@ -42,24 +42,24 @@ def _skip(reason: str) -> int:
 
 def _ruff_json(paths: Sequence[str], root: Path, python: str | None = None, timeout: float | None = None) -> list[dict]:
     if python is None and importlib.util.find_spec("ruff") is None:
-        raise HookSkipped("ruff is not installed for this Python (environment not synced: uv sync)")
+        raise HookSkippedError("ruff is not installed for this Python (environment not synced: uv sync)")
     try:
         done = subprocess.run(
             [python or sys.executable, "-m", "ruff", "check", *paths, "--output-format", "json"],
             cwd=root, capture_output=True, text=True, check=False, timeout=timeout,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise HookSkipped(f"ruff could not run ({type(exc).__name__})") from exc
+        raise HookSkippedError(f"ruff could not run ({type(exc).__name__})") from exc
     if done.returncode == 1 and not done.stdout.strip() and "No module named" in done.stderr:
-        raise HookSkipped("ruff is not installed for the chosen Python (environment not synced: uv sync)")
+        raise HookSkippedError("ruff is not installed for the chosen Python (environment not synced: uv sync)")
     if done.returncode not in (0, 1):
-        raise HookSkipped(f"ruff exited {done.returncode}: {' '.join(done.stderr.split())[:200]}")
+        raise HookSkippedError(f"ruff exited {done.returncode}: {' '.join(done.stderr.split())[:200]}")
     try:
         records = json.loads(done.stdout or "[]")
     except json.JSONDecodeError as exc:
-        raise HookSkipped(f"ruff output was not JSON ({exc})") from exc
+        raise HookSkippedError(f"ruff output was not JSON ({exc})") from exc
     if not isinstance(records, list):
-        raise HookSkipped("ruff output was not a list")
+        raise HookSkippedError("ruff output was not a list")
     return records
 
 
@@ -74,19 +74,19 @@ def check(
     """The ratchet result for the staged files, or None when none of them is a checkable `src` file.
 
     `python` (default: this interpreter) and `timeout` (default: none) are for the edit hook; a missing ruff
-    or a timeout raises `HookSkipped`, never a clean pass.
+    or a timeout raises `HookSkippedError`, never a clean pass.
     """
     paths = changed_python_files(files, root)
     if not paths:
         return None
     path = registry_file or registry.registry_path(root)
     if not path.is_file():
-        raise HookSkipped(f"no code-health registry at {path.name} (an older checkout?)")
+        raise HookSkippedError(f"no code-health registry at {path.name} (an older checkout?)")
     try:
         rows = [row for row in registry.load_rows(path, root, check_files=False) if row.file in set(paths)]
         findings = adapters.adapt_ruff(_ruff_json(paths, root, python, timeout), str(root))
     except registry.RegistryError as exc:
-        raise HookSkipped(f"the code-health registry is unusable ({exc})") from exc
+        raise HookSkippedError(f"the code-health registry is unusable ({exc})") from exc
     return ratchet.compare(findings, rows)
 
 
@@ -94,7 +94,7 @@ def run(root: Path, files: Sequence[str], registry_file: Path | None = None) -> 
     """Run the check; returns 1 for a new or worse violation, otherwise 0."""
     try:
         result = check(root, files, registry_file)
-    except HookSkipped as exc:
+    except HookSkippedError as exc:
         return _skip(str(exc))
     if result is None or not result.failed:
         return 0

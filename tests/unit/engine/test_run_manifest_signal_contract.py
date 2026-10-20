@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -14,7 +15,6 @@ from src.engine.kernel import Kernel
 from src.observability.config import ObservabilityConfig, ObservabilityMode
 from src.observability.reporting.artifact_repository import RunArtifactRepository, RunManifest
 
-RUN_IDS = ("sc_manifest_canonical", "sc_manifest_live", "sc_manifest_audit")
 
 
 def _profile(contract: str) -> RuntimeProfile:
@@ -25,12 +25,23 @@ def _profile(contract: str) -> RuntimeProfile:
     )
 
 
-@pytest.fixture(autouse=True)
-def _remove_own_run_dirs():
+@pytest.fixture
+def run_id(request):
+    """A run id no other test and no other xdist worker uses, and the removal of exactly that run's directory afterwards.
+
+    The ids used to be three fixed names, and each test's cleanup removed all three: under `-n 2` the first test to finish deleted the directory a
+    second test on another worker was still writing (`Manifest not found`, `quality_report.json.tmp: No such file`)."""
+    created = []
+
+    def make(label: str) -> str:
+        name = f"sc_manifest_{label}_{os.getpid()}_{request.node.name}"[:120]
+        created.append(name)
+        return name
+
+    yield make
     # Stay in the repo cwd (see test_kernel_provenance_manifest_load): Kernel's content warmup loads data/content relatively.
-    yield
-    for run_id in RUN_IDS:
-        shutil.rmtree(Path("data/runs") / run_id, ignore_errors=True)
+    for name in created:
+        shutil.rmtree(Path("data/runs") / name, ignore_errors=True)
 
 
 def _kernel(monkeypatch, run_id: str, contract: str, flags=None) -> Kernel:
@@ -39,27 +50,35 @@ def _kernel(monkeypatch, run_id: str, contract: str, flags=None) -> Kernel:
                   flags={"no_replay": True, **(flags or {})}, run_id=run_id, world_id="w")
 
 
-def test_a_canonical_run_records_its_contract_and_work_model(monkeypatch):
-    kernel = _kernel(monkeypatch, "sc_manifest_canonical", "canonical")
+def test_a_canonical_run_records_its_contract_and_work_model(monkeypatch, run_id):
+    canonical = run_id("canonical")
+    kernel = _kernel(monkeypatch, canonical, "canonical")
     try:
         expected = {"signal_contract": "CANONICAL", "effective_source": "canonical",
                     "work_model": "WORK_MODEL_V1", "work_model_status": "PROVISIONAL"}
-        assert kernel._artifact_repo.read_manifest("sc_manifest_canonical").signal_contract == expected
+        assert kernel._artifact_repo.read_manifest(canonical).signal_contract == expected
         assert kernel._replay._manifest["signal_contract"] == expected
     finally:
         kernel.shutdown()
 
 
-def test_a_live_run_and_an_audit_run_say_so(monkeypatch):
-    live = _kernel(monkeypatch, "sc_manifest_live", "live")
-    audit = _kernel(monkeypatch, "sc_manifest_audit", "canonical", flags={"audit_mode": True})
+def test_a_live_run_and_an_audit_run_say_so(monkeypatch, run_id):
+    live_id, audit_id = run_id("live"), run_id("audit")
+    live = _kernel(monkeypatch, live_id, "live")
+    audit = None
     try:
-        assert live._artifact_repo.read_manifest("sc_manifest_live").signal_contract["effective_source"] == "live"
-        recorded = audit._artifact_repo.read_manifest("sc_manifest_audit").signal_contract
+        audit = _kernel(monkeypatch, audit_id, "canonical", flags={"audit_mode": True})
+        assert live._artifact_repo.read_manifest(live_id).signal_contract["effective_source"] == "live"
+        recorded = audit._artifact_repo.read_manifest(audit_id).signal_contract
         assert (recorded["signal_contract"], recorded["effective_source"]) == ("CANONICAL", "audit_zeroed")
     finally:
-        live.shutdown()
-        audit.shutdown()
+        # Each kernel is shut down even if the other's shutdown or an assertion fails: a kernel left running leaks its drain worker, which the
+        # session sentinel then reports against whichever test happens to run last on the worker.
+        try:
+            live.shutdown()
+        finally:
+            if audit is not None:
+                audit.shutdown()
 
 
 def test_a_manifest_written_before_the_field_existed_still_loads(tmp_path):

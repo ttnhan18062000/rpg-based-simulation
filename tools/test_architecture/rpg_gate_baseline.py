@@ -25,6 +25,8 @@ File: ``<baselines dir>/rpg_gate_v<N>.json`` (proposed dir ``tests/simulation_qu
   carries ``violations`` and, when it is a run row, ``per_seed`` counts.
 * ``omitted_validity`` (optional) lists validity rows that failed but are owned in ``rpg_gate_known.yaml`` (``state: fail``) and so were left out of ``metrics`` by the
   candidate builder (``rpg_gate_candidate``); the lint requires ``row``, ``known_match`` and ``ticket`` and rejects a listed row that is still in ``metrics``.
+* ``undefined_rows`` (optional) lists pooled shares whose denominator summed to 0 (``{row, reason: "empty_denominator"}``): the candidate leaves them out of ``metrics`` and
+  ``rebaseline`` carries the list. A later run in which such a row is defined reads "no reference (undefined at baseline)" against it, never drift; only a re-baseline gives it a reference.
 * A baseline holds validity rows only at ``violations == 0``. Validity is absolute (any non-zero value is a FAIL) and is never compared with a
   baseline, so a re-baseline can not normalise a validity fail; the lint, the loader and ``rebaseline()`` all refuse it and no ruling overrides that.
   A known validity fail is owned in ``rpg_gate_known.yaml`` (``state: fail``), never here.
@@ -225,6 +227,7 @@ def lint_baseline(doc: Any, filename: Optional[str] = None) -> List[str]:
         problems.append(_ruling_problem(doc["owner_ruling"]))
     problems.extend(_lint_metrics(doc.get("metrics")))
     problems.extend(_lint_omitted_validity(doc.get("omitted_validity"), doc.get("metrics")))
+    problems.extend(_lint_undefined_rows(doc.get("undefined_rows"), doc.get("metrics")))
     problems.extend(_lint_rebaseline(doc.get("rebaseline"), version, (doc.get("provenance") or {}).get("cites")))
     return problems
 
@@ -275,6 +278,8 @@ def _lint_metrics(metrics: Any) -> List[str]:
             problems.append(f"{label}: per_seed must map a seed to a number")
         if scope == "pooled" and per_seed is not None:
             problems.append(f"{label}: a pooled row has no per_seed")
+        if klass == "outcome" and ("floor_rel" in row or "floor_base" in row):
+            problems.extend(_lint_relative_floor(label, row, scope))
         if klass == "outcome" and scope == "pooled":
             if not _is_number(row.get("value")):
                 problems.append(f"{label}: a pooled outcome row needs a numeric value")
@@ -297,6 +302,26 @@ def _lint_metrics(metrics: Any) -> List[str]:
     return problems
 
 
+def _lint_relative_floor(label: str, row: Mapping[str, Any], scope: Any) -> List[str]:
+    """``floor_base`` and ``floor_rel`` are optional and numeric and belong to a run row. With ``floor_rel``: ``floor_base`` is required, ``floor_rel`` is in (0, 1] and the
+    recorded ``floor`` is at least ``floor_base``."""
+    out: List[str] = []
+    if scope == "pooled":
+        out.append(f"{label}: a pooled row has no floor_rel / floor_base")
+    for name in ("floor_base", "floor_rel"):
+        if name in row and not _is_number(row[name]):
+            out.append(f"{label}: {name} must be a number")
+    if "floor_rel" in row:
+        rel, base, floor = row["floor_rel"], row.get("floor_base"), row.get("floor")
+        if _is_number(rel) and not 0 < rel <= 1:
+            out.append(f"{label}: floor_rel {rel} is not in (0, 1]")
+        if "floor_base" not in row:
+            out.append(f"{label}: floor_rel needs floor_base")
+        elif _is_number(base) and _is_number(floor) and floor < base:
+            out.append(f"{label}: floor {floor} is below floor_base {base}")
+    return out
+
+
 def _lint_omitted_validity(omitted: Any, metrics: Any) -> List[str]:
     """``omitted_validity`` lists validity rows that failed but were owned in ``rpg_gate_known.yaml`` and so left out of ``metrics``; each needs a row label,
     the ``known_match`` pattern and the ``ticket`` that owns it, and a listed row must not also be in ``metrics`` (a baseline never holds a validity fail)."""
@@ -315,6 +340,27 @@ def _lint_omitted_validity(omitted: Any, metrics: Any) -> List[str]:
                 problems.append(f"omitted_validity[{index}]: missing {name}")
         if entry.get("row") in present:
             problems.append(f"omitted_validity[{index}]: {entry['row']} is listed as omitted but is still in metrics")
+    return problems
+
+
+def _lint_undefined_rows(undefined: Any, metrics: Any) -> List[str]:
+    """``undefined_rows`` lists pooled shares the module marked undefined (``reason: empty_denominator``) and the candidate left out of ``metrics``; each needs a ``row`` label
+    and a ``reason``, and a listed row must not also be in ``metrics``."""
+    if undefined is None:
+        return []
+    if not isinstance(undefined, list):
+        return ["undefined_rows must be a list"]
+    present = {row_label(r) for r in metrics if isinstance(r, dict)} if isinstance(metrics, list) else set()
+    problems: List[str] = []
+    for index, entry in enumerate(undefined):
+        if not isinstance(entry, dict):
+            problems.append(f"undefined_rows[{index}]: not an object")
+            continue
+        for name in ("row", "reason"):
+            if not entry.get(name):
+                problems.append(f"undefined_rows[{index}]: missing {name}")
+        if entry.get("row") in present:
+            problems.append(f"undefined_rows[{index}]: {entry['row']} is listed as undefined but is still in metrics")
     return problems
 
 
@@ -532,6 +578,8 @@ def rebaseline(
     }
     if candidate.get("omitted_validity"):
         doc["omitted_validity"] = list(candidate["omitted_validity"])
+    if candidate.get("undefined_rows"):
+        doc["undefined_rows"] = list(candidate["undefined_rows"])
     if owner_ruling and not existing:
         doc["owner_ruling"] = dict(owner_ruling)  # version 1 has no rebaseline record to hold it
         doc["stop_lines_crossed"] = crossed

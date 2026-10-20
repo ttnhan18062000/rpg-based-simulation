@@ -93,13 +93,19 @@ def test_the_engine_manager_has_no_demo_spawn_switch():
 
 def test_the_authored_world_presents_every_entity_including_those_carrying_items():
     """Found by D69: the demo spawn carried no items, so the entity presenter's read of an item's `metadata` (an ItemStack has `properties`) never ran
-    live. The authored world's merchants and workers carry items, and the entity DTO raised AttributeError for them."""
+    live. The authored world's merchants and workers carry items, and the entity DTO raised AttributeError for them.
+
+    The LIST is a bounded summary (a count of items, no item rows: TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL), so the items are read from the
+    DETAIL endpoint of each carrier, which is where the presenter's item read runs."""
     profile = PROD_SMALL.model_copy(update={"api_key_hashes": "probe:" + hashlib.sha256(KEY.encode()).hexdigest()})
     app = create_v2_app(profile, seed=SEED, world_id="sandbox_world")
     with TestClient(app, headers={"X-API-Key": KEY}) as client:
         response = client.get("/api/v1/entities", params={"limit": 50})
-    assert response.status_code == 200
-    entities = response.json()["entities"]
-    carrying = [e for e in entities if e["inventory"]["items"]]
-    assert carrying, "sandbox_world authors entities that carry items; none was presented"
-    assert all("metadata" in item for e in carrying for item in e["inventory"]["items"])
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert all("items" not in e["inventory"] for e in entities), "the list carries counts, not item rows"
+        carrying_ids = [e["id"] for e in entities if e["inventory"]["item_count"] > 0]
+        assert carrying_ids, "sandbox_world authors entities that carry items; none was presented"
+        details = [client.get(f"/api/v1/entities/{eid}").json() for eid in carrying_ids]
+    assert all(d["inventory"]["items"] for d in details)
+    assert all("metadata" in item for d in details for item in d["inventory"]["items"])

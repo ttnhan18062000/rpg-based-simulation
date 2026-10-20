@@ -128,16 +128,16 @@ def _fake_python(path: Path, body: str) -> Path:
 
 
 def test_a_missing_ruff_is_a_skip_not_a_clean_pass(project: Path, tmp_path: Path) -> None:
-    """Exit 1 with empty stdout and 'No module named ruff' must raise HookSkipped (shared with pre-commit)."""
+    """Exit 1 with empty stdout and 'No module named ruff' must raise HookSkippedError (shared with pre-commit)."""
     fake = _fake_python(tmp_path / "py", "echo 'No module named ruff' >&2; exit 1")
-    with pytest.raises(staged_ratchet.HookSkipped, match="not installed"):
+    with pytest.raises(staged_ratchet.HookSkippedError, match="not installed"):
         staged_ratchet.check(project, ["src/a.py"], python=str(fake))
 
 
 def test_the_time_budget_is_a_skip(project: Path, tmp_path: Path) -> None:
-    """A ruff that outlives the budget raises HookSkipped, so the hook is silent."""
+    """A ruff that outlives the budget raises HookSkippedError, so the hook is silent."""
     fake = _fake_python(tmp_path / "py", "sleep 5")
-    with pytest.raises(staged_ratchet.HookSkipped, match="could not run"):
+    with pytest.raises(staged_ratchet.HookSkippedError, match="could not run"):
         staged_ratchet.check(project, ["src/a.py"], python=str(fake), timeout=0.2)
 
 

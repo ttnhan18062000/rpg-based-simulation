@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import shutil
 from pathlib import Path
 
@@ -21,12 +22,17 @@ def _profile():
     )
 
 
+# Process-unique ids: under `-n 2` the two tests run on different workers, and a cleanup that removes a fixed name removes the other worker's directory.
+_OK = f"prov_load_ok_{os.getpid()}"
+_BAD = f"prov_load_bad_{os.getpid()}"
+
+
 @pytest.fixture(autouse=True)
 def _remove_own_run_dirs():
     # Stay in the repo cwd: Kernel's content warmup loads data/content relatively, and a different cwd
     # would install an empty catalog into process-wide singletons and break later tests.
     yield
-    for run_id in ("prov_load_ok", "prov_load_bad"):
+    for run_id in (_OK, _BAD):  # only this process's ids: an xdist worker running the sibling test owns the other process's
         shutil.rmtree(Path("data/runs") / run_id, ignore_errors=True)
 
 
@@ -48,9 +54,9 @@ def test_run_manifest_takes_fingerprints_from_provenance_manifest(tmp_path, monk
         "module_fingerprints": {"module_a": "fp-a"},
     }))
 
-    kernel = _make_kernel(tmp_path, monkeypatch, "prov_load_ok", prov)
+    kernel = _make_kernel(tmp_path, monkeypatch, _OK, prov)
     try:
-        manifest = kernel._artifact_repo.read_manifest("prov_load_ok")
+        manifest = kernel._artifact_repo.read_manifest(_OK)
         assert manifest.catalog_fingerprint == "cat-fp-from-provenance"
         assert manifest.module_fingerprints == {"module_a": "fp-a"}
     finally:
@@ -62,9 +68,9 @@ def test_corrupt_provenance_manifest_is_logged_not_swallowed(tmp_path, monkeypat
     prov.write_text("{not json")
 
     with caplog.at_level(logging.WARNING, logger="src.engine.kernel"):
-        kernel = _make_kernel(tmp_path, monkeypatch, "prov_load_bad", prov)
+        kernel = _make_kernel(tmp_path, monkeypatch, _BAD, prov)
     try:
         assert any("Could not load provenance manifest" in r.getMessage() for r in caplog.records)
-        assert kernel._artifact_repo.read_manifest("prov_load_bad").module_fingerprints is None
+        assert kernel._artifact_repo.read_manifest(_BAD).module_fingerprints is None
     finally:
         kernel.shutdown()

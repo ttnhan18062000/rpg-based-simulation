@@ -22,6 +22,7 @@ from src.api.dependencies import (
 )
 from src.api.engine_manager import V2EngineManager
 from src.api.http_metrics import RequestDurationMiddleware
+from src.api.routes import entities as entity_routes
 from src.api.schemas import WorldStateResponse, EntityPageResponse, EntityDetailResponse
 from src.config.profiles import RuntimeProfile
 
@@ -132,6 +133,7 @@ def create_v2_app(
 
     from src.api.routes import decisions
     app.include_router(decisions.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+    app.include_router(entity_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.api.routes import scenarios
     app.include_router(scenarios.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
@@ -242,7 +244,7 @@ def create_v2_app(
         limit: int = 100, 
         manager: V2EngineManager = Depends(get_engine_manager)
     ):
-        """Paged entity retrieval."""
+        """Paged entity SUMMARIES: bounded fields plus counts, independent of an entity's age. The full model is GET /entities/{id}; quest history is paged at /entities/{id}/quests."""
         return manager.get_entities_paged(offset, limit)
 
     @app.get("/api/v1/entities/{entity_id}", response_model=Optional[Dict[str, Any]], dependencies=[Depends(require_admission)])
