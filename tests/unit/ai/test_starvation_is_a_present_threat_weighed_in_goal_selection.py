@@ -70,3 +70,20 @@ def test_a_subject_in_the_desperation_band_with_a_hunter_really_attacking_does_n
     update = TacticalDecisionSystem.evaluate_entity_intent(state, hero)
     assert (update.task.payload_set or {}).get("action") != "EAT"
     assert (update.task.payload_set or {}).get("reason") == "PANIC_RETREAT"
+
+
+def test_the_starving_pull_exceeds_the_retreat_ceiling_so_the_weighing_is_by_immediacy_not_score_magnitude():
+    """A measured fact, pinned so a later change to either side is caught (designer ruling, SURV-07 row 83): past the starvation line the hunger pull is
+    155-160 and CombatRetreatScorer cannot exceed 150 ((1 - hp_ratio) x 100 + panic_level x 50 - bravery x 30, panic <= 1, bravery >= 0)."""
+    from src.ai.goals.scorers import CombatRetreatScorer
+    from src.engine.need_pull import hunger_pull
+    from src.engine.starvation import STARVING_LINE
+
+    assert STARVING_LINE == 95.0
+    pulls = [hunger_pull(h, h, 0.0, 0.0) for h in (STARVING_LINE, 100.0)]  # no walk, no rate: the pull the subject has standing at the inn
+    assert pulls == [155.0, 160.0]
+    state, merchant = _scene(hunger=100.0, hp=1)  # hp 1 of 85: the most a wounded subject can feel
+    personality = replace(merchant.identity.personality, bravery=0.0)
+    merchant = replace(merchant, identity=replace(merchant.identity, personality=personality))
+    retreat = CombatRetreatScorer().score(merchant, state).utility
+    assert retreat <= 150.0 < min(pulls)
