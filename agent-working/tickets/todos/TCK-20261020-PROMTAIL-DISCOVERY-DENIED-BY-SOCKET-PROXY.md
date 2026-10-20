@@ -41,6 +41,7 @@ In the 2026-10-19 SLO run, the Redis drill and the re-measure, Loki held no data
 - Fold in two stale compose.yaml comments (lead review of the R1/R2 batch, 2026-10-20):
   - redis-exporter `mem_limit: 32m # placeholder until the measured peak is recorded`: replace it with the measured figure (re-measure 2026-10-19: docker stats 12 MiB, anon 10 MiB, anon + active_file 12 MiB, 36 %).
   - grafana "Slot (c) verifies the new headroom": replace it with the result (re-measure anon 23 % of 1024m; the long-run slot (b) figure of 654 MiB is 64 %).
+- Runbook pass, same PR (lead, 2026-10-20): #686 made `GET /api/v1/entities` a bounded summary (target ≤ 1 KB per row). In api-latency-slo.md, update the "payload growth with world age" cause and first check: say the 2026-10-19 plateau (~691.5 KB, 12 entities) predates #686, and confirm the new size with one measured request if a stack is up. Do not edit the 2026-10-19 records.
 
 ## Out of Scope
 - Promtail → Alloy migration itself (separate follow-up).
