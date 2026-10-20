@@ -81,6 +81,9 @@ class Kernel:
     ) -> None:
         self._stopped = False
         self._profile = profile
+        # Reject a bad profile or a forbidden flag before anything is built or started: no recorder, feed or trace worker exists yet, so a rejected
+        # construction leaves no thread to stop and no run directory behind (TCK-20261008-PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS).
+        self.validate(flags)
         self._state = state
         self._rng = rng
         self._phases = get_authoritative_phases()
@@ -312,8 +315,6 @@ class Kernel:
 
         reset_run_state(profile.cadence.strategic_intelligence, ESCALATION_ONSET * HUNGER_LINE, should_run, profile.max_observability_budget_percent > 0,
                         starving_line=STARVING_LINE)
-
-        self.validate(flags)
 
         # WORLD-CAT-004: warm all content singletons before the first tick so that
         # CatalogRepository.load_all() is never triggered from inside tick_once().

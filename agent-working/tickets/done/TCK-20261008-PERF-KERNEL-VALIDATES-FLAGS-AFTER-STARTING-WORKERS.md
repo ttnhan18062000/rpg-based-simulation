@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261008-PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS
-phase: open
+phase: done
 date: 2026-10-08
 tags: [performance, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, engine]
 Kernel.__init__ validates its flags only after starting the event-recorder and trace-writer workers, so a Kernel that rejects a forbidden flag leaks background threads
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -73,7 +73,8 @@ that names `kernel.py` again, or routing to the RPG side. It's a small, self-con
 - `docs/engine/matrices/observability_operational_controls_matrix.md`
 
 ## Related Stored Artifacts
-- `agent-working/stored_artifacts/TCK-20261006-PERF-OPERATIONAL-FLAGS-MATRIX-DRIFT/`
+- `agent-working/stored_artifacts/TCK-20261006-PERF-OPERATIONAL-FLAGS-MATRIX-DRIFT/
+- agent-working/stored_artifacts/TCK-20261008-PERF-KERNEL-VALIDATES-FLAGS-AFTER-STARTING-WORKERS/`
 
 ## Related Code Areas
 - `src/engine/kernel.py` (`__init__`, `validate`), `src/observability/event_recorder.py`
@@ -83,9 +84,13 @@ that names `kernel.py` again, or routing to the RPG side. It's a small, self-con
   handoff doc.
 
 ## Implementation Notes
+self.validate(flags) moved to the top of Kernel.__init__ (right after the profile is set). No helper was needed: it is one line moved.
 
 ## Test Summary
+tests/unit/engine/test_kernel_rejects_a_forbidden_flag_before_starting_any_worker.py (4): 3 fail on main (thread and run-folder leak), all pass with the fix. Kernel unit tests, test_forbidden_flags, test_operational_flags, test_startup_validation: 68 passed. frontier_living_world s42 300t final hash identical base vs fix (414fc727899a274d).
 
 ## Files Changed
+src/engine/kernel.py; tests/unit/engine/test_kernel_rejects_a_forbidden_flag_before_starting_any_worker.py.
 
 ## Completion Summary
+A Kernel that rejects its flags now fails before any worker, feed or run folder exists.
