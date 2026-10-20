@@ -1,0 +1,94 @@
+utc,latency_rule,error_rule,ntfy_firing,ntfy_resolved,server_p95_5m_s
+17:18:54,inactive/Normal (NoData),inactive/Normal (NoData),1,1,nan
+17:19:09,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.245
+17:19:24,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.243
+17:19:39,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.234
+17:19:55,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.231
+17:20:10,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.23
+17:20:25,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.231
+17:20:40,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.229
+17:20:55,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.228
+17:21:10,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.228
+17:21:26,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.226
+17:21:41,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.226
+17:21:56,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.226
+17:22:11,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.225
+17:22:26,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.225
+17:22:42,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.224
+17:22:57,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.224
+17:23:12,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.223
+17:23:27,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.224
+17:23:42,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.224
+17:23:58,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.224
+17:24:13,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.223
+17:24:28,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.223
+17:24:43,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.223
+17:24:58,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.222
+17:25:14,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.223
+17:25:29,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.223
+17:25:44,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.224
+17:25:59,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.224
+17:26:14,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.224
+17:26:29,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.224
+17:26:45,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.224
+17:27:00,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.225
+17:27:15,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.225
+17:27:30,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.225
+17:27:45,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.225
+17:28:01,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.225
+17:28:16,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.227
+17:28:31,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.233
+17:28:46,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.239
+17:29:01,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.246
+17:29:16,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.252
+17:29:32,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.268
+17:29:47,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.282
+17:30:02,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.295
+17:30:17,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.316
+17:30:33,inactive/Normal (NoData),inactive/Normal (NoData),1,1,0.334
+17:30:48,pending/Pending,inactive/Normal (NoData),1,1,0.349
+17:31:03,pending/Pending,inactive/Normal (NoData),1,1,0.362
+17:31:18,pending/Pending,inactive/Normal (NoData),1,1,0.373
+17:31:33,pending/Pending,inactive/Normal (NoData),1,1,0.382
+17:31:48,pending/Pending,inactive/Normal (NoData),1,1,0.39
+17:32:04,pending/Pending,inactive/Normal (NoData),1,1,0.396
+17:32:19,pending/Pending,inactive/Normal (NoData),1,1,0.402
+17:32:34,pending/Pending,inactive/Normal (NoData),1,1,0.407
+17:32:49,firing/Alerting,inactive/Normal (NoData),1,1,0.413
+17:33:04,firing/Alerting,inactive/Normal (NoData),1,1,0.414
+17:33:19,firing/Alerting,inactive/Normal (NoData),2,1,0.414
+17:33:35,firing/Alerting,inactive/Normal (NoData),2,1,0.415
+17:33:50,firing/Alerting,inactive/Normal (NoData),2,1,0.414
+17:34:05,firing/Alerting,inactive/Normal (NoData),2,1,0.412
+17:34:20,firing/Alerting,inactive/Normal (NoData),2,1,0.411
+17:34:35,firing/Alerting,inactive/Normal (NoData),2,1,0.411
+17:34:51,firing/Alerting,inactive/Normal (NoData),2,1,0.411
+17:35:06,firing/Alerting,inactive/Normal (NoData),2,1,0.41
+17:35:21,firing/Alerting,inactive/Normal (NoData),2,1,0.41
+17:35:36,firing/Alerting,inactive/Normal (NoData),2,1,0.409
+17:35:51,firing/Alerting,inactive/Normal (NoData),2,1,0.409
+17:36:06,firing/Alerting,inactive/Normal (NoData),2,1,0.409
+17:36:22,firing/Alerting,inactive/Normal (NoData),2,1,0.408
+17:36:37,firing/Alerting,inactive/Normal (NoData),2,1,0.41
+17:36:52,firing/Alerting,inactive/Normal (NoData),2,1,0.412
+17:37:07,firing/Alerting,inactive/Normal (NoData),2,1,0.413
+17:37:22,firing/Alerting,inactive/Normal (NoData),2,1,0.414
+17:37:38,firing/Alerting,inactive/Normal (NoData),2,1,0.414
+17:37:57,firing/Alerting,inactive/Normal (NoData),2,1,0.414
+17:38:12,firing/Alerting,inactive/Normal (NoData),2,1,0.414
+17:38:27,firing/Alerting,inactive/Normal (NoData),2,1,0.415
+17:38:43,firing/Alerting,inactive/Normal (NoData),2,1,0.415
+17:38:58,firing/Alerting,inactive/Normal (NoData),2,1,0.417
+17:39:13,firing/Alerting,inactive/Normal (NoData),2,1,0.418
+17:39:28,firing/Alerting,inactive/Normal (NoData),2,1,0.419
+17:39:43,firing/Alerting,inactive/Normal (NoData),2,1,0.419
+17:39:58,firing/Alerting,inactive/Normal (NoData),2,1,0.42
+17:40:14,firing/Alerting,inactive/Normal (NoData),2,1,0.423
+17:40:57,firing/Alerting,inactive/Normal (NoData),2,1,0.432
+17:41:13,firing/Alerting,inactive/Normal (NoData),2,1,0.439
+17:41:28,firing/Alerting,inactive/Normal (NoData),2,1,0.442
+17:41:43,firing/Alerting,inactive/Normal (NoData),2,1,0.438
+17:41:58,firing/Alerting,inactive/Normal (NoData),2,1,0.434
+17:42:13,firing/Alerting,inactive/Normal (NoData),2,1,nan
+17:42:37,firing/Alerting,inactive/Normal (NoData),2,1,nan
+17:42:52,inactive/Normal (NoData),inactive/Normal (NoData),2,1,nan

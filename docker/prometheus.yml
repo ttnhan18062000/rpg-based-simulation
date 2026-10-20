@@ -3,9 +3,8 @@ global:
   evaluation_interval: 5s
 
 # The `job` label is the name the runbooks (docs/runbooks) use for a target.
-# `rpg-backend` on backend:8000 was removed (TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER): /metrics there is
-# admission-gated and returns 401, so a target-down rule on it would fire forever. TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
-# adds backend:9109 when rpg's R1 lands.
+# The backend is scraped on its internal metrics port 9109 (rpg R1, #648; `expose` only in compose.yaml). The old job on backend:8000
+# was removed by TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER: /metrics there is admission-gated and returns 401.
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
@@ -33,3 +32,11 @@ scrape_configs:
   - job_name: "ntfy"
     static_configs:
       - targets: ["ntfy:9091"]
+
+  - job_name: "rpg-backend"
+    static_configs:
+      - targets: ["backend:9109"]
+
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis-exporter:9121"]

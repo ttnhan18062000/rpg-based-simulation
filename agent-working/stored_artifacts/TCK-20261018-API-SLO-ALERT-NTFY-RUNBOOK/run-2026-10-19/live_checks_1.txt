@@ -1,0 +1,22 @@
+## targets
+  grafana up 
+  loki up 
+  node-exporter up 
+  ntfy up 
+  prometheus up 
+  redis up 
+  rpg-backend down Get "http://backend:9109/metrics": dial tcp 172.19.0.10:9109: connect: connectio
+  tempo up 
+## redis_up
+  ['1']
+## redis version (INFO via exporter)
+  {'os': 'Linux 6.17.0-41-generic x86_64', 'redis_mode': 'standalone', 'redis_version': '8.10.2'}
+## sim_current_tick
+  []
+## le=0.3 bucket present
+  []
+## public 8000/metrics
+  401
+## 9109 from host
+  000
+  not reachable (exit 7)

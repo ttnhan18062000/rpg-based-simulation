@@ -110,3 +110,11 @@ $C cp backend:/tmp/profile.raw <ticket staging dir>/profile.raw
 The file is py-spy's raw (folded-stack) format, which tools/perf reads (`tools/perf/_profiling_common.py` parses it and writes a speedscope JSON).
 This overlay produces no SVG: py-spy has no folded-to-SVG converter, and none is pinned here.
 Label for the record: "py-spy nonblocking 100 Hz attached during the hold; latency during the hold is not a measured figure".
+
+## Redis-stop drill
+
+`drill_redis_stop.sh` is the scripted manual drill of ADR D5 (a drill, not chaos tooling): it holds a steady Locust step below the knee, stops Redis
+(T0), waits for the `RedisDown` message in the local ntfy topic (T1), starts Redis after a fixed outage (T2), waits for the resolved message (T3), and
+runs a tail. It prints a UTC timestamp for every event and samples the backend `/health`, `redis_up` and the Grafana state of `RedisDown` and the
+two API SLO rules, so the record can say whether the SLO stayed green. It reads the ntfy topic and a READ token from gitignored files and never prints
+them (saved messages have the topic redacted). Run it alone, with the observability stack up. Output: `tools/loadtest/runs/<ts>-drill-redis-stop/`.

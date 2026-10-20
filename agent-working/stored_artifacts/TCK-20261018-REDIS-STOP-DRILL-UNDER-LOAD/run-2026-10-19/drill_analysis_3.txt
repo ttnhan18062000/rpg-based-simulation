@@ -1,0 +1,31 @@
+## cgroup memory.peak per container since its start (MiB)
+  platform-grafana-1 1024 MiB (limit 1024 MiB)
+  platform-prometheus-1 266 MiB (limit 512 MiB)
+  platform-ai_worker-1 61 MiB (limit 512 MiB)
+  platform-backend-1 233 MiB (limit 1024 MiB)
+  platform-promtail-1 128 MiB (limit 128 MiB)
+  platform-redis-1 62 MiB (limit 256 MiB)
+  platform-docker-socket-proxy-1 28 MiB (limit 64 MiB)
+  platform-loki-1 222 MiB (limit 512 MiB)
+  platform-tempo-1 147 MiB (limit 512 MiB)
+  platform-redis-exporter-1 26 MiB (limit 32 MiB)
+  platform-node-exporter-1 24 MiB (limit 32 MiB)
+  platform-ntfy-1 64 MiB (limit 64 MiB)
+## docker stats now (idle tail)
+platform-grafana-1 713.3MiB / 1GiB
+platform-prometheus-1 108.7MiB / 512MiB
+platform-ai_worker-1 39.25MiB / 512MiB
+platform-backend-1 124.3MiB / 1GiB
+platform-promtail-1 55.54MiB / 128MiB
+platform-redis-1 51.02MiB / 256MiB
+platform-docker-socket-proxy-1 13.52MiB / 64MiB
+platform-loki-1 82.78MiB / 512MiB
+platform-tempo-1 41.85MiB / 512MiB
+platform-redis-exporter-1 8.93MiB / 32MiB
+platform-node-exporter-1 12.62MiB / 32MiB
+platform-ntfy-1 40.9MiB / 64MiB
+## stream window check
+1792432775810-0
+1792432787124-0
+0
+(window ids: 17:51:29Z = 1792432289000 ms, 17:54:32Z = 1792432472000 ms)

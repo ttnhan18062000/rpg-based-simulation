@@ -1,0 +1,11 @@
+2026-10-19T17:49:59Z start users=10 head=90s outage=180s tail=60s out=tools/loadtest/runs/20261019T174959Z-drill-redis-stop
+2026-10-19T17:49:59Z baseline firing_msgs=0 resolved_msgs=0 rules: ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok redis_up=1
+2026-10-19T17:49:59Z LOCUST_START pid=1149691
+2026-10-19T17:51:29Z T0 docker compose stop redis
+2026-10-19T17:52:51Z T1 RedisDown firing message received in the ntfy topic
+2026-10-19T17:54:32Z T2 docker compose start redis
+2026-10-19T17:57:51Z T3 RedisDown resolved message received in the ntfy topic
+2026-10-19T17:57:51Z tail 60s of steady load
+2026-10-19T17:58:51Z LOCUST_STOP
+2026-10-19T17:58:51Z captures written to tools/loadtest/runs/20261019T174959Z-drill-redis-stop (events.txt, samples.csv, locust*_stats*.csv, ntfy_messages.jsonl, loki_backend.json)
+2026-10-19T17:58:51Z detection T1-T0 and recovery T3-T2 are read from the timestamps above; the record is written by hand from these files
