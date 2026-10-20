@@ -1,0 +1,81 @@
+---
+status: active
+layer: testing
+authority: P2
+audience: agent
+ticket_id: TCK-20261020-VISUAL-ASSETS-STORE-TESTS-REAL-LOCK
+phase: open
+date: 2026-10-20
+tags: [testing, determinism]
+---
+
+# TCK-20261020-VISUAL-ASSETS-STORE-TESTS-REAL-LOCK
+
+## Title
+visual_assets store tests take their write lock in tmp, never on the real `visual_assets/catalog/.store.lock`
+
+## Status
+OPEN
+
+## Tier
+hotfix
+
+## Type
+repair
+
+## Priority
+P2
+
+## Request Summary
+GitHub issue #657 (testing-planner, u24, 2026-10-19). Several visual_assets tests run a writing store command (`cli.main` intake/review/build/release/export-runtime, or `store_write_lock` directly). They take `LOCK_EX|LOCK_NB` on the real lock file, `visual_assets/store/lock.py::lock_path()` = `config.CATALOG_ROOT / ".store.lock"`, because the `roots` fixture (`tests/visual_assets/store/unit/conftest.py`) patches only `QUARANTINE_ROOT` and `REVIEW_ROOT`. Two processes at once (pytest-xdist, or a real store command running locally) give the second one `GateError store_locked`: `cli.main` returns 2 and the test fails (`test_cli.py::test_the_clock_is_read_only_here` IndexError at :49, `test_intake_exit_codes` `assert 2 == 0` at :38). Serial runs are green. Until this lands on main, testing runs the affected files serially in a separate step of the same CI job, recorded against this ticket.
+
+The owner chose to scope it this week (2026-10-20, via lead-planner). It is a test-fixture fix only.
+
+## Scope
+1. Re-derive the affected set at the dispatch base. Grep `tests/visual_assets/**` for in-process writing store calls (`cli.main([...])` with intake/review/build/release/export-runtime/adopt/adopt-set/revoke/gc/draft keep, `store_write_lock`, and helpers that call them) whose `config.CATALOG_ROOT` is the real catalog. The issue lists 12 files under `store/unit/` plus `test_review_cli.py` and `test_key_usage.py`. Record the re-derived list in Implementation Notes.
+2. Point the lock into tmp for those tests through fixtures, and **only when `config.CATALOG_ROOT` is the real catalog root**: `monkeypatch.setattr(lock, "lock_path", ...)` returning a path under `tmp_path`. A test that already points `CATALOG_ROOT` at a tmp catalog keeps its lock at `<tmp catalog>/.store.lock`. `test_lock.py`, `test_deletion_log.py:106` and `test_kill_mid_publish.py` assert on that location and must stay unchanged. Place it in `tests/visual_assets/store/unit/conftest.py`, as an autouse fixture there, or in `roots` if every affected test uses `roots`. For the two top-level files, use a local fixture or a shared helper module.
+3. Add a regression test that fails on today's main. Within the fixture, `lock.lock_path()` is never under the real catalog. The reproduction from the issue also passes: hold `flock` on the real `visual_assets/catalog/.store.lock` from another process, then run the affected tests and see them pass. A test that holds the real lock in a child process (as `kill_helper.py` does) is preferred over a manual run, if it stays light.
+4. Reply on #657 with the ticket id (planner does this at dispatch) and, after merge, tell testing the serial step can go (via lead).
+
+## Out of Scope
+- `src/**` and `visual_assets/store/**` production code. `lock.py` is NOT changed: the lock design (ADR D24) is right, and only the tests are wrong.
+- The real catalog. No file under `visual_assets/catalog/` changes, and nothing deletes or touches the real `.store.lock`.
+- **`tests/visual_assets/conftest.py` and `tests/visual_assets/drawing/conftest.py`.** They are guarded files in `docs/assets/aseprite_local_proof.json`. Editing either would need the Aseprite local proof refresh, a heavy slot. If the fix truly needs one, stop and ask the planner first.
+- The CI serial step itself (testing's), and xdist adoption for visual_assets.
+
+## Acceptance Criteria
+- AC1: no test under `tests/visual_assets/` takes the real `visual_assets/catalog/.store.lock`. The re-derived list is in Implementation Notes, and the regression test proves it for the in-process paths.
+- AC2: while another process holds `flock` on the real lock, the affected files pass (the issue's reproduction, recorded with counts).
+- AC3: tests that point `CATALOG_ROOT` at a tmp catalog still see the lock at `<tmp catalog>/.store.lock` (`test_lock.py`, `test_deletion_log.py`, `test_kill_mid_publish.py` unchanged and green).
+- AC4: no change to `src/**`, `visual_assets/**` or the two guarded conftests; `git diff --stat` of the batch shows only `tests/visual_assets/**` plus ticket/monitoring/REGISTRY files.
+- AC5: `tests/visual_assets` not-slow is green (heavy slot via the planner and lead), and the paths guard passes.
+
+## Related Tickets
+- TCK-20261010-VISUAL-ASSETS-STORE-LOCK-AND-DELETION-LOG (added the lock, ADR D24)
+- TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS (testing's, where the collision was found)
+
+## Related Docs
+- docs/assets/store_contract.md ("Store lock, deletion log and recovery (`ADR D24`)")
+- docs/assets/retention_and_rollback.md (store operations)
+- docs/assets/aseprite_local_proof.json (the guarded-file list)
+
+## Related Stored Artifacts
+- agent-working/stored_artifacts/TCK-20261010-VISUAL-ASSETS-STORE-LOCK-AND-DELETION-LOG/
+
+## Related Code Areas
+- visual_assets/store/lock.py (`lock_path`, `store_write_lock`; read only)
+- tests/visual_assets/store/unit/conftest.py (`roots`)
+- tests/visual_assets/store/kill_helper.py (holds the lock in a child process)
+- tests/visual_assets/test_review_cli.py, tests/visual_assets/test_key_usage.py
+
+## Assumptions / Open Questions
+- Assumed: monkeypatching `lock.lock_path` reaches every in-process caller, because `store_write_lock` looks `lock_path` up in its module at call time. Verify this. If any caller imported `lock_path` by name, patch that site as well, and note it.
+- Assumed: no test runs a writing store command in a subprocess against the real catalog. The subprocess in `test_key_usage.py` is `git status` only. If one exists, report it before choosing a fix, because a monkeypatch cannot reach it.
+
+## Implementation Notes
+
+## Test Summary
+
+## Files Changed
+
+## Completion Summary
