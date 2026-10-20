@@ -26,7 +26,7 @@ Adopted pixels are readable without the store lock: `visual_assets/catalog/gener
 | 1 | `visual_assets/review/icon_compliance.py:253` (`bead`) | NOW (same) | distance to the tier badges; tier keys are not revised |
 | 2 | `icon_compliance.py:314` (`silver_bead`) | NOW (same) | mean L* of tier D/E; not revised |
 | 3 | `icon_compliance.py:331` (`buff_arrow`) | R1 | `before` = the frame the arrow revision started from |
-| 4 | `icon_compliance.py:442` (`spiked_debuff`) | NOW (value changes) | "differs from the round buff frame": the frame adopted now is r0002; see expected changes |
+| 4 | `icon_compliance.py:442` (`spiked_debuff`) | R1 (kept, decided in step C) | "differs from the round buff frame": the row's value is carried by committed records (below); it is the same 28 px against the r0001 and the r0002 frame, so repointing would change nothing and only risk the owner-gated table. Kept on r0001 and recorded |
 | 5 | `icon_compliance.py:456` (`tankard`) | R1 | `before` = the r0001 mug outline |
 | 6 | `icon_compliance.py:497` (`__main__`) | R1 | prints the r1 `CHECKS` table, written for the r0001 redraws; against r0002 its rows fail by design (test 155) |
 | 7 | `visual_assets/review/review_sheets.py:509` | R1 | builds the review folder of a set with a PROFILE (only `icons-owner-fixes-v1`): `adopted_old` is the "before" panel, r0001; with r0002 the panel would be empty and the owner's recorded sheet could not be reproduced. Decision flagged for the planner (below) |
@@ -46,14 +46,23 @@ Adopted pixels are readable without the store lock: `visual_assets/catalog/gener
 
 (26 sites = rows 1-24 with the grouped rows expanded: 14-15 is 2 sites, 18-19 is 4 sites, 20-21 is 2, 23-24 is 2. The `__main__` of `icon_lookalikes` is row 10 and has a second `--proposed` branch that calls `proposed_sprites()`.)
 
-## Decision flagged for the planner
-Sites 7 and 8 are "means adopted now" in name but reproduce a recorded owner gate. The ticket says to keep such a site on r0001 and say so; I do. A future revision set needs a base of "adopted now" in `review_sheets` (site 7); that belongs to that set's ticket.
+## Decision (confirmed by the planner)
+Sites 7 and 8 are "means adopted now" in name but reproduce a recorded owner gate, so they stay on r0001. A future revision set needs an "adopted now" base in `review_sheets` (site 7); that belongs to that set's own ticket, not this one.
 
-## Expected review-value changes
-Only site 4 (`spiked_debuff`, "differs from the round buff frame"): the diff is now measured against the r0002 buff frame. Whether `measured`/`ok` changes is shown by the run; test 144 uses `CHECKS_R2` with `fix_sprites()` as the debuff but the frame from `all_icon_sprites()`; it will use the accessor. Any change is listed in the Test Summary with key and why. Everything else is value-identical.
+## Expected review-value changes: none
+Checked (planner's step C) whether any committed output carries the `icon_compliance.py:442` row. It is carried by `docs/assets/icon_set_v2_review.md:217` (`| differs from the round buff frame | >= 6 px (I1 at 16x16) | 28 px | ok |`), `frontend/src/visualAssets/__fixtures__/icondraft_fixes/rule_result.json:281` (compared byte for byte by `test_icon_owner_fixes_draft_set.py:87`, the icons-owner-fixes-v1 compliance table the owner gated on) and `agent-working/stored_artifacts/TCK-20261008-VISUAL-ASSETS-ICON-THEME-FIT/owner_fixes_result.json.txt`. Measured: the r0002 debuff is 28 px from the r0001 buff frame and 28 px from the r0002 buff frame, so the value would not change either way; because committed records carry the row, site 4 stays on r0001 and is the only "adopted now"-looking site kept for that reason. No review output changes in this ticket. The NOW sites are therefore 8: 1, 2, 9, 10, 12, 13, 16, 22.
 
 ## Guarded files
 `docs/assets/aseprite_local_proof.json` lists conftests, drawing tests, store support, `test_release_byte_reproducibility.py` and others. None of the files in this change is in it (re-checked after the edits).
+
+## Store icon sources the pin accounts for (planner's step A)
+The store has 65 icon sources (`visual_assets/catalog/sources/icon_*`): 14 `icons-key-v1` + 22 `icons-v2` = the 36 accessor keys, plus an explicit excluded set that the test names with a reason:
+- 18 object markers (`adopted_facts.OBJECT_KEYS`: `icon.node.*` x9, `icon.marker.nest`, `icon.building.*` x4 and the others of `object-markers-v1`): adopted 2026-10-14, drawn after the 36-icon review sheet, not in the accessor's sheet;
+- 11 entity role markers (`adopted_facts.ENTITY_KEYS`): `entity-markers-v1`, 2026-10-19, same reason.
+The test fails if a store icon source is in neither the 36 nor the excluded set, if an accessor key has no store source, and if the excluded set names a source that is not in the store.
+
+## Static check
+After the rename `grep -rn all_icon_sprites` must match exactly one file: `agent-working/stored_artifacts/TCK-20261008-VISUAL-ASSETS-ICON-THEME-FIT/drawing/fix.py:169`. It is a stored artifact, a record, and is not edited.
 
 ## Name
 `all_icon_sprites` is renamed to `r0001_icon_sprites` at all R1 sites in one commit (the old name is the bug: it reads as "all the icons"). The new accessor is `adopted_icon_sprites()`; both live in `icon_lookalikes.py`. The new one imports `icon_owner_fixes_draft_set` inside the function (that module imports `icon_compliance` and `icon_lookalikes`, so a top-level import is circular).
