@@ -7819,6 +7819,38 @@
   - agent-working/stored_artifacts/TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-FINALIZE-SELFCHECK-RECORDS-FAIL-REASON-CLASS.md
+  ticket_id: TCK-20261020-FINALIZE-SELFCHECK-RECORDS-FAIL-REASON-CLASS
+  title: The done-checker's Finalize self-check records a short reason class for each
+    failing condition in its gate-verdict row
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - check_migration_complete
+  - record_gate_verdict
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
+  - retro
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN.md
+  ticket_id: TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN
+  title: Hand closures record agent_count as unknown (null) instead of a phase-event
+    count, and the retro's "Avg agents per run" leaves them out
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - run_record
+  - avg_agents
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
+  - retro
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED.md
   ticket_id: TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED
   title: Hand closures record Review, Document-Update and Architecture-Verify as skipped
@@ -7861,6 +7893,21 @@
   tags:
   - performance
   - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PLANNER-MAY-WRITE-STAGING-ARTIFACTS.md
+  ticket_id: TCK-20261020-PLANNER-MAY-WRITE-STAGING-ARTIFACTS
+  title: Every planner role may write agent-working/staging_artifacts/**, so starting
+    a ticket's staging artifacts stops raising a role_boundary warning
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - registries/session_roles.yaml, tools/sessions/roster.py, tools/sessions/boundary.py,
+    tools/sessions/generate_agents.py
+  artifact_files: []
+  tags:
+  - governance
+  - agent-monitoring
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA.md
   ticket_id: TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA
