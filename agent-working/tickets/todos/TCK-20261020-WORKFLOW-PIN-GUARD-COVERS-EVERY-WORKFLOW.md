@@ -15,7 +15,7 @@ tags: [testing, workflows]
 The SHA-pin guard globs every file in `.github/workflows/`, so one test enforces the repo-wide pin rule.
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 hotfix
@@ -29,7 +29,7 @@ P3
 ## Request Summary
 lead-planner-u24's non-blocking follow-up on #675 (issuecomment-6281833519): `tests/static/test_workflow_actions_pinned_by_sha.py` lists only testing's four workflows. The owner's rule (SHA + `# vX.Y.Z`) applies to every workflow. Once the other owners' workflows are pinned, the guard should cover all of them.
 
-**BLOCKED** until every other workflow on main is pinned:
+**UNBLOCKED 2026-10-20:** all 9 workflows on main pin every `uses:` (checked by testing-planner). It was blocked until:
 - deploy-docs.yml: platform, #668.
 - pr-body-lint.yml: agent-working, TCK-20261019-SEMGREP-BASELINE-AGENT-WORKING-PATHS.
 - security-scan.yml and any other workflow: check on main when unblocking.

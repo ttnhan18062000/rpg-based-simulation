@@ -15,7 +15,7 @@ tags: [testing, regression, simulation-quality]
 The rpg gate report checks each pooled share against the numerator and denominator count rows it names. A share marked undefined while its denominator is non-zero, or a defined share that is not Σnum/Σden, is a `contract_error`.
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 hotfix
@@ -31,7 +31,7 @@ P3
 
 rpg-planner agreed, 2026-10-20: Lane B adds `numerator:` and `denominator:` (run row ids) to every pooled share row in the combined pre-v1 PR, with a unit test that both name rows in the same document.
 
-**BLOCKED** until rpg-pre-v1-fixes is on main with those fields. Not a v1 blocker.
+**UNBLOCKED 2026-10-20:** #682 is on main, and `rpg_gate_metrics.pool` emits `numerator: "O1.starved"` and `denominator: "O1.at_risk"` on O1.starvation_share. Not a v1 blocker. The report is not in the harness hash.
 
 ## Scope
 1. Report: for each pooled outcome row that carries `numerator`/`denominator`, find those run rows (same world, group and key) in every seed document.
