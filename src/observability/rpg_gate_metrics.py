@@ -19,6 +19,14 @@ Outcome (what the world did; paired against a baseline, never graded alone): O1 
 O3 attacks on people by wild meat-eaters (a diet with meat, a species without the trade trait), O4 ways mix, O5 per-group coin flows (no producer yet:
 the world's net coin is validity V6), O6 kills not eaten. An outcome row never grades: only a validity row can fail. O7 (tick time) is the harness's cost document, not a metric row here.
 
+Row sets are DECLARED, never observed (TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS): every seed of a world emits the same (id, group, key) rows, with value 0
+when nothing happened, so an absent row is never read as zero. The domains: GROUPS are the kind groups of the world's declaration (the world compiled for each seed of the
+gate config's seed set, before any tick; their union), KEYS are enumerations (death causes: ``DeathCause``; transfer sources: ``TRANSFER_SOURCES``, which a unit test
+keeps equal to every ``source_kind`` literal in ``src/``). Something observed outside its declared domain is a loud ``GateDataMissingError``, never a new row.
+A share (O1) is carried as two COUNT rows, numerator (``O1.starved``) and denominator (``O1.at_risk``, the group's tick-0 population), true zeros on every seed; the share
+is derived only in the pooled document (``O1.starvation_share``) as sum(numerator) / sum(denominator) over the seeds; a group whose pooled denominator is 0 gets
+``value: null, reason: "empty_denominator"`` (n/a, never 0 or 1). A per-seed share is never a metric row.
+
 Floors and k are practical thresholds with a fiction reason each (``OUTCOME_THRESHOLDS``), never fitted to a measured baseline.
 """
 from __future__ import annotations
@@ -28,7 +36,8 @@ import os
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
-from src.ai.goals.kind_group import kind_group
+from src.ai.goals.kind_group import is_person, kind_group
+from src.core.death_cause import DeathCause
 from src.observability.run_ledger import (
     LEDGER_LIVE_EVENT,
     LEDGER_TALLY_EVENT,
@@ -47,6 +56,13 @@ COIN_EPSILON = 1e-6
 PEOPLE_CLASS = "prepared"  # the diet class of the inn's free meal (D44): the V4 diet gate. Personhood is NOT this: it is the trade trait (D43), carried as a 0/1 flag
 MEAT_CLASS = "meat"
 FOOD_NODE_SOURCE, INN_SOURCE, BODY_SOURCE = "NODE", "TOWN_SERVICE", "CORPSE_FOOD"
+DEATH_CAUSES: Tuple[str, ...] = tuple(cause.value for cause in DeathCause)  # the key domain of O2.deaths: the enum, every member on every seed
+# The key domain of O4.accepted: every ``ResourceTransferIntent.source_kind`` the engine emits (no enum exists; tests/unit/observability keeps this tuple equal to the
+# ``source_kind`` literals under src/, so a new source is declared here or the unit test fails).
+TRANSFER_SOURCES: Tuple[str, ...] = (
+    "CARRIED_FOOD", "CHEST", "COMBAT", "CORPSE", "CORPSE_FOOD", "CRAFTING", "GROUND_ITEM", "HOME_STORAGE", "INFORMATION_PURCHASE", "INHERIT", "NODE",
+    "QUEST", "RECRUIT", "SHOP_BUY", "SHOP_SELL", "TAX", "TOWN_SERVICE", "WAGE",
+)
 
 
 class GateDataMissingError(RuntimeError):
@@ -56,7 +72,11 @@ class GateDataMissingError(RuntimeError):
 # --------------------------------------------------------------------------------------------- thresholds
 # id -> (k, floor, fiction reason). k = standard errors; floor = the smallest change worth tracing, in the row's own unit.
 OUTCOME_THRESHOLDS: Dict[str, Tuple[float, float, str]] = {
-    "O1.starvation_share": (2.0, 0.05, "a settlement notices when one more in twenty of a kind starves"),
+    # PROPOSED by the designer's floor principle, for the designer to rule on: a count row reuses O2.population's rule (never under three) and its source row's k;
+    # a pooled share's floor is an absolute difference of ten points. The O1.starvation_share row is pooled only: sum(starved) / sum(at risk).
+    "O1.starvation_share": (2.0, 0.10, "PROPOSED: a ten-point difference in the share of a kind that starves"),
+    "O1.starved": (2.0, 3.0, "PROPOSED: three more of a kind starved in a run"),
+    "O1.at_risk": (2.0, 3.0, "PROPOSED: a kind's tick-0 head count, the denominator of the starvation share"),
     "O2.deaths": (2.0, 2.0, "two more deaths of one cause in a run is a story; one is noise"),
     "O2.population": (2.0, 3.0, "a tenth more or fewer of a kind alive, and never under three, is a visible crowd change"),
     "O2.survivors": (2.0, 1.0, "a kind alive or gone in a seed is the whole difference"),
@@ -152,23 +172,65 @@ def population_floor(tick0_mean_population: float) -> float:
     return max(OUTCOME_THRESHOLDS["O2.population"][1], 0.10 * tick0_mean_population)
 
 
-def _tick0_alive(world: str, seed: int) -> Dict[str, int]:
-    """The alive count by kind group of the world compiled for ``seed``, before any tick (what the ledger's first sample sees)."""
+def _compiled_tick0(world: str, seed: int) -> Any:
+    """The state of the world compiled for ``seed``, before any tick (the declaration realised for that seed)."""
     try:
         spec, context = WorldRepository(os.path.join("data", "worlds")).load_world_with_context(world)
     except WorldRepositoryError as exc:
-        raise GateDataMissingError(f"world {world!r} has no spec to compile for the O2.population floor (tick-0 counts): {exc}") from exc
+        raise GateDataMissingError(f"world {world!r} has no spec to compile for the declared row domains (tick-0 groups and counts): {exc}") from exc
     state, _report = WorldCompiler.compile(spec, seed, context=context)
-    return _final_alive_by_group(state)
+    return state
+
+
+def _tick0_alive(world: str, seed: int) -> Dict[str, int]:
+    """The alive count by kind group of the world compiled for ``seed``, before any tick (what the ledger's first sample sees)."""
+    return _final_alive_by_group(_compiled_tick0(world, seed))
+
+
+def _tick0_persons(world: str, seed: int) -> Dict[str, int]:
+    """The count by kind group of the declared bodies that carry the coin-and-trade trait (D43), before any tick."""
+    counts: Dict[str, int] = defaultdict(int)
+    for entity in _compiled_tick0(world, seed).entities.values():
+        if entity.combat.alive and is_person(entity):
+            counts[kind_group(entity)] += 1
+    return dict(counts)
+
+
+def _seed_set(world: str, seeds: Sequence[int]) -> Sequence[int]:
+    if not seeds:
+        raise GateDataMissingError("the run carries no seed set: the declared row domains and the O2.population floor are pooled over the gate config's seeds")
+    return seeds
 
 
 def tick0_means(world: str, seeds: Sequence[int]) -> Dict[str, float]:
     """The pooled tick-0 mean population per kind group over the gate config's seed set, handed in by the harness (a group absent from a seed counts 0 there)."""
-    if not seeds:
-        raise GateDataMissingError("the run carries no seed set: the O2.population floor is pooled over the gate config's seeds")
-    per_seed = [_tick0_alive(world, seed) for seed in seeds]
+    per_seed = [_tick0_alive(world, seed) for seed in _seed_set(world, seeds)]
     groups = {g for counts in per_seed for g in counts}
     return {g: sum(counts.get(g, 0) for counts in per_seed) / len(seeds) for g in groups}
+
+
+def declared_groups(world: str, seeds: Sequence[int]) -> List[str]:
+    """The world's declared kind groups: the union, over the gate config's seed set, of the groups of the world compiled before any tick."""
+    return sorted({g for seed in _seed_set(world, seeds) for g in _tick0_alive(world, seed)})
+
+
+def declared_wild_meat_eaters(world: str, seeds: Sequence[int]) -> List[str]:
+    """The declared groups that can bite as wild meat-eaters (O3): a diet with meat and at least one declared body without the trade trait."""
+    wild: Set[str] = set()
+    for seed in _seed_set(world, seeds):
+        alive, persons = _tick0_alive(world, seed), _tick0_persons(world, seed)
+        wild |= {g for g, n in alive.items() if _group_has(g, MEAT_CLASS) and n - persons.get(g, 0) > 0}
+    return sorted(wild)
+
+
+def _require_declared(kind: str, observed: Set[str], declared: Sequence[str], ledger: Optional[Mapping[str, Any]] = None) -> None:
+    """Something seen in the run outside its declared domain is a missing declaration: the run is no-data, never a silently new row. The one exception is a kind
+    group whose only way in was an UNSOURCED add: V8 already fails that run with the entity named, so the stray group is left out of the rows instead of hiding the V8 fail."""
+    stray = sorted(observed - set(declared))
+    if stray and kind == "kind group" and ledger is not None and _check_unsourced_adds(ledger)[0] > 0:
+        return
+    if stray:
+        raise GateDataMissingError(f"{kind} {stray} seen in the run but not declared (declared: {sorted(declared)}); declare it so every seed emits the same rows")
 
 
 def _check_food_source(ledger: Mapping[str, Any]) -> Tuple[int, List[Any]]:
@@ -243,15 +305,18 @@ def _population_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: A
     rows: List[Dict[str, Any]] = []
     population = ledger["population"]
     first = population[str(ledger["first_tick"])] if population else {}
+    groups = declared_groups(world, seeds)
     means = tick0_means(world, seeds)
     final = _final_alive_by_group(state)
+    _require_declared("kind group", set(first) | set(final) | {g for t in population.values() for g in t}, groups, ledger)
     starved: Dict[str, int] = defaultdict(int)
     for key, n in ledger["deaths"].items():
         group, cause = _split(key, 2)
         if cause == "STARVATION":
             starved[group] += n
-    for group in sorted(set(first) | set(final) | {g for t in population.values() for g in t}):
-        rows.append(_outcome("O1.starvation_share", world, group, starved[group] / max(1, first.get(group, 0))))
+    for group in groups:
+        rows.append(_outcome("O1.starved", world, group, starved[group]))
+        rows.append(_outcome("O1.at_risk", world, group, first.get(group, 0)))
         rows.append(_outcome("O2.survivors", world, group, 1.0 if final.get(group, 0) > 0 else 0.0))
         floor = population_floor(means.get(group, 0.0))
         rows += [_outcome("O2.population", world, group, at.get(group, 0), tick=int(t), floor=floor) for t, at in sorted(population.items(), key=lambda kv: int(kv[0]))]
@@ -259,15 +324,19 @@ def _population_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: A
     return rows
 
 
-def _death_rows(world: str, ledger: Mapping[str, Any]) -> List[Dict[str, Any]]:
+def _death_rows(world: str, ledger: Mapping[str, Any], seeds: Sequence[int]) -> List[Dict[str, Any]]:
+    groups = declared_groups(world, seeds)
     deaths: Dict[Tuple[str, str], int] = defaultdict(int)
     for key, n in ledger["deaths"].items():
         group, cause = _split(key, 2)
         deaths[(group, cause)] += n
-    return [_outcome("O2.deaths", world, group, n, key=cause) for (group, cause), n in sorted(deaths.items())]
+    _require_declared("kind group", {g for g, _ in deaths}, groups, ledger)
+    _require_declared("death cause", {c for _, c in deaths}, DEATH_CAUSES)
+    return [_outcome("O2.deaths", world, group, deaths[(group, cause)], key=cause) for group in groups for cause in DEATH_CAUSES]
 
 
-def _combat_rows(world: str, ledger: Mapping[str, Any]) -> List[Dict[str, Any]]:
+def _combat_rows(world: str, ledger: Mapping[str, Any], seeds: Sequence[int]) -> List[Dict[str, Any]]:
+    wild = declared_wild_meat_eaters(world, seeds)
     on_people: Dict[str, int] = defaultdict(int)
     kills = 0
     for key, n in ledger["attacks"].items():
@@ -278,22 +347,26 @@ def _combat_rows(world: str, ledger: Mapping[str, Any]) -> List[Dict[str, Any]]:
             on_people[attacker] += n
         if outcome == "kill":
             kills += n
+    _require_declared("wild meat-eater group", set(on_people), wild)
     feeding = float(ledger["world_events"].get("FEEDING_KILL", 0))
-    rows = [_outcome("O3.attacks_on_people", world, attacker, n) for attacker, n in sorted(on_people.items())]
+    rows = [_outcome("O3.attacks_on_people", world, attacker, on_people[attacker]) for attacker in wild]
     return rows + [_outcome("O6.feeding_kills", world, "*", feeding), _outcome("O6.kills_not_eaten", world, "*", max(0.0, kills - feeding))]
 
 
-def _way_rows(world: str, ledger: Mapping[str, Any]) -> List[Dict[str, Any]]:
+def _way_rows(world: str, ledger: Mapping[str, Any], seeds: Sequence[int]) -> List[Dict[str, Any]]:
+    groups = declared_groups(world, seeds)
     ways: Dict[Tuple[str, str], int] = defaultdict(int)
     for key, n in ledger["transfers"].items():
         group, source, outcome = _split(key, 3)
         if outcome == "accepted":
             ways[(group, source)] += n
-    return [_outcome("O4.accepted", world, group, n, key=source) for (group, source), n in sorted(ways.items())]
+    _require_declared("kind group", {g for g, _ in ways}, groups, ledger)
+    _require_declared("transfer source", {src for _, src in ways}, TRANSFER_SOURCES)
+    return [_outcome("O4.accepted", world, group, ways[(group, source)], key=source) for group in groups for source in TRANSFER_SOURCES]
 
 
 def _outcome_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: Any, seeds: Sequence[int]) -> List[Dict[str, Any]]:
-    return _population_rows(world, ticks, ledger, state, seeds) + _death_rows(world, ledger) + _combat_rows(world, ledger) + _way_rows(world, ledger)
+    return _population_rows(world, ticks, ledger, state, seeds) + _death_rows(world, ledger, seeds) + _combat_rows(world, ledger, seeds) + _way_rows(world, ledger, seeds)
 
 
 def compute(run: Any) -> Dict[str, Any]:
@@ -327,16 +400,20 @@ def _liveness_row(world: str, groups: Set[str], used: Mapping[Tuple[str, str], f
 
 
 def pool(docs: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
-    """One world's pooled rows from its per-seed documents: ``O2.seeds_with_survivors`` per group and V7 (liveness of declared ways)."""
+    """One world's pooled rows from its per-seed documents: ``O2.seeds_with_survivors`` per group, ``O1.starvation_share`` per group (sum of starved / sum at risk) and V7 (liveness of declared ways)."""
     if not docs:
         return []
     world = docs[0]["world"]
     survivors: Dict[str, int] = defaultdict(int)
+    starved: Dict[str, float] = defaultdict(float)
+    at_risk: Dict[str, float] = defaultdict(float)
     used: Dict[Tuple[str, str], float] = defaultdict(float)
     feeding = 0.0
     for row in (r for doc in docs for r in list(doc.get("metrics", []))):
         if row["id"] == "O2.survivors":
             survivors[row["group"]] += int(row["value"])
+        elif row["id"] in ("O1.starved", "O1.at_risk"):
+            (starved if row["id"] == "O1.starved" else at_risk)[row["group"]] += row["value"]
         elif row["id"] == "O4.accepted":
             used[(row["group"], row["key"])] += row["value"]
         elif row["id"] == "O6.feeding_kills":
@@ -344,6 +421,15 @@ def pool(docs: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
     rows: List[Dict[str, Any]] = [
         {"id": "O2.seeds_with_survivors", "class": "outcome", "scope": "pooled", "world": world, "group": group,
          "value": float(n), "floor": POOLED_THRESHOLDS["O2.seeds_with_survivors"]} for group, n in sorted(survivors.items())]
+    for group in sorted(set(starved) | set(at_risk)):
+        share: Dict[str, Any] = {"id": "O1.starvation_share", "class": "outcome", "scope": "pooled", "world": world, "group": group,
+                                 "numerator": "O1.starved", "denominator": "O1.at_risk",
+                                 "k": OUTCOME_THRESHOLDS["O1.starvation_share"][0], "floor": OUTCOME_THRESHOLDS["O1.starvation_share"][1]}
+        if at_risk[group] > 0:
+            share["value"] = starved[group] / at_risk[group]
+        else:
+            share.update(value=None, reason="empty_denominator")
+        rows.append(share)
     rows.append(_liveness_row(world, set(survivors), used, feeding))
     rows.sort(key=lambda r: (r["id"], r["group"]))
     return rows

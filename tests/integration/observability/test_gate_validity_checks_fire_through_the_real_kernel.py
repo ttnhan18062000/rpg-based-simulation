@@ -20,7 +20,7 @@ WORLD, SEED = "frontier_living_world", 42
 
 
 def run_gate_metrics(run_id: str, ticks: int, prepare: Optional[Callable[[Any], None]] = None, after_tick: Optional[Callable[[Any, int], None]] = None,
-                     world: str = WORLD, seed: int = SEED) -> List[Dict[str, Any]]:
+                     world: str = WORLD, seed: int = SEED, seeds: Optional[tuple] = None) -> List[Dict[str, Any]]:
     """Run ``ticks`` real ticks of ``world`` and return every row the real ``compute`` emits. ``prepare(kernel)`` seeds state before tick 1;
     ``after_tick(kernel, tick_number)`` may seed state between ticks."""
     from src.observability import rpg_gate_metrics
@@ -38,7 +38,7 @@ def run_gate_metrics(run_id: str, ticks: int, prepare: Optional[Callable[[Any], 
     finally:
         kernel.shutdown()  # flushes the recorded event stream before the metrics read it
     try:
-        result = rpg_gate_metrics.compute(RunArtifacts(world, seed, ticks, "test", kernel.state, run_dir, seeds=(seed,)))
+        result = rpg_gate_metrics.compute(RunArtifacts(world, seed, ticks, "test", kernel.state, run_dir, seeds=tuple(seeds) if seeds else (seed,)))
         return list(result["metrics"] if isinstance(result, dict) else result)
     finally:
         shutil.rmtree(run_dir, ignore_errors=True)

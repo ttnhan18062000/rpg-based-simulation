@@ -33,8 +33,12 @@ Tick = Tuple[Sequence[Any], Dict[int, SpawnSource]]  # (entities_add, entity_spa
 
 @pytest.fixture
 def _fake_floors(monkeypatch):
-    """Self-test world has no spec; V8 cases assert validity rows only, never O2 floors (the floor is the fixed base, 3.0)."""
-    monkeypatch.setattr(metrics, "tick0_means", lambda world, seeds: {})
+    """Self-test world has no spec; V8 cases assert validity rows only, never O2 floors (the floor is the fixed base, 3.0). Its declaration is the groups of the
+    self-test state and of the entities the cases add (no wild meat-eater)."""
+    declared = dict(metrics._final_alive_by_group(_world()))
+    declared[kind_group(_new(1))] = declared.get(kind_group(_new(1)), 0) + 1
+    monkeypatch.setattr(metrics, "_tick0_alive", lambda world, seed: dict(declared))
+    monkeypatch.setattr(metrics, "_tick0_persons", lambda world, seed: {})
 
 
 @pytest.fixture(autouse=True)

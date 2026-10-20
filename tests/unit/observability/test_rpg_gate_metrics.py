@@ -155,11 +155,12 @@ def test_outcome_rows_carry_their_thresholds_and_group_by_kind_property(tmp_path
     rows = m.compute(_run(tmp_path, ledger))["metrics"]
     outcome = [r for r in rows if r["class"] == "outcome"]
     assert all(r["k"] > 0 and r["floor"] > 0 for r in outcome)
-    assert _row({"metrics": rows}, "O1.starvation_share", DEER)["value"] == 0.5  # 3 of the 6 at the first tick
+    assert _row({"metrics": rows}, "O1.starved", DEER)["value"] == 3 and _row({"metrics": rows}, "O1.at_risk", DEER)["value"] == 6  # a share is two count rows
+    assert not [r for r in rows if r["id"] == "O1.starvation_share"], "the share is a pooled row only"
     assert _row({"metrics": rows}, "O3.attacks_on_people", WOLF)["value"] == 5  # people attacking people is not O3
     assert not [r for r in rows if r["id"].startswith("O5")], "net coin is the V6 validity check; O5 is per-group flows only"
-    (ways,) = [r for r in rows if r["id"] == "O4.accepted"]
-    assert ways["value"] == 5 and ways["key"] == "CARRIED_FOOD"  # only accepted transfers
+    ways = [r for r in rows if r["id"] == "O4.accepted" and r["group"] == PEOPLE and r["value"] > 0]
+    assert [(r["key"], r["value"]) for r in ways] == [("CARRIED_FOOD", 5)]  # only accepted transfers; every other declared source is a true 0
     assert _row({"metrics": rows}, "O6.kills_not_eaten")["value"] == 0.0  # the one kill was a feeding kill
     assert not any(" " in r["group"] or r["group"] in ("hunter", "predator", "prey") for r in rows), "groups are diet properties, never roles"
 
@@ -206,8 +207,10 @@ _REAL_TICK0_ALIVE = m._tick0_alive
 
 @pytest.fixture(autouse=True)
 def _no_world_compile(monkeypatch):
-    """The fake world "w" has no spec: the floor's tick-0 counts default to none (the base floor) unless a test sets them with ``_tick0``."""
-    monkeypatch.setattr(m, "_tick0_alive", lambda world, seed: {})
+    """The fake world "w" has no spec: its declaration (the compiled tick-0 groups) is the three kind groups of ``_ledger`` (people trade, wolves and deer do not)
+    unless a test sets other counts with ``_tick0``."""
+    monkeypatch.setattr(m, "_tick0_alive", lambda world, seed: {PEOPLE: 10, WOLF: 4, DEER: 6})
+    monkeypatch.setattr(m, "_tick0_persons", lambda world, seed: {PEOPLE: 10})
 
 
 def _tick0(monkeypatch, per_seed):
@@ -280,3 +283,73 @@ def test_an_outcome_row_never_carries_a_verdict_and_pooled_outcomes_are_values_o
     assert all("violations" not in r and "oracle" not in r for r in rows if r["class"] == "outcome")
     docs = [{"world": "w", "metrics": [{"id": "O2.survivors", "group": WOLF, "value": 0.0}]}]
     assert all("violations" not in r for r in m.pool(docs) if r["class"] == "outcome")
+
+
+# ------------------------------------------------------------------------------------------------ declared row domains (TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS)
+def _row_keys(result):
+    return {(r["id"], r["group"], str(r.get("key", "")), r.get("tick")) for r in result["metrics"]}
+
+
+def test_two_seeds_with_different_events_emit_the_same_row_set(tmp_path):
+    quiet = m.compute(_run(tmp_path, _ledger()))
+    busy = m.compute(_run(tmp_path, _ledger(
+        deaths={f"{DEER}|STARVATION": 2, f"{WOLF}|COMBAT": 1, f"{PEOPLE}|HAZARD": 3}, transfers={f"{PEOPLE}|NODE|accepted": 4, f"{WOLF}|CORPSE_FOOD|accepted": 2},
+        attacks={f"{WOLF}|0|1|hit": 2}, world_events={"FEEDING_KILL": 1})))
+    assert _row_keys(quiet) == _row_keys(busy)
+    zero = [r for r in quiet["metrics"] if r["id"] == "O2.deaths"]
+    assert zero and all(r["value"] == 0 for r in zero)
+
+
+def test_the_death_causes_and_transfer_sources_are_the_declared_enumerations(tmp_path):
+    from src.core.death_cause import DeathCause
+
+    result = m.compute(_run(tmp_path, _ledger()))
+    for group in (PEOPLE, WOLF, DEER):
+        assert {r["key"] for r in result["metrics"] if r["id"] == "O2.deaths" and r["group"] == group} == {c.value for c in DeathCause}
+        assert {r["key"] for r in result["metrics"] if r["id"] == "O4.accepted" and r["group"] == group} == set(m.TRANSFER_SOURCES)
+    assert {r["group"] for r in result["metrics"] if r["id"] == "O3.attacks_on_people"} == {WOLF}  # only a declared wild meat-eater: a diet with meat, a body without the trade trait
+
+
+def test_transfer_sources_cover_every_source_kind_literal_in_src():
+    import re
+
+    root = Path(m.__file__).resolve().parents[1]
+    literals = {hit for path in root.rglob("*.py") for hit in re.findall(r'source_kind\s*=\s*"([A-Z_]+)"', path.read_text(encoding="utf-8"))}
+    assert literals, "the scan found no source_kind literals: the pattern is stale"
+    assert literals <= set(m.TRANSFER_SOURCES), sorted(literals - set(m.TRANSFER_SOURCES))
+
+
+def test_something_seen_outside_its_declaration_is_no_data_not_a_new_row(tmp_path):
+    with pytest.raises(m.GateDataMissingError, match="kind group"):
+        m.compute(_run(tmp_path, _ledger(transfers={"phantom|NODE|accepted": 1})))
+    with pytest.raises(m.GateDataMissingError, match="transfer source"):
+        m.compute(_run(tmp_path, _ledger(transfers={f"{PEOPLE}|TELEPORT|accepted": 1})))
+    with pytest.raises(m.GateDataMissingError, match="death cause"):
+        m.compute(_run(tmp_path, _ledger(deaths={f"{PEOPLE}|MAGIC": 1})))
+    with pytest.raises(m.GateDataMissingError, match="wild meat-eater"):
+        m.compute(_run(tmp_path, _ledger(attacks={"meat+plant|0|1|hit": 1})))
+
+
+def test_a_share_is_two_count_rows_and_a_pooled_row_that_is_null_when_the_denominator_is_empty(tmp_path):
+    seed_a = m.compute(_run(tmp_path, _ledger(deaths={f"{DEER}|STARVATION": 3}, population={"1": {PEOPLE: 10, WOLF: 4, DEER: 6}})))
+    seed_b = m.compute(_run(tmp_path, _ledger(deaths={}, population={"1": {PEOPLE: 10, WOLF: 4, DEER: 4}})))
+    seed_c = m.compute(_run(tmp_path, _ledger(deaths={}, population={"1": {PEOPLE: 10, WOLF: 4}})))  # no deer at tick 0: an empty denominator on this seed
+    for doc in (seed_a, seed_b, seed_c):
+        assert not [r for r in doc["metrics"] if r["id"] == "O1.starvation_share"], "no per-seed share row"
+        assert _row(doc, "O1.at_risk", DEER)["value"] in (6, 4, 0)
+    docs = [dict(d, world="w") for d in (seed_a, seed_b, seed_c)]
+    (share,) = [r for r in m.pool(docs) if r["id"] == "O1.starvation_share" and r["group"] == DEER]
+    assert share["scope"] == "pooled" and share["value"] == pytest.approx(3 / 10)  # sum(starved) / sum(at risk): the empty seed adds nothing
+    empty = [dict(m.compute(_run(tmp_path, _ledger(population={"1": {PEOPLE: 10, WOLF: 4}}))), world="w")]
+    (null,) = [r for r in m.pool(empty) if r["id"] == "O1.starvation_share" and r["group"] == DEER]
+    assert null["value"] is None and null["reason"] == "empty_denominator"
+
+
+def test_every_pooled_share_row_names_its_numerator_and_denominator_run_rows(tmp_path):
+    seed_docs = [m.compute(_run(tmp_path, _ledger(deaths={f"{DEER}|STARVATION": 1}))) for _ in range(2)]
+    shares = [r for r in m.pool([dict(d, world="w") for d in seed_docs]) if r["id"] == "O1.starvation_share"]
+    assert shares
+    for share in shares:
+        assert share["numerator"] == "O1.starved" and share["denominator"] == "O1.at_risk"
+        for doc in seed_docs:  # the named rows exist on every seed's run document, for the share's own group
+            assert _row(doc, share["numerator"], share["group"]) and _row(doc, share["denominator"], share["group"])
