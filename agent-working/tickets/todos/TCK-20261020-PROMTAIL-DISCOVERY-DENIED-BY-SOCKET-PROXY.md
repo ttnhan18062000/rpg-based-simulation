@@ -30,7 +30,12 @@ P1
 In the 2026-10-19 SLO run, the Redis drill and the re-measure, Loki held no data: no labels, `loki_ingester_chunks_created_total` 0, promtail sent 0 entries. Promtail `/targets` shows `docker/tcp://docker-socket-proxy:2375 (0/0 ready)`. Every 5 s it logs `Unable to refresh target groups ... error while computing network labels: ... 403 Forbidden`. `docker-socket-proxy` (tecnativa v0.4.1) allows `CONTAINERS=1`, `POST=0` only. A probe from inside promtail: `GET /containers/json` returns 200, `GET /networks` returns 403. So every runbook first check that starts with Loki finds nothing; `docker compose logs` is the working fallback. Evidence: `docs/runbooks/records/2026-10-19-redis-stop-drill-under-load.md` §7 and its `remeasure-2026-10-19/loki/` files (stored_artifacts of TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD).
 
 ## Scope
-- Establish when it broke. Hypothesis: the promtail bump 3.0.0 → 3.6.8 (Dependabot #562, TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL) started calling the networks API during discovery. Check whether any earlier record shows Loki log lines.
+- Establish when it broke. The first hypothesis was the promtail bump 3.0.0 → 3.6.8 (#562/#604, merged 2026-10-16), but counter-evidence weakens it. TCK-20261018-OBSERVABILITY-PROFILE-HARDENING's runtime check on 2026-10-18, already on promtail 3.6.8 with the same proxy (CONTAINERS=1, POST=0), recorded "NETWORKS=1: not needed. Without it the proxy returns 403 on GET /networks (logged every refresh), GET /containers/json works and backend logs keep arriving", plus Loki `container` values for the 9 project containers. So the 403 alone did not stop discovery on 10-18. Find what changed between that run and 2026-10-19. Candidates:
+  - the service set (S4 added node-exporter and ntfy; R1/R2 added redis-exporter), and whether any container now carries more than one network, or a network-mode, that makes the network-label lookup mandatory;
+  - promtail-config edits after HARDENING;
+  - the proxy image;
+  - whether the 10-18 check ran a different promtail config.
+  Read promtail 3.6.8's docker_sd network-label code path to see when a /networks failure aborts the whole refresh.
 - Choose a fix, preferring the narrowest read surface:
   (a) `NETWORKS=1` on the proxy (GET-only, since POST=0 stays). This widens what the proxy exposes: network names, subnets and attached containers. Security decision: lead reviews, and the decision is recorded in compose.yaml beside the proxy's existing risk comment.
   (b) a promtail/discovery setting that skips network labels, if one exists in the pinned version.
