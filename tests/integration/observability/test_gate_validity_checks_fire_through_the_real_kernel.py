@@ -98,8 +98,10 @@ def test_v3_fires_for_a_starvation_death_beside_an_open_way_even_when_the_dying_
     import src.engine.apply as apply
 
     monkeypatch.setattr(apply, "hp_loss", lambda *a, **k: 40)  # the starvation drain is made large so the death falls in the first ticks
-    row = run_gate_row_set("gate_pos_v3", 6, prepare=_seed_hungry_worker_beside_an_inn)["V3"]
+    forced = []
+    row = run_gate_row_set("gate_pos_v3", 6, prepare=lambda kernel: forced.append(_seed_hungry_worker_beside_an_inn(kernel)))["V3"]
     assert row["violations"] > 0
+    assert [example["entity_id"] for example in row["examples"]] == forced, row["examples"]  # the example names the starving worker
     assert row["examples"][0]["untried"], row["examples"]
 
 
@@ -116,15 +118,19 @@ def test_v3_records_one_death_once_and_does_not_rerecord_an_entity_that_starved_
 
 # ------------------------------------------------------------------------------------------------------------------------------ V5
 def test_v5_fires_for_an_alive_entity_that_acts_outside_the_world_extent():
+    forced = set()
+
     def prepare(kernel) -> None:
         entities = dict(kernel.state.entities)
         for entity in list(entities.values())[:6]:
             if entity.combat.alive:
+                forced.add(entity.id)
                 entities[entity.id] = replace(entity, navigation=replace(entity.navigation, position=(5000.0, 5000.0)))
         _set_entities(kernel, entities)
 
     row = run_gate_row_set("gate_pos_v5", 30, prepare=prepare)["V5"]
     assert row["violations"] > 0
+    assert row["examples"] and {example["entity_id"] for example in row["examples"]} <= forced, (row["examples"], forced)  # each example names a seeded entity
     assert row["examples"][0]["position"] == [5000.0, 5000.0]
 
 
@@ -162,15 +168,18 @@ def test_v8_fires_for_an_entity_added_mid_run_with_no_declared_source(monkeypatc
 
     real = WorldDynamicsSystem.resolve_dynamics
     added = []
+    added_at = []
 
     def with_an_unsourced_add(state, update, *args, **kwargs):
         refined = real(state, update, *args, **kwargs)
         if state.tick == 2 and not added:
             newcomer = V2EntityBuilder(state.next_entity_id).location(30.0, 30.0).build()
             added.append(newcomer.id)
+            added_at.append(state.tick + 1)  # the add is applied into the next tick's state
             refined = replace(refined, entities_add=[*refined.entities_add, newcomer])  # no entity_spawn_sources entry: an undeclared add
         return refined
 
     monkeypatch.setattr(WorldDynamicsSystem, "resolve_dynamics", staticmethod(with_an_unsourced_add))
     row = run_gate_row_set("gate_pos_v8", 5)["V8"]
     assert added and row["violations"] > 0, row
+    assert [(example["entity_id"], example["tick"]) for example in row["examples"]] == [(added[0], added_at[0])], row["examples"]  # the example names the newcomer and its tick
