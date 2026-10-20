@@ -1097,6 +1097,24 @@ def classify_checklist_failure(
 # ---------------------------------------------------------------------------
 
 
+class _Reasoned(tuple):
+    """A plain `(status, evidence)` 2-tuple that also carries a `.reason` class
+    (TCK-20261020-FINALIZE-SELFCHECK-RECORDS-FAIL-REASON-CLASS). It compares, unpacks and indexes exactly
+    like the 2-tuple it wraps, so every existing caller (implement-ticket.js one-liners, tests) is unchanged."""
+
+    reason: str | None
+
+    def __new__(cls, status: str, evidence: str, reason: str | None):
+        obj = super().__new__(cls, (status, evidence))
+        obj.reason = reason
+        return obj
+
+
+def _fail(evidence: str, reason: str) -> tuple[str, str]:
+    """A FAIL result tagged with a closed-set reason class (never the evidence text itself)."""
+    return _Reasoned("FAIL", evidence, reason)
+
+
 def _disposition_migration_result(ticket_id: str) -> tuple[str, str] | None:
     """TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES: a ticket closed as a disposition (nothing
     implemented) has no staging artifacts to migrate. Returns None when the ticket has no
@@ -1112,13 +1130,13 @@ def _disposition_migration_result(ticket_id: str) -> tuple[str, str] | None:
     if status == "NA":
         return None
     if status == "FAIL":
-        return ("FAIL", f"Disposition present but invalid: {evidence}")
+        return _fail(f"Disposition present but invalid: {evidence}", "disposition_invalid")
     src_paths = sorted(p for p in _git_touched_paths(ticket_id) if p.startswith("src/"))
     if src_paths:
-        return (
-            "FAIL",
+        return _fail(
             f"Disposition present but src/ changes are attributed to this ticket: "
             f"{', '.join(src_paths[:5])}{' ...' if len(src_paths) > 5 else ''}",
+            "disposition_src_changes",
         )
     value = parse_body_section(body, "Disposition")
     return (
@@ -1159,9 +1177,9 @@ def check_migration_complete(
 
     ok, problems = _files_complete(stored_dir, REQUIRED_ARTIFACT_FILES)
     if not ok:
-        return ("FAIL", f"Missing or empty file(s) in {stored_dir}: {', '.join(problems)}")
+        return _fail(f"Missing or empty file(s) in {stored_dir}: {', '.join(problems)}", "stored_artifacts_missing")
     if staging_dir.exists():
-        return ("FAIL", f"migration ran but source not cleaned — {staging_dir} still exists")
+        return _fail(f"migration ran but source not cleaned — {staging_dir} still exists", "staging_not_cleaned")
     return ("PASS", f"{stored_dir} complete and {staging_dir} removed")
 
 
@@ -1182,10 +1200,13 @@ def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
     done_path = next((c for c in _ticket_file_candidates(ticket_id) if c != inprogress_path and c.exists()), flat_done_path)
 
     problems = []
+    reasons = []  # parallel to problems; the first one is the recorded class
     if not done_path.exists():
         problems.append(f"{flat_done_path} does not exist (flat or one-level-deep under agent-working/tickets/done/)")
+        reasons.append("ticket_not_in_done")
     if inprogress_path.exists():
         problems.append(f"{inprogress_path} still exists")
+        reasons.append("ticket_still_inprogress")
     todos_dir = TICKETS / "todos"
     if todos_dir.is_dir() and done_path.exists():
         # TCK-20261005-CLOSE-LEAVES-STALE-TODOS-COPY-FOR-DIRECTLY-FILED-TICKETS: a ticket filed straight into
@@ -1193,9 +1214,10 @@ def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
         # only after the close is done.
         for stale in sorted(todos_dir.rglob(f"{ticket_id}.md")):
             problems.append(f"stale copy {stale} still exists under todos/ (delete it; the closure tool removes it)")
+            reasons.append("stale_todos_copy")
 
     if problems:
-        return ("FAIL", "; ".join(problems))
+        return _fail("; ".join(problems), reasons[0])
     return ("PASS", f"{done_path} exists and {inprogress_path} removed")
 
 
@@ -1224,7 +1246,7 @@ def check_working_log_exactly_one_row(
     """
     rows = _rows_for_ticket(csv_path, ticket_id, data_root)
     if not rows:
-        return ("FAIL", "no working_log row found — Finalize did not append")
+        return _fail("no working_log row found — Finalize did not append", "no_row")
 
     status_counts: dict = {}
     for row in rows:
@@ -1233,10 +1255,10 @@ def check_working_log_exactly_one_row(
 
     duplicated = {status: n for status, n in status_counts.items() if n > 1}
     if duplicated:
-        return (
-            "FAIL",
+        return _fail(
             f"{len(rows)} row(s) found for {ticket_id}, with a real duplicate at status(es) "
             f"{duplicated} — duplicate Finalize run",
+            "duplicate_rows",
         )
     if len(rows) == 1:
         return ("PASS", f"Exactly 1 working_log row found for {ticket_id}")
@@ -1370,7 +1392,7 @@ def check_registry_entry_regenerated(
     else:
         registry_to_read = output_path
         if not output_path.exists():
-            return ("FAIL", f"{output_path} does not exist; run `make docs-registry`")
+            return _fail(f"{output_path} does not exist; run `make docs-registry`", "registry_file_missing")
 
     entries = yaml.safe_load(registry_to_read.read_text(encoding="utf-8")) or []
     # TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE (Option A) extended
@@ -1409,17 +1431,17 @@ def check_registry_entry_regenerated(
             except Exception:  # noqa: BLE001 - read-only check stays advisory about why
                 pass
         if fresh_has_entry:
-            return (
-                "FAIL",
+            return _fail(
                 f"{output_path} is stale: a fresh registry has a agent-working/tickets/done/ entry for "
                 f"{ticket_id} but the on-disk file does not (read-only check, nothing written); "
                 "run `make docs-registry` or re-run with --regenerate-registry, then stage it",
+                "registry_stale_on_disk",
             )
-    return (
-        "FAIL",
+    return _fail(
         f"{output_path} has no agent-working/tickets/done/ entry for {ticket_id}"
         + (" after regeneration" if regenerate else " (read-only check)")
         + (f" (regen also exited nonzero: {regen_note})" if regen_note else ""),
+        "entry_absent",
     )
 
 
@@ -1453,10 +1475,15 @@ def run_finalize_selfcheck(ticket_id: str, tier: str, regenerate_registry: bool 
             check_registry_entry_regenerated(ticket_id, regenerate=regenerate_registry),
         ),
     )
-    return [
-        {"condition": name, "status": status, "evidence": evidence}
-        for name, (status, evidence) in checks
-    ]
+    results = []
+    for name, result in checks:
+        status, evidence = result
+        row = {"condition": name, "status": status, "evidence": evidence}
+        reason = getattr(result, "reason", None)
+        if status == "FAIL" and reason:
+            row["reason"] = reason  # optional: absent for PASS/NA and for any FAIL without a class
+        results.append(row)
+    return results
 
 
 # ---------------------------------------------------------------------------
@@ -1584,6 +1611,7 @@ def main(argv=None) -> int:
         )
     parts: dict[str, dict] = {}
     sub_results: dict[str, str] = {}
+    sub_reasons: dict[str, str] = {}
     if part in ("precheck", "both"):
         results = run_static_precheck(args.ticket_id, tier, args.start_ts)
         parts["precheck"] = {"results": results, "fail": _render_results("precheck", results)}
@@ -1592,6 +1620,7 @@ def main(argv=None) -> int:
         results = run_finalize_selfcheck(args.ticket_id, tier, regenerate_registry=args.regenerate_registry)
         parts["finalize"] = {"results": results, "fail": _render_results("finalize", results)}
         sub_results.update({f"finalize.{r['condition']}": r["status"] for r in results})
+        sub_reasons.update({f"finalize.{r['condition']}": r["reason"] for r in results if r.get("reason")})
     any_fail = any(
         info["fail"] for name, info in parts.items() if not (name == "precheck" and post_close_precheck)
     )
@@ -1618,6 +1647,7 @@ def main(argv=None) -> int:
             blocking=blocking,
             ticket_id=args.ticket_id,
             sub_results={k: v for k, v in sub_results.items() if k.startswith(f"{name}.")},
+            sub_reasons={k: v for k, v in sub_reasons.items() if k.startswith(f"{name}.")} or None,
             inputs_ref=inputs_ref,
         )
     return 1 if any_fail else 0

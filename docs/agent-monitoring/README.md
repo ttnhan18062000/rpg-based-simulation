@@ -255,7 +255,7 @@ when the tier plan marks the phase `full` and the closer narrated none, and prin
 and Architecture-Verify are `skipped` with `skip_reason: no_hand_tool`. Document-Update is `ok` (derived by the recorder,
 naming up to three files) when the ticket's own changed files include a `docs/` file other than `docs/REGISTRY.yaml` and
 `docs/parity_ledger/**`; otherwise, or when git cannot say what changed, it is `skipped` with `no_hand_tool`. A narrated
-event always wins, and no other phase is added. The added events are not counted in `agent_count` (they are not agent calls). A hotfix gets only Document-Update (its Review and Architecture-Verify are
+event always wins, and no other phase is added. The run row's `agent_count` is `null` for a hand closure (unknown: the recorder cannot see agent calls), so neither these events nor the narrated ones are counted as agent calls. A hotfix gets only Document-Update (its Review and Architecture-Verify are
 `skipped_event` in the plan).
 
 `tool_call_count`/`cost_proxy_score` are only ever added to an event when real `tools.jsonl` rows
