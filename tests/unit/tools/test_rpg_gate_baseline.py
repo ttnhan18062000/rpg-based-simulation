@@ -367,3 +367,19 @@ def test_rebaseline_carries_undefined_rows_and_the_lint_checks_them(tmp_path):
     doc["undefined_rows"] = [{"row": "O9.share:pooled:w:*", "reason": "empty_denominator"}, {"row": "x"}, "bad"]
     problems = rgb.lint_baseline(doc, filename="rpg_gate_v1.json")
     assert problems == ["undefined_rows[0]: O9.share:pooled:w:* is listed as undefined but is still in metrics", "undefined_rows[1]: missing reason", "undefined_rows[2]: not an object"]
+
+
+def test_the_lint_checks_floor_base_and_floor_rel():
+    def doc(**row):
+        candidate = _candidate()
+        candidate["metrics"][0].update({"floor": 5.0, "floor_base": 3.0, "floor_rel": 0.1, **row})
+        return {"schema": rgb.SCHEMA, "version": 1, "milestone": "M1", "provenance": {**candidate["provenance"], "recorded_at": "2026-10-11T00:00:00Z", "stale_after": "2026-11-10T00:00:00Z", "cites": ["T"]},
+                "metrics": candidate["metrics"], "rebaseline": None}
+    assert rgb.lint_baseline(doc(), filename="rpg_gate_v1.json") == []
+    problems = lambda **row: rgb.lint_baseline(doc(**row), filename="rpg_gate_v1.json")  # noqa: E731
+    assert any("floor 2.0 is below floor_base 3.0" in p for p in problems(floor=2.0))
+    assert any("floor_rel 1.5 is not in (0, 1]" in p for p in problems(floor_rel=1.5))
+    assert any("floor_base must be a number" in p for p in problems(floor_base="3"))
+    without_base = doc()
+    del without_base["metrics"][0]["floor_base"]
+    assert any("floor_rel needs floor_base" in p for p in rgb.lint_baseline(without_base, filename="rpg_gate_v1.json"))
