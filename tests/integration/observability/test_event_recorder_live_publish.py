@@ -8,13 +8,12 @@ from src.observability.events import SimulationEvent
 
 @pytest.fixture(autouse=True)
 def clean_run_dir():
-    run_dir = "tests/run_data_live_publish_test"
-    if os.path.exists(run_dir):
-        shutil.rmtree(run_dir)
+    # Process-unique dir: under `-n auto` both tests can run on different workers, and a fixed dir is removed by the other's teardown.
+    run_dir = f"tests/run_data_live_publish_test_{os.getpid()}"
+    shutil.rmtree(run_dir, ignore_errors=True)
     LiveEventPublisher.reset_instance()
     yield run_dir
-    if os.path.exists(run_dir):
-        shutil.rmtree(run_dir)
+    shutil.rmtree(run_dir, ignore_errors=True)
     LiveEventPublisher.reset_instance()
 
 def test_event_recorder_integration(clean_run_dir):
