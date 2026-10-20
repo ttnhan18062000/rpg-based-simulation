@@ -7740,6 +7740,18 @@
   - testing
   - regression
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS.md
+  ticket_id: TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS
+  title: Every seed of a world emits the same (id, group, key) rows, taken from declared
+    domains, with true zeros; a share is two count rows and a pooled row
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - src/observability/rpg_gate_metrics.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT.md
   ticket_id: TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT
   title: test_observability_websocket_suite step 5 waits for the synthetic walk event
@@ -7749,18 +7761,6 @@
   date: '2026-10-20'
   related_code_areas:
   - tests/api/test_observability_websocket.py
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS.md
-  ticket_id: TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS
-  title: Every seed of a world emits the same (id, group, key) rows, taken from declared
-    domains, with true zeros; a share is two count rows and a pooled row
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-20'
-  related_code_areas:
-  - src/observability/rpg_gate_metrics.py
   artifact_files: []
   tags: []
 - type: ticket
@@ -7890,6 +7890,18 @@
   - testing
   - regression
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-O2-POPULATION-FLOOR-IS-ONE-VALUE-PER-WORLD.md
+  ticket_id: TCK-20261019-O2-POPULATION-FLOOR-IS-ONE-VALUE-PER-WORLD
+  title: O2.population's floor is one value per (world, group), computed from the
+    gate seed set's pooled tick-0 mean
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/rpg_gate_metrics.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD.md
   ticket_id: TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD
   title: The rpg gate report judges an outcome row's drift against each reference
@@ -8013,6 +8025,17 @@
   - testing
   - bug
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-V1-COUNTS-A-HUNGER-DROP-AS-BACKED-ONLY-WHEN-AN-ACCEPTED-TRANSFER-MOVED-SOMETHING.md
+  ticket_id: TCK-20261019-V1-COUNTS-A-HUNGER-DROP-AS-BACKED-ONLY-WHEN-AN-ACCEPTED-TRANSFER-MOVED-SOMETHING
+  title: V1 counts a hunger drop as backed only when an accepted transfer moved something
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/run_ledger.py, src/observability/rpg_gate_metrics.py (V1), tools/test_architecture/rpg_gate_known.yaml
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-V4-COUNTS-CONSUMPTION-NOT-ACQUISITION.md
   ticket_id: TCK-20261019-V4-COUNTS-CONSUMPTION-NOT-ACQUISITION
   title: The gate's V4 counts a consumption outside the eater's diet, not any node
@@ -8072,29 +8095,6 @@
   - testing
   - workflows
   - performance
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261019-O2-POPULATION-FLOOR-IS-ONE-VALUE-PER-WORLD.md
-  ticket_id: TCK-20261019-O2-POPULATION-FLOOR-IS-ONE-VALUE-PER-WORLD
-  title: O2.population's floor is one value per (world, group), computed from the
-    gate seed set's pooled tick-0 mean
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-10-19'
-  related_code_areas:
-  - src/observability/rpg_gate_metrics.py
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261019-V1-COUNTS-A-HUNGER-DROP-AS-BACKED-ONLY-WHEN-AN-ACCEPTED-TRANSFER-MOVED-SOMETHING.md
-  ticket_id: TCK-20261019-V1-COUNTS-A-HUNGER-DROP-AS-BACKED-ONLY-WHEN-AN-ACCEPTED-TRANSFER-MOVED-SOMETHING
-  title: V1 counts a hunger drop as backed only when an accepted transfer moved something
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-10-19'
-  related_code_areas:
-  - src/observability/run_ledger.py, src/observability/rpg_gate_metrics.py (V1), tools/test_architecture/rpg_gate_known.yaml
-  artifact_files: []
-  tags: []
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645.md
   ticket_id: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-O2-POPULATION-FLOOR-IS-ONE-VALUE-PER-WORLD
-phase: active
+phase: done
 date: 2026-10-19
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 O2.population's floor is one value per (world, group), computed from the gate seed set's pooled tick-0 mean
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -59,10 +59,10 @@ The floor was per-seed (a tenth of that seed's first-tick population), so fronti
 tests/simulation_quality/rpg_gate/test_v8_fires.py got an autouse patch of the two floor helpers (its self-test world has no spec).
 
 ## Test Summary
-tests/simulation_quality/rpg_gate + tests/unit/observability + tests/observability: 1186 passed, 1 skipped; mypy gate 0; lint-imports 17 kept; code-health 0 new. A real one-world child run at seeds 42 and 43 gave identical floors in both documents.
+tests/unit/observability/test_rpg_gate_metrics.py (floor value, identical across seed documents and ticks, a paired arm's floor does not move, compiled tick-0 equals the ledger's first sample on the 3 gate worlds); tests/unit/tools/test_rpg_gate_harness.py (floor_seeds, rerun full seed set). Combined branch checks as above.
 
 ## Files Changed
 src/observability/rpg_gate_metrics.py, tests/unit/observability/test_rpg_gate_metrics.py, tests/simulation_quality/rpg_gate/test_v8_fires.py
 
 ## Completion Summary
-Built; closure is handled when the pre-v1 fixes are combined.
+O2.population's floor is one value per (world, group) from the pooled tick-0 mean over the gate config's seed set, handed in by the harness (--seeds). Landed in the combined pre-v1 PR; closed by hand-orchestration at the PR commit.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS
-phase: active
+phase: done
 date: 2026-10-20
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Every seed of a world emits the same (id, group, key) rows, taken from declared domains, with true zeros; a share is two count rows and a pooled row
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -63,10 +63,10 @@ Run 39212800104's documents are sparse: a row exists only when something happene
 Replaces `O1.starvation_share` as a run row (it is no longer a run row). Designer rulings 2026-10-20: O1.starvation_share keeps (2.0, 0.05); O1.at_risk is redefined as individuals ever alive in the run; both counts are judged as counts with k 2.0 and floor max(3, 0.10 x the v1 pooled per-seed mean) (the base 3 is in the module, the relative part is the report's).
 
 ## Test Summary
-See the report to rpg-planner.
+Unit: tests/unit/observability/test_rpg_gate_metrics.py (identical row identities across seeds, enumerations, source-literal drift guard, strays raise, share as two count rows and a pooled null row, numerator/denominator fields, mid-run spawn raises at_risk and the share stays <= 1, a declared spawn of a kind absent at tick 0). Real kernel: tests/integration/observability/test_gate_rows_are_the_same_on_every_seed_through_the_real_kernel.py. Dry chain 3 worlds x seeds 42/43 x 1500t: harness, report and candidate pass the same-rows check (234 rows). Fold hash vs A's 29d4d3d07 identical on the 3 worlds.
 
 ## Files Changed
 src/observability/rpg_gate_metrics.py, tests/unit/observability/test_rpg_gate_metrics.py, tests/simulation_quality/rpg_gate/test_v8_fires.py, tests/integration/observability/test_gate_rows_are_the_same_on_every_seed_through_the_real_kernel.py, tests/integration/observability/test_gate_validity_checks_fire_through_the_real_kernel.py (helper takes a seed set)
 
 ## Completion Summary
-Built; closure is handled when the pre-v1 fixes are combined.
+Every seed of a world emits the same (id, group, key, tick) rows from declared domains with true zeros; a share is two count rows and a pooled row. Landed in the combined pre-v1 PR; closed by hand-orchestration at the PR commit.
