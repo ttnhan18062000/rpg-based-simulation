@@ -16,3 +16,5 @@ tags: [architecture, testing]
 4. No expected value changes (checked, investigation.md).
 5. Guarded-set check after the edits; `git diff --stat` limited to `visual_assets/review/**`, `tests/visual_assets/**`, `tools/visual_assets_entity_marker_sheet.py`, ticket and artifacts.
 6. Light scoped runs (icon tests + the new one), then slot (a) and slot (b) on lead's GO (background plus watcher), close.
+
+7. (planner review of fe487b579) The pin derives the expected revision from the store: the newest non-revoked revision under `sources/<source>/` via `records.list_revisions` + `records.is_eligible` (read-only, no lock, no CLI), asserts the built artifact's `source_revision` equals it and keeps the `pixel_hash` comparison. The 7-key set is derived (`{newest == r0002} == PROPOSED`, all others r0001); a new test shows an adopted-but-unbuilt r0003 is reported.
