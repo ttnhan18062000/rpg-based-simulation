@@ -29,7 +29,7 @@ P3
 ## Request Summary
 lead-planner-u24's non-blocking follow-up on #675 (issuecomment-6281833519): `tests/static/test_workflow_actions_pinned_by_sha.py` lists only testing's four workflows. The owner's rule (SHA + `# vX.Y.Z`) applies to every workflow. Once the other owners' workflows are pinned, the guard should cover all of them.
 
-**SEQUENCED, 2026-10-20 (correction by lead-planner-u24):** testing-planner's earlier 'all pinned' check was wrong; its grep `-v './'` dropped every line with a slash. `pr-body-lint.yml:17` is still `actions/checkout@v7` on main b753a9b08, and its pin is in agent-working's unmerged batch (094b22f3c, branch agent-working-ci-hygiene-batch). The PR may be built now but MUST NOT merge before that batch is on main, or main goes red. The original blockers were:
+**SEQUENCED, 2026-10-20 (correction by lead-planner-u24):** testing-planner's earlier 'all pinned' check was wrong; its grep `-v './'` dropped every line with a slash. `pr-body-lint.yml:17` is still `actions/checkout@v7` on main b753a9b08, and its pin is in agent-working's unmerged batch (094b22f3c, branch agent-working-ci-hygiene-batch). UPDATE: pr-body-lint.yml was pinned on main by #690 (d3a0e4843); all 9 workflows are verified pinned with a corrected grep, so the PR can go now. The original blockers were:
 - deploy-docs.yml: platform, #668.
 - pr-body-lint.yml: agent-working, TCK-20261019-SEMGREP-BASELINE-AGENT-WORKING-PATHS.
 - security-scan.yml and any other workflow: check on main when unblocking.
