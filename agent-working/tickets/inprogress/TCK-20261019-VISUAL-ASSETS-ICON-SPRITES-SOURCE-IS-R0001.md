@@ -15,7 +15,7 @@ tags: [architecture, testing]
 `icon_lookalikes.all_icon_sprites()` returns r0001 art for the 7 revised icon keys; find which consumers mean "adopted now" and point them at the current art
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
