@@ -54,7 +54,15 @@ These are keyed COUNT rows: O2.deaths by cause key, O4.accepted by source key. T
    - Do not change how present rows are judged.
 3. **Candidate:** unchanged (it already refuses). Add a test that pins the existing refusal text for a keyed row.
 4. **Stub metrics:** if `tests/helpers/rpg_gate_stub_metrics.py` cannot emit a seed with a missing keyed row, add a mode (for example `RPG_GATE_STUB_SPARSE_SEED`).
-5. **Do NOT edit** `rpg_gate_harness.py`, `rpg_gate_run.py` or `tests/helpers/kernel_pinning.py`. They are the harness hash.
+5. **Shares (added 2026-10-20 after rpg-designer's ruling; testing-planner chose option (a)).**
+   - A share is never a run row. The module carries it as two dense COUNT run rows, numerator and denominator, judged like any count.
+   - The share itself is a POOLED row only, with `value = Σnum/Σden` over the seeds; a den-0 seed contributes nothing. A per-seed share is not a metric row.
+   - When Σden = 0 for a world, the module emits the pooled row with `value: null` and `reason: "empty_denominator"`.
+   - Report: that row is `no-data`, reason `empty_denominator`. It is NOT a contract_error and does not count as a failure. A pooled outcome row with a null value and any other reason, or none, stays a contract_error.
+   - Candidate: leave such a row out of `metrics` and list it in `undefined_rows: [{row, reason}]`. `rebaseline` carries the list. A later run in which that row is defined, judged against such a baseline, reports `no reference (undefined at baseline)`, never drift. Only a re-baseline gives it a reference.
+   - Format doc: state all of the above.
+   - Tests: a world with Σden=0 (report no-data/empty_denominator; candidate lists it and does not refuse); a null pooled value without the reason (contract_error); a defined candidate against an undefined baseline (no reference).
+6. **Do NOT edit** `rpg_gate_harness.py`, `rpg_gate_run.py` or `tests/helpers/kernel_pinning.py`. They are the harness hash.
 
 ## Out of Scope
 - rpg's module change (ruling 2), and any value, k or floor.
@@ -65,6 +73,7 @@ These are keyed COUNT rows: O2.deaths by cause key, O4.accepted by source key. T
 - [ ] AC2: a report test where one seed lacks a keyed row gives exactly one contract_error row for it, shown in the markdown and counted in the tally. When every seed has the row, there is no such row.
 - [ ] AC3: offline re-run of the report on run 39212800104's documents (copy them to the scratchpad first). Quote the new row-set contract_error count per world. Before rpg's change it is >0 in all three worlds.
 - [ ] AC4: the candidate refusal test passes. `git diff origin/main -- tools/test_architecture/rpg_gate_harness.py tools/test_architecture/rpg_gate_run.py tests/helpers/kernel_pinning.py` is empty.
+- [ ] AC4b: the share cases in Scope 5 each have a passing test, and the format doc states them.
 - [ ] AC5: `tests/simulation_quality/rpg_gate/` and `tests/unit/tools -k rpg_gate` pass, and CI is green.
 
 ## Related Tickets
