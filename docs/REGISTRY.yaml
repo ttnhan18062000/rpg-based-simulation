@@ -7879,6 +7879,20 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-WORKFLOW-PIN-GUARD-COVERS-EVERY-WORKFLOW.md
+  ticket_id: TCK-20261020-WORKFLOW-PIN-GUARD-COVERS-EVERY-WORKFLOW
+  title: The SHA-pin guard globs every file in `.github/workflows/`, so one test enforces
+    the repo-wide pin rule.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/static/test_workflow_actions_pinned_by_sha.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
   ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
   title: 'A panic whose destination resolves to the subject''s own tile is not taken:
