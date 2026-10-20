@@ -59,7 +59,7 @@ import datetime as dt
 
 from tools.test_architecture import known_reds
 from tools.test_architecture.rpg_gate_baseline import SCHEMA, BaselineError, GateConfig, load_config, row_label
-from tools.test_architecture.rpg_gate_report import metric_test_id
+from tools.test_architecture.rpg_gate_report import EMPTY_DENOMINATOR, metric_test_id
 
 DOC_RE = re.compile(r"^(?P<world>.+)__(?:s(?P<seed>-?\d+)|pooled)\.json$")
 MIN_SEEDS = 2
@@ -255,6 +255,7 @@ def build_candidate(
         return True
 
     rows: List[dict] = []
+    undefined: List[dict] = []  # pooled shares whose denominator summed to 0: left out of metrics, never imputed
     for world in config.worlds:
         run_rows: Dict[Tuple[Any, ...], Dict[str, Any]] = {}
         for seed in config.seeds:
@@ -301,6 +302,9 @@ def build_candidate(
                 violations, oracle = _validity(row, name)
                 rows.append({**base, "violations": violations, "oracle": oracle})
             elif row.get("class") == "outcome":
+                if row.get("value") is None and row.get("reason") == EMPTY_DENOMINATOR:
+                    undefined.append({"row": row_label(base), "reason": EMPTY_DENOMINATOR})
+                    continue  # an undefined share is left out of metrics and listed, never imputed
                 if not _is_number(row.get("value")):
                     raise CandidateRefused(f"{name}: pooled outcome row {row['id']} has no numeric value")
                 rows.append({**base, "value": row["value"], "floor": row["floor"]})
@@ -312,6 +316,8 @@ def build_candidate(
         "provenance": {"commit_sha": sha, "harness_hash": hhash, "worlds": list(config.worlds), "seeds": list(config.seeds), "ticks": config.ticks},
         "metrics": rows,
     }
+    if undefined:
+        candidate["undefined_rows"] = sorted(undefined, key=lambda u: u["row"])
     if omitted_rows:
         candidate["omitted_validity"] = sorted(omitted_rows, key=lambda o: o["row"])
     if milestone:

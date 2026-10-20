@@ -24,6 +24,9 @@ States of one finding:
   child never started) or ``seed_no_data``.
 * ``unstable``: a ``fail`` or ``drift`` that the same-SHA rerun did not reproduce. Routed to test infrastructure (roadmap §4.5, nondeterminism), not to the feature team.
 
+A row key that some seed documents of a world carry and others lack is one ``no-data`` / ``contract_error`` row for that key ("row absent from seed(s) [..]"): the row set of a
+world is declared by the module, and an absent row is never read as 0 (format doc, "The run row set is declared, not observed").
+
 Every document's ``harness_hash`` must equal the current harness hash and the documents must agree with each other; otherwise they are ``no-data`` with the
 reason "documents from another harness version". A validity row without an integer ``violations`` or without an ``oracle`` (the report must cite it), and an
 outcome row without a numeric value or mean, are likewise contract errors (``no-data``), never a pass and never a crash.
@@ -63,12 +66,12 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from tools.test_architecture import known_reds
-from tools.test_architecture.rpg_gate_baseline import GateConfig, References, load_baselines, load_config, resolve_references, staleness
+from tools.test_architecture.rpg_gate_baseline import GateConfig, References, load_baselines, load_config, resolve_references, row_label, staleness
 
 SCHEMA = "rpg-gate-report/v1"
 PASS, FAIL, DRIFT, STALE, NO_DATA, UNSTABLE = "pass", "fail", "drift", "stale", "no-data", "unstable"
 STATES = (PASS, FAIL, DRIFT, UNSTABLE, STALE, NO_DATA)
-NO_DATA_REASONS = ("run_error", "metric_error", "harness_error", "seed_no_data", "contract_error")
+NO_DATA_REASONS = ("run_error", "metric_error", "harness_error", "seed_no_data", "contract_error", "empty_denominator")
 MAX_EXAMPLES = 5
 TEST_INFRA = "test-infrastructure"
 
@@ -104,6 +107,15 @@ def _no_data(world: str, seed: Optional[int], detail: str, reason: str = "harnes
     return {"world": world, "scope": scope, "id": "*", "group": "*", "class": "run", "state": NO_DATA, "reason": reason, "detail": detail, **({"seed": seed} if seed is not None else {})}
 
 
+EMPTY_DENOMINATOR = "empty_denominator"
+
+
+def _undefined_share(row: Mapping[str, Any]) -> bool:
+    """A pooled share the module marks undefined: ``value: null`` with ``reason: "empty_denominator"`` (the denominator summed to 0). A null value with any other
+    reason, or none, is not that: it stays a contract error."""
+    return row.get("scope") == "pooled" and row.get("class") == "outcome" and row.get("value") is None and row.get("reason") == EMPTY_DENOMINATOR
+
+
 def _is_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
@@ -120,7 +132,7 @@ def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str, str], str]:
             key = (world, row["id"], row.get("group", "*"))
             if row.get("class") == "outcome":
                 pooled = row.get("scope") == "pooled"
-                need = ("floor", "value") if pooled else ("k", "floor")
+                need = ("floor",) if _undefined_share(row) else ("floor", "value") if pooled else ("k", "floor")
                 missing = [n for n in need if not _is_number(row.get(n))]
                 if not pooled and not (_is_number(row.get("value")) or _is_number(row.get("mean"))):
                     missing.append("value")
@@ -157,6 +169,10 @@ def _validity(row: Mapping[str, Any], world: str, seed: Optional[int], config: G
     return finding
 
 
+def _label(row: Mapping[str, Any], world: str) -> str:
+    return row_label({"id": row["id"], "scope": row.get("scope", "run"), "world": world, "group": row.get("group", "*"), "key": row.get("key"), "tick": row.get("tick")})
+
+
 def _baseline_row(baseline: Mapping[str, Any], row: Mapping[str, Any], world: str) -> Optional[dict]:
     for candidate in baseline["metrics"]:
         if (candidate.get("id"), candidate.get("scope"), candidate.get("world"), candidate.get("group"), candidate.get("key"), candidate.get("tick")) == (
@@ -172,6 +188,8 @@ def _compare(label: str, baseline: Mapping[str, Any], reasons: Sequence[str], ro
     if reasons:
         return {**result, "state": STALE, "reasons": list(reasons)}
     base = _baseline_row(baseline, cur_row, world)
+    if base is None and _label(cur_row, world) in {u.get("row") for u in baseline.get("undefined_rows") or [] if isinstance(u, dict)}:
+        return {**result, "state": NO_DATA, "detail": "no reference (undefined at baseline)"}  # defined now, undefined then: never drift; only a re-baseline gives it a reference
     if base is None:
         return {**result, "state": NO_DATA, "detail": "no row for this metric in the baseline"}
     pooled = cur_row.get("scope") == "pooled"
@@ -283,6 +301,9 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
             for r in pooled["metrics"]:
                 if r.get("class") == "outcome":
                     problem = problems.get((world, r["id"], r.get("group", "*")))
+                    if not problem and _undefined_share(r):
+                        findings.append({**_contract_no_data(world, r, None, "the share's denominator is 0 in every seed of this world"), "reason": EMPTY_DENOMINATOR})  # not a contract error, not a failure
+                        continue
                     findings.append(_contract_no_data(world, r, None, problem) if problem else _outcome(r, world, refs, reasons_by_version, config))
         if not all_ok:
             continue  # a partial seed set would change what an outcome means; the missing seeds already report as no-data
@@ -294,10 +315,34 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
                     row = grouped.setdefault(key, {"id": r["id"], "group": r.get("group", "*"), "key": r.get("key"), "tick": r.get("tick"), "scope": "run",
                                                    "k": r.get("k"), "floor": r.get("floor"), **({"oracle": r["oracle"]} if r.get("oracle") else {}), "per_seed": {}})
                     row["per_seed"][seed] = r["value"] if _is_number(r.get("value")) else r.get("mean")
+        required = set(config.required_at("run"))
+        absent = _absent_row_seeds(seed_docs, required)
         for row in grouped.values():
+            gone = absent.pop(("outcome", row["id"], row["group"], row["key"], row["tick"]), None)
+            if gone:
+                findings.append(_contract_no_data(world, row, None, _absent_detail(gone)))  # one row for the key; it is never judged on the seeds that have it
+                continue
             problem = problems.get((world, row["id"], row["group"]))
             findings.append(_contract_no_data(world, row, None, problem) if problem else _outcome(row, world, refs, reasons_by_version, config))
+        for (klass, mid, group, key, tick), gone in absent.items():  # a validity row the config does not require, absent from some seeds
+            findings.append(_contract_no_data(world, {"id": mid, "class": klass, "scope": "run", "group": group, "key": key, "tick": tick}, None, _absent_detail(gone)))
     return findings
+
+
+def _absent_row_seeds(seed_docs: Mapping[int, Mapping[str, Any]], required: Sequence[str]) -> Dict[Tuple[Any, ...], List[int]]:
+    """``(class, id, group, key, tick) -> seeds that lack the row`` for a row some seed carries and another does not. The row set of a world is declared by the module,
+    so every seed document carries the same rows; an absent row is never read as 0 (TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED).
+    A required validity row that a seed leaves out is already reported per seed by ``required_missing``."""
+    present: Dict[Tuple[Any, ...], set] = {}
+    for seed, doc in seed_docs.items():
+        for r in doc["metrics"]:
+            if r.get("class") in ("outcome", "validity") and not (r.get("class") == "validity" and r.get("id") in required):
+                present.setdefault((r["class"], r["id"], r.get("group", "*"), r.get("key"), r.get("tick")), set()).add(seed)
+    return {key: sorted(set(seed_docs) - seeds) for key, seeds in present.items() if set(seed_docs) - seeds}
+
+
+def _absent_detail(seeds: Sequence[int]) -> str:
+    return f"row absent from seed(s) {list(seeds)}; every seed reports the same rows"
 
 
 # ---------------------------------------------------------------- rerun, ownership, verdict
