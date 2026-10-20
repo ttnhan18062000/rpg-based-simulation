@@ -225,6 +225,11 @@ None yet.
   specific resource constraints (45-90 min heavy suite) is the central open question this
   ticket's own investigation must resolve — not assumed either way here.
 
+### Triage 2026-10-20 (testing-implementer, read-only; testing-planner ruling)
+- The exit-2 symptom is NOT recurring. The last 4 completed scheduled slow-regression.yml runs passed (39389695225, 39344485652, 39281035719, 39220151275); slow-regression-watchdog.yml's last 8 runs all passed.
+- The two 10-18 failures (39172879323, 39150078917) failed at "Report failing-set changes": SimQ anchor drift in tests/unit/worldassembly/test_corpus_diversity.py (urban_political cognition/social; "pillar lost its data" on simq_routing_test_seed42). That is the re-anchor's territory, not a kernel-budget exit 2.
+- **Ruling:** DEFERRED until after the SimQ re-anchor on v1. Then re-derive from the first post-re-anchor slow runs. If those are green and exit 2 has not recurred, close this ticket as not reproducible, citing the run ids. The audit_mode root cause is not re-confirmed on current main.
+
 ## Implementation Notes
 **2026-09-14 update: a new, structural finding — the slow suite is compound-gated by 11 jobs in
 series, not the 2 initially suspected, and not merely occasionally skipped.**

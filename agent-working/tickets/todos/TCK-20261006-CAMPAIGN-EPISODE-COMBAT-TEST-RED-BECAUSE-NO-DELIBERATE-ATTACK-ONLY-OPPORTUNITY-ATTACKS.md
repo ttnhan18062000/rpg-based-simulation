@@ -83,6 +83,9 @@ Reported by `rpg-feature-planning` from `test-architecture-reviewer`: `tests/int
 - **Hypothesis (n=1, one seed, `4311e7fc5`):** in seed 1337 the only in-reach decision (entity 18, tick 32, hp 1.0) chose `SAFETY_PRESSURE_RETREAT`; the only ATTACK decision (entity 47, tick 33) was made from outside combat range; contact came at ticks 32 to 33, from approach, not spawn adjacency. So the defect in this campaign looks like "entities do not close to reach because they retreat at full HP", not "entities in reach do not attack". Consistent with, but not proof of, the flee-gate finding on the standard worlds.
 - Not isolated: why the count fell from 1 (at `bc00caa1a`) to 0 between #175 and `main` (the cause inside #175 is the worker-utilization sentinel).
 
+### Triage 2026-10-20 (testing-implementer, read-only)
+- Nothing is red. `test_real_campaign_episode_makes_deliberate_attacks` (L373) XFAILs as intended (1 xfailed, 32 s), and the original `..._plausible_not_degenerate` test no longer exists. The 2 open ACs wait on rpg's attack chain: re-measure on that fix, then the deliberate-attack test passes. No testing work until then.
+
 ## Implementation Notes
 Landed by the campaign-test split PR (the old single test is replaced by three tests over ONE episode run, module-scoped fixture, governor pinned to NORMAL through the new optional `governor=` argument on `ScenarioRuntimeService`):
 1. `test_real_campaign_episode_has_no_hard_law_violation`: unmarked, green.

@@ -131,6 +131,10 @@ historical records.
 - Assumption: the six numbers quoted above are the post-fix measurements reported by
   `rpg-implementer-2`. Re-measure before relying on them — they were relayed, not independently taken.
 
+### Triage 2026-10-20 (testing-implementer, read-only)
+- STILL REAL. tests/unit/rendering/frozen_dungeon_crawl.py still loads tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml, and the connectivity, density, variants and shape tests use it. docs/visual_quality/scoring_contract.md records no decision (AC1 untouched). No other ticket covers it.
+- Routes: tests/unit/rendering/** goes to rpg; docs/visual_quality/scoring_contract.md is unowned. testing-planner asked rpg-planner (2026-10-20) who takes it.
+
 ## Implementation Notes
 
 _(to be filled during implementation)_

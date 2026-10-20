@@ -69,6 +69,10 @@ None.
 - The fixed tick-timing approach versus the watchdog-off approach is the implementer's call. Either
   must keep the test deterministic.
 
+### Triage 2026-10-20 (testing-implementer, read-only)
+- STILL REAL on main b753a9b08. One local run failed at tests/integration/observability/test_baseline_comparison_flow.py:55, `assert res_run.status == "PASS"`, which came back 'WARNING'. The test runs a real ScenarioSweeper sweep (L15-30); the watchdog's wall-clock tick time feeds health_score, and nothing pins timing. A loaded host reproduces it deterministically (a good AC1 reproducer).
+- The file routes to rpg (tests/**). testing-planner asked rpg-planner (2026-10-20) whether rpg takes it or OKs a test-only fix by testing.
+
 ## Implementation Notes
 (Open.)
 
