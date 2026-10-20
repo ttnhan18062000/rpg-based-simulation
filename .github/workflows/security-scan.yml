@@ -149,19 +149,28 @@ jobs:
             if [ ! -f semgrep.sarif ]; then
               echo "Semgrep did not produce a report."
             else
-              echo "Findings: $(jq '[.runs[].results[]?] | length' semgrep.sarif)"
+              echo "Findings: $(jq '[.runs[].results[]? | select((.suppressions // []) | length == 0)] | length' semgrep.sarif)"
+              echo "Suppressed in source: $(jq '[.runs[].results[]? | select((.suppressions // []) | length > 0)] | length' semgrep.sarif)"
               echo
               echo "| Level | Count |"
               echo "|---|---|"
               # a Semgrep SARIF result carries no level of its own; it comes from the rule's default configuration
               jq -r '([.runs[].tool.driver.rules[]? | {key: .id, value: (.defaultConfiguration.level // "unset")}] | from_entries) as $lv
-                | [.runs[].results[]? | ($lv[.ruleId] // "unset")] | group_by(.) | map({l: .[0], n: length})[] | "| \(.l) | \(.n) |"' semgrep.sarif
+                | [.runs[].results[]? | select((.suppressions // []) | length == 0) | ($lv[.ruleId] // "unset")] | group_by(.) | map({l: .[0], n: length})[] | "| \(.l) | \(.n) |"' semgrep.sarif
               echo
               echo "| Rule | Count |"
               echo "|---|---|"
-              jq -r '[.runs[].results[]?.ruleId] | group_by(.) | map({r: .[0], n: length}) | sort_by(-.n)[:15][] | "| \(.r) | \(.n) |"' semgrep.sarif
+              jq -r '[.runs[].results[]? | select((.suppressions // []) | length == 0) | .ruleId] | group_by(.) | map({r: .[0], n: length}) | sort_by(-.n)[:15][] | "| \(.r) | \(.n) |"' semgrep.sarif
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Drop in-source-suppressed results from the code-scanning upload
+        if: always() && steps.gate.outputs.run == 'true'
+        run: |
+          # Semgrep still writes `# nosemgrep` findings into its SARIF, marked suppressions[].kind == "inSource", and code scanning raises them as alerts anyway.
+          # The full semgrep.sarif stays the artifact; only the copy uploaded to code scanning is filtered.
+          if [ -f semgrep.sarif ]; then
+            jq '.runs[].results |= map(select((.suppressions // []) | length == 0))' semgrep.sarif > semgrep-upload.sarif
+          fi
       - name: Upload Semgrep report
         if: always() && steps.gate.outputs.run == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -173,8 +182,8 @@ jobs:
         if: >-
           always() && steps.gate.outputs.run == 'true' &&
           (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) &&
-          hashFiles('semgrep.sarif') != ''
+          hashFiles('semgrep-upload.sarif') != ''
         uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
-          sarif_file: semgrep.sarif
+          sarif_file: semgrep-upload.sarif
           category: semgrep

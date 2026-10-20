@@ -7748,6 +7748,22 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-DEPLOY-DOCS-SHA-PINS-AND-FRONTEND-NONROOT.md
+  ticket_id: TCK-20261019-DEPLOY-DOCS-SHA-PINS-AND-FRONTEND-NONROOT
+  title: 'Platform''s two Semgrep baseline findings: pin deploy-docs.yml''s actions
+    by commit SHA, run the frontend image as non-root; record the repo-wide pin rule'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/deploy-docs.yml
+  - docs/guides/delivery_process.md
+  artifact_files: []
+  tags:
+  - platform
+  - delivery
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-IMPORT-CONTRACTS-NAME-STALE-ENTRIES.md
   ticket_id: TCK-20261019-IMPORT-CONTRACTS-NAME-STALE-ENTRIES
   title: '`import_contracts ci` names the stale ignored import and where to delete
