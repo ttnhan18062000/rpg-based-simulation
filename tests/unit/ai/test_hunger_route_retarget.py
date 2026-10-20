@@ -21,8 +21,8 @@ def _subject(x=54.0, y=40.0):
     return SimpleNamespace(navigation=SimpleNamespace(position=(x, y)))
 
 
-def _hostile(x, y):
-    return SimpleNamespace(navigation=SimpleNamespace(position=(x, y)))
+def _hostile(x, y, reach=1):
+    return SimpleNamespace(navigation=SimpleNamespace(position=(x, y)), combat=SimpleNamespace(range=reach))
 
 
 def _hunger_project(way: OpenWay) -> ProjectState:
@@ -90,6 +90,12 @@ def test_an_unthreatened_objective_is_never_re_chosen(world):
 
 
 def test_a_hostile_beside_the_route_threatens_it_and_one_off_to_the_side_does_not():
-    assert safe_route.route_is_threatened((54.0, 40.0), (23.0, 39.0), [_hostile(44.0, 41.0)])
-    assert not safe_route.route_is_threatened((54.0, 40.0), (23.0, 39.0), [_hostile(44.0, 46.0)])
-    assert not safe_route.route_is_threatened((54.0, 40.0), (23.0, 39.0), [])
+    """Beside = within the hostile's OWN attack reach plus one step of the straight line: melee (reach 1) counts at 2 tiles, a ranged hostile wider."""
+    start, end = (54.0, 40.0), (23.0, 39.0)  # the line runs at y of about 39.7 where x is 44
+    assert safe_route.route_is_threatened(start, end, [_hostile(44.0, 40.0)])                      # on the walk
+    assert safe_route.route_is_threatened(start, end, [_hostile(44.0, 41.0)])                      # melee: 1.3 tiles off the line (inside reach 1 + step 1)
+    assert not safe_route.route_is_threatened(start, end, [_hostile(44.0, 42.0)])                  # melee: 2.3 tiles off is out of its reach
+    assert not safe_route.route_is_threatened(start, end, [_hostile(44.0, 46.0)])
+    assert safe_route.route_is_threatened(start, end, [_hostile(44.0, 45.0, reach=5)])             # ranged (reach 5): 5.3 tiles off still strikes
+    assert not safe_route.route_is_threatened(start, end, [_hostile(44.0, 46.0, reach=5)])         # but not 6.3
+    assert not safe_route.route_is_threatened(start, end, [])

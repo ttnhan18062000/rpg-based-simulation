@@ -54,7 +54,7 @@ The v1 gate run on 7b1528861 has one unowned red: V3, crowded_frontier seed 45, 
 src/ai/goals/safe_route.py, src/systems/strategic_systems/intelligence.py
 
 ## Assumptions / Open Questions
-- Beside the route is ROUTE_BESIDE_TILES = 2 of the straight walk (a width, not a count); to be confirmed by the designer.
+- Beside the route is the hostile's own attack reach (combat.range) plus one step of the straight line (designer ruling 2026-10-20); a bent route is judged by its chord.
 
 ## Implementation Notes
 

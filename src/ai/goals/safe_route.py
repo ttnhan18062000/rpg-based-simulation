@@ -7,7 +7,7 @@ The hunger pull aims at the nearest open way whose route is not threatened, and 
 
 A hunger project's active objective is threatened when a hostile the subject would flee from (the tactical pass's own perceived-hostile
 predicate: `perceived_hostiles`, which is `are_entities_hostile` over what the subject perceives within the target-perception radius, never
-the true map) lies on or beside the route to it. Then the project is RETARGETED, not replaced: its single objective becomes the nearest open
+the true map) lies within its own attack reach plus one step of the straight line to it. Then the project is RETARGETED, not replaced: its single objective becomes the nearest open
 way (the kind's diet and the service rules, the same ways the pull already uses) whose route is not threatened.
 
 The commitment needs no stored state. Only the CURRENT objective is ever tested, so a re-chosen objective stays until it is reached or is
@@ -32,9 +32,8 @@ if TYPE_CHECKING:
 
 Position = Tuple[float, float]
 
-#: "Beside the route": the band, in tiles, around the straight line from the subject to its way inside which a perceived hostile makes the route
-#: threatened. A geometric width (a hostile that near is on the walk), not a tuning count or a timer.
-ROUTE_BESIDE_TILES = 2
+#: One step of the walk, in tiles: a subject moves one whole tile per tick (MOV-07), and no named per-tick move constant exists to read.
+MOVE_STEP_TILES = 1
 
 
 @dataclass(frozen=True)
@@ -54,13 +53,16 @@ def _route_points(start: Position, end: Position) -> List[Position]:
 
 
 def route_is_threatened(start: Position, end: Position, hostiles: Sequence["EntityState"]) -> bool:
-    """True when a hostile stands on or beside (within `ROUTE_BESIDE_TILES` of) the straight walk from `start` to `end`."""
+    """True when a hostile could strike the subject on the way: it stands within its OWN attack reach (`combat.range`) plus one step of the straight
+    line from `start` to `end`. A melee hostile (reach 1) therefore counts at 2 tiles, a ranged one wider. A route bent around an obstacle is judged by
+    its chord, and only hostiles the subject perceives are passed in."""
     if not hostiles:
         return False
     points = _route_points(start, end)
     for hostile in hostiles:
         hx, hy = hostile.navigation.position
-        if any(max(abs(px - hx), abs(py - hy)) <= ROUTE_BESIDE_TILES for px, py in points):
+        reach = hostile.combat.range + MOVE_STEP_TILES
+        if any(max(abs(px - hx), abs(py - hy)) <= reach for px, py in points):
             return True
     return False
 

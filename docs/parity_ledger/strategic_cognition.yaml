@@ -4573,7 +4573,7 @@
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.135.
   support_boundary: 'Does not add a meal path for a subject with no hunger project (the in-reach meal stays after v1); gate V3 on frontier_living_world seed 42 (5000 ticks) is 0 with this change. A hunter closing on a starving subject is not seen before contact (strategic cadence, v1 row C5).'
 - id: STRAT-285
-  text: 'TCK-20261020-A-HUNGER-PULL-AIMS-AT-A-WAY-WHOSE-ROUTE-IS-NOT-THREATENED (SURV-07 amendment, memo row 84): the hunger pull aims at the nearest open way whose route is not threatened and holds its choice until reached or threatened. A hunger project whose objective route has a perceived hostile on or beside it is retargeted (same project) to the nearest open way whose route is not threatened; the new objective is kept until reached or itself threatened, with no switching back when the old threat leaves view; when all open ways are threatened the objective stays (all threatened keeps the nearest).'
+  text: 'TCK-20261020-A-HUNGER-PULL-AIMS-AT-A-WAY-WHOSE-ROUTE-IS-NOT-THREATENED (SURV-07 amendment, memo row 84): the hunger pull aims at the nearest open way whose route is not threatened and holds its choice until reached or threatened. A hunger project whose objective route has a perceived hostile within its own attack reach plus one step of it is retargeted (same project) to the nearest open way whose route is not threatened; the new objective is kept until reached or itself threatened, with no switching back when the old threat leaves view; when all open ways are threatened the objective stays (all threatened keeps the nearest).'
   status: verified
   priority: P1
   legacy_evidence: null
@@ -4581,4 +4581,4 @@
   proof_type: regression
   test_path: tests/unit/ai/test_hunger_route_retarget.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.136.
-  support_boundary: 'Perceived hostiles only (no remembered-hostile store is read); one nearest way per kind; the route is the straight walk, not the pathfinder route. A town inn serving a hostile raider is N8, after v1.'
+  support_boundary: 'Perceived hostiles only (no remembered-hostile store is read); one nearest way per kind; the route is the straight line to the way (a route bent around an obstacle is judged by its chord), and a hostile counts when within its own attack reach plus one step of it. A town inn serving a hostile raider is N8, after v1.'

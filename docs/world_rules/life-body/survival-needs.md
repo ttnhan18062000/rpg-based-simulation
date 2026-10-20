@@ -856,12 +856,13 @@ others, not a reflex.
   node about as far the other way had no threat near it. No hostile ever acted on it.
   - **The rule:** the hunger pull aims at the nearest open way (per the kind's diet and the
     service rules) whose route is not threatened. A route is threatened when a hostile the
-    subject would flee from, as it perceives or remembers it, lies on or beside the route. When
-    the way a subject is pursuing becomes threatened, it turns to the nearest open way whose
-    route is not.
+    subject would flee from, as it perceives it, could strike the subject on the way: it stands
+    within its own attack reach plus one step of the straight line to the way. Remembered
+    threats join with milestone 1's honest perception. When the way a subject is pursuing
+    becomes threatened, it turns to the nearest open way whose route is not.
   - **It holds its choice:** the new way is kept until reached or until it is itself
-    threatened. A threat that drops out of view does not send the subject back; out of view is
-    not gone.
+    threatened. A threat that drops out of view does not send the subject back: only the way it
+    is pursuing is tested, so out of view is not gone.
   - **When every way is threatened,** the nearest is kept, and the flee rules decide as before
     (row 83: a threat acting on the subject comes first).
   - **Fear stays:** a subject near death still flees a hostile it sees, acting or not. What
