@@ -84,7 +84,7 @@ None.
 - Folded in: TCK-20261020-BASELINE-GENERATION-FLOW-HEALTH-SCORE-MEAN-IS-99-NOT-100 (rpg-planner's sibling). Same cause (the 95 is one HighCPULatencyRule WARNING on the slow first run, so it is wall clock, not an engine change); `test_baseline_generation_and_cli_flow` uses the same fixture and passes with its mean 100.0 assertion unchanged.
 
 ## Test Summary
-tests/integration/observability/test_baseline_comparison_flow.py and test_baseline_generation_flow.py: 4 passed, twice, on a loaded host. CI read from the PR.
+tests/integration/observability/test_baseline_comparison_flow.py and test_baseline_generation_flow.py: 4 passed twice on a loaded host; after review a control test (pinned 5 ms: no warning, health 100) and run_report assertions on the slow sweep (warning_count >= 1, health < 100) bring it to 5 passed. CI read from the PR.
 
 ## Files Changed
 - tests/integration/observability/conftest.py (new fixture)

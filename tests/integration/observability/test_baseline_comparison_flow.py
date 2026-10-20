@@ -32,10 +32,30 @@ def _compute_ms_avgs(output_dir, sweep_id):
     return scores
 
 
+def _run_reports(output_dir, sweep_id):
+    records = RunSetArtifactRepository(base_dir=output_dir).read_run_index(sweep_id)
+    reports = []
+    for r in records:
+        with open(os.path.join(output_dir, sweep_id, "runs", r.run_id, "run_report.json"), encoding="utf-8") as f:
+            reports.append(json.load(f))
+    return reports
+
+
 def test_a_slow_tick_is_what_trips_the_cpu_latency_rule(tmp_path, tick_cost_ms):
-    """The injection is real: with every tick recorded at 59 ms the runs' average compute is over the rule's 50 ms limit, which is what made the flow WARNING."""
+    """The injection is real: with every tick recorded at 59 ms the runs' average compute is over the rule's 50 ms limit, and every run is scored down for it
+    (a WARNING, health below 100), which is what made the flow WARNING."""
     tick_cost_ms(SLOW_TICK_MS)
-    assert all(ms > 50.0 for ms in _compute_ms_avgs(_sweep(tmp_path, "slow_sweep"), "slow_sweep"))
+    output_dir = _sweep(tmp_path, "slow_sweep")
+    assert all(ms > 50.0 for ms in _compute_ms_avgs(output_dir, "slow_sweep"))
+    reports = _run_reports(output_dir, "slow_sweep")
+    assert reports and all(r["warning_count"] >= 1 and r["health_score"] < 100.0 for r in reports)
+
+
+def test_a_pinned_fast_tick_leaves_every_run_unscored(tmp_path, tick_cost_ms):
+    """The control: the same sweep with the tick pinned at 5 ms raises no warning, so the pin is what removes the host's speed from the verdict."""
+    tick_cost_ms(5.0)
+    reports = _run_reports(_sweep(tmp_path, "fast_sweep"), "fast_sweep")
+    assert reports and all(r["warning_count"] == 0 and r["health_score"] == 100.0 for r in reports)
 
 
 def test_baseline_comparison_and_cli_flow(tmp_path, tick_cost_ms):
