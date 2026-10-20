@@ -376,3 +376,11 @@ def test_a_world_declaring_a_spawn_of_a_kind_absent_at_tick_zero_has_that_groups
     assert _row_keys(quiet) == _row_keys(arrival)
     assert _row(quiet, "O1.at_risk", RAIDER)["value"] == 0 and _row(arrival, "O1.at_risk", RAIDER)["value"] == 2
     assert {r["key"] for r in quiet["metrics"] if r["id"] == "O4.accepted" and r["group"] == RAIDER} == set(m.TRANSFER_SOURCES)
+
+
+def test_only_the_two_o1_count_rows_carry_floor_rel_next_to_their_base_floor(tmp_path):
+    rows = m.compute(_run(tmp_path, _ledger(deaths={f"{DEER}|STARVATION": 1})))["metrics"]
+    with_rel = [r for r in rows if "floor_rel" in r]
+    assert with_rel and {r["id"] for r in with_rel} == {"O1.starved", "O1.at_risk"}
+    assert all(r["floor_rel"] == 0.10 and r["floor"] == 3.0 for r in with_rel)
+    assert not [r for r in rows if r["id"] not in ("O1.starved", "O1.at_risk") and "floor_rel" in r]
