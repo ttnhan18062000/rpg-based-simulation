@@ -7847,6 +7847,22 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED.md
+  ticket_id: TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED
+  title: Hand closures record Review, Document-Update and Architecture-Verify as skipped
+    with a skip_reason instead of omitting them
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - evidence_phase_events
+  - SKIP_REASONS
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
+  - workflows
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
   ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
   title: 'A panic whose destination resolves to the subject''s own tile is not taken:
