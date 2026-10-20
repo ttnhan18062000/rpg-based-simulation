@@ -1341,6 +1341,120 @@ def test_run_finalize_selfcheck_duplicate_rows_fails(tmp_path, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# Finalize FAIL reason classes (TCK-20261020-FINALIZE-SELFCHECK-RECORDS-FAIL-REASON-CLASS)
+# ---------------------------------------------------------------------------
+
+
+def _reasons(results):
+    return {r["condition"]: r.get("reason") for r in results}
+
+
+def test_finalize_results_carry_no_reason_when_all_pass(tmp_path, monkeypatch):
+    _scaffold_finalize_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    results = run_finalize_selfcheck("TCK-FAKE", "standard")
+    assert all("reason" not in r for r in results), results
+
+
+def test_reasoned_fail_still_unpacks_and_compares_as_a_plain_two_tuple(tmp_path, monkeypatch):
+    # implement-ticket.js one-liners and older tests read (status, evidence) only.
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
+
+    result = check_registry_entry_regenerated("TCK-FAKE")
+    status, evidence = result
+    assert (status, evidence) == tuple(result) and len(result) == 2
+
+
+def test_registry_reason_registry_file_missing(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    result = check_registry_entry_regenerated("TCK-FAKE", regenerate=False)
+    assert result[0] == "FAIL"
+    assert result.reason == "registry_file_missing"
+
+
+def test_registry_reason_stale_on_disk(tmp_path, monkeypatch):
+    # A fresh registry has the done/ entry, the file on disk (written before the ticket moved) does not.
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "REGISTRY.yaml").write_text("[]\n", encoding="utf-8")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    monkeypatch.chdir(tmp_path)
+
+    result = check_registry_entry_regenerated("TCK-FAKE", regenerate=False)
+    assert result[0] == "FAIL"
+    assert result.reason == "registry_stale_on_disk"
+
+
+def test_registry_reason_entry_absent_with_regenerate(tmp_path, monkeypatch):
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
+
+    result = check_registry_entry_regenerated("TCK-FAKE", regenerate=True)
+    assert result[0] == "FAIL"
+    assert result.reason == "entry_absent"
+
+
+def test_registry_reason_entry_absent_read_only_when_fresh_registry_lacks_it(tmp_path, monkeypatch):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "REGISTRY.yaml").write_text("[]\n", encoding="utf-8")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
+
+    assert check_registry_entry_regenerated("TCK-FAKE", regenerate=False).reason == "entry_absent"
+
+
+def test_migration_reasons(tmp_path, monkeypatch):
+    _scaffold_finalize_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / STORED_ARTIFACTS / "TCK-FAKE" / "plan.md").unlink()
+    assert check_migration_complete("TCK-FAKE", "standard").reason == "stored_artifacts_missing"
+
+    (tmp_path / STORED_ARTIFACTS / "TCK-FAKE" / "plan.md").write_text("x\n", encoding="utf-8")
+    (tmp_path / STAGING_ARTIFACTS / "TCK-FAKE").mkdir(parents=True)
+    assert check_migration_complete("TCK-FAKE", "standard").reason == "staging_not_cleaned"
+
+
+def test_working_log_reasons(tmp_path, monkeypatch):
+    _scaffold_finalize_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    csv_path = tmp_path / TICKETS / "working_log.csv"
+    row = ["2026-07-05T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "x", "agent-working/stored_artifacts/TCK-FAKE"]
+    _write_csv(csv_path, [])
+    assert check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path).reason == "no_row"
+    _write_csv(csv_path, [row, row])
+    assert check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path).reason == "duplicate_rows"
+
+
+def test_ticket_finalized_reasons(tmp_path, monkeypatch):
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    (tmp_path / TICKETS / "inprogress").mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
+    assert check_ticket_finalized("TCK-FAKE").reason == "ticket_not_in_done"
+
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    _write_ticket(tmp_path / TICKETS / "inprogress" / "TCK-FAKE.md", "TCK-FAKE")
+    assert check_ticket_finalized("TCK-FAKE").reason == "ticket_still_inprogress"
+
+    (tmp_path / TICKETS / "inprogress" / "TCK-FAKE.md").unlink()
+    (tmp_path / TICKETS / "todos").mkdir()
+    _write_ticket(tmp_path / TICKETS / "todos" / "TCK-FAKE.md", "TCK-FAKE")
+    assert check_ticket_finalized("TCK-FAKE").reason == "stale_todos_copy"
+
+
+def test_run_finalize_selfcheck_rows_carry_reason_only_for_fails(tmp_path, monkeypatch):
+    _scaffold_finalize_repo(tmp_path)
+    (tmp_path / STORED_ARTIFACTS / "TCK-FAKE" / "plan.md").unlink()
+    monkeypatch.chdir(tmp_path)
+
+    reasons = _reasons(run_finalize_selfcheck("TCK-FAKE", "standard"))
+    assert reasons["migration_complete"] == "stored_artifacts_missing"
+    assert reasons["ticket_finalized"] is None and reasons["working_log_exactly_one_row"] is None
+
+
+# ---------------------------------------------------------------------------
 # check_monitoring_write_recorded
 # ---------------------------------------------------------------------------
 

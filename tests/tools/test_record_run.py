@@ -101,11 +101,14 @@ def test_missing_agent_count_rejected():
     assert errors == ["Missing required fields: ['agent_count']"]
 
 
-def test_null_agent_count_rejected():
+def test_null_agent_count_accepted_as_unknown():
+    # TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN: null is a valid value (the key stays required, see above);
+    # every other required field still rejects null.
     record = dict(_VALID_RECORD)
     record["agent_count"] = None
-    errors = validate_record(record)
-    assert errors == ["Missing required fields: ['agent_count']"]
+    assert validate_record(record) == []
+    record["workflow"] = None
+    assert validate_record(record) == ["Missing required fields: ['workflow']"]
 
 
 def test_agent_count_zero_is_falsy_but_valid():

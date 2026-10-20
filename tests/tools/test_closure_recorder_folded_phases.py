@@ -79,11 +79,12 @@ def test_epic_and_an_unreadable_plan_add_nothing(tmp_path):
     assert rec.folded_phase_events("standard", NARRATED, "claude", set(), plan_path=tmp_path / "missing.yaml") == []
 
 
-def test_recorder_added_events_are_not_counted_in_agent_count():
+def test_recorder_added_events_leave_agent_count_unknown():
+    # TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN superseded the subtraction: a hand closure's count is null.
     added = rec.folded_phase_events("standard", NARRATED, "claude", {"docs/x.md"})
     assert len(added) == 3
     events = rec.insert_in_plan_order(NARRATED, added)
     run, event_records = rec.build_records("TCK-20261020-T", "standard", "DONE", events, None, None, "implement-ticket", "claude",
-                                           "claude", recorder_added=len(added))
+                                           "claude")
     assert len(event_records) == len(NARRATED) + 3
-    assert run["agent_count"] == len(NARRATED)
+    assert "agent_count" in run and run["agent_count"] is None
