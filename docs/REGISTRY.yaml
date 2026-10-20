@@ -7887,6 +7887,21 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE.md
+  ticket_id: TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE
+  title: SimQ reads the run's lossless simulation_events.jsonl offline, never the
+    live stream (D80 C)
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/event_recorder.py
+  - src/simulation_quality/
+  - tools/ (calibrate_simq, simq compare)
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-DEPLOY-DOCS-SHA-PINS-AND-FRONTEND-NONROOT.md
   ticket_id: TCK-20261019-DEPLOY-DOCS-SHA-PINS-AND-FRONTEND-NONROOT
   title: 'Platform''s two Semgrep baseline findings: pin deploy-docs.yml''s actions
@@ -8181,6 +8196,21 @@
   - workflows
   - performance
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261019-D80B-ENGINE-STOPS-IMPORTING-SIMQ-POST-APPLY-OBSERVER-HOOK.md
+  ticket_id: TCK-20261019-D80B-ENGINE-STOPS-IMPORTING-SIMQ-POST-APPLY-OBSERVER-HOOK
+  title: 'The engine stops importing SimQ: a generic post-apply observer hook replaces
+    kernel.py''s SimQ hub wiring (D80 B)'
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-19'
+  related_code_areas:
+  - src/engine/kernel.py (230-272, 1148-1167)
+  - src/observability/event_recorder.py (quality_fn)
+  - src/simulation_quality/
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645.md
   ticket_id: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
   title: 'The catalog arena smoke fails its tick budget at tick 3 (479.5 ms > 150
@@ -8192,21 +8222,6 @@
   - tests/integration/certification/test_catalog_arena_smoke.py
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE.md
-  ticket_id: TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE
-  title: SimQ reads the run's lossless simulation_events.jsonl offline, never the
-    live stream (D80 C)
-  tier: standard
-  ticket_type: refactor
-  date: '2026-10-19'
-  related_code_areas:
-  - src/observability/event_recorder.py
-  - src/simulation_quality/
-  - tools/ (calibrate_simq, simq compare)
-  artifact_files: []
-  tags:
-  - observability
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-D80D-UNGRADED-SIMQ-DATA-REVIEW-ON-THE-V1-RECORD.md
   ticket_id: TCK-20261019-D80D-UNGRADED-SIMQ-DATA-REVIEW-ON-THE-V1-RECORD

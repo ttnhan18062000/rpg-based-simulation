@@ -73,15 +73,16 @@ def observe_world(world: str, seed: int, ticks: int, obs_mode: str = "NORMAL") -
     data behind, matching this repo's own convention.
     """
     from entity_lifecycle_score import _run_for_analysis, load_weights, score_run
-    from calibrate_simq import _build_hub, _load_weights, _load_world_state, _replay_jsonl_through_hub, _resolve_profile
+    from calibrate_simq import _load_weights, _load_world_state, _resolve_profile
+    from src.simulation_quality.offline import build_hub, replay_run_dir
 
     run_dir, health, final_entities = _run_for_analysis(world, seed, ticks, obs_mode)
     try:
         profile = _resolve_profile(world)
         simq_weights = _load_weights(profile)
         run_id = os.path.basename(run_dir)
-        hub, _persistence = _build_hub(simq_weights, run_dir, run_id)
-        event_count = _replay_jsonl_through_hub(run_dir, hub)
+        hub, _persistence = build_hub(simq_weights, run_dir, run_id)
+        event_count = replay_run_dir(run_dir, hub).event_count
         simq_report = hub.get_quality_report().to_dict()
 
         world_state, _compile_report = _load_world_state(world, seed)

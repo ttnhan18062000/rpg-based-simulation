@@ -220,11 +220,11 @@ class QualityHub:
         normalized = snap["raw_score"] / max(1, tick)
         return _assign_grade(normalized, self._weights.grade_thresholds)
 
-    def get_quality_report(self) -> QualityReport:
+    def get_quality_report(self, generated_at: Optional[str] = None) -> QualityReport:
         with self._lock:
             tick = self._tick
             run_id = self._run_id
-        return QualityReportBuilder.build(self._accumulators, tick, run_id, self._weights)
+        return QualityReportBuilder.build(self._accumulators, tick, run_id, self._weights, generated_at=generated_at)
 
     def start(self, feed: Any) -> None:
         feed.start(self)

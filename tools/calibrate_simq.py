@@ -106,37 +106,6 @@ def _load_weights(profile: str = "default"):
     )
 
 
-def _build_hub(weights, run_dir: str, run_id: str):
-    from src.simulation_quality.quality_hub import QualityHub
-    from src.simulation_quality.persistence import QualityPersistence
-    from src.simulation_quality.scorers.agency import AgencyScorer
-    from src.simulation_quality.scorers.combat import CombatScorer
-    from src.simulation_quality.scorers.cognition import CognitionScorer
-    from src.simulation_quality.scorers.economy import EconomyScorer
-    from src.simulation_quality.scorers.faction import FactionScorer
-    from src.simulation_quality.scorers.information import InformationScorer
-    from src.simulation_quality.scorers.narrative import NarrativeScorer
-    from src.simulation_quality.scorers.progression import ProgressionScorer
-    from src.simulation_quality.scorers.social import SocialScorer
-    from src.simulation_quality.scorers.world_dynamics import WorldDynamicsScorer
-
-    scorers = [
-        AgencyScorer(weights),
-        CombatScorer(weights),
-        CognitionScorer(weights),
-        EconomyScorer(weights),
-        FactionScorer(weights),
-        InformationScorer(weights),
-        NarrativeScorer(weights),
-        ProgressionScorer(weights),
-        SocialScorer(weights),
-        WorldDynamicsScorer(weights),
-    ]
-    persistence = QualityPersistence(run_dir)
-    hub = QualityHub(scorers, weights, persistence, run_id=run_id)
-    return hub, persistence
-
-
 def _load_world_state(name: str, seed: int):
     """Load and compile a WorldSpec for the given world name.
 
@@ -466,34 +435,6 @@ def _run_campaign_engine(
     return campaign_run_dir, elapsed, campaign_run_id
 
 
-def _replay_jsonl_through_hub(run_dir: str, hub) -> int:
-    """Read simulation_events.jsonl from run_dir and replay each event through hub."""
-    from src.observability.events import ObservabilityEventEnvelope
-
-    jsonl_path = os.path.join(run_dir, "simulation_events.jsonl")
-    if not os.path.exists(jsonl_path):
-        logger.warning("No simulation_events.jsonl found in %s", run_dir)
-        return 0
-
-    event_count = 0
-    with open(jsonl_path, encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                data = json.loads(line)
-                # Remove fields not in ObservabilityEventEnvelope
-                data.pop("related_entity_ids", None)
-                env = ObservabilityEventEnvelope(**data)
-                hub.on_envelope(env)
-                event_count += 1
-            except Exception as exc:
-                logger.debug("Skipped JSONL event: %s", exc)
-    return event_count
-
-
-
 def pillar_line(pillar_id: str, snap) -> str:
     """One line of the pillar breakdown; a no-data pillar prints its event count against the minimum."""
     if snap.normalized_score is None:
@@ -592,14 +533,14 @@ def main():
             }.items() if v is not None
         })
         weights = weights.model_copy(update={"detection": patched_detection})
-    hub, persistence = _build_hub(weights, cal_dir, run_id or run_tag)
+    # Scored from the run's lossless simulation_events.jsonl, never the live stream (decision 80 C); a run without the file is refused.
+    from src.simulation_quality.offline import score_run_dir  # noqa: PLC0415
 
-    event_count = _replay_jsonl_through_hub(engine_run_dir, hub)
-    print(f"[calibrate_simq] Replayed {event_count} events through QualityHub.")
-
-    report = hub.get_quality_report()
-    persistence.write_report(report)
-    persistence.shutdown()
+    report, replay = score_run_dir(engine_run_dir, weights, cal_dir, run_id=run_id or run_tag)
+    event_count = replay.event_count
+    print(f"[calibrate_simq] Replayed {event_count} events through QualityHub ({replay.skipped_lines} unreadable lines skipped).")
+    with open(os.path.join(cal_dir, "event_counts_by_type.json"), "w", encoding="utf-8") as fh:
+        fh.write(json.dumps(replay.event_counts_by_type, indent=2, sort_keys=True) + "\n")
     # The run's own host-independence record (audit_mode / signals_zeroed, copied from its run manifest) is written right after the report of this same run, so it can
     # never describe an earlier or later run than the report beside it; a comparison tool refuses a run that is not recorded host-independent
     # (TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT).

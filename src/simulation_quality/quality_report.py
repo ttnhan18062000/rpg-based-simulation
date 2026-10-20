@@ -111,6 +111,7 @@ class QualityReportBuilder:
         current_tick: int,
         run_id: str,
         weights: ScoringWeights,
+        generated_at: Optional[str] = None,
     ) -> QualityReport:
         effective_tick = max(1, current_tick)
         pillar_snapshots: dict[str, PillarSnapshot] = {}
@@ -157,7 +158,7 @@ class QualityReportBuilder:
             tick_count=current_tick,
             overall_score=overall_score,
             overall_grade=overall_grade,
-            generated_at=datetime.datetime.now(timezone.utc).isoformat(),
+            generated_at=generated_at if generated_at is not None else datetime.datetime.now(timezone.utc).isoformat(),
             pillars=pillar_snapshots,
             overall_status=STATUS_OK if overall_has_data else STATUS_NO_DATA,
             overall_reason=None if overall_has_data else REASON_TOO_FEW_PILLARS,
