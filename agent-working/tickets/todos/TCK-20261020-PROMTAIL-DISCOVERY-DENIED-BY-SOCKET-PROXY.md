@@ -70,6 +70,7 @@ In the 2026-10-19 SLO run, the Redis drill and the re-measure, Loki held no data
 - docs/runbooks/target-down.md, docs/runbooks/api-latency-slo.md, docs/runbooks/redis-down.md
 
 ## Related Stored Artifacts
+- agent-working/staging_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/ (plan.md, investigation.md, test_plan.md; filed up front)
 - agent-working/stored_artifacts/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD/ (remeasure-2026-10-19/loki/)
 
 ## Related Code Areas
