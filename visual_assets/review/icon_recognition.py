@@ -208,7 +208,7 @@ if __name__ == "__main__":
 
             sprites = icon_owner_fixes_draft_set.proposed_sprites()
         else:
-            sprites = icon_lookalikes.all_icon_sprites()
+            sprites = icon_lookalikes.adopted_icon_sprites()
         info = build_blind_set(args.images, sprites, sorted(sprites), args.seed)
         args.private.mkdir(parents=True, exist_ok=True)
         (args.private / "blind_info.json").write_text(dumps(info))
