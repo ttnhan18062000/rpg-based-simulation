@@ -10,7 +10,7 @@ from visual_assets.review import icon_specs as specs_mod
 from visual_assets.store import pixels
 
 SPECS = specs_mod.load()
-SPRITES = la.all_icon_sprites()
+SPRITES = la.adopted_icon_sprites()
 
 
 def test_specs_are_complete_consistent_and_match_the_registry():

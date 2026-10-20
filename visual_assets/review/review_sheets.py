@@ -506,7 +506,7 @@ def generate(set_id: str, out_dir: Path | None = None, root: Path | None = None)
     not_proposed = profile.get("not_proposed", {})
     pending = profile.get("pending", {})
     shown = [e for e in entries if e.key not in not_proposed and e.key not in pending]
-    adopted = {k: s for k, s in la.all_icon_sprites().items()}
+    adopted = {k: s for k, s in la.r0001_icon_sprites().items()}
     sprites = {**adopted, **{e.key: e.sprite for e in shown}}
     adopted_old = {e.key: adopted[e.key] for e in shown if e.key in adopted and adopted[e.key] != e.sprite}
     groups = groups_for({e.key for e in shown})

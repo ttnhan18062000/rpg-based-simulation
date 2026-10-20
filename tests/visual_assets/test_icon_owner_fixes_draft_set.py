@@ -56,7 +56,7 @@ def test_each_proposed_drawing_keeps_the_silhouette_the_owner_approved_exactly()
 def test_the_two_drafts_the_owner_did_not_want_revised_are_not_proposed_and_not_in_the_evaluated_set():
     """Owner decision (planner's blocking question, 2026-10-08, verbatim "Keep current versions"): the adopted brick wall and crossed swords stay."""
     assert sorted(of.NOT_PROPOSED) == ["icon.marker.enemy_camp", "icon.marker.ruins"] and len(of.PROPOSED) == 7 and of.PENDING == {}
-    adopted = la.all_icon_sprites()
+    adopted = la.r0001_icon_sprites()
     proposed = of.proposed_sprites()
     for key in of.NOT_PROPOSED:
         assert proposed[key] == adopted[key], key  # the evaluated set keeps the adopted drawing
@@ -70,7 +70,7 @@ def test_the_proposed_revisions_meet_every_spec_row_and_the_adopted_icons_are_un
     sprites = of.proposed_sprites()
     rows = cp.measure(sprites, list(of.PROPOSED), checks=cp.CHECKS_R2)
     assert [(k, r.item, r.measured) for k, rs in rows.items() for r in rs if not r.ok] == []
-    adopted = la.all_icon_sprites()
+    adopted = la.r0001_icon_sprites()
     assert [k for k in adopted if k not in of.PROPOSED and sprites[k] != adopted[k]] == []  # nothing else moved, the two not-proposed drafts included
 
 
