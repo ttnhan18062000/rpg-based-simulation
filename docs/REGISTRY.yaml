@@ -7286,6 +7286,17 @@
   - platform
   - observability
 - type: doc
+  path: docs/runbooks/records/2026-10-20-log-shipping-fix.md
+  title: 'Log shipping fix (2026-10-20): promtail discovery was denied by the socket
+    proxy'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
   path: docs/runbooks/redis-down.md
   title: 'Runbook: RedisDown (cause alert)'
   status: active
@@ -7779,6 +7790,18 @@
   - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-BASELINE-GENERATION-FLOW-HEALTH-SCORE-MEAN-IS-99-NOT-100.md
+  ticket_id: TCK-20261020-BASELINE-GENERATION-FLOW-HEALTH-SCORE-MEAN-IS-99-NOT-100
+  title: 'test_baseline_generation_and_cli_flow fails on main: one of 5 runs scores
+    health 95, so the mean is 99.0, not 100.0'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/integration/observability/test_baseline_generation_flow.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL.md
   ticket_id: TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL
   title: GET /api/v1/entities returns a bounded summary per entity; the full detail
@@ -7849,7 +7872,10 @@
   date: '2026-10-20'
   related_code_areas:
   - docker/promtail config
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/investigation.md
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/plan.md
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/test_plan.md
   tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR.md
@@ -7949,6 +7975,23 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-VISUAL-ASSETS-STORE-TESTS-REAL-LOCK.md
+  ticket_id: TCK-20261020-VISUAL-ASSETS-STORE-TESTS-REAL-LOCK
+  title: visual_assets store tests take their write lock in tmp, never on the real
+    `visual_assets/catalog/.store.lock`
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - lock_path
+  - roots
+  - tests/visual_assets/store/kill_helper.py (holds the lock in a child process)
+  - tests/visual_assets/test_review_cli.py, tests/visual_assets/test_key_usage.py
+  artifact_files: []
+  tags:
+  - testing
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT.md
   ticket_id: TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT
   title: test_observability_websocket_suite step 5 waits for the synthetic walk event
@@ -7960,6 +8003,20 @@
   - tests/api/test_observability_websocket.py
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-WORKFLOW-PIN-GUARD-COVERS-EVERY-WORKFLOW.md
+  ticket_id: TCK-20261020-WORKFLOW-PIN-GUARD-COVERS-EVERY-WORKFLOW
+  title: The SHA-pin guard globs every file in `.github/workflows/`, so one test enforces
+    the repo-wide pin rule.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/static/test_workflow_actions_pinned_by_sha.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
   ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
@@ -8725,7 +8782,10 @@
   date: '2026-10-18'
   related_code_areas:
   - compose.yaml
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/test_plan.md
   tags:
   - platform
   - observability
@@ -11303,6 +11363,19 @@
   - economy
   - resource
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT.md
+  ticket_id: TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT
+  title: '`test_baseline_comparison_and_cli_flow` fails on a loaded machine: the simulation
+    watchdog trips on wall-clock tick time and turns the expected PASS into WARNING'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-10'
+  related_code_areas:
+  - tests/integration/observability/test_baseline_comparison_flow.py
+  - src/engine/
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261010-DEFEAT-CORPUS-TEST-WINDOW-DEPENDS-ON-PURSUIT-GEOMETRY.md
   ticket_id: TCK-20261010-DEFEAT-CORPUS-TEST-WINDOW-DEPENDS-ON-PURSUIT-GEOMETRY
   title: The defeat corpus test's fixed 120-tick window depends on pursuit geometry;
@@ -11792,19 +11865,6 @@
   - agent-working/stored_artifacts/TCK-20261010-VISUAL-ASSETS-STORE-TOOLING-DOCS-AND-CLOSE/test_plan.md
   tags:
   - planning
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT.md
-  ticket_id: TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT
-  title: '`test_baseline_comparison_and_cli_flow` fails on a loaded machine: the simulation
-    watchdog trips on wall-clock tick time and turns the expected PASS into WARNING'
-  tier: hotfix
-  ticket_type: bug
-  date: '2026-10-10'
-  related_code_areas:
-  - tests/integration/observability/test_baseline_comparison_flow.py
-  - src/engine/
-  artifact_files: []
-  tags: []
 - type: ticket
   path: agent-working/tickets/todos/parity-ledger-paydown/TCK-20261010-EPIC-PARITY-LEDGER-PAYDOWN.md
   ticket_id: TCK-20261010-EPIC-PARITY-LEDGER-PAYDOWN
