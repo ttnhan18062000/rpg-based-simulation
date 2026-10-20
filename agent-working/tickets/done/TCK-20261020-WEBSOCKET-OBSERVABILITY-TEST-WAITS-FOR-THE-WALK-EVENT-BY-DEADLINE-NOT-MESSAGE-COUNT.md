@@ -57,10 +57,15 @@ tests/api/test_observability_websocket.py
 Wall time of the test swings from 10 s to 60 s under load (observed again: two 60 s runs of 20); not explained by this ticket. The sleep(4) server start and the 20 s heartbeat deadline are the other time budgets in the test.
 
 ## Implementation Notes
+Second cause, found while timing the suite: the test still started its server with `time.sleep(4.0)`, so on a loaded host the first connection was refused (6 of 10 timed runs failed with ConnectionRefused on 8019 or an early error). It now uses `tests.helpers.live_server.start_server`/`stop_server` (health-polling; TCK-20261014-SERVER-STARTING-TESTS-WAIT-FOR-HEALTH-INSTEAD-OF-SLEEPING-3-SECONDS) and asserts port 8019 is free first.
+
+Finding: the port 8019 is hard-coded, so two runs of this test cannot share a host. A second `serve` on a busy port is not noticed by the health wait (the other server answers /health), so the test now fails loudly instead. A subscription_ack replaced by an `error` reply in another lane's run coincided with this session's servers holding 8019 (port clash symptom, not a regression).
+
+Open, not addressed here: wall time swings from 10 s to 60 s (one 59 s pass in the last 10 loaded runs). The timed copy put the extra ~50 s after the start of step 6 (max-subscribers); it is investigated separately.
 Reproduction probe counted messages before the walk event on an unloaded and a loaded host.
 
 ## Test Summary
-20 of 20 passed locally under concurrent server load.
+Deadline loop: 20 of 20 passed under concurrent server load. With the health wait: 20 sequential runs with 8019 free before and after each, all passed (8.8-9.3 s); 10 more with other servers loading the host, all passed (one took 59 s: the open swing).
 
 ## Files Changed
 tests/api/test_observability_websocket.py
