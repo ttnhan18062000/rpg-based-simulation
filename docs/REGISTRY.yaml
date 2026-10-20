@@ -7725,6 +7725,37 @@
   - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-O1-COUNT-FLOORS-CARRY-THEIR-RELATIVE-PART.md
+  ticket_id: TCK-20261020-O1-COUNT-FLOORS-CARRY-THEIR-RELATIVE-PART
+  title: The O1.starved and O1.at_risk run rows carry floor_rel next to their base
+    floor
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - src/observability/rpg_gate_metrics.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR.md
+  ticket_id: TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR
+  title: A run outcome row may carry `floor_rel`. The candidate records `floor = max(floor,
+    floor_rel × mean of the run set's per-seed values)`, keeping `floor_base` and
+    `floor_rel`, and the report's threshold-moved check compares base and rel, not
+    the computed floor.
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/test_architecture/rpg_gate_candidate.py, rpg_gate_report.py, rpg_gate_baseline.py
+    (lint)
+  - tests/unit/tools/test_rpg_gate_candidate.py, test_rpg_gate_report.py, test_rpg_gate_baseline.py
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST.md
   ticket_id: TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST
   title: The rpg gate harness unit tests stop racing each other on `data/runs/rpg-gate-sandbox_world-s<seed>-<sha8>*`
@@ -7753,6 +7784,38 @@
   - agent-working/stored_artifacts/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS/investigation.md
   - agent-working/stored_artifacts/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS/plan.md
   - agent-working/stored_artifacts/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED.md
+  ticket_id: TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED
+  title: The rpg gate contract says a world's run-row set is declared by the module,
+    not observed. The report shows a seed whose rows differ from its world's other
+    seeds as a `contract_error`, so it is visible before the candidate step refuses
+    it.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/test_architecture/rpg_gate_report.py, rpg_gate_candidate.py (test only)
+  - tests/helpers/rpg_gate_stub_metrics.py, tests/unit/tools/test_rpg_gate_report.py
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-UNIT-TESTS-SHARE-DATA-RUNS-DIRS-UNDER-XDIST.md
+  ticket_id: TCK-20261020-UNIT-TESTS-SHARE-DATA-RUNS-DIRS-UNDER-XDIST
+  title: Unit tests that write fixed data/runs dirs fail under pytest-xdist because
+    another worker removes the dir underneath them
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/unit/engine/test_run_manifest_signal_contract.py
+  - tests/unit/worldmodules/test_schema_unified.py
+  - QualityPersistence.write_report
+  artifact_files: []
   tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT.md
@@ -7933,6 +7996,25 @@
   - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/investigation.md
   - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/plan.md
   - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/test_plan.md
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE.md
+  ticket_id: TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE
+  title: Every required validity row of the rpg gate has at least one real-kernel
+    positive test, and a lint fails when an id has none.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/architecture/ (the lint)
+  - tests/simulation_quality/rpg_gate/ (the map, config.yaml)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE/test_plan.md
   tags:
   - testing
   - regression
