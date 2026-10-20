@@ -144,7 +144,13 @@ def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str, str], str]:
                     problems[key] = "contract error: validity row without an integer violations count"
                 elif not row.get("oracle"):
                     problems[key] = "contract error: validity row without an oracle to cite"
-            seen.setdefault(key, set()).add((row.get("k"), row.get("floor"), row.get("oracle")))
+            if row.get("class") == "outcome" and "floor_rel" in row:
+                rel = row["floor_rel"]
+                if row.get("scope") == "pooled":
+                    problems[key] = "contract error: pooled outcome row carries floor_rel"
+                elif not _is_number(rel) or not 0 < rel <= 1:
+                    problems[key] = f"contract error: floor_rel {rel!r} is not a number in (0, 1]"
+            seen.setdefault(key, set()).add((row.get("k"), row.get("floor"), row.get("oracle"), row.get("floor_rel")))
     for key, versions in seen.items():
         if len(versions) > 1:
             problems[key] = "mixed metric module versions"
@@ -215,9 +221,14 @@ def _threshold_moved(cur_row: Mapping[str, Any], base: Mapping[str, Any], pooled
     """``{field: {"candidate": c, "reference": r}}`` for each of ``k`` / ``floor`` / ``oracle`` that differs between the candidate and the reference row. Reported, never
     used to judge. ``oracle`` is compared whenever either side carries one (a missing side is ``None``); ``k`` is not part of a pooled row."""
     moved: Dict[str, Dict[str, Any]] = {}
-    for name in ("floor",) if pooled else ("k", "floor"):
-        if cur_row.get(name) != base.get(name):
-            moved[name] = {"candidate": cur_row.get(name), "reference": base.get(name)}
+    # A reference that recorded a relative floor keeps the document's own floor as ``floor_base``: that is what the candidate documents' ``floor`` is compared with, so a
+    # relative floor, which differs run to run, never shows as moved; ``floor_rel`` itself is compared when either side has one.
+    reference_floor = base.get("floor_base") if "floor_rel" in base else base.get("floor")
+    for name, candidate_value, reference_value in (("k", cur_row.get("k"), base.get("k")), ("floor", cur_row.get("floor"), reference_floor), ("floor_rel", cur_row.get("floor_rel"), base.get("floor_rel"))):
+        if (name == "k" and pooled) or (name == "floor_rel" and candidate_value is None and reference_value is None):
+            continue
+        if candidate_value != reference_value:
+            moved[name] = {"candidate": candidate_value, "reference": reference_value}
     if (cur_row.get("oracle") or base.get("oracle")) and cur_row.get("oracle") != base.get("oracle"):
         moved["oracle"] = {"candidate": cur_row.get("oracle"), "reference": base.get("oracle")}
     return moved
@@ -313,7 +324,7 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
                 if r.get("class") == "outcome":
                     key = (r["id"], r.get("group", "*"), r.get("key"), r.get("tick"))
                     row = grouped.setdefault(key, {"id": r["id"], "group": r.get("group", "*"), "key": r.get("key"), "tick": r.get("tick"), "scope": "run",
-                                                   "k": r.get("k"), "floor": r.get("floor"), **({"oracle": r["oracle"]} if r.get("oracle") else {}), "per_seed": {}})
+                                                   "k": r.get("k"), "floor": r.get("floor"), **({"floor_rel": r["floor_rel"]} if "floor_rel" in r else {}), **({"oracle": r["oracle"]} if r.get("oracle") else {}), "per_seed": {}})
                     row["per_seed"][seed] = r["value"] if _is_number(r.get("value")) else r.get("mean")
         required = set(config.required_at("run"))
         absent = _absent_row_seeds(seed_docs, required)

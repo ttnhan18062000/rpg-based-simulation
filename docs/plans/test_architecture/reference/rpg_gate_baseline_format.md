@@ -32,6 +32,16 @@ The thresholds recorded in a baseline are the thresholds that baseline is judged
 - A relative floor (O2.population: `max(3.0, 0.10 * tick-0 population)`) is computed by the metric module from its own run set, so it is fixed once recorded; it changes only through a re-baseline (`baseline_change_policy.md`). The module never reads baseline artifacts.
 - The within-run-set rule is unchanged: one `k` / `floor` / `oracle` per (world, id, group) across a world's documents, else `contract_error`. The candidate is unchanged: a new baseline records the candidate's own thresholds.
 
+### A relative floor
+
+A seed document cannot know a floor that depends on the other seeds' outcomes, so a run outcome row may carry a numeric `floor_rel` (`0 < floor_rel <= 1`) beside its absolute `floor`. The module never reads a baseline; the **candidate** applies the relative part once, from the run set it records (TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR):
+
+- `floor = max(floor, floor_rel * mean(per_seed))`, recorded together with `floor_base` (the document's own floor) and `floor_rel`. Per-seed values `[40, 50, 60]` with floor 3 and `floor_rel` 0.10 record floor 5.0; `[5, 5, 5]` record 3.0.
+- The report judges on the reference row's recorded `floor`, unchanged.
+- `threshold_moved` compares the candidate documents' `floor` with the reference's `floor_base` (its `floor` when the reference has no `floor_rel`), and `floor_rel` when either side has one, so a computed relative floor never shows as moved; a changed `floor_rel` or base does.
+- Contract errors: `floor_rel` on a pooled row, or outside `(0, 1]` or not a number. The candidate refuses and the report gives `no-data` / `contract_error`. `floor_rel` joins `k`, `floor` and `oracle` in the one-value-per-`(world, id, group)` check. A reference row with `floor_rel` but no numeric `floor` is the existing "no recorded threshold" contract error.
+- Baseline lint: `floor_base` and `floor_rel` are optional and numeric and belong to run rows; with `floor_rel`, `floor_base` is required and `floor >= floor_base`.
+
 ## Staleness
 
 A baseline is stale past `stale_after`, when its harness hash differs from the current harness (an unknown current hash also counts), or when
