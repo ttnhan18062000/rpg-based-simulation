@@ -7836,6 +7836,23 @@
   - testing
   - workflows
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-TEST-WORKFLOWS-PIN-ACTIONS-BY-SHA.md
+  ticket_id: TCK-20261019-TEST-WORKFLOWS-PIN-ACTIONS-BY-SHA
+  title: testing's workflows pin every action by full commit SHA with a `# vX.Y.Z`
+    comment, setup-node moves to its current major, and a static test keeps every
+    ref a SHA.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/test.yml, slow-regression.yml, slow-regression-watchdog.yml,
+    rpg-gate-report.yml
+  - tests/static/
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES.md
   ticket_id: TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES
   title: test.yml's Frontend and jscpd steps run Node 24, the same as the frontend
