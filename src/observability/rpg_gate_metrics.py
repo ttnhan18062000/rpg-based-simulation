@@ -65,6 +65,7 @@ COIN_EPSILON = 1e-6
 PEOPLE_CLASS = "prepared"  # the diet class of the inn's free meal (D44): the V4 diet gate. Personhood is NOT this: it is the trade trait (D43), carried as a 0/1 flag
 MEAT_CLASS = "meat"
 FOOD_NODE_SOURCE, INN_SOURCE, BODY_SOURCE = "NODE", "TOWN_SERVICE", "CORPSE_FOOD"
+COUNT_FLOOR_REL = 0.10  # the relative part of the O1 count floors (designer ruling 2026-10-20): carried on O1.starved and O1.at_risk only
 DEATH_CAUSES: Tuple[str, ...] = tuple(cause.value for cause in DeathCause)  # the key domain of O2.deaths: the enum, every member on every seed
 # The key domain of O4.accepted: every ``ResourceTransferIntent.source_kind`` the engine emits (no enum exists; tests/unit/observability keeps this tuple equal to the
 # ``source_kind`` literals under src/, so a new source is declared here or the unit test fails).
@@ -82,10 +83,11 @@ class GateDataMissingError(RuntimeError):
 # id -> (k, floor, fiction reason). k = standard errors; floor = the smallest change worth tracing, in the row's own unit.
 OUTCOME_THRESHOLDS: Dict[str, Tuple[float, float, str]] = {
     # The O1.starvation_share row is pooled only: sum(starved) / sum(at risk). Designer rulings 2026-10-20: the share keeps its own floor (0.05, own fiction);
-    # the two count rows are judged as counts with the share's k, floor max(3, 0.10 x the v1 pooled per-seed mean): the base 3 is here, the relative part is the report's.
+    # the two count rows are judged as counts with the share's k. The module emits the base (``floor`` 3.0) and the relative part (``floor_rel`` 0.10) on these two rows only;
+    # the candidate records the computed floor, max(floor, floor_rel x the run set's per-seed mean), at baseline time, and keeps floor_base and floor_rel for audit.
     "O1.starvation_share": (2.0, 0.05, "a settlement notices when one more in twenty of a kind starves"),
-    "O1.starved": (2.0, 3.0, "three more of a kind starved in a run (relative part: a tenth of the v1 pooled mean)"),
-    "O1.at_risk": (2.0, 3.0, "individuals of a kind ever alive in the run: tick 0 plus every entry (relative part: a tenth of the v1 pooled mean)"),
+    "O1.starved": (2.0, 3.0, "three more of a kind starved in a run (floor_rel 0.10: a tenth of the run set's per-seed mean)"),
+    "O1.at_risk": (2.0, 3.0, "individuals of a kind ever alive in the run: tick 0 plus every entry (floor_rel 0.10: a tenth of the run set's per-seed mean)"),
     "O2.deaths": (2.0, 2.0, "two more deaths of one cause in a run is a story; one is noise"),
     "O2.population": (2.0, 3.0, "a tenth more or fewer of a kind alive, and never under three, is a visible crowd change"),
     "O2.survivors": (2.0, 1.0, "a kind alive or gone in a seed is the whole difference"),
@@ -170,7 +172,7 @@ def _validity(vid: str, world: str, violations: int, examples: Optional[List[Any
 
 
 def _outcome(oid: str, world: str, group: str, value: float, **where: Any) -> Dict[str, Any]:
-    """A run outcome row; ``where`` may set ``key`` (a cause or a source), ``tick`` and ``floor`` (a row whose floor scales with its group)."""
+    """A run outcome row; ``where`` may set ``key`` (a cause or a source), ``tick``, ``floor`` (a row whose floor scales with its group) and ``floor_rel`` (the two O1 count rows only)."""
     k, floor, _ = OUTCOME_THRESHOLDS[oid]
     return {"id": oid, "class": "outcome", "scope": "run", "world": world, "group": group, "value": float(value), "k": k, "floor": floor, **where}
 
@@ -341,8 +343,8 @@ def _population_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: A
     for key, n in ledger["adds"].items():
         entered[_split(key, 2)[0]] += n
     for group in groups:
-        rows.append(_outcome("O1.starved", world, group, starved[group]))
-        rows.append(_outcome("O1.at_risk", world, group, first.get(group, 0) + entered[group]))
+        rows.append(_outcome("O1.starved", world, group, starved[group], floor_rel=COUNT_FLOOR_REL))
+        rows.append(_outcome("O1.at_risk", world, group, first.get(group, 0) + entered[group], floor_rel=COUNT_FLOOR_REL))
         rows.append(_outcome("O2.survivors", world, group, 1.0 if final.get(group, 0) > 0 else 0.0))
         floor = population_floor(means.get(group, 0.0))
         rows += [_outcome("O2.population", world, group, at.get(group, 0), tick=int(t), floor=floor) for t, at in sorted(population.items(), key=lambda kv: int(kv[0]))]
