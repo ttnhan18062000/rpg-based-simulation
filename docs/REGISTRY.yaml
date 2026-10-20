@@ -7210,6 +7210,17 @@
   - platform
   - observability
 - type: doc
+  path: docs/runbooks/api-latency-slo.md
+  title: 'Runbook: API SLO (ApiLatencyP95High, ApiErrorRateHigh)'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+  - performance
+- type: doc
   path: docs/runbooks/disk-space.md
   title: 'Runbook: disk space (DiskSpaceLow, DiskWillFillIn24h)'
   status: active
@@ -7234,6 +7245,39 @@
 - type: doc
   path: docs/runbooks/records/2026-10-18-target-down-drill.md
   title: 'Target-down drill (2026-10-18): stop Loki, the alert reaches ntfy, recover'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/records/2026-10-19-api-slo-alert-fire-test.md
+  title: 'API SLO alert (2026-10-19): scrape on 9109, server-side numbers, and the
+    fire test'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+  - performance
+- type: doc
+  path: docs/runbooks/records/2026-10-19-redis-stop-drill-under-load.md
+  title: 'Redis-stop drill under load (2026-10-19): the cause alert fires while the
+    API SLO stays green'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/redis-down.md
+  title: 'Runbook: RedisDown (cause alert)'
   status: active
   layer: platform
   authority: P2
@@ -7820,6 +7864,22 @@
   - testing
   - regression
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-RPG-GATE-POOLED-SHARE-CHECKED-AGAINST-ITS-COUNT-ROWS.md
+  ticket_id: TCK-20261020-RPG-GATE-POOLED-SHARE-CHECKED-AGAINST-ITS-COUNT-ROWS
+  title: The rpg gate report checks each pooled share against the numerator and denominator
+    count rows it names. A share marked undefined while its denominator is non-zero,
+    or a defined share that is not Σnum/Σden, is a `contract_error`.
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/test_architecture/rpg_gate_report.py, tests/unit/tools/test_rpg_gate_report.py
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS.md
   ticket_id: TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS
   title: Every seed of a world emits the same (id, group, key) rows, taken from declared
@@ -7892,6 +7952,29 @@
   tags:
   - testing
   - workflows
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
+  ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
+  title: Tune DiskWillFillIn24h so short bursts of heavy local work don't trip it
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - docker/grafana/provisioning/alerting/rules-base.yaml
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY.md
+  ticket_id: TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY
+  title: 'Loki receives no logs: promtail''s docker discovery is denied by the socket
+    proxy (GET /networks returns 403)'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - docker/promtail config
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
   ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
@@ -8381,6 +8464,23 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK.md
+  ticket_id: TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK
+  title: One API SLO alert as a provisioned Grafana alert rule, a local ntfy container
+    as its contact point, and the runbook it links to
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/grafana/provisioning/alerting/rules-slo.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK/test_plan.md
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER.md
   ticket_id: TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER
   title: 'Backend image: run backend, ai_worker and watchdog as a non-root user, so
@@ -8632,6 +8732,40 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-REDIS-DOWN-CAUSE-ALERT.md
+  ticket_id: TCK-20261018-REDIS-DOWN-CAUSE-ALERT
+  title: A Redis-down cause alert, so the Redis-stop drill has something that fires
+    when the API SLO stays green
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-DOWN-CAUSE-ALERT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-DOWN-CAUSE-ALERT/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-DOWN-CAUSE-ALERT/test_plan.md
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD.md
+  ticket_id: TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD
+  title: 'The recorded drill: stop Redis under Locust load, follow the runbook, and
+    record detection time, recovery time and a short post-mortem'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD/test_plan.md
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-REPLAY-NON-AUTHORITATIVE-TEST-INDEPENDENT-OF-HOST-MEMORY.md
   ticket_id: TCK-20261018-REPLAY-NON-AUTHORITATIVE-TEST-INDEPENDENT-OF-HOST-MEMORY
   title: Make test_replay_is_non_authoritative independent of host memory
@@ -8657,6 +8791,23 @@
   - ai
   - agent-monitoring
   - data-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT.md
+  ticket_id: TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
+  title: 'Prometheus: scrape the backend''s internal metrics port 9109 instead of
+    the admission-gated /metrics on 8000'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT/test_plan.md
+  tags:
+  - platform
+  - observability
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-SEARCH-SHARED-SERVER-CWD-AND-TEST-RUNTIME-ISOLATION.md
   ticket_id: TCK-20261018-SEARCH-SHARED-SERVER-CWD-AND-TEST-RUNTIME-ISOLATION
@@ -8904,20 +9055,6 @@
   - observability
   - security
 - type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT.md
-  ticket_id: TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
-  title: 'Prometheus: scrape the backend''s internal metrics port 9109 instead of
-    the admission-gated /metrics on 8000'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-18'
-  related_code_areas:
-  - docker/prometheus.yml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
   path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT.md
   ticket_id: TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT
   title: Prometheus scrape of ai_worker:9108, an ai_worker healthcheck on its up gauge,
@@ -8927,20 +9064,6 @@
   date: '2026-10-18'
   related_code_areas:
   - docker/prometheus.yml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK.md
-  ticket_id: TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK
-  title: One API SLO alert as a provisioned Grafana alert rule, a local ntfy container
-    as its contact point, and the runbook it links to
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
   artifact_files: []
   tags:
   - platform
@@ -8961,34 +9084,6 @@
   - platform
   - observability
   - performance
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-REDIS-DOWN-CAUSE-ALERT.md
-  ticket_id: TCK-20261018-REDIS-DOWN-CAUSE-ALERT
-  title: A Redis-down cause alert, so the Redis-stop drill has something that fires
-    when the API SLO stays green
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD.md
-  ticket_id: TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD
-  title: 'The recorded drill: stop Redis under Locust load, follow the runbook, and
-    record detection time, recovery time and a short post-mortem'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - tools/loadtest/
-  artifact_files: []
-  tags:
-  - platform
-  - observability
 - type: ticket
   path: agent-working/tickets/todos/phase19-off-mode-check/TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK.md
   ticket_id: TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK
