@@ -78,9 +78,9 @@ testing-planner ruling, 2026-10-19: this becomes a **standing contract rule**. A
 - rpg's kernel positive tests (read only)
 
 ## Assumptions / Open Questions
-- Unblock: rpg's combined pre-v1 PR merges, and rpg sends the node ids per V-id.
+- Unblock: rpg's combined pre-v1 PR (rpg-pre-v1-fixes; b0c49820d holds all 8 positives, no PR yet) merges WITH Lane A's V4 gate-row assert and negative control. All node ids are now in hand (2026-10-20).
 - **Node ids from rpg-planner, 2026-10-20** (on rpg-gate-positive-tests 1d27d31b2, then 1571b8810, which goes into rpg-pre-v1-fixes). F = `tests/integration/observability/test_gate_validity_checks_fire_through_the_real_kernel.py`:
-  - V1: PENDING (rpg's Lane B is adding it; the ticket stays BLOCKED until rpg sends the id).
+  - V1: `tests/integration/observability/test_v1_counts_an_unbacked_hunger_drop_through_the_real_kernel.py::test_v1_fires_for_a_broke_eater_whose_hunger_falls_with_nothing_moved`. It asserts violations >= the forced ticks and the `{group}|without_transfer` example count. The row's key is a kind group, not an entity id, so it falls under the pin-the-key clause; the eater is pinned through its own tracked state. Control: `::test_v1_does_not_count_the_same_worker_when_it_pays_for_the_meal`. Mutation: forcing backed=True turns it red.
   - V2: `F::test_v2_fires_when_a_body_with_meat_decays_and_the_decay_sink_is_silent`
   - V3: `F::test_v3_fires_for_a_starvation_death_beside_an_open_way_even_when_the_dying_entity_had_no_update`
   - V4: `tests/integration/observability/test_v4_counts_a_forbidden_meal_through_the_real_kernel.py::test_a_meat_only_body_that_eats_plant_food_in_a_real_run_is_counted`
