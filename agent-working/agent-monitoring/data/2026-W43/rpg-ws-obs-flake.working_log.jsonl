@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-20T04:04:44.125750Z", "ticket_id": "TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT", "title": "Websocket observability test waits by deadline", "status": "DONE", "summary": "Step 5 bounded by wall-clock deadline instead of 10 messages", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}
