@@ -7864,6 +7864,22 @@
   - testing
   - regression
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-RPG-GATE-POOLED-SHARE-CHECKED-AGAINST-ITS-COUNT-ROWS.md
+  ticket_id: TCK-20261020-RPG-GATE-POOLED-SHARE-CHECKED-AGAINST-ITS-COUNT-ROWS
+  title: The rpg gate report checks each pooled share against the numerator and denominator
+    count rows it names. A share marked undefined while its denominator is non-zero,
+    or a defined share that is not Σnum/Σden, is a `contract_error`.
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/test_architecture/rpg_gate_report.py, tests/unit/tools/test_rpg_gate_report.py
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS.md
   ticket_id: TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS
   title: Every seed of a world emits the same (id, group, key) rows, taken from declared
