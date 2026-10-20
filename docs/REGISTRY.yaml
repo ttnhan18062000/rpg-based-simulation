@@ -7826,6 +7826,21 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PERF-PYSPY-TOOLKIT-TEST-MEASURED-WINDOW.md
+  ticket_id: TCK-20261020-PERF-PYSPY-TOOLKIT-TEST-MEASURED-WINDOW
+  title: The py-spy end-to-end toolkit test measures too few ticks to be sampled reliably
+    on a loaded host
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/tools/test_profiling_toolkit.py
+  - tools/perf/profile_tick.py
+  artifact_files: []
+  tags:
+  - performance
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA.md
   ticket_id: TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA
   title: pr-body-lint.yml pins actions/checkout by full commit SHA, per the repo-wide
