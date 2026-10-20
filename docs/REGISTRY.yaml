@@ -7699,6 +7699,20 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL.md
+  ticket_id: TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL
+  title: test_observe_world_cleans_up_its_own_run_dir runs in the serial step of Tools
+    f–z, because it reads the whole shared data/runs directory.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/test.yml (tools-f-z)
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS.md
   ticket_id: TCK-20261019-COMPOSE-BACKEND-PUBLISHES-EVENT-STREAM-TO-REDIS
   title: 'Default compose stack: the backend publishes the event stream to Redis,
@@ -7713,6 +7727,19 @@
   - platform
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-GATE-VALIDITY-CHECKS-FIRE-THROUGH-THE-REAL-KERNEL-AND-V3-SEES-EVERY-STARVATION-DEATH.md
+  ticket_id: TCK-20261019-GATE-VALIDITY-CHECKS-FIRE-THROUGH-THE-REAL-KERNEL-AND-V3-SEES-EVERY-STARVATION-DEATH
+  title: Every gate validity check has a real-kernel positive, and V3 sees every starvation
+    death
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/observability/starvation_record.py; src/observability/rpg_gate_metrics.py;
+    src/observability/run_ledger.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-MEAT-DECAYED-IS-WRITTEN-FROM-THE-APPLIED-OUTCOME-V2.md
   ticket_id: TCK-20261019-MEAT-DECAYED-IS-WRITTEN-FROM-THE-APPLIED-OUTCOME-V2
   title: A body that decays and is looted whole on the same tick yields no MEAT_DECAYED
@@ -7724,6 +7751,81 @@
   - _meat_decayed_events
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD.md
+  ticket_id: TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD
+  title: The rpg gate report judges an outcome row's drift against each reference
+    using the k and floor recorded in that reference, not the candidate run's own.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - _compare
+  - tools/test_architecture/rpg_gate_candidate.py (read only, plus a test)
+  - tests/helpers/rpg_gate_stub_metrics.py
+  - tests/unit/tools/test_rpg_gate_report.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD/test_plan.md
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL.md
+  ticket_id: TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL
+  title: The rpg gate's required-validity check asks for each V row only at the level
+    it is judged at (per-seed `run` or `pooled`), not in every document.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - load_config
+  - missing_required
+  - _missing_required
+  - tests/simulation_quality/rpg_gate/config.yaml (rpg's values)
+  - tests/helpers/rpg_gate_stub_metrics.py
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW.md
+  ticket_id: TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW
+  title: 'CI: .github/workflows/security-scan.yml — gitleaks (secrets) on every PR
+    and Semgrep (static) path-gated, both report-only, plus the roles diff for the
+    new paths'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/security-scan.yml
+  - .github/workflows/iac.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-SECRET-STATIC-SCAN-WORKFLOW/test_plan.md
+  tags:
+  - platform
+  - delivery
+  - security
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES.md
+  ticket_id: TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES
+  title: test.yml's Frontend and jscpd steps run Node 24, the same as the frontend
+    image, instead of Node 20.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/test.yml
+  - tests/static/test_ci_step_summary_reporting.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE.md
   ticket_id: TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE
@@ -7752,6 +7854,22 @@
   - src/observability/run_ledger.py, src/observability/rpg_gate_metrics.py, src/ai/goals/kind_group.py
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY.md
+  ticket_id: TCK-20261019-V8-SELF-TEST-ASSERTS-THE-EXAMPLE-NAMES-THE-ENTITY
+  title: V8's gate self-test, case (a), asserts that the example names the unsourced
+    entity, and the format doc drops its "not yet emitted" line.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/simulation_quality/rpg_gate/test_v8_fires.py
+  - src/observability/run_ledger.py, src/observability/rpg_gate_metrics.py (read only)
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY.md
   ticket_id: TCK-20261019-V8-UNSOURCED-ADD-EXAMPLES-NAME-THE-ENTITY
