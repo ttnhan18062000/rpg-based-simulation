@@ -7852,6 +7852,22 @@
   - delivery
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR.md
+  ticket_id: TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR
+  title: The observe_world cleanup test asserts that only its own run dir is gone,
+    not that all of data/runs is unchanged
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/tools/test_simq_long_run_observation.py
+  - tools/simq_long_run_observation.py::observe_world
+  - tools/entity_lifecycle_score.py::_run_for_analysis
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN.md
   ticket_id: TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN
   title: testing's workflows pass `${{ github.* }}` values to shell steps through
