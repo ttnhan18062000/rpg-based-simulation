@@ -7852,6 +7852,22 @@
   - delivery
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SEMGREP-BASELINE-AGENT-WORKING-PATHS.md
+  ticket_id: TCK-20261019-SEMGREP-BASELINE-AGENT-WORKING-PATHS
+  title: 'The two Semgrep baseline findings on agent-working paths are resolved: pr-body-lint.yml''s
+    checkout is pinned by SHA, and launch.py''s exec carries a justified nosemgrep'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/pr-body-lint.yml
+  - tools/sessions/launch.py
+  - .github/workflows/security-scan.yml
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR.md
   ticket_id: TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR
   title: The observe_world cleanup test asserts that only its own run dir is gone,
