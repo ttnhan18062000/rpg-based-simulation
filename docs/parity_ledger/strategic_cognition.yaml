@@ -4562,3 +4562,13 @@
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.115.
   support_boundary: 'On the current code the measured effect is within noise (seeds 42 to 46, 5000 ticks); a woken sleeper with no open way to eat sleeps again, and a re-decided sleep at an inn charges a new bed.'
 
+- id: STRAT-284
+  text: 'TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION (SURV-07 amendment, memo row 83): past the starvation line (95, where health drains, src/engine/starvation.py STARVING_LINE) a present threat no longer drops the hunger goal; a threat acting on the subject still pre-empts it in the tactical pass. The weighing is by immediacy, not by score magnitude: at the goal level the starving pull (155-160) exceeds the retreat ceiling (150).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/ai/goals/scorers.py (_hunger_escalated_unless_threatened, EatScorer, _hunger_without_open_way), src/engine/starvation.py (STARVING_LINE), docs/mechanics/04_strategic_cognition.md section 1. Forced merchant-37 case through the real kernel eats by tick 14 and does not with the old gate. Paired measurement (b)+(ii) in docs/guidelines/intentional_divergences.md Section 2.135.
+  proof_type: regression
+  test_path: tests/unit/ai/test_starvation_is_a_present_threat_weighed_in_goal_selection.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.135.
+  support_boundary: 'Does not add a meal path for a subject with no hunger project (the in-reach meal stays after v1); gate V3 on frontier_living_world seed 42 (5000 ticks) is 0 with this change. A hunter closing on a starving subject is not seen before contact (strategic cadence, v1 row C5).'

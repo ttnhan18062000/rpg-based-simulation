@@ -7,6 +7,7 @@ from src.engine.appraisal import can_eat_item, can_use_inn_meal
 from src.ai.goals.ways import inn_in_reach
 from src.engine.need_pull import hunger_pull, sleep_pull
 from src.engine.sleep_debt import SLEEP_DEBT
+from src.engine.starvation import STARVING_LINE
 from src.engine.way_in_range import way_in_range
 from src.ai.goals.present_threat import present_threat_to
 from src.content_semantics.faction import are_entities_hostile
@@ -65,6 +66,15 @@ def _escalated_unless_threatened(entity: EntityState, state: AuthoritativeState,
     return escalated
 
 
+def _hunger_escalated_unless_threatened(entity: EntityState, state: AuthoritativeState, raw: float, escalated: float) -> float:
+    """SURV-07 (row 83): once hunger is past its consequence line it is taking the subject's health, and starvation is itself a present threat to life, so the
+    escalated pull is NOT dropped while another threat holds: goal selection weighs it against the appraised threat (flight against food) and neither
+    wins by default. Below the line the threat gate stands as before. No timer: the desperation line is the rule's own edge."""
+    if entity.biological.hunger >= STARVING_LINE:
+        return escalated
+    return _escalated_unless_threatened(entity, state, raw, escalated)
+
+
 class SleepScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
         bio = entity.biological
@@ -100,7 +110,7 @@ def _hunger_without_open_way(entity: EntityState, state: AuthoritativeState, uti
         return GoalScore(kind=GoalKind.HUNGER, utility=utility, need_access=access, no_open_step=True)
     pull = hunger_pull(utility, entity.biological.hunger, need_rates(entity)[0], _travel_tiles(entity, step.target_pos))
     return GoalScore(
-        kind=GoalKind.HUNGER, utility=_escalated_unless_threatened(entity, state, utility, pull), target_id=step.target_id,
+        kind=GoalKind.HUNGER, utility=_hunger_escalated_unless_threatened(entity, state, utility, pull), target_id=step.target_id,
         target_pos=step.target_pos, target_entity_id=step.target_entity_id, need_access=access, opening_step=step.kind)
 
 
@@ -121,7 +131,7 @@ class EatScorer(GoalScorer):
             return _hunger_without_open_way(entity, state, utility, NeedAccess.NO_WAY_WITHIN_REACH)
         # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn.
         rate = need_rates(entity)[0]
-        utility = _escalated_unless_threatened(entity, state, utility, hunger_pull(utility, bio.hunger, rate, _travel_tiles(entity, best_bldg.position)))
+        utility = _hunger_escalated_unless_threatened(entity, state, utility, hunger_pull(utility, bio.hunger, rate, _travel_tiles(entity, best_bldg.position)))
         return GoalScore(kind=GoalKind.HUNGER, utility=utility, target_id=str(best_bldg.id), target_pos=best_bldg.position, need_access=NeedAccess.WAY_WITHIN_REACH)
 
 
