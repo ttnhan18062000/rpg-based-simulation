@@ -388,6 +388,7 @@ def build_records(
     path_reason: str = "unstated",
     path_note: str | None = None,
     summaries_shared: bool = False,
+    recorder_added: int = 0,
 ) -> tuple[dict, list[dict]]:
     """Expands a minimal `events` list (phase/status/summary per entry) into a full run record
     plus a full event-record batch, both matching record_run.py's/record_events.py's own REQUIRED
@@ -406,7 +407,7 @@ def build_records(
         "workflow": workflow,
         "tier": tier,
         "final_status": final_status,
-        "agent_count": len(events),
+        "agent_count": len(events) - recorder_added,  # events the recorder added (folded phases) are not agent calls
         "execution_mode": "hand",
         # TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD: why this was closed by hand, and the planned phases with no
         # event (read from implement-ticket.yaml at write time; the key is absent when that file cannot be read)
@@ -655,7 +656,14 @@ def main() -> None:
         needs_docs_check = "Document-Update" not in {e.get("phase") for e in events} and "Document-Update" in full_phases(args.tier)
     except Exception:  # noqa: BLE001 - an unreadable plan adds nothing (folded_phase_events reads it again)
         needs_docs_check = False
-    folded = folded_phase_events(args.tier, events, args.agent, _ticket_changed_files(args.ticket_id) if needs_docs_check else set())
+    changed_cache: list = []
+
+    def changed_once():  # one git read per closure, shared by the docs check and the Parity guard
+        if not changed_cache:
+            changed_cache.append(_ticket_changed_files(args.ticket_id))
+        return changed_cache[0]
+
+    folded = folded_phase_events(args.tier, events, args.agent, changed_once() if needs_docs_check else set())
     if folded:
         events = insert_in_plan_order(events, folded)
         print(f"NOTE: recorded {[e['phase'] + ':' + e['status'] for e in folded]} for phases the hand path folds into "
@@ -679,6 +687,7 @@ def main() -> None:
         args.start_ts, args.end_ts, args.workflow, args.provider, args.agent,
         now=now, session_id=os.environ.get("CLAUDE_CODE_SESSION_ID") or None, resolution=resolution,
         path_reason=args.path_reason, path_note=args.path_note, summaries_shared=args.allow_shared_summaries,
+        recorder_added=len(folded),
     )
 
     run_errors = record_run.validate_record(run_record)
@@ -697,7 +706,7 @@ def main() -> None:
         sys.exit(1)
 
     # TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD: refuse templated events before anything is written.
-    changed = _ticket_changed_files(args.ticket_id) if any(
+    changed = changed_once() if any(
         e.get("phase") == "Parity" and e.get("status") in ("ok", "skipped") for e in events) else set()
     refusals = []
     if changed is not None and (parity_error := parity_claimed_without_ledger_change(events, changed)):

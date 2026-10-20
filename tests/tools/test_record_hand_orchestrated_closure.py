@@ -196,10 +196,10 @@ class TestCLIWritesRealRecords:
         assert run_record["run_id"] == "TCK-FAKE-CLI"
         assert run_record["tier"] == "hotfix"
         assert run_record["final_status"] == "DONE"
-        assert run_record["agent_count"] == 4
+        assert run_record["agent_count"] == 3  # the recorder-added Document-Update is not an agent call
 
         event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
-        # the three narrated phases plus the recorder-added Document-Update (hotfix plan: full; TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED)
+        # the three narrated phases plus the recorder-added Document-Update (hotfix plan: full; TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED), not counted in agent_count
         assert [e["phase"] for e in event_lines].count("Document-Update") == 1 and len(event_lines) == 4
         assert [e["seq"] for e in event_lines] == [1, 2, 3, 4]
 
