@@ -7708,6 +7708,38 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION.md
+  ticket_id: TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION
+  title: 'Once hunger is past its consequence line and taking health, starvation is
+    itself a present threat to life: the hunger escalation is no longer dropped while
+    another threat holds; goal selection weighs it (SURV-07 amendment, memo row 83,
+    step two of the V3 fix).'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai/goals/scorers.py, src/engine/starvation.py, src/ai/goals/present_threat.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST.md
+  ticket_id: TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST
+  title: The rpg gate harness unit tests stop racing each other on `data/runs/rpg-gate-sandbox_world-s<seed>-<sha8>*`
+    under pytest-xdist.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/unit/tools/test_rpg_gate_harness.py
+  - run_id_for
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT.md
   ticket_id: TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT
   title: test_observability_websocket_suite step 5 waits for the synthetic walk event
@@ -7717,6 +7749,18 @@
   date: '2026-10-20'
   related_code_areas:
   - tests/api/test_observability_websocket.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS.md
+  ticket_id: TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS
+  title: Every seed of a world emits the same (id, group, key) rows, taken from declared
+    domains, with true zeros; a share is two count rows and a pooled row
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - src/observability/rpg_gate_metrics.py
   artifact_files: []
   tags: []
 - type: ticket
@@ -7813,6 +7857,21 @@
   - _meat_decayed_events
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH.md
+  ticket_id: TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH
+  title: The native-refusal test writes its temp script copy under tmp_path, not a
+    fixed name in the real `.claude/workflows/`
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/tools/test_implement_ticket_native_refusal.py
+  - .claude/workflows/implement-ticket.js
+  artifact_files: []
+  tags:
+  - testing
+  - regression
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD.md
   ticket_id: TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD
@@ -7979,6 +8038,20 @@
   tags:
   - observability
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
+  ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
+  title: 'A panic whose destination resolves to the subject''s own tile is not taken:
+    the tick falls through the existing order (in-place survival, then the arrival
+    at a building) (V3 pre-v1 step, designer ruling "a flight with no destination
+    is not flight").'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/engine/tactical.py, src/engine/tactical_destinations.py, src/engine/tactical_rest.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
   ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
   title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
@@ -8084,6 +8157,18 @@
   related_code_areas:
   - tools/rpg_measure/paired.py
   - tests/regression/test_behavioral_5k.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-RETREAT-DESTINATION-NEEDS-A-REGION-WOUNDED-SUBJECTS-IN-UNCLAIMED-SPACE-CANNOT-FLEE.md
+  ticket_id: TCK-20261019-RETREAT-DESTINATION-NEEDS-A-REGION-WOUNDED-SUBJECTS-IN-UNCLAIMED-SPACE-CANNOT-FLEE
+  title: 'retreat_destination needs a region: wounded subjects in unclaimed space
+    cannot flee.'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/engine/tactical_destinations.py:38, :80+; src/engine/tactical.py:107.
   artifact_files: []
   tags: []
 - type: ticket
