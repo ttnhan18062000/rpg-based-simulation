@@ -2,12 +2,11 @@ import hashlib
 import pytest
 import asyncio
 import json
-import subprocess
-import sys
-import time
 import websockets
-import os
 import requests
+import socket
+
+from tests.helpers.live_server import start_server, stop_server
 
 _TEST_CLIENT_ID = "observability-websocket-test-client"
 _TEST_RAW_KEY = "observability-websocket-test-key"
@@ -17,17 +16,16 @@ _TEST_KEY_HASH = hashlib.sha256(_TEST_RAW_KEY.encode("utf-8")).hexdigest()
 async def test_observability_websocket_suite():
     """Exhaustively verify WebSocket live events API handshake, filtering, heartbeats, and limits."""
     port = 8019
-    env = os.environ.copy()
-    env["SIM_OBS_MODE"] = "DEBUG"
-    env["RPG_API_KEY_HASHES"] = f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"
     headers = {"X-API-Key": _TEST_RAW_KEY}
 
-    log_file = open("uvicorn_ws_obs.log", "w")
+    # The port is fixed, so a server another run left on it would answer /health and the
+    # test would talk to the wrong process: refuse to start rather than do that.
+    with socket.socket() as probe:
+        assert probe.connect_ex(("127.0.0.1", port)) != 0, f"port {port} is already in use (another run of this test?)"
 
-    # Start the V2 API server uvicorn subprocess
-    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "INFO"]
-    server = subprocess.Popen(cmd, env=env, stdout=log_file, stderr=log_file)
-    time.sleep(4.0)  # Wait for uvicorn server to initialize completely
+    # start_server polls /health until the server answers (a fixed sleep made this test fail
+    # with ConnectionRefused whenever the host was loaded).
+    server, log_file = start_server(port, env={"SIM_OBS_MODE": "DEBUG", "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"})
 
     try:
         base_url = f"ws://127.0.0.1:{port}/api/v1/ws/observability/events"
@@ -114,20 +112,25 @@ async def test_observability_websocket_suite():
             # legitimately pass the subscription's category filter too, so only the specific
             # synthetic event we posted should end the loop; any other movement event is
             # background noise to skip past, not a test failure.
+            # The bound is wall-clock, not a message count: how many real movement events
+            # queue ahead of the synthetic one depends on how long the POST takes and how
+            # fast the simulation ticks, so a count of messages (previously 10) runs out on a
+            # loaded runner while the walk event is still behind them in the FIFO queue.
             event_received = False
-            for _ in range(10):
+            deadline = asyncio.get_event_loop().time() + 20.0
+            while asyncio.get_event_loop().time() < deadline:
                 try:
                     resp = await asyncio.wait_for(ws.recv(), timeout=2.0)
-                    data = json.loads(resp)
-                    if (
-                        data["type"] == "event"
-                        and data["event"]["event_category"] == "movement"
-                        and data["event"]["event_type"] == "walk"
-                    ):
-                        event_received = True
-                        break
                 except asyncio.TimeoutError:
                     continue
+                data = json.loads(resp)
+                if (
+                    data["type"] == "event"
+                    and data["event"]["event_category"] == "movement"
+                    and data["event"]["event_type"] == "walk"
+                ):
+                    event_received = True
+                    break
             assert event_received, "Failed to receive movement event from stream"
             # If no lifecycle events occurred, that's fine, we verified the filter structure.
 
@@ -162,9 +165,4 @@ async def test_observability_websocket_suite():
                 await client.close()
 
     finally:
-        server.kill()
-        server.wait()
-        log_file.close()
-        # Clean up uvicorn log
-        if os.path.exists("uvicorn_ws_obs.log"):
-            os.remove("uvicorn_ws_obs.log")
+        stop_server(server, log_file)
