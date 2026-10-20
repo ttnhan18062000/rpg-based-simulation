@@ -7764,6 +7764,23 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
+  ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
+  title: 'A panic whose destination resolves to the subject''s own tile is not taken:
+    the tick falls through the existing order (in-place survival, then the arrival
+    at a building) (V3 pre-v1 step, designer ruling "a flight with no destination
+    is not flight").'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - src/engine/tactical.py, src/engine/tactical_destinations.py, src/engine/tactical_rest.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM.md
   ticket_id: TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM
   title: 'The request-duration histogram gets a 0.3 s bucket so the API SLO alert
@@ -8037,20 +8054,6 @@
   artifact_files: []
   tags:
   - observability
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
-  ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
-  title: 'A panic whose destination resolves to the subject''s own tile is not taken:
-    the tick falls through the existing order (in-place survival, then the arrival
-    at a building) (V3 pre-v1 step, designer ruling "a flight with no destination
-    is not flight").'
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-19'
-  related_code_areas:
-  - src/engine/tactical.py, src/engine/tactical_destinations.py, src/engine/tactical_rest.py
-  artifact_files: []
-  tags: []
 - type: ticket
   path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
   ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS

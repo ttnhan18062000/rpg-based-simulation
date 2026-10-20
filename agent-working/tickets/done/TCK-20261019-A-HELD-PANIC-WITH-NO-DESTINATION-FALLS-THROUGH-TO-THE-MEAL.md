@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
-phase: open
+phase: done
 date: 2026-10-19
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 A panic whose destination resolves to the subject's own tile is not taken: the tick falls through the existing order (in-place survival, then the arrival at a building) (V3 pre-v1 step, designer ruling "a flight with no destination is not flight").
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -65,10 +65,10 @@ src/engine/tactical.py, src/engine/tactical_destinations.py, src/engine/tactical
 tactical.py: panic_destination computed once; the panic branch requires a destination or a real tactical hostile (new helper _has_tactical_hostiles).
 
 ## Test Summary
-TBD
+tests/unit/tactical/test_held_panic_falls_through.py (merchant-37 case, a panic with a real destination, a held panic beside a real tactical hostile) and tests/integration/observability/test_starving_wounded_merchant_eats_through_the_real_kernel.py pass on the combined pre-v1 branch (with tests/unit/ai and tests/unit/tactical: 1421 passed, 6 skipped across the observability, rpg_gate and V3 suites). Paired 3 worlds x seeds 42-46 x 5000t reported in divergence 2.135: (b) alone and (b)+(ii) moved no stop rule (D76).
 
 ## Files Changed
 src/engine/tactical.py; tests/unit/tactical/test_held_panic_falls_through.py; the todo ticket TCK-20261019-RETREAT-DESTINATION-NEEDS-A-REGION-WOUNDED-SUBJECTS-IN-UNCLAIMED-SPACE-CANNOT-FLEE; staging artifacts; docs/REGISTRY.yaml.
 
 ## Completion Summary
-TBD
+Landed as part of the combined pre-v1 PR with the (ii) ticket (rpg-v3-starvation-threat 29d4d3d07, (b) a49896e1c). Closed by hand-orchestration at the fold.
