@@ -160,8 +160,8 @@ def test_terrain_variants_survive_module_pipeline(repos):
     resolver = WorldAssemblyResolver(cat, mod)
 
     declared_variants = [
-        TerrainVariantSpec(terrain="FOREST", weight=2.0),
-        TerrainVariantSpec(terrain="GRASS", weight=1.0),
+        TerrainVariantSpec(terrain="forest", weight=2.0),
+        TerrainVariantSpec(terrain="grass", weight=1.0),
     ]
     declared_spec = WorldModuleSpec(
         schema_version="worldmodule.v1",

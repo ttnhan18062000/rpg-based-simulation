@@ -23,9 +23,9 @@ def _config(**over) -> base.GateConfig:
     return base.GateConfig(**args)
 
 
-def _seed_doc(seed, *, v3=0, sha=SHA, hhash=HASH, ticks=100, k=2.0, floor=1.0):
+def _seed_doc(seed, *, v3=0, sha=SHA, hhash=HASH, ticks=100, k=2.0, floor=1.0, value=None, floor_rel=None):
     return {"schema": "rpg-gate-metrics/v1", "status": "ok", "world": "w", "seed": seed, "ticks": ticks, "sha": sha, "harness_hash": hhash, "metrics": [
-        {"id": "O1", "class": "outcome", "scope": "run", "group": "*", "key": "DEATHS", "tick": 100, "value": 10.0 + seed, "k": k, "floor": floor},
+        {"id": "O1", "class": "outcome", "scope": "run", "group": "*", "key": "DEATHS", "tick": 100, "value": 10.0 + seed if value is None else value, "k": k, "floor": floor, **({"floor_rel": floor_rel} if floor_rel is not None else {})},
         {"id": "V1", "class": "validity", "scope": "run", "group": "*", "violations": 0, "examples": [], "oracle": ORACLE},
         {"id": "V3", "class": "validity", "scope": "run", "group": "wolves", "violations": v3, "examples": ["x"] if v3 else [], "oracle": ORACLE},
     ]}
@@ -152,6 +152,15 @@ def test_a_row_absent_from_one_seed_refuses(tmp_path):
     _refused(_write(tmp_path / "d", docs), r"O1 \(group \*\) is absent from seed\(s\) \[2\]")
 
 
+def test_a_keyed_row_absent_from_one_seed_refuses_with_the_row_set_text(tmp_path):
+    """The row set is declared by the module and nothing is imputed (TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED): a keyed count row a seed omits is a refusal."""
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_doc()}
+    for seed in SEEDS:
+        docs[("w", seed)]["metrics"].append({"id": "O4", "class": "outcome", "scope": "run", "group": "meat", "key": "eaten", "tick": 100, "value": 2.0, "k": 2.0, "floor": 1.0})
+    docs[("w", 3)]["metrics"] = [m for m in docs[("w", 3)]["metrics"] if m["id"] != "O4"]
+    _refused(_write(tmp_path / "d", docs), r"row O4 \(group meat\) is absent from seed\(s\) \[3\]; every seed must report the same rows")
+
+
 # ---- validity fails: owned ones are omitted and recorded, others refuse
 
 def _failing(v3=2):
@@ -272,29 +281,29 @@ def _full(directory):
 
 
 def test_a_required_validity_row_present_everywhere_does_not_refuse(tmp_path):
-    candidate = _build(_write(tmp_path / "d"), config=_config(required_validity=("V3",)))
+    candidate = _build(_write(tmp_path / "d"), config=_config(required_validity={"run": ("V3",), "pooled": ("V3",)}))
     assert "omitted_validity" not in candidate
 
 
 def test_a_missing_required_validity_row_refuses_without_an_owner(tmp_path):
     docs = _write(tmp_path / "d", _without(_full(tmp_path), "V3"))
-    _refused(docs, "required validity row V3 is missing and has no owner", config=_config(required_validity=("V3",)))
+    _refused(docs, "required validity row V3 is missing and has no owner", config=_config(required_validity={"run": ("V3",), "pooled": ("V3",)}))
 
 
 def test_a_missing_required_row_is_accepted_when_an_owned_fail_covers_it_and_is_listed(tmp_path):
     docs = _write(tmp_path / "d", _without(_full(tmp_path), "V3"))
     known = [_entry(match="V3", ticket="TCK-OWN-V3")]
-    candidate = _build(docs, known, config=_config(required_validity=("V3",)), milestone="M0")
-    assert candidate["omitted_validity"] == [{"row": "V3:run:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}]
+    candidate = _build(docs, known, config=_config(required_validity={"run": ("V3",), "pooled": ("V3",)}), milestone="M0")
+    assert candidate["omitted_validity"] == [{"row": "V3:pooled:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}, {"row": "V3:run:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}]  # one per level
     assert not [r for r in candidate["metrics"] if r["id"] == "V3"]
     baselines = tmp_path / "b"
-    base.rebaseline(candidate, _config(required_validity=("V3",)), baselines, pr=None, cites=["TCK-METRIC-SET"], known=known, today=TODAY)
+    base.rebaseline(candidate, _config(required_validity={"run": ("V3",), "pooled": ("V3",)}), baselines, pr=None, cites=["TCK-METRIC-SET"], known=known, today=TODAY)
     assert base.lint_dir(baselines) == []
 
 
 def test_an_expired_or_wrong_state_owner_does_not_cover_a_missing_required_row(tmp_path):
     docs = _write(tmp_path / "d", _without(_full(tmp_path), "V3"))
-    cfg = _config(required_validity=("V3",))
+    cfg = _config(required_validity={"run": ("V3",), "pooled": ("V3",)})
     _refused(docs, "expired", [_entry(match="V3", expires="2026-10-01")], config=cfg)
     _refused(docs, "no owner", [{**_entry(match="V3"), "state": "flaky"}], config=cfg)
 
@@ -302,7 +311,7 @@ def test_an_expired_or_wrong_state_owner_does_not_cover_a_missing_required_row(t
 def test_a_row_missing_from_only_the_pooled_document_refuses_too(tmp_path):
     docs = _full(tmp_path)
     docs[("w", None)] = {**docs[("w", None)], "metrics": [m for m in docs[("w", None)]["metrics"] if m["id"] != "V3"]}
-    _refused(_write(tmp_path / "d", docs), r"w__pooled\.json: required validity row V3 is missing", config=_config(required_validity=("V3",)))
+    _refused(_write(tmp_path / "d", docs), r"w__pooled\.json: required validity row V3 is missing", config=_config(required_validity={"run": ("V3",), "pooled": ("V3",)}))
 
 
 def _with_stub_v8(mode):
@@ -313,10 +322,133 @@ def _with_stub_v8(mode):
 
 
 def test_the_stub_v8_row_clean_is_recorded_and_violating_needs_an_owner(tmp_path):
-    cfg = _config(required_validity=("V8",))
+    cfg = _config(required_validity={"run": ("V8",), "pooled": ("V8",)})
     candidate = _build(_write(tmp_path / "ok", _with_stub_v8("clean")), config=cfg)
     assert [r["id"] for r in candidate["metrics"] if r["id"] == "V8"]
     _refused(_write(tmp_path / "bad", _with_stub_v8("violations")), "validity row V8 has 1 violation", config=cfg)
     _refused(_write(tmp_path / "gone", _with_stub_v8("absent")), "required validity row V8 is missing", config=cfg)
     owned = _build(_write(tmp_path / "own", _with_stub_v8("violations")), [_entry(match="V8", ticket="TCK-RPG-V8")], config=cfg)
     assert [o["known_match"] for o in owned["omitted_validity"]] and not [r for r in owned["metrics"] if r["id"] == "V8"]
+
+
+# ---- TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL: a row is required at the level it is judged at
+
+PER_LEVEL = {"run": ("V1", "V3"), "pooled": ("V3",)}  # the fixture's seed documents carry V1 and V3, its pooled document only V3 (no V1)
+
+
+def _drop(doc, rid):
+    return {**doc, "metrics": [m for m in doc["metrics"] if m["id"] != rid]}
+
+
+def test_a_pooled_document_without_a_run_only_row_and_seed_documents_without_a_pooled_only_row_do_not_refuse(tmp_path):
+    docs = _full(tmp_path)
+    docs = {k: (_drop(d, "V3") if k[1] is not None else d) for k, d in docs.items()}  # seeds lack V3, which is required at the pooled level only
+    candidate = _build(_write(tmp_path / "d", docs), config=_config(required_validity={"run": ("V1",), "pooled": ("V3",)}))
+    assert "omitted_validity" not in candidate
+
+
+def test_dropping_a_run_row_from_one_seed_refuses_and_an_owner_lists_it_as_run_level(tmp_path):
+    docs = _full(tmp_path)
+    docs[("w", 2)] = _drop(docs[("w", 2)], "V3")
+    cfg = _config(required_validity={"run": ("V3",), "pooled": ()})
+    _refused(_write(tmp_path / "d", docs), r"w__s2\.json: required validity row V3 is missing and has no owner", config=cfg)
+    candidate = _build(_write(tmp_path / "o", docs), [_entry(match="V3", ticket="TCK-OWN-V3")], config=cfg)
+    assert candidate["omitted_validity"] == [{"row": "V3:run:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}]
+
+
+def test_dropping_a_pooled_row_refuses_and_an_owner_lists_it_as_pooled_level(tmp_path):
+    docs = _full(tmp_path)
+    docs[("w", None)] = _drop(docs[("w", None)], "V3")
+    cfg = _config(required_validity={"run": (), "pooled": ("V3",)})
+    _refused(_write(tmp_path / "d", docs), r"w__pooled\.json: required validity row V3 is missing and has no owner", config=cfg)
+    candidate = _build(_write(tmp_path / "o", docs), [_entry(match="V3", ticket="TCK-OWN-V3")], config=cfg)
+    assert candidate["omitted_validity"] == [{"row": "V3:pooled:w:*", "known_match": "V3", "ticket": "TCK-OWN-V3"}]
+
+
+def test_a_pooled_only_row_is_not_asked_of_the_seed_documents(tmp_path):
+    cfg = _config(required_validity={"run": ("V1",), "pooled": ("V7",)})
+    _refused(_write(tmp_path / "d"), r"w__pooled\.json: required validity row V7 is missing", config=cfg)  # only the pooled document is asked for V7
+
+
+def test_floors_may_differ_between_worlds_but_not_between_the_seeds_of_one(tmp_path):
+    two = _config(worlds=("w", "x"))
+
+    def world(name, floor_by_seed):
+        out = {(name, s): {**_seed_doc(s, floor=floor_by_seed[s]), "world": name} for s in SEEDS}
+        out[(name, None)] = {**_pooled_doc(), "world": name}
+        return out
+
+    same_per_world = {**world("w", {1: 1.0, 2: 1.0, 3: 1.0}), **world("x", {1: 3.0, 2: 3.0, 3: 3.0})}
+    assert "metrics" in _build(_write(tmp_path / "ok", same_per_world), config=two)
+    drift = {**world("w", {1: 1.0, 2: 1.0, 3: 1.0}), **world("x", {1: 3.0, 2: 3.1, 3: 3.0})}
+    _refused(_write(tmp_path / "bad", drift), r"threshold mismatch for O1 in x", config=two)
+
+
+def test_the_candidate_records_its_own_thresholds():
+    """TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD AC5: a new baseline carries the candidate's k and floor, not any reference's."""
+    docs = {**{("w", s): _seed_doc(s, k=3.5, floor=7.0) for s in SEEDS}, ("w", None): _pooled_doc()}
+    candidate = _build(_write(Path(__import__("tempfile").mkdtemp()) / "d", docs))
+    row = next(r for r in candidate["metrics"] if r["id"] == "O1")
+    assert (row["k"], row["floor"]) == (3.5, 7.0)
+    pooled = next(r for r in candidate["metrics"] if r["id"] == "O9")
+    assert pooled["floor"] == 0.1
+
+
+def _pooled_with_share(**row):
+    doc = _pooled_doc()
+    doc["metrics"].append({"id": "O8", "class": "outcome", "scope": "pooled", "group": "*", "floor": 0.1, **row})
+    return doc
+
+
+def test_an_empty_denominator_share_is_left_out_and_listed_not_refused(tmp_path):
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_with_share(value=None, reason="empty_denominator")}
+    candidate = _build(_write(tmp_path / "d", docs), ())
+    assert candidate["undefined_rows"] == [{"row": "O8:pooled:w:*", "reason": "empty_denominator"}]
+    assert not [m for m in candidate["metrics"] if m["id"] == "O8"]
+
+
+def test_a_null_pooled_share_without_the_reason_still_refuses(tmp_path):
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_with_share(value=None)}
+    _refused(_write(tmp_path / "d", docs), "pooled outcome row O8 has no numeric value")
+
+
+# ---- a relative floor (TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR)
+
+def _o1(candidate):
+    return next(m for m in candidate["metrics"] if m["id"] == "O1" and m["scope"] == "run")
+
+
+def _rel_docs(values, **kw):
+    return {**{("w", s): _seed_doc(s, value=v, floor=3.0, floor_rel=0.10, **kw) for s, v in zip(SEEDS, values)}, ("w", None): _pooled_doc()}
+
+
+def test_the_candidate_records_the_relative_floor_with_its_two_parts(tmp_path):
+    row = _o1(_build(_write(tmp_path / "a", _rel_docs([40.0, 50.0, 60.0])), ()))
+    assert (row["floor"], row["floor_base"], row["floor_rel"]) == (5.0, 3.0, 0.10)
+    small = _o1(_build(_write(tmp_path / "b", _rel_docs([5.0, 5.0, 5.0])), ()))
+    assert (small["floor"], small["floor_base"], small["floor_rel"]) == (3.0, 3.0, 0.10)
+
+
+def test_a_row_without_floor_rel_records_only_floor(tmp_path):
+    row = _o1(_build(_write(tmp_path / "a"), ()))
+    assert "floor_rel" not in row and "floor_base" not in row
+
+
+def test_floor_rel_outside_zero_to_one_or_not_a_number_refuses(tmp_path):
+    for bad in (0, -0.1, 1.5, "0.1", True):
+        docs = {**{("w", s): _seed_doc(s, floor_rel=0.1) for s in SEEDS}, ("w", None): _pooled_doc()}
+        for s in SEEDS:
+            docs[("w", s)]["metrics"][0]["floor_rel"] = bad
+        _refused(_write(tmp_path / f"d{bad!r}", docs), "floor_rel .* must be a number in")
+
+
+def test_a_pooled_row_with_floor_rel_refuses(tmp_path):
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_doc()}
+    docs[("w", None)]["metrics"][1]["floor_rel"] = 0.1
+    _refused(_write(tmp_path / "d", docs), "pooled outcome row O9 carries floor_rel")
+
+
+def test_floor_rel_must_agree_across_the_documents_of_a_world(tmp_path):
+    docs = _rel_docs([40.0, 50.0, 60.0])
+    docs[("w", 2)]["metrics"][0]["floor_rel"] = 0.2
+    _refused(_write(tmp_path / "d", docs), "threshold mismatch for O1")

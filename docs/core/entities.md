@@ -140,6 +140,8 @@ instantiates all 16 components listed in the roster above (`identity`, `inventor
 `AuthoritativeState.__post_init__` (`state.py:1218-1263`) additionally guards `next_entity_id`
 against collisions with any pre-existing integer entity keys already present in `entities`.
 
+At run time an add never reuses an id: every mid-run generator comes from `EntityGenerator.for_state(state, update)` (its counter starts past `next_entity_id`, every live id and every id an earlier phase of the tick added), the apply raises `DuplicateEntityIdError` for an `entities_add` whose id exists, and it advances `next_entity_id` past every added id.
+
 > [!IMPORTANT]
 > All `EntityState` changes must flow through the authoritative apply path described in
 > `docs/core/state.md`'s "Frozen Lifecycle" Law. Do not attempt ad-hoc field mutation outside the

@@ -7,6 +7,8 @@ from src.engine.kernel import Kernel
 from src.engine.replay_manager import ReplayManager
 from src.engine.policy import GovernorPolicy
 from src.config.profiles import RuntimeProfile, HardwareClass
+from src.engine.executor import LocalSequentialExecutor
+from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
 
 def test_replay_is_non_authoritative(tmp_path):
@@ -37,7 +39,9 @@ def test_replay_is_non_authoritative(tmp_path):
     
     rng = MagicMock()
     rng.get_state.return_value = None
-    kernel = Kernel(profile=profile, state=state, rng=rng, replay=replay)
+    # Pinned governor: the default one reads host memory against this profile's 512 MB cap and drops to SURVIVAL (replay off) in a large
+    # pytest process, which would make the persist_chunk assertion depend on the host.
+    kernel = Kernel(profile=profile, state=state, rng=rng, replay=replay, governor=PinnedNormalGovernor(), executor=LocalSequentialExecutor())
 
     # 3. Execute ticks
     # Even if the sink fails, tick_once should complete normally

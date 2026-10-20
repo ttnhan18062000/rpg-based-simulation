@@ -258,6 +258,7 @@ class ResourceTransactionSystem:
         ResourceTransactionSystem._apply_source_debits(refined_entity_updates, source_debits)
         existing_world_events = list(update.world_events_add)
         existing_world_events.extend(world_events)
+        existing_world_events = ResourceTransactionSystem._without_decay_of_looted_bodies(existing_world_events, new_corpses_remove[len(update.corpses_remove):])
         return replace(update,
             entity_updates=refined_entity_updates,
             node_updates=new_node_updates,
@@ -274,6 +275,16 @@ class ResourceTransactionSystem:
             processed_transaction_ids=list(processed_ids.union(in_tick_processed_ids)),
             world_events_add=existing_world_events
         )
+
+    @staticmethod
+    def _without_decay_of_looted_bodies(events: list, removed_by_transfer: List[int]) -> list:
+        """MEAT_DECAYED is a record of meat that left the world by decay (decision 44). The world-dynamics step writes it before the transfers resolve,
+        so a body that decays on the tick an accepted whole-body loot (a CORPSE transfer) takes it carries a record for meat the looter received. The
+        record is written from the applied outcome: that body yields the loot and no decay record (the run ledger and the V2/H7 check then agree)."""
+        looted = {str(corpse_id) for corpse_id in removed_by_transfer}
+        if not looted:
+            return events
+        return [e for e in events if not (e.category == WorldEventCategory.MEAT_DECAYED and e.subject in looted)]
 
     @staticmethod
     def _note_depletion(state: AuthoritativeState, result: Any, node_updates: Dict[int, Any], depleted: set, events: list) -> None:

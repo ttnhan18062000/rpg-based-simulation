@@ -33,9 +33,13 @@ World rule SURV-07 restates the tier order above (Survival, then Biological, the
 
 **A panic flight needs a present threat (TCK-20261011-A-PANIC-RETREAT-TO-ITS-OWN-TILE-IS-HELD-WITH-NO-THREAT-IN-SIGHT).** Tier 1 says only a present threat to life outranks a pressing need, but the first gate of the tactical pass (`emotion.is_fleeing`) summed panic terms that need no hostile (low hit points, regional dread, a grudge), so a wounded subject with nothing in sight fled "from nothing": `retreat_destination` had no threat vector and no home region, the destination was its own tile (MOV-03, hold), and the held `PANIC_RETREAT` stood above hunger for hundreds of ticks (measured: a merchant at 7 of 85 hp held 500+ ticks, then slept through its own starvation). The flight is now issued only when a hostile is perceived (`_perceived_threats`); dread, grudge and low hit points still feed the panic, so they matter once a threat is in sight, and a cornered subject with a threat in sight still holds its tile (MOV-03). A flight ends on arriving within a tile of its point (`arrived_in_area`), which for a cornered flight is at once. Wounds do not heal outside a town tile, an inn rest or a level-up (no natural hit-point regeneration is stated in Bible 01 or built): a disclosed gap.
 
+**Hunger wakes a held gatherer that carries food it can eat (TCK-20261012-A-HELD-GATHERER-ON-A-REGROWING-PATCH-IS-NEVER-RELEASED-TO-EAT, SURV-06 x SURV-07).** A held `INTERACT` on a node that still has charges runs no brain and ends only when the node is gone or empty, so a grazer on a regrowing patch gathered grass while its hunger climbed (traced: hunger 70 to 100, seven grass carried, no meal). From the SURV-07 onset (hunger at 0.6 of its line) a held gatherer that carries food its diet can eat is woken for the brain on the strategic cadence (staggered by id); the decision then eats. With nothing edible carried it keeps gathering (the gathering is the way to food), and a sated gatherer is never woken. No new constant.
+
 **Hunger wakes a sleeper (TCK-20261011-HUNGER-WAKES-A-SLEEPER, owner ruling 2026-10-11, SURV-07 x decision 41).** A held SLEEP or REST runs no brain, so a subject that fell asleep at hunger 96 slept through its own starvation (traced: two merchants and a scout, 300 to 400 ticks; one with 81 gold). `DeterministicScheduler._is_need_woken` now wakes the brain of a sleeper (`is_asleep`) on the strategic cadence (every 10 ticks, staggered by id) while hunger is at or past `ESCALATION_ONSET` of its line (`need_pull.hunger_is_pressing`, 0.6 of 95; no new constant). Only hunger wakes a sleeper: its sleep debt is high by nature. A wake is a re-decision only: a chosen sleep or rest ends there, and the subject eats if a way is open, else decides to sleep again (the debt remains); a collapse (debt at the collapse line, 98) is woken too, but the decision is the collapse again until the debt is back below the line (about 20 ticks), after which hunger can end it and the subject wakes still weakened (debt above 80).
 
-Only a **present threat** outranks a pressing need. A perceived, catalog-hostile neighbour plus one of AGENCY-07's terms (wounded, adjacent, targeting, closing, outmatching; `present_threat_to`) removes the escalation, so a need never outbids combat flight or engagement; a wound alone with no hostile in view is not a threat. A bed is a way only within `SLEEP_DEBT.bed_reach` tiles (and inside a leashed subject's range); beyond that the sleep goal names no place. A subject whose fatigue project cannot reach a bed (inn or home) before its sleep debt reaches 0.85 of the line, or that has no bed to walk to, **rests where it stands** when no present threat holds: the tactical pass dispatches `REST` (rough rest, SURV-06) with reason `REST_IN_PLACE` (`rest_in_place_update`, `src/engine/tactical_rest.py`). The curve constants are engineering's (Decision 24); they are measured in divergence 2.81 (`docs/guidelines/intentional_divergences.md`).
+Only a **present threat** outranks a pressing need. A perceived, catalog-hostile neighbour plus one of AGENCY-07's terms (wounded, adjacent, targeting, closing, outmatching; `present_threat_to`) removes the escalation below the starvation line, so there a need never outbids combat flight or engagement (past the line, see the next paragraph); a wound alone with no hostile in view is not a threat. A bed is a way only within `SLEEP_DEBT.bed_reach` tiles (and inside a leashed subject's range); beyond that the sleep goal names no place. A subject whose fatigue project cannot reach a bed (inn or home) before its sleep debt reaches 0.85 of the line, or that has no bed to walk to, **rests where it stands** when no present threat holds: the tactical pass dispatches `REST` (rough rest, SURV-06) with reason `REST_IN_PLACE` (`rest_in_place_update`, `src/engine/tactical_rest.py`). The curve constants are engineering's (Decision 24); they are measured in divergence 2.81 (`docs/guidelines/intentional_divergences.md`).
+
+**Starvation that is taking health is itself a present threat (SURV-07 amendment, memo row 83, TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION).** Past the starvation line (95, where health drains, `src/engine/starvation.py` `STARVING_LINE`) a present threat no longer drops the hunger goal (`_hunger_escalated_unless_threatened`, `src/ai/goals/scorers.py`); a threat acting on the subject still pre-empts it in the tactical pass. The weighing is by immediacy, not by score magnitude: at the goal level the starving pull (155-160) exceeds the retreat ceiling (150). Below the line the gate above stands, fatigue is unchanged, and there is no timer. A starving subject may therefore leave a fight it chose in order to eat; a fight acting on it is still handled first.
 
 ## 2. Interruption Resistance
 To prevent "Goal Flickering" (rapidly switching between two similar goals), entities apply an **Interruption Margin**. For adventure-domain project routing specifically, this law only governs entities whose resolved `CognitionProfileDefinition.supports_adventure_routing` is `True` (`src/content/schema.py:100`) — see `docs/simulation/domains/adventure_contract.md` for the full eligibility gate. (System B's general goal-switching via `GoalRegistry` also uses `Switch_Allowed`/`Interruption_Margin`, independent of this eligibility gate.)
@@ -168,41 +172,28 @@ respectively.
 running episode now injects the same `grief_ally_{dead_ally_id}` `SOCIAL_THREAT` concern within
 the same episode, through the authoritative pipeline rather than a direct `EntityState` return:
 
-1. `EventExtractor.detect_grief_triggers()` (`src/observability/event_extractor.py:1665-1706`)
-   is called from `Kernel._phase_observability()` (`src/engine/kernel.py:1009`), immediately
-   after that phase's own `EventExtractor.extract()` call. It re-walks the same
-   `lifecycle.active: True→False` transition condition used for death detection and returns
-   `(griever_id, dead_ally_id, urgency)` triples for every currently-alive entity whose
-   `entity.social.trust_history` toward the newly-dead entity meets `ALLY_TRUST_THRESHOLD`
-   (`0.30`, `src/core/social_constants.py` — re-exported by `grief_urgency.py` for its own
-   callers). `urgency = round(min(1.0, trust * 0.8), 6)` — the identical
-   formula `CampaignOrchestrator._advance_grief_urgencies()` uses, so the two paths cannot
-   diverge in value.
-2. Because Observability runs *after* that tick's own `ApplyPath` pass in the 7-phase kernel loop
-   (`docs/engine/kernel.md`), the resulting mutation cannot land in the same tick that detected
-   the death. `Kernel._phase_observability()` records a `GriefUrgencyTriggeredEvent` immediately
-   (`kernel.py:1008-1012`) and queues each triple onto `Kernel._pending_grief_triggers`
-   (`kernel.py:1013`).
-3. On the *next* tick's `_phase_resolution()`, `Kernel._drain_pending_grief_triggers()`
-   (`kernel.py:692-730`) converts each queued triple into a `StrategicUpdate` via
-   `GriefUrgencyImporter.build_strategic_update()` (`grief_urgency.py:81-91`) — built from the
-   same `_build_grief_concern()` helper (`grief_urgency.py:45-63`) Path 1's `apply()` uses, so
-   the concern id/shape cannot drift between the two paths. The `StrategicUpdate` is merged into
-   that tick's `entity_updates` (`EntityUpdate.merge()`, preserving any decision system's own
-   update for the same entity) and committed through the normal `AuthoritativeApplyPipeline.
-   refine()` / `ApplyPath` route (`kernel.py:635`, `:659-664`) — the same authoritative route
-   `src/engine/tactical.py` already uses for its own `StrategicUpdate`s. This is the durable-state
-   rule this mechanism now satisfies for any mid-tick caller, which the Path 1 direct-`EntityState`
-   -return shape could not.
-4. **Last-tick edge case:** a death on an episode's *final* tick has no subsequent tick to drain
-   into. `Kernel.drain_pending_triggers_at_teardown()` (`kernel.py:732-754`) is a one-shot
-   resolution+apply flush against the current (final) state — reusing
-   `_drain_pending_grief_triggers()` and the same `AuthoritativeApplyPipeline.refine()` +
-   `ApplyPath.apply_generation()` commit route, but running none of the other 6 kernel phases and
-   not advancing `tick`/`world_time`. `ScenarioRuntimeService.flush_pending_grief_triggers()`
-   (`src/engine/scenario_runtime.py:264`) invokes it, and `CampaignOrchestrator.run_episode()`
-   (`src/domains/campaigns/orchestrator.py:178`) calls that before reading `svc.final_state` —
-   guaranteeing the same-episode injection guarantee holds even on the terminal tick.
+1. **Detection reads state (decision 80, grief as state).** `pending_grief_triggers(state)` (`src/core/grief_triggers.py`) is a pure function of
+   `AuthoritativeState`: every body with `lifecycle.active == False` whose `lifecycle.death_record.tick == state.tick - 1` (it died on the previous
+   tick, the lifecycle resolver wrote the record) is a death owed a grief, and every still-active entity whose `entity.social.trust_history` toward it
+   meets `ALLY_TRUST_THRESHOLD` (`0.30`, `src/core/social_constants.py`) yields `(griever_id, dead_ally_id, urgency)` with
+   `urgency = round(min(1.0, trust * 0.8), 6)`, the formula `CampaignOrchestrator._advance_grief_urgencies()` uses. Nothing depends on the
+   observability mode.
+2. **The watermark is typed state.** `AuthoritativeState.grief_drained_tick` (default `-1`) is the newest death tick whose triggers have been applied. It
+   is written only through `StateUpdate.grief_drained_tick_set` and the apply path, in the same update as the `StrategicUpdate`s, and a death whose tick is
+   at or below it is never owed again. It is in the canonical data and the replay fingerprint only once it is not `-1`, so every state without a grief
+   drain keeps its digest. There is no kernel-side list.
+3. On a tick's `_phase_resolution()`, `Kernel._drain_pending_grief_triggers()` converts each owed trigger into a `StrategicUpdate` via
+   `GriefUrgencyImporter.build_strategic_update()` (`grief_urgency.py`) — built from the same `_build_grief_concern()` helper Path 1's `apply()` uses, so
+   the concern id/shape cannot drift between the two paths. The `StrategicUpdate` is merged into that tick's `entity_updates` (`EntityUpdate.merge()`,
+   preserving any decision system's own update for the same entity) and committed through the normal `AuthoritativeApplyPipeline.refine()` /
+   `ApplyPath` route, together with `grief_drained_tick_set`. The mutation therefore lands one tick after the death, as before.
+   `Kernel._phase_observability()` only reports: it builds a `GriefUrgencyTriggeredEvent` from the same function and emits nothing when observability is
+   `OFF`; the authoritative outcome is the same either way.
+4. **Last-tick edge case:** a death on an episode's *final* tick has no subsequent tick to drain into. `Kernel.drain_pending_triggers_at_teardown()` is a
+   one-shot resolution+apply flush against the current (final) state — the same owed triggers from state, the same commit route, no other kernel phase,
+   `tick`/`world_time` not advanced — and it sets `grief_drained_tick`, so a second flush, or a resume from a checkpoint taken after the death tick, applies
+   each trigger exactly once. `ScenarioRuntimeService.flush_pending_grief_triggers()` invokes it, and `CampaignOrchestrator.run_episode()` calls that
+   before reading `svc.final_state`.
 
 **Nemesis relations do not (yet) have a mid-episode path.** `NemesisRelationImporter.
 build_strategic_update()` (`grief_urgency.py:135-150`) exists for architectural symmetry with

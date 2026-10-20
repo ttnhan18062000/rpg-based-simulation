@@ -106,7 +106,7 @@ def test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms():
         "regional_trauma", "calamity_intensity", "buildings", "readiness_speed_scaling",
         # TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: 12 mechanisms registered from the
         # wider-scope completeness sweep, found in code, none has an atlas card (same as above).
-        "regional_monster_spawn", "resource_ecology_regrowth", "regional_transformation",
+        "resource_ecology_regrowth", "regional_transformation",
         "production_role_vacancy", "veterancy_rank", "quest_lifecycle_resolution",
         "intent_requirement_gating", "regional_hazard_drain", "humanoid_reproduction",
         "role_model_imitation", "faction_raid", "refugee_displacement",

@@ -13,6 +13,7 @@ families:
   status: {size: 16, convention: "16x16 frame with one arrow inside; the arrow's direction carries the meaning, not colour"}
   plate: {size: 16, convention: "16x16 rounded plate, rim #9ea4b6, composited under a location glyph"}
   node: {size: 16, convention: "16x16 glyph, live area 12x12 (2 px margin), dark outline #0e1018, drawn on the map cell with NO plate (a resource node is not a location); one object, upright and centred, no scene; readable over any terrain colour"}
+  entity: {size: 16, convention: "16x16 glyph, live area 12x12 (2 px margin), dark outline #0e1018, drawn on the map cell with NO plate and NO token (owner decision 2026-10-19: a bare object); one object or creature, centred, no scene; keyed on the presenter's role kind; readable over any terrain colour and distinct from an item or a resource node"}
 icons:
   icon.marker.resource_grove:
     status: v2
@@ -574,3 +575,135 @@ icons:
     must_not_read_as: a lollipop, a mushroom, a plain green tree
     synonyms: [tree, resin, amber, trunk, sap, forest]
     distractors: [lollipop, mushroom, cactus, broccoli, cloud, candle]
+  icon.entity.worker:
+    status: v2
+    subject: a three-tine pitchfork
+    theme: "medieval: a farmer's iron pitchfork on a wooden shaft"
+    modern_lookalikes_to_avoid: ["a trident (a sea god's weapon)", "a modern garden fork", "cutlery"]
+    orientation: upright, tines up, shaft down
+    proportions: "three iron tines 6 to 7 px long joined by a 1 px crossbar, a wooden shaft 2 px wide and 4 to 5 px long below; about 9 px wide and 12 px tall; the tines are straight, the shaft is long, never a trident's barbs"
+    parts: [tines, crossbar, wooden shaft]
+    reads_as: a pitchfork
+    must_not_read_as: a trident, a pickaxe (the mine icon), a rake, the crossed hammer and tongs item
+    synonyms: [pitchfork, fork, farm, hay, tines, trident]
+    distractors: [rake, cutlery, comb, candelabra, antenna, cactus]
+  icon.entity.guard:
+    status: v2
+    subject: a large iron gate key
+    theme: "medieval: a heavy iron key of a castle gate warden, round bow and two blocky teeth"
+    modern_lookalikes_to_avoid: ["a modern house key", "a padlock", "a wrench"]
+    orientation: upright, bow on top, teeth to the lower right
+    proportions: "a round open bow 6 px across with a 2 px hole, a shaft 2 px wide and 6 px long, two square teeth 2 px wide on the right of the lower shaft; 8 px wide and 12 px tall; iron grey with a dark outline"
+    parts: [bow, shaft, teeth]
+    reads_as: a large key
+    must_not_read_as: a padlock, a keyhole, a wrench, a door-key trinket item, a shield (the warrior class icon)
+    synonyms: [key, gate key, skeleton key]
+    distractors: [padlock, wrench, magnifier, spoon, mirror, lollipop]
+  icon.entity.scout:
+    status: v2
+    subject: an open eye
+    theme: "abstract ui glyph: a watching eye, the almond outline with a round iris (an interface-style glyph, not a person)"
+    modern_lookalikes_to_avoid: ["a modern camera lens", "a power button", "an eyeball with veins"]
+    orientation: front view, level, centred
+    proportions: "an almond outline 12 px wide and 7 px tall with a 4 px round iris and a 2 px pupil, a 1 px lid line above; no lashes, no blood vessels"
+    parts: [almond outline, iris, pupil]
+    reads_as: an open eye
+    must_not_read_as: a camera lens, a power button, a fish, an eyeball for sale (a dropped item)
+    synonyms: [eye, watching, seeing, iris, vision]
+    distractors: [camera, lens, button, fish, lemon, seed]
+  icon.entity.raider:
+    status: v2
+    subject: a torn red banner
+    theme: "medieval: a tattered war banner on a pole, red cloth with a ragged lower edge"
+    modern_lookalikes_to_avoid: ["a modern flag", "a pennant", "a sail"]
+    orientation: upright pole at the left, cloth hanging to the right
+    proportions: "a pole 1 px wide and 12 px tall at the left, red cloth 8 px wide and 6 px tall hanging from near the top with a torn zig-zag lower edge and two notches; the cloth is never a clean rectangle"
+    parts: [pole, torn cloth, notches]
+    reads_as: a torn banner
+    must_not_read_as: a clean flag, the guild banner item, crossed swords (the enemy camp), a castle
+    synonyms: [banner, flag, standard, tattered, pole]
+    distractors: [sail, curtain, bat, hammer, pickaxe, kite]
+  icon.entity.sentinel:
+    status: v2
+    subject: a stone idol face
+    theme: "medieval fantasy: a square carved stone head of an undead guardian, two blue-lit eye slits"
+    modern_lookalikes_to_avoid: ["a modern robot head", "a skull", "a tombstone"]
+    orientation: front view, level, centred
+    proportions: "a square block 10 px wide and 10 px tall with two 2 x 1 px blue eye slits, a 1 px nose groove and a flat chin; grey stone, no bone, no teeth, no helm"
+    parts: [block head, eye slits, nose groove]
+    reads_as: a stone idol face
+    must_not_read_as: a skull or bone (the boss arena), the guard's gate key, a helm, a tombstone, a door
+    synonyms: [idol, statue, stone, face, mask, golem, head]
+    distractors: [tombstone, door, robot, violin case, cube, oven]
+  icon.entity.merchant:
+    status: v2
+    subject: a balance scale
+    theme: "medieval: a market trader's brass balance with two hanging pans"
+    modern_lookalikes_to_avoid: ["modern kitchen scales", "the scales of justice emblem", "a coin purse"]
+    orientation: upright, symmetric, centred
+    proportions: "a post 2 px wide and 9 px tall on a 6 px base, a beam 12 px wide across the top, two pans 4 px wide hanging on 1 px strings at each end; brass and dark outline"
+    parts: [post, beam, strings, pans]
+    reads_as: a balance scale
+    must_not_read_as: a coin purse (the store icon), a tree, an anvil, a pair of bowls
+    synonyms: [scale, balance, scales, weigh, weighing]
+    distractors: [purse, tree, hourglass, candelabra, bell, anchor]
+  icon.entity.blacksmith:
+    status: v2
+    subject: a horseshoe
+    theme: "medieval: an iron horseshoe, open end up, with nail holes"
+    modern_lookalikes_to_avoid: ["a magnet", "a modern U-shaped clip", "a letter U"]
+    orientation: open end up, centred
+    proportions: "a thick U 10 px wide and 11 px tall with a 2 px band, six 1 px nail holes (three each side), flat ends; dark iron with a highlight on the left"
+    parts: [arch, ends, nail holes]
+    reads_as: a horseshoe
+    must_not_read_as: a magnet, the anvil in the blacksmith building icon, the crossed hammer and tongs item
+    synonyms: [horseshoe, shoe, horse, lucky, u-shape]
+    distractors: [magnet, letter u, bracelet, cup handle, arch, bow]
+  icon.entity.leader:
+    status: v2
+    subject: a gold crown
+    theme: "medieval: a gold king's crown with three points and a band"
+    modern_lookalikes_to_avoid: ["a modern tiara", "a party crown", "a comb"]
+    orientation: front view, level, centred
+    proportions: "a band 10 px wide and 3 px tall with three triangular points 3 px tall, a small round gem on the middle point; gold with a darker lower edge"
+    parts: [band, three points, gem]
+    reads_as: a crown
+    must_not_read_as: a tiara, a flame, a comb, the guild banner
+    synonyms: [crown, king, queen, royal, gold crown]
+    distractors: [tiara, comb, flame, castle, hat, gear]
+  icon.entity.alpha:
+    status: v2
+    subject: a standing wolf
+    theme: "medieval fantasy: a wild grey wolf standing in side view, head up, tail down"
+    modern_lookalikes_to_avoid: ["a dog", "a fox", "a cat"]
+    orientation: side view facing right, standing
+    proportions: "a body 7 px long and 4 px tall, four legs 3 px tall, a head with a long snout and two pointed ears at the front, a thick tail down at the back; grey with a pale chest"
+    parts: [body, legs, pointed ears, snout, tail]
+    reads_as: a standing wolf
+    must_not_read_as: a dog, a fox, a horse, the hooded rogue cowl
+    synonyms: [wolf, canine, hound]
+    distractors: [dog, fox, cat, horse, goat, sheep]
+  icon.entity.predator_hunter:
+    status: v2
+    subject: three claw slashes
+    theme: "medieval fantasy: three parallel red claw marks of a wild beast, tapering at the ends"
+    modern_lookalikes_to_avoid: ["a modern scratch icon", "lightning", "a rake"]
+    orientation: three near-vertical strokes leaning right
+    proportions: "three strokes 2 px wide at the middle, tapering to 1 px points at both ends, 10 px tall, 3 px apart, red with a dark outline; no hand, no animal"
+    parts: [three claw strokes]
+    reads_as: three claw slashes
+    must_not_read_as: a skull (the boss arena), a rake, lightning, a fence, steam
+    synonyms: [claw, claws, scratch, slash, scratches, rake marks]
+    distractors: [rake, lightning, fence, steam, comb, bars]
+  icon.entity.wild_creature:
+    status: v2
+    subject: a grazing deer
+    theme: "medieval fantasy: a wild brown deer with branching antlers, head lowered to graze"
+    modern_lookalikes_to_avoid: ["a modern cartoon deer", "a horse", "a goat"]
+    orientation: side view facing left, head down
+    proportions: "a body 7 px long and 4 px tall, four thin legs 3 px tall, a neck and head lowered to the left, branching antlers 3 px tall on the head, a short tail; brown with a pale belly"
+    parts: [body, legs, lowered head, antlers, tail]
+    reads_as: a grazing deer
+    must_not_read_as: a horse, a goat, a dog, a nest, a tree
+    synonyms: [deer, stag, antlers, reindeer, elk, doe]
+    distractors: [horse, goat, dog, cow, sheep, tree]

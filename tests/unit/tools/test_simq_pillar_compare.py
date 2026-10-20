@@ -4,13 +4,21 @@ import pytest
 
 from tools.test_architecture import simq_pillar_compare as spc
 from tools.test_architecture.simq_pillar_compare import (
-    PillarContractError as Bad, compare_pillar, compare_report, no_data_sets_equal, parse_anchor, parse_report_overall, parse_report_pillar, parse_row_pillar,
+    HostIndependenceRefused, PillarContractError as Bad, compare_pillar, compare_report, no_data_sets_equal, parse_anchor, parse_report_overall, parse_report_pillar, parse_row_pillar,
 )
 
 OK_ANCHOR = {"grade": "B", "score": 1.0}
 ND_ANCHOR = {"status": "no-data", "reason": "below_min_events", "min_events": 3}
 OK_LIVE = {"grade": "B", "normalized_score": 1.0, "event_count": 9}
 ND_LIVE = {"status": "no-data", "grade": None, "normalized_score": None, "event_count": 1, "min_events": 3, "reason": "below_min_events"}
+
+
+AUDIT_MANIFEST = {"run_id": "r", "audit_mode": True, "signals_zeroed": True}
+
+
+def _report(run_key, anchors, report, **kw):
+    """compare_report on a host-independent live run (the host-independence refusal has its own tests below)."""
+    return compare_report(run_key, anchors, report, live_manifest=AUDIT_MANIFEST, **kw)
 
 
 def _cmp(anchor, live, **kw):
@@ -86,22 +94,22 @@ def test_anchor_no_data_live_ok_is_gained_data():
 def test_a_pillar_missing_from_the_report_fails_naming_it():
     v = _cmp(OK_ANCHOR, None)
     assert (v.ok, v.code) == (False, spc.MISSING) and v.message.startswith("X:")
-    verdicts, _ = compare_report("k", {"COMBAT": OK_ANCHOR, "FACTION": ND_ANCHOR}, {"pillars": {"COMBAT": OK_LIVE}})
+    verdicts, _ = _report("k", {"COMBAT": OK_ANCHOR, "FACTION": ND_ANCHOR}, {"pillars": {"COMBAT": OK_LIVE}})
     assert [v.code for v in verdicts] == [spc.PASS, spc.MISSING] and "FACTION" in verdicts[1].message
 
 
 def test_a_missing_pillar_that_would_have_read_as_c_no_longer_passes():
-    verdicts, _ = compare_report("k", {"COMBAT": {"grade": "C", "score": 0.0}}, {"pillars": {}})
+    verdicts, _ = _report("k", {"COMBAT": {"grade": "C", "score": 0.0}}, {"pillars": {}})
     assert [v.ok for v in verdicts] == [False]
 
 
 def test_compare_report_turns_malformed_pillars_into_contract_verdicts_and_lists_no_data():
     report = {"pillars": {"A": OK_LIVE, "B": ND_LIVE, "C": {**ND_LIVE, "grade": "C"}, "D": {"grade": "B"}}}
     anchors = {"A": OK_ANCHOR, "B": ND_ANCHOR, "C": ND_ANCHOR, "D": OK_ANCHOR, "E": {"grade": "B"}}
-    verdicts, sets = compare_report("k", anchors, report)
+    verdicts, sets = _report("k", anchors, report)
     assert [v.code for v in verdicts] == [spc.PASS, spc.STILL_NO_DATA, spc.CONTRACT, spc.CONTRACT, spc.CONTRACT]
     assert sets == {"anchor_no_data": ["B", "C"], "live_no_data": ["B"]}
-    assert not compare_report("k", anchors, {})[0][0].ok  # no pillars object at all
+    assert not _report("k", anchors, {})[0][0].ok  # no pillars object at all
 
 
 # AC5: the anchor shapes
@@ -181,7 +189,7 @@ def test_the_committed_fixture_is_all_ok_anchors_today():
 
 
 def test_a_verdict_names_its_pillar_without_parsing_the_message():
-    verdicts, _ = compare_report("k", {"A": OK_ANCHOR, "B": ND_ANCHOR, "C": OK_ANCHOR, "D": OK_ANCHOR},
+    verdicts, _ = _report("k", {"A": OK_ANCHOR, "B": ND_ANCHOR, "C": OK_ANCHOR, "D": OK_ANCHOR},
                                  {"pillars": {"A": {**OK_LIVE, "normalized_score": 9.0}, "B": OK_LIVE, "D": {"grade": "B"}}})
     assert {v.pillar: v.code for v in verdicts} == {"A": spc.SCORE, "B": spc.GAINED_DATA, "C": spc.MISSING, "D": spc.CONTRACT}
 
@@ -193,3 +201,39 @@ def test_a_no_data_pillar_whose_event_count_reaches_min_events_contradicts_itsel
         parse_row_pillar("X", {"status": "no-data", "grade": None, "norm": None, "events": 7, "min_events": 3})
     assert parse_report_pillar("X", {**ND_LIVE, "event_count": 2}).status == "no-data"
     assert parse_report_pillar("X", {k: v for k, v in ND_LIVE.items() if k != "event_count"}).status == "no-data"  # no count to contradict
+
+
+# TCK-20261014-SIMQ-COMPARE-TOOLS-REFUSE-RUNS-NOT-RECORDED-HOST-INDEPENDENT (AC3): the live side must be recorded host-independent; the anchor side is covered by simq_reanchor.
+_LIVE_RUN = {"pillars": {"COMBAT": OK_LIVE}}
+
+
+def test_compare_report_accepts_a_live_run_recorded_host_independent():
+    verdicts, _ = compare_report("k", {"COMBAT": OK_ANCHOR}, _LIVE_RUN, live_manifest={"audit_mode": True, "signals_zeroed": True})
+    assert [v.ok for v in verdicts] == [True]
+
+
+def test_compare_report_accepts_a_pinned_governor_run_for_the_live_side():
+    verdicts, _ = compare_report("k", {"COMBAT": OK_ANCHOR}, _LIVE_RUN, live_manifest={"audit_mode": False, "signals_zeroed": True})
+    assert [v.ok for v in verdicts] == [True]
+
+
+@pytest.mark.parametrize(
+    "manifest",
+    [
+        {"audit_mode": False, "signals_zeroed": False},  # a live run
+        {"run_id": "r"},  # an older manifest with no field
+        {"audit_mode": None, "signals_zeroed": None},  # a sidecar with nulls
+        {"audit_mode": True, "signals_zeroed": "yes"},  # not a boolean
+        {},
+        None,  # no manifest to hand: a refusal, not a skip
+    ],
+)
+def test_compare_report_refuses_a_live_run_not_recorded_host_independent(manifest):
+    with pytest.raises(HostIndependenceRefused, match="re-run it under audit_mode") as caught:
+        compare_report("k", {"COMBAT": OK_ANCHOR}, _LIVE_RUN, live_manifest=manifest)
+    assert "k:" in str(caught.value) and caught.value.__cause__ is not None  # names the run; keeps rpg's NonAuditRunError as the cause
+
+
+def test_compare_report_has_no_default_for_the_live_manifest():
+    with pytest.raises(TypeError):
+        compare_report("k", {"COMBAT": OK_ANCHOR}, _LIVE_RUN)  # type: ignore[call-arg]

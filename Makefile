@@ -301,7 +301,7 @@ code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (repor
 	npx --yes jscpd@$(JSCPD_VERSION) src --config codebase/config/.jscpd.json
 
 .PHONY: import-contracts
-import-contracts: ## Run the import-linter contracts in codebase/structure/importlinter.toml (advisory; also the `Import contracts` step of the code-health CI job). Prints the result, always exits 0
+import-contracts: ## Run the import-linter contracts in codebase/structure/importlinter.toml (local advisory twin of the blocking `Import contracts` step of the code-health CI job). Prints the result, always exits 0
 	$(PYTHON3) -m codebase.structure.import_contracts advisory --annotate
 
 .PHONY: replay-check
@@ -506,8 +506,7 @@ codebase-health-pr-impact: ## Print a batched PR/AI change-impact report for one
 	python3 -m codebase.reports.pr_impact_report $(ARGS)
 
 agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
-	$(shell for py in .venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
-	  tools/agent-monitoring/build_index.py
+	$(PYTHON3) tools/agent-monitoring/build_index.py
 
 parity-index: ## Rebuild the derived read-only SQLite index over docs/parity_ledger/*.yaml (on-demand only — not CI)
 	python3 tools/parity_index.py build

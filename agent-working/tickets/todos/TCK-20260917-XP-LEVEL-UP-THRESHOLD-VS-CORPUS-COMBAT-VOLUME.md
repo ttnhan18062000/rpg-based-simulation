@@ -177,6 +177,8 @@ chain.
   `evolution_level == 1` corpus data this finding explains; flag, don't fix here without fresh data
 
 ## Assumptions / Open Questions
+**Triage 2026-10-18 (#636): AFTER v1, re-sequenced.** Valid: the chain is correct and the volume too low; tuning is balancing (D7). Before v1 only: read the level-ups per world from the existing gate runs for v1's disclosure. The XP curve vs kill-volume tuning is measured after v1. Its 'must run last' tie to the dispatch fix is satisfied.
+
 - Whether the measurement holds at tick counts beyond 1000 (not directly re-checked; `COMB-318`'s
   own 9500-tick run suggests it would, but that ran a different world set).
 - Whether the `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` fix alone raises kill volume

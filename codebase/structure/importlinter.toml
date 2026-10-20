@@ -172,7 +172,6 @@ ignore_imports = [
     "src.engine.world_dynamics -> src.world.environment",
     "src.engine.world_dynamics -> src.world.influence",
     "src.engine.world_dynamics -> src.world.reproduction_humanoid",
-    "src.engine.world_dynamics -> src.world.spawn",
     "src.engine.world_dynamics -> src.world.threat",
     "src.engine.world_dynamics -> src.world.transformation",
     "src.scenarios.catalog_state_builder -> src.certification.models",
@@ -197,7 +196,7 @@ ignore_imports = [
 
 [[tool.importlinter.contracts]]
 id = "c01_core_not_domains"
-name = "core must not import domains (test_entity_models_do_not_import_domain_services)"
+name = "core must not import domains"
 type = "forbidden"
 source_modules = [
     "src.core",
@@ -318,10 +317,20 @@ forbidden_modules = [
 allow_indirect_imports = true
 unmatched_ignore_imports_alerting = "warn"
 ignore_imports = [
-    # pending rpg decision, handoff_to_rpg.md: kernel.py function-local imports at lines 149, 304, 305, 316 and 1241 (the violations the phase19 test was written for; the test itself is a no-op)
+    # rpg-planner decision (a), #547: every edge is a function-local import in src/engine/kernel.py inside an
+    # `obs_mode != ObservabilityMode.OFF` branch (or the shutdown of an object that branch created). With
+    # observability OFF none of these modules is imported; each is a write-only sink, never read back into the tick.
+    # The ignores rely on rpg's condition (#547): an OFF-mode kernel imports none of the four, and an edge that moves
+    # out of the guard becomes a violation. That condition is UNENFORCED until TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK
+    # lands (owner decision 2026-10-18, #547): tests/architecture/test_phase19_observability_boundaries.py is a static scan
+    # that never matches `src.observability...` and has no notion of OFF mode.
+    # kernel.py:294 and :1188 -- decision-trace sink, opened only when observability is on (294), cleared at shutdown only if opened (1188)
     "src.engine.kernel -> src.observability.cognition.decision_trace_writer",
+    # kernel.py:283 -- cognition recorder sink, built only when observability is on
     "src.engine.kernel -> src.observability.cognition.recorder",
+    # kernel.py:152 -- run manifest and artifact sink, built only when observability is on
     "src.engine.kernel -> src.observability.reporting.artifact_repository",
+    # kernel.py:282 -- metric-window sink, built only when observability is on
     "src.engine.kernel -> src.observability.reporting.metric_recorder",
 ]
 

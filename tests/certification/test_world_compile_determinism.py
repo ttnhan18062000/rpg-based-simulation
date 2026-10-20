@@ -19,8 +19,8 @@ def create_certification_base_spec() -> dict:
             "coordinate_system": "grid"
         },
         "regions": [
-            {"id": "valley_town", "type": "town", "bounds": [0, 0, 30, 30], "terrain": "GRASS"},
-            {"id": "valley_woods", "type": "wilderness", "bounds": [40, 40, 90, 90], "terrain": "FOREST"}
+            {"id": "valley_town", "type": "town", "bounds": [0, 0, 30, 30], "terrain": "grass"},
+            {"id": "valley_woods", "type": "wilderness", "bounds": [40, 40, 90, 90], "terrain": "forest"}
         ],
         "factions": [
             {"id": "locals", "type": "civilian"},

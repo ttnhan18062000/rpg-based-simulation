@@ -86,6 +86,11 @@ class CanonicalStateHasher:
         return json.dumps(data, sort_keys=True, separators=(",", ":"))
 
     @staticmethod
+    def _grief_fields(state: AuthoritativeState) -> Dict[str, Any]:
+        """`grief_drained_tick` joins the canonical data only once a grief drain has happened, so a state without one keeps its digest."""
+        return {} if state.grief_drained_tick == -1 else {"grief_drained_tick": state.grief_drained_tick}
+
+    @staticmethod
     def to_canonical_data(state: AuthoritativeState) -> Dict[str, Any]:
         """
         Convert AuthoritativeState into a sortable dictionary structure.
@@ -100,6 +105,7 @@ class CanonicalStateHasher:
             "last_calamity_tick": state.last_calamity_tick,
             "town_center": state.town_center
         }
+        data.update(CanonicalStateHasher._grief_fields(state))
         
         # 2. Entities (Sorted by ID)
         sorted_entities = {}

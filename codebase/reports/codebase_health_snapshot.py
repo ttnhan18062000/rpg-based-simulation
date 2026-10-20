@@ -275,13 +275,13 @@ def build_scorecard(snapshots: list) -> dict:
     return {"no_snapshots_yet": False, "dimensions": dimensions}
 
 
-def _format_scalar_value(value) -> str:
+def _format_scalar_value(value: float | int) -> str:
     if isinstance(value, float):
         return f"{value:.2f}"
     return f"{value:,}"
 
 
-def _format_dependency_list(values) -> str:
+def _format_dependency_list(values: list[str]) -> str:
     return f"{len(values)} ({', '.join(values) if values else 'none'})"
 
 
@@ -339,7 +339,8 @@ def format_scorecard(scorecard: dict) -> str:
     return "\n".join(lines)
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point; returns the process exit code."""
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="mode", required=True)
 

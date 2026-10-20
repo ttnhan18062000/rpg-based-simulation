@@ -24,6 +24,9 @@ States of one finding:
   child never started) or ``seed_no_data``.
 * ``unstable``: a ``fail`` or ``drift`` that the same-SHA rerun did not reproduce. Routed to test infrastructure (roadmap §4.5, nondeterminism), not to the feature team.
 
+A row key that some seed documents of a world carry and others lack is one ``no-data`` / ``contract_error`` row for that key ("row absent from seed(s) [..]"): the row set of a
+world is declared by the module, and an absent row is never read as 0 (format doc, "The run row set is declared, not observed").
+
 Every document's ``harness_hash`` must equal the current harness hash and the documents must agree with each other; otherwise they are ``no-data`` with the
 reason "documents from another harness version". A validity row without an integer ``violations`` or without an ``oracle`` (the report must cite it), and an
 outcome row without a numeric value or mean, are likewise contract errors (``no-data``), never a pass and never a crash.
@@ -63,12 +66,12 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from tools.test_architecture import known_reds
-from tools.test_architecture.rpg_gate_baseline import GateConfig, References, load_baselines, load_config, resolve_references, staleness
+from tools.test_architecture.rpg_gate_baseline import GateConfig, References, load_baselines, load_config, resolve_references, row_label, staleness
 
 SCHEMA = "rpg-gate-report/v1"
 PASS, FAIL, DRIFT, STALE, NO_DATA, UNSTABLE = "pass", "fail", "drift", "stale", "no-data", "unstable"
 STATES = (PASS, FAIL, DRIFT, UNSTABLE, STALE, NO_DATA)
-NO_DATA_REASONS = ("run_error", "metric_error", "harness_error", "seed_no_data", "contract_error")
+NO_DATA_REASONS = ("run_error", "metric_error", "harness_error", "seed_no_data", "contract_error", "empty_denominator")
 MAX_EXAMPLES = 5
 TEST_INFRA = "test-infrastructure"
 
@@ -104,23 +107,32 @@ def _no_data(world: str, seed: Optional[int], detail: str, reason: str = "harnes
     return {"world": world, "scope": scope, "id": "*", "group": "*", "class": "run", "state": NO_DATA, "reason": reason, "detail": detail, **({"seed": seed} if seed is not None else {})}
 
 
+EMPTY_DENOMINATOR = "empty_denominator"
+
+
+def _undefined_share(row: Mapping[str, Any]) -> bool:
+    """A pooled share the module marks undefined: ``value: null`` with ``reason: "empty_denominator"`` (the denominator summed to 0). A null value with any other
+    reason, or none, is not that: it stays a contract error."""
+    return row.get("scope") == "pooled" and row.get("class") == "outcome" and row.get("value") is None and row.get("reason") == EMPTY_DENOMINATOR
+
+
 def _is_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
-def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str], str]:
-    """``(id, group) -> reason`` for rows that break the threshold contract: an outcome row without a numeric ``k`` / ``floor`` (a pooled one needs only the
-    floor), or rows of one (id, group) that disagree on ``k``, ``floor`` or ``oracle`` across the documents of the run set."""
-    seen: Dict[Tuple[str, str], set] = {}
-    problems: Dict[Tuple[str, str], str] = {}
-    for doc in docs.values():
+def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str, str], str]:
+    """``(world, id, group) -> reason`` for rows that break the threshold contract: an outcome row without a numeric ``k`` / ``floor`` (a pooled one needs only the
+    floor), or rows of one (world, id, group) that disagree on ``k``, ``floor`` or ``oracle`` across that world's documents (floors may differ between worlds; the row key carries the world)."""
+    seen: Dict[Tuple[str, str, str], set] = {}
+    problems: Dict[Tuple[str, str, str], str] = {}
+    for (world, _seed), doc in docs.items():
         if doc.get("status") != "ok":
             continue
         for row in doc["metrics"]:
-            key = (row["id"], row.get("group", "*"))
+            key = (world, row["id"], row.get("group", "*"))
             if row.get("class") == "outcome":
                 pooled = row.get("scope") == "pooled"
-                need = ("floor", "value") if pooled else ("k", "floor")
+                need = ("floor",) if _undefined_share(row) else ("floor", "value") if pooled else ("k", "floor")
                 missing = [n for n in need if not _is_number(row.get(n))]
                 if not pooled and not (_is_number(row.get("value")) or _is_number(row.get("mean"))):
                     missing.append("value")
@@ -132,7 +144,13 @@ def _threshold_problems(docs: Docs) -> Dict[Tuple[str, str], str]:
                     problems[key] = "contract error: validity row without an integer violations count"
                 elif not row.get("oracle"):
                     problems[key] = "contract error: validity row without an oracle to cite"
-            seen.setdefault(key, set()).add((row.get("k"), row.get("floor"), row.get("oracle")))
+            if row.get("class") == "outcome" and "floor_rel" in row:
+                rel = row["floor_rel"]
+                if row.get("scope") == "pooled":
+                    problems[key] = "contract error: pooled outcome row carries floor_rel"
+                elif not _is_number(rel) or not 0 < rel <= 1:
+                    problems[key] = f"contract error: floor_rel {rel!r} is not a number in (0, 1]"
+            seen.setdefault(key, set()).add((row.get("k"), row.get("floor"), row.get("oracle"), row.get("floor_rel")))
     for key, versions in seen.items():
         if len(versions) > 1:
             problems[key] = "mixed metric module versions"
@@ -157,6 +175,10 @@ def _validity(row: Mapping[str, Any], world: str, seed: Optional[int], config: G
     return finding
 
 
+def _label(row: Mapping[str, Any], world: str) -> str:
+    return row_label({"id": row["id"], "scope": row.get("scope", "run"), "world": world, "group": row.get("group", "*"), "key": row.get("key"), "tick": row.get("tick")})
+
+
 def _baseline_row(baseline: Mapping[str, Any], row: Mapping[str, Any], world: str) -> Optional[dict]:
     for candidate in baseline["metrics"]:
         if (candidate.get("id"), candidate.get("scope"), candidate.get("world"), candidate.get("group"), candidate.get("key"), candidate.get("tick")) == (
@@ -172,21 +194,44 @@ def _compare(label: str, baseline: Mapping[str, Any], reasons: Sequence[str], ro
     if reasons:
         return {**result, "state": STALE, "reasons": list(reasons)}
     base = _baseline_row(baseline, cur_row, world)
+    if base is None and _label(cur_row, world) in {u.get("row") for u in baseline.get("undefined_rows") or [] if isinstance(u, dict)}:
+        return {**result, "state": NO_DATA, "detail": "no reference (undefined at baseline)"}  # defined now, undefined then: never drift; only a re-baseline gives it a reference
     if base is None:
         return {**result, "state": NO_DATA, "detail": "no row for this metric in the baseline"}
-    floor = cur_row["floor"]
-    if cur_row.get("scope") == "pooled":
+    pooled = cur_row.get("scope") == "pooled"
+    floor, k = base.get("floor"), base.get("k")
+    if not _is_number(floor) or (not pooled and not _is_number(k)):  # the reference's own thresholds judge it; never the candidate's (TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD)
+        return {**result, "state": NO_DATA, "reason": "contract_error", "detail": "reference row has no recorded threshold"}
+    moved = _threshold_moved(cur_row, base, pooled)
+    extra = {"threshold_moved": moved} if moved else {}
+    if pooled:
         diff = row_values["value"] - base["value"]
-        return {**result, "state": DRIFT if abs(diff) > floor else PASS, "diff": diff, "floor": floor}
+        return {**result, "state": DRIFT if abs(diff) > floor else PASS, "diff": diff, "floor": floor, **extra}
     base_seeds = base.get("per_seed") or {}
     diffs = [row_values["per_seed"][seed] - base_seeds[str(seed)] for seed in sorted(row_values["per_seed"]) if str(seed) in base_seeds]
     if len(diffs) < 2:
-        return {**result, "state": NO_DATA, "n": len(diffs), "of": len(config.seeds), "detail": f"judged on {len(diffs)}/{len(config.seeds)} seeds; at least 2 are needed for a standard error"}
+        return {**result, "state": NO_DATA, "n": len(diffs), "of": len(config.seeds), "detail": f"judged on {len(diffs)}/{len(config.seeds)} seeds; at least 2 are needed for a standard error", **extra}
     mean = statistics.fmean(diffs)
     se = statistics.stdev(diffs) / math.sqrt(len(diffs))
-    k = cur_row["k"]
     drift = abs(mean) > k * se and abs(mean) > floor
-    return {**result, "state": DRIFT if drift else PASS, "diff": mean, "se": se, "k": k, "floor": floor, "threshold": k * se, "n": len(diffs), "of": len(config.seeds)}
+    return {**result, "state": DRIFT if drift else PASS, "diff": mean, "se": se, "k": k, "floor": floor, "threshold": k * se, "n": len(diffs), "of": len(config.seeds), **extra}
+
+
+def _threshold_moved(cur_row: Mapping[str, Any], base: Mapping[str, Any], pooled: bool) -> Dict[str, Dict[str, Any]]:
+    """``{field: {"candidate": c, "reference": r}}`` for each of ``k`` / ``floor`` / ``oracle`` that differs between the candidate and the reference row. Reported, never
+    used to judge. ``oracle`` is compared whenever either side carries one (a missing side is ``None``); ``k`` is not part of a pooled row."""
+    moved: Dict[str, Dict[str, Any]] = {}
+    # A reference that recorded a relative floor keeps the document's own floor as ``floor_base``: that is what the candidate documents' ``floor`` is compared with, so a
+    # relative floor, which differs run to run, never shows as moved; ``floor_rel`` itself is compared when either side has one.
+    reference_floor = base.get("floor_base") if "floor_rel" in base else base.get("floor")
+    for name, candidate_value, reference_value in (("k", cur_row.get("k"), base.get("k")), ("floor", cur_row.get("floor"), reference_floor), ("floor_rel", cur_row.get("floor_rel"), base.get("floor_rel"))):
+        if (name == "k" and pooled) or (name == "floor_rel" and candidate_value is None and reference_value is None):
+            continue
+        if candidate_value != reference_value:
+            moved[name] = {"candidate": candidate_value, "reference": reference_value}
+    if (cur_row.get("oracle") or base.get("oracle")) and cur_row.get("oracle") != base.get("oracle"):
+        moved["oracle"] = {"candidate": cur_row.get("oracle"), "reference": base.get("oracle")}
+    return moved
 
 
 def _outcome(cur_row: dict, world: str, refs: Optional[References], reasons_by_version: Mapping[int, Sequence[str]], config: GateConfig) -> dict:
@@ -202,6 +247,10 @@ def _outcome(cur_row: dict, world: str, refs: Optional[References], reasons_by_v
     ]
     states = {r["state"] for r in results}
     state = DRIFT if DRIFT in states else STALE if STALE in states else NO_DATA if NO_DATA in states else PASS
+    if state == NO_DATA:  # a contract error of a reference must reach the no-data tally; when the state is DRIFT or STALE the per-reference text still names it
+        broken = next((r for r in results if r["state"] == NO_DATA and r.get("reason") == "contract_error"), None)
+        if broken is not None:
+            return {**finding, "state": state, "reason": "contract_error", "detail": broken["detail"], "refs": results}
     return {**finding, "state": state, "refs": results}
 
 
@@ -234,15 +283,15 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
     problems = _threshold_problems(docs)
 
     def validity(row: Mapping[str, Any], world: str, seed: Optional[int]) -> dict:
-        problem = problems.get((row["id"], row.get("group", "*")))
+        problem = problems.get((world, row["id"], row.get("group", "*")))
         return _contract_no_data(world, row, seed, problem) if problem else _validity(row, world, seed, config)
 
     def missing_required(doc: Mapping[str, Any], world: str, seed: Optional[int]) -> List[dict]:
-        """A validity row the config requires but the document leaves out is ``no-data``, never a pass: a metric module that drops a check must not look clean."""
+        """A validity row the config requires at this document's level (``run`` for a seed document, ``pooled`` for the pooled one) but the document leaves out is ``no-data``, never a pass: a metric module that drops a check must not look clean."""
         present = {r.get("id") for r in doc["metrics"] if r.get("class") == "validity"}
         return [{**_contract_no_data(world, {"id": rid, "class": "validity", "scope": "pooled" if seed is None else "run", "group": "*"}, seed, f"required validity row {rid} missing"),
                  "required_missing": True}
-                for rid in config.required_validity if rid not in present]
+                for rid in config.required_at("pooled" if seed is None else "run") if rid not in present]
 
     for world in config.worlds:
         seed_docs = {seed: docs.get((world, seed)) for seed in config.seeds}
@@ -262,7 +311,10 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
             findings.extend(missing_required(pooled, world, None))
             for r in pooled["metrics"]:
                 if r.get("class") == "outcome":
-                    problem = problems.get((r["id"], r.get("group", "*")))
+                    problem = problems.get((world, r["id"], r.get("group", "*")))
+                    if not problem and _undefined_share(r):
+                        findings.append({**_contract_no_data(world, r, None, "the share's denominator is 0 in every seed of this world"), "reason": EMPTY_DENOMINATOR})  # not a contract error, not a failure
+                        continue
                     findings.append(_contract_no_data(world, r, None, problem) if problem else _outcome(r, world, refs, reasons_by_version, config))
         if not all_ok:
             continue  # a partial seed set would change what an outcome means; the missing seeds already report as no-data
@@ -272,12 +324,36 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
                 if r.get("class") == "outcome":
                     key = (r["id"], r.get("group", "*"), r.get("key"), r.get("tick"))
                     row = grouped.setdefault(key, {"id": r["id"], "group": r.get("group", "*"), "key": r.get("key"), "tick": r.get("tick"), "scope": "run",
-                                                   "k": r.get("k"), "floor": r.get("floor"), "per_seed": {}})
+                                                   "k": r.get("k"), "floor": r.get("floor"), **({"floor_rel": r["floor_rel"]} if "floor_rel" in r else {}), **({"oracle": r["oracle"]} if r.get("oracle") else {}), "per_seed": {}})
                     row["per_seed"][seed] = r["value"] if _is_number(r.get("value")) else r.get("mean")
+        required = set(config.required_at("run"))
+        absent = _absent_row_seeds(seed_docs, required)
         for row in grouped.values():
-            problem = problems.get((row["id"], row["group"]))
+            gone = absent.pop(("outcome", row["id"], row["group"], row["key"], row["tick"]), None)
+            if gone:
+                findings.append(_contract_no_data(world, row, None, _absent_detail(gone)))  # one row for the key; it is never judged on the seeds that have it
+                continue
+            problem = problems.get((world, row["id"], row["group"]))
             findings.append(_contract_no_data(world, row, None, problem) if problem else _outcome(row, world, refs, reasons_by_version, config))
+        for (klass, mid, group, key, tick), gone in absent.items():  # a validity row the config does not require, absent from some seeds
+            findings.append(_contract_no_data(world, {"id": mid, "class": klass, "scope": "run", "group": group, "key": key, "tick": tick}, None, _absent_detail(gone)))
     return findings
+
+
+def _absent_row_seeds(seed_docs: Mapping[int, Mapping[str, Any]], required: Sequence[str]) -> Dict[Tuple[Any, ...], List[int]]:
+    """``(class, id, group, key, tick) -> seeds that lack the row`` for a row some seed carries and another does not. The row set of a world is declared by the module,
+    so every seed document carries the same rows; an absent row is never read as 0 (TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED).
+    A required validity row that a seed leaves out is already reported per seed by ``required_missing``."""
+    present: Dict[Tuple[Any, ...], set] = {}
+    for seed, doc in seed_docs.items():
+        for r in doc["metrics"]:
+            if r.get("class") in ("outcome", "validity") and not (r.get("class") == "validity" and r.get("id") in required):
+                present.setdefault((r["class"], r["id"], r.get("group", "*"), r.get("key"), r.get("tick")), set()).add(seed)
+    return {key: sorted(set(seed_docs) - seeds) for key, seeds in present.items() if set(seed_docs) - seeds}
+
+
+def _absent_detail(seeds: Sequence[int]) -> str:
+    return f"row absent from seed(s) {list(seeds)}; every seed reports the same rows"
 
 
 # ---------------------------------------------------------------- rerun, ownership, verdict
@@ -429,11 +505,15 @@ def _detail(f: Mapping[str, Any]) -> str:
             parts.append(f"oracle: {f['oracle']}")
     if f["state"] == UNSTABLE:
         parts.append(f"was {f['first_state']}, rerun {f['rerun_state']}; route: {f['route']}")
+    shown: set = set()
     for r in f.get("refs", []):
         numbers = f" d={r['diff']:.4g}" + (f" se={r['se']:.4g} k*se={r['threshold']:.4g}" if "se" in r else "") + f" floor={r['floor']:.4g}" if "diff" in r else ""
         judged = f", judged on {r['n']}/{r['of']} seeds" if "n" in r else ""
-        parts.append(f"vs {r['ref']} v{r['version']}: {r['state']}{numbers}{judged}")
-    if f.get("detail"):
+        moved = "".join(f"; threshold moved: {n} {m['reference']} -> {m['candidate']}" for n, m in sorted((r.get("threshold_moved") or {}).items()))
+        cause = (f" [{r['reason']}] {r['detail']}" if r.get("reason") else f" {r['detail']}") if r.get("detail") and r["state"] == "no-data" else ""
+        shown.add(r.get("detail"))
+        parts.append(f"vs {r['ref']} v{r['version']}: {r['state']}{numbers}{judged}{moved}{cause}")
+    if f.get("detail") and f["detail"] not in shown:
         parts.append((f"[{f['reason']}] " if f.get("reason") else "") + f["detail"])
     if f.get("ownership"):
         parts.append(f"{f['ownership']}{' ' + f['ticket'] if f.get('ticket') else ''}")

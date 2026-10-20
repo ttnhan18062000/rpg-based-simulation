@@ -45,6 +45,9 @@ def child_command(args: argparse.Namespace, out_json: Path) -> List[str]:
            "--seed", str(args.seed), "--warmup", str(args.warmup), "--ticks", str(args.ticks),
            "--out-json", str(out_json)]
     cmd += ["--profile", args.profile, "--contract", args.contract]
+    if getattr(args, "replay", False):
+        # The replay directory sits beside the child's output, so it is under the run's --out-dir and never in data/runs/.
+        cmd += ["--replay", "--replay-dir", str(out_json.parent / "replay")]
     if args.flag and args.flag_mode:
         cmd += ["--flag", args.flag, "--flag-mode", args.flag_mode]
     return cmd
@@ -57,6 +60,10 @@ def render_phase_report(fields, summary, phase_rows, sampling_note: str) -> str:
     out.append(f"- processed work (mean per tick): {work}")
     out.append(f"- events (measured ticks): {sum(summary['events'].values())}")
     out.append(f"- child peak RSS (MB, ru_maxrss of the profiled process): {summary.get('peak_rss_mb')}")
+    rp = summary.get("replay")
+    if rp:
+        out.append(f"- replay ON: allowed on {rp['replay_allowed_ticks']} of {rp['replay_allowed_ticks'] + rp['replay_disallowed_ticks']} measured ticks, "
+                   f"richness {', '.join(rp['replay_richness']) or 'n/a'}, manager stats {rp['replay_stats']}")
     out.append(f"- sampling: {sampling_note}")
     if summary["runtime_mode_sequence"] != ["NORMAL"]:
         out.append("- WARNING: the RuntimeMode left NORMAL during the measured ticks. Cadence, LOD and scan policy "
@@ -76,7 +83,8 @@ def render_phase_report(fields, summary, phase_rows, sampling_note: str) -> str:
 def run_child(args: argparse.Namespace) -> int:
     common.load_repo_on_path()
     data = common.run_scenario_ticks(args.scenario, args.entities, args.seed, args.warmup, args.ticks,
-                                     flag=args.flag, flag_mode=args.flag_mode, profile_name=args.profile, contract=args.contract)
+                                     flag=args.flag, flag_mode=args.flag_mode, profile_name=args.profile, contract=args.contract,
+                                     replay=args.replay, replay_dir=Path(args.replay_dir) if args.replay_dir else None)
     common.write_json(Path(args.out_json), data)
     return 0
 
@@ -206,6 +214,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--contract", choices=common.CONTRACTS, default="live",
                         help="what is held fixed: live (historical default), pinned (RuntimeMode pinned NORMAL, mode only), canonical "
                              "(modelled-cost governor), audit (audit_mode: adds fingerprint and dirty-set work)")
+    parser.add_argument("--replay", action="store_true",
+                        help="turn no_replay off and inject a ReplayManager rooted under --out-dir: measures the replay-only work "
+                             "(REFINED_UPDATE fingerprint, phase-7 digest, replay writer). Default is replay off, as every earlier profile ran")
     parser.add_argument("--sampler", choices=("py-spy", "none"), default="py-spy",
                         help="none runs the child with no sampler: the phase table only, to measure the sampler's overhead")
     parser.add_argument("--rate", type=int, default=DEFAULT_RATE_HZ, help="py-spy sample rate in Hz")
@@ -218,6 +229,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--out-dir", default=None, help=f"output directory (default {common.OUT_ROOT}/<scenario>_<n>_s<seed>)")
     parser.add_argument("--flag", default=None, help="force a feature flag for this run only (used by flag_attribution)")
     parser.add_argument("--flag-mode", choices=("ON", "OFF"), default=None)
+    parser.add_argument("--replay-dir", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--child", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--out-json", default=None, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)

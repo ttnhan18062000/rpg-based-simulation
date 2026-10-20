@@ -1,0 +1,21 @@
+# Each validity id of the rpg gate -> the pytest node ids of its REAL-KERNEL positive tests (TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE).
+# A kernel positive forces a violation through `build_kernel` and asserts `violations > 0` on the row the metric module emits.
+# The node ids come from rpg (the tests are theirs); the map and its lint are testing's:
+#   tests/architecture/test_rpg_gate_validity_rows_have_kernel_positives.py
+# A new V-id PR adds its entry here together with its test. Controls (the same setup with the check satisfied) are not entries.
+V1:
+  - tests/integration/observability/test_v1_counts_an_unbacked_hunger_drop_through_the_real_kernel.py::test_v1_fires_for_a_broke_eater_whose_hunger_falls_with_nothing_moved
+V2:
+  - tests/integration/observability/test_gate_validity_checks_fire_through_the_real_kernel.py::test_v2_fires_when_a_body_with_meat_decays_and_the_decay_sink_is_silent
+V3:
+  - tests/integration/observability/test_gate_validity_checks_fire_through_the_real_kernel.py::test_v3_fires_for_a_starvation_death_beside_an_open_way_even_when_the_dying_entity_had_no_update
+V4:
+  - tests/integration/observability/test_v4_counts_a_forbidden_meal_through_the_real_kernel.py::test_a_meat_only_body_that_eats_plant_food_in_a_real_run_fires_the_v4_row
+V5:
+  - tests/integration/observability/test_gate_validity_checks_fire_through_the_real_kernel.py::test_v5_fires_for_an_alive_entity_that_acts_outside_the_world_extent
+V6:
+  - tests/integration/observability/test_gate_validity_checks_fire_through_the_real_kernel.py::test_v6_fires_when_an_entity_holds_more_coin_than_the_world_ever_declared
+V7:
+  - tests/integration/observability/test_gate_validity_checks_fire_through_the_real_kernel.py::test_v7_fires_in_the_pooled_rows_of_real_runs_where_people_never_use_a_declared_way
+V8:
+  - tests/integration/observability/test_gate_validity_checks_fire_through_the_real_kernel.py::test_v8_fires_for_an_entity_added_mid_run_with_no_declared_source

@@ -480,6 +480,7 @@ def test_population_stability(world_id: str) -> None:
 # ---------------------------------------------------------------------------
 
 @pytest.mark.slow
+@pytest.mark.resource_budget_large
 def test_generated_frontier_3_42_extended_population_stability() -> None:
     """Tolerance-based tick-1000 regression guard for
     TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE.

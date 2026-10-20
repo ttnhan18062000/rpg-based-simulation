@@ -1,8 +1,64 @@
 # Compliance IDs: API-001, API-009, API-013, API-018, API-019, API-020, API-021, API-022, API-023, API-024, DATA-023, DATA-041, DATA-045, DATA-129, DATA-130, DATA-131, DATA-132, DATA-133, DATA-134, DATA-135, INFRA-019, INFRA-056, INFRA-057, INFRA-167, INFRA-180, RES-021, STRAT-035, STRAT-044, STRAT-060, STRAT-068, WORLD-015
 from __future__ import annotations
-from typing import Dict, Any, List
-from src.core.state import AuthoritativeState, EntityState, RegionState
+from typing import Dict, Any, List, Optional
+from src.core.state import AuthoritativeState, EntityState, PlaceState, RegionState
+from src.api.schemas import PlaceReadModel, PlaceTiles
+from src.content_semantics.faction import get_faction_semantics_service
 from src.core.enums import Faction
+from src.core.strategic import ContractStatus, is_live_project
+
+# The entity read model is bounded by construction (TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL): an entity's finished records
+# (terminal quests, resolved blockers, closed contracts) pile up for its whole life, so the detail model carries the live ones plus at most this many of the
+# newest finished ones and counts the rest; the full history is the paged `/entities/{id}/quests` sub-resource. The list carries counts only.
+DETAIL_TERMINAL_QUESTS = 10
+DETAIL_CLOSED_CONTRACTS = 5
+MAX_ENTITY_PAGE = 500  # the most entities one list page returns, whatever `limit` asks for
+_OPEN_CONTRACT_STATUSES = frozenset({ContractStatus.OFFERED, ContractStatus.ACCEPTED, ContractStatus.COUNTERED, ContractStatus.ACTIVE})
+
+
+def _quest_dto(q: Any) -> Dict[str, Any]:
+    """One quest as the API shows it (the detail's `quests` entries and the paged sub-resource's rows)."""
+    return {
+        "id": q.id,
+        "name": q.name,
+        "kind": q.quest_kind.name if hasattr(q.quest_kind, 'name') else str(q.quest_kind),
+        "status": q.quest_status.name if hasattr(q.quest_status, 'name') else str(q.quest_status),
+        "live": is_live_project(q),
+        "created_tick": q.created_tick,
+        "progress": q.progress_ratio,
+        "reward": {"xp": q.reward.xp, "gold": q.reward.gold, "items": q.reward.items}
+    }
+
+
+def _entity_quests(entity: EntityState) -> List[Any]:
+    """Every QuestState the entity holds, newest first (created tick, then id, so the order is deterministic)."""
+    from src.core.quests import QuestState
+    quests = [q for q in entity.strategic.projects.values() if isinstance(q, QuestState)]
+    return sorted(quests, key=lambda q: (-q.created_tick, q.id))
+
+
+def _is_open_contract(c: Any) -> bool:
+    return c.status in _OPEN_CONTRACT_STATUSES
+
+
+def present_entity_quests(entity: EntityState, status: str = "all", offset: int = 0, limit: int = 50) -> Dict[str, Any]:
+    """The paged quest history of one entity: `status` is `live`, `terminal` or `all`; newest first."""
+    quests = _entity_quests(entity)
+    if status == "live":
+        quests = [q for q in quests if is_live_project(q)]
+    elif status == "terminal":
+        quests = [q for q in quests if not is_live_project(q)]
+    offset, limit = max(0, offset), max(0, min(limit, MAX_ENTITY_PAGE))
+    return {"entity_id": entity.id, "status": status, "total": len(quests), "offset": offset, "limit": limit,
+            "quests": [_quest_dto(q) for q in quests[offset:offset + limit]]}
+
+
+def _species_and_size(entity: EntityState) -> Dict[str, Optional[str]]:
+    """The entity's species id and the species' declared power band (small, medium, large), or null for both. Never derived here."""
+    species_id = (entity.identity.properties or {}).get("species_id")
+    species = get_faction_semantics_service().repo.get_species(species_id) if species_id else None
+    return {"species": species_id, "size": None if species is None else species.power}
+
 
 class StatePresenter:
     """
@@ -61,12 +117,16 @@ class StatePresenter:
 
     @staticmethod
     def present_entity(entity: EntityState) -> Dict[str, Any]:
-        """Detailed entity model."""
-        from src.core.quests import QuestState
-        
+        """Detailed entity model. Bounded: live quests, unresolved blockers and open contracts in full; only the newest few finished ones, with counts of the rest."""
+        all_quests = _entity_quests(entity)
+        detail_quests = [q for q in all_quests if is_live_project(q)] + [q for q in all_quests if not is_live_project(q)][:DETAIL_TERMINAL_QUESTS]
+        open_blockers = [b for b in entity.strategic.blockers.values() if not b.resolved]
+        contracts = sorted(entity.strategic.contracts.values(), key=lambda c: (-c.created_tick, c.id))
+        detail_contracts = [c for c in contracts if _is_open_contract(c)] + [c for c in contracts if not _is_open_contract(c)][:DETAIL_CLOSED_CONTRACTS]
         return {
             "id": entity.id,
             "kind": entity.kind,
+            **_species_and_size(entity),
             "position": entity.position,
             "readiness": entity.readiness,
             "combat": {
@@ -83,7 +143,7 @@ class StatePresenter:
                 "gold": entity.inventory.gold,
                 "item_count": len(entity.inventory.items),
                 "items": [
-                    {"id": i.item_id, "quantity": i.quantity, "metadata": i.metadata}
+                    {"id": i.item_id, "quantity": i.quantity, "metadata": i.properties}
                     for i in entity.inventory.items
                 ]
             },
@@ -95,28 +155,21 @@ class StatePresenter:
                 "primary_overload": entity.strategic.primary_overload_source,
                 "blockers": [
                     {"id": b.id, "kind": b.kind, "subject": b.subject, "severity": b.severity, "resolved": b.resolved}
-                    for b in entity.strategic.blockers.values()
+                    for b in open_blockers
                 ],
+                "blockers_resolved_count": len(entity.strategic.blockers) - len(open_blockers),
                 "leads": [
                     {"id": l.id, "kind": l.kind, "subject": l.subject, "certainty": l.certainty.value if hasattr(l.certainty, 'value') else l.certainty, "tested": l.tested}
                     for l in entity.strategic.leads.values()
                 ],
                 "contracts": [
                     {"id": c.id, "kind": c.kind.value if hasattr(c.kind, 'value') else c.kind, "status": c.status.value if hasattr(c.status, 'value') else c.status, "target_id": c.target_id}
-                    for c in entity.strategic.contracts.values()
-                ]
+                    for c in detail_contracts
+                ],
+                "contracts_total": len(contracts)
             },
-            "quests": [
-                {
-                    "id": q.id,
-                    "name": q.name,
-                    "kind": q.quest_kind.name if hasattr(q.quest_kind, 'name') else str(q.quest_kind),
-                    "status": q.quest_status.name if hasattr(q.quest_status, 'name') else str(q.quest_status),
-                    "progress": q.progress_ratio,
-                    "reward": {"xp": q.reward.xp, "gold": q.reward.gold, "items": q.reward.items}
-                }
-                for q in entity.strategic.projects.values() if isinstance(q, QuestState)
-            ],
+            "quests": [_quest_dto(q) for q in detail_quests],
+            "quests_total": len(all_quests),
             "social": {
                 "trust": {str(k): v for k, v in entity.social.trust_history.items()},
                 "public_reputation": entity.social.public_reputation,
@@ -153,6 +206,29 @@ class StatePresenter:
         }
 
     @staticmethod
+    def present_entity_summary(entity: EntityState) -> Dict[str, Any]:
+        """The bounded list model: identity, position, vitals and COUNTS, no collection that grows with the entity's age. The full model is `present_entity`."""
+        quests = _entity_quests(entity)
+        live_quests = sum(1 for q in quests if is_live_project(q))
+        return {
+            "id": entity.id,
+            "kind": entity.kind,
+            **_species_and_size(entity),
+            "position": entity.position,
+            "combat": {"hp": entity.combat.hp, "max_hp": entity.combat.max_hp, "alive": entity.combat.alive},
+            "biological": {"hunger": entity.biological.hunger, "sleep_debt": entity.biological.sleep_debt},
+            "identity": {"faction": entity.identity.faction, "role": entity.identity.role, "level": entity.identity.evolution_level, "class": entity.identity.class_id},
+            "inventory": {"gold": entity.inventory.gold, "item_count": len(entity.inventory.items)},
+            "counts": {
+                "quests_live": live_quests,
+                "quests_total": len(quests),
+                "projects": len(entity.strategic.projects),
+                "blockers_open": sum(1 for b in entity.strategic.blockers.values() if not b.resolved),
+                "contracts_open": sum(1 for c in entity.strategic.contracts.values() if _is_open_contract(c)),
+            },
+        }
+
+    @staticmethod
     def present_entity_slim(entity: EntityState) -> Dict[str, Any]:
         """Lightweight per-entity projection for the WS entity-delta broadcast.
 
@@ -171,6 +247,7 @@ class StatePresenter:
         return {
             "id": entity.id,
             "kind": entity.kind,
+            **_species_and_size(entity),
             "x": x,
             "y": y,
             "hp": entity.combat.hp,
@@ -178,6 +255,32 @@ class StatePresenter:
             "level": entity.identity.evolution_level,
             "faction": faction,
             "weapon_range": entity.combat.range,
+        }
+
+    @staticmethod
+    def present_place(place: PlaceState, region: Optional[RegionState] = None) -> PlaceReadModel:
+        """A place as a typed read-model (D69). The owner is the place's own sovereignty override, else its region's holder; a name is the place id
+        read as words (a place has no display name of its own yet)."""
+        owner_id = place.owner_faction_id if place.owner_faction_id is not None else (region.owner_faction_id if region is not None else None)
+        try:
+            owner = Faction(owner_id).name.lower() if owner_id is not None else None
+        except ValueError:
+            owner = str(owner_id)
+        x, y = int(place.position[0]), int(place.position[1])
+        if place.footprint is not None:
+            min_x, min_y, max_x, max_y = place.footprint
+            tiles: PlaceTiles = {"x": min_x, "y": min_y, "width": max_x - min_x + 1, "height": max_y - min_y + 1}
+        else:
+            tiles = {"x": x, "y": y, "width": 1, "height": 1}
+        return {
+            "location_id": place.place_id,
+            "name": place.place_id.replace("_", " ").title(),
+            "location_type": place.kind.value.lower(),
+            "x": x,
+            "y": y,
+            "region_id": place.region_id,
+            "owner": owner,
+            "tiles": tiles,
         }
 
     @staticmethod
@@ -199,12 +302,16 @@ class StatePresenter:
         """Deterministic terrain-type-string -> int code, for the live map's RLE grid.
 
         No terrain-type enum exists in this codebase (recipe-declared free-form strings). Codes are
-        assigned 0..n-1 over the alphabetically-sorted distinct values actually present in
+        assigned 0..n-1 over the alphabetically-sorted, case-folded distinct values actually present in
         state.terrain, so the same terrain-type set always maps to the same codes regardless of dict
         insertion order. Computed fresh per call (never cached/stored) since terrain can change
         between calls.
         """
-        return {t: i for i, t in enumerate(sorted(set(state.terrain.values())))}
+        # One terrain, one code: the engine carries both 'PLAIN' (the compiler's fill) and 'plain' (content), a known casing fragmentation upstream
+        # that changes pathing and hashes if touched, so the presenter folds case here. Every raw string keeps its own key and shares its meaning's code.
+        meanings = sorted({t.lower() for t in state.terrain.values()})
+        code_of = {m: i for i, m in enumerate(meanings)}
+        return {t: code_of[t.lower()] for t in sorted(set(state.terrain.values()))}
 
     @staticmethod
     def present_map(state: AuthoritativeState) -> Dict[str, Any]:
@@ -303,7 +410,7 @@ class StatePresenter:
                 "center_y": (min_y + max_y) / 2,
                 "radius": max(max_x - min_x, max_y - min_y) / 2,
                 "difficulty": region.hazard_level,
-                "locations": [],
+                "locations": [StatePresenter.present_place(state.places[pid], region) for pid in region.places if pid in state.places],
             })
 
         return {

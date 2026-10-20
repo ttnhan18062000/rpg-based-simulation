@@ -32,6 +32,7 @@ pytestmark = [pytest.mark.domain("combat"), pytest.mark.level("scenario")]
 WORLD, SEED = "frontier_living_world", 42
 HUNGRY, FED = 85.0, 0.0
 WINDOW = 80
+PLAIN_RADIUS = 20  # tiles of plain around the pair
 
 
 def _species(entity):
@@ -52,7 +53,10 @@ def _stage(*, hunger, prey_species="goblin", with_prey=True, berries=False):
     if berries:
         template = next(n for n in state.resource_nodes.values() if food_hunger_recovery(n.yields_item) > 0.0)
         nodes = {template.id: replace(template, position=(x + 2.0, y), remaining_charges=4)}
-    return replace(state, entities=entities, buildings={}, building_tiles={}, resource_nodes=nodes), wolf.id, prey.id
+    # Staged on plain so the test is about hunting, not terrain time (D75); terrain slowing is covered in test_terrain_cost_is_time.py.
+    terrain = {**state.terrain, **{(int(x) + dx, int(y) + dy): "plain" for dx in range(-PLAIN_RADIUS, PLAIN_RADIUS + 1)
+                                   for dy in range(-PLAIN_RADIUS, PLAIN_RADIUS + 1)}}
+    return replace(state, entities=entities, buildings={}, building_tiles={}, resource_nodes=nodes, terrain=terrain), wolf.id, prey.id
 
 
 def _run(stage, ticks=WINDOW):

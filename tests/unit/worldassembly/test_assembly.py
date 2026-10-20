@@ -1009,7 +1009,7 @@ def test_region_recipe_spec_accepts_terrain_variants_and_defaults_to_none():
     no_kwarg_spec = RegionRecipeSpec(id="hometown", type="town", grid_bounds=(0, 0, 5, 5))
     assert no_kwarg_spec.terrain_variants is None
 
-    declared_variants = [TerrainVariantSpec(terrain="FOREST")]
+    declared_variants = [TerrainVariantSpec(terrain="forest")]
     declared_spec = RegionRecipeSpec(
         id="hometown",
         type="town",

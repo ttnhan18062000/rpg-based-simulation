@@ -182,29 +182,35 @@ is changed-line feedback only and stays advisory permanently (decision 8.19).
 3. Locally: `make code-health` (ratchet), `make typecheck-py` (mypy through the baseline) and
    `python3 -m codebase.gates.sarif_feedback --changed FILE --out SARIF` (the SARIF the job would upload).
 
-### Reading the import-contract result (advisory)
+### Reading the import-contract result (blocking)
 
 The `Import contracts` step is the last step of the `code-health` CI job. It runs the import-linter contracts in
-`codebase/structure/importlinter.toml` (`TCK-20261004-IMPORT-LINTER-ADOPTION`) and can never fail the job: the
-command exits 0 whatever it finds and the step has its own `continue-on-error`. `Code health` is a required check
-(`TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING`), but this step stays advisory: a broken contract is a summary line
-and a `::warning::`, never a red required check. Blocking is a separate, later step
-(`TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`).
+`codebase/structure/importlinter.toml` (`TCK-20261004-IMPORT-LINTER-ADOPTION`, made blocking by
+`TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`) as `python3 -m codebase.structure.import_contracts ci`. The step
+has no `continue-on-error`, and `Code health` has been a required check since 2026-10-06
+(`TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING`), so a failing step is a red required check. There is no separate
+required-check name and no ruleset change.
 
-- **Job summary:** one line `Import contracts (advisory): N kept, M broken` (plus stale ignored imports), then each
-  broken contract by name. One `::warning::` annotation appears when a contract is broken, stale or could not
-  run ("could not run" is shown instead of looking like a pass).
+- **Exit codes:** 1 when a contract is broken, an `ignore_imports` entry is stale, or the generated `layers` block is
+  out of date; 2 when the contracts could not run (a missing binary or output that is not lint-imports' own). Both fail
+  the job: "could not run" never looks like a pass.
+- **Job summary:** one line `Import contracts (blocking): N kept, M broken` (plus stale ignored imports), then each
+  broken contract by name with every `importer -> imported (l.N)` pair under it. One `::error::` annotation per broken
+  contract carries the same pairs (and one each for stale entries, a stale block and "could not run").
 - **A broken contract** means a new import crosses a boundary: the `layers` contract (order from
-  `codebase/structure/package_registry.jsonl`, 135 existing upward imports held in
-  `codebase/structure/import_layers_baseline.txt`) or one of the class E and loophole contracts. Run locally for the
-  import lines. **A stale ignored import** means an excepted import no longer exists: delete its entry.
-- **Locally:** `make import-contracts` (the same step), or for the full import lines
-  `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` (`lint-imports` is in
-  the `lint` group). After a registry change: `python3 -m codebase.structure.import_contracts` rewrites the
-  generated `layers` block, `--check` reports a stale one; `seed-baseline` accepts the current violations (a
-  deliberate reseed, never to hide a new import).
-- The existing `tests/architecture/` import tests still run beside the contracts; nothing is retired until
-  `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`.
+  `codebase/structure/package_registry.jsonl`, existing upward imports held in
+  `codebase/structure/import_layers_baseline.txt`) or one of the class E and loophole contracts. Fix the import in your
+  PR; if it is deliberate, ask the codebase planner for a baseline or `ignore_imports` entry with a reason (never add one
+  just to pass). **A stale ignored import** means an excepted import no longer exists: delete its entry.
+- **Locally:** `make import-contracts` (the advisory twin: same summary, always exit 0), `make lint-imports` for
+  lint-imports' own report and exit code, or
+  `uvx --from import-linter==2.15 lint-imports --config codebase/structure/importlinter.toml` (`lint-imports` is in the
+  `lint` group). After a registry change: `python3 -m codebase.structure.import_contracts` rewrites the generated
+  `layers` block, `--check` reports a stale one; `seed-baseline` accepts the current violations (a deliberate reseed,
+  never to hide a new import).
+- **Retired tests:** seven class E import tests were retired when the step became blocking; each has a replacement
+  contract and a parity table (injected violation, contract BROKEN) in the ticket's Test Summary. The phase19 hot-path
+  test and the other 42 import rules stay tests.
 
 ### Git hooks (opt-in)
 
@@ -409,9 +415,12 @@ No curl. No bash. Results arrive as a structured tool response directly in conte
 
 Every session's `search_mcp.py` used to load its own embedding model on its first query (about 600 MB each). The first session now starts one local server (`tools/search_shared.py serve`) and every later session asks it, so nine sessions hold about 1.2 GB instead of about 5.7 GB. Nothing to set up and nothing breaks without it:
 
-- **Same answers.** The server runs `search_mcp._search`, the very function the in-process path runs; the client also compares a hash of the result-deciding files (`search_mcp.py`, `search_shared.py`, `knowledge_search.py`, `hybrid_retrieval.py`) with the server's and searches in-process on a mismatch, so a server started from older code never answers.
+- **Same answers.** The server runs `search_mcp._search`, the very function the in-process path runs; the client also compares a hash of the result-deciding files (`search_mcp.py`, `search_shared.py`, `knowledge_search.py`, `hybrid_retrieval.py`) with the server's and searches in-process on a mismatch, so a server started from older code never answers. The hash and the server's own code both come from the **main checkout's** `tools/` (resolved from git, never the cwd), so a worktree that edits `tools/search_*.py` neither starts a server from its own copy nor falls back because of it (`TCK-20261018-SEARCH-SHARED-SINGLE-SERVER-FROM-MAIN-CHECKOUT`). The one exception: a worktree that built its own index keeps its own `tools/` for that index. `RPG_SEARCH_SHARED_CODE_ROOT` overrides the root for tests and dev.
+- **One server per index, and a slow start is waited for.** The server holds an exclusive lock on `server.lock` for its whole life, taken before it loads anything; a second `serve` exits at once, and a killed server's lock disappears with its pid. While the model loads the state file holds a `starting` record; clients never spawn over it. A query that arrives during that load (up to 180 s) gets a **lexical-only** answer, `{"results": [...], "degraded": "lexical_only_server_starting"}`, so no client loads a second 600 MB model because of a slow start. Past 180 s, or for any other failure, the call searches in-process as before. After a pull changes `tools/search_*.py`, the first client that sees the live server on other code replaces it (SIGTERM only to the process that just answered with the token and whose recorded start time still matches) and answers lexical-only meanwhile, so the whole fleet does not fall back to its own models.
+- **Server cwd.** The detached server starts with the main checkout as its cwd, so a removed worktree never leaves it with a deleted one. Under pytest `state_dir()` refuses the real runtime dir (`tests/tools/conftest.py` gives every test a tmp one).
+- **One log line per move.** `search_mcp` prints one stderr line when it moves between the shared server, lexical-only answers and in-process search, never one per query.
 - **Fallback.** Any failure (no server, timeout, a bad answer, a state directory that is not private to your user) makes that call search in-process, as before. The staleness warning and the worktree index fallback do not depend on the server.
-- **Where it lives.** `$XDG_RUNTIME_DIR/rpg-search/<key>/` (outside the repo, `0700`; `<key>` is the sha256 of the index database's resolved path, so every worktree of a checkout shares one server): `server.json` (pid, port, token; `0600`), `lock`, `server.log`. It binds `127.0.0.1` on an OS-assigned port, requires the token, and exits after 30 idle minutes (`RPG_SEARCH_IDLE_SECONDS`), removing its state.
+- **Where it lives.** `$XDG_RUNTIME_DIR/rpg-search/<key>/` (outside the repo, `0700`; `<key>` is the sha256 of the index database's resolved path, so every worktree of a checkout shares one server): `server.json` (pid, port, token; `0600`; a `starting` record while the model loads), `lock` (clients), `server.lock` (held by the server), `server.log`. It binds `127.0.0.1` on an OS-assigned port, requires the token, and exits after 30 idle minutes (`RPG_SEARCH_IDLE_SECONDS`), removing its state.
 - **Kill switch.** `RPG_SEARCH_SHARED=0` forces in-process search. `tests/tools` sets it for every test; no test starts a real detached server without `RPG_SEARCH_SHARED_ALLOW_TEST_SPAWN=1` and a tmp `XDG_RUNTIME_DIR`.
 - **Stopping one by hand:** `kill $(python3 -c 'import json,glob;print(json.load(open(glob.glob("'$XDG_RUNTIME_DIR'/rpg-search/*/server.json")[0]))["pid"])')`; the next search starts a fresh one.
 - The FastAPI `tools/search_server.py` (Docker, `make search-server-docker`) is a separate server with its own search path and different results; it is unchanged. Pointing it at the same core is an agent-working follow-up.

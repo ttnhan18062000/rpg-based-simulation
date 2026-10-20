@@ -1,13 +1,10 @@
 from __future__ import annotations
 from dataclasses import replace
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional
 from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate, WorldUpdate, NO_OWNER_SENTINEL
 from src.core.enums import Faction
 from src.content_semantics.faction import get_faction_id_str, get_faction_semantics_service
-
-if TYPE_CHECKING:
-    from src.systems.world_systems.generator import EntityGenerator
 
 
 def _region_owner_faction_id_str(owner_int: Optional[int]) -> Optional[str]:
@@ -72,42 +69,3 @@ class FactionInfluenceService:
             world_updates[r_id] = WorldUpdate(**w_upd_args)
             
         return StateUpdate(world_updates=world_updates)
-
-    @staticmethod
-    def process_conquest_lifecycle(state: AuthoritativeState, update: StateUpdate, generator: EntityGenerator) -> StateUpdate:
-        """
-        Handles spawning/removing strongholds based on world updates.
-        """
-        entities_add = []
-        entities_remove = []
-        
-        for r_id, w_upd in update.world_updates.items():
-            region = state.regions[r_id]
-            
-            # 1. New Conquest -> Spawn Stronghold
-            if w_upd.owner_faction_id_set == Faction.MONSTER_HORDE:
-                # Center of region
-                center = (
-                    (region.bounds[0] + region.bounds[2]) / 2,
-                    (region.bounds[1] + region.bounds[3]) / 2
-                )
-                stronghold = generator.spawn_stronghold(state, center)
-                entities_add.append(stronghold)
-                
-            # 2. New Liberation -> Remove Stronghold
-            elif w_upd.owner_faction_id_set == NO_OWNER_SENTINEL:
-                # Find stronghold in this region
-                for e_id, entity in state.entities.items():
-                    if entity.kind == "stronghold":
-                        from src.engine.legality import LegalityServiceV2
-                        e_region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state)
-                        if e_region and e_region.id == r_id:
-                            entities_remove.append(e_id)
-                            
-        # Also check for stronghold destruction triggering liberation
-        # (This would normally happen in a separate pass if we want destruction to BE the trigger)
-        
-        return update.replace(
-            entities_add=list(update.entities_add) + entities_add,
-            entities_remove=list(update.entities_remove) + entities_remove
-        )

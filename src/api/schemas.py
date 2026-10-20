@@ -37,3 +37,27 @@ class EntityDetailResponse(TypedDict, total=False):
     name: str
     attributes: Dict[str, Any]
     metadata: Dict[str, Any]
+
+
+class PlaceTiles(TypedDict):
+    """The tiles a place covers, as one rectangle: its footprint, or the single tile it stands on."""
+    x: int
+    y: int
+    width: int
+    height: int
+
+
+class PlaceReadModel(TypedDict):
+    """One place (town, den, ruin, named site) as the Live Map reads it, through `StatePresenter.present_place` (D69): never the raw `PlaceState`.
+
+    `location_id`, `name`, `location_type`, `x`, `y` and `region_id` are the fields the frontend's `Location` type already declares; `owner` and
+    `tiles` are the place's own sovereignty and extent."""
+    location_id: str
+    name: str
+    location_type: str
+    x: int
+    y: int
+    region_id: str
+    owner: Optional[str]
+    tiles: PlaceTiles
+

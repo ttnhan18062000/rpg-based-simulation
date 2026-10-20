@@ -315,6 +315,10 @@ export interface Location {
   x: number;
   y: number;
   region_id: string;
+  /** Faction holding the place (its own override, else its region's), or null. */
+  owner?: string | null;
+  /** The tiles the place covers, as one rectangle. */
+  tiles?: { x: number; y: number; width: number; height: number };
 }
 
 export interface Region {

@@ -2,7 +2,7 @@ from __future__ import annotations
 import pytest
 
 from src.simulation_quality.pillar_accumulator import PillarAccumulator
-from src.simulation_quality.pillars import PillarId
+from src.simulation_quality.pillars import PILLAR_MIN_EVENTS, PillarId
 from src.simulation_quality.quality_report import QualityReportBuilder, _assign_grade
 from src.simulation_quality.score_record import ScoreRecord
 from src.simulation_quality.weights import ScoringWeights
@@ -64,7 +64,8 @@ def test_normalized_score_formula(scoring_weights):
 
 def test_normalized_score_tick_zero_uses_one(scoring_weights):
     acc = PillarAccumulator(PillarId.ECONOMY, weights=scoring_weights)
-    acc.add(_make_record("e1", PillarId.ECONOMY, 5.0))
+    for i in range(3):
+        acc.add(_make_record(f"e{i}", PillarId.ECONOMY, 5.0 / 3))
     accumulators = {PillarId.ECONOMY: acc}
     report = QualityReportBuilder.build(accumulators, current_tick=0, run_id="test", weights=scoring_weights)
     snap = report.pillars["ECONOMY"]
@@ -85,8 +86,10 @@ def test_grade_reads_from_scoring_weights_not_hardcoded(scoring_weights):
 def test_overall_score_weighted_average(scoring_weights):
     from collections import OrderedDict
     accumulators = {}
-    for pillar in PillarId:
+    for n, pillar in enumerate(PillarId):
         acc = PillarAccumulator(pillar, weights=scoring_weights)
+        for i in range(PILLAR_MIN_EVENTS[pillar]):
+            acc.add(_make_record(f"{pillar.value}{i}", pillar, float(n - 4)))
         accumulators[pillar] = acc
     report = QualityReportBuilder.build(
         accumulators, current_tick=10, run_id="test", weights=scoring_weights
@@ -141,9 +144,11 @@ def _make_acc_with_last_event_at(
     last_tick: int,
     raw_total: float,
 ) -> PillarAccumulator:
-    """Build an accumulator with a single event delivering raw_total at last_tick."""
+    """Build an accumulator with exactly the minimum event count, summing to raw_total, the last at last_tick."""
     acc = PillarAccumulator(pillar, weights=scoring_weights)
-    acc.add(_make_record_at_tick("e1", pillar, tick=last_tick, delta=raw_total))
+    n = PILLAR_MIN_EVENTS[pillar]
+    for i in range(n):
+        acc.add(_make_record_at_tick(f"e{i}", pillar, tick=last_tick, delta=raw_total / n))
     return acc
 
 
@@ -170,14 +175,15 @@ def test_combat_grade_stable_across_tick_counts_for_same_activity(scoring_weight
     assert report_500.pillars["COMBAT"].grade == "A"
 
 
-def test_zero_event_pillar_uses_current_tick_fallback(scoring_weights):
-    """T-REP-03: Pillar with no events (last_event_tick=0) falls back to current_tick.
-    raw_score=0.0 always yields 0.0 so grade stays C regardless."""
+def test_zero_event_pillar_is_no_data_not_a_grade(scoring_weights):
+    """T-REP-03: a pillar with no events reports no-data: null score and grade, a reason, never a placeholder."""
     acc = PillarAccumulator(PillarId.ECONOMY, weights=scoring_weights)  # no events added
     report = QualityReportBuilder.build({PillarId.ECONOMY: acc}, current_tick=500, run_id="r", weights=scoring_weights)
     snap = report.pillars["ECONOMY"]
-    assert snap.normalized_score == pytest.approx(0.0)
-    assert snap.grade == "C"
+    assert snap.status == "no-data"
+    assert snap.normalized_score is None
+    assert snap.grade is None
+    assert snap.reason == "below_min_events"
 
 
 def test_exact_normalized_score_when_last_event_tick_exceeds_floor(scoring_weights):
@@ -231,3 +237,74 @@ def test_floor_not_used_when_last_event_tick_exceeds_floor(scoring_weights):
     expected = 127.0 / 172  # = 0.7384
     assert abs(report.pillars["COMBAT"].normalized_score - expected) < 0.001
     assert report.pillars["COMBAT"].grade == "A"
+
+
+# ---------------------------------------------------------------------------
+# No-data below a minimum event count (PILLAR_MIN_EVENTS)
+# ---------------------------------------------------------------------------
+
+def _acc_with_events(pillar: PillarId, scoring_weights, count: int, delta: float) -> PillarAccumulator:
+    acc = PillarAccumulator(pillar, weights=scoring_weights)
+    for i in range(count):
+        acc.add(_make_record_at_tick(f"{pillar.value}{i}", pillar, tick=10, delta=delta))
+    return acc
+
+
+def test_a_lone_plateau_penalty_is_no_data_and_not_a_grade(scoring_weights):
+    acc = _acc_with_events(PillarId.PROGRESSION, scoring_weights, 1, -8.0)
+    report = QualityReportBuilder.build({PillarId.PROGRESSION: acc}, current_tick=200, run_id="r", weights=scoring_weights)
+    snap = report.pillars["PROGRESSION"]
+    assert (snap.status, snap.grade, snap.normalized_score, snap.reason) == ("no-data", None, None, "below_min_events")
+    assert snap.event_count == 1 and snap.min_events == PILLAR_MIN_EVENTS[PillarId.PROGRESSION]
+
+
+def test_at_the_minimum_the_pillar_is_scored_as_before(scoring_weights):
+    n = PILLAR_MIN_EVENTS[PillarId.PROGRESSION]
+    below = QualityReportBuilder.build({PillarId.PROGRESSION: _acc_with_events(PillarId.PROGRESSION, scoring_weights, n - 1, 1.0)}, 200, "r", scoring_weights)
+    at = QualityReportBuilder.build({PillarId.PROGRESSION: _acc_with_events(PillarId.PROGRESSION, scoring_weights, n, 1.0)}, 200, "r", scoring_weights)
+    assert below.pillars["PROGRESSION"].status == "no-data"
+    assert at.pillars["PROGRESSION"].status == "ok"
+    assert at.pillars["PROGRESSION"].grade is not None and "reason" not in at.to_dict()["pillars"]["PROGRESSION"]
+
+
+def test_overall_excludes_no_data_pillars_and_counts_both(scoring_weights):
+    accs = {p: _acc_with_events(p, scoring_weights, PILLAR_MIN_EVENTS[p], 5.0) for p in list(PillarId)[:6]}
+    accs.update({p: _acc_with_events(p, scoring_weights, 1, -50.0) for p in list(PillarId)[6:]})
+    report = QualityReportBuilder.build(accs, current_tick=100, run_id="r", weights=scoring_weights)
+    scored = [p for p in list(PillarId)[:6]]
+    weight_sum = sum(scoring_weights.pillar_weight(p.value) for p in scored)
+    expected = sum(report.pillars[p.value].normalized_score * scoring_weights.pillar_weight(p.value) for p in scored) / weight_sum
+    assert report.overall_status == "ok" and report.overall_reason is None
+    assert report.overall_score == pytest.approx(expected)
+    assert (report.pillars_scored, report.pillars_no_data) == (6, 4)
+
+
+def test_overall_is_no_data_below_half_the_pillars_scored(scoring_weights):
+    accs = {p: _acc_with_events(p, scoring_weights, PILLAR_MIN_EVENTS[p], 5.0) for p in list(PillarId)[:4]}
+    accs.update({p: PillarAccumulator(p, weights=scoring_weights) for p in list(PillarId)[4:]})
+    report = QualityReportBuilder.build(accs, current_tick=100, run_id="r", weights=scoring_weights)
+    assert (report.overall_status, report.overall_score, report.overall_grade, report.overall_reason) == (
+        "no-data", None, None, "too_few_pillars_scored")
+    assert (report.pillars_scored, report.pillars_no_data) == (4, 6)
+
+
+def test_every_pillar_key_is_present_and_the_bytes_are_stable(scoring_weights):
+    import json
+    accs = {p: PillarAccumulator(p, weights=scoring_weights) for p in PillarId}
+    d1 = QualityReportBuilder.build(accs, 100, "r", scoring_weights).to_dict()
+    d2 = QualityReportBuilder.build(accs, 100, "r", scoring_weights).to_dict()
+    for d in (d1, d2):
+        d.pop("generated_at")
+    assert json.dumps(d1, sort_keys=True) == json.dumps(d2, sort_keys=True)
+    assert set(d1["pillars"]) == {p.value for p in PillarId}
+    for pillar in d1["pillars"].values():
+        assert {"status", "grade", "normalized_score", "event_count", "min_events"} <= set(pillar)
+    assert d1["overall_score"] is None and d1["overall_grade"] is None
+    assert {"overall_status", "overall_reason", "pillars_scored", "pillars_no_data"} <= set(d1)
+
+
+def test_calibrate_prints_a_no_data_pillar_instead_of_crashing(scoring_weights):
+    from tools.calibrate_simq import pillar_line
+    acc = _acc_with_events(PillarId.PROGRESSION, scoring_weights, 1, -8.0)
+    snap = QualityReportBuilder.build({PillarId.PROGRESSION: acc}, 200, "r", scoring_weights).pillars["PROGRESSION"]
+    assert "no-data (1 events < 3)" in pillar_line("PROGRESSION", snap)

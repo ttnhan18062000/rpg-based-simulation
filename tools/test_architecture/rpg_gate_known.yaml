@@ -1,5 +1,5 @@
 # Known fails and drifts of the rpg regression gate report (TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE, child 1 of
-# TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC). EMPTY on purpose: the gate report that reads it lands in a later child.
+# TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC). The first entries were measured by the metric module on seed 42 (1500 ticks, TCK-20261009-RPG-REGRESSION-METRICS-COMPUTED-FROM-TYPED-RECORDS); a closer of the owning ticket removes its entry.
 # Schema, matcher and lint: tools/test_architecture/known_reds.py (RPG_GATE_SPEC); tests/unit/tools/test_known_reds.py lints this file.
 #
 # Each entry: `match` (an fnmatch pattern on `<metric_id>[:<group>]`), `ticket`, `owner`, `added_on`, `expires_on` (ISO dates)
@@ -8,4 +8,11 @@
 #   drift  a DRIFT against the baseline; `ticket` is a TRACE ticket (the decision that explains the drift).
 # `note` is optional. Unknown fields are rejected. A metric with no entry in its state is UNOWNED; one past `expires_on` is EXPIRED.
 # ORDER MATTERS within a state: the first entry whose pattern matches wins, and the lint rejects a shadowed entry.
-known: []
+known:
+  - match: "V1"
+    ticket: TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL
+    owner: rpg-planner
+    added_on: "2026-10-13"
+    expires_on: "2026-12-31"
+    state: fail
+    note: "The free meal: a subject that cannot pay eats at the inn. The inn charge (building_services.py:71-74, TOWN_SERVICE gold_delta -5, gold_cost 0) is accepted at 0 gold (conservation.py:256) and the -5 is clamped to 0 (inventory.py:156); V1 counts a hunger drop as backed only when an accepted transfer moved something (items, or the gold applied after the clamp), so it now shows. Before D74 it showed as merchants (group undeclared) via core_actions.py eat_update alone (-40, no transfer)."

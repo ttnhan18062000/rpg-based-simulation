@@ -9,10 +9,8 @@ dead/destroyed record representability, AST import guard.
 
 from __future__ import annotations
 
-import ast
 import dataclasses
 import json
-from pathlib import Path
 
 import pytest
 
@@ -444,24 +442,3 @@ def test_campaign_state_importable():
 # ---------------------------------------------------------------------------
 # Guard 4: state.py has no imports from src.engine.* or src.systems.*
 # ---------------------------------------------------------------------------
-
-def test_campaign_state_module_has_no_engine_imports():
-    state_path = Path(__file__).parent.parent.parent.parent.parent / "src" / "domains" / "campaigns" / "state.py"
-    source = state_path.read_text()
-    tree = ast.parse(source)
-
-    forbidden_prefixes = ("src.engine", "src.systems")
-
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
-            if isinstance(node, ast.ImportFrom) and node.module:
-                for prefix in forbidden_prefixes:
-                    assert not node.module.startswith(prefix), (
-                        f"state.py must not import from {prefix!r}; found: {node.module!r}"
-                    )
-            elif isinstance(node, ast.Import):
-                for alias in node.names:
-                    for prefix in forbidden_prefixes:
-                        assert not alias.name.startswith(prefix), (
-                            f"state.py must not import from {prefix!r}; found: {alias.name!r}"
-                        )

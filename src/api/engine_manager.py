@@ -10,7 +10,8 @@ from src.core.state import AuthoritativeState
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.config.profiles import RuntimeProfile
-from src.systems.world_systems.generator import EntityGenerator
+from src.api.metrics_port import MetricsPort, start_metrics_port
+from src.api.http_metrics import HttpRequestMetrics, activate, deactivate
 from src.api.read_model_cache import ReadModelCache
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
@@ -22,10 +23,9 @@ class V2EngineManager:
     V2 drop-in replacement for legacy EngineManager.
     Wraps the V2 Kernel and manages the background execution loop.
     """
-    def __init__(self, profile: RuntimeProfile, seed: int = 42, entities_count: int = 10, world_id: str = "dungeon_crawl"):
+    def __init__(self, profile: RuntimeProfile, seed: int = 42, world_id: str = "dungeon_crawl"):
         self._profile = profile
         self._seed = seed
-        self._entities_count = entities_count
         self._world_id = world_id
         
         self._kernel: Optional[Kernel] = None
@@ -57,12 +57,22 @@ class V2EngineManager:
         self._metrics_registry = CollectorRegistry()
         self._metrics_collector = PrometheusMetricsCollector(self)
         self._metrics_registry.register(self._metrics_collector)
+        self._metrics_port: Optional[MetricsPort] = None
+        self._http_metrics = HttpRequestMetrics(self._metrics_registry)
         self._errors_total = 0
         self._total_spawned = 0
         self._total_deaths = 0
         self._started_at: Optional[float] = None
         
         self._build()
+
+    @property
+    def metrics_port(self) -> Optional[MetricsPort]:
+        """The running internal metrics port, or None before start, after stop, or when it could not be bound."""
+        return self._metrics_port
+    def http_metrics(self) -> HttpRequestMetrics:
+        """The request-duration histogram registered on metrics_registry."""
+        return self._http_metrics
 
     @property
     def metrics_registry(self) -> Any:
@@ -113,58 +123,18 @@ class V2EngineManager:
                     logger.exception("Error in tick listener")
 
     def _build(self):
-        """Construct the initial kernel and state.
+        """Construct the initial kernel and state: the authored world, compiled the way the simulation and the gate compile it.
 
-        Loads and compiles a real world (terrain, regions, resource nodes, buildings) via
-        WorldCompiler -- previously this constructed a bare AuthoritativeState with no terrain
-        argument at all (terrain defaulting to an empty dict), so every route/consumer reading
-        state.terrain (e.g. GET /api/v1/map) always saw an empty map, live-confirmed via
-        TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX's Playwright e2e check. The compiled
-        world's own entities (quest-givers, NPCs, etc.) are deliberately discarded in favor of
-        the existing hero+goblin-diagonal spawn logic below -- that logic's entities_count
-        semantics and spawn-collision fix (TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-
-        MONSTER-DIAGONAL) are an established, tested contract this change must not disturb; only
-        the terrain/regions/statics layer was missing.
+        D69 (owner ruling 2026-10-14, issue #519): what a viewer watches is what gets measured, so the live server runs the SAME compiled world
+        (`load_world_with_context` + `WorldCompiler.compile(..., context=...)`), with its authored entities, buildings, nodes and regions. There is
+        no demo spawn (it was one hero and a diagonal of goblins that discarded the authored entities) and no switch that brings it back.
         """
-        from src.api.presenters.state_presenter import StatePresenter
-
         rng = DeterministicRNG(self._seed)
-        gen = EntityGenerator(self._seed)
 
-        repo = WorldRepository("data/worlds")
-        spec = repo.load_world(self._world_id)
-        compiled_state, _compile_report = WorldCompiler.compile(spec, seed=self._seed)
+        spec, context = WorldRepository("data/worlds").load_world_with_context(self._world_id)
+        compiled_state, _compile_report = WorldCompiler.compile(spec, seed=self._seed, context=context)
 
-        entities = {}
-        # Spawn hero at center
-        hero_pos = (64.0, 64.0)
-        hero = gen.spawn_hero(hero_pos)
-        entities[hero.id] = hero
-
-        # Spawn monsters along a diagonal from (60, 60). Skip any offset whose tile
-        # (LAW-SPAWN-OCCUPANCY collides on int(x)/int(y), not exact float equality) would
-        # land on the hero's own tile -- with entities_count=10 (the default used by
-        # src/api/server.py's real startup path), offset 4 lands exactly on hero_pos,
-        # producing a deterministic spawn-placement collision (TCK-20260817-STANDARD-
-        # SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL).
-        hero_tile = (int(hero_pos[0]), int(hero_pos[1]))
-        placed = 0
-        offset = 0
-        while placed < self._entities_count - 1:
-            pos = (60.0 + offset, 60.0 + offset)
-            offset += 1
-            if (int(pos[0]), int(pos[1])) == hero_tile:
-                continue
-            monster = gen.spawn_goblin(pos)
-            entities[monster.id] = monster
-            placed += 1
-
-        state = dataclasses.replace(
-            compiled_state,
-            tick=0,
-            seed=self._seed,
-            entities=entities,
-        )
+        state = dataclasses.replace(compiled_state, tick=0, seed=self._seed)
 
         self._kernel = Kernel(profile=self._profile, state=state, rng=rng)
         self._kernel._event_listeners = self._event_listeners
@@ -229,7 +199,7 @@ class V2EngineManager:
             return StatePresenter.present_full(self._latest_state)
 
     def get_entities_paged(self, offset: int = 0, limit: int = 100) -> Dict[str, Any]:
-        """Returns a paged list of entities."""
+        """Returns a paged list of BOUNDED entity summaries (the full detail is get_entity)."""
         with self._state_lock:
             if not self._latest_state:
                 return {"entities": [], "total": 0, "offset": offset, "limit": limit}
@@ -241,6 +211,14 @@ class V2EngineManager:
             if not self._latest_state or entity_id not in self._latest_state.entities:
                 return None
             return self._read_cache.get_entity_dto(self._latest_state.entities[entity_id])
+
+    def get_entity_quests(self, entity_id: int, status: str = "all", offset: int = 0, limit: int = 50) -> Optional[Dict[str, Any]]:
+        """The paged quest history of one entity (newest first), or None when the entity does not exist."""
+        from src.api.presenters.state_presenter import present_entity_quests
+        with self._state_lock:
+            if not self._latest_state or entity_id not in self._latest_state.entities:
+                return None
+            return present_entity_quests(self._latest_state.entities[entity_id], status, offset, limit)
 
     def get_entity_timeline_events(self, entity_id: int) -> List[Dict[str, Any]]:
         """Returns serialized timeline events for an entity, or [] if not found."""
@@ -268,14 +246,20 @@ class V2EngineManager:
         self._running.set()
         self._thread = threading.Thread(target=self._run_loop, name="v2-engine-loop", daemon=True)
         self._thread.start()
+        self._metrics_port = start_metrics_port(self._metrics_registry)  # issue #622 R1: the internal, unauthenticated metrics port
+        activate(self._http_metrics)
         logger.info("V2EngineManager started.")
 
     def stop(self):
         self._stop_requested.set()
         self._paused.clear()
         self._running.clear()
+        deactivate(self._http_metrics)
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=5.0)
+        if self._metrics_port is not None:
+            self._metrics_port.stop()
+            self._metrics_port = None
         if self._kernel:
             self._kernel.shutdown()
         logger.info("V2EngineManager stopped.")

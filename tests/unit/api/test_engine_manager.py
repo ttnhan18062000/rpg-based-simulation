@@ -30,7 +30,7 @@ def _poll_until(predicate, timeout=2.0, interval=0.01):
 
 
 def test_is_thread_alive_reflects_real_thread_state():
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     try:
         assert manager.is_thread_alive is False
         manager.start()
@@ -41,7 +41,7 @@ def test_is_thread_alive_reflects_real_thread_state():
 
 
 def test_last_tick_age_seconds_uses_tick_times_then_started_at_fallback():
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     try:
         assert manager.last_tick_age_seconds is None
 
@@ -58,7 +58,7 @@ def test_last_tick_age_seconds_uses_tick_times_then_started_at_fallback():
 
 
 def test_get_health_status_killed_thread_reports_unhealthy_synthetic():
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     real_thread = None
     try:
         manager.start()
@@ -79,7 +79,7 @@ def test_get_health_status_killed_thread_reports_unhealthy_synthetic():
 
 
 def test_get_health_status_killed_thread_reports_unhealthy_realistic():
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     try:
         manager.start()
         assert _poll_until(lambda: len(manager._tick_times) > 0)
@@ -96,7 +96,7 @@ def test_get_health_status_killed_thread_reports_unhealthy_realistic():
 
 
 def test_get_health_status_stale_tick_reports_degraded():
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     try:
         manager.start()
         assert _poll_until(lambda: len(manager._tick_times) > 0)
@@ -113,7 +113,7 @@ def test_get_health_status_stale_tick_reports_degraded():
 
 
 def test_get_health_status_paused_stays_ok():
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     try:
         manager.start()
         assert _poll_until(lambda: len(manager._tick_times) > 0)
@@ -143,7 +143,7 @@ def _make_entity(eid: int):
 def test_engine_manager_total_spawned_incremented_on_new_entity():
     """Kernel.tick_once must be patched at the class level, not the instance -- Kernel uses
     __slots__ (see test_get_health_status_killed_thread_reports_unhealthy_realistic above)."""
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     spawned = {"done": False}
 
     def _side_effect():
@@ -167,7 +167,7 @@ def test_engine_manager_total_spawned_incremented_on_new_entity():
 
 
 def test_engine_manager_total_deaths_incremented_on_removed_entity():
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     removed = {"done": False}
 
     def _side_effect():
@@ -191,7 +191,7 @@ def test_engine_manager_total_deaths_incremented_on_removed_entity():
 
 
 def test_engine_manager_reset_zeroes_spawn_death_counters():
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     spawned = {"done": False}
 
     def _side_effect():
@@ -223,7 +223,7 @@ def test_tick_listener_registered_before_snapshot_loses_no_tick():
     (TCK-20260821-WS-ENTITY-DELTA-BROADCAST AC #3): a tick fired in the window between
     add_tick_listener and the initial get_state() snapshot must still be observed by the listener,
     not silently dropped."""
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     received = []
     try:
         # Mirrors stream_ws's own call order: register listener, then a tick fires, then
@@ -242,7 +242,7 @@ def test_tick_listener_registered_before_snapshot_loses_no_tick():
 def test_delta_payload_is_none_or_dict_and_notify_listeners_receives_it():
     """The one call site of _notify_listeners in _run_loop must only fire with a non-None delta
     payload -- a quiet non-heartbeat tick must not invoke registered listeners at all."""
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     received = []
     try:
         manager.add_tick_listener(lambda payload: received.append(payload))
@@ -256,7 +256,7 @@ def test_delta_payload_is_none_or_dict_and_notify_listeners_receives_it():
 
 
 def test_stats_counters_non_decreasing_across_ticks():
-    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    manager = V2EngineManager(PROD_DEFAULT, seed=42)
     remaining_ids = iter([999903, 999904, 999905])
 
     def _side_effect():

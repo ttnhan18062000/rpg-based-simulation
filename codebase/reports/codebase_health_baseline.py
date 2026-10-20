@@ -64,6 +64,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
+
 from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -116,6 +117,7 @@ def measure_py_tree(repo_root: Path, prefix: str) -> tuple:
 
 
 def count_top_level_src_packages(repo_root: Path) -> int:
+    """Count the top-level packages among the git-tracked files under ``src``."""
     files = _git_ls_files(repo_root, "src/*")
     packages = set()
     for rel_path in files:
@@ -126,6 +128,7 @@ def count_top_level_src_packages(repo_root: Path) -> int:
 
 
 def count_test_subdirectories(repo_root: Path) -> int:
+    """Count the directories below ``tests`` that hold git-tracked ``.py`` files."""
     files = _git_ls_files(repo_root, "tests/*.py")
     subdirs = set()
     for rel_path in files:
@@ -136,15 +139,18 @@ def count_test_subdirectories(repo_root: Path) -> int:
 
 
 def count_commits(repo_root: Path) -> int:
+    """Count the commits reachable from HEAD."""
     output = _run_git(["log", "--oneline"], repo_root)
     return len([line for line in output.splitlines() if line])
 
 
 def count_docs(repo_root: Path) -> int:
+    """Count the git-tracked Markdown files directly matching ``docs/*.md``."""
     return len(_git_ls_files(repo_root, "docs/*.md"))
 
 
 def measure_registry_size(repo_root: Path) -> tuple:
+    """Return the byte size and line count of ``docs/REGISTRY.yaml``, or (0, 0) when it is missing."""
     registry_path = repo_root / "docs" / "REGISTRY.yaml"
     if not registry_path.exists():
         return 0, 0
@@ -155,6 +161,7 @@ def measure_registry_size(repo_root: Path) -> tuple:
 
 
 def find_dead_bytecode_files(repo_root: Path) -> int:
+    """Count ``.pyc`` files that have no matching source file."""
     dead = 0
     for pyc_path in repo_root.rglob("*.pyc"):
         if any(part in _SKIP_DIR_NAMES for part in pyc_path.parts[:-1] if part != "__pycache__"):
@@ -181,6 +188,7 @@ def _parse_core_dependencies(repo_root: Path) -> list:
 
 
 def find_unused_core_dependencies(repo_root: Path) -> list:
+    """List the core dependencies whose import name no tracked ``.py`` file imports."""
     specs = _parse_core_dependencies(repo_root)
     py_files = _git_ls_files(repo_root, "*.py")
     combined_source = []
@@ -236,6 +244,7 @@ def compute_churn_lines_changed(
 
 
 def build_report(repo_root: Path) -> dict:
+    """Measure the repository and return the baseline report as a dict."""
     source_loc, source_files = measure_py_tree(repo_root, "src/")
     test_loc, test_files = measure_py_tree(repo_root, "tests/")
     ratio = (test_loc / source_loc) if source_loc else 0.0
@@ -259,6 +268,7 @@ def build_report(repo_root: Path) -> dict:
 
 
 def format_report(report: dict) -> str:
+    """Render a baseline report as text."""
     unused_deps = ", ".join(report["unused_core_dependencies"]) or "none"
     lines = [
         "Codebase Health Baseline (live, computed fresh — not a cached snapshot)",
@@ -282,7 +292,8 @@ def format_report(report: dict) -> str:
     return "\n".join(lines)
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point; returns the process exit code."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--repo-root", type=Path, default=_REPO_ROOT,

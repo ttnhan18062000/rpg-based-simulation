@@ -421,6 +421,11 @@ if __name__ == "__main__":
     )
     
     logger.info("Starting LiveAnomalyWorker with config: %s", config)
+
+    if config.stream_backend == "redis":
+        from src.observability.stream.lag_metrics import start_lag_metrics_server
+
+        start_lag_metrics_server(config.redis_url, config.stream_name)
     worker = LiveAnomalyWorker(config=config)
     worker.start()
     

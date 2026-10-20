@@ -60,7 +60,7 @@ def _run(script=SCRIPT, **scenario) -> dict:
     return json.loads(proc.stdout)
 
 
-def _run_with_unported_list(**scenario) -> dict:
+def _run_with_unported_list(tmp_path, **scenario) -> dict:
     """Run the script with the (now empty) refusal list re-populated, so the refusal mechanism itself stays tested
     for the next gate site someone adds before porting it."""
     source = SCRIPT.read_text(encoding="utf-8")
@@ -68,12 +68,11 @@ def _run_with_unported_list(**scenario) -> dict:
         r"const NATIVE_UNPORTED_GATE_SITES = \[.*?\]", "const NATIVE_UNPORTED_GATE_SITES = ['someGateOutput']", source, count=1, flags=re.S
     )
     assert populated != source
-    tmp = SCRIPT.parent / "_tmp_refusal_populated.js"
+    # The harness reads the script by path and runs it in `vm` with no sibling require, so the copy lives under
+    # pytest's per-test tmp_path: nothing is written into the repo tree and parallel workers never share a file.
+    tmp = tmp_path / "refusal_populated.js"
     tmp.write_text(populated, encoding="utf-8")
-    try:
-        return _run(tmp, **scenario)
-    finally:
-        tmp.unlink()
+    return _run(tmp, **scenario)
 
 
 def _pipeline_dispatches(result: dict) -> list:
@@ -81,8 +80,8 @@ def _pipeline_dispatches(result: dict) -> list:
 
 
 @pytest.mark.parametrize("args", [{"tier": "standard"}, {"tier": "hotfix"}, {}])
-def test_native_non_epic_or_unknown_tier_is_refused_with_no_pipeline_agent(args):
-    result = _run_with_unported_list(native=True, args=args)
+def test_native_non_epic_or_unknown_tier_is_refused_with_no_pipeline_agent(args, tmp_path):
+    result = _run_with_unported_list(tmp_path, native=True, args=args)
     assert result["thrown"] is None
     assert result["returned"]["status"] == "NATIVE_GATE_SITES_UNPORTED"
     assert "legacy runtime" in result["returned"]["message"]
@@ -109,16 +108,16 @@ def test_legacy_runtime_is_unaffected():
     assert any(d["label"] == "scope" for d in result["dispatches"])
 
 
-def test_refusal_writes_a_run_row_and_event_best_effort():
-    result = _run_with_unported_list(native=True, args={"tier": "standard"})
+def test_refusal_writes_a_run_row_and_event_best_effort(tmp_path):
+    result = _run_with_unported_list(tmp_path, native=True, args={"tier": "standard"})
     recorder = [d["prompt"] for d in result["dispatches"] if d["label"] == "refusal-record"]
     assert len(recorder) == 2
     assert any('"final_status":"NATIVE_GATE_SITES_UNPORTED"' in p and "record_run.py" in p for p in recorder)
     assert any("record_events.py" in p for p in recorder)
 
 
-def test_recorder_failure_never_changes_the_refusal_status():
-    result = _run_with_unported_list(native=True, args={"tier": "standard"}, recorderThrows=True)
+def test_recorder_failure_never_changes_the_refusal_status(tmp_path):
+    result = _run_with_unported_list(tmp_path, native=True, args={"tier": "standard"}, recorderThrows=True)
     assert result["thrown"] is None
     assert result["returned"]["status"] == "NATIVE_GATE_SITES_UNPORTED"
 

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Set
 
 from src.core.state import LifeStage
 from src.core.updates import StateUpdate, EntityUpdate, LifecycleUpdate, WorldUpdate
+from src.core.spawn_source import SpawnKind, SpawnSource
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -100,7 +101,7 @@ class HumanoidReproductionService:
             # population_young_births_delta additively across pairs via WorldUpdate.merge().
             world_updates = {region.id: WorldUpdate(region_id=region.id, population_young_births_delta=1)} if region is not None else {}
             pair_update = StateUpdate(
-                entities_add=[child],
+                entities_add=[child], entity_spawn_sources={child.id: SpawnSource(SpawnKind.BIRTH, parent_ids=(a.id, b.id))},
                 entity_updates={
                     a.id: EntityUpdate(entity_id=a.id, lifecycle=LifecycleUpdate(reproduction_cooldowns_add={b.id: expiry})),
                     b.id: EntityUpdate(entity_id=b.id, lifecycle=LifecycleUpdate(reproduction_cooldowns_add={a.id: expiry})),
