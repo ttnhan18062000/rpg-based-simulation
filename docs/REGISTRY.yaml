@@ -7725,6 +7725,18 @@
   - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-O1-COUNT-FLOORS-CARRY-THEIR-RELATIVE-PART.md
+  ticket_id: TCK-20261020-O1-COUNT-FLOORS-CARRY-THEIR-RELATIVE-PART
+  title: The O1.starved and O1.at_risk run rows carry floor_rel next to their base
+    floor
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - src/observability/rpg_gate_metrics.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR.md
   ticket_id: TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR
   title: A run outcome row may carry `floor_rel`. The candidate records `floor = max(floor,
@@ -7791,6 +7803,20 @@
   - testing
   - regression
   - simulation-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-UNIT-TESTS-SHARE-DATA-RUNS-DIRS-UNDER-XDIST.md
+  ticket_id: TCK-20261020-UNIT-TESTS-SHARE-DATA-RUNS-DIRS-UNDER-XDIST
+  title: Unit tests that write fixed data/runs dirs fail under pytest-xdist because
+    another worker removes the dir underneath them
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/unit/engine/test_run_manifest_signal_contract.py
+  - tests/unit/worldmodules/test_schema_unified.py
+  - QualityPersistence.write_report
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT.md
   ticket_id: TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT
