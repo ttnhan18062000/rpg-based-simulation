@@ -1304,7 +1304,7 @@ class StrategicIntelligenceSystem:
         current_tick = state.tick
         strat = entity.strategic
         
-        boredom_upd = {}
+        boredom_upd: Dict[str, float] = {}
         if strat.current_project_id:
             proj = strat.projects.get(strat.current_project_id)
             if proj and proj.status == ProjectStatus.ACTIVE:
