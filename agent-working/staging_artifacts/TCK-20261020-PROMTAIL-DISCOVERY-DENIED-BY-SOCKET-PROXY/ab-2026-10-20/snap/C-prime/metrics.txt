@@ -1,0 +1,427 @@
+HTTP/1.0 200 OK
+Content-Type: text/plain; version=0.0.4; charset=utf-8; escaping=underscores
+Date: Tue, 20 Oct 2026 14:59:22 GMT
+
+# HELP deprecated_flags_inuse_total The number of deprecated flags currently set.
+# TYPE deprecated_flags_inuse_total counter
+deprecated_flags_inuse_total 0
+# HELP go_gc_duration_seconds A summary of the wall-time pause (stop-the-world) duration in garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 0.000375676
+go_gc_duration_seconds{quantile="0.25"} 0.0005385
+go_gc_duration_seconds{quantile="0.5"} 0.000610855
+go_gc_duration_seconds{quantile="0.75"} 0.000754589
+go_gc_duration_seconds{quantile="1"} 0.00091347
+go_gc_duration_seconds_sum 0.00319309
+go_gc_duration_seconds_count 5
+# HELP go_gc_gogc_percent Heap size target percentage configured by the user, otherwise 100. This value is set by the GOGC environment variable, and the runtime/debug.SetGCPercent function. Sourced from /gc/gogc:percent.
+# TYPE go_gc_gogc_percent gauge
+go_gc_gogc_percent 100
+# HELP go_gc_gomemlimit_bytes Go runtime memory limit configured by the user, otherwise math.MaxInt64. This value is set by the GOMEMLIMIT environment variable, and the runtime/debug.SetMemoryLimit function. Sourced from /gc/gomemlimit:bytes.
+# TYPE go_gc_gomemlimit_bytes gauge
+go_gc_gomemlimit_bytes 9.223372036854776e+18
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 35
+# HELP go_info Information about the Go environment.
+# TYPE go_info gauge
+go_info{version="go1.25.8"} 1
+# HELP go_memstats_alloc_bytes Number of bytes allocated in heap and currently in use. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_alloc_bytes gauge
+go_memstats_alloc_bytes 2.2178344e+07
+# HELP go_memstats_alloc_bytes_total Total number of bytes allocated in heap until now, even if released already. Equals to /gc/heap/allocs:bytes.
+# TYPE go_memstats_alloc_bytes_total counter
+go_memstats_alloc_bytes_total 2.6830552e+07
+# HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table. Equals to /memory/classes/profiling/buckets:bytes.
+# TYPE go_memstats_buck_hash_sys_bytes gauge
+go_memstats_buck_hash_sys_bytes 1.460741e+06
+# HELP go_memstats_frees_total Total number of heap objects frees. Equals to /gc/heap/frees:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_frees_total counter
+go_memstats_frees_total 32469
+# HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata. Equals to /memory/classes/metadata/other:bytes.
+# TYPE go_memstats_gc_sys_bytes gauge
+go_memstats_gc_sys_bytes 3.833616e+06
+# HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and currently in use, same as go_memstats_alloc_bytes. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_heap_alloc_bytes gauge
+go_memstats_heap_alloc_bytes 2.2178344e+07
+# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used. Equals to /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_idle_bytes gauge
+go_memstats_heap_idle_bytes 2.105344e+06
+# HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes
+# TYPE go_memstats_heap_inuse_bytes gauge
+go_memstats_heap_inuse_bytes 2.6271744e+07
+# HELP go_memstats_heap_objects Number of currently allocated objects. Equals to /gc/heap/objects:objects.
+# TYPE go_memstats_heap_objects gauge
+go_memstats_heap_objects 45079
+# HELP go_memstats_heap_released_bytes Number of heap bytes released to OS. Equals to /memory/classes/heap/released:bytes.
+# TYPE go_memstats_heap_released_bytes gauge
+go_memstats_heap_released_bytes 2.072576e+06
+# HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes + /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_sys_bytes gauge
+go_memstats_heap_sys_bytes 2.8377088e+07
+# HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.
+# TYPE go_memstats_last_gc_time_seconds gauge
+go_memstats_last_gc_time_seconds 1.7925083170604568e+09
+# HELP go_memstats_mallocs_total Total number of heap objects allocated, both live and gc-ed. Semantically a counter version for go_memstats_heap_objects gauge. Equals to /gc/heap/allocs:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_mallocs_total counter
+go_memstats_mallocs_total 77548
+# HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures. Equals to /memory/classes/metadata/mcache/inuse:bytes.
+# TYPE go_memstats_mcache_inuse_bytes gauge
+go_memstats_mcache_inuse_bytes 7248
+# HELP go_memstats_mcache_sys_bytes Number of bytes used for mcache structures obtained from system. Equals to /memory/classes/metadata/mcache/inuse:bytes + /memory/classes/metadata/mcache/free:bytes.
+# TYPE go_memstats_mcache_sys_bytes gauge
+go_memstats_mcache_sys_bytes 15704
+# HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures. Equals to /memory/classes/metadata/mspan/inuse:bytes.
+# TYPE go_memstats_mspan_inuse_bytes gauge
+go_memstats_mspan_inuse_bytes 218560
+# HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system. Equals to /memory/classes/metadata/mspan/inuse:bytes + /memory/classes/metadata/mspan/free:bytes.
+# TYPE go_memstats_mspan_sys_bytes gauge
+go_memstats_mspan_sys_bytes 228480
+# HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place. Equals to /gc/heap/goal:bytes.
+# TYPE go_memstats_next_gc_bytes gauge
+go_memstats_next_gc_bytes 3.8766938e+07
+# HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations. Equals to /memory/classes/other:bytes.
+# TYPE go_memstats_other_sys_bytes gauge
+go_memstats_other_sys_bytes 1.365531e+06
+# HELP go_memstats_stack_inuse_bytes Number of bytes obtained from system for stack allocator in non-CGO environments. Equals to /memory/classes/heap/stacks:bytes.
+# TYPE go_memstats_stack_inuse_bytes gauge
+go_memstats_stack_inuse_bytes 983040
+# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator. Equals to /memory/classes/heap/stacks:bytes + /memory/classes/os-stacks:bytes.
+# TYPE go_memstats_stack_sys_bytes gauge
+go_memstats_stack_sys_bytes 983040
+# HELP go_memstats_sys_bytes Number of bytes obtained from system. Equals to /memory/classes/total:byte.
+# TYPE go_memstats_sys_bytes gauge
+go_memstats_sys_bytes 3.62642e+07
+# HELP go_sched_gomaxprocs_threads The current runtime.GOMAXPROCS setting, or the number of operating system threads that can execute user-level Go code simultaneously. Sourced from /sched/gomaxprocs:threads.
+# TYPE go_sched_gomaxprocs_threads gauge
+go_sched_gomaxprocs_threads 6
+# HELP go_threads Number of OS threads created.
+# TYPE go_threads gauge
+go_threads 12
+# HELP grpc_concurrent_streams_by_conn_max The current number of concurrent streams in the connection with the most concurrent streams.
+# TYPE grpc_concurrent_streams_by_conn_max gauge
+grpc_concurrent_streams_by_conn_max 0
+# HELP grpc_concurrent_streams_limit The max number of concurrent streams that can be accepted (0 means no limit).
+# TYPE grpc_concurrent_streams_limit gauge
+grpc_concurrent_streams_limit 100
+# HELP inflight_requests Current number of inflight requests.
+# TYPE inflight_requests gauge
+inflight_requests{method="GET",route="metrics"} 1
+inflight_requests{method="GET",route="ready"} 0
+inflight_requests{method="GET",route="targets"} 0
+# HELP jaeger_tracer_baggage_restrictions_updates_total Number of times baggage restrictions were successfully updated
+# TYPE jaeger_tracer_baggage_restrictions_updates_total counter
+jaeger_tracer_baggage_restrictions_updates_total{result="err"} 0
+jaeger_tracer_baggage_restrictions_updates_total{result="ok"} 0
+# HELP jaeger_tracer_baggage_truncations_total Number of times baggage was truncated as per baggage restrictions
+# TYPE jaeger_tracer_baggage_truncations_total counter
+jaeger_tracer_baggage_truncations_total 0
+# HELP jaeger_tracer_baggage_updates_total Number of times baggage was successfully written or updated on spans
+# TYPE jaeger_tracer_baggage_updates_total counter
+jaeger_tracer_baggage_updates_total{result="err"} 0
+jaeger_tracer_baggage_updates_total{result="ok"} 0
+# HELP jaeger_tracer_finished_spans_total Number of sampled spans finished by this tracer
+# TYPE jaeger_tracer_finished_spans_total counter
+jaeger_tracer_finished_spans_total{sampled="delayed"} 0
+jaeger_tracer_finished_spans_total{sampled="n"} 5
+jaeger_tracer_finished_spans_total{sampled="y"} 0
+# HELP jaeger_tracer_reporter_queue_length Current number of spans in the reporter queue
+# TYPE jaeger_tracer_reporter_queue_length gauge
+jaeger_tracer_reporter_queue_length 0
+# HELP jaeger_tracer_reporter_spans_total Number of spans successfully reported
+# TYPE jaeger_tracer_reporter_spans_total counter
+jaeger_tracer_reporter_spans_total{result="dropped"} 0
+jaeger_tracer_reporter_spans_total{result="err"} 0
+jaeger_tracer_reporter_spans_total{result="ok"} 0
+# HELP jaeger_tracer_sampler_queries_total Number of times the Sampler succeeded to retrieve sampling strategy
+# TYPE jaeger_tracer_sampler_queries_total counter
+jaeger_tracer_sampler_queries_total{result="err"} 0
+jaeger_tracer_sampler_queries_total{result="ok"} 0
+# HELP jaeger_tracer_sampler_updates_total Number of times the Sampler succeeded to retrieve and update sampling strategy
+# TYPE jaeger_tracer_sampler_updates_total counter
+jaeger_tracer_sampler_updates_total{result="err"} 0
+jaeger_tracer_sampler_updates_total{result="ok"} 0
+# HELP jaeger_tracer_span_context_decoding_errors_total Number of errors decoding tracing context
+# TYPE jaeger_tracer_span_context_decoding_errors_total counter
+jaeger_tracer_span_context_decoding_errors_total 0
+# HELP jaeger_tracer_started_spans_total Number of spans started by this tracer as sampled
+# TYPE jaeger_tracer_started_spans_total counter
+jaeger_tracer_started_spans_total{sampled="delayed"} 0
+jaeger_tracer_started_spans_total{sampled="n"} 6
+jaeger_tracer_started_spans_total{sampled="y"} 0
+# HELP jaeger_tracer_throttled_debug_spans_total Number of times debug spans were throttled
+# TYPE jaeger_tracer_throttled_debug_spans_total counter
+jaeger_tracer_throttled_debug_spans_total 0
+# HELP jaeger_tracer_throttler_updates_total Number of times throttler successfully updated
+# TYPE jaeger_tracer_throttler_updates_total counter
+jaeger_tracer_throttler_updates_total{result="err"} 0
+jaeger_tracer_throttler_updates_total{result="ok"} 0
+# HELP jaeger_tracer_traces_total Number of traces started by this tracer as sampled
+# TYPE jaeger_tracer_traces_total counter
+jaeger_tracer_traces_total{sampled="n",state="joined"} 0
+jaeger_tracer_traces_total{sampled="n",state="started"} 6
+jaeger_tracer_traces_total{sampled="y",state="joined"} 0
+jaeger_tracer_traces_total{sampled="y",state="started"} 0
+# HELP loki_experimental_features_in_use_total The number of experimental features in use.
+# TYPE loki_experimental_features_in_use_total counter
+loki_experimental_features_in_use_total 0
+# HELP loki_internal_log_messages_total Total number of log messages created by Loki itself.
+# TYPE loki_internal_log_messages_total counter
+loki_internal_log_messages_total{level="debug"} 6
+loki_internal_log_messages_total{level="error"} 10
+loki_internal_log_messages_total{level="info"} 3
+loki_internal_log_messages_total{level="warn"} 1
+# HELP loki_log_flushes Histogram of log flushes using the line-buffered logger.
+# TYPE loki_log_flushes histogram
+loki_log_flushes_bucket{le="1"} 9
+loki_log_flushes_bucket{le="2"} 9
+loki_log_flushes_bucket{le="4"} 10
+loki_log_flushes_bucket{le="8"} 10
+loki_log_flushes_bucket{le="16"} 10
+loki_log_flushes_bucket{le="32"} 10
+loki_log_flushes_bucket{le="64"} 10
+loki_log_flushes_bucket{le="128"} 10
+loki_log_flushes_bucket{le="256"} 10
+loki_log_flushes_bucket{le="+Inf"} 10
+loki_log_flushes_sum 13
+loki_log_flushes_count 10
+# HELP loki_log_messages_total DEPRECATED. Use internal_log_messages_total for the same functionality. Total number of log messages created by Loki itself.
+# TYPE loki_log_messages_total counter
+loki_log_messages_total{level="debug"} 6
+loki_log_messages_total{level="error"} 10
+loki_log_messages_total{level="info"} 3
+loki_log_messages_total{level="warn"} 1
+# HELP loki_logql_querystats_duplicates_total Total count of duplicates found while executing LogQL queries.
+# TYPE loki_logql_querystats_duplicates_total counter
+loki_logql_querystats_duplicates_total 0
+# HELP loki_logql_querystats_ingester_sent_lines_total Total count of lines sent from ingesters while executing LogQL queries.
+# TYPE loki_logql_querystats_ingester_sent_lines_total counter
+loki_logql_querystats_ingester_sent_lines_total 0
+# HELP loki_panic_total The total number of panic triggered
+# TYPE loki_panic_total counter
+loki_panic_total 0
+# HELP loki_querier_index_cache_corruptions_total The number of cache corruptions for the index cache.
+# TYPE loki_querier_index_cache_corruptions_total counter
+loki_querier_index_cache_corruptions_total 0
+# HELP loki_querier_index_cache_encode_errors_total The number of errors for the index cache while encoding the body.
+# TYPE loki_querier_index_cache_encode_errors_total counter
+loki_querier_index_cache_encode_errors_total 0
+# HELP loki_querier_index_cache_gets_total The number of gets for the index cache.
+# TYPE loki_querier_index_cache_gets_total counter
+loki_querier_index_cache_gets_total 0
+# HELP loki_querier_index_cache_hits_total The number of cache hits for the index cache.
+# TYPE loki_querier_index_cache_hits_total counter
+loki_querier_index_cache_hits_total 0
+# HELP loki_querier_index_cache_puts_total The number of puts for the index cache.
+# TYPE loki_querier_index_cache_puts_total counter
+loki_querier_index_cache_puts_total 0
+# HELP net_conntrack_dialer_conn_attempted_total Total number of connections attempted by the given dialer a given name.
+# TYPE net_conntrack_dialer_conn_attempted_total counter
+net_conntrack_dialer_conn_attempted_total{dialer_name="promtail"} 0
+# HELP net_conntrack_dialer_conn_closed_total Total number of connections closed which originated from the dialer of a given name.
+# TYPE net_conntrack_dialer_conn_closed_total counter
+net_conntrack_dialer_conn_closed_total{dialer_name="promtail"} 0
+# HELP net_conntrack_dialer_conn_established_total Total number of connections successfully established by the given dialer a given name.
+# TYPE net_conntrack_dialer_conn_established_total counter
+net_conntrack_dialer_conn_established_total{dialer_name="promtail"} 0
+# HELP net_conntrack_dialer_conn_failed_total Total number of connections failed to dial by the dialer a given name.
+# TYPE net_conntrack_dialer_conn_failed_total counter
+net_conntrack_dialer_conn_failed_total{dialer_name="promtail",reason="refused"} 0
+net_conntrack_dialer_conn_failed_total{dialer_name="promtail",reason="resolution"} 0
+net_conntrack_dialer_conn_failed_total{dialer_name="promtail",reason="timeout"} 0
+net_conntrack_dialer_conn_failed_total{dialer_name="promtail",reason="unknown"} 0
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 0.69
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 524287
+# HELP process_network_receive_bytes_total Number of bytes received by the process over the network.
+# TYPE process_network_receive_bytes_total counter
+process_network_receive_bytes_total 134538
+# HELP process_network_transmit_bytes_total Number of bytes sent by the process over the network.
+# TYPE process_network_transmit_bytes_total counter
+process_network_transmit_bytes_total 12878
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 10
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 8.3914752e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.79250831622e+09
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 2.130296832e+09
+# HELP process_virtual_memory_max_bytes Maximum amount of virtual memory available in bytes.
+# TYPE process_virtual_memory_max_bytes gauge
+process_virtual_memory_max_bytes 1.8446744073709552e+19
+# HELP prometheus_remote_storage_exemplars_in_total Exemplars in to remote storage, compare to exemplars out for queue managers.
+# TYPE prometheus_remote_storage_exemplars_in_total counter
+prometheus_remote_storage_exemplars_in_total 0
+# HELP prometheus_remote_storage_histograms_in_total HistogramSamples in to remote storage, compare to histograms out for queue managers.
+# TYPE prometheus_remote_storage_histograms_in_total counter
+prometheus_remote_storage_histograms_in_total 0
+# HELP prometheus_remote_storage_samples_in_total Samples in to remote storage, compare to samples out for queue managers.
+# TYPE prometheus_remote_storage_samples_in_total counter
+prometheus_remote_storage_samples_in_total 0
+# HELP prometheus_remote_storage_string_interner_zero_reference_releases_total The number of times release has been called for strings that are not interned.
+# TYPE prometheus_remote_storage_string_interner_zero_reference_releases_total counter
+prometheus_remote_storage_string_interner_zero_reference_releases_total 0
+# HELP prometheus_template_text_expansion_failures_total The total number of template text expansion failures.
+# TYPE prometheus_template_text_expansion_failures_total counter
+prometheus_template_text_expansion_failures_total 0
+# HELP prometheus_template_text_expansions_total The total number of template text expansions.
+# TYPE prometheus_template_text_expansions_total counter
+prometheus_template_text_expansions_total 0
+# HELP prometheus_treecache_watcher_goroutines The current number of watcher goroutines.
+# TYPE prometheus_treecache_watcher_goroutines gauge
+prometheus_treecache_watcher_goroutines 0
+# HELP prometheus_treecache_zookeeper_failures_total The total number of ZooKeeper failures.
+# TYPE prometheus_treecache_zookeeper_failures_total counter
+prometheus_treecache_zookeeper_failures_total 0
+# HELP promtail_build_info A metric with a constant '1' value labeled by version, revision, branch, goversion from which promtail was built, and the goos and goarch for the build.
+# TYPE promtail_build_info gauge
+promtail_build_info{branch="release-3.6.x",goarch="amd64",goos="linux",goversion="go1.25.8",revision="138c391f",tags="netgo",version="3.6.8"} 1
+# HELP promtail_config_reload_fail_total Number of reload fail times.
+# TYPE promtail_config_reload_fail_total counter
+promtail_config_reload_fail_total 0
+# HELP promtail_config_reload_success_total Number of reload success times.
+# TYPE promtail_config_reload_success_total counter
+promtail_config_reload_success_total 0
+# HELP promtail_docker_target_entries_total Total number of successful entries sent to the Docker target
+# TYPE promtail_docker_target_entries_total counter
+promtail_docker_target_entries_total 0
+# HELP promtail_docker_target_parsing_errors_total Total number of parsing errors while receiving Docker messages
+# TYPE promtail_docker_target_parsing_errors_total counter
+promtail_docker_target_parsing_errors_total 0
+# HELP promtail_encoded_bytes_total Number of bytes encoded and ready to send.
+# TYPE promtail_encoded_bytes_total counter
+promtail_encoded_bytes_total{host="loki:3100"} 0
+# HELP promtail_sent_bytes_total Number of bytes sent.
+# TYPE promtail_sent_bytes_total counter
+promtail_sent_bytes_total{host="loki:3100"} 0
+# HELP promtail_sent_entries_total Number of log entries sent to the ingester.
+# TYPE promtail_sent_entries_total counter
+promtail_sent_entries_total{host="loki:3100"} 0
+# HELP request_duration_seconds Time (in seconds) spent serving HTTP requests.
+# TYPE request_duration_seconds histogram
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="0.005"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="0.01"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="0.025"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="0.05"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="0.1"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="0.25"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="0.5"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="1"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="2.5"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="5"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="10"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="25"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="50"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="100"} 4
+request_duration_seconds_bucket{method="GET",route="ready",status_code="200",ws="false",le="+Inf"} 4
+request_duration_seconds_sum{method="GET",route="ready",status_code="200",ws="false"} 0.000193988
+request_duration_seconds_count{method="GET",route="ready",status_code="200",ws="false"} 4
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="0.005"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="0.01"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="0.025"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="0.05"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="0.1"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="0.25"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="0.5"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="1"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="2.5"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="5"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="10"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="25"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="50"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="100"} 1
+request_duration_seconds_bucket{method="GET",route="targets",status_code="200",ws="false",le="+Inf"} 1
+request_duration_seconds_sum{method="GET",route="targets",status_code="200",ws="false"} 0.001310747
+request_duration_seconds_count{method="GET",route="targets",status_code="200",ws="false"} 1
+# HELP request_message_bytes Size (in bytes) of messages received in the request.
+# TYPE request_message_bytes histogram
+request_message_bytes_bucket{method="GET",route="ready",le="4"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="16"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="64"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="256"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="1024"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="4096"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="16384"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="65536"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="262144"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="1.048576e+06"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="4.194304e+06"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="1.6777216e+07"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="6.7108864e+07"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="2.68435456e+08"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="1.073741824e+09"} 4
+request_message_bytes_bucket{method="GET",route="ready",le="+Inf"} 4
+request_message_bytes_sum{method="GET",route="ready"} 0
+request_message_bytes_count{method="GET",route="ready"} 4
+request_message_bytes_bucket{method="GET",route="targets",le="4"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="16"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="64"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="256"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="1024"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="4096"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="16384"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="65536"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="262144"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="1.048576e+06"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="4.194304e+06"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="1.6777216e+07"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="6.7108864e+07"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="2.68435456e+08"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="1.073741824e+09"} 1
+request_message_bytes_bucket{method="GET",route="targets",le="+Inf"} 1
+request_message_bytes_sum{method="GET",route="targets"} 0
+request_message_bytes_count{method="GET",route="targets"} 1
+# HELP response_message_bytes Size (in bytes) of messages sent in response.
+# TYPE response_message_bytes histogram
+response_message_bytes_bucket{method="GET",route="ready",le="4"} 0
+response_message_bytes_bucket{method="GET",route="ready",le="16"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="64"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="256"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="1024"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="4096"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="16384"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="65536"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="262144"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="1.048576e+06"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="4.194304e+06"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="1.6777216e+07"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="6.7108864e+07"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="2.68435456e+08"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="1.073741824e+09"} 4
+response_message_bytes_bucket{method="GET",route="ready",le="+Inf"} 4
+response_message_bytes_sum{method="GET",route="ready"} 20
+response_message_bytes_count{method="GET",route="ready"} 4
+response_message_bytes_bucket{method="GET",route="targets",le="4"} 0
+response_message_bytes_bucket{method="GET",route="targets",le="16"} 0
+response_message_bytes_bucket{method="GET",route="targets",le="64"} 0
+response_message_bytes_bucket{method="GET",route="targets",le="256"} 0
+response_message_bytes_bucket{method="GET",route="targets",le="1024"} 0
+response_message_bytes_bucket{method="GET",route="targets",le="4096"} 0
+response_message_bytes_bucket{method="GET",route="targets",le="16384"} 1
+response_message_bytes_bucket{method="GET",route="targets",le="65536"} 1
+response_message_bytes_bucket{method="GET",route="targets",le="262144"} 1
+response_message_bytes_bucket{method="GET",route="targets",le="1.048576e+06"} 1
+response_message_bytes_bucket{method="GET",route="targets",le="4.194304e+06"} 1
+response_message_bytes_bucket{method="GET",route="targets",le="1.6777216e+07"} 1
+response_message_bytes_bucket{method="GET",route="targets",le="6.7108864e+07"} 1
+response_message_bytes_bucket{method="GET",route="targets",le="2.68435456e+08"} 1
+response_message_bytes_bucket{method="GET",route="targets",le="1.073741824e+09"} 1
+response_message_bytes_bucket{method="GET",route="targets",le="+Inf"} 1
+response_message_bytes_sum{method="GET",route="targets"} 4306
+response_message_bytes_count{method="GET",route="targets"} 1
+# HELP tcp_connections Current number of accepted TCP connections.
+# TYPE tcp_connections gauge
+tcp_connections{protocol="grpc"} 0
+tcp_connections{protocol="http"} 1
+# HELP tcp_connections_limit The max number of TCP connections that can be accepted (0 means no limit).
+# TYPE tcp_connections_limit gauge
+tcp_connections_limit{protocol="grpc"} 0
+tcp_connections_limit{protocol="http"} 0

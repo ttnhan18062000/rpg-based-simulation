@@ -51,3 +51,41 @@ Promtail 3.6.8 is the `grafana/loki` tag `v3.6.8` (object 138c391f..., the revis
 ## Step 1b: the proxy rules at tecnativa/docker-socket-proxy v0.4.1 (tag object a6fbf383...), `haproxy.cfg`
 - Line 48: `http-request deny unless METH_GET || { env(POST) -m bool }`. With `POST=0` anything that is not GET (or HEAD, which `METH_GET` includes) is denied for every section: `POST /networks/create` and `DELETE /networks/<id>` would be 403 with or without `NETWORKS`.
 - Line 65: `http-request allow if { path,url_dec -m reg -i ^(/v[\d\.]+)?/networks } { env(NETWORKS) -m bool }`. The section variable maps to the **path prefix** `/networks` (optionally with a version prefix), so `NETWORKS=1` opens `GET /networks` (list) and `GET /networks/<id>` (inspect) and nothing else; line 77 is the final `http-request deny`. This matches the ticket's description of option 1. The surface probe in the A/B still confirms it live.
+
+## A/B run, 2026-10-20 (slot 2; running locally; evidence in `ab-2026-10-20/`)
+Stack: redis, backend, loki, docker-socket-proxy, promtail (`up -d --no-deps`; Grafana and Prometheus were not started because Loki is queried directly and the A/B does not need them; the only other containers on the host were the github-mcp ones, untouched). Up at 14:51:50Z, down at 14:59:45Z without `-v`; the abort watcher was proven (dry run WOULD DOWN; real lines every minute, 4.6 to 4.9 GB available, swap 2.4 GB, never triggered) and the sampler ran from before `up`. The NETWORKS override file was throwaway, under the run directory, and was deleted afterwards (not committed).
+
+| state | UTC | targets page | `promtail_sent_entries_total` | 403 "network labels" lines (cumulative in `docker logs`) | Loki `container` values | backend lines in the last 5 min |
+|---|---|---|---|---|---|---|
+| A: fresh up, no NETWORKS | 14:52:49 | 0/0 ready | 0 | 12 | none (labels empty) | 0 |
+| B: NETWORKS=1 (override), proxy + promtail recreated | 14:53:49 | 5/5 ready | 325 | 0 | backend, docker-socket-proxy, redis (no loki or promtail) | 5 |
+| C: proxy recreated without NETWORKS, promtail untouched | +60 s 14:55:59 | 0/0 ready | 442 (rose in the first seconds, then flat) | 12 in the minute | same (older lines) | 5 (older) |
+| C, +3 min | 14:58:00 | 0/0 ready | 442 (flat) | 36 | same | 5 (older) |
+| C': promtail restarted | 14:59:21 | 0/0 ready | 0 | continues | same (older) | 5 (older) |
+
+- **A reproduces 10-19:** 0 targets, 0 entries sent, empty Loki labels, one 403 per 5 s.
+- **B fixes it:** with `NETWORKS=1` and nothing else, the five project containers become targets, entries flow (325 within 50 s, 20 successful pushes), `container` values are exactly the project's running services minus loki and promtail (the relabel drop works), and backend lines are queryable. Loki's own and promtail's own lines: 0.
+- **C does NOT reproduce the 10-18 observation, so the stale-target hypothesis is not supported as stated.** After the proxy was recreated without NETWORKS the targets did not keep shipping: promtail logged `could not transfer logs` for all five docker targets at 14:54:58Z (the long-lived log streams died with the old proxy), the targets page fell to 0/0, and `promtail_sent_entries_total` stayed at 442 for the following minutes. The vendored refresh does keep the last good groups when a refresh fails (Step 1), but the per-container log streams are tied to the proxy connection and do not survive its recreation. So "stale targets that keep shipping" is not what happens when the proxy is recreated.
+- **What probably explains 10-18:** the Loki label and line queries do not prove current shipping: the Loki container keeps the lines it already holds (here, `container` values and the "last 5 minutes" backend lines stay visible in C and C' although nothing new was sent). On 10-18 a running Loki that had received logs earlier (from a promtail that did not call `/networks`, or before the proxy change) would answer the same queries. The only reliable live signals are `promtail_sent_entries_total` rising, and the 403 lines. That is a hypothesis; I could not reproduce the 10-18 sequence, and the proxy had been recreated for the hardening change on 10-18 as well.
+- **C' (promtail restart without NETWORKS) = A:** 0 targets, 0 entries.
+
+### B-surface probes (from inside promtail, with `NETWORKS=1`, `POST=0`; HTTP/1.0 status lines)
+| request | status |
+|---|---|
+| `GET /networks` | 200 |
+| `GET /networks/<platform_default id>` | 200 |
+| `POST /networks/create` | 403 |
+| `DELETE /networks/ab00000000000000` (a made-up id) | 403 |
+| `POST /containers/x/stop` | 403 |
+| `GET /volumes` | 403 |
+| `GET /images/json` | 403 |
+| `GET /containers/json` | 200 |
+| `GET /version` | 200 |
+| `GET /info` | 403 |
+The widening with `NETWORKS=1` is `/networks` only: every write is denied by `POST=0`, and the GET sections for volumes, images and info stay closed.
+
+### Guard finding: `promtail_targets_active_total` does not exist for docker targets
+The plan's guard `sum(promtail_targets_active_total) == 0` cannot work: promtail 3.6.8 exports no active-target gauge for the docker discovery. Its metric families are `promtail_docker_target_entries_total`, `promtail_docker_target_parsing_errors_total`, `promtail_sent_entries_total`, `promtail_sent_bytes_total`, `promtail_dropped_*`, `promtail_encoded_bytes_total`, `promtail_request_duration_seconds` and `promtail_batch_retries_total` (the A and B metric files are in the evidence). In state A the docker-target and sent counters exist at 0; in B they count up; no series says how many targets exist. Candidate guards, for the planner to choose: (1) a rule on a Loki query (no lines from any project container for 10 minutes) which also fires on a quiet backend; (2) `rate(promtail_sent_entries_total[10m]) == 0` for 10m, which the plan rejects because an idle stack sends nothing; (3) `promtail_request_duration_seconds_count` rate, same weakness; (4) a log-based rule on promtail's own 403 line, which only works if promtail's logs reach Loki (they are dropped by design); (5) a cheap probe sidecar or a scrape of the proxy's access path (not available: haproxy exposes no counters here). None is exact; (1) with a long window on a stack whose backend logs every tick is the least bad.
+
+### Memory (sampler, whole run)
+Peaks, MiB (limit; docker stats; anon; anon + active_file): promtail 128; 127; 28; 126, docker-socket-proxy 64; 29; 11; 27, loki 512; 212; 73; 209, backend 1024; 126; 120; 122, redis 256; 14; 6; 13. No OOM kill (5 of 5 `oom=false`, restarts 0). The promtail 127 MiB is the first sample after creation at 14:51:55Z; it was 16 MiB at 14:53:02Z and 42 to 46 MiB while shipping in B (about 35 percent of its 128m), so it is a startup transient of file cache, not the working set.

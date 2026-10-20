@@ -1,0 +1,4 @@
+14:51:50 STATE A: fresh up (30 min hard stop from here), no NETWORKS
+14:53:00 STATE B: NETWORKS=1 via override, recreate proxy and promtail
+14:54:47 STATE C: recreate ONLY the proxy without NETWORKS (compose.yaml alone), promtail untouched
+14:58:36 STATE C': restart promtail (proxy still without NETWORKS)
