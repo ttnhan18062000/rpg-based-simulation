@@ -26,7 +26,6 @@ tests/architecture/test_fidelity_write_paths.py.
 
 from __future__ import annotations
 
-import ast
 import re
 from pathlib import Path
 from typing import FrozenSet
@@ -54,14 +53,6 @@ _FAME_MODULE_FILES = (
     Path("src/domains/fame/exporter.py"),
     Path("src/domains/fame/legend.py"),
 )
-
-_FAME_DERIVER_AND_MODEL_FILES = (
-    Path("src/domains/fame/model.py"),
-    Path("src/domains/fame/deriver.py"),
-)
-
-_FORBIDDEN_TOP_LEVEL_IMPORT_PREFIXES = ("src.engine", "src.core.state")
-
 
 def _iter_src_py_files():
     return sorted(_SRC_ROOT.rglob("*.py"))
@@ -101,31 +92,6 @@ def test_fame_module_no_belief_entry_knowledge_fact_or_legendary_arrival_referen
         "with the pre-existing, unrelated LEGENDARY_ARRIVAL faction-reputation "
         "concept:\n"
         + "\n".join(f"  {path}: {matches}" for path, matches in violations.items())
-    )
-
-
-def test_fame_deriver_and_model_no_engine_or_core_state_imports():
-    violations = {}
-
-    for path in _FAME_DERIVER_AND_MODEL_FILES:
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        bad_imports = []
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    if alias.name.startswith(_FORBIDDEN_TOP_LEVEL_IMPORT_PREFIXES):
-                        bad_imports.append(alias.name)
-            elif isinstance(node, ast.ImportFrom):
-                module = node.module or ""
-                if module.startswith(_FORBIDDEN_TOP_LEVEL_IMPORT_PREFIXES):
-                    bad_imports.append(module)
-        if bad_imports:
-            violations[path.as_posix()] = bad_imports
-
-    assert not violations, (
-        "Found forbidden src.engine/src.core.state import(s) in a fame "
-        "model/deriver module (must stay pure/stateless):\n"
-        + "\n".join(f"  {path}: {imports}" for path, imports in violations.items())
     )
 
 

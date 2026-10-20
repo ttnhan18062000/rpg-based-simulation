@@ -124,7 +124,8 @@ def parse_junit_dir(junit_dir: Path) -> Tuple[Dict[str, str], Set[str], Set[str]
         if step is None:
             continue
         try:
-            root = ET.parse(path).getroot()
+            # Parses this repo's own pytest junit XML; no untrusted input.
+            root = ET.parse(path).getroot()  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
         except ET.ParseError:
             continue  # a truncated file proves nothing: the step stays "missing"
         seen.add(step)

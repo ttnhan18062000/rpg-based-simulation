@@ -56,10 +56,10 @@ def test_lint_group_holds_the_code_health_tools_and_is_a_default_group() -> None
 def test_code_health_job_is_blocking_and_the_ratchet_step_can_fail_it() -> None:
     """TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING: a required check must be able to fail the PR.
 
-    Branch protection lists the job by its name. Two steps keep a step-level `continue-on-error`: the changed-paths step and
-    the advisory `Import contracts` step (TCK-20261004-IMPORT-LINTER-ADOPTION: it exits 0 whatever it finds and must never turn the
-    required check red). The ratchet step, the package-registry step (blocking since
-    TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING) and the job carry none.
+    Branch protection lists the job by its name. One step keeps a step-level `continue-on-error`: the changed-paths step.
+    The ratchet step, the package-registry step (blocking since TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING), the
+    `Import contracts` step (blocking since TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT: exit 1 on a broken or stale
+    contract, exit 2 when it cannot run) and the job carry none.
     """
     job = _JOBS["code-health"]
     assert job["name"] == "Code health"
@@ -70,5 +70,8 @@ def test_code_health_job_is_blocking_and_the_ratchet_step_can_fail_it() -> None:
     assert "--annotate" in step["run"] and "--summary-out" in step["run"] and "$GITHUB_STEP_SUMMARY" in step["run"]
     assert job["timeout-minutes"] == 20 and _JOBS["typecheck"]["timeout-minutes"] == 10, "a hang must not hold a required check"
     tolerant = {s["name"] for s in job["steps"] if s.get("continue-on-error")}
-    assert tolerant == {"Paths this PR changed", "Import contracts"}
-    assert job["steps"][-1]["name"] == "Import contracts", "the advisory step stays last, after every blocking one"
+    assert tolerant == {"Paths this PR changed"}
+    contracts = job["steps"][-1]
+    assert contracts["name"] == "Import contracts", "the import contracts step stays last"
+    assert "continue-on-error" not in contracts, "a broken contract must be able to fail the required check"
+    assert "codebase.structure.import_contracts ci " in contracts["run"] and "--annotate" in contracts["run"]

@@ -37,7 +37,7 @@ DEFAULT_BASELINE = "codebase/baselines/mypy_baseline.txt"
 LIST_LIMIT = 25
 
 
-class GateCannotRun(Exception):
+class GateCannotRunError(Exception):
     """mypy or mypy-baseline could not produce a usable result."""
 
 
@@ -52,7 +52,7 @@ def baseline_entries(root: Path) -> int:
     """The number of entries (non-empty lines) in the baseline file."""
     path = baseline_path(root)
     if not path.is_file():
-        raise GateCannotRun(f"baseline {path.relative_to(root)} does not exist (run `make typecheck-baseline-sync` on main)")
+        raise GateCannotRunError(f"baseline {path.relative_to(root)} does not exist (run `make typecheck-baseline-sync` on main)")
     return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
 
 
@@ -65,10 +65,10 @@ def _run(command: Sequence[str], root: Path, ok_codes: Sequence[int], stdin: str
     try:
         done = subprocess.run(command, cwd=root, input=stdin, capture_output=True, text=True, check=False)
     except OSError as exc:
-        raise GateCannotRun(f"{command[0]}: {exc}") from exc
+        raise GateCannotRunError(f"{command[0]}: {exc}") from exc
     if done.returncode not in ok_codes:
         detail = (done.stderr or done.stdout).strip()
-        raise GateCannotRun(f"{' '.join(command[1:3])} exited {done.returncode}: {detail}")
+        raise GateCannotRunError(f"{' '.join(command[1:3])} exited {done.returncode}: {detail}")
     return done
 
 
@@ -100,8 +100,8 @@ def run(root: Path, summary_out: Path | None = None, annotate: bool = False, myp
         filtered = _run([sys.executable, *FILTER_COMMAND], root, FILTER_EXIT_CODES, stdin=raw)
         new = new_error_lines(filtered.stdout)
         if filtered.returncode and not new:
-            raise GateCannotRun(f"mypy_baseline filter exited {filtered.returncode} with no error line: {filtered.stdout.strip()}")
-    except (GateCannotRun, OSError, tomllib.TOMLDecodeError) as exc:
+            raise GateCannotRunError(f"mypy_baseline filter exited {filtered.returncode} with no error line: {filtered.stdout.strip()}")
+    except (GateCannotRunError, OSError, tomllib.TOMLDecodeError) as exc:
         reason = " ".join(f"{exc}".split())[:300] or type(exc).__name__
         _append(summary_out, f"**mypy:** could not run: {reason}")
         if annotate:

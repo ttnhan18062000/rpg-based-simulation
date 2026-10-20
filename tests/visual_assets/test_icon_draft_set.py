@@ -29,7 +29,7 @@ def test_the_set_holds_exactly_the_14_key_set_keys_and_the_registry_holds_those_
 
     from tests.visual_assets import adopted_facts as af
 
-    assert sorted(k for k in registry.keys if k.startswith("icon.")) == sorted([*ds.SIZES, *v2.KEYS, *af.OBJECT_KEYS])  # the 22 v2 keys are registered but not drawn yet
+    assert sorted(k for k in registry.keys if k.startswith("icon.")) == sorted([*ds.SIZES, *v2.KEYS, *af.OBJECT_KEYS, *af.ENTITY_KEYS])  # the 22 v2 keys are registered but not drawn yet
     assert all(registry.keys[k].optional for k in ds.SIZES)  # nothing in the registry needs these drafts; a missing image leaves today's fallback
 
 
