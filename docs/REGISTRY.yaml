@@ -7939,18 +7939,7 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
-  ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
-  title: Tune DiskWillFillIn24h so short bursts of heavy local work don't trip it
-  tier: hotfix
-  ticket_type: chore
-  date: '2026-10-20'
-  related_code_areas:
-  - docker/grafana/provisioning/alerting/rules-base.yaml
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY.md
+  path: agent-working/tickets/inprogress/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY.md
   ticket_id: TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY
   title: 'Loki receives no logs: promtail''s docker discovery is denied by the socket
     proxy (GET /networks returns 403)'
@@ -7959,6 +7948,17 @@
   date: '2026-10-20'
   related_code_areas:
   - docker/promtail config
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
+  ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
+  title: Tune DiskWillFillIn24h so short bursts of heavy local work don't trip it
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - docker/grafana/provisioning/alerting/rules-base.yaml
   artifact_files: []
   tags: []
 - type: ticket

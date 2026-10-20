@@ -19,6 +19,7 @@ Every alert rule in `docker/grafana/provisioning/alerting/rules-base.yaml` has a
 | `DiskWillFillIn24h` | 30m | [disk-space.md](disk-space.md) | proven by query only |
 | `ApiLatencyP95High` | 2m | [api-latency-slo.md](api-latency-slo.md) | fire test: a Locust step above the knee (see the SLO record) |
 | `ApiErrorRateHigh` | 2m | [api-latency-slo.md](api-latency-slo.md) | not drilled |
+| `LogShippingErrors` | 10m | [log-shipping.md](log-shipping.md) | live proof: a stopped promtail, a fresh promtail against the 403, and a quiet stack (see the promtail record) |
 | `RedisDown` (cause alert) | 30s | [redis-down.md](redis-down.md) | the Redis-stop drill under load (see `records/`) |
 
 Records of measured runs and drills are in `records/`.

@@ -81,6 +81,9 @@ In the 2026-10-19 SLO run, the Redis drill and the re-measure, Loki held no data
 - Did Loki ever receive docker logs in this stack? Unknown. Check older records first.
 
 ## Implementation Notes
+- **Decision (2026-10-20):** NETWORKS=1 on docker-socket-proxy, POST=0 unchanged: owner via lead-planner, 2026-10-20. The compose comment documents what it opens (GET/HEAD /networks and /networks/{id} only), what it exposes, why, and the rejected options (log-file mount, Loki Docker driver). A/B evidence: investigation.md and ab-2026-10-20/.
+- **Guard:** Prometheus job promtail (promtail:9080) and base rule LogShippingErrors (error-level log counter, for 10m, noData Alerting, no comparison in the PromQL), runbook docs/runbooks/log-shipping.md. Live proof pending its own slot.
+- **Ride-alongs:** the redis-exporter and Grafana compose comments updated to measured figures; api-latency-slo.md carries the #686 note.
 Not started.
 - Plan requirements (lead, 2026-10-20). The plan must state:
   - the exact proxy env change and every endpoint it opens;
