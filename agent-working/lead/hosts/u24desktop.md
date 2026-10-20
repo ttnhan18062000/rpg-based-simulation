@@ -13,10 +13,22 @@ Written only by `lead-planner-u24`, the lead seat on host `u24desktop` (`u24desk
 `board.md`. **Advice only**: neither lead dispatches, reorders a queue or approves anything. Status requests go only to
 sessions on this host (`docs/guides/cross_session_messages.md`).
 
-Last status pass: 2026-10-19, at `main` df3cb7256 (fourth pass; the 2026-10-18 pass was at 7d6199aac).
+Last status pass: 2026-10-20, at `main` f6c7bc795 (fifth pass; the 2026-10-19 pass was at df3cb7256).
 
-## Since the 2026-10-18 pass
+## Since the 2026-10-19 pass
 
+- **Merged (u24 sessions):** #654 (rpg R2 request histogram), #662 (rpg: 0.3 s histogram bucket for the API SLO alert), #653, #658 (rpg pre-v1 batch; owner accepted the D74 override), #651, #655 (Node 24 in test.yml; the merge needed the `workflow` token scope), #659 (CI-runtime child 1: xdist inside existing jobs), #660, #663, #664, #666 (rpg gate per-level and per-reference), #665 (platform u24: `security-scan.yml`, gitleaks plus Semgrep, report-only), #667 (testing: workflows pass the github context through `env`), #675 (testing: actions pinned by SHA), #668 (platform u24: deploy-docs pins, frontend image non-root on 8080, the code-scanning upload drops in-source-suppressed results). Ubuntu: #647, #661, #670 (asset rc-0012), #671, #674. #609 closed.
+- **`-u24` seats are live (#661, 710473fb5):** platform-planner-u24, platform-implementer-u24 and agent-working-{planner,implementer,designer}-u24, each relaunched once with `tools/sessions/launch.py <role>-u24 --worktree <path>` after syncing its worktree to origin/main (the role card is read from the worktree).
+- **Owner decision, 2026-10-19: every workflow pins each action by full commit SHA with a `# vX.Y.Z` comment**, GitHub-owned actions included; Dependabot keeps them current, grouped monthly. Recorded in `docs/guides/delivery_process.md` ("Action pin rule"). Each owner converts its own files: testing (#675) and platform (#668) are done; agent-working's `pr-body-lint.yml` is the last one. After that, testing widens the pin guard to every workflow (TCK-20261020-WORKFLOW-PIN-GUARD-COVERS-EVERY-WORKFLOW).
+- **Security-scan lane:** main's scan after #668 has 23 open Semgrep alerts, none on a `# nosemgrep` line. Still to do: the three junit XML alerts (#244-#246, `tools/ci_junit_*`, testing's TCK-20261020-CI-JUNIT-TOOLS-ACCEPT-DEFUSED-XML-FINDINGS, blocked on the roles ticket that gives the unowned paths an owner) and the `src/lab` findings (rpg, after v1).
+- **Import contracts block `Code health` since #671 (309715a72).** A PR that removes an import listed in `codebase/structure/import_layers_baseline.txt` must delete that line in the same PR (guide: issue #673; #674 makes CI name the stale entry). rpg's pre-v1 branch already passes `import_contracts ci`.
+- **Frontend container port:** #668 moves the frontend from 80 to 8080 (unprivileged nginx). Ubuntu's DevOps steps 2-3 were told on #618. `deploy-docs.yml` runs only when dispatched and Pages is disabled, so its two major action bumps are unproven until the owner dispatches it.
+- **RPG (summary):** baseline v1 waits on the pre-v1 fixes. The owner ruled V3 (a starving character must treat starvation as a present threat) is fixed before v1, with no known red. Lane B's `rpg-pre-v1-fixes` carries the real-kernel gate positives, V4 and V1; Lane A builds V3; then one combined PR. testing's v1 re-anchor date is 2026-10-31.
+- **Disk (2026-10-20):** `/` fell to 2.2 GB free; personal-career (other repo) removed its orphaned 2.3 GB scratchpad, so `/` is at 4.9 GB, and `~/.cache/uv` (4.2 GB) can be pruned. `/mnt/data` 15 GB free after the owner pruned 11 merged worktrees (backup `~/Working/worktree-backup-2026-10-19.txt`).
+
+## Earlier passes
+
+### Since the 2026-10-18 pass (written 2026-10-19)
 - **Merged:** #637 (testing: Frontend lane runs on `visual_assets/` and the M5 criteria doc), #645 (rpg M0 batch, 37 tickets; ai_worker `/metrics` on 9108), #646 (v1 dependency window: uv group, redis-py 8 with the Redis 8.10.2 image, Starlette 1.x; merged before lead-planner's review, soak PASS), #650 (platform u24: the default compose stack publishes the event stream to Redis), #648 (rpg R1: backend metrics on internal port 9109), #649 (testing: `simq_reanchor` and the live compare refuse runs not recorded host-independent; the v1 re-anchor prerequisite). Ubuntu: #632, #638-#644. Dependabot #578, #579, #566, #580 closed as superseded by #646.
 - **Branches deleted by the owner, 2026-10-19:** `platform-implementer-stream-env-u24`, `rpg-metrics-port`, `testing-simq-refuse-nonaudit`, `platform-implementer-cosign-attest-label`.
 - **Merging to `main` needs `--admin`.** The `protect_branches` ruleset restricts updates to the admin role; required checks are Code health and Type check. Use `gh pr merge <n> --squash --admin`, and delete the remote branch with `git push origin --delete <b>` when a worktree holds the local branch (`--delete-branch` stops at the local delete).
@@ -26,7 +38,6 @@ Last status pass: 2026-10-19, at `main` df3cb7256 (fourth pass; the 2026-10-18 p
 - **MCP status (2026-10-19):** knowledge-search OK; aseprite OK; headroom MCP OK (its 8787 proxy is off by design: proxy mode was dropped 2026-09-21); github MCP now starts (owner added `.env`, image v2.0.2). It runs with write access; `GITHUB_READ_ONLY=1` was recommended. The `.env` path is relative, so worktree sessions don't see it.
 - **Disk and memory (2026-10-19):** `/` 5.2 GB free (89 %, holds `/tmp` scratchpads and Docker); `/mnt/data` 16 GB free. 8 GB RAM, about 3 GB available with 13 sessions. career-44 (other repo) runs capped jobs under a 2 GB, 200 % CPU scope and yields to RPG runs.
 
-## Earlier passes
 
 ### Merged 2026-10-15 to 2026-10-16
 
@@ -48,29 +59,27 @@ on both images, with sign and SPDX claims.
 
 | role | branch or ticket | state | blocker | next step | last status time |
 |---|---|---|---|---|---|
-| rpg-planner | R2 PR #654 (`rpg-request-histogram`, green); seat branch holds the soak-watchdog todo (local) | in delivery | owner's merge of #654 | baseline v1 with the designer's `v1_disclosure.md` (open list empty) | 2026-10-19 |
-| rpg-implementer (Lane A) | R1 merged (#648); R2 rebased onto main | busy | none | R2 review follow-ups | 2026-10-19 (via rpg-planner) |
-| rpg-implementer-2 (Lane B) | none current (handover top section is old batch-2 history) | idle | none | per rpg-planner | 2026-10-19 |
-| rpg-implementer-3 (Lane C) | route step folded earlier; handover dated 2026-10-15 | idle | none | per rpg-planner | 2026-10-15 |
-| rpg-designer | `rpg-designer-v1-disclosure` 80b29a5b4 (local); handover compacted 2026-10-19 (86 KB note archived) | busy | none | v1 disclosure goes up with the designer's docs batch on the owner's yes | 2026-10-19 |
-| testing-planner | `testing-planner-idle` 19b3cef3e; CI-runtime epic filed | idle (HARD boundary reached) | none | review #651, #653, #655; dispatch the epic after phase19 | 2026-10-19 |
-| testing-implementer | PRs #651 (frontier_3_42 marked), #653 (V8 spawn source), #655 (Node 24 in test.yml) | busy | #655 red | fix #655; then the CI-runtime epic | 2026-10-19 (from PRs) |
-| agent-working-planner | #634 answers posted | idle | ubuntu's `-u24` roles PR | relaunch as `-u24` after it merges | 2026-10-19 |
-| agent-working-implementer | TCK-20261015-SESSION-BINDINGS-TORN-TAIL closing; owner's `PostToolUseFailure` settings entry | idle | owner | none queued | 2026-10-19 |
-| agent-working-designer | handover dated 2026-10-07 | not running | none | relaunch as `-u24` after the roles PR | 2026-10-07 |
-| platform-planner (u24) | #650 merged | idle | none | scope the gitleaks/Semgrep lane (#541 item 3) | 2026-10-19 |
-| platform-implementer (u24) | #650 merged; worktree still on `platform-implementer-stream-env-u24` | idle | none | move off the spent branch; gitleaks/Semgrep on dispatch | 2026-10-19 |
+| rpg-planner | runs Lanes A-C toward the combined pre-v1 PR | busy | V3 fix (Lane A) | combined pre-v1 PR, then baseline v1 | 2026-10-20 |
+| rpg-implementer (Lane A) | V3 starvation-as-threat on `rpg-v3-starvation-threat` | busy | none | paired measurement, seeds 42-46; a stop goes to the owner | 2026-10-20 (via rpg-planner) |
+| rpg-implementer-2 (Lane B) | `rpg-pre-v1-fixes` (pushed, no PR) | busy | V3 and the designer's docs | fold them, full checks, open the combined PR on the owner's yes | 2026-10-20 |
+| rpg-implementer-3 (Lane C) | real-kernel gate positives (merged into Lane B) | idle | none | per rpg-planner | 2026-10-20 (via rpg-planner) |
+| rpg-designer | 4 rule docs for V3 and the disclosure | busy | none | review Lane A's Bible 04 section | 2026-10-20 |
+| testing-planner | `testing-planner-idle`; pin and junit follow-ups filed | idle | roles ticket (junit) | review #676; CI-runtime children 2-3 | 2026-10-20 |
+| testing-implementer | #676 (harness run-dir race under xdist) | busy | 1 red check on #676 | fix, then next dispatch | 2026-10-20 (from PRs) |
+| agent-working-planner-u24 | roles ticket TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS | waiting | owner's OK to dispatch | dispatch; pr-body-lint pin; Semgrep baseline in its paths | 2026-10-20 |
+| agent-working-implementer-u24 | native-refusal hotfix (committed, unpushed) | idle | owner's push yes | push, open the PR | 2026-10-19 |
+| agent-working-designer-u24 | handover dated 2026-10-07 | not running | none | on demand | 2026-10-07 |
+| platform-planner-u24 | #665, #668 merged | idle | none | watch the first dispatched deploy-docs run | 2026-10-20 |
+| platform-implementer-u24 | #668 merged | idle | none | next dispatch | 2026-10-20 |
 
 ## Open PRs (u24desktop view)
 
 | PR | owner | state |
 |---|---|---|
-| #654 R2 request histogram | rpg | green; owner's merge |
-| #651, #653 | testing | green; testing-planner's review, then owner |
-| #655 Node 24 in test.yml | testing | red |
-| #647 tools tests and git above tmp | agent-working (ubuntu) | theirs |
-| #609 actions-major group | platform | red on Frontend; not reviewed |
-| #565, #567-#570 frontend npm | rpg | after R2, one at a time |
+| #676 harness run-dir race | testing | 1 check red; testing-planner's review |
+| (unopened) native-refusal hotfix | agent-working | waits on the owner's push yes |
+| (unopened) combined pre-v1 | rpg | waits on V3 |
+| #565, #567-#570 frontend npm | rpg | after v1, one at a time |
 | #529 paired perf tripwire | perf (ubuntu) | not tracked here |
 
 ## Overlap and conflicts
@@ -78,17 +87,17 @@ on both images, with sign and SPDX claims.
 Work that duplicates or blocks another session, on either host. One line each: what, which sessions, since when, what would
 resolve it (a recommendation to the owner, not an instruction).
 
-- **Two seats under one role name** (platform since 2026-10-18, agent-working too): resolved by the #618 split, the collision rules (`(u24)` tags, `-u24` or unique branch topics, ubuntu uses `*-local-*`) and, once merged, ubuntu's `-u24` roles PR.
-- **Ubuntu step-2/S4 readings taken before #650** measured an idle ai_worker (the default stack published no events). Re-take them after #650 (fyi on #618, 2026-10-19).
-- **`docs/REGISTRY.yaml`**: the local `merge-tree` check without the driver still reports conflicts that GitHub merges cleanly (#648, #649 on 2026-10-19). Merge one PR at a time; `python3 tools/generate_registry.py --check` on main after each.
-- **Main checkout pulls** trip on untracked monitoring shards (`manual_actions.jsonl` on 2026-10-19): move aside, pull, re-append the local-only lines.
+- **Unowned paths** (`tools/ci_junit_*`, `tools/handover_transit.py`, `tools/search/**`, `.github/workflows/rpg-gate-report.yml`) since 2026-10-19: findings on them have no owner. Resolves when the owner OKs the roles ticket (testing and agent-working agreed on the split).
+- **`docs/REGISTRY.yaml`**: the local `merge-tree` check without the driver still reports hunks that GitHub merges cleanly (#668 on 2026-10-20). Merge one PR at a time and watch main's registry test after each.
+- **Main checkout pulls** trip on modified monitoring shards (`manual_actions.jsonl`, 2026-10-20): save the added lines, restore the file, pull, re-append.
 - **CI-runtime child 3** touches main-push lanes that the Slow regression watchdog, perf baselines and the rpg gate report read; lead-planner (ubuntu) and platform-planner review it.
 
 ## Pending owner decisions seen from this host
 
+- Code scanning "Check runs failure threshold" set to None (`delivery_process.md` describes it as the repo setting).
+- OK to dispatch the roles ticket TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS (agent-working-planner-u24's terminal).
+- Push yes for agent-working-implementer-u24's native-refusal hotfix.
 - github MCP: add `GITHUB_READ_ONLY=1` to `.env` (recommended).
-- Push grant: does ubuntu's 2026-10-18 "sessions push their own reviewed branches" apply to u24 sessions?
-- agent-working epics: close the three time-gated epics after 2026-10-19; three epics still flagged idle by the staleness hook (perf-m2-contract, python-code-craft-structure, rpg-regression-gate-report).
 - `.claude/settings.json` `PostToolUseFailure` entry (agent-working-implementer's ask, from #612).
-- Worktrees: `testing-setup-uv` (merged); `m2-idea43-temporal-note`, `health2`, `branch1-impl2` (dirty); rpg-planner's detached measurement bases; leftover `test-arch-*` worktrees.
-- Handover notes to trim: `rpg-implementer-2.md` (70 KB); stale: `testing-implementer.md` (2026-10-07 header), `agent-working-designer.md`; legacy `test-architecture-*.md` to archive.
+- rpg Lane A's 377 old run dirs (about 0.2 GB); rpg-planner to name which unmerged rpg worktrees are folded and removable.
+- Handover notes to trim: `rpg-implementer-2.md` (72 KB), `testing-implementer.md` (2026-10-07 header).
