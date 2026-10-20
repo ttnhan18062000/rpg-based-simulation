@@ -1,0 +1,984 @@
+HTTP/1.0 200 OK
+Date: Tue, 20 Oct 2026 15:33:21 GMT
+Content-Type: text/html; charset=utf-8
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="robots" content="noindex,nofollow">
+        <title>Targets</title>
+        <link rel="shortcut icon" href="/static/img/favicon.ico?v=%28version%3d3.6.8%2c%20branch%3drelease-3.6.x%2c%20revision%3d138c391f%29">
+        <script src="/static/vendor/js/jquery-3.5.1.min.js?v=%28version%3d3.6.8%2c%20branch%3drelease-3.6.x%2c%20revision%3d138c391f%29"></script>
+        <script src="/static/vendor/js/popper.min.js?v=%28version%3d3.6.8%2c%20branch%3drelease-3.6.x%2c%20revision%3d138c391f%29"></script>
+        <script src="/static/vendor/bootstrap-4.1.3/js/bootstrap.min.js?v=%28version%3d3.6.8%2c%20branch%3drelease-3.6.x%2c%20revision%3d138c391f%29"></script>
+
+        <link type="text/css" rel="stylesheet" href="/static/vendor/bootstrap-4.1.3/css/bootstrap.min.css?v=%28version%3d3.6.8%2c%20branch%3drelease-3.6.x%2c%20revision%3d138c391f%29">
+        <link type="text/css" rel="stylesheet" href="/static/css/promtail.css?v=%28version%3d3.6.8%2c%20branch%3drelease-3.6.x%2c%20revision%3d138c391f%29">
+        <link type="text/css" rel="stylesheet" href="/static/vendor/bootstrap4-glyphicons/css/bootstrap-glyphicons.min.css?v=%28version%3d3.6.8%2c%20branch%3drelease-3.6.x%2c%20revision%3d138c391f%29">
+
+        <script>
+            var PATH_PREFIX = "";
+            var BUILD_VERSION = "(version=3.6.8, branch=release-3.6.x, revision=138c391f)";
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip()
+            })
+        </script>
+
+        
+<link type="text/css" rel="stylesheet" href="/static/css/targets.css?v=%28version%3d3.6.8%2c%20branch%3drelease-3.6.x%2c%20revision%3d138c391f%29">
+<script src="/static/js/targets.js?v=%28version%3d3.6.8%2c%20branch%3drelease-3.6.x%2c%20revision%3d138c391f%29"></script>
+
+    </head>
+
+    <body>
+        <nav class="navbar fixed-top navbar-expand-sm navbar-dark bg-dark">
+            <div class="container-fluid">
+
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#nav-content" aria-expanded="false" aria-controls="nav-content" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                    
+                </button>
+
+                <a class="navbar-brand" href="#">Promtail</a>
+
+
+                <div id="nav-content" class="navbar-collapse collapse">
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="/service-discovery">Service Discovery</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/targets">Targets</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/config">Config</a></li>
+                        <li class= "nav-item" >
+                            <a class ="nav-link" href="https://github.com/grafana/loki" target="_blank">Help</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        
+  <div class="container-fluid">
+    <h1>Targets</h1>
+    <div id="showTargets" class="btn-group btn-group-toggle" data-toggle="buttons">
+      <label class="btn btn-primary">
+        <input type="radio" name="targets" id="all-targets" autocomplete="off" checked> All
+      </label>
+      <label class="btn btn-primary">
+        <input type="radio" name="targets" id="unready-targets" autocomplete="off"> Unready
+      </label>
+      </br>
+  </div>
+
+    
+    
+    
+
+    <div class="table-container">
+      <h2 class="job_header">
+        <a id="job-docker/tcp://docker-socket-proxy:2375:80" href="#job-docker%2ftcp%3a%2f%2fdocker-socket-proxy%3a2375%3a80">docker/tcp://docker-socket-proxy:2375:80 (11/11 ready)</a>
+        <button type="button" class="targets expanded-table btn btn-primary">show less</button>
+      </h2>
+      <table class="table table-sm table-bordered table-striped table-hover">
+        <thead class="job_details">
+          <tr>
+            <th>Type</th>
+            <th>Ready</th>
+            <th>Labels</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.12:3000&quot;<br>__meta_docker_container_id=&quot;bc1cb64b513ccc6b78ebb1da49d2d12b40e3e399b1bab394e49543c3a6930d5b&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;b0ac7cf658fc59fc78a551c00952a7ea585b04023c731d5bd59ce48a2380aec2&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;prometheus:service_healthy:false&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;grafana&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_label_maintainer=&quot;Grafana Labs &amp;lt;hello@grafana.com&amp;gt;&quot;<br>__meta_docker_container_label_org_opencontainers_image_source=&quot;https://github.com/grafana/grafana&quot;<br>__meta_docker_container_name=&quot;/platform-grafana-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.12&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;<br>__meta_docker_port_private=&quot;3000&quot;<br>__meta_docker_port_public=&quot;3000&quot;<br>__meta_docker_port_public_ip=&quot;127.0.0.1&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.12:3000"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="bc1cb64b513ccc6b78ebb1da49d2d12b40e3e399b1bab394e49543c3a6930d5b"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="b0ac7cf658fc59fc78a551c00952a7ea585b04023c731d5bd59ce48a2380aec2"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on="prometheus:service_healthy:false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="grafana"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_maintainer="Grafana Labs &lt;hello@grafana.com&gt;"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_source="https://github.com/grafana/grafana"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-grafana-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.12"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_private="3000"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public="3000"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public_ip="127.0.0.1"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.10:8000&quot;<br>__meta_docker_container_id=&quot;f4a63fafe3cd29034630e823270bf5e5f944023b757ddab61dc7b60fcbcf29f6&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;9ac9c071294a64e96975e18061baa7399cf55f96a0284c9289c2fdc37bd0dc80&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;redis:service_healthy:false&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:7210863cacbde8a7188eb06fe44cf7d2751e08bce1efc90379ace6ea1d7f4c88&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;backend&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_name=&quot;/platform-backend-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.10&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;<br>__meta_docker_port_private=&quot;8000&quot;<br>__meta_docker_port_public=&quot;8000&quot;<br>__meta_docker_port_public_ip=&quot;0.0.0.0&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.10:8000"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="f4a63fafe3cd29034630e823270bf5e5f944023b757ddab61dc7b60fcbcf29f6"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="9ac9c071294a64e96975e18061baa7399cf55f96a0284c9289c2fdc37bd0dc80"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on="redis:service_healthy:false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:7210863cacbde8a7188eb06fe44cf7d2751e08bce1efc90379ace6ea1d7f4c88"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="backend"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-backend-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.10"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_private="8000"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public="8000"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public_ip="0.0.0.0"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.3:3100&quot;<br>__meta_docker_container_id=&quot;cc7e4e451848889a4e133e2e54aa5ad1b48fa37a7bd7889545501643947e9781&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;86436f5312ad2b5c72020d384b8c5626cc9a42b7e26b68c7858728da1a2bd57d&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:1107dd5274e0ada47e42472b7a7e71f3b2a2fe878878108f3e2f9e51528f0193&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;loki&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_name=&quot;/platform-loki-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.3&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;<br>__meta_docker_port_private=&quot;3100&quot;<br>__meta_docker_port_public=&quot;3100&quot;<br>__meta_docker_port_public_ip=&quot;127.0.0.1&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.3:3100"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="cc7e4e451848889a4e133e2e54aa5ad1b48fa37a7bd7889545501643947e9781"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="86436f5312ad2b5c72020d384b8c5626cc9a42b7e26b68c7858728da1a2bd57d"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on=""</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:1107dd5274e0ada47e42472b7a7e71f3b2a2fe878878108f3e2f9e51528f0193"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="loki"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-loki-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.3"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_private="3100"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public="3100"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public_ip="127.0.0.1"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.2:80&quot;<br>__meta_docker_container_id=&quot;5a69afdb192acb9361eab5eaff44c77bf0927a7dafc8e66dcb41beb6f621e9f2&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;b4171c28bb2f5d28cc4820a5c1da1155e3fbe31a4ebfda87080d066d936b6901&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:6ef4b819f722fccdc036af611c4774cfdc2de821ab74fdd48bbf4c9d6f8973da&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;ntfy&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_label_org_opencontainers_image_authors=&quot;philipp.heckel@gmail.com&quot;<br>__meta_docker_container_label_org_opencontainers_image_description=&quot;Send push notifications to your phone or desktop using PUT/POST&quot;<br>__meta_docker_container_label_org_opencontainers_image_documentation=&quot;https://docs.ntfy.sh/&quot;<br>__meta_docker_container_label_org_opencontainers_image_licenses=&quot;Apache-2.0, GPL-2.0&quot;<br>__meta_docker_container_label_org_opencontainers_image_source=&quot;https://github.com/binwiederhier/ntfy&quot;<br>__meta_docker_container_label_org_opencontainers_image_title=&quot;ntfy&quot;<br>__meta_docker_container_label_org_opencontainers_image_url=&quot;https://ntfy.sh/&quot;<br>__meta_docker_container_label_org_opencontainers_image_vendor=&quot;Philipp C. Heckel&quot;<br>__meta_docker_container_name=&quot;/platform-ntfy-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.2&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;<br>__meta_docker_port_private=&quot;80&quot;<br>__meta_docker_port_public=&quot;2586&quot;<br>__meta_docker_port_public_ip=&quot;127.0.0.1&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.2:80"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="5a69afdb192acb9361eab5eaff44c77bf0927a7dafc8e66dcb41beb6f621e9f2"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="b4171c28bb2f5d28cc4820a5c1da1155e3fbe31a4ebfda87080d066d936b6901"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on=""</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:6ef4b819f722fccdc036af611c4774cfdc2de821ab74fdd48bbf4c9d6f8973da"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="ntfy"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_authors="philipp.heckel@gmail.com"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_description="Send push notifications to your phone or desktop using PUT/POST"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_documentation="https://docs.ntfy.sh/"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_licenses="Apache-2.0, GPL-2.0"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_source="https://github.com/binwiederhier/ntfy"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_title="ntfy"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_url="https://ntfy.sh/"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_vendor="Philipp C. Heckel"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-ntfy-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.2"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_private="80"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public="2586"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public_ip="127.0.0.1"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.11:9090&quot;<br>__meta_docker_container_id=&quot;2897a6817ae18d3a33af1d02cdf713ac04b1007f0df2cbfc412f00319f5a2992&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;ed860fd82f09213dbd960251e5cb19205d458ebf3ca36aaa6cc3065695104fca&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;backend:service_healthy:false&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;prometheus&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_label_io_prometheus_image_variant=&quot;busybox&quot;<br>__meta_docker_container_label_maintainer=&quot;The Prometheus Authors &amp;lt;prometheus-developers@googlegroups.com&amp;gt;&quot;<br>__meta_docker_container_label_org_opencontainers_image_authors=&quot;The Prometheus Authors&quot;<br>__meta_docker_container_label_org_opencontainers_image_description=&quot;The Prometheus monitoring system and time series database&quot;<br>__meta_docker_container_label_org_opencontainers_image_documentation=&quot;https://prometheus.io/docs&quot;<br>__meta_docker_container_label_org_opencontainers_image_licenses=&quot;Apache License 2.0&quot;<br>__meta_docker_container_label_org_opencontainers_image_source=&quot;https://github.com/prometheus/prometheus&quot;<br>__meta_docker_container_label_org_opencontainers_image_title=&quot;Prometheus&quot;<br>__meta_docker_container_label_org_opencontainers_image_url=&quot;https://github.com/prometheus/prometheus&quot;<br>__meta_docker_container_label_org_opencontainers_image_vendor=&quot;Prometheus&quot;<br>__meta_docker_container_name=&quot;/platform-prometheus-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.11&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;<br>__meta_docker_port_private=&quot;9090&quot;<br>__meta_docker_port_public=&quot;9090&quot;<br>__meta_docker_port_public_ip=&quot;127.0.0.1&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.11:9090"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="2897a6817ae18d3a33af1d02cdf713ac04b1007f0df2cbfc412f00319f5a2992"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="ed860fd82f09213dbd960251e5cb19205d458ebf3ca36aaa6cc3065695104fca"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on="backend:service_healthy:false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="prometheus"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_io_prometheus_image_variant="busybox"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_maintainer="The Prometheus Authors &lt;prometheus-developers@googlegroups.com&gt;"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_authors="The Prometheus Authors"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_description="The Prometheus monitoring system and time series database"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_documentation="https://prometheus.io/docs"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_licenses="Apache License 2.0"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_source="https://github.com/prometheus/prometheus"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_title="Prometheus"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_url="https://github.com/prometheus/prometheus"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_vendor="Prometheus"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-prometheus-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.11"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_private="9090"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public="9090"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public_ip="127.0.0.1"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.4:6379&quot;<br>__meta_docker_container_id=&quot;ef8c0c0fdfcd460ed7aa0994a8e9c812c4589680c0090f71af0f80dfe0e71044&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;e820a899f1dacfbfe1b61af98321e2d28c51d377fa456db3a46f118c203ecbd5&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;redis&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_name=&quot;/platform-redis-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.4&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;<br>__meta_docker_port_private=&quot;6379&quot;<br>__meta_docker_port_public=&quot;6379&quot;<br>__meta_docker_port_public_ip=&quot;127.0.0.1&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.4:6379"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="ef8c0c0fdfcd460ed7aa0994a8e9c812c4589680c0090f71af0f80dfe0e71044"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="e820a899f1dacfbfe1b61af98321e2d28c51d377fa456db3a46f118c203ecbd5"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on=""</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="redis"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-redis-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.4"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_private="6379"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public="6379"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_public_ip="127.0.0.1"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.6:3200&quot;<br>__meta_docker_container_id=&quot;73e9d58416233787ae2783316cb42ddecfe71b539ad0f125a1ec194c5601de1e&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;286de53d96c57b69cfa6f4d674957dabfa06ed05f208b1b7e60983eb333af871&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;tempo&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_name=&quot;/platform-tempo-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.6&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;<br>__meta_docker_port_private=&quot;3200&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.6:3200"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="73e9d58416233787ae2783316cb42ddecfe71b539ad0f125a1ec194c5601de1e"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="286de53d96c57b69cfa6f4d674957dabfa06ed05f208b1b7e60983eb333af871"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on=""</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="tempo"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-tempo-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.6"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_private="3200"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.7:9121&quot;<br>__meta_docker_container_id=&quot;d6efcc6a4e958548a1125cf046ccfc24fb6b5602e75b9df0ffa849891e39f003&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;ca5a111a12d14cadec22bb00abdf00460cef59b5a515ab32374695cebf91d4c3&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:6ca518a72f30f7f576ef92963de1b91d3c3f5fd3aeac949f878bfda183587820&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;redis-exporter&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_label_org_opencontainers_image_created=&quot;2026-10-01T05:14:06.551Z&quot;<br>__meta_docker_container_label_org_opencontainers_image_description=&quot;Prometheus Exporter for Valkey &amp;amp; Redis Metrics. Supports Valkey 9.x, 8.x, 7.x and various Redis versions&quot;<br>__meta_docker_container_label_org_opencontainers_image_licenses=&quot;MIT&quot;<br>__meta_docker_container_label_org_opencontainers_image_revision=&quot;589a1cd930d62ba449a5207179ab44252e359c66&quot;<br>__meta_docker_container_label_org_opencontainers_image_source=&quot;https://github.com/oliver006/redis_exporter&quot;<br>__meta_docker_container_label_org_opencontainers_image_title=&quot;redis_exporter&quot;<br>__meta_docker_container_label_org_opencontainers_image_url=&quot;https://github.com/oliver006/redis_exporter&quot;<br>__meta_docker_container_label_org_opencontainers_image_version=&quot;v1.93.0&quot;<br>__meta_docker_container_name=&quot;/platform-redis-exporter-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.7&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;<br>__meta_docker_port_private=&quot;9121&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.7:9121"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="d6efcc6a4e958548a1125cf046ccfc24fb6b5602e75b9df0ffa849891e39f003"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="ca5a111a12d14cadec22bb00abdf00460cef59b5a515ab32374695cebf91d4c3"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on=""</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:6ca518a72f30f7f576ef92963de1b91d3c3f5fd3aeac949f878bfda183587820"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="redis-exporter"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_created="2026-10-01T05:14:06.551Z"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_description="Prometheus Exporter for Valkey &amp; Redis Metrics. Supports Valkey 9.x, 8.x, 7.x and various Redis versions"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_licenses="MIT"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_revision="589a1cd930d62ba449a5207179ab44252e359c66"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_source="https://github.com/oliver006/redis_exporter"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_title="redis_exporter"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_url="https://github.com/oliver006/redis_exporter"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_version="v1.93.0"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-redis-exporter-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.7"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_private="9121"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.8:9100&quot;<br>__meta_docker_container_id=&quot;9fc936476f7c6cf6260ef0d262bbfb11d68603c8e01b10a45fe55b398bb50760&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;9aa0c4f7a2eee66dc9d22ee24ff51eac5bf8318a0dec2f6cb66f7f9abeb598a4&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;node-exporter&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_label_io_prometheus_image_variant=&quot;busybox&quot;<br>__meta_docker_container_label_maintainer=&quot;The Prometheus Authors &amp;lt;prometheus-developers@googlegroups.com&amp;gt;&quot;<br>__meta_docker_container_label_org_opencontainers_image_authors=&quot;The Prometheus Authors&quot;<br>__meta_docker_container_label_org_opencontainers_image_description=&quot;Prometheus exporter for hardware and OS metrics exposed by *NIX kernels&quot;<br>__meta_docker_container_label_org_opencontainers_image_documentation=&quot;https://github.com/prometheus/node_exporter&quot;<br>__meta_docker_container_label_org_opencontainers_image_licenses=&quot;Apache License 2.0&quot;<br>__meta_docker_container_label_org_opencontainers_image_source=&quot;https://github.com/prometheus/node_exporter&quot;<br>__meta_docker_container_label_org_opencontainers_image_title=&quot;node_exporter&quot;<br>__meta_docker_container_label_org_opencontainers_image_url=&quot;https://github.com/prometheus/node_exporter&quot;<br>__meta_docker_container_label_org_opencontainers_image_vendor=&quot;Prometheus&quot;<br>__meta_docker_container_name=&quot;/platform-node-exporter-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.8&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;<br>__meta_docker_port_private=&quot;9100&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.8:9100"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="9fc936476f7c6cf6260ef0d262bbfb11d68603c8e01b10a45fe55b398bb50760"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="9aa0c4f7a2eee66dc9d22ee24ff51eac5bf8318a0dec2f6cb66f7f9abeb598a4"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on=""</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="node-exporter"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_io_prometheus_image_variant="busybox"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_maintainer="The Prometheus Authors &lt;prometheus-developers@googlegroups.com&gt;"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_authors="The Prometheus Authors"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_description="Prometheus exporter for hardware and OS metrics exposed by *NIX kernels"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_documentation="https://github.com/prometheus/node_exporter"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_licenses="Apache License 2.0"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_source="https://github.com/prometheus/node_exporter"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_title="node_exporter"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_url="https://github.com/prometheus/node_exporter"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_vendor="Prometheus"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-node-exporter-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.8"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_private="9100"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.9:80&quot;<br>__meta_docker_container_id=&quot;2e4b79bb21f2db058e8c726e0fd5a0f2eb5eeb1aab9f44acb9b3f66a58df5db9&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;26b341ccd6896b1ebaff59d045efd1faf3db89a15a8e97b9a52598b177a2f089&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;docker-socket-proxy:service_started:false&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:6cfa64ec432b24a912d640e2edb940eeae2666f61861a66c121d763dd7241381&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_replace=&quot;promtail-1&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;promtail&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_label_org_opencontainers_image_ref_name=&quot;ubuntu&quot;<br>__meta_docker_container_label_org_opencontainers_image_version=&quot;24.04&quot;<br>__meta_docker_container_name=&quot;/platform-promtail-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.9&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.9:80"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="2e4b79bb21f2db058e8c726e0fd5a0f2eb5eeb1aab9f44acb9b3f66a58df5db9"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="26b341ccd6896b1ebaff59d045efd1faf3db89a15a8e97b9a52598b177a2f089"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on="docker-socket-proxy:service_started:false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:6cfa64ec432b24a912d640e2edb940eeae2666f61861a66c121d763dd7241381"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_replace="promtail-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="promtail"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_ref_name="ubuntu"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_version="24.04"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-promtail-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.9"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="type">
+              <span >Docker</a><br>
+            </td>
+            <td class="state">
+              <span class="alert alert-success state_indicator text-uppercase">
+                true
+              </span>
+            </td>
+            <td class="labels">
+              <span class="cursor-pointer" data-toggle="tooltip" title="" data-html=true data-original-title="<b>Before relabeling:</b><br>__address__=&quot;172.19.0.5:2375&quot;<br>__meta_docker_container_id=&quot;0159ea6af5a20032b8fdb866e1c823f47d07fb452986500e76cec8214ebd94e0&quot;<br>__meta_docker_container_label_com_docker_compose_config_hash=&quot;2ee55124da681c2e316158520df745e13cc8849e39fa2b0edd0dd981fb3d9f24&quot;<br>__meta_docker_container_label_com_docker_compose_container_number=&quot;1&quot;<br>__meta_docker_container_label_com_docker_compose_depends_on=&quot;&quot;<br>__meta_docker_container_label_com_docker_compose_image=&quot;sha256:3400c429c5f9e1b21d62130fb93b16e2e772d4fb7695bd52fc2b743800b9fe9e&quot;<br>__meta_docker_container_label_com_docker_compose_oneoff=&quot;False&quot;<br>__meta_docker_container_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_container_label_com_docker_compose_project_config_files=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml&quot;<br>__meta_docker_container_label_com_docker_compose_project_working_dir=&quot;/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform&quot;<br>__meta_docker_container_label_com_docker_compose_replace=&quot;docker-socket-proxy-1&quot;<br>__meta_docker_container_label_com_docker_compose_service=&quot;docker-socket-proxy&quot;<br>__meta_docker_container_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_container_label_org_opencontainers_image_created=&quot;2025-09-05T05:39:58.668Z&quot;<br>__meta_docker_container_label_org_opencontainers_image_description=&quot;Proxy over your Docker socket to restrict which requests it accepts&quot;<br>__meta_docker_container_label_org_opencontainers_image_licenses=&quot;Apache-2.0&quot;<br>__meta_docker_container_label_org_opencontainers_image_revision=&quot;a6fbf3835b0554c12be4bccdea4299e14ecb05e8&quot;<br>__meta_docker_container_label_org_opencontainers_image_source=&quot;https://github.com/Tecnativa/docker-socket-proxy&quot;<br>__meta_docker_container_label_org_opencontainers_image_title=&quot;docker-socket-proxy&quot;<br>__meta_docker_container_label_org_opencontainers_image_url=&quot;https://github.com/Tecnativa/docker-socket-proxy&quot;<br>__meta_docker_container_label_org_opencontainers_image_version=&quot;v0.4.1&quot;<br>__meta_docker_container_name=&quot;/platform-docker-socket-proxy-1&quot;<br>__meta_docker_container_network_mode=&quot;platform_default&quot;<br>__meta_docker_network_id=&quot;c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408&quot;<br>__meta_docker_network_ingress=&quot;false&quot;<br>__meta_docker_network_internal=&quot;false&quot;<br>__meta_docker_network_ip=&quot;172.19.0.5&quot;<br>__meta_docker_network_label_com_docker_compose_config_hash=&quot;9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17&quot;<br>__meta_docker_network_label_com_docker_compose_network=&quot;default&quot;<br>__meta_docker_network_label_com_docker_compose_project=&quot;platform&quot;<br>__meta_docker_network_label_com_docker_compose_version=&quot;5.1.1&quot;<br>__meta_docker_network_name=&quot;platform_default&quot;<br>__meta_docker_network_scope=&quot;local&quot;<br>__meta_docker_port_private=&quot;2375&quot;">
+                
+                  <span class="badge badge-primary">__address__="172.19.0.5:2375"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_id="0159ea6af5a20032b8fdb866e1c823f47d07fb452986500e76cec8214ebd94e0"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_config_hash="2ee55124da681c2e316158520df745e13cc8849e39fa2b0edd0dd981fb3d9f24"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_container_number="1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_depends_on=""</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_image="sha256:3400c429c5f9e1b21d62130fb93b16e2e772d4fb7695bd52fc2b743800b9fe9e"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_oneoff="False"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_config_files="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform/compose.yaml"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_project_working_dir="/data/vboxuser/Work/rpg-based-simulation/.claude/worktrees/platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_replace="docker-socket-proxy-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_service="docker-socket-proxy"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_created="2025-09-05T05:39:58.668Z"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_description="Proxy over your Docker socket to restrict which requests it accepts"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_licenses="Apache-2.0"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_revision="a6fbf3835b0554c12be4bccdea4299e14ecb05e8"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_source="https://github.com/Tecnativa/docker-socket-proxy"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_title="docker-socket-proxy"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_url="https://github.com/Tecnativa/docker-socket-proxy"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_label_org_opencontainers_image_version="v0.4.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_name="/platform-docker-socket-proxy-1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_container_network_mode="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_id="c800217f87758ce1f5d6ca11b30b6e89ce20752471fa19759b7c98ddf27f0408"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ingress="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_internal="false"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_ip="172.19.0.5"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_config_hash="9773eb95fcfbee373f2604489eb5536faccdef29cb51bede15f61d16bb450f17"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_network="default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_project="platform"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_label_com_docker_compose_version="5.1.1"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_name="platform_default"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_network_scope="local"</span>
+                
+                  <span class="badge badge-primary">__meta_docker_port_private="2375"</span>
+                
+              </span>
+            </td>
+            <td class="details">
+              
+            </td>
+          </tr>
+        
+        </tbody>
+      </table>
+    </div>
+    
+  </div>
+
+    </body>
+</html>
+
+
+
+

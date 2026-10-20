@@ -152,7 +152,7 @@ services:
     # in-network port (9091), outside the auth, scraped by Prometheus as job "ntfy". The auth and cache databases live in the ntfy_data volume.
     image: binwiederhier/ntfy:v2.28.0@sha256:6ef4b819f722fccdc036af611c4774cfdc2de821ab74fdd48bbf4c9d6f8973da
     command: serve
-    mem_limit: 64m # measured peak 26 MiB over a 2026-10-18 run (about 2.5x headroom)
+    mem_limit: 96m # measured 2026-10-20 (58-minute proof run): anon 26 MiB, anon + active_file 58 MiB (message-cache file pages), docker stats 61 MiB; raised from 64m (platform-planner)
     init: true # needed by the healthcheck (no zombie processes)
     environment:
       - NTFY_BASE_URL=http://ntfy
@@ -180,7 +180,7 @@ services:
     # The README names Valkey 7-9 "and Redis" but not Redis 8: compatibility with this file's redis:8.10.2 is proven by the live run. The image is a scratch
     # image with no shell, so there is no healthcheck; Prometheus' `up{job="redis"}` is the probe. No host port.
     image: oliver006/redis_exporter:v1.93.0@sha256:6ca518a72f30f7f576ef92963de1b91d3c3f5fd3aeac949f878bfda183587820
-    mem_limit: 32m # placeholder until the measured peak is recorded (see the ticket)
+    mem_limit: 32m # measured 12 MiB peak (anon 10), 2026-10-19 re-measure
     command:
       - '--redis.addr=redis://redis:6379'
     restart: unless-stopped
@@ -208,7 +208,7 @@ services:
     profiles: ["observability"]
     image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
     # Grafana 13 needs more than the 10.x limit of 256m: it hit 256m and restarted once, then peaked at 480 MiB during first start (317 MiB settled).
-    mem_limit: 1024m # measured peak 654 MiB (85 % of the old 768m) in slot (b), 2026-10-19; raised to 1024m (lead, 2026-10-20). Slot (c) verifies the new headroom.
+    mem_limit: 1024m # 654 MiB peak (85 % of the old 768m) in slot (b), 2026-10-19; raised to 1024m (lead, 2026-10-20). Re-measure: anon 23 % of 1024m (9 minutes); long-run 654 MiB = 64 %; fresh-volume first start 673 MiB docker stats (66 %), anon 250 MiB.
     ports:
       - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
     environment:
@@ -275,13 +275,23 @@ services:
 
   docker-socket-proxy:
     profiles: ["observability"]
-    # The only service that mounts the Docker socket, read-only, behind an allow-list: container list/inspect/logs, no POST (no exec, stop or create).
+    # The only service that mounts the Docker socket, read-only, behind an allow-list: container list/inspect/logs plus GET on /networks, no POST (no exec, stop or create).
     # Remaining risk: GET on /containers/*/json still exposes every container's environment (including secrets passed as env) to promtail,
     # and the socket itself is still reachable by this proxy process. Internal network only (no published port).
+    # NETWORKS=1 (TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY; decision: owner via lead-planner, 2026-10-20):
+    #   Why: promtail's docker_sd calls the Docker networks API on every refresh to build network labels; without NETWORKS the proxy answers 403, every refresh
+    #   fails ("error while computing network labels") and Loki gets nothing (shown in three runs on 2026-10-19 and the A/B of 2026-10-20).
+    #   What it opens: GET/HEAD on /networks and /networks/{id} only. POST=0 still denies every write (POST /networks/create, DELETE /networks/{id} and
+    #   POST /containers/x/stop returned 403 in the 2026-10-20 probes), and GET /volumes, /images/json and /info stay 403.
+    #   What it exposes: network names, IDs, drivers, subnets, gateways and each network's attached container IDs and IPs, a small addition next to the
+    #   container environment promtail can already read.
+    #   Rejected: mounting /var/lib/docker/containers read-only in promtail (it would read every container's logs on the host, other stacks included, and loses
+    #   the project filter); the Loki Docker logging driver (a host plugin install, a logging block on every service, and it bypasses promtail's pipeline).
     image: tecnativa/docker-socket-proxy:v0.4.1@sha256:3400c429c5f9e1b21d62130fb93b16e2e772d4fb7695bd52fc2b743800b9fe9e
     mem_limit: 64m
     environment:
       - CONTAINERS=1
+      - NETWORKS=1
       - POST=0
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro

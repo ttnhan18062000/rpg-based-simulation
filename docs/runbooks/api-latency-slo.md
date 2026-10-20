@@ -35,6 +35,7 @@ The rules are evaluated every minute. The rate windows are 5 minutes, so a short
 - **Engine tick contention in the same process:** the API and the engine share one Python process; a slow tick delays requests.
 - **Admission pressure mode** (the governor): sustained load puts the server in a restrictive mode; check the governor state in `/api/v1/status`.
 - **Host saturation:** this is a VM host with the whole stack and other sessions on it; check `docker stats` and the host load.
+- **Note (#686):** `GET /api/v1/entities` is now a bounded summary per entity (the full detail moved to the single-entity endpoint), so the payload plateau described below predates it; the 2026-10-18 and 2026-10-19 records describe the build before #686 and are not edited.
 - **Payload growth with world age:** `GET /api/v1/entities` is the dominant cost in the measured mix. What grows it: on 2026-10-19 the response went from about 12 KB to a plateau of about 691 KB within a few minutes of 50-user load while the world held only 12 entities (about 57 KB per entity), so the per-entity payload grows with age; the 2026-10-18 world had 100 entities at about 7.4 KB each. The cause of the per-entity growth was not investigated.
 
 ## Mitigations

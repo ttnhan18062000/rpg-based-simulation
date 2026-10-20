@@ -1,0 +1,5 @@
+first start of a fresh Grafana volume, MiB: container limit | docker stats peak | anon peak | anon+active_file peak | memory.peak (ref)
+grafana-1: 1024 | 673 | 250 | 655 | 1025
+prometheus-1: 512 | 222 | 109 | 219 | 287
+backend-1: 1024 | 168 | 118 | 158 | 207
+redis-1: 256 | 72 | 6 | 71 | 91
