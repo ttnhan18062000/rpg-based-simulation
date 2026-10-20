@@ -1,0 +1,7 @@
+sampler started 18:03:50
+18:03:50 STACK UP (15 min hard stop from here)
+18:04:49 LOAD users=10 duration=180
+18:07:51 LOAD done users=10
+18:07:51 LOAD users=50 duration=240
+18:11:53 LOAD done users=50
+18:11:53 LOADDONE

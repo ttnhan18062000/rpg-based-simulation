@@ -2,7 +2,7 @@
 #
 # Profiles:
 #   default (`docker compose up`)                  backend, redis, ai_worker, frontend
-#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, docker-socket-proxy, tempo, watchdog, node-exporter, ntfy
+#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, docker-socket-proxy, tempo, watchdog, node-exporter, ntfy, redis-exporter
 # watchdog sits in the observability profile because it depends_on promtail (healthy only once loki is ready) and prometheus, and polls Loki.
 # Grafana's admin password is a compose secret file (gitignored). Create it once before `--profile observability up`:
 #   mkdir -p docker/secrets && openssl rand -base64 24 > docker/secrets/grafana_admin_password
@@ -31,6 +31,10 @@ services:
         APP_GID: ${APP_GID:-1000}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
+    # The unauthenticated metrics port (rpg R1, #648) is reachable only on the compose network, by Prometheus: `expose`, never `ports`.
+    # The public 8000/metrics stays behind admission (401).
+    expose:
+      - "9109"
     restart: unless-stopped
     environment:
       # The event-stream producer reads SIM_* (src/observability/config.py), not REDIS_URL. Without these two it falls back to the
@@ -169,6 +173,18 @@ services:
       retries: 5
       start_period: 15s
 
+  redis-exporter:
+    profiles: ["observability"]
+    # Redis metrics for the Redis-down cause alert (TCK-20261018-REDIS-DOWN-CAUSE-ALERT, cause alert added 2026-10-18 by lead review): `redis_up`,
+    # memory, clients and stream lengths. oliver006/redis_exporter v1.93.0 (2026-10-01, over two weeks old), pinned by tag and index digest; Dependabot bumps it.
+    # The README names Valkey 7-9 "and Redis" but not Redis 8: compatibility with this file's redis:8.10.2 is proven by the live run. The image is a scratch
+    # image with no shell, so there is no healthcheck; Prometheus' `up{job="redis"}` is the probe. No host port.
+    image: oliver006/redis_exporter:v1.93.0@sha256:6ca518a72f30f7f576ef92963de1b91d3c3f5fd3aeac949f878bfda183587820
+    mem_limit: 32m # placeholder until the measured peak is recorded (see the ticket)
+    command:
+      - '--redis.addr=redis://redis:6379'
+    restart: unless-stopped
+
   node-exporter:
     profiles: ["observability"]
     # Host filesystem metrics for the disk alerts (TCK-20261018-BASE-ALERT-SCRAPES-AND-NODE-EXPORTER). Pinned by tag and
@@ -192,7 +208,7 @@ services:
     profiles: ["observability"]
     image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
     # Grafana 13 needs more than the 10.x limit of 256m: it hit 256m and restarted once, then peaked at 480 MiB during first start (317 MiB settled).
-    mem_limit: 768m # measured peak 559 MiB (73 %) with the base alert rules and ntfy contact point loaded, 2026-10-18; watch when the SLO rules are added. Not raised.
+    mem_limit: 1024m # measured peak 654 MiB (85 % of the old 768m) in slot (b), 2026-10-19; raised to 1024m (lead, 2026-10-20). Slot (c) verifies the new headroom.
     ports:
       - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
     environment:

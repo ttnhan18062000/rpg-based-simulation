@@ -125,6 +125,11 @@ A share is never a run row. The module carries it as two dense count run rows, a
 - **Report:** that row is `no-data` with reason `empty_denominator`. It is not a `contract_error`, is tallied under its own reason, and is not a failure. A pooled outcome row with a null value and any other reason, or none, stays a `contract_error`.
 - **Candidate:** the row is left out of `metrics` and listed in `undefined_rows: [{row, reason}]`; `rebaseline` carries the list into the baseline (the lint checks each entry and that a listed row is not also in `metrics`). A null value without the reason still refuses.
 - **Against a baseline where the row was undefined**, a run in which it is defined reads `no reference (undefined at baseline)`, never drift. Only a re-baseline gives it a reference.
+- **A share names its count rows.** A pooled share row carries `numerator` and `denominator`, the ids of the two run rows (same group) it is derived from. The report re-derives it from the seed documents and refuses (`contract_error`, the row is not judged) when:
+  - a named row is absent from a seed with data (`share names <id>, absent from seed(s) [..]`);
+  - the row is `empty_denominator` while the denominators sum above 0 (`share marked undefined but its denominator sums to <n>`);
+  - a defined value is not Σnum/Σden within 1e-9 (`share value <v> != Σnum/Σden <w>`), or is defined over a zero denominator.
+- **Which rows are shares** is today decided by the two fields being present: a pooled count such as `O2.seeds_with_survivors` carries neither and is not checked. A share that dropped the fields would therefore go unchecked. rpg (2026-10-20) will add an explicit marker on every pooled outcome row after v1 (`aggregate: "share" | "count"`, shares required to carry the fields); the check then makes absence a `contract_error` and this section changes with it.
 
 ## Candidate and recording v1
 
