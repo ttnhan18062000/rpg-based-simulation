@@ -578,6 +578,17 @@ def test_the_start_hook_adds_the_stale_code_line_on_startup_and_clear_not_compac
     assert "STALE SESSION CODE" not in _ctx(world, _payload(repo, source="compact", session_title=WRITER))
 
 
+def test_the_start_hook_adds_the_monitoring_hook_line_where_the_freshness_line_goes(world, monkeypatch):
+    """TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH: one line on startup/resume/clear, none on compact."""
+    from tools.sessions import settings_freshness as sf
+    root, repo, state_root = world
+    monkeypatch.setattr(sf, "session_code_line", lambda *_a, **_k: "")
+    monkeypatch.setattr(sf, "monitoring_hook_line", lambda *_a, **_k: "session-roles: the PostToolUse monitoring hook TEST")
+    for source in ("startup", "resume", "clear"):
+        assert _ctx(world, _payload(repo, source=source, session_title=WRITER)).count("monitoring hook TEST") == 1
+    assert "monitoring hook TEST" not in _ctx(world, _payload(repo, source="compact", session_title=WRITER))
+
+
 # ---- TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP -----------------------------------------
 
 def _declare(world, session_id, kind="HARD", row="r"):

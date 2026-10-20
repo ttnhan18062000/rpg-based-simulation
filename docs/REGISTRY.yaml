@@ -9326,7 +9326,7 @@
   - determinism
   - testing
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH.md
+  path: agent-working/tickets/done/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH.md
   ticket_id: TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH
   title: Say when a session's tool-call hook is not loaded, and get late tool rows
     committed, so tools shards cover the sessions that close tickets
@@ -9336,7 +9336,10 @@
   related_code_areas:
   - tools/agent-monitoring/post_tool_hook.py, tools/sessions/settings_freshness.py,
     tools/sessions/session_start_hook.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH/investigation.md
+  - agent-working/stored_artifacts/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH/plan.md
+  - agent-working/stored_artifacts/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH/test_plan.md
   tags:
   - agent-monitoring
   - hooks

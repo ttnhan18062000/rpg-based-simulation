@@ -20,6 +20,10 @@ Rules:
   the next close because exact duplicates are dropped.
 - Late-shard policy: a shard for an already-closed week that arrives later (a branch merging after its
   week ended) is folded by the next close of that week, like any other shard.
+- Main-checkout tools rows: a session launched in the main checkout writes `main.tools.jsonl`, which no PR carries. A close run
+  from a worktree reads that file (read-only) from the main checkout, found through `git rev-parse --git-common-dir`, and appends
+  the week's rows missing from the canonical `tools.jsonl` (full-row identity dedup). A close run in the main checkout itself
+  folds it as an ordinary shard. Host u24desktop's main checkout is another host and is not swept.
 - working_log rows go through `working_log_writer.consolidate_pending_rows(week=...)`, the CSV's single
   writer; this module never opens `agent-working/tickets/working_log.csv` itself.
 """
@@ -29,6 +33,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import date, timedelta
 from pathlib import Path
@@ -118,7 +123,82 @@ def _fold_kind(week_dir: Path, kind: str) -> dict:
     }
 
 
-def close_week(week: str, data_dir: Path = DEFAULT_DATA_DIR, today: date | None = None) -> dict:
+#: The branch key the hook gives a session launched in the main checkout (`main.tools.jsonl`). No PR branch carries that file, so
+#: a worktree's week close pulls it in (TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH).
+MAIN_CHECKOUT_TOOLS_SHARD = "main.tools.jsonl"
+_UNSET = object()
+
+
+def find_main_checkout(data_dir: Path) -> Path | None:
+    """The main worktree, one level above `git rev-parse --git-common-dir`, when `data_dir` belongs to a different checkout; else None."""
+    cwd = Path(data_dir).resolve().parent
+    try:
+        out = []
+        for flag in ("--git-common-dir", "--show-toplevel"):
+            proc = subprocess.run(["git", "rev-parse", flag], cwd=cwd, capture_output=True, text=True, timeout=10)
+            if proc.returncode != 0 or not proc.stdout.strip():
+                return None
+            out.append(proc.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        return None
+    common = Path(out[0]) if Path(out[0]).is_absolute() else (cwd / out[0])
+    main = common.resolve().parent
+    return main if main != Path(out[1]).resolve() and main.is_dir() else None
+
+
+def _identity(line: str) -> str | None:
+    """Full-row identity: the parsed row re-serialised with sorted keys, so spacing or key order never hides a duplicate."""
+    try:
+        rec = json.loads(line)
+    except ValueError:
+        return None
+    return json.dumps(rec, sort_keys=True, separators=(",", ":")) if isinstance(rec, dict) else None
+
+
+def sweep_main_checkout_tools(week: str, week_dir: Path, main_checkout: object = _UNSET) -> dict:
+    """Append the main checkout's `main.tools.jsonl` rows for `week` to this checkout's canonical `tools.jsonl`.
+
+    Strictly read-only on the main checkout (never truncated, rewritten or staged). Only the week being closed. Rows already in the
+    canonical file (or repeated in the sweep) are dropped by full-row identity; a torn line is skipped. Idempotent. Never raises.
+    """
+    result = {"swept": 0, "duplicates_dropped": 0, "skipped": None}
+    try:
+        main = find_main_checkout(Path(week_dir).parent) if main_checkout is _UNSET else main_checkout
+        if main is None:
+            result["skipped"] = "no separate main checkout (this is the main checkout, or git cannot say)"
+            return result
+        src = Path(main) / "agent-working" / "agent-monitoring" / "data" / week / MAIN_CHECKOUT_TOOLS_SHARD
+        if not src.is_file():
+            result["skipped"] = f"no {MAIN_CHECKOUT_TOOLS_SHARD} for {week} in the main checkout"
+            return result
+        canonical = Path(week_dir) / "tools.jsonl"
+        existing_text = canonical.read_text(encoding="utf-8") if canonical.exists() else ""
+        seen = {i for i in (_identity(ln) for ln in existing_text.splitlines() if ln.strip()) if i}
+        fresh = []
+        for ln in src.read_text(encoding="utf-8", errors="replace").splitlines():
+            ident = _identity(ln) if ln.strip() else None
+            if ident is None:
+                continue  # blank or torn
+            if ident in seen:
+                result["duplicates_dropped"] += 1
+                continue
+            seen.add(ident)
+            fresh.append(ln.strip())
+        if not fresh:
+            return result
+        appended = [ln for _, ln in sorted(enumerate(fresh), key=_sort_key)]
+        new_text = existing_text if existing_text.endswith("\n") or not existing_text else existing_text + "\n"
+        new_text += "".join(ln + "\n" for ln in appended)
+        tmp = canonical.with_name(canonical.name + ".closing")
+        tmp.write_text(new_text, encoding="utf-8")
+        os.replace(tmp, canonical)
+        result["swept"] = len(appended)
+    except Exception as exc:  # noqa: BLE001 - a sweep problem never fails a week close
+        result["skipped"] = f"sweep failed: {type(exc).__name__}: {exc}"
+    return result
+
+
+def close_week(week: str, data_dir: Path = DEFAULT_DATA_DIR, today: date | None = None, main_checkout: object = _UNSET) -> dict:
     today = today or date.today()
     if not is_finished(week, today):
         raise WeekCloseError(
@@ -129,6 +209,7 @@ def close_week(week: str, data_dir: Path = DEFAULT_DATA_DIR, today: date | None 
     if not week_dir.is_dir():
         raise WeekCloseError(f"no such week directory: {week_dir}")
     result = {kind: _fold_kind(week_dir, kind) for kind in CLOSE_KINDS}
+    result["main_checkout_tools"] = sweep_main_checkout_tools(week, week_dir, main_checkout)
     result["working_log"] = consolidate_pending_rows(
         data_root=Path(data_dir), csv_path=_default_csv_path_for(Path(data_dir)), week=week
     )
@@ -158,6 +239,9 @@ def main(argv=None) -> int:
             r = result[kind]
             print(f"{args.week} {kind}: {r['shard_files']} shard(s), {r['lines_in']} line(s) in, "
                   f"{r['lines_out']} out, {r['duplicates_dropped']} exact duplicate(s) dropped")
+        sw = result["main_checkout_tools"]
+        print(f"{args.week} main-checkout tools rows: swept {sw['swept']} ({sw['duplicates_dropped']} duplicate(s) dropped)"
+              + (f"; {sw['skipped']}" if sw["skipped"] else ""))
         wl = result["working_log"]
         print(f"{args.week} working_log: folded {wl['shard_files']} shard file(s) ({wl['consolidated_rows']} row(s)"
               + (f", {wl['voided_rows']} voided, recorded in working_log_voids.jsonl" if wl.get("voided_rows") else "") + ")")

@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent

@@ -163,6 +163,46 @@ def session_code_line(directory: Path | str, ref: str = "origin/main") -> str:
             f"({shown}), so this hook may inject the wrong role or handover note. Sync this worktree to {ref}.")
 
 
+MONITORING_HOOK = "post_tool_hook.py"
+
+
+def monitoring_hook_loaded(directory: Path | str) -> bool | None:
+    """Whether this worktree's project settings register the PostToolUse monitoring hook (`post_tool_hook.py`): True or False,
+    `None` when that cannot be told (not a repo, settings present but unparseable). `.claude/settings.local.json` counts too.
+    A missing `.claude/settings.json` is False: no project hooks load from here."""
+    directory = Path(directory)
+    top = _git(["rev-parse", "--show-toplevel"], directory) if directory.is_dir() else None
+    if top is None or top.returncode != 0:
+        return None
+    root = Path(top.stdout.strip())
+    commands: set[str] = set()
+    for name in (SETTINGS, ".claude/settings.local.json"):
+        path = root / name
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+        if not isinstance(data, dict):
+            return None
+        commands |= _hook_commands(data)
+    return any(c.startswith("PostToolUse: ") and MONITORING_HOOK in c for c in commands)
+
+
+def monitoring_hook_line(directory: Path | str) -> str:
+    """The one SessionStart line when the monitoring hook is not loaded here ("" when it is or cannot be told). Report-only; never raises
+    (TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH)."""
+    try:
+        loaded = monitoring_hook_loaded(directory)
+    except Exception:  # the hook must never fail a session
+        return ""
+    if loaded is not False:
+        return ""
+    return (f"session-roles: the PostToolUse monitoring hook ({MONITORING_HOOK}) is not in this worktree's {SETTINGS}, so this "
+            f"session's tool calls will not be recorded. Sync this worktree to origin/main.")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Report whether a directory runs the project settings and agents on the ref.")
     ap.add_argument("directory", nargs="?", default=".")

@@ -293,7 +293,20 @@ make agent-monitoring-close-week WEEK=2026-W39
 - `retro_nudge_hook.py` adds a report-only line when a finished week still holds shards. It never blocks
   and the close is never scheduled: one session closes one week, and the implementer commits it.
 
-Code: `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`.
+- **Main-checkout tool rows** (`TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH`). A session launched in the main checkout
+  (lead, planners) is on branch `main`, so the hook writes `main.tools.jsonl`, a file no PR branch carries. A close run from a
+  worktree finds the main checkout with `git rev-parse --git-common-dir` and appends that week's rows that the canonical
+  `tools.jsonl` lacks (full-row identity, so a row also in a branch shard or already folded counts once; a torn line is skipped).
+  It is read-only on the main checkout: its `main.tools.jsonl` is never truncated, rewritten or staged. The close prints one line
+  with the swept count. Two limits: the other host's main checkout (u24desktop) is a different machine and is not swept, and a week
+  that was already closed only gains these rows on a re-close, which is back-fill and is done deliberately, not by this sweep.
+  A close run in the main checkout itself folds `main.tools.jsonl` like any other shard. The sweep adds rows, so it improves row
+  coverage; it does not change how hand-closure durations are derived (that needs 3 unattributed rows in the activity block).
+- **Hook not loaded.** SessionStart (startup, resume, clear) adds one report-only line when the worktree's `.claude/settings.json`
+  (or `settings.local.json`) has no PostToolUse hook running `post_tool_hook.py`. `post_tool_hook.py` is silent on a normal call, so a
+  transcript cannot show whether it ran: use the missing rows, not the transcript.
+
+Code: `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`; `tools/sessions/settings_freshness.py` (`monitoring_hook_line`).
 
 ## Main-branch integrity report
 

@@ -200,3 +200,43 @@ def test_the_check_is_offline_and_fast(repo, tmp_path):
         sf._git = real
     assert not {"fetch", "pull", "ls-remote", "clone"} & set(calls) and len(calls) == 3
     assert elapsed < 2.0
+
+
+# ---- the monitoring-hook line (TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH) ----------------------------------
+
+def _post_settings(*commands: str) -> str:
+    hooks = {"PostToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": c} for c in commands]}]}
+    return json.dumps({"hooks": hooks})
+
+
+_POST_HOOK = 'R=$(git rev-parse --show-toplevel) || exit 0; test -f "$R/tools/agent-monitoring/post_tool_hook.py" || exit 0; cd "$R"; python3 tools/agent-monitoring/post_tool_hook.py'
+
+
+def test_a_worktree_with_the_monitoring_hook_gets_no_line(repo):
+    (repo / ".claude" / "settings.json").write_text(_post_settings(_POST_HOOK))
+    assert sf.monitoring_hook_loaded(repo) is True
+    assert sf.monitoring_hook_line(repo) == ""
+
+
+def test_a_worktree_without_the_monitoring_hook_gets_exactly_one_line(repo):
+    # the fixture's settings only register PreToolUse hooks, and another PostToolUse hook is not the monitoring one
+    assert sf.monitoring_hook_loaded(repo) is False
+    (repo / ".claude" / "settings.json").write_text(_post_settings("python3 tools/agent-monitoring/retro_nudge_hook.py"))
+    line = sf.monitoring_hook_line(repo)
+    assert line.count("\n") == 0 and "post_tool_hook.py" in line and "will not be recorded" in line
+
+
+def test_a_missing_settings_file_says_the_hook_is_not_loaded(repo):
+    (repo / ".claude" / "settings.json").unlink()
+    assert sf.monitoring_hook_loaded(repo) is False and sf.monitoring_hook_line(repo)
+
+
+def test_the_hook_in_settings_local_counts(repo):
+    (repo / ".claude" / "settings.local.json").write_text(_post_settings(_POST_HOOK))
+    assert sf.monitoring_hook_loaded(repo) is True
+
+
+def test_unparseable_settings_or_no_repo_give_no_line_and_no_crash(repo, tmp_path):
+    (repo / ".claude" / "settings.json").write_text("{not json")
+    assert sf.monitoring_hook_loaded(repo) is None and sf.monitoring_hook_line(repo) == ""
+    assert sf.monitoring_hook_line(tmp_path / "nowhere") == ""

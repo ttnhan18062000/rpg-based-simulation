@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
@@ -43,10 +43,48 @@ so the hook keys their rows to `main.tools.jsonl`. A PR branch never contains th
 for any week, and W43's file (558 rows now) is on disk only. The rows are not lost; they never reach a PR. This is the "late rows"
 class of the ticket, and it is the whole measurable gap, not a quarter of it.
 
+## Finding 4: reconciliation with the retro's duration coverage (W43)
+`unknown_durations.py` (this folder) replays `hand_closure_time.resolve()` offline for every W43 run row at `origin/main`
+(53 rows, all with a session id; 41 `duration_source: unknown`, 12 `tool_activity`), with every tool row known now.
+Why the 41 are unknown:
+
+| reason | runs |
+|---|---|
+| the session has no tool rows anywhere | 17 (15 of them one session, no transcript on this host) |
+| the activity block ending at the closure has < 3 rows, no earlier closure in it | 11 |
+| the session has unattributed rows, none before this closure | 5 |
+| back-to-back closure: fewer than 3 rows after the session's previous closure | 4 |
+| the replay now derives `tool_activity` (rows were not on the closer's disk at closure time) | 4 |
+
+Of the 24 unknown runs whose session has rows before the closure, 10 closed more than 30 minutes (`PAUSE_THRESHOLD_SECONDS`) after the
+session's last row, so the activity block is empty; 9 closed within the threshold. Every row of these sessions is unattributed
+(`run_id` null), so sidecar attribution is not the cause. The planner's back-to-back hypothesis explains 4 of 41.
+
+State plainly: scope 2(c) improves **row coverage**, not the retro's duration coverage. It could only help the 4 runs where rows
+were not on the closer's disk in time, plus part of the 17 with no rows if their session is a main-checkout one. The derivation
+rules (3 rows minimum, the pause threshold, claim-after-previous-closure) are the larger cause and are **not** changed here; the
+planner takes that to the owner as a follow-up.
+
 ## Consequence for the scope
 - Scope 1 (say when the hook is not loaded): the data gives it no measured case on this host. It stays cheap and report-only
   (a new line in the freshness check), but it would not have changed W41-W43's coverage.
 - Scope 2 (late rows) carries the gap. Fix candidates below, in the plan.
+
+## Re-measure (after the change)
+Owner decision 2026-10-21: back-fill is **W43 only**; W41 and W42 are not re-closed and keep their numbers. Lead restored the 809 W43
+rows into the main checkout's `main.tools.jsonl` (now ~1394 lines); the side branch `lead-planner-monitoring-shards` is not merged
+or read. W43 is not yet a finished week, so its close has not run; the table is what that close gives (sweep simulated by reading
+the same file the sweep reads).
+
+| week | closing sessions | rows on `origin/main` today | rows after the W43 close sweeps the main checkout |
+|---|---|---|---|
+| W41 | 41 | 15 (unchanged, no re-close) | 15 |
+| W42 | 29 | 14 committed (+3 local) (unchanged) | 14 |
+| W43 | 12 | 8 | 11 (the 12th is the session with no transcript or rows anywhere) |
+
+The earlier 27% (11 of 41, W41, from the ticket) is 15 of 41 (37%) on today's `origin/main`, the difference being later merges;
+the sweep does not change W41. W43 goes from 8 of 12 (67%) to 11 of 12 (92%). This is row coverage; the retro's duration coverage is
+unchanged (finding 4).
 
 ## Limits
 Only transcripts still on this host; sessions of host u24desktop and purged ones are unclassified (18 closing sessions). Closures
