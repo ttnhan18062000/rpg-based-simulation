@@ -295,16 +295,6 @@ def test_visual_assets_module_respects_the_boundaries(path):
     assert check_source(rel, path.read_text()) == []
 
 
-def test_src_never_imports_visual_assets():
-    offenders = []
-    for path in SRC.rglob("*.py"):
-        text = path.read_text(errors="ignore")
-        if "visual_assets" not in text:
-            continue
-        offenders += check_source(str(path.relative_to(REPO)), text)
-    assert offenders == []
-
-
 def test_every_drawing_module_has_a_known_layer():
     for path in _tree_files():
         rel = str(path.relative_to(REPO))

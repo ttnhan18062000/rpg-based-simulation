@@ -111,13 +111,16 @@ const OBJECT_MARKER_FALLBACKS: Readonly<Record<string, readonly [string, string]
     .map((n) => [`icon.node.${n}`, ['inset square (#7dd3a0)', 'the resource node name as text'] as const])),
   'icon.node.herb_patch': ['inset square (#6ee7b7)', 'the resource node name as text'],
 })
-/** The fallbacks of the 22 icon set v2 keys plus the 18 object markers, as each key's description in the registry states them (copied; the page imports nothing from the app). */
+/** Entity markers (`TCK-20261013-VISUAL-ASSETS-ENTITY-MARKER-DRAFTS`, adopted not built): each key's registry `fallback`, today's grey circle (#888888, the client's colour for a kind it has none for) with the state ring (copied; the keys are registered but not drawn by this page). */
+const ENTITY_KINDS = ['worker', 'guard', 'scout', 'raider', 'sentinel', 'merchant', 'blacksmith', 'leader', 'alpha', 'predator_hunter', 'wild_creature'] as const
+/** The fallbacks of the 22 icon set v2 keys, the 18 object markers and the 11 entity markers, as each key's description in the registry states them (copied; the page imports nothing from the app). */
 const V2_FALLBACKS: Readonly<Record<string, Fallback>> = Object.freeze({
   ...Object.fromEntries(Object.entries(MARKER_FALLBACKS).map(([n, [what, color]]) => [`icon.marker.${n}`, textFallback(`${what} (${color}) plus the location name as hover text`, `today's ${what} label`)])),
   ...Object.fromEntries(Object.entries(PANEL_FALLBACKS).map(([k, what]) => [k, textFallback(what, 'today\'s panel label')])),
   ...Object.fromEntries(['weapon', 'armor', 'trinket', 'tool', 'consumable', 'material'].map((n) => [`icon.item.${n}`, textFallback(`${n} (item type as text)`, 'the item type as text, as the loot and inspect panels show it today')])),
   ...Object.fromEntries(RARITIES.map((r) => [rarityKey(r), { kind: 'chip', letter: r, color: RARITY_CHIPS[r], note: 'identifying: today\'s rarity colour on the rarity name as text, which the badge never replaces' } as Fallback])),
   ...Object.fromEntries(Object.entries(OBJECT_MARKER_FALLBACKS).map(([k, [glyph, text]]) => [k, textFallback(`${glyph} plus ${text}`, 'today\'s label of the object on the map')])),
+  ...Object.fromEntries(ENTITY_KINDS.map((n) => [`icon.entity.${n}`, textFallback('grey circle (#888888) with the state ring plus the entity kind name as text', 'today\'s circle of the entity on the map')])),
 })
 
 /** What the Live Map or a panel shows today where the icon will go (docs/assets/fallback_safety.md; each key's description in the registry states the same). */

@@ -116,7 +116,6 @@ src.engine.world_dynamics -> src.world.ecology
 src.engine.world_dynamics -> src.world.environment
 src.engine.world_dynamics -> src.world.influence
 src.engine.world_dynamics -> src.world.reproduction_humanoid
-src.engine.world_dynamics -> src.world.spawn
 src.engine.world_dynamics -> src.world.threat
 src.engine.world_dynamics -> src.world.transformation
 src.scenarios.catalog_state_builder -> src.certification.models

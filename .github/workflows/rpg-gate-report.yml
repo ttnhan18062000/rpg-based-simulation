@@ -54,11 +54,14 @@ jobs:
       - name: Decide
         id: decide
         if: ${{ github.event_name == 'schedule' }}
+        env:
+          HEAD_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -o pipefail  # a crashing gate must not hide behind `| tee`
           python3 -m tools.test_architecture.slow_regression_gate decide \
             --workflow rpg-gate-report.yml --suite-job "RPG gate report" \
-            --head-sha "${{ github.sha }}" --exclude-run-id "${{ github.run_id }}" | tee decision.txt
+            --head-sha "${HEAD_SHA}" --exclude-run-id "${RUN_ID}" | tee decision.txt
           cat decision.txt >> "$GITHUB_OUTPUT"
           {
             echo "### RPG gate report gate"
@@ -196,11 +199,14 @@ jobs:
       - name: Update the rolling issue
         if: ${{ !cancelled() && github.event_name == 'schedule' }}
         env:
+          HEAD_SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
           GH_TOKEN: ${{ github.token }}
         run: |
           python -m tools.test_architecture.rpg_gate_issue \
             --report report/rpg-gate-report.json \
-            --repo "${{ github.repository }}" --run-id "${{ github.run_id }}" --sha "${{ github.sha }}"
+            --repo "${REPOSITORY}" --run-id "${RUN_ID}" --sha "${HEAD_SHA}"
       # The job's verdict, after the uploads and the issue: red only for an unowned or expired fail, or an unstable metric (rpg_gate_report.verdict).
       - name: Verdict
         run: |

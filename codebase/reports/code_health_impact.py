@@ -59,6 +59,7 @@ import json
 import re
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import yaml
@@ -133,6 +134,7 @@ EDGE_DEGREE_MEDIUM_THRESHOLD = 50
 
 
 def load_graph(graph_path: Path = DEFAULT_GRAPH_PATH) -> dict:
+    """Load the graphify graph JSON from ``graph_path``."""
     with open(graph_path, "r", encoding="utf-8") as handle:
         return json.load(handle)
 
@@ -170,6 +172,7 @@ def resolve_defined_symbols(graph: dict, file_node: dict | None) -> list:
 
 
 def run_graphify_affected(symbol: str, depth: int, graph_path: Path) -> str:
+    """Run ``graphify affected`` for ``symbol`` and return its stdout."""
     result = subprocess.run(
         ["graphify", "affected", symbol, "--depth", str(depth), "--graph", str(graph_path)],
         capture_output=True, text=True,
@@ -200,8 +203,9 @@ def find_dependents(
     target_path: str,
     depth: int = DEFAULT_AFFECTED_DEPTH,
     graph_path: Path = DEFAULT_GRAPH_PATH,
-    affected_runner=run_graphify_affected,
+    affected_runner: Callable[[str, int, Path], str] = run_graphify_affected,
 ) -> dict:
+    """Find the files that depend on ``target_path`` by querying graphify for each symbol it defines."""
     file_node = find_file_node(graph, target_path)
     symbols = resolve_defined_symbols(graph, file_node)
 
@@ -249,6 +253,7 @@ def find_dependents(
 
 
 def match_architecture_rules(target_path: str) -> list:
+    """Return the sorted architecture-rule filenames whose path prefixes match ``target_path``."""
     matched = [
         filename
         for filename, prefixes in ARCHITECTURE_RULE_PATH_PREFIXES.items()
@@ -295,6 +300,7 @@ def normalize_registry_value(value: str) -> str:
 
 
 def resolve_registry_value_paths(value: str, label_index: dict, basename_index: dict) -> set:
+    """Resolve one registry ``related_code_areas`` value to the set of file paths it names."""
     normalized = normalize_registry_value(value)
     if "/" in normalized:
         return {normalized}
@@ -310,6 +316,7 @@ def resolve_registry_value_paths(value: str, label_index: dict, basename_index: 
 def registry_entry_matches_target(
     related_code_areas: list, target_path: str, label_index: dict, basename_index: dict
 ) -> bool:
+    """Return True when any ``related_code_areas`` value names ``target_path``."""
     for raw_value in related_code_areas:
         normalized = normalize_registry_value(raw_value)
         if normalized.endswith("/"):
@@ -325,6 +332,7 @@ def registry_entry_matches_target(
 def required_tests_from_registry(
     registry_entries: list, target_path: str, label_index: dict, basename_index: dict
 ) -> set:
+    """Collect the test paths that registry entries tie to ``target_path``."""
     required_tests = set()
     for entry in registry_entries:
         related_code_areas = entry.get("related_code_areas") or []
@@ -340,6 +348,7 @@ def required_tests_from_registry(
 
 
 def load_registry_entries(registry_path: Path = DEFAULT_REGISTRY_PATH) -> list:
+    """Load the entries from the docs registry, or an empty list when it is missing."""
     if not registry_path.exists():
         return []
     with open(registry_path, "r", encoding="utf-8") as handle:
@@ -388,6 +397,7 @@ def compute_edge_degree(graph: dict, target_path: str) -> int:
 
 
 def compute_criticality_tier(churn: int, edge_degree: int) -> str:
+    """Map a file's churn and graph edge degree to a criticality tier."""
     if churn >= CHURN_HIGH_THRESHOLD or edge_degree >= EDGE_DEGREE_HIGH_THRESHOLD:
         return "high"
     if churn >= CHURN_MEDIUM_THRESHOLD or edge_degree >= EDGE_DEGREE_MEDIUM_THRESHOLD:
@@ -426,21 +436,23 @@ def sort_dependents_src_first(dependents: set, target_path: str = "") -> list:
 
 
 def derive_subsystem(target_path: str) -> str:
+    """Derive a display subsystem name from ``target_path``."""
     parts = Path(target_path).parts
     if len(parts) >= 2 and parts[0] in ("src", "tools", "tests"):
         return parts[1].replace("_", " ").title()
     return parts[0].replace("_", " ").title() if parts else target_path
 
 
-def build_impact_report(
+def build_impact_report(  # noqa: PLR0913  # keyword options of one report builder; a params object would only wrap them
     repo_root: Path,
     target_path: str,
     depth: int = DEFAULT_AFFECTED_DEPTH,
     graph: dict | None = None,
     graph_path: Path = DEFAULT_GRAPH_PATH,
     registry_entries: list | None = None,
-    affected_runner=run_graphify_affected,
+    affected_runner: Callable[[str, int, Path], str] = run_graphify_affected,
 ) -> dict:
+    """Build the impact report for ``target_path`` from the graph and the docs registry."""
     if graph is None:
         graph = load_graph(graph_path)
     if registry_entries is None:
@@ -480,6 +492,7 @@ def build_impact_report(
 
 
 def format_impact_report(report: dict, max_dependents_shown: int = 40) -> str:
+    """Render an impact report as text, showing at most ``max_dependents_shown`` dependents."""
     lines = [
         f"Change-Impact Report: {report['target_path']}",
         "=" * 74,
@@ -526,7 +539,8 @@ def format_impact_report(report: dict, max_dependents_shown: int = 40) -> str:
     return "\n".join(lines)
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point; returns the process exit code."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("target_path", help="Repo-relative source path, e.g. src/engine/pipeline.py")
     parser.add_argument("--repo-root", type=Path, default=_REPO_ROOT)
