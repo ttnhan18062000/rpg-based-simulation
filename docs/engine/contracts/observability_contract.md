@@ -24,6 +24,7 @@ The following signals must be exposed in a stable `RuntimeSnapshot`:
 - `work_latency_ms`: Observed latency between schedule and execution for critical items.
 - `queue_utilization`: $0.0 - 1.0$ ratio for action and work queues.
 - `dropped_work_count`: Total count of optional work items shed due to pressure.
+- `budget_overrun_ms`, `budget_overrun_tick`, `total_budget_overruns`: the tick-budget overrun signal (largest overrun on the latest overrun tick, that tick or -1, and the count of overrun ticks). Report only: no governor, scheduler or game system reads it. Also surfaced in the API metrics snapshot, the live snapshot and Prometheus.
 - `replay_backlog_kb`: Size of the `ReplayBuffer` currently in memory.
 
 ## 3. Bounded Trending Law

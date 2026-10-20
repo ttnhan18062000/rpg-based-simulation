@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-PERF-BUDGET-OVERRUN-TELEMETRY-SURFACING
-phase: open
+phase: done
 date: 2026-10-06
 tags: [performance, observability]
 ---
@@ -15,7 +15,7 @@ tags: [performance, observability]
 Surface the kernel's tick-budget overrun signal wherever dropped work is surfaced today: the API engine status, the live snapshot and Prometheus
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -83,7 +83,8 @@ plausible. Ask the owner; do not assume it.
 - `docs/guidelines/intentional_divergences.md` (DEV-014)
 
 ## Related Stored Artifacts
-- `agent-working/stored_artifacts/TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY/`
+- `agent-working/stored_artifacts/TCK-20261006-PERF-TICK-BUDGET-THROTTLE-REPORT-ONLY/
+- agent-working/stored_artifacts/TCK-20261006-PERF-BUDGET-OVERRUN-TELEMETRY-SURFACING/`
 
 ## Related Code Areas
 - `src/api/engine_manager.py`, `src/observability/live/snapshot_provider.py`,
@@ -93,9 +94,13 @@ plausible. Ask the owner; do not assume it.
 - Whether the frontend should show it is a separate question. Not this ticket.
 
 ## Implementation Notes
+Fields added to RuntimeSnapshot (defaults), the engine manager metrics snapshot, the live snapshot runtime_status and Prometheus (sim_budget_overrun_ms gauge, sim_budget_overruns_total counter). Gate record (acceptance 5): dispatched by rpg-planner to rpg-implementer, who owns these files; no perf lift was used.
 
 ## Test Summary
+tests/observability/test_budget_overrun_telemetry.py (3) pass; live snapshot, observability hardening, signal truth and work-debt tests: 37 passed in all.
 
 ## Files Changed
+src/engine/observability.py, src/api/engine_manager.py, src/observability/live/snapshot_provider.py, src/observability/prometheus_collector.py, docs/observability/prometheus_metrics.md, docs/engine/contracts/observability_contract.md, tests/observability/test_budget_overrun_telemetry.py.
 
 ## Completion Summary
+The overrun signal now shows wherever dropped work does, as telemetry only.

@@ -43,6 +43,8 @@ All duration-based metrics are exported in **seconds** in accordance with standa
 | `sim_rejection_count_total` | Gauge | Cumulative counts of rejected actions grouped by rejection code. | `reason` |
 | `sim_quest_status_count` | Gauge | Active quests in the simulation grouped by current lifecycle state. | `status` |
 | `sim_dropped_work_delta` | Gauge | Work items shed in the current tick. | None |
+| `sim_budget_overrun_ms` | Gauge | Overrun in ms of the latest tick that exceeded its time budget (0 when none yet). Report only. | None |
+| `sim_budget_overruns_total` | Counter | Cumulative ticks that exceeded the tick time budget. Report only. | None |
 | `sim_errors_total` | Counter | Cumulative simulation tick loop execution errors. | None |
 
 ---
