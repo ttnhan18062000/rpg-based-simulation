@@ -68,6 +68,18 @@ The config may carry `required_validity`, a mapping from a **level** to the ids 
 - the report gives each id required at a document's level but missing from that document (in every world) the state `no-data`, reason `contract_error`, detail `required validity row <id> missing`, and the markdown names the missing ids in a banner. A row that is not required at that level is not asked for. It never reads as a pass; the job's verdict rule is unchanged (no-data is not red by itself);
 - the candidate refuses while any row required at a document's level is missing from it, unless a current, unexpired `state: fail` entry in `rpg_gate_known.yaml` owns that id (then the row is listed in `omitted_validity`, once per world and level, as `<id>:run:<world>:*` or `<id>:pooled:<world>:*`).
 
+### Kernel positives
+
+A validity row is **not accepted without a kernel positive** (TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE). V1 (a 0-gold charge counted as a payment) and V4 (a counter cleared before the ledger saw it) were blind on the first full-size gate run and read 0 violations, so they looked green. A kernel positive is a test that:
+
+- runs `build_kernel` (the run path the gate harness uses) for at least one tick with a forced violation;
+- reads the row the metric module emits (`compute`, or `pool` for a pooled row) and asserts its `violations > 0`; asserting a private ledger counter is not enough;
+- where the row's examples carry an entity id, asserts that an example names the forced entity; where they carry none by design (V2 book totals, V6 coin totals, V7 pooled `{way, why}`, V4's consumption key, V1's `{group}|without_transfer`), pins the example's key instead; a capped example list may be checked by membership in the forced set (V5).
+
+A test that builds the update by hand does not count (`test_v8_fires` case (a) uses the real ApplyPath and RunLedger but bypasses the kernel pipeline).
+
+The map `tests/simulation_quality/rpg_gate/kernel_positives.yaml` gives each validity id its kernel positive node ids (rpg's tests; the format is testing's). The lint `tests/architecture/test_rpg_gate_validity_rows_have_kernel_positives.py` fails when a required id (either level) has no entry, when an entry names an id that is not required, when a node id is not a test function in its file, or when the named test reaches no `build_kernel` call or no `compute` / `pool` call. It follows same-module helpers and one-hop imports from repo modules, with no allowlist. Whether the test asserts `violations > 0` and the example is left to review. **A PR that adds a V-id carries its map entry and its kernel positive together.** Controls (the same setup with the check satisfied, `violations == 0`) are not map entries.
+
 ## V8: every entity added mid-run has a declared source
 
 Owner ruling D70: a monster spawner with no parent and no cost is nothing-from-nothing, and no V1-V7 row counted entity adds. V8 lands before baseline v1, so v1's row set contains it. Validity is absolute (rule 8 of `baseline_change_policy.md`): it records no value.
