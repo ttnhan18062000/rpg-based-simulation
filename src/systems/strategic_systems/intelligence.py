@@ -86,6 +86,7 @@ from src.systems.world_systems.intake import ConcernIntakeSystem
 from src.engine.domain_logic import SimulationDomainLogic
 from src.ai.goals import GoalRegistry
 from src.ai.goals.base import GoalScore
+from src.ai.goals.safe_route import retarget_if_threatened
 from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
@@ -1432,6 +1433,18 @@ class StrategicIntelligenceSystem:
                         leads_add_or_update=memory_upd.leads_add_or_update,
                         leads_remove=memory_upd.leads_remove
                     )
+                # SURV-07 (memo row 84): a hunger project whose route to its way is threatened turns to the nearest open way whose route is not,
+                # and keeps it until reached or threatened. The same project, retargeted; the active-objective path, for every kind.
+                if project.kind == "hunger":
+                    _retargeted = retarget_if_threatened(entity, state, project)
+                    if _retargeted is not None:
+                        return StrategicUpdate(
+                            projects_add_or_update=[_retargeted],
+                            current_objective_id_set=_retargeted.active_objective_id,
+                            boredom_delta=boredom_upd,
+                            leads_add_or_update=memory_upd.leads_add_or_update,
+                            leads_remove=memory_upd.leads_remove
+                        )
                 if project.kind == "fatigue" and entity.biological.sleep_debt < 20.0:
                     return StrategicUpdate(
                         projects_add_or_update=[replace(project, status=ProjectStatus.COMPLETED)],

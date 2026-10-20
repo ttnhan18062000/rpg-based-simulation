@@ -847,6 +847,33 @@ others, not a reflex.
     the amendment after v1 with the gate's starvation check recorded as a known red (declined by
     the owner, 2026-10-20: it would narrow decision 54).
 
+- **Amendment, the pull aims at a way it can reach (decided by rpg-designer under owner
+  delegation, 2026-10-20; row 84 of the memo; refines row 56's "nearest open way"). In effect
+  before baseline v1 (the owner's call, 2026-10-20).** The v1 gate run on 7b1528861 had one
+  starvation death (`crowded_frontier`, seed 45, raider 27, t1091). Its hunger project aimed at
+  the town inn from t633 and never changed; from t900 it walked toward the inn and fled back each
+  time townsfolk on the route came into view, at hp 1-2, about 190 ticks, while an open forage
+  node about as far the other way had no threat near it. No hostile ever acted on it.
+  - **The rule:** the hunger pull aims at the nearest open way (per the kind's diet and the
+    service rules) whose route is not threatened. A route is threatened when a hostile the
+    subject would flee from, as it perceives or remembers it, lies on or beside the route. When
+    the way a subject is pursuing becomes threatened, it turns to the nearest open way whose
+    route is not.
+  - **It holds its choice:** the new way is kept until reached or until it is itself
+    threatened. A threat that drops out of view does not send the subject back; out of view is
+    not gone.
+  - **When every way is threatened,** the nearest is kept, and the flee rules decide as before
+    (row 83: a threat acting on the subject comes first).
+  - **Fear stays:** a subject near death still flees a hostile it sees, acting or not. What
+    changes is where it goes for food afterwards, not whether it flees.
+  - **Not a count or a timer:** the trigger is a threat on the route, not a number of
+    interruptions or ticks.
+  - **Alternatives not taken:** re-planning after N interrupted walks (a tuning count);
+    ignoring seen but non-acting hostiles once starving (walks a dying subject into a guard);
+    re-choosing without holding (the subject swings back to the first way each time the threat
+    leaves view, the shuttle seen); recording the gate's starvation check as a known red at v1
+    (declined by the owner, 2026-10-20, as for row 83).
+
 - **Amendment, providing for a coming need (decided by the owner directly, 2026-10-09; row 55 of
   the memo):**
 
