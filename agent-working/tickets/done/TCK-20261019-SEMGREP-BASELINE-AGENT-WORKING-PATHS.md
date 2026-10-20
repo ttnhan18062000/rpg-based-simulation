@@ -85,7 +85,7 @@ None.
 SARIF `semgrep` artifact of the latest main security-scan run (39367942743), `ruleId` values:
 - `yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag` at `.github/workflows/pr-body-lint.yml:17`
 - `python.lang.security.audit.dangerous-os-exec-tainted-env-args.dangerous-os-exec-tainted-env-args` at `tools/sessions/launch.py:516`
-`pr-body-lint.yml` checkout is now pinned to `3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1`. `launch.py` carries a reason line above the `os.execvpe` call and `# nosemgrep: python.lang.security.audit.dangerous-os-exec-tainted-env-args.dangerous-os-exec-tainted-env-args` on it. No behaviour change.
+`pr-body-lint.yml` checkout is pinned (this edit was identical to #690's, which landed first) to `3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1`. `launch.py` carries a reason line above the `os.execvpe` call and `# nosemgrep: python.lang.security.audit.dangerous-os-exec-tainted-env-args.dangerous-os-exec-tainted-env-args` on it. No behaviour change.
 
 ## Test Summary
 `semgrep` is not installed locally, so AC 3 rests on the PR's own security-scan run (to be read on the batch PR).
@@ -96,4 +96,4 @@ SARIF `semgrep` artifact of the latest main security-scan run (39367942743), `ru
 - `tools/sessions/launch.py`
 
 ## Completion Summary
-The two agent-working-owned baseline findings are addressed in code: a SHA pin and a reviewable nosemgrep suppression with its reason. The scan stays report-only.
+The pin half of this ticket landed first via #690 (`TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA`, same line, same SHA); after merging main this branch's `pr-body-lint.yml` has no diff against main, and no pin test was added here (#690 owns `test_pr_body_lint_workflow_pinned.py`). This ticket's remaining change is the `launch.py` nosemgrep. The two agent-working-owned baseline findings are addressed in code: a SHA pin and a reviewable nosemgrep suppression with its reason. The scan stays report-only.
