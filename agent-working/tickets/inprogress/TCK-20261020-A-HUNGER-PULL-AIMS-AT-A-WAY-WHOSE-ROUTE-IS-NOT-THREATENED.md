@@ -15,7 +15,7 @@ tags: []
 The hunger pull aims at the nearest open way whose route is not threatened, and holds its choice until reached or threatened (SURV-07 amendment, memo row 84)
 
 ## Status
-INPROGRESS
+BLOCKED
 
 ## Tier
 standard
@@ -57,6 +57,7 @@ src/ai/goals/safe_route.py, src/systems/strategic_systems/intelligence.py
 - Beside the route is the hostile's own attack reach (combat.range) plus one step of the straight line (designer ruling 2026-10-20); a bent route is judged by its chord.
 
 ## Implementation Notes
+PARKED 2026-10-20 (designer ruling via rpg-planner): the paired run on d805aeaa7 left V3 crowded 45 at 1 (raider 27 still starves at t1091). Cause: the tactical pass (_perceived_threats, no alive test) panics at corpses of workers 3 and 2 and guard 11, while this step's perceived_hostiles filters the dead, so the brain tick sees no threat and the objective holds. The corpse fix (TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT, branch rpg-corpse-not-a-threat) goes first; this step returns as TCK-20261020-PARKED-HUNGER-SAFE-ROUTE-STEP-AFTER-V1. Branch rpg-hunger-safe-route stays at its tip d805aeaa7 plus this note; no PR.
 
 ## Test Summary
 
