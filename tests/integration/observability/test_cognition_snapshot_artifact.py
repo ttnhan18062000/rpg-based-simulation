@@ -78,7 +78,7 @@ class TestCognitionSnapshotArtifact:
 
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
-        self.test_run_id = "test_run_cognition_rec"
+        self.test_run_id = f"test_run_cognition_rec_{os.getpid()}"  # per-process: the four tests may run on different xdist workers
         self.test_run_dir = f"data/runs/{self.test_run_id}"
         if os.path.exists(self.test_run_dir):
             shutil.rmtree(self.test_run_dir)
