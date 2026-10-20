@@ -8424,6 +8424,24 @@
   tags:
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001.md
+  ticket_id: TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001
+  title: '`icon_lookalikes.all_icon_sprites()` returns r0001 art for the 7 revised
+    icon keys; find which consumers mean "adopted now" and point them at the current
+    art'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - visual_assets/review/icon_lookalikes.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001/test_plan.md
+  tags:
+  - architecture
+  - testing
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
   ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
   title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
@@ -8533,21 +8551,6 @@
   - create_watchdog_trip
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001.md
-  ticket_id: TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001
-  title: '`icon_lookalikes.all_icon_sprites()` returns r0001 art for the 7 revised
-    icon keys; find which consumers mean "adopted now" and point them at the current
-    art'
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-19'
-  related_code_areas:
-  - visual_assets/review/icon_lookalikes.py
-  artifact_files: []
-  tags:
-  - architecture
-  - testing
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
   ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
