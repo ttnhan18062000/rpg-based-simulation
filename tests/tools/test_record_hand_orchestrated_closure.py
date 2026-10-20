@@ -101,12 +101,13 @@ def test_build_records_defaults_agent_but_respects_per_event_override():
     assert event_records[1]["agent"] == "implementer"
 
 
-def test_build_records_agent_count_matches_event_count():
+def test_build_records_agent_count_is_null_unknown_not_the_event_count():
     run_record, event_records = build_records(
         "TCK-FAKE", "hotfix", "DONE", _MINIMAL_EVENTS,
         None, None, "implement-ticket", "claude", "claude",
     )
-    assert run_record["agent_count"] == len(event_records) == 3
+    assert "agent_count" in run_record and run_record["agent_count"] is None  # unknown, key still present
+    assert len(event_records) == 3
 
 
 def test_build_records_start_end_ts_default_to_now_when_omitted():
@@ -196,10 +197,10 @@ class TestCLIWritesRealRecords:
         assert run_record["run_id"] == "TCK-FAKE-CLI"
         assert run_record["tier"] == "hotfix"
         assert run_record["final_status"] == "DONE"
-        assert run_record["agent_count"] == 3  # the recorder-added Document-Update is not an agent call
+        assert "agent_count" in run_record and run_record["agent_count"] is None  # unknown: a hand closure sees no agent calls
 
         event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
-        # the three narrated phases plus the recorder-added Document-Update (hotfix plan: full; TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED), not counted in agent_count
+        # the three narrated phases plus the recorder-added Document-Update (hotfix plan: full; TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED), and agent_count is null
         assert [e["phase"] for e in event_lines].count("Document-Update") == 1 and len(event_lines) == 4
         assert [e["seq"] for e in event_lines] == [1, 2, 3, 4]
 

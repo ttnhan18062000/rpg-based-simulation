@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN
-phase: open
+phase: done
 date: 2026-10-20
 tags: [agent-monitoring, data-quality, retro]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality, retro]
 Hand closures record agent_count as unknown (null) instead of a phase-event count, and the retro's "Avg agents per run" leaves them out
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -86,7 +86,16 @@ From RETRO-2026-W43's final note (40 runs), item 3, proposal C. The owner approv
 - 2026-10-20 (agent-working-planner): owner yes (via lead-planner), with the note that it supersedes #690's agent_count change for hand closures and must keep the schema and retro consistent. Batch 7, dispatched to agent-working-implementer.
 
 ## Test Summary
+tests/tools/test_record_run.py (null accepted, other required fields still reject null), test_closure_recorder_folded_phases.py (#690 test updated to the null contract), test_record_hand_orchestrated_closure.py (2 updated), test_generate_retro.py (3 new; frozen-report row relabelled). Affected files pass.
 
 ## Files Changed
+- tools/agent-monitoring/record_hand_orchestrated_closure.py (`agent_count: None`; `recorder_added` removed)
+- tools/agent-monitoring/record_run.py (`NULLABLE_REQUIRED`)
+- tools/agent-monitoring/generate_retro.py (average over non-null runs, n shown, n/a)
+- tools/agent-monitoring/query.py (prints `unk`)
+- docs/agent-monitoring/schema.md, docs/agent-monitoring/README.md
+- tests/tools/test_record_run.py, test_closure_recorder_folded_phases.py, test_record_hand_orchestrated_closure.py, test_generate_retro.py
 
 ## Completion Summary
+Hand closures now write `agent_count: null` (key still required). The retro averages only non-null runs and labels the row with n. #690's subtraction is gone and its test updated, not deleted. Not changed (out of scope): the retro's "Total agent calls" row still counts events, so it stays misleading for hand runs.
+

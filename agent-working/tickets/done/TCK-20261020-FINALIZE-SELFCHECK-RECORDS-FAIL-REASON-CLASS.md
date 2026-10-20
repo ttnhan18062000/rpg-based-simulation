@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-FINALIZE-SELFCHECK-RECORDS-FAIL-REASON-CLASS
-phase: open
+phase: done
 date: 2026-10-20
 tags: [agent-monitoring, data-quality, retro]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality, retro]
 The done-checker's Finalize self-check records a short reason class for each failing condition in its gate-verdict row
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -91,7 +91,14 @@ The planner's reading of the code is a hypothesis, to be confirmed by the new fi
 - 2026-10-20 (agent-working-planner): owner yes (via lead-planner). Batch 7, dispatched to agent-working-implementer.
 
 ## Test Summary
+tests/tools/test_done_checker_static.py (9 new: one per reason class, 2-tuple compatibility, reasons only on FAIL rows) and tests/tools/test_gate_verdicts.py (3 new: row sub_reasons only for FAILs, malformed dropped, validate_record flags). Both files pass in full (214).
 
 ## Files Changed
+- tools/gate_checks/done_checker_static.py (`_Reasoned` 2-tuple subclass, `_fail`, reason on each Finalize FAIL branch, optional `reason` key in `run_finalize_selfcheck`, `sub_reasons` passed from `main`)
+- tools/agent-monitoring/gate_verdicts.py (`sub_reasons` in `build_record`/`validate_record`)
+- docs/agent-monitoring/schema.md
+- tests/tools/test_done_checker_static.py, tests/tools/test_gate_verdicts.py
 
 ## Completion Summary
+Each failing Finalize condition now records a closed-set reason class on the gate-verdict row as optional `sub_reasons`. Mechanism: a `(status, evidence)` tuple subclass carrying `.reason`, so every existing caller is unchanged. Precheck is untouched. The planner's hypothesis (most registry FAILs are `registry_stale_on_disk`) is left to the W44 retro to confirm from the new field.
+
