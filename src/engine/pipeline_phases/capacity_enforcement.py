@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate, StrategicUpdate
 
-from src.core.strategic import live_projects
+from src.core.strategic import live_projects_in_the_trim
 from src.strategy.capacity import CapacityService
 from src.core.updates import EntityUpdate, StrategicUpdate
 
@@ -95,7 +95,7 @@ class CapacityEnforcementPhase:
                     all_projects.pop(p_id, None)
                     
                 project_removals = CapacityService.trim_dict(
-                    live_projects(all_projects),
+                    live_projects_in_the_trim(all_projects),  # SURV-07: a live hunger or sleep project is outside the trim
                     profile.max_active_projects,
                     lambda p: p.score
                 )

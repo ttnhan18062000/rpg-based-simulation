@@ -16,7 +16,7 @@ from typing import List, Optional
 from src.core.state import EntityState
 from src.core.strategic import (
     BlockerState, LeadKind, LeadState, LeadCertainty, ObjectiveState, ObjectiveStatus,
-    CognitionProfile, live_projects
+    CognitionProfile, live_projects_in_the_trim
 )
 from src.core.updates import StrategicUpdate
 from src.engine.domain.lead_routing import LeadRoutingSystem
@@ -199,8 +199,11 @@ class DetourSuggestionSystem:
                 return (1, p.id)
             return (0, p.id)
             
+        # SURV-07: a live hunger or sleep project is outside the trim (it neither counts toward the cap here nor is removed by it), keyed on the
+        # project's kind and not on the need's level, so it does not re-enter the count when the need drops below its onset mid-meal and a suspended
+        # project is never evicted for it. The other projects are trimmed exactly as before.
         all_projects = sorted(
-            live_projects(entity.strategic.projects).values(),
+            live_projects_in_the_trim(entity.strategic.projects).values(),
             key=_proj_priority,
             reverse=True
         )

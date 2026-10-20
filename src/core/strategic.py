@@ -352,6 +352,18 @@ def live_projects(projects: Mapping[str, ProjectState]) -> Dict[str, ProjectStat
     return {pid: p for pid, p in projects.items() if is_live_project(p)}
 
 
+#: The project kinds of the standing needs (the values of GoalKind.HUNGER and GoalKind.FATIGUE).
+NEED_PROJECT_KINDS = frozenset({"hunger", "fatigue"})
+
+
+def live_projects_in_the_trim(projects: Mapping[str, ProjectState]) -> Dict[str, ProjectState]:
+    """The live projects the capacity trims count and may remove: every live project except a hunger or sleep project (SURV-07).
+
+    A live need project is outside the trim, keyed on its KIND and not on the need's level, so it does not re-enter the count when the need falls
+    below its onset mid-meal and a suspended project is never evicted for it. Admission is `intelligence._escalated_need_wins`."""
+    return {pid: p for pid, p in live_projects(projects).items() if getattr(p.kind, "value", p.kind) not in NEED_PROJECT_KINDS}
+
+
 def has_project_capacity(projects: Mapping[str, ProjectState], max_active_projects: int) -> bool:
     """True when one more project can start: fewer live projects than the limit."""
     return sum(1 for p in projects.values() if is_live_project(p)) < max_active_projects
