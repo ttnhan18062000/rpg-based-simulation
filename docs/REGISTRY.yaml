@@ -7898,7 +7898,10 @@
   - src/observability/event_recorder.py
   - src/simulation_quality/
   - tools/ (calibrate_simq, simq compare)
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE/test_plan.md
   tags:
   - observability
 - type: ticket

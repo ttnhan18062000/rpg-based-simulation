@@ -80,3 +80,4 @@ src/simulation_quality/{offline,quality_hub,quality_report}.py, tools/{calibrate
 
 ## Completion Summary
 SimQ now scores a run from its lossless event file through one offline module; calibration, the long-run observation and a new run-dir CLI use it. The simulation hash is untouched (no engine change).
+The offline report's `generated_at` is the fixed marker `offline-replay` (accepted by rpg-planner: a byte-identical report matters more than a wall-clock stamp; the live report is unchanged). `related_entity_ids` is kept and a missing event file is refused.
