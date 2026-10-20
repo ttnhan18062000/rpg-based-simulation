@@ -96,10 +96,22 @@ def test_a_timeout_is_no_data(tmp_path):
     assert _doc(tmp_path, "a", h.doc_name(WORLD, 1))["reason"] == "harness_error"
 
 
-def test_run_directories_are_removed_by_id_and_cost_is_recorded(tmp_path):
+def test_run_directories_are_removed_by_id_and_cost_is_recorded(tmp_path, monkeypatch):
+    # The glob carries this invocation's own token: without it, a parallel worker's live run directory (same world,
+    # seeds and SHA) matches and the assertion fails (TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST).
+    tokens = set()
+    real_run_one = h.run_one
+
+    def spy(*args, **kw):
+        tokens.add(kw["token"])
+        return real_run_one(*args, **kw)
+
+    monkeypatch.setattr(h, "run_one", spy)
     matrix = _run(tmp_path, "a")
+    assert len(tokens) == 1
+    (token,) = tokens
     for seed in (1, 2):
-        assert not list((ROOT / h.RUNS_DIR).glob(f"{h.run_id_for(WORLD, seed, SHA)}*"))
+        assert not list((ROOT / h.RUNS_DIR).glob(f"{h.run_id_for(WORLD, seed, SHA, token)}*"))
     assert all(r["wall_seconds"] > 0 and r["peak_rss_mb"] > 0 for r in matrix["runs"])
     assert "wall_seconds" in matrix and "peak_rss_mb" not in _doc(tmp_path, "a", h.doc_name(WORLD, 1))  # cost stays out of the document
 
