@@ -47,6 +47,7 @@ Scope is testing's files only. pr-body-lint.yml is agent-working's (TCK-20261019
 2. **Reuse platform's SHAs** where the action and version match: checkout `3d3c42e5…` (# v7.0.1) and upload-artifact `cf430e03…` (# v7.0.2), taken from platform's workflows on main. Copy the full 40-hex values.
    - For every other action, resolve the SHA of the release tag with `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`. Dereference an annotated tag to its commit.
    - Record each action → SHA → version in Implementation Notes.
+   - **Check every SHA against its tag ref, the reused platform ones too** (lead-planner-u24, 2026-10-20): `gh api repos/<owner>/<repo>/git/ref/tags/<vX.Y.Z>`, dereferencing an annotated tag. The pinned SHA must equal the tag's commit. Paste the check output in Implementation Notes. The pin form is the one platform's #668 uses: full SHA + `# vX.Y.Z`.
 3. **setup-node v7:** check the v7 release notes for input changes. `node-version: 24` (#655), `cache: npm` and `cache-dependency-path` must keep working. If an input changed, stop and report.
 4. **Static guard:** a test over these four workflows fails on any `uses:` that is not a 40-hex SHA followed by a `# v` comment, except local `./` actions. Add a regression snippet.
 5. **Existing pins:** the CI-runtime and tools static tests (`test_ci_xdist_in_critical_path_jobs.py`, `test_ci_split_tools_jobs.py`, `test_ci_step_summary_reporting.py` and similar) match actions by NAME. Run them. If any matches a ref literally, change it to match by name, as TCK-20261015-SETUP-UV-PIN did.
@@ -65,7 +66,7 @@ Scope is testing's files only. pr-body-lint.yml is agent-working's (TCK-20261019
 - [ ] AC5: the first security-scan main run after merge shows 0 `mutable-action-tag` findings in these four files. Quote the run id (a post-merge check).
 
 ## Related Tickets
-- TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN (#667; merge it FIRST, since both edit the same files)
+- TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN (#667, MERGED e52719485 on 2026-10-20; this ticket is unblocked)
 - TCK-20261019-TEST-YML-NODE-24-IN-FRONTEND-AND-JSCPD-LANES (#655, node-version 24)
 - TCK-20261015-SETUP-UV-PIN-IN-SPLIT-TOOLS-JOBS-TEST-BLOCKS-DEPENDABOT (match by name)
 - TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS (registers rpg-gate-report.yml to testing)
