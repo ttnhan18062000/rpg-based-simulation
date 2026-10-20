@@ -1,0 +1,31 @@
+## responses by status_class over the whole drill (increase, 17:49:59Z to 17:58:51Z)
+  2xx 218054
+## 5xx during the outage window only (17:51:29Z to 17:54:32Z)
+  none
+## Locust (aggregate, whole run)
+ requests 217618 failures 0 req/s 409.9 p50/p95/p99 18 52 79
+ history rows 3169
+Traceback (most recent call last):
+  File "<stdin>", line 16, in <module>
+ValueError: could not convert string to float: 'N/A'
+## ai_worker
+started=2026-10-19T17:47:35.007001884Z restarts=0 status=running
+ai_worker started=2026-10-19T17:47:35.007001884Z restarts=0 status=running
+name observatory:consumers consumers 1 pending 0 last-delivered-id 1792432766002-0 entries-read 26293 lag 0 
+1001
+ai_worker log (outage window):
+ERROR:src.observability.stream.consumer:RedisStreamConsumer read error: Connection closed by server.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+ERROR:src.observability.stream.consumer:RedisStreamConsumer failed to connect/create group: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+WARNING:__main__:[WARNING] LIVE ANOMALY: GovernorDegradedLive on system: Governor degraded/survival mode sustained for 29 ticks (limit=5)
+WARNING:__main__:[WARNING] LIVE ANOMALY: GovernorDegradedLive on system: Governor degraded/survival mode sustained for 16 ticks (limit=5)
+WARNING:__main__:[WARNING] LIVE ANOMALY: GovernorDegradedLive on system: Governor degraded/survival mode sustained for 11 ticks (limit=5)

@@ -1,0 +1,27 @@
+utc,latency_rule,error_rule,ntfy_firing,ntfy_resolved,server_p95_5m_s
+17:11:33,firing/Alerting,inactive/Normal (NoData),1,0,0.333
+17:11:57,firing/Alerting,inactive/Normal (NoData),1,0,0.307
+17:12:12,firing/Alerting,inactive/Normal (NoData),1,0,0.294
+17:12:28,firing/Alerting,inactive/Normal (NoData),1,0,0.31
+17:12:43,firing/Alerting,inactive/Normal (NoData),1,0,0.332
+17:12:58,firing/Alerting,inactive/Normal (NoData),1,0,0.354
+17:13:13,firing/Alerting,inactive/Normal (NoData),1,0,0.376
+17:13:28,firing/Alerting,inactive/Normal (NoData),1,0,0.382
+17:13:43,firing/Alerting,inactive/Normal (NoData),1,0,0.382
+17:13:59,firing/Alerting,inactive/Normal (NoData),1,0,0.399
+17:14:14,firing/Alerting,inactive/Normal (NoData),1,0,0.418
+17:14:29,firing/Alerting,inactive/Normal (NoData),1,0,0.435
+17:14:44,firing/Alerting,inactive/Normal (NoData),1,0,0.43
+17:14:59,firing/Alerting,inactive/Normal (NoData),1,0,0.43
+17:15:14,firing/Alerting,inactive/Normal (NoData),1,0,0.43
+17:15:37,firing/Alerting,inactive/Normal (NoData),1,0,nan
+17:15:52,inactive/Normal (NoData),inactive/Normal (NoData),1,0,nan
+17:16:17,inactive/Normal (NoData),inactive/Normal (NoData),1,1,nan
+17:16:32,inactive/Normal (NoData),inactive/Normal (NoData),1,1,nan
+17:16:48,inactive/Normal (NoData),inactive/Normal (NoData),1,1,nan
+17:17:03,inactive/Normal (NoData),inactive/Normal (NoData),1,1,nan
+17:17:18,inactive/Normal (NoData),inactive/Normal (NoData),1,1,nan
+17:17:33,inactive/Normal (NoData),inactive/Normal (NoData),1,1,nan
+17:17:48,inactive/Normal (NoData),inactive/Normal (NoData),1,1,nan
+17:18:03,inactive/Normal (NoData),inactive/Normal (NoData),1,1,nan
+17:18:19,inactive/Normal (NoData),inactive/Normal (NoData),1,1,nan

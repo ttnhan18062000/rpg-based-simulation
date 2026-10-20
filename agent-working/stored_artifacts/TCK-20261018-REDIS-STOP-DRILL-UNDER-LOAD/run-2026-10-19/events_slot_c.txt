@@ -1,0 +1,3 @@
+17:47:12 slot (c) start
+17:47:24 start stack incl. ai_worker (fresh containers, grafana limit 1024m)
+17:49:58 drill start (users=10, head 90s, outage 180s, tail 60s)

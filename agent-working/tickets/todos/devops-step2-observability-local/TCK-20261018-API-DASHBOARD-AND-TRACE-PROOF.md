@@ -67,6 +67,8 @@ reference for the alert rule.
 - R3's test that `src/engine/**` imports no `opentelemetry` module exists and passes.
 - `python3 -c "import json; json.load(open('docker/grafana/dashboards/api.json'))"` passes, and the dashboard JSON has
   no `id` field and no datasource names, only uids.
+- (amended 2026-10-19) The dashboard's "SLO" row uses exactly the PromQL of `docker/grafana/provisioning/alerting/rules-slo.yaml`
+  (`TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK`, the single source). The test plan proves it with a jq/grep equality check of the expressions (no `tests/**`).
 
 ## Related Tickets
 Epic `TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL`. Needs `TCK-20261018-TEMPO-TRACE-BACKEND`,

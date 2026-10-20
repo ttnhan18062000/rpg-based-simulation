@@ -1,0 +1,36 @@
+## ntfy messages (published time)
+17:01:05 [firing] ApiLatencyP95High | API p95 latency above 300 ms (2xx, excluding /health and unmatched) / Runbook: docs/runbooks/api-latency-slo.md | prio 4 ['bell']
+17:14:51 [firing] DiskWillFillIn24h | / is predicted to fill within 24 hours / Runbook: docs/runbooks/disk-space.md | prio 4 ['bell']
+17:16:17 [resolved] ApiLatencyP95High | API p95 latency above 300 ms (2xx, excluding /health and unmatched) / Runbook: docs/runbooks/api-latency-slo.md | prio 4 ['bell']
+17:29:51 [resolved] DiskWillFillIn24h | / is predicted to fill within 24 hours / Runbook: docs/runbooks/disk-space.md | prio 4 ['bell']
+17:33:05 [firing] ApiLatencyP95High | API p95 latency above 300 ms (2xx, excluding /health and unmatched) / Runbook: docs/runbooks/api-latency-slo.md | prio 4 ['bell']
+17:43:05 [resolved] ApiLatencyP95High | API p95 latency above 300 ms (2xx, excluding /health and unmatched) / Runbook: docs/runbooks/api-latency-slo.md | prio 4 ['bell']
+17:52:50 [firing] RedisDown | Redis is down (cause alert): events are being lost while the API keeps serving / Runbook: docs/runbooks/redis-down.md | prio 4 ['bell']
+17:57:50 [resolved] RedisDown | Redis is down (cause alert): events are being lost while the API keeps serving / Runbook: docs/runbooks/redis-down.md | prio 4 ['bell']
+## samples around the outage (utc,backend /health,redis_up,rules)
+ts,backend_health_http,redis_up,rules
+2026-10-19T17:51:32Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:51:48Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:52:03Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=pending/ok
+2026-10-19T17:52:19Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=pending/ok
+2026-10-19T17:52:34Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=firing/ok
+2026-10-19T17:52:50Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=firing/ok
+2026-10-19T17:53:05Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=firing/ok
+2026-10-19T17:53:21Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=firing/ok
+2026-10-19T17:53:36Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=firing/ok
+2026-10-19T17:53:52Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=firing/ok
+2026-10-19T17:54:08Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=firing/ok
+2026-10-19T17:54:23Z,200,0,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=firing/ok
+2026-10-19T17:54:39Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=firing/ok
+2026-10-19T17:54:54Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:55:10Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:55:25Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:55:41Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:55:57Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:56:12Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:56:28Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:56:43Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:56:59Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:57:15Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:57:30Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
+2026-10-19T17:57:46Z,200,1,ApiErrorRateHigh=inactive/ok ApiLatencyP95High=inactive/ok RedisDown=inactive/ok
