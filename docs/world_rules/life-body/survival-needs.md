@@ -822,9 +822,12 @@ others, not a reflex.
   that never engaged, and never ate.
   - **The rule:** once hunger is past its consequence line and is taking the subject's health,
     starvation is itself a present threat to its life (Bible 04 §1 Tier 1, not only Tier 2). The
-    subject weighs it against the threat it appraises (flight against food); neither wins by
-    default. A threat counts as present by the subject's appraisal (decision 47), not by
-    adjacency alone.
+    two threats are weighed by immediacy: a threat acting on the subject (attacking it, or a
+    flight with somewhere to go) still comes first; a threat the subject only appraises, one not
+    acting on it, no longer holds the hunger back. The subject eats with a wolf watching, not
+    while it bites. A threat counts as present by the subject's appraisal (decision 47), not by
+    adjacency alone. (As built, 70402779d: at the goal level the starving pull, 155-160, exceeds
+    the retreat ceiling, 150; the acting threat wins in the tactical pass.)
   - **Not a timer:** a threat does not stop counting after some number of ticks. A timer has no
     fiction behind it; the desperation line does.
   - **Also a reading of this Rule, not a change:** a flight with no destination (a panic retreat
@@ -835,7 +838,12 @@ others, not a reflex.
     already in reach as an in-place act, like eating carried food; service still passes the
     relationship gate (EXCH-02), payment and opening.
   - **Alternatives not taken:** a threat that expires after N ticks (no fiction); starvation
-    overriding every threat (the alternative already rejected above, against Bible 04 §1);
+    overriding every threat (the alternative already rejected above, against Bible 04 §1; an
+    acting threat still wins here); a magnitude weighing inside the goal scores, by a cap, a
+    threat-scaled pull or a direct comparison (each adds a tuning constant, decision 33); the
+    same escalation applied to retreat in its own consequence band (principled, but it changes
+    retreat in every world; parked after v1, its own step, if a subject is seen eating into a
+    fatal attack);
     the amendment after v1 with the gate's starvation check recorded as a known red (declined by
     the owner, 2026-10-20: it would narrow decision 54).
 
