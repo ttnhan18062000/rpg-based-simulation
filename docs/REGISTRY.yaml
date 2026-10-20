@@ -7708,6 +7708,18 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT.md
+  ticket_id: TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT
+  title: test_observability_websocket_suite step 5 waits for the synthetic walk event
+    by wall-clock deadline, not by a count of 10 messages
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/api/test_observability_websocket.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM.md
   ticket_id: TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM
   title: 'The request-duration histogram gets a 0.3 s bucket so the API SLO alert
@@ -7747,6 +7759,22 @@
   tags:
   - platform
   - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-DEPLOY-DOCS-SHA-PINS-AND-FRONTEND-NONROOT.md
+  ticket_id: TCK-20261019-DEPLOY-DOCS-SHA-PINS-AND-FRONTEND-NONROOT
+  title: 'Platform''s two Semgrep baseline findings: pin deploy-docs.yml''s actions
+    by commit SHA, run the frontend image as non-root; record the repo-wide pin rule'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/deploy-docs.yml
+  - docs/guides/delivery_process.md
+  artifact_files: []
+  tags:
+  - platform
+  - delivery
+  - security
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-GATE-VALIDITY-CHECKS-FIRE-THROUGH-THE-REAL-KERNEL-AND-V3-SEES-EVERY-STARVATION-DEATH.md
   ticket_id: TCK-20261019-GATE-VALIDITY-CHECKS-FIRE-THROUGH-THE-REAL-KERNEL-AND-V3-SEES-EVERY-STARVATION-DEATH
@@ -7855,6 +7883,23 @@
   date: '2026-10-19'
   related_code_areas:
   - .github/workflows/test.yml, slow-regression.yml, slow-regression-watchdog.yml
+  - tests/static/
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-TEST-WORKFLOWS-PIN-ACTIONS-BY-SHA.md
+  ticket_id: TCK-20261019-TEST-WORKFLOWS-PIN-ACTIONS-BY-SHA
+  title: testing's workflows pin every action by full commit SHA with a `# vX.Y.Z`
+    comment, setup-node moves to its current major, and a static test keeps every
+    ref a SHA.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/test.yml, slow-regression.yml, slow-regression-watchdog.yml,
+    rpg-gate-report.yml
   - tests/static/
   artifact_files: []
   tags:
