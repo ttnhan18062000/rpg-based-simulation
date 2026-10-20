@@ -79,6 +79,17 @@ testing-planner ruling, 2026-10-19: this becomes a **standing contract rule**. A
 
 ## Assumptions / Open Questions
 - Unblock: rpg's combined pre-v1 PR merges, and rpg sends the node ids per V-id.
+- **Node ids from rpg-planner, 2026-10-20** (on rpg-gate-positive-tests 1d27d31b2, which goes into rpg-pre-v1-fixes). F = `tests/integration/observability/test_gate_validity_checks_fire_through_the_real_kernel.py`:
+  - V1: PENDING (rpg's Lane B is adding it; the ticket stays BLOCKED until rpg sends the id).
+  - V2: `F::test_v2_fires_when_a_body_with_meat_decays_and_the_decay_sink_is_silent`
+  - V3: `F::test_v3_fires_for_a_starvation_death_beside_an_open_way_even_when_the_dying_entity_had_no_update`
+  - V4: `tests/integration/observability/test_v4_counts_a_forbidden_meal_through_the_real_kernel.py::test_a_meat_only_body_that_eats_plant_food_in_a_real_run_is_counted`
+  - V5: `F::test_v5_fires_for_an_alive_entity_that_acts_outside_the_world_extent`
+  - V6: `F::test_v6_fires_when_an_entity_holds_more_coin_than_the_world_ever_declared`
+  - V7 (pooled): `F::test_v7_fires_in_the_pooled_rows_of_real_runs_where_people_never_use_a_declared_way`
+  - V8: `F::test_v8_fires_for_an_entity_added_mid_run_with_no_declared_source`
+  - Controls (not map entries): the `::test_v2_sink_example_is_absent_...` and `::test_v3_records_one_death_once_...` tests.
+  - Implementer: if these tests reach `build_kernel` through a helper imported from another module (not one defined in the same module), widen the static check to follow that one import, or stop and report. Do not allowlist.
 - If a check can't be forced through build_kernel in a test-sized run, rpg says so with a reason. That id gets a ruling from testing-planner; it isn't silently skipped.
 
 ## Implementation Notes
