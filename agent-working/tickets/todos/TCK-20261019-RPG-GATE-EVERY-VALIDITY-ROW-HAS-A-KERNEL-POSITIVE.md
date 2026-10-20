@@ -88,7 +88,12 @@ testing-planner ruling, 2026-10-19: this becomes a **standing contract rule**. A
   - V6: `F::test_v6_fires_when_an_entity_holds_more_coin_than_the_world_ever_declared`
   - V7 (pooled): `F::test_v7_fires_in_the_pooled_rows_of_real_runs_where_people_never_use_a_declared_way`
   - V8: `F::test_v8_fires_for_an_entity_added_mid_run_with_no_declared_source`
-  - Tightened at 1571b8810: V3, V5 and V8 assert that the example names the forced entity (V8 checks the exact [(newcomer_id, apply tick)]). V4's example check is to be confirmed with rpg.
+  - Tightened at 1571b8810: V3, V5 and V8 assert that the example names the forced entity (V8 checks the exact [(newcomer_id, apply tick)]). V4 (rpg-planner, 2026-10-20): **not yet a kernel positive.** The test at 1571b8810 asserts the private `RunLedger._diet_breaches` counter and never reaches compute or the emitted row. Lane A is fixing it on rpg-v4-consumption-check:
+    - assert V4 `violations > 0` on the real compute's row;
+    - pin the consumption key `meat|CARRIED_FOOD|wild_berries` (V4's examples carry no entity id today, so this falls under the pin-the-key clause);
+    - add a negative control (diet gate unpatched, V4 == 0).
+    The node id is unchanged. Adding the eater id to V4's examples is rpg's after-v1 follow-up. Unblocking now also waits on this fix.
+  - Lesson for the lint (the implementer adds it if it stays cheap): calling build_kernel is not enough. The static check should also require that the test reads the emitted validity row (a call to the metric module's compute or pool), not just a private ledger attribute. If that isn't cheap to check statically, leave it to PR review and say so in the format doc.
   - Controls (not map entries): the `::test_v2_sink_example_is_absent_...` and `::test_v3_records_one_death_once_...` tests.
   - Implementer: if these tests reach `build_kernel` through a helper imported from another module (not one defined in the same module), widen the static check to follow that one import, or stop and report. Do not allowlist.
 - If a check can't be forced through build_kernel in a test-sized run, rpg says so with a reason. That id gets a ruling from testing-planner; it isn't silently skipped.
