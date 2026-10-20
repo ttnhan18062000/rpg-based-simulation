@@ -624,3 +624,140 @@ def test_the_no_row_in_the_baseline_detail_is_shown_for_its_reference():
     base = _baseline(2)
     base["metrics"] = [m for m in base["metrics"] if m["id"] != "O1"]
     assert "no row for this metric in the baseline" in rep.render_markdown(_build(_docs(), refs=_refs(base)))
+
+
+def _keyed(seed, value, key="starved"):
+    return {"id": "O2", "class": "outcome", "scope": "run", "group": "wolves", "key": key, "tick": 100, "value": value, "k": 2.0, "floor": 1.0}
+
+
+def _with_keyed(docs, rows_by_seed):
+    for seed, rows in rows_by_seed.items():
+        docs[("w", seed)]["metrics"] = [m for m in docs[("w", seed)]["metrics"] if m["id"] != "O2"] + rows
+    return docs
+
+
+def _absent(report):
+    return [f for f in report["findings"] if "absent from seed" in f.get("detail", "")]
+
+
+def test_a_keyed_row_absent_from_some_seeds_is_one_contract_error_never_read_as_zero():
+    rows = {s: [_keyed(s, 3.0), _keyed(s, 1.0, "killed")] for s in SEEDS}
+    rows[2], rows[4] = [_keyed(2, 3.0)], [_keyed(4, 3.0)]
+    report = _build(_with_keyed(_docs(), rows))
+    (found,) = _absent(report)
+    assert (found["id"], found["key"], found["state"], found["reason"]) == ("O2", "killed", "no-data", "contract_error")
+    assert found["detail"] == "row absent from seed(s) [2, 4]; every seed reports the same rows"
+    assert [f["state"] for f in report["findings"] if f["id"] == "O2" and f["key"] == "killed"] == ["no-data"]  # the key is not judged on the seeds that have it
+    assert report["no_data_reasons"]["contract_error"] == 1
+    markdown = rep.render_markdown(report)
+    assert "row absent from seed(s) [2, 4]; every seed reports the same rows" in markdown and "contract_error: 1" in markdown  # the tally line names it
+
+
+def test_no_row_set_error_when_every_seed_carries_the_same_keyed_rows():
+    report = _build(_with_keyed(_docs(), {s: [_keyed(s, 3.0 + s)] for s in SEEDS}))
+    assert _absent(report) == [] and report["no_data_reasons"]["contract_error"] == 0
+
+
+def test_a_row_every_seed_lacks_is_not_a_row_set_error():
+    assert _absent(_build(_with_keyed(_docs(), {s: [] for s in SEEDS}))) == []
+
+
+def test_a_validity_row_the_config_does_not_require_is_judged_on_the_row_set_too_but_a_required_one_is_reported_per_seed_only():
+    docs = _docs()
+    docs[("w", 3)]["metrics"] = [m for m in docs[("w", 3)]["metrics"] if m["id"] != "V1"]
+    report = _build(docs)
+    assert len(_absent(report)) == 1 and _absent(report)[0]["id"] == "V1"
+    required = _build(docs, config=_config(required_validity={"run": ("V1",)}))
+    assert _absent(required) == [] and [f for f in required["findings"] if f.get("required_missing")]
+
+
+# ---- shares: an undefined pooled share (TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED, scope 5)
+
+def _share_docs(**row):
+    docs = _docs()
+    docs[("w", None)] = _pooled_doc()
+    docs[("w", None)]["metrics"].append({"id": "O9", "class": "outcome", "scope": "pooled", "group": "*", "floor": 0.1, **row})
+    return docs
+
+
+def test_an_empty_denominator_share_is_no_data_empty_denominator_not_a_contract_error():
+    report = _build(_share_docs(value=None, reason="empty_denominator"), refs=_refs(_baseline(2, pooled=0.4)))
+    (found,) = [f for f in report["findings"] if f["id"] == "O9"]
+    assert (found["state"], found["reason"]) == ("no-data", "empty_denominator")
+    assert report["no_data_reasons"]["empty_denominator"] == 1 and report["no_data_reasons"]["contract_error"] == 0
+    assert report["verdict"] == "green" and "empty_denominator" in rep.render_markdown(report)
+
+
+def test_a_null_pooled_share_without_that_reason_stays_a_contract_error():
+    for extra in ({}, {"reason": "other"}):
+        report = _build(_share_docs(value=None, **extra), refs=_refs(_baseline(2, pooled=0.4)))
+        (found,) = [f for f in report["findings"] if f["id"] == "O9"]
+        assert (found["state"], found["reason"]) == ("no-data", "contract_error"), extra
+
+
+def test_a_defined_share_against_a_baseline_where_it_was_undefined_has_no_reference_never_drift():
+    base = _baseline(2)
+    base["undefined_rows"] = [{"row": "O9:pooled:w:*", "reason": "empty_denominator"}]
+    report = _build(_share_docs(value=0.9), refs=_refs(base))
+    (found,) = [f for f in report["findings"] if f["id"] == "O9"]
+    assert found["state"] == "no-data" and "reason" not in found
+    assert {r["detail"] for r in found["refs"]} == {"no reference (undefined at baseline)"}
+    assert "no reference (undefined at baseline)" in rep.render_markdown(report)
+
+
+# ---- a relative floor (TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR)
+
+def _rel_baseline(floor, floor_base=3.0, floor_rel=0.10):
+    base = _baseline(2)
+    base["metrics"][0].update({"floor": floor, "floor_base": floor_base, "floor_rel": floor_rel})
+    return base
+
+
+def _moved(report):
+    (found,) = [f for f in report["findings"] if f["id"] == "O1" and f["scope"] == "run"]
+    return [r.get("threshold_moved") or {} for r in found["refs"]]
+
+
+def _rel_docs(**row):
+    docs = _docs()
+    for s in SEEDS:
+        docs[("w", s)]["metrics"][0].update({"floor": 3.0, "floor_rel": 0.10, **row})
+    return docs
+
+
+def test_a_computed_relative_floor_never_shows_as_moved():
+    # the reference computed floor 5.0 from its own seeds; the candidate documents carry the same base and relative part
+    assert _moved(_build(_rel_docs(), refs=_refs(_rel_baseline(5.0)))) == [{}, {}]
+
+
+def test_a_changed_floor_rel_or_floor_base_shows_as_moved():
+    assert _moved(_build(_rel_docs(floor_rel=0.2), refs=_refs(_rel_baseline(5.0))))[0] == {"floor_rel": {"candidate": 0.2, "reference": 0.1}}
+    assert _moved(_build(_rel_docs(floor=4.0), refs=_refs(_rel_baseline(5.0))))[0] == {"floor": {"candidate": 4.0, "reference": 3.0}}
+
+
+def test_judging_uses_the_references_recorded_floor():
+    # mean difference 4: over a floor of 3, under the recorded relative floor of 5 -> no drift
+    docs = _rel_docs()
+    for s in SEEDS:
+        docs[("w", s)]["metrics"][0]["value"] = 14.0 + (0.1 if s % 2 else -0.1)
+    states = _states(_build(docs, refs=_refs(_rel_baseline(5.0, floor_rel=0.10))))
+    assert states[("O1", None, "run")] == "pass"
+
+
+def test_a_reference_with_floor_rel_but_no_numeric_floor_is_the_no_recorded_threshold_contract_error():
+    base = _rel_baseline(5.0)
+    base["metrics"][0].pop("floor")
+    report = _build(_rel_docs(), refs=_refs(base))
+    (found,) = [f for f in report["findings"] if f["id"] == "O1" and f["scope"] == "run"]
+    assert (found["state"], found["reason"], found["detail"]) == ("no-data", "contract_error", "reference row has no recorded threshold")
+
+
+def test_floor_rel_outside_zero_to_one_or_on_a_pooled_row_is_a_contract_error():
+    for bad in (0, 2, "x"):
+        report = _build(_rel_docs(floor_rel=bad))
+        assert [f["reason"] for f in report["findings"] if f["id"] == "O1" and f["scope"] == "run"] == ["contract_error"], bad
+    docs = _docs()
+    docs[("w", None)] = _pooled_doc(value=1.0)
+    docs[("w", None)]["metrics"][-1]["floor_rel"] = 0.1
+    report = _build(docs)
+    assert [f["reason"] for f in report["findings"] if f["id"] == "O9"] == ["contract_error"]

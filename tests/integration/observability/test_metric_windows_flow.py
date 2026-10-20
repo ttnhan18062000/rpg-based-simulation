@@ -11,16 +11,18 @@ from src.core.builder import V2EntityBuilder
 from src.observability.config import ObservabilityConfig, ObservabilityMode
 from src.observability.reporting.artifact_repository import RunArtifactRepository
 
+# Process-unique ids: under `-n auto` the two tests run on different workers, and a teardown that removes
+# a fixed name removes the other worker's directory mid-test ("Manifest not found").
+_RUN_ID = f"test_run_metrics_integration_123_{os.getpid()}"
+_RUN_ID_OFF = f"test_run_metrics_integration_off_{os.getpid()}"
+
+
 @pytest.fixture
 def clean_runs():
     base_dir = "data/runs"
     yield
-    test_run_path = os.path.join(base_dir, "test_run_metrics_integration_123")
-    if os.path.exists(test_run_path):
-        shutil.rmtree(test_run_path)
-    test_run_path_off = os.path.join(base_dir, "test_run_metrics_integration_off")
-    if os.path.exists(test_run_path_off):
-        shutil.rmtree(test_run_path_off)
+    for rid in (_RUN_ID, _RUN_ID_OFF):  # only this process's ids
+        shutil.rmtree(os.path.join(base_dir, rid), ignore_errors=True)
 
 def test_kernel_run_produces_metric_windows(clean_runs):
     """Verify that a standard simulation run produces metric_windows.jsonl."""
@@ -44,24 +46,25 @@ def test_kernel_run_produces_metric_windows(clean_runs):
     state = AuthoritativeState(tick=1, seed=42, world_time=101, entities={1: e1})
     rng = DeterministicRNG(42)
     
-    run_id = "test_run_metrics_integration_123"
+    run_id = _RUN_ID
     kernel = Kernel(profile, state, rng, run_id=run_id)
     
     # Override window size on recorder to test flushes inside loop
     if kernel._metric_recorder:
         kernel._metric_recorder.window_size = 2
         
-    # Tick 1
-    kernel.tick_once()
-    
-    # Tick 2 - Should trigger window flush of 1-2
-    kernel.tick_once()
-    
-    # Tick 3 - Tick is recorded, but window 3-4 is not yet complete
-    kernel.tick_once()
-    
-    # Shutdown kernel - Should trigger final partial window flush (tick 3)
-    shutdown_result = kernel.shutdown()
+    try:
+        # Tick 1
+        kernel.tick_once()
+
+        # Tick 2 - Should trigger window flush of 1-2
+        kernel.tick_once()
+
+        # Tick 3 - Tick is recorded, but window 3-4 is not yet complete
+        kernel.tick_once()
+    finally:
+        # Shutdown kernel - Should trigger final partial window flush (tick 3); also runs if a tick raised
+        shutdown_result = kernel.shutdown()
     
     repo = RunArtifactRepository()
     metrics_path = os.path.join(repo.base_dir, run_id, "metric_windows.jsonl")
@@ -112,14 +115,16 @@ def test_kernel_metrics_disabled_when_off(clean_runs):
     state = AuthoritativeState(tick=1, seed=42, world_time=101, entities={1: e1})
     rng = DeterministicRNG(42)
     
-    run_id = "test_run_metrics_integration_off"
+    run_id = _RUN_ID_OFF
     kernel = Kernel(profile, state, rng, run_id=run_id)
     
     assert kernel._metric_recorder is None
     
-    kernel.tick_once()
-    kernel.shutdown()
-    
+    try:
+        kernel.tick_once()
+    finally:
+        kernel.shutdown()
+
     repo = RunArtifactRepository()
     metrics_path = os.path.join(repo.base_dir, run_id, "metric_windows.jsonl")
     assert not os.path.exists(metrics_path)

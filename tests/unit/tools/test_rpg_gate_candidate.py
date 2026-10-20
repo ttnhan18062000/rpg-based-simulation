@@ -23,9 +23,9 @@ def _config(**over) -> base.GateConfig:
     return base.GateConfig(**args)
 
 
-def _seed_doc(seed, *, v3=0, sha=SHA, hhash=HASH, ticks=100, k=2.0, floor=1.0):
+def _seed_doc(seed, *, v3=0, sha=SHA, hhash=HASH, ticks=100, k=2.0, floor=1.0, value=None, floor_rel=None):
     return {"schema": "rpg-gate-metrics/v1", "status": "ok", "world": "w", "seed": seed, "ticks": ticks, "sha": sha, "harness_hash": hhash, "metrics": [
-        {"id": "O1", "class": "outcome", "scope": "run", "group": "*", "key": "DEATHS", "tick": 100, "value": 10.0 + seed, "k": k, "floor": floor},
+        {"id": "O1", "class": "outcome", "scope": "run", "group": "*", "key": "DEATHS", "tick": 100, "value": 10.0 + seed if value is None else value, "k": k, "floor": floor, **({"floor_rel": floor_rel} if floor_rel is not None else {})},
         {"id": "V1", "class": "validity", "scope": "run", "group": "*", "violations": 0, "examples": [], "oracle": ORACLE},
         {"id": "V3", "class": "validity", "scope": "run", "group": "wolves", "violations": v3, "examples": ["x"] if v3 else [], "oracle": ORACLE},
     ]}
@@ -150,6 +150,15 @@ def test_a_row_absent_from_one_seed_refuses(tmp_path):
     docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_doc()}
     docs[("w", 2)]["metrics"] = [m for m in docs[("w", 2)]["metrics"] if m["id"] != "O1"]
     _refused(_write(tmp_path / "d", docs), r"O1 \(group \*\) is absent from seed\(s\) \[2\]")
+
+
+def test_a_keyed_row_absent_from_one_seed_refuses_with_the_row_set_text(tmp_path):
+    """The row set is declared by the module and nothing is imputed (TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED): a keyed count row a seed omits is a refusal."""
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_doc()}
+    for seed in SEEDS:
+        docs[("w", seed)]["metrics"].append({"id": "O4", "class": "outcome", "scope": "run", "group": "meat", "key": "eaten", "tick": 100, "value": 2.0, "k": 2.0, "floor": 1.0})
+    docs[("w", 3)]["metrics"] = [m for m in docs[("w", 3)]["metrics"] if m["id"] != "O4"]
+    _refused(_write(tmp_path / "d", docs), r"row O4 \(group meat\) is absent from seed\(s\) \[3\]; every seed must report the same rows")
 
 
 # ---- validity fails: owned ones are omitted and recorded, others refuse
@@ -383,3 +392,63 @@ def test_the_candidate_records_its_own_thresholds():
     assert (row["k"], row["floor"]) == (3.5, 7.0)
     pooled = next(r for r in candidate["metrics"] if r["id"] == "O9")
     assert pooled["floor"] == 0.1
+
+
+def _pooled_with_share(**row):
+    doc = _pooled_doc()
+    doc["metrics"].append({"id": "O8", "class": "outcome", "scope": "pooled", "group": "*", "floor": 0.1, **row})
+    return doc
+
+
+def test_an_empty_denominator_share_is_left_out_and_listed_not_refused(tmp_path):
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_with_share(value=None, reason="empty_denominator")}
+    candidate = _build(_write(tmp_path / "d", docs), ())
+    assert candidate["undefined_rows"] == [{"row": "O8:pooled:w:*", "reason": "empty_denominator"}]
+    assert not [m for m in candidate["metrics"] if m["id"] == "O8"]
+
+
+def test_a_null_pooled_share_without_the_reason_still_refuses(tmp_path):
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_with_share(value=None)}
+    _refused(_write(tmp_path / "d", docs), "pooled outcome row O8 has no numeric value")
+
+
+# ---- a relative floor (TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR)
+
+def _o1(candidate):
+    return next(m for m in candidate["metrics"] if m["id"] == "O1" and m["scope"] == "run")
+
+
+def _rel_docs(values, **kw):
+    return {**{("w", s): _seed_doc(s, value=v, floor=3.0, floor_rel=0.10, **kw) for s, v in zip(SEEDS, values)}, ("w", None): _pooled_doc()}
+
+
+def test_the_candidate_records_the_relative_floor_with_its_two_parts(tmp_path):
+    row = _o1(_build(_write(tmp_path / "a", _rel_docs([40.0, 50.0, 60.0])), ()))
+    assert (row["floor"], row["floor_base"], row["floor_rel"]) == (5.0, 3.0, 0.10)
+    small = _o1(_build(_write(tmp_path / "b", _rel_docs([5.0, 5.0, 5.0])), ()))
+    assert (small["floor"], small["floor_base"], small["floor_rel"]) == (3.0, 3.0, 0.10)
+
+
+def test_a_row_without_floor_rel_records_only_floor(tmp_path):
+    row = _o1(_build(_write(tmp_path / "a"), ()))
+    assert "floor_rel" not in row and "floor_base" not in row
+
+
+def test_floor_rel_outside_zero_to_one_or_not_a_number_refuses(tmp_path):
+    for bad in (0, -0.1, 1.5, "0.1", True):
+        docs = {**{("w", s): _seed_doc(s, floor_rel=0.1) for s in SEEDS}, ("w", None): _pooled_doc()}
+        for s in SEEDS:
+            docs[("w", s)]["metrics"][0]["floor_rel"] = bad
+        _refused(_write(tmp_path / f"d{bad!r}", docs), "floor_rel .* must be a number in")
+
+
+def test_a_pooled_row_with_floor_rel_refuses(tmp_path):
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_doc()}
+    docs[("w", None)]["metrics"][1]["floor_rel"] = 0.1
+    _refused(_write(tmp_path / "d", docs), "pooled outcome row O9 carries floor_rel")
+
+
+def test_floor_rel_must_agree_across_the_documents_of_a_world(tmp_path):
+    docs = _rel_docs([40.0, 50.0, 60.0])
+    docs[("w", 2)]["metrics"][0]["floor_rel"] = 0.2
+    _refused(_write(tmp_path / "d", docs), "threshold mismatch for O1")
