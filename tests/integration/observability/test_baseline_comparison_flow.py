@@ -12,7 +12,54 @@ from src.observability.reporting.baseline_comparator import BaselineComparator
 from src.cli.entry import _run_compare_run, _run_compare_sweep
 
 
-def test_baseline_comparison_and_cli_flow(tmp_path):
+SLOW_TICK_MS = 59.0  # above the HighCPULatencyRule's 50 ms limit: what a loaded host produced
+
+
+def _sweep(tmp_path, sweep_id):
+    output_dir = str(tmp_path / "run_sets")
+    ScenarioSweeper.run_sweep(ScenarioSweepConfig(
+        sweep_id=sweep_id, scenario_name="idle", scenario_type="sandbox", seeds=[1, 2, 3], ticks=2,
+        observability_mode=ObservabilityMode.LIGHT, output_dir=output_dir))
+    return output_dir
+
+
+def _compute_ms_avgs(output_dir, sweep_id):
+    records = RunSetArtifactRepository(base_dir=output_dir).read_run_index(sweep_id)
+    scores = []
+    for r in records:
+        with open(os.path.join(output_dir, sweep_id, "runs", r.run_id, "metric_windows.jsonl"), encoding="utf-8") as f:
+            scores.append(max(json.loads(line)["tick_compute_ms_avg"] for line in f if line.strip()))
+    return scores
+
+
+def _run_reports(output_dir, sweep_id):
+    records = RunSetArtifactRepository(base_dir=output_dir).read_run_index(sweep_id)
+    reports = []
+    for r in records:
+        with open(os.path.join(output_dir, sweep_id, "runs", r.run_id, "run_report.json"), encoding="utf-8") as f:
+            reports.append(json.load(f))
+    return reports
+
+
+def test_a_slow_tick_is_what_trips_the_cpu_latency_rule(tmp_path, tick_cost_ms):
+    """The injection is real: with every tick recorded at 59 ms the runs' average compute is over the rule's 50 ms limit, and every run is scored down for it
+    (a WARNING, health below 100), which is what made the flow WARNING."""
+    tick_cost_ms(SLOW_TICK_MS)
+    output_dir = _sweep(tmp_path, "slow_sweep")
+    assert all(ms > 50.0 for ms in _compute_ms_avgs(output_dir, "slow_sweep"))
+    reports = _run_reports(output_dir, "slow_sweep")
+    assert reports and all(r["warning_count"] >= 1 and r["health_score"] < 100.0 for r in reports)
+
+
+def test_a_pinned_fast_tick_leaves_every_run_unscored(tmp_path, tick_cost_ms):
+    """The control: the same sweep with the tick pinned at 5 ms raises no warning, so the pin is what removes the host's speed from the verdict."""
+    tick_cost_ms(5.0)
+    reports = _run_reports(_sweep(tmp_path, "fast_sweep"), "fast_sweep")
+    assert reports and all(r["warning_count"] == 0 and r["health_score"] == 100.0 for r in reports)
+
+
+def test_baseline_comparison_and_cli_flow(tmp_path, tick_cost_ms):
+    tick_cost_ms(5.0)  # the verdict below is a comparison of identical idle runs, not a measurement of this host's speed
     output_dir = str(tmp_path / "run_sets")
     sweep_id = "test_compare_sweep"
 

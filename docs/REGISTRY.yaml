@@ -7769,6 +7769,18 @@
   - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-BASELINE-GENERATION-FLOW-HEALTH-SCORE-MEAN-IS-99-NOT-100.md
+  ticket_id: TCK-20261020-BASELINE-GENERATION-FLOW-HEALTH-SCORE-MEAN-IS-99-NOT-100
+  title: 'test_baseline_generation_and_cli_flow fails on main: one of 5 runs scores
+    health 95, so the mean is 99.0, not 100.0'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/integration/observability/test_baseline_generation_flow.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL.md
   ticket_id: TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL
   title: GET /api/v1/entities returns a bounded summary per entity; the full detail
@@ -11310,6 +11322,19 @@
   - economy
   - resource
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT.md
+  ticket_id: TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT
+  title: '`test_baseline_comparison_and_cli_flow` fails on a loaded machine: the simulation
+    watchdog trips on wall-clock tick time and turns the expected PASS into WARNING'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-10'
+  related_code_areas:
+  - tests/integration/observability/test_baseline_comparison_flow.py
+  - src/engine/
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261010-DEFEAT-CORPUS-TEST-WINDOW-DEPENDS-ON-PURSUIT-GEOMETRY.md
   ticket_id: TCK-20261010-DEFEAT-CORPUS-TEST-WINDOW-DEPENDS-ON-PURSUIT-GEOMETRY
   title: The defeat corpus test's fixed 120-tick window depends on pursuit geometry;
@@ -11799,19 +11824,6 @@
   - agent-working/stored_artifacts/TCK-20261010-VISUAL-ASSETS-STORE-TOOLING-DOCS-AND-CLOSE/test_plan.md
   tags:
   - planning
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT.md
-  ticket_id: TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT
-  title: '`test_baseline_comparison_and_cli_flow` fails on a loaded machine: the simulation
-    watchdog trips on wall-clock tick time and turns the expected PASS into WARNING'
-  tier: hotfix
-  ticket_type: bug
-  date: '2026-10-10'
-  related_code_areas:
-  - tests/integration/observability/test_baseline_comparison_flow.py
-  - src/engine/
-  artifact_files: []
-  tags: []
 - type: ticket
   path: agent-working/tickets/todos/parity-ledger-paydown/TCK-20261010-EPIC-PARITY-LEDGER-PAYDOWN.md
   ticket_id: TCK-20261010-EPIC-PARITY-LEDGER-PAYDOWN
