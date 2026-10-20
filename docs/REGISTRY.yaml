@@ -7749,7 +7749,10 @@
   date: '2026-10-20'
   related_code_areas:
   - src/observability/rpg_gate_metrics.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS/plan.md
+  - agent-working/stored_artifacts/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS/test_plan.md
   tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT.md
