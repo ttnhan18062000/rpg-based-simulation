@@ -24,9 +24,9 @@ All responses must be shaped through this service or the equivalent `V2EngineMan
 |--------|---------|------|---------|
 | `world_status()` | Minimal world summary | O(1) cache | `ReadModelCache.get_minimal_summary()` |
 | `world_full()` | Full snapshot (all entities + regions) | O(N) | `StatePresenter.present_full()` |
-| `entity_status(entity_id)` | Shaped entity DTO or `None` | O(1) cache | `ReadModelCache.get_entity_dto()` |
+| `entity_status(entity_id)` | Shaped entity DTO or `None`. Bounded: live quests/unresolved blockers/open contracts in full plus at most 10 finished quests and 5 closed contracts, with `quests_total`, `blockers_resolved_count`, `contracts_total` | O(1) cache | `ReadModelCache.get_entity_dto()` |
 | `entity_timeline(entity_id)` | List of serialized timeline events or `[]` | O(k events) | `entity.timeline` via manager method |
-| `entities_paged(offset, limit)` | Paged entity list with metadata | O(page) cache | `ReadModelCache.get_entities_paged()` |
+| `entities_paged(offset, limit)` | Paged list of BOUNDED entity summaries (identity, position, vitals, counts; no collection that grows with age); a page is at most 500 entities. Quest history is paged at `GET /api/v1/entities/{id}/quests?status=live\|terminal\|all` | O(page) summary cache (separate from the detail cache) | `ReadModelCache.get_entities_paged()` |
 | `tick_delta` — computed by `V2EngineManager._update_latest_state()` (direct call, not proxied via `ReadModelService`; see Purpose above) | Per-tick entity delta (`changed`/`removed`/`tick`/`events`) or `None` on a quiet tick | O(dirty) | `ReadModelCache.compute_tick_delta()` |
 
 ## Architecture Law
