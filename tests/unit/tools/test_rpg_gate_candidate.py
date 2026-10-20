@@ -152,6 +152,15 @@ def test_a_row_absent_from_one_seed_refuses(tmp_path):
     _refused(_write(tmp_path / "d", docs), r"O1 \(group \*\) is absent from seed\(s\) \[2\]")
 
 
+def test_a_keyed_row_absent_from_one_seed_refuses_with_the_row_set_text(tmp_path):
+    """The row set is declared by the module and nothing is imputed (TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED): a keyed count row a seed omits is a refusal."""
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_doc()}
+    for seed in SEEDS:
+        docs[("w", seed)]["metrics"].append({"id": "O4", "class": "outcome", "scope": "run", "group": "meat", "key": "eaten", "tick": 100, "value": 2.0, "k": 2.0, "floor": 1.0})
+    docs[("w", 3)]["metrics"] = [m for m in docs[("w", 3)]["metrics"] if m["id"] != "O4"]
+    _refused(_write(tmp_path / "d", docs), r"row O4 \(group meat\) is absent from seed\(s\) \[3\]; every seed must report the same rows")
+
+
 # ---- validity fails: owned ones are omitted and recorded, others refuse
 
 def _failing(v3=2):
@@ -383,3 +392,21 @@ def test_the_candidate_records_its_own_thresholds():
     assert (row["k"], row["floor"]) == (3.5, 7.0)
     pooled = next(r for r in candidate["metrics"] if r["id"] == "O9")
     assert pooled["floor"] == 0.1
+
+
+def _pooled_with_share(**row):
+    doc = _pooled_doc()
+    doc["metrics"].append({"id": "O8", "class": "outcome", "scope": "pooled", "group": "*", "floor": 0.1, **row})
+    return doc
+
+
+def test_an_empty_denominator_share_is_left_out_and_listed_not_refused(tmp_path):
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_with_share(value=None, reason="empty_denominator")}
+    candidate = _build(_write(tmp_path / "d", docs), ())
+    assert candidate["undefined_rows"] == [{"row": "O8:pooled:w:*", "reason": "empty_denominator"}]
+    assert not [m for m in candidate["metrics"] if m["id"] == "O8"]
+
+
+def test_a_null_pooled_share_without_the_reason_still_refuses(tmp_path):
+    docs = {**{("w", s): _seed_doc(s) for s in SEEDS}, ("w", None): _pooled_with_share(value=None)}
+    _refused(_write(tmp_path / "d", docs), "pooled outcome row O8 has no numeric value")
