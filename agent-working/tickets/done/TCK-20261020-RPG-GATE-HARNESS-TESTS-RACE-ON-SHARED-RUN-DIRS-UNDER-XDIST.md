@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST
-phase: inprogress
+phase: done
 date: 2026-10-20
 tags: [testing, regression]
 ---
@@ -15,7 +15,7 @@ tags: [testing, regression]
 The rpg gate harness unit tests stop racing each other on `data/runs/rpg-gate-sandbox_world-s<seed>-<sha8>*` under pytest-xdist.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -45,10 +45,10 @@ Serial runs pass, and so does CI unit-infra today. This is a latent flake. rpg f
 - Any harness source change.
 
 ## Acceptance Criteria
-- [ ] AC1: 10 repeats of `pytest -n 2 --dist loadgroup tests/unit/tools/test_rpg_gate_harness.py` pass. Also 10 repeats with the file run alongside `tests/unit/tools -k rpg_gate`. Quote the counts.
-- [ ] AC2: the setup error is explained (quoted), and either fixed in this file or routed to its owner with a ticket or message id.
-- [ ] AC3: `git diff origin/main -- tools/test_architecture/rpg_gate_harness.py` is empty (the harness hash is unchanged).
-- [ ] AC4: CI on the PR is green.
+- [x] AC1: 10 repeats of `pytest -n 2 --dist loadgroup tests/unit/tools/test_rpg_gate_harness.py` pass. Also 10 repeats with the file run alongside `tests/unit/tools -k rpg_gate`. Quote the counts.
+- [ ] AC2 (NOT MET, left unticked by testing-planner's ruling): the setup error is explained (quoted), and either fixed in this file or routed to its owner with a ticket or message id.
+- [x] AC3: `git diff origin/main -- tools/test_architecture/rpg_gate_harness.py` is empty (the harness hash is unchanged).
+- [x] AC4: CI on the PR is green.
 
 ## Related Tickets
 - TCK-20261020-UNIT-TESTS-SHARE-DATA-RUNS-DIRS-UNDER-XDIST (rpg's half)
@@ -75,10 +75,10 @@ Serial runs pass, and so does CI unit-infra today. This is a latent flake. rpg f
 - AC2 (setup error): NOT reproduced. 16 runs on this file and one full `pytest tests/unit -n 2 --dist loadgroup -m "not slow and not extra_slow"` (8347 passed, 1 failed, 5 skipped) gave no setup ERROR. The one failure was tests/unit/engine/test_run_manifest_signal_contract.py::test_a_canonical_run_records_its_contract_and_work_model, `FileNotFoundError: Manifest not found for run_id: sc_manifest_canonical`. That test uses a fixed run id under the shared data/runs, so it belongs to rpg's TCK-20261020-UNIT-TESTS-SHARE-DATA-RUNS-DIRS-UNDER-XDIST, not this file.
 
 ## Test Summary
-(implementer)
+AC1: 10 of 10 green on the file and 10 of 10 alongside `tests/unit/tools -k rpg_gate`. AC3: harness diff empty. AC4: read from the PR's CI.
 
 ## Files Changed
-(implementer)
+- tests/unit/tools/test_rpg_gate_harness.py
 
 ## Completion Summary
-(implementer)
+The race is fixed in the test. AC2 not met: not reproduced (16 file runs + 1 full unit run); the symptom moved between tests across branches, which points at a worker-level cause; routed to rpg's TCK-20261020-UNIT-TESTS-SHARE-DATA-RUNS-DIRS-UNDER-XDIST; closed by testing-planner's ruling; reopen if it recurs with a traceback.

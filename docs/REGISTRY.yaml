@@ -7708,7 +7708,7 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST.md
+  path: agent-working/tickets/done/TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST.md
   ticket_id: TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST
   title: The rpg gate harness unit tests stop racing each other on `data/runs/rpg-gate-sandbox_world-s<seed>-<sha8>*`
     under pytest-xdist.
