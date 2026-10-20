@@ -7944,6 +7944,25 @@
   - regression
   - simulation-quality
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE.md
+  ticket_id: TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE
+  title: Every required validity row of the rpg gate has at least one real-kernel
+    positive test, and a lint fails when an id has none.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/architecture/ (the lint)
+  - tests/simulation_quality/rpg_gate/ (the map, config.yaml)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-RPG-GATE-EVERY-VALIDITY-ROW-HAS-A-KERNEL-POSITIVE/test_plan.md
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL.md
   ticket_id: TCK-20261019-RPG-GATE-REQUIRED-VALIDITY-PER-LEVEL
   title: The rpg gate's required-validity check asks for each V row only at the level
