@@ -7723,6 +7723,24 @@
   - testing
   - regression
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED.md
+  ticket_id: TCK-20261020-RPG-GATE-RUN-ROW-SET-IS-DECLARED-NOT-OBSERVED
+  title: The rpg gate contract says a world's run-row set is declared by the module,
+    not observed. The report shows a seed whose rows differ from its world's other
+    seeds as a `contract_error`, so it is visible before the candidate step refuses
+    it.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/test_architecture/rpg_gate_report.py, rpg_gate_candidate.py (test only)
+  - tests/helpers/rpg_gate_stub_metrics.py, tests/unit/tools/test_rpg_gate_report.py
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT.md
   ticket_id: TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT
   title: test_observability_websocket_suite step 5 waits for the synthetic walk event

@@ -356,3 +356,14 @@ def test_the_committed_gate_config_requires_v7_pooled_and_the_rest_per_run():
 
     loaded = rgb.load_config(Path(__file__).resolve().parents[3] / "tests" / "simulation_quality" / "rpg_gate" / "config.yaml")
     assert loaded.required_validity == {"run": ("V1", "V2", "V3", "V4", "V5", "V6", "V8"), "pooled": ("V7",)}
+
+
+def test_rebaseline_carries_undefined_rows_and_the_lint_checks_them(tmp_path):
+    candidate = _candidate()
+    candidate["undefined_rows"] = [{"row": "O8:pooled:w:*", "reason": "empty_denominator"}]
+    path = rgb.rebaseline(candidate, _config(), tmp_path, pr=None, cites=["TCK-metric-set-v1"], now=NOW)
+    assert json.loads(path.read_text())["undefined_rows"] == candidate["undefined_rows"] and rgb.lint_dir(tmp_path) == []
+    doc = json.loads(path.read_text())
+    doc["undefined_rows"] = [{"row": "O9.share:pooled:w:*", "reason": "empty_denominator"}, {"row": "x"}, "bad"]
+    problems = rgb.lint_baseline(doc, filename="rpg_gate_v1.json")
+    assert problems == ["undefined_rows[0]: O9.share:pooled:w:* is listed as undefined but is still in metrics", "undefined_rows[1]: missing reason", "undefined_rows[2]: not an object"]
