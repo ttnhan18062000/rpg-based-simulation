@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-OBSERVABILITY-PROFILE-HARDENING
-phase: open
+phase: done
 date: 2026-10-18
 tags: [platform, observability, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability, security]
 Compose: Grafana admin password from a secret file (no `admin` default), host ports bound to 127.0.0.1, Promtail's Docker socket behind a read-only proxy
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -121,13 +121,14 @@ None.
   - Socket: only `platform-docker-socket-proxy-1` mounts `/var/run/docker.sock` (checked with `docker inspect` on every container of the profile). `POST /containers/x/stop` through the proxy: 403; `GET /containers/json` and `/version`: 200. PASS.
   - Loki without the `/var/lib/docker/containers` mount: backend lines arrive (query `{container="platform-backend-1"}`). PASS.
   - Project filter: Loki `container` label values are exactly this project's 9 containers (ai_worker, backend, docker-socket-proxy, frontend, grafana, prometheus, redis, tempo, watchdog); no `loki`/`promtail` (drop rule works) and none of the other containers on the host. PASS.
-  - NETWORKS=1: not needed. Without it the proxy returns 403 on `GET /networks` (logged every refresh), `GET /containers/json` works and backend logs keep arriving. Dropped (least privilege); the 403 line in the proxy log is expected.
-  - Leftovers: `data/runs` is owned by root after the run (reported to the planner, not cleaned). Named volumes `platform_*` remain after `down`.
+  - NETWORKS=1: not needed. Without it the proxy returns 403 on `GET /networks` (logged every refresh), `GET /containers/json` works and backend logs keep arriving. Dropped (least privilege); the 403 line in the proxy log is expected. **[2026-10-20 correction, note only: likely stale targets; see TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY. Promtail's discovery fails on every refresh without NETWORKS but keeps the last good targets, so the 10-18 run most likely saw targets from an earlier good refresh. Three fresh runs on 10-19 found 0 targets and an empty Loki.]**
+    - **Fresh-volume check, 2026-10-20 (running locally; the owner removed `platform_grafana_data`, lead confirmed it gone; the volume was created at 2026-10-20T21:46:28+07:00 by `up -d grafana`, which started grafana, prometheus, backend and redis only; abort watcher proven by a dry run printing WOULD DOWN, then 2 real lines; sampler started before `up`; down at 14:48:57Z without `-v`, the new volume stays):** the real password from `docker/secrets/grafana_admin_password` returned 200 on `/api/user`; `admin`/`admin` returned 401; an unauthenticated call returned 401 (all with the secret passed through curl's stdin config, never on argv). That closes the finding of 10-18 (the persisted DB from the empty-file test). Provisioning loaded on the fresh DB: alert-rule groups `base` (5), `cause` (1) and `slo` (2), all provenance `file`; contact point `ntfy` (webhook, credential `[REDACTED]`) and the default policy to `ntfy`; datasources Loki, Prometheus and Tempo. No container was OOM-killed (4 of 4 `oom=false`, restarts 0). Grafana at the first start of a fresh DB: `docker stats` peak 673 MiB (66 % of the 1024m limit; 88 % of the old 768m), anon peak 250 MiB (24 %), anon + active_file 655 MiB (64 %), `memory.peak` 1025 MiB (reference only, includes cache). Evidence: `agent-working/staging_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/fresh-volume-2026-10-20/`.
+- Leftovers: `data/runs` is owned by root after the run (reported to the planner, not cleaned). Named volumes `platform_*` remain after `down`.
 - Not run: tests/static and all of tests/tools (separate clearance; this ticket changes no Makefile).
 - PASS again after the changes: `compose config -q` (default and observability).
 
 ## Files Changed
-`compose.yaml`, `docker/promtail-config.yml`, `.gitignore`, this ticket.
+`compose.yaml`, `docker/promtail-config.yml`, `.gitignore`, this ticket and its stored artifacts (retrospective), plus the follow-up changes in `TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY` (`NETWORKS=1` on the proxy).
 
 ## Completion Summary
-(open)
+The observability profile is hardened: Grafana's admin password comes from a gitignored compose secret with an entrypoint guard (it refuses to start on an empty file or on `admin`); Prometheus, Grafana, Loki and Redis publish on 127.0.0.1 only; the Docker socket is mounted read-only by one service, `docker-socket-proxy` (CONTAINERS=1, POST=0, and since 2026-10-20 NETWORKS=1, owner via lead-planner), and promtail reaches it over the internal network; the promtail drop rule uses the compose service label with a project filter. Runtime checks of 2026-10-18 passed (ports on loopback, Redis by service name, socket mounted only by the proxy, POST through the proxy refused). The Grafana fresh-volume check was run on 2026-10-20 after the owner removed `platform_grafana_data`: the real password returned 200, admin/admin 401, provisioning loaded on the fresh database, Grafana's first start peaked at 673 MiB (docker stats; anon 250 MiB) under the 1024m limit. Corrections recorded: the 2026-10-18 conclusion that `NETWORKS=1` was not needed was wrong (a fresh promtail ships nothing without it; the 10-18 evidence was most likely Loki holding older lines), fixed and proven in `TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY` (`docs/runbooks/records/2026-10-20-log-shipping-fix.md`). The ticket's Test Summary keeps the 10-18 text with a dated correction note. Staging artifacts did not exist before the work and were written retrospectively at close, labelled so. Knowledge index refreshed by lead-planner in the main checkout after merge.

@@ -7231,6 +7231,16 @@
   - platform
   - observability
 - type: doc
+  path: docs/runbooks/log-shipping.md
+  title: 'Runbook: LogShippingErrors'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
   path: docs/runbooks/records/2026-10-18-api-load-test.md
   title: 'API load test (2026-10-18): age effect, /entities page cap and proposed
     SLO'
@@ -7268,6 +7278,17 @@
   path: docs/runbooks/records/2026-10-19-redis-stop-drill-under-load.md
   title: 'Redis-stop drill under load (2026-10-19): the cause alert fires while the
     API SLO stays green'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/records/2026-10-20-log-shipping-fix.md
+  title: 'Log shipping fix (2026-10-20): promtail discovery was denied by the socket
+    proxy'
   status: active
   layer: platform
   authority: P2
@@ -7826,6 +7847,21 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PERF-PYSPY-TOOLKIT-TEST-MEASURED-WINDOW.md
+  ticket_id: TCK-20261020-PERF-PYSPY-TOOLKIT-TEST-MEASURED-WINDOW
+  title: The py-spy end-to-end toolkit test measures too few ticks to be sampled reliably
+    on a loaded host
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/tools/test_profiling_toolkit.py
+  - tools/perf/profile_tick.py
+  artifact_files: []
+  tags:
+  - performance
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA.md
   ticket_id: TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA
   title: pr-body-lint.yml pins actions/checkout by full commit SHA, per the repo-wide
@@ -7841,6 +7877,21 @@
   - ai
   - process-improvement
   - governance
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY.md
+  ticket_id: TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY
+  title: 'Loki receives no logs: promtail''s docker discovery is denied by the socket
+    proxy (GET /networks returns 403)'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - docker/promtail config
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/investigation.md
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/plan.md
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/test_plan.md
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR.md
   ticket_id: TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR
@@ -7990,18 +8041,6 @@
   date: '2026-10-20'
   related_code_areas:
   - docker/grafana/provisioning/alerting/rules-base.yaml
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY.md
-  ticket_id: TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY
-  title: 'Loki receives no logs: promtail''s docker discovery is denied by the socket
-    proxy (GET /networks returns 403)'
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-20'
-  related_code_areas:
-  - docker/promtail config
   artifact_files: []
   tags: []
 - type: ticket
@@ -8749,6 +8788,24 @@
   - agent-monitoring
   - setup
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING.md
+  ticket_id: TCK-20261018-OBSERVABILITY-PROFILE-HARDENING
+  title: 'Compose: Grafana admin password from a secret file (no `admin` default),
+    host ports bound to 127.0.0.1, Promtail''s Docker socket behind a read-only proxy'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/test_plan.md
+  tags:
+  - platform
+  - observability
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-REDIS-ADAPTER-MISSING-LIBRARY-TEST-BLOCKS-THE-IMPORT.md
   ticket_id: TCK-20261018-REDIS-ADAPTER-MISSING-LIBRARY-TEST-BLOCKS-THE-IMPORT
   title: test_redis_adapter_resilient_missing_library really blocks the redis import,
@@ -9068,21 +9125,6 @@
   tags:
   - platform
   - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING.md
-  ticket_id: TCK-20261018-OBSERVABILITY-PROFILE-HARDENING
-  title: 'Compose: Grafana admin password from a secret file (no `admin` default),
-    host ports bound to 127.0.0.1, Promtail''s Docker socket behind a read-only proxy'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-  - security
 - type: ticket
   path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT.md
   ticket_id: TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT

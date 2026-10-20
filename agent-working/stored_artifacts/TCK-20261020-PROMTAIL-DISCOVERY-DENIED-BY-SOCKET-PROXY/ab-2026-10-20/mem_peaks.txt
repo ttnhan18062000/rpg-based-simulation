@@ -1,0 +1,6 @@
+A/B run peaks, MiB: limit | docker stats | anon | anon+active_file | memory.peak (ref) | anon+active % of limit
+loki-1: 512 | 212 | 73 | 209 | 226 | 41%
+promtail-1: 128 | 127 | 28 | 126 | 128 | 99%
+backend-1: 1024 | 126 | 120 | 122 | 201 | 12%
+docker-socket-proxy-1: 64 | 29 | 11 | 27 | 31 | 42%
+redis-1: 256 | 14 | 6 | 13 | 33 | 5%
