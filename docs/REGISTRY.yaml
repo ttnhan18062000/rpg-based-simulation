@@ -7708,6 +7708,21 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST.md
+  ticket_id: TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST
+  title: The rpg gate harness unit tests stop racing each other on `data/runs/rpg-gate-sandbox_world-s<seed>-<sha8>*`
+    under pytest-xdist.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/unit/tools/test_rpg_gate_harness.py
+  - run_id_for
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM.md
   ticket_id: TCK-20261019-API-SLO-BUCKET-AT-300-MS-FOR-THE-REQUEST-HISTOGRAM
   title: 'The request-duration histogram gets a 0.3 s bucket so the API SLO alert
