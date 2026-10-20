@@ -20,10 +20,13 @@ O3 attacks on people by wild meat-eaters (a diet with meat, a species without th
 the world's net coin is validity V6), O6 kills not eaten. An outcome row never grades: only a validity row can fail. O7 (tick time) is the harness's cost document, not a metric row here.
 
 Row sets are DECLARED, never observed (TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS): every seed of a world emits the same (id, group, key) rows, with value 0
-when nothing happened, so an absent row is never read as zero. The domains: GROUPS are the kind groups of the world's declaration (the world compiled for each seed of the
-gate config's seed set, before any tick; their union), KEYS are enumerations (death causes: ``DeathCause``; transfer sources: ``TRANSFER_SOURCES``, which a unit test
+when nothing happened, so an absent row is never read as zero. The domains: GROUPS are the kind groups of the world's declaration: the kinds of the world compiled for each
+seed of the gate config's seed set before any tick, UNION the kinds of every declared spawn source in that compiled world (a camp's kind, the calamity world boss when its
+flag is on; births and territory spawns copy a kind already present), read from the declarations, never from the run. An individual whose kind changes mid-run
+(evolution, coming of age) counts in the group it ENTERED with (moot at v1: evolution is dead, D15). KEYS are enumerations (death causes: ``DeathCause``; transfer sources: ``TRANSFER_SOURCES``, which a unit test
 keeps equal to every ``source_kind`` literal in ``src/``). Something observed outside its declared domain is a loud ``GateDataMissingError``, never a new row.
-A share (O1) is carried as two COUNT rows, numerator (``O1.starved``) and denominator (``O1.at_risk``, the group's tick-0 population), true zeros on every seed; the share
+A share (O1) is carried as two COUNT rows, numerator (``O1.starved``: individuals of the group who starved, spawned ones included) and denominator (``O1.at_risk``: individuals
+of the group ever alive in the run, counted once each: the tick-0 count plus every entry into the group, so the share is at most 1 by construction), true zeros on every seed; the share
 is derived only in the pooled document (``O1.starvation_share``) as sum(numerator) / sum(denominator) over the seeds; a group whose pooled denominator is 0 gets
 ``value: null, reason: "empty_denominator"`` (n/a, never 0 or 1). A per-seed share is never a metric row.
 
@@ -36,7 +39,12 @@ import os
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
-from src.ai.goals.kind_group import is_person, kind_group
+from src.ai.goals.kind_group import (
+    UNDECLARED,
+    is_person,
+    kind_group,
+    species_kind_group,
+)
 from src.core.death_cause import DeathCause
 from src.observability.run_ledger import (
     LEDGER_LIVE_EVENT,
@@ -48,6 +56,7 @@ from src.observability.starvation_record import (
     CHANNEL_TALLY_EVENT,
     RECORD_EVENT,
 )
+from src.world.boss import world_boss_spawn_enabled
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository, WorldRepositoryError
 
@@ -72,11 +81,11 @@ class GateDataMissingError(RuntimeError):
 # --------------------------------------------------------------------------------------------- thresholds
 # id -> (k, floor, fiction reason). k = standard errors; floor = the smallest change worth tracing, in the row's own unit.
 OUTCOME_THRESHOLDS: Dict[str, Tuple[float, float, str]] = {
-    # PROPOSED by the designer's floor principle, for the designer to rule on: a count row reuses O2.population's rule (never under three) and its source row's k;
-    # a pooled share's floor is an absolute difference of ten points. The O1.starvation_share row is pooled only: sum(starved) / sum(at risk).
-    "O1.starvation_share": (2.0, 0.10, "PROPOSED: a ten-point difference in the share of a kind that starves"),
-    "O1.starved": (2.0, 3.0, "PROPOSED: three more of a kind starved in a run"),
-    "O1.at_risk": (2.0, 3.0, "PROPOSED: a kind's tick-0 head count, the denominator of the starvation share"),
+    # The O1.starvation_share row is pooled only: sum(starved) / sum(at risk). Designer rulings 2026-10-20: the share keeps its own floor (0.05, own fiction);
+    # the two count rows are judged as counts with the share's k, floor max(3, 0.10 x the v1 pooled per-seed mean): the base 3 is here, the relative part is the report's.
+    "O1.starvation_share": (2.0, 0.05, "a settlement notices when one more in twenty of a kind starves"),
+    "O1.starved": (2.0, 3.0, "three more of a kind starved in a run (relative part: a tenth of the v1 pooled mean)"),
+    "O1.at_risk": (2.0, 3.0, "individuals of a kind ever alive in the run: tick 0 plus every entry (relative part: a tenth of the v1 pooled mean)"),
     "O2.deaths": (2.0, 2.0, "two more deaths of one cause in a run is a story; one is noise"),
     "O2.population": (2.0, 3.0, "a tenth more or fewer of a kind alive, and never under three, is a visible crowd change"),
     "O2.survivors": (2.0, 1.0, "a kind alive or gone in a seed is the whole difference"),
@@ -209,9 +218,23 @@ def tick0_means(world: str, seeds: Sequence[int]) -> Dict[str, float]:
     return {g: sum(counts.get(g, 0) for counts in per_seed) / len(seeds) for g in groups}
 
 
+def _spawn_kinds(world: str, seed: int) -> List[str]:
+    """The kinds of the declared spawn sources of the world compiled for ``seed``: its camps (a nest spreads a camp's kind) and the calamity world boss when its flag is on.
+    Births copy a parent's kind and territory spawns copy a standing monster's, so they add nothing beyond the tick-0 kinds."""
+    state = _compiled_tick0(world, seed)
+    kinds = [camp.kind for camp in (getattr(state, "camps", None) or {}).values()]
+    if world_boss_spawn_enabled(state):
+        kinds.append("world_boss")
+    return kinds
+
+
 def declared_groups(world: str, seeds: Sequence[int]) -> List[str]:
-    """The world's declared kind groups: the union, over the gate config's seed set, of the groups of the world compiled before any tick."""
-    return sorted({g for seed in _seed_set(world, seeds) for g in _tick0_alive(world, seed)})
+    """The world's declared kind groups: the union, over the gate config's seed set, of the groups of the world compiled before any tick and of its declared spawn-source kinds."""
+    groups: Set[str] = set()
+    for seed in _seed_set(world, seeds):
+        groups |= set(_tick0_alive(world, seed))
+        groups |= {g for g in (species_kind_group(kind) for kind in _spawn_kinds(world, seed)) if g != UNDECLARED}
+    return sorted(groups)
 
 
 def declared_wild_meat_eaters(world: str, seeds: Sequence[int]) -> List[str]:
@@ -314,9 +337,12 @@ def _population_rows(world: str, ticks: int, ledger: Mapping[str, Any], state: A
         group, cause = _split(key, 2)
         if cause == "STARVATION":
             starved[group] += n
+    entered: Dict[str, int] = defaultdict(int)  # every entry into a group after tick 0 (births, camp spawns, raids): the run's own adds, by group
+    for key, n in ledger["adds"].items():
+        entered[_split(key, 2)[0]] += n
     for group in groups:
         rows.append(_outcome("O1.starved", world, group, starved[group]))
-        rows.append(_outcome("O1.at_risk", world, group, first.get(group, 0)))
+        rows.append(_outcome("O1.at_risk", world, group, first.get(group, 0) + entered[group]))
         rows.append(_outcome("O2.survivors", world, group, 1.0 if final.get(group, 0) > 0 else 0.0))
         floor = population_floor(means.get(group, 0.0))
         rows += [_outcome("O2.population", world, group, at.get(group, 0), tick=int(t), floor=floor) for t, at in sorted(population.items(), key=lambda kv: int(kv[0]))]

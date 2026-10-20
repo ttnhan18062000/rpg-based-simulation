@@ -211,6 +211,7 @@ def _no_world_compile(monkeypatch):
     unless a test sets other counts with ``_tick0``."""
     monkeypatch.setattr(m, "_tick0_alive", lambda world, seed: {PEOPLE: 10, WOLF: 4, DEER: 6})
     monkeypatch.setattr(m, "_tick0_persons", lambda world, seed: {PEOPLE: 10})
+    monkeypatch.setattr(m, "_spawn_kinds", lambda world, seed: [])
 
 
 def _tick0(monkeypatch, per_seed):
@@ -353,3 +354,25 @@ def test_every_pooled_share_row_names_its_numerator_and_denominator_run_rows(tmp
         assert share["numerator"] == "O1.starved" and share["denominator"] == "O1.at_risk"
         for doc in seed_docs:  # the named rows exist on every seed's run document, for the share's own group
             assert _row(doc, share["numerator"], share["group"]) and _row(doc, share["denominator"], share["group"])
+
+
+def test_at_risk_counts_every_individual_ever_alive_so_a_mid_run_spawn_raises_it_and_the_share_stays_at_most_one(tmp_path):
+    ledger = _ledger(deaths={f"{WOLF}|STARVATION": 7}, adds={f"{WOLF}|BIRTH": 3, f"{WOLF}|AUTHORED_ARRIVAL": 2, f"{DEER}|BIRTH": 1})
+    doc = m.compute(_run(tmp_path, ledger))
+    assert _row(doc, "O1.at_risk", WOLF)["value"] == 4 + 3 + 2  # the tick-0 four plus every entry into the group
+    assert _row(doc, "O1.at_risk", DEER)["value"] == 6 + 1 and _row(doc, "O1.at_risk", PEOPLE)["value"] == 10
+    assert _row(doc, "O1.starved", WOLF)["value"] == 7  # spawned individuals who starved are in the numerator
+    (share,) = [r for r in m.pool([dict(doc, world="w")]) if r["id"] == "O1.starvation_share" and r["group"] == WOLF]
+    assert share["value"] == pytest.approx(7 / 9) and share["value"] <= 1.0
+
+
+def test_a_world_declaring_a_spawn_of_a_kind_absent_at_tick_zero_has_that_groups_rows_on_every_seed(tmp_path, monkeypatch):
+    RAIDER = "meat+plant"
+    monkeypatch.setattr(m, "_spawn_kinds", lambda world, seed: ["raider_camp"])
+    monkeypatch.setattr(m, "species_kind_group", lambda kind: RAIDER if kind == "raider_camp" else m.UNDECLARED)
+    ticks = {"1": {PEOPLE: 10, WOLF: 4, DEER: 6}, "50": {PEOPLE: 10, WOLF: 4, DEER: 6}}  # the sampled ticks are part of a row's identity: the same in both seeds
+    quiet = m.compute(_run(tmp_path, _ledger(population=ticks), seeds=(1, 2)))
+    arrival = m.compute(_run(tmp_path, _ledger(adds={f"{RAIDER}|AUTHORED_ARRIVAL": 2}, population={"1": ticks["1"], "50": {**ticks["50"], RAIDER: 2}}), seeds=(1, 2)))
+    assert _row_keys(quiet) == _row_keys(arrival)
+    assert _row(quiet, "O1.at_risk", RAIDER)["value"] == 0 and _row(arrival, "O1.at_risk", RAIDER)["value"] == 2
+    assert {r["key"] for r in quiet["metrics"] if r["id"] == "O4.accepted" and r["group"] == RAIDER} == set(m.TRANSFER_SOURCES)

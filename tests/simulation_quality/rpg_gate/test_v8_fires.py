@@ -39,6 +39,7 @@ def _fake_floors(monkeypatch):
     declared[kind_group(_new(1))] = declared.get(kind_group(_new(1)), 0) + 1
     monkeypatch.setattr(metrics, "_tick0_alive", lambda world, seed: dict(declared))
     monkeypatch.setattr(metrics, "_tick0_persons", lambda world, seed: {})
+    monkeypatch.setattr(metrics, "_spawn_kinds", lambda world, seed: [])
 
 
 @pytest.fixture(autouse=True)
