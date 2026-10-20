@@ -151,7 +151,7 @@ def test_mypy_crashing_is_reported_as_could_not_run_and_the_summary_is_appended(
     (project / "summary.md").write_text("earlier step\n")
 
     def boom(command, root, ok_codes, stdin=None):
-        raise mypy_gate.GateCannotRun("-m mypy exited 2: INTERNAL ERROR\nsecond line")
+        raise mypy_gate.GateCannotRunError("-m mypy exited 2: INTERNAL ERROR\nsecond line")
 
     monkeypatch.setattr(mypy_gate, "_run", boom)
     assert run(project, project / "summary.md", True, None) == 2

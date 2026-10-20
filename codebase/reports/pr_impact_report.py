@@ -26,6 +26,7 @@ resolved reasoning.
 import argparse
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from codebase.reports import code_health_impact as chi
@@ -38,15 +39,16 @@ FRAMING_NOTE = (
 )
 
 
-def build_pr_impact_report(
+def build_pr_impact_report(  # noqa: PLR0913  # mirrors chi.build_impact_report's options
     repo_root: Path,
     target_paths: list,
     depth: int = chi.DEFAULT_AFFECTED_DEPTH,
     graph: dict | None = None,
     graph_path: Path = chi.DEFAULT_GRAPH_PATH,
     registry_entries: list | None = None,
-    affected_runner=chi.run_graphify_affected,
+    affected_runner: Callable[[str, int, Path], str] = chi.run_graphify_affected,
 ) -> dict:
+    """Build the impact report for the files a PR changes."""
     if graph is None:
         graph = chi.load_graph(graph_path)
     if registry_entries is None:
@@ -70,7 +72,7 @@ def build_pr_impact_report(
                 "report": report,
                 "error": None,
             })
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001  # one failing path must not abort the batch; the error is recorded in the entry
             entries.append({
                 "target_path": target_path,
                 "status": "failed",
@@ -85,7 +87,8 @@ def build_pr_impact_report(
     }
 
 
-def format_pr_impact_report(report: dict, max_dependents_shown: int = 40) -> str:
+def format_pr_impact_report(report: dict, max_dependents_shown: int = 40) -> str:  # noqa: PLR0912  # one flat branch per report section
+    """Render a PR impact report as text, showing at most ``max_dependents_shown`` dependents."""
     lines = []
     for entry in report["entries"]:
         lines.append(f"## {entry['target_path']}")
@@ -157,7 +160,8 @@ def format_pr_impact_report(report: dict, max_dependents_shown: int = 40) -> str
     return "\n".join(lines)
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point; returns the process exit code."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "target_paths", nargs="+",

@@ -181,7 +181,7 @@ Source: `TCK-20261009-HANDOFF-TESTING-METRICS-EXPORT-FLAKE`. Codebase does not f
 
 ## Update 2026-10-19 (import-linter flip): decision 8.11 notice
 
-**DRAFT: committed, not sent.** codebase-planner sends it on the day of the flip; until then nothing here is live.
+**Sent 2026-10-19 as issue #672** (PR #671).
 
 Source: ticket `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`, branch `import-linter-flip`. The two-week soak from the adoption merge (#351) ended 2026-10-19T13:40Z. Under decision 8.11 (the `src/` freeze only; tests that pin CI may be edited, with a notice to you) the flip does this:
 
