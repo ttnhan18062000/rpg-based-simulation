@@ -1,0 +1,14 @@
+peak over all soak/curve/fire samples (docker stats --no-stream every few seconds, run.py USE files):
+| service | peak MiB | mem_limit MiB | peak % of limit | peak CPU % of one core |
+| grafana | 654 | 768 | 85% | 26 |
+| backend | 177 | 1024 | 17% | 191 |
+| prometheus | 106 | 512 | 21% | 12 |
+| loki | 95 | 512 | 19% | 8 |
+| tempo | 50 | 512 | 10% | 4 |
+| ntfy | 39 | 64 | 61% | 7 |
+| promtail | 34 | 128 | 26% | 11 |
+| redis-exporter | 16 | 32 | 51% | 6 |
+| docker-socket-proxy | 14 | 64 | 23% | 0 |
+| node-exporter | 11 | 32 | 36% | 1 |
+| redis | 9 | 256 | 3% | 9 |
+sum of per-service peaks 1206 MiB; Locust peak CPU 58% of one core

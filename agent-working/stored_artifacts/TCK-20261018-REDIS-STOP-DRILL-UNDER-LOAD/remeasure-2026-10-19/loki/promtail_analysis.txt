@@ -1,0 +1,49 @@
+## promtail /targets (text)
+HTTP/1.0 200 OK
+Date: Mon, 19 Oct 2026 18:04:59 GMT
+Content-Type: text/html; charset=utf-8
+ Targets 
+ var PATH_PREFIX = "";
+ var BUILD_VERSION = "(version=3.6.8, branch=release-3.6.x, revision=138c391f)";
+ $(function () {
+ $('[data-toggle="tooltip"]').tooltip()
+ })
+ Promtail 
+ Service Discovery 
+ Targets 
+ Config 
+ Help 
+ Targets 
+ All
+ Unready
+ docker/tcp://docker-socket-proxy:2375:80 (0/0 ready) 
+ show less 
+ Type 
+ Ready 
+ Labels 
+ Details 
+## promtail metrics (sent/dropped/errors/targets)
+promtail_sent_bytes_total{host="loki:3100"} 0
+promtail_sent_entries_total{host="loki:3100"} 0
+## last promtail log lines
+level=error ts=2026-10-19T18:04:20.618780966Z caller=handler.go:87 component=docker_discovery caller=refresh.go:90 time=2026-10-19T18:04:20.618769983Z msg="Unable to refresh target groups" discovery=docker config=docker/
+level=error ts=2026-10-19T18:04:25.534203573Z caller=handler.go:87 component=docker_discovery caller=refresh.go:90 time=2026-10-19T18:04:25.534191516Z msg="Unable to refresh target groups" discovery=docker config=docker/
+level=error ts=2026-10-19T18:04:30.551567692Z caller=handler.go:87 component=docker_discovery caller=refresh.go:90 time=2026-10-19T18:04:30.551558357Z msg="Unable to refresh target groups" discovery=docker config=docker/
+level=error ts=2026-10-19T18:04:35.542118988Z caller=handler.go:87 component=docker_discovery caller=refresh.go:90 time=2026-10-19T18:04:35.542109602Z msg="Unable to refresh target groups" discovery=docker config=docker/
+level=error ts=2026-10-19T18:04:40.546693517Z caller=handler.go:87 component=docker_discovery caller=refresh.go:90 time=2026-10-19T18:04:40.54668348Z msg="Unable to refresh target groups" discovery=docker config=docker/t
+level=error ts=2026-10-19T18:04:45.524457093Z caller=handler.go:87 component=docker_discovery caller=refresh.go:90 time=2026-10-19T18:04:45.524450047Z msg="Unable to refresh target groups" discovery=docker config=docker/
+level=error ts=2026-10-19T18:04:50.557976932Z caller=handler.go:87 component=docker_discovery caller=refresh.go:90 time=2026-10-19T18:04:50.557829272Z msg="Unable to refresh target groups" discovery=docker config=docker/
+level=error ts=2026-10-19T18:04:55.593922163Z caller=handler.go:87 component=docker_discovery caller=refresh.go:90 time=2026-10-19T18:04:55.593912793Z msg="Unable to refresh target groups" discovery=docker config=docker/
+## container env COMPOSE_PROJECT_NAME
+[platform]
+## host shell env
+[<unset>]
+## compose project label of running containers
+platform
+## proxy reachable from promtail?
+HTTP/1.0 200 OK
+## proxy list with an empty project filter vs project=platform (count of containers)
+bash: line 1: printf: `B': invalid format character
+ (python3 missing in container)
+bash: line 1: printf: `B': invalid format character
+ (python3 missing in container)

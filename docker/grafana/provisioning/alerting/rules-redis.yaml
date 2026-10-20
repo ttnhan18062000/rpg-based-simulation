@@ -1,0 +1,57 @@
+apiVersion: 1
+
+# Cause alert, added 2026-10-18 by lead review (TCK-20261018-REDIS-DOWN-CAUSE-ALERT): this is NOT the step-3 SLO alert. While Redis is down the API
+# keeps serving (the read routes do not use Redis) and /health reports engine liveness only, so the SLO rules stay green, yet events are lost. This rule
+# is what fires then. Signal: redis_exporter's redis_up == 0, for 30s. Group interval 30s, so detection is one evaluation plus the 30s `for`, then the
+# policy's group_wait. noDataState OK and execErrState OK: an exporter that is down is TargetDown's job (job "redis"), a dead Prometheus is
+# PrometheusUnreachable's. No dollar sign appears in this file (see the note in rules-base.yaml).
+groups:
+  - orgId: 1
+    name: cause
+    folder: Cause alerts
+    interval: 30s
+    rules:
+      - uid: cause-redis-down
+        title: RedisDown
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: 'redis_up == 0'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+        noDataState: OK
+        execErrState: OK
+        for: 30s
+        isPaused: false
+        annotations:
+          summary: "Redis is down (cause alert): events are being lost while the API keeps serving"
+          runbook_url: docs/runbooks/redis-down.md
+        labels:
+          severity: warning
+          alert_kind: cause

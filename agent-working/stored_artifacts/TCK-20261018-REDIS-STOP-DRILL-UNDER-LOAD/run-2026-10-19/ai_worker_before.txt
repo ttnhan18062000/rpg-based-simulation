@@ -1,0 +1,1 @@
+ai_worker started=2026-10-19T17:47:35.007001884Z restarts=0 status=running
