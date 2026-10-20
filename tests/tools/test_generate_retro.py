@@ -522,7 +522,7 @@ def test_avg_agents_excludes_null_runs_and_reports_n():
 def test_avg_agents_prints_na_when_every_run_is_null():
     runs = [dict(_BASE_RUN, run_id=f"TCK-H{i}", agent_count=None, execution_mode="hand") for i in range(3)]
     rs = compute_retro_metrics(runs, [])["run_summary"]
-    assert (rs["avg_agents"], rs["avg_agents_n"]) == (None, 0)
+    assert (rs["avg_agents"], rs["avg_agents_n"]) == (0, 0)  # a number, not None: the dashboard model takes a float
     report = generate(runs, [], "test-label")
     assert "| Avg agents per run (n=0 of 3; hand closures record unknown) | n/a |" in report
 
