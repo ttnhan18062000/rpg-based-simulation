@@ -4,7 +4,7 @@ layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY
-phase: open
+phase: inprogress
 date: 2026-10-20
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Loki receives no logs: promtail's docker discovery is denied by the socket proxy (GET /networks returns 403)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
