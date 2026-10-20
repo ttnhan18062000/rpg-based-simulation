@@ -114,20 +114,25 @@ async def test_observability_websocket_suite():
             # legitimately pass the subscription's category filter too, so only the specific
             # synthetic event we posted should end the loop; any other movement event is
             # background noise to skip past, not a test failure.
+            # The bound is wall-clock, not a message count: how many real movement events
+            # queue ahead of the synthetic one depends on how long the POST takes and how
+            # fast the simulation ticks, so a count of messages (previously 10) runs out on a
+            # loaded runner while the walk event is still behind them in the FIFO queue.
             event_received = False
-            for _ in range(10):
+            deadline = asyncio.get_event_loop().time() + 20.0
+            while asyncio.get_event_loop().time() < deadline:
                 try:
                     resp = await asyncio.wait_for(ws.recv(), timeout=2.0)
-                    data = json.loads(resp)
-                    if (
-                        data["type"] == "event"
-                        and data["event"]["event_category"] == "movement"
-                        and data["event"]["event_type"] == "walk"
-                    ):
-                        event_received = True
-                        break
                 except asyncio.TimeoutError:
                     continue
+                data = json.loads(resp)
+                if (
+                    data["type"] == "event"
+                    and data["event"]["event_category"] == "movement"
+                    and data["event"]["event_type"] == "walk"
+                ):
+                    event_received = True
+                    break
             assert event_received, "Failed to receive movement event from stream"
             # If no lifecycle events occurred, that's fine, we verified the filter structure.
 

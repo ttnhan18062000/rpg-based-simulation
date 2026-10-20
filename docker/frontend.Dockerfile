@@ -12,7 +12,7 @@ COPY frontend/ .
 RUN npm run build
 
 # Production stage
-FROM nginx:1.31.6-alpine3.24@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2
+FROM nginxinc/nginx-unprivileged:1.31.6-alpine3.24@sha256:884e0b7f42f303641b0f4e78755aea647521dca0b89ca3be7992ad78b5c07434
 
 # Copy built assets to Nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
@@ -20,7 +20,8 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy the server proxy configuration
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port (Nginx default is 80)
-EXPOSE 80
+# The unprivileged image listens on 8080 and runs as uid 101 (TCK-20261019-DEPLOY-DOCS-SHA-PINS-AND-FRONTEND-NONROOT)
+USER 101
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
