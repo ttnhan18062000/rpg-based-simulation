@@ -90,6 +90,14 @@ class PrometheusMetricsCollector:
         dropped.add_metric([], snapshot.get("dropped_work_delta", 0))
         yield dropped
 
+        # sim_budget_overrun_ms / sim_budget_overruns_total: the tick-budget overrun signal (report only; nothing in the engine reads it)
+        overrun_ms = GaugeMetricFamily("sim_budget_overrun_ms", "Overrun in ms of the latest tick that exceeded its time budget (0 when none yet)")
+        overrun_ms.add_metric([], snapshot.get("budget_overrun_ms", 0.0))
+        yield overrun_ms
+        overruns = CounterMetricFamily("sim_budget_overruns_total", "Cumulative ticks that exceeded the tick time budget")
+        overruns.add_metric([], snapshot.get("total_budget_overruns", 0))
+        yield overruns
+
         # 14. sim_errors_total
         errors = CounterMetricFamily("sim_errors_total", "Cumulative simulation tick processing exceptions")
         errors.add_metric([], snapshot.get("errors_total", 0))

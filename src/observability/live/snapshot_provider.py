@@ -134,6 +134,9 @@ class LiveSnapshotProvider:
             "queue_utilization": metrics_snapshot.get("queue_utilization", 0.0),
             "memory_rss_bytes": metrics_snapshot.get("memory_rss_bytes", 0.0),
             "dropped_work_delta": metrics_snapshot.get("dropped_work_delta", 0),
+            "budget_overrun_ms": metrics_snapshot.get("budget_overrun_ms", 0.0),
+            "budget_overrun_tick": metrics_snapshot.get("budget_overrun_tick", -1),
+            "total_budget_overruns": metrics_snapshot.get("total_budget_overruns", 0),
             "errors_total": metrics_snapshot.get("errors_total", 0),
             "phase_costs_ms": metrics_snapshot.get("phase_costs_ms", {}),
         }

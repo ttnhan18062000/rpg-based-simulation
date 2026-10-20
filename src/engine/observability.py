@@ -32,6 +32,10 @@ class RuntimeSnapshot:
     replay_dropped_events: int   # Non-authoritative events lost due to buffer pressure
     uptime_seconds: float
     last_tick: int
+    # Tick-budget overrun telemetry (report only, PERF-D1 amendment A1): read by nothing that decides
+    budget_overrun_ms: float = 0.0       # Largest overrun on the latest overrun tick
+    budget_overrun_tick: int = -1        # Tick of the latest overrun, -1 when none
+    total_budget_overruns: int = 0       # Ticks that overran the budget
 
 
 class SignalCollector:
@@ -129,5 +133,8 @@ class SignalCollector:
             dropped_work_count=status.total_dropped_work,
             replay_dropped_events=replay_stats["dropped_events_count"],
             uptime_seconds=time.perf_counter() - self._start_time,
-            last_tick=kernel.state.tick
+            last_tick=kernel.state.tick,
+            budget_overrun_ms=status.budget_overrun_ms,
+            budget_overrun_tick=status.budget_overrun_tick,
+            total_budget_overruns=status.total_budget_overruns,
         )
