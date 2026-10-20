@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED
-phase: open
+phase: done
 date: 2026-10-20
 tags: [agent-monitoring, data-quality, workflows]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality, workflows]
 Hand closures record Review, Document-Update and Architecture-Verify as skipped with a skip_reason instead of omitting them
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -95,7 +95,14 @@ From now on, `record_hand_orchestrated_closure.py` records them, so `phases_omit
 - 2026-10-20 (agent-working-planner): owner yes (via lead-planner). Batch 6, dispatched to agent-working-implementer.
 
 ## Test Summary
+- New `tests/tools/test_closure_recorder_folded_phases.py` (9 tests) covers the seven Scope §3 cases plus plan order, epic and an unreadable plan.
+- Two existing CLI tests in `test_record_hand_orchestrated_closure.py` counted exactly the narrated events (3); a hotfix closure now also records Document-Update, so they expect 4 events and `agent_count` 4.
+- `test_record_hand_orchestrated_closure.py`, `test_closure_recorder_phase_evidence.py`, the new file, the paths guard and `tests/docs` pass.
 
 ## Files Changed
+- `tools/agent-monitoring/record_hand_orchestrated_closure.py` (`folded_phase_events`, `insert_in_plan_order`, the `main` step), `tools/agent-monitoring/path_record.py` (`phase_order`).
+- `docs/agent-monitoring/README.md`, `docs/agent-monitoring/schema.md`.
+- `tests/tools/test_closure_recorder_folded_phases.py`, `tests/tools/test_record_hand_orchestrated_closure.py`.
 
 ## Completion Summary
+After `evidence_phase_events`, the recorder adds Review, Architecture-Verify and Document-Update for a hand closure when the tier plan (read through `path_record`, not copied) marks the phase `full` and the closer narrated none. Review and Architecture-Verify are `skipped`/`no_hand_tool`; Document-Update is `ok` when the ticket changed a `docs/` file other than `docs/REGISTRY.yaml` and `docs/parity_ledger/**` (up to 3 named), else `skipped`/`no_hand_tool` (also when the changed files are unreadable). Narrated events win, plan order is kept, one NOTE line is printed. This ticket was itself closed with the new behaviour. Not run here: `make knowledge-index-update` (lead runs it after the merge).

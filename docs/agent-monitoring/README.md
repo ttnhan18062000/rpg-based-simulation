@@ -248,6 +248,16 @@ summaries equal, phase for phase, an already-recorded run of a different ticket 
 names that ticket). `--allow-shared-summaries` overrides the second and sets `summaries_shared: true` on the run row. If git
 cannot say what the ticket changed (no `origin/main`), the Parity claim is not checked and a warning says so.
 
+The hand path has no separate Review, Architecture-Verify or Document-Update step (they fold into Implement/Verify), so a
+closer gives no event for them and `phases_omitted` would show them as real gaps
+(`TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED`, from RETRO-2026-W42). The recorder therefore adds them
+when the tier plan marks the phase `full` and the closer narrated none, and prints one `NOTE:` line naming them. Review
+and Architecture-Verify are `skipped` with `skip_reason: no_hand_tool`. Document-Update is `ok` (derived by the recorder,
+naming up to three files) when the ticket's own changed files include a `docs/` file other than `docs/REGISTRY.yaml` and
+`docs/parity_ledger/**`; otherwise, or when git cannot say what changed, it is `skipped` with `no_hand_tool`. A narrated
+event always wins, and no other phase is added. A hotfix gets only Document-Update (its Review and Architecture-Verify are
+`skipped_event` in the plan).
+
 `tool_call_count`/`cost_proxy_score` are only ever added to an event when real `tools.jsonl` rows
 exist for its `(run_id, seq)` — a hand-orchestrating session never has a live per-phase sidecar
 during the actual work, so an unattributed phase correctly has no such keys at all (never a false

@@ -7742,6 +7742,22 @@
   - agent-working/stored_artifacts/TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED.md
+  ticket_id: TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED
+  title: Hand closures record Review, Document-Update and Architecture-Verify as skipped
+    with a skip_reason instead of omitting them
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - evidence_phase_events
+  - SKIP_REASONS
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
+  - workflows
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-O1-COUNT-FLOORS-CARRY-THEIR-RELATIVE-PART.md
   ticket_id: TCK-20261020-O1-COUNT-FLOORS-CARRY-THEIR-RELATIVE-PART
   title: The O1.starved and O1.at_risk run rows carry floor_rel next to their base
@@ -7847,21 +7863,21 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED.md
-  ticket_id: TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED
-  title: Hand closures record Review, Document-Update and Architecture-Verify as skipped
-    with a skip_reason instead of omitting them
+  path: agent-working/tickets/inprogress/TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA.md
+  ticket_id: TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA
+  title: pr-body-lint.yml pins actions/checkout by full commit SHA, per the repo-wide
+    pin rule
   tier: hotfix
-  ticket_type: feature
+  ticket_type: repair
   date: '2026-10-20'
   related_code_areas:
-  - evidence_phase_events
-  - SKIP_REASONS
+  - .github/workflows/pr-body-lint.yml, tests/static/test_workflow_actions_pinned_by_sha.py,
+    tests/tools/
   artifact_files: []
   tags:
-  - agent-monitoring
-  - data-quality
-  - workflows
+  - ai
+  - process-improvement
+  - governance
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
   ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
