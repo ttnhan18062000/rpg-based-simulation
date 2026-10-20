@@ -7708,6 +7708,22 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-CI-LANES-RUN-TRAILING-BACKSLASH-AND-XDIST.md
+  ticket_id: TCK-20261020-CI-LANES-RUN-TRAILING-BACKSLASH-AND-XDIST
+  title: '`ci_lanes --run` runs test.yml''s commands as CI does: no stray `\` argument
+    once `--junit-xml` is stripped, and a clear stop when the venv lacks pytest-xdist'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/delivery/ci_lanes.py
+  - tests/tools/test_delivery_ci_lanes.py
+  - .github/workflows/test.yml
+  artifact_files: []
+  tags:
+  - ai
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST.md
   ticket_id: TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST
   title: The rpg gate harness unit tests stop racing each other on `data/runs/rpg-gate-sandbox_world-s<seed>-<sha8>*`
@@ -8047,6 +8063,23 @@
   - tests/regression/test_behavioral_5k.py
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS.md
+  ticket_id: TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS
+  title: 'Five paths that route as unowned get an owner in session_roles.yaml: testing
+    takes rpg-gate-report.yml and the two ci_junit tools, and agent-working takes
+    handover_transit.py and tools/search/**'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - tools/sessions/route.py
+  - .claude/agents/session-*.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING.md
   ticket_id: TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING
