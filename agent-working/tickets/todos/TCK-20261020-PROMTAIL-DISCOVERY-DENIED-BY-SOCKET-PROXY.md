@@ -36,6 +36,7 @@ In the 2026-10-19 SLO run, the Redis drill and the re-measure, Loki held no data
   - the proxy image;
   - whether the 10-18 check ran a different promtail config.
   Read promtail 3.6.8's docker_sd network-label code path to see when a /networks failure aborts the whole refresh.
+  - Leading hypothesis (planner, 2026-10-20): the 10-18 observation is explained by stale targets, not by the 403 being harmless. `NETWORKS` never appears in compose.yaml's git history (`git log -S NETWORKS`), so NETWORKS=1 was set only ad hoc during the 10-18 check and then dropped. Prometheus-style discovery keeps the last successful target groups when a refresh fails. If promtail discovered its targets while NETWORKS=1 was set, and the proxy was then recreated without it, the targets would stay in memory and logs would keep arriving, with the 403 logged on every refresh. A fresh promtail start against a 403 never gets targets, which matches 2026-10-19 (0/0). The A/B run must test exactly this: fresh start, 403 → 0 targets; fresh start with NETWORKS=1 → targets; then recreate the proxy without NETWORKS and check the targets stay (stale).
 - Choose a fix, preferring the narrowest read surface:
   (a) `NETWORKS=1` on the proxy (GET-only, since POST=0 stays). This widens what the proxy exposes: network names, subnets and attached containers. Security decision: lead reviews, and the decision is recorded in compose.yaml beside the proxy's existing risk comment.
   (b) a promtail/discovery setting that skips network labels, if one exists in the pinned version.
