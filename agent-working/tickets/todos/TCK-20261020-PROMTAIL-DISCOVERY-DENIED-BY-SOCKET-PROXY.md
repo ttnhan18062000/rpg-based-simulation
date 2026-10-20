@@ -58,7 +58,7 @@ In the 2026-10-19 SLO run, the Redis drill and the re-measure, Loki held no data
 - Root cause (version or config) stated, with evidence.
 - Loki receives backend, ai_worker and grafana logs in a live run; the queries are recorded.
 - The proxy allow-list change, if any, is the minimum needed, is GET-only, and its risk is written next to it in compose.yaml with the reviewer's decision.
-- A guard against silent regression: the runbook's alerting-pipeline or target checks include "promtail targets > 0". Optional: a base alert on `promtail_targets_active_total == 0`, or on the sent-entries rate being 0 with the stack up. Decide in the plan.
+- A guard against silent regression: the runbook's alerting-pipeline or target checks include "promtail targets > 0". A base alert LogShippingStalled on `promtail_targets_active_total == 0` (not on zero sent entries; lead 2026-10-20), proven by a stopped promtail and by a fresh promtail against the 403.
 
 ## Related Tickets
 - TCK-20261015-LOKI-37-READINESS-VIA-PROMTAIL (promtail 3.6.8 bump)
