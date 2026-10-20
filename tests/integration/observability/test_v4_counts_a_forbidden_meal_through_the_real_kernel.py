@@ -43,7 +43,7 @@ def _v4_row(run_id: str, ticks: int = 25) -> Dict[str, Any]:
     finally:
         kernel.shutdown()  # flushes the recorded event stream before the metrics read it
     try:
-        result = rpg_gate_metrics.compute(RunArtifacts(WORLD, SEED, ticks, "test", kernel.state, run_dir))
+        result = rpg_gate_metrics.compute(RunArtifacts(WORLD, SEED, ticks, "test", kernel.state, run_dir, seeds=(SEED,)))
         rows: List[Dict[str, Any]] = list(result["metrics"] if isinstance(result, dict) else result)
         return next(r for r in rows if r["id"] == "V4" and r.get("group") == "*")
     finally:
