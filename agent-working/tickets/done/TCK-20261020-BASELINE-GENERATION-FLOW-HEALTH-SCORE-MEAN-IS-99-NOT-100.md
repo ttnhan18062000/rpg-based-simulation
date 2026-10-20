@@ -38,7 +38,7 @@ Changing the health-score formula without a ruling.
 ## Acceptance Criteria
 - [x] The cause is named: the slow first run of the sweep trips HighCPULatencyRule (avg compute > 50 ms), -5 health. It is wall clock, not an engine change.
 - [x] The test passes for that reason (fixed tick cost through the existing LiveSignalSource seam); the 100.0 assertion is unchanged.
-- [ ] The CI-selection question (why CI integration did not catch it) is not answered here: on a fast CI host the first run stays under 50 ms, so it passes there. Left to rpg-planner.
+- [x] The CI-selection question: not a marker or selection gap. A fast CI host keeps the sweep's first run under the 50 ms HighCPULatencyRule limit, so the test passes there and fails only on a slow or loaded host (rpg-planner accepted this reading, 2026-10-20; no new ticket).
 
 ## Related Tickets
 - TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT
