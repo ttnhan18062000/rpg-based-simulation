@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P2
 audience: agent
@@ -38,3 +38,7 @@ tags: [platform, observability]
 - Project filter: no other stack's containers in Loki.
 - loki and promtail self-logs still dropped.
 - Secrets: no token or topic in any captured file (scan by counts).
+
+## Results (2026-10-20)
+- Static: compose config -q (both profiles), promtool check config, YAML parse, frontmatter, tests/static, the compose hygiene, loki cardinality, platform-domain, allowlist and registry tests: passed (203).
+- A/B (14:51 to 14:59Z): A and C' reproduce the 0-target state; B (NETWORKS=1) ships; C does not reproduce 10-18; B-surface: /networks only. Live proof (15:06 to 16:05Z, committed config): fresh start Normal with query 0; quiet stack 11 minutes Normal; (ii) fresh promtail against the 403 fired and resolved; (i) stopped promtail fired TargetDown and LogShippingErrors (noData) and both resolved. Record: docs/runbooks/records/2026-10-20-log-shipping-fix.md.

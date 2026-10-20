@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-OBSERVABILITY-PROFILE-HARDENING
-phase: open
+phase: done
 date: 2026-10-18
 tags: [platform, observability, security]
 ---
@@ -15,7 +15,7 @@ tags: [platform, observability, security]
 Compose: Grafana admin password from a secret file (no `admin` default), host ports bound to 127.0.0.1, Promtail's Docker socket behind a read-only proxy
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -128,7 +128,7 @@ None.
 - PASS again after the changes: `compose config -q` (default and observability).
 
 ## Files Changed
-`compose.yaml`, `docker/promtail-config.yml`, `.gitignore`, this ticket.
+`compose.yaml`, `docker/promtail-config.yml`, `.gitignore`, this ticket and its stored artifacts (retrospective), plus the follow-up changes in `TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY` (`NETWORKS=1` on the proxy).
 
 ## Completion Summary
-(open)
+The observability profile is hardened: Grafana's admin password comes from a gitignored compose secret with an entrypoint guard (it refuses to start on an empty file or on `admin`); Prometheus, Grafana, Loki and Redis publish on 127.0.0.1 only; the Docker socket is mounted read-only by one service, `docker-socket-proxy` (CONTAINERS=1, POST=0, and since 2026-10-20 NETWORKS=1, owner via lead-planner), and promtail reaches it over the internal network; the promtail drop rule uses the compose service label with a project filter. Runtime checks of 2026-10-18 passed (ports on loopback, Redis by service name, socket mounted only by the proxy, POST through the proxy refused). The Grafana fresh-volume check was run on 2026-10-20 after the owner removed `platform_grafana_data`: the real password returned 200, admin/admin 401, provisioning loaded on the fresh database, Grafana's first start peaked at 673 MiB (docker stats; anon 250 MiB) under the 1024m limit. Corrections recorded: the 2026-10-18 conclusion that `NETWORKS=1` was not needed was wrong (a fresh promtail ships nothing without it; the 10-18 evidence was most likely Loki holding older lines), fixed and proven in `TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY` (`docs/runbooks/records/2026-10-20-log-shipping-fix.md`). The ticket's Test Summary keeps the 10-18 text with a dated correction note. Staging artifacts did not exist before the work and were written retrospectively at close, labelled so. Knowledge index refreshed by lead-planner in the main checkout after merge.

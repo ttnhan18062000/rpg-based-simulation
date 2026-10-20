@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY
-phase: inprogress
+phase: done
 date: 2026-10-20
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Loki receives no logs: promtail's docker discovery is denied by the socket proxy (GET /networks returns 403)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -94,10 +94,11 @@ Not started.
  Standard tier: plan.md, investigation.md and test_plan.md at dispatch.
 
 ## Test Summary
-Not started.
+- **validated:** compose config -q (both profiles), promtool check config, YAML parse of the rules, frontmatter, tests/static, the compose hygiene, loki cardinality, platform-domain, allowlist and registry tests (203 passed); done_checker_static PASS.
+- **running locally:** the A/B and the live proof of 2026-10-20 (summarised in the Completion Summary; full timelines in `docs/runbooks/records/2026-10-20-log-shipping-fix.md`; evidence in the ticket's stored artifacts: `ab-2026-10-20/`, `proof-2026-10-20/`, `fresh-volume-2026-10-20/`).
 
 ## Files Changed
-None yet.
+`compose.yaml` (docker-socket-proxy `NETWORKS=1`, comments), `docker/prometheus.yml` (job `promtail`), `docker/grafana/provisioning/alerting/rules-base.yaml` (`LogShippingErrors`), `docs/runbooks/log-shipping.md` (new), `docs/runbooks/{README,target-down,api-latency-slo}.md`, `tools/loadtest/stack_guard.sh` (new), `docs/runbooks/records/2026-10-20-log-shipping-fix.md` (new), this ticket, its stored artifacts and the HARDENING ticket's notes.
 
 ## Completion Summary
-Not started.
+Loki had no data because promtail's Docker discovery calls the networks API on every refresh and the socket proxy (CONTAINERS=1 only) answered 403, so every refresh failed (code path cited at the loki v3.6.8 and proxy v0.4.1 tags). Fixed with `NETWORKS=1` on the proxy, `POST=0` unchanged (owner via lead-planner, 2026-10-20); the widening is `/networks` only (probes: `GET /networks` and `/networks/<id>` 200; `POST /networks/create`, `DELETE /networks/<id>`, `POST /containers/x/stop`, `GET /volumes`, `GET /images/json`, `GET /info` 403). A guard was added: a Prometheus job `promtail` and the base rule `LogShippingErrors` on promtail's own error-level log counter, with `docs/runbooks/log-shipping.md`. Running locally on 2026-10-20 (record `docs/runbooks/records/2026-10-20-log-shipping-fix.md`): a fresh start with the committed config shipped logs (11/11 targets, a new backend line after `up`) and the rule was Normal with its query at 0; a quiet stack stayed Normal for 11 minutes; a fresh promtail against the 403 fired the alert (Pending 15:21:56Z, Alerting 15:31:59Z, ntfy 15:32:14Z) and it resolved after the restore (ntfy 15:42:14Z); a stopped promtail fired `TargetDown` (ntfy 15:46:17Z) and `LogShippingErrors` through noData (ntfy 15:59:14Z) and both resolved (16:01:17Z and 16:04:14Z). Findings and gaps: (1) the stale-target hypothesis is NOT supported: after a proxy recreation without `NETWORKS` the per-container log streams died and shipping stopped; the 10-18 observation was most likely Loki holding older lines (a hypothesis, not reproduced); (2) lead's original guard on `promtail_targets_active_total` was dropped because promtail 3.6.8 does not export that metric for docker discovery; (3) a comparison inside the PromQL would have turned the healthy case into NoData and fired under noData Alerting, so the threshold lives in Grafana's step; (4) the rule fires on errors that recur at least every 5 minutes for 10 minutes, not on isolated ones; (5) ntfy reached 61 of 64 MiB on the docker stats basis (26 MiB anon), a limit decision is left to the planner; (6) one run per failure case. Staging artifacts were written by platform-planner at dispatch and updated at close. Knowledge index refreshed by lead-planner in the main checkout after merge.
