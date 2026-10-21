@@ -134,6 +134,29 @@ def test_a_re_close_with_a_late_shard_holding_the_old_unknown_row_still_has_one_
     assert check_duplicate_run_records(rows, ceiling=0)[0]["status"] == "PASS"
 
 
+def test_two_unknown_rows_for_one_execution_end_as_one_run_row_after_one_close(tmp_path):
+    # a checkpoint line and the final line of one execution, both unknown, both re-derivable in the same pass
+    data = tmp_path / "data"
+    _write(data / WEEK / "runs.jsonl", [_unknown(closure=300, final_status="NEEDS_CHANGES"), _unknown(closure=310)])
+    _write(data / WEEK / "tools.jsonl", _tool_rows(40, 41, 45, 50, 55))
+    result = _close(data)
+    rows = _runs(data)
+    assert len(rows) == 1 and result["durations"]["rederived"] == 1 and result["durations"]["stale_dropped"] == 1
+    assert rows[0]["closed_ts"] == _iso(310) and rows[0]["duration_rederived"] == "week_close"
+    assert len(dedupe_to_latest_per_execution(rows)) == 1 and check_duplicate_run_records(rows, ceiling=0)[0]["status"] == "PASS"
+
+
+def test_an_unknown_row_that_cannot_be_rederived_still_goes_when_a_sibling_was(tmp_path):
+    # the second row belongs to the same execution but another session id with no rows: it stays unknown on its own, so it must be dropped
+    data = tmp_path / "data"
+    _write(data / WEEK / "runs.jsonl", [_unknown(closure=300), _unknown(closure=310, sid="nobody")])
+    _write(data / WEEK / "tools.jsonl", _tool_rows(40, 41, 45, 50, 55))
+    _close(data)
+    rows = _runs(data)
+    assert len(rows) == 1 and rows[0]["duration_rederived"] == "week_close"
+    assert len(dedupe_to_latest_per_execution(rows)) == 1
+
+
 def test_the_cli_prints_one_line_with_the_counts(tmp_path, capsys):
     data = tmp_path / "data"
     _write(data / WEEK / "runs.jsonl", [_unknown(closure=300)])

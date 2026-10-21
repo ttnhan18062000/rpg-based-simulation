@@ -219,7 +219,9 @@ def rederive_week_durations(week: str, week_dir: Path) -> dict:
     `tool_activity` is rewritten in place (`start_ts`, `end_ts`, `duration_s`, `duration_source`, `claim_peers`, `closed_ts` when anchored)
     and marked `duration_rederived: "week_close"`; `declared` and `tool_activity` rows are never touched, and cost fields are not
     re-derived. Because the rewrite changes `start_ts`, an old `unknown` row for the same `(run_id, execution_id)` (a late shard folded
-    in by a re-close) would count as a second run under `run_dedup`: it is dropped, and only that row. Idempotent; never raises.
+    in by a re-close) would count as a second run under `run_dedup`: it is dropped, and only that row. When one execution holds several
+    unknown rows (a checkpoint line and the final line), the latest closure that resolves is re-derived and its unknown siblings are
+    dropped, so one execution ends as one run row. Idempotent; never raises.
     """
     result = {"rederived": 0, "stale_dropped": 0, "skipped": None}
     try:
@@ -245,10 +247,10 @@ def rederive_week_durations(week: str, week_dir: Path) -> dict:
                 by_session.setdefault(r["session_id"], []).append(r)
         for rows in by_session.values():
             rows.sort(key=lambda r: r["ts"])
-        ends_by_session: dict[str, list[str]] = {}
+        ends_by_session: dict[str, list[tuple[str, tuple]]] = {}  # session -> (end_ts, (run_id, execution_id)) of its hand closures
         for r in all_hand_runs:
             if hct._parse(r.get("end_ts")):
-                ends_by_session.setdefault(r["session_id"], []).append(r["end_ts"])
+                ends_by_session.setdefault(r["session_id"], []).append((r["end_ts"], (r.get("run_id"), r.get("execution_id"))))
 
         def closure_of(rec: dict) -> str:
             return rec.get("closed_ts") or rec.get("end_ts") or ""
@@ -261,23 +263,31 @@ def rederive_week_durations(week: str, week_dir: Path) -> dict:
         for i, r in enumerate(parsed):
             if r and r.get("duration_source") == "unknown" and (r.get("run_id"), r.get("execution_id")) in rederived_ids:
                 drop.add(i)
+        # One execution can hold several unknown rows (a checkpoint line and the final line). Re-derive the LATEST closure's row, the one
+        # that carries the final state, and drop its unknown siblings only when that succeeds; a sibling's own end never counts as a
+        # prior closure of the same execution.
+        groups: dict[tuple, list[int]] = {}
         for i in candidates:
-            rec = parsed[i]
-            sid, closure = rec["session_id"], closure_of(rec)
-            prior = [e for e in ends_by_session.get(sid, []) if hct._parse(e) < hct._parse(closure)]
-            res = hct.resolve(closure, None, None, sid, by_session.get(sid, []), prior)
-            if res.duration_source != hct.TOOL_ACTIVITY:
-                continue
-            old_end = rec["end_ts"]
-            rec.update({"start_ts": res.start_ts, "end_ts": res.end_ts, "duration_source": hct.TOOL_ACTIVITY,
-                        "claim_peers": res.claim_peers, "duration_rederived": "week_close"})
-            rec["duration_s"] = int((hct._parse(res.end_ts) - hct._parse(res.start_ts)).total_seconds())
-            if res.closed_ts:
-                rec["closed_ts"] = res.closed_ts
-            ends = ends_by_session.get(sid, [])
-            if old_end in ends:
-                ends[ends.index(old_end)] = res.end_ts  # later closures of this session claim after the re-derived end
-            result["rederived"] += 1
+            groups.setdefault((parsed[i].get("run_id"), parsed[i].get("execution_id")), []).append(i)
+        done_ids: dict[tuple, int] = {}
+        for key, members in sorted(groups.items(), key=lambda kv: hct._parse(closure_of(parsed[kv[1][-1]]))):
+            for i in reversed(members):  # latest closure first; the first row that resolves is the survivor
+                rec = parsed[i]
+                sid, closure = rec["session_id"], closure_of(rec)
+                prior = [e for e, k in ends_by_session.get(sid, []) if k != key and hct._parse(e) < hct._parse(closure)]
+                res = hct.resolve(closure, None, None, sid, by_session.get(sid, []), prior)
+                if res.duration_source != hct.TOOL_ACTIVITY:
+                    continue
+                rec.update({"start_ts": res.start_ts, "end_ts": res.end_ts, "duration_source": hct.TOOL_ACTIVITY,
+                            "claim_peers": res.claim_peers, "duration_rederived": "week_close"})
+                rec["duration_s"] = int((hct._parse(res.end_ts) - hct._parse(res.start_ts)).total_seconds())
+                if res.closed_ts:
+                    rec["closed_ts"] = res.closed_ts
+                ends_by_session[sid] = [(e, k) for e, k in ends_by_session.get(sid, []) if k != key] + [(res.end_ts, key)]
+                done_ids[key] = i
+                drop.update(m for m in members if m != i)
+                break
+        result["rederived"] = len([i for i in done_ids.values() if i not in drop])
         if not result["rederived"] and not drop:
             return result
         out = []
