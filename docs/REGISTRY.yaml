@@ -7773,6 +7773,20 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS.md
+  ticket_id: TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS
+  title: Week-close sweeps the main checkout's main.tools.jsonl into the closed week's
+    canonical tools file (read-only on the main checkout)
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - tools/agent-monitoring/week_close.py; tests/tools/test_week_close_main_checkout_sweep.py
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE.md
   ticket_id: TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE
   title: A hand closure made more than 30 minutes after the session's last tool call
@@ -7791,20 +7805,6 @@
   - agent-monitoring
   - data-quality
   - retro
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS.md
-  ticket_id: TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS
-  title: Week-close sweeps the main checkout's main.tools.jsonl into the closed week's
-    canonical tools file (read-only on the main checkout)
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-10-21'
-  related_code_areas:
-  - tools/agent-monitoring/week_close.py; tests/tools/test_week_close_main_checkout_sweep.py
-  artifact_files: []
-  tags:
-  - agent-monitoring
-  - data-quality
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION.md
   ticket_id: TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION

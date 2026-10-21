@@ -297,6 +297,17 @@ make agent-monitoring-close-week WEEK=2026-W39
 - `retro_nudge_hook.py` adds a report-only line when a finished week still holds shards. It never blocks
   and the close is never scheduled: one session closes one week, and the implementer commits it.
 
+- **Main-checkout tool rows** (`TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS`; see "Tool rows that never reach `main`"
+  above for the reminder lines). A session launched in the main checkout (lead, planners) is on branch `main`, so the hook writes
+  `main.tools.jsonl`, a file no PR branch carries, and a reminder cannot get it committed. A close run from a worktree finds the main
+  checkout with `git rev-parse --git-common-dir` and appends that week's rows that the canonical `tools.jsonl` lacks (full-row
+  identity, so a row also in a branch shard or already folded counts once; a torn line is skipped). It is read-only on the main
+  checkout: its `main.tools.jsonl` is never truncated, rewritten or staged. The close prints one line with the swept count. Two
+  limits: the other host's main checkout (u24desktop) is a different machine and is not swept, and a week that was already closed
+  only gains these rows on a re-close, which is back-fill and is done deliberately, not by this sweep. A close run in the main
+  checkout itself folds `main.tools.jsonl` like any other shard. The sweep adds rows, so it improves row coverage; it does not change
+  how hand-closure durations are derived.
+
 Code: `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`.
 
 ## Main-branch integrity report

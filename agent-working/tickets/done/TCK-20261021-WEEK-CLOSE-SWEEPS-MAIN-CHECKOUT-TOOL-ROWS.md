@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS
-phase: open
+phase: done
 date: 2026-10-21
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 Week-close sweeps the main checkout's main.tools.jsonl into the closed week's canonical tools file (read-only on the main checkout)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -75,7 +75,13 @@ this sweep. Lead already restored the 809 W43 rows into the main checkout's file
 - 2026-10-21 (agent-working-planner): re-scoped after the #703/#705 collision. Batch 9, first ticket, dispatched to agent-working-implementer.
 
 ## Test Summary
+tests/tools/test_week_close_main_checkout_sweep.py (9, ported unchanged from 587ab5e9e). Also passing: test_week_close.py, test_week_close_gate_verdicts_and_void.py, #703's test_session_settings_freshness.py and test_session_resolve_and_hook.py (126 in all). No full tests/tools run.
 
 ## Files Changed
+- tools/agent-monitoring/week_close.py (`find_main_checkout`, `_identity`, `sweep_main_checkout_tools`, `close_week` call, CLI line), ported unchanged
+- tests/tools/test_week_close_main_checkout_sweep.py (ported)
+- docs/agent-monitoring/README.md (one bullet under "Closing a finished week", pointing at #703's section)
+- agent-working/stored_artifacts/TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS/ (investigation.md, measure.py, unknown_durations.py, sessions.csv)
 
 ## Completion Summary
+A week close run from a worktree now appends the closed week's main-checkout `main.tools.jsonl` rows the canonical `tools.jsonl` lacks: read-only on the main checkout, full-row dedup, idempotent, never raises. W43 goes from 8 of 12 closing sessions with rows to 11 of 12 when it closes (simulated from the restored file). #703's SessionStart lines and the closed ticket were not touched. The evidence folder states where host ubuntu's measurement agrees with and differs from #703's u24 split.
