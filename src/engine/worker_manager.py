@@ -7,13 +7,16 @@ import logging
 import math
 import threading
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, Future
-from typing import List, Dict, Any, Optional, Callable
+from typing import TYPE_CHECKING, List, Dict, Any, Optional, Callable
 import multiprocessing
+
+if TYPE_CHECKING:
+    from src.core.worker_protocol import WorkerPacket, WorkerResult
 
 logger = logging.getLogger(__name__)
 
 
-def failure_no_op(packet):
+def failure_no_op(packet: "WorkerPacket") -> "WorkerResult":
     """The deterministic authoritative no-op a failed packet becomes (bounded_concurrency_contract §4): FAILURE status, an empty update for the packet's own entity."""
     from src.core.worker_protocol import ResultStatus, WorkerResult
     from src.core.updates import EntityUpdate
@@ -175,23 +178,28 @@ class WorkerManager:
                     with self._stats_lock:
                         self._inflight_count -= 1
 
-        # Collect results
-        # No timeout on result(): a chunk's outcome must not depend on how fast the host is. A hung chunk is a liveness matter for the watchdog
-        # (docs/architecture/simulation_watchdog.md), not the commit path's (bounded_concurrency_contract §4).
+        results.extend(self._collect(futures))
+
+        return results
+
+    def _collect(self, futures: List[tuple[Future, List["WorkerPacket"]]]) -> List["WorkerResult"]:
+        """Collect each chunk future's results in submission order.
+
+        No timeout on result(): a chunk's outcome must not depend on how fast the host is. A hung chunk is a liveness matter for the watchdog
+        (docs/architecture/simulation_watchdog.md), not the commit path's (bounded_concurrency_contract §4). A chunk that raised answers every one of its
+        packets with a FAILURE no-op, in packet order, so the other chunks still commit and each entity keeps its single result slot (§4).
+        """
+        collected: List["WorkerResult"] = []
         for future, chunk in futures:
             try:
-                chunk_results = future.result()
-                results.extend(chunk_results)
+                collected.extend(future.result())
             except Exception as e:
-                # A chunk that raised answers every one of its packets with a FAILURE no-op, in packet order, so the other chunks still commit, the entities of
-                # this one keep their single result slot (§4) and the batch's content does not depend on which chunk failed to run.
                 logger.error("Chunk future failure: %s; %d packet(s) become FAILURE no-ops", e, len(chunk))
-                results.extend(failure_no_op(p) for p in chunk)
+                collected.extend(failure_no_op(p) for p in chunk)
             finally:
                 with self._stats_lock:
                     self._inflight_count -= 1
-
-        return results
+        return collected
 
     def _execute_locally(
         self, 
@@ -225,7 +233,7 @@ class WorkerManager:
         
         start = time.perf_counter_ns()
         try:
-            result = fn(packet)
+            result: List[WorkerResult] | WorkerResult = fn(packet)
             elapsed = time.perf_counter_ns() - start
             from dataclasses import replace
             if isinstance(result, list):

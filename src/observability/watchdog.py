@@ -6,6 +6,8 @@ import requests
 from typing import Dict, Any, Optional
 
 from src.logging.formatter import setup_v2_logging
+from src.observability.alerts.manager import AlertsManager
+from src.observability.alerts.models import AlertEvent
 
 setup_v2_logging(os.environ.get("LOG_LEVEL", "INFO"))
 logger = logging.getLogger("watchdog")
@@ -146,8 +148,6 @@ class SimulationWatchdog:
             logger.critical("SYSTEM_CRITICAL: Persistent failure! Reason: %s",
                            status_report, extra={'component': 'watchdog', 'diagnostics': status_report})
             try:
-                from src.observability.alerts.manager import AlertsManager
-                from src.observability.alerts.models import AlertEvent
                 router = AlertsManager.get_router()
                 tick_value = int(self.last_tick) if self.last_tick and self.last_tick > 0 else 0
                 event = AlertEvent.create_watchdog_trip(
@@ -163,8 +163,6 @@ class SimulationWatchdog:
     def _route_blind_alert(self, status_report: Dict[str, Any]) -> None:
         """The watchdog cannot read the metrics endpoint: tell the operator once per dedup window (the router's own, SIM_ALERTS_DEDUP_WINDOW_SECONDS, default 60 s), without a stall alert."""
         try:
-            from src.observability.alerts.manager import AlertsManager
-            from src.observability.alerts.models import AlertEvent
             tick_value = int(self.last_tick) if self.last_tick and self.last_tick > 0 else 0
             AlertsManager.get_router().route(AlertEvent.create_watchdog_blind(
                 run_id=self.run_id,
