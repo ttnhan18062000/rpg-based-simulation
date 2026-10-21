@@ -308,6 +308,14 @@ make agent-monitoring-close-week WEEK=2026-W39
   checkout itself folds `main.tools.jsonl` like any other shard. The sweep adds rows, so it improves row coverage; it does not change
   how hand-closure durations are derived.
 
+- **Duration re-derivation** (`TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE`). After the fold and the
+  sweep, a close replays `hand_closure_time.resolve()` for every hand run of that week with `duration_source: unknown`, using the
+  session's unattributed tool rows of that week and the previous one. A run that now resolves `tool_activity` is rewritten in place and
+  marked `duration_rederived: "week_close"`; an old `unknown` row for the same `(run_id, execution_id)` that a late shard brings back is
+  dropped, so the run is never counted twice. It prints one line with the counts and is idempotent. Limits: cost (`cost_proxy_score`,
+  `tool_call_count`) is not re-derived; only a finished week is closed, so only then is a duration re-derived; rows that sit only in
+  the other host's checkout count only once they are merged.
+
 Code: `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`.
 
 ## Main-branch integrity report

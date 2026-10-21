@@ -67,6 +67,8 @@ def summary(runs: list[dict], events: list[dict]) -> dict | None:
         "derived": {"n": len([r for r in runs if is_derived(r) and r.get("duration_s")]), "avg_min": avg_minutes([r for r in runs if is_derived(r)])},
         "by_source": {s: {"count": len(rs), "with_duration": len([r for r in rs if r.get("duration_s")]),
                           "avg_min": None if s == "unknown" else avg_minutes(rs)} for s, rs in by_source.items()},
+        # TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE: a re-derived row counts as tool_activity above
+        "rederived": len([r for r in hand if r.get("duration_rederived")]),
         "hand_coverage": {"hand_runs": len(hand), "duration_known": len([r for r in hand if r.get("duration_s")]),
                           "cost_known": len([r for r in hand if r.get("run_id") in scored_runs])},
         "session_window": {"events": len([e for e in events if is_session_window(e)]),
@@ -102,7 +104,8 @@ def by_source_lines(p: dict) -> list[str]:
     cov = p["hand_coverage"]
     lines += ["", f"_Hand-closed coverage: duration known for {cov['duration_known']} of {cov['hand_runs']} "
                   f"({_pct(cov['duration_known'], cov['hand_runs'])}); a cost value for {cov['cost_known']} of {cov['hand_runs']} "
-                  f"({_pct(cov['cost_known'], cov['hand_runs'])})._", ""]
+                  f"({_pct(cov['cost_known'], cov['hand_runs'])})"
+                  + (f"; {p['rederived']} duration(s) re-derived at week close" if p.get("rederived") else "") + "._", ""]
     return lines
 
 

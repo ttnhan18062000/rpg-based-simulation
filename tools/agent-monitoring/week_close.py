@@ -40,6 +40,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import hand_closure_time as hct  # noqa: E402
 from monitoring_consolidation import DEFAULT_DATA_DIR, JSONL_KINDS, _default_csv_path_for  # noqa: E402
 
 #: What a week close folds: the three canonical kinds plus the gate-verdict ledger, so a closed week leaves no per-batch shard
@@ -198,6 +199,101 @@ def sweep_main_checkout_tools(week: str, week_dir: Path, main_checkout: object =
     return result
 
 
+def _previous_week(week: str) -> str:
+    year, number = (int(x) for x in _WEEK_RE.match(week).groups())
+    iso = (date.fromisocalendar(year, number, 1) - timedelta(days=7)).isocalendar()
+    return f"{iso[0]}-W{iso[1]:02d}"
+
+
+def _week_rows(data_dir: Path, week: str, suffix: str) -> list[dict]:
+    folder = Path(data_dir) / week
+    return [r for path in sorted(folder.glob(f"*{suffix}")) for r in hct._read_jsonl(path)] if folder.is_dir() else []
+
+
+def rederive_week_durations(week: str, week_dir: Path) -> dict:
+    """Re-derive the `unknown` durations of this week's hand closures from the tool rows present now
+    (TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE).
+
+    Replays `hand_closure_time.resolve()` for each hand run row with `duration_source: unknown` and a session id, oldest closure first, with
+    the session's unattributed rows of this and the previous week and the session's earlier hand closures. A run that now resolves
+    `tool_activity` is rewritten in place (`start_ts`, `end_ts`, `duration_s`, `duration_source`, `claim_peers`, `closed_ts` when anchored)
+    and marked `duration_rederived: "week_close"`; `declared` and `tool_activity` rows are never touched, and cost fields are not
+    re-derived. Because the rewrite changes `start_ts`, an old `unknown` row for the same `(run_id, execution_id)` (a late shard folded
+    in by a re-close) would count as a second run under `run_dedup`: it is dropped, and only that row. Idempotent; never raises.
+    """
+    result = {"rederived": 0, "stale_dropped": 0, "skipped": None}
+    try:
+        canonical = Path(week_dir) / "runs.jsonl"
+        if not canonical.is_file():
+            return result
+        data_dir = Path(week_dir).parent
+        lines = canonical.read_text(encoding="utf-8").splitlines()
+        parsed = []
+        for ln in lines:
+            try:
+                rec = json.loads(ln)
+            except ValueError:
+                rec = None
+            parsed.append(rec if isinstance(rec, dict) else None)
+        rederived_ids = {(r.get("run_id"), r.get("execution_id")) for r in parsed if r and r.get("duration_rederived")}
+        tool_rows = [r for w in (_previous_week(week), week) for r in _week_rows(data_dir, w, "tools.jsonl")]
+        all_hand_runs = [r for w in (_previous_week(week), week) for r in _week_rows(data_dir, w, "runs.jsonl")
+                         if r.get("execution_mode") == "hand" and r.get("session_id")]
+        by_session: dict[str, list[dict]] = {}
+        for r in tool_rows:
+            if r.get("run_id") is None and r.get("session_id") and hct._parse(r.get("ts")):
+                by_session.setdefault(r["session_id"], []).append(r)
+        for rows in by_session.values():
+            rows.sort(key=lambda r: r["ts"])
+        ends_by_session: dict[str, list[str]] = {}
+        for r in all_hand_runs:
+            if hct._parse(r.get("end_ts")):
+                ends_by_session.setdefault(r["session_id"], []).append(r["end_ts"])
+
+        def closure_of(rec: dict) -> str:
+            return rec.get("closed_ts") or rec.get("end_ts") or ""
+
+        candidates = sorted(
+            (i for i, r in enumerate(parsed) if r and r.get("execution_mode") == "hand" and r.get("duration_source") == "unknown"
+             and r.get("session_id") and (r.get("run_id"), r.get("execution_id")) not in rederived_ids and hct._parse(closure_of(r))),
+            key=lambda i: hct._parse(closure_of(parsed[i])))
+        drop = set()
+        for i, r in enumerate(parsed):
+            if r and r.get("duration_source") == "unknown" and (r.get("run_id"), r.get("execution_id")) in rederived_ids:
+                drop.add(i)
+        for i in candidates:
+            rec = parsed[i]
+            sid, closure = rec["session_id"], closure_of(rec)
+            prior = [e for e in ends_by_session.get(sid, []) if hct._parse(e) < hct._parse(closure)]
+            res = hct.resolve(closure, None, None, sid, by_session.get(sid, []), prior)
+            if res.duration_source != hct.TOOL_ACTIVITY:
+                continue
+            old_end = rec["end_ts"]
+            rec.update({"start_ts": res.start_ts, "end_ts": res.end_ts, "duration_source": hct.TOOL_ACTIVITY,
+                        "claim_peers": res.claim_peers, "duration_rederived": "week_close"})
+            rec["duration_s"] = int((hct._parse(res.end_ts) - hct._parse(res.start_ts)).total_seconds())
+            if res.closed_ts:
+                rec["closed_ts"] = res.closed_ts
+            ends = ends_by_session.get(sid, [])
+            if old_end in ends:
+                ends[ends.index(old_end)] = res.end_ts  # later closures of this session claim after the re-derived end
+            result["rederived"] += 1
+        if not result["rederived"] and not drop:
+            return result
+        out = []
+        for i, ln in enumerate(lines):
+            if i in drop:
+                result["stale_dropped"] += 1
+                continue
+            out.append(json.dumps(parsed[i], separators=(",", ":")) if i in candidates and parsed[i].get("duration_rederived") else ln)
+        tmp = canonical.with_name(canonical.name + ".closing")
+        tmp.write_text("".join(x + "\n" for x in out), encoding="utf-8")
+        os.replace(tmp, canonical)
+    except Exception as exc:  # noqa: BLE001 - a re-derivation problem never fails a week close
+        result["skipped"] = f"re-derivation failed: {type(exc).__name__}: {exc}"
+    return result
+
+
 def close_week(week: str, data_dir: Path = DEFAULT_DATA_DIR, today: date | None = None, main_checkout: object = _UNSET) -> dict:
     today = today or date.today()
     if not is_finished(week, today):
@@ -210,6 +306,7 @@ def close_week(week: str, data_dir: Path = DEFAULT_DATA_DIR, today: date | None 
         raise WeekCloseError(f"no such week directory: {week_dir}")
     result = {kind: _fold_kind(week_dir, kind) for kind in CLOSE_KINDS}
     result["main_checkout_tools"] = sweep_main_checkout_tools(week, week_dir, main_checkout)
+    result["durations"] = rederive_week_durations(week, week_dir)
     result["working_log"] = consolidate_pending_rows(
         data_root=Path(data_dir), csv_path=_default_csv_path_for(Path(data_dir)), week=week
     )
@@ -242,6 +339,9 @@ def main(argv=None) -> int:
         sw = result["main_checkout_tools"]
         print(f"{args.week} main-checkout tools rows: swept {sw['swept']} ({sw['duplicates_dropped']} duplicate(s) dropped)"
               + (f"; {sw['skipped']}" if sw["skipped"] else ""))
+        rd = result["durations"]
+        print(f"{args.week} hand-closure durations: re-derived {rd['rederived']} unknown, dropped {rd['stale_dropped']} stale unknown row(s)"
+              + (f"; {rd['skipped']}" if rd["skipped"] else ""))
         wl = result["working_log"]
         print(f"{args.week} working_log: folded {wl['shard_files']} shard file(s) ({wl['consolidated_rows']} row(s)"
               + (f", {wl['voided_rows']} voided, recorded in working_log_voids.jsonl" if wl.get("voided_rows") else "") + ")")

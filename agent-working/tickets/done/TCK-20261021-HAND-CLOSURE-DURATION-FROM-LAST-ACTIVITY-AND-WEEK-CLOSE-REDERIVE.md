@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE
-phase: open
+phase: done
 date: 2026-10-21
 tags: [agent-monitoring, data-quality, retro]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality, retro]
 A hand closure made more than 30 minutes after the session's last tool call derives its duration from that last activity block, and week-close re-derives unknown durations from all rows present
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -113,10 +113,27 @@ Two changes in `tools/agent-monitoring/hand_closure_time.py` and `week_close.py`
 - **Depends on #705.** Base this on origin/main after #705 merges, or merge it in when it lands. The sweep runs before the re-derivation.
 
 ## Implementation Notes
-- 2026-10-21 (agent-working-planner): owner yes (via lead-planner). Batch 9, dispatched to agent-working-implementer after #705 opened.
+- 2026-10-20 (agent-working-planner): owner yes (via lead-planner). Batch 9.
+- 2026-10-21 (agent-working-implementer): **Readers of the touched fields** (searched `src/`, `frontend/`, `dashboard-frontend/` and `tools/`; no src/ or frontend edit needed):
+  - `src/api/agent_ops_dashboard/ingest.py` (lines ~287, 401-403) builds `RunSummary`/run dicts from explicit `start_ts`, `end_ts`, `duration_s` reads, never `**record`; the new keys are ignored. `models.py` pydantic models use default extra handling. Dashboard stats/api tests pass (see Test Summary).
+  - `dashboard-frontend/src/api.ts` mirrors those three fields only.
+  - `tools/agent-monitoring/duckdb_view.py`: fixed column map, "anything else in a record is ignored" (confirmed in its comment); `closed_ts`/`duration_rederived` are not added.
+  - `tools/agent-monitoring/duration_utils.py` (`compute_active_idle_split`): **needed a change.** Hand-closure events are stamped with the recording time, which is after an anchored `end_ts`; counting them made the wait up to the recording one idle gap larger than the run. Events after `end_ts` are now skipped (test added).
+  - `validate.py` (end_ts present/absent only), `build_index.py`, `legacy_reader.py`, `read_ranged_baseline.py`, `generate_retro.py`: read `end_ts`/`duration_s` as values; unaffected.
+  - `retro_provenance.py`: re-derived rows are `tool_activity`; the hand-coverage line now says how many were re-derived.
+  - `run_dedup.py`/`duplicate_run_record_check.py`: group on `(run_id, execution_id, start_ts)`; handled by dropping the stale unknown row at the re-close (tested with both).
+- `end_ts` for the anchored case is the last tool call; no reader relied on it being the closure time.
 
 ## Test Summary
+New: test_hand_closure_time.py (9: anchored five rows with `closed_ts`, two rows unknown, non-empty block unchanged, back-to-back unchanged, claim after previous closure, declared never anchors, field validation, CLI end to end, duration_utils clamp); test_week_close_rederive_durations.py (9: re-derive and mark, idempotent, too few rows untouched, late shard and previous week, declared/tool_activity/other-session/non-hand untouched, later closure claims after the re-derived end, re-close with a late shard holding the old unknown row keeps one run and passes `check_duplicate_run_records` with ceiling 0, CLI line); test_retro_provenance.py (1). Passing unchanged: dashboard stats and api tests, generate_retro, record_run, record_hand_orchestrated_closure, week_close (4 files), hand_closure_time. No full tests/tools run.
 
 ## Files Changed
+- tools/agent-monitoring/hand_closure_time.py (`Resolution.closed_ts`, `_anchored`, `resolve`, docstring)
+- tools/agent-monitoring/record_hand_orchestrated_closure.py (writes `closed_ts`), record_run.py (validates `closed_ts`, `duration_rederived`)
+- tools/agent-monitoring/week_close.py (`rederive_week_durations`, `close_week`, CLI line)
+- tools/agent-monitoring/duration_utils.py (events after `end_ts` skipped), retro_provenance.py (re-derived count)
+- docs/agent-monitoring/schema.md, README.md
+- tests/tools/test_hand_closure_time.py, test_week_close_rederive_durations.py, test_retro_provenance.py
 
 ## Completion Summary
+A hand closure made more than 30 minutes after the session's last tool call now derives from that last activity block (`tool_activity`, `end_ts` = last claimed row, `closed_ts` = the closure), and a week close re-derives `unknown` hand durations from the rows then present, marks them `duration_rederived: "week_close"`, and drops a stale unknown row a late shard brings back. Re-run on a scratch copy of W42-W43 from `origin/main` plus the main checkout's restored `main.tools.jsonl` (W43 hand run rows): **before** 19 `tool_activity` / 43 `unknown`; **after one close** 30 `tool_activity` (11 re-derived) / 32 `unknown`, 1404 rows swept; a second close changed nothing. The remaining unknowns are the ones with no rows at all, too few rows, or true back-to-back closures (unchanged rules). No src/ or frontend change.
