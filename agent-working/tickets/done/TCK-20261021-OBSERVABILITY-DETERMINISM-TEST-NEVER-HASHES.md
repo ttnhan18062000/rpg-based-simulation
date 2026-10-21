@@ -62,12 +62,13 @@ Lead-planner-u24's read-only pass on origin/main (2026-10-21): the test is named
 ## Implementation Notes
 - The test now runs WORLD frontier_living_world, seed 42, 100 ticks through `build_kernel` (pinned governor, sequential executor, audit mode) under OFF and under FULL and compares `CanonicalStateHasher.get_hash` of the final state. The name `test_observability_off_and_full_have_same_authoritative_hash` is kept.
 - Non-vacuity: it also asserts FULL wrote `simulation_events.jsonl` and OFF did not, so the two modes really differ in what they record.
-- Mutation check (`test_the_comparison_catches_an_observability_mode_that_writes_authoritative_state`): a FULL run that advances `state.tick` after every tick (an observability path writing authoritative state) gets a different hash from OFF. It is a self-test of the comparison's power, not a production-code mutation: the repository has no switch that makes a mode write state.
+- Mutation check, after testing-planner's review: `test_the_comparison_catches_an_observability_phase_that_writes_an_entitys_hp` patches `Kernel._phase_observability` inside the test (the FULL-only phase: it returns at once under OFF) so that, after the real phase, it also bumps the hp of the lowest-id entity in the authoritative state; the faulty FULL hash differs from both the clean FULL and the OFF hash. The fault is injected at the observability boundary of the test; no production switch exists. The coarser `test_the_comparison_catches_a_state_tick_advanced_after_each_tick` (state tick advanced after every tick, no observability code involved) is kept as a separate case.
+- The docstring states which partition `CanonicalStateHasher` covers (the authoritative state: scalars, entities, regions, places, scars, nodes, buildings, corpses, items, chests, groups, storage, camps, global resources, tiles, rng checkpoint, bridge fields); observability-only data is outside it by design.
 - FULL and OFF hashes are equal on main (735a1c635): no determinism finding.
 - Not changed: docs/simulation_quality/quality_scoring_contract.md:1217 and docs/testing/observability_coverage.md:85 cite the test as determinism evidence; they are now true. No parity-ledger entry cites it by name (grep).
 
 ## Test Summary
-2 passed in 23 s, serial, peak RSS 164 MB. Hash equality OFF vs FULL on frontier_living_world seed 42, 100 ticks.
+3 passed in 32 s, serial, peak RSS 161 MB. Hash equality OFF vs FULL on frontier_living_world seed 42, 100 ticks.
 
 ## Files Changed
 tests/integration/observability/test_phase28_observability_determinism.py
