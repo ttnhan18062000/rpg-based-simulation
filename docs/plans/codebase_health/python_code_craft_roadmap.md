@@ -225,15 +225,15 @@ Each is separately closable. None before M6 modifies `src/`.
 | M2 | Environment | uv as the single dependency source: refreshed `uv.lock`, dev tools in a dependency group, CI on `uv sync`, Python version aligned, environment guide updated | codebase |
 | M3 | Measure and baseline | Ruff, complexipy, jscpd and the line-count script configured; `codebase/health/` adapters and ratchet; registry seeded from a full scan; first health snapshot taken | codebase |
 | M4 | Gates | Ratchet as an advisory CI job with changed-line PR feedback, blocking after a clean soak; mypy blocking through `mypy-baseline` with ledger and static-test updates; prek hooks; type-checker trial (basedpyright vs Pyrefly) reported | codebase |
-| M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation. **done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (done 2026-10-05, PR #351, advisory; its flip and test retirement are `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`, prepared on branch `import-linter-flip`: the step is blocking from that PR's merge and 7 class E tests are retired with it); the ast-grep SARIF and snapshot follow-ups and `exemplar_modules` were delivered by #318** | codebase |
+| M5 | Structure | Package registry seeded; structure audit decisions; ast-grep rule pack for project rules; import-linter evaluation. **done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (done 2026-10-05, PR #351, advisory; its flip and test retirement are `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT`, done: merged as #671 (`309715a72`, 2026-10-19), the import-linter step is blocking since then and 7 class E tests are retired; the phase19 OFF-mode check stays with testing (#621); #674 (`abef4d682`) added zero ruff findings in `codebase/` and stale-entry naming)); the ast-grep SARIF and snapshot follow-ups and `exemplar_modules` were delivered by #318** | codebase |
 | M6 | Agent integration | Skill, edit hook, implementer pointer, review rubric; batched with the M5 follow-ups (exemplar modules, ast-grep SARIF and snapshot). Brief `python_code_craft_m6_agent_integration_ticket_brief.md` (2026-10-04). **done 2026-10-04 (PR #318)** | codebase, by owner decision 17 (paths under `.claude/**` stay agent-working's) |
-| M7 | Refactor lane | **Deferred until the owner reopens `src/`.** Standing batch folder, one file per batch, fed by the registry; first targets `api/server.py` and `observability/event_extractor.py` | codebase, with rpg-planner for engine files |
+| M7 | Refactor lane | **Reopened 2026-10-20 (decision 7 amendment); first target `api/server.py`.** Standing batch folder, one file per batch, fed by the registry; first targets `api/server.py` and `observability/event_extractor.py` | codebase, with rpg-planner for engine files |
 
 **M4 soak:** start = 2026-10-03 (PR #305, which added the advisory `Code health (advisory)` CI job, merged 2026-10-03T16:47:13Z), end = 2026-10-17 (start + 14 days). The flip ticket `TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` carries the same dates.
 
 **M5 soaks:** start = 2026-10-04 (PR #315, which added the advisory package-registry and ast-grep checks, merged 2026-10-04T06:26:43Z), end = 2026-10-18 (start + 14 days). The flip tickets `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING` and `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING` carry the same dates.
 
-Order: M1, M2, M3, M4, M5 (done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION` (blocked on owner and testing planner)). M6 (done 2026-10-04 (PR #318)) can start after M3. M7 is a lane, not an epic, and never closes.
+Order: M1, M2, M3, M4, M5 (done 2026-10-04 (PR #315), carrying forward: `TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING`, `TCK-20261004-AST-GREP-RULE-PACK-FLIP-BLOCKING`, `TCK-20261004-IMPORT-LINTER-ADOPTION`, all done: the flip merged as #671 and the M5 folder is in `done/`). M6 (done 2026-10-04 (PR #318)) can start after M3. M7 is a lane, not an epic, and never closes.
 
 ## 8. Owner decisions
 
@@ -248,6 +248,8 @@ Recorded 2026-10-02:
 5. **Gate strictness:** advisory for a soak period, then blocking for new violations only.
 6. **Toolchain preference:** modern tools, complexity accepted.
 7. **`src/` is frozen for this plan** until the owner says otherwise.
+
+   *Amended 2026-10-20 by owner (owner via lead-planner): `src/` is reopened for the M7 refactor lane only: one `src/` file per batch, starting with `src/api/server.py`, dispatched only after the ratchet round-2 and Pyrefly batches merge and after `rpg-planner` confirms no open work on that file (asked on a `for:rpg-planner` issue). Everything outside M7 stays frozen.*
 
 8. **Toolchain approved** as proposed in Section 6.2 (2026-10-02).
 9. **M2 (uv in CI) may proceed now**, one job migrated first, `requirements.txt` kept as a generated
@@ -292,7 +294,7 @@ Recorded 2026-10-02:
 
 Tickets: M1 to M3 in `agent-working/tickets/done/python-code-craft/` (closed 2026-10-03, PRs #288,
 #297, #298). M4 in `agent-working/tickets/todos/python-code-craft-gates/` (epic plus six children,
-order in `SEQUENCE.md`; brief `python_code_craft_m4_gates_ticket_brief.md`). M5 in `agent-working/tickets/todos/python-code-craft-structure/` (epic `TCK-20261004-PYTHON-CODE-CRAFT-STRUCTURE-EPIC` and four children done 2026-10-04, three blocked follow-ups still there; brief `python_code_craft_m5_structure_ticket_brief.md`; results in `src_package_structure_audit.md` and `import_linter_evaluation.md`).
+order in `SEQUENCE.md`; brief `python_code_craft_m4_gates_ticket_brief.md`). M5 in `agent-working/tickets/todos/python-code-craft-structure/` (epic `TCK-20261004-PYTHON-CODE-CRAFT-STRUCTURE-EPIC` and four children done 2026-10-04, all carry-forwards since done (flip #671) and the folder is in `done/`; brief `python_code_craft_m5_structure_ticket_brief.md`; results in `src_package_structure_audit.md` and `import_linter_evaluation.md`).
 
 ## 9. Risks
 

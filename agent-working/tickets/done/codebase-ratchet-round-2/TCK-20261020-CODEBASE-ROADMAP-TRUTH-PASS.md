@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-CODEBASE-ROADMAP-TRUTH-PASS
-phase: open
+phase: done
 date: 2026-10-20
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 Bring the code-craft roadmap up to date (M5 and the import-linter flip done) and record the owner's M7 reopen of `src/`
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -44,9 +44,9 @@ In `docs/plans/codebase_health/` only:
 - Rewriting past decisions or soak findings.
 
 ## Acceptance Criteria
-- [ ] No sentence in the roadmap still describes M5, the flip or self-lint as pending. Check with `grep -n "prepared on branch\|blocked follow-ups\|Deferred until the owner reopens"` (0 hits).
-- [ ] The decision 7 amendment text is present verbatim.
-- [ ] `tests/docs` passes. Frontmatter is valid. REGISTRY is regenerated.
+- [x] No sentence in the roadmap still describes M5, the flip or self-lint as pending. Check with `grep -n "prepared on branch\|blocked follow-ups\|Deferred until the owner reopens"` (0 hits).
+- [x] The decision 7 amendment text is present verbatim.
+- [x] `tests/docs` passes. Frontmatter is valid. REGISTRY is regenerated.
 
 ## Related Tickets
 - TCK-20261020-RATCHET-TIGHTEN-ROUND-2 (same batch)
@@ -68,9 +68,15 @@ None (docs only).
 None.
 
 ## Implementation Notes
+Edited docs/plans/codebase_health/ only. Roadmap: M5 row, Order paragraph and tickets paragraph now say done (flip #671, `309715a72`; #674 `abef4d682`; M5 folder in `done/`; phase19 OFF-mode stays with testing #621); M7 row says reopened 2026-10-20; decision 7 amendment inserted verbatim (extracted from this ticket, checked by string match). `import_linter_evaluation.md` and `import_linter_soak_review.md` each got one line `**Outcome:** merged #671 (2026-10-19).`
 
 ## Test Summary
+- `grep -n "prepared on branch\|blocked follow-ups\|Deferred until the owner reopens"` on the roadmap: 0 hits.
+- Amendment verbatim: string match True.
+- `pytest tests/docs`: 72 passed, 2 skipped, 1 xfailed.
 
 ## Files Changed
+docs/plans/codebase_health/python_code_craft_roadmap.md, import_linter_evaluation.md, import_linter_soak_review.md; docs/REGISTRY.yaml; this ticket.
 
 ## Completion Summary
+Roadmap no longer describes finished M5/flip work as pending and records the M7 reopen next to decision 7.

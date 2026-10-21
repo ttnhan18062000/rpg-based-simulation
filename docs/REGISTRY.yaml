@@ -8111,18 +8111,7 @@
   - testing
   - workflows
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
-  ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
-  title: Tune DiskWillFillIn24h so short bursts of heavy local work don't trip it
-  tier: hotfix
-  ticket_type: chore
-  date: '2026-10-20'
-  related_code_areas:
-  - docker/grafana/provisioning/alerting/rules-base.yaml
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/codebase-ratchet-round-2/TCK-20261020-CODEBASE-ROADMAP-TRUTH-PASS.md
+  path: agent-working/tickets/done/codebase-ratchet-round-2/TCK-20261020-CODEBASE-ROADMAP-TRUTH-PASS.md
   ticket_id: TCK-20261020-CODEBASE-ROADMAP-TRUTH-PASS
   title: Bring the code-craft roadmap up to date (M5 and the import-linter flip done)
     and record the owner's M7 reopen of `src/`
@@ -8135,7 +8124,7 @@
   - architecture
   - delivery
 - type: ticket
-  path: agent-working/tickets/todos/codebase-ratchet-round-2/TCK-20261020-RATCHET-TIGHTEN-ROUND-2.md
+  path: agent-working/tickets/done/codebase-ratchet-round-2/TCK-20261020-RATCHET-TIGHTEN-ROUND-2.md
   ticket_id: TCK-20261020-RATCHET-TIGHTEN-ROUND-2
   title: Lock in the code-health, mypy and parity-schema debt paid down since 2026-10-09
   tier: hotfix
@@ -8149,6 +8138,17 @@
   tags:
   - architecture
   - delivery
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
+  ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
+  title: Tune DiskWillFillIn24h so short bursts of heavy local work don't trip it
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - docker/grafana/provisioning/alerting/rules-base.yaml
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
   ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
