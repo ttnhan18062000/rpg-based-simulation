@@ -37,6 +37,8 @@ This contract covers the transition of the concurrency layer from a prototype to
 
 ## 4. Fallback and Failure Law
 - **Failure-to-No-Op**: A worker failure (exception, timeout, or invalid status) results in a deterministic **authoritative no-op**.
+- **Chunk failure**: when a pooled chunk raises as a whole, every packet in it becomes a `FAILURE` no-op (`failure_no_op` in `src/engine/worker_manager.py`), in packet order; the other chunks still commit.
+- **No timeout in the commit path**: a hung chunk is not timed out (`future.result()` has no timeout), because a wall-clock decision would make the committed state depend on host speed. Liveness is the watchdog's (`docs/architecture/simulation_watchdog.md`). The `TIMEOUT` status of §2 stays a named but unused value; do not remove it.
 - **Slot Consumption**: A failed result consumes the entity's single allow result slot for that tick. No retries are permitted within the same tick.
 - **Fallback Equivalence**: Synchronous local execution (fallback) MUST enter the same collection and sorting path as concurrent execution to ensure semantic identity.
 
