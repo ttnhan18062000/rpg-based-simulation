@@ -14,6 +14,7 @@ from pathlib import Path
 from src.engine.phases import get_authoritative_phases
 from src.core.updates import StateUpdate, EntityUpdate
 from src.core.grief_triggers import pending_grief_triggers
+from src.core.concurrency_law import ConcurrencyLaw
 from src.core.governance import RuntimeMode
 from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
@@ -602,8 +603,7 @@ class Kernel:
         from src.core.updates import StateUpdate, EntityUpdate
         from src.core.protocol_validator import ProtocolViolationError
         from src.engine.pipeline import AuthoritativeApplyPipeline
-        
-        self._final_results.sort(key=lambda r: (r.class_priority, -r.local_priority, r.entity_id))
+        self._final_results.sort(key=ConcurrencyLaw.commit_key)
         
         entity_updates: Dict[int, EntityUpdate] = {}
         overrun_reported = False
