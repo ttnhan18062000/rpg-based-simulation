@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH
-phase: open
+phase: done
 date: 2026-10-16
 tags: [agent-monitoring, hooks, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, hooks, data-quality]
 Say when a session's tool-call hook is not loaded, and get late tool rows committed, so tools shards cover the sessions that close tickets
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,13 +62,19 @@ Follow-up filed by `TCK-20261015-TOOLS-TELEMETRY-FAILURES-AND-DURATIONS` (scope 
 - The 5-of-19 and 14-of-19 split uses the transcripts present on one host; sessions on other hosts or since purged are not in it.
 
 ## Implementation Notes
-(filled during work)
+`tools/sessions/settings_freshness.py` gains `monitoring_hook_line` and `unstaged_tool_rows_line`; `session_start_hook.py` prints both on startup/resume/clear (not compact), next to the session-code freshness line. Both are report-only, read-only, and fail open. Measurements and the decision are in `agent-working/stored_artifacts/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH/investigation.md`. Doc: a section in `docs/agent-monitoring/README.md`. No `.claude/settings.json` change, so there is no literal settings diff for the PR body.
 
 ## Test Summary
-(filled during work)
+`pytest tests/tools/test_session_settings_freshness.py tests/tools/test_session_resolve_and_hook.py tests/tools/test_agent_working_paths_guard.py -p no:randomly`: 7 new freshness tests and 1 new wiring test pass; the live `.` worktree gives no hook line and a pending-rows line.
+Measured causes (counts): of 41 W41 closing sessions 11 had tool rows on main (27%); of the 19 with a transcript, 8 had rows in an unmerged worktree shard, 6 had no hook event at all, 5 had hook events but no rows. If rows in unmerged worktree shards are counted, 19 of 41 sessions (46%) have rows somewhere.
+Re-measure: the new lines affect sessions started after this merges, so coverage after both can only be measured on the next closed week's data (W44 retro); it is not claimed here.
 
 ## Files Changed
-(filled during work)
+- `tools/sessions/settings_freshness.py`
+- `tools/sessions/session_start_hook.py`
+- `tests/tools/test_session_settings_freshness.py`
+- `tests/tools/test_session_resolve_and_hook.py`
+- `docs/agent-monitoring/README.md`
 
 ## Completion Summary
-(filled at close)
+Late rows are decided: a SessionStart reminder, no flush (8 of 19 sessions had rows that only lacked a commit; a flush would add a git-writing second write path; the pre-push check misses older weeks). Hook-not-loaded now says so at start. The earlier 14/5 split relied on a text match transcripts do not support; the corrected split is 8/6/5. Known gaps: the 5 'hook fired, no row' sessions are not provably the silent `test -f` skip; 11 of the 30 uncovered sessions have no transcript on this host; the post-change coverage figure needs a week of data.
