@@ -90,6 +90,6 @@ After the switch, a 401/403 from the metrics port means the watchdog is misconfi
 - `src/observability/alerts/models.py`: `AlertEvent.create_watchdog_blind`.
 - `docs/architecture/simulation_watchdog.md`: responsibility 1 rewritten.
 - Dedup window verified from code: `AlertDeduplicator(suppression_window_seconds=60.0)` and `AlertsManager.get_router` uses `SIM_ALERTS_DEDUP_WINDOW_SECONDS` else 60.0 (alerts/deduplicator.py, alerts/manager.py L24-28). The ticket's "60 s" is right. It is a fixed window from the first alert (the entry is not refreshed while suppressed).
-- Parity: no ledger entry covers the external watchdog (the `watchdog` hits in docs/parity_ledger are the kernel's tick-budget watchdog), so none was added.
+- Parity: no ledger entry covered the external watchdog (the `watchdog` hits in docs/parity_ledger are the kernel's tick-budget watchdog), so INFRA-438 was added (verified, P2, test_watchdog_metrics_source.py; no schema error on the entry, the ledger-wide ratchet reports 0 new).
 - compose.yaml: unchanged by ruling; the code default `http://backend:9109` covers it. fyi for platform-planner (PR notes): the watchdog service now reads `backend:9109` (set `METRICS_URL` to override); nothing in compose needs editing.
 - No simulation file touched, no hash check needed.
