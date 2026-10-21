@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261021-PYREFLY-ADVISORY-REPORT
-phase: open
+phase: done
 date: 2026-10-21
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 Pyrefly as an advisory second type-checker opinion: a report-only CI job and Makefile target that never block
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -88,10 +88,19 @@ Owner decision 2026-10-20 (via lead-planner): batch 2 of the code-craft round is
 - Open: whether the baseline is keyed by line number (churn on every unrelated edit). Measure it on one trivial local edit and record the result. If it churns, the report still never blocks; the plan says how often `typecheck-pyrefly-baseline-sync` runs (with each mypy re-sync).
 
 ## Implementation Notes
-Staging artifacts are in `agent-working/staging_artifacts/TCK-20261021-PYREFLY-ADVISORY-REPORT/` (written by codebase-planner; the implementer updates them as the work changes).
+Staging artifacts moved to `agent-working/stored_artifacts/TCK-20261021-PYREFLY-ADVISORY-REPORT/` (plan.md holds the measurements).
+- CI placement changed from a job to a last step in `code-health` (testing's `MAX_JOB_COUNT = 21`, #659; codebase-planner + lead approved); 8.11 notice #708.
+- The report passes `--python-interpreter-path sys.executable`: with a bare interpreter Pyrefly reports 6 extra errors.
+- Baseline is written by `codebase.gates.pyrefly_report --update-baseline` (Pyrefly's own `--update-baseline`); no `pyrefly suppress`, nothing under `src/`.
 
 ## Test Summary
+- Pyrefly 1.3.2 on `src/`: 709 errors, 2.45 s wall, 216 MB peak RSS; `make typecheck-pyrefly` prints 0 new against the fresh baseline. Baseline does not churn on a one-line edit.
+- `tests/codebase` + `tests/docs` + `tests/static`: 723 passed, 2 skipped, 1 xfailed (one pin fixed afterwards, re-run green); touched files re-run: 131 passed.
+- `tests/tools` (lead's slot, MemoryMax=3G, 980 s): 5196 passed, 56 skipped, 1 xfailed.
+- Parity schema check: 2844, 0 rose. `git diff origin/main -- src/` empty. `uv lock` diff: pyrefly only.
 
 ## Files Changed
+pyproject.toml, uv.lock, Makefile, .github/workflows/test.yml (+8/-0), codebase/gates/pyrefly_report.py, codebase/baselines/pyrefly_baseline.json, tests/codebase/test_pyrefly_report.py, tests/codebase/test_import_contracts.py, tests/static/test_ci_uv_install.py, docs/parity_ledger/infrastructure.yaml (INFRA-TYPE-002), roadmap, trial doc, python_code_standard.md, this ticket, stored artifacts, REGISTRY, monitoring shards.
 
 ## Completion Summary
+Pyrefly 1.3.2 runs as an advisory, never-blocking report: pin, `[tool.pyrefly]`, own baseline, `pyrefly_report` module, two Makefile targets, and one last step in the Code health job with step-level `continue-on-error`. Nothing blocking changed.
