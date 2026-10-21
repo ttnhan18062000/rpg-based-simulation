@@ -15,7 +15,7 @@ tags: [testing, workflows]
 The three Semgrep `use-defused-xml-parse` findings in `tools/ci_junit_merge.py` and `tools/ci_junit_summary.py` are accepted in code with a reason, the same way #667 handled testing's report tools.
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 hotfix
@@ -69,6 +69,7 @@ These `ET.parse` calls read JUnit XML that pytest's `--junit-xml` wrote in this 
 - tools/ci_junit_merge.py, tools/ci_junit_summary.py
 
 ## Assumptions / Open Questions
+- **UNBLOCKED 2026-10-21:** #701 merged as 7ae9a6ebc, and origin/main registries/session_roles.yaml:88 puts `tools/ci_junit_*.py` in testing.owns. Checked on main: the only parse sites are exactly the three lines in scope (ci_junit_merge.py:61; ci_junit_summary.py:94 and :149). There is no `fromstring`. Dispatched to testing-implementer.
 - If the roles ticket instead routes these files elsewhere, this ticket moves to that owner with the ruling attached as a recommendation.
 
 ## Implementation Notes
