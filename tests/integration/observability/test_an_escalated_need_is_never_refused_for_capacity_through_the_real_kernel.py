@@ -95,6 +95,7 @@ def test_a_full_cap_is_exceeded_by_at_most_one_project_per_need():
         _close(kernel, run_id)
 
 
+@pytest.mark.resource_budget_large  # 600 to 2100 real ticks: inherently over the default per-test time limit
 def test_hunger_and_sleep_switching_over_600_ticks_never_hold_more_than_the_cap_plus_two_live_projects():
     """The exemption is ONE live project per need kind (the current one, else the newest): an entity whose dominant need flips between hunger and
     sleep keeps creating need projects, and the older ones are trimmed like any project. It never holds more than the cap (3) plus two."""
@@ -156,6 +157,7 @@ def test_an_admitted_hunger_project_that_is_not_current_survives_the_bandwidth_t
         _close(kernel, run_id)
 
 
+@pytest.mark.resource_budget_large  # 600 to 2100 real ticks: inherently over the default per-test time limit
 def test_the_gate_run_blacksmith_gets_a_hunger_project_by_about_hunger_95_and_eats_before_100__pins_current_scoring_not_the_rule():
     """The bs13 case itself, no staging. PINS CURRENT SCORING, NOT THE RULE: the hunger goal only beats town_return (about 139) near hunger 95, so the
     project appears around tick 1900; this tightens when the town_return outbid is fixed (TCK-20261020-TOWN-RETURN-OUTBIDS-AN-ESCALATED-NEED-UNTIL-ABOUT-95)."""
