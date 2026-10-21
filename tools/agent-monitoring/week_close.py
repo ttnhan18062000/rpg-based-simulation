@@ -42,6 +42,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import hand_closure_time as hct  # noqa: E402
 from monitoring_consolidation import DEFAULT_DATA_DIR, JSONL_KINDS, _default_csv_path_for  # noqa: E402
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 #: What a week close folds: the three canonical kinds plus the gate-verdict ledger, so a closed week leaves no per-batch shard
 #: of any family that has them (TCK-20261015-WEEK-CLOSE-ALL-SHARD-KINDS-AND-VOID-ROW). `manual_actions.jsonl` and
@@ -168,7 +169,7 @@ def sweep_main_checkout_tools(week: str, week_dir: Path, main_checkout: object =
         if main is None:
             result["skipped"] = "no separate main checkout (this is the main checkout, or git cannot say)"
             return result
-        src = Path(main) / "agent-working" / "agent-monitoring" / "data" / week / MAIN_CHECKOUT_TOOLS_SHARD
+        src = Path(main) / AGENT_MONITORING / "data" / week / MAIN_CHECKOUT_TOOLS_SHARD
         if not src.is_file():
             result["skipped"] = f"no {MAIN_CHECKOUT_TOOLS_SHARD} for {week} in the main checkout"
             return result
