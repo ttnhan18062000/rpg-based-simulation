@@ -250,7 +250,7 @@ def bead(s: rule.Sprite) -> list[Row]:
     fill = len(sil) / (w * h)
     base = {col for col in c.values()}
     hi = [p for p, col in c.items() if sum(col) > 3 * 0x80]
-    sprites = la.all_icon_sprites()
+    sprites = la.adopted_icon_sprites()
     near = min(rule.shape_distance(s, sprites[t]) for t in TIERS)
     return [
         Row("round, not square", "silhouette fills at most 80 % of its bounding box (a circle is 79 %, a square 100 %, an octagon about 88 %)", f"{100 * fill:.0f} %", fill <= 0.80),
@@ -311,7 +311,7 @@ def silver_bead(s: rule.Sprite) -> list[Row]:
     w, h = x1 - x0 + 1, y1 - y0 + 1
     fill = len(sil) / (w * h)
     counts = {k: sum(1 for v in c.values() if v == k) for k in (SILVER, SILVER_LIGHT, SILVER_SHADE)}
-    sprites = la.all_icon_sprites()
+    sprites = la.adopted_icon_sprites()
     mine = rule.lightness(rule.mean_colour(s), "normal")
     dark_tiers = {t: rule.lightness(rule.mean_colour(sprites[t]), "normal") for t in ("icon.tier.d", "icon.tier.e")}
     gap = min(mine - v for v in dark_tiers.values())
@@ -328,7 +328,7 @@ def silver_bead(s: rule.Sprite) -> list[Row]:
 
 
 def buff_arrow(s: rule.Sprite) -> list[Row]:
-    before = la.all_icon_sprites()["icon.status.frame_buff"]
+    before = la.r0001_icon_sprites()["icon.status.frame_buff"]
     changed = [(i % 16, i // 16) for i in range(256) if s.rgba[i] != before.rgba[i]]
     outside = [p for p in changed if not (4 <= p[0] <= 11 and 3 <= p[1] <= 11)]
     bone = sorted((i % 16, i // 16) for i, p in enumerate(s.rgba) if tuple(p[:3]) == (0xF0, 0xEC, 0xD8) and p[3])
@@ -439,7 +439,7 @@ def spiked_debuff(s: rule.Sprite) -> list[Row]:
     widths = [sum(1 for x, yy in bone if yy == y) for y in sorted({y for _, y in bone})]
     fill = len(sil) / ((x1 - x0 + 1) * (y1 - y0 + 1))
     flipped = {(15 - x, y) for x, y in sil}
-    buff = la.all_icon_sprites()["icon.status.frame_buff"]
+    buff = la.r0001_icon_sprites()["icon.status.frame_buff"]
     diff = rule.shape_distance(s, buff)
     return [
         Row("size", "16 x 16 px, filling its canvas like the buff frame", f"{x1 - x0 + 1} x {y1 - y0 + 1} px", (x1 - x0 + 1, y1 - y0 + 1) == (16, 16)),
@@ -453,7 +453,7 @@ def spiked_debuff(s: rule.Sprite) -> list[Row]:
 
 
 def tankard(s: rule.Sprite) -> list[Row]:
-    before = la.all_icon_sprites()["icon.building.inn"]
+    before = la.r0001_icon_sprites()["icon.building.inn"]
     same_outline = silhouette(s) == silhouette(before)
     c = content(s)
     seam_cols = sorted({x for x in range(24) if sum(1 for y in range(10, 19) if c.get((x, y)) == BROWN_C) >= 7})
@@ -494,6 +494,6 @@ def markdown(rows: dict[str, list[Row]]) -> str:
 
 
 if __name__ == "__main__":
-    rows = measure(la.all_icon_sprites())
+    rows = measure(la.r0001_icon_sprites())
     sys.stdout.write(markdown(rows))
     sys.exit(0 if all(r.ok for rs in rows.values() for r in rs) else 1)

@@ -25,6 +25,9 @@ GUARD = "python3 tools/sessions/guard.py"
 SAMPLER = "python3 tools/agent-monitoring/manual_actions.py hook"
 
 
+from tools.agent_working_paths import AGENT_MONITORING as MON  # noqa: E402
+
+
 def git(cwd, *a):
     return subprocess.run(["git", *a], cwd=cwd, check=True, capture_output=True, text=True, env=_ENV)
 
@@ -200,3 +203,83 @@ def test_the_check_is_offline_and_fast(repo, tmp_path):
         sf._git = real
     assert not {"fetch", "pull", "ls-remote", "clone"} & set(calls) and len(calls) == 3
     assert elapsed < 2.0
+
+
+# ---- TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH ------------------------------------------------------------
+
+POST_HOOK = 'R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f "$R/tools/agent-monitoring/post_tool_hook.py" || exit 0; python3 "$R/tools/agent-monitoring/post_tool_hook.py"'
+
+
+def _post_settings(*commands: str) -> str:
+    hooks = {"PostToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": c} for c in commands]}]}
+    return json.dumps({"hooks": hooks})
+
+
+def _worktree(tmp_path, settings: str | None, script: bool) -> Path:
+    r = tmp_path / "wt"
+    (r / ".claude").mkdir(parents=True)
+    git(r, "init", "-q")
+    if settings is not None:
+        (r / ".claude" / "settings.json").write_text(settings)
+    if script:
+        (r / "tools" / "agent-monitoring").mkdir(parents=True)
+        (r / "tools" / "agent-monitoring" / "post_tool_hook.py").write_text("")
+    return r
+
+
+def test_a_worktree_with_the_monitoring_hook_gets_no_line(tmp_path):
+    assert sf.monitoring_hook_line(_worktree(tmp_path, _post_settings(POST_HOOK), script=True)) == ""
+
+
+def test_a_settings_file_without_the_post_tool_hook_gets_one_line(tmp_path):
+    line = sf.monitoring_hook_line(_worktree(tmp_path, _post_settings("echo other"), script=True))
+    assert line.startswith("monitoring: NO TOOL-ROW HOOK") and "no PostToolUse hook" in line and "\n" not in line
+
+
+def test_a_pre_tool_use_mention_does_not_count_as_the_post_tool_hook(tmp_path):
+    pre_only = json.dumps({"hooks": {"PreToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": POST_HOOK}]}]}})
+    assert "no PostToolUse hook" in sf.monitoring_hook_line(_worktree(tmp_path, pre_only, script=True))
+
+
+def test_a_missing_hook_script_is_reported_because_the_command_skips_it_silently(tmp_path):
+    line = sf.monitoring_hook_line(_worktree(tmp_path, _post_settings(POST_HOOK), script=False))
+    assert "post_tool_hook.py is missing here" in line
+
+
+def test_no_settings_file_and_not_a_repo_fail_open(tmp_path):
+    assert "no PostToolUse hook" in sf.monitoring_hook_line(_worktree(tmp_path / "a", None, script=True))
+    plain = tmp_path / "plain"
+    plain.mkdir()
+    assert sf.monitoring_hook_line(plain) == "" and sf.unstaged_tool_rows_line(plain) == ""
+
+
+def _shard_repo(tmp_path) -> Path:
+    r = tmp_path / "rows"
+    old = r / MON / "data" / "2026-W41"
+    old.mkdir(parents=True)
+    (old / "seat.tools.jsonl").write_text('{"a":1}\n')
+    git(r, "init", "-q")
+    git(r, "add", "-A")
+    git(r, "commit", "-qm", "base")
+    return r
+
+
+def test_tool_rows_left_uncommitted_in_an_older_week_are_counted(tmp_path):
+    r = _shard_repo(tmp_path)
+    assert sf.unstaged_tool_rows_line(r) == ""
+    shard = r / MON / "data" / "2026-W41" / "seat.tools.jsonl"
+    shard.write_text('{"a":1}\n{"a":2}\n{"a":3}\n')
+    new = r / MON / "data" / "2026-W43"
+    new.mkdir()
+    (new / "seat.tools.jsonl").write_text('{"b":1}\n')
+    line = sf.unstaged_tool_rows_line(r)
+    assert "3 tool row(s) in 2 shard file(s) (2026-W41, 2026-W43)" in line and "not in any commit" in line
+
+
+def test_staged_rows_are_not_reported_as_pending_once_committed(tmp_path):
+    r = _shard_repo(tmp_path)
+    shard = r / MON / "data" / "2026-W41" / "seat.tools.jsonl"
+    shard.write_text('{"a":1}\n{"a":2}\n')
+    git(r, "add", "-A")
+    git(r, "commit", "-qm", "rows")
+    assert sf.unstaged_tool_rows_line(r) == ""

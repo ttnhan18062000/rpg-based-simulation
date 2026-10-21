@@ -388,7 +388,6 @@ def build_records(
     path_reason: str = "unstated",
     path_note: str | None = None,
     summaries_shared: bool = False,
-    recorder_added: int = 0,
 ) -> tuple[dict, list[dict]]:
     """Expands a minimal `events` list (phase/status/summary per entry) into a full run record
     plus a full event-record batch, both matching record_run.py's/record_events.py's own REQUIRED
@@ -407,7 +406,11 @@ def build_records(
         "workflow": workflow,
         "tier": tier,
         "final_status": final_status,
-        "agent_count": len(events) - recorder_added,  # events the recorder added (folded phases) are not agent calls
+        # TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN: unknown, never a number that looks measured. The closer's
+        # narrated phase events (plus the artifact-derived and folded ones the recorder adds) are not agent calls, and
+        # a hand closure makes none the recorder can see. The key stays required (null, not absent), like `duration_s`
+        # with `duration_source: unknown`; readers skip null runs instead of averaging them as 0.
+        "agent_count": None,
         "execution_mode": "hand",
         # TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD: why this was closed by hand, and the planned phases with no
         # event (read from implement-ticket.yaml at write time; the key is absent when that file cannot be read)
@@ -687,7 +690,6 @@ def main() -> None:
         args.start_ts, args.end_ts, args.workflow, args.provider, args.agent,
         now=now, session_id=os.environ.get("CLAUDE_CODE_SESSION_ID") or None, resolution=resolution,
         path_reason=args.path_reason, path_note=args.path_note, summaries_shared=args.allow_shared_summaries,
-        recorder_added=len(folded),
     )
 
     run_errors = record_run.validate_record(run_record)

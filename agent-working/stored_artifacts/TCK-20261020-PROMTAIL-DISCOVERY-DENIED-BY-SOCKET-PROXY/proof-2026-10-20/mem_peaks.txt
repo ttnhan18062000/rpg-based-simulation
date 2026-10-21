@@ -1,0 +1,12 @@
+proof run peaks (57 min), MiB: limit | docker stats | anon | anon+active_file | memory.peak (ref) | docker stats % of limit
+grafana: 1024 | 350 | 259 | 338 | 794 | 34%
+backend: 1024 | 200 | 186 | 190 | 404 | 20%
+prometheus: 512 | 168 | 102 | 166 | 241 | 33%
+loki: 512 | 145 | 87 | 143 | 196 | 28%
+tempo: 512 | 129 | 41 | 128 | 151 | 25%
+promtail: 128 | 62 | 46 | 58 | 82 | 49%
+ntfy: 64 | 61 | 26 | 58 | 64 | 95%
+node-exporter: 32 | 23 | 8 | 23 | 29 | 72%
+redis-exporter: 32 | 22 | 11 | 21 | 24 | 70%
+docker-socket-proxy: 64 | 20 | 11 | 18 | 21 | 31%
+redis: 256 | 17 | 8 | 16 | 43 | 7%

@@ -7231,6 +7231,16 @@
   - platform
   - observability
 - type: doc
+  path: docs/runbooks/log-shipping.md
+  title: 'Runbook: LogShippingErrors'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
   path: docs/runbooks/records/2026-10-18-api-load-test.md
   title: 'API load test (2026-10-18): age effect, /entities page cap and proposed
     SLO'
@@ -7268,6 +7278,17 @@
   path: docs/runbooks/records/2026-10-19-redis-stop-drill-under-load.md
   title: 'Redis-stop drill under load (2026-10-19): the cause alert fires while the
     API SLO stays green'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/records/2026-10-20-log-shipping-fix.md
+  title: 'Log shipping fix (2026-10-20): promtail discovery was denied by the socket
+    proxy'
   status: active
   layer: platform
   authority: P2
@@ -7781,6 +7802,37 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-CI-JUNIT-TOOLS-ACCEPT-DEFUSED-XML-FINDINGS.md
+  ticket_id: TCK-20261020-CI-JUNIT-TOOLS-ACCEPT-DEFUSED-XML-FINDINGS
+  title: 'The three Semgrep `use-defused-xml-parse` findings in `tools/ci_junit_merge.py`
+    and `tools/ci_junit_summary.py` are accepted in code with a reason, the same way
+    #667 handled testing''s report tools.'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/ci_junit_merge.py, tools/ci_junit_summary.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-CI-LANES-RUN-TRAILING-BACKSLASH-AND-XDIST.md
+  ticket_id: TCK-20261020-CI-LANES-RUN-TRAILING-BACKSLASH-AND-XDIST
+  title: '`ci_lanes --run` runs test.yml''s commands as CI does: no stray `\` argument
+    once `--junit-xml` is stripped, and a clear stop when the venv lacks pytest-xdist'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/delivery/ci_lanes.py
+  - tests/tools/test_delivery_ci_lanes.py
+  - .github/workflows/test.yml
+  artifact_files: []
+  tags:
+  - ai
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL.md
   ticket_id: TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL
   title: GET /api/v1/entities returns a bounded summary per entity; the full detail
@@ -7797,6 +7849,38 @@
   - agent-working/stored_artifacts/TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL/plan.md
   - agent-working/stored_artifacts/TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL/test_plan.md
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-FINALIZE-SELFCHECK-RECORDS-FAIL-REASON-CLASS.md
+  ticket_id: TCK-20261020-FINALIZE-SELFCHECK-RECORDS-FAIL-REASON-CLASS
+  title: The done-checker's Finalize self-check records a short reason class for each
+    failing condition in its gate-verdict row
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - check_migration_complete
+  - record_gate_verdict
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
+  - retro
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN.md
+  ticket_id: TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN
+  title: Hand closures record agent_count as unknown (null) instead of a phase-event
+    count, and the retro's "Avg agents per run" leaves them out
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - run_record
+  - avg_agents
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
+  - retro
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED.md
   ticket_id: TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED
@@ -7826,6 +7910,36 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PERF-PYSPY-TOOLKIT-TEST-MEASURED-WINDOW.md
+  ticket_id: TCK-20261020-PERF-PYSPY-TOOLKIT-TEST-MEASURED-WINDOW
+  title: The py-spy end-to-end toolkit test measures too few ticks to be sampled reliably
+    on a loaded host
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/tools/test_profiling_toolkit.py
+  - tools/perf/profile_tick.py
+  artifact_files: []
+  tags:
+  - performance
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PLANNER-MAY-WRITE-STAGING-ARTIFACTS.md
+  ticket_id: TCK-20261020-PLANNER-MAY-WRITE-STAGING-ARTIFACTS
+  title: Every planner role may write agent-working/staging_artifacts/**, so starting
+    a ticket's staging artifacts stops raising a role_boundary warning
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - registries/session_roles.yaml, tools/sessions/roster.py, tools/sessions/boundary.py,
+    tools/sessions/generate_agents.py
+  artifact_files: []
+  tags:
+  - governance
+  - agent-monitoring
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA.md
   ticket_id: TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA
   title: pr-body-lint.yml pins actions/checkout by full commit SHA, per the repo-wide
@@ -7841,6 +7955,21 @@
   - ai
   - process-improvement
   - governance
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY.md
+  ticket_id: TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY
+  title: 'Loki receives no logs: promtail''s docker discovery is denied by the socket
+    proxy (GET /networks returns 403)'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - docker/promtail config
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/investigation.md
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/plan.md
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/test_plan.md
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR.md
   ticket_id: TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR
@@ -7990,18 +8119,6 @@
   date: '2026-10-20'
   related_code_areas:
   - docker/grafana/provisioning/alerting/rules-base.yaml
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY.md
-  ticket_id: TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY
-  title: 'Loki receives no logs: promtail''s docker discovery is denied by the socket
-    proxy (GET /networks returns 403)'
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-20'
-  related_code_areas:
-  - docker/promtail config
   artifact_files: []
   tags: []
 - type: ticket
@@ -8222,6 +8339,55 @@
   - delivery
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SEMGREP-BASELINE-AGENT-WORKING-PATHS.md
+  ticket_id: TCK-20261019-SEMGREP-BASELINE-AGENT-WORKING-PATHS
+  title: 'The two Semgrep baseline findings on agent-working paths are resolved: pr-body-lint.yml''s
+    checkout is pinned by SHA, and launch.py''s exec carries a justified nosemgrep'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/pr-body-lint.yml
+  - tools/sessions/launch.py
+  - .github/workflows/security-scan.yml
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS.md
+  ticket_id: TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS
+  title: 'Five paths that route as unowned get an owner in session_roles.yaml: testing
+    takes rpg-gate-report.yml and the two ci_junit tools, and agent-working takes
+    handover_transit.py and tools/search/**'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - tools/sessions/route.py
+  - .claude/agents/session-*.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR.md
+  ticket_id: TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR
+  title: The observe_world cleanup test asserts that only its own run dir is gone,
+    not that all of data/runs is unchanged
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/tools/test_simq_long_run_observation.py
+  - tools/simq_long_run_observation.py::observe_world
+  - tools/entity_lifecycle_score.py::_run_for_analysis
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN.md
   ticket_id: TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN
   title: testing's workflows pass `${{ github.* }}` values to shell steps through
@@ -8338,6 +8504,24 @@
   tags:
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001.md
+  ticket_id: TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001
+  title: '`icon_lookalikes.all_icon_sprites()` returns r0001 art for the 7 revised
+    icon keys; find which consumers mean "adopted now" and point them at the current
+    art'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - visual_assets/review/icon_lookalikes.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001/test_plan.md
+  tags:
+  - architecture
+  - testing
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
   ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
   title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
@@ -8447,21 +8631,6 @@
   - create_watchdog_trip
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001.md
-  ticket_id: TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001
-  title: '`icon_lookalikes.all_icon_sprites()` returns r0001 art for the 7 revised
-    icon keys; find which consumers mean "adopted now" and point them at the current
-    art'
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-19'
-  related_code_areas:
-  - visual_assets/review/icon_lookalikes.py
-  artifact_files: []
-  tags:
-  - architecture
-  - testing
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
   ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
@@ -8748,6 +8917,24 @@
   - ai
   - agent-monitoring
   - setup
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING.md
+  ticket_id: TCK-20261018-OBSERVABILITY-PROFILE-HARDENING
+  title: 'Compose: Grafana admin password from a secret file (no `admin` default),
+    host ports bound to 127.0.0.1, Promtail''s Docker socket behind a read-only proxy'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/test_plan.md
+  tags:
+  - platform
+  - observability
+  - security
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-REDIS-ADAPTER-MISSING-LIBRARY-TEST-BLOCKS-THE-IMPORT.md
   ticket_id: TCK-20261018-REDIS-ADAPTER-MISSING-LIBRARY-TEST-BLOCKS-THE-IMPORT
@@ -9069,21 +9256,6 @@
   - platform
   - observability
 - type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING.md
-  ticket_id: TCK-20261018-OBSERVABILITY-PROFILE-HARDENING
-  title: 'Compose: Grafana admin password from a secret file (no `admin` default),
-    host ports bound to 127.0.0.1, Promtail''s Docker socket behind a read-only proxy'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-  - security
-- type: ticket
   path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT.md
   ticket_id: TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT
   title: Prometheus scrape of ai_worker:9108, an ai_worker healthcheck on its up gauge,
@@ -9281,7 +9453,7 @@
   - determinism
   - testing
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH.md
+  path: agent-working/tickets/done/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH.md
   ticket_id: TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH
   title: Say when a session's tool-call hook is not loaded, and get late tool rows
     committed, so tools shards cover the sessions that close tickets
@@ -9291,7 +9463,10 @@
   related_code_areas:
   - tools/agent-monitoring/post_tool_hook.py, tools/sessions/settings_freshness.py,
     tools/sessions/session_start_hook.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH/investigation.md
+  - agent-working/stored_artifacts/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH/plan.md
+  - agent-working/stored_artifacts/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH/test_plan.md
   tags:
   - agent-monitoring
   - hooks

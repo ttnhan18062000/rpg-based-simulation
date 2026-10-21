@@ -1,0 +1,215 @@
+utc,logship_rule,targetdown_promtail,logship_query,promtail_up,sent_entries,ntfy_logship_firing,ntfy_logship_resolved,ntfy_td_firing,ntfy_td_resolved
+15:09:05,inactive//ok,none,0,1,642,0,0,0,0
+15:09:20,inactive//ok,none,0,1,673,0,0,0,0
+15:09:35,inactive//ok,none,0,1,699,0,0,0,0
+15:09:51,inactive/Normal/ok,Normal,0,1,728,0,0,0,0
+15:10:06,inactive/Normal/ok,Normal,0,1,750,0,0,0,0
+15:10:21,inactive/Normal/ok,Normal,0,1,769,0,0,0,0
+15:10:36,inactive/Normal/ok,Normal,0,1,787,0,0,0,0
+15:10:52,inactive/Normal/ok,Normal,0,1,853,0,0,0,0
+15:11:07,inactive/Normal/ok,Normal,0,1,869,0,0,0,0
+15:11:25,inactive/Normal/ok,Normal,0,1,916,0,0,0,0
+15:11:41,inactive/Normal/ok,Normal,0,1,949,0,0,0,0
+15:11:56,inactive/Normal/ok,Normal,0,1,983,0,0,0,0
+15:12:12,inactive/Normal/ok,Normal,0,1,1033,0,0,0,0
+15:12:27,inactive/Normal/ok,Normal,0,1,1073,0,0,0,0
+15:12:42,inactive/Normal/ok,Normal,0,1,1097,0,0,0,0
+15:12:58,inactive/Normal/ok,Normal,0,1,1145,0,0,0,0
+15:13:13,inactive/Normal/ok,Normal,0,1,1167,0,0,0,0
+15:13:28,inactive/Normal/ok,Normal,0,1,1212,0,0,0,0
+15:13:44,inactive/Normal/ok,Normal,0,1,1240,0,0,0,0
+15:13:59,inactive/Normal/ok,Normal,0,1,1272,0,0,0,0
+15:14:14,inactive/Normal/ok,Normal,0,1,1296,0,0,0,0
+15:14:30,inactive/Normal/ok,Normal,0,1,1328,0,0,0,0
+15:14:45,inactive/Normal/ok,Normal,0,1,1355,0,0,0,0
+15:15:00,inactive/Normal/ok,Normal,0,1,1380,0,0,0,0
+15:15:16,inactive/Normal/ok,Normal,0,1,1406,0,0,0,0
+15:15:31,inactive/Normal/ok,Normal,0,1,1461,0,0,0,0
+15:15:46,inactive/Normal/ok,Normal,0,1,1495,0,0,0,0
+15:16:02,inactive/Normal/ok,Normal,0,1,1534,0,0,0,0
+15:16:17,inactive/Normal/ok,Normal,0,1,1559,0,0,0,0
+15:16:32,inactive/Normal/ok,Normal,0,1,1584,0,0,0,0
+15:16:48,inactive/Normal/ok,Normal,0,1,1602,0,0,0,0
+15:17:03,inactive/Normal/ok,Normal,0,1,1645,0,0,0,0
+15:17:19,inactive/Normal/ok,Normal,0,1,1696,0,0,0,0
+15:17:34,inactive/Normal/ok,Normal,0,1,1723,0,0,0,0
+15:17:49,inactive/Normal/ok,Normal,0,1,1755,0,0,0,0
+15:18:05,inactive/Normal/ok,Normal,0,1,1778,0,0,0,0
+15:18:20,inactive/Normal/ok,Normal,0,1,1816,0,0,0,0
+15:18:36,inactive/Normal/ok,Normal,0,1,1858,0,0,0,0
+15:19:07,inactive/Normal/ok,Normal,0,1,1890,0,0,0,0
+15:19:22,inactive/Normal/ok,Normal,0,1,1927,0,0,0,0
+15:19:38,inactive/Normal/ok,Normal,0,1,1958,0,0,0,0
+15:19:53,inactive/Normal/ok,Normal,0,1,1990,0,0,0,0
+15:20:08,inactive/Normal/ok,Normal,0,1,2023,0,0,0,0
+15:20:24,inactive/Normal/ok,Normal,0,1,2055,0,0,0,0
+15:20:39,inactive/Normal/ok,Normal,0,1,2081,0,0,0,0
+15:20:55,inactive/Normal/ok,Normal,0,1,2126,0,0,0,0
+15:21:10,inactive/Normal/ok,Normal,0,1,2159,0,0,0,0
+15:21:25,inactive/Normal/ok,Normal,0.003357661016949153,1,2205,0,0,0,0
+15:21:41,inactive/Normal/ok,Normal,0.01344441898351614,1,0,0,0,0,0
+15:21:56,pending/Pending/ok,Normal,0.02354712994350282,1,0,0,0,0,0
+15:22:11,pending/Pending/ok,Normal,0.033665405718107944,1,0,0,0,0,0
+15:22:27,pending/Pending/ok,Normal,0.04380735593220338,1,0,0,0,0,0
+15:22:42,pending/Pending/ok,Normal,0.0539682625772306,1,0,0,0,0,0
+15:22:57,pending/Pending/ok,Normal,0.06418629378531074,1,0,0,0,0,0
+15:23:13,pending/Pending/ok,Normal,0.07439455367231637,1,0,0,0,0,0
+15:23:28,pending/Pending/ok,Normal,0.08461581920903956,1,0,0,0,0,0
+15:23:47,pending/Pending/ok,Normal,0.09025142628508553,1,0,0,0,0,0
+15:24:02,pending/Pending/ok,Normal,0.10468604800981496,1,0,0,0,0,0
+15:24:18,pending/Pending/ok,Normal,0.1149668700564972,1,0,0,0,0,0
+15:24:33,pending/Pending/ok,Normal,0.12525398870056498,1,0,0,0,0,0
+15:24:48,pending/Pending/ok,Normal,0.13555841807909602,1,0,0,0,0,0
+15:25:04,pending/Pending/ok,Normal,0.14678747899738873,1,0,0,0,0,0
+15:25:19,pending/Pending/ok,Normal,0.15702726553672317,1,0,0,0,0,0
+15:25:34,pending/Pending/ok,Normal,0.16731074319651792,1,0,0,0,0,0
+15:25:50,pending/Pending/ok,Normal,0.17753502824858758,1,0,0,0,0,0
+15:26:05,pending/Pending/ok,Normal,0.18777337102799305,1,0,0,0,0,0
+15:26:20,pending/Pending/ok,Normal,0.1966101694915254,1,0,0,0,0,0
+15:26:36,pending/Pending/ok,Normal,0.1966101694915254,1,0,0,0,0,0
+15:26:51,pending/Pending/ok,Normal,0.1966101694915254,1,0,0,0,0,0
+15:27:06,pending/Pending/ok,Normal,0.1966208336723348,1,0,0,0,0,0
+15:27:22,pending/Pending/ok,Normal,0.1966021721150326,1,0,0,0,0,0
+15:27:37,pending/Pending/ok,Normal,0.1966101694915254,1,0,0,0,0,0
+15:27:53,pending/Pending/ok,Normal,0.1966101694915254,1,0,0,0,0,0
+15:28:08,pending/Pending/ok,Normal,0.1966101694915254,1,0,0,0,0,0
+15:28:24,pending/Pending/ok,Normal,0.1966101694915254,1,0,0,0,0,0
+15:28:39,pending/Pending/ok,Normal,0.20202390087052105,1,0,0,0,0,0
+15:28:54,pending/Pending/ok,Normal,0.20000406787934671,1,0,0,0,0,0
+15:29:10,pending/Pending/ok,Normal,0.19999999999999998,1,0,0,0,0,0
+15:29:25,pending/Pending/ok,Normal,0.19999999999999998,1,0,0,0,0,0
+15:29:40,pending/Pending/ok,Normal,0.19999999999999998,1,0,0,0,0,0
+15:29:56,pending/Pending/ok,Normal,0.19998983102554108,1,0,0,0,0,0
+15:30:11,pending/Pending/ok,Normal,0.19999999999999998,1,0,0,0,0,0
+15:30:27,pending/Pending/ok,Normal,0.19999999999999998,1,0,0,0,0,0
+15:30:42,pending/Pending/ok,Normal,0.19999999999999998,1,0,0,0,0,0
+15:30:58,pending/Pending/ok,Normal,0.19999999999999998,1,0,0,0,0,0
+15:31:13,pending/Pending/ok,Normal,0.19999999999999998,1,0,0,0,0,0
+15:31:28,pending/Pending/ok,Normal,0.19999999999999998,1,0,0,0,0,0
+15:31:44,pending/Pending/ok,Normal,0.19999999999999998,1,0,0,0,0,0
+15:31:59,firing/Alerting/ok,Normal,0.1999966102269453,1,0,0,0,0,0
+15:32:14,firing/Alerting/ok,Normal,0.20000813592417319,1,0,1,0,0,0
+15:32:30,firing/Alerting/ok,Normal,0.20000271190117833,1,0,1,0,0,0
+15:32:45,firing/Alerting/ok,Normal,0.18983050847457628,1,3212,1,0,0,0
+15:33:01,firing/Alerting/ok,Normal,0.17966101694915254,1,3254,1,0,0,0
+15:33:16,firing/Alerting/ok,Normal,0.16949382364506638,1,3292,1,0,0,0
+15:33:31,firing/Alerting/ok,Normal,0.15931717337437162,1,3364,1,0,0,0
+15:33:47,firing/Alerting/ok,Normal,0.14915658729728265,1,3399,1,0,0,0
+15:34:03,firing/Alerting/ok,Normal,0.13898305084745763,1,3446,1,0,0,0
+15:34:18,firing/Alerting/ok,Normal,0.1288135593220339,1,3477,1,0,0,0
+15:34:33,firing/Alerting/ok,Normal,0.11864406779661017,1,3520,1,0,0,0
+15:34:49,firing/Alerting/ok,Normal,0.10508937681999546,1,3554,1,0,0,0
+15:35:04,firing/Alerting/ok,Normal,0.09491525423728814,1,3588,1,0,0,0
+15:35:19,firing/Alerting/ok,Normal,0.0847443263673497,1,3626,1,0,0,0
+15:35:35,firing/Alerting/ok,Normal,0.07457500720326773,1,3659,1,0,0,0
+15:35:51,firing/Alerting/ok,Normal,0.0644061246834778,1,3707,1,0,0,0
+15:36:06,firing/Alerting/ok,Normal,0.05423728813559322,1,3763,1,0,0,0
+15:36:22,firing/Alerting/ok,Normal,0.04406779661016949,1,3803,1,0,0,0
+15:36:47,firing/Alerting/ok,Normal,0.026880004300800692,1,3825,1,0,0,0
+15:37:03,firing/Alerting/ok,Normal,0.01694915254237288,1,3881,1,0,0,0
+15:37:18,firing/Alerting/ok,Normal,0.006779661016949152,1,3925,1,0,0,0
+15:37:34,firing/Alerting/ok,Normal,0,1,3959,1,0,0,0
+15:37:49,inactive/Normal/ok,Normal,0,1,4011,1,0,0,0
+15:38:05,inactive/Normal/ok,Normal,0,1,4056,1,0,0,0
+15:38:20,inactive/Normal/ok,Normal,0,1,4109,1,0,0,0
+15:38:35,inactive/Normal/ok,Normal,0,1,4138,1,0,0,0
+15:39:07,inactive/Normal/ok,Normal,0,1,4188,1,0,0,0
+15:39:22,inactive/Normal/ok,Normal,0,1,4223,1,0,0,0
+15:39:38,inactive/Normal/ok,Normal,0,1,4258,1,0,0,0
+15:39:53,inactive/Normal/ok,Normal,0,1,4300,1,0,0,0
+15:40:09,inactive/Normal/ok,Normal,0,1,4345,1,0,0,0
+15:40:24,inactive/Normal/ok,Normal,0,1,4392,1,0,0,0
+15:40:40,inactive/Normal/ok,Normal,0,1,4439,1,0,0,0
+15:40:57,inactive/Normal/ok,Normal,0,1,4515,1,0,0,0
+15:41:13,inactive/Normal/ok,Normal,0,1,4571,1,0,0,0
+15:41:28,inactive/Normal/ok,Normal,0,1,4607,1,0,0,0
+15:41:44,inactive/Normal/ok,Normal,0,1,4663,1,0,0,0
+15:42:07,inactive/Normal/ok,Normal,0,1,4701,1,0,0,0
+15:42:23,inactive/Normal/ok,Normal,0,1,4747,1,1,0,0
+15:42:38,inactive/Normal/ok,Normal,0,1,4801,1,1,0,0
+15:42:54,inactive/Normal/ok,Normal,0,1,4886,1,1,0,0
+15:43:10,inactive/Normal/ok,Normal,0,0,none,1,1,0,0
+15:43:25,inactive/Normal/ok,Normal,0,0,none,1,1,0,0
+15:43:40,inactive/Normal/ok,Normal,0,0,none,1,1,0,0
+15:43:56,inactive/Normal/ok,Pending,0,0,none,1,1,0,0
+15:44:11,inactive/Normal/ok,Pending,0,0,none,1,1,0,0
+15:44:26,inactive/Normal/ok,Pending,0,0,none,1,1,0,0
+15:44:42,inactive/Normal/ok,Pending,0,0,none,1,1,0,0
+15:44:57,inactive/Normal/ok,Pending,0,0,none,1,1,0,0
+15:45:13,inactive/Normal/ok,Pending,0,0,none,1,1,0,0
+15:45:28,inactive/Normal/ok,Pending,0,0,none,1,1,0,0
+15:45:43,inactive/Normal/ok,Pending,0,0,none,1,1,0,0
+15:46:07,inactive/Normal/ok,Alerting,0,0,none,1,1,0,0
+15:46:23,inactive/Normal/ok,Alerting,0,0,none,1,1,1,0
+15:46:38,inactive/Normal/ok,Alerting,0,0,none,1,1,1,0
+15:46:54,inactive/Normal/ok,Alerting,0,0,none,1,1,1,0
+15:47:09,inactive/Normal/ok,Alerting,0,0,none,1,1,1,0
+15:47:25,inactive/Normal/ok,Alerting,0,0,none,1,1,1,0
+15:47:40,inactive/Normal/ok,Alerting,0,0,none,1,1,1,0
+15:47:55,inactive/Normal/ok,Alerting,none,0,none,1,1,1,0
+15:48:11,inactive/Normal/ok,Alerting,none,0,none,1,1,1,0
+15:48:27,inactive/Normal/ok,Alerting,none,0,none,1,1,1,0
+15:48:42,inactive/Normal/ok,Alerting,none,0,none,1,1,1,0
+15:48:58,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:49:13,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:49:28,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:49:44,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:50:00,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:50:15,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:50:31,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:50:46,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:51:02,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:51:17,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:51:32,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:51:48,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:52:03,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:52:26,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:52:42,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:52:58,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:53:13,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:53:28,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:53:44,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:53:59,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:54:14,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:54:30,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:54:45,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:55:00,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:55:16,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:55:31,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:55:47,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:56:02,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:56:18,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:56:33,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:56:48,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:57:04,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:57:19,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:57:34,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:57:50,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:58:05,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:58:20,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:58:36,pending/Pending (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:58:51,firing/Alerting (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:59:07,firing/Alerting (NoData)/ok,Alerting,none,0,none,1,1,1,0
+15:59:27,firing/Alerting (NoData)/ok,Alerting,none,0,none,2,1,1,0
+15:59:42,firing/Alerting (NoData)/ok,Alerting,none,0,none,2,1,1,0
+15:59:58,firing/Alerting (NoData)/ok,Alerting,none,1,0,2,1,1,0
+16:00:13,firing/Alerting (NoData)/ok,Alerting,0,1,2045,2,1,1,0
+16:00:31,firing/Alerting (NoData)/ok,Alerting,0,1,2127,2,1,1,0
+16:00:49,inactive/Normal/ok,Normal,0,1,2178,2,1,1,0
+16:01:05,inactive/Normal/ok,Normal,0,1,2201,2,1,1,0
+16:01:21,inactive/Normal/ok,Normal,0,1,2238,2,1,1,1
+16:01:37,inactive/Normal/ok,Normal,0,1,2289,2,1,1,1
+16:01:53,inactive/Normal/ok,Normal,0,1,2348,2,1,1,1
+16:02:08,inactive/Normal/ok,Normal,0,1,2376,2,1,1,1
+16:02:23,inactive/Normal/ok,Normal,0,1,2411,2,1,1,1
+16:02:39,inactive/Normal/ok,Normal,0,1,2437,2,1,1,1
+16:02:55,inactive/Normal/ok,Normal,0,1,2486,2,1,1,1
+16:03:10,inactive/Normal/ok,Normal,0,1,2522,2,1,1,1
+16:03:26,inactive/Normal/ok,Normal,0,1,2576,2,1,1,1
+16:03:41,inactive/Normal/ok,Normal,0,1,2606,2,1,1,1
+16:03:56,inactive/Normal/ok,Normal,0,1,2641,2,1,1,1
+16:04:12,inactive/Normal/ok,Normal,0,1,2688,2,1,1,1
+16:04:27,inactive/Normal/ok,Normal,0,1,2723,2,2,1,1
+16:04:43,inactive/Normal/ok,Normal,0,1,2759,2,2,1,1
+16:04:58,inactive/Normal/ok,Normal,0,1,2815,0,0,0,0
+16:05:13,inactive/Normal/ok,Normal,0,1,2867,0,0,0,0
