@@ -77,6 +77,11 @@ FLEE_PANIC_THRESHOLD = 0.4
 REGIONAL_DREAD_MAX = 0.3
 
 
+def living(neighbors: List[EntityState]) -> List[EntityState]:
+    """A dead body is in the neighbour view but is neither a hostile, an ally nor a nemesis to fear: only the living are appraised."""
+    return [n for n in neighbors if n.combat.alive]
+
+
 def regional_dread(region_trauma: float) -> float:
     """Dread a region's trauma weighs on a subject: linear in trauma / the Bible 05 §2 instability
     threshold, saturating at REGIONAL_DREAD_MAX there instead of growing with every further death."""
@@ -101,7 +106,7 @@ class AppraisalSystem:
         """
         panic = 0.0
         aggression = 0.0
-        neighbors = [n for n in neighbors if n.combat.alive]  # a dead body is in the view but is neither a hostile, an ally nor a nemesis to fear
+        neighbors = living(neighbors)
         
         # 0. Regional Dread (Pillar 4.2, AGENCY-06): bounded, never decides flight alone.
         panic += regional_dread(region_trauma)

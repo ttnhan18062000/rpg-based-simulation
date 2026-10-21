@@ -84,9 +84,8 @@ from src.core.updates import NavigationUpdate, InteractionUpdate
 from src.systems.world_systems.routine import RoutineService
 from src.systems.world_systems.intake import ConcernIntakeSystem
 from src.engine.domain_logic import SimulationDomainLogic
-from src.ai.goals import GoalRegistry
+from src.ai.goals import GoalRegistry, escalated_need_wins
 from src.ai.goals.base import GoalScore
-from src.ai.goals.escalation import escalated_need_wins
 from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
