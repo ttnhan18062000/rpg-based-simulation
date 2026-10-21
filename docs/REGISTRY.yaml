@@ -7834,6 +7834,23 @@
   - agent-monitoring
   - data-quality
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH.md
+  ticket_id: TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH
+  title: The executor looks up local_priority by a packet work_id format that never
+    matches the scheduler's WorkItem work_id, so the priority is always 0. The kernel's
+    sort order also contradicts bounded_concurrency_contract §3.
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/engine/scheduler.py:143, src/engine/executor.py:189/290/335/340, src/engine/kernel.py:606,
+    docs/engine/bounded_concurrency_contract.md §3
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH/investigation.md
+  - agent-working/stored_artifacts/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH/plan.md
+  - agent-working/stored_artifacts/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/codebase-pyrefly-advisory/TCK-20261021-PYREFLY-ADVISORY-REPORT.md
   ticket_id: TCK-20261021-PYREFLY-ADVISORY-REPORT
   title: 'Pyrefly as an advisory second type-checker opinion: a report-only Code health
