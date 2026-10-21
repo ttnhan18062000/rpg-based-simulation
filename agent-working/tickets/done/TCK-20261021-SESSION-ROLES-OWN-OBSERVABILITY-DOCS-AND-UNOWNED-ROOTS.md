@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS
-phase: open
+phase: done
 date: 2026-10-21
 tags: [ai, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance]
 Eleven paths that route as unowned get an owner in session_roles.yaml: the 8 docs/observability files, README.md, docs/guides/feature_flags.md and tools/release/**
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -47,7 +47,7 @@ All 11 paths route `status: unowned` on origin/main 4099c0889 (checked with `pyt
    Use explicit file entries, not a `docs/observability/**` glob. A future doc there must not get an owner silently.
    The registry has no co-owner field (`owns`/`owns_not`/`routes` only). The existing `src/** -> rpg-planner` routes already cover the dashboard code.
 2. Routes. Several domains route `"tools/**": agent-working-designer` (codebase, testing, lead, platform). Make sure `route.py --from <domain> tools/release/release_gate.py` gives testing-planner for every domain. Where a `tools/**` route would win, add `"tools/release/**": testing-planner` to that domain's routes, the same way codebase's `tools/test_architecture/**` route works. Check the same for the other 10 paths against every domain's routes.
-3. Regenerate the role cards (`python3 -m tools.sessions.generate_agents`). The card budget is 415 tokens (`tools/sessions/card.py`). **Never raise it.** If a card goes over, fold into a brace group on the card line first. If that still doesn't fit, or a shortening changes meaning, stop and ask agent-working-planner.
+3. Regenerate the role cards (`python3 -m tools.sessions.generate_agents`). The card budget is 415 tokens (`tools/sessions/card.py`). Decision of the owner (2026-10-21, via lead-planner and agent-working-planner): the budget is raised from 415 to 440 for this batch, because explicit file entries for 11 paths cannot fold (precedent 400->415 on 2026-10-20). The follow-up TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT is filed to bring it back down.
 4. Update any test that pins the owns lists, the routes or the card text.
 
 ## Out of Scope
@@ -87,9 +87,18 @@ None (hotfix).
 - If the edit to `registries/session_roles.yaml` triggers the role-capability permission prompt, retry in your own window and the owner approves there. Never work around it.
 
 ## Implementation Notes
+- `registries/session_roles.yaml`: 11 explicit `owns` entries (rpg 6, agent-working 2, platform 1, lead 1, testing `tools/release/**`) and a `"tools/release/**": testing-planner` route in codebase, lead and platform (the three domains with a `tools/**` route that do not claim the path; testing claims it itself).
+- Over budget after the edit: 9 of 25 cards (worst 437). Fold and trim options were put to agent-working-planner; the owner chose to raise the limit to 440. `card.py`, `test_session_platform_domain.py` and `host_suffixed_twins.md` updated. Worst card now 437 (rpg-implementer).
+- Cherry-picked 8dcec1a20 (files the follow-up ticket only; not implemented here).
 
 ## Test Summary
+- Route matrix over all 18080 tracked files x (no domain + 8 domains): 18 paths change (the 10 files plus 8 under tools/release/), every view gives the new owner's seat. Command: iterate `tools.sessions.route.route(path, roster, domain)`.
+- `python3 -m tools.sessions.validate`: 0 findings. `generate_agents --check`: no drift.
+- `pytest tests/tools -k "session or route or roster or card or boundary or paths_guard" -p no:randomly`: 855 passed, 1 skipped.
+- Grep for unowned-path counts: only test_session_route / test_session_boundary / test_session_status fixtures, unchanged and passing.
 
 ## Files Changed
+- registries/session_roles.yaml, .claude/agents/session-*.md (25, generated), tools/sessions/card.py, tests/tools/test_session_platform_domain.py, docs/guidelines/session_roles/host_suffixed_twins.md
 
 ## Completion Summary
+11 paths now route to their owners (rpg 6, agent-working 2, platform 1, lead 1, testing `tools/release/**`) with `tools/release/**` routes in codebase, lead and platform. Card budget raised 415 -> 440 by owner decision; worst card 437. No other path changed owner.

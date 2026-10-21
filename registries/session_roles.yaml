@@ -22,6 +22,12 @@ domains:
       - docs/brainstorm/**
       - registries/mechanisms.yaml
       - tests/**
+      - docs/observability/prometheus_metrics.md
+      - docs/observability/hard_law_monitor.md
+      - docs/observability/decision_trace_contract.md
+      - docs/observability/read_model_service_contract.md
+      - docs/observability/how_to_run_simulation.md
+      - docs/guides/feature_flags.md
     owns_not: []
     routes:
       "agent-working/**": agent-working-designer
@@ -56,6 +62,8 @@ domains:
       - tests/tools/**
       - tests/docs/**
       - tools/search/**            # the search server image (Dockerfile etc.); search_*.py above
+      - docs/observability/retrieval_retention_redaction_policy.md
+      - docs/observability/agent_ops_dashboard_contract.md   # contract for the agent-monitoring data the dashboard reads; the code under src/api/agent_ops_dashboard stays rpg (src/** route)
     owns_not:
       - registries/mechanisms.yaml   # content is rpg-domain; only the advisory tooling around it stays here
     routes:
@@ -74,6 +82,7 @@ domains:
       "src/**": rpg-planner                   # ask before touching RPG logic
       "agent-working/**": agent-working-designer   # process problems
       "tools/test_architecture/**": testing-planner
+      "tools/release/**": testing-planner
       "tools/**": agent-working-designer
       "tests/architecture/**": testing-planner
   testing:
@@ -86,6 +95,7 @@ domains:
       - .github/workflows/slow-regression*.yml   # includes slow-regression-watchdog.yml
       - .github/workflows/rpg-gate-report.yml
       - tools/ci_junit_*.py                      # ci_junit_merge.py, ci_junit_summary.py (read by test.yml)
+      - tools/release/**                         # release_gate.py, generate_release_proof.py (owner 2026-10-21)
     owns_not: []
     routes:
       "src/**": rpg-planner                   # ask before touching RPG logic
@@ -137,11 +147,13 @@ domains:
       - .mcp.json
       - docs/architecture/**                 # asset's ADR and perf's PERF-D file are split below
       - agent-working/lead/**
+      - README.md
     owns_not: []
     routes:
       "src/**": rpg-planner
       "frontend/**": rpg-planner
       "visual_assets/**": asset-planner
+      "tools/release/**": testing-planner
       "tools/**": agent-working-designer
       "agent-working/**": agent-working-designer
   platform:   # deployment and runtime; spec in docs/architecture/devops_plan_amendment_proposal.md (PR #537), owner 2026-10-13
@@ -156,12 +168,14 @@ domains:
       - .github/dependabot.yml
       - tools/loadtest/**
       - docs/runbooks/**
+      - docs/observability/loki_label_policy.md
     owns_not: []
     routes:
       "src/**": rpg-planner                   # the engine stays one process
       "docs/architecture/**": lead-planner    # ADR changes go to lead for review
       ".github/workflows/test.yml": testing-planner
       "agent-working/**": agent-working-designer
+      "tools/release/**": testing-planner
       "tools/**": agent-working-designer
 # Intentional overlaps between domains (a path matched by two domains' owns is an error unless a
 # split here names both domains and covers it).
