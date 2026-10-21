@@ -7819,6 +7819,18 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-OBSERVABILITY-DETERMINISM-TEST-NEVER-HASHES.md
+  ticket_id: TCK-20261021-OBSERVABILITY-DETERMINISM-TEST-NEVER-HASHES
+  title: test_phase28_observability_determinism is named "same authoritative hash"
+    but only toggles the observability mode and never compares a hash
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - tests/integration/observability/test_phase28_observability_determinism.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS.md
   ticket_id: TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS
   title: Week-close sweeps the main checkout's main.tools.jsonl into the closed week's
