@@ -199,11 +199,11 @@ class DetourSuggestionSystem:
                 return (1, p.id)
             return (0, p.id)
             
-        # SURV-07: a live hunger or sleep project is outside the trim (it neither counts toward the cap here nor is removed by it), keyed on the
+        # SURV-07: one live hunger and one live sleep project (the current one of that kind, else the newest) are outside the trim (neither counts toward the cap here nor is removed by it), keyed on the
         # project's kind and not on the need's level, so it does not re-enter the count when the need drops below its onset mid-meal and a suspended
         # project is never evicted for it. The other projects are trimmed exactly as before.
         all_projects = sorted(
-            live_projects_in_the_trim(entity.strategic.projects).values(),
+            live_projects_in_the_trim(entity.strategic.projects, active_proj_id).values(),
             key=_proj_priority,
             reverse=True
         )

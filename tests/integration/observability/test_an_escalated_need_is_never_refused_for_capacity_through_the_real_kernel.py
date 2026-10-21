@@ -95,6 +95,37 @@ def test_a_full_cap_is_exceeded_by_at_most_one_project_per_need():
         _close(kernel, run_id)
 
 
+def test_hunger_and_sleep_switching_over_600_ticks_never_hold_more_than_the_cap_plus_two_live_projects():
+    """The exemption is ONE live project per need kind (the current one, else the newest): an entity whose dominant need flips between hunger and
+    sleep keeps creating need projects, and the older ones are trimmed like any project. It never holds more than the cap (3) plus two."""
+    from src.core.strategic import live_projects
+
+    run_id = "escalated_switching_bounded"
+    kernel = _kernel(run_id)
+    try:
+        _fill_the_cap_and_stage(kernel, hunger=70.0, sleep_debt=70.0)
+        peak = 0
+        made = {"hunger": set(), "fatigue": set()}
+        for tick in range(600):
+            if tick % 12 == 0:  # flip the dominant need: the one that is not dominant stays past its onset
+                entities = dict(kernel.state.entities)
+                e = entities[13]
+                hungry = (tick // 12) % 2 == 0
+                bio = replace(e.biological, hunger=95.0 if hungry else 60.0, sleep_debt=60.0 if hungry else 95.0)
+                entities[13] = replace(e, biological=bio)
+                object.__setattr__(kernel.state, "entities", entities)
+            kernel.tick_once()
+            strategic = kernel.state.entities[13].strategic
+            peak = max(peak, len(live_projects(strategic.projects)))
+            for pid, p in strategic.projects.items():
+                if p.kind in made:
+                    made[p.kind].add(pid)
+            assert len(live_projects(strategic.projects)) <= 3 + 2, f"{len(live_projects(strategic.projects))} live projects at tick {tick}"
+        assert len(made["hunger"]) + len(made["fatigue"]) >= 2, "the need never switched, so the test did not exercise the bound"
+    finally:
+        _close(kernel, run_id)
+
+
 def test_an_admitted_hunger_project_that_is_not_current_survives_the_bandwidth_trim_and_the_suspended_projects_are_untouched():
     """The trim (Law 194-197) works on the other projects only: a live hunger project is outside it, keyed on its kind, even when something else is current."""
     from src.core.strategic import ProjectStatus

@@ -356,12 +356,23 @@ def live_projects(projects: Mapping[str, ProjectState]) -> Dict[str, ProjectStat
 NEED_PROJECT_KINDS = frozenset({"hunger", "fatigue"})
 
 
-def live_projects_in_the_trim(projects: Mapping[str, ProjectState]) -> Dict[str, ProjectState]:
-    """The live projects the capacity trims count and may remove: every live project except a hunger or sleep project (SURV-07).
+def live_projects_in_the_trim(projects: Mapping[str, ProjectState], current_project_id: Optional[str] = None) -> Dict[str, ProjectState]:
+    """The live projects the capacity trims count and may remove: every live project except ONE hunger and ONE sleep project (SURV-07).
 
-    A live need project is outside the trim, keyed on its KIND and not on the need's level, so it does not re-enter the count when the need falls
-    below its onset mid-meal and a suspended project is never evicted for it. Admission is `intelligence._escalated_need_wins`."""
-    return {pid: p for pid, p in live_projects(projects).items() if getattr(p.kind, "value", p.kind) not in NEED_PROJECT_KINDS}
+    The exempt project of a need kind is the current project when it is of that kind, otherwise the newest live one by `created_tick` (ties: the
+    greater id). It is keyed on the KIND and not on the need's level, so it does not re-enter the count when the need falls below its onset mid-meal
+    and a suspended project is never evicted for it. Every other live need project counts and is trimmed like any project, so an entity switching
+    between hunger and sleep holds at most the cap plus two. Admission is `ai.goals.escalation.escalated_need_wins`."""
+    live = live_projects(projects)
+    exempt: set = set()
+    for kind in NEED_PROJECT_KINDS:
+        of_kind = [p for p in live.values() if getattr(p.kind, "value", p.kind) == kind]
+        if not of_kind:
+            continue
+        current = [p for p in of_kind if p.id == current_project_id]
+        pick = current[0] if current else max(of_kind, key=lambda p: (p.created_tick, p.id))
+        exempt.add(pick.id)
+    return {pid: p for pid, p in live.items() if pid not in exempt}
 
 
 def has_project_capacity(projects: Mapping[str, ProjectState], max_active_projects: int) -> bool:

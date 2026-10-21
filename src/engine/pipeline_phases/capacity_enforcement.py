@@ -95,7 +95,7 @@ class CapacityEnforcementPhase:
                     all_projects.pop(p_id, None)
                     
                 project_removals = CapacityService.trim_dict(
-                    live_projects_in_the_trim(all_projects),  # SURV-07: a live hunger or sleep project is outside the trim
+                    live_projects_in_the_trim(all_projects, strat_upd.current_project_id_set if strat_upd.current_project_id_set is not None else entity.strategic.current_project_id),  # SURV-07: one live hunger and one sleep project are outside the trim
                     profile.max_active_projects,
                     lambda p: p.score
                 )
