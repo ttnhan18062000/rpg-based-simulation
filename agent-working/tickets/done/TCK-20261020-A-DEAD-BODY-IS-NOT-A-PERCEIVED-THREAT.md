@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT
-phase: open
+phase: done
 date: 2026-10-20
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 A dead body in the neighbour view is not a perceived threat: the panic gate, the emotional appraisal and the saliency ranking skip the dead
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -47,10 +47,10 @@ Raider 27 of crowded_frontier seed 45 (the v1 gate's V3 death, t1091) shuttled o
 - TCK-20261020-A-HUNGER-PULL-AIMS-AT-A-WAY-WHOSE-ROUTE-IS-NOT-THREATENED (parked), TCK-20261020-PARKED-HUNGER-SAFE-ROUTE-STEP-AFTER-V1
 
 ## Related Docs
-- docs/mechanics/04_strategic_cognition.md, docs/guidelines/intentional_divergences.md (2.114)
+- docs/mechanics/04_strategic_cognition.md (section 1), docs/guidelines/intentional_divergences.md (2.136), docs/parity_ledger/strategic_cognition.yaml (STRAT-285), docs/plans/systemic_world/owner_decision_memo.md (row 84 (1)), docs/plans/systemic_world/v1_disclosure.md (N7)
 
 ## Related Stored Artifacts
-- None yet (standard tier: plan/investigation/test_plan are written at close).
+- agent-working/stored_artifacts/TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT/ (plan, investigation, test_plan).
 
 ## Related Code Areas
 - src/engine/tactical.py, src/engine/cognition.py
@@ -68,4 +68,11 @@ tests/integration/observability/test_a_dead_body_is_not_a_perceived_threat_throu
 src/engine/tactical.py, src/engine/cognition.py, the test file above.
 
 ## Completion Summary
-Open.
+Done on branch rpg-corpse-not-a-threat (23fbe0ecf, step one of the v1 fix PR; the docs land in the step-two docs commit of the same PR).
+
+- **Divergence**: 2.136 (class Bug Fix); parity STRAT-285; memo row 84 (1); v1 disclosure N7.
+- **Measured**: paired 7b1528861 to 23fbe0ecf, seeds 42-46, 5000 ticks, base-vs-base self-check byte-identical (the report was regenerated from the cache after the original log was deleted; same numbers). People deaths: frontier 142 to 130 (SE 2.23), urban 58 to 62 (SE 0.37), crowded 166 to 167 (SE 0.66); no drift. Extinction stop in crowded (guard, merchant), accepted by the owner, 2026-10-21. Traces: seed 42 raider 35 stopped fleeing nine corpses at t396 and killed guard 10 at t471; seed 44 merchant 12 killed at t2066 in a melee that exists only in the new arm (v1 row C6); seed 46 raider 34, no longer distracted by worker 1's corpse at t1407, killed merchant 12 at t1436.
+- **Gate**: V3 on crowded 45 is 0 (the case that motivated the change).
+- **Tests**: the three real-kernel tests above pass; full tests/unit serial on the PR tip: 8442 passed, 9 failures are the pre-existing SimQ grade anchors (red on 7b1528861 too, TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED).
+- **Mechanism advisory** (report-only): `mechanism_registry_changed_code_check` names `tactical_decision` (cites `src/engine/tactical.py`) and `emotion` (cites `src/engine/cognition.py`) as mechanisms whose cited code changed without their own entry changing. The change narrows who counts as a threat (only the living); it adds no mechanism and removes none, so I judged no entry edit needed, and `registries/mechanisms.yaml` content is the planner's to rule on; reported to rpg-planner.
+- **Known limits**: grief, mourning and vengeance are unchanged by design; C6 (a subject in a fight it chose never disengages) and C7 (mutual threatening-flee standoff) surfaced after this change and are independent of it, filed as after-v1 tickets.
