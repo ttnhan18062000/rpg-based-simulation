@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-RATCHET-TIGHTEN-ROUND-2
-phase: open
+phase: done
 date: 2026-10-20
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 Lock in the code-health, mypy and parity-schema debt paid down since 2026-10-09
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -46,14 +46,14 @@ Second round of `TCK-20261009-RATCHET-TIGHTEN-AFTER-PAYDOWN`. Since 2026-10-09, 
 - Accepting new debt.
 
 ## Acceptance Criteria
-- [ ] The measurement before the tighten is pasted into Test Summary (all three gates).
-- [ ] After the tighten:
+- [x] The measurement before the tighten is pasted into Test Summary (all three gates).
+- [x] After the tighten:
   - `make code-health` gives 0 new, 0 worse, 0 improved, 0 gone;
   - `make typecheck-py` gives 0 new;
   - the parity check reports 0 fell.
-- [ ] The mypy baseline diff is deletions only. The code-health and parity baseline diffs add no row and raise no ceiling or count (script output pasted).
-- [ ] `git diff --stat` touches only the changed baseline files, the ticket and monitoring.
-- [ ] `tests/codebase` passes.
+- [x] The mypy baseline diff is deletions only. The code-health and parity baseline diffs add no row and raise no ceiling or count (script output pasted).
+- [x] `git diff --stat` touches only the changed baseline files, the ticket and monitoring.
+- [x] `tests/codebase` passes.
 
 ## Related Tickets
 - TCK-20261009-RATCHET-TIGHTEN-AFTER-PAYDOWN (round 1)
@@ -75,9 +75,28 @@ None.
 - If CI on the PR shows new debt landed on main between the tighten and the merge, re-merge main and re-run the tighten. Never accept rows.
 
 ## Implementation Notes
+Measured on origin/main merged into codebase-ratchet-round-2, one capped slot (lead-planner go): code-health 8s, typecheck-py 27s, pytest tests/codebase 213s, MemoryMax=2G, basetemp /data/vboxuser/cb-pytest-tmp (deleted). Then tightened with the tools only: `codebase.health tighten --yes`, `make typecheck-baseline-sync` (one more ~30s mypy run), `parity_ledger_schema tighten --yes`. No hand edits, nothing under src/.
 
 ## Test Summary
+Before the tighten:
+- `make code-health`: 0 new, 0 worse, 140 improved, 47 gone, 3496 unchanged.
+- `make typecheck-py`: 0 new (the baseline held 155 lines that no longer occur).
+- parity schema check: 2844 errors vs baseline 2851, 0 rose, 0 new, 4 fell.
+
+After the tighten:
+- code-health: 0 new, 0 worse, 0 improved, 0 gone, 3636 unchanged (rows 3683 -> 3636: 47 removed, 0 added, 0 ceiling/value raised, checked by script against HEAD).
+- typecheck-py: 0 new; mypy baseline diff is 155 deletions, 0 additions.
+- parity: 2844, 0 fell (238->237, 265->263, 87->85, 88->86).
+- `pytest tests/codebase`: 506 passed (before the tighten, same slot).
 
 ## Files Changed
+```
+codebase/baselines/code_health_exceptions.jsonl    | 327 +++++++++------------
+ codebase/baselines/mypy_baseline.txt               | 155 ----------
+ .../baselines/parity_ledger_schema_baseline.json   |   8 +-
+ 3 files changed, 144 insertions(+), 346 deletions(-)
+```
+Plus this ticket and agent-monitoring shards.
 
 ## Completion Summary
+All three ratchets locked in; every gate now re-checks at zero moved. Nothing loosened: no row added, no ceiling raised, mypy diff deletions only.
