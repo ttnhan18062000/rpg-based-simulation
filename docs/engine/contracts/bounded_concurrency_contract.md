@@ -26,14 +26,14 @@ This contract covers the transition of the concurrency layer from a prototype to
 ## 3. Deterministic Commit Law
 - **Frozen Commit Key**: Results are authoritatively applied in a stable order defined by:
   1. `class_priority` (Explicit contract mapping)
-  2. `local_priority` (Default 0, lower is earlier)
+  2. `local_priority` (Default 0, higher is earlier: sorted descending after `class_priority`, see `ConcurrencyLaw.commit_key`, used by `Kernel._phase_resolution`)
   3. `entity_id` (Ascending)
 - **Priority Mapping**:
   - `CRITICAL`: 0 (Authoritative entity actions)
   - `PERIODIC`: 10 (Authoritative up-keep tasks)
   - `OPPORTUNISTIC`: 20 (Non-authoritative/Observational tasks)
   - `DEFERRED`: 30 (Postponed work items)
-  (Lower value = Higher priority / Earlier commit)
+  (For `class_priority`: lower value = higher priority / earlier commit.)
 
 ## 4. Fallback and Failure Law
 - **Failure-to-No-Op**: A worker failure (exception, timeout, or invalid status) results in a deterministic **authoritative no-op**.

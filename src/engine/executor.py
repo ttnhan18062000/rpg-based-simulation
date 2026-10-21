@@ -7,7 +7,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, List, Dict, Any, Mapping, Protocol, Callable
 
 from src.core.worker_protocol import WorkerResult, ResultStatus, WorkerPacket
-from src.core.work import WorkClass
+from src.core.work import WorkClass, packet_work_id
 from src.engine.candidate_selector import MovementCandidateSelector
 
 if TYPE_CHECKING:
@@ -186,7 +186,7 @@ class LocalSequentialExecutor:
                     results.append(
                         WorkerResult(
                             source_packet_id=f"local:{readonly_state.tick}:{i}",
-                            work_id=f"{readonly_state.tick}:{item.owner_id}:{item.work_kind}",
+                            work_id=packet_work_id(readonly_state.tick, item.owner_id, item.work_kind),
                             entity_id=eid,
                             work_class=item.work_class,
                             update=upd,
@@ -287,7 +287,7 @@ class ConcurrentExecutionAdapter:
                     packet_seed = rng.get_int(Domain.DEFAULT, state.tick, item.owner_id, 0, 1000000)
                     packet = WorkerPacket(
                         packet_id=packet_id,
-                        work_id=f"{state.tick}:{item.owner_id}:{item.work_kind}",
+                        work_id=packet_work_id(state.tick, item.owner_id, item.work_kind),
                         tick=state.tick,
                         world_time=state.world_time,
                         seed=packet_seed,
@@ -332,7 +332,7 @@ class ConcurrentExecutionAdapter:
         )
 
         # Optimization: Map work_id to priority in O(1)
-        priority_map = {item.work_id: item.priority for item in work_items}
+        priority_map = {packet_work_id(state.tick, item.owner_id, item.work_kind): item.priority for item in work_items}
 
         for res in raw_results:
             source_packet = self._source_packets.get(res.source_packet_id)
