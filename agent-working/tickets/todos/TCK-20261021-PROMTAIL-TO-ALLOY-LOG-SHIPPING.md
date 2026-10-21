@@ -76,12 +76,12 @@ Promtail is deprecated upstream, and Grafana Alloy replaces it. Three earlier ti
 None.
 
 ## Related Code Areas
-- compose.yaml (`promtail`, `docker-socket-proxy`)
+- compose.yaml
 - docker/promtail-config.yml
-- docker/prometheus.yml (job `promtail`)
-- docker/grafana/provisioning/alerting/rules-base.yaml (`LogShippingErrors`)
+- docker/prometheus.yml
+- docker/grafana/provisioning/alerting/rules-base.yaml
 - docker/grafana/provisioning/datasources/datasource.yml
-- tests/logging/test_loki_cardinality.py (testing-planner)
+- tests/logging/test_loki_cardinality.py
 
 ## Assumptions / Open Questions
 - Cross-domain edits, each routed to its owner and not made by platform: `tests/logging/test_loki_cardinality.py` (testing-planner); `docs/architecture/devops_baseline_adr.md` and `docs/architecture/system_overview.md` (lead-planner); `docs/engine/contracts/infrastructure_overview.md` (rpg-planner; that topology diagram is already reported out of date on #532). Find the owner of `docs/observability/loki_label_policy.md` from `registries/session_roles.yaml` before editing it.

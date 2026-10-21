@@ -7807,6 +7807,25 @@
   - agent-monitoring
   - data-quality
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING.md
+  ticket_id: TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING
+  title: Ship container logs to Loki with Grafana Alloy instead of the deprecated
+    Promtail
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-21'
+  related_code_areas:
+  - compose.yaml
+  - docker/promtail-config.yml
+  - docker/prometheus.yml
+  - docker/grafana/provisioning/alerting/rules-base.yaml
+  - docker/grafana/provisioning/datasources/datasource.yml
+  - tests/logging/test_loki_cardinality.py
+  artifact_files: []
+  tags:
+  - observability
+  - platform
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION.md
   ticket_id: TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION
   title: 'Once hunger is past its consequence line and taking health, starvation is
