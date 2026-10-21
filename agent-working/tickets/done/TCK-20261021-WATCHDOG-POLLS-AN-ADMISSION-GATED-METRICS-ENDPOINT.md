@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261021-WATCHDOG-POLLS-AN-ADMISSION-GATED-METRICS-ENDPOINT
-phase: open
+phase: done
 date: 2026-10-21
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 The watchdog GETs backend:8000/metrics, which is behind require_admission (401), so with admission on, check_metrics fails every 10 s and WatchdogTrip fires continuously
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -63,7 +63,7 @@ Lead-planner-u24 found this on 2026-10-21 by reading the code on origin/main; it
 - This was read from code, not reproduced. Re-verify it before any fix.
 
 ## Implementation Notes
-Scoped by reading origin/main 735a1c635 (read-only, nothing run). Plan below; nothing is built until rpg-planner has read it.
+Scoped by reading origin/main 735a1c635 (read-only, nothing run); plan approved by rpg-planner on 2026-10-21, with the 401 ruling below. Built as planned.
 
 ### Findings
 1. **What the watchdog polls.** `src/observability/watchdog.py` makes three polls per cycle: `GET {BACKEND_URL}/health` (L29), `GET {BACKEND_URL}/metrics` (L47, looks for the `sim_current_tick` line, L53-61), and Loki (L74). `BACKEND_URL` defaults to `http://backend:8000` (L12); compose sets the same (`compose.yaml` L331). `/metrics` is `@app.get("/metrics", dependencies=[Depends(require_admission)])` (`src/api/server.py` L176); `/health` (L186) has no dependency, so it is open.
@@ -82,11 +82,14 @@ Scoped by reading origin/main 735a1c635 (read-only, nothing run). Plan below; no
 - Platform ask (one line, after rpg-planner agrees): the `METRICS_URL` env line above in `compose.yaml`; nothing else. Retiring the watchdog is NOT proposed here.
 - No simulation file is touched, so no hash check is needed. Serial tests only.
 
-### Open question for rpg-planner
-- Treating 401 as "not a stall" means a misconfigured gate silently disables the stall check. Alternative: fail loudly with a distinct reason (`Metrics gated (HTTP 401)`) but not count it toward `consecutive_failures`. Preferred here is the second form (visible, not tripping); say if you want the first.
+### Ruling (rpg-planner, 2026-10-21) on 401/403
+After the switch, a 401/403 from the metrics port means the watchdog is misconfigured and blind, not that the sim stalled. So: reason `Metrics gated (HTTP 401)`; not counted toward `consecutive_failures`; its own `WatchdogBlind` alert (existing alert path and dedup, no new knob). Built: `SimulationWatchdog.metrics_blind` set by `check_metrics`, `run_cycle` routes `AlertEvent.create_watchdog_blind` (alert_type `WatchdogBlind`, severity ERROR, dedup key `watchdog-blind:{run_id}`).
 
-## Test Summary
-
-## Files Changed
-
-## Completion Summary
+### Built
+- `src/observability/watchdog.py`: `METRICS_URL` (default `http://backend:9109`), `parse_tick` (exact name, labels allowed), the 401/403 branch, `_route_blind_alert`. `/health` stays on `BACKEND_URL`.
+- `src/observability/alerts/models.py`: `AlertEvent.create_watchdog_blind`.
+- `docs/architecture/simulation_watchdog.md`: responsibility 1 rewritten.
+- Dedup window verified from code: `AlertDeduplicator(suppression_window_seconds=60.0)` and `AlertsManager.get_router` uses `SIM_ALERTS_DEDUP_WINDOW_SECONDS` else 60.0 (alerts/deduplicator.py, alerts/manager.py L24-28). The ticket's "60 s" is right. It is a fixed window from the first alert (the entry is not refreshed while suppressed).
+- Parity: no ledger entry covers the external watchdog (the `watchdog` hits in docs/parity_ledger are the kernel's tick-budget watchdog), so none was added.
+- compose.yaml: unchanged by ruling; the code default `http://backend:9109` covers it. fyi for platform-planner (PR notes): the watchdog service now reads `backend:9109` (set `METRICS_URL` to override); nothing in compose needs editing.
+- No simulation file touched, no hash check needed.
