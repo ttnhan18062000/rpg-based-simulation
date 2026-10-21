@@ -1470,6 +1470,7 @@ mechanisms:
       - src/systems/strategic_systems/entity_target_objective.py::close_entity_target_project
       - src/systems/strategic_systems/entity_target_objective.py::objective_outcome
       - src/systems/strategic_systems/entity_target_objective.py::contract_objective_outcome
+      - src/ai/goals/escalation.py::escalated_need_wins
     verified:
       instrument: scenario
       verdict: observed
