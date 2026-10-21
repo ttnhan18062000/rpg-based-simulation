@@ -13007,3 +13007,17 @@
     tests/codebase/test_pyrefly_report.py::test_makefile_targets_exist_and_say_advisory
   divergence_note: null
   support_boundary: null
+- id: INFRA-437
+  text: 'TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS: when a pooled chunk future raises, WorkerManager.execute_batch answers every packet of that chunk with
+    a FAILURE no-op (an empty EntityUpdate for the packet''s own entity, the packet''s packet_id and work_id), in packet order, instead of dropping the chunk''s results. The other
+    chunks still commit and each entity keeps its one result slot (bounded_concurrency_contract §4). future.result() has no timeout: a hung chunk is the watchdog''s liveness
+    matter, not the commit path''s, so what a run commits never depends on host speed; the contract''s TIMEOUT status stays a named, unused value.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/worker_manager.py::failure_no_op; src/engine/worker_manager.py::WorkerManager.execute_batch (collect loop); docs/engine/contracts/bounded_concurrency_contract.md §4
+  proof_type: contract
+  test_path: tests/unit/engine/test_worker_chunk_exception_becomes_failure_no_ops.py
+  divergence_note: null
+  support_boundary: 'Thread and process pools; a chunk that raises as a whole (an error inside one packet was already a per-packet FAILURE no-op). Not covered: a hung chunk (no timeout by ruling).
+    The rpg gate runs inject LocalSequentialExecutor, so they never reach execute_batch.'
