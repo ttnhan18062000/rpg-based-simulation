@@ -83,6 +83,10 @@ def compute_active_idle_split(
         dt = _parse_ts(e.get("ts"))
         if dt is None:
             continue
+        if dt > end_dt:
+            # An event recorded after the run's end (a hand closure whose end_ts is its last tool call, closed_ts later) is not part
+            # of the run's timeline: counting it would turn the wait up to the recording into an idle gap larger than the run.
+            continue
         label = f"{e.get('phase', '?')}:{e.get('agent', '?')}"
         points.append((dt, label))
     points.append((end_dt, "end"))
