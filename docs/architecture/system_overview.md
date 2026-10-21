@@ -3,14 +3,14 @@ status: active
 layer: architecture
 authority: P2
 audience: developer
-date: 2026-10-13
+date: 2026-10-21
 tags: [architecture, observability, documentation]
 ---
 
 # System overview
 
 A one-page map of how the system fits together. It is D10 of the DevOps baseline ADR (`devops_baseline_adr.md`).
-Every claim was checked against the code on `main` (2026-10-13). For depth, follow the links. This page summarises them and does not replace them.
+Every claim was checked against the code on `main` (2026-10-13; ops table re-checked 2026-10-21). For depth, follow the links. This page summarises them and does not replace them.
 
 ## What it is
 
@@ -31,7 +31,7 @@ flowchart LR
 
     K -- "events, async and non-blocking<br/>XADD simulation:events" --> R[("Redis Streams")]
     R -- "consumer group" --> W["ai_worker<br/>anomaly rules"]
-    P["Prometheus"] -- "scrape /metrics" --> API
+    P["Prometheus"] -- "scrape internal :9109<br/>(public /metrics is auth-gated)" --> API
     G["Grafana"] --> P
     PT["Promtail"] -- "container logs" --> L["Loki"]
     WD["watchdog<br/>(src/observability/watchdog.py)"] -- "/health, /metrics" --> API
@@ -63,19 +63,19 @@ flowchart LR
 
 Levels are those of the DevOps baseline ADR (D7). A capability is listed at the highest level it has **actually reached**, never the planned one.
 
-| capability | where | evidence level (2026-10-13) |
+| capability | where | evidence level (2026-10-21) |
 |---|---|---|
-| Containerised stack (9 services) | `compose.yaml`, `docker/` | running locally |
+| Containerised stack (14 services: 4 default, 10 in the observability profile) | `compose.yaml`, `docker/` | running locally |
 | Health and metrics endpoints | `src/api/server.py` (`/health`, `/metrics`) | running locally |
 | Metrics, dashboards and logs | Prometheus, Grafana, Loki, Promtail | running locally |
 | CI: path-gated test lanes, type and code-health gates | `.github/workflows/test.yml` | running in CI |
 | Backend image build check | `test.yml` (not required, not pushed) | running in CI |
-| Optional observability profile with memory caps | ADR D1, slice S1 | in progress |
-| Published images with an SBOM and a vulnerability report | ADR D2/D3 | in progress (S1); signing is S2 |
-| Load test with a measured throughput figure | ADR D9 | planned |
-| Alerts, SLOs, runbook and a recorded drill | ADR D5 | planned |
-| Request tracing (API layer) | ADR D4 | planned |
-| Terraform written and validated | ADR D6 | planned |
+| Optional observability profile with memory caps | ADR D1, slice S1 | running locally |
+| Published images with an SBOM, a vulnerability report and keyless signing | `.github/workflows/publish-images.yml` | running in CI |
+| Load test with a measured throughput figure | ADR D9; `tools/loadtest/`, `docs/runbooks/records/2026-10-18-api-load-test.md` | recorded locally |
+| Alerts, SLOs, runbook and a recorded drill | ADR D5; Grafana-managed rules (`docker/grafana/provisioning/alerting/`) to ntfy, `docs/runbooks/`, drills in `docs/runbooks/records/` | running locally, drills recorded |
+| Request tracing (API layer) | ADR D4; Tempo is in the observability profile | in progress: Tempo runs, but `src/` emits no spans yet |
+| Terraform written and validated | ADR D6; `infra/terraform/`, `.github/workflows/iac.yml` | validated in CI, never applied |
 | Cloud deployment | not selected ("2b") | none |
 
 Update this table as each slice lands.

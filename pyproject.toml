@@ -83,7 +83,7 @@ lint = [
     "complexipy==8.0.1",
     # TCK-20261004-AST-GREP-RULE-PACK-ADVISORY: project rules in codebase/rules/ (binary: `ast-grep`, never `sg`).
     "ast-grep-cli==0.50.0",
-    # TCK-20261004-IMPORT-LINTER-ADOPTION: contracts in codebase/structure/importlinter.toml (advisory; binary: `lint-imports --config <file>`).
+    # TCK-20261004-IMPORT-LINTER-ADOPTION: contracts in codebase/structure/importlinter.toml (blocking in the required Code health job since #671; binary: `lint-imports --config <file>`).
     "import-linter==2.15",
     # TCK-20261021-PYREFLY-ADVISORY-REPORT: advisory second type-checker opinion, report-only, never a gate (mypy is the gate).
     "pyrefly==1.3.2",
