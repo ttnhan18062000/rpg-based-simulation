@@ -7734,6 +7734,21 @@
   date: '2026-10-20'
   related_code_areas:
   - src/engine/tactical.py, src/engine/cognition.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT/plan.md
+  - agent-working/stored_artifacts/TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY.md
+  ticket_id: TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY
+  title: A hunger or sleep goal that wins scoring at or past its SURV-07 onset is
+    admitted even when the project cap is full
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/systems/strategic_systems/intelligence.py, src/systems/strategic_systems/detour.py
   artifact_files: []
   tags: []
 - type: ticket
@@ -7839,18 +7854,6 @@
   date: '2026-10-20'
   related_code_areas:
   - tests/api/test_observability_websocket.py
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY.md
-  ticket_id: TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY
-  title: A hunger or sleep goal that wins scoring at or past its SURV-07 onset is
-    admitted even when the project cap is full
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-20'
-  related_code_areas:
-  - src/systems/strategic_systems/intelligence.py, src/systems/strategic_systems/detour.py
   artifact_files: []
   tags: []
 - type: ticket
