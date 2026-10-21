@@ -13025,3 +13025,17 @@
   divergence_note: null
   support_boundary: 'Thread and process pools; a chunk that raises as a whole (an error inside one packet was already a per-packet FAILURE no-op). Not covered: a hung chunk (no timeout by ruling).
     The rpg gate runs inject LocalSequentialExecutor, so they never reach execute_batch.'
+- id: INFRA-438
+  text: 'TCK-20261021-WATCHDOG-POLLS-AN-ADMISSION-GATED-METRICS-ENDPOINT: the external SimulationWatchdog reads sim_current_tick from the backend''s internal metrics port (METRICS_URL, default
+    http://backend:9109/metrics, the same registry the API''s key-gated /metrics serves), not from /metrics on the API port, which answers 401 to a poller without an API key. A 401 or 403 from the
+    metrics endpoint is reported as "Metrics gated (HTTP <status>)", is not counted toward consecutive_failures (no stall alert), and raises its own WatchdogBlind alert (severity ERROR, once per the
+    alert router''s dedup window). A refused connection, a timeout, any other non-200 status and a tick that does not advance remain failures. The tick sample is matched by exact metric name.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/observability/watchdog.py::SimulationWatchdog.check_metrics, ::parse_tick, ::_route_blind_alert; src/observability/alerts/models.py::AlertEvent.create_watchdog_blind; src/api/metrics_port.py::start_metrics_port; docs/architecture/simulation_watchdog.md
+  proof_type: contract
+  test_path: tests/unit/observability/test_watchdog_metrics_source.py
+  divergence_note: null
+  support_boundary: 'Unit level: a real prometheus_client registry served by start_metrics_port and a local HTTP server answering 401/403/500; check_metrics is never patched. The compose deployment is not run
+    here (the observability profile); compose.yaml is unchanged because the code default covers it.'
