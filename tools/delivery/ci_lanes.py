@@ -278,8 +278,28 @@ def git_uncommitted(run=subprocess.run) -> List[str]:
     return [] if r.returncode != 0 else [ln[3:] for ln in r.stdout.splitlines() if ln.strip()]
 
 
+_XDIST_FLAG = re.compile(r"(?:^|\s)(?:-n\s*\S+|--dist(?:=|\s))")
+_XDIST_INSTALL = "uv sync --locked --no-install-project --no-group lint"
+
+
+def _strip_junit(command: str) -> str:
+    """Drop `--junit-xml=...` and any line continuation that leaves dangling: the flag is usually the last line after a
+    `\\`, so the plain removal ends the command in a lone `\\` that bash hands to pytest as a path."""
+    out = _JUNIT.sub("", command)
+    out = re.sub(r"\\[ \t]+\\", r"\\", out)
+    return re.sub(r"(?:\s*\\)+\s*$", "", out)
+
+
 def lane_commands(lane: Lane) -> List[str]:
-    return [_JUNIT.sub("", s.command) for s in lane.steps]
+    return [_strip_junit(s.command) for s in lane.steps]
+
+
+def xdist_importable(run=subprocess.run) -> bool:
+    """Whether `python3` (the interpreter the lane commands run under) can import pytest-xdist."""
+    try:
+        return run(["python3", "-c", "import xdist"], cwd=REPO_ROOT, capture_output=True).returncode == 0
+    except OSError:
+        return False
 
 
 def render_list(workflow: Workflow, verdicts: Sequence[LaneVerdict], base: str, uncommitted: Sequence[str] = ()) -> str:
@@ -309,12 +329,23 @@ def render_list(workflow: Workflow, verdicts: Sequence[LaneVerdict], base: str, 
     return "\n".join(out)
 
 
-def run_lanes(workflow: Workflow, names: Sequence[str], runner=subprocess.run) -> Dict[str, bool]:
+def run_lanes(workflow: Workflow, names: Sequence[str], runner=subprocess.run, xdist_check=xdist_importable) -> Dict[str, bool]:
     results: Dict[str, bool] = {}
     by_name = {l.name: l for l in workflow.lanes}
+    xdist_ok: Optional[bool] = None
     for name in names:
         ok = True
-        for cmd in lane_commands(by_name[name]):
+        commands = lane_commands(by_name[name])
+        if any(_XDIST_FLAG.search(c) for c in commands):
+            if xdist_ok is None:
+                xdist_ok = xdist_check()
+            if not xdist_ok:
+                print(f"[{name}] needs pytest-xdist (its command uses -n/--dist) but python3 cannot import it; "
+                      f"install the dev group: {_XDIST_INSTALL}", flush=True)
+                results[name] = False
+                print(f"FAIL: {name}", flush=True)
+                continue
+        for cmd in commands:
             print(f"[{name}] $ {cmd}", flush=True)
             ok = runner(["bash", "-ec", cmd], cwd=REPO_ROOT).returncode == 0 and ok
             if not ok:
