@@ -33,6 +33,14 @@ def validate_record(record: dict) -> list[str]:
 DURATION_SOURCES = ("declared", "tool_activity", "unknown")
 
 
+def _is_iso(value: str) -> bool:
+    try:
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
 def _optional_field_errors(record: dict) -> list[str]:
     """TCK-20261006-HAND-CLOSURE-RECORDER-REAL-TIMESTAMPS: optional provenance fields; absent (old rows) is always valid."""
     errors = []
@@ -43,6 +51,13 @@ def _optional_field_errors(record: dict) -> list[str]:
     peers = record.get("claim_peers")
     if peers is not None and not (isinstance(peers, int) and not isinstance(peers, bool) and peers >= 0):
         errors.append("claim_peers must be a non-negative integer")
+    # TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE: the closure time of an anchored duration, and
+    # the marker a week close leaves on a re-derived row
+    closed = record.get("closed_ts")
+    if closed is not None and not (isinstance(closed, str) and _is_iso(closed)):
+        errors.append("closed_ts must be an ISO 8601 string")
+    if record.get("duration_rederived") is not None and record["duration_rederived"] != "week_close":
+        errors.append("duration_rederived must be 'week_close'")
     # TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD: why this path was taken, and which planned phases have no event
     reason = record.get("path_reason")
     if reason is not None and reason not in PATH_REASONS:

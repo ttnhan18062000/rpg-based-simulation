@@ -11,6 +11,13 @@ measurement. This module resolves one of three sources, in this precedence:
                    (a gap above `PAUSE_THRESHOLD_SECONDS` ends a block); at least `MIN_CLAIMED_ROWS` rows
     unknown        otherwise: `start_ts == end_ts` (the field is required) and `duration_s` is null, never 0
 
+The anchored block (TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE): when no `--start-ts` is given and
+the block ending at the closure is EMPTY (the closure came more than `PAUSE_THRESHOLD_SECONDS` after the session's last row), the
+work ended at that last row, so the block ending there is derived with the same claim rule and the same `MIN_CLAIMED_ROWS`.
+`end_ts` is then the last claimed row (counting the idle gap up to the closure would inflate the duration) and the real closure time
+is kept in `Resolution.closed_ts`, written as the run's optional `closed_ts`. A non-empty block ending at the closure, including a
+back-to-back closure, behaves exactly as before.
+
 Each closure claims only the rows after the previous closure's end, so a row is claimed by at most one closure. The
 claimed rows are also the cost join (TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION): `Resolution.claimed`. Pure functions over lists of dicts plus two thin readers; never raises.
 """
@@ -45,6 +52,7 @@ class Resolution:
     end_ts: str
     claim_peers: int | None = None  # only with tool_activity
     claimed: tuple[dict, ...] = field(default=(), compare=False)
+    closed_ts: str | None = None  # only with an anchored tool_activity: the real closure time (end_ts is the last tool call)
 
 
 def _read_jsonl(path: Path) -> list[dict]:
@@ -132,7 +140,24 @@ def resolve(now: str, declared_start: str | None, declared_end: str | None, sess
     claimed, peers = claim_rows(rows, end, prior_ends)
     if len(claimed) >= MIN_CLAIMED_ROWS:
         return Resolution(TOOL_ACTIVITY, claimed[0]["ts"], end, peers, tuple(claimed))
+    if not activity_block(rows, end):
+        anchored = _anchored(rows, end, prior_ends)
+        if anchored is not None:
+            return anchored
     return Resolution(UNKNOWN, end, end)
+
+
+def _anchored(rows: list[dict], closure: str, prior_ends: list[str]) -> Resolution | None:
+    """The activity block ending at the session's last row before `closure`, when it claims at least `MIN_CLAIMED_ROWS`."""
+    limit = _parse(closure)
+    earlier = [r for r in rows if limit and _parse(r["ts"]) <= limit]
+    if not earlier:
+        return None
+    last_ts = max(earlier, key=lambda r: _parse(r["ts"]))["ts"]
+    claimed, peers = claim_rows(rows, last_ts, prior_ends)
+    if len(claimed) < MIN_CLAIMED_ROWS:
+        return None
+    return Resolution(TOOL_ACTIVITY, claimed[0]["ts"], last_ts, peers, tuple(claimed), closed_ts=closure)
 
 
 def resolve_for_session(now: str, declared_start: str | None, declared_end: str | None, session_id: str | None,
