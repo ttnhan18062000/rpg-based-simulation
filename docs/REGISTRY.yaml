@@ -7792,6 +7792,33 @@
   - data-quality
   - retro
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-KERNEL-DOC-THROTTLING-AND-FINGERPRINT-HASH-DRIFT.md
+  ticket_id: TCK-20261021-KERNEL-DOC-THROTTLING-AND-FINGERPRINT-HASH-DRIFT
+  title: 'Engine contract drift: kernel.md still says Emergency Throttling drops work
+    (DEV-014 made it report-only) and calls the isolation fingerprint SHA-256 where
+    known_limitations §2.3 says MD5'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - docs/engine/kernel.md, docs/engine/known_limitations.md §2.3, the DEV-014 divergence
+    entry, src/engine (throttling and fingerprint code)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-KNOWN-LIMITATIONS-PHASE10-FLAG-DEFAULTS-DRIFT.md
+  ticket_id: TCK-20261021-KNOWN-LIMITATIONS-PHASE10-FLAG-DEFAULTS-DRIFT
+  title: known_limitations.md §1.5 says every Phase-10 flag defaults OFF, but feature_flags.py
+    defaults ENABLE_COMBAT_ENGAGEMENT, ENABLE_BELIEF_ASSIMILATION and ENABLE_SOCIAL_COOPERATION
+    to ON
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - docs/engine/known_limitations.md §1.5, src/core/feature_flags.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS.md
   ticket_id: TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS
   title: Week-close sweeps the main checkout's main.tools.jsonl into the closed week's
