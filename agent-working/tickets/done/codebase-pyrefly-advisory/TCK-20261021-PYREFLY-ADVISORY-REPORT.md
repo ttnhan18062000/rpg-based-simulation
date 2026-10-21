@@ -12,7 +12,7 @@ tags: [architecture, delivery]
 # TCK-20261021-PYREFLY-ADVISORY-REPORT
 
 ## Title
-Pyrefly as an advisory second type-checker opinion: a report-only CI job and Makefile target that never block
+Pyrefly as an advisory second type-checker opinion: a report-only Code health CI step and Makefile target that never block
 
 ## Status
 DONE
