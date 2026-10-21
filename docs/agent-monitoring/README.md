@@ -273,6 +273,10 @@ does not change, and `.claude/settings.json` hook changes affect every concurren
 immediately, a larger blast radius than a single ticket should decide unilaterally. Flagged as a
 follow-up recommendation for whoever next revisits this area.
 
+## Tool rows that never reach `main`
+
+A session leaves tool rows only if its worktree has the PostToolUse hook (`.claude/settings.json` names `tools/agent-monitoring/post_tool_hook.py` and the script exists; the hook command skips a missing script silently) and the rows are then committed. W41 measured 11 of 41 closing sessions with a tool row on `main` (27%); for the 19 sessions with a transcript, 8 had rows sitting in an unmerged worktree shard, 6 showed no hook event at all, and 5 showed hook events but left no row (`TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH`). SessionStart now prints a `monitoring:` line when the worktree lacks the hook, and another when tool rows in any week's shard are not in a commit. Both are report-only; there is no flush, because the rows are already written and a flush would be a second write path. Stage `agent-working/agent-monitoring/` in every commit.
+
 ## Closing a finished week
 
 Per-batch shards (`<batch>.runs.jsonl` and siblings) are folded into the canonical `runs.jsonl`,
