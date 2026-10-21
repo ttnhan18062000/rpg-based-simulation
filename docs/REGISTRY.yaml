@@ -7802,6 +7802,21 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-CI-JUNIT-TOOLS-ACCEPT-DEFUSED-XML-FINDINGS.md
+  ticket_id: TCK-20261020-CI-JUNIT-TOOLS-ACCEPT-DEFUSED-XML-FINDINGS
+  title: 'The three Semgrep `use-defused-xml-parse` findings in `tools/ci_junit_merge.py`
+    and `tools/ci_junit_summary.py` are accepted in code with a reason, the same way
+    #667 handled testing''s report tools.'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/ci_junit_merge.py, tools/ci_junit_summary.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-CI-LANES-RUN-TRAILING-BACKSLASH-AND-XDIST.md
   ticket_id: TCK-20261020-CI-LANES-RUN-TRAILING-BACKSLASH-AND-XDIST
   title: '`ci_lanes --run` runs test.yml''s commands as CI does: no stray `\` argument
