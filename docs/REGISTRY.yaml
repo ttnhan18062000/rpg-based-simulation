@@ -7851,6 +7851,22 @@
   - agent-working/stored_artifacts/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS.md
+  ticket_id: TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS
+  title: When a worker chunk future raises, that chunk's results are dropped with
+    no per-entity FAILURE no-ops, which the contract requires, and future.result()
+    has no timeout path
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/engine/worker_manager.py (~L176), the worker failure contract in docs/engine/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS/plan.md
+  - agent-working/stored_artifacts/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/codebase-pyrefly-advisory/TCK-20261021-PYREFLY-ADVISORY-REPORT.md
   ticket_id: TCK-20261021-PYREFLY-ADVISORY-REPORT
   title: 'Pyrefly as an advisory second type-checker opinion: a report-only Code health
