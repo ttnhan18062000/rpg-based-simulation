@@ -73,6 +73,19 @@ class AlertEvent:
         )
 
     @classmethod
+    def create_watchdog_blind(cls, run_id: str, tick: int, message: str, details: Dict[str, Any]) -> "AlertEvent":
+        """Factory for the alert that says the external watchdog cannot read the metrics endpoint (a gated or misconfigured source), distinct from a trip that says the simulation stalled."""
+        return cls(
+            alert_type="WatchdogBlind",
+            severity="ERROR",
+            run_id=run_id,
+            tick=tick,
+            message=message,
+            evidence=details,
+            dedup_key=f"watchdog-blind:{run_id}"
+        )
+
+    @classmethod
     def create_critical_anomaly(cls, run_id: str, tick: Optional[int], message: str, details: Dict[str, Any]) -> "AlertEvent":
         """Factory to create a critical anomaly alert event from the worker/rules engine."""
         rule_id = details.get("rule_id", "UnknownRule")

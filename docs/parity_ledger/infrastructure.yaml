@@ -2742,8 +2742,12 @@
   test_path: tests/unit/domains/feature_packs/test_loader.py::test_load_demo_escort_pack_registers_escort_dignitary
   divergence_note: null
 - id: INFRA-221
-  text: 'All 10 Phase 10 feature flags in FeatureFlagManager default to FeatureMode.OFF.
-    Balance and behavioural scenarios must explicitly enable flags via set_flag_mode()
+  text: 'Eight of the 11 Phase 10 feature flags in FeatureFlagManager default to FeatureMode.OFF;
+    ENABLE_COMBAT_ENGAGEMENT, ENABLE_BELIEF_ASSIMILATION and ENABLE_SOCIAL_COOPERATION default
+    to FeatureMode.ON (deliberate flips, TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER and
+    TCK-20260824-ROLLOUT-FLAG-DECISIONS; docs/engine/known_limitations.md 1.5, corrected by
+    TCK-20261021-KNOWN-LIMITATIONS-PHASE10-FLAG-DEFAULTS-DRIFT). Balance and behavioural scenarios
+    must explicitly enable the flags that default OFF via set_flag_mode()
     or the overrides constructor argument. The sentinel test test_adventure_routing_defaults_off()
     guards the ENABLE_ADVENTURE_ROUTING default and will fail with instructions if
     the default is changed without re-running tools/balance_measure.py to establish
@@ -12692,8 +12696,8 @@
     of src/ or of the seeded registry.'
 - id: INFRA-420
   text: 'Worker-result resolution order does not change the committed state, because no two results
-    can tie. Kernel._phase_resolution sorts results by (class_priority, -local_priority, entity_id)
-    with a stable sort, and the key is unique: entity results have a unique entity_id, a second result
+    can tie. Kernel._phase_resolution sorts results by ConcurrencyLaw.commit_key = (class_priority, -local_priority, entity_id)
+    (class_priority lower is earlier, local_priority higher is earlier) with a stable sort, and the key is unique: entity results have a unique entity_id, a second result
     for one entity is rejected by ProtocolValidator.validate_result_batch and by the resolution guard,
     and an entity_id 0 result (the former DRAIN_DEBT system-result slot, the only results that tied) is
     rejected by the validator because nothing produces one (TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE).
@@ -12704,9 +12708,9 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/engine/kernel.py::Kernel._phase_resolution; src/core/protocol_validator.py::ProtocolValidator.validate_result_batch
+  v2_evidence: src/engine/kernel.py::Kernel._phase_resolution; src/core/concurrency_law.py::ConcurrencyLaw.commit_key; src/core/work.py::packet_work_id (the executor carries WorkItem.priority onto the result through it, TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH); src/core/protocol_validator.py::ProtocolValidator.validate_result_batch
   proof_type: contract
-  test_path: tests/integration/kernel/test_tied_worker_result_order.py
+  test_path: tests/integration/kernel/test_tied_worker_result_order.py, tests/unit/engine/test_work_item_priority_reaches_the_result.py
   divergence_note: DEV-019 (entity-0 results are always rejected)
   support_boundary: 'Unique-key ordering (TCK-20261004-PERF-M1-TIED-WORKER-RESULT-VERIFICATION, rewritten
     by TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE). The earlier bounded commutative merge rule for system
@@ -13007,3 +13011,31 @@
     tests/codebase/test_pyrefly_report.py::test_makefile_targets_exist_and_say_advisory
   divergence_note: null
   support_boundary: null
+- id: INFRA-437
+  text: 'TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS: when a pooled chunk future raises, WorkerManager.execute_batch answers every packet of that chunk with
+    a FAILURE no-op (an empty EntityUpdate for the packet''s own entity, the packet''s packet_id and work_id), in packet order, instead of dropping the chunk''s results. The other
+    chunks still commit and each entity keeps its one result slot (bounded_concurrency_contract §4). future.result() has no timeout: a hung chunk is the watchdog''s liveness
+    matter, not the commit path''s, so what a run commits never depends on host speed; the contract''s TIMEOUT status stays a named, unused value.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/worker_manager.py::failure_no_op; src/engine/worker_manager.py::WorkerManager.execute_batch (collect loop); docs/engine/contracts/bounded_concurrency_contract.md §4
+  proof_type: contract
+  test_path: tests/unit/engine/test_worker_chunk_exception_becomes_failure_no_ops.py
+  divergence_note: null
+  support_boundary: 'Thread and process pools; a chunk that raises as a whole (an error inside one packet was already a per-packet FAILURE no-op). Not covered: a hung chunk (no timeout by ruling).
+    The rpg gate runs inject LocalSequentialExecutor, so they never reach execute_batch.'
+- id: INFRA-438
+  text: 'TCK-20261021-WATCHDOG-POLLS-AN-ADMISSION-GATED-METRICS-ENDPOINT: the external SimulationWatchdog reads sim_current_tick from the backend''s internal metrics port (METRICS_URL, default
+    http://backend:9109/metrics, the same registry the API''s key-gated /metrics serves), not from /metrics on the API port, which answers 401 to a poller without an API key. A 401 or 403 from the
+    metrics endpoint is reported as "Metrics gated (HTTP <status>)", is not counted toward consecutive_failures (no stall alert), and raises its own WatchdogBlind alert (severity ERROR, once per the
+    alert router''s dedup window). A refused connection, a timeout, any other non-200 status and a tick that does not advance remain failures. The tick sample is matched by exact metric name.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/observability/watchdog.py::SimulationWatchdog.check_metrics, ::parse_tick, ::_route_blind_alert; src/observability/alerts/models.py::AlertEvent.create_watchdog_blind; src/api/metrics_port.py::start_metrics_port; docs/architecture/simulation_watchdog.md
+  proof_type: contract
+  test_path: tests/unit/observability/test_watchdog_metrics_source.py
+  divergence_note: null
+  support_boundary: 'Unit level: a real prometheus_client registry served by start_metrics_port and a local HTTP server answering 401/403/500; check_metrics is never patched. The compose deployment is not run
+    here (the observability profile); compose.yaml is unchanged because the code default covers it.'

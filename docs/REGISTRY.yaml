@@ -7792,6 +7792,45 @@
   - data-quality
   - retro
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-KERNEL-DOC-THROTTLING-AND-FINGERPRINT-HASH-DRIFT.md
+  ticket_id: TCK-20261021-KERNEL-DOC-THROTTLING-AND-FINGERPRINT-HASH-DRIFT
+  title: 'Engine contract drift: kernel.md still says Emergency Throttling drops work
+    (DEV-014 made it report-only) and calls the isolation fingerprint SHA-256 where
+    known_limitations §2.3 says MD5'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - docs/engine/kernel.md, docs/engine/known_limitations.md §2.3, the DEV-014 divergence
+    entry, src/engine (throttling and fingerprint code)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-KNOWN-LIMITATIONS-PHASE10-FLAG-DEFAULTS-DRIFT.md
+  ticket_id: TCK-20261021-KNOWN-LIMITATIONS-PHASE10-FLAG-DEFAULTS-DRIFT
+  title: known_limitations.md §1.5 says every Phase-10 flag defaults OFF, but feature_flags.py
+    defaults ENABLE_COMBAT_ENGAGEMENT, ENABLE_BELIEF_ASSIMILATION and ENABLE_SOCIAL_COOPERATION
+    to ON
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - docs/engine/known_limitations.md §1.5, src/core/feature_flags.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-OBSERVABILITY-DETERMINISM-TEST-NEVER-HASHES.md
+  ticket_id: TCK-20261021-OBSERVABILITY-DETERMINISM-TEST-NEVER-HASHES
+  title: test_phase28_observability_determinism is named "same authoritative hash"
+    but only toggles the observability mode and never compares a hash
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - tests/integration/observability/test_phase28_observability_determinism.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS.md
   ticket_id: TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS
   title: 'Eleven paths that route as unowned get an owner in session_roles.yaml: the
@@ -7809,6 +7848,19 @@
   - ai
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-WATCHDOG-POLLS-AN-ADMISSION-GATED-METRICS-ENDPOINT.md
+  ticket_id: TCK-20261021-WATCHDOG-POLLS-AN-ADMISSION-GATED-METRICS-ENDPOINT
+  title: The watchdog GETs backend:8000/metrics, which is behind require_admission
+    (401), so with admission on, check_metrics fails every 10 s and WatchdogTrip fires
+    continuously
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/observability/watchdog.py, src/api/server.py:176, docker/prometheus.yml, tests/unit/observability/test_watchdog.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS.md
   ticket_id: TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS
   title: Week-close sweeps the main checkout's main.tools.jsonl into the closed week's
@@ -7823,6 +7875,39 @@
   tags:
   - agent-monitoring
   - data-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH.md
+  ticket_id: TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH
+  title: The executor looks up local_priority by a packet work_id format that never
+    matches the scheduler's WorkItem work_id, so the priority is always 0. The kernel's
+    sort order also contradicts bounded_concurrency_contract §3.
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/engine/scheduler.py:143, src/engine/executor.py:189/290/335/340, src/engine/kernel.py:606,
+    docs/engine/bounded_concurrency_contract.md §3
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH/investigation.md
+  - agent-working/stored_artifacts/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH/plan.md
+  - agent-working/stored_artifacts/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS.md
+  ticket_id: TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS
+  title: When a worker chunk future raises, that chunk's results are dropped with
+    no per-entity FAILURE no-ops, which the contract requires, and future.result()
+    has no timeout path
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/engine/worker_manager.py (~L176), the worker failure contract in docs/engine/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS/plan.md
+  - agent-working/stored_artifacts/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS/test_plan.md
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/codebase-pyrefly-advisory/TCK-20261021-PYREFLY-ADVISORY-REPORT.md
   ticket_id: TCK-20261021-PYREFLY-ADVISORY-REPORT
@@ -8233,6 +8318,19 @@
   date: '2026-10-20'
   related_code_areas:
   - docker/grafana/provisioning/alerting/rules-base.yaml
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-SUSPENDED-PROJECTS-ARE-NEVER-RESUMED-SLOT-LEAK.md
+  ticket_id: TCK-20261020-SUSPENDED-PROJECTS-ARE-NEVER-RESUMED-SLOT-LEAK
+  title: Suspended projects are never resumed and never expire, so they hold project
+    slots forever (slot leak)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai/intelligence.py (~L1771 capacity gate)
+  - src/core/strategic.py (is_live_project, has_project_capacity)
   artifact_files: []
   tags: []
 - type: ticket

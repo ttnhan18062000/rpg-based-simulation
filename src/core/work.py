@@ -39,3 +39,10 @@ class WorkItem:
     def is_deferrable(self) -> bool:
         """Law: Critical work is never deferrable."""
         return self.work_class != WorkClass.CRITICAL
+
+
+def packet_work_id(tick: int, owner_id: int | str, work_kind: str) -> str:
+    """The work id a worker packet and its result carry. The executor builds it for the packet and for the look-up that carries ``WorkItem.priority`` onto the result,
+    so both sides use this one function (they used two different formats before, and the look-up never matched, TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH).
+    It is not ``WorkItem.work_id`` (the scheduler's own ``{tick}:{kind}:{id}``), which no packet or result carries."""
+    return f"{tick}:{owner_id}:{work_kind}"

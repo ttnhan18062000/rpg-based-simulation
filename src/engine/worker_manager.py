@@ -7,10 +7,28 @@ import logging
 import math
 import threading
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, Future
-from typing import List, Dict, Any, Optional, Callable
+from typing import TYPE_CHECKING, List, Dict, Any, Optional, Callable
 import multiprocessing
 
+if TYPE_CHECKING:
+    from src.core.worker_protocol import WorkerPacket, WorkerResult
+
 logger = logging.getLogger(__name__)
+
+
+def failure_no_op(packet: "WorkerPacket") -> "WorkerResult":
+    """The deterministic authoritative no-op a failed packet becomes (bounded_concurrency_contract §4): FAILURE status, an empty update for the packet's own entity."""
+    from src.core.worker_protocol import ResultStatus, WorkerResult
+    from src.core.updates import EntityUpdate
+
+    return WorkerResult(
+        source_packet_id=packet.packet_id,
+        work_id=packet.work_id,
+        entity_id=packet.subject.id,
+        work_class=packet.work_class,
+        update=EntityUpdate(entity_id=packet.subject.id),
+        status=ResultStatus.FAILURE,
+    )
 
 
 def _process_chunk_wrapper(packets, worker_fn):
@@ -18,8 +36,7 @@ def _process_chunk_wrapper(packets, worker_fn):
     Handles a chunk of packets in a single process call.
     """
     import time
-    from src.core.worker_protocol import ResultStatus, WorkerResult
-    from src.core.updates import EntityUpdate
+    from src.core.worker_protocol import WorkerResult
     from dataclasses import replace
 
     chunk_results = []
@@ -36,14 +53,7 @@ def _process_chunk_wrapper(packets, worker_fn):
             else:
                 chunk_results.append(results)
         except Exception:
-            chunk_results.append(WorkerResult(
-                source_packet_id=packet.packet_id,
-                work_id=packet.work_id,
-                entity_id=packet.subject.id,
-                work_class=packet.work_class,
-                update=EntityUpdate(entity_id=packet.subject.id),
-                status=ResultStatus.FAILURE
-            ))
+            chunk_results.append(failure_no_op(packet))
     return chunk_results
 
 
@@ -105,7 +115,7 @@ class WorkerManager:
             return self._execute_locally(packets, worker_fn)
 
         results: List[WorkerResult] = []
-        futures: List[Future] = []
+        futures: List[tuple[Future, List[WorkerPacket]]] = []  # each future with the chunk it runs, so a failed chunk can be answered per entity
         
         # Adaptive Pool Selection (M8 Rule: Optimize for IPC overhead)
         if self._use_processes and len(packets) < self._max_workers * 10:
@@ -145,7 +155,7 @@ class WorkerManager:
                     
                     if self._use_processes:
                         future = self._pool.submit(_process_chunk_wrapper, chunk, worker_fn)
-                        futures.append(future)
+                        futures.append((future, chunk))
                     else:
                         # Thread Pool Dispatch
                         def chunk_worker(c=chunk, f=worker_fn, t=throttle):
@@ -161,25 +171,35 @@ class WorkerManager:
                                 t.release()
 
                         future = self._pool.submit(chunk_worker)
-                        futures.append(future)
+                        futures.append((future, chunk))
                 except Exception as e:
                     logger.error("Submission failed: %s", e)
                     results.extend(self._execute_locally(chunk, worker_fn))
                     with self._stats_lock:
                         self._inflight_count -= 1
 
-        # Collect results
-        for future in futures:
+        results.extend(self._collect(futures))
+
+        return results
+
+    def _collect(self, futures: List[tuple[Future, List["WorkerPacket"]]]) -> List["WorkerResult"]:
+        """Collect each chunk future's results in submission order.
+
+        No timeout on result(): a chunk's outcome must not depend on how fast the host is. A hung chunk is a liveness matter for the watchdog
+        (docs/architecture/simulation_watchdog.md), not the commit path's (bounded_concurrency_contract §4). A chunk that raised answers every one of its
+        packets with a FAILURE no-op, in packet order, so the other chunks still commit and each entity keeps its single result slot (§4).
+        """
+        collected: List["WorkerResult"] = []
+        for future, chunk in futures:
             try:
-                chunk_results = future.result()
-                results.extend(chunk_results)
+                collected.extend(future.result())
             except Exception as e:
-                logger.error("Chunk future failure: %s", e)
+                logger.error("Chunk future failure: %s; %d packet(s) become FAILURE no-ops", e, len(chunk))
+                collected.extend(failure_no_op(p) for p in chunk)
             finally:
                 with self._stats_lock:
                     self._inflight_count -= 1
-
-        return results
+        return collected
 
     def _execute_locally(
         self, 
@@ -204,9 +224,8 @@ class WorkerManager:
         thread and is not pool capacity (same reasoning as zero workers meaning synchronous
         execution), so it must not push peak_active above max_workers.
         """
-        from src.core.worker_protocol import ResultStatus, WorkerResult
-        from src.core.updates import EntityUpdate
-        
+        from src.core.worker_protocol import WorkerResult
+
         if pooled:
             with self._stats_lock:
                 self._active_count += 1
@@ -214,7 +233,7 @@ class WorkerManager:
         
         start = time.perf_counter_ns()
         try:
-            result = fn(packet)
+            result: List[WorkerResult] | WorkerResult = fn(packet)
             elapsed = time.perf_counter_ns() - start
             from dataclasses import replace
             if isinstance(result, list):
@@ -224,14 +243,7 @@ class WorkerManager:
             return result
         except Exception as e:
             logger.error("Internal worker crash: %s", e)
-            return WorkerResult(
-                source_packet_id=packet.packet_id,
-                work_id=packet.work_id,
-                entity_id=packet.subject.id,
-                work_class=packet.work_class,
-                update=EntityUpdate(entity_id=packet.subject.id), # No-op
-                status=ResultStatus.FAILURE
-            )
+            return failure_no_op(packet)
         finally:
             if pooled:
                 with self._stats_lock:
