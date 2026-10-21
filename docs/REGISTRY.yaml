@@ -7210,8 +7210,29 @@
   - platform
   - observability
 - type: doc
+  path: docs/runbooks/api-latency-slo.md
+  title: 'Runbook: API SLO (ApiLatencyP95High, ApiErrorRateHigh)'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+  - performance
+- type: doc
   path: docs/runbooks/disk-space.md
   title: 'Runbook: disk space (DiskSpaceLow, DiskWillFillIn24h)'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/log-shipping.md
+  title: 'Runbook: LogShippingErrors'
   status: active
   layer: platform
   authority: P2
@@ -7234,6 +7255,50 @@
 - type: doc
   path: docs/runbooks/records/2026-10-18-target-down-drill.md
   title: 'Target-down drill (2026-10-18): stop Loki, the alert reaches ntfy, recover'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/records/2026-10-19-api-slo-alert-fire-test.md
+  title: 'API SLO alert (2026-10-19): scrape on 9109, server-side numbers, and the
+    fire test'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+  - performance
+- type: doc
+  path: docs/runbooks/records/2026-10-19-redis-stop-drill-under-load.md
+  title: 'Redis-stop drill under load (2026-10-19): the cause alert fires while the
+    API SLO stays green'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/records/2026-10-20-log-shipping-fix.md
+  title: 'Log shipping fix (2026-10-20): promtail discovery was denied by the socket
+    proxy'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/redis-down.md
+  title: 'Runbook: RedisDown (cause alert)'
   status: active
   layer: platform
   authority: P2
@@ -7725,6 +7790,18 @@
   - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-BASELINE-GENERATION-FLOW-HEALTH-SCORE-MEAN-IS-99-NOT-100.md
+  ticket_id: TCK-20261020-BASELINE-GENERATION-FLOW-HEALTH-SCORE-MEAN-IS-99-NOT-100
+  title: 'test_baseline_generation_and_cli_flow fails on main: one of 5 runs scores
+    health 95, so the mean is 99.0, not 100.0'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/integration/observability/test_baseline_generation_flow.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-CI-LANES-RUN-TRAILING-BACKSLASH-AND-XDIST.md
   ticket_id: TCK-20261020-CI-LANES-RUN-TRAILING-BACKSLASH-AND-XDIST
   title: '`ci_lanes --run` runs test.yml''s commands as CI does: no stray `\` argument
@@ -7758,6 +7835,38 @@
   - agent-working/stored_artifacts/TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-FINALIZE-SELFCHECK-RECORDS-FAIL-REASON-CLASS.md
+  ticket_id: TCK-20261020-FINALIZE-SELFCHECK-RECORDS-FAIL-REASON-CLASS
+  title: The done-checker's Finalize self-check records a short reason class for each
+    failing condition in its gate-verdict row
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - check_migration_complete
+  - record_gate_verdict
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
+  - retro
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN.md
+  ticket_id: TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN
+  title: Hand closures record agent_count as unknown (null) instead of a phase-event
+    count, and the retro's "Avg agents per run" leaves them out
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - run_record
+  - avg_agents
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
+  - retro
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED.md
   ticket_id: TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED
   title: Hand closures record Review, Document-Update and Architecture-Verify as skipped
@@ -7786,6 +7895,36 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PERF-PYSPY-TOOLKIT-TEST-MEASURED-WINDOW.md
+  ticket_id: TCK-20261020-PERF-PYSPY-TOOLKIT-TEST-MEASURED-WINDOW
+  title: The py-spy end-to-end toolkit test measures too few ticks to be sampled reliably
+    on a loaded host
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/tools/test_profiling_toolkit.py
+  - tools/perf/profile_tick.py
+  artifact_files: []
+  tags:
+  - performance
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PLANNER-MAY-WRITE-STAGING-ARTIFACTS.md
+  ticket_id: TCK-20261020-PLANNER-MAY-WRITE-STAGING-ARTIFACTS
+  title: Every planner role may write agent-working/staging_artifacts/**, so starting
+    a ticket's staging artifacts stops raising a role_boundary warning
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - registries/session_roles.yaml, tools/sessions/roster.py, tools/sessions/boundary.py,
+    tools/sessions/generate_agents.py
+  artifact_files: []
+  tags:
+  - governance
+  - agent-monitoring
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA.md
   ticket_id: TCK-20261020-PR-BODY-LINT-PIN-CHECKOUT-BY-SHA
   title: pr-body-lint.yml pins actions/checkout by full commit SHA, per the repo-wide
@@ -7801,6 +7940,21 @@
   - ai
   - process-improvement
   - governance
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY.md
+  ticket_id: TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY
+  title: 'Loki receives no logs: promtail''s docker discovery is denied by the socket
+    proxy (GET /networks returns 403)'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - docker/promtail config
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/investigation.md
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/plan.md
+  - agent-working/stored_artifacts/TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY/test_plan.md
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR.md
   ticket_id: TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR
@@ -7835,6 +7989,22 @@
   tags:
   - testing
   - regression
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-RPG-GATE-POOLED-SHARE-CHECKED-AGAINST-ITS-COUNT-ROWS.md
+  ticket_id: TCK-20261020-RPG-GATE-POOLED-SHARE-CHECKED-AGAINST-ITS-COUNT-ROWS
+  title: The rpg gate report checks each pooled share against the numerator and denominator
+    count rows it names. A share marked undefined while its denominator is non-zero,
+    or a defined share that is not Σnum/Σden, is a `contract_error`.
+  tier: hotfix
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/test_architecture/rpg_gate_report.py, tests/unit/tools/test_rpg_gate_report.py
+  artifact_files: []
+  tags:
+  - testing
+  - regression
+  - simulation-quality
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS.md
   ticket_id: TCK-20261020-RPG-GATE-ROWS-COME-FROM-DECLARED-DOMAINS
@@ -7883,6 +8053,23 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-VISUAL-ASSETS-STORE-TESTS-REAL-LOCK.md
+  ticket_id: TCK-20261020-VISUAL-ASSETS-STORE-TESTS-REAL-LOCK
+  title: visual_assets store tests take their write lock in tmp, never on the real
+    `visual_assets/catalog/.store.lock`
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - lock_path
+  - roots
+  - tests/visual_assets/store/kill_helper.py (holds the lock in a child process)
+  - tests/visual_assets/test_review_cli.py, tests/visual_assets/test_key_usage.py
+  artifact_files: []
+  tags:
+  - testing
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT.md
   ticket_id: TCK-20261020-WEBSOCKET-OBSERVABILITY-TEST-WAITS-FOR-THE-WALK-EVENT-BY-DEADLINE-NOT-MESSAGE-COUNT
   title: test_observability_websocket_suite step 5 waits for the synthetic walk event
@@ -7892,6 +8079,31 @@
   date: '2026-10-20'
   related_code_areas:
   - tests/api/test_observability_websocket.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-WORKFLOW-PIN-GUARD-COVERS-EVERY-WORKFLOW.md
+  ticket_id: TCK-20261020-WORKFLOW-PIN-GUARD-COVERS-EVERY-WORKFLOW
+  title: The SHA-pin guard globs every file in `.github/workflows/`, so one test enforces
+    the repo-wide pin rule.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/static/test_workflow_actions_pinned_by_sha.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
+  ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
+  title: Tune DiskWillFillIn24h so short bursts of heavy local work don't trip it
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - docker/grafana/provisioning/alerting/rules-base.yaml
   artifact_files: []
   tags: []
 - type: ticket
@@ -8277,6 +8489,24 @@
   tags:
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001.md
+  ticket_id: TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001
+  title: '`icon_lookalikes.all_icon_sprites()` returns r0001 art for the 7 revised
+    icon keys; find which consumers mean "adopted now" and point them at the current
+    art'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - visual_assets/review/icon_lookalikes.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001/test_plan.md
+  tags:
+  - architecture
+  - testing
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
   ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
   title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
@@ -8387,21 +8617,6 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001.md
-  ticket_id: TCK-20261019-VISUAL-ASSETS-ICON-SPRITES-SOURCE-IS-R0001
-  title: '`icon_lookalikes.all_icon_sprites()` returns r0001 art for the 7 revised
-    icon keys; find which consumers mean "adopted now" and point them at the current
-    art'
-  tier: standard
-  ticket_type: bug
-  date: '2026-10-19'
-  related_code_areas:
-  - visual_assets/review/icon_lookalikes.py
-  artifact_files: []
-  tags:
-  - architecture
-  - testing
-- type: ticket
   path: agent-working/tickets/done/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
   ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
   title: 'The measured API load-test run on host ubuntu: req/s and p50/p95/p99 with
@@ -8431,6 +8646,23 @@
   - src/api/http_metrics.py, src/api/engine_manager.py, src/api/server.py
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK.md
+  ticket_id: TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK
+  title: One API SLO alert as a provisioned Grafana alert rule, a local ntfy container
+    as its contact point, and the runbook it links to
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/grafana/provisioning/alerting/rules-slo.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK/test_plan.md
+  tags:
+  - platform
+  - observability
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER.md
   ticket_id: TCK-20261018-BACKEND-IMAGE-NON-ROOT-USER
@@ -8671,6 +8903,24 @@
   - agent-monitoring
   - setup
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING.md
+  ticket_id: TCK-20261018-OBSERVABILITY-PROFILE-HARDENING
+  title: 'Compose: Grafana admin password from a secret file (no `admin` default),
+    host ports bound to 127.0.0.1, Promtail''s Docker socket behind a read-only proxy'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING/test_plan.md
+  tags:
+  - platform
+  - observability
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-REDIS-ADAPTER-MISSING-LIBRARY-TEST-BLOCKS-THE-IMPORT.md
   ticket_id: TCK-20261018-REDIS-ADAPTER-MISSING-LIBRARY-TEST-BLOCKS-THE-IMPORT
   title: test_redis_adapter_resilient_missing_library really blocks the redis import,
@@ -8682,6 +8932,40 @@
   - src/observability/stream/adapters.py (unchanged), tests/unit/observability/test_event_stream_adapters.py
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-REDIS-DOWN-CAUSE-ALERT.md
+  ticket_id: TCK-20261018-REDIS-DOWN-CAUSE-ALERT
+  title: A Redis-down cause alert, so the Redis-stop drill has something that fires
+    when the API SLO stays green
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-DOWN-CAUSE-ALERT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-DOWN-CAUSE-ALERT/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-DOWN-CAUSE-ALERT/test_plan.md
+  tags:
+  - platform
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD.md
+  ticket_id: TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD
+  title: 'The recorded drill: stop Redis under Locust load, follow the runbook, and
+    record detection time, recovery time and a short post-mortem'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD/test_plan.md
+  tags:
+  - platform
+  - observability
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-REPLAY-NON-AUTHORITATIVE-TEST-INDEPENDENT-OF-HOST-MEMORY.md
   ticket_id: TCK-20261018-REPLAY-NON-AUTHORITATIVE-TEST-INDEPENDENT-OF-HOST-MEMORY
@@ -8708,6 +8992,23 @@
   - ai
   - agent-monitoring
   - data-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT.md
+  ticket_id: TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
+  title: 'Prometheus: scrape the backend''s internal metrics port 9109 instead of
+    the admission-gated /metrics on 8000'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT/test_plan.md
+  tags:
+  - platform
+  - observability
 - type: ticket
   path: agent-working/tickets/done/TCK-20261018-SEARCH-SHARED-SERVER-CWD-AND-TEST-RUNTIME-ISOLATION.md
   ticket_id: TCK-20261018-SEARCH-SHARED-SERVER-CWD-AND-TEST-RUNTIME-ISOLATION
@@ -8940,35 +9241,6 @@
   - platform
   - observability
 - type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-OBSERVABILITY-PROFILE-HARDENING.md
-  ticket_id: TCK-20261018-OBSERVABILITY-PROFILE-HARDENING
-  title: 'Compose: Grafana admin password from a secret file (no `admin` default),
-    host ports bound to 127.0.0.1, Promtail''s Docker socket behind a read-only proxy'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-  - security
-- type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT.md
-  ticket_id: TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
-  title: 'Prometheus: scrape the backend''s internal metrics port 9109 instead of
-    the admission-gated /metrics on 8000'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-18'
-  related_code_areas:
-  - docker/prometheus.yml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
   path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT.md
   ticket_id: TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT
   title: Prometheus scrape of ai_worker:9108, an ai_worker healthcheck on its up gauge,
@@ -8978,20 +9250,6 @@
   date: '2026-10-18'
   related_code_areas:
   - docker/prometheus.yml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK.md
-  ticket_id: TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK
-  title: One API SLO alert as a provisioned Grafana alert rule, a local ntfy container
-    as its contact point, and the runbook it links to
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
   artifact_files: []
   tags:
   - platform
@@ -9012,34 +9270,6 @@
   - platform
   - observability
   - performance
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-REDIS-DOWN-CAUSE-ALERT.md
-  ticket_id: TCK-20261018-REDIS-DOWN-CAUSE-ALERT
-  title: A Redis-down cause alert, so the Redis-stop drill has something that fires
-    when the API SLO stays green
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD.md
-  ticket_id: TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD
-  title: 'The recorded drill: stop Redis under Locust load, follow the runbook, and
-    record detection time, recovery time and a short post-mortem'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - tools/loadtest/
-  artifact_files: []
-  tags:
-  - platform
-  - observability
 - type: ticket
   path: agent-working/tickets/todos/phase19-off-mode-check/TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK.md
   ticket_id: TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK
@@ -11263,6 +11493,19 @@
   - economy
   - resource
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT.md
+  ticket_id: TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT
+  title: '`test_baseline_comparison_and_cli_flow` fails on a loaded machine: the simulation
+    watchdog trips on wall-clock tick time and turns the expected PASS into WARNING'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-10'
+  related_code_areas:
+  - tests/integration/observability/test_baseline_comparison_flow.py
+  - src/engine/
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261010-DEFEAT-CORPUS-TEST-WINDOW-DEPENDS-ON-PURSUIT-GEOMETRY.md
   ticket_id: TCK-20261010-DEFEAT-CORPUS-TEST-WINDOW-DEPENDS-ON-PURSUIT-GEOMETRY
   title: The defeat corpus test's fixed 120-tick window depends on pursuit geometry;
@@ -11752,19 +11995,6 @@
   - agent-working/stored_artifacts/TCK-20261010-VISUAL-ASSETS-STORE-TOOLING-DOCS-AND-CLOSE/test_plan.md
   tags:
   - planning
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT.md
-  ticket_id: TCK-20261010-BASELINE-COMPARISON-FLOW-TEST-WALL-CLOCK-DEPENDENT
-  title: '`test_baseline_comparison_and_cli_flow` fails on a loaded machine: the simulation
-    watchdog trips on wall-clock tick time and turns the expected PASS into WARNING'
-  tier: hotfix
-  ticket_type: bug
-  date: '2026-10-10'
-  related_code_areas:
-  - tests/integration/observability/test_baseline_comparison_flow.py
-  - src/engine/
-  artifact_files: []
-  tags: []
 - type: ticket
   path: agent-working/tickets/todos/parity-ledger-paydown/TCK-20261010-EPIC-PARITY-LEDGER-PAYDOWN.md
   ticket_id: TCK-20261010-EPIC-PARITY-LEDGER-PAYDOWN
