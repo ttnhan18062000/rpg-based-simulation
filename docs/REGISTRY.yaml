@@ -7807,6 +7807,24 @@
   - agent-monitoring
   - data-quality
 - type: ticket
+  path: agent-working/tickets/todos/codebase-pyrefly-advisory/TCK-20261021-PYREFLY-ADVISORY-REPORT.md
+  ticket_id: TCK-20261021-PYREFLY-ADVISORY-REPORT
+  title: 'Pyrefly as an advisory second type-checker opinion: a report-only CI job
+    and Makefile target that never block'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-21'
+  related_code_areas:
+  - codebase/gates/mypy_gate.py
+  - codebase/baselines/
+  - pyproject.toml
+  - tests/codebase/test_typecheck_gate_configured.py
+  - docs/parity_ledger/infrastructure.yaml
+  artifact_files: []
+  tags:
+  - architecture
+  - delivery
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION.md
   ticket_id: TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION
   title: 'Once hunger is past its consequence line and taking health, starvation is
