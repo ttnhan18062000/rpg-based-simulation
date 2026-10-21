@@ -146,15 +146,16 @@ def test_two_unknown_rows_for_one_execution_end_as_one_run_row_after_one_close(t
     assert len(dedupe_to_latest_per_execution(rows)) == 1 and check_duplicate_run_records(rows, ceiling=0)[0]["status"] == "PASS"
 
 
-def test_an_unknown_row_that_cannot_be_rederived_still_goes_when_a_sibling_was(tmp_path):
-    # the second row belongs to the same execution but another session id with no rows: it stays unknown on its own, so it must be dropped
+def test_a_resolvable_checkpoint_never_replaces_an_unresolvable_final_row(tmp_path):
+    # the checkpoint row could be re-derived, but the final row (the one carrying the final status) cannot: touch nothing, drop nothing
     data = tmp_path / "data"
-    _write(data / WEEK / "runs.jsonl", [_unknown(closure=300), _unknown(closure=310, sid="nobody")])
+    _write(data / WEEK / "runs.jsonl", [_unknown(closure=300, final_status="NEEDS_CHANGES"), _unknown(closure=310, sid="nobody")])
     _write(data / WEEK / "tools.jsonl", _tool_rows(40, 41, 45, 50, 55))
-    _close(data)
-    rows = _runs(data)
-    assert len(rows) == 1 and rows[0]["duration_rederived"] == "week_close"
-    assert len(dedupe_to_latest_per_execution(rows)) == 1
+    before = (data / WEEK / "runs.jsonl").read_bytes()
+    result = _close(data)
+    assert result["durations"] == {"rederived": 0, "stale_dropped": 0, "skipped": None}
+    assert (data / WEEK / "runs.jsonl").read_bytes() == before
+    assert [r["final_status"] for r in _runs(data)] == ["NEEDS_CHANGES", "DONE"]
 
 
 def test_the_cli_prints_one_line_with_the_counts(tmp_path, capsys):
