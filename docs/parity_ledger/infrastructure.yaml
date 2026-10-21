@@ -2742,8 +2742,12 @@
   test_path: tests/unit/domains/feature_packs/test_loader.py::test_load_demo_escort_pack_registers_escort_dignitary
   divergence_note: null
 - id: INFRA-221
-  text: 'All 10 Phase 10 feature flags in FeatureFlagManager default to FeatureMode.OFF.
-    Balance and behavioural scenarios must explicitly enable flags via set_flag_mode()
+  text: 'Eight of the 11 Phase 10 feature flags in FeatureFlagManager default to FeatureMode.OFF;
+    ENABLE_COMBAT_ENGAGEMENT, ENABLE_BELIEF_ASSIMILATION and ENABLE_SOCIAL_COOPERATION default
+    to FeatureMode.ON (deliberate flips, TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER and
+    TCK-20260824-ROLLOUT-FLAG-DECISIONS; docs/engine/known_limitations.md 1.5, corrected by
+    TCK-20261021-KNOWN-LIMITATIONS-PHASE10-FLAG-DEFAULTS-DRIFT). Balance and behavioural scenarios
+    must explicitly enable the flags that default OFF via set_flag_mode()
     or the overrides constructor argument. The sentinel test test_adventure_routing_defaults_off()
     guards the ENABLE_ADVENTURE_ROUTING default and will fail with instructions if
     the default is changed without re-running tools/balance_measure.py to establish
