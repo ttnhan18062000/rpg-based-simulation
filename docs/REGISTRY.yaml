@@ -7831,6 +7831,19 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-WATCHDOG-POLLS-AN-ADMISSION-GATED-METRICS-ENDPOINT.md
+  ticket_id: TCK-20261021-WATCHDOG-POLLS-AN-ADMISSION-GATED-METRICS-ENDPOINT
+  title: The watchdog GETs backend:8000/metrics, which is behind require_admission
+    (401), so with admission on, check_metrics fails every 10 s and WatchdogTrip fires
+    continuously
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/observability/watchdog.py, src/api/server.py:176, docker/prometheus.yml, tests/unit/observability/test_watchdog.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS.md
   ticket_id: TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS
   title: Week-close sweeps the main checkout's main.tools.jsonl into the closed week's
@@ -8274,6 +8287,19 @@
   date: '2026-10-20'
   related_code_areas:
   - docker/grafana/provisioning/alerting/rules-base.yaml
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-SUSPENDED-PROJECTS-ARE-NEVER-RESUMED-SLOT-LEAK.md
+  ticket_id: TCK-20261020-SUSPENDED-PROJECTS-ARE-NEVER-RESUMED-SLOT-LEAK
+  title: Suspended projects are never resumed and never expire, so they hold project
+    slots forever (slot leak)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai/intelligence.py (~L1771 capacity gate)
+  - src/core/strategic.py (is_live_project, has_project_capacity)
   artifact_files: []
   tags: []
 - type: ticket
