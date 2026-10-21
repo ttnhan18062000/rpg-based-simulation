@@ -19,6 +19,8 @@ changed. Advice, not an adoption: adopting anything would be a new ticket.
 **Keep mypy + mypy-baseline as the primary checker. Do not replace it. Do not add basedpyright. Consider Pyrefly as a
 cheap, advisory second opinion after the M4 soak (a new ticket), not as a gate.**
 
+**Outcome:** done as `TCK-20261021-PYREFLY-ADVISORY-REPORT` (2026-10-21): Pyrefly 1.3.2 runs as a report-only step of the Code health job (`make typecheck-pyrefly`) against its own baseline; 709 errors on `src/` at the start, about 2.5 s and 216 MB. It is not a required check.
+
 - Replacing mypy would throw away the baseline, the ledger entry (`INFRA-TYPE-001`), the gate module and tests that
   just landed, for no measured gain: both alternatives report **fewer** errors, and 395 of mypy's 1,081 flagged
   (file, line) pairs are reported by neither (Section 4). Fewer errors is not evidence of better accuracy; the
