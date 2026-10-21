@@ -7807,7 +7807,7 @@
   - agent-monitoring
   - data-quality
 - type: ticket
-  path: agent-working/tickets/todos/codebase-pyrefly-advisory/TCK-20261021-PYREFLY-ADVISORY-REPORT.md
+  path: agent-working/tickets/done/codebase-pyrefly-advisory/TCK-20261021-PYREFLY-ADVISORY-REPORT.md
   ticket_id: TCK-20261021-PYREFLY-ADVISORY-REPORT
   title: 'Pyrefly as an advisory second type-checker opinion: a report-only CI job
     and Makefile target that never block'
@@ -7820,7 +7820,10 @@
   - pyproject.toml
   - tests/codebase/test_typecheck_gate_configured.py
   - docs/parity_ledger/infrastructure.yaml
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261021-PYREFLY-ADVISORY-REPORT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261021-PYREFLY-ADVISORY-REPORT/plan.md
+  - agent-working/stored_artifacts/TCK-20261021-PYREFLY-ADVISORY-REPORT/test_plan.md
   tags:
   - architecture
   - delivery
