@@ -12692,8 +12692,8 @@
     of src/ or of the seeded registry.'
 - id: INFRA-420
   text: 'Worker-result resolution order does not change the committed state, because no two results
-    can tie. Kernel._phase_resolution sorts results by (class_priority, -local_priority, entity_id)
-    with a stable sort, and the key is unique: entity results have a unique entity_id, a second result
+    can tie. Kernel._phase_resolution sorts results by ConcurrencyLaw.commit_key = (class_priority, -local_priority, entity_id)
+    (class_priority lower is earlier, local_priority higher is earlier) with a stable sort, and the key is unique: entity results have a unique entity_id, a second result
     for one entity is rejected by ProtocolValidator.validate_result_batch and by the resolution guard,
     and an entity_id 0 result (the former DRAIN_DEBT system-result slot, the only results that tied) is
     rejected by the validator because nothing produces one (TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE).
@@ -12704,9 +12704,9 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/engine/kernel.py::Kernel._phase_resolution; src/core/protocol_validator.py::ProtocolValidator.validate_result_batch
+  v2_evidence: src/engine/kernel.py::Kernel._phase_resolution; src/core/concurrency_law.py::ConcurrencyLaw.commit_key; src/core/work.py::packet_work_id (the executor carries WorkItem.priority onto the result through it, TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH); src/core/protocol_validator.py::ProtocolValidator.validate_result_batch
   proof_type: contract
-  test_path: tests/integration/kernel/test_tied_worker_result_order.py
+  test_path: tests/integration/kernel/test_tied_worker_result_order.py, tests/unit/engine/test_work_item_priority_reaches_the_result.py
   divergence_note: DEV-019 (entity-0 results are always rejected)
   support_boundary: 'Unique-key ordering (TCK-20261004-PERF-M1-TIED-WORKER-RESULT-VERIFICATION, rewritten
     by TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE). The earlier bounded commutative merge rule for system
