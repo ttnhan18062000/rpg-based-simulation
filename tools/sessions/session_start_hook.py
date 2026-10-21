@@ -255,6 +255,9 @@ def bind(payload: dict, environ, root: Path, state_root: Path, proc_root: Path =
         line = sf.session_code_line(worktree)
         if line:
             notes.append(line)
+        for line in (sf.monitoring_hook_line(worktree), sf.unstaged_tool_rows_line(worktree)):
+            if line:
+                notes.append(line)
     if link_shared_graph(worktree) == "linked":
         notes.append("session-roles: linked graphify-out to the main checkout's graph (read-only here; refresh it from the main checkout).")
     parts.extend(notes)

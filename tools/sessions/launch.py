@@ -513,7 +513,8 @@ def main(argv: list[str] | None = None, root: Path = _REPO_ROOT) -> int:
             pass  # the record is a convenience; the launch never fails on it
     link_shared_graph(wt)  # graphify-out -> the main checkout's graph; a no-op when it has its own or is the main checkout
     os.chdir(wt)
-    os.execvpe(cmd[0], cmd, {**os.environ, **env})
+    # Local launcher run by hand; cmd comes from the role registry plus the user's CLI; no untrusted input.
+    os.execvpe(cmd[0], cmd, {**os.environ, **env})  # nosemgrep: python.lang.security.audit.dangerous-os-exec-tainted-env-args.dangerous-os-exec-tainted-env-args
     return 0  # pragma: no cover
 
 

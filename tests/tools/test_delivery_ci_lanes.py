@@ -191,9 +191,49 @@ def test_run_lanes_reports_pass_and_fail_per_lane(workflow):
         calls.append(cmd[-1])
         return subprocess.CompletedProcess(cmd, 1 if "simulation_quality" in cmd[-1] else 0)
 
-    results = lanes.run_lanes(workflow, ["integration", "simulation-quality"], runner=runner)
+    results = lanes.run_lanes(workflow, ["integration", "simulation-quality"], runner=runner, xdist_check=lambda: True)
     assert results == {"integration": True, "simulation-quality": False}
     assert len(calls) == 2
+
+
+def test_a_junit_flag_on_a_continued_last_line_leaves_no_dangling_backslash():
+    cmd = lanes._strip_junit("python3 -m pytest tests/tools \\\n  -q \\\n  --junit-xml=reports/x.xml")
+    assert not cmd.rstrip().endswith("\\")
+    assert "--junit-xml" not in cmd
+    argv = subprocess.run(["bash", "-c", 'printf "%s\\n" ' + cmd.replace("python3 -m pytest", "pytest")],
+                          capture_output=True, text=True)
+    assert argv.returncode == 0
+    assert "\\" not in argv.stdout.split()
+    assert subprocess.run(["bash", "-n", "-c", cmd]).returncode == 0
+
+
+def test_a_junit_flag_mid_continuation_does_not_leave_a_backslash_space_escape():
+    cmd = lanes._strip_junit("pytest a \\\n  --junit-xml=x.xml \\\n  -q")
+    assert "\\ \\" not in cmd and "--junit-xml" not in cmd
+    assert subprocess.run(["bash", "-n", "-c", cmd]).returncode == 0
+
+
+def test_no_real_lane_command_ends_in_a_backslash(workflow):
+    for lane in workflow.lanes:
+        for cmd in lanes.lane_commands(lane):
+            assert not cmd.rstrip().endswith("\\"), f"{lane.name}: {cmd[-40:]!r}"
+
+
+def test_a_lane_with_n_auto_is_not_run_without_xdist_and_the_output_says_how_to_fix(workflow, capsys):
+    calls = []
+
+    def runner(cmd, cwd=None):
+        calls.append(cmd[-1])
+        return subprocess.CompletedProcess(cmd, 0)
+
+    names = ["integration", "simulation-quality"]
+    assert any(lanes._XDIST_FLAG.search(c) for c in lanes.lane_commands(next(l for l in workflow.lanes if l.name == "integration")))
+    results = lanes.run_lanes(workflow, names, runner=runner, xdist_check=lambda: False)
+    out = capsys.readouterr().out
+    assert results["integration"] is False
+    assert "pytest-xdist" in out and "uv sync" in out and "FAIL: integration" in out
+    assert not any("tests/integration" in c for c in calls)
+    assert results["simulation-quality"] is True and calls
 
 
 def test_git_changed_uses_three_dots_and_none_on_failure():

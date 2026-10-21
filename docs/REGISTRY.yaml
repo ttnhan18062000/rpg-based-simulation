@@ -7802,6 +7802,37 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-CI-JUNIT-TOOLS-ACCEPT-DEFUSED-XML-FINDINGS.md
+  ticket_id: TCK-20261020-CI-JUNIT-TOOLS-ACCEPT-DEFUSED-XML-FINDINGS
+  title: 'The three Semgrep `use-defused-xml-parse` findings in `tools/ci_junit_merge.py`
+    and `tools/ci_junit_summary.py` are accepted in code with a reason, the same way
+    #667 handled testing''s report tools.'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/ci_junit_merge.py, tools/ci_junit_summary.py
+  artifact_files: []
+  tags:
+  - testing
+  - workflows
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-CI-LANES-RUN-TRAILING-BACKSLASH-AND-XDIST.md
+  ticket_id: TCK-20261020-CI-LANES-RUN-TRAILING-BACKSLASH-AND-XDIST
+  title: '`ci_lanes --run` runs test.yml''s commands as CI does: no stray `\` argument
+    once `--junit-xml` is stripped, and a clear stop when the venv lacks pytest-xdist'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tools/delivery/ci_lanes.py
+  - tests/tools/test_delivery_ci_lanes.py
+  - .github/workflows/test.yml
+  artifact_files: []
+  tags:
+  - ai
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL.md
   ticket_id: TCK-20261020-ENTITY-LIST-RETURNS-A-BOUNDED-SUMMARY-NOT-THE-FULL-DETAIL
   title: GET /api/v1/entities returns a bounded summary per entity; the full detail
@@ -8307,6 +8338,55 @@
   - platform
   - delivery
   - security
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SEMGREP-BASELINE-AGENT-WORKING-PATHS.md
+  ticket_id: TCK-20261019-SEMGREP-BASELINE-AGENT-WORKING-PATHS
+  title: 'The two Semgrep baseline findings on agent-working paths are resolved: pr-body-lint.yml''s
+    checkout is pinned by SHA, and launch.py''s exec carries a justified nosemgrep'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - .github/workflows/pr-body-lint.yml
+  - tools/sessions/launch.py
+  - .github/workflows/security-scan.yml
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS.md
+  ticket_id: TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS
+  title: 'Five paths that route as unowned get an owner in session_roles.yaml: testing
+    takes rpg-gate-report.yml and the two ci_junit tools, and agent-working takes
+    handover_transit.py and tools/search/**'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - tools/sessions/route.py
+  - .claude/agents/session-*.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR.md
+  ticket_id: TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR
+  title: The observe_world cleanup test asserts that only its own run dir is gone,
+    not that all of data/runs is unchanged
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-19'
+  related_code_areas:
+  - tests/tools/test_simq_long_run_observation.py
+  - tools/simq_long_run_observation.py::observe_world
+  - tools/entity_lifecycle_score.py::_run_for_analysis
+  artifact_files: []
+  tags:
+  - testing
+  - regression
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN.md
   ticket_id: TCK-20261019-TEST-WORKFLOWS-GITHUB-CONTEXT-VIA-ENV-NOT-RUN
@@ -9373,7 +9453,7 @@
   - determinism
   - testing
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH.md
+  path: agent-working/tickets/done/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH.md
   ticket_id: TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH
   title: Say when a session's tool-call hook is not loaded, and get late tool rows
     committed, so tools shards cover the sessions that close tickets
@@ -9383,7 +9463,10 @@
   related_code_areas:
   - tools/agent-monitoring/post_tool_hook.py, tools/sessions/settings_freshness.py,
     tools/sessions/session_start_hook.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH/investigation.md
+  - agent-working/stored_artifacts/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH/plan.md
+  - agent-working/stored_artifacts/TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH/test_plan.md
   tags:
   - agent-monitoring
   - hooks
