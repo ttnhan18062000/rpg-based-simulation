@@ -1,0 +1,2 @@
+sampler started 14:45:26
+14:46:27 UP grafana (+deps)

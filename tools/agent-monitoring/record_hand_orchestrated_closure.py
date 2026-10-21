@@ -98,7 +98,7 @@ from vocabulary import (  # noqa: E402
 )
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 import hand_closure_time  # noqa: E402
-from path_record import phases_omitted as compute_phases_omitted  # noqa: E402
+from path_record import full_phases, phase_order, phases_omitted as compute_phases_omitted  # noqa: E402
 from vocabulary import PATH_REASONS, SKIP_REASONS  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -240,6 +240,67 @@ def evidence_phase_events(ticket_id: str, tier: str, events: list[dict], default
     return derived
 
 
+#: hand-path phases with no separate step of their own (TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED)
+_FOLDED_PHASES = ("Review", "Document-Update", "Architecture-Verify")
+_DOCS_NOT_EVIDENCE = ("docs/REGISTRY.yaml", "docs/parity_ledger/")
+
+
+def _docs_evidence(changed_files) -> list[str]:
+    return sorted(p for p in changed_files if p.startswith("docs/") and not p.startswith(_DOCS_NOT_EVIDENCE))
+
+
+def folded_phase_events(tier: str, events: list[dict], default_agent: str, changed_files, plan_path=None) -> list[dict]:
+    """Review, Document-Update and Architecture-Verify as events the closer did not narrate, when the tier plan marks the
+    phase `full`: the hand path folds them into Implement/Verify, and an omitted phase would read as a real gap.
+    Review and Architecture-Verify are `skipped`/`no_hand_tool`. Document-Update is `ok` when the ticket's own changed
+    files include a `docs/` file other than `docs/REGISTRY.yaml` and `docs/parity_ledger/**`, else `skipped`/`no_hand_tool`
+    (also when `changed_files` is None: the docs check could not run). A narrated event always wins; other phases and
+    tiers the plan does not list get nothing."""
+    try:
+        planned = set(full_phases(tier)) if plan_path is None else set(full_phases(tier, plan_path))
+    except Exception:  # noqa: BLE001 - an unreadable plan adds nothing, like phases_omitted
+        return []
+    given = {e.get("phase") for e in events}
+    added = []
+    for phase in _FOLDED_PHASES:
+        if phase not in planned or phase in given:
+            continue
+        event = {"phase": phase, "agent": default_agent, "status": "skipped", "skip_reason": "no_hand_tool"}
+        if phase != "Document-Update":
+            event["summary"] = (f"{phase} not run as its own step: added by the recorder because the hand path has no "
+                                f"separate {phase.lower()} step (folded into Implement/Verify).")
+        elif changed_files is None:
+            event["summary"] = ("Document-Update not derived: added by the recorder; the ticket's changed files could not "
+                                "be read, so the docs check could not run.")
+        else:
+            docs = _docs_evidence(changed_files)
+            if docs:
+                names = ", ".join(docs[:3]) + (f" (+{len(docs) - 3} more)" if len(docs) > 3 else "")
+                event.pop("skip_reason")
+                event["status"] = "ok"
+                event["summary"] = f"Document-Update ran: derived by the recorder from the ticket's changed docs files ({names}), not narrated by the closer."
+            else:
+                event["summary"] = ("Document-Update not run as its own step: added by the recorder because the ticket "
+                                    "changed no docs/ file beyond docs/REGISTRY.yaml and docs/parity_ledger/.")
+        added.append(event)
+    return added
+
+
+def insert_in_plan_order(events: list[dict], added: list[dict]) -> list[dict]:
+    """`added` events placed before the first existing event of a later plan phase (after it when none is later);
+    events whose phase is not in the plan keep their place."""
+    try:
+        order = {name: i for i, name in enumerate(phase_order())}
+    except Exception:  # noqa: BLE001
+        return events + added
+    result = list(events)
+    for event in sorted(added, key=lambda e: order.get(e["phase"], len(order))):
+        rank = order.get(event["phase"], len(order))
+        at = next((i for i, e in enumerate(result) if order.get(e.get("phase"), -1) > rank), len(result))
+        result.insert(at, event)
+    return result
+
+
 def parity_skipped_without_enum_reason(events: list[dict], changed_files) -> str | None:
     """A Parity event skipped without a structured reason while the ticket's own diff touches `src/`: the free-text
     summary alone does not say why the behavior-parity check did not apply to a source change. Returns the ERROR text,
@@ -345,7 +406,11 @@ def build_records(
         "workflow": workflow,
         "tier": tier,
         "final_status": final_status,
-        "agent_count": len(events),
+        # TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN: unknown, never a number that looks measured. The closer's
+        # narrated phase events (plus the artifact-derived and folded ones the recorder adds) are not agent calls, and
+        # a hand closure makes none the recorder can see. The key stays required (null, not absent), like `duration_s`
+        # with `duration_source: unknown`; readers skip null runs instead of averaging them as 0.
+        "agent_count": None,
         "execution_mode": "hand",
         # TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD: why this was closed by hand, and the planned phases with no
         # event (read from implement-ticket.yaml at write time; the key is absent when that file cannot be read)
@@ -359,6 +424,9 @@ def build_records(
         **({"duration_source": resolution.duration_source} if resolution else {}),
         **({"session_id": session_id} if resolution else {}),
         **({"claim_peers": resolution.claim_peers} if resolution and resolution.claim_peers is not None else {}),
+        # TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE: an anchored duration ends at the last tool
+        # call, so the real closure time is kept here (absent when end_ts already is the closure time)
+        **({"closed_ts": resolution.closed_ts} if resolution and resolution.closed_ts else {}),
     }
 
     event_records = [
@@ -590,6 +658,23 @@ def main() -> None:
         events = events[:at] + derived_events + events[at:]
         print(f"NOTE: recorded {[e['phase'] for e in derived_events]} as ran, from the ticket's artifacts.", file=sys.stderr)
 
+    try:
+        needs_docs_check = "Document-Update" not in {e.get("phase") for e in events} and "Document-Update" in full_phases(args.tier)
+    except Exception:  # noqa: BLE001 - an unreadable plan adds nothing (folded_phase_events reads it again)
+        needs_docs_check = False
+    changed_cache: list = []
+
+    def changed_once():  # one git read per closure, shared by the docs check and the Parity guard
+        if not changed_cache:
+            changed_cache.append(_ticket_changed_files(args.ticket_id))
+        return changed_cache[0]
+
+    folded = folded_phase_events(args.tier, events, args.agent, changed_once() if needs_docs_check else set())
+    if folded:
+        events = insert_in_plan_order(events, folded)
+        print(f"NOTE: recorded {[e['phase'] + ':' + e['status'] for e in folded]} for phases the hand path folds into "
+              "Implement/Verify (no event was narrated).", file=sys.stderr)
+
     bad_agents = unregistered_agents(args.ticket_id, args.agent, events)
     if bad_agents:
         print(
@@ -626,7 +711,7 @@ def main() -> None:
         sys.exit(1)
 
     # TCK-20261009-HAND-CLOSURE-TEMPLATED-EVENTS-GUARD: refuse templated events before anything is written.
-    changed = _ticket_changed_files(args.ticket_id) if any(
+    changed = changed_once() if any(
         e.get("phase") == "Parity" and e.get("status") in ("ok", "skipped") for e in events) else set()
     refusals = []
     if changed is not None and (parity_error := parity_claimed_without_ledger_change(events, changed)):

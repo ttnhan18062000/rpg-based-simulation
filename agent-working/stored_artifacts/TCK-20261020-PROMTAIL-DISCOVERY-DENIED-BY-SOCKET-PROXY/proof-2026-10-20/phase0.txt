@@ -1,0 +1,28 @@
+## PHASE 0: fresh start checks 15:10:45Z
+targets page:  docker/tcp://docker-socket-proxy:2375:80 (11/11 ready) ;
+promtail_targets_active_total: 
+promtail_sent_entries_total: promtail_sent_entries_total{host="loki:3100"} 808 
+403 'network labels' lines in promtail log: 0 (last: )
+loki ready: ready
+loki labels: {"status":"success","data":["container","job","service_name"]}
+loki container values: {"status":"success","data":["platform-backend-1","platform-docker-socket-proxy-1","platform-grafana-1","platform-node-exporter-1","platform-ntfy-1","platform-prometheus-1","platform-redis-1","platform-redis-exporter-1","platform-tempo-1"]}
+backend lines (last 5 min, limit 5): 5
+loki lines of loki/promtail themselves (must be 0): 0
+promtail up: ['1']
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import sys,json;print([r['value'][1] for r in json.load(sys.stdin)['data']['result']])
+                                                  ~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+KeyError: 'data'
+rule query value (error rate): 
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import sys,json;print([r['value'][1] for r in json.load(sys.stdin)['data']['result']])
+                                                  ~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+KeyError: 'data'
+error counter raw: 
+newest backend line in Loki (after up=15:07:45Z):
+  15:10:46 WARNING:src.engine.kernel:Tick 1307 exceeded budget at end_of_tick: 27.76ms vs limit 26.35
+ streams 1
+LogShippingErrors rule (Grafana):
+  LogShippingErrors state inactive health ok alerts ['Normal'] lastEval 2026-10-20T15:10:40Z

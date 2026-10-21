@@ -139,6 +139,8 @@ Python identifier conventions that section does not state.
 | T3 | Durable data, and anything passed or returned across a module boundary, is a typed model (dataclass or Pydantic), not `dict[str, Any]` (see the Durable State Rule in `CLAUDE.md`). | reviewer |
 | T4 | New code passes mypy under the repo config without a new `# type: ignore`. | mypy, blocking |
 
+Pyrefly (`make typecheck-pyrefly`) is a second opinion and is advice only: it never blocks, and mypy is the gate for T1 and T4.
+
 ## 8. Error handling
 
 | ID | Rule | Enforcement |

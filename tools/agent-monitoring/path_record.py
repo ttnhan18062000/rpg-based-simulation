@@ -35,6 +35,12 @@ def full_phases(tier: str, plan_path: Path = WORKFLOW_PLAN_PATH) -> list[str]:
     return [p["name"] for p in plan.get("phases", []) if (p.get("tiers") or {}).get(tier) == FULL]
 
 
+def phase_order(plan_path: Path = WORKFLOW_PLAN_PATH) -> list[str]:
+    """Every phase name in the plan, in plan order (what a caller sorts inserted events by)."""
+    plan = yaml.safe_load(plan_path.read_text(encoding="utf-8"))
+    return [p["name"] for p in plan.get("phases", [])]
+
+
 def phases_omitted(tier: str, recorded_phases, plan_path: Path = WORKFLOW_PLAN_PATH) -> list[str] | None:
     """`full` phases of `tier` with no event in `recorded_phases`. None when the plan cannot be read, so a caller
     leaves the field off rather than writing a false `[]`."""

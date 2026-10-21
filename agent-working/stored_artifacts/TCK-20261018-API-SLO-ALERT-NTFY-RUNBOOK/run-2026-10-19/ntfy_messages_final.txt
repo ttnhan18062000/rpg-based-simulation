@@ -1,0 +1,6 @@
+17:01:05 [firing] ApiLatencyP95High | API p95 latency above 300 ms (2xx, excluding /health and unmatched) / Runbook: docs/runbooks/api-latency-slo.md | prio 4 ['bell']
+17:14:51 [firing] DiskWillFillIn24h | / is predicted to fill within 24 hours / Runbook: docs/runbooks/disk-space.md | prio 4 ['bell']
+17:16:17 [resolved] ApiLatencyP95High | API p95 latency above 300 ms (2xx, excluding /health and unmatched) / Runbook: docs/runbooks/api-latency-slo.md | prio 4 ['bell']
+17:29:51 [resolved] DiskWillFillIn24h | / is predicted to fill within 24 hours / Runbook: docs/runbooks/disk-space.md | prio 4 ['bell']
+17:33:05 [firing] ApiLatencyP95High | API p95 latency above 300 ms (2xx, excluding /health and unmatched) / Runbook: docs/runbooks/api-latency-slo.md | prio 4 ['bell']
+17:43:05 [resolved] ApiLatencyP95High | API p95 latency above 300 ms (2xx, excluding /health and unmatched) / Runbook: docs/runbooks/api-latency-slo.md | prio 4 ['bell']

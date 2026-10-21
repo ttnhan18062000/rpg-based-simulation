@@ -48,7 +48,7 @@ def fix_sprites(root: Path = DRAFTS, set_id: str = SET_ID) -> dict[str, rule.Spr
 def proposed_sprites(root: Path = DRAFTS) -> dict[str, rule.Sprite]:
     """The 36 icons as they would stand if the owner adopts the four PROPOSED revisions: those four replace their adopted r0001 drawings; the two drafts that are not proposed are left out."""
     fixes = fix_sprites(root)
-    return {**la.all_icon_sprites(), **{k: fixes[k] for k in EVALUATED}}
+    return {**la.r0001_icon_sprites(), **{k: fixes[k] for k in EVALUATED}}
 
 
 def evaluate(root: Path = DRAFTS) -> dict:

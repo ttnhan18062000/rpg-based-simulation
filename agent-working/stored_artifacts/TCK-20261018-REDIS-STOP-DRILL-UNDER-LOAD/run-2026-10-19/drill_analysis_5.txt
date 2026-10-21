@@ -1,0 +1,8 @@
+## backend docker logs 17:51:00-17:56:00Z, lines mentioning redis/stream/publish/drop (counts)
+124539
+    184 WARNING:src.observability.stream.adapters:Redis offline or unreachable: Error -3 connecting to redis:N. Temporary failure in name resolution
+      1 ERROR:src.observability.stream.adapters:RedisStreamAdapter failed to publish event: Error -3 connecting to redis:N. Temporary failure in nam
+## same, after the restart 17:54:32-17:58:00Z
+      2 WARNING:src.observability.stream.adapters:Redis offline or unreachable: Error -3 connecting to redis:N. Temporary failure in name resolution
+## Loki label check
+{"status":"success"}

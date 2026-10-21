@@ -91,7 +91,8 @@ def parse_junit_xml(path: Path) -> JUnitSummary:
     missing file, malformed XML, or unexpected attribute shape resolves to the all-zero
     `parse_ok=False` sentinel instead."""
     try:
-        tree = ET.parse(path)
+        # Parses this repo's own pytest junit XML; no untrusted input.
+        tree = ET.parse(path)  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
     except (ET.ParseError, FileNotFoundError, OSError):
         return _EMPTY_SUMMARY
 
@@ -146,7 +147,8 @@ def parse_testcase_records(path: Path) -> list[TestCaseRecord]:
     an empty list instead of a sentinel dataclass since there is no meaningful "parse_ok"
     concept for a list of records."""
     try:
-        tree = ET.parse(path)
+        # Parses this repo's own pytest junit XML; no untrusted input.
+        tree = ET.parse(path)  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
     except (ET.ParseError, FileNotFoundError, OSError):
         return []
 

@@ -1,0 +1,5 @@
+platform-docker-socket-proxy-1 oom=false restarts=0
+platform-promtail-1 oom=false restarts=0
+platform-backend-1 oom=false restarts=0
+platform-redis-1 oom=false restarts=0
+platform-loki-1 oom=false restarts=0

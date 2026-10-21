@@ -58,7 +58,8 @@ def merge_junit_shards(expected_paths: list[str], out_path: Path) -> MergeResult
     for path_str in expected_paths:
         path = Path(path_str)
         try:
-            parsed = ET.parse(path).getroot()
+            # Parses this repo's own pytest junit XML; no untrusted input.
+            parsed = ET.parse(path).getroot()  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
         except (ET.ParseError, OSError, FileNotFoundError):
             missing_paths.append(path_str)
             continue

@@ -16,7 +16,6 @@ from pathlib import Path
 import yaml
 
 from visual_assets.review import icon_lookalikes as la
-from visual_assets.review import icon_owner_fixes_draft_set as fixes
 from visual_assets.review.review_sheets import DARK, DIM, GREEN, INK, LIGHT, PAGE, Canvas, wrap
 
 REPO = Path(__file__).resolve().parents[1]
@@ -38,7 +37,7 @@ Rgb = tuple[int, int, int]
 
 def glyphs() -> dict:
     """The adopted glyphs: the key-set and v2 drawings (r0001) with the owner-fixes drawings (r0002, adopted 2026-10-08) over them, so item.tool is the hammer and tongs, not the old wrench."""
-    return {**la.all_icon_sprites(), **fixes.proposed_sprites()}
+    return la.adopted_icon_sprites()
 
 
 def options(slot: dict) -> list[str]:

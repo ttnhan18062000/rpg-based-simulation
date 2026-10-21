@@ -19,6 +19,11 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+_ROOT = str(Path(__file__).resolve().parents[2])
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
+
 OK, MISMATCH, UNKNOWN = "ok", "mismatch", "unknown"
 SETTINGS, AGENTS = ".claude/settings.json", ".claude/agents"
 EXIT = {OK: 0, MISMATCH: 1, UNKNOWN: 2}
@@ -161,6 +166,75 @@ def session_code_line(directory: Path | str, ref: str = "origin/main") -> str:
     shown = ", ".join(stale[:4]) + (f" and {len(stale) - 4} more" if len(stale) > 4 else "")
     return (f"session-roles: STALE SESSION CODE: {len(stale)} file(s) changed on {ref} are missing from this worktree "
             f"({shown}), so this hook may inject the wrong role or handover note. Sync this worktree to {ref}.")
+
+
+MONITORING_HOOK = "tools/agent-monitoring/post_tool_hook.py"
+
+
+def _worktree_root(directory: Path | str) -> Path | None:
+    directory = Path(directory)
+    top = _git(["rev-parse", "--show-toplevel"], directory) if directory.is_dir() else None
+    return Path(top.stdout.strip()) if top is not None and top.returncode == 0 else None
+
+
+def monitoring_hook_line(directory: Path | str) -> str:
+    """TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH: one report-only SessionStart line ("" when the tool-row hook is
+    in place) when this worktree would write no tool rows: the PostToolUse monitoring hook is not in its
+    `.claude/settings.json`, or its script is missing (the hook command is `test -f <script> || exit 0`, so a missing script
+    is silent). Failing open, never a fetch."""
+    try:
+        root = _worktree_root(directory)
+        if root is None:
+            return ""
+        settings = root / SETTINGS
+        wired = False
+        if settings.is_file():
+            wired = any(MONITORING_HOOK in c for c in _hook_commands(_json(settings.read_text(encoding="utf-8")))
+                        if c.startswith("PostToolUse:"))
+        problems = []
+        if not wired:
+            problems.append(f"{SETTINGS} has no PostToolUse hook for {MONITORING_HOOK}")
+        if not (root / MONITORING_HOOK).is_file():
+            problems.append(f"{MONITORING_HOOK} is missing here")
+        if not problems:
+            return ""
+        return ("monitoring: NO TOOL-ROW HOOK in this worktree, so this session's tool calls will leave no rows: "
+                + "; ".join(problems) + ". Sync this worktree to origin/main.")
+    except Exception as exc:  # the hook must never fail a session
+        return f"monitoring: the tool-row hook check failed ({type(exc).__name__}); not verified."
+
+
+def unstaged_tool_rows_line(directory: Path | str) -> str:
+    """The other half: tool rows this worktree wrote that no commit carries yet. The pre-push advisory only looks at the
+    current ISO week's shard directory, so rows left uncommitted in an older week's shard never reach `main` and never
+    get flagged. Report-only ("" when nothing is pending); counts the added lines of every dirty or untracked
+    `*tools.jsonl` under the monitoring data directory."""
+    try:
+        root = _worktree_root(directory)
+        if root is None:
+            return ""
+        data = (AGENT_MONITORING / "data").as_posix()
+        status = _git(["status", "--porcelain", "--untracked-files=all", "--", data], root)
+        if status.returncode != 0:
+            return ""
+        files = [ln[3:].strip() for ln in status.stdout.splitlines() if ln[3:].strip().endswith("tools.jsonl")]
+        if not files:
+            return ""
+        rows = 0
+        for name in files:
+            path = root / name
+            if path.is_file():
+                tracked = _git(["ls-files", "--error-unmatch", name], root).returncode == 0
+                if tracked:
+                    stat = _git(["diff", "HEAD", "--numstat", "--", name], root)
+                    rows += int((stat.stdout.split() or ["0"])[0]) if stat.returncode == 0 and stat.stdout.split()[:1] != ["-"] else 0
+                else:
+                    rows += sum(1 for _ in path.open("rb"))
+        weeks = sorted({Path(f).parent.name for f in files})
+        return (f"monitoring: {rows} tool row(s) in {len(files)} shard file(s) ({', '.join(weeks)}) are not in any commit; "
+                f"stage `{data}/` in your next commit or they never reach main.")
+    except Exception as exc:
+        return f"monitoring: the pending tool-row check failed ({type(exc).__name__}); not verified."
 
 
 def main(argv: list[str] | None = None) -> int:

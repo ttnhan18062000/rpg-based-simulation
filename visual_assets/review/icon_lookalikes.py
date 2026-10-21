@@ -7,7 +7,7 @@ Method (so the numbers can be reproduced): each silhouette (every pixel with alp
 ratio, and centred. The distance of two icons is the number of canvas pixels in exactly one silhouette (XOR) out of 576, so size differences between a 8x8 badge and a 24x24 panel icon do not hide a
 shared shape; the same measure at the icons' own size is I1's. Pairs are listed nearest first.
 
-    python -m visual_assets.review.icon_lookalikes      # prints the report as JSON for the 14 adopted and the 22 v2 icons
+    python -m visual_assets.review.icon_lookalikes      # prints the report as JSON for the 36 icons as adopted now (r0002 where revised)
 """
 
 from __future__ import annotations
@@ -48,9 +48,23 @@ def distance(a: frozenset, b: frozenset) -> int:
     return len(a ^ b)
 
 
-def all_icon_sprites() -> dict[str, rule.Sprite]:
-    """The 14 adopted icons (kept drafts of `icons-key-v1`, plate included) and the 22 v2 drafts."""
+def r0001_icon_sprites() -> dict[str, rule.Sprite]:
+    """The 36 icons as first drawn, the r0001 drawings: the 14 kept drafts of `icons-key-v1` (plate included) and the 22 of `icons-v2`.
+
+    Seven of them were re-adopted as r0002 on 2026-10-08; for those this is the OLD art. Use it for before/after comparisons, the r1 spec table and recorded gate outputs; use `adopted_icon_sprites()` for
+    "the art adopted now"."""
     return {**keyset.draft_sprites(), **v2set.v2_sprites()}
+
+
+def adopted_icon_sprites() -> dict[str, rule.Sprite]:
+    """The 36 icons as adopted NOW: the r0001 drawings with the seven owner-fix revisions (r0002, adopted 2026-10-08) in place of theirs.
+
+    `tests/visual_assets/test_icon_adopted_art.py` pins this against the pixels the store holds for every icon key. The import is inside the function because `icon_owner_fixes_draft_set` imports
+    `icon_compliance`, which imports this module."""
+    from visual_assets.review import icon_owner_fixes_draft_set as fixes
+
+    revised = fixes.fix_sprites()
+    return {**r0001_icon_sprites(), **{key: revised[key] for key in fixes.PROPOSED}}
 
 
 def family_of(key: str) -> str:
@@ -80,5 +94,5 @@ if __name__ == "__main__":
 
         print(json.dumps(report(icon_owner_fixes_draft_set.proposed_sprites()), indent=1))
     else:
-        print(json.dumps(report(all_icon_sprites()), indent=1))
+        print(json.dumps(report(adopted_icon_sprites()), indent=1))
     sys.exit(0)

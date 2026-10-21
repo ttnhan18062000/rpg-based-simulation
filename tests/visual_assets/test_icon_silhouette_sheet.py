@@ -24,7 +24,7 @@ def test_every_changed_slot_is_a_registered_icon_with_its_current_silhouette_and
     sheet = ss.build()
     assert [s["key"] for s in sheet["slots"]] == SLOTS
     registered = set(icon_specs.registered_icon_keys())
-    sprites = la.all_icon_sprites()
+    sprites = la.r0001_icon_sprites()
     for slot in sheet["slots"]:
         assert slot["key"] in registered and slot["options"]
         assert slot["current_rows"] == ss.rows_of(sprites[slot["key"]])  # the adopted r0001, from the kept drafts
@@ -36,7 +36,7 @@ def test_every_changed_slot_is_a_registered_icon_with_its_current_silhouette_and
 
 def test_the_numbers_are_the_rules_own_measures():
     sheet = ss.build()
-    sprites = la.all_icon_sprites()
+    sprites = la.r0001_icon_sprites()
     slot = next(s for s in sheet["slots"] if s["key"] == "icon.status.frame_buff")
     opt = slot["options"][0]
     mine = ss.sprite_of(opt["rows"])

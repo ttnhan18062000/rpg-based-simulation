@@ -19,4 +19,4 @@ Function: designer. You design and draft, never dispatch. Drafts: main-checkout 
 A designer or planner whose card says "Launches from the main checkout" starts there, holds no lease and makes small doc/ticket branches. Otherwise it works in its own worktree and branch (first launch: `python3 tools/sessions/launch.py <role> --branch <topic>`) and lands its own PR. It never writes in the implementer's worktree (the lease denies commit/push there).
 
 ## Reference
-Not injected (dropped from the card to hold the 400-token budget once the `-u24` twins and the unstaffed marker landed, TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS; the planner card made the same cut on 2026-10-16): see `docs/guides/cross_session_messages.md`; a designer's output is a handoff only after the user confirms the direction.
+Not injected (dropped from the card to hold the card token budget once the `-u24` twins and the unstaffed marker landed, TCK-20261018-SESSION-ROLES-HOST-SUFFIXED-U24-SEATS; the planner card made the same cut on 2026-10-16): see `docs/guides/cross_session_messages.md`; a designer's output is a handoff only after the user confirms the direction.

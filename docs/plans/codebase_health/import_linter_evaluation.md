@@ -9,6 +9,9 @@ tags: [architecture, audit]
 
 # import-linter Evaluation (M5, report only)
 
+
+**Outcome:** merged #671 (2026-10-19).
+
 Decision record for `TCK-20261004-IMPORT-LINTER-EVALUATION`. Nothing in the repository changed to produce it:
 no dependency, CI, test, `pyproject.toml` or `src/` edit. Everything ran in a scratch copy outside the repo.
 

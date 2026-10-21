@@ -10,7 +10,8 @@ from src.observability.reporting.baseline_generator import BaselineGenerator
 from src.cli.entry import _run_generate_baseline
 
 
-def test_baseline_generation_and_cli_flow(tmp_path):
+def test_baseline_generation_and_cli_flow(tmp_path, tick_cost_ms):
+    tick_cost_ms(5.0)  # the expected mean health of 5 idle runs is 100: no run may be scored down for this host's tick speed
     output_dir = str(tmp_path / "run_sets")
     sweep_id = "test_baseline_sweep"
 

@@ -8,10 +8,15 @@ from pathlib import Path
 import pytest
 
 from tests.visual_assets.store.unit.conftest import snapshot
+from tests.visual_assets.store.lock_isolation import redirect_real_catalog_lock
 from visual_assets.review import __main__ as cli
 from visual_assets.review import key_usage as ku
 from visual_assets.store import config
 from visual_assets.store.catalog.registry import load_registry
+
+
+# #657: a test here never takes the real catalog lock
+_store_lock_in_tmp = pytest.fixture(autouse=True)(redirect_real_catalog_lock)
 
 REGISTRY = """record_type: visual_key_registry
 schema_version: 1

@@ -36,11 +36,26 @@ def test_observe_one_world_produces_both_signals(tmp_path):
         pass
 
 
-def test_observe_world_cleans_up_its_own_run_dir():
-    before = set(os.listdir("data/runs")) if os.path.isdir("data/runs") else set()
+def test_observe_world_cleans_up_its_own_run_dir(monkeypatch):
+    """Asserts on the run dir observe_world itself created, not on all of data/runs: under
+    pytest-xdist another worker's run dir can appear in a before/after listing window."""
+    import entity_lifecycle_score as els
+
+    captured = []
+    orig = els._run_for_analysis
+
+    def spy(*args, **kwargs):
+        result = orig(*args, **kwargs)
+        captured.append(result[0])
+        return result
+
+    monkeypatch.setattr(els, "_run_for_analysis", spy)
     slro.observe_world("sandbox_world", seed=42, ticks=30, obs_mode="NORMAL")
-    after = set(os.listdir("data/runs")) if os.path.isdir("data/runs") else set()
-    assert after == before, f"observe_world left scratch data behind: {after - before}"
+    assert len(captured) == 1
+    run_dir = str(captured[0]).replace(os.sep, "/")
+    assert run_dir, "spy captured an empty run dir"
+    assert run_dir.startswith("data/runs/"), f"unexpected run dir location: {run_dir}"
+    assert not os.path.exists(run_dir), f"observe_world left its own run dir behind: {run_dir}"
 
 
 def test_output_written_to_docs_long_run_observations_dir():
