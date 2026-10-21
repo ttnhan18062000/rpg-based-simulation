@@ -8111,6 +8111,34 @@
   - testing
   - workflows
 - type: ticket
+  path: agent-working/tickets/done/codebase-ratchet-round-2/TCK-20261020-CODEBASE-ROADMAP-TRUTH-PASS.md
+  ticket_id: TCK-20261020-CODEBASE-ROADMAP-TRUTH-PASS
+  title: Bring the code-craft roadmap up to date (M5 and the import-linter flip done)
+    and record the owner's M7 reopen of `src/`
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - architecture
+  - delivery
+- type: ticket
+  path: agent-working/tickets/done/codebase-ratchet-round-2/TCK-20261020-RATCHET-TIGHTEN-ROUND-2.md
+  ticket_id: TCK-20261020-RATCHET-TIGHTEN-ROUND-2
+  title: Lock in the code-health, mypy and parity-schema debt paid down since 2026-10-09
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-20'
+  related_code_areas:
+  - codebase/baselines/code_health_exceptions.jsonl
+  - codebase/baselines/mypy_baseline.txt
+  - codebase/baselines/parity_ledger_schema_baseline.json
+  artifact_files: []
+  tags:
+  - architecture
+  - delivery
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
   ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
   title: Tune DiskWillFillIn24h so short bursts of heavy local work don't trip it
