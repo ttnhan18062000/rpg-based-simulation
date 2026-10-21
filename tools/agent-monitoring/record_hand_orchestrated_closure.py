@@ -424,6 +424,9 @@ def build_records(
         **({"duration_source": resolution.duration_source} if resolution else {}),
         **({"session_id": session_id} if resolution else {}),
         **({"claim_peers": resolution.claim_peers} if resolution and resolution.claim_peers is not None else {}),
+        # TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE: an anchored duration ends at the last tool
+        # call, so the real closure time is kept here (absent when end_ts already is the closure time)
+        **({"closed_ts": resolution.closed_ts} if resolution and resolution.closed_ts else {}),
     }
 
     event_records = [

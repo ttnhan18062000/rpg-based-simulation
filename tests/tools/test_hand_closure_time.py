@@ -85,6 +85,66 @@ def test_a_later_closure_with_nothing_new_is_unknown():
     assert hct.resolve(_iso(60), None, None, SID, _rows(10, 20, 30), [_iso(31)]).duration_source == "unknown"
 
 
+# ---- the anchored block (TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE) ----------------------
+
+def test_a_closure_long_after_a_five_row_block_derives_from_that_block_and_keeps_the_closure_time():
+    res = hct.resolve(_iso(200), None, None, SID, _rows(40, 41, 45, 50, 55), [])
+    assert (res.duration_source, res.start_ts, res.end_ts, res.closed_ts) == ("tool_activity", _iso(40), _iso(55), _iso(200))
+    assert len(res.claimed) == 5 and res.claim_peers == 0
+
+
+def test_the_same_closure_with_two_rows_is_unknown():
+    res = hct.resolve(_iso(200), None, None, SID, _rows(50, 55), [])
+    assert (res.duration_source, res.start_ts, res.end_ts, res.closed_ts) == ("unknown", _iso(200), _iso(200), None)
+
+
+def test_a_non_empty_block_ending_at_the_closure_is_unchanged_and_has_no_closed_ts():
+    res = hct.resolve(_iso(60), None, None, SID, _rows(40, 41, 45, 50, 55), [])
+    assert (res.duration_source, res.start_ts, res.end_ts, res.closed_ts) == ("tool_activity", _iso(40), _iso(60), None)
+
+
+def test_a_back_to_back_closure_is_unchanged():
+    # the previous closure ended inside the block, which is non-empty at the closure: only 2 rows are left to claim
+    res = hct.resolve(_iso(60), None, None, SID, _rows(10, 20, 30, 50, 55), [_iso(35)])
+    assert res.duration_source == "unknown" and res.closed_ts is None
+
+
+def test_an_anchored_block_claims_only_rows_after_the_previous_closure():
+    rows = _rows(10, 20, 30, 40, 50, 55)
+    res = hct.resolve(_iso(300), None, None, SID, rows, [_iso(35)])
+    assert [r["ts"] for r in res.claimed] == [_iso(40), _iso(50), _iso(55)] and res.end_ts == _iso(55) and res.claim_peers == 1
+
+
+def test_a_declared_start_never_anchors():
+    res = hct.resolve(_iso(200), _iso(10), None, SID, _rows(40, 41, 45, 50, 55), [])
+    assert (res.duration_source, res.end_ts, res.closed_ts) == ("declared", _iso(200), None)
+
+
+def test_closed_ts_validates_as_an_iso_string_and_duration_rederived_only_as_week_close():
+    base = {"run_id": "r", "start_ts": "a", "workflow": "w", "tier": "hotfix", "final_status": "DONE", "agent_count": None}
+    assert record_run.validate_record({**base, "closed_ts": "2026-10-21T01:00:00Z", "duration_rederived": "week_close"}) == []
+    assert record_run.validate_record({**base, "closed_ts": "yesterday"}) == ["closed_ts must be an ISO 8601 string"]
+    assert record_run.validate_record({**base, "duration_rederived": "hand"}) == ["duration_rederived must be 'week_close'"]
+
+
+def test_cli_a_closure_long_after_the_last_row_records_the_blocks_span_and_the_closure_time(tmp_path):
+    _repo(tmp_path)
+    _seed_recent(tmp_path, [200, 195, 190, 185, 180])
+    result = _run(tmp_path)
+    assert result.returncode == 0, result.stderr
+    run, _ = _records(tmp_path)
+    assert run["duration_source"] == "tool_activity" and run["duration_s"] == 20 * 60
+    assert run["end_ts"] < run["closed_ts"] and record_run.validate_record(run) == []
+
+
+def test_active_duration_ignores_events_recorded_after_the_run_ended():
+    import duration_utils as du
+
+    events = [{"ts": _iso(300), "phase": "Scope", "agent": "claude"}]
+    out = du.compute_active_idle_split(_iso(0), _iso(20), events)
+    assert (out["total_duration_s"], out["idle_gap_s"], out["active_duration_s"]) == (1200.0, 0.0, 1200.0)
+
+
 # ---- the readers --------------------------------------------------------------------------------
 
 def _write(path: Path, rows: list[dict], junk: bool = True) -> None:
