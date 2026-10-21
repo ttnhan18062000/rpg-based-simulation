@@ -7792,6 +7792,23 @@
   - data-quality
   - retro
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS.md
+  ticket_id: TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS
+  title: 'Eleven paths that route as unowned get an owner in session_roles.yaml: the
+    8 docs/observability files, README.md, docs/guides/feature_flags.md and tools/release/**'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-21'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - tools/sessions/{route,validate,generate_agents,card}.py
+  - .claude/agents/session-*.md
+  - tests/tools/test_session_*.py
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS.md
   ticket_id: TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS
   title: Week-close sweeps the main checkout's main.tools.jsonl into the closed week's
@@ -7827,6 +7844,20 @@
   tags:
   - architecture
   - delivery
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT.md
+  ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
+  title: Role cards show a role's single files in a folder it doesn't otherwise own
+    as "dir/ (N files)", so the card budget can come back down from 440
+  tier: hotfix
+  ticket_type: refactor
+  date: '2026-10-21'
+  related_code_areas:
+  - tools/sessions/card.py
+  artifact_files: []
+  tags:
+  - ai
+  - governance
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION.md
   ticket_id: TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION
