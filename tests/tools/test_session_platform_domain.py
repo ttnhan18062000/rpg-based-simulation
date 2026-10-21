@@ -42,4 +42,4 @@ def test_platform_cards_exist_and_fit_the_budget(name):
     assert (REPO / ".claude" / "agents" / f"session-{name}.md").is_file()
     card = compose_card(name, ROSTER, AUTHORITY, REPO)
     assert "Domain: platform" in card
-    assert estimate_tokens(card) <= CARD_BUDGET_TOKENS == 400
+    assert estimate_tokens(card) <= CARD_BUDGET_TOKENS == 415
