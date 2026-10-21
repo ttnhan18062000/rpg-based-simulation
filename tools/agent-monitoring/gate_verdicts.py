@@ -115,6 +115,7 @@ def build_record(
     phase: str | None = None,
     ticket_id: str | None = None,
     sub_results: dict | None = None,
+    sub_reasons: dict | None = None,
     execution_mode: str | None = None,
     run_id: str | None = None,
     execution_id: str | None = None,
@@ -138,6 +139,13 @@ def build_record(
     }
     if sub_results is not None:
         record["sub_results"] = sub_results
+    # TCK-20261020-FINALIZE-SELFCHECK-RECORDS-FAIL-REASON-CLASS: optional closed-set reason class per FAILing
+    # condition. Anything malformed is dropped here, never fatal: a reason is a hint, not part of the verdict.
+    if isinstance(sub_reasons, dict):
+        allowed = set(sub_results) if isinstance(sub_results, dict) else set()
+        kept = {k: v for k, v in sub_reasons.items() if isinstance(k, str) and isinstance(v, str) and v and k in allowed}
+        if kept:
+            record["sub_reasons"] = kept
     return record
 
 
@@ -176,6 +184,16 @@ def validate_record(record: object) -> list[str]:
             problems.append("sub_results is not an object")
         else:
             problems.extend(f"sub_results[{k!r}]={v!r} not in {SUB_RESULT_VALUES}" for k, v in sub.items() if v not in SUB_RESULT_VALUES)
+    reasons = record.get("sub_reasons")
+    if reasons is not None:
+        if not isinstance(reasons, dict):
+            problems.append("sub_reasons is not an object")
+        else:
+            known = sub if isinstance(sub, dict) else {}
+            problems.extend(
+                f"sub_reasons[{k!r}]={v!r} is not a string for a sub_results key" for k, v in reasons.items()
+                if not (isinstance(v, str) and v and k in known)
+            )
     return problems
 
 

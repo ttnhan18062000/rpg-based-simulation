@@ -59,7 +59,7 @@ def measure_sword(sprite: rule.Sprite) -> dict:
 
 
 def test_the_committed_redrawn_icons_meet_every_spec_row():
-    rows = cp.measure(la.all_icon_sprites())
+    rows = cp.measure(la.r0001_icon_sprites())
     assert set(rows) == set(cp.CHECKS) and len(rows) == 6
     failing = [(k, r.item, r.measured) for k, rs in rows.items() for r in rs if not r.ok]
     assert failing == []
@@ -82,7 +82,7 @@ def test_each_way_the_old_sword_was_wrong_fails_its_own_row():
 
 
 def test_each_measured_row_names_its_spec_and_its_measured_value_and_the_table_is_markdown():
-    rows = cp.measure(la.all_icon_sprites())
+    rows = cp.measure(la.r0001_icon_sprites())
     text = cp.markdown(rows)
     for key, rs in rows.items():
         assert f"**`{key}`**" in text and all(r.spec and r.measured for r in rs)
@@ -95,7 +95,7 @@ def test_a_square_bead_and_an_eight_pixel_bead_fail_the_round_and_size_rows():
 
     square = bead(["######..", "#ssss#..", "#ssss#..", "#ssss#..", "#ssss#..", "######..", "........", "........"])
     big = bead(["..####..", ".#ssss#.", "#ssssss#", "#ssssss#", "#ssssss#", "#ssssss#", ".#ssss#.", "..####.."])
-    sprites = la.all_icon_sprites()
+    sprites = la.adopted_icon_sprites()
     assert {"round, not square", "size"} <= {r.item for r in cp.measure({**sprites, "icon.rarity.common": square}, ["icon.rarity.common"])["icon.rarity.common"] if not r.ok}
     assert "size" in {r.item for r in cp.measure({**sprites, "icon.rarity.common": big}, ["icon.rarity.common"])["icon.rarity.common"] if not r.ok}
 
@@ -141,7 +141,7 @@ def _r2(key: str, sprite: rule.Sprite) -> set[str]:
 
 
 def test_the_six_drafts_as_drawn_meet_every_row_of_their_own_table():
-    rows = cp.measure({**la.all_icon_sprites(), **of.fix_sprites()}, list(of.KEYS), checks=cp.CHECKS_R2)
+    rows = cp.measure({**la.r0001_icon_sprites(), **of.fix_sprites()}, list(of.KEYS), checks=cp.CHECKS_R2)
     assert set(rows) == set(of.KEYS) and [(k, r.item) for k, rs in rows.items() for r in rs if not r.ok] == []
 
 
@@ -152,7 +152,7 @@ def test_a_changed_frame_pixel_or_an_outlined_chevron_fails_the_buff_rows():
 
 
 def test_the_adopted_slate_bead_fails_the_lighter_than_the_tier_badges_row():
-    old = la.all_icon_sprites()["icon.rarity.common"]  # the 7 px slate bead of r0001: mean L* 40 against tier D's 29, a gap of 11
+    old = la.r0001_icon_sprites()["icon.rarity.common"]  # the 7 px slate bead of r0001: mean L* 40 against tier D's 29, a gap of 11
     failed_rows = _r2("icon.rarity.common", old)
     assert "lighter than the dark tier badges" in failed_rows and "silver fill" in failed_rows
 
@@ -183,10 +183,10 @@ def test_a_cottage_with_modern_blue_glass_a_triangle_debuff_and_a_changed_tankar
     house = of.fix_sprites()["icon.building.hero_house"]
     blue = _edit(house, {(6, 15): (0x50, 0xA8, 0xE0, 255), (7, 15): (0x50, 0xA8, 0xE0, 255)})
     assert "no modern blue glass" in _r2("icon.building.hero_house", blue)
-    old_house = la.all_icon_sprites()["icon.building.hero_house"]  # the adopted white-walled house with blue windows
+    old_house = la.r0001_icon_sprites()["icon.building.hero_house"]  # the adopted white-walled house with blue windows
     assert {"thatched roof", "timber frame", "no modern blue glass"} <= _r2("icon.building.hero_house", old_house)
-    old_debuff = la.all_icon_sprites()["icon.status.frame_debuff"]  # the inverted red triangle that read as a road sign
+    old_debuff = la.r0001_icon_sprites()["icon.status.frame_debuff"]  # the inverted red triangle that read as a road sign
     assert {"eight spikes", "not a triangle (not a road sign)", "symmetric"} & _r2("icon.status.frame_debuff", old_debuff)
     tankard = of.fix_sprites()["icon.building.inn"]
     assert "same outline" in _r2("icon.building.inn", _edit(tankard, {(2, 2): (0x0E, 0x10, 0x18, 255)}))
-    assert "iron hoops" in _r2("icon.building.inn", la.all_icon_sprites()["icon.building.inn"])  # the adopted mug has none
+    assert "iron hoops" in _r2("icon.building.inn", la.r0001_icon_sprites()["icon.building.inn"])  # the adopted mug has none

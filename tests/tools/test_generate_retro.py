@@ -509,6 +509,29 @@ def test_compute_retro_metrics_run_summary_matches_fixture():
     assert rs["avg_agents"] == 6.0
 
 
+def test_avg_agents_excludes_null_runs_and_reports_n():
+    # TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN: a pipeline run with 9 still averages as before; the hand closure
+    # (agent_count null) is left out, and the row says how many runs the average covers.
+    runs = [dict(_BASE_RUN, agent_count=9), dict(_BASE_RUN, run_id="TCK-HAND", agent_count=None, execution_mode="hand")]
+    rs = compute_retro_metrics(runs, [])["run_summary"]
+    assert (rs["avg_agents"], rs["avg_agents_n"]) == (9.0, 1)
+    report = generate(runs, [], "test-label")
+    assert "| Avg agents per run (n=1 of 2; hand closures record unknown) | 9.0 |" in report
+
+
+def test_avg_agents_prints_na_when_every_run_is_null():
+    runs = [dict(_BASE_RUN, run_id=f"TCK-H{i}", agent_count=None, execution_mode="hand") for i in range(3)]
+    rs = compute_retro_metrics(runs, [])["run_summary"]
+    assert (rs["avg_agents"], rs["avg_agents_n"]) == (0, 0)  # a number, not None: the dashboard model takes a float
+    report = generate(runs, [], "test-label")
+    assert "| Avg agents per run (n=0 of 3; hand closures record unknown) | n/a |" in report
+
+
+def test_avg_agents_row_has_no_unknown_note_when_every_run_has_a_count():
+    report = generate([dict(_BASE_RUN, agent_count=4)], [], "test-label")
+    assert "| Avg agents per run (n=1 of 1) | 4.0 |" in report
+
+
 def test_compute_retro_metrics_is_a_pure_read_only_function(tmp_path):
     """No file writes, no printing — mirrors this project's read-only-logic architecture test
     convention. Calling it twice with the same inputs must be side-effect-free and idempotent."""
@@ -1414,7 +1437,7 @@ _FIXED_CORPUS_EXPECTED_REPORT = (
     "| Completed (DONE) | 1 (33%) |\n"
     "| Gate failures (runs; no gate ledger for this window) | 2 |\n"
     "| Avg duration | 20 min |\n"
-    "| Avg agents per run | 3.3 |\n"
+    "| Avg agents per run (n=3 of 3) | 3.3 |\n"
     "| Total agent calls | 2 |\n"
     "\n"
     "**By execution mode**\n"

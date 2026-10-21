@@ -13,6 +13,9 @@ from session_role import stamp as stamp_session_role  # noqa: E402
 from vocabulary import PATH_REASONS  # noqa: E402
 
 REQUIRED = {"run_id", "start_ts", "workflow", "tier", "final_status", "agent_count"}
+# TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN: the key is required but may be an explicit null (unknown; a hand
+# closure cannot see agent calls). Absent is still a schema error.
+NULLABLE_REQUIRED = {"agent_count"}
 
 
 def validate_record(record: dict) -> list[str]:
@@ -21,7 +24,7 @@ def validate_record(record: dict) -> list[str]:
     A field counts as missing if it is absent from the dict OR its value is
     None — a `null` in --data's JSON must fail identically to an absent key.
     """
-    missing = {f for f in REQUIRED if f not in record or record[f] is None}
+    missing = {f for f in REQUIRED if f not in record or (record[f] is None and f not in NULLABLE_REQUIRED)}
     if missing:
         return [f"Missing required fields: {sorted(missing)}"]
     return _optional_field_errors(record)

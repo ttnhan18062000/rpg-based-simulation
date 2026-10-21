@@ -1,0 +1,15 @@
+## pre-drill state 17:49:35
+XLEN simulation:events: 1001
+name observatory:consumers consumers 1 pending 0 last-delivered-id 1792432175771-1 entries-read 25888 lag 0 
+ai_worker log tail:
+WARNING:__main__:[WARNING] LIVE ANOMALY: GovernorDegradedLive on system: Governor degraded/survival mode sustained for 5 ticks (limit=5)
+WARNING:__main__:[WARNING] LIVE ANOMALY: GovernorDegradedLive on system: Governor degraded/survival mode sustained for 5 ticks (limit=5)
+WARNING:__main__:[WARNING] LIVE ANOMALY: GovernorDegradedLive on system: Governor degraded/survival mode sustained for 17 ticks (limit=5)
+WARNING:__main__:[WARNING] LIVE ANOMALY: GovernorDegradedLive on system: Governor degraded/survival mode sustained for 19 ticks (limit=5)
+WARNING:__main__:[WARNING] LIVE ANOMALY: GovernorDegradedLive on system: Governor degraded/survival mode sustained for 39 ticks (limit=5)
+WARNING:__main__:[WARNING] LIVE ANOMALY: GovernorDegradedLive on system: Governor degraded/survival mode sustained for 8 ticks (limit=5)
+rules:
+  RedisDown inactive ['Normal (NoData)'] ok
+  ApiLatencyP95High inactive ['Normal (NoData)'] ok
+  ApiErrorRateHigh inactive ['Normal (NoData)'] ok
+redis_up ['1']

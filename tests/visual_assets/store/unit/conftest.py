@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.visual_assets.store.lock_isolation import redirect_real_catalog_lock
 from visual_assets.store.contracts import RECORD_TYPES
 
 FIXTURES = Path(__file__).resolve().parents[4] / "visual_assets" / "catalog" / "fixtures" / "contracts"
@@ -81,6 +82,10 @@ def snapshot(root) -> dict[str, tuple]:
             else:
                 out[rel] = ("dir" if st.S_ISDIR(mode) else "special",)
     return out
+
+
+# #657: no test in this directory takes the real catalog lock (a tmp catalog keeps its own `.store.lock`)
+_store_lock_in_tmp = pytest.fixture(autouse=True)(redirect_real_catalog_lock)
 
 
 @pytest.fixture(autouse=True)

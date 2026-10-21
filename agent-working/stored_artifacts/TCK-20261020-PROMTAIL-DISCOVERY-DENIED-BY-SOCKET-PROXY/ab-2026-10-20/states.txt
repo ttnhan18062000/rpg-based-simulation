@@ -1,0 +1,61 @@
+## A 14:52:49Z
+targets page:  docker/tcp://docker-socket-proxy:2375:80 (0/0 ready) ;
+promtail_targets_active_total: 
+promtail_sent_entries_total: promtail_sent_entries_total{host="loki:3100"} 0 
+403 'network labels' lines in promtail log: 12 (last: ts=2026-10-20T14:52:49.009333914Z)
+loki ready: ready
+loki labels: {"status":"success"}
+loki container values: {"status":"success"}
+backend lines (last 5 min, limit 5): 0
+loki lines of loki/promtail themselves (must be 0): 0
+## B 14:53:49Z
+targets page:  docker/tcp://docker-socket-proxy:2375:80 (5/5 ready) ;
+promtail_targets_active_total: 
+promtail_sent_entries_total: promtail_sent_entries_total{host="loki:3100"} 325 
+403 'network labels' lines in promtail log: 0 (last: )
+loki ready: ready
+loki labels: {"status":"success","data":["container","job","service_name"]}
+loki container values: {"status":"success","data":["platform-backend-1","platform-docker-socket-proxy-1","platform-redis-1"]}
+backend lines (last 5 min, limit 5): 5
+loki lines of loki/promtail themselves (must be 0): 0
+## B-surface 14:54:26Z (proxy has NETWORKS=1, POST=0)
+GET /networks | HTTP/1.0 200 OK
+GET /networks/<platform_default id> | HTTP/1.0 200 OK
+POST /networks/create | HTTP/1.0 403 Forbidden
+DELETE /networks/ab00000000000000 | HTTP/1.0 403 Forbidden
+POST /containers/x/stop | HTTP/1.0 403 Forbidden
+GET /volumes | HTTP/1.0 403 Forbidden
+GET /images/json | HTTP/1.0 403 Forbidden
+GET /containers/json | HTTP/1.0 200 OK
+GET /version | HTTP/1.0 200 OK
+GET /info | HTTP/1.0 403 Forbidden
+## C-60s 14:55:59Z
+targets page:  docker/tcp://docker-socket-proxy:2375:80 (0/0 ready) ;
+promtail_targets_active_total: 
+promtail_sent_entries_total: promtail_sent_entries_total{host="loki:3100"} 442 
+403 'network labels' lines in promtail log: 12 (last: ts=2026-10-20T14:55:59.370872044Z)
+loki ready: ready
+loki labels: {"status":"success","data":["container","job","service_name"]}
+loki container values: {"status":"success","data":["platform-backend-1","platform-docker-socket-proxy-1","platform-redis-1"]}
+backend lines (last 5 min, limit 5): 5
+loki lines of loki/promtail themselves (must be 0): 0
+## C-3min 14:58:00Z
+targets page:  docker/tcp://docker-socket-proxy:2375:80 (0/0 ready) ;
+promtail_targets_active_total: 
+promtail_sent_entries_total: promtail_sent_entries_total{host="loki:3100"} 442 
+403 'network labels' lines in promtail log: 36 (last: ts=2026-10-20T14:57:59.417276666Z)
+loki ready: ready
+loki labels: {"status":"success","data":["container","job","service_name"]}
+loki container values: {"status":"success","data":["platform-backend-1","platform-docker-socket-proxy-1","platform-redis-1"]}
+backend lines (last 5 min, limit 5): 5
+loki lines of loki/promtail themselves (must be 0): 0
+## C-prime 14:59:21Z
+targets page:  docker/tcp://docker-socket-proxy:2375:80 (0/0 ready) ;
+promtail_targets_active_total: 
+promtail_sent_entries_total: promtail_sent_entries_total{host="loki:3100"} 0 
+403 'network labels' lines in promtail log: 53 (last: ts=2026-10-20T14:59:22.274765553Z)
+loki ready: ready
+loki labels: {"status":"success","data":["container","job","service_name"]}
+loki container values: {"status":"success","data":["platform-backend-1","platform-docker-socket-proxy-1","platform-redis-1"]}
+backend lines (last 5 min, limit 5): 5
+loki lines of loki/promtail themselves (must be 0): 0
