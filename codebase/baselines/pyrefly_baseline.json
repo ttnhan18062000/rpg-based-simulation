@@ -1,0 +1,4967 @@
+{
+  "errors": [
+    {
+      "column": 17,
+      "path": "src/api/agent_ops_dashboard/ingest.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `list.sort` called with arguments: (key=(r: Unknown) -> Unknown, reverse=Literal[True])",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/api/agent_ops_dashboard/ingest.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Unknown | None` is not assignable to parameter `run_id` with type `bytearray | bytes | str` in function `src.api.agent_ops_dashboard.models.RunMatchSummary.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 36,
+      "path": "src/api/engine_manager.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `state`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/api/engine_manager.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `tick_once`",
+      "severity": "error"
+    },
+    {
+      "column": 35,
+      "path": "src/api/engine_manager.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `state`",
+      "severity": "error"
+    },
+    {
+      "column": 43,
+      "path": "src/api/engine_manager.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `state`",
+      "severity": "error"
+    },
+    {
+      "column": 33,
+      "path": "src/api/presenters/state_presenter.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `dict.get` called with arguments: (str | None, Literal[0])",
+      "severity": "error"
+    },
+    {
+      "column": 40,
+      "path": "src/api/presenters/state_presenter.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `dict.get` called with arguments: (str | None, Literal[0])",
+      "severity": "error"
+    },
+    {
+      "column": 40,
+      "path": "src/api/routes/search.py",
+      "name": "bad-assignment",
+      "concise_description": "`str` is not assignable to dict key `scenario_name` with type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 33,
+      "path": "src/api/routes/search.py",
+      "name": "bad-assignment",
+      "concise_description": "`str` is not assignable to dict key `status` with type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/api/routes/search.py",
+      "name": "bad-assignment",
+      "concise_description": "`str` is not assignable to dict key `sort` with type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/api/server.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `persistence` with type `QualityPersistence` in function `src.api.dependencies.set_quality_persistence`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/api/ws/stream.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Dict`",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/api/ws/stream.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/api/ws/stream.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `bytes | Unknown | None` is not assignable to parameter `data` with type `bytes` in function `starlette.websockets.WebSocket.send_bytes`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/api/ws/stream.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `bytes | Unknown | None` is not assignable to parameter `data` with type `bytes` in function `starlette.websockets.WebSocket.send_bytes`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/api/ws/stream.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `entity_id` with type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 10,
+      "path": "src/certification/conformance.py",
+      "name": "invalid-annotation",
+      "concise_description": "Tuple literal cannot be used in annotations",
+      "severity": "error"
+    },
+    {
+      "column": 19,
+      "path": "src/certification/hardware.py",
+      "name": "missing-attribute",
+      "concise_description": "No attribute `system` in module `platform`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/certification/hardware.py",
+      "name": "missing-attribute",
+      "concise_description": "No attribute `release` in module `platform`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/certification/hardware.py",
+      "name": "missing-attribute",
+      "concise_description": "No attribute `python_version` in module `platform`",
+      "severity": "error"
+    },
+    {
+      "column": 43,
+      "path": "src/certification/models.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `evidence_level` with type `EvidenceLevel`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/certification/scenarios.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['quest']` is not assignable to parameter `kind` with type `ProjectKind` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 59,
+      "path": "src/certification/scenarios.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['location']` is not assignable to parameter `kind` with type `LeadKind` in function `src.core.strategic.LeadState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/cli/diagnostics.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `str` has no attribute `get`",
+      "severity": "error"
+    },
+    {
+      "column": 57,
+      "path": "src/cli/diagnostics.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `str` has no attribute `get`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/cli/diagnostics.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RunArtifactRepository` has no attribute `get_manifest`",
+      "severity": "error"
+    },
+    {
+      "column": 46,
+      "path": "src/config/validator.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 52,
+      "path": "src/content/reference_graph.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `NormalizedWorldModule`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/content/validator.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `ContentFamilyMatrixEntry`",
+      "severity": "error"
+    },
+    {
+      "column": 53,
+      "path": "src/content/validator.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `matrix` with type `dict[str, Unknown]`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/content/validator.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `edges`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/content/validator.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `has_node`",
+      "severity": "error"
+    },
+    {
+      "column": 49,
+      "path": "src/content/validator.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `has_node`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/content/validator.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `nodes`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/content/validator.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `is_record_used`",
+      "severity": "error"
+    },
+    {
+      "column": 12,
+      "path": "src/content_semantics/faction.py",
+      "name": "bad-return",
+      "concise_description": "Returned type `None` is not assignable to declared return type `str`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_navigation` with type `NavigationComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/core/builder.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `DataclassInstance` is not assignable to parameter `navigation` with type `NavigationComponent` in function `src.core.state.EntityState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_identity` with type `IdentityComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_inventory` with type `InventoryComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_combat` with type `CombatComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_attributes` with type `AttributeComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_aptitude` with type `AptitudeComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_navigation` with type `NavigationComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_strategic` with type `StrategicComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_strategic` with type `StrategicComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_social` with type `SocialComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_biological` with type `BiologicalComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_lifecycle` with type `LifecycleComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_interaction` with type `InteractionComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_task` with type `TaskComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_stamina` with type `StaminaComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_equipment` with type `EquipmentComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/core/builder.py",
+      "name": "bad-assignment",
+      "concise_description": "`DataclassInstance` is not assignable to attribute `_identity` with type `IdentityComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 52,
+      "path": "src/core/conservation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `building_id` with type `int` in function `src.core.update_models.buildings.BuildingUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/core/conservation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `key` with type `int` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 56,
+      "path": "src/core/conservation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `node_id` with type `int` in function `src.core.updates.ResourceNodeUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 50,
+      "path": "src/core/conservation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `key` with type `int` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 36,
+      "path": "src/core/conservation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `ground_item_remove` with type `int | None` in function `TransactionResult.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 40,
+      "path": "src/core/conservation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `key` with type `int` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/core/conservation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `corpse_remove` with type `int | None` in function `TransactionResult.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/core/conservation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `key` with type `int` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 33,
+      "path": "src/core/conservation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `building_id` with type `int` in function `src.core.update_models.buildings.BuildingUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 63,
+      "path": "src/core/dirty.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/core/dirty.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 53,
+      "path": "src/core/dirty.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/core/dirty.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/core/dirty.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `List`",
+      "severity": "error"
+    },
+    {
+      "column": 81,
+      "path": "src/core/dirty.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/core/equipment.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[EquipSlot, str]` is not assignable to parameter `slot_updates` with type `dict[EquipSlot, str | None]` in function `src.core.updates.EquipmentUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/core/export.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `AuthoritativeState`",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/core/inventory.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `ItemStack | str` is not assignable to parameter `item_id` with type `str` in function `src.core.items.ItemRegistry.get`",
+      "severity": "error"
+    },
+    {
+      "column": 79,
+      "path": "src/core/inventory.py",
+      "name": "bad-return",
+      "concise_description": "Function declared to return `bool`, but one or more paths are missing an explicit `return`",
+      "severity": "error"
+    },
+    {
+      "column": 57,
+      "path": "src/core/models/world_records.py",
+      "name": "bad-argument-type",
+      "concise_description": "Keyword argument `source_entity_id` with type `int | None` is not assignable to parameter `**kwargs` with type `int | str | tuple[float, float]` in function `typing.MutableMapping.update`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/core/recipes.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/core/recipes.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/core/serialization.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RegionState` has no attribute `to_dict`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/core/state.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `frozenset[str]` is not assignable to parameter `known_recipes` with type `set[str]` in function `IdentityComponent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/core/state.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `frozenset[str]` is not assignable to parameter `learned_skills` with type `set[str]` in function `IdentityComponent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/core/state.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `frozenset[str]` is not assignable to parameter `traits` with type `set[str]` in function `IdentityComponent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 38,
+      "path": "src/core/state.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `frozenset[str]` is not assignable to parameter `active_breakthroughs` with type `set[str]` in function `IdentityComponent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/core/state.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `tuple[IntentResult, ...]` is not assignable to parameter `latest_intent_results` with type `list[IntentResult]` in function `IdentityComponent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/core/state.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `tuple[ItemStack, ...]` is not assignable to parameter `items` with type `list[ItemStack]` in function `src.core.models.inventory.InventoryComponent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/core/state.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorldEvent`",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/core/state.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `InformationProviderState`",
+      "severity": "error"
+    },
+    {
+      "column": 78,
+      "path": "src/core/state.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `DirtySet`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/core/updates.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `IntentResult`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/core/updates.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `ResourceNodeState`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/core/updates.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `RuntimeMode`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/core/updates.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorldEvent`",
+      "severity": "error"
+    },
+    {
+      "column": 46,
+      "path": "src/core/updates.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `InformationProviderState`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/core/updates.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Iterable`",
+      "severity": "error"
+    },
+    {
+      "column": 19,
+      "path": "src/core/worker_protocol.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/core/worker_protocol.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/core/worker_protocol.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 19,
+      "path": "src/core/worker_protocol.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/core/worker_protocol.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/core/worker_protocol.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 33,
+      "path": "src/core/worker_protocol.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/core/worker_protocol.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/core/worker_protocol.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/core/worker_protocol.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 52,
+      "path": "src/domains/belief_institution/deriver.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | None` is not assignable to parameter `key` with type `int` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 60,
+      "path": "src/domains/belief_institution/deriver.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `object` has no attribute `significance`",
+      "severity": "error"
+    },
+    {
+      "column": 60,
+      "path": "src/domains/belief_institution/deriver.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `object` has no attribute `significance`",
+      "severity": "error"
+    },
+    {
+      "column": 41,
+      "path": "src/domains/belief_institution/deriver.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `object` has no attribute `entry_id`",
+      "severity": "error"
+    },
+    {
+      "column": 68,
+      "path": "src/domains/campaigns/behavior_change.py",
+      "name": "unsupported-operation",
+      "concise_description": "`in` is not supported between `None` and `str`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/domains/campaigns/orchestrator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `AuthoritativeState | None` is not assignable to parameter `final_state` with type `AuthoritativeState` in function `CampaignOrchestrator._advance_state`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/domains/campaigns/orchestrator.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `record`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/domains/campaigns/orchestrator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `event_category` with type `Literal['anomaly', 'combat', 'economy', 'faction', 'hard_law', 'infrastructure', 'inventory', 'lifecycle', 'movement', 'quest', 'region', 'resource', 'social', 'strategy']` in function `src.observability.events.SimulationEvent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 51,
+      "path": "src/domains/cooperation/phase.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, int]`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/domains/cooperation/services.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, str]`",
+      "severity": "error"
+    },
+    {
+      "column": 36,
+      "path": "src/domains/cooperation/services.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, str]`",
+      "severity": "error"
+    },
+    {
+      "column": 36,
+      "path": "src/domains/cooperation/services.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, str]`",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/domains/cooperation/services.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, str]`",
+      "severity": "error"
+    },
+    {
+      "column": 42,
+      "path": "src/domains/cooperation/services.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, str]`",
+      "severity": "error"
+    },
+    {
+      "column": 50,
+      "path": "src/domains/cooperation/services.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, str]`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/domains/faction/diplomatic_actions.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `TreatyOffer`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/domains/faction/diplomatic_actions.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `TradeAgreement`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/domains/faction/diplomatic_actions.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `NonAggressionPact`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/domains/faction/diplomatic_actions.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `AllianceProposal`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/domains/faction/diplomatic_actions.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Betrayal`",
+      "severity": "error"
+    },
+    {
+      "column": 47,
+      "path": "src/domains/information/bridge.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `key` with type `str` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 35,
+      "path": "src/domains/information/bridge.py",
+      "name": "bad-specialization",
+      "concise_description": "`None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/domains/information/bridge.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `LeadCertainty | None` is not assignable to parameter `certainty` with type `LeadCertainty` in function `src.core.strategic.LeadState.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/domains/information/bridge.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `failure_count`",
+      "severity": "error"
+    },
+    {
+      "column": 70,
+      "path": "src/domains/information/bridge.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `list[LeadState | None]` is not assignable to parameter `leads_add_or_update` with type `list[LeadState]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 38,
+      "path": "src/domains/information/bridge.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `subject` with type `str` in function `src.domains.information.schema.InformationQuery.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/domains/information/normalizer.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['location']` is not assignable to parameter `kind` with type `LeadKind` in function `src.core.strategic.LeadState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/domains/information/normalizer.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['location']` is not assignable to parameter `kind` with type `LeadKind` in function `src.core.strategic.LeadState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 80,
+      "path": "src/domains/information/phase.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `knowledge` with type `KnowledgeModelComponent` in function `src.core.self_model.SelfModelBundle.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 60,
+      "path": "src/domains/information/phase.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `key` with type `str` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 41,
+      "path": "src/domains/information/resolver.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `key` with type `int` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 48,
+      "path": "src/domains/information/router.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `key` with type `int` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 57,
+      "path": "src/domains/memory/attribution.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `dict.get` called with arguments: (Literal['MAIN_HAND'], float)",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/domains/memory/phase.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Unknown | None` is not assignable to parameter `event_kind` with type `str` in function `src.domains.memory.attribution.CausalAttributionService.attribute`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/domains/motivation/evaluator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Mapping[str, float]` is not assignable to parameter `preference_map` with type `dict[str, float]` in function `RoleFitEvaluator.evaluate_tags`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/domains/motivation/evaluator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Mapping[str, float]` is not assignable to parameter `preference_map` with type `dict[str, float]` in function `RoleFitEvaluator.evaluate_tags`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/domains/motivation/evaluator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Mapping[str, float]` is not assignable to parameter `preference_map` with type `dict[str, float]` in function `RoleFitEvaluator.evaluate_tags`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/domains/motivation/evaluator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Mapping[str, float]` is not assignable to parameter `preference_map` with type `dict[str, float]` in function `RoleFitEvaluator.evaluate_tags`",
+      "severity": "error"
+    },
+    {
+      "column": 60,
+      "path": "src/domains/optimization/feature_flags.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `overrides` with type `dict[str, FeatureMode]`",
+      "severity": "error"
+    },
+    {
+      "column": 49,
+      "path": "src/domains/world_emergence/phase.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, int]`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/domains/world_emergence/phase.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, float] | dict[str, int]` is not assignable to parameter `metric_counters` with type `dict[str, int]` in function `src.core.updates.StateUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 47,
+      "path": "src/domains/world_emergence/services.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `StateUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/engine/apply.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | Unknown` is not assignable to parameter `current_mode` with type `RuntimeMode` in function `src.core.state.AuthoritativeState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/engine/appraisal.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `can_perceive`",
+      "severity": "error"
+    },
+    {
+      "column": 12,
+      "path": "src/engine/behavior_consumers.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get_cognition_profile`",
+      "severity": "error"
+    },
+    {
+      "column": 12,
+      "path": "src/engine/behavior_consumers.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get_role`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `entities` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `regions` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `places` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `local_scars` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `resource_nodes` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `buildings` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `corpses` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `ground_items` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `chests` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `groups` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `home_storage` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[str, Any]]` is not assignable to dict key `camps` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 36,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, float]` is not assignable to dict key `global_resources` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 33,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`list[str]` is not assignable to dict key `blocked_tiles` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`list[str]` is not assignable to dict key `town_tiles` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, str]` is not assignable to dict key `building_tiles` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 43,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, float]` is not assignable to dict key `region_loyalty_pressure` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 41,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[Unknown, Unknown]]` is not assignable to dict key `region_culture_states` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, dict[Unknown, Unknown]]` is not assignable to dict key `entity_legend_facts` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 47,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`list[dict[str, Any]]` is not assignable to dict key `information_source_profiles` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 46,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, list[dict[Unknown, Unknown]]]` is not assignable to dict key `entity_belief_institutions` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/engine/checkpoint.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, float]` is not assignable to dict key `event_fidelity` with type `int | tuple[float, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/engine/cognition.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/engine/cognition.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `SocialComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 38,
+      "path": "src/engine/combat.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 40,
+      "path": "src/engine/combat.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/combat.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 46,
+      "path": "src/engine/combat.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[str, float]`",
+      "severity": "error"
+    },
+    {
+      "column": 128,
+      "path": "src/engine/combat.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WoundUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 56,
+      "path": "src/engine/domain/action_router.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `neighbor_view` with type `list[tuple[int, EntityState]]`",
+      "severity": "error"
+    },
+    {
+      "column": 56,
+      "path": "src/engine/domain/action_router.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, Any] | None` is not assignable to parameter `payload` with type `dict[str, Any]` in function `src.engine.domain.core_actions.CoreActions.execute_recruit`",
+      "severity": "error"
+    },
+    {
+      "column": 56,
+      "path": "src/engine/domain/action_router.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, Any] | None` is not assignable to parameter `payload` with type `dict[str, Any]` in function `src.engine.domain.core_actions.CoreActions.execute_team_up`",
+      "severity": "error"
+    },
+    {
+      "column": 54,
+      "path": "src/engine/domain/action_router.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, Any] | None` is not assignable to parameter `payload` with type `dict[str, Any]` in function `src.engine.domain.core_actions.CoreActions.execute_trade`",
+      "severity": "error"
+    },
+    {
+      "column": 60,
+      "path": "src/engine/domain/action_router.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, Any] | None` is not assignable to parameter `payload` with type `dict[str, Any]` in function `src.engine.domain.core_actions.CoreActions.execute_allocate_ap`",
+      "severity": "error"
+    },
+    {
+      "column": 54,
+      "path": "src/engine/domain/action_router.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, Any] | None` is not assignable to parameter `payload` with type `dict[str, Any]` in function `src.engine.domain.core_actions.CoreActions.execute_train`",
+      "severity": "error"
+    },
+    {
+      "column": 65,
+      "path": "src/engine/domain/action_router.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, Any] | None` is not assignable to parameter `payload` with type `dict[str, Any]` in function `src.engine.domain.core_actions.CoreActions.execute_propose_marriage`",
+      "severity": "error"
+    },
+    {
+      "column": 58,
+      "path": "src/engine/domain/action_router.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, Any] | None` is not assignable to parameter `payload` with type `dict[str, Any]` in function `src.engine.domain.core_actions.CoreActions.execute_join_clan`",
+      "severity": "error"
+    },
+    {
+      "column": 59,
+      "path": "src/engine/domain/action_router.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, Any] | None` is not assignable to parameter `payload` with type `dict[str, Any]` in function `src.engine.domain.core_actions.CoreActions.execute_leave_clan`",
+      "severity": "error"
+    },
+    {
+      "column": 57,
+      "path": "src/engine/domain/action_router.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, Any] | None` is not assignable to parameter `payload` with type `dict[str, Any]` in function `src.engine.domain.core_actions.CoreActions.execute_interact`",
+      "severity": "error"
+    },
+    {
+      "column": 56,
+      "path": "src/engine/domain/aoe_actions.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `neighbor_view` with type `list[tuple[int, EntityState]]`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/engine/domain/aoe_actions.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/engine/domain/aoe_actions.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get`",
+      "severity": "error"
+    },
+    {
+      "column": 56,
+      "path": "src/engine/domain/combat_actions.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `neighbor_view` with type `list[tuple[int, EntityState]]`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/engine/domain/combat_actions.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `target_id` with type `int` in function `src.core.strategic.ContractState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `source_id` with type `int | str` in function `src.core.update_models.resources.ResourceTransferIntent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `entity_id` with type `int` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-assignment",
+      "concise_description": "`Any | None` is not assignable to dict key type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `TaskComponent` is not assignable to parameter `task` with type `TaskUpdate | None` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `entity_id` with type `int` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-assignment",
+      "concise_description": "`Any | None` is not assignable to dict key type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `target_id` with type `int` in function `src.core.strategic.ContractState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `entity_id` with type `int` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-assignment",
+      "concise_description": "`Any | None` is not assignable to dict key type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `TaskComponent` is not assignable to parameter `task` with type `TaskUpdate | None` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `entity_id` with type `int` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-assignment",
+      "concise_description": "`Any | None` is not assignable to dict key type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `target_id` with type `int` in function `src.core.strategic.ContractState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `entity_id` with type `int` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-assignment",
+      "concise_description": "`Any | None` is not assignable to dict key type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `TaskComponent` is not assignable to parameter `task` with type `TaskUpdate | None` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `entity_id` with type `int` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-assignment",
+      "concise_description": "`Any | None` is not assignable to dict key type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `entity_id` with type `int` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-assignment",
+      "concise_description": "`Any | None` is not assignable to dict key type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `TaskComponent` is not assignable to parameter `task` with type `TaskUpdate | None` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `entity_id` with type `int` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-assignment",
+      "concise_description": "`Any | None` is not assignable to dict key type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `target_entity_id` with type `int` in function `src.core.strategic.MarriageState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `entity_id` with type `int` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-assignment",
+      "concise_description": "`Any | None` is not assignable to dict key type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `TaskComponent` is not assignable to parameter `task` with type `TaskUpdate | None` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `entity_id` with type `int` in function `src.core.updates.EntityUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/engine/domain/core_actions.py",
+      "name": "bad-assignment",
+      "concise_description": "`Any | None` is not assignable to dict key type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 43,
+      "path": "src/engine/domain/movement_actions.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `dict[int, Never]`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/engine/domain/movement_actions.py",
+      "name": "bad-return",
+      "concise_description": "Returned type `dict[int, EntityUpdate] | dict[int, Never]` is not assignable to declared return type `dict[int, EntityUpdate]`",
+      "severity": "error"
+    },
+    {
+      "column": 56,
+      "path": "src/engine/domain/skill_actions.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `neighbor_view` with type `list[tuple[int, EntityState]]`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/engine/domain/skill_actions.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/engine/domain/skill_actions.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/engine/domain_logic.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `AuthoritativeState`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/engine/domain_logic.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `AuthoritativeState`",
+      "severity": "error"
+    },
+    {
+      "column": 56,
+      "path": "src/engine/domain_logic.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `neighbor_view` with type `list[tuple[int, EntityState]]`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/engine/domain_logic.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `AuthoritativeState`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/engine/domain_logic.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `AuthoritativeState`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/engine/executor.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `MappingProxyType[str, Unknown] | MappingProxyType[Unknown, Unknown]` is not assignable to parameter `entities` with type `dict[int, EntityState]` in function `src.core.state.AuthoritativeState.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/engine/executor.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `MappingProxyType[str, Unknown] | MappingProxyType[Unknown, Unknown]` is not assignable to parameter `resource_nodes` with type `dict[int, ResourceNodeState]` in function `src.core.state.AuthoritativeState.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 19,
+      "path": "src/engine/executor.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `MappingProxyType[str, Unknown] | MappingProxyType[Unknown, Unknown]` is not assignable to parameter `buildings` with type `dict[int, BuildingState]` in function `src.core.state.AuthoritativeState.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/engine/executor.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `MappingProxyType[str, Unknown] | MappingProxyType[Unknown, Unknown]` is not assignable to parameter `regions` with type `dict[str, RegionState]` in function `src.core.state.AuthoritativeState.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/engine/executor.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `MappingProxyType[str, Unknown] | MappingProxyType[Unknown, Unknown]` is not assignable to parameter `terrain` with type `dict[tuple[int, int], str]` in function `src.core.state.AuthoritativeState.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/engine/executor.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `MappingProxyType[str, Unknown] | MappingProxyType[Unknown, Unknown]` is not assignable to parameter `building_tiles` with type `dict[tuple[int, int], str]` in function `src.core.state.AuthoritativeState.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/engine/executor.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `MappingProxyType[str, Unknown] | MappingProxyType[Unknown, Unknown]` is not assignable to parameter `global_resources` with type `dict[str, float]` in function `src.core.state.AuthoritativeState.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/engine/executor.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `frozenset[tuple[int, int]]` is not assignable to parameter `blocked_tiles` with type `set[tuple[int, int]]` in function `src.core.state.AuthoritativeState.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/engine/executor.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `frozenset[tuple[int, int]]` is not assignable to parameter `town_tiles` with type `set[tuple[int, int]]` in function `src.core.state.AuthoritativeState.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/engine/executor.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `RuntimeProfile`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/engine/executor.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `RuntimeProfile`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/engine/executor.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `RuntimeProfile`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/engine/executor.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Tuple`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/engine/governor.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 53,
+      "path": "src/engine/intent/action_intent.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `resource_id` with type `str` in function `src.core.registries.ResourceRegistry.contains`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/intent/action_intent.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `resource_id` with type `str` in function `src.core.registries.ResourceRegistry.get`",
+      "severity": "error"
+    },
+    {
+      "column": 73,
+      "path": "src/engine/intent/action_intent.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `knowledge` with type `KnowledgeModelComponent` in function `src.core.self_model.SelfModelBundle.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 41,
+      "path": "src/engine/intent/action_intent.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | Any | None` is not assignable to parameter `recipe_id` with type `str` in function `src.core.registries.RecipeRegistry.get`",
+      "severity": "error"
+    },
+    {
+      "column": 41,
+      "path": "src/engine/intent/action_intent.py",
+      "name": "unbound-name",
+      "concise_description": "`recipe_id` may be uninitialized",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/engine/intent/action_intent.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | Any | None` is not assignable to parameter `source_id` with type `int | str` in function `src.core.update_models.resources.ResourceTransferIntent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 71,
+      "path": "src/engine/intent/action_intent.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `failure_reason`",
+      "severity": "error"
+    },
+    {
+      "column": 40,
+      "path": "src/engine/intent/action_intent.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `failure_reason`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/engine/kernel.py",
+      "name": "unbound-name",
+      "concise_description": "`os` may be uninitialized",
+      "severity": "error"
+    },
+    {
+      "column": 71,
+      "path": "src/engine/kernel.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `run_dir` with type `str` in function `src.observability.cognition.decision_trace_writer.DecisionTraceWriter.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `previous_mode`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/engine/kernel.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `run_id` with type `str` in function `src.observability.alerts.models.AlertEvent.create_watchdog_trip`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `cumulative_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `hard_law_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `hard_law_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `last_hard_law_violation_tick`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `cumulative_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 60,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `cumulative_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 62,
+      "path": "src/engine/kernel.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `run_id` with type `str` in function `src.observability.alerts.models.AlertEvent.create_hard_law_violation`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/engine/kernel.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `severity` with type `Literal['CRITICAL', 'DEBUG', 'ERROR', 'INFO', 'WARNING']` in function `src.observability.events.SimulationEvent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `dirty_set`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `current_tick_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `cumulative_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `hard_law_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `hard_law_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `last_hard_law_violation_tick`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `cumulative_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 60,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `RuntimeStatus` has no attribute `cumulative_violations`",
+      "severity": "error"
+    },
+    {
+      "column": 62,
+      "path": "src/engine/kernel.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `run_id` with type `str` in function `src.observability.alerts.models.AlertEvent.create_hard_law_violation`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `record_tick`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/engine/kernel.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `record_tick`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/engine/kernel.py",
+      "name": "bad-return",
+      "concise_description": "Returned type `str | None` is not assignable to declared return type `str`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/engine/kernel.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `EntityState`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/engine/kernel.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `EntityState`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/engine/legality.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `tuple` has no attribute `position`",
+      "severity": "error"
+    },
+    {
+      "column": 49,
+      "path": "src/engine/legality.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `tuple` has no attribute `position`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/engine/legality.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `tuple` has no attribute `position`",
+      "severity": "error"
+    },
+    {
+      "column": 49,
+      "path": "src/engine/legality.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `tuple` has no attribute `position`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/engine/legality.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `AuthoritativeState` has no attribute `engagements`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/engine/metrics.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, int]` is not assignable to parameter `project_counts` with type `dict[str, int]` in function `WorldMetrics.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `LifecyclePatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `BiologicalPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `InteractionPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `IdentityPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `NavigationPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `CombatPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `StaminaPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `InventoryPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `EquipmentPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `StrategicPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `QuestPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `SocialPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `TaskPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `AttributePatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `RewardPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `WoundPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `StatusEffectPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `SelfModelPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/engine/patches.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `CognitionPatch` is not assignable to parameter `object` with type `KindPatch` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 12,
+      "path": "src/engine/patches.py",
+      "name": "bad-return",
+      "concise_description": "Returned type `list[KindPatch]` is not assignable to declared return type `list[ComponentPatch]`",
+      "severity": "error"
+    },
+    {
+      "column": 54,
+      "path": "src/engine/pipeline.py",
+      "name": "bad-specialization",
+      "concise_description": "`None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/engine/pipeline_phases/actions.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `payload_set`",
+      "severity": "error"
+    },
+    {
+      "column": 38,
+      "path": "src/engine/pipeline_phases/actions.py",
+      "name": "bad-specialization",
+      "concise_description": "`None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 42,
+      "path": "src/engine/pipeline_phases/actions.py",
+      "name": "bad-specialization",
+      "concise_description": "`None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 41,
+      "path": "src/engine/pipeline_phases/actions.py",
+      "name": "bad-specialization",
+      "concise_description": "`None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 41,
+      "path": "src/engine/pipeline_phases/actions.py",
+      "name": "bad-specialization",
+      "concise_description": "`None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 42,
+      "path": "src/engine/pipeline_phases/capacity_enforcement.py",
+      "name": "bad-specialization",
+      "concise_description": "`None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/engine/pipeline_phases/movement.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `tuple[float, ...]` is not assignable to parameter `target_pos` with type `tuple[float, float]` in function `MovementPhase._next_manhattan_step`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/engine/pipeline_phases/occupancy.py",
+      "name": "unsupported-operation",
+      "concise_description": "`None` is not subscriptable",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/engine/pipeline_phases/occupancy.py",
+      "name": "unsupported-operation",
+      "concise_description": "`None` is not subscriptable",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/engine/pipeline_phases/occupancy.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['OCCUPANCY_CONFLICT']` is not assignable to parameter `reason` with type `ReasonCode` in function `src.core.updates.RejectionEvent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/engine/pipeline_phases/paid_information.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['information']` is not assignable to parameter `kind` with type `LeadKind` in function `src.core.strategic.LeadState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/engine/pipeline_phases/trust.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `reason` with type `ReasonCode` in function `src.core.updates.RejectionEvent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 52,
+      "path": "src/engine/quests.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `StateUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 68,
+      "path": "src/engine/quests.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `StateUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/engine/replay_buffer.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Dict`",
+      "severity": "error"
+    },
+    {
+      "column": 38,
+      "path": "src/engine/replay_buffer.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 51,
+      "path": "src/engine/replay_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `LifecycleOutcome`",
+      "severity": "error"
+    },
+    {
+      "column": 77,
+      "path": "src/engine/rpg_depth.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WoundState`",
+      "severity": "error"
+    },
+    {
+      "column": 70,
+      "path": "src/engine/sabotage.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/engine/sabotage.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/engine/scenario_runtime.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `tick_once`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/engine/scenario_runtime.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `state`",
+      "severity": "error"
+    },
+    {
+      "column": 63,
+      "path": "src/engine/shop.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | str` is not assignable to parameter `key` with type `int` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 100,
+      "path": "src/engine/spatial_query.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 106,
+      "path": "src/engine/spatial_query.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 109,
+      "path": "src/engine/spatial_query.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 88,
+      "path": "src/engine/spatial_query.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 93,
+      "path": "src/engine/spatial_query.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 81,
+      "path": "src/engine/spatial_query.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 86,
+      "path": "src/engine/spatial_query.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 57,
+      "path": "src/engine/spatial_query.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/engine/spatial_query.py",
+      "name": "bad-return",
+      "concise_description": "Returned type `dict[tuple[float, float], BuildingState]` is not assignable to declared return type `dict[tuple[int, int], BuildingState]`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/engine/tactical.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `can_perceive`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/engine/tactical.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `resolve_pressures`",
+      "severity": "error"
+    },
+    {
+      "column": 48,
+      "path": "src/engine/tactical.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | None` is not assignable to parameter `key` with type `int` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/engine/tactical.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `x` with type `Buffer | SupportsIndex | SupportsInt | SupportsTrunc | str` in function `int.__new__`",
+      "severity": "error"
+    },
+    {
+      "column": 47,
+      "path": "src/engine/tactical.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `node_or_string` with type `AST | str` in function `ast.literal_eval`",
+      "severity": "error"
+    },
+    {
+      "column": 56,
+      "path": "src/engine/worker_logic.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `List`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerPacket`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerPacket`",
+      "severity": "error"
+    },
+    {
+      "column": 50,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerResult`",
+      "severity": "error"
+    },
+    {
+      "column": 66,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerResult`",
+      "severity": "error"
+    },
+    {
+      "column": 15,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerResult`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerResult`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/engine/worker_manager.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `acquire`",
+      "severity": "error"
+    },
+    {
+      "column": 33,
+      "path": "src/engine/worker_manager.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `release`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerPacket`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerPacket`",
+      "severity": "error"
+    },
+    {
+      "column": 50,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerResult`",
+      "severity": "error"
+    },
+    {
+      "column": 66,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerResult`",
+      "severity": "error"
+    },
+    {
+      "column": 15,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerResult`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerPacket`",
+      "severity": "error"
+    },
+    {
+      "column": 15,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerResult`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/engine/worker_manager.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `WorkerResult`",
+      "severity": "error"
+    },
+    {
+      "column": 86,
+      "path": "src/engine/world_dynamics.py",
+      "name": "bad-assignment",
+      "concise_description": "`str` is not assignable to dict value type `float`",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/engine/world_dynamics.py",
+      "name": "unbound-name",
+      "concise_description": "`BossService` may be uninitialized",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/lab/cli.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `str.join` called with arguments: (object)",
+      "severity": "error"
+    },
+    {
+      "column": 65,
+      "path": "src/lab/cli.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `VariantManifest` has no attribute `mutation_ids`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/lab/mutation.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `None`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/lab/mutation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `MutationEngine.apply_mutations.DynamicWorldRepo | MutationEngine.apply_mutations.MockWorldRepo` is not assignable to parameter `world_repo` with type `WorldRepository | None` in function `src.lab.validator.ScenarioValidator.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/lab/mutation.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `list[AnomalyReferencesRule | ExpectedBehaviorRule | RequiredSignalsRule | WorldExistenceRule] | list[ScenarioValidationRule]` is not assignable to parameter `rules` with type `list[ScenarioValidationRule] | None` in function `src.lab.validator.ScenarioValidator.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/lab/mutation_orchestrator.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of type `str | Unknown | None` has no attribute `completed_run_count`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/lab/mutation_orchestrator.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of type `str | Unknown | None` has no attribute `budgets`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/lab/orchestrator.py",
+      "name": "bad-assignment",
+      "concise_description": "`RuntimeProfile` is not assignable to variable `profile` with type `str`",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/lab/orchestrator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `profile` with type `RuntimeProfile` in function `src.engine.kernel.Kernel.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/lab/orchestrator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `profile` with type `RuntimeProfile` in function `src.engine.kernel.Kernel.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/lab/workflows/compact_simulation_data.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `sum` called with arguments: (list[bool | dict[Unknown, int] | int | str | Unknown])",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/lab/workflows/compact_simulation_data.py",
+      "name": "bad-specialization",
+      "concise_description": "`bool | dict[Unknown, int] | int | str | Unknown` is not assignable to upper bound `SupportsDunderGT[Any] | SupportsDunderLT[Any]` of type variable `SupportsRichComparisonT`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/lab/workflows/compact_simulation_data.py",
+      "name": "bad-specialization",
+      "concise_description": "`bool | dict[Unknown, int] | int | str | Unknown` is not assignable to upper bound `SupportsDunderGT[Any] | SupportsDunderLT[Any]` of type variable `SupportsRichComparisonT`",
+      "severity": "error"
+    },
+    {
+      "column": 38,
+      "path": "src/lab/workflows/compact_simulation_data.py",
+      "name": "bad-assignment",
+      "concise_description": "`list[Unknown]` is not assignable to dict key `rules_triggered` with type `set[Unknown]`",
+      "severity": "error"
+    },
+    {
+      "column": 41,
+      "path": "src/lab/workflows/propose_simulation_enhancements.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, list[str] | str | dict[str, str | Unknown]]` is not assignable to parameter `object` with type `dict[str, list[str] | str | Unknown]` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/lab/workflows/revert_simulation_knowledge.py",
+      "name": "unsupported-operation",
+      "concise_description": "`None` is not subscriptable",
+      "severity": "error"
+    },
+    {
+      "column": 69,
+      "path": "src/observability/alerts/deduplicator.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `current_time` with type `float`",
+      "severity": "error"
+    },
+    {
+      "column": 43,
+      "path": "src/observability/alerts/deduplicator.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `current_time` with type `float`",
+      "severity": "error"
+    },
+    {
+      "column": 92,
+      "path": "src/observability/alerts/router.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `deduplicator` with type `AlertDeduplicator`",
+      "severity": "error"
+    },
+    {
+      "column": 67,
+      "path": "src/observability/alerts/sinks.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `random`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/observability/anomaly/post_run_analyzer.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 49,
+      "path": "src/observability/anomaly/rules.py",
+      "name": "unsupported-operation",
+      "concise_description": "`-` is not supported between `int` and `None`",
+      "severity": "error"
+    },
+    {
+      "column": 49,
+      "path": "src/observability/anomaly/rules_engine.py",
+      "name": "unsupported-operation",
+      "concise_description": "`-` is not supported between `int` and `None`",
+      "severity": "error"
+    },
+    {
+      "column": 40,
+      "path": "src/observability/anomaly/rules_engine.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `int | None` is not assignable to parameter `tick_start` with type `Decimal | bool | bytes | float | int | str` in function `AnomalyRecord.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/observability/anomaly/worker.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `run_id` with type `str` in function `src.observability.alerts.models.AlertEvent.create_critical_anomaly`",
+      "severity": "error"
+    },
+    {
+      "column": 35,
+      "path": "src/observability/behavior/episode_detector.py",
+      "name": "bad-assignment",
+      "concise_description": "`int | str` is not assignable to variable `active_quest_id` with type `str | None`",
+      "severity": "error"
+    },
+    {
+      "column": 74,
+      "path": "src/observability/cognition/decision_trace_writer.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `(item: _DecisionTraceQueueItem) -> None` is not assignable to parameter `file_write_fn` with type `((ObservabilityEventEnvelope) -> None) | None` in function `src.observability.queue.QueueDrainWorker.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/observability/cognition/decision_trace_writer.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `_DecisionTraceQueueItem` is not assignable to parameter `event` with type `ObservabilityEventEnvelope` in function `src.observability.queue.BoundedObservabilityQueue.try_push`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/observability/cognition/decision_trace_writer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `tell`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/observability/cognition/decision_trace_writer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `write`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/observability/cognition/decision_trace_writer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `flush`",
+      "severity": "error"
+    },
+    {
+      "column": 43,
+      "path": "src/observability/cognition/decision_trace_writer.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `ObservabilityEventEnvelope` is not assignable to parameter `item` with type `_DecisionTraceQueueItem` in function `DecisionTraceWriter._write_entry_to_file`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/observability/event_extractor.py",
+      "name": "unsupported-operation",
+      "concise_description": "`>` is not supported between `float` and `None`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/observability/event_extractor.py",
+      "name": "unsupported-operation",
+      "concise_description": "`>` is not supported between `None` and `float`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/observability/event_extractor.py",
+      "name": "unsupported-operation",
+      "concise_description": "`>` is not supported between `None` and `None`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/observability/event_extractor.py",
+      "name": "unsupported-operation",
+      "concise_description": "`<=` is not supported between `None` and `float`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/observability/event_extractor.py",
+      "name": "unsupported-operation",
+      "concise_description": "`<` is not supported between `None` and `float`",
+      "severity": "error"
+    },
+    {
+      "column": 86,
+      "path": "src/observability/event_extractor.py",
+      "name": "unsupported-operation",
+      "concise_description": "`-` is not supported between `float` and `None`",
+      "severity": "error"
+    },
+    {
+      "column": 86,
+      "path": "src/observability/event_extractor.py",
+      "name": "unsupported-operation",
+      "concise_description": "`-` is not supported between `None` and `float`",
+      "severity": "error"
+    },
+    {
+      "column": 86,
+      "path": "src/observability/event_extractor.py",
+      "name": "unsupported-operation",
+      "concise_description": "`-` is not supported between `None` and `None`",
+      "severity": "error"
+    },
+    {
+      "column": 58,
+      "path": "src/observability/event_extractor.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `certainty`",
+      "severity": "error"
+    },
+    {
+      "column": 93,
+      "path": "src/observability/event_extractor.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `certainty`",
+      "severity": "error"
+    },
+    {
+      "column": 49,
+      "path": "src/observability/event_recorder.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `ObservabilityEventEnvelope`",
+      "severity": "error"
+    },
+    {
+      "column": 53,
+      "path": "src/observability/event_recorder.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `ObservabilityEventEnvelope`",
+      "severity": "error"
+    },
+    {
+      "column": 5,
+      "path": "src/observability/events.py",
+      "name": "bad-override-mutable-attribute",
+      "concise_description": "Class member `QuestEvent.quest_id` overrides parent class `SimulationEvent` in an inconsistent manner",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/mining/controller.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `entity_count` in function `src.perf.scenarios.build_resource_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/mining/controller.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `node_count` in function `src.perf.scenarios.build_resource_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/mining/controller.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `entity_count` in function `src.perf.scenarios.build_idle_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/mining/controller.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `entity_count` in function `src.perf.scenarios.build_movement_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/mining/controller.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `entity_count` in function `src.perf.scenarios.build_strategic_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/mining/controller.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `entity_count` in function `src.perf.scenarios.build_mixed_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/mining/controller.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `team_a_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/mining/controller.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `team_b_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 43,
+      "path": "src/observability/mining/dataset.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `max` called with arguments: (dict[Unknown, int], key=Overload[\n  (key: Unknown, default: None = None, /) -> int | None\n  (key: Unknown, default: int, /) -> int\n  [_T](key: Unknown, default: _T, /) -> int | _T\n])",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/observability/mining/dataset.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `max` called with arguments: (dict[Unknown, int], key=Overload[\n  (key: Unknown, default: None = None, /) -> int | None\n  (key: Unknown, default: int, /) -> int\n  [_T](key: Unknown, default: _T, /) -> int | _T\n])",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/observability/mining/dataset.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `max` called with arguments: (dict[Unknown, int], key=Overload[\n  (key: Unknown, default: None = None, /) -> int | None\n  (key: Unknown, default: int, /) -> int\n  [_T](key: Unknown, default: _T, /) -> int | _T\n])",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/observability/mining/evidence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of type `dict[Unknown, Unknown] | int | list[Unknown]` has no attribute `extend`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `int`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "Cannot set item in `list[Unknown]`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+=` is not supported between `dict[Unknown, Unknown]` and `int`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+=` is not supported between `list[Unknown]` and `int`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+=` is not supported between `dict[Unknown, Unknown]` and `int`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+=` is not supported between `list[Unknown]` and `int`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+=` is not supported between `dict[Unknown, Unknown]` and `Literal[1]`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+=` is not supported between `list[Unknown]` and `Literal[1]`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+=` is not supported between `dict[Unknown, Unknown]` and `int`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+=` is not supported between `list[Unknown]` and `int`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+=` is not supported between `dict[Unknown, Unknown]` and `Literal[0]`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/observability/mining/evidence.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+=` is not supported between `list[Unknown]` and `Literal[0]`",
+      "severity": "error"
+    },
+    {
+      "column": 53,
+      "path": "src/observability/mining/priority.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `dict.get` called with arguments: (float | list[Unknown] | str | Unknown, Literal[5])",
+      "severity": "error"
+    },
+    {
+      "column": 73,
+      "path": "src/observability/mining/priority.py",
+      "name": "unsupported-operation",
+      "concise_description": "Unary `-` is not supported on `list[Unknown]`",
+      "severity": "error"
+    },
+    {
+      "column": 73,
+      "path": "src/observability/mining/priority.py",
+      "name": "unsupported-operation",
+      "concise_description": "Unary `-` is not supported on `str`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/observability/readiness/harness.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `EventRecorder` has no attribute `_stream_adapter`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/observability/readiness/harness.py",
+      "name": "bad-assignment",
+      "concise_description": "`list[ProductionReadinessHarness.run_worker_crash_scenario.CrashingRule]` is not assignable to attribute `rules` with type `list[LiveAnomalyRule]`",
+      "severity": "error"
+    },
+    {
+      "column": 19,
+      "path": "src/observability/reporting/metric_recorder.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `max` called with arguments: (dict[str, int], key=Overload[\n  (key: str, default: None = None, /) -> int | None\n  (key: str, default: int, /) -> int\n  [_T](key: str, default: _T, /) -> int | _T\n])",
+      "severity": "error"
+    },
+    {
+      "column": 46,
+      "path": "src/observability/reporting/metric_recorder.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `max` called with arguments: (dict[str, int], key=Overload[\n  (key: str, default: None = None, /) -> int | None\n  (key: str, default: int, /) -> int\n  [_T](key: str, default: _T, /) -> int | _T\n])",
+      "severity": "error"
+    },
+    {
+      "column": 15,
+      "path": "src/observability/reporting/retention.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/observability/reporting/retention.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Optional`",
+      "severity": "error"
+    },
+    {
+      "column": 67,
+      "path": "src/observability/stream/consumer.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `random`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/observability/stream/consumer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `xadd`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/observability/stream/consumer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `xack`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/observability/stream/consumer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `xack`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/observability/stream/consumer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `xack`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/observability/stream/consumer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `xpending_range`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/observability/stream/consumer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `xclaim`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/observability/stream/consumer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `xrange`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/observability/stream/consumer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `xack`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/observability/stream/consumer.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `xreadgroup`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/sweeper.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `entity_count` in function `src.perf.scenarios.build_resource_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/sweeper.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `node_count` in function `src.perf.scenarios.build_resource_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/sweeper.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `entity_count` in function `src.perf.scenarios.build_idle_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/sweeper.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `entity_count` in function `src.perf.scenarios.build_movement_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/sweeper.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `entity_count` in function `src.perf.scenarios.build_strategic_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/sweeper.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `entity_count` in function `src.perf.scenarios.build_mixed_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/sweeper.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `team_a_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/observability/sweeper.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `team_b_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/observability/trace.py",
+      "name": "bad-assignment",
+      "concise_description": "`None` is not assignable to `dict[str, Any]`",
+      "severity": "error"
+    },
+    {
+      "column": 35,
+      "path": "src/observability/understanding/balance/engine.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `max` called with arguments: (dict[Unknown, Unknown], key=Overload[\n  (key: Unknown, default: None = None, /) -> Unknown | None\n  (key: Unknown, default: Unknown, /) -> Unknown\n  [_T](key: Unknown, default: _T, /) -> _T | Unknown\n])",
+      "severity": "error"
+    },
+    {
+      "column": 19,
+      "path": "src/observability/understanding/stories/patterns.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `max` called with arguments: (dict[int, int], key=Overload[\n  (key: int, default: None = None, /) -> int | None\n  (key: int, default: int, /) -> int\n  [_T](key: int, default: _T, /) -> int | _T\n])",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get_client`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `get_client`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `query`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `command`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `command`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `command`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `command`",
+      "severity": "error"
+    },
+    {
+      "column": 29,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `command`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `insert`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `insert`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `insert`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `insert`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `insert`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `query`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `command`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/observability/warehouse/clickhouse.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `insert`",
+      "severity": "error"
+    },
+    {
+      "column": 42,
+      "path": "src/observability/watchdog.py",
+      "name": "bad-assignment",
+      "concise_description": "`float` is not assignable to attribute `last_tick` with type `int`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/perf/benchmark_record.py",
+      "name": "missing-attribute",
+      "concise_description": "No attribute `processor` in module `platform`",
+      "severity": "error"
+    },
+    {
+      "column": 43,
+      "path": "src/perf/benchmark_record.py",
+      "name": "missing-attribute",
+      "concise_description": "No attribute `processor` in module `platform`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/perf/benchmark_record.py",
+      "name": "missing-attribute",
+      "concise_description": "No attribute `python_version` in module `platform`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/perf/benchmark_record.py",
+      "name": "missing-attribute",
+      "concise_description": "No attribute `python_implementation` in module `platform`",
+      "severity": "error"
+    },
+    {
+      "column": 15,
+      "path": "src/perf/benchmark_record.py",
+      "name": "missing-attribute",
+      "concise_description": "No attribute `system` in module `platform`",
+      "severity": "error"
+    },
+    {
+      "column": 35,
+      "path": "src/perf/benchmark_record.py",
+      "name": "missing-attribute",
+      "concise_description": "No attribute `release` in module `platform`",
+      "severity": "error"
+    },
+    {
+      "column": 14,
+      "path": "src/perf/benchmark_record.py",
+      "name": "missing-attribute",
+      "concise_description": "No attribute `machine` in module `platform`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/perf/governance_scenarios.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `tuple[float, float, float, float]` is not assignable to parameter `bounds` with type `tuple[int, int, int, int]` in function `src.core.state.RegionState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/perf/long_run_harness.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `node_count` in function `src.perf.scenarios.build_resource_state`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/perf/long_run_harness.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `team_a_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/perf/long_run_harness.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `team_b_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 33,
+      "path": "src/perf/long_run_harness.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `entity_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/perf/long_run_harness.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `node_count` in function `src.perf.scenarios.build_resource_state`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/perf/long_run_harness.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `team_a_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/perf/long_run_harness.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `team_b_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/perf/long_run_harness.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `entity_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/perf/long_run_harness.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `node_count` in function `src.perf.scenarios.build_resource_state`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/perf/long_run_harness.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `team_a_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/perf/long_run_harness.py",
+      "name": "missing-argument",
+      "concise_description": "Missing argument `team_b_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/perf/long_run_harness.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `entity_count` in function `src.perf.scenarios.build_combat_arena_state`",
+      "severity": "error"
+    },
+    {
+      "column": 48,
+      "path": "src/perf/scenarios.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['location']` is not assignable to parameter `kind` with type `LeadKind` in function `src.core.strategic.LeadState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/perf/scenarios.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `tuple[float, float, float, float]` is not assignable to parameter `bounds` with type `tuple[int, int, int, int]` in function `src.core.state.RegionState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 51,
+      "path": "src/scenarios/modifier_applicator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `x` with type `Buffer | SupportsFloat | SupportsIndex | str` in function `float.__new__`",
+      "severity": "error"
+    },
+    {
+      "column": 50,
+      "path": "src/scenarios/modifier_applicator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `x` with type `Buffer | SupportsFloat | SupportsIndex | str` in function `float.__new__`",
+      "severity": "error"
+    },
+    {
+      "column": 53,
+      "path": "src/scenarios/modifier_applicator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `x` with type `Buffer | SupportsFloat | SupportsIndex | str` in function `float.__new__`",
+      "severity": "error"
+    },
+    {
+      "column": 42,
+      "path": "src/scenarios/modifier_applicator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `x` with type `Buffer | SupportsFloat | SupportsIndex | str` in function `float.__new__`",
+      "severity": "error"
+    },
+    {
+      "column": 41,
+      "path": "src/scenarios/modifier_applicator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `x` with type `Buffer | SupportsFloat | SupportsIndex | str` in function `float.__new__`",
+      "severity": "error"
+    },
+    {
+      "column": 51,
+      "path": "src/simulation_quality/scorers/agency.py",
+      "name": "no-matching-overload",
+      "concise_description": "No matching overload found for function `dict.get` called with arguments: (int | None, Literal[0])",
+      "severity": "error"
+    },
+    {
+      "column": 54,
+      "path": "src/simulation_quality/worker.py",
+      "name": "bad-assignment",
+      "concise_description": "`dict[str, Unknown]` is not assignable to dict key `pillar_event_counts` with type `str`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/strategy/leads.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `kind` with type `LeadKind` in function `src.core.strategic.LeadState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 68,
+      "path": "src/systems/lifecycle_systems/lifecycle.py",
+      "name": "bad-specialization",
+      "concise_description": "`None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/social_systems/appraisal.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `SocialComponent`",
+      "severity": "error"
+    },
+    {
+      "column": 10,
+      "path": "src/systems/social_systems/appraisal.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `SocialUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/systems/social_systems/appraisal.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `SocialUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/systems/social_systems/appraisal.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `StrategicUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/systems/social_systems/appraisal.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['betrayal']` is not assignable to parameter `kind` with type `TurningPointKind` in function `src.core.strategic.TurningPointState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/social_systems/appraisal.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['avenge']` is not assignable to parameter `kind` with type `DirectiveKind` in function `src.core.strategic.DirectiveState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 10,
+      "path": "src/systems/social_systems/appraisal.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `StrategicUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 10,
+      "path": "src/systems/social_systems/appraisal.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `SocialUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/systems/social_systems/contracts.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `ClanUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/systems/social_systems/guilds.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['danger']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/systems/strategic_systems/belief.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['location']` is not assignable to parameter `kind` with type `LeadKind` in function `src.core.strategic.LeadState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/systems/strategic_systems/belief.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['location']` is not assignable to parameter `kind` with type `LeadKind` in function `src.core.strategic.LeadState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['access']` is not assignable to parameter `kind` with type `BlockerKind` in function `src.core.strategic.BlockerState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['access']` is not assignable to parameter `kind` with type `BlockerKind` in function `src.core.strategic.BlockerState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['inventory']` is not assignable to parameter `kind` with type `BlockerKind` in function `src.core.strategic.BlockerState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['material']` is not assignable to parameter `kind` with type `BlockerKind` in function `src.core.strategic.BlockerState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['inventory']` is not assignable to parameter `kind` with type `BlockerKind` in function `src.core.strategic.BlockerState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['material']` is not assignable to parameter `kind` with type `BlockerKind` in function `src.core.strategic.BlockerState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['material']` is not assignable to parameter `kind` with type `BlockerKind` in function `src.core.strategic.BlockerState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['material']` is not assignable to parameter `kind` with type `BlockerKind` in function `src.core.strategic.BlockerState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['material']` is not assignable to parameter `kind` with type `BlockerKind` in function `src.core.strategic.BlockerState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `cadence` with type `SystemCadence`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `merge`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `merge`",
+      "severity": "error"
+    },
+    {
+      "column": 66,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `current_project_id_set`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `projects_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 145,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `object | str | Unknown` is not assignable to parameter `key` with type `str` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `blockers_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-specialization",
+      "concise_description": "`Unknown | None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `blockers_remove`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `blockers_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 66,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `current_project_id_set`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `projects_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 144,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `object | str | Unknown` is not assignable to parameter `key` with type `str` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 67,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `current_objective_id_set`",
+      "severity": "error"
+    },
+    {
+      "column": 105,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `blockers_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `blockers_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `blockers_remove`",
+      "severity": "error"
+    },
+    {
+      "column": 33,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `projects_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 38,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `blockers_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `blockers_remove`",
+      "severity": "error"
+    },
+    {
+      "column": 37,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `projects_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 75,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `current_objective_id_set`",
+      "severity": "error"
+    },
+    {
+      "column": 35,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-specialization",
+      "concise_description": "`Unknown | None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `object | str | Unknown | None` is not assignable to parameter `current_project_id_set` with type `str | None` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 69,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `current_objective_id_set`",
+      "severity": "error"
+    },
+    {
+      "column": 36,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `concerns_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 40,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `concerns_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 35,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-specialization",
+      "concise_description": "`Unknown | None` is not assignable to upper bound `DataclassInstance` of type variable `_DataclassT`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `blockers_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `merge`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `merge`",
+      "severity": "error"
+    },
+    {
+      "column": 69,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `current_project_id_set`",
+      "severity": "error"
+    },
+    {
+      "column": 100,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `tuple[float, ...]` is not assignable to parameter `target_set` with type `tuple[float, float] | None` in function `src.core.updates.NavigationUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `projects_add_or_update`",
+      "severity": "error"
+    },
+    {
+      "column": 147,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `object | str | Unknown` is not assignable to parameter `key` with type `str` in function `dict.get`",
+      "severity": "error"
+    },
+    {
+      "column": 67,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `current_objective_id_set`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `cadence` with type `SystemCadence`",
+      "severity": "error"
+    },
+    {
+      "column": 61,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `item_id` with type `str` in function `has_item`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['great_victory', 'victory']` is not assignable to parameter `kind` with type `TurningPointKind` in function `src.core.strategic.TurningPointState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['loss']` is not assignable to parameter `kind` with type `TurningPointKind` in function `src.core.strategic.TurningPointState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 10,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `SocialUpdate`",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 47,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 39,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 48,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `kind` with type `ObjectiveKind` in function `src.core.strategic.ObjectiveState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 34,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['detour']` is not assignable to parameter `kind` with type `ProjectKind` in function `src.core.strategic.ProjectState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 47,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 40,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `family` with type `RouteFamily` in function `src.domains.adventure.mapper.RouteToProjectMapper.map_to_states`",
+      "severity": "error"
+    },
+    {
+      "column": 62,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `kind` with type `ObjectiveKind` in function `src.core.strategic.ObjectiveState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `kind` with type `ProjectKind` in function `src.core.strategic.ProjectState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `kind` with type `ObjectiveKind` in function `src.core.strategic.ObjectiveState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `kind` with type `ProjectKind` in function `src.core.strategic.ProjectState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `kind` with type `ObjectiveKind` in function `src.core.strategic.ObjectiveState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Any | None` is not assignable to parameter `kind` with type `ProjectKind` in function `src.core.strategic.ProjectState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal[GoalKind.COMBAT_ENGAGE, GoalKind.COMBAT_RETREAT, GoalKind.FATIGUE, GoalKind.GUILD, GoalKind.HARVESTING, GoalKind.HUNGER, GoalKind.RECOVER, GoalKind.RESOLVE_BLOCKER, GoalKind.SOCIAL, GoalKind.TOWN_RETURN] | str` is not assignable to parameter `kind` with type `ProjectKind` in function `src.core.strategic.ProjectState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 58,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 35,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `blockers_add_or_update` with type `list[BlockerState]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `blockers_remove` with type `list[str]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `directives_add_or_update` with type `list[DirectiveState]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `directives_remove` with type `list[str]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `projects_add_or_update` with type `list[ProjectState]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `projects_remove` with type `list[str]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `current_project_id_set` with type `str | None` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `current_objective_id_set` with type `str | None` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `concerns_add_or_update` with type `list[ConcernState]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `concerns_remove` with type `list[str]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `candidate_zones_add_or_update` with type `list[CandidateZone]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `candidate_zones_remove` with type `list[str]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `hypotheses_add_or_update` with type `list[HypothesisState]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `hypotheses_remove` with type `list[str]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `source_trust_updates` with type `list[SourceTrustEntry]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `contracts_add_or_update` with type `list[ContractState]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `contracts_remove` with type `list[str]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `marriages_add_or_update` with type `list[MarriageState]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `marriages_remove` with type `list[str]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `turning_points_add` with type `list[TurningPointState]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `overload_source_set` with type `str | None` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `overload_tick_set` with type `int | None` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `last_routing_family_set` with type `str | None` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `last_routing_tick_set` with type `int | None` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `beliefs_remove` with type `list[str]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `committed_intentions_remove` with type `list[str]` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Unpacked keyword argument `list[CommittedIntention]` is not assignable to parameter `home_region_id_set` with type `str | None` in function `src.core.updates.StrategicUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 35,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 50,
+      "path": "src/systems/strategic_systems/intelligence.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[ProjectKind, float]` is not assignable to parameter `boredom_delta` with type `dict[str, float]` in function `src.core.updates.StrategicUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 90,
+      "path": "src/systems/strategic_systems/redirection.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `cadence` with type `SystemCadence`",
+      "severity": "error"
+    },
+    {
+      "column": 73,
+      "path": "src/systems/strategic_systems/redirection.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `tuple[float, ...]` is not assignable to parameter `target_set` with type `tuple[float, float] | None` in function `src.core.updates.NavigationUpdate.__replace__`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/systems/world_systems/events.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['danger']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/systems/world_systems/events.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['exploration']` is not assignable to parameter `kind` with type `ProjectKind` in function `src.core.strategic.ProjectState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/world_systems/events.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['investigate']` is not assignable to parameter `kind` with type `ObjectiveKind` in function `src.core.strategic.ObjectiveState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/world_systems/events.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['opportunity']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/systems/world_systems/events.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['danger']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/world_systems/events.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `kind` with type `DirectiveKind` in function `src.core.strategic.DirectiveState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 36,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `task`",
+      "severity": "error"
+    },
+    {
+      "column": 40,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `navigation`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `task`",
+      "severity": "error"
+    },
+    {
+      "column": 16,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `strategic`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `strategic`",
+      "severity": "error"
+    },
+    {
+      "column": 57,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `strategic`",
+      "severity": "error"
+    },
+    {
+      "column": 36,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `id`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `social`",
+      "severity": "error"
+    },
+    {
+      "column": 56,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `id`",
+      "severity": "error"
+    },
+    {
+      "column": 75,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `social`",
+      "severity": "error"
+    },
+    {
+      "column": 107,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `id`",
+      "severity": "error"
+    },
+    {
+      "column": 38,
+      "path": "src/systems/world_systems/groups.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['GROUP_OBJECTIVE']` is not assignable to parameter `kind` with type `DirectiveKind` in function `src.core.strategic.DirectiveState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/systems/world_systems/intake.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['danger']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 27,
+      "path": "src/systems/world_systems/intake.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['trauma']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 31,
+      "path": "src/systems/world_systems/intake.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['opportunity']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal[QuestKind.EXPLORE]` is not assignable to parameter `kind` with type `ProjectKind` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `title` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `target_position` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `reward_gold` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `reward_xp` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 43,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "missing-attribute",
+      "concise_description": "Class `Faction` has no class attribute `MONSTER`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal[QuestKind.BOUNTY]` is not assignable to parameter `kind` with type `ProjectKind` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `title` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `target_id` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `reward_gold` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 21,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `reward_xp` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "missing-attribute",
+      "concise_description": "Class `QuestKind` has no class attribute `HARVEST`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `title` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `target_item_id` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `target_quantity` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `reward_gold` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/systems/world_systems/quest_generator.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `reward_xp` in function `src.core.models.quests.QuestState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/world_systems/quests.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `kind` with type `ObjectiveKind` in function `src.core.strategic.ObjectiveState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 18,
+      "path": "src/systems/world_systems/quests.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['quest']` is not assignable to parameter `kind` with type `ProjectKind` in function `src.core.strategic.ProjectState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/world_systems/routine.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['hunger']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/world_systems/routine.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['fatigue']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/world_systems/routine.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['fatigue']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/world_systems/routine.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['danger']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 22,
+      "path": "src/systems/world_systems/routine.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['inventory_full']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 32,
+      "path": "src/systems/world_systems/routine.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['opportunity']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 70,
+      "path": "src/systems/world_systems/routine.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `ProjectState`",
+      "severity": "error"
+    },
+    {
+      "column": 110,
+      "path": "src/systems/world_systems/routine.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `ProjectState`",
+      "severity": "error"
+    },
+    {
+      "column": 23,
+      "path": "src/systems/world_systems/routine.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['opportunity']` is not assignable to parameter `kind` with type `ConcernKind` in function `src.core.strategic.ConcernState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 69,
+      "path": "src/testing/route_family_classifier.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `known_leads` with type `set[str]`",
+      "severity": "error"
+    },
+    {
+      "column": 89,
+      "path": "src/testing/scenario_runner.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `inventory`",
+      "severity": "error"
+    },
+    {
+      "column": 12,
+      "path": "src/world/boss.py",
+      "name": "bad-return",
+      "concise_description": "Returned type `(state: AuthoritativeState, generator: EntityGenerator) -> StateUpdate` is not assignable to declared return type `staticmethod[..., StateUpdate]`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/world/boss.py",
+      "name": "invalid-annotation",
+      "concise_description": "`check_for_boss_spawn` method self type `AuthoritativeState` is not a superclass of class `BossService`",
+      "severity": "error"
+    },
+    {
+      "column": 9,
+      "path": "src/world/boss.py",
+      "name": "invalid-annotation",
+      "concise_description": "`check_for_lair_spawn` method self type `AuthoritativeState` is not a superclass of class `BossService`",
+      "severity": "error"
+    },
+    {
+      "column": 13,
+      "path": "src/world/boss.py",
+      "name": "unexpected-keyword",
+      "concise_description": "Unexpected keyword argument `trauma_score_delta` in function `src.core.updates.WorldUpdate.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 70,
+      "path": "src/world/ecology.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `entity_id` with type `int` in function `src.platform.rng.DeterministicRNG.get_float`",
+      "severity": "error"
+    },
+    {
+      "column": 76,
+      "path": "src/world/ecology.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `entity_id` with type `int` in function `src.platform.rng.DeterministicRNG.get_float`",
+      "severity": "error"
+    },
+    {
+      "column": 76,
+      "path": "src/world/ecology.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str` is not assignable to parameter `entity_id` with type `int` in function `src.platform.rng.DeterministicRNG.get_float`",
+      "severity": "error"
+    },
+    {
+      "column": 26,
+      "path": "src/world/providers/information.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `Literal['location']` is not assignable to parameter `kind` with type `LeadKind` in function `src.core.strategic.LeadState.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/world/regional_sovereignty.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `id`",
+      "severity": "error"
+    },
+    {
+      "column": 44,
+      "path": "src/world/regional_sovereignty.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `float` is not assignable to parameter `gold_delta` with type `int` in function `src.core.update_models.resources.ResourceTransferIntent.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 20,
+      "path": "src/world/regional_sovereignty.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `BuildingState` has no attribute `is_functional`",
+      "severity": "error"
+    },
+    {
+      "column": 24,
+      "path": "src/world/regional_sovereignty.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `NoneType` has no attribute `id`",
+      "severity": "error"
+    },
+    {
+      "column": 66,
+      "path": "src/world/regional_sovereignty.py",
+      "name": "missing-attribute",
+      "concise_description": "Object of class `BuildingState` has no attribute `pos`",
+      "severity": "error"
+    },
+    {
+      "column": 45,
+      "path": "src/world/transformation.py",
+      "name": "unsupported-operation",
+      "concise_description": "`<` is not supported between `float` and `list[str]`",
+      "severity": "error"
+    },
+    {
+      "column": 50,
+      "path": "src/world/transformation.py",
+      "name": "unsupported-operation",
+      "concise_description": "`>=` is not supported between `float` and `list[str]`",
+      "severity": "error"
+    },
+    {
+      "column": 47,
+      "path": "src/world/transformation.py",
+      "name": "unsupported-operation",
+      "concise_description": "`<` is not supported between `float` and `list[str]`",
+      "severity": "error"
+    },
+    {
+      "column": 52,
+      "path": "src/world/transformation.py",
+      "name": "unsupported-operation",
+      "concise_description": "`>=` is not supported between `float` and `list[str]`",
+      "severity": "error"
+    },
+    {
+      "column": 53,
+      "path": "src/world/transformation.py",
+      "name": "unsupported-operation",
+      "concise_description": "`<=` is not supported between `float` and `list[str]`",
+      "severity": "error"
+    },
+    {
+      "column": 28,
+      "path": "src/world/transformation.py",
+      "name": "not-iterable",
+      "concise_description": "Type `float` is not iterable",
+      "severity": "error"
+    },
+    {
+      "column": 30,
+      "path": "src/worldassembly/entity_spawner.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `tuple[float, float] | None` is not assignable to parameter `position` with type `tuple[float, float]` in function `src.entities.archetype_factory.EntitySpawnContext.__init__`",
+      "severity": "error"
+    },
+    {
+      "column": 46,
+      "path": "src/worldassembly/entity_spawner.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `str | None` is not assignable to parameter `archetype_id` with type `str` in function `src.content.resolver.EntityArchetypeResolver.resolve`",
+      "severity": "error"
+    },
+    {
+      "column": 40,
+      "path": "src/worldassembly/resolver.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, str]` is not assignable to parameter `object` with type `dict[str, str | None]` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 33,
+      "path": "src/worldassembly/resolver.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `dict[str, str]` is not assignable to parameter `object` with type `dict[str, str | None]` in function `list.append`",
+      "severity": "error"
+    },
+    {
+      "column": 25,
+      "path": "src/worldassembly/resolver.py",
+      "name": "bad-argument-type",
+      "concise_description": "Argument `NormalizedWorldComposition` is not assignable to parameter `composition` with type `WorldCompositionSpec` in function `WorldAssemblyValidator.validate`",
+      "severity": "error"
+    },
+    {
+      "column": 38,
+      "path": "src/worldassembly/resolver.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `param_vals` with type `dict[str, Any]`",
+      "severity": "error"
+    },
+    {
+      "column": 59,
+      "path": "src/worldbuilding/validator.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `rules` with type `list[WorldValidationRule]`",
+      "severity": "error"
+    },
+    {
+      "column": 58,
+      "path": "src/worldbuilding/validator.py",
+      "name": "bad-function-definition",
+      "concise_description": "Default `None` is not assignable to parameter `raw_data` with type `dict[Unknown, Unknown]`",
+      "severity": "error"
+    },
+    {
+      "column": 17,
+      "path": "src/worldgeneration/generator.py",
+      "name": "unsupported-operation",
+      "concise_description": "`+` is not supported between `float` and `None`",
+      "severity": "error"
+    },
+    {
+      "column": 53,
+      "path": "src/worldmodules/utils.py",
+      "name": "unknown-name",
+      "concise_description": "Could not find name `Any`",
+      "severity": "error"
+    }
+  ]
+}
