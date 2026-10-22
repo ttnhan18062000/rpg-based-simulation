@@ -13,6 +13,15 @@ request in its terminal (approval logged on issue #715, comment 6338162467). Not
 decision. Each step that would change one is marked **needs ADR** and goes to lead-planner. Code goes to rpg-planner
 or perf-planner.
 
+**Revised 2026-10-23** (`TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE`, scope approved on #715, comment 6347241081).
+What changed, and why:
+- Mode 2 now carries perf-planner's YES and its five conditions (#593, comment 6343379030), in place of the three facts to verify (§4, §8 Q2).
+- H3 and H4 were re-measured after #645 and both closed (#593, comment 6343696936; PR #723) (§2, §3, §6, §8 Q3).
+- §5's leak column is replaced by the audited verdicts of [port_leak_audit.md](port_leak_audit.md); the event-sink line is corrected;
+  Mode 1 is stated as fixed budgets per PERF-D1 A2; the v1 baseline is noted as blind to six fields.
+- The conformance paragraph points to [conformance_suite_design.md](conformance_suite_design.md).
+- §6 marks the audit and the design done, and records the T2 runner facts and that PERF-M6-T05 has no ticket.
+
 **Companion:** `faster_feature_testing_draft_tickets.md` (same folder) holds the draft tickets for step 1.
 
 ## 1. Why
@@ -37,9 +46,10 @@ itself call for giving up determinism:
 |---|---|---|
 | Collection (the only parallel phase) | 6 to 26 % of a tick, so the Amdahl ceiling is 1.06 to 1.35x | idea 08 table; tick_cost_growth §2 |
 | 4-thread pool vs 0 workers | Collection 1.6 to 2.1x **slower** (GIL plus dispatch, `[inferred]`) | idea 08, finding 2 |
-| serial waste, named | H1 hostility per pair (29 to 62 % synthetic), H2 cooperation candidates (43 to 61 % of `strategic_100`), H3 EventRecorder eviction (42.5 % late `frontier_extended`, measured before the 2026-10-19 partial fix in #645), H4 event validation (up to 14 %) | tick_cost_growth §3 |
-| projection after H1 to H3 | `strategic_100` 615 to about 270 ms; late corpus tick 130 to about 75 ms (shares, not measured fixes) | tick_cost_growth §3 |
+| serial waste, named | H1 hostility per pair (29 to 62 % synthetic), H2 cooperation candidates (43 to 61 % of `strategic_100`), H3 EventRecorder eviction and H4 event validation (both **closed** by the re-measure in the next row) | tick_cost_growth §3 |
+| projection after H1 to H3 | `strategic_100` 615 to about 270 ms; late corpus tick 130 to about 75 ms (shares, not measured fixes). **The late-corpus figure assumed H3 at 42.5 %; H3 is now 0.69 % (next row), so that projection no longer holds** | tick_cost_growth §3 |
 | replay digest when allowed | 9.2 % (`strategic_100`) to 27.1 % (`frontier_extended`) of a tick | tick_cost_growth §4 |
+| H3 and H4 re-measured after #645 (2026-10-22) | both CLOSE. H3 `EventRecorder.record` 0.69 % of the tick (was 42.5 %). H4 `event_shapers.py` 1.18 % and event-path pydantic 0.65 % (`strategic_100`); the 7.15 % total pydantic share belongs to the H1/H2 callers. Shapers at 3.74 % on `frontier_extended` are rpg's call. PROVISIONAL: shares, one host | #593 comment 6343696936; PR #723 |
 | engine working set | about 101 to 130 MB per run; the 1.7 GB figure is the harness's `gc.disable()` | tick_cost_growth §5 |
 | Resolution (`refine`) | one chained fold over a single `StateUpdate`: 43 `run_phase` calls (12 flag-gated) plus 6 direct calls, each reading what earlier phases wrote | `src/engine/pipeline.py:135-438`; `docs/performance/phase_inventory.md` |
 
@@ -49,7 +59,7 @@ raises the parallel ceiling later**, because Collection becomes a larger share o
 
 ## 3. Order of work
 
-1. **Fix the named waste (no mode change).** H2, H3 and H4 (draft tickets), next to H1 (rpg Lane B,
+1. **Fix the named waste (no mode change).** H2 (draft ticket; H3 and H4 are closed, §2), next to H1 (rpg Lane B,
    `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP`) and H5 (rpg, via #593). Every fix has to be
    behaviour-neutral: identical canonical hashes under `audit_mode` (`performance_contract.md` §4.1, parity
    invariant). **After v1:** nothing touching `src/**` lands before the v1 record PR merges.
@@ -78,6 +88,8 @@ Execution Mode and RuntimeMode on a claim). **Results are compared only within o
   Replay is on, so the per-tick SHA-256 `TICK_END.hash` is emitted (`docs/engine/kernel.md`, "State Hashing in
   Phase 7"; `tools/test_architecture/rpg_gate_run.py:60-66`).
 - **Guarantees:** DET-PORT-0 (PERF-D2); PERF-D1 A2's "fixed budgets" contract for outcome runs.
+- **Contract:** fixed budgets (`audit_mode`, or pinned NORMAL), per PERF-D1 A2. `CANONICAL` is only for runs that measure cost or
+  governance, and a run is never compared with a run on another contract; see [conformance_suite_design.md](conformance_suite_design.md) §2.
 - **Gives up:** nothing. Every other mode is checked against this one.
 - **Used for:** the rpg gate, paired runs, certification, determinism and regression tests.
 
@@ -101,13 +113,23 @@ Execution Mode and RuntimeMode on a claim). **Results are compared only within o
   `start_hash` and `final_hash` directly with `CanonicalStateHasher.get_hash`. The neutral check
   (`paired.py:174-180`) and the self-check (`stats.py:125`) compare those hashes plus fates and counters. Mode 2
   could therefore serve neutral steps too.
-- **Three facts to verify first (draft T3):**
-  - that `no_replay` leaves the canonical hashes identical, i.e. no game logic reads `replay_allowed`;
-  - that the behaviour counters, which `arm_child.py:35-36` tallies from `simulation_events.jsonl`, are still
-    written;
-  - that no consumer on the paired or gate path reads the replay stream.
+- **Ruled YES by perf-planner (2026-10-22, #593 comment 6343379030):** "Paired arms may run with `no_replay`, under five
+  conditions." It is consistent with PERF-D1 A2, because A2 decides the budget and signal contract and `no_replay` changes
+  neither, nor any clock; it turns off one non-authoritative output. The five conditions, quoted:
+  1. "**Arm path only.** `arm_child.py` and the gate both call `rpg_gate_run.build_kernel` [...] Adding the flag there would also
+     change the gate, which is testing-planner's call and an open owner question. T3 must pass `no_replay` only from the arm,
+     e.g. an explicit parameter that defaults off."
+  2. "**T3's proof stands as drafted:** identical start and final hashes, fates and counters with and without the flag (3 worlds
+     × s42 × 1000 ticks). `simulation_events.jsonl` counters are still written. The manifest's `audit_mode` and
+     `signals_zeroed` are non-null in both arms. This is a code reading, so the run has to confirm it."
+  3. "**Recorded and refused when mixed.** The arm document records `replay`. Paired refuses to compare a replay-on arm with a
+     replay-off arm unless the hashes prove them equal."
+  4. "**No perf claim.** The wall-time before and after is a same-host, PROVISIONAL tooling number. It is not a baseline and not
+     a tripwire reference, and nobody quotes it as an engine speed-up."
+  5. "**Proof scope.** Behaviour and neutral proofs keep comparing `CanonicalStateHasher` state hashes, which are unchanged.
+     Anything that later needs a per-tick digest trail (replay verification, divergence bisection) runs with replay on."
 - **Not used for:** certification.
-- **Owner of the ruling:** perf-planner (PERF-D1 contracts).
+- **Owner of the ruling:** perf-planner (PERF-D1 contracts). Whether the gate adopts Mode 2 stays an owner question (§8 Q2).
 
 ### Mode 3: Parallel-deterministic
 - **Runs as:** more cores, applied in stages:
@@ -141,7 +163,7 @@ Execution Mode and RuntimeMode on a claim). **Results are compared only within o
     - inheritance;
     - spawns;
   - one shared entity-ID allocator;
-  - ordered `world_events_add` and recorder order feeding the digest.
+  - ordered `world_events_add` and recorder order (whether any digest depends on event order is unconfirmed: no event digest was found, §5).
   - RNG is counter-keyed (`src/platform/rng.py:85-90`), so draw order is safe.
 - **Status:** 3b is parked as C-10 / M3, reopened only for evaluation under **PERF-M6-T05**
   (`docs/architecture/performance_optimization_decisions.md`). This proposal feeds that evaluation. It does not
@@ -179,20 +201,25 @@ Execution Mode and RuntimeMode on a claim). **Results are compared only within o
 A mode should swap an implementation behind a named port, not patch the core. Proposed ports, each with its
 contract and its Mode 1 implementation:
 
-| port | Mode 1 implementation | known leak to close first (lead-planner-u24's review, 2026-10-22) |
+| port | Mode 1 implementation | audited verdict ([port_leak_audit.md](port_leak_audit.md), at `b281d0c3d`) |
 |---|---|---|
-| clock | fixed budgets, pinned NORMAL | `kernel.py` `perf_counter_ns` and `time.sleep` pacing; `worker_manager.py:44/234`; `run_identity.py:21` |
-| random source | `DeterministicRNG(seed)`, counter-keyed | `scenario_checkpoint.py` restores with `base_seed=0` (finding sent to rpg); salted `hash()` at `military_conflict.py:339` (sent to rpg, after v1) |
-| executor | `LocalSequentialExecutor` | the profile drives the executor choice implicitly |
-| commit path | `refine` then `ApplyPath.apply_generation` | none for Modes 1 to 3a; 3b and 5 change it |
-| event sink | `EventRecorder`, ordered | ordering feeds the digest; H3 eviction cost |
-| state store and hash | `AuthoritativeState`, `CanonicalStateHasher` | hash omits factions, clans, quest_registry, item_instances, terrain, recent_world_events (audit pending with rpg) |
-| process scope | one process per run | process-global singletons (behavior_consumers, `ObservabilityConfig._override_mode`, the observability queue, stream adapter, decision_trace_writer, scenario_registry, content thread-local) |
+| clock | fixed budgets, pinned NORMAL | Pacing and timers reach telemetry only. The leak is the default `LIVE` signal contract choosing the runtime mode ([§2](port_leak_audit.md#2-clock)) |
+| random source | `DeterministicRNG(seed)`, counter-keyed | Confirmed: a checkpoint restore draws stateless randoms from seed 0, and salted `hash()` at `military_conflict.py:339` reaches hashed `groups`; one more salted `hash()` site, reach unverified ([§3](port_leak_audit.md#3-random-source)) |
+| executor | `LocalSequentialExecutor` | Confirmed: the profile picks the executor implicitly; M3+ ([§6](port_leak_audit.md#6-executor-commit-path-event-sink)) |
+| commit path | `refine` then `ApplyPath.apply_generation` | Confirmed: no leak for Modes 1 to 3a; 3b and 5 change it |
+| event sink | `EventRecorder`, ordered | "Ordering feeds the digest" is **not confirmed**: no event digest exists and the final hash is state-only. Eviction is a cost, and H3 is closed (§2) |
+| state store and hash | `AuthoritativeState`, `CanonicalStateHasher` | Confirmed and wider: the hash omits six durable fields, `information_providers` among them; `terrain` is not a gap ([§5](port_leak_audit.md#5-canonicalstatehasher-coverage-main-item)) |
+| process scope | one process per run | Confirmed, all M3+, none reaches the hash; the content thread-local is not a leak ([§4](port_leak_audit.md#4-process-global-singletons)) |
+
+**The v1 baseline is blind to those six fields.** The final hash, and the paired proofs that rely on it, cannot see a divergence in `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans` or `information_providers` (lead-planner-u24, #593 comment 6346664156; rpg-planner ruled `recent_world_events` is state, so all six count, #593 comment 6347182683). The fix is perf's PERF-D5 scheme bump, after v1; v1 itself stays as it is.
 
 **Conformance suite.** A fixed set of worlds and seeds runs in every mode:
 - Modes 2 and 3 must reproduce Mode 1's final canonical hash.
 - Mode 4 asserts invariants only, as `test_cert_long_run_stability.py` does today.
 - Mode 5 asserts invariants and outcome distributions only.
+
+The worlds, seeds, cases, blind-to lists, the side digest, the Mode 3 matrix and the lanes are in
+[conformance_suite_design.md](conformance_suite_design.md). Lane placement stays pending testing-planner.
 
 **Ownership:** testing-planner (lane placement), with perf-planner for the parity matrix (PERF-D2).
 
@@ -200,14 +227,20 @@ contract and its Mode 1 implementation:
 
 | step | needs | owner |
 |---|---|---|
-| 1 H2, H3, H4 fixes | draft tickets, after v1; hash-identical | rpg-planner (src), perf-planner reviews the measurement |
+| 1 H2 fix | draft ticket, after v1; hash-identical. H3 and H4 are closed (§2) | rpg-planner (src), perf-planner reviews the measurement |
 | 2 T1 run and rerun accounting | draft ticket | testing-planner (with rpg for `tools/rpg_measure`) |
 | 2 T2 paired runs off this host | draft ticket | testing-planner; lead for host policy |
-| 2 T3 / Mode 2 `no_replay` for paired arms | perf ruling, then a draft ticket | perf-planner rules; rpg or testing implements |
+| 2 T3 / Mode 2 `no_replay` for paired arms | perf ruling **done: YES** (§4); the draft ticket remains | perf-planner ruled; rpg or testing implements |
 | Mode 3a | stack-survey evaluation, parity matrix | perf-planner (PERF-D2, M6) |
-| Mode 3b | PERF-M6-T05 proposal, then an ADR | perf-planner, then lead-planner |
+| Mode 3b | PERF-M6-T05 proposal, then an ADR. PERF-M6-T05 has **no ticket**: it is a line in `docs/plans/design_enhancement/performance_milestones_epic.md` (M6) | perf-planner, then lead-planner |
 | Mode 5 | a world-size requirement, then an ADR amendment | owner, then lead-planner |
-| ports, conformance suite | a design pass after step 1 | architecture (this folder) proposes; rpg and testing build |
+| ports, conformance suite | **audit done** ([port_leak_audit.md](port_leak_audit.md)); **design done** ([conformance_suite_design.md](conformance_suite_design.md)); building the suite waits on step 1 | architecture proposed; rpg and testing build |
+
+**T2 runner facts** (platform-planner, relayed by lead-planner, 2026-10-22):
+- there is no self-hosted runner, and the repo is public, so adding one means hardware, hardening and an owner decision;
+- GitHub-hosted runners have 4 vCPU and 16 GB, a 6 h job limit and free minutes;
+- a runner's identity is a description, not a fixed machine: fine for byte-identity checks, unfit for timing comparisons;
+- run both arms of a pair in the same job, on one VM.
 
 ## 7. Explicitly not proposed
 
@@ -220,6 +253,5 @@ contract and its Mode 1 implementation:
 
 1. **Target scale for goal (b):** agent count, ticks per second, live or offline. It decides whether Mode 5 belongs
    in the plan at all.
-2. **Mode 2:** may paired arms (and the gate) use it once perf rules on it and T3 passes?
-3. **H2, H3, H4:** the recommendation is that H2 gets a ticket after v1, and that H3 and H4 re-measure first,
-   because both were profiled before #645. Agree, or post on #593 that all three wait?
+2. **Mode 2:** may paired arms (and the gate) use it once perf rules on it and T3 passes? **Answered in part:** perf ruled YES under five conditions (§4, #593 comment 6343379030). Whether the **gate** adopts it is still the owner's and testing-planner's call.
+3. **H2, H3, H4:** **Answered.** H3 and H4 were re-measured and both CLOSE (§2). H2 still gets a ticket after v1.

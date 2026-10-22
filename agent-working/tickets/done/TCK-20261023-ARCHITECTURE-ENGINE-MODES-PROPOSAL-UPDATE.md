@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
-phase: open
+phase: done
 date: 2026-10-23
 tags: [architecture, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, determinism]
 Update the engine execution modes proposal with the 2026-10-22 rulings and measurements, and make it agree with the port-leak audit and the conformance-suite design
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -116,5 +116,16 @@ title and body afterwards to cover three tickets. Close by hand with `--path-rea
 architecture-planner before any push.
 
 ## Test Summary
+Docs only; no tests apply. `tools/validate_frontmatter.py` on the proposal: no violations. Grep for digest, H3, H4 and CANONICAL
+in the proposal found two stale statements (the H1-H3 projection, the 3b recorder-order digest blocker); both fixed.
+
 ## Files Changed
+- docs/plans/architecture/engine_execution_modes_proposal.md
+- docs/REGISTRY.yaml (regenerated); ticket move and monitoring shards
+
 ## Completion Summary
+Scope items 1 to 8 done. Mode 2 carries perf's YES and five conditions, quoted from #593 comment 6343379030; H3 and H4 are
+closed (6343696936, PR #723); T2 runner facts and the PERF-M6-T05 note added; section 5 now holds audited verdicts linked to
+the audit, the corrected event-sink line, Mode 1 on fixed budgets and the v1 baseline blind to six fields (rpg ruling #593
+comment 6347182683); the conformance paragraph points to the design doc; section 6 marks the audit and design done; Q2 and Q3
+answered; a Revised 2026-10-23 line added. The README row did not need a change.
