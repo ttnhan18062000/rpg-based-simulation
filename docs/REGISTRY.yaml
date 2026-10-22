@@ -7834,6 +7834,22 @@
   - governance
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-FOUR-SEATS.md
+  ticket_id: TCK-20261022-ARCHITECTURE-FOUR-SEATS
+  title: 'The architecture domain gets a planner and an implementer on each host:
+    `architecture-planner` and `architecture-implementer` (ubuntu), `architecture-planner-u24`
+    (exists) and `architecture-implementer-u24`; owns stay proposals-only'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - .claude/agents/session-*.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-PLANNER-U24-SEAT.md
   ticket_id: TCK-20261022-ARCHITECTURE-PLANNER-U24-SEAT
   title: Register an advisory architecture domain with one seat, `architecture-planner-u24`

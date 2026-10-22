@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from tools.sessions import boundary as bd
 from tools.sessions.card import CARD_BUDGET_TOKENS, compose_card, estimate_tokens
 from tools.sessions.roster import load_authority, load_roster
 from tools.sessions.route import route
@@ -30,8 +31,42 @@ def test_adrs_still_route_to_lead():
     assert route("docs/architecture/system_overview.md", ROSTER).domains == ("lead",)
 
 
-def test_the_seat_is_a_lone_main_checkout_planner_dispatched_by_the_user():
-    roles = [r for r in ROSTER.roles if r.domain == "architecture"]
-    assert [r.role for r in roles] == ["architecture-planner-u24"]
-    assert set(roles[0].accepts_dispatch_from) == {"user"}
-    assert roles[0].function == "planner"
+def test_two_planners_and_two_implementers_taking_dispatch_from_the_user_and_their_own_hosts_planner():
+    roles = {r.role: r for r in ROSTER.roles if r.domain == "architecture"}
+    assert set(roles) == {"architecture-planner", "architecture-planner-u24",
+                          "architecture-implementer", "architecture-implementer-u24"}
+    assert {n for n, r in roles.items() if r.function == "planner"} == {"architecture-planner", "architecture-planner-u24"}
+    for planner in ("architecture-planner", "architecture-planner-u24"):
+        assert set(roles[planner].accepts_dispatch_from) == {"user"}
+    assert set(roles["architecture-implementer"].accepts_dispatch_from) == {"user", "architecture-planner"}
+    assert set(roles["architecture-implementer-u24"].accepts_dispatch_from) == {"user", "architecture-planner-u24"}
+
+
+def test_the_implementers_have_distinct_worktree_writer_slots():
+    slots = {w.name: w.writer for w in ROSTER.worktrees if w.name.startswith("architecture")}
+    assert slots == {"architecture": "architecture-implementer", "architecture-u24": "architecture-implementer-u24"}
+
+
+def test_all_four_cards_exist_and_fit_the_budget():
+    for name in ("architecture-planner", "architecture-planner-u24", "architecture-implementer", "architecture-implementer-u24"):
+        assert (REPO / ".claude" / "agents" / f"session-{name}.md").is_file()
+        card = compose_card(name, ROSTER, AUTHORITY, REPO)
+        assert "Domain: architecture" in card and estimate_tokens(card) <= CARD_BUDGET_TOKENS
+
+
+def test_owns_stay_proposals_only():
+    domain = next(d for d in ROSTER.domains if d.name == "architecture")
+    assert domain.owns == ("docs/plans/architecture/**",)
+
+
+def _edit(path):
+    return {"tool_input": {"file_path": str(REPO / path)}, "cwd": str(REPO)}
+
+
+def test_an_architecture_implementer_is_flagged_for_src_but_not_for_its_own_docs():
+    for name in ("architecture-implementer", "architecture-implementer-u24"):
+        role = ROSTER.role(name)
+        assert "**" not in role.may_write
+        found = bd.check_edit(_edit("src/x.py"), role, ROSTER)
+        assert found is not None and found[0] == "edit_outside_owns"
+        assert bd.check_edit(_edit("docs/plans/architecture/x.md"), role, ROSTER) is None
