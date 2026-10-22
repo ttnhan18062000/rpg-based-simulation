@@ -32,7 +32,7 @@ The v1 dry run measured behavioral_5k gold_avg 0.0 against a baseline of 584.16.
 ## Scope
 - `tests/helpers/world_build.py`: one `compile_world_with_context(world_id, seed)` helper; the 5k test builds its world through it.
 - A guard in the test: on a world that declares starting gold (`WORLDS_WITH_STARTING_GOLD`), the compiled tick-0 state must hold coin, or the test fails loudly.
-- `tests/unit/test_world_build_helper_matches_the_gate.py`: the helper's tick-0 state hash equals the gate kernel's (`rpg_gate_run.build_kernel`), the bodies hold coin, and a context-less compile holds none.
+- `tests/unit/worldassembly/test_world_build_helper_matches_the_gate.py`: the helper's tick-0 state hash equals the gate kernel's (`rpg_gate_run.build_kernel`), the bodies hold coin, and a context-less compile holds none.
 - Stability proof: two 5000-tick runs of the fixed harness agree.
 
 ## Out of Scope
@@ -62,10 +62,10 @@ The v1 dry run measured behavioral_5k gold_avg 0.0 against a baseline of 584.16.
 The gate's own build (`tools/test_architecture/rpg_gate_run.build_kernel`) is untouched; the drift guard is the unit test comparing the two tick-0 hashes.
 
 ## Test Summary
-Fixed harness, urban_political seed 42, 5000 ticks, audit_mode + pinned NORMAL governor, PYTHONHASHSEED=0, two independent runs (run in parallel): both alive_avg 18.34, gold_avg 909.4, quest_active_count 7.08 (identical; 336 s each, 144 MB). Before the fix the same function gave 24.64 / 0.0 / 6.12 at 5000t. tests/unit/test_world_build_helper_matches_the_gate.py: 2 passed (the helper's tick-0 state hash equals the gate kernel's; the bodies hold coin; a context-less compile holds none). baseline_5k.json is NOT rewritten here: the rebaseline happens on the v1 commit.
+Fixed harness, urban_political seed 42, 5000 ticks, audit_mode + pinned NORMAL governor, PYTHONHASHSEED=0, two independent runs (run in parallel): both alive_avg 18.34, gold_avg 909.4, quest_active_count 7.08 (identical; 336 s each, 144 MB). Before the fix the same function gave 24.64 / 0.0 / 6.12 at 5000t. tests/unit/worldassembly/test_world_build_helper_matches_the_gate.py: 2 passed (the helper's tick-0 state hash equals the gate kernel's; the bodies hold coin; a context-less compile holds none). baseline_5k.json is NOT rewritten here: the rebaseline happens on the v1 commit.
 
 ## Files Changed
-tests/regression/test_behavioral_5k.py, tests/helpers/world_build.py, tests/unit/test_world_build_helper_matches_the_gate.py
+tests/regression/test_behavioral_5k.py, tests/helpers/world_build.py, tests/unit/worldassembly/test_world_build_helper_matches_the_gate.py
 
 ## Completion Summary
 Fixed on rpg-baseline-v1 (shared world helper, tick-0 gold guard, helper-vs-gate unit test) and the baseline rebaselined at v1 e8df8b96d in the record PR: alive_avg 13.30 -> 18.34, gold_avg 584.16 -> 904.2, quest_active_count 0.0 -> 6.16, two runs identical, test_behavioral_5k passes. Other callers that compile without the content context stay with rpg-planner's triage (out of scope).
