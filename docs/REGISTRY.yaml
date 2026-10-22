@@ -7865,6 +7865,25 @@
   - ai
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-PORT-LEAK-AUDIT.md
+  ticket_id: TCK-20261022-ARCHITECTURE-PORT-LEAK-AUDIT
+  title: 'Port-leak audit: an evidence table, with file:line, for every "known leak"
+    in engine_execution_modes_proposal.md §5, each classed as breaking Mode 1 today
+    or only Mode 3 and later'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - src/engine/kernel.py, src/engine/apply.py, src/core/state.py, the CanonicalStateHasher
+    module, src/platform/rng.py,
+  - worker_manager.py, run_identity.py, scenario_checkpoint.py, military_conflict.py,
+    src/observability/
+  artifact_files: []
+  tags:
+  - architecture
+  - determinism
+  - audit
+- type: ticket
   path: agent-working/tickets/done/TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK.md
   ticket_id: TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK
   title: No MEAT_DECAYED record for a carcass that a same-tick partial take re-adds

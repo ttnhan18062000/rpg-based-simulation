@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261022-ARCHITECTURE-PORT-LEAK-AUDIT
-phase: open
+phase: done
 date: 2026-10-22
 tags: [architecture, determinism, audit]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, determinism, audit]
 Port-leak audit: an evidence table, with file:line, for every "known leak" in engine_execution_modes_proposal.md §5, each classed as breaking Mode 1 today or only Mode 3 and later
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -104,5 +104,17 @@ Context scan first (search_docs, then graphify query), then targeted reads. Hand
 `--path-reason investigation_only`. Send the commit SHA to architecture-planner for review before any push.
 
 ## Test Summary
+Read-only audit; no tests apply. `tools/validate_frontmatter.py` on the new doc: no violations. `make docs-registry` regenerated.
+
 ## Files Changed
+- docs/plans/architecture/port_leak_audit.md (new)
+- docs/plans/architecture/README.md (Contents row)
+- docs/REGISTRY.yaml (regenerated)
+- agent-working/ ticket move and monitoring shards
+
 ## Completion Summary
+Port-leak audit written at main b281d0c3d. Key results: the hasher omits six mutable durable fields (item_instances,
+recent_world_events, quest_registry, factions, clans, plus information_providers which the proposal missed; terrain is
+constant, no gap); the clock leak is the default LIVE signal contract, not the pacing sleeps; checkpoint restore with
+base_seed=0 corrupts stateless draws; the event-digest claim in section 5 was not confirmed. Five drafted findings (F1-F5)
+for architecture-planner to route. Items UNVERIFIED are listed in section 8 of the doc.
