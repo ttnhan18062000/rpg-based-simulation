@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING
-phase: open
+phase: done
 date: 2026-10-22
 tags: [ai, governance, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance, process-improvement]
 Before acting on a user approval, a session records it on one approvals-log issue and tells its own host's lead; both leads acknowledge there, and an acknowledgment is not an approval
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -111,9 +111,16 @@ None.
   `for:<role>` issues, so label the log issue `for:lead-planner` and `for:lead-planner-u24` and both leads see it at start.
 
 ## Implementation Notes
+- Log issue: https://github.com/ttnhan18062000/rpg-based-simulation/issues/715 (opened by agent-working-planner-u24 at the user's request; my own create call was denied by the classifier). Labels for:lead-planner and for:lead-planner-u24.
+- Cards carry the short clause "log user approvals on the approvals issue first" folded into the existing never-approve sentence; the full rule is in the guide section only. The cards do not name the issue number or the guide; a session finds it by title (`gh issue list --search "Approvals log in:title"`).
+- Budget: owner decision "raise to 460, 2026-10-22" (via agent-working-planner-u24); worst card 437 on main (rpg-implementer), 460 now (agent-working-implementer, agent-working-planner-u24). Hard-coded 440 in test_session_platform_domain.py and host_suffixed_twins.md updated.
+- Route diff over 18,140 tracked paths: only docs/guides/cross_session_messages.md changes owner (unowned to agent-working).
 
 ## Test Summary
+Scoped `pytest tests/tools -k "session or route or roster or card"`: 822 passed; the two budget-constant failures were fixed, test_session_platform_domain.py and test_session_cards.py pass (73).
 
 ## Files Changed
+docs/guides/cross_session_messages.md, docs/guidelines/session_roles/functions/{planner,implementer,designer}.md, docs/guidelines/session_roles/host_suffixed_twins.md, registries/session_roles.yaml, tools/sessions/card.py, tests/tools/test_session_platform_domain.py, .claude/agents/session-*.md (generated).
 
 ## Completion Summary
+User approvals are logged on #715 before acting; the three function cards carry the clause; the guide is owned by agent-working; card budget 460.

@@ -7773,6 +7773,23 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING.md
+  ticket_id: TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING
+  title: Before acting on a user approval, a session records it on one approvals-log
+    issue and tells its own host's lead; both leads acknowledge there, and an acknowledgment
+    is not an approval
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - .claude/agents/session-*.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE.md
   ticket_id: TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE
   title: A hand closure made more than 30 minutes after the session's last tool call

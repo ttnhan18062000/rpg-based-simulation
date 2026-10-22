@@ -68,7 +68,7 @@ Plain prose stays legal; the envelope is a convention and is linted nowhere.
 ## Acting on a user approval
 
 Owner decision 2026-10-22. Before acting on a user approval, a session records it on the standing GitHub issue
-"Approvals log (both leads acknowledge; an ack is not an approval)" (issue number: #TBD) and tells its own host's lead. The
+"Approvals log (both leads acknowledge; an ack is not an approval)" (issue #715) and tells its own host's lead. The
 other host's lead cannot be messaged (`ListAgents` is same-host only), which is why the record is an issue.
 
 - **Covers:** merge, push, scope change, freeze exception, STOP acceptance.
