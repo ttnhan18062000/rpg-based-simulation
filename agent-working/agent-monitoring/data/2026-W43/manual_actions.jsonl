@@ -6,3 +6,4 @@
 {"ts":"2026-10-19T04:30:38.853529Z","category":"handover_recovery","source":"sample","session_id":"ab7e365f-0d9e-4db2-a343-ef710b5b50a1","session_role":"rpg-designer","batch":null,"count":1}
 {"ts":"2026-10-20T14:16:11.184606Z","category":"handover_recovery","source":"sample","session_id":"4f7732d7-85c2-47fa-9c18-79beeaa8d9d4","session_role":"agent-working-implementer","batch":null,"count":1}
 {"ts":"2026-10-20T14:16:04.051989Z","category":"handover_recovery","source":"sample","session_id":"8014aae0-212a-4ff6-9fd5-bc38ef1d0c71","session_role":"agent-working-planner","batch":null,"count":1}
+{"ts":"2026-10-22T14:30:55.459311Z","category":"handover_recovery","source":"sample","session_id":"cb5e5772-6f3f-466b-bc74-e58d62265108","session_role":"platform-planner","batch":null,"count":1}
