@@ -258,7 +258,7 @@ class ResourceTransactionSystem:
         ResourceTransactionSystem._apply_source_debits(refined_entity_updates, source_debits)
         existing_world_events = list(update.world_events_add)
         existing_world_events.extend(world_events)
-        existing_world_events = ResourceTransactionSystem._without_decay_of_looted_bodies(existing_world_events, new_corpses_remove[len(update.corpses_remove):])
+        existing_world_events = ResourceTransactionSystem._without_decay_of_looted_bodies(existing_world_events, new_corpses_remove[len(update.corpses_remove):], readded=set(new_corpses_remove) & {c.id for c in new_corpses_update})
         return replace(update,
             entity_updates=refined_entity_updates,
             node_updates=new_node_updates,
@@ -277,14 +277,17 @@ class ResourceTransactionSystem:
         )
 
     @staticmethod
-    def _without_decay_of_looted_bodies(events: list, removed_by_transfer: List[int]) -> list:
+    def _without_decay_of_looted_bodies(events: list, removed_by_transfer: List[int], readded: Optional[set] = None) -> list:
         """MEAT_DECAYED is a record of meat that left the world by decay (decision 44). The world-dynamics step writes it before the transfers resolve,
         so a body that decays on the tick an accepted whole-body loot (a CORPSE transfer) takes it carries a record for meat the looter received. The
-        record is written from the applied outcome: that body yields the loot and no decay record (the run ledger and the V2/H7 check then agree)."""
-        looted = {str(corpse_id) for corpse_id in removed_by_transfer}
-        if not looted:
+        record is written from the applied outcome: that body yields the loot and no decay record (the run ledger and the V2/H7 check then agree).
+        The same holds for a body the decay step removes and a transfer of the same resolution puts back (`readded`: a meal eaten at the carcass leaves a
+        smaller body in `corpses_add_or_update`, and the apply path keeps it): it did not leave this tick, so it gets no record now and is recorded
+        when it actually leaves, with the meat it still holds (TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK)."""
+        gone_or_kept = {str(corpse_id) for corpse_id in removed_by_transfer} | {str(corpse_id) for corpse_id in (readded or ())}
+        if not gone_or_kept:
             return events
-        return [e for e in events if not (e.category == WorldEventCategory.MEAT_DECAYED and e.subject in looted)]
+        return [e for e in events if not (e.category == WorldEventCategory.MEAT_DECAYED and e.subject in gone_or_kept)]
 
     @staticmethod
     def _note_depletion(state: AuthoritativeState, result: Any, node_updates: Dict[int, Any], depleted: set, events: list) -> None:

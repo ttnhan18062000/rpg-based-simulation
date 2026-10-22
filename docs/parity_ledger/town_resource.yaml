@@ -2504,7 +2504,9 @@
   v2_evidence: '`src/engine/carcass.py` (`body_meat`), `src/engine/apply_plan.py` (corpse creation), `src/core/conservation.py` (`_corpse_food_result`),
     `src/engine/domain/core_actions.py` (`corpse_meal`, `eat_at_corpse_update`), `src/engine/appraisal.py` (`can_eat_item`, `can_use_inn_meal`),
     `src/ai/goals/opening_steps.py` (`_scavenge_step`, `_hunt_step`), `src/engine/tactical.py` (`_hunger_corpse`), `data/content/living/body_models.yaml`,
-    `data/content/world/items.yaml`; grazing (memo row 59): `src/worldassembly/cover.py`, `src/engine/economy.py` (`_record_depletion`), `src/engine/world_dynamics.py` (`_node_cooldown_updates`), `data/content/world/resources.yaml` (`cover_patch_*`) and `biomes.yaml`; `docs/mechanics/03_economic_laws.md` sections 3.1 and 3.2'
+    `data/content/world/items.yaml`; grazing (memo row 59): `src/worldassembly/cover.py`, `src/engine/economy.py` (`_record_depletion`), `src/engine/world_dynamics.py` (`_node_cooldown_updates`), `data/content/world/resources.yaml` (`cover_patch_*`) and `biomes.yaml`; `docs/mechanics/03_economic_laws.md` sections 3.1 and 3.2; the MEAT_DECAYED record (the sink for meat that leaves with a decaying body) is written from the applied
+    outcome: `src/engine/economy.py` (`_without_decay_of_looted_bodies`: no record for a body an accepted whole-body loot takes, nor for a body a same-tick meal at the carcass
+    re-adds), with `tests/unit/engine/test_meat_decay_record_and_whole_loot.py` and `tests/unit/engine/test_no_meat_decay_record_for_a_readded_carcass.py`'
   proof_type: parity
   test_path: tests/mechanic_scenarios/test_hunting_kill_to_meat.py
   divergence_note: 'Intentional divergence 2.107 (Intentional Gameplay Change).'
