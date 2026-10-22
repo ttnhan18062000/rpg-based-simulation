@@ -128,83 +128,13 @@ it hashes state only. Mutation path: every durable field is rebuilt in `ApplyPat
 **true for all six.** For five of them it is a real gap. `terrain` is constant after assembly, so it is not. One field the
 claim missed, `information_providers`, is a sixth gap.
 
-**Is the gap partly closed elsewhere?** `StateFingerprinter.get_fingerprint` (`src/replay/fingerprint.py:33`) is a second
-digest used for replay. Its docstring lists entities, resources, regions, scars, groups and macro state; it does not name
-factions, clans or quests. UNVERIFIED (needs a read of lines 80-200): whether `faction=` on the entity line
-(`fingerprint.py:~60`) is the only faction signal. Separately, `observability/event_extractor.py:1519,1544,1675` reads
-`factions` to emit events, so a faction divergence may show up in the event stream, but no event digest exists (§7).
-
-**Why it matters for the proposal.** Modes 2 and 3 are accepted as correct if they reproduce Mode 1's final hash. A fast
-path that diverges only in `factions`, `quest_registry` or `recent_world_events` would pass that check. Closing the gap
-changes the digest value for every world (the `PROOF_DIGEST_SCHEME` constant in `checkpoint.py` would need a version bump
-and every pinned baseline would be re-recorded), which is a `perf-planner` scheme decision and a hard dependency of the
-conformance suite. **Until the scheme is bumped, any hash-equality proof is blind to these fields.** The T3 `no_replay` proof is
-unaffected: it touches only non-authoritative output.
-
-## 6. Executor, commit path, event sink
-
-- **executor (confirmed).** `kernel.py:193-198`: an explicit `executor` argument wins, else `max_worker_count > 0` picks
-  `ConcurrentExecutionAdapter`, else `LocalSequentialExecutor` (`executor.py:112`). The profile drives the choice, as §5 says.
-  The `Protocol` is `IWorkExecutor` (`executor.py:63`). M3+.
-- **commit path (confirmed).** `kernel.py:735,782` call `ApplyPath.apply_generation` after `AuthoritativeApplyPipeline.refine`
-  (`pipeline.py:41`), in `_phase_resolution` order (`final_results.sort(key=ConcurrencyLaw.commit_key)`, `kernel.py:606`).
-  No leak found for Modes 1 to 3a.
-- **event sink (not confirmed as stated).** §5 says "ordering feeds the digest". A grep for `event_digest|events_digest|digest_events`
-  under `src/` found nothing, and the final hash (`kernel.py:1196-1197`) is state-only. The `EventRecorder` buffer is bounded
-  and evicts (`event_recorder.py:72,223-233`, `buffer_evicted_count`), so the H3 eviction cost is real, but that is a cost,
-  not a correctness leak. If a digest over events exists elsewhere (tests, certification) this audit did not find it:
-  UNVERIFIED. Class: M2 for cost. The proposal's wording should change if the digest is confirmed absent; that edit is item B.
-
-## 7. Findings to route (drafts; architecture-planner sends them)
-
-**F1 to rpg-planner and perf-planner. Hash omits six mutable durable fields (M1-now).**
-> `CanonicalStateHasher.to_canonical_data` (`src/engine/checkpoint.py:94-168`) does not hash `item_instances`
-> (`state.py:1351`), `recent_world_events` (`:1459`), `quest_registry` (`:1460`), `factions` (`:1464`), `clans` (`:1466`) or
-> `information_providers` (`:1462`). All six are rebuilt every tick in `ApplyPath.apply_generation` (`apply.py:529,543-547`),
-> so a divergence in any of them is invisible to the final hash and to Mode 2/3 conformance. `terrain` is omitted too but is a
-> passthrough (`apply.py:512`), no gap. Question for rpg-planner: is `recent_world_events` (a windowed list) meant to be
-> part of canonical state, or is it a view? Question for perf-planner: adding fields changes every digest, so
-> perf owns the scheme bump (PERF-D5, `flat-sha256-v1` to vN). It needs an owner-approved PERF-D5 amendment and comes after
-> RECORD-BASELINE-V1, then the baselines are re-recorded. rpg's ruling on `recent_world_events` decides whether the field count is
-> five or six. Until the bump, hash-equality proofs are blind to these fields (the T3 `no_replay` proof is not affected). Evidence: `docs/plans/architecture/port_leak_audit.md` §5.
-
-**F2 to perf-planner. Default `LIVE` signal contract lets wall-clock choose the runtime mode (M1-now).**
-> `config/profiles.py:57` defaults `signal_contract` to `LIVE`; `signal_source.py:190-194` returns `_ZEROED` for
-> `audit_mode` (signals zeroed), `_CANONICAL` for `signal_contract` CANONICAL (the reference work model) and `_LIVE` otherwise;
-> only `LIVE` uses measured `tick_compute_ms`; `governor.py:79-105` turns `cost_ms >= budget_ms` into `DEGRADED`, and
-> the policy changes scheduling (`kernel.py:555-566`). The same seed on a slower host can schedule different work. This is
-> PERF-D1 input 1, already known; the ask is that the proposal's Mode 1 state fixed budgets (`audit_mode`, or pinned NORMAL) as a precondition, per PERF-D1 A2,
-> and that the conformance suite pin it. `CANONICAL` is for runs that measure cost or governance and must not stand in for it:
-> T08 (#591) measured `frontier_extended` in SURVIVAL on 902 of 1000 ticks and `frontier_marches` in CONSTRAINED on 876 of 1000, so
-> the two contracts give different outcomes. Never compare runs across contracts. The A2 default flip is rpg's
-> `TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-*`, queued after v1.
-
-**F3 to rpg-planner. Checkpoint restore draws stateless randoms from seed 0 (M1-now, restore path).**
-> `scenario_checkpoint.py:85` builds `DeterministicRNG(base_seed=0)`. `rng.set_state` (`platform/rng.py:57`) restores only
-> the per-domain streams; `get_int`/`get_float` (`:84-110`) seed from `_base_seed`, so every stateless draw after a restore
-> differs from the unbroken run unless the seed is 0. The comment at `:83-84` is wrong for them. Fix: build the RNG with
-> `state.seed`. Path note: `scenario_runtime.py:420` seeds from the initial state and `:423` is a fresh seed-0 state, both consistent;
-> a checkpointed scenario takes `scenario_checkpoint.py:85`, not those. Needs a run to size: restore at tick N, run K more, compare the final hash with an unbroken run. (§5 says a
-> finding on this was already sent; this adds the mechanism.)
-
-**F4 to rpg-planner. Salted `hash()` at `military_conflict.py:339` and `perception/filter.py:88,97` (M1-now, cross-process).**
-> `GroupRecord.id` comes from `hash((contested_region_id, ...))` over a `str`, so it depends on `PYTHONHASHSEED`; `groups`
-> is hashed, so the final hash differs between processes whenever a faction attack fires. `perception/filter.py` does the
-> same for string signal ids; whether that reaches state is unverified. Fix: a stable digest (e.g. `zlib.crc32` over the
-> canonical string) or an allocator-issued id. (`:339` is already with rpg per §5.)
-
-**F5 to rpg-planner (perf-planner copied). `pressure_signals` is dormant; id counters are low risk (M3+, dormant).**
-> `state.pressure_signals` (`state.py:1399`) is unhashed but nothing in `src/` writes it: `kernel.py:528` is only the
-> `record_tick` argument, and the only producer of `StateUpdate.pressure_signals_set` (`apply.py:345`) was removed by
-> TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING. The one reader is `pipeline.py:86-91`, where `ENABLE_*` keys gate phases; only
-> `src/testing/scenario_runner.py:100` and tests populate it. Not a live leak. Recommend rpg either delete the `ENABLE_*` back door
-> (perf's preference) or hash the field. The id counters (`:1536-1538`) are not hashed directly but surface in the hashed entity
-> and node ids at the next allocation: low risk, no fix.
+**Is the gap partly closed elsewhere?** No. Settled: the replay fingerprint (`StateFingerprinter.get_fingerprint`) does not cover
+the six fields either; see `conformance_suite_design.md` §4.1a. `observability/event_extractor.py:1519,1544,1675` reads
+`factions` to emit events, so a faction divergence may show up in the event stream, but no event digest exists (§6).
 
 ## 8. Not settled by reading
 
 - Whether any shipped flow restores a checkpoint and compares hashes (F3).
 - Whether `perception/filter.py` ids reach authoritative state (F4).
 - Set-iteration-order sweep (not done).
-- Whether `fingerprint.py` covers `factions`/`clans`/`quest_registry` (§5).
 - Whether an events digest exists outside `src/` (§6).
