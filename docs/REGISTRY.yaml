@@ -7790,6 +7790,21 @@
   - governance
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-PLANNER-U24-SEAT.md
+  ticket_id: TCK-20261022-ARCHITECTURE-PLANNER-U24-SEAT
+  title: Register an advisory architecture domain with one seat, `architecture-planner-u24`
+    (u24desktop, planner, no implementer), which owns only `docs/plans/architecture/**`
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - .claude/agents/session-*.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE.md
   ticket_id: TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE
   title: A hand closure made more than 30 minutes after the session's last tool call
