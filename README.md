@@ -133,14 +133,17 @@ See [docs/ai/](docs/ai/) for the full agent and workflow reference.
 
 ## Infrastructure (Optional)
 
-Docker Compose manages Grafana, Loki, Redis, and RabbitMQ for production telemetry.
+Docker Compose (`compose.yaml` at the root; Dockerfiles and ops configs in `docker/`) runs two profiles. The only broker is
+Redis Streams; there is no Kafka or RabbitMQ (`docs/architecture/devops_baseline_adr.md`).
 
 ```bash
-docker compose up -d     # start telemetry stack (compose.yaml at the root; Dockerfiles and ops configs are in docker/)
-# Grafana: http://localhost:3000  (admin/admin)
+docker compose up -d                                  # backend, redis, ai_worker, frontend
+docker compose --profile observability up -d          # adds Prometheus, Grafana, Loki, Promtail, Tempo, ntfy and the exporters
+# Grafana: http://localhost:3000 (user admin; the password is the gitignored secret file docker/secrets/grafana_admin_password)
 ```
 
-If Kafka/Redis throws `InconsistentClusterIdException`: `docker compose down -v && docker compose up -d --build`
+The observability profile needs its secret files first (Grafana password, ntfy topic and token): the steps are in the header of
+`compose.yaml`. Alerts, drills and first checks are in [`docs/runbooks/`](docs/runbooks/README.md).
 
 ---
 

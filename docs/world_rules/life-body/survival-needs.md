@@ -847,6 +847,28 @@ others, not a reflex.
     the amendment after v1 with the gate's starvation check recorded as a known red (declined by
     the owner, 2026-10-20: it would narrow decision 54).
 
+- **Two readings enforced before v1 (decided by rpg-designer under owner delegation,
+  2026-10-20; row 84 of the memo; both before baseline v1, the user's call).** The v1 gate run on
+  7b1528861 had one starvation death left, `crowded_frontier` seed 45, and it hid two defects
+  in turn.
+  - **The dead are not threats.** Raider 27 kept fleeing from three townsfolk who were already
+    dead, so it never reached food. Threat perception, appraisal and saliency now read only the
+    living. Grief, mourning and vengeance still start from the dead, as before.
+  - **An escalated need is never refused for capacity.** Blacksmith 13 then starved with hunger
+    its top goal, because three suspended projects filled its project capacity and the winning
+    hunger goal was dropped unseen. By this Rule, escalation produces the goal: a hunger or sleep
+    goal that wins at or past its escalation onset is admitted even when capacity is full.
+    Nothing else is dropped to make room; the project trims (the bandwidth trim and the
+    capacity-enforcement phase) leave one live project per need alone and trim stale duplicates
+    as before, so a subject holds at most its cap plus two. Below the onset, capacity applies as
+    before.
+  - **Neither is a new rule:** both make the code do what Bible 04 §1 and this Rule already say.
+  - **Alternatives not taken:** suspended projects stop counting toward capacity (reverses
+    divergence 2.77); suspended projects expire or resume (new behaviour, after v1); a project
+    is evicted to make room (needs a rule for which); the hunger re-choice of a way whose route
+    is threatened (parked after v1: its first case was the dead); recording the gate's
+    starvation check as a known red at v1 (declined).
+
 - **Amendment, providing for a coming need (decided by the owner directly, 2026-10-09; row 55 of
   the memo):**
 

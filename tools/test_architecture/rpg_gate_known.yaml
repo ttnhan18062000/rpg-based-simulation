@@ -16,3 +16,10 @@ known:
     expires_on: "2026-12-31"
     state: fail
     note: "The free meal: a subject that cannot pay eats at the inn. The inn charge (building_services.py:71-74, TOWN_SERVICE gold_delta -5, gold_cost 0) is accepted at 0 gold (conservation.py:256) and the -5 is clamped to 0 (inventory.py:156); V1 counts a hunger drop as backed only when an accepted transfer moved something (items, or the gold applied after the clamp), so it now shows. Before D74 it showed as merchants (group undeclared) via core_actions.py eat_update alone (-40, no transfer)."
+  - match: "V3"
+    ticket: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
+    owner: rpg-planner
+    added_on: "2026-10-22"
+    expires_on: "2026-11-05"
+    state: fail
+    note: "v1 known reds, owner cutoff 2026-10-21; exception and breadth accepted by the owner on issue #715 (comment 6337993346). Owns EXACTLY three V3 cases from v1 gate run 39710919027: urban_political/44 merchant 28 t3140 (N14, TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT); crowded_frontier/46 raider 38 t3778 and frontier_living_world/44 worker 2 t3736 (N15, this ticket). The matcher cannot name a world or seed, so this entry also owns any other V3 fail: ANY OTHER V3 FAIL IS A REGRESSION. Check every gate report's V3 examples by hand until expiry. Replace with scoped entries via TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED before 2026-11-05. Disclosure: v1_disclosure.md M5."

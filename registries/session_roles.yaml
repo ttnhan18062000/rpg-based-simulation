@@ -22,6 +22,12 @@ domains:
       - docs/brainstorm/**
       - registries/mechanisms.yaml
       - tests/**
+      - docs/observability/prometheus_metrics.md
+      - docs/observability/hard_law_monitor.md
+      - docs/observability/decision_trace_contract.md
+      - docs/observability/read_model_service_contract.md
+      - docs/observability/how_to_run_simulation.md
+      - docs/guides/feature_flags.md
     owns_not: []
     routes:
       "agent-working/**": agent-working-designer
@@ -41,6 +47,7 @@ domains:
       - docs/agent-monitoring/**
       - docs/plans/agent_infrastructure/**
       - docs/guidelines/session_roles/**
+      - docs/guides/cross_session_messages.md   # the guide behind the role cards
       - agent-working/agent-orchestration/**
       - agent-working/agent-monitoring/retro/**
       - registries/session_*.yaml   # exactly session_roles.yaml and session_authority.yaml today; one glob keeps the card within its token budget
@@ -56,6 +63,8 @@ domains:
       - tests/tools/**
       - tests/docs/**
       - tools/search/**            # the search server image (Dockerfile etc.); search_*.py above
+      - docs/observability/retrieval_retention_redaction_policy.md
+      - docs/observability/agent_ops_dashboard_contract.md   # contract for the agent-monitoring data the dashboard reads; the code under src/api/agent_ops_dashboard stays rpg (src/** route)
     owns_not:
       - registries/mechanisms.yaml   # content is rpg-domain; only the advisory tooling around it stays here
     routes:
@@ -74,6 +83,7 @@ domains:
       "src/**": rpg-planner                   # ask before touching RPG logic
       "agent-working/**": agent-working-designer   # process problems
       "tools/test_architecture/**": testing-planner
+      "tools/release/**": testing-planner
       "tools/**": agent-working-designer
       "tests/architecture/**": testing-planner
   testing:
@@ -86,6 +96,7 @@ domains:
       - .github/workflows/slow-regression*.yml   # includes slow-regression-watchdog.yml
       - .github/workflows/rpg-gate-report.yml
       - tools/ci_junit_*.py                      # ci_junit_merge.py, ci_junit_summary.py (read by test.yml)
+      - tools/release/**                         # release_gate.py, generate_release_proof.py (owner 2026-10-21)
     owns_not: []
     routes:
       "src/**": rpg-planner                   # ask before touching RPG logic
@@ -137,11 +148,13 @@ domains:
       - .mcp.json
       - docs/architecture/**                 # asset's ADR and perf's PERF-D file are split below
       - agent-working/lead/**
+      - README.md
     owns_not: []
     routes:
       "src/**": rpg-planner
       "frontend/**": rpg-planner
       "visual_assets/**": asset-planner
+      "tools/release/**": testing-planner
       "tools/**": agent-working-designer
       "agent-working/**": agent-working-designer
   platform:   # deployment and runtime; spec in docs/architecture/devops_plan_amendment_proposal.md (PR #537), owner 2026-10-13
@@ -156,11 +169,23 @@ domains:
       - .github/dependabot.yml
       - tools/loadtest/**
       - docs/runbooks/**
+      - docs/observability/loki_label_policy.md
     owns_not: []
     routes:
       "src/**": rpg-planner                   # the engine stays one process
       "docs/architecture/**": lead-planner    # ADR changes go to lead for review
       ".github/workflows/test.yml": testing-planner
+      "agent-working/**": agent-working-designer
+      "tools/release/**": testing-planner
+      "tools/**": agent-working-designer
+  architecture:   # advisory; owner 2026-10-22 (#715). Proposals and reviews only; ADRs stay lead's
+    owns:
+      - docs/plans/architecture/**
+    owns_not: []
+    routes:
+      "src/**": rpg-planner
+      "docs/architecture/**": lead-planner    # ADRs go to lead for review
+      "docs/performance/**": perf-planner
       "agent-working/**": agent-working-designer
       "tools/**": agent-working-designer
 # Intentional overlaps between domains (a path matched by two domains' owns is an error unless a
@@ -354,6 +379,16 @@ roles:
     placement: {launch: main-checkout, max_sessions: 1}   # reads from the main checkout
     handover: .claude/handover/lead-planner-u24.md
     card_note: "Host lead for u24desktop: status of this host's sessions only, on `agent-working/lead/hosts/u24desktop.md`. Never edits `board.md`. Lead-owned paths: comment only; review authority stays with lead-planner."
+
+  - role: architecture-planner-u24   # host u24desktop; no designer or implementer (owner 2026-10-22)
+    identity: {domain: architecture, function: planner, session_name: architecture-planner-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**", "docs/REGISTRY.yaml"]}
+    placement: {launch: main-checkout, max_sessions: 1}
+    handover: .claude/handover/architecture-planner-u24.md
+    card_note: "Host u24desktop. Advisory."
 
   - role: platform-planner   # launched on demand while a DevOps plan step is open; no designer (ADRs go to lead-planner)
     identity: {domain: platform, function: planner, session_name: platform-planner,

@@ -269,7 +269,9 @@ def test_wider_scope_numbers_pinned():
     # 342 -> 343 on 2026-10-16 (D75 route step, divergence 2.128): +src/engine/route_search.py (RoutePlanStore and the bounded terrain-cost search).
     # 343 -> 344 on 2026-10-17 (grief-as-state, decision 80, divergence 2.134): +src/core/grief_triggers.py (pending_grief_triggers, a pure read of
     # death records and trust), bound under `cross_episode_grief_nemesis`, so unbound_files is unchanged.
-    assert wider["scope_files"] == 344
+    # 344 -> 345 on 2026-10-21 (TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY): +src/ai/goals/escalation.py (escalated_need_wins, bound under
+    # `goal_hierarchy`; functions only, so it adds no unbound file or mechanism-shaped class).
+    assert wider["scope_files"] == 345
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
