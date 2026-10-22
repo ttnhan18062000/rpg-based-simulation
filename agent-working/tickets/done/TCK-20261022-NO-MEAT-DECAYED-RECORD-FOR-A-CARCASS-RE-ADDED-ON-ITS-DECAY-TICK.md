@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK
-phase: open
+phase: done
 date: 2026-10-22
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 No MEAT_DECAYED record for a carcass that a same-tick partial take re-adds on its decay tick (emitter-only, hash-neutral; (a1) of the v1 V2 split)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -63,9 +63,22 @@ src/engine/economy.py; src/engine/world_dynamics.py (`_meat_decayed_events`); sr
 `src/engine/economy.py` `ResourceTransactionSystem._without_decay_of_looted_bodies(events, removed_by_transfer, readded=None)`: besides the bodies an accepted whole-body loot removes, a body that is in the resolution's `corpses_remove` AND in its `corpses_add_or_update` gets no MEAT_DECAYED record (`readded=set(new_corpses_remove) & {c.id for c in new_corpses_update}` at the call site in `resolve_all`). Both lists include the earlier resolution's entries (the second, lifecycle-phase resolution starts from the update with its lists and world events), so the second resolution is covered too. No change to `apply_plan.py`, the corpse lifecycle, decay timing, world state or the gate metrics. The body that is re-added decays a tick late (the apply path pops the decayed body and then re-inserts the replacement); that is (b1). The parity ledger has no entry named MEAT-DECAYED-V2; the decision-44 meat entry TOWN-205 carries the evidence line.
 
 ## Test Summary
-tests/unit/engine/test_no_meat_decay_record_for_a_readded_carcass.py (3): the crowded/44 case (3 meat, one eaten on the decay tick: no record that tick, the 2 left recorded the tick the body leaves, books agree: made 3 = taken 1 + vanished 2); the frontier/46 case (1 meat eaten on the decay tick: no meat record at all, made 1 = taken 1); the control (a body that decays with nobody eating keeps its one record). The first two fail without the fix, all pass with it. tests/unit/engine/test_meat_decay_record_and_whole_loot.py unchanged (3 pass). tests/unit/engine + observability + core: 2197 passed, 4 skipped. `codebase.health check`: 0 new, 0 worse. mypy gate 0. lint-imports 17 kept. The paired hash-neutral proof is recorded in the Completion Summary.
+tests/unit/engine/test_no_meat_decay_record_for_a_readded_carcass.py (3): the crowded/44 case (3 meat, one eaten on the decay tick: no record that tick, the 2 left recorded the tick the body leaves, books agree: made 3 = taken 1 + vanished 2); the frontier/46 case (1 meat eaten on the decay tick: no meat record at all, made 1 = taken 1); the control (a body that decays with nobody eating keeps its one record). The first two fail without the fix, all pass with it. tests/unit/engine/test_meat_decay_record_and_whole_loot.py unchanged (3 pass). tests/unit/engine + observability + core: 2197 passed, 4 skipped. `codebase.health check`: 0 new, 0 worse. mypy gate 0. lint-imports 17 kept. The proof (P1, P2, P3) is below.
+
+### Proof (P1 + P2 + P3, accepted by the designer)
+- P1: paired e6a6a3e10 to 3b0722bdb, seeds 42-46, 3 worlds, 5000 ticks, `--self-check off`, PYTHONHASHSEED=0 (audit_mode): 0 of 15 base/new pairs differ in ANY result field (start and final hash, the nine counters, adds, final summary, flags). People deaths 127 to 127, 67 to 67, 177 to 177. `arm_child.py` hash 72320cac unchanged.
+- P2: ledger probe at 3b0722bdb (one run each):
+
+| run | decay qty before to after (events) | delta | vanished / made / taken / looted | V2 violations | second-equation residual | filter fires |
+|---|---|---|---|---|---|---|
+| crowded_frontier/44 | 148.0 (35) to 145.0 (34) | -3.0 | 145 / 162 / 12 / 5 (unchanged) | 0 | 0.0 | 1: body 1000007, 3.0, re-added (ledger tick 1604) |
+| frontier_living_world/46 | 139.0 (35) to 138.0 (34) | -1.0 | 138 / 142 / 4 / 0 (unchanged) | 0 | 0.0 | 1: body 1000030, 1.0, re-added (ledger tick 2575) |
+
+- P3: the world is hash-identical in all 15 runs, and the filter fires only for a body re-added on its decay tick; every such record is a V2 mismatch at e6a6a3e10, and the e6a6a3e10 gate fails V2 only on those two runs, so the filter fires nowhere else among the 15.
 
 ## Files Changed
 src/engine/economy.py; docs/parity_ledger/town_resource.yaml (TOWN-205 evidence); tests/unit/engine/test_no_meat_decay_record_for_a_readded_carcass.py (new).
 
 ## Completion Summary
+Done on branch rpg-meat-decay-record-for-readded-carcass (from e6a6a3e10), emitter-only and hash-neutral. Owner approval: the SPLIT, logged on #715 (comments 6334937052 and 6335479455), owner memo rows 85 and 86. (b1), the decay timing, is TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME, after v1.
+- **Mechanism advisory** (report-only): the changed-code check reports 0 drift findings and 0 implemented_by replacements.

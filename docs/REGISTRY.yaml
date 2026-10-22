@@ -7773,6 +7773,18 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK.md
+  ticket_id: TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK
+  title: No MEAT_DECAYED record for a carcass that a same-tick partial take re-adds
+    on its decay tick (emitter-only, hash-neutral; (a1) of the v1 V2 split)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-22'
+  related_code_areas:
+  - _meat_decayed_events
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE.md
   ticket_id: TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE
   title: A hand closure made more than 30 minutes after the session's last tool call
