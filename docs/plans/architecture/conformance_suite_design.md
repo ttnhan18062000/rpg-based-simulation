@@ -15,8 +15,7 @@ comment 6345579717; start approval: comment 6346236596). Input: [port_leak_audit
 F5, audited at `main` `b281d0c3d`). The suite is the one the proposal's §5 names as the precondition for Modes 2, 3 and 5;
 this doc cites the proposal by section, not by quote, because item B may change its wording.
 
-**Decisions this doc does not take.** Lane placement is testing-planner's. The hash scheme and the stopgap digest are
-perf-planner's. Whether `recent_world_events` is canonical state is rpg-planner's. Each is an open question in §9.
+**Decisions this doc does not take.** Lane placement is testing-planner's. The hash scheme is perf-planner's (it also adopted the side digest of §4.2). Whether `recent_world_events` is canonical state is rpg-planner's. Each is an open question in §9.
 
 ## 1. What the suite must prove, and the one thing it cannot yet see
 
@@ -118,20 +117,46 @@ see `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clan
 Mode 3 "blind to" list in §4 stands in full: running Mode 3 with replay on does not close the gap. (Read at `b281d0c3d`; the
 file was not changed by the commits since.)
 
-### 4.2 Stopgap per-field digest (a design option only; perf's call)
+### 4.2 Side digest over the six fields (adopted; perf-planner, 2026-10-22)
 
-Until the bump, the suite could compute a **side digest** over exactly the six omitted fields, test-side, with the same
-canonical-JSON rule as the hasher (sorted keys, compact separators, SHA-256), and assert it equal alongside the final hash
-in Modes 2 and 3. Properties:
+Until the PERF-D5 bump, the suite computes a **side digest** over exactly the six omitted fields, test-side, and asserts it
+equal alongside the final hash in Modes 2 and 3. Perf-planner adopted it on four conditions, all part of this design:
 
-- it is **suite-only**: it is not `PROOF_DIGEST_SCHEME`, never appears in a manifest as a proof digest and does not touch
-  `src/**`;
-- a mismatch is a conformance failure, a match is *not* a determinism proof (it is one more field set compared, no more);
-- it needs a canonical dict for each of the six value types, and some may not have `to_canonical_dict` (an audit read did
-  not check); `UNVERIFIED (needs read)`;
-- it is discarded when the PERF-D5 bump lands.
+1. **Suite-only test helper, not a proof digest.** It carries no `PROOF_DIGEST_SCHEME` name or version, nothing outside the
+   suite records it (no manifest, no baseline) and it does not touch `src/**`.
+2. **A positive control.** Case **C2**: one mutation per field (the mutations of C1), and each must change the side digest. A
+   side digest that does not move for a field is itself blind and fails C2.
+3. **Canonical form follows `CanonicalStateHasher`'s rules** (sorted keys, the same float handling), so the PERF-D5 bump can
+   reuse the helper.
+4. **`recent_world_events` drops out** of the side digest, C1 and C2 if rpg rules it a view (§9, Q3).
 
-Whether to build it is perf-planner's call (§9, Q2). Without it, the "blind to" list in §4 stands in full.
+Other properties: a mismatch is a conformance failure, a match is *not* a determinism proof (one more field set compared, no
+more); it needs a canonical dict for each of the six value types, and some may not have `to_canonical_dict` (an audit read
+did not check), `UNVERIFIED (needs read)`; it is discarded when the bump lands. Why: it closes the blind spot for any
+Mode 2 or 3 conformance run before the bump. Without it ("option (a)", the blind-to list alone) suffices only if no Mode 2
+or 3 adoption lands before the bump. With the side digest in place, the Mode 2 and Mode 3 rows of §4 read "blind to the six
+fields **except** through the side digest"; the fingerprint and the trail stay blind (§4.1a).
+
+### 4.3 Mode 3 matrix (perf-planner, 2026-10-22)
+
+- **Backends:** `LocalSequentialExecutor` (`src/engine/executor.py:112`, the default at `kernel.py:198`) and `WorkerManager`
+  with threads or processes (`src/engine/worker_manager.py:85-91`, `use_processes`).
+- **Matrix:** {sequential, threads, processes} x workers {1, 2, 4}, with sequential at 0 workers as the **reference arm**.
+  Add workers 8 on CI only, as oversubscription (the local VM has 6 vCPU). Every cell asserts final hash, trail (replay on)
+  and side digest equal to the reference.
+- **Host kinds:** both the local 6-vCPU VM and the CI runner (AMD EPYC 7763), because different schedulers expose different
+  orderings.
+- **No timing in the suite.** The GIL slowdown (1.6 to 2.1x) and any speed-up claim go through `performance_contract.md`'s
+  paired method, not here.
+- **Mode 3b rows are design-only** until Gate B / PERF-M6-T05.
+
+### 4.4 The events stream is covered by counts, never by content
+
+No events digest was found (a grep of `tests/`, `tests/certification/` and `tools/` by perf-planner; absence from a grep is
+not proof). Events are checked by counts only: the ledger tally `arm_child.py:35-36` (`LEDGER_TALLY`, compared by
+`paired.py`), the gate rows at `rpg_gate_run.py:47`, and `test_phase28_observability_determinism.py`, which checks only the
+final hash and that the file was written. **Event-content equality is a gap, not a case**: if the suite needs it, it needs a
+new digest, which this design does not propose.
 
 ## 5. Cross-process and in-process cases
 
@@ -156,13 +181,13 @@ Whether to build it is perf-planner's call (§9, Q2). Without it, the "blind to"
 
 | audit finding | case | note |
 |---|---|---|
-| F1 hash omits six fields | C1 (inverted canary), the "blind to" lists of §4, the optional side digest of §4.2 | green only after PERF-D5 |
+| F1 hash omits six fields | C1 (inverted canary), C2 (side-digest positive control), the "blind to" lists of §4, the side digest of §4.2 | C1 green only after PERF-D5; the side digest narrows the blind spot before it |
 | F2 `LIVE` default lets wall-clock choose the mode | P1, P2, P3, and the precondition rows of §2 | the A2 default flip is a separate rpg ticket |
 | F3 restore draws from seed 0 | X4 (§3 restore case); the non-zero-seed rule | expected-red |
 | F4 salted `hash()` | A0, X1 | X1 is vacuous without A0; `perception/filter.py:88,97` reach is `UNVERIFIED` and X1 on a world that exercises perception would show it |
 | F5 `pressure_signals` dormant | G1 | the id counters are **not covered, because** they surface in hashed entity and node ids at the next allocation (audit F5: low risk, no fix) |
 | audit §4 singletons (no finding number) | X2, X3 | M3+ |
-| audit §6 event sink (no event digest found) | **not covered, because** there is no event digest to compare; if one is found, add it to the Mode 1 row and to the blind-to lists | audit §6, `UNVERIFIED` |
+| audit §6 event sink (no event digest found) | **not covered, because** there is no event digest to compare; events are checked by counts only (§4.4), and content equality is a gap, not a case | audit §6; perf-planner's grep, 2026-10-22 |
 
 ## 8. Lanes (DRAFT, pending testing-planner) and dependencies
 
@@ -177,13 +202,13 @@ nightly cron (`test.yml:7-12`), `slow-regression.yml`, and the sharded gate (`rp
 | C-short: a PR-time job | A0, C1, G1, P1, P2, W5 seed 42 at 300 ticks for X1 and Mode 1 vs Mode 2, W1 seed 42 at 300 ticks for Mode 1 vs Mode 2 | minutes; the cheapest cases that can catch an F4 or Mode 2 regression |
 | C-nightly: the `test.yml` cron | W1 to W3 at 1000 ticks, seeds 42 to 44 (W1, W2), Mode 1 vs Mode 2, X1, X2, X4 | a few tens of runs of about 2 min each, one job per world (shard as the gate does) |
 | C-slow: `slow-regression` | W4 at 1000 ticks (the eviction path), X3, Mode 4 invariants (the certification long-run tests exist) | longest runs |
-| not CI | P3 and any Mode 3 matrix with real workers | Mode 3 needs a runner with the same interpreter and OS identity to stay DET-PORT-0 (draft T2 note); until then it is a local or second-host case |
+| not CI (yet) | P3; the Mode 3 matrix of §4.3 on the local VM | the same matrix also runs on the CI runner, which must have the same interpreter and OS identity to stay DET-PORT-0 (draft T2 note); the CI cells are pending testing-planner |
 
 **Dependencies.** `pending step 1` marks a case that needs step-1 code that does not exist yet.
 
 | case | waits on |
 |---|---|
-| A0, C1, G1, P2 | nothing for the design; the code is test-side. A0 is the first thing to run once anyone runs anything |
+| A0, C1, C2, G1, P2 | nothing for the design; the code is test-side. A0 is the first thing to run once anyone runs anything |
 | P1 | `no_replay` in the arm path and its manifest record (draft T3): **pending step 1** |
 | Mode 1 reproducibility (two processes) | v1 record PR merged (the freeze: nothing touching `src/**` lands before it); no code needed, but the lane needs T2 (paired arms off this host) for a CI job: **pending step 1** |
 | Mode 2 vs Mode 1 | draft T3 and a perf ruling that `no_replay` is consistent with PERF-D1 A2: **pending step 1** |
@@ -202,9 +227,9 @@ nightly cron (`test.yml:7-12`), `slow-regression.yml`, and the sharded gate (`rp
 | # | question | owner |
 |---|---|---|
 | Q1 | Where does each lane run, and is C-short a required check? (The test_architecture roadmap principle 8 says paired jobs are not required checks.) | testing-planner |
-| Q2 | Is the §4.2 side digest worth building before PERF-D5, or does the "blind to" list suffice? | perf-planner |
+| Q2 | ~~Is the §4.2 side digest worth building before PERF-D5, or does the "blind to" list suffice?~~ **Resolved, §4.2: adopted on four conditions. (perf-planner, 2026-10-22)** | closed |
 | Q3 | Is `recent_world_events` canonical state or a view? Decides whether C1 has five or six fields. | rpg-planner |
 | Q4 | Does any shipped world (W5, W2) pass A0? If none does, is a purpose-built attack world acceptable in `data/worlds`? | rpg-planner |
 | Q5 | ~~Does the fingerprint cover `factions`, `clans` or `quest_registry`?~~ **Resolved, see §4.1a: it covers none of the six.** | closed |
-| Q6 | Is there any events digest outside `src/`? If yes, add it to the Mode 1 row (audit §6) | perf-planner |
-| Q7 | The Mode 3 matrix: which backends and worker counts, and on which host kind? | perf-planner with testing-planner |
+| Q6 | ~~Is there any events digest outside `src/`? If yes, add it to the Mode 1 row (audit §6)~~ **Resolved, §4.4: none found; counts only, content equality is a gap. (perf-planner, 2026-10-22)** | closed |
+| Q7 | ~~The Mode 3 matrix: which backends and worker counts, and on which host kind?~~ **Resolved, §4.3. (perf-planner, 2026-10-22)** | closed |
