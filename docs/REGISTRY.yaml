@@ -7839,6 +7839,20 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
+  ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
+  title: Update the engine execution modes proposal with the 2026-10-22 rulings and
+    measurements, and make it agree with the port-leak audit and the conformance-suite
+    design
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - architecture
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING.md
   ticket_id: TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING
   title: Before acting on a user approval, a session records it on one approvals-log
