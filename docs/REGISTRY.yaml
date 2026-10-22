@@ -5845,6 +5845,16 @@
   - ai
   - governance
 - type: doc
+  path: docs/plans/architecture/conformance_suite_design.md
+  title: Conformance-suite design for the engine execution modes
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - determinism
+- type: doc
   path: docs/plans/architecture/engine_execution_modes_proposal.md
   title: 'Engine execution modes: fix the waste first, then five labelled modes'
   status: active
@@ -5867,6 +5877,18 @@
   - architecture
   - performance
   - testing
+- type: doc
+  path: docs/plans/architecture/port_leak_audit.md
+  title: 'Port-leak audit: what §5 of the engine execution modes proposal claims,
+    and what the code does'
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - determinism
+  - audit
 - type: doc
   path: docs/plans/archive/agent_infrastructure/context_efficient_agent_retrieval/ticket_plan_structure.md
   title: Ticket Plan Structure — Context-Efficient Agent Retrieval and Observability
@@ -7817,6 +7839,20 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
+  ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
+  title: Update the engine execution modes proposal with the 2026-10-22 rulings and
+    measurements, and make it agree with the port-leak audit and the conformance-suite
+    design
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - architecture
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING.md
   ticket_id: TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING
   title: Before acting on a user approval, a session records it on one approvals-log
@@ -7833,6 +7869,22 @@
   - ai
   - governance
   - process-improvement
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-CONFORMANCE-SUITE-DESIGN.md
+  ticket_id: TCK-20261022-ARCHITECTURE-CONFORMANCE-SUITE-DESIGN
+  title: 'Conformance-suite design for the engine execution modes: the worlds, seeds
+    and assertions each mode must pass, and what each assertion cannot see'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - tests/certification/ (test_cert_long_run_stability.py, test_phase10_enhanced_determinism_parity.py),
+    src/engine/checkpoint.py,
+  - src/engine/signal_source.py, the rpg gate runner (rpg_gate_run)
+  artifact_files: []
+  tags:
+  - architecture
+  - determinism
 - type: ticket
   path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-FOUR-SEATS.md
   ticket_id: TCK-20261022-ARCHITECTURE-FOUR-SEATS
@@ -7864,6 +7916,25 @@
   tags:
   - ai
   - governance
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-PORT-LEAK-AUDIT.md
+  ticket_id: TCK-20261022-ARCHITECTURE-PORT-LEAK-AUDIT
+  title: 'Port-leak audit: an evidence table, with file:line, for every "known leak"
+    in engine_execution_modes_proposal.md §5, each classed as breaking Mode 1 today
+    or only Mode 3 and later'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - src/engine/kernel.py, src/engine/apply.py, src/core/state.py, the CanonicalStateHasher
+    module, src/platform/rng.py,
+  - worker_manager.py, run_identity.py, scenario_checkpoint.py, military_conflict.py,
+    src/observability/
+  artifact_files: []
+  tags:
+  - architecture
+  - determinism
+  - audit
 - type: ticket
   path: agent-working/tickets/done/TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK.md
   ticket_id: TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK
