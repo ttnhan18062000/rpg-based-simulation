@@ -5455,6 +5455,17 @@
   - process-improvement
   - governance
 - type: doc
+  path: docs/guidelines/session_roles/domains/architecture.md
+  title: 'Session domain: architecture'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: doc
   path: docs/guidelines/session_roles/domains/asset.md
   title: 'Session domain: asset'
   status: active
@@ -5823,6 +5834,16 @@
   - process-improvement
   - delivery
   - agent-monitoring
+- type: doc
+  path: docs/plans/architecture/README.md
+  title: Architecture plans
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
 - type: doc
   path: docs/plans/archive/agent_infrastructure/context_efficient_agent_retrieval/ticket_plan_structure.md
   title: Ticket Plan Structure — Context-Efficient Agent Retrieval and Observability
@@ -7789,6 +7810,21 @@
   - ai
   - governance
   - process-improvement
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-PLANNER-U24-SEAT.md
+  ticket_id: TCK-20261022-ARCHITECTURE-PLANNER-U24-SEAT
+  title: Register an advisory architecture domain with one seat, `architecture-planner-u24`
+    (u24desktop, planner, no implementer), which owns only `docs/plans/architecture/**`
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - .claude/agents/session-*.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
 - type: ticket
   path: agent-working/tickets/done/TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE.md
   ticket_id: TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE
