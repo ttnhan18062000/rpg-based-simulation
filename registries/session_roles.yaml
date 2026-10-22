@@ -47,6 +47,7 @@ domains:
       - docs/agent-monitoring/**
       - docs/plans/agent_infrastructure/**
       - docs/guidelines/session_roles/**
+      - docs/guides/cross_session_messages.md   # the guide behind the role cards
       - agent-working/agent-orchestration/**
       - agent-working/agent-monitoring/retro/**
       - registries/session_*.yaml   # exactly session_roles.yaml and session_authority.yaml today; one glob keeps the card within its token budget
@@ -176,6 +177,16 @@ domains:
       ".github/workflows/test.yml": testing-planner
       "agent-working/**": agent-working-designer
       "tools/release/**": testing-planner
+      "tools/**": agent-working-designer
+  architecture:   # advisory; owner 2026-10-22 (#715). Proposals and reviews only; ADRs stay lead's
+    owns:
+      - docs/plans/architecture/**
+    owns_not: []
+    routes:
+      "src/**": rpg-planner
+      "docs/architecture/**": lead-planner    # ADRs go to lead for review
+      "docs/performance/**": perf-planner
+      "agent-working/**": agent-working-designer
       "tools/**": agent-working-designer
 # Intentional overlaps between domains (a path matched by two domains' owns is an error unless a
 # split here names both domains and covers it).
@@ -368,6 +379,16 @@ roles:
     placement: {launch: main-checkout, max_sessions: 1}   # reads from the main checkout
     handover: .claude/handover/lead-planner-u24.md
     card_note: "Host lead for u24desktop: status of this host's sessions only, on `agent-working/lead/hosts/u24desktop.md`. Never edits `board.md`. Lead-owned paths: comment only; review authority stays with lead-planner."
+
+  - role: architecture-planner-u24   # host u24desktop; no designer or implementer (owner 2026-10-22)
+    identity: {domain: architecture, function: planner, session_name: architecture-planner-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**", "docs/REGISTRY.yaml"]}
+    placement: {launch: main-checkout, max_sessions: 1}
+    handover: .claude/handover/architecture-planner-u24.md
+    card_note: "Host u24desktop. Advisory."
 
   - role: platform-planner   # launched on demand while a DevOps plan step is open; no designer (ADRs go to lead-planner)
     identity: {domain: platform, function: planner, session_name: platform-planner,
