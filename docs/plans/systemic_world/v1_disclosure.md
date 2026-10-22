@@ -170,7 +170,7 @@ fallback tables are row Y3; schema defaults, harness, observability mode names a
 | # | Disclosure | Source | After v1 |
 |---|---|---|---|
 | T1 | `test_real_campaign_episode_makes_deliberate_attacks` is a strict xfail: 2 deliberate attacks against 3 required (seed 42, 70 ticks, workers disabled). The assertion is unchanged. | #636 triage; `TCK-20261006-CAMPAIGN-EPISODE-COMBAT-TEST-RED-…` | standalone ticket |
-| T2 | `test_behavioral_5k` is a known red until the v1 rebaseline. | `TCK-20261007-BEHAVIORAL-5K-REBASELINE-AFTER-THE-STARVATION-CHAIN-LANDS` | rebaselined at v1 |
+| T2 | `test_behavioral_5k` was a known red until the v1 rebaseline; rebaselined at v1 (urban_political seed 42, 5000 ticks, e8df8b96d; two regenerations at PYTHONHASHSEED=0 exact), and it passes. Old → new: alive_avg 13.30 → 18.34, gold_avg 584.16 → 904.2, quest_active_count 0.0 → 6.16. Most of the move is the test's own fix: the old baseline came from a world built without the content context, plus a tick-0 gold guard (`rpg-baseline-v1` 66ba2aa39; that harness read 18.34 / 909.4 / 7.08), so the old 0 active quests was an artefact, not a quest defect. The rest (gold 909.4 → 904.2, quests 7.08 → 6.16; alive unchanged) comes from simulation changes merged between that harness run and v1, not isolated to one change. | `TCK-20261007-BEHAVIORAL-5K-REBASELINE-AFTER-THE-STARVATION-CHAIN-LANDS`; the v1 record (`TCK-20261019-RECORD-BASELINE-V1`) | — |
 
 ## Open before v1
 
