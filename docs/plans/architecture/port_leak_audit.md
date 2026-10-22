@@ -8,7 +8,7 @@ tags: [architecture, determinism, audit]
 
 # Port-leak audit: what §5 of the engine execution modes proposal claims, and what the code does
 
-**Status:** audit, advisory. Read-only: every claim below is from reading code at `main` **`b281d0c3d`**; no run, profile
+**Status:** audit, advisory; **revised 2026-10-22 after perf-planner and lead-planner review** (clock row, F1, F2, F3, F5). Read-only: every claim below is from reading code at `main` **`b281d0c3d`**; no run, profile
 or hash experiment was made. A claim that reading cannot settle is marked `UNVERIFIED (needs run)` with the run that would
 settle it. Written by `architecture-implementer` for ticket `TCK-20261022-ARCHITECTURE-PORT-LEAK-AUDIT`, dispatched by
 `architecture-planner` (approval: issue #715, comment 6345579717). Source list:
@@ -22,7 +22,7 @@ execution. Owners: `rpg-planner` (`src/**` semantics) or `perf-planner` (engine 
 
 | # | port | §5 claim | verdict | class |
 |---|---|---|---|---|
-| 1 | clock | wall-clock pacing and timers | **Partly refuted.** Pacing and timers reach telemetry only. The real leak is the *default* `LIVE` signal contract: measured wall-clock picks the runtime mode, and the mode changes scheduling | M1-now (unless `audit_mode` or `CANONICAL`) |
+| 1 | clock | wall-clock pacing and timers | **Partly refuted.** Pacing and timers reach telemetry only. The real leak is the *default* `LIVE` signal contract: measured wall-clock picks the runtime mode, and the mode changes scheduling | M1-now (unless fixed budgets: `audit_mode` or pinned NORMAL) |
 | 2a | random | `base_seed=0` on restore | **Confirmed**, and worse than the code comment says: stateless draws read `_base_seed` | M1-now (restore path only) |
 | 2b | random | salted `hash()` at `military_conflict.py:339` | **Confirmed**; result lands in hashed `groups` | M1-now (cross-process) |
 | 2c | random | (not in §5) | **New:** salted `hash()` at `perception/filter.py:88,97` | M1-now provisional, reach UNVERIFIED |
@@ -50,14 +50,19 @@ last row. `select_signal_source` (`signal_source.py:190`) zeroes the signals und
 can reach `DEGRADED` and schedule different work. PERF-D1 input 1 already says this (`governor.py:~100` comment). The
 `current_mode` field is not hashed (see §5), so the final hash would not flag the cause, only the downstream state.
 
-**Class:** M1-now for any non-audit, non-`CANONICAL` run. Owner: `perf-planner`. Mode 1 as the proposal defines it ("pinned
-NORMAL") needs `CANONICAL` or `audit_mode` stated as a precondition.
+**Class:** M1-now for any run that is not on fixed budgets. Owner: `perf-planner`. Per PERF-D1 amendment A2
+(`docs/architecture/performance_optimization_decisions.md`, about :357), a run judged on its outcomes uses **fixed budgets**:
+`audit_mode`, or pinned NORMAL. That is Mode 1. `CANONICAL` is for runs that measure governance or cost (`tools/perf`
+baselines, the tripwire, capacity runs). The two are **not interchangeable**: under today's cost model T08 (#591) measured
+`strategic_100` and `mixed_200` in CONSTRAINED or SURVIVAL, `frontier_extended` in SURVIVAL on 902 of 1000 ticks and
+`frontier_marches` in CONSTRAINED on 876 of 1000, so a `CANONICAL` run and an `audit_mode` run give different outcomes. Never
+compare runs across contracts. The A2 default flip is rpg's `TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-*`, queued after v1.
 
 ## 3. Random source
 
 | leak | evidence | what the code does | class | why |
 |---|---|---|---|---|
-| restore uses `base_seed=0` | `src/engine/scenario_checkpoint.py:85` | `DeterministicRNG(base_seed=0)`, then `set_state(state.rng_checkpoint)`. `set_state` (`platform/rng.py:57-63`) restores only the per-domain **stream** generators. The stateless draws `get_float`/`get_int` (`rng.py:84-110`) seed from `self._base_seed` through `_composite_seed`, so after a restore they draw from seed 0 instead of `state.seed`. The code comment at `scenario_checkpoint.py:83-84` ("base_seed is irrelevant post-restore") is wrong for these draws | M1-now (restore path only) | a restored run diverges from the unbroken run for any seed other than 0, at the first stateless draw. Whether any shipped flow restores and compares a hash is UNVERIFIED (needs run: restore at tick N, run to N+K, compare the hash with an unbroken run) |
+| restore uses `base_seed=0` | `src/engine/scenario_checkpoint.py:85` | `DeterministicRNG(base_seed=0)`, then `set_state(state.rng_checkpoint)`. `set_state` (`platform/rng.py:57-63`) restores only the per-domain **stream** generators. The stateless draws `get_float`/`get_int` (`rng.py:84-110`) seed from `self._base_seed` through `_composite_seed`, so after a restore they draw from seed 0 instead of `state.seed`. The code comment at `scenario_checkpoint.py:83-84` ("base_seed is irrelevant post-restore") is wrong for these draws. **Which path a checkpointed scenario takes:** `ScenarioCheckpointer.restore` builds its own kernel here, so a restored scenario does *not* go through `ScenarioRuntimeService._build_kernel` (`scenario_runtime.py:419-424`). That method seeds from the initial state at `:420` (`base_seed=self._initial_state.seed`), and its other branch at `:423` is a fresh `AuthoritativeState(tick=0, seed=0)` with `base_seed=0`, which agrees with its own state seed, so `:423` is consistent, not a leak. Only `scenario_checkpoint.py:85` forces 0 against a state whose seed may differ | M1-now (restore path only) | a restored run diverges from the unbroken run for any seed other than 0, at the first stateless draw. Whether any shipped flow restores and compares a hash is UNVERIFIED (needs run: restore at tick N, run to N+K, compare the hash with an unbroken run) |
 | salted `hash()` for a group id | `src/engine/military_conflict.py:339` | `abs(hash((contested_region_id, attacker_id, state.tick))) % 2**31` becomes `GroupRecord.id`. The tuple holds a `str`, so the value depends on `PYTHONHASHSEED` | M1-now (cross-process) | `groups` is hashed (`checkpoint.py:126`), so two processes with the same seed produce different final hashes whenever a faction attack fires. In one process it is stable |
 | salted `hash()` for perceived ids | `src/domains/perception/filter.py:88,97` | `hash(signal.signal_id)` for a non-integer entity id, and always for resource `node_id` | M1-now provisional | `PerceivedEntity.entity_id`/`node_id` are string-salted. UNVERIFIED whether they reach authoritative state or only a per-tick view (needs a read of the consumers, or a two-`PYTHONHASHSEED` run) |
 | `id(obj)` | `src/engine/executor.py:243`; `src/engine/biological_needs.py:94-96` | object identity as a key / cache validity token | M3+ | not traced past the line. `biological_needs.py` uses it as a cache-staleness token, which is per-process by design |
@@ -113,7 +118,7 @@ it hashes state only. Mutation path: every durable field is rebuilt in `ApplyPat
 | **`information_providers` 1462** | **none** | **yes** (`apply.py:491-492,547`) | **GAP: durable, mutable. Not in the §5 list** |
 | `terrain` 1382 | none | **no**: passthrough `apply.py:512`; the only replace is a scenario fixture, `certification/scenarios.py:219` | no gap after assembly. Assembly-time terrain is not hash-verified, low risk |
 | `next_node_id` 1536, `next_entity_id` 1537, `next_item_instance_id` 1538 | none | yes (`apply.py:530`) | minor gap: ids show up in hashed entities once allocated, so a divergence is caught late rather than never |
-| `processed_transaction_ids` 1535, `transaction_trace` 1395, `rejection_registry` 1397, `pressure_signals` 1399 | none | yes (`apply.py:522-524`) | diagnostic counters; whether decision logic reads `pressure_signals` (`kernel.py:528` sets it) is UNVERIFIED. Route to `rpg-planner` |
+| `processed_transaction_ids` 1535, `transaction_trace` 1395, `rejection_registry` 1397, `pressure_signals` 1399 | none | yes (`apply.py:522-524`) | `transaction_trace`, `rejection_registry`, `processed_transaction_ids`: diagnostic counters, no gap. `pressure_signals` is **dormant**: `kernel.py:528` passes it to `record_tick` (observability only) and does not set state. `state.pressure_signals` changes only through `StateUpdate.pressure_signals_set` (`apply.py:345`; declared `core/updates.py:1044`), and nothing in `src/` produces that today (the wall-clock producer was removed by TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING, PERF-D1 A1, pinned by `tests/unit/resource/test_buy_price_independent_of_host_timing.py`). Its one reader is `pipeline.py:86-91`, where `ENABLE_*` keys switch feature flags; only `src/testing/scenario_runner.py:100` and tests populate it. Class M3+ (dormant) |
 | `current_mode` 1533 | none | yes, from the governor | derived from signals (§2); the hash sees its effects, not the mode |
 | `town_entity_ids` 1393 | none | cached, passthrough (`apply.py:520`) | derived, no gap |
 | `pending_information_responses` 1402, `pending_self_model_information_events` 1403, `feature_flags` 1405 | none | transient or input | no gap by design (`compare=False`) |
@@ -133,7 +138,8 @@ factions, clans or quests. UNVERIFIED (needs a read of lines 80-200): whether `f
 path that diverges only in `factions`, `quest_registry` or `recent_world_events` would pass that check. Closing the gap
 changes the digest value for every world (the `PROOF_DIGEST_SCHEME` constant in `checkpoint.py` would need a version bump
 and every pinned baseline would be re-recorded), which is a `perf-planner` scheme decision and a hard dependency of the
-conformance suite.
+conformance suite. **Until the scheme is bumped, any hash-equality proof is blind to these fields.** The T3 `no_replay` proof is
+unaffected: it touches only non-authoritative output.
 
 ## 6. Executor, commit path, event sink
 
@@ -158,20 +164,26 @@ conformance suite.
 > so a divergence in any of them is invisible to the final hash and to Mode 2/3 conformance. `terrain` is omitted too but is a
 > passthrough (`apply.py:512`), no gap. Question for rpg-planner: is `recent_world_events` (a windowed list) meant to be
 > part of canonical state, or is it a view? Question for perf-planner: adding fields changes every digest; the
-> `PROOF_DIGEST_SCHEME` bump and baseline re-record are yours. Evidence: `docs/plans/architecture/port_leak_audit.md` §5.
+> perf owns the scheme bump (PERF-D5, `flat-sha256-v1` to vN). It needs an owner-approved PERF-D5 amendment and comes after
+> RECORD-BASELINE-V1, then the baselines are re-recorded. rpg's ruling on `recent_world_events` decides whether the field count is
+> five or six. Until the bump, hash-equality proofs are blind to these fields (the T3 `no_replay` proof is not affected). Evidence: `docs/plans/architecture/port_leak_audit.md` §5.
 
 **F2 to perf-planner. Default `LIVE` signal contract lets wall-clock choose the runtime mode (M1-now).**
 > `config/profiles.py:57` defaults `signal_contract` to `LIVE`; `signal_source.py:190-194` uses measured
-> `tick_compute_ms` unless `audit_mode` or `CANONICAL`; `governor.py:79-105` turns `cost_ms >= budget_ms` into `DEGRADED`, and
+> `tick_compute_ms` unless `audit_mode`; `governor.py:79-105` turns `cost_ms >= budget_ms` into `DEGRADED`, and
 > the policy changes scheduling (`kernel.py:555-566`). The same seed on a slower host can schedule different work. This is
-> PERF-D1 input 1, already known; the ask is that the proposal's Mode 1 state `CANONICAL` or `audit_mode` as a precondition,
-> and that the conformance suite pin it.
+> PERF-D1 input 1, already known; the ask is that the proposal's Mode 1 state fixed budgets (`audit_mode`, or pinned NORMAL) as a precondition, per PERF-D1 A2,
+> and that the conformance suite pin it. `CANONICAL` is for runs that measure cost or governance and must not stand in for it:
+> T08 (#591) measured `frontier_extended` in SURVIVAL on 902 of 1000 ticks and `frontier_marches` in CONSTRAINED on 876 of 1000, so
+> the two contracts give different outcomes. Never compare runs across contracts. The A2 default flip is rpg's
+> `TCK-20261014-UNAUDITED-RUNS-DEPEND-ON-HOST-SPEED-*`, queued after v1.
 
 **F3 to rpg-planner. Checkpoint restore draws stateless randoms from seed 0 (M1-now, restore path).**
 > `scenario_checkpoint.py:85` builds `DeterministicRNG(base_seed=0)`. `rng.set_state` (`platform/rng.py:57`) restores only
 > the per-domain streams; `get_int`/`get_float` (`:84-110`) seed from `_base_seed`, so every stateless draw after a restore
 > differs from the unbroken run unless the seed is 0. The comment at `:83-84` is wrong for them. Fix: build the RNG with
-> `state.seed`. Needs a run to size: restore at tick N, run K more, compare the final hash with an unbroken run. (§5 says a
+> `state.seed`. Path note: `scenario_runtime.py:420` seeds from the initial state and `:423` is a fresh seed-0 state, both consistent;
+> a checkpointed scenario takes `scenario_checkpoint.py:85`, not those. Needs a run to size: restore at tick N, run K more, compare the final hash with an unbroken run. (§5 says a
 > finding on this was already sent; this adds the mechanism.)
 
 **F4 to rpg-planner. Salted `hash()` at `military_conflict.py:339` and `perception/filter.py:88,97` (M1-now, cross-process).**
@@ -180,9 +192,13 @@ conformance suite.
 > same for string signal ids; whether that reaches state is unverified. Fix: a stable digest (e.g. `zlib.crc32` over the
 > canonical string) or an allocator-issued id. (`:339` is already with rpg per §5.)
 
-**F5 to perf-planner. `recent_world_events`, `pressure_signals` and counters: confirm intent (M2).**
-> `pressure_signals` (`state.py:1399`, set at `kernel.py:528`) and the id counters (`:1536-1538`) are durable, mutable and
-> unhashed. Say whether decision logic reads `pressure_signals`; if so it belongs in F1.
+**F5 to rpg-planner (perf-planner copied). `pressure_signals` is dormant; id counters are low risk (M3+, dormant).**
+> `state.pressure_signals` (`state.py:1399`) is unhashed but nothing in `src/` writes it: `kernel.py:528` is only the
+> `record_tick` argument, and the only producer of `StateUpdate.pressure_signals_set` (`apply.py:345`) was removed by
+> TCK-20261003-SALIENCE-WALL-CLOCK-PRICE-COUPLING. The one reader is `pipeline.py:86-91`, where `ENABLE_*` keys gate phases; only
+> `src/testing/scenario_runner.py:100` and tests populate it. Not a live leak. Recommend rpg either delete the `ENABLE_*` back door
+> (perf's preference) or hash the field. The id counters (`:1536-1538`) are not hashed directly but surface in the hashed entity
+> and node ids at the next allocation: low risk, no fix.
 
 ## 8. Not settled by reading
 

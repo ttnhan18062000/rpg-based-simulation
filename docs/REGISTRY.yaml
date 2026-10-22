@@ -5868,6 +5868,18 @@
   - performance
   - testing
 - type: doc
+  path: docs/plans/architecture/port_leak_audit.md
+  title: 'Port-leak audit: what §5 of the engine execution modes proposal claims,
+    and what the code does'
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - determinism
+  - audit
+- type: doc
   path: docs/plans/archive/agent_infrastructure/context_efficient_agent_retrieval/ticket_plan_structure.md
   title: Ticket Plan Structure — Context-Efficient Agent Retrieval and Observability
   status: historical
