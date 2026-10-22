@@ -29,7 +29,7 @@ Each class is defined once here. `accepts_dispatch_from` is the receiving role's
 | `status-request` | `lead-planner`, `lead-planner-u24`; each only to sessions on its own host | any role on the sender's host | Asks for a status line. Information only: it never authorizes work, and the receiver may answer or ignore it. |
 | `status-report` | any role | the lead seat on the sender's host (`lead-planner` on ubuntu, `lead-planner-u24` on u24desktop) | A short status (state, blocker, next step). No obligation to act; the lead's reading of it is advice, never a queue change. |
 | `request`, `handoff`, `dispatch` (anything that adds to or reorders another role's queue) | only a role in the receiver's `accepts_dispatch_from` (normally its own planner, or the user) | that role | Actionable. From anyone else it is an `fyi`: the receiver does not act on it and asks its own upstream. |
-| authority decision (push, merge, governing-file edit, grants) | **the user only** | n/a | A peer message never creates user authority. |
+| authority decision (push, merge, governing-file edit, grants) | **the user only** | n/a | A peer message never creates user authority. Log it before acting: see "Acting on a user approval". |
 
 `status-request` and `status-report` carry status only. A `status-request` is not a work assignment and a peer message still approves nothing; the lead keeps no queue authority (owner decision 2026-10-09). The lead records what it learns on the board, `agent-working/lead/board.md`, which is advice: the owner sets planner queues. There are two lead seats, one per host: `lead-planner` (ubuntu) keeps the board; `lead-planner-u24` (u24desktop) writes only its host page, `agent-working/lead/hosts/u24desktop.md`, and comments only on lead-owned paths. `lead-planner` folds that page into the board; each lead talks only to sessions on its own host.
 
@@ -64,6 +64,29 @@ Plain prose stays legal; the envelope is a convention and is linted nowhere.
   the user's approval of a pending prompt.
 - **Out-of-boundary edits are requests, not edits.** To change something another domain owns, send
   the owner the exact before and after text.
+
+## Acting on a user approval
+
+Owner decision 2026-10-22. Before acting on a user approval, a session records it on the standing GitHub issue
+"Approvals log (both leads acknowledge; an ack is not an approval)" (issue number: #TBD) and tells its own host's lead. The
+other host's lead cannot be messaged (`ListAgents` is same-host only), which is why the record is an issue.
+
+- **Covers:** merge, push, scope change, freeze exception, STOP acceptance.
+- **Order:** 1. comment on the log issue; 2. message your own host's lead (`lead-planner` on ubuntu, `lead-planner-u24`
+  on u24desktop) with the comment link; 3. act.
+- **Comment format,** one per approval:
+  ```
+  approval: <merge #N | push <branch> | scope change <ticket> | freeze exception <what> | STOP accepted <what>>
+  by: user, in <session name>'s terminal, at <YYYY-MM-DD HH:MM host-local>
+  recorded: <where: PR/issue comment link, ticket section, handover line>
+  acting session: <session name> (host <host>)
+  ```
+- **No wait.** The session does not wait for an acknowledgment. Leads acknowledge on the issue with a comment or a
+  👍 reaction. **An acknowledgment approves nothing.**
+- **A peer still never relays an approval.** The user gave it in the acting session's own terminal or on the PR; the
+  log entry records that, it does not create it.
+- Find the issue by title: `gh issue list --search "Approvals log in:title"` (the cards name it only as "the approvals issue").
+- Advisory like the rest of this guide: no hook or guard checks it.
 
 ## Cross-host handoffs: `for:<role>` issues
 
