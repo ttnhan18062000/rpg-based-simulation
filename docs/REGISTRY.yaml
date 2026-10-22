@@ -5455,6 +5455,17 @@
   - process-improvement
   - governance
 - type: doc
+  path: docs/guidelines/session_roles/domains/architecture.md
+  title: 'Session domain: architecture'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: doc
   path: docs/guidelines/session_roles/domains/asset.md
   title: 'Session domain: asset'
   status: active
@@ -5823,6 +5834,16 @@
   - process-improvement
   - delivery
   - agent-monitoring
+- type: doc
+  path: docs/plans/architecture/README.md
+  title: Architecture plans
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
 - type: doc
   path: docs/plans/archive/agent_infrastructure/context_efficient_agent_retrieval/ticket_plan_structure.md
   title: Ticket Plan Structure — Context-Efficient Agent Retrieval and Observability
