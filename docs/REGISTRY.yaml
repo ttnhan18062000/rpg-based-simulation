@@ -7846,6 +7846,22 @@
   - governance
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-CONFORMANCE-SUITE-DESIGN.md
+  ticket_id: TCK-20261022-ARCHITECTURE-CONFORMANCE-SUITE-DESIGN
+  title: 'Conformance-suite design for the engine execution modes: the worlds, seeds
+    and assertions each mode must pass, and what each assertion cannot see'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - tests/certification/ (test_cert_long_run_stability.py, test_phase10_enhanced_determinism_parity.py),
+    src/engine/checkpoint.py,
+  - src/engine/signal_source.py, the rpg gate runner (rpg_gate_run)
+  artifact_files: []
+  tags:
+  - architecture
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-FOUR-SEATS.md
   ticket_id: TCK-20261022-ARCHITECTURE-FOUR-SEATS
   title: 'The architecture domain gets a planner and an implementer on each host:
@@ -7910,22 +7926,6 @@
   - agent-working/stored_artifacts/TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK/plan.md
   - agent-working/stored_artifacts/TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK/test_plan.md
   tags: []
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261022-ARCHITECTURE-CONFORMANCE-SUITE-DESIGN.md
-  ticket_id: TCK-20261022-ARCHITECTURE-CONFORMANCE-SUITE-DESIGN
-  title: 'Conformance-suite design for the engine execution modes: the worlds, seeds
-    and assertions each mode must pass, and what each assertion cannot see'
-  tier: hotfix
-  ticket_type: chore
-  date: '2026-10-22'
-  related_code_areas:
-  - tests/certification/ (test_cert_long_run_stability.py, test_phase10_enhanced_determinism_parity.py),
-    src/engine/checkpoint.py,
-  - src/engine/signal_source.py, the rpg gate runner (rpg_gate_run)
-  artifact_files: []
-  tags:
-  - architecture
-  - determinism
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME.md
   ticket_id: TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME

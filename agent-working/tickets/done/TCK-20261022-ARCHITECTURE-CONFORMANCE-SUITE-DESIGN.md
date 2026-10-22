@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261022-ARCHITECTURE-CONFORMANCE-SUITE-DESIGN
-phase: open
+phase: done
 date: 2026-10-22
 tags: [architecture, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, determinism]
 Conformance-suite design for the engine execution modes: the worlds, seeds and assertions each mode must pass, and what each assertion cannot see
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -104,5 +104,17 @@ Context scan first (search_docs, then graphify query). Branch: architecture-impl
 Close by hand with `--path-reason investigation_only`. Send the SHA to architecture-planner before any push.
 
 ## Test Summary
+Design only; no tests apply. `tools/validate_frontmatter.py` on the new doc: no violations.
+
 ## Files Changed
+- docs/plans/architecture/conformance_suite_design.md (new)
+- docs/plans/architecture/README.md (Contents row)
+- docs/REGISTRY.yaml (regenerated)
+- ticket move and monitoring shards
+
 ## Completion Summary
+Conformance-suite design written. Covers mode preconditions (fixed budgets for Mode 1, never compare across contracts,
+perf's Mode 2 conditions), a six-world matrix with reasons and costs (gate worlds cost UNVERIFIED), per-mode assertions with
+blind-to lists, an inverted canary for the six unhashed fields, cross-process cases X1-X4, contract and guard cases, a
+draft lane placement pending testing-planner, a dependency table and seven open questions with owners. F1-F5 each map to a
+case or a stated reason. Whether any shipped world fires a faction attack is UNVERIFIED and is the first probe (A0).
