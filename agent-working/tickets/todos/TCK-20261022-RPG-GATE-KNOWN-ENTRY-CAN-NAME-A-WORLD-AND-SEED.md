@@ -77,7 +77,7 @@ tools/test_architecture/known_reds.py; tools/test_architecture/rpg_gate_candidat
     - N14: `cases: [{world: urban_political, seed: 44, entity_id: 28}]` -> TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT;
     - N15: `cases: [{world: crowded_frontier, seed: 46, entity_id: 38}, {world: frontier_living_world, seed: 44, entity_id: 2}]` -> TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.
 
-    Before committing, confirm the world names and entity ids against the docs of a green v1 gate run (39799337778 on e8df8b96d). If any differs from v1_disclosure.md M5, stop and ask rpg-planner. Keep `expires_on` at 2026-11-05 unless rpg-planner and the owner re-rule it. The V1 entry stays unscoped (AC2).
+    Before committing, confirm the world names and entity ids against the docs of a green v1 gate run (39799337778 on e8df8b96d). The commit message or PR body quotes the confirmation for all three: merchant 28 t3140 (urban_political/44), worker 2 t3736 (frontier_living_world/44), raider 38 t3778 (crowded_frontier/46), as lead-planner-u24 asked for review. If any differs from v1_disclosure.md M5, stop and ask rpg-planner. Keep `expires_on` at 2026-11-05 unless rpg-planner and the owner re-rule it. The V1 entry stays unscoped (AC2).
   - Test cases on top of the ACs:
     - a fourth V3 fail on an uncovered (world, seed) is RED/unowned and refuses the candidate (AC1);
     - a covered (world, seed) with a NEW entity id is unowned;

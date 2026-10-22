@@ -99,6 +99,13 @@ not real behaviour shifts. So:
 
 ## Assumptions / Open Questions
 - Baseline v1's SHA is announced by rpg-planner. The runs wait for main, so the anchors match what CI runs.
+- **2026-10-23, agreed with rpg-planner:**
+  - **SHA:** the v1 simulation code is e8df8b96da891304d8a4d8afade5e6d63182cf22 (gate run 39799337778 GREEN). #725 (the record PR) adds only baselines, docs and tickets, with no src/content/config change. Run the pairs on #725's MERGE sha, which rpg-planner sends when it merges and whose src is identical to e8df8b96d. PIN that sha in a dedicated worktree (`git worktree add --detach <path> <sha>`), so no post-v1 src PR (#529 first) can enter the runs.
+  - **Producer:** the committed `tools/test_architecture/simq_audit_rows.py`: every anchored key x2, isolated audit_mode, `--workers 1`, deleting only its own run ids. That's about 81 keys x2 at about 1 min per pair, roughly 1.5 h.
+  - **Host order:** THESE PAIRS FIRST. Then rpg's `make evaluate-full` (TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE, due 10-30). Never both at once. Tell rpg-planner when the last process exits.
+  - **Tables:** the moved-rows and ruling tables go to rpg-planner BEFORE any commit, and rpg rules each moved row (with the designer where a Bible meaning is touched).
+  - **Expiry:** if the sha isn't on main by 10-29, rpg-planner says so that day, which triggers AC6.
+  - **Sidecar:** rpg's calibration writes the existing calibrate_simq `quality_report.run_determinism.json` (run id + audit_mode + signals_zeroed). No new format. test_grade_regression's live side keeps refusing a missing sidecar.
 
 ## Implementation Notes
 (implementer)
