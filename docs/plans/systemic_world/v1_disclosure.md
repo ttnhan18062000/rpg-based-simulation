@@ -18,9 +18,7 @@ The v1 baseline artifact cites this file at the baseline's pinned commit; it doe
 VERBATIM are owner or designer rulings and are not reworded. Every row names its source ruling (memo
 row or roadmap item in `owner_decision_memo.md` / `roadmap.md`) and what happens after v1.
 
-**Measured on.** rpg-next 74a310b6e, an ancestor of #645's merged tip 6d7bd1509 (main 3597c08d3); the later commits change no simulation behaviour (type annotations, test isolation, perf inventories, ticket files) unless a row says otherwise: the three gate
-worlds (`frontier_living_world`, `urban_political`, `crowded_frontier`), seeds 42-46 (10-seed rows say
-42-51), 5,000 ticks, audit_mode.
+**Measured on.** v1 = e8df8b96d (simulation identical in every paired field to e6a6a3e10; adds the MEAT_DECAYED emitter filter and the V3 known entry), main after #718 and #720; gate run 39799337778 (harness 525fe36f2cbc, report artifact `rpg-gate-report-e8df8b96da891304d8a4d8afade5e6d63182cf22`): green, equal to the run on e6a6a3e10. The v1 steps' paired readings (N7, N9) were measured on the steps' own commits, and the cumulative reading (M4) on e6a6a3e10; v1 is that code plus a record-only filter, proven identical field for field (N16). Rows measured earlier name their own commit, e.g. rpg-next 74a310b6e (an ancestor of #645's merged tip 6d7bd1509, main 3597c08d3); the later commits change no simulation behaviour unless a row says otherwise. Unless a row says otherwise: the three gate worlds (`frontier_living_world`, `urban_political`, `crowded_frontier`), seeds 42-46 (10-seed rows say 42-51), 5,000 ticks, audit_mode.
 
 ## M. Measurement caveats
 

@@ -1173,6 +1173,11 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
    - **Baseline v1** (TCK-20261019-RECORD-BASELINE-V1) records the meal-ON world, together with
      `v1_disclosure.md`, which lists everything v1 records but does not claim. The free-meal
      removal (decision 73) is measured against v1 as the gate's own step.
+     **Recorded 2026-10-22:** v1 = e8df8b96d (simulation identical in every paired field to e6a6a3e10; adds the MEAT_DECAYED emitter filter and the V3 known entry). Gate run 39799337778 on it: green, V2 0 on all 15
+     runs, V3 exactly the three known reds (disclosure N14, N15, M5). The cumulative reading 1b
+     (903239fbe against e6a6a3e10, seeds 42-51) is disclosure M4; its stop was the pooled test
+     (memo row 86). The extinction line, revisited at v1: per seed it stays the stop for a single
+     step; a cumulative or M0-crossing span stops on the pooled test (memo row 86).
 1. **Kinds by properties.**
    - The property model in coarse bands, as schema and content.
    - The appraisal.
