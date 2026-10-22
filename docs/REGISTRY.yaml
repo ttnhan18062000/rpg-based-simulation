@@ -7841,6 +7841,32 @@
   - agent-working/stored_artifacts/TCK-20261022-NO-MEAT-DECAYED-RECORD-FOR-A-CARCASS-RE-ADDED-ON-ITS-DECAY-TICK/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME.md
+  ticket_id: TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME
+  title: A carcass partly eaten on its decay tick is re-inserted by the apply order
+    and decays a tick late; its MEAT_DECAYED record overstates (V2 fail on 2 of 15
+    v1 gate runs)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-22'
+  related_code_areas:
+  - _without_decay_of_looted_bodies
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED.md
+  ticket_id: TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED
+  title: An rpg gate known entry can name the (world, seed) it owns, so owning one
+    known validity fail does not hide every other fail of the same metric
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-22'
+  related_code_areas:
+  - tools/test_architecture/known_reds.py; tools/test_architecture/rpg_gate_candidate.py;
+    tools/test_architecture/rpg_gate_report.py; tools/test_architecture/rpg_gate_known.yaml.
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE.md
   ticket_id: TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE
   title: A hand closure made more than 30 minutes after the session's last tool call
@@ -8011,6 +8037,17 @@
   tags:
   - ai
   - governance
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT.md
+  ticket_id: TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT
+  title: A crowded service door blocks a starving subject 2 tiles away indefinitely
+    (occupancy_violation, falls back to REST)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas: []
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION.md
   ticket_id: TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION
@@ -8416,6 +8453,18 @@
   date: '2026-10-20'
   related_code_areas:
   - docker/grafana/provisioning/alerting/rules-base.yaml
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.md
+  ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
+  title: 'Put both survival pressures on one escalation scale: combat_retreat gets
+    the need-pull escalation once hp is in its own consequence band'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai need_pull.py (ESCALATION_AMPLITUDE, smoothstep)
   artifact_files: []
   tags: []
 - type: ticket
