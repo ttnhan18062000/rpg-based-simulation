@@ -178,7 +178,7 @@ domains:
       "agent-working/**": agent-working-designer
       "tools/release/**": testing-planner
       "tools/**": agent-working-designer
-  architecture:   # advisory; owner 2026-10-22 (#715). Proposals and reviews only; ADRs stay lead's
+  architecture:   # owner 2026-10-22 (#715). Proposals and reviews; ADRs stay lead's
     owns:
       - docs/plans/architecture/**
     owns_not: []
@@ -380,7 +380,16 @@ roles:
     handover: .claude/handover/lead-planner-u24.md
     card_note: "Host lead for u24desktop: status of this host's sessions only, on `agent-working/lead/hosts/u24desktop.md`. Never edits `board.md`. Lead-owned paths: comment only; review authority stays with lead-planner."
 
-  - role: architecture-planner-u24   # host u24desktop; no designer or implementer (owner 2026-10-22)
+  - role: architecture-planner   # host ubuntu; registered from u24desktop (owner 2026-10-22, #715)
+    identity: {domain: architecture, function: planner, session_name: architecture-planner,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**", "docs/REGISTRY.yaml"]}
+    placement: {launch: main-checkout, max_sessions: 1}
+    handover: .claude/handover/architecture-planner.md
+    card_note: "Host ubuntu; twin `-u24`."
+  - role: architecture-planner-u24   # host u24desktop (owner 2026-10-22)
     identity: {domain: architecture, function: planner, session_name: architecture-planner-u24,
                legacy_session_name: null, seat_status: staffed}
     responsibility:
@@ -388,7 +397,25 @@ roles:
     capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**", "docs/REGISTRY.yaml"]}
     placement: {launch: main-checkout, max_sessions: 1}
     handover: .claude/handover/architecture-planner-u24.md
-    card_note: "Host u24desktop. Advisory."
+    card_note: "Host u24desktop; twin is plain."
+  - role: architecture-implementer   # host ubuntu; registered from u24desktop (owner 2026-10-22, #715)
+    identity: {domain: architecture, function: implementer, session_name: architecture-implementer,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, architecture-planner]
+    capability: {may_write: ["docs/plans/architecture/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**", "agent-working/stored_artifacts/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml", ".claude/handover/drafts/**"]}   # docs only until architecture owns code (owner 2026-10-22, #715); code goes to rpg or perf implementers
+    placement: {worktree: architecture, max_sessions: 1}
+    handover: .claude/handover/architecture-implementer.md
+    card_note: "Host ubuntu; twin `-u24`."
+  - role: architecture-implementer-u24   # host u24desktop (owner 2026-10-22)
+    identity: {domain: architecture, function: implementer, session_name: architecture-implementer-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, architecture-planner-u24]
+    capability: {may_write: ["docs/plans/architecture/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**", "agent-working/stored_artifacts/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml", ".claude/handover/drafts/**"]}   # docs only until architecture owns code (owner 2026-10-22, #715); code goes to rpg or perf implementers
+    placement: {worktree: architecture-u24, max_sessions: 1}
+    handover: .claude/handover/architecture-implementer-u24.md
+    card_note: "Host u24desktop; twin is plain."
 
   - role: platform-planner   # launched on demand while a DevOps plan step is open; no designer (ADRs go to lead-planner)
     identity: {domain: platform, function: planner, session_name: platform-planner,
@@ -486,3 +513,5 @@ worktrees:
   agent-working-u24: {writer: agent-working-implementer-u24}
   agent-working-designer-u24: {writer: agent-working-designer-u24}
   agent-working-planner-u24: {writer: agent-working-planner-u24}
+  architecture: {writer: architecture-implementer}
+  architecture-u24: {writer: architecture-implementer-u24}
