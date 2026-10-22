@@ -92,12 +92,12 @@ def _target_still_perceived(entity: "EntityState", target: "EntityState") -> boo
 
 
 def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) -> List["EntityState"]:
-    """Perceived neighbors the entity's appraisal counts as hostile (same predicate as
-    AppraisalSystem.evaluate_emotional_state), so a retreat flees what the panic gate saw."""
+    """Perceived LIVING neighbors the entity's appraisal counts as hostile (same predicate as
+    AppraisalSystem.evaluate_emotional_state), so a retreat flees what the panic gate saw. A dead body is in the neighbour view but is not a threat."""
     sx, sy = entity.navigation.position
     return [
         n for n in neighbors
-        if are_entities_hostile(entity, n, RelationContext(
+        if n.combat.alive and are_entities_hostile(entity, n, RelationContext(
             distance=abs(n.navigation.position[0] - sx) + abs(n.navigation.position[1] - sy),
             combat_engaged=True,
         ))
