@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-BEHAVIORAL-5K-BUILDS-ITS-WORLD-WITHOUT-THE-CONTENT-CONTEXT
-phase: open
+phase: done
 date: 2026-10-20
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 tests/regression/test_behavioral_5k.py compiles its world without the content context, so the bodies hold no starting coin and gold_avg reads 0.0
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -68,4 +68,4 @@ Fixed harness, urban_political seed 42, 5000 ticks, audit_mode + pinned NORMAL g
 tests/regression/test_behavioral_5k.py, tests/helpers/world_build.py, tests/unit/test_world_build_helper_matches_the_gate.py
 
 ## Completion Summary
-TBD
+Fixed on rpg-baseline-v1 (shared world helper, tick-0 gold guard, helper-vs-gate unit test) and the baseline rebaselined at v1 e8df8b96d in the record PR: alive_avg 13.30 -> 18.34, gold_avg 584.16 -> 904.2, quest_active_count 0.0 -> 6.16, two runs identical, test_behavioral_5k passes. Other callers that compile without the content context stay with rpg-planner's triage (out of scope).

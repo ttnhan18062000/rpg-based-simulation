@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-RECORD-BASELINE-V1
-phase: active
+phase: done
 date: 2026-10-19
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Record baseline v1: paired fingerprints, gate V1-V8 rows and the behavioral_5k rebaseline, all on one commit, with v1_disclosure.md as what v1 does not claim
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -92,9 +92,13 @@ Milestone 0 ends with the baseline v1 record, and milestone 1 measures against i
 - Whether main after 6d7bd1509 (the #645 tip) has moved simulation behaviour (deps window, R1, R2, other domains). A hash-identity check answers this before the record.
 
 ## Implementation Notes
+v1 = e8df8b96d (main after #714 v1 fixes, #718 known file, #720 emitter filter). Order of events: the first 1b (paired.py on e6a6a3e10) was refused (NonAuditRunError: the cached base at 903239fbe predates the determinism fix, so its manifest has audit_mode/signals_zeroed = None; the plan's command had left out --legacy-base). The re-run with --legacy-base --self-check full proved the base audit by a byte-identical 30-run base repeat. The first gate run on main (39710919027) was RED with 5 unowned fails (3 V3, 2 V2) and wrote no candidate; the V2 pair was a one-tick decay-record defect fixed by #720, the V3s were owned by a blanket known entry (#718, expires 2026-11-05). The recorded candidate is from gate run 39799337778 (workflow_dispatch on main, no ref input, commit_sha e8df8b96d, not evidence-only, harness_hash 525fe36f2cbc equal to run 39710919027's). 1b on e6a6a3e10 carries over to v1 because (a1) (#720) was proven identical in every paired result field, 0 of 15 pairs (P1); the known file changes only verdict labels. The diff e6a6a3e10..e8df8b96d under src, content, config, data, registries, tools/rpg_measure and the gate paths is src/engine/economy.py (#720), tools/test_architecture/rpg_gate_known.yaml (#718) and registries/session_roles.yaml (outside the measured paths, session routing only).
 
 ## Test Summary
+1b (paired, seeds 42-51, 5000t, --legacy-base --self-check full, e6a6a3e10 vs 903239fbe): base repeat spread 0 (30 runs byte-identical); people deaths frontier 255->246 (-9, SE 1.83), urban 91->99 (+8, SE 0.92), crowded 300->312 (+12, SE 0.80), all no drift; the tool's extinction line is STOP none in all three worlds; two-way per-seed extinctions only_in_new 45 / only_in_base 29 (v1b/extinct_two_way.txt), disclosed under owner memo row 86; crowded raider 54->69 per-kind is disclosed with the goblin-spawn confound (not a stop). Gate run 39799337778: GREEN, 90 pass / 18 fail (all owned: 15 V1 free-meal, 3 V3) / 0 drift / 0 unstable / 253 no-data (no baseline existed), V2 pass on all 15; V3 examples exactly urban_political/44 merchant 28 (t3140), frontier_living_world/44 worker 2 (t3736), crowded_frontier/46 raider 38 (t3778). rebaseline --milestone M0 --cite this ticket: wrote rpg_gate_v1.json (no owner-ruling flags); `rpg_gate_baseline lint` exit 0. behavioral_5k (urban_political, seed 42, 5000t, PYTHONHASHSEED=0): two regeneration runs agree; alive_avg 13.30 -> 18.34, gold_avg 584.16 -> 904.2, quest_active_count 0.0 -> 6.16; tests/regression/test_behavioral_5k.py -m extra_slow passes (412 s). Attribution: the harness change (shared world helper with the content context, tick-0 gold guard) accounts for most of the move (that harness measured 18.34 / 909.4 / 7.08 on 66ba2aa39); the remaining gap to v1 (gold 909.4 -> 904.2, quest 7.08 -> 6.16) is simulation changes merged between the harness run and v1, not isolated to a PR.
 
 ## Files Changed
+tests/simulation_quality/rpg_gate/baselines/rpg_gate_v1.json (new), tests/regression/baseline_5k.json, the merged rpg-baseline-v1 files (tests/helpers/world_build.py, tests/regression/test_behavioral_5k.py, tests/unit/test_world_build_helper_matches_the_gate.py, tickets), the designer's docs commits (docs/plans/systemic_world/owner_decision_memo.md, v1_disclosure.md, roadmap.md), docs/REGISTRY.yaml, monitoring shards.
 
 ## Completion Summary
+Baseline v1 recorded at e8df8b96d: the gate baseline JSON (M0) from a main run, the behavioral_5k rebaseline, and 1b carried over under owner memo rows 85/86. NOT done in this ticket: scope item 4 (calibration regenerated with make evaluate-full and its run_determinism sidecar, for testing's SimQ re-anchor) and pointing the D76 cumulative table at the new base (the 1b run is the data for it); both are left to rpg-planner/the designer and are not claimed here. The user's merge of the record PR is the owner's sign-off.
