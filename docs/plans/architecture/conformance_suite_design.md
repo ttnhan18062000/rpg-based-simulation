@@ -108,6 +108,16 @@ hash is blind), which documents the gap in executable form. It turns green only 
 field that rpg rules out of canonical state (for example `recent_world_events`, if it is a view) is removed from C1 with
 the ruling cited.
 
+### 4.1a Settled: the replay fingerprint is blind to the same six fields
+
+`StateFingerprinter.get_fingerprint` (`src/replay/fingerprint.py:33`; it feeds the `REFINED_UPDATE` fingerprint, so it is
+what the replay trail sees besides `TICK_END.hash`) reads only `entities`, `global_resources`, `grief_drained_tick`,
+`last_calamity_tick`, `local_scars`, `maturity`, `movement_count`, `regions`, `resource_nodes`, `seed`, `tick` and, through
+`_group_identity` (`:248`), `groups`. A grep of the file for the six names finds none of them. So the per-tick trail does not
+see `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans` or `information_providers` either, and the
+Mode 3 "blind to" list in §4 stands in full: running Mode 3 with replay on does not close the gap. (Read at `b281d0c3d`; the
+file was not changed by the commits since.)
+
 ### 4.2 Stopgap per-field digest (a design option only; perf's call)
 
 Until the bump, the suite could compute a **side digest** over exactly the six omitted fields, test-side, with the same
@@ -195,6 +205,6 @@ nightly cron (`test.yml:7-12`), `slow-regression.yml`, and the sharded gate (`rp
 | Q2 | Is the §4.2 side digest worth building before PERF-D5, or does the "blind to" list suffice? | perf-planner |
 | Q3 | Is `recent_world_events` canonical state or a view? Decides whether C1 has five or six fields. | rpg-planner |
 | Q4 | Does any shipped world (W5, W2) pass A0? If none does, is a purpose-built attack world acceptable in `data/worlds`? | rpg-planner |
-| Q5 | Does `StateFingerprinter.get_fingerprint` (`src/replay/fingerprint.py:33`) cover `factions`, `clans` or `quest_registry`? If so the trail already sees them under replay and the Mode 3 blind-to list shrinks (audit §5, `UNVERIFIED`) | perf-planner |
+| Q5 | ~~Does the fingerprint cover `factions`, `clans` or `quest_registry`?~~ **Resolved, see §4.1a: it covers none of the six.** | closed |
 | Q6 | Is there any events digest outside `src/`? If yes, add it to the Mode 1 row (audit §6) | perf-planner |
 | Q7 | The Mode 3 matrix: which backends and worker counts, and on which host kind? | perf-planner with testing-planner |

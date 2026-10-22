@@ -5845,6 +5845,16 @@
   - ai
   - governance
 - type: doc
+  path: docs/plans/architecture/conformance_suite_design.md
+  title: Conformance-suite design for the engine execution modes
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - determinism
+- type: doc
   path: docs/plans/architecture/engine_execution_modes_proposal.md
   title: 'Engine execution modes: fix the waste first, then five labelled modes'
   status: active
