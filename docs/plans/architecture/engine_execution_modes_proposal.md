@@ -86,21 +86,26 @@ Execution Mode and RuntimeMode on a claim). **Results are compared only within o
   `TICK_END.hash`.
 - **Keeps:** the same executor, the same fixed budgets and the same world evolution. `kernel.md` says "Shutdown
   always emits the final canonical hash regardless of runtime mode", so end-state proof stays.
-- **Gives up:**
-  - per-tick determinism proof: you cannot name the first tick at which two runs diverge;
-  - replay of the run. Phase-7 digest output is the replay proof stream (`kernel.md`, Phase 7).
+- **Gives up:** the whole replay stream, not only the digest. `no_replay` sets `replay_allowed=False`, and
+  `ReplayManager.emit` returns early for every event (`src/engine/replay_manager.py:99`). So there is no
+  `REFINED_UPDATE` with its fingerprint (`kernel.py:657`) and no `TICK_END` with its hash (`kernel.md`, Phase 7).
+  That means:
+  - no per-tick determinism proof: you cannot name the first tick at which two runs diverge;
+  - no replay of the run.
 - **Does not give up:** the PERF-D1 A2 contract. `no_replay` changes no budget and reads no clock.
-- **Expected saving:** the digest share, 9 to 27 % of a tick (PROVISIONAL).
+- **Expected saving:** at least the digest share, 9 to 27 % of a tick (PROVISIONAL; a lower bound, since the
+  other replay emits stop too).
 - **Used for:** paired arms (behaviour and, once T3 passes, neutral steps), the rpg gate if testing-planner agrees,
   and exploratory runs.
 - **Paired proofs do not read the digest (code read, 2026-10-22).** `tools/rpg_measure/arm_child.py:58,69` computes
   `start_hash` and `final_hash` directly with `CanonicalStateHasher.get_hash`. The neutral check
   (`paired.py:174-180`) and the self-check (`stats.py:125`) compare those hashes plus fates and counters. Mode 2
   could therefore serve neutral steps too.
-- **Two facts to verify first (draft T3):**
+- **Three facts to verify first (draft T3):**
   - that `no_replay` leaves the canonical hashes identical, i.e. no game logic reads `replay_allowed`;
   - that the behaviour counters, which `arm_child.py:35-36` tallies from `simulation_events.jsonl`, are still
-    written.
+    written;
+  - that no consumer on the paired or gate path reads the replay stream.
 - **Not used for:** certification.
 - **Owner of the ruling:** perf-planner (PERF-D1 contracts).
 
@@ -216,4 +221,5 @@ contract and its Mode 1 implementation:
 1. **Target scale for goal (b):** agent count, ticks per second, live or offline. It decides whether Mode 5 belongs
    in the plan at all.
 2. **Mode 2:** may paired arms (and the gate) use it once perf rules on it and T3 passes?
-3. **H2, H3, H4:** file them after v1 (this proposal's recommendation), or post on #593 that they wait?
+3. **H2, H3, H4:** the recommendation is that H2 gets a ticket after v1, and that H3 and H4 re-measure first,
+   because both were profiled before #645. Agree, or post on #593 that all three wait?

@@ -79,7 +79,7 @@ overlap a little".
 ## H3: EventRecorder eviction: re-measure the partial fix, then finish or close
 
 Proposed ID: `TCK-2026MMDD-EVENT-RECORDER-EVICTION-COST-AFTER-THE-SEVERITY-COUNTS`. Layer `observability`. Tier
-`hotfix` if only a re-measure, `standard` if a fix. Type `investigation`. Priority P3. Tags
+`hotfix` if only a re-measure, `standard` if a fix. Type `chore` (`refactor` if it becomes a fix). Priority P3. Tags
 `[performance, observability]`.
 
 **Request summary.**
@@ -201,7 +201,7 @@ Proposed ID: `TCK-2026MMDD-PAIRED-ARMS-RUN-WITHOUT-THE-PER-TICK-REPLAY-DIGEST`. 
   so replay is allowed and Phase 7 computes the per-tick SHA-256 digest (`src/engine/kernel.py:1125`;
   `docs/engine/kernel.md`, "State Hashing in Phase 7").
 - That digest is 9.2 % (`strategic_100`) to 27.1 % (`frontier_extended`) of a tick (`tick_cost_growth.md` §4,
-  PROVISIONAL).
+  PROVISIONAL). This is a lower bound on the saving, because `no_replay` stops every replay emit.
 - Paired proofs never read it. `arm_child.py:58,69` hashes the start and final state directly with
   `CanonicalStateHasher.get_hash`. The neutral check (`paired.py:174-180`) and the self-check (`stats.py:125`)
   compare those hashes plus fates and counters.
@@ -211,9 +211,12 @@ budget and reads no clock, but the contract is perf's.
 
 **Scope:**
 - Pass `no_replay` in the paired arm kernel.
-- Verify three things:
+- Note what `no_replay` turns off: every `ReplayManager.emit` (`src/engine/replay_manager.py:99`), so
+  `REFINED_UPDATE` (`kernel.py:657`) and `TICK_END` go too, not just the digest.
+- Verify four things:
   - hashes are identical with and without it, i.e. no game logic reads `replay_allowed`;
   - the behaviour counters `arm_child.py:35-36` tallies from `simulation_events.jsonl` are still written;
+  - no consumer on the paired or gate path reads the replay stream;
   - the result manifest records the flag.
 - Then decide separately whether the gate harness adopts it (testing-planner).
 
