@@ -5845,6 +5845,29 @@
   - ai
   - governance
 - type: doc
+  path: docs/plans/architecture/engine_execution_modes_proposal.md
+  title: 'Engine execution modes: fix the waste first, then five labelled modes'
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - performance
+  - determinism
+- type: doc
+  path: docs/plans/architecture/faster_feature_testing_draft_tickets.md
+  title: 'Draft tickets: faster feature testing (step 1 and step 2 of the execution-modes
+    proposal)'
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - performance
+  - testing
+- type: doc
   path: docs/plans/archive/agent_infrastructure/context_efficient_agent_retrieval/ticket_plan_structure.md
   title: Ticket Plan Structure — Context-Efficient Agent Retrieval and Observability
   status: historical
