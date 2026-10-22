@@ -18,12 +18,17 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
+from tests.helpers.world_build import compile_world_with_context
+
 SEED = 42
 WORLD_ID = "urban_political"
 TICKS = 5000
 SAMPLE_INTERVAL = 100  # sample every N ticks → 50 samples over 5k-tick run
 
 BASELINE_PATH = Path("tests/regression/baseline_5k.json")
+
+# Worlds whose declaration gives bodies a starting purse: their tick-0 state must hold coin, or the world was built without its context.
+WORLDS_WITH_STARTING_GOLD = frozenset({"urban_political"})
 
 # Allowed relative deviation from baseline before test fails.
 # Bands chosen empirically from D06 1k-tick variance (ticket §Assumptions).
@@ -48,16 +53,15 @@ def collect_behavioral_metrics(
     non-survival goal selection — the domain that most behavioral regressions
     affect.
     """
-    from src.worldbuilding.repository import WorldRepository
-    from src.worldbuilding.compiler import WorldCompiler
     from src.engine.kernel import Kernel
     from src.engine.metrics import MetricsService
     from src.config.profiles import RuntimeProfile, HardwareClass
     from src.platform.rng import DeterministicRNG
+    from tests.helpers.kernel_pinning import PinnedNormalGovernor
 
-    repo = WorldRepository("data/worlds")
-    spec = repo.load_world(world_id)
-    state, _ = WorldCompiler.compile(spec, seed=seed)
+    state, _ = compile_world_with_context(world_id, seed)  # the gate's build: with the content context (a context-less world has no starting purses)
+    assert world_id not in WORLDS_WITH_STARTING_GOLD or sum(e.inventory.gold for e in state.entities.values()) > 0, (
+        f"world {world_id!r} declares starting gold but the compiled tick-0 state holds none: it was built without its content context")
 
     # Enable adventure routing — required for economic and quest metrics to activate.
     flags = dict(state.feature_flags)
@@ -77,8 +81,9 @@ def collect_behavioral_metrics(
     )
     # no_frame_pacing disables the kernel's tick-rate sleep (which pads each tick to
     # max_tick_budget_ms). Without this flag, 5000 ticks × 500ms = ~45 minutes.
+    # audit_mode with a pinned NORMAL governor: no wall-clock throttle, so the metrics do not depend on host speed (the baseline is recorded host-independently).
     kernel = Kernel(profile=profile, state=state, rng=DeterministicRNG(seed),
-                    flags={"no_frame_pacing": True})
+                    governor=PinnedNormalGovernor(), flags={"no_frame_pacing": True, "audit_mode": True})
 
     samples: list[dict[str, Any]] = []
     try:
