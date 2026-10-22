@@ -163,14 +163,15 @@ unaffected: it touches only non-authoritative output.
 > `information_providers` (`:1462`). All six are rebuilt every tick in `ApplyPath.apply_generation` (`apply.py:529,543-547`),
 > so a divergence in any of them is invisible to the final hash and to Mode 2/3 conformance. `terrain` is omitted too but is a
 > passthrough (`apply.py:512`), no gap. Question for rpg-planner: is `recent_world_events` (a windowed list) meant to be
-> part of canonical state, or is it a view? Question for perf-planner: adding fields changes every digest; the
+> part of canonical state, or is it a view? Question for perf-planner: adding fields changes every digest, so
 > perf owns the scheme bump (PERF-D5, `flat-sha256-v1` to vN). It needs an owner-approved PERF-D5 amendment and comes after
 > RECORD-BASELINE-V1, then the baselines are re-recorded. rpg's ruling on `recent_world_events` decides whether the field count is
 > five or six. Until the bump, hash-equality proofs are blind to these fields (the T3 `no_replay` proof is not affected). Evidence: `docs/plans/architecture/port_leak_audit.md` §5.
 
 **F2 to perf-planner. Default `LIVE` signal contract lets wall-clock choose the runtime mode (M1-now).**
-> `config/profiles.py:57` defaults `signal_contract` to `LIVE`; `signal_source.py:190-194` uses measured
-> `tick_compute_ms` unless `audit_mode`; `governor.py:79-105` turns `cost_ms >= budget_ms` into `DEGRADED`, and
+> `config/profiles.py:57` defaults `signal_contract` to `LIVE`; `signal_source.py:190-194` returns `_ZEROED` for
+> `audit_mode` (signals zeroed), `_CANONICAL` for `signal_contract` CANONICAL (the reference work model) and `_LIVE` otherwise;
+> only `LIVE` uses measured `tick_compute_ms`; `governor.py:79-105` turns `cost_ms >= budget_ms` into `DEGRADED`, and
 > the policy changes scheduling (`kernel.py:555-566`). The same seed on a slower host can schedule different work. This is
 > PERF-D1 input 1, already known; the ask is that the proposal's Mode 1 state fixed budgets (`audit_mode`, or pinned NORMAL) as a precondition, per PERF-D1 A2,
 > and that the conformance suite pin it. `CANONICAL` is for runs that measure cost or governance and must not stand in for it:
