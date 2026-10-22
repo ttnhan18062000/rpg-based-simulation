@@ -5455,6 +5455,17 @@
   - process-improvement
   - governance
 - type: doc
+  path: docs/guidelines/session_roles/domains/architecture.md
+  title: 'Session domain: architecture'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: doc
   path: docs/guidelines/session_roles/domains/asset.md
   title: 'Session domain: asset'
   status: active
@@ -5823,6 +5834,39 @@
   - process-improvement
   - delivery
   - agent-monitoring
+- type: doc
+  path: docs/plans/architecture/README.md
+  title: Architecture plans
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
+- type: doc
+  path: docs/plans/architecture/engine_execution_modes_proposal.md
+  title: 'Engine execution modes: fix the waste first, then five labelled modes'
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - performance
+  - determinism
+- type: doc
+  path: docs/plans/architecture/faster_feature_testing_draft_tickets.md
+  title: 'Draft tickets: faster feature testing (step 1 and step 2 of the execution-modes
+    proposal)'
+  status: active
+  layer: architecture
+  authority: P2
+  audience: agent
+  tags:
+  - architecture
+  - performance
+  - testing
 - type: doc
   path: docs/plans/archive/agent_infrastructure/context_efficient_agent_retrieval/ticket_plan_structure.md
   title: Ticket Plan Structure — Context-Efficient Agent Retrieval and Observability
@@ -7773,6 +7817,64 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING.md
+  ticket_id: TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING
+  title: Before acting on a user approval, a session records it on one approvals-log
+    issue and tells its own host's lead; both leads acknowledge there, and an acknowledgment
+    is not an approval
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - .claude/agents/session-*.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - process-improvement
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261022-ARCHITECTURE-PLANNER-U24-SEAT.md
+  ticket_id: TCK-20261022-ARCHITECTURE-PLANNER-U24-SEAT
+  title: Register an advisory architecture domain with one seat, `architecture-planner-u24`
+    (u24desktop, planner, no implementer), which owns only `docs/plans/architecture/**`
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - .claude/agents/session-*.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME.md
+  ticket_id: TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME
+  title: A carcass partly eaten on its decay tick is re-inserted by the apply order
+    and decays a tick late; its MEAT_DECAYED record overstates (V2 fail on 2 of 15
+    v1 gate runs)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-22'
+  related_code_areas:
+  - _without_decay_of_looted_bodies
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED.md
+  ticket_id: TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED
+  title: An rpg gate known entry can name the (world, seed) it owns, so owning one
+    known validity fail does not hide every other fail of the same metric
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-22'
+  related_code_areas:
+  - tools/test_architecture/known_reds.py; tools/test_architecture/rpg_gate_candidate.py;
+    tools/test_architecture/rpg_gate_report.py; tools/test_architecture/rpg_gate_known.yaml.
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE.md
   ticket_id: TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE
   title: A hand closure made more than 30 minutes after the session's last tool call
@@ -7792,6 +7894,75 @@
   - data-quality
   - retro
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-KERNEL-DOC-THROTTLING-AND-FINGERPRINT-HASH-DRIFT.md
+  ticket_id: TCK-20261021-KERNEL-DOC-THROTTLING-AND-FINGERPRINT-HASH-DRIFT
+  title: 'Engine contract drift: kernel.md still says Emergency Throttling drops work
+    (DEV-014 made it report-only) and calls the isolation fingerprint SHA-256 where
+    known_limitations §2.3 says MD5'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - docs/engine/kernel.md, docs/engine/known_limitations.md §2.3, the DEV-014 divergence
+    entry, src/engine (throttling and fingerprint code)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-KNOWN-LIMITATIONS-PHASE10-FLAG-DEFAULTS-DRIFT.md
+  ticket_id: TCK-20261021-KNOWN-LIMITATIONS-PHASE10-FLAG-DEFAULTS-DRIFT
+  title: known_limitations.md §1.5 says every Phase-10 flag defaults OFF, but feature_flags.py
+    defaults ENABLE_COMBAT_ENGAGEMENT, ENABLE_BELIEF_ASSIMILATION and ENABLE_SOCIAL_COOPERATION
+    to ON
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - docs/engine/known_limitations.md §1.5, src/core/feature_flags.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-OBSERVABILITY-DETERMINISM-TEST-NEVER-HASHES.md
+  ticket_id: TCK-20261021-OBSERVABILITY-DETERMINISM-TEST-NEVER-HASHES
+  title: test_phase28_observability_determinism is named "same authoritative hash"
+    but only toggles the observability mode and never compares a hash
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - tests/integration/observability/test_phase28_observability_determinism.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS.md
+  ticket_id: TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS
+  title: 'Eleven paths that route as unowned get an owner in session_roles.yaml: the
+    8 docs/observability files, README.md, docs/guides/feature_flags.md and tools/release/**'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-21'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - tools/sessions/{route,validate,generate_agents,card}.py
+  - .claude/agents/session-*.md
+  - tests/tools/test_session_*.py
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-WATCHDOG-POLLS-AN-ADMISSION-GATED-METRICS-ENDPOINT.md
+  ticket_id: TCK-20261021-WATCHDOG-POLLS-AN-ADMISSION-GATED-METRICS-ENDPOINT
+  title: The watchdog GETs backend:8000/metrics, which is behind require_admission
+    (401), so with admission on, check_metrics fails every 10 s and WatchdogTrip fires
+    continuously
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/observability/watchdog.py, src/api/server.py:176, docker/prometheus.yml, tests/unit/observability/test_watchdog.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS.md
   ticket_id: TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS
   title: Week-close sweeps the main checkout's main.tools.jsonl into the closed week's
@@ -7806,6 +7977,85 @@
   tags:
   - agent-monitoring
   - data-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH.md
+  ticket_id: TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH
+  title: The executor looks up local_priority by a packet work_id format that never
+    matches the scheduler's WorkItem work_id, so the priority is always 0. The kernel's
+    sort order also contradicts bounded_concurrency_contract §3.
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/engine/scheduler.py:143, src/engine/executor.py:189/290/335/340, src/engine/kernel.py:606,
+    docs/engine/bounded_concurrency_contract.md §3
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH/investigation.md
+  - agent-working/stored_artifacts/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH/plan.md
+  - agent-working/stored_artifacts/TCK-20261021-WORK-ITEM-PRIORITY-LOOKUP-KEY-MISMATCH/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS.md
+  ticket_id: TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS
+  title: When a worker chunk future raises, that chunk's results are dropped with
+    no per-entity FAILURE no-ops, which the contract requires, and future.result()
+    has no timeout path
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/engine/worker_manager.py (~L176), the worker failure contract in docs/engine/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS/plan.md
+  - agent-working/stored_artifacts/TCK-20261021-WORKER-CHUNK-EXCEPTION-DROPS-RESULTS-WITHOUT-FAILURE-NOOPS/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/codebase-pyrefly-advisory/TCK-20261021-PYREFLY-ADVISORY-REPORT.md
+  ticket_id: TCK-20261021-PYREFLY-ADVISORY-REPORT
+  title: 'Pyrefly as an advisory second type-checker opinion: a report-only Code health
+    CI step and Makefile target that never block'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-21'
+  related_code_areas:
+  - codebase/gates/mypy_gate.py
+  - codebase/baselines/
+  - pyproject.toml
+  - tests/codebase/test_typecheck_gate_configured.py
+  - docs/parity_ledger/infrastructure.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261021-PYREFLY-ADVISORY-REPORT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261021-PYREFLY-ADVISORY-REPORT/plan.md
+  - agent-working/stored_artifacts/TCK-20261021-PYREFLY-ADVISORY-REPORT/test_plan.md
+  tags:
+  - architecture
+  - delivery
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT.md
+  ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
+  title: Role cards show a role's single files in a folder it doesn't otherwise own
+    as "dir/ (N files)", so the card budget can come back down from 440
+  tier: hotfix
+  ticket_type: refactor
+  date: '2026-10-21'
+  related_code_areas:
+  - tools/sessions/card.py
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT.md
+  ticket_id: TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT
+  title: A crowded service door blocks a starving subject 2 tiles away indefinitely
+    (occupancy_violation, falls back to REST)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas: []
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING.md
   ticket_id: TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING
@@ -7841,6 +8091,36 @@
   - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/investigation.md
   - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/plan.md
   - agent-working/stored_artifacts/TCK-20261019-STARVATION-PAST-ITS-LINE-IS-A-PRESENT-THREAT-WEIGHED-IN-GOAL-SELECTION/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT.md
+  ticket_id: TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT
+  title: 'A dead body in the neighbour view is not a perceived threat: the panic gate,
+    the emotional appraisal and the saliency ranking skip the dead'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/engine/tactical.py, src/engine/cognition.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT/plan.md
+  - agent-working/stored_artifacts/TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY.md
+  ticket_id: TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY
+  title: A hunger or sleep goal that wins scoring at or past its SURV-07 onset is
+    admitted even when the project cap is full
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/systems/strategic_systems/intelligence.py, src/systems/strategic_systems/detour.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY/investigation.md
+  - agent-working/stored_artifacts/TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY/plan.md
+  - agent-working/stored_artifacts/TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY/test_plan.md
   tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261020-BASELINE-GENERATION-FLOW-HEALTH-SCORE-MEAN-IS-99-NOT-100.md
@@ -8200,6 +8480,31 @@
   date: '2026-10-20'
   related_code_areas:
   - docker/grafana/provisioning/alerting/rules-base.yaml
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.md
+  ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
+  title: 'Put both survival pressures on one escalation scale: combat_retreat gets
+    the need-pull escalation once hp is in its own consequence band'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai need_pull.py (ESCALATION_AMPLITUDE, smoothstep)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-SUSPENDED-PROJECTS-ARE-NEVER-RESUMED-SLOT-LEAK.md
+  ticket_id: TCK-20261020-SUSPENDED-PROJECTS-ARE-NEVER-RESUMED-SLOT-LEAK
+  title: Suspended projects are never resumed and never expire, so they hold project
+    slots forever (slot leak)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai/intelligence.py (~L1771 capacity gate)
+  - src/core/strategic.py (is_live_project, has_project_capacity)
   artifact_files: []
   tags: []
 - type: ticket
