@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261022-PERF-EVENT-RECORDER-AND-EVENT-CONSTRUCTION-REMEASURE
-phase: open
+phase: done
 date: 2026-10-22
 tags: [performance, observability, benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [performance, observability, benchmarking]
 Re-measure H3 (EventRecorder eviction) and H4 (pydantic construction of engine-made events) after #645, then close or hand a fix to rpg
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -66,17 +66,17 @@ numbers.
 - Replay-on cost (measured by `TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED`).
 
 ## Acceptance Criteria
-- [ ] 3 runs × 2 workloads on main at or after #645, taken in a lead-granted quiet slot (loadavg1 < 1.5,
+- [x] 3 runs × 2 workloads on main at or after #645, taken in a lead-granted quiet slot (loadavg1 < 1.5,
       ≥ 2.5 GB available, `systemd-run` MemoryMax=3G / MemorySwapMax=0, one at a time, foreground). The
       load is recorded per run.
-- [ ] H3 and H4 inclusive shares reported as median and range, with commit, host and contract. Labelled
+- [x] H3 and H4 inclusive shares reported as median and range, with commit, host and contract. Labelled
       PROVISIONAL (shares, single host).
-- [ ] The post-#645 eviction path is cited by file:line, with folded-stack evidence for or against a
+- [x] The post-#645 eviction path is cited by file:line, with folded-stack evidence for or against a
       remaining O(buffer) step.
-- [ ] `tick_cost_growth.md` §3 has the dated re-measure note. The pre-#645 numbers are kept and labelled.
-- [ ] A CLOSE or FIX verdict per item is posted on #593 with the numbers. A FIX verdict names the call site
+- [x] `tick_cost_growth.md` §3 has the dated re-measure note. The pre-#645 numbers are kept and labelled.
+- [x] A CLOSE or FIX verdict per item is posted on #593 with the numbers. A FIX verdict names the call site
       for rpg.
-- [ ] Profiles stay under `reports/perf/tick_cost_remeasure/` (git-ignored) and are summarised in the
+- [x] Profiles stay under `reports/perf/tick_cost_remeasure/` (git-ignored) and are summarised in the
       ticket. Run data is cleaned by run id.
 
 ## Related Tickets
@@ -103,9 +103,18 @@ numbers.
   FIX-BORDERLINE and leave the call to rpg-planner.
 
 ## Implementation Notes
+Six serial runs (H3 x3, H4 x3) at commit `3b5c7b473` (main `81b387aa8`, contains #645), each started at loadavg1 below 1.5 with at least 3.6 GB available, under `systemd-run --user --scope -p MemoryMax=3G -p MemorySwapMax=0`. No timeout or OOM. Inclusive shares of kept py-spy samples, runs 1 / 2 / 3:
+- H3 `EventRecorder.record` on `frontier_extended`: 0.69 / 0.76 / 0.56 %, median 0.69 % (was 42.5 %). **CLOSE.**
+- H4 on `strategic_100`: `event_shapers.py` 0.97 / 1.59 / 1.18 %, median 1.18 %; pydantic `__init__` under the event path 0.44 / 0.71 / 0.65 %, median 0.65 %. **CLOSE.**
+- Observation: `frontier_extended` `event_shapers.py` is 2.41 / 4.84 / 3.74 %, median 3.74 %, with only 0.75 % pydantic `__init__`; not a `model_construct` target, left to rpg-planner.
+Eviction path and the full table are in `docs/performance/tick_cost_growth.md` section 3, "Re-measure after #645". Raw folded stacks stay in the git-ignored `reports/perf/tick_cost_remeasure/`. The verdict posts on #593 through perf-planner.
 
 ## Test Summary
+Measurement only; no code changed, so no tests. Frontmatter validated by the closure checks.
 
 ## Files Changed
+- `docs/performance/tick_cost_growth.md` (dated re-measure note under section 3)
+- this ticket
 
 ## Completion Summary
+H3 and H4 both CLOSE by the 2 % rule; evidence in the doc note.
