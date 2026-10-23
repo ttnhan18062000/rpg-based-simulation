@@ -7059,7 +7059,7 @@
   - architecture
   - documentation
   - roadmap
-  last_verified: '2026-10-22'
+  last_verified: '2026-10-23'
 - type: doc
   path: docs/plans/systemic_world/review_history/external-ai-instruction-execute-first-systemic-world-batch.md
   title: External AI instruction — execute and self-review the first systemic-world
@@ -7852,6 +7852,30 @@
   tags:
   - architecture
   - determinism
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
+  ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
+  title: Remove the free meal for every kind (decision 73) as its own measured step
+    against v1, before milestone 1
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - src/systems (building_services, conservation, inventory); src/ai need_pull
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-M1-DONE-CRITERIA-AND-FREEZE-RULE.md
+  ticket_id: TCK-20261023-M1-DONE-CRITERIA-AND-FREEZE-RULE
+  title: Record the owner-approved milestone 1 done criteria and freeze rule as roadmap
+    §12.5
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas:
+  - docs/plans/systemic_world/roadmap.md
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE.md
   ticket_id: TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE
