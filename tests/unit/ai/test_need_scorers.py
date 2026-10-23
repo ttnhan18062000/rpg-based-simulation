@@ -10,6 +10,7 @@ from src.ai.goals.base import NeedAccess
 from src.engine.need_pull import HUNGER_LINE, SLEEP_LINE
 from src.ai.goals.scorers import EatScorer, SleepScorer
 from src.core.builder import V2EntityBuilder
+from src.core.movement_modes import MovementMode
 from src.core.state import AuthoritativeState, BuildingState
 
 BLOCKER_CEILING = 103.8
@@ -88,12 +89,53 @@ def _with_hostile(hero, at, hp=100):
     return hero, state
 
 
-def test_a_present_threat_takes_the_escalation_away_so_a_need_never_outbids_combat():
+def _acting(state, task):
+    """`state` with the hostile (entity 2) given `task`."""
+    monster = replace(state.entities[2], task=task)
+    object.__setattr__(state, "entities", {**state.entities, 2: monster})
+    return state
+
+
+def test_a_hostile_acting_on_the_subject_takes_the_escalation_away_so_a_need_never_outbids_combat():
+    """Memo row 88: a hostile holds back an escalated need by an act (its current task attacks or pursues the subject, or it hit the subject), not by standing adjacent."""
+    from src.core.state import TaskComponent
+
     hunger = 0.75 * HUNGER_LINE
-    hero, near = _with_hostile(_hero(hunger=hunger), (1.0, 0.0))  # adjacent: a present threat
-    assert EatScorer().score(hero, near).utility == pytest.approx(hunger)
-    hero, far = _with_hostile(_hero(hunger=hunger), (9.0, 0.0))   # perceived but not a present threat
+    hero, near = _with_hostile(_hero(hunger=hunger), (1.0, 0.0))
+    attacking = _acting(near, TaskComponent(work_kind="ENTITY_ACT", payload={"action": "ATTACK", "target_id": hero.id}))
+    assert EatScorer().score(hero, attacking).utility == pytest.approx(hunger)  # a targeting attacker: the escalation gives way
+    hero, near = _with_hostile(_hero(hunger=hunger), (1.0, 0.0))
+    pursuing = _acting(near, TaskComponent(work_kind="ENTITY_MOVE", payload={"target_position": (0.0, 0.0), "target_id": hero.id}))
+    object.__setattr__(pursuing, "entities", {**pursuing.entities, 2: replace(pursuing.entities[2], navigation=replace(pursuing.entities[2].navigation, movement_mode=MovementMode.PURSUE))})
+    assert EatScorer().score(hero, pursuing).utility == pytest.approx(hunger)
+    hero, far = _with_hostile(_hero(hunger=hunger), (9.0, 0.0))   # perceived but not acting
     assert EatScorer().score(hero, far).utility > BLOCKER_CEILING
+
+
+def test_a_hostile_merely_adjacent_does_not_take_the_escalation_away():
+    """Old -> new: an adjacent hostile with no attack or pursuit task used to count as a present threat and drop the escalation to the raw hunger."""
+    hunger = 0.75 * HUNGER_LINE
+    hero, near = _with_hostile(_hero(hunger=hunger), (1.0, 0.0))
+    assert EatScorer().score(hero, near).utility > BLOCKER_CEILING
+
+
+def test_a_hit_within_the_window_is_an_act_and_a_stale_or_foreign_hit_is_not():
+    from src.engine.scheduler import NEED_WAKE_CADENCE
+
+    hunger = 0.75 * HUNGER_LINE
+
+    def scene(last_attacker, hit_tick):
+        hero, state = _with_hostile(_hero(hunger=hunger), (1.0, 0.0))
+        hero = replace(hero, combat=replace(hero.combat, last_attacker_id=last_attacker, last_hit_tick=hit_tick))
+        object.__setattr__(state, "entities", {**state.entities, 1: hero})
+        return hero, state
+
+    hero, state = scene(2, 500 - NEED_WAKE_CADENCE)
+    assert EatScorer().score(hero, state).utility == pytest.approx(hunger)  # the hostile hit it exactly one cadence ago
+    hero, state = scene(2, 500 - NEED_WAKE_CADENCE - 1)
+    assert EatScorer().score(hero, state).utility > BLOCKER_CEILING  # one tick past the window
+    hero, state = scene(99, 500)
+    assert EatScorer().score(hero, state).utility > BLOCKER_CEILING  # the last hit was another body's
 
 
 def test_a_wound_alone_with_no_hostile_in_view_is_not_a_threat_to_the_need():

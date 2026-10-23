@@ -4594,3 +4594,15 @@
   test_path: tests/integration/observability/test_an_escalated_need_is_never_refused_for_capacity_through_the_real_kernel.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.137.
   support_boundary: 'Paired against the dead-are-not-threats step, STRAT-285 (seeds 42-46): no drift; extinction stop (frontier scout; crowded hero, scout, worker), accepted by the owner (v1 disclosure N9). V3 on 15: 12 clean, 3 owned known reds (N14, N15). has_project_capacity still counts exempt need projects (slot-leak ticket); a suspended exempt need project frees a slot for an ordinary project that the old trim would have removed.'
+
+- id: STRAT-287
+  text: 'TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE (SURV-07, AGENCY-07, memo row 88): a perceived hostile holds back an escalated need and holds a panic retreat past the need''s consequence line only when it ACTS on the subject: its current task is an attack (ATTACK, SKILL) or a pursuit (PURSUE, INTERCEPT, BRACKETING) with the subject as its typed target, or it is the body that last took hp from the subject within NEED_WAKE_CADENCE ticks (CombatComponent.last_hit_tick, written with last_attacker_id). Wounded, adjacent, closing without a task and outmatched are AGENCY-07 flight terms only. Rest and eat in place and the cautious safety retreat keep the full terms.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/ai/goals/present_threat.py (acting_threat_to), src/engine/tactical_threat.py (hostile_acts_on), src/ai/goals/scorers.py (_escalated_unless_threatened), src/engine/tactical.py (_panic_holds), src/core/state.py (CombatComponent.last_hit_tick), src/engine/patches.py (CombatPatch), src/engine/combat.py (hit_tick_set). docs/mechanics/04_strategic_cognition.md section 1. Real-kernel merchant-37 test stays green; unit pairs per reader (acting versus resting) and a hit-window boundary test.'
+  proof_type: regression
+  test_path: tests/unit/engine/test_acting_hostile_is_an_act_not_a_state.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.138.
+  support_boundary: 'Paired measurement pending (base 341f700d0, seeds 42-46). An attack task stays current until the hostile next decides (no reach test); the state digest changes for every entity (new always-emitted key). Step A (retreat escalation) is measured on this tip.'
+
