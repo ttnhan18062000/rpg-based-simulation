@@ -170,6 +170,7 @@ domains:
       - tools/loadtest/**
       - docs/runbooks/**
       - docs/observability/loki_label_policy.md
+      - SECURITY.md                           # owner 2026-10-23 (#715); platform already owns security-scan.yml and dependabot.yml
     owns_not: []
     routes:
       "src/**": rpg-planner                   # the engine stays one process

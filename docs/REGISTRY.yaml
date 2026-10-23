@@ -7869,6 +7869,19 @@
   - ai
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261023-SESSION-ROLES-PLATFORM-OWNS-SECURITY-MD.md
+  ticket_id: TCK-20261023-SESSION-ROLES-PLATFORM-OWNS-SECURITY-MD
+  title: '`SECURITY.md` (repo root) gets an owner: platform'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas:
+  - registries/session_roles.yaml
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
   ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
   title: Remove the free meal for every kind (decision 73) as its own measured step
