@@ -7059,7 +7059,7 @@
   - architecture
   - documentation
   - roadmap
-  last_verified: '2026-10-22'
+  last_verified: '2026-10-23'
 - type: doc
   path: docs/plans/systemic_world/review_history/external-ai-instruction-execute-first-systemic-world-batch.md
   title: External AI instruction — execute and self-review the first systemic-world
@@ -7853,6 +7853,30 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
+  ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
+  title: Remove the free meal for every kind (decision 73) as its own measured step
+    against v1, before milestone 1
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - src/systems (building_services, conservation, inventory); src/ai need_pull
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-M1-DONE-CRITERIA-AND-FREEZE-RULE.md
+  ticket_id: TCK-20261023-M1-DONE-CRITERIA-AND-FREEZE-RULE
+  title: Record the owner-approved milestone 1 done criteria and freeze rule as roadmap
+    §12.5
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas:
+  - docs/plans/systemic_world/roadmap.md
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE.md
   ticket_id: TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE
   title: Regenerate the calibration on v1 (`make evaluate-full` plus its run_determinism
@@ -7981,6 +8005,23 @@
   - observability
   - benchmarking
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED.md
+  ticket_id: TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED
+  title: An rpg gate known entry can name the (world, seed) it owns, so owning one
+    known validity fail does not hide every other fail of the same metric
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-22'
+  related_code_areas:
+  - tools/test_architecture/known_reds.py; tools/test_architecture/rpg_gate_candidate.py;
+    tools/test_architecture/rpg_gate_report.py; tools/test_architecture/rpg_gate_known.yaml.
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED/plan.md
+  - agent-working/stored_artifacts/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED/test_plan.md
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME.md
   ticket_id: TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME
   title: A carcass partly eaten on its decay tick is re-inserted by the apply order
@@ -7991,19 +8032,6 @@
   date: '2026-10-22'
   related_code_areas:
   - _without_decay_of_looted_bodies
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED.md
-  ticket_id: TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED
-  title: An rpg gate known entry can name the (world, seed) it owns, so owning one
-    known validity fail does not hide every other fail of the same metric
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-22'
-  related_code_areas:
-  - tools/test_architecture/known_reds.py; tools/test_architecture/rpg_gate_candidate.py;
-    tools/test_architecture/rpg_gate_report.py; tools/test_architecture/rpg_gate_known.yaml.
   artifact_files: []
   tags: []
 - type: ticket

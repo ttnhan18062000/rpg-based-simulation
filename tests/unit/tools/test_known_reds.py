@@ -199,3 +199,138 @@ def test_the_slow_report_still_exposes_the_names_it_used_to_define():
 
     for name in ("load_known_reds", "lint_known_reds", "shadowed_entries", "owner_of", "is_expired", "days_to_expiry", "classify", "stale_mappings", "REQUIRED_ENTRY_FIELDS", "KINDS"):
         assert getattr(srr, name) is getattr(kr, name)
+
+
+# --- TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED: scoped entries (`cases`) ---
+
+
+def _scoped(cases, match="V3", **extra):
+    return _gate(match, "fail", cases=cases, **extra)
+
+
+def _v3(world, seed, *ids, violations=None, scope="run"):
+    """A V3 fail finding as the gate report carries it."""
+    examples = [{"entity_id": i, "kind": "starved", "tick": 100} for i in ids]
+    finding = {"id": "V3", "group": "*", "scope": scope, "world": world, "state": "fail", "violations": len(examples) if violations is None else violations, "examples": examples}
+    if scope == "run":
+        finding["seed"] = seed
+    return finding
+
+
+N14 = {"world": "urban_political", "seed": 44, "entity_id": 28}
+N15A = {"world": "crowded_frontier", "seed": 46, "entity_id": 38}
+N15B = {"world": "frontier_living_world", "seed": 44, "entity_id": 2}
+
+
+def _v1_registry():
+    return [_scoped([N14], ticket="TCK-N14"), _scoped([N15A, N15B], ticket="TCK-N15")]
+
+
+def _owner(finding, known=None):
+    entry = kr.owner_of_finding("V3", finding, known if known is not None else _v1_registry(), state="fail")
+    return entry["ticket"] if entry else None
+
+
+def test_a_scoped_entry_owns_exactly_its_cases_and_scoped_entries_share_a_match():
+    assert _owner(_v3("urban_political", 44, 28)) == "TCK-N14"
+    assert _owner(_v3("crowded_frontier", 46, 38)) == "TCK-N15"
+    assert _owner(_v3("frontier_living_world", 44, 2)) == "TCK-N15"
+
+
+def test_a_fourth_fail_on_an_uncovered_world_and_seed_is_unowned():
+    assert _owner(_v3("urban_political", 45, 28)) is None
+    assert _owner(_v3("crowded_frontier", 47, 38)) is None
+    assert _owner(_v3("new_world", 44, 2)) is None
+
+
+def test_a_new_entity_on_a_covered_world_and_seed_is_unowned():
+    assert _owner(_v3("urban_political", 44, 28, 29)) is None
+    assert _owner(_v3("urban_political", 44, 29)) is None
+
+
+def test_violations_above_the_examples_cap_is_unowned():
+    assert _owner(_v3("urban_political", 44, 28, violations=6)) is None
+
+
+def test_an_example_without_an_entity_id_is_unverifiable_so_unowned():
+    finding = _v3("urban_political", 44, 28)
+    finding["examples"] = [{"kind": "starved"}]
+    assert _owner(finding) is None
+    finding["examples"] = []
+    finding["violations"] = 0
+    assert _owner(finding) is None
+
+
+def test_a_pooled_fail_is_never_owned_by_a_scoped_entry():
+    assert _owner(_v3("urban_political", None, 28, scope="pooled")) is None
+
+
+def test_a_case_without_entity_id_owns_every_fail_of_that_world_and_seed():
+    known = [_scoped([{"world": "w", "seed": 1}])]
+    assert _owner(_v3("w", 1, 5, 6, violations=9), known) == "TCK-X"
+    assert _owner(_v3("w", 2, 5), known) is None
+
+
+def test_an_unscoped_entry_after_scoped_ones_owns_what_they_do_not():
+    known = [*_v1_registry(), _gate("V3", "fail", ticket="TCK-ALL")]
+    assert _owner(_v3("anywhere", 1, 7), known) == "TCK-ALL"
+    assert _owner(_v3("urban_political", 44, 28), known) == "TCK-N14"
+
+
+def test_the_string_lookups_never_see_a_scoped_entry():
+    known = _v1_registry()
+    assert kr.owner_of("V3", known, "fail") is None
+    assert kr.classify({"V3": ""}, known, TODAY, "fail") == (["V3"], [])
+    assert kr.stale_mappings({}, known, "fail") == []
+
+
+def test_stale_cases_names_each_case_that_no_longer_fails():
+    ident = lambda f: f["id"]  # noqa: E731
+    assert kr.stale_cases([_v3("urban_political", 44, 28)], _v1_registry(), ident) == [
+        "V3 crowded_frontier/46/38", "V3 frontier_living_world/44/2"]
+    assert kr.stale_cases([_v3("urban_political", 44, 99)], _v1_registry(), ident)[0] == "V3 urban_political/44/28"
+    assert kr.stale_cases([], [_scoped([{"world": "w", "seed": 1}])], ident) == ["V3 w/1"]
+
+
+def test_the_lint_accepts_the_v1_registry():
+    assert kr.lint_known_reds(_v1_registry(), RPG_GATE_SPEC) == []
+
+
+def test_the_lint_rejects_overlapping_cases_across_and_within_entries():
+    across = kr.lint_known_reds([_scoped([N14]), _scoped([{**N14}], ticket="TCK-Y")], RPG_GATE_SPEC)
+    assert any("overlaps" in p for p in across)
+    within = kr.lint_known_reds([_scoped([N14, {"world": "urban_political", "seed": 44}])], RPG_GATE_SPEC)
+    assert any("overlaps" in p for p in within)
+    assert not [p for p in kr.lint_known_reds([_scoped([N14, {**N14, "entity_id": 29}])], RPG_GATE_SPEC) if "overlaps" in p]
+
+
+def test_the_lint_rejects_an_unscoped_entry_before_a_scoped_one_but_not_the_reverse():
+    assert any("shadowed" in p for p in kr.lint_known_reds([_gate("V3", "fail"), _scoped([N14])], RPG_GATE_SPEC))
+    assert kr.lint_known_reds([_scoped([N14]), _gate("V3", "fail", ticket="TCK-Y")], RPG_GATE_SPEC) == []
+
+
+@pytest.mark.parametrize(
+    "cases, fragment",
+    [
+        ([], "non-empty list"),
+        ("x", "non-empty list"),
+        (["x"], "not a mapping"),
+        ([{"seed": 1}], "world is required"),
+        ([{"world": "w"}], "seed is required"),
+        ([{"world": "w", "seed": "1"}], "seed is required"),
+        ([{"world": "w", "seed": True}], "seed is required"),
+        ([{"world": "w", "seed": 1, "extra": 1}], "unknown key"),
+        ([{"world": "w", "seed": 1, "entity_id": None}], "entity_id"),
+    ],
+)
+def test_the_lint_rejects_an_empty_or_malformed_case(cases, fragment):
+    assert any(fragment in p for p in kr.lint_known_reds([_scoped(cases)], RPG_GATE_SPEC))
+
+
+def test_a_drift_entry_with_cases_is_a_lint_error():
+    assert any("only on a state: fail" in p for p in kr.lint_known_reds([_gate("O1", "drift", cases=[N14])], RPG_GATE_SPEC))
+
+
+def test_the_slow_registry_rejects_cases():
+    problems = kr.lint_known_reds([_slow("tests.a*", cases=[{"world": "w", "seed": 1}])], SLOW_SPEC)
+    assert any("cases is not allowed in the slow registry" in p for p in problems)

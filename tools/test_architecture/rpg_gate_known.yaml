@@ -6,6 +6,11 @@
 # and `state`, the one state the entry covers:
 #   fail   a VALIDITY fail; `ticket` is the ticket that owns the fix.
 #   drift  a DRIFT against the baseline; `ticket` is a TRACE ticket (the decision that explains the drift).
+# `cases` is optional and allowed only on a `fail` entry: a non-empty list of `{world, seed, entity_id?}` that SCOPES the entry. A scoped entry owns a
+# run-scope fail only when its (world, seed) is a case and, when the case names an `entity_id`, the finding's violations all show in its examples
+# (violations == len(examples), none cut by the module's example cap) and every example's `entity_id` is one of the case ids for that (world, seed).
+# Anything it cannot verify is unowned; it never owns a pooled fail; when its cases do not cover a finding the next entry is tried, so scoped entries may
+# share one `match`. Two entries may not name the same case; an unscoped entry before a scoped one of the same pattern shadows it. An unscoped entry keeps its meaning.
 # `note` is optional. Unknown fields are rejected. A metric with no entry in its state is UNOWNED; one past `expires_on` is EXPIRED.
 # ORDER MATTERS within a state: the first entry whose pattern matches wins, and the lint rejects a shadowed entry.
 known:
@@ -17,9 +22,21 @@ known:
     state: fail
     note: "The free meal: a subject that cannot pay eats at the inn. The inn charge (building_services.py:71-74, TOWN_SERVICE gold_delta -5, gold_cost 0) is accepted at 0 gold (conservation.py:256) and the -5 is clamped to 0 (inventory.py:156); V1 counts a hunger drop as backed only when an accepted transfer moved something (items, or the gold applied after the clamp), so it now shows. Before D74 it showed as merchants (group undeclared) via core_actions.py eat_update alone (-40, no transfer)."
   - match: "V3"
+    ticket: TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT
+    owner: rpg-planner
+    added_on: "2026-10-22"
+    expires_on: "2026-11-05"
+    state: fail
+    cases:
+      - {world: urban_political, seed: 44, entity_id: 28}
+    note: "N14, v1 known red, owner cutoff 2026-10-21; exception accepted by the owner on issue #715 (comment 6337993346). Owns EXACTLY urban_political/44 merchant 28 (starved t3140). Any other V3 fail, or another entity on this (world, seed), is a regression. Disclosure: v1_disclosure.md M5."
+  - match: "V3"
     ticket: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
     owner: rpg-planner
     added_on: "2026-10-22"
     expires_on: "2026-11-05"
     state: fail
-    note: "v1 known reds, owner cutoff 2026-10-21; exception and breadth accepted by the owner on issue #715 (comment 6337993346). Owns EXACTLY three V3 cases from v1 gate run 39710919027: urban_political/44 merchant 28 t3140 (N14, TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT); crowded_frontier/46 raider 38 t3778 and frontier_living_world/44 worker 2 t3736 (N15, this ticket). The matcher cannot name a world or seed, so this entry also owns any other V3 fail: ANY OTHER V3 FAIL IS A REGRESSION. Check every gate report's V3 examples by hand until expiry. Replace with scoped entries via TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED before 2026-11-05. Disclosure: v1_disclosure.md M5."
+    cases:
+      - {world: crowded_frontier, seed: 46, entity_id: 38}
+      - {world: frontier_living_world, seed: 44, entity_id: 2}
+    note: "N15, v1 known reds, owner cutoff 2026-10-21; exception accepted by the owner on issue #715 (comment 6337993346). Owns EXACTLY crowded_frontier/46 raider 38 (starved t3778) and frontier_living_world/44 worker 2 (starved t3736). Any other V3 fail, or another entity on these (world, seed) pairs, is a regression. Disclosure: v1_disclosure.md M5."

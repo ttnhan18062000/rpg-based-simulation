@@ -425,7 +425,7 @@ def _ownership(findings: List[dict], known: Sequence[dict], today: dt.date) -> L
     out = []
     for f in findings:
         if f["state"] in (FAIL, DRIFT):
-            entry = known_reds.owner_of(metric_test_id(f), known, state=f["state"])
+            entry = known_reds.owner_of_finding(metric_test_id(f), f, known, state=f["state"])
             if entry is None:
                 f = {**f, "ownership": "unowned" if f["state"] == FAIL else "needs-trace-ticket"}
             elif known_reds.is_expired(entry, today):
@@ -474,6 +474,7 @@ def build_report(
         state: [e["match"] for e in known_reds.stale_mappings({metric_test_id(f): "" for f in findings if f["state"] == state}, known, state=state)]
         for state in known_reds.GATE_STATES
     }
+    stale_known["fail"] = stale_known["fail"] + known_reds.stale_cases(findings, known, metric_test_id, "fail")
     outcome, reasons = verdict(findings)
     counts = {state: sum(1 for f in findings if f["state"] == state) for state in STATES}
     return {

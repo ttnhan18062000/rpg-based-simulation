@@ -831,3 +831,48 @@ def test_floor_rel_outside_zero_to_one_or_on_a_pooled_row_is_a_contract_error():
     docs[("w", None)]["metrics"][-1]["floor_rel"] = 0.1
     report = _build(docs)
     assert [f["reason"] for f in report["findings"] if f["id"] == "O9"] == ["contract_error"]
+
+
+# ---- TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED: scoped ownership in the report
+
+def _scoped_entry(cases, ticket="TCK-S"):
+    return {**_entry("V1", "fail", ticket=ticket), "cases": cases}
+
+
+def _fail_docs(**by_seed):
+    docs = _docs()
+    for seed, examples in by_seed.items():
+        docs[("w", int(seed.lstrip("s")))] = _seed_doc(int(seed.lstrip("s")), violations=len(examples), examples=examples)
+    return docs
+
+
+def test_a_scoped_entry_owns_only_its_world_seed_and_entity_and_the_rest_is_red():
+    docs = _fail_docs(s1=[{"entity_id": 7}])
+    known = [_scoped_entry([{"world": "w", "seed": 1, "entity_id": 7}])]
+    owned = _build(docs, known=known)
+    assert owned["verdict"] == "green" and next(f for f in owned["findings"] if f["state"] == "fail")["ownership"] == "known"
+    assert owned["stale_known_entries"]["fail"] == []
+    # a fourth fail on an uncovered seed is RED while the covered one stays owned
+    docs[("w", 2)] = _seed_doc(2, violations=1, examples=[{"entity_id": 7}])
+    red = _build(docs, known=known)
+    assert red["verdict"] == "red" and sum(1 for f in red["findings"] if f.get("ownership") == "unowned") == 1
+    assert sum(1 for f in red["findings"] if f.get("ownership") == "known") == 1
+
+
+def test_a_new_entity_on_a_covered_seed_is_red_in_the_report():
+    docs = _fail_docs(s1=[{"entity_id": 7}, {"entity_id": 8}])
+    assert _build(docs, known=[_scoped_entry([{"world": "w", "seed": 1, "entity_id": 7}])])["verdict"] == "red"
+
+
+def test_examples_cut_by_the_cap_are_unowned_in_the_report():
+    docs = _docs()
+    docs[("w", 1)] = _seed_doc(1, violations=6, examples=[{"entity_id": 7}] * 6)  # the report keeps MAX_EXAMPLES (5) of 6
+    assert _build(docs, known=[_scoped_entry([{"world": "w", "seed": 1, "entity_id": 7}])])["verdict"] == "red"
+
+
+def test_a_scoped_entry_does_not_own_a_pooled_fail_and_a_stale_case_is_listed():
+    docs = _docs()
+    docs[("w", None)] = _pooled_doc(violations=1)
+    report = _build(docs, known=[{**_entry("V7:wolves", "fail"), "cases": [{"world": "w", "seed": 1}]}])
+    assert report["verdict"] == "red"
+    assert report["stale_known_entries"]["fail"] == ["V7:wolves w/1"]
