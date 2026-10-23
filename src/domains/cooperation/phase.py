@@ -89,6 +89,8 @@ class CooperationPhase:
         # Built once per tick: offers live on the offering entity's own contracts, and nothing in this loop changes a
         # contract (every change is deferred into the returned update), so one index serves every entity below.
         pending_offers = build_pending_offer_index(state)
+        # Same reasoning: positions, liveness and activity are unchanged until the returned update is applied.
+        candidate_index = PartnerCandidateProvider.build_index(state, budget)
         
         # Scoped evaluation per tick
         for entity_id, entity in state.entities.items():
@@ -125,7 +127,7 @@ class CooperationPhase:
             evaluation_count += 1
             
             # 2. Get scoped partner candidates
-            candidates = PartnerCandidateProvider.get_candidates(entity, state, help_needs, budget)
+            candidates = PartnerCandidateProvider.get_candidates(entity, state, help_needs, budget, candidate_index)
             
             # 3. Evaluate fit reports for candidates
             fit_reports = []
