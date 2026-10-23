@@ -7059,7 +7059,7 @@
   - architecture
   - documentation
   - roadmap
-  last_verified: '2026-10-22'
+  last_verified: '2026-10-23'
 - type: doc
   path: docs/plans/systemic_world/review_history/external-ai-instruction-execute-first-systemic-world-batch.md
   title: External AI instruction — execute and self-review the first systemic-world
