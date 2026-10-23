@@ -542,7 +542,7 @@ def rebaseline(
     for omitted in candidate.get("omitted_validity") or []:
         if known is None:
             raise RebaselineRefused("this candidate omitted owned validity fails; pass the current rpg_gate_known.yaml (--known) so each owner can be re-checked")
-        entry = next((e for e in known if e.get("match") == omitted.get("known_match") and e.get("state") == "fail"), None)
+        entry = next((e for e in known if e.get("match") == omitted.get("known_match") and e.get("state") == "fail" and omitted.get("ticket") in (None, e.get("ticket"))), None)  # scoped entries may share a match; the ticket tells them apart
         if entry is None:
             raise RebaselineRefused(f"omitted validity row {omitted.get('row')}: its owner entry {omitted.get('known_match')!r} is no longer a state: fail entry in rpg_gate_known.yaml")
         if known_reds.is_expired(entry, today or dt.datetime.now(dt.timezone.utc).date()):

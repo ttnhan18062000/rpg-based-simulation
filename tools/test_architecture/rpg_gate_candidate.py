@@ -29,7 +29,7 @@ A candidate is never partial. :func:`build_candidate` raises :class:`CandidateRe
 * a document's ``ticks`` or ``world`` / ``seed`` differs from the config or its file name;
 * a validity row has ``violations > 0`` with no current owner, or no integer ``violations`` / no ``oracle``. A baseline holds validity rows at 0 only, and
   validity is judged absolutely on every run, never against a baseline. So a row that fails but has a current, unexpired ``state: fail`` entry in
-  ``rpg_gate_known.yaml`` (``known_reds.owner_of``, matched by ``<metric_id>[:<group>]``) is OMITTED from the candidate (all its seeds and its pooled row)
+  ``rpg_gate_known.yaml`` (``known_reds.owner_of_finding``, matched by ``<metric_id>[:<group>]``; a scoped entry with ``cases`` owns only a fail it can verify) is OMITTED from the candidate (all its seeds and its pooled row)
   and listed in ``omitted_validity: [{row, known_match, ticket}]``; without that, one owned fail would block the whole baseline and every outcome drift
   behind it. An unowned or expired fail still refuses;
 * ``k``, ``floor`` or ``oracle`` disagree across the documents for one (id, group), or an outcome row lacks its numeric ``k`` / ``floor`` / value;
@@ -172,9 +172,9 @@ def _validity(row: Mapping[str, Any], name: str) -> Tuple[int, str]:
     return violations, row["oracle"]
 
 
-def _omissions(docs: Mapping[Any, dict], config: GateConfig, known: Sequence[dict], today: dt.date) -> Dict[Tuple[str, str, str], dict]:
-    """``(world, id, group) -> known entry`` for every validity row that fails and is owned; an unowned or expired fail refuses the candidate."""
-    omitted: Dict[Tuple[str, str, str], dict] = {}
+def _omissions(docs: Mapping[Any, dict], config: GateConfig, known: Sequence[dict], today: dt.date) -> Dict[Tuple[str, str, str], List[dict]]:
+    """``(world, id, group) -> [known entries]`` for every validity row that fails and is owned; an unowned or expired fail refuses the candidate."""
+    omitted: Dict[Tuple[str, str, str], List[dict]] = {}
     for key, doc in docs.items():
         name = f"{key[0]}__s{key[1]}.json" if key[1] is not None else f"{key[0]}__pooled.json"
         for row in doc["metrics"]:
@@ -184,12 +184,15 @@ def _omissions(docs: Mapping[Any, dict], config: GateConfig, known: Sequence[dic
             if violations == 0:
                 continue
             group = row.get("group", "*")
-            entry = known_reds.owner_of(metric_test_id({"id": row["id"], "group": group}), known, state="fail")
+            finding = {"world": key[0], "scope": "run" if key[1] is not None else "pooled", "seed": key[1], "violations": violations, "examples": list(row.get("examples") or [])}
+            entry = known_reds.owner_of_finding(metric_test_id({"id": row["id"], "group": group}), finding, known, state="fail")
             if entry is None:
                 raise CandidateRefused(f"{name}: validity row {row['id']} has {violations} violation(s) and no owner in rpg_gate_known.yaml (state: fail); a baseline holds validity rows at 0, so the fail must be owned or fixed first")
             if known_reds.is_expired(entry, today):
                 raise CandidateRefused(f"{name}: validity row {row['id']} has {violations} violation(s) and its owner entry {entry['match']!r} expired on {entry['expires_on']}")
-            omitted[(key[0], row["id"], group)] = entry
+            owners = omitted.setdefault((key[0], row["id"], group), [])
+            if not any(o is entry for o in owners):
+                owners.append(entry)  # scoped entries can share a match: every owner is recorded, so each expiry is re-checked at rebaseline
     return omitted
 
 
@@ -251,12 +254,14 @@ def build_candidate(
     def omit(row: Mapping[str, Any], world: str, scope: str) -> bool:
         if row.get("class") == "validity" and (world, scope, row["id"]) in owned_missing:
             return True
-        entry = omitted.get((world, row["id"], row.get("group", "*")))
-        if entry is None:
+        owners = omitted.get((world, row["id"], row.get("group", "*")))
+        if not owners:
             return False
         label = row_label({"id": row["id"], "scope": scope, "world": world, "group": row.get("group", "*")})
-        if not any(o["row"] == label for o in omitted_rows):
-            omitted_rows.append({"row": label, "known_match": entry["match"], "ticket": entry["ticket"]})
+        for entry in owners:
+            item = {"row": label, "known_match": entry["match"], "ticket": entry["ticket"]}
+            if item not in omitted_rows:
+                omitted_rows.append(item)
         return True
 
     rows: List[dict] = []
