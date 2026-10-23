@@ -7853,6 +7853,22 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261023-SEMGREP-SEARCH-DOCKERFILE-USER-AND-TRANSIT-SHA1.md
+  ticket_id: TCK-20261023-SEMGREP-SEARCH-DOCKERFILE-USER-AND-TRANSIT-SHA1
+  title: 'The two open Semgrep alerts on agent-working paths are resolved: the search
+    server image runs as a non-root user, and handover_transit''s git blob id is marked
+    not-for-security'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas:
+  - tools/search/Dockerfile
+  - tests/tools/test_handover_transit*.py
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
   ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
   title: Remove the free meal for every kind (decision 73) as its own measured step
