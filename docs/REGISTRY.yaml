@@ -7853,6 +7853,30 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261023-COOPERATION-CANDIDATES-ENUMERATED-PER-ENTITY-PER-TICK.md
+  ticket_id: TCK-20261023-COOPERATION-CANDIDATES-ENUMERATED-PER-ENTITY-PER-TICK
+  title: Cooperation partner candidates are enumerated per entity per tick (O(n^2));
+    build the candidate source once per tick (H2)
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-23'
+  related_code_areas:
+  - src/domains/cooperation/providers.py; src/engine/cooperation*
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-CHECKPOINT-RESTORE-DRAWS-STATELESS-RANDOMS-FROM-SEED-ZERO.md
+  ticket_id: TCK-20261023-CHECKPOINT-RESTORE-DRAWS-STATELESS-RANDOMS-FROM-SEED-ZERO
+  title: A restored checkpoint rebuilds DeterministicRNG with base_seed=0, so stateless
+    draws after a restore differ from the unbroken run (#593 F3)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-23'
+  related_code_areas:
+  - src/engine/scenario_checkpoint.py; src/platform/rng.py; src/engine/scenario_runtime.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
   ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
   title: Remove the free meal for every kind (decision 73) as its own measured step
@@ -7874,6 +7898,79 @@
   date: '2026-10-23'
   related_code_areas:
   - docs/plans/systemic_world/roadmap.md
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-PAIRED-ARMS-RUN-WITHOUT-THE-PER-TICK-REPLAY-DIGEST.md
+  ticket_id: TCK-20261023-PAIRED-ARMS-RUN-WITHOUT-THE-PER-TICK-REPLAY-DIGEST
+  title: Paired arms run with no_replay (Mode 2), after perf's ruling (T3)
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - tools/rpg_measure/arm_child.py; tools/rpg_measure/paired.py; src/engine/replay_manager.py
+    (read)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS.md
+  ticket_id: TCK-20261023-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS
+  title: paired.py can compare arm results collected from the off-host workflow instead
+    of running them (rpg child of T2)
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - tools/rpg_measure/paired.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-PAIRED-WRITES-ONE-RUN-LEDGER-ROW-PER-INVOCATION.md
+  ticket_id: TCK-20261023-PAIRED-WRITES-ONE-RUN-LEDGER-ROW-PER-INVOCATION
+  title: paired.py writes one run-ledger/v1 row per invocation (incl. STOP, REFUSED,
+    KILLED), with per-arm wall_seconds and peak RSS (rpg child of T1)
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - tools/rpg_measure/paired.py; tools/rpg_measure/arm_child.py; tools/test_architecture/run_ledger.py
+    (reader)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-PRESSURE-SIGNALS-SWITCH-FEATURE-FLAGS-OUTSIDE-THE-HASH.md
+  ticket_id: TCK-20261023-PRESSURE-SIGNALS-SWITCH-FEATURE-FLAGS-OUTSIDE-THE-HASH
+  title: Unhashed state.pressure_signals keys starting ENABLE_ switch feature flags
+    (pipeline.py:86-91) (#593 F5)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-23'
+  related_code_areas:
+  - src/engine/pipeline.py; src/engine/checkpoint.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-RUN-MANIFEST-RECORDS-THE-CODE-SHA.md
+  ticket_id: TCK-20261023-RUN-MANIFEST-RECORDS-THE-CODE-SHA
+  title: run_manifest.json records the code sha (and a dirty flag) of the tree the
+    kernel imports from, so a comparison tool can refuse a run from the wrong code
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - src/engine/kernel.py; src/observability/reporting/run_determinism.py; src/lab/repository.py.
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID.md
+  ticket_id: TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID
+  title: Faction squad group_id uses Python's salted hash() of a str region id, so
+    the state hash depends on PYTHONHASHSEED (#593 F4)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-23'
+  related_code_areas:
+  - src/engine/military_conflict.py; src/domains/perception/filter.py; data/worlds/
   artifact_files: []
   tags: []
 - type: ticket
