@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261023-COOPERATION-CANDIDATES-ENUMERATED-PER-ENTITY-PER-TICK
-phase: implement
+phase: done
 date: 2026-10-23
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Cooperation partner candidates are enumerated per entity per tick (O(n^2)); build the candidate source once per tick (H2)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -56,9 +56,13 @@ src/domains/cooperation/providers.py; src/engine/cooperation*
 Coordinate with H1 (hostility per pair, Lane B): both sit on the `are_entities_hostile` path. Paired runs queue behind other heavy host work (one heavy process at a time).
 
 ## Implementation Notes
+PartnerCandidateIndex (providers.py) built once per tick in CooperationPhase.execute; see the staging investigation for the design and the evidence block.
 
 ## Test Summary
+tests/unit/domains/cooperation (incl. new test_candidate_index_differential.py) and tests/unit/combat/test_catalog_hostility_sweep.py: 123 passed. Hash x3 worlds equal, paired --neutral IDENTICAL, cooperation phase -64 % (strategic_100) / -85 % (frontier_marches).
 
 ## Files Changed
+src/domains/cooperation/providers.py, src/domains/cooperation/phase.py, tests/unit/domains/cooperation/test_candidate_index_differential.py, seven planner todo tickets carried.
 
 ## Completion Summary
+Candidate source indexed once per tick; selection result identical; cooperation phase 3-6x cheaper on the measured scenarios.
