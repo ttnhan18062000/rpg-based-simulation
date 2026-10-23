@@ -494,3 +494,14 @@ def test_a_missing_required_row_is_not_owned_by_a_scoped_entry(tmp_path):
     for doc in docs.values():
         doc["metrics"] = [m for m in doc["metrics"] if m["id"] != "V3"]
     _refused(_write(tmp_path / "m", docs), "required validity row V3 is missing", [_scoped_v3([{"world": "w", "seed": 2}])], config=cfg)
+
+
+def test_two_scoped_owners_of_one_row_are_both_recorded_so_each_expiry_is_rechecked(tmp_path):
+    first = _scoped_v3([{"world": "w", "seed": 2, "entity_id": 28}], ticket="TCK-A")
+    second = _scoped_v3([{"world": "w", "seed": 3, "entity_id": 38}], ticket="TCK-B")
+    docs = _v3_docs({2: [28], 3: [38]})
+    candidate = _build(_write(tmp_path / "d", docs), [first, second], milestone="M0")
+    run_rows = [(o["row"], o["ticket"]) for o in candidate["omitted_validity"] if ":run:" in o["row"]]
+    assert run_rows == [("V3:run:w:wolves", "TCK-A"), ("V3:run:w:wolves", "TCK-B")]
+    with pytest.raises(base.RebaselineRefused, match="expired"):
+        base.rebaseline(candidate, _config(), tmp_path / "b", pr=None, cites=["TCK-METRIC-SET"], known=[first, {**second, "expires_on": "2026-10-01"}], today=TODAY)
