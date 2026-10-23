@@ -7059,7 +7059,7 @@
   - architecture
   - documentation
   - roadmap
-  last_verified: '2026-10-19'
+  last_verified: '2026-10-22'
 - type: doc
   path: docs/plans/systemic_world/review_history/external-ai-instruction-execute-first-systemic-world-batch.md
   title: External AI instruction — execute and self-review the first systemic-world
@@ -7853,6 +7853,19 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE.md
+  ticket_id: TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE
+  title: Regenerate the calibration on v1 (`make evaluate-full` plus its run_determinism
+    sidecar) for testing's SimQ re-anchor, and point the D76 cumulative table at the
+    v1 base
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas:
+  - Makefile (evaluate-full); src/observability/reporting/run_determinism.py.
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING.md
   ticket_id: TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING
   title: Before acting on a user approval, a session records it on one approvals-log
@@ -8232,6 +8245,18 @@
   date: '2026-10-20'
   related_code_areas:
   - tests/integration/observability/test_baseline_generation_flow.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261020-BEHAVIORAL-5K-BUILDS-ITS-WORLD-WITHOUT-THE-CONTENT-CONTEXT.md
+  ticket_id: TCK-20261020-BEHAVIORAL-5K-BUILDS-ITS-WORLD-WITHOUT-THE-CONTENT-CONTEXT
+  title: tests/regression/test_behavioral_5k.py compiles its world without the content
+    context, so the bodies hold no starting coin and gold_avg reads 0.0
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - tests/regression/test_behavioral_5k.py, tests/helpers/world_build.py
   artifact_files: []
   tags: []
 - type: ticket
@@ -8746,6 +8771,22 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-RECORD-BASELINE-V1.md
+  ticket_id: TCK-20261019-RECORD-BASELINE-V1
+  title: 'Record baseline v1: paired fingerprints, gate V1-V8 rows and the behavioral_5k
+    rebaseline, all on one commit, with v1_disclosure.md as what v1 does not claim'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas:
+  - tools/rpg_measure/paired.py
+  - tests/regression/test_behavioral_5k.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-RECORD-BASELINE-V1/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-RECORD-BASELINE-V1/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-RECORD-BASELINE-V1/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD.md
   ticket_id: TCK-20261019-RPG-GATE-DRIFT-JUDGED-ON-THE-REFERENCE-THRESHOLD
   title: The rpg gate report judges an outcome row's drift against each reference
@@ -9077,19 +9118,6 @@
   related_code_areas:
   - src/ai/goals/scorers.py (HarvestScorer, _may_gather), src/systems/strategic_systems/intelligence.py
     (goal selection, blocker_node), src/engine/interaction.py.
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261019-RECORD-BASELINE-V1.md
-  ticket_id: TCK-20261019-RECORD-BASELINE-V1
-  title: 'Record baseline v1: paired fingerprints, gate V1-V8 rows and the behavioral_5k
-    rebaseline, all on one commit, with v1_disclosure.md as what v1 does not claim'
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-19'
-  related_code_areas:
-  - tools/rpg_measure/paired.py
-  - tests/regression/test_behavioral_5k.py
   artifact_files: []
   tags: []
 - type: ticket
