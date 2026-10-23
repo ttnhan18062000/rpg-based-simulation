@@ -7981,6 +7981,23 @@
   - observability
   - benchmarking
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED.md
+  ticket_id: TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED
+  title: An rpg gate known entry can name the (world, seed) it owns, so owning one
+    known validity fail does not hide every other fail of the same metric
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-22'
+  related_code_areas:
+  - tools/test_architecture/known_reds.py; tools/test_architecture/rpg_gate_candidate.py;
+    tools/test_architecture/rpg_gate_report.py; tools/test_architecture/rpg_gate_known.yaml.
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED/plan.md
+  - agent-working/stored_artifacts/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED/test_plan.md
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME.md
   ticket_id: TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME
   title: A carcass partly eaten on its decay tick is re-inserted by the apply order
@@ -7991,19 +8008,6 @@
   date: '2026-10-22'
   related_code_areas:
   - _without_decay_of_looted_bodies
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED.md
-  ticket_id: TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED
-  title: An rpg gate known entry can name the (world, seed) it owns, so owning one
-    known validity fail does not hide every other fail of the same metric
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-22'
-  related_code_areas:
-  - tools/test_architecture/known_reds.py; tools/test_architecture/rpg_gate_candidate.py;
-    tools/test_architecture/rpg_gate_report.py; tools/test_architecture/rpg_gate_known.yaml.
   artifact_files: []
   tags: []
 - type: ticket
