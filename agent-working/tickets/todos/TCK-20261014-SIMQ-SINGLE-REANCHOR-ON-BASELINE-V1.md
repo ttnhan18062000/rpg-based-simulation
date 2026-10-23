@@ -15,7 +15,7 @@ tags: [testing, regression, simulation-quality]
 One SimQ grade-anchor re-anchor, taken on baseline v1. Testing runs the mechanics, and rpg-planner rules on every moved row. The four anchor-family tickets fold into it, and it owns the anchor known-reds until it lands.
 
 ## Status
-OPEN
+OPEN (ready to dispatch 2026-10-23: v1 is on main)
 
 ## Tier
 standard
@@ -105,6 +105,7 @@ not real behaviour shifts. So:
   - **Host order:** THESE PAIRS FIRST. Then rpg's `make evaluate-full` (TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE, due 10-30). Never both at once. Tell rpg-planner when the last process exits.
   - **Tables:** the moved-rows and ruling tables go to rpg-planner BEFORE any commit, and rpg rules each moved row (with the designer where a Bible meaning is touched).
   - **Expiry:** if the sha isn't on main by 10-29, rpg-planner says so that day, which triggers AC6.
+  - **v1 SHA = 341f700d0** (#725 merged 2026-10-23). Checked by testing-planner: `git diff e8df8b96d 341f700d0` touches no src/, content/ or config/ files. Under tests/ it changes only the behavioral_5k baseline, rpg_gate_v1.json, tests/helpers/world_build.py and session-tool tests. Before the run, confirm simq_audit_rows / calibrate_simq do not import tests/helpers/world_build.py; if they do, tell testing-planner. Pin it with `git worktree add --detach <scratch path> 341f700d0` and run everything from there.
   - **Sidecar:** rpg's calibration writes the existing calibrate_simq `quality_report.run_determinism.json` (run id + audit_mode + signals_zeroed). No new format. test_grade_regression's live side keeps refusing a missing sidecar.
 
 ## Implementation Notes
