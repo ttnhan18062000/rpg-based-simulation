@@ -7853,6 +7853,19 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE.md
+  ticket_id: TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE
+  title: Regenerate the calibration on v1 (`make evaluate-full` plus its run_determinism
+    sidecar) for testing's SimQ re-anchor, and point the D76 cumulative table at the
+    v1 base
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas:
+  - Makefile (evaluate-full); src/observability/reporting/run_determinism.py.
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
   ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
   title: Remove the free meal for every kind (decision 73) as its own measured step
@@ -7874,19 +7887,6 @@
   date: '2026-10-23'
   related_code_areas:
   - docs/plans/systemic_world/roadmap.md
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE.md
-  ticket_id: TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE
-  title: Regenerate the calibration on v1 (`make evaluate-full` plus its run_determinism
-    sidecar) for testing's SimQ re-anchor, and point the D76 cumulative table at the
-    v1 base
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-23'
-  related_code_areas:
-  - Makefile (evaluate-full); src/observability/reporting/run_determinism.py.
   artifact_files: []
   tags: []
 - type: ticket
