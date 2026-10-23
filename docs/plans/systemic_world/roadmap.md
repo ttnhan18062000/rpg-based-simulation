@@ -1258,9 +1258,22 @@ This section is written once, before milestone 1 starts. It answers the lesson o
 date and the freeze each moved step by step. Changing anything below takes an owner ruling, recorded as an owner-memo row
 and logged on the approvals issue (#715) before anyone acts on it. A change is never made by editing this text alone.
 
-**Base.** Milestone 1 is measured against baseline v1: record commit 341f700d0, simulation e8df8b96d, gate baseline
-`rpg_gate_v1.json`. If the decision-73 step (free meal removed) is recorded first, its record is the milestone 1 base
-(v1.1). The decision-76 cumulative watch restarts from that base. 903239fbe is history.
+**Base.** Milestone 1 spans baseline v1 (record commit 341f700d0, simulation e8df8b96d, gate baseline
+`rpg_gate_v1.json`) to the milestone 1 record; 903239fbe is history. Clarified by the owner on 2026-10-23 (#715 6356509993,
+memo row 89):
+- **Order:** HUNGER step B → step A → F4 → the decision-73 step (free meal removed) → the §12.3 milestone 1 items.
+  "Decision 73 before milestone 1" means before those items, not before the v1-disclosure repairs.
+- **v1 → v1.1:** each repair is measured once at fold against its parent, and the decision-73 step is too; each single step
+  keeps the per-seed extinction stop. All of them sit on ONE decision-76 cumulative watch from v1. That watch is a span, so
+  it stops on the pooled test (memo row 86).
+- **v1.1:** the decision-73 record is v1.1. If decision 73 does not move the world, v1.1 is the last world-changing tip
+  plus the decision-73 step's neutral proof, recorded anyway (gate and fingerprints), so the items always have a recorded
+  base. The cumulative watch for the §12.3 items restarts at v1.1. The v1 → v1.1 reading is a row of the v1.1 disclosure
+  (as v1's M4).
+- **Re-read at v1.1:** the repaired cases are read case by case against the v1 disclosure rows they closed. A V3 that
+  reappears at v1.1 is NEW at v1.1, not "already disclosed at v1". The repairs' unit tests stay green through decision 73.
+- **Not a scope boundary:** v1.1 is only the base of the items' cumulative watch. The v1-disclosure repairs stay in
+  milestone 1's scope and in done item 4, wherever they land relative to v1.1.
 
 **Hash scheme during milestone 1.** If the proof digest scheme is bumped (F1, `PROOF_DIGEST_SCHEME`, perf's call PERF-D5),
 the v1 base is re-recorded under the new scheme (same e8df8b96d simulation, new digests) before any milestone 1
@@ -1291,9 +1304,9 @@ Each item becomes a ticket under the milestone 1 epic before work starts.
 - Milestones 2 and 3.
 - Packs, herds and territory.
 - Any rule work not listed above. A new item enters only by owner ruling, under change control.
-- The free-meal removal (decision 73): owner, 2026-10-23 (#715 6356123802), a separate step BEFORE milestone 1. It is
-  its own paired step against v1, with the full stop rules, and is recorded as the milestone 1 base (v1.1) if it moves
-  the world. It retires the V1 free-meal known entry before that entry's 2026-12-31 expiry.
+- The free-meal removal (decision 73): owner, 2026-10-23 (#715 6356123802), a separate step before the §12.3 milestone 1
+  items (after the HUNGER steps and F4; see Base, memo row 89). It is its own paired step against its parent, with the full
+  stop rules, and its record is v1.1. It retires the V1 free-meal known entry before that entry's 2026-12-31 expiry.
 
 **Done when (all of these, on one recorded commit):**
 1. The §12.3 milestone 1 "done when" holds: no decision reads a role, kind or faction name, a new kind works from content
