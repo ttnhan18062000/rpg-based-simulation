@@ -67,7 +67,7 @@ def layer_packages(rows: Sequence[dict]) -> list[tuple[str, list[str]]]:
 
 def render_block(rows: Sequence[dict], baseline: Sequence[str]) -> str:
     """The generated text, markers included, ending with a newline."""
-    lines = [BEGIN_MARKER, "[[tool.importlinter.contracts]]", 'id = "layers"', 'name = "Registry layer order (advisory)"']
+    lines = [BEGIN_MARKER, "[[tool.importlinter.contracts]]", 'id = "layers"', 'name = "Registry layer order"']
     lines += ['type = "layers"', 'unmatched_ignore_imports_alerting = "warn"', "layers = ["]
     for layer, packages in layer_packages(rows):
         lines.append(f'    "{" : ".join(f"src.{package}" for package in packages)}",  # {layer}')
