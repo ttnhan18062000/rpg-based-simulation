@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261025-HANGING-GH-TEST-BOUND-RELATIVE-TO-BASELINE
-phase: open
+phase: done
 date: 2026-10-25
 tags: [testing, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [testing, determinism]
 The hanging-gh test bounds the extra time the gh cut-off adds, not the hook's whole run time, so a loaded runner cannot fail it
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -64,9 +64,13 @@ None.
 None.
 
 ## Implementation Notes
+The test times the no-gh baseline call, then asserts `hanging_s <= baseline_s + ISSUE_TIMEOUT_S + 2` (2 s of process-spawn slack over the same call) and keeps `hanging_s < 20`. No other timing assertion in the file has the absolute-bound shape (the only `time.monotonic` use is this test). The ~4.5 s of hook work seen under load was not investigated further; no finding to record beyond that one measurement.
 
 ## Test Summary
+Passes alone (1.17 s). Negative control: the same test with the monkeypatched `ISSUE_TIMEOUT_S` changed to 60 (cut-off effectively disabled) fails: `assert 30.136 < 20` (the 30 s sleep runs to completion). The relative bound alone would not catch that (it grows with the timeout), so the absolute ceiling is what does.
 
 ## Files Changed
+tests/tools/test_session_resolve_and_hook.py
 
 ## Completion Summary
+The hanging-gh test no longer fails on a loaded runner; it still fails when the cut-off does not fire.

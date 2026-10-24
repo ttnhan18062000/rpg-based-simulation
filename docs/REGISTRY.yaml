@@ -7839,6 +7839,20 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261025-HANGING-GH-TEST-BOUND-RELATIVE-TO-BASELINE.md
+  ticket_id: TCK-20261025-HANGING-GH-TEST-BOUND-RELATIVE-TO-BASELINE
+  title: The hanging-gh test bounds the extra time the gh cut-off adds, not the hook's
+    whole run time, so a loaded runner cannot fail it
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-25'
+  related_code_areas:
+  - tests/tools/test_session_resolve_and_hook.py
+  artifact_files: []
+  tags:
+  - testing
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-RPG-UBUNTU-SEATS.md
   ticket_id: TCK-20261025-RPG-UBUNTU-SEATS
   title: Host ubuntu gets three rpg twin seats (`rpg-designer-ubuntu`, `rpg-planner-ubuntu`,
