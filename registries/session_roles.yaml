@@ -222,6 +222,7 @@ roles:
     capability: {may_write: [".claude/handover/drafts/**", "docs/world_rules/**", "docs/plans/systemic_world/**"]}
     placement: {worktree: rpg-designer, max_sessions: 1}
     handover: .claude/handover/rpg-designer.md
+    card_note: "Host u24desktop; twin `-ubuntu`."
   - role: rpg-planner
     identity: {domain: rpg, function: planner, session_name: rpg-planner,
                legacy_session_name: rpg-feature-planning, seat_status: staffed}
@@ -230,6 +231,7 @@ roles:
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**"]}
     placement: {worktree: rpg-planner, max_sessions: 1}
     handover: .claude/handover/rpg-planner.md
+    card_note: "Host u24desktop; twin `-ubuntu`."
   - role: rpg-implementer
     identity: {domain: rpg, function: implementer, session_name: rpg-implementer,
                legacy_session_name: rpg-implementer, seat_status: staffed}
@@ -238,6 +240,34 @@ roles:
     capability: {may_write: ["**"]}
     placement: {worktree: rpg, max_sessions: 3}
     handover: .claude/handover/rpg-implementer.md
+    card_note: "Host u24desktop; twin `-ubuntu`."
+  - role: rpg-designer-ubuntu   # host ubuntu; rpg exception: plain = u24desktop (owner 2026-10-25, #715)
+    identity: {domain: rpg, function: designer, session_name: rpg-designer-ubuntu,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "docs/world_rules/**", "docs/plans/systemic_world/**"]}
+    placement: {worktree: rpg-designer-ubuntu, max_sessions: 1}
+    handover: .claude/handover/rpg-designer-ubuntu.md
+    card_note: "Host ubuntu."
+  - role: rpg-planner-ubuntu   # host ubuntu; takes no work until the lane split is agreed (TCK-20261025-RPG-UBUNTU-SEATS)
+    identity: {domain: rpg, function: planner, session_name: rpg-planner-ubuntu,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, rpg-designer-ubuntu]
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**"]}
+    placement: {worktree: rpg-planner-ubuntu, max_sessions: 1}
+    handover: .claude/handover/rpg-planner-ubuntu.md
+    card_note: "Host ubuntu."
+  - role: rpg-implementer-ubuntu   # host ubuntu; takes no work until the lane split is agreed
+    identity: {domain: rpg, function: implementer, session_name: rpg-implementer-ubuntu,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, rpg-planner-ubuntu]
+    capability: {may_write: ["**"]}
+    placement: {worktree: rpg-ubuntu, max_sessions: 3}
+    handover: .claude/handover/rpg-implementer-ubuntu.md
+    card_note: "Host ubuntu."
   - role: agent-working-designer
     identity: {domain: agent-working, function: designer, session_name: agent-working-designer,
                legacy_session_name: agent-working-design, seat_status: unstaffed,
@@ -497,6 +527,9 @@ worktrees:
   codebase: {writer: codebase-implementer}
   rpg-designer: {writer: rpg-designer}
   rpg-planner: {writer: rpg-planner}
+  rpg-designer-ubuntu: {writer: rpg-designer-ubuntu}
+  rpg-planner-ubuntu: {writer: rpg-planner-ubuntu}
+  rpg-ubuntu: {writer: rpg-implementer-ubuntu}
   agent-working-designer: {writer: agent-working-designer}
   agent-working-planner: {writer: agent-working-planner}
   testing-designer: {writer: testing-designer}

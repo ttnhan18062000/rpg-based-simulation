@@ -155,7 +155,7 @@ def _role_line(role: Role, roster: Roster) -> str:
         f"Dispatch from: {', '.join(role.accepts_dispatch_from)}." if role.accepts_dispatch_from else "",
         (f"Launches from the main checkout, no lease; `{role.handover}`" if role.launch == "main-checkout"
          else f"Worktree {role.worktree}; main-checkout `{role.handover}`") + (
-            f" (instance N of `{role.role}` reads `{handover_rel(role, role.role + '-N')}`)." if role.max_sessions > 1 else "."),
+            f" (instance N reads `{handover_rel(role, role.role + '-N')}`)." if role.max_sessions > 1 else "."),
     ]
     return " ".join(p for p in parts if p)
 

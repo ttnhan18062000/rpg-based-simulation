@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261025-RPG-UBUNTU-SEATS
-phase: open
+phase: done
 date: 2026-10-25
 tags: [process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [process-improvement]
 Host ubuntu gets three rpg twin seats (`rpg-designer-ubuntu`, `rpg-planner-ubuntu`, `rpg-implementer-ubuntu`); the plain u24desktop rpg seats are unchanged
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -92,13 +92,27 @@ existing `rpg-designer`, `rpg-planner` and `rpg-implementer`, which already run 
 - **(b) Lane split across hosts.** Two rpg planners on two hosts can collide on the same tickets. Until the owner and
   `rpg-planner` agree a lane split through `lead-planner-u24`, the ubuntu rpg seats take **no** work: no ticket filing or
   dispatch, and every future ubuntu rpg dispatch posts a claim on #634 first. Record this in the rpg domain doc.
+- **(b), added by agent-working-planner's decision:** the rpg domain card line "Only it [rpg-planner] messages rpg implementers; send briefs and
+  parked branches to it" contradicts `Dispatch from: rpg-planner-ubuntu` on the ubuntu implementer's card. The text is left unchanged (rpg's
+  process wording) and is resolved with the lane split, when the ubuntu seats are allowed work at all. Recorded in `domains/rpg.md`.
 - The suffix `-ubuntu` is new; check that nothing in `tools/sessions/` hard-codes `-u24` as the only twin suffix (none found in
   a quick grep on 2026-10-25), and add a test if a resolver does depend on it.
 
 ## Implementation Notes
+- Registry: three `-ubuntu` roles placed after their plain roles, worktrees `rpg-designer-ubuntu`, `rpg-planner-ubuntu`, `rpg-ubuntu`;
+  `rpg-implementer-ubuntu` keeps `max_sessions: 3` like the plain implementer (distinct worktree name, so the one-writer-per-worktree rule is met).
+- Card budget (460 kept, not raised), by planner decision: `tools/sessions/card.py` instance clause drops the repeated role name
+  ("instance N reads `...-N.md`"; only `rpg-implementer` is multi-instance, so only its cards changed); the twins' `card_note` is "Host ubuntu."
+  and the plain rpg seats' is "Host u24desktop; twin `-ubuntu`.". Final tokens: rpg-implementer-ubuntu 459, rpg-implementer 455, rpg-planner-ubuntu 452, others 449; max over all cards 460.
+- Route diff, origin/main registry vs new, over all 18288 tracked paths: 0 owner/status/seat changes.
+- No `-u24`-only suffix is hard-coded in `tools/sessions/` (the new test file covers resolution of the `-ubuntu` roles).
 
 ## Test Summary
+- Full tests/tools/test_session_*.py + paths guard, serial, MemoryMax 3G: 813 passed, 1 failed. The failure is `test_a_hanging_gh_is_cut_off_at_the_timeout`, 5.07 s against a `< 5` s limit under machine load; it passes alone (twice) and with its whole file (75 passed). Timing flake, not caused by this change.
+- Route diff over 18288 tracked paths: 0 changes. generate_agents --check: 0 drift. validate: 0 findings.
 
 ## Files Changed
+registries/session_roles.yaml, tools/sessions/card.py, .claude/agents/session-rpg-*.md (6), docs/guidelines/session_roles/host_suffixed_twins.md and domains/rpg.md, tests/tools/test_session_{agent_generator,host_lead,roster,rpg_ubuntu_twins}.py, stored artifacts.
 
 ## Completion Summary
+Three host-ubuntu rpg twin seats registered; plain rpg seats unchanged but for a card_note; cards within 460 (max 460). Open points (a) routing and (b) lane split, plus the card-wording conflict, are recorded and not decided.
