@@ -1,0 +1,202 @@
+# Gate conformance map (TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE).
+#
+# Maps every live `assert_perf_threshold` / `perf_check` call site under tests/ to a clause ID from
+# docs/performance/performance_clause_inventory.md (section 3 rows PC-, CC-, BP-, OA-, OI-, RG-, RP-) or to the literal `none` (the check enforces no
+# documented clause). `related` names clauses the check concerns but does not enforce. A site is keyed `file::function#N`, N being its 1-based
+# position among the helper calls in that function in source order; no line numbers, so a moved line does not break the map.
+# tests/docs/test_gate_conformance_map.py fails on an unmapped site, an unknown clause ID and an entry whose site no longer exists.
+
+sites:
+  - site: tests/arena/test_arena_stress.py::test_arena_stress_50v50#1
+    clause: none
+    note: "absolute tick ceiling for the arena stress scenario; no clause sets a per-scenario ceiling"
+  - site: tests/certification/test_cert_long_run_stability.py::test_long_run_pure_stability#1
+    clause: OI-06
+    note: "rss_bounded: OI-06 states bounded RSS containment over a long run; the check uses 2x growth or 512 MB"
+  - site: tests/certification/test_cert_long_run_stability.py::test_long_run_pure_stability#2
+    clause: none
+    note: "latency_stable: p95 drift within 1.5x or +15 ms; no clause"
+  - site: tests/certification/test_cert_long_run_stability.py::test_long_run_pure_stability#3
+    clause: none
+    related: [OI-05]
+    note: "caches_bounded: cache sizes within 10*N and 2*N; OI-05 requires registered caches and a max-items policy, not these bounds"
+  - site: tests/certification/test_cert_long_run_stability.py::test_long_run_pure_stability#4
+    clause: BP-13
+    note: "gc_stable: BP-13 says the GC sweep count must remain stable; the check uses its own gen-1 and gen-2 deltas"
+  - site: tests/perf/test_api_projection_perf.py::test_api_projection_performance_benchmark#1
+    clause: none
+    note: "API projection speed-up ratio; no clause on API projection performance"
+  - site: tests/perf/test_hard_law_monitor_overhead.py::test_hard_law_monitor_overhead#1
+    clause: none
+    related: [PC-12]
+    note: "absolute ms ceiling on one subsystem; PC-12 states a 1 % of tick ceiling and this check does not enforce it"
+  - site: tests/perf/test_observability_scale_validation.py::test_scale_performance_and_footprint#1
+    clause: none
+    related: [PC-12]
+    note: "observability footprint at scale; no clause sets this number"
+  - site: tests/perf/test_perf_api_snapshot.py::test_api_snapshot_performance_comparison#1
+    clause: none
+    note: "API snapshot speed-up ratio; no clause on API snapshot performance"
+  - site: tests/perf/test_perf_api_snapshot.py::test_api_snapshot_performance_comparison#2
+    clause: none
+    note: "API snapshot speed-up ratio; no clause on API snapshot performance"
+  - site: tests/perf/test_perf_api_snapshot.py::test_api_snapshot_performance_stress#1
+    clause: none
+    note: "API snapshot speed-up ratio; no clause on API snapshot performance"
+  - site: tests/perf/test_perf_api_snapshot.py::test_api_snapshot_performance_stress#2
+    clause: none
+    note: "API snapshot speed-up ratio; no clause on API snapshot performance"
+  - site: tests/perf/test_perf_combat.py::test_perf_combat#1
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_idle.py::test_perf_idle_baseline#1
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_idle.py::test_perf_idle_baseline#2
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_idle.py::test_perf_idle_baseline#3
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_metropolis.py::test_perf_metropolis_stress#1
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_metropolis.py::test_perf_metropolis_stress#2
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_metropolis.py::test_perf_metropolis_stress#3
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_metropolis.py::test_perf_metropolis_longevity#1
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_metropolis.py::test_perf_metropolis_longevity#2
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_metropolis.py::test_perf_chaos_items#1
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_movement.py::test_perf_movement#1
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_passive_scaling.py::test_perf_passive_scaling#1
+    clause: none
+    related: [BP-12]
+    note: "absolute tick ceilings and an RSS bound per scale point; BP-12 states a tick-100-to-1,000 RSS delta rule that this does not implement"
+  - site: tests/perf/test_perf_passive_scaling.py::test_perf_passive_scaling#2
+    clause: none
+    related: [BP-12]
+    note: "absolute tick ceilings and an RSS bound per scale point; BP-12 states a tick-100-to-1,000 RSS delta rule that this does not implement"
+  - site: tests/perf/test_perf_passive_scaling.py::test_perf_passive_scaling#3
+    clause: none
+    related: [BP-12]
+    note: "absolute tick ceilings and an RSS bound per scale point; BP-12 states a tick-100-to-1,000 RSS delta rule that this does not implement"
+  - site: tests/perf/test_perf_passive_scaling.py::test_perf_passive_scaling#4
+    clause: none
+    related: [BP-12]
+    note: "absolute tick ceilings and an RSS bound per scale point; BP-12 states a tick-100-to-1,000 RSS delta rule that this does not implement"
+  - site: tests/perf/test_perf_passive_scaling.py::test_perf_passive_scaling#5
+    clause: none
+    related: [BP-12]
+    note: "absolute tick ceilings and an RSS bound per scale point; BP-12 states a tick-100-to-1,000 RSS delta rule that this does not implement"
+  - site: tests/perf/test_perf_resource.py::test_perf_resource#1
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_strategic.py::test_perf_strategic#1
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_stress.py::test_perf_mixed_stress#1
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_stress.py::test_perf_mixed_stress#2
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_perf_stress.py::test_perf_mixed_stress#3
+    clause: none
+    note: "absolute per-scenario tick-time or memory ceiling; no clause sets a per-scenario ceiling"
+  - site: tests/perf/test_persistence_phase_cost.py::test_persistence_phase_cost_regression_guard_1000t#1
+    clause: none
+    note: "persistence share of the tick ceiling; no clause"
+  - site: tests/perf/test_phase2_self_model_budget.py::test_phase2_self_model_perf_budget_and_dirty_check#1
+    clause: none
+    note: "per-feature-phase wall-time budget at 100 entities; no clause sets a per-phase budget"
+  - site: tests/perf/test_phase2_self_model_budget.py::test_phase2_self_model_perf_budget_and_dirty_check#2
+    clause: none
+    note: "per-feature-phase wall-time budget at 100 entities; no clause sets a per-phase budget"
+  - site: tests/perf/test_phase2_self_model_budget.py::test_phase2_self_model_perf_budget_and_dirty_check#3
+    clause: none
+    note: "per-feature-phase wall-time budget at 100 entities; no clause sets a per-phase budget"
+  - site: tests/perf/test_phase3_adventure_decision_budget.py::test_phase3_adventure_decision_perf_budget#1
+    clause: none
+    note: "per-feature-phase wall-time budget at 100 entities; no clause sets a per-phase budget"
+  - site: tests/perf/test_phase4_combat_engagement_budget.py::test_performance_budget_100_entities#1
+    clause: none
+    note: "per-feature-phase wall-time budget at 100 entities; no clause sets a per-phase budget"
+  - site: tests/perf/test_phase5_information_belief_budget.py::test_performance_budget_100_entities#1
+    clause: none
+    note: "per-feature-phase wall-time budget at 100 entities; no clause sets a per-phase budget"
+  - site: tests/perf/test_phase6_progression_conversion_budget.py::test_phase6_progression_conversion_performance_budget#1
+    clause: none
+    note: "per-feature-phase wall-time budget at 100 entities; no clause sets a per-phase budget"
+  - site: tests/perf/test_phase7_social_cooperation_budget.py::test_cooperation_phase_performance_budget_100_entities#1
+    clause: none
+    note: "per-feature-phase wall-time budget at 100 entities; no clause sets a per-phase budget"
+  - site: tests/perf/test_phase8_world_emergence_budget.py::test_phase8_performance_budget#1
+    clause: none
+    note: "per-feature-phase wall-time budget at 100 entities; no clause sets a per-phase budget"
+  - site: tests/perf/test_phase9_campaign_semantic_budget.py::test_campaign_semantic_budget_overhead#1
+    clause: none
+    note: "per-feature-phase wall-time budget at 100 entities; no clause sets a per-phase budget"
+  - site: tests/perf/test_production_observatory_overhead.py::test_observatory_light_mode_overhead#1
+    clause: none
+    related: [PC-12]
+    note: "overhead-ratio check on the observatory; PC-12 states a 1 % of tick ceiling and this check enforces its own number"
+  - site: tests/perf/test_production_observatory_overhead.py::test_observatory_off_mode_zero_overhead#1
+    clause: none
+    related: [PC-12]
+    note: "overhead-ratio check on the observatory; PC-12 states a 1 % of tick ceiling and this check enforces its own number"
+  - site: tests/perf/test_profiler_integrity.py::test_benchmark_disables_frame_pacing_by_default#1
+    clause: none
+    note: "absolute ceiling in the profiler integrity test; no clause"
+  - site: tests/perf/test_simq_isolation_overhead.py::test_inprocess_simq_overhead_within_regression_band#1
+    clause: BP-08
+    note: "one of the four SimQ isolation CPU overhead bands named by BP-08 (soft, nightly)"
+  - site: tests/perf/test_simq_isolation_overhead.py::test_broker_mode_engine_cpu_within_disabled_band#1
+    clause: BP-08
+    note: "one of the four SimQ isolation CPU overhead bands named by BP-08 (soft, nightly)"
+  - site: tests/perf/test_simq_isolation_overhead.py::test_push_shaper_registry_overhead_within_regression_band#1
+    clause: BP-08
+    note: "one of the four SimQ isolation CPU overhead bands named by BP-08 (soft, nightly)"
+  - site: tests/perf/test_simq_isolation_overhead.py::test_phase2_shaper_registry_overhead_within_regression_band#1
+    clause: BP-08
+    note: "one of the four SimQ isolation CPU overhead bands named by BP-08 (soft, nightly)"
+
+# Live checks that are not helper call sites. The call-site test cannot see them (it looks for the two helper names), so it does NOT cover them;
+# the decision (TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE, 2026-10-24) is to list them here with their clause or `none`, and the test only
+# checks that each listed path exists and each clause ID is real. A check added outside the helpers is not caught by the test.
+
+other_checks:
+  - path: src/perf/regression_gate.py
+    check: "PerfRegressionGate (p95 and p99 tolerance 10 %, peak RSS 15 %, memory delta)"
+    clause: [BP-10, BP-12]
+    note: "BP-11 states 15 % for p99 and the code uses 10 %; the gate is applied to no real measurement"
+  - path: src/perf/long_run_harness.py
+    check: "long-run stability invariants (rss_bounded, latency_stable, caches_bounded, gc_stable)"
+    clause: [OI-06, BP-13]
+    note: "the numbers appear in no document"
+  - path: src/perf/benchmark_record.py
+    check: "compare() and the tripwire thresholds (max(5 ms, base x 1.40), report-only)"
+    clause: [PC-13, BP-09]
+    note: "the tripwire projection; final value published in performance_contract.md section 5"
+  - path: tests/perf/test_perf_regression_baseline.py
+    check: "nightly local regression test against the promoted baselines"
+    clause: [PC-07, PC-13]
+    note: "soft, nightly"
+  - path: tests/perf/conftest.py
+    check: "PerfBudget / assert_within_budget against perf_baselines.json"
+    clause: [none]
+    note: "no document mentions PerfBudget"
+  - path: .github/workflows/test.yml
+    check: 'CI selectors: -m "not slow and not extra_slow" on pull requests; perf-cert-arena paired tripwire step'
+    clause: [none]
+    note: "selection, not a clause"

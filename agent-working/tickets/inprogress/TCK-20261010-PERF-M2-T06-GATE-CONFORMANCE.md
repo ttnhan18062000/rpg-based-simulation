@@ -15,7 +15,7 @@ tags: [performance, documentation, certification]
 PERF-M2-T06: P1 contract publication and gate-conformance map
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard

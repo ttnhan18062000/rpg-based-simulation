@@ -13417,7 +13417,7 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/todos/perf-m2-contract/TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE.md
+  path: agent-working/tickets/inprogress/TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE.md
   ticket_id: TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE
   title: 'PERF-M2-T06: P1 contract publication and gate-conformance map'
   tier: standard
