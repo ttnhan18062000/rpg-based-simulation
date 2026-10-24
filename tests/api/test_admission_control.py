@@ -31,6 +31,7 @@ from src.api.admission_control import (
 )
 from src.api.server import create_v2_app
 from src.config.profiles import RuntimeProfile, HardwareClass
+from tests.helpers.api_routes import route_dependant, route_path, walk_routes
 
 TEST_CLIENT_ID = "test-client"
 TEST_RAW_KEY = "test-raw-key-12345"
@@ -224,8 +225,8 @@ def test_admission_dependency_requires_resolved_client_identity():
     }
 
     checked_any = False
-    for route in app.routes:
-        dependant = getattr(route, "dependant", None)
+    for route in walk_routes(app):  # `include_router` routes are not flat in `app.routes` on starlette 1.x
+        dependant = route_dependant(route)
         if dependant is None:
             continue
         for dep in dependant.dependencies:
@@ -256,8 +257,8 @@ def test_admission_control_covers_every_authenticated_route():
     admission_names = {"require_admission", "require_admission_header_or_query", "require_admission_ws"}
 
     neither_paths = set()
-    for route in app.routes:
-        dependant = getattr(route, "dependant", None)
+    for route in walk_routes(app):  # `include_router` routes are not flat in `app.routes` on starlette 1.x
+        dependant = route_dependant(route)
         if dependant is None:
             continue
 
@@ -272,7 +273,7 @@ def test_admission_control_covers_every_authenticated_route():
 
         _collect(dependant)
 
-        path = getattr(route, "path", None)
+        path = route_path(route)
         has_auth = bool(all_names & auth_names)
         has_admission = bool(all_names & admission_names)
 
