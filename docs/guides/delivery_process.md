@@ -368,6 +368,9 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
    not to skip. The pre-push hook's check D names the touched lanes and this command; it is advisory, never runs tests and never
    blocks. `tests/tools/test_delivery_ci_lanes.py` fails if `test.yml` gains a regex variable, output or pytest step the
    resolver cannot map. Scoping which tests to run inside a lane stays test-scoper's job.
+   Check E (`TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY`) runs `python3 tools/generate_registry.py --check` only when the
+   branch diff touches a `.md` under `docs/`, the tickets or the stored artifacts, and adds one advisory line naming
+   `make docs-registry` when `docs/REGISTRY.yaml` is stale (exit 2); any other result or a timeout says nothing.
 3. **Push** the branch, then **create the PR** (`gh pr create`). The title and the generated body
    sections (`## What landed` through `## Verification`/`## Known gaps`, plus the `Closes:` line)
    come from `python3 tools/delivery/pr_render.py` — run it plain for readable stdout
