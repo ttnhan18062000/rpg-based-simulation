@@ -83,8 +83,10 @@ lint = [
     "complexipy==8.0.1",
     # TCK-20261004-AST-GREP-RULE-PACK-ADVISORY: project rules in codebase/rules/ (binary: `ast-grep`, never `sg`).
     "ast-grep-cli==0.50.0",
-    # TCK-20261004-IMPORT-LINTER-ADOPTION: contracts in codebase/structure/importlinter.toml (advisory; binary: `lint-imports --config <file>`).
+    # TCK-20261004-IMPORT-LINTER-ADOPTION: contracts in codebase/structure/importlinter.toml (blocking in the required Code health job since #671; binary: `lint-imports --config <file>`).
     "import-linter==2.15",
+    # TCK-20261021-PYREFLY-ADVISORY-REPORT: advisory second type-checker opinion, report-only, never a gate (mypy is the gate).
+    "pyrefly==1.3.2",
 ]
 profiling = [
     "memray>=1.0.0",
@@ -185,6 +187,21 @@ exclude = [
     "src/entities/",
     "src/progression/",
 ]
+
+# TCK-20261021-PYREFLY-ADVISORY-REPORT: Pyrefly is an advisory second opinion, report-only and never a gate (mypy is the gate).
+# Same scope as [tool.mypy]: src/ minus the five excluded V1 packages. Run it with `make typecheck-pyrefly`.
+[tool.pyrefly]
+project-includes = ["src/**/*.py"]
+project-excludes = [
+    "src/ai/**",
+    "src/town/**",
+    "src/quests/**",
+    "src/entities/**",
+    "src/progression/**",
+]
+search-path = ["."]
+python-version = "3.12"
+ignore-missing-imports = ["*"]
 
 # ── Code health (python_code_craft_roadmap.md section 6; docs/guidelines/python_code_standard.md) ──
 [tool.ruff]

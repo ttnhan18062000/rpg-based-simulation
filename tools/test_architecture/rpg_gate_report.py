@@ -116,6 +116,45 @@ def _undefined_share(row: Mapping[str, Any]) -> bool:
     return row.get("scope") == "pooled" and row.get("class") == "outcome" and row.get("value") is None and row.get("reason") == EMPTY_DENOMINATOR
 
 
+SHARE_TOLERANCE = 1e-9
+
+
+def _share_problem(row: Mapping[str, Any], seed_docs: Mapping[int, Optional[Mapping[str, Any]]]) -> Optional[str]:
+    """What is wrong with a pooled share that names its count rows (``numerator`` / ``denominator``), or ``None``. The pooled value is derived from the seed
+    documents, so the report re-derives it: both named run rows must exist (same group) on every seed that has data, ``empty_denominator`` must mean the denominators
+    sum to 0, and a defined value must equal Σnum/Σden. A row without the two fields is not checked here (TCK-20261020-RPG-GATE-POOLED-SHARE-CHECKED-AGAINST-ITS-COUNT-ROWS)."""
+    num_id, den_id = row.get("numerator"), row.get("denominator")
+    if num_id is None and den_id is None:
+        return None
+    if not isinstance(num_id, str) or not isinstance(den_id, str):
+        return "share names its count rows with both numerator and denominator, as row ids"
+    group = row.get("group", "*")
+    sums: Dict[str, float] = {}
+    for rid in (num_id, den_id):
+        absent, total = [], 0.0
+        for seed, doc in seed_docs.items():
+            if doc is None or doc.get("status") != "ok":
+                continue
+            hits = [r for r in doc["metrics"] if r.get("id") == rid and r.get("group", "*") == group and r.get("key") is None]
+            if len(hits) != 1 or not _is_number(hits[0].get("value")):
+                absent.append(seed)
+            else:
+                total += hits[0]["value"]
+        if absent:
+            return f"share names {rid}, absent from seed(s) {sorted(absent)}"
+        sums[rid] = total
+    num, den = sums[num_id], sums[den_id]
+    if _undefined_share(row):
+        return f"share marked undefined but its denominator sums to {den:g}" if den > 0 else None
+    if not _is_number(row.get("value")):
+        return None  # a null value without the reason is already a contract error elsewhere
+    if den == 0:
+        return f"share value {row['value']:g} but its denominator sums to 0"
+    if abs(row["value"] - num / den) > SHARE_TOLERANCE:
+        return f"share value {row['value']:g} != Σnum/Σden {num / den:g}"
+    return None
+
+
 def _is_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
@@ -311,7 +350,7 @@ def evaluate(docs: Docs, config: GateConfig, refs: Optional[References], reasons
             findings.extend(missing_required(pooled, world, None))
             for r in pooled["metrics"]:
                 if r.get("class") == "outcome":
-                    problem = problems.get((world, r["id"], r.get("group", "*")))
+                    problem = problems.get((world, r["id"], r.get("group", "*"))) or _share_problem(r, seed_docs)
                     if not problem and _undefined_share(r):
                         findings.append({**_contract_no_data(world, r, None, "the share's denominator is 0 in every seed of this world"), "reason": EMPTY_DENOMINATOR})  # not a contract error, not a failure
                         continue
@@ -386,7 +425,7 @@ def _ownership(findings: List[dict], known: Sequence[dict], today: dt.date) -> L
     out = []
     for f in findings:
         if f["state"] in (FAIL, DRIFT):
-            entry = known_reds.owner_of(metric_test_id(f), known, state=f["state"])
+            entry = known_reds.owner_of_finding(metric_test_id(f), f, known, state=f["state"])
             if entry is None:
                 f = {**f, "ownership": "unowned" if f["state"] == FAIL else "needs-trace-ticket"}
             elif known_reds.is_expired(entry, today):
@@ -435,6 +474,7 @@ def build_report(
         state: [e["match"] for e in known_reds.stale_mappings({metric_test_id(f): "" for f in findings if f["state"] == state}, known, state=state)]
         for state in known_reds.GATE_STATES
     }
+    stale_known["fail"] = stale_known["fail"] + known_reds.stale_cases(findings, known, metric_test_id, "fail")
     outcome, reasons = verdict(findings)
     counts = {state: sum(1 for f in findings if f["state"] == state) for state in STATES}
     return {

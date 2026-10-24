@@ -219,13 +219,17 @@ def test_advisory_flags_a_stale_generated_block(tmp_path: Path, capsys: pytest.C
 
 
 def test_ci_step_is_the_last_step_of_the_package_registry_job_and_is_blocking() -> None:
-    """A required check must be able to fail: the step runs `ci`, follows the package-registry step and has no continue-on-error."""
+    """A required check must be able to fail: the step runs `ci`, follows the package-registry step and has no continue-on-error.
+
+    It is the last GATING step; the advisory Pyrefly step (TCK-20261021-PYREFLY-ADVISORY-REPORT) runs after it.
+    """
     workflow = yaml.safe_load((_REPO_ROOT / ".github/workflows/test.yml").read_text())
     steps = next(job for job in workflow["jobs"].values() if any(s.get("name") == "Package registry" for s in job["steps"]))["steps"]
-    step = steps[-1]
+    assert steps[-1]["name"] == "Pyrefly (advisory, never blocks)"
+    step = steps[-2]
     assert step["name"] == "Import contracts" and "continue-on-error" not in step
     assert "codebase.structure.import_contracts ci " in step["run"] and "--annotate" in step["run"] and "--summary-out" in step["run"]
-    assert steps[-2]["name"] == "Package registry"
+    assert steps[-3]["name"] == "Package registry"
 
 
 def _run_ci(tmp_path: Path, stdout: str, exit_code: int, *extra: str, root: Path | None = None) -> int:

@@ -10,9 +10,14 @@ import json
 
 import pytest
 
+from tests.visual_assets.store.lock_isolation import redirect_real_catalog_lock
 from visual_assets.review import __main__ as cli
 from visual_assets.review import sets
 from visual_assets.review.pilot_colour_vision import REPO
+
+
+# #657: a test here never takes the real catalog lock
+_store_lock_in_tmp = pytest.fixture(autouse=True)(redirect_real_catalog_lock)
 
 FIXTURES = REPO / "frontend" / "src" / "visualAssets" / "__fixtures__"
 RECORDED = {"icons-key-v1": "icondraft", "icons-v2": "icondraft_v2", "icons-owner-fixes-v1": "icondraft_fixes"}

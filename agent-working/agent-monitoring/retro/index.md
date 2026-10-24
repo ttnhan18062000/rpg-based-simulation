@@ -2,12 +2,13 @@
 
 | Report | Runs | DONE | Gate failures | Search Calls | Read Calls | Skill Invocations |
 |---|---|---|---|---|---|---|
-| [LAST7D](RETRO-LAST7D.md) | 96 | 96 | 0 | 0 | 0 | 0 |
-| [LAST28D](RETRO-LAST28D.md) | 696 | 681 | 11 | 343 | 828 | 0 |
-| [LAST14D](RETRO-LAST14D.md) | 391 | 384 | 7 | 3 | 10 | 0 |
-| [ALL](RETRO-ALL.md) | 2284 | 2122 | 110 | 5850 | 44214 | 334 |
-| [2026-W42](RETRO-2026-W42.md) | 81 | 81 | 0 | 0 | 0 | 0 |
-| [2026-W41](RETRO-2026-W41.md) | 281 | 276 | 5 | 3 | 1 | 0 |
+| [LAST7D](RETRO-LAST7D.md) | 149 | 149 | 0 | 0 | 0 | 0 |
+| [LAST28D](RETRO-LAST28D.md) | 775 | 760 | 11 | 336 | 757 | 0 |
+| [LAST14D](RETRO-LAST14D.md) | 362 | 360 | 2 | 3 | 1 | 0 |
+| [ALL](RETRO-ALL.md) | 2393 | 2231 | 110 | 5931 | 44247 | 335 |
+| [2026-W43](RETRO-2026-W43.md) | 40 | 40 | 19L | 0 | 0 | 0 |
+| [2026-W42](RETRO-2026-W42.md) | 150 | 150 | 57L | 0 | 0 | 0 |
+| [2026-W41](RETRO-2026-W41.md) | 281 | 276 | 77L | 3 | 1 | 0 |
 | [2026-W40](RETRO-2026-W40.md) | 251 | 241 | 6 | 174 | 348 | 0 |
 | [2026-W39](RETRO-2026-W39.md) | 71 | 71 | 0 | 166 | 467 | 0 |
 | [2026-W38](RETRO-2026-W38.md) | 89 | 87 | 2 | 4 | 94 | 0 |
@@ -20,3 +21,5 @@
 | [2026-W29](RETRO-2026-W29.md) | 83 | 78 | 5 | 173 | 2348 | 7 |
 | [2026-W28](RETRO-2026-W28.md) | 82 | 77 | 4 | 67 | 999 | 1 |
 | [2026-W27](RETRO-2026-W27.md) | 100 | 98 | 2 | 57 | 656 | 9 |
+
+Gate failures: `NL` is the number of blocking verdicts in the gate ledger for that week; a plain number counts runs that ended in a gate failure (no gate ledger for that window).

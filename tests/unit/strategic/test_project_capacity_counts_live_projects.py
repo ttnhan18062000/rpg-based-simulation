@@ -87,10 +87,18 @@ def test_an_entity_holding_only_finished_projects_can_start_a_fatigue_project():
     assert _fatigue_projects(_entity(finished, sleep_debt=90.0)) == [("fatigue", ProjectStatus.ACTIVE)]
 
 
-def test_an_entity_holding_max_live_projects_still_cannot_start_a_new_kind():
-    live = [_project("a", ProjectStatus.SUSPENDED, ProjectKind.HARVESTING), _project("b", ProjectStatus.SUSPENDED),
+def _full_cap():
+    return [_project("a", ProjectStatus.SUSPENDED, ProjectKind.HARVESTING), _project("b", ProjectStatus.SUSPENDED),
             _project("c", ProjectStatus.SUSPENDED, ProjectKind.QUEST)]
-    assert _fatigue_projects(_entity(live, sleep_debt=90.0)) == []
+
+
+def test_an_entity_holding_max_live_projects_still_cannot_start_a_new_kind_below_the_need_onset():
+    assert _fatigue_projects(_entity(_full_cap(), sleep_debt=50.0)) == []
+
+
+def test_an_entity_holding_max_live_projects_starts_a_fatigue_project_at_or_past_the_sleep_onset():
+    """TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY (SURV-07): an escalated need is admitted at a full cap; below the onset the cap applies."""
+    assert _fatigue_projects(_entity(_full_cap(), sleep_debt=90.0)) == [("fatigue", ProjectStatus.ACTIVE)]
 
 
 def test_an_entity_with_no_projects_starts_one():
@@ -160,3 +168,30 @@ def test_the_guild_scorer_has_no_spare_capacity_when_live_projects_fill_the_limi
 
     entity = _entity([_project(f"l{i}", ProjectStatus.SUSPENDED) for i in range(3)])
     assert GuildNeedScorer().score(entity, _guild_state(entity)).utility == 0.0
+
+
+def test_the_trim_leaves_one_live_hunger_and_one_sleep_project_alone_whatever_their_status():
+    """SURV-07: ONE live need project of each kind is outside both capacity trims, keyed on its kind (not on the need level)."""
+    from src.core.strategic import GoalKind, live_projects_in_the_trim
+
+    projects = {p.id: p for p in (_project("a", ProjectStatus.SUSPENDED), _project("h", ProjectStatus.SUSPENDED, GoalKind.HUNGER),
+                                  _project("f", ProjectStatus.ACTIVE, GoalKind.FATIGUE), _project("z", ProjectStatus.ABANDONED))}
+    assert sorted(live_projects_in_the_trim(projects)) == ["a"]
+
+
+def test_a_second_live_need_project_of_a_kind_counts_and_the_exempt_one_is_the_current_else_the_newest():
+    from dataclasses import replace
+
+    from src.core.strategic import GoalKind, live_projects_in_the_trim
+
+    def need(pid, kind, tick):
+        return replace(_project(pid, ProjectStatus.SUSPENDED, kind), created_tick=tick)
+
+    projects = {p.id: p for p in (need("h1", GoalKind.HUNGER, 10), need("h2", GoalKind.HUNGER, 30), need("h3", GoalKind.HUNGER, 20),
+                                  need("f1", GoalKind.FATIGUE, 5), need("f2", GoalKind.FATIGUE, 6), _project("a", ProjectStatus.SUSPENDED))}
+    # No current project: the newest of each kind (h2, f2) is exempt; the rest count.
+    assert sorted(live_projects_in_the_trim(projects)) == ["a", "f1", "h1", "h3"]
+    # The current project of a kind is the exempt one even when older.
+    assert sorted(live_projects_in_the_trim(projects, "h1")) == ["a", "f1", "h2", "h3"]
+    # A current project of another kind does not change either kind's pick.
+    assert sorted(live_projects_in_the_trim(projects, "a")) == ["a", "f1", "h1", "h3"]

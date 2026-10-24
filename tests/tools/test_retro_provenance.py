@@ -122,3 +122,13 @@ def test_the_provenance_block_counts_prefield_zero_rows_as_unknown_never_average
     assert block["headline"]["unknown"] == 2
     assert block["by_source"]["unknown"]["count"] == 2 and block["by_source"]["unknown"]["avg_min"] is None
     assert block["by_source"]["unlabelled"]["count"] == 1  # OLD at 600 s is pre-field but measured
+
+
+def test_the_hand_coverage_line_says_how_many_durations_a_week_close_re_derived():
+    # TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE
+    base = {"execution_mode": "hand", "duration_source": "tool_activity", "duration_s": 600}
+    runs = [dict(base, run_id="a", duration_rederived="week_close"), dict(base, run_id="b")]
+    p = rp.summary(runs, [])
+    assert p["rederived"] == 1 and "1 duration(s) re-derived at week close" in "\n".join(rp.by_source_lines(p))
+    p = rp.summary([dict(base, run_id="b")], [])
+    assert p["rederived"] == 0 and "re-derived" not in "\n".join(rp.by_source_lines(p))

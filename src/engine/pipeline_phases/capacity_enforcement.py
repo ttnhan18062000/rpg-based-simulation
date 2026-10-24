@@ -1,15 +1,20 @@
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict, List, Optional
 from dataclasses import replace
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate, StrategicUpdate
 
-from src.core.strategic import live_projects
+from src.core.strategic import live_projects_in_the_trim
 from src.strategy.capacity import CapacityService
 from src.core.updates import EntityUpdate, StrategicUpdate
+
+def _current_project_id(entity: EntityState, strat_upd: StrategicUpdate) -> Optional[str]:
+    """The current project id after this tick's update: the update's own choice when it sets one, else the entity's."""
+    return strat_upd.current_project_id_set if strat_upd.current_project_id_set is not None else entity.strategic.current_project_id
+
 
 class CapacityEnforcementPhase:
     """
@@ -95,7 +100,7 @@ class CapacityEnforcementPhase:
                     all_projects.pop(p_id, None)
                     
                 project_removals = CapacityService.trim_dict(
-                    live_projects(all_projects),
+                    live_projects_in_the_trim(all_projects, _current_project_id(entity, strat_upd)),  # SURV-07: one live need project per kind is outside the trim
                     profile.max_active_projects,
                     lambda p: p.score
                 )

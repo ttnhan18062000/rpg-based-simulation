@@ -1,0 +1,15 @@
+level=info ts=2026-10-20T15:08:14.508755185Z caller=promtail.go:135 msg="Reloading configuration file" sha3sum=c3b5a2bebb7ed5a45c29ad50ad3dc411f9290f89c97c11cf9480ae0e509939f8
+level=info ts=2026-10-20T15:08:14.510645321Z caller=server.go:386 msg="server listening on addresses" http=[::]:9080 grpc=[::]:42121
+level=info ts=2026-10-20T15:08:14.510786743Z caller=main.go:173 msg="Starting Promtail" version="(version=3.6.8, branch=release-3.6.x, revision=138c391f)"
+level=warn ts=2026-10-20T15:08:14.511049585Z caller=promtail.go:265 msg="enable watchConfig"
+level=info ts=2026-10-20T15:08:19.512174706Z caller=target_group.go:130 msg="added Docker target" containerID=faac9f0fe2393a6a6892c5e54446fb2d40fd86a8377e6d2b572eb5e6d07b2723
+level=info ts=2026-10-20T15:08:19.51224563Z caller=target_group.go:130 msg="added Docker target" containerID=ef8c0c0fdfcd460ed7aa0994a8e9c812c4589680c0090f71af0f80dfe0e71044
+level=info ts=2026-10-20T15:08:19.51226638Z caller=target_group.go:130 msg="added Docker target" containerID=d86a32a72e0ea73c310197fde1395568a156d4af371108b71f0ecff8113bc0e5
+level=info ts=2026-10-20T15:08:19.512283014Z caller=target_group.go:130 msg="added Docker target" containerID=cc7e4e451848889a4e133e2e54aa5ad1b48fa37a7bd7889545501643947e9781
+level=info ts=2026-10-20T15:08:19.512294453Z caller=target_group.go:130 msg="added Docker target" containerID=73e9d58416233787ae2783316cb42ddecfe71b539ad0f125a1ec194c5601de1e
+level=info ts=2026-10-20T15:08:19.512320938Z caller=target_group.go:130 msg="added Docker target" containerID=d6efcc6a4e958548a1125cf046ccfc24fb6b5602e75b9df0ffa849891e39f003
+level=info ts=2026-10-20T15:08:19.512337371Z caller=target_group.go:130 msg="added Docker target" containerID=9fc936476f7c6cf6260ef0d262bbfb11d68603c8e01b10a45fe55b398bb50760
+level=info ts=2026-10-20T15:08:19.512349719Z caller=target_group.go:130 msg="added Docker target" containerID=5a69afdb192acb9361eab5eaff44c77bf0927a7dafc8e66dcb41beb6f621e9f2
+level=info ts=2026-10-20T15:08:24.512304039Z caller=target_group.go:130 msg="added Docker target" containerID=f4a63fafe3cd29034630e823270bf5e5f944023b757ddab61dc7b60fcbcf29f6
+level=info ts=2026-10-20T15:08:29.512491345Z caller=target_group.go:130 msg="added Docker target" containerID=2897a6817ae18d3a33af1d02cdf713ac04b1007f0df2cbfc412f00319f5a2992
+level=info ts=2026-10-20T15:08:39.512398212Z caller=target_group.go:130 msg="added Docker target" containerID=bc1cb64b513ccc6b78ebb1da49d2d12b40e3e399b1bab394e49543c3a6930d5b

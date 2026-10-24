@@ -264,7 +264,7 @@ class TestReportRendering:
 @pytest.mark.skipif(shutil.which("py-spy") is None, reason="py-spy is not installed (opt-in `profiling` dependency group)")
 def test_end_to_end_tiny_profile_with_py_spy(tmp_path):
     done = subprocess.run([sys.executable, str(PERF / "profile_tick.py"), "--scenario", "idle", "--entities", "20",
-                           "--ticks", "4", "--warmup", "1", "--out-dir", str(tmp_path)],
+                           "--ticks", "40", "--warmup", "1", "--out-dir", str(tmp_path)],
                           capture_output=True, text=True, cwd=REPO_ROOT, timeout=240)
     assert done.returncode == 0, done.stderr
     for name in ("profile.folded", "profile.speedscope.json", "phases.md", "phases.json"):

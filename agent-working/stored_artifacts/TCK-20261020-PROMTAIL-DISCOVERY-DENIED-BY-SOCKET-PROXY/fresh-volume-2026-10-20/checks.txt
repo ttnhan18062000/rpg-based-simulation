@@ -1,0 +1,13 @@
+## checks 14:48:20Z
+real password /api/user: 200
+admin/admin /api/user: 401
+unauthenticated /api/user: 401
+## provisioned rule groups
+  base 5 ['DiskSpaceLow', 'DiskWillFillIn24h', 'GrafanaAlertingFailures', 'PrometheusUnreachable', 'TargetDown'] provenance ['file']
+  cause 1 ['RedisDown'] provenance ['file']
+  slo 2 ['ApiErrorRateHigh', 'ApiLatencyP95High'] provenance ['file']
+## contact points / policy
+  ntfy webhook file cred= '[REDACTED]'
+  policy receiver ntfy provenance file
+## datasources
+  [('Loki', 'loki'), ('Prometheus', 'prometheus'), ('Tempo', 'tempo')]

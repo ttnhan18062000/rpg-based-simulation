@@ -1,0 +1,15 @@
+## OOMKilled / restarts
+  platform-grafana-1 oom=false restarts=0
+  platform-prometheus-1 oom=false restarts=0
+  platform-ai_worker-1 oom=false restarts=0
+  platform-backend-1 oom=false restarts=0
+  platform-promtail-1 oom=false restarts=0
+  platform-redis-1 oom=false restarts=0
+  platform-docker-socket-proxy-1 oom=false restarts=0
+  platform-loki-1 oom=false restarts=0
+  platform-tempo-1 oom=false restarts=0
+  platform-redis-exporter-1 oom=false restarts=0
+  platform-node-exporter-1 oom=false restarts=0
+  platform-ntfy-1 oom=false restarts=0
+## backend logs in the Loki export
+ streams 0 lines 0

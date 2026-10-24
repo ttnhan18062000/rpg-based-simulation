@@ -99,7 +99,7 @@ def print_runs(runs):
             f"{trunc(r.get('start_ts',''), 22)} "
             f"{trunc(r.get('tier',''), 10)} "
             f"{trunc(r.get('final_status',''), 22)} "
-            f"{str(r.get('agent_count','')):>6} "
+            f"{'unk' if r.get('agent_count') is None else r['agent_count']!s:>6} "
             f"{str(r.get('duration_s','')):>6}"
         )
     print(f"\n{len(runs)} run(s)")

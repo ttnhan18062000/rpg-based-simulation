@@ -22,7 +22,7 @@ The system already has:
 We will implement a standalone **Simulation Watchdog** service (`src/observability/watchdog.py`).
 
 ### Key Responsibilities:
-1.  **Metric Pulsing**: Periodically poll the `/metrics` endpoint to ensure `sim_current_tick` is incrementing.
+1.  **Metric Pulsing**: Periodically poll the backend's **internal metrics port** (`METRICS_URL`, default `http://backend:9109/metrics`, the same registry the API's `/metrics` serves, unauthenticated, compose network only: `src/api/metrics_port.py`) to ensure `sim_current_tick` is incrementing. `/metrics` on the API port is behind the API key and answers 401 to this poller, so it is not used. A 401/403 from the metrics endpoint means the watchdog is misconfigured and blind, not that the simulation stalled: it is reported as `Metrics gated (HTTP 401)`, is NOT counted toward `consecutive_failures`, and raises its own `WatchdogBlind` alert (severity ERROR, once per the router's dedup window, `SIM_ALERTS_DEDUP_WINDOW_SECONDS`, default 60 s). A refused connection, a timeout, any other non-200 status and a tick that does not advance stay failures.
 2.  **Health Check**: Monitor the `/health` endpoint for 200 OK responses.
 3.  **Log Aggregation**: Query Loki for `level="error"` or `level="critical"` across all container jobs.
 4.  **Self-Correction/Alerting**: Emit a "SYSTEM_CRITICAL" log when a failure is detected, and

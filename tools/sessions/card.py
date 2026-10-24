@@ -4,7 +4,7 @@ Read-only. The injected text of a template is its `## Card` section; everything 
 rationale and is never injected. Ownership, routes, handover and authority are generated from the
 manifest and the authority file, so no template restates them (define once).
 
-Budget (plan section 5, step 3): about 400 tokens. No tokenizer is installed in this repo, so the
+Budget (plan section 5, step 3): about 460 tokens (raised from 440 to 460 by the owner via agent-working-planner-u24, 2026-10-22, TCK-20261022-APPROVALS-NOTIFY-BOTH-LEADS-BEFORE-ACTING; earlier: 415 to 440 by the owner via lead-planner, 2026-10-21, TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS; precedent 400->415 on 2026-10-20, TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS). No tokenizer is installed in this repo, so the
 measure is a deliberately conservative estimate, `ceil(len(text) / 3.5)`: path-heavy text tokenizes
 at roughly 3 to 4 characters per token, so this over-counts prose and is about right for globs.
 """
@@ -18,7 +18,7 @@ from pathlib import Path
 
 from tools.sessions.roster import REPO_ROOT, Authority, Role, Roster, handover_rel
 
-CARD_BUDGET_TOKENS = 400
+CARD_BUDGET_TOKENS = 460
 CHARS_PER_TOKEN = 3.5
 TEMPLATE_DIR = Path("docs/guidelines/session_roles")
 

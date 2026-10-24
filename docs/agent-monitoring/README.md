@@ -58,7 +58,7 @@ indefinitely (the sections after this one) does not belong here at all.
 
 | Ticket | What landed | Metric | Baseline (ref) | Check when | Verdict |
 |---|---|---|---|---|---|
-| `TCK-20260924-DELIVERY-COST-MEASUREMENT` | `gh`-calls-per-PR delivery-cost measurement tool (`tools/delivery/delivery_cost_measurement.py`) | `gh_calls_per_pr` | 16.04 @ `0e0ff8f2172634226b1e8a04338fec8b5972a2c6` (W30–W39, `origin/main`, pre-epic) | After several PRs have been delivered through this epic's own delivery tooling (`gh pr create` via `pr_render.py`, CI polling via `pr_status.py`) in ordinary day-to-day use — **not** from this implementation batch's own corpus, whose `gh`/git traffic reflects building the tooling, not using it, for the identical reason the "before" baseline itself recorded no "after" | _(pending — 2026-09-30 check: W40 @ `833b60306` = 6.0 gh calls/PR over only 3 PRs, vs 16.04 baseline; too few PRs and partly tooling-building to call a verdict, recheck after ~10 ordinary PRs; 2026-10-06 check: W40–W41 @ `9299891a9` = 11.3 gh calls/PR but only 3 `gh pr create` seen of 109 PRs merged, because the tool only sees committed tools shards; still not checkable, recheck after tools-shard coverage is fixed by TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION — see RETRO-2026-W41 Notes)_ |
+| `TCK-20260924-DELIVERY-COST-MEASUREMENT` | `gh`-calls-per-PR delivery-cost measurement tool (`tools/delivery/delivery_cost_measurement.py`) | `gh_calls_per_pr` | 16.04 @ `0e0ff8f2172634226b1e8a04338fec8b5972a2c6` (W30–W39, `origin/main`, pre-epic) | After several PRs have been delivered through this epic's own delivery tooling (`gh pr create` via `pr_render.py`, CI polling via `pr_status.py`) in ordinary day-to-day use — **not** from this implementation batch's own corpus, whose `gh`/git traffic reflects building the tooling, not using it, for the identical reason the "before" baseline itself recorded no "after" | _(pending — 2026-09-30 check: W40 @ `833b60306` = 6.0 gh calls/PR over only 3 PRs, vs 16.04 baseline; too few PRs and partly tooling-building to call a verdict, recheck after ~10 ordinary PRs; 2026-10-06 check: W40–W41 @ `9299891a9` = 11.3 gh calls/PR but only 3 `gh pr create` seen of 109 PRs merged, because the tool only sees committed tools shards; still not checkable, recheck after tools-shard coverage is fixed by TCK-20261006-HAND-CLOSURE-COST-ATTRIBUTION — see RETRO-2026-W41 Notes; 2026-10-20 check: W42–W43 @ `c35648e75` = 195 gh calls but 2 `gh pr create` (97.5/PR, a coverage artefact), still not checkable, recheck after TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH — see RETRO-2026-W43 Notes)_ |
 
 ## Baseline Metrics Snapshot (one-off)
 
@@ -248,6 +248,16 @@ summaries equal, phase for phase, an already-recorded run of a different ticket 
 names that ticket). `--allow-shared-summaries` overrides the second and sets `summaries_shared: true` on the run row. If git
 cannot say what the ticket changed (no `origin/main`), the Parity claim is not checked and a warning says so.
 
+The hand path has no separate Review, Architecture-Verify or Document-Update step (they fold into Implement/Verify), so a
+closer gives no event for them and `phases_omitted` would show them as real gaps
+(`TCK-20261020-HAND-CLOSURE-RECORDS-FOLDED-PHASES-AS-SKIPPED`, from RETRO-2026-W42). The recorder therefore adds them
+when the tier plan marks the phase `full` and the closer narrated none, and prints one `NOTE:` line naming them. Review
+and Architecture-Verify are `skipped` with `skip_reason: no_hand_tool`. Document-Update is `ok` (derived by the recorder,
+naming up to three files) when the ticket's own changed files include a `docs/` file other than `docs/REGISTRY.yaml` and
+`docs/parity_ledger/**`; otherwise, or when git cannot say what changed, it is `skipped` with `no_hand_tool`. A narrated
+event always wins, and no other phase is added. The run row's `agent_count` is `null` for a hand closure (unknown: the recorder cannot see agent calls), so neither these events nor the narrated ones are counted as agent calls. A hotfix gets only Document-Update (its Review and Architecture-Verify are
+`skipped_event` in the plan).
+
 `tool_call_count`/`cost_proxy_score` are only ever added to an event when real `tools.jsonl` rows
 exist for its `(run_id, seq)` — a hand-orchestrating session never has a live per-phase sidecar
 during the actual work, so an unattributed phase correctly has no such keys at all (never a false
@@ -262,6 +272,10 @@ coverage is "guaranteed by workflow — not verified by done-checker," a deliber
 does not change, and `.claude/settings.json` hook changes affect every concurrent session
 immediately, a larger blast radius than a single ticket should decide unilaterally. Flagged as a
 follow-up recommendation for whoever next revisits this area.
+
+## Tool rows that never reach `main`
+
+A session leaves tool rows only if its worktree has the PostToolUse hook (`.claude/settings.json` names `tools/agent-monitoring/post_tool_hook.py` and the script exists; the hook command skips a missing script silently) and the rows are then committed. W41 measured 11 of 41 closing sessions with a tool row on `main` (27%); for the 19 sessions with a transcript, 8 had rows sitting in an unmerged worktree shard, 6 showed no hook event at all, and 5 showed hook events but left no row (`TCK-20261016-TOOLS-HOOK-LOADED-AND-LATE-ROWS-FLUSH`). SessionStart now prints a `monitoring:` line when the worktree lacks the hook, and another when tool rows in any week's shard are not in a commit. Both are report-only; there is no flush, because the rows are already written and a flush would be a second write path. Stage `agent-working/agent-monitoring/` in every commit.
 
 ## Closing a finished week
 
@@ -282,6 +296,25 @@ make agent-monitoring-close-week WEEK=2026-W39
   that week.
 - `retro_nudge_hook.py` adds a report-only line when a finished week still holds shards. It never blocks
   and the close is never scheduled: one session closes one week, and the implementer commits it.
+
+- **Main-checkout tool rows** (`TCK-20261021-WEEK-CLOSE-SWEEPS-MAIN-CHECKOUT-TOOL-ROWS`; see "Tool rows that never reach `main`"
+  above for the reminder lines). A session launched in the main checkout (lead, planners) is on branch `main`, so the hook writes
+  `main.tools.jsonl`, a file no PR branch carries, and a reminder cannot get it committed. A close run from a worktree finds the main
+  checkout with `git rev-parse --git-common-dir` and appends that week's rows that the canonical `tools.jsonl` lacks (full-row
+  identity, so a row also in a branch shard or already folded counts once; a torn line is skipped). It is read-only on the main
+  checkout: its `main.tools.jsonl` is never truncated, rewritten or staged. The close prints one line with the swept count. Two
+  limits: the other host's main checkout (u24desktop) is a different machine and is not swept, and a week that was already closed
+  only gains these rows on a re-close, which is back-fill and is done deliberately, not by this sweep. A close run in the main
+  checkout itself folds `main.tools.jsonl` like any other shard. The sweep adds rows, so it improves row coverage; it does not change
+  how hand-closure durations are derived.
+
+- **Duration re-derivation** (`TCK-20261021-HAND-CLOSURE-DURATION-FROM-LAST-ACTIVITY-AND-WEEK-CLOSE-REDERIVE`). After the fold and the
+  sweep, a close replays `hand_closure_time.resolve()` for every hand run of that week with `duration_source: unknown`, using the
+  session's unattributed tool rows of that week and the previous one. A run that now resolves `tool_activity` is rewritten in place and
+  marked `duration_rederived: "week_close"`; an old `unknown` row for the same `(run_id, execution_id)` that a late shard brings back is
+  dropped, so the run is never counted twice. It prints one line with the counts and is idempotent. Limits: cost (`cost_proxy_score`,
+  `tool_call_count`) is not re-derived; only a finished week is closed, so only then is a duration re-derived; rows that sit only in
+  the other host's checkout count only once they are merged.
 
 Code: `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`.
 

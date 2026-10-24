@@ -1202,6 +1202,14 @@ jobs:
       # each broken contract's importer -> imported pairs. Fix the import, or ask the codebase planner for a baseline entry with a reason.
       - name: Import contracts
         run: python3 -m codebase.structure.import_contracts ci --summary-out "$GITHUB_STEP_SUMMARY" --annotate
+      # TCK-20261021-PYREFLY-ADVISORY-REPORT, owner decision 2026-10-20: Pyrefly is a second type-checker opinion next to
+      # mypy, report-only and never a gate. This is the LAST step of the job and has its own continue-on-error, so
+      # it cannot fail the required "Code health" check; it is a step, not a job, because test.yml is held to its job
+      # count (MAX_JOB_COUNT, TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS). No annotations; the exit code is ignored.
+      - name: Pyrefly (advisory, never blocks)
+        run: python3 -m codebase.gates.pyrefly_report --summary-out "$GITHUB_STEP_SUMMARY"
+        continue-on-error: true
+        timeout-minutes: 3
 
   # ── Code health SARIF feedback (advisory, permanently) ─────────────────────
   # TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK: findings in the PR's changed src/*.py files that the code-health

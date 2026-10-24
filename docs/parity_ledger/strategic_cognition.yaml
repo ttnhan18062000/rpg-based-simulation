@@ -4572,3 +4572,25 @@
   test_path: tests/unit/ai/test_starvation_is_a_present_threat_weighed_in_goal_selection.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.135.
   support_boundary: 'Does not add a meal path for a subject with no hunger project (the in-reach meal stays after v1); gate V3 on frontier_living_world seed 42 (5000 ticks) is 0 with this change. A hunter closing on a starving subject is not seen before contact (strategic cadence, v1 row C5).'
+
+- id: STRAT-285
+  text: 'TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT (SURV-07, memo row 84 (1)): threat perception (_perceived_threats), emotional appraisal (hostile, ally, nemesis) and saliency ranking read only the living; a dead body is in the neighbour view but is no threat, no hostile or ally, and earns no hostility bonus. Grief, mourning and vengeance are unchanged.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/tactical.py (_perceived_threats), src/engine/cognition.py (AppraisalSystem.evaluate_emotional_state, SensoryFilter.filter_saliency), docs/mechanics/04_strategic_cognition.md section 1. Ticket TCK-20261020-A-DEAD-BODY-IS-NOT-A-PERCEIVED-THREAT. Real-kernel tests: a corpse gives no PANIC_RETREAT; a live hostile still does; a hungry hp-2 raider with three townsfolk dead eats.'
+  proof_type: regression
+  test_path: tests/integration/observability/test_a_dead_body_is_not_a_perceived_threat_through_the_real_kernel.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.136.
+  support_boundary: 'Paired against 7b1528861 (seeds 42-46): no drift in any world; extinction stop in crowded (guard, merchant), accepted by the owner (v1 disclosure N7). Flight rises on the frontier from live threats no longer crowded out of attention by corpses.'
+
+- id: STRAT-286
+  text: 'TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY (SURV-07, memo row 84 (2)): a hunger or sleep goal that wins scoring at or past its escalation onset (0.6 of its line) is admitted when project capacity is full (escalated_need_wins); one live hunger and one live sleep project (the current one, else the newest by created_tick) are outside both capacity trims (bandwidth trim and CapacityEnforcementPhase); every other live need project counts and is trimmed. Below the onset the cap applies as before.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/ai/goals/escalation.py (escalated_need_wins), src/core/strategic.py (NEED_PROJECT_KINDS, live_projects_in_the_trim), src/systems/strategic_systems/intelligence.py (capacity gate), src/systems/strategic_systems/detour.py (enforce_bandwidth), src/engine/pipeline_phases/capacity_enforcement.py, docs/mechanics/04_strategic_cognition.md sections 1 and 4. Ticket TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY. Real-kernel tests: a hungry entity past the onset at a full cap gets a hunger project and eats; below the onset the cap refuses; one project per need kind; an admitted non-current need project survives both trims; hunger and sleep switching for 600 ticks never exceeds the cap plus two.'
+  proof_type: regression
+  test_path: tests/integration/observability/test_an_escalated_need_is_never_refused_for_capacity_through_the_real_kernel.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.137.
+  support_boundary: 'Paired against the dead-are-not-threats step, STRAT-285 (seeds 42-46): no drift; extinction stop (frontier scout; crowded hero, scout, worker), accepted by the owner (v1 disclosure N9). V3 on 15: 12 clean, 3 owned known reds (N14, N15). has_project_capacity still counts exempt need projects (slot-leak ticket); a suspended exempt need project frees a slot for an ordinary project that the old trim would have removed.'

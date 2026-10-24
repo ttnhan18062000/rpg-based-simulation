@@ -1,0 +1,138 @@
+{
+  "is_measurement": true,
+  "pool_ceiling_rps": 2970.0,
+  "baseline": {
+    "backend_cpu_pct": 0.0,
+    "backend_mem_mb": 0.0,
+    "locust_cpu_pct": 0.0,
+    "host_cpu_pct": 0.0,
+    "run_queue": 0.0,
+    "swap_kb_s_mean": 0.0,
+    "disk_kb_s_mean": 0.0
+  },
+  "steps": {
+    "10": {
+      "engine": {
+        "ticks_per_s": [
+          8.23
+        ],
+        "ticks_per_s_median": 8.23,
+        "start": {
+          "status": "RUNNING",
+          "current_tick": 12048,
+          "governor_mode": "DEGRADED",
+          "health_state": "DEGRADED",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 1476.0341165065765,
+          "taken_at": 1792429637.7639499
+        },
+        "end": {
+          "status": "RUNNING",
+          "current_tick": 12545,
+          "governor_mode": "SURVIVAL",
+          "health_state": "HEALTHY",
+          "observability_mode": "LIGHT",
+          "elapsed_seconds": 1536.4503889083862,
+          "taken_at": 1792429698.179547
+        },
+        "governor_modes": [
+          "DEGRADED",
+          "SURVIVAL"
+        ],
+        "health_states": [
+          "DEGRADED",
+          "HEALTHY"
+        ],
+        "observability_modes": [
+          "LIGHT"
+        ]
+      },
+      "spread": {
+        "rps": {
+          "median": 228.31395424943014,
+          "min": 228.31395424943014,
+          "max": 228.31395424943014
+        },
+        "p50": {
+          "median": 29.0,
+          "min": 29.0,
+          "max": 29.0
+        },
+        "p95": {
+          "median": 130.0,
+          "min": 130.0,
+          "max": 130.0
+        },
+        "p99": {
+          "median": 190.0,
+          "min": 190.0,
+          "max": 190.0
+        }
+      },
+      "peak_use": {
+        "backend_cpu_pct": 150.33,
+        "backend_mem_mb": 145.1,
+        "locust_cpu_pct": 38.6,
+        "host_cpu_pct": 46,
+        "run_queue": 22
+      },
+      "containers_peak": {
+        "platform-backend-1": {
+          "cpu_pct_peak": 150.33,
+          "mem_mb_peak": 145.1
+        },
+        "platform-docker-socket-proxy-1": {
+          "cpu_pct_peak": 0.36,
+          "mem_mb_peak": 13.71
+        },
+        "platform-grafana-1": {
+          "cpu_pct_peak": 11.57,
+          "mem_mb_peak": 367.7
+        },
+        "platform-loki-1": {
+          "cpu_pct_peak": 3.8,
+          "mem_mb_peak": 91.64
+        },
+        "platform-node-exporter-1": {
+          "cpu_pct_peak": 0.72,
+          "mem_mb_peak": 11.05
+        },
+        "platform-ntfy-1": {
+          "cpu_pct_peak": 3.86,
+          "mem_mb_peak": 27.93
+        },
+        "platform-prometheus-1": {
+          "cpu_pct_peak": 6.31,
+          "mem_mb_peak": 97.61
+        },
+        "platform-promtail-1": {
+          "cpu_pct_peak": 7.52,
+          "mem_mb_peak": 31.39
+        },
+        "platform-redis-1": {
+          "cpu_pct_peak": 4.37,
+          "mem_mb_peak": 7.523
+        },
+        "platform-redis-exporter-1": {
+          "cpu_pct_peak": 4.71,
+          "mem_mb_peak": 13.41
+        },
+        "platform-tempo-1": {
+          "cpu_pct_peak": 1.7,
+          "mem_mb_peak": 49.0
+        }
+      },
+      "error_rates": {
+        "admission_429": 0.0,
+        "server_5xx": 0.0,
+        "http_other": 0.0,
+        "transport": 0.0
+      },
+      "swap_delta_kb_s": 1.9180327868852458,
+      "disk_delta_kb_s": 206.18032786885246,
+      "ceiling_warning": false,
+      "flags": []
+    }
+  },
+  "saturation": null
+}

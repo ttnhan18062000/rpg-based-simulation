@@ -52,7 +52,7 @@ def test_a_planted_near_twin_one_blade_pixel_off_is_still_close():
 
 
 def test_the_report_is_deterministic_and_covers_all_36_icons():
-    sprites = la.all_icon_sprites()
+    sprites = la.adopted_icon_sprites()
     assert len(sprites) == 36
     assert la.report(sprites) == la.report(sprites)
     assert set(la.report(sprites)["nearest"]) == set(sprites)

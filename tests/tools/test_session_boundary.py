@@ -61,6 +61,30 @@ def test_unowned_paths_are_not_an_event(path):
     assert bd.check_edit(_edit(path), ROSTER.role("agent-working-implementer"), ROSTER) is None
 
 
+def _planners_with_ticket_grant():
+    return [r for r in ROSTER.roles if r.function == "planner" and "agent-working/tickets/**" in r.may_write]
+
+
+def test_every_planner_with_a_tickets_grant_may_write_staging_artifacts():
+    # TCK-20261020-PLANNER-MAY-WRITE-STAGING-ARTIFACTS: a standard-tier dispatch has the planner start the staging
+    # artifacts, so the grant travels with the tickets grant (the -u24 twins copy their plain twin, host_suffixed_twins.md).
+    planners = _planners_with_ticket_grant()
+    assert len(planners) >= 10
+    missing = [r.role for r in planners if "agent-working/staging_artifacts/**" not in r.may_write]
+    assert missing == []
+
+
+@pytest.mark.parametrize("role_id", [r.role for r in _planners_with_ticket_grant()])
+def test_planner_writing_a_ticket_staging_artifact_is_not_an_event(role_id):
+    path = "agent-working/staging_artifacts/TCK-20261020-X/plan.md"
+    assert bd.check_edit(_edit(path), ROSTER.role(role_id), ROSTER) is None
+
+
+def test_planner_writing_another_domains_code_is_still_an_event():
+    found = bd.check_edit(_edit("src/x.py"), ROSTER.role("platform-planner"), ROSTER)
+    assert found is not None and found[0] == bd.KIND_EDIT and found[2]["owner_domains"] == ["rpg"]
+
+
 def test_split_path_not_including_the_domain_is_an_event_and_including_it_is_not():
     assert bd.check_edit(_edit("tests/tools/x.py"), ROSTER.role("agent-working-implementer"), ROSTER) is None
     assert bd.check_edit(_edit("tests/tools/x.py"), ROSTER.role("codebase-implementer"), ROSTER) is not None

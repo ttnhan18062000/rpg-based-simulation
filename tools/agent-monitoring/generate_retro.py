@@ -801,7 +801,11 @@ def compute_retro_metrics(
     avg_dur = int(sum(durations) / len(durations)) if durations else 0
     avg_dur_min = avg_dur // 60
 
-    agent_counts = [r.get("agent_count", 0) for r in runs if r.get("agent_count")]
+    # TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN: a null agent_count is unknown (hand closures), never 0 in the
+    # average; the row reports how many runs the average covers. Legacy 0 / missing keep the old exclusion.
+    agent_counts = [r["agent_count"] for r in runs if r.get("agent_count")]
+    # `avg_agents` stays a number (0 when no run has a count): the agent-ops dashboard's RunSummaryStats takes it as a float.
+    # The retro row reads `avg_agents_n` to print n/a instead of that 0.
     avg_agents = round(sum(agent_counts) / len(agent_counts), 1) if agent_counts else 0
 
     # Execution-mode split (TCK-20260929-RUN-EXECUTION-MODE-FIELD, extended by
@@ -1069,6 +1073,7 @@ def compute_retro_metrics(
             "gate_fail_count": len(gate_fails),
             "avg_duration_min": avg_dur_min,
             "avg_agents": avg_agents,
+            "avg_agents_n": len(agent_counts),
             "total_agent_calls": len(events),
             "execution_mode": execution_mode_summary,
             "provenance": retro_provenance.summary(runs, events),
@@ -1461,7 +1466,10 @@ def generate(
         lines.extend(retro_provenance.run_summary_rows(prov))
     else:
         lines.append(f"| Avg duration | {rs['avg_duration_min']} min |")
-    lines.append(f"| Avg agents per run | {rs['avg_agents']} |")
+    n_known, n_runs = rs["avg_agents_n"], rs["total"]
+    unknown_note = "; hand closures record unknown" if n_known < n_runs else ""
+    avg_agents_cell = "n/a" if n_known == 0 else rs["avg_agents"]
+    lines.append(f"| Avg agents per run (n={n_known} of {n_runs}{unknown_note}) | {avg_agents_cell} |")
     lines.append(f"| Total agent calls | {rs['total_agent_calls']} |")
     lines.append("")
 

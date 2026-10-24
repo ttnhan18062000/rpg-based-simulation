@@ -26,7 +26,7 @@ def _edit(path):
 
 def test_the_validator_reports_no_findings_for_the_whole_roster():
     assert validate.validate(REPO) == []
-    assert len(ROSTER.roles) == 25
+    assert len(ROSTER.roles) == 29  # +4 architecture seats (#715)
 
 
 def test_the_u24_seat_is_a_main_checkout_planner_that_nobody_dispatches_to():

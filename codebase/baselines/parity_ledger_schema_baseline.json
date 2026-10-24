@@ -1,8 +1,8 @@
 {
   "counts": {
     "combat_movement.yaml": {
-      "allOf/0/then/properties/test_path/type": 238,
-      "allOf/2/else/then/properties/test_path/type": 265,
+      "allOf/0/then/properties/test_path/type": 237,
+      "allOf/2/else/then/properties/test_path/type": 263,
       "properties/proof_type/enum": 4
     },
     "infrastructure.yaml": {
@@ -33,8 +33,8 @@
       "properties/proof_type/enum": 1
     },
     "world_dynamics.yaml": {
-      "allOf/0/then/properties/test_path/type": 87,
-      "allOf/2/else/then/properties/test_path/type": 88
+      "allOf/0/then/properties/test_path/type": 85,
+      "allOf/2/else/then/properties/test_path/type": 86
     }
   },
   "version": 1

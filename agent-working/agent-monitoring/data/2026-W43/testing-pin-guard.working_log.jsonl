@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-20T14:17:04.684251Z", "ticket_id": "TCK-20261020-WORKFLOW-PIN-GUARD-COVERS-EVERY-WORKFLOW", "title": "SHA-pin guard covers every workflow", "status": "DONE", "summary": "Guard globs all workflows with a non-empty check and a yaml uses-count check", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

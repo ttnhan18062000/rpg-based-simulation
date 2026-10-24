@@ -705,6 +705,76 @@ def test_a_defined_share_against_a_baseline_where_it_was_undefined_has_no_refere
     assert "no reference (undefined at baseline)" in rep.render_markdown(report)
 
 
+# ---- a share checked against its count rows (TCK-20261020-RPG-GATE-POOLED-SHARE-CHECKED-AGAINST-ITS-COUNT-ROWS)
+
+def _counted_share_docs(starved=(1, 2, 0, 1, 1), at_risk=(4, 4, 4, 4, 4), **row):
+    """Five seed documents carrying the count rows S.num / S.den for group ``*``, and a pooled share that names them (value defaults to Σnum/Σden)."""
+    docs = _docs()
+    for seed, num, den in zip(SEEDS, starved, at_risk):
+        docs[("w", seed)]["metrics"] += [
+            {"id": "S.num", "class": "outcome", "scope": "run", "group": "*", "value": float(num), "k": 2.0, "floor": 1.0},
+            {"id": "S.den", "class": "outcome", "scope": "run", "group": "*", "value": float(den), "k": 2.0, "floor": 1.0}]
+    total = sum(at_risk)
+    share = {"id": "O9", "class": "outcome", "scope": "pooled", "group": "*", "floor": 0.1, "numerator": "S.num", "denominator": "S.den",
+             "value": sum(starved) / total if total else None, **({"reason": "empty_denominator"} if not total else {})}
+    docs[("w", None)] = _pooled_doc()
+    docs[("w", None)]["metrics"].append({**share, **row})
+    return docs
+
+
+def _share_finding(docs):
+    report = _build(docs, refs=_refs(_baseline(2, pooled=0.4)))
+    (found,) = [f for f in report["findings"] if f["id"] == "O9"]
+    return found, report
+
+
+def test_a_consistent_share_passes_untouched():
+    found, report = _share_finding(_counted_share_docs())
+    assert found["state"] != "no-data" and report["no_data_reasons"]["contract_error"] == 0
+
+
+def test_a_consistent_empty_denominator_share_is_still_no_data_empty_denominator():
+    found, report = _share_finding(_counted_share_docs(starved=(0,) * 5, at_risk=(0,) * 5))
+    assert (found["state"], found["reason"]) == ("no-data", "empty_denominator") and report["no_data_reasons"]["contract_error"] == 0
+
+
+def test_a_share_that_names_a_row_absent_from_a_seed_is_a_contract_error_naming_the_seeds():
+    docs = _counted_share_docs()
+    docs[("w", 3)]["metrics"] = [m for m in docs[("w", 3)]["metrics"] if m["id"] != "S.den"]
+    found, _ = _share_finding(docs)
+    assert (found["state"], found["reason"]) == ("no-data", "contract_error") and found["detail"] == f"share names S.den, absent from seed(s) [{SEEDS[2]}]"
+
+
+def test_a_share_that_names_a_row_no_seed_has_is_a_contract_error():
+    found, _ = _share_finding(_counted_share_docs(denominator="S.missing"))
+    assert found["reason"] == "contract_error" and found["detail"].startswith("share names S.missing, absent from seed(s)")
+
+
+def test_an_undefined_share_whose_denominator_sums_above_zero_is_a_contract_error():
+    found, _ = _share_finding(_counted_share_docs(value=None, reason="empty_denominator"))
+    assert found["reason"] == "contract_error" and found["detail"] == "share marked undefined but its denominator sums to 20"
+
+
+def test_a_share_value_that_is_not_the_ratio_of_its_sums_is_a_contract_error():
+    found, _ = _share_finding(_counted_share_docs(value=0.5))
+    assert found["reason"] == "contract_error" and found["detail"] == "share value 0.5 != Σnum/Σden 0.25"
+
+
+def test_a_share_within_the_tolerance_of_the_ratio_passes():
+    found, _ = _share_finding(_counted_share_docs(value=0.25 + 1e-12))
+    assert found["state"] != "no-data"
+
+
+def test_a_defined_share_over_a_zero_denominator_is_a_contract_error():
+    found, _ = _share_finding(_counted_share_docs(starved=(0,) * 5, at_risk=(0,) * 5, value=0.3, reason=None))
+    assert found["reason"] == "contract_error" and found["detail"] == "share value 0.3 but its denominator sums to 0"
+
+
+def test_a_pooled_row_without_count_fields_is_not_checked_as_a_share():
+    found, _ = _share_finding(_share_docs(value=0.9) | {})  # an O9 row with no numerator / denominator
+    assert found["state"] != "no-data"
+
+
 # ---- a relative floor (TCK-20261020-RPG-GATE-CANDIDATE-RECORDS-A-RELATIVE-FLOOR)
 
 def _rel_baseline(floor, floor_base=3.0, floor_rel=0.10):
@@ -761,3 +831,48 @@ def test_floor_rel_outside_zero_to_one_or_on_a_pooled_row_is_a_contract_error():
     docs[("w", None)]["metrics"][-1]["floor_rel"] = 0.1
     report = _build(docs)
     assert [f["reason"] for f in report["findings"] if f["id"] == "O9"] == ["contract_error"]
+
+
+# ---- TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED: scoped ownership in the report
+
+def _scoped_entry(cases, ticket="TCK-S"):
+    return {**_entry("V1", "fail", ticket=ticket), "cases": cases}
+
+
+def _fail_docs(**by_seed):
+    docs = _docs()
+    for seed, examples in by_seed.items():
+        docs[("w", int(seed.lstrip("s")))] = _seed_doc(int(seed.lstrip("s")), violations=len(examples), examples=examples)
+    return docs
+
+
+def test_a_scoped_entry_owns_only_its_world_seed_and_entity_and_the_rest_is_red():
+    docs = _fail_docs(s1=[{"entity_id": 7}])
+    known = [_scoped_entry([{"world": "w", "seed": 1, "entity_id": 7}])]
+    owned = _build(docs, known=known)
+    assert owned["verdict"] == "green" and next(f for f in owned["findings"] if f["state"] == "fail")["ownership"] == "known"
+    assert owned["stale_known_entries"]["fail"] == []
+    # a fourth fail on an uncovered seed is RED while the covered one stays owned
+    docs[("w", 2)] = _seed_doc(2, violations=1, examples=[{"entity_id": 7}])
+    red = _build(docs, known=known)
+    assert red["verdict"] == "red" and sum(1 for f in red["findings"] if f.get("ownership") == "unowned") == 1
+    assert sum(1 for f in red["findings"] if f.get("ownership") == "known") == 1
+
+
+def test_a_new_entity_on_a_covered_seed_is_red_in_the_report():
+    docs = _fail_docs(s1=[{"entity_id": 7}, {"entity_id": 8}])
+    assert _build(docs, known=[_scoped_entry([{"world": "w", "seed": 1, "entity_id": 7}])])["verdict"] == "red"
+
+
+def test_examples_cut_by_the_cap_are_unowned_in_the_report():
+    docs = _docs()
+    docs[("w", 1)] = _seed_doc(1, violations=6, examples=[{"entity_id": 7}] * 6)  # the report keeps MAX_EXAMPLES (5) of 6
+    assert _build(docs, known=[_scoped_entry([{"world": "w", "seed": 1, "entity_id": 7}])])["verdict"] == "red"
+
+
+def test_a_scoped_entry_does_not_own_a_pooled_fail_and_a_stale_case_is_listed():
+    docs = _docs()
+    docs[("w", None)] = _pooled_doc(violations=1)
+    report = _build(docs, known=[{**_entry("V7:wolves", "fail"), "cases": [{"world": "w", "seed": 1}]}])
+    assert report["verdict"] == "red"
+    assert report["stale_known_entries"]["fail"] == ["V7:wolves w/1"]

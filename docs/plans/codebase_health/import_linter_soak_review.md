@@ -9,6 +9,9 @@ tags: [delivery, planning]
 
 # Import-linter soak review (FINAL, 2026-10-19)
 
+
+**Outcome:** merged #671 (2026-10-19).
+
 Covers `TCK-20261005-IMPORT-LINTER-FLIP-AND-TEST-RETIREMENT` (scope bullet 1, acceptance criterion 1). Window: from
 `e9585eb02` (PR #351 merged, 2026-10-05T13:40:06Z) to 2026-10-19T13:40Z. Sections 1-6 below read the window up to
 2026-10-08 (`origin/main` `0d75424dc`, 3.9 days of 14); the flip ticket finishes it on 2026-10-19. Method as in

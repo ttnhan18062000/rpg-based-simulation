@@ -46,7 +46,7 @@ def load_proposals(path: Path = PROPOSALS) -> dict:
 
 def build(proposals: dict | None = None, sprites: dict[str, rule.Sprite] | None = None) -> dict:
     proposals = proposals or load_proposals()
-    sprites = sprites or la.all_icon_sprites()
+    sprites = sprites or la.r0001_icon_sprites()
     slots = []
     for key, slot in proposals["slots"].items():
         current = sprites[key]

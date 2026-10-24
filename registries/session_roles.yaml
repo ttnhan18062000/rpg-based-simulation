@@ -22,6 +22,12 @@ domains:
       - docs/brainstorm/**
       - registries/mechanisms.yaml
       - tests/**
+      - docs/observability/prometheus_metrics.md
+      - docs/observability/hard_law_monitor.md
+      - docs/observability/decision_trace_contract.md
+      - docs/observability/read_model_service_contract.md
+      - docs/observability/how_to_run_simulation.md
+      - docs/guides/feature_flags.md
     owns_not: []
     routes:
       "agent-working/**": agent-working-designer
@@ -41,6 +47,7 @@ domains:
       - docs/agent-monitoring/**
       - docs/plans/agent_infrastructure/**
       - docs/guidelines/session_roles/**
+      - docs/guides/cross_session_messages.md   # the guide behind the role cards
       - agent-working/agent-orchestration/**
       - agent-working/agent-monitoring/retro/**
       - registries/session_*.yaml   # exactly session_roles.yaml and session_authority.yaml today; one glob keeps the card within its token budget
@@ -51,9 +58,13 @@ domains:
       - tools/search_*.py          # search_mcp, search_server, search_shared (owner 2026-10-13)
       - tools/start_*_mcp.sh       # start_search_mcp, start_headroom_mcp
       - tools/*_search.py          # exactly knowledge_search.py and eval_search.py today
+      - tools/handover_transit.py   # session/handover tooling (session-lead epic scope)
       - requirements-knowledge.txt
       - tests/tools/**
       - tests/docs/**
+      - tools/search/**            # the search server image (Dockerfile etc.); search_*.py above
+      - docs/observability/retrieval_retention_redaction_policy.md
+      - docs/observability/agent_ops_dashboard_contract.md   # contract for the agent-monitoring data the dashboard reads; the code under src/api/agent_ops_dashboard stays rpg (src/** route)
     owns_not:
       - registries/mechanisms.yaml   # content is rpg-domain; only the advisory tooling around it stays here
     routes:
@@ -72,6 +83,7 @@ domains:
       "src/**": rpg-planner                   # ask before touching RPG logic
       "agent-working/**": agent-working-designer   # process problems
       "tools/test_architecture/**": testing-planner
+      "tools/release/**": testing-planner
       "tools/**": agent-working-designer
       "tests/architecture/**": testing-planner
   testing:
@@ -82,6 +94,9 @@ domains:
       - tools/test_architecture/**
       - .github/workflows/test.yml            # owner 2026-10-08: testing holds the test CI workflows
       - .github/workflows/slow-regression*.yml   # includes slow-regression-watchdog.yml
+      - .github/workflows/rpg-gate-report.yml
+      - tools/ci_junit_*.py                      # ci_junit_merge.py, ci_junit_summary.py (read by test.yml)
+      - tools/release/**                         # release_gate.py, generate_release_proof.py (owner 2026-10-21)
     owns_not: []
     routes:
       "src/**": rpg-planner                   # ask before touching RPG logic
@@ -133,11 +148,13 @@ domains:
       - .mcp.json
       - docs/architecture/**                 # asset's ADR and perf's PERF-D file are split below
       - agent-working/lead/**
+      - README.md
     owns_not: []
     routes:
       "src/**": rpg-planner
       "frontend/**": rpg-planner
       "visual_assets/**": asset-planner
+      "tools/release/**": testing-planner
       "tools/**": agent-working-designer
       "agent-working/**": agent-working-designer
   platform:   # deployment and runtime; spec in docs/architecture/devops_plan_amendment_proposal.md (PR #537), owner 2026-10-13
@@ -152,11 +169,23 @@ domains:
       - .github/dependabot.yml
       - tools/loadtest/**
       - docs/runbooks/**
+      - docs/observability/loki_label_policy.md
     owns_not: []
     routes:
       "src/**": rpg-planner                   # the engine stays one process
       "docs/architecture/**": lead-planner    # ADR changes go to lead for review
       ".github/workflows/test.yml": testing-planner
+      "agent-working/**": agent-working-designer
+      "tools/release/**": testing-planner
+      "tools/**": agent-working-designer
+  architecture:   # owner 2026-10-22 (#715). Proposals and reviews; ADRs stay lead's
+    owns:
+      - docs/plans/architecture/**
+    owns_not: []
+    routes:
+      "src/**": rpg-planner
+      "docs/architecture/**": lead-planner    # ADRs go to lead for review
+      "docs/performance/**": perf-planner
       "agent-working/**": agent-working-designer
       "tools/**": agent-working-designer
 # Intentional overlaps between domains (a path matched by two domains' owns is an error unless a
@@ -198,7 +227,7 @@ roles:
                legacy_session_name: rpg-feature-planning, seat_status: staffed}
     responsibility:
       accepts_dispatch_from: [user, rpg-designer]
-    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/**", "agent-working/tickets/**"]}
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**"]}
     placement: {worktree: rpg-planner, max_sessions: 1}
     handover: .claude/handover/rpg-planner.md
   - role: rpg-implementer
@@ -223,7 +252,7 @@ roles:
                legacy_session_name: agent-working-design, seat_status: staffed}   # held on host ubuntu since 2026-10-18
     responsibility:
       accepts_dispatch_from: [user, agent-working-designer]
-    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**"]}
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**"]}
     placement: {worktree: agent-working-planner, max_sessions: 1}
     handover: .claude/handover/agent-working-planner.md
     card_note: "Host ubuntu; twin `-u24`."
@@ -250,7 +279,7 @@ roles:
                legacy_session_name: test-architecture-reviewer, seat_status: staffed}
     responsibility:
       accepts_dispatch_from: [user, testing-designer]
-    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/test_architecture/**", "agent-working/tickets/**"]}
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/test_architecture/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**"]}
     placement: {worktree: testing-planner, max_sessions: 1}
     handover: .claude/handover/testing-planner.md
   - role: testing-implementer
@@ -276,7 +305,7 @@ roles:
                legacy_session_name: codebase-planner, seat_status: staffed}   # runs on host ubuntu (2026-10-09)
     responsibility:
       accepts_dispatch_from: [user, codebase-designer]
-    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/codebase_health/**", "agent-working/tickets/**"]}
+    capability: {may_write: [".claude/handover/drafts/**", "docs/plans/codebase_health/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**"]}
     placement: {worktree: codebase-planner, max_sessions: 1}
     handover: .claude/handover/codebase-planner.md
   - role: codebase-implementer
@@ -315,7 +344,7 @@ roles:
       accepts_dispatch_from: [user]   # no perf-designer seat; roadmap "Ownership model" (2026-10-02)
     capability: {may_write: [".claude/handover/drafts/**", "docs/performance/**",
                              "docs/plans/design_enhancement/performance_optimization/**",
-                             "docs/architecture/performance_optimization_decisions.md", "agent-working/tickets/**",
+                             "docs/architecture/performance_optimization_decisions.md", "agent-working/tickets/**", "agent-working/staging_artifacts/**",
                              "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
     placement: {worktree: perf-planner, max_sessions: 1}   # ubuntu: proposed ~/Work/rpg-perf-planner
     handover: .claude/handover/perf-planner.md
@@ -334,7 +363,7 @@ roles:
     responsibility:
       accepts_dispatch_from: [user]
       owns_not: ["agent-working/lead/hosts/u24desktop.md"]   # the u24 lead's page: boundary.py flags a write to it
-    capability: {may_write: [".claude/handover/drafts/**", "agent-working/lead/**", "agent-working/tickets/**",
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/lead/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**",
                              "docs/architecture/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
     placement: {launch: main-checkout, max_sessions: 1}   # reads from the main checkout
     handover: .claude/handover/lead-planner.md
@@ -351,12 +380,49 @@ roles:
     handover: .claude/handover/lead-planner-u24.md
     card_note: "Host lead for u24desktop: status of this host's sessions only, on `agent-working/lead/hosts/u24desktop.md`. Never edits `board.md`. Lead-owned paths: comment only; review authority stays with lead-planner."
 
+  - role: architecture-planner   # host ubuntu; registered from u24desktop (owner 2026-10-22, #715)
+    identity: {domain: architecture, function: planner, session_name: architecture-planner,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**", "docs/REGISTRY.yaml"]}
+    placement: {launch: main-checkout, max_sessions: 1}
+    handover: .claude/handover/architecture-planner.md
+    card_note: "Host ubuntu; twin `-u24`."
+  - role: architecture-planner-u24   # host u24desktop (owner 2026-10-22)
+    identity: {domain: architecture, function: planner, session_name: architecture-planner-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user]
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**", "docs/REGISTRY.yaml"]}
+    placement: {launch: main-checkout, max_sessions: 1}
+    handover: .claude/handover/architecture-planner-u24.md
+    card_note: "Host u24desktop; twin is plain."
+  - role: architecture-implementer   # host ubuntu; registered from u24desktop (owner 2026-10-22, #715)
+    identity: {domain: architecture, function: implementer, session_name: architecture-implementer,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, architecture-planner]
+    capability: {may_write: ["docs/plans/architecture/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**", "agent-working/stored_artifacts/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml", ".claude/handover/drafts/**"]}   # docs only until architecture owns code (owner 2026-10-22, #715); code goes to rpg or perf implementers
+    placement: {worktree: architecture, max_sessions: 1}
+    handover: .claude/handover/architecture-implementer.md
+    card_note: "Host ubuntu; twin `-u24`."
+  - role: architecture-implementer-u24   # host u24desktop (owner 2026-10-22)
+    identity: {domain: architecture, function: implementer, session_name: architecture-implementer-u24,
+               legacy_session_name: null, seat_status: staffed}
+    responsibility:
+      accepts_dispatch_from: [user, architecture-planner-u24]
+    capability: {may_write: ["docs/plans/architecture/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**", "agent-working/stored_artifacts/**", "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml", ".claude/handover/drafts/**"]}   # docs only until architecture owns code (owner 2026-10-22, #715); code goes to rpg or perf implementers
+    placement: {worktree: architecture-u24, max_sessions: 1}
+    handover: .claude/handover/architecture-implementer-u24.md
+    card_note: "Host u24desktop; twin is plain."
+
   - role: platform-planner   # launched on demand while a DevOps plan step is open; no designer (ADRs go to lead-planner)
     identity: {domain: platform, function: planner, session_name: platform-planner,
                legacy_session_name: null, seat_status: staffed}
     responsibility:
       accepts_dispatch_from: [user]
-    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**",
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**",
                              "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
     placement: {worktree: platform-planner, max_sessions: 1}
     handover: .claude/handover/platform-planner.md
@@ -378,7 +444,7 @@ roles:
                legacy_session_name: null, seat_status: staffed}
     responsibility:
       accepts_dispatch_from: [user]
-    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**",
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**",
                              "agent-working/agent-monitoring/**", "docs/REGISTRY.yaml"]}
     placement: {worktree: platform-planner-u24, max_sessions: 1}
     handover: .claude/handover/platform-planner-u24.md
@@ -406,7 +472,7 @@ roles:
                legacy_session_name: null, seat_status: staffed}   # owner 2026-10-19: staffed
     responsibility:
       accepts_dispatch_from: [user, agent-working-designer-u24]
-    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**"]}
+    capability: {may_write: [".claude/handover/drafts/**", "agent-working/tickets/**", "agent-working/staging_artifacts/**"]}
     placement: {worktree: agent-working-planner-u24, max_sessions: 1}
     handover: .claude/handover/agent-working-planner-u24.md
     card_note: "Host u24desktop; twin is plain."
@@ -447,3 +513,5 @@ worktrees:
   agent-working-u24: {writer: agent-working-implementer-u24}
   agent-working-designer-u24: {writer: agent-working-designer-u24}
   agent-working-planner-u24: {writer: agent-working-planner-u24}
+  architecture: {writer: architecture-implementer}
+  architecture-u24: {writer: architecture-implementer-u24}
