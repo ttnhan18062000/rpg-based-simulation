@@ -173,8 +173,7 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/routes/static.py", "retiring_ticket": null, "reviewed": false, "rule": "D103", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/routes/stats.py", "retiring_ticket": null, "reviewed": false, "rule": "D103", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/schemas.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 2437, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "module-length", "symbol": null, "tool": "line_count", "value": 2437}
-{"added_date": "2026-10-02", "ceiling": 18, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "ANN202", "symbol": null, "tool": "ruff", "value": 18}
+{"added_date": "2026-10-02", "ceiling": 15, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "ANN202", "symbol": null, "tool": "ruff", "value": 15}
 {"added_date": "2026-10-02", "ceiling": 3, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "BLE001", "symbol": null, "tool": "ruff", "value": 3}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "C901", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
@@ -184,8 +183,7 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0915", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-04", "ceiling": 1, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "n4-version-marker-name", "symbol": "create_v2_app", "tool": "ast_grep", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 52, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "create_v2_app", "tool": "complexipy", "value": 52}
-{"added_date": "2026-10-02", "ceiling": 2407, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "create_v2_app", "tool": "line_count", "value": 2407}
-{"added_date": "2026-10-02", "ceiling": 2094, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "create_v2_app.<locals>.get_observability_ui", "tool": "line_count", "value": 2094}
+{"added_date": "2026-10-02", "ceiling": 307, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "create_v2_app", "tool": "line_count", "value": 307}
 {"added_date": "2026-10-04", "ceiling": 1, "file": "src/api/server.py", "retiring_ticket": null, "reviewed": false, "rule": "e3-silent-except", "symbol": "create_v2_app.lifespan", "tool": "ast_grep", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/ws/__init__.py", "retiring_ticket": null, "reviewed": false, "rule": "D104", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/api/ws/stream.py", "retiring_ticket": null, "reviewed": false, "rule": "ANN001", "symbol": null, "tool": "ruff", "value": 1}
@@ -1318,7 +1316,7 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/kernel.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0913", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 4, "file": "src/engine/kernel.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0915", "symbol": null, "tool": "ruff", "value": 4}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/kernel.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR1702", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1317, "file": "src/engine/kernel.py", "retiring_ticket": null, "reviewed": true, "rule": "class-length", "symbol": "Kernel", "tool": "line_count", "value": 1317}
+{"added_date": "2026-10-02", "ceiling": 1316, "file": "src/engine/kernel.py", "retiring_ticket": null, "reviewed": true, "rule": "class-length", "symbol": "Kernel", "tool": "line_count", "value": 1316}
 {"added_date": "2026-10-04", "ceiling": 1, "file": "src/engine/kernel.py", "retiring_ticket": null, "reviewed": false, "rule": "e3-silent-except", "symbol": "Kernel.__init__", "tool": "ast_grep", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 37, "file": "src/engine/kernel.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "Kernel.__init__", "tool": "complexipy", "value": 37}
 {"added_date": "2026-10-02", "ceiling": 268, "file": "src/engine/kernel.py", "retiring_ticket": null, "reviewed": true, "rule": "function-length", "symbol": "Kernel.__init__", "tool": "line_count", "value": 268}
@@ -1457,7 +1455,7 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/pipeline_phases/capacity_enforcement.py", "retiring_ticket": null, "reviewed": false, "rule": "C901", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/pipeline_phases/capacity_enforcement.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/pipeline_phases/capacity_enforcement.py", "retiring_ticket": null, "reviewed": false, "rule": "D102", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 5, "file": "src/engine/pipeline_phases/capacity_enforcement.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 5}
+{"added_date": "2026-10-02", "ceiling": 3, "file": "src/engine/pipeline_phases/capacity_enforcement.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 3}
 {"added_date": "2026-10-02", "ceiling": 2, "file": "src/engine/pipeline_phases/capacity_enforcement.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 2}
 {"added_date": "2026-10-02", "ceiling": 2, "file": "src/engine/pipeline_phases/capacity_enforcement.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 2}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/pipeline_phases/capacity_enforcement.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0912", "symbol": null, "tool": "ruff", "value": 1}
@@ -1673,14 +1671,11 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "C901", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 2, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 2}
-{"added_date": "2026-10-02", "ceiling": 14, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "F821", "symbol": null, "tool": "ruff", "value": 14}
 {"added_date": "2026-10-02", "ceiling": 3, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 3}
 {"added_date": "2026-10-02", "ceiling": 7, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 7}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0912", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0915", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR1702", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 32, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "WorkerManager.execute_batch", "tool": "complexipy", "value": 32}
-{"added_date": "2026-10-02", "ceiling": 90, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "WorkerManager.execute_batch", "tool": "line_count", "value": 90}
+{"added_date": "2026-10-02", "ceiling": 29, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "WorkerManager.execute_batch", "tool": "complexipy", "value": 29}
+{"added_date": "2026-10-02", "ceiling": 81, "file": "src/engine/worker_manager.py", "retiring_ticket": null, "reviewed": false, "rule": "function-length", "symbol": "WorkerManager.execute_batch", "tool": "line_count", "value": 81}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/world_dynamics.py", "retiring_ticket": null, "reviewed": false, "rule": "C901", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/engine/world_dynamics.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 4, "file": "src/engine/world_dynamics.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 4}
@@ -2726,9 +2721,7 @@
 {"added_date": "2026-10-02", "ceiling": 5, "file": "src/observability/watchdog.py", "retiring_ticket": null, "reviewed": false, "rule": "BLE001", "symbol": null, "tool": "ruff", "value": 5}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/watchdog.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/watchdog.py", "retiring_ticket": null, "reviewed": false, "rule": "E722", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 2, "file": "src/observability/watchdog.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 2}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/observability/watchdog.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 2, "file": "src/observability/watchdog.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 2}
 {"added_date": "2026-10-04", "ceiling": 1, "file": "src/observability/watchdog.py", "retiring_ticket": null, "reviewed": false, "rule": "e3-silent-except", "symbol": "SimulationWatchdog.check_health", "tool": "ast_grep", "value": 1}
 {"added_date": "2026-10-04", "ceiling": 1, "file": "src/observability/watchdog.py", "retiring_ticket": null, "reviewed": false, "rule": "e3-silent-except", "symbol": "SimulationWatchdog.check_loki_errors", "tool": "ast_grep", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/perf/bench_harness.py", "retiring_ticket": null, "reviewed": false, "rule": "ANN204", "symbol": null, "tool": "ruff", "value": 1}
