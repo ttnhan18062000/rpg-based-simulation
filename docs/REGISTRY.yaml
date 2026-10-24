@@ -7852,6 +7852,23 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS.md
+  ticket_id: TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS
+  title: '`requirements-knowledge.txt` takes the patched mcp, graphifyy and torch
+    versions, with the index rebuilt and search quality checked'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas:
+  - requirements-knowledge.txt
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS/test_plan.md
+  tags:
+  - knowledge-store
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261024-PERF-TOOLS-HELP-FLAG-NEVER-STARTS-A-RUN.md
   ticket_id: TCK-20261024-PERF-TOOLS-HELP-FLAG-NEVER-STARTS-A-RUN
   title: '`--help` on a tools/perf script prints usage and exits; it never starts
@@ -7866,6 +7883,23 @@
   tags:
   - performance
   - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY.md
+  ticket_id: TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY
+  title: The pre-push advisory hook warns when a branch adds tagged docs or tickets
+    and `docs/REGISTRY.yaml` is stale
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-24'
+  related_code_areas:
+  - tools/delivery/pre_push_advisory_hook.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY/test_plan.md
+  tags:
+  - delivery
+  - process-improvement
 - type: ticket
   path: agent-working/tickets/done/TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM.md
   ticket_id: TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM
@@ -7966,6 +8000,20 @@
   tags:
   - architecture
   - delivery
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION.md
+  ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
+  title: The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt`
+    version, not a stray user-site install
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-24'
+  related_code_areas:
+  - .claude/settings.json
+  artifact_files: []
+  tags:
+  - knowledge-store
+  - process-improvement
 - type: ticket
   path: agent-working/tickets/done/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
   ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
