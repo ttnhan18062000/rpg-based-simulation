@@ -18,7 +18,7 @@ confirmed false-positive shape in the corpus (`git push` inside a `grep` pattern
 -n "git commit\\|git push\\|..."`) does not follow any of those three anchors and is excluded by
 construction, not by a special case.
 
-Four checks, each read-only against local refs (no network call — an offline-first design so this
+Five checks, each read-only against local refs (no network call — an offline-first design so this
 hook cannot itself become a source of the Fortiguard TLS-block failure mode this epic elsewhere
 defends against):
 
@@ -44,6 +44,12 @@ defends against):
   whose pytest paths hold a changed file, plus the one command that runs them. It never runs a test (hook
   timeouts) and says nothing when no lane is specifically touched.
 
+- **E — `docs/REGISTRY.yaml` is stale (advisory, TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY).** Only when
+  the branch diff touches a registry source (a `.md` under `docs/`, `agent-working/tickets/` or
+  `agent-working/stored_artifacts/`, the trees `tools/generate_registry.py` reads) does it run
+  `python3 tools/generate_registry.py --check` (offline, a few seconds); exit 2 means stale and yields one line naming
+  `make docs-registry`. A push that touches none of those pays nothing; any other exit or a timeout says nothing.
+
 Every check degrades to "no finding" on any git-command failure (detached HEAD, no local
 `origin/main` ref, non-tracking branch) rather than raising — this hook must never traceback, and
 an uncertain check says nothing, not something wrong.
@@ -64,7 +70,7 @@ from typing import List, NamedTuple
 _REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
 if _REPO_ROOT_STR not in sys.path:
     sys.path.append(_REPO_ROOT_STR)
-from tools.agent_working_paths import AGENT_MONITORING, TICKETS, posix  # noqa: E402
+from tools.agent_working_paths import AGENT_MONITORING, STORED_ARTIFACTS, TICKETS, posix  # noqa: E402
 
 _GIT_PUSH_RE = re.compile(r"(?:^|&&|;)\s*git\s+push\b", re.MULTILINE)
 _TICKET_ID_RE = re.compile(r"TCK-[0-9]{8}-[A-Z0-9-]+")
@@ -194,6 +200,29 @@ def check_ci_lanes(run_command=default_run_command, base_ref: str = "origin/main
     ]
 
 
+_REGISTRY_SOURCE_ROOTS = ("docs/", f"{posix(TICKETS)}/", f"{posix(STORED_ARTIFACTS)}/")
+_REGISTRY_STALE_EXIT = 2  # generate_registry.py --check: on-disk output differs from a fresh regeneration
+
+
+def check_registry_fresh(run_command=default_run_command, base_ref: str = "origin/main") -> List[str]:
+    try:
+        diff = run_command(["git", "diff", "--name-only", f"{base_ref}...HEAD"])
+        if diff.returncode != 0:
+            return []
+        feeds = [p for p in diff.stdout.splitlines() if p.endswith(".md") and p.startswith(_REGISTRY_SOURCE_ROOTS)]
+        if not feeds:
+            return []
+        result = run_command([sys.executable, "tools/generate_registry.py", "--check"], 60)
+    except Exception:
+        return []  # an uncertain check says nothing (includes a timeout)
+    if result.returncode != _REGISTRY_STALE_EXIT:
+        return []
+    return [
+        "pre-push: this branch changes docs or tickets and docs/REGISTRY.yaml is stale (CI's Registry re-sync gate "
+        "will fail). Run `make docs-registry`, then `git add docs/REGISTRY.yaml` and commit it."
+    ]
+
+
 def run_all_checks(
     run_command=default_run_command,
     base_ref: str = "origin/main",
@@ -204,6 +233,7 @@ def run_all_checks(
     findings.extend(check_monitoring_shard_staged(run_command))
     findings.extend(check_squash_merged_finished(run_command, base_ref))
     findings.extend(check_ci_lanes(run_command, base_ref))
+    findings.extend(check_registry_fresh(run_command, base_ref))
     return findings
 
 
