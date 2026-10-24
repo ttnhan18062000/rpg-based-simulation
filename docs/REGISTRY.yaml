@@ -7869,6 +7869,21 @@
   - knowledge-store
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-PERF-TOOLS-HELP-FLAG-NEVER-STARTS-A-RUN.md
+  ticket_id: TCK-20261024-PERF-TOOLS-HELP-FLAG-NEVER-STARTS-A-RUN
+  title: '`--help` on a tools/perf script prints usage and exits; it never starts
+    a benchmark'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-24'
+  related_code_areas:
+  - tools/perf/perf_baseline.py
+  - tests/unit/perf/
+  artifact_files: []
+  tags:
+  - performance
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY.md
   ticket_id: TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY
   title: The pre-push advisory hook warns when a branch adds tagged docs or tickets
@@ -7899,6 +7914,20 @@
   tags:
   - testing
   - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261024-UV-LOCK-SECURITY-BUMPS.md
+  ticket_id: TCK-20261024-UV-LOCK-SECURITY-BUMPS
+  title: Bump the Python packages in uv.lock that have open Dependabot security alerts
+    to their first patched versions
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas:
+  - uv.lock
+  artifact_files: []
+  tags:
+  - security
+  - platform
 - type: ticket
   path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS.md
   ticket_id: TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS
