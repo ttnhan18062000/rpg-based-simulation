@@ -4006,12 +4006,12 @@
      "src.api.dependencies.get_engine_manager"
     ],
     "endpoint": "stream_ws",
-    "include_in_schema": null,
+    "include_in_schema": true,
     "kind": "ws",
     "methods": [],
     "name": "stream_ws",
     "path": "/api/v1/ws",
-    "response_class": null,
+    "response_class": "starlette.responses.JSONResponse",
     "response_model": null
    },
    {
@@ -4022,12 +4022,12 @@
      "src.api.dependencies.get_engine_manager"
     ],
     "endpoint": "stream_observe_ws",
-    "include_in_schema": null,
+    "include_in_schema": true,
     "kind": "ws",
     "methods": [],
     "name": "stream_observe_ws",
     "path": "/api/v1/ws/observe",
-    "response_class": null,
+    "response_class": "starlette.responses.JSONResponse",
     "response_model": null
    },
    {
@@ -4038,12 +4038,12 @@
      "src.api.dependencies.get_engine_manager"
     ],
     "endpoint": "stream_live_events_ws",
-    "include_in_schema": null,
+    "include_in_schema": true,
     "kind": "ws",
     "methods": [],
     "name": "stream_live_events_ws",
     "path": "/api/v1/ws/observability/events",
-    "response_class": null,
+    "response_class": "starlette.responses.JSONResponse",
     "response_model": null
    },
    {
@@ -10309,12 +10309,12 @@
      "src.api.dependencies.get_engine_manager"
     ],
     "endpoint": "stream_ws",
-    "include_in_schema": null,
+    "include_in_schema": true,
     "kind": "ws",
     "methods": [],
     "name": "stream_ws",
     "path": "/api/v1/ws",
-    "response_class": null,
+    "response_class": "starlette.responses.JSONResponse",
     "response_model": null
    },
    {
@@ -10325,12 +10325,12 @@
      "src.api.dependencies.get_engine_manager"
     ],
     "endpoint": "stream_observe_ws",
-    "include_in_schema": null,
+    "include_in_schema": true,
     "kind": "ws",
     "methods": [],
     "name": "stream_observe_ws",
     "path": "/api/v1/ws/observe",
-    "response_class": null,
+    "response_class": "starlette.responses.JSONResponse",
     "response_model": null
    },
    {
@@ -10341,12 +10341,12 @@
      "src.api.dependencies.get_engine_manager"
     ],
     "endpoint": "stream_live_events_ws",
-    "include_in_schema": null,
+    "include_in_schema": true,
     "kind": "ws",
     "methods": [],
     "name": "stream_live_events_ws",
     "path": "/api/v1/ws/observability/events",
-    "response_class": null,
+    "response_class": "starlette.responses.JSONResponse",
     "response_model": null
    },
    {
@@ -11437,7 +11437,7 @@
   "cors_preflight": {
    "headers": {
     "access-control-allow-headers": "x-api-key",
-    "access-control-allow-methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+    "access-control-allow-methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY",
     "access-control-allow-origin": "*",
     "access-control-max-age": "600"
    },
