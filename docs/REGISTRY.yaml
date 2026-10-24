@@ -7900,6 +7900,20 @@
   - testing
   - determinism
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION.md
+  ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
+  title: The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt`
+    version, not a stray user-site install
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-24'
+  related_code_areas:
+  - .claude/settings.json
+  artifact_files: []
+  tags:
+  - knowledge-store
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
   ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
   title: Update the engine execution modes proposal with the 2026-10-22 rulings and
