@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS
-phase: open
+phase: done
 date: 2026-10-24
 tags: [architecture, api-design]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, api-design]
 The 16 remaining inline routes in create_v2_app move into routers under src/api/routes/ and the function-local imports go to module top
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -91,9 +91,13 @@ It also imports inside the function (34 `PLC0415` rows). When this ticket is don
 - Open: where the moved routes go when their names match the existing, unregistered modules (Scope 1).
 
 ## Implementation Notes
+The 15 inline routes moved into six routers (engine_probes, live_observability, engine_state, engine_control, live_health, run_reports) in registration order. create_v2_app keeps middleware, lifespan and _register_routers; local imports are at module top. CORS block now src/api/server.py:184-189; /metrics now src/api/routes/engine_probes.py:25. src/api/routes/{state,control,health}.py are 0-byte unused files, left alone.
 
 ## Test Summary
+Snapshot fixture unchanged; lint-imports 17 kept; code-health 0 new/0 worse; mypy no new error; 834 passed across the required suites. Pyrefly baseline not synced (no pyrefly in the venv; advisory).
 
 ## Files Changed
+src/api/server.py, src/api/routes/{engine_probes,live_observability,engine_state,engine_control,live_health,run_reports}.py, codebase/baselines/code_health_exceptions.jsonl, codebase/baselines/mypy_baseline.txt
 
 ## Completion Summary
+server.py is 195 lines, create_v2_app 85 lines; rows for ANN202, C901, D100, F401, I001, PLC0415, PLR0915, cognitive-complexity are gone, BLE001 3 to 2.

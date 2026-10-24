@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261024-IMPORT-LINTER-LAYERS-CONTRACT-NAME-NOT-ADVISORY
-phase: open
+phase: done
 date: 2026-10-24
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 The generated import-linter layers contract drops "(advisory)" from its name, because it has been blocking since #671
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -64,9 +64,13 @@ The user chose to fold this into the M7 batch PR; the same approval comment cove
 - Assumed: nothing parses the contract by its display name, only by `id = "layers"`. Verify with grep before the change.
 
 ## Implementation Notes
+render_block names the layers contract 'Registry layer order'; importlinter.toml regenerated with the module's own helper; the recorded lint-imports output in the test updated.
 
 ## Test Summary
+tests/codebase/test_import_contracts.py 34 passed; lint-imports 17 kept, 0 broken.
 
 ## Files Changed
+codebase/structure/import_contracts.py, codebase/structure/importlinter.toml, tests/codebase/test_import_contracts.py
 
 ## Completion Summary
+The generated contract name no longer says advisory.

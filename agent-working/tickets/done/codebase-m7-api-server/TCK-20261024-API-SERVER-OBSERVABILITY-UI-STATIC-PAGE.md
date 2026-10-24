@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE
-phase: open
+phase: done
 date: 2026-10-24
 tags: [architecture, api-design, observability]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, api-design, observability]
 The 2,093-line observability UI page leaves create_v2_app: served byte-identical from a static file by a router under src/api/routes/
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -83,9 +83,13 @@ M7 batch 1, ticket 2 of 3. User approval 2026-10-24, logged at https://github.co
 - Assumed: a `.html` file under `src/` trips no gate, because ruff, ast-grep and paths-guard read only `.py` files. Verify with `make code-health` and the paths-guard check before push.
 
 ## Implementation Notes
+The 2,093-line page now lives in src/api/static_pages/observability_ui.html, written from the served bytes (sha256 081c122a...5f91b, identical). src/api/routes/observability_ui.py serves it and its two redirects, read once with functools.cache, registered last as before. No packaging change needed (see investigation.md).
 
 ## Test Summary
+Snapshot test passes with the fixture unchanged; code-health 0 new/0 worse after tighten; 691 passed across tests/api, the guard and tests/codebase.
 
 ## Files Changed
+src/api/server.py, src/api/routes/observability_ui.py, src/api/static_pages/observability_ui.html, codebase/baselines/code_health_exceptions.jsonl
 
 ## Completion Summary
+server.py went from 2437 to 338 lines; module-length and the get_observability_ui function-length rows are gone.

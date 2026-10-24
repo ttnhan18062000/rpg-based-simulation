@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS
-phase: open
+phase: done
 date: 2026-10-24
 tags: [architecture, api-design, testing]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, api-design, testing]
 Characterization tests that pin the HTTP surface of create_v2_app before src/api/server.py is split
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -90,9 +90,13 @@ Roadmap section 9 says characterization tests come first. This ticket adds tests
 - Open: some routers are included only under a condition (`server.py:132`, `:147`, `:150`), so the route set may depend on the profile or arguments passed to `create_v2_app`. Snapshot every branch the existing tests exercise. List any conditional router left unpinned in investigation.md.
 
 ## Implementation Notes
+Added tests/api/test_server_http_surface_characterization.py and tests/fixtures/api_server_http_surface.json: route order and metadata, flattened dependencies, OpenAPI, middleware, UI sha256, redirects, /metrics and CORS preflight, for the default and both-optional-routers profiles. Regenerate with UPDATE_API_SURFACE_FIXTURE=1.
 
 ## Test Summary
+3 new tests; tests/api plus the read-model guard 173 passed; five probes each failed the snapshot (see test_plan.md); two fresh-process fixtures are byte-identical.
 
 ## Files Changed
+tests/api/test_server_http_surface_characterization.py, tests/fixtures/api_server_http_surface.json
 
 ## Completion Summary
+Pinned the HTTP surface of create_v2_app with no change under src/. The fixture dropped endpoint_module before the first move so it survives the split.
