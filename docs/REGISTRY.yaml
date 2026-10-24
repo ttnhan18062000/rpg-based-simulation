@@ -7900,6 +7900,78 @@
   - testing
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS.md
+  ticket_id: TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS
+  title: Characterization tests that pin the HTTP surface of create_v2_app before
+    src/api/server.py is split
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas:
+  - src/api/server.py
+  - tests/api/test_all_routes_require_auth.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS/test_plan.md
+  tags:
+  - architecture
+  - api-design
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS.md
+  ticket_id: TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS
+  title: The 16 remaining inline routes in create_v2_app move into routers under src/api/routes/
+    and the function-local imports go to module top
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-24'
+  related_code_areas:
+  - src/api/server.py
+  - src/api/dependencies.py
+  - codebase/baselines/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS/test_plan.md
+  tags:
+  - architecture
+  - api-design
+- type: ticket
+  path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE.md
+  ticket_id: TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE
+  title: 'The 2,093-line observability UI page leaves create_v2_app: served byte-identical
+    from a static file by a router under src/api/routes/'
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-24'
+  related_code_areas:
+  - src/api/server.py:335-2437
+  - codebase/baselines/code_health_exceptions.jsonl
+  - pyproject.toml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE/test_plan.md
+  tags:
+  - architecture
+  - api-design
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-IMPORT-LINTER-LAYERS-CONTRACT-NAME-NOT-ADVISORY.md
+  ticket_id: TCK-20261024-IMPORT-LINTER-LAYERS-CONTRACT-NAME-NOT-ADVISORY
+  title: 'The generated import-linter layers contract drops "(advisory)" from its
+    name, because it has been blocking since #671'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas:
+  - codebase/structure/import_contracts.py
+  artifact_files: []
+  tags:
+  - architecture
+  - delivery
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION.md
   ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
   title: The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt`
