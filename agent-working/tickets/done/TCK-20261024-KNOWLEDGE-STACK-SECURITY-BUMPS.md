@@ -99,6 +99,10 @@ Ran on host ubuntu, 2026-10-24, alone (load average about 1.5; no RPG measuremen
 
 **Decision:** all three pins taken (every metric equal, both smokes pass). The main `.venv-knowledge` was upgraded in place with `uv pip` (it has no pip): torch 2.13.0+cpu, mcp 1.30.0, graphifyy 0.9.70, and sentence-transformers 6.1.0 (it was at 5.6.0, behind the 6.1.0 the file already pinned). `pip check` clean. The real index in this worktree is the one built by the candidate venv; `tools/knowledge_search.py query` on the main venv returns the same top-3 as before. The Dependabot alerts are checked after merge.
 
+**Known gaps** (not fixed here; the planner files the first as a follow-up):
+- The `graphify` on PATH is `~/.local/bin/graphify` on the system python, at graphifyy 0.6.7, not the pinned `.venv-knowledge` 0.9.70. The CLI that hooks and sessions run is therefore not the pinned one; this predates this ticket. The smokes above ran the 0.9.70 binary from the throwaway venv.
+- The 0.9 node-ID re-key applies when the shared `graphify-out/` is next rebuilt with 0.9; it was not exercised on the real graph.
+
 ## Test Summary
 Measurement ticket, no code: eval and spot checks above (candidate equals baseline), two smokes pass. No repo tests changed.
 
