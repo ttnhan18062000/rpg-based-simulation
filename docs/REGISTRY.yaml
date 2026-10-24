@@ -7852,6 +7852,21 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-PERF-TOOLS-HELP-FLAG-NEVER-STARTS-A-RUN.md
+  ticket_id: TCK-20261024-PERF-TOOLS-HELP-FLAG-NEVER-STARTS-A-RUN
+  title: '`--help` on a tools/perf script prints usage and exits; it never starts
+    a benchmark'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-24'
+  related_code_areas:
+  - tools/perf/perf_baseline.py
+  - tests/unit/perf/
+  artifact_files: []
+  tags:
+  - performance
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
   ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
   title: Update the engine execution modes proposal with the 2026-10-22 rulings and
