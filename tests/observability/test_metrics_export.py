@@ -8,6 +8,7 @@ from tests.helpers.live_server import start_server, stop_server
 import requests
 from prometheus_client.parser import text_string_to_metric_families
 
+from tests.helpers.api_routes import route_path, walk_routes
 from src.api.server import create_v2_app
 from src.api.engine_manager import V2EngineManager
 from src.config.profiles import RuntimeProfile, HardwareClass
@@ -131,9 +132,9 @@ async def test_metrics_endpoint_direct():
 
         # Locate the /metrics endpoint route in the app
         metrics_endpoint = None
-        for route in app.routes:
-            if getattr(route, "path", None) == "/metrics":
-                metrics_endpoint = route.endpoint
+        for route in walk_routes(app):  # `include_router` routes are not flat in `app.routes` on starlette 1.x
+            if route_path(route) == "/metrics":
+                metrics_endpoint = (getattr(route, "endpoint", None) or route.starlette_route.endpoint)
                 break
 
         assert metrics_endpoint is not None, "Failed to find /metrics endpoint in app"
