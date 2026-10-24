@@ -11,7 +11,7 @@ tags: [performance, documentation, certification]
 
 # Draft: `docs/engine/performance_contract.md` section 5 edit (waits for rpg's lift)
 
-**Not applied.** `docs/engine/performance_contract.md` is rpg-owned P1; the edit is the PR's last commit and is made only after rpg-planner grants the lift (#593 perf issuecomment-6386482656). The text and numbers are the owner's decision (#715 issuecomment-6386636889, option A); nothing is invented here. Evidence write-up: #593 issuecomment-6386482656.
+**Not applied.** `docs/engine/performance_contract.md` is rpg-owned P1; the edit is the PR's last commit and is made only after rpg-planner grants the lift (#593 perf issuecomment-6386482656). The section 5 text and numbers are the owner's decision (#715 issuecomment-6386636889, option A); the section 3.3 sentence is the owner's option A of #715 issuecomment-6386816236; nothing is invented here. Evidence write-up: #593 issuecomment-6386482656.
 
 ## Edit 1: section 5, first bullet, the sentence beginning "The threshold (provisional, owner-approved 2026-10-10)" through "...detect only changes above about 40%."
 
@@ -23,11 +23,18 @@ tags: [performance, documentation, certification]
 
 > **The threshold (final, report-only; owner decision 2026-10-24, option A):** the tripwire (`tools/perf/tripwire.py`, `TRIPWIRE_THRESHOLDS`) reports `REGRESSION` when the head's average tick latency over 50 sampled ticks exceeds `max(5.0 ms, base x 1.40)`, base and head measured paired on one runner, each in a fresh process. The relative term sits above the measured noise: the largest head/base deviation with identical code on both sides was 0.35 on the 6-vCPU development VM (44 A/A pairs, 2026-10-10), and on the CI runner 0.206 (idle_100_local) and 0.095 (movement_100_local) in run 40106785877 (main `10422cedd`) and 0.005 and 0.010 in run 40109334529 (main `667552eb9`), 8 trials per scenario in each. A first non-PASS result is run once more, head first; a disagreeing retry is `INCONCLUSIVE`; the outcome is reported and never blocks. **Limit of the evidence:** the CI measurements cover two runner VMs, and the tripwire detects only changes above about 40%; a smaller change is not detected by it.
 
-## Edit 2 (only if the owner's text calls for it): section 3.3, the Tripwire bullet
+## Edit 2: section 3.3, the Tripwire bullet, last sentence (owner-approved, option A, #715 issuecomment-6386816236)
 
-No numeric change. The bullet already states the claim scope (no capacity claim) and that the tripwire reports and does not block; the ticket's AC "no sentence still says 'The threshold is not yet set'" is already met by the current text (a grep finds no such sentence). Left as is unless rpg-planner asks.
+**Old** (verbatim, from `performance_contract.md` section 3.3):
 
-## Points for perf-planner (not edits)
+> The nightly lane is `INCONCLUSIVE` until baseline records are promoted (`PERF-M2-T08`).
 
-- Section 3.3, Tripwire bullet, last sentence: "The nightly lane is `INCONCLUSIVE` until baseline records are promoted (`PERF-M2-T08`)." T08 is DONE and the records are promoted (`tests/perf/baselines/*.v0001.json`), so this sentence reads stale. Fixing it is outside the owner-fixed text; raised for a decision.
-- Section 5 first-bullet last sentence lists retired tolerances including "the retired `tools/perf/check_perf_regression.py`"; the file is gone, which agrees with the sentence, so no edit.
+**New:**
+
+> The nightly lane compares against the promoted `*.v0001.json` records (`PERF-M2-T08`); a scenario still on a legacy record is `INCONCLUSIVE` with a named reason.
+
+No other change to section 3.3. The ticket's AC "no sentence still says 'The threshold is not yet set'" is already met by the current text (a grep finds no such sentence).
+
+## Application
+
+Both edits go into one final commit once rpg-planner relays the lift. Until then `docs/engine/performance_contract.md` is untouched.
