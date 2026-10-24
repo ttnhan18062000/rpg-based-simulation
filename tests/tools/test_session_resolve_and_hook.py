@@ -88,8 +88,15 @@ def test_snapshot_round_trips_and_rejects_a_malformed_dict():
 
 # ---- the hook ----------------------------------------------------------------------------------
 
+_PLENTY_FREE = 500 * 1024**3
+
+
 @pytest.fixture
-def world(tmp_path):
+def world(tmp_path, monkeypatch):
+    """TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM: the real runner's free space must not reach the context
+    (below 10 GB it embeds "only 6.8 GB free", which differs between two calls), so the probe reports plenty."""
+    from tools.sessions import disk_headroom as dh
+    monkeypatch.setattr(dh, "free_bytes", lambda _root: _PLENTY_FREE)
     root = tmp_path / "root"
     shutil.copytree(REAL_ROOT / "registries", root / "registries",
                     ignore=shutil.ignore_patterns("*.jsonl"))
@@ -123,6 +130,13 @@ def _manifest_wt(world, role_id):
 def _ctx(world, payload, env=None):
     root, repo, state_root = world
     return hook.build_context(payload, env or {}, root, state_root)
+
+
+def test_the_disk_line_appears_when_the_probe_reports_low_space(world, monkeypatch):
+    from tools.sessions import disk_headroom as dh
+    assert "disk-headroom:" not in _ctx(world, _payload(world[1]))
+    monkeypatch.setattr(dh, "free_bytes", lambda _root: 3 * 1024**3)
+    assert "disk-headroom: only 3.0 GB free" in _ctx(world, _payload(world[1]))
 
 
 def test_resolved_role_gets_its_card_and_only_its_own_handover(world):
