@@ -7,6 +7,7 @@ Default: run ``tools/perf/run_perf_baseline.py`` (the one writer of ``reports/pe
 because ``tools/release/generate_optimization_proof.py`` reads ``baseline.json`` in exactly that
 shape (TCK-20261004-PERF-LATEST-JSON-SINGLE-WRITER).
 """
+import argparse
 import json
 import os
 import subprocess
@@ -79,9 +80,20 @@ def update_baseline():
     return 0
 
 
+def build_parser():
+    """Return the CLI parser: no argument runs the suite, ``--update`` promotes ``latest.json``."""
+    parser = argparse.ArgumentParser(
+        prog="perf_baseline.py",
+        description="Run the scenario benchmark suite (no argument), or promote reports/perf/latest.json to the baseline (--update).",
+    )
+    parser.add_argument("--update", action="store_true", help="validate latest.json and copy it to baseline.json instead of running the suite")
+    return parser
+
+
 def main(argv=None):
-    argv = sys.argv[1:] if argv is None else argv
-    if argv and argv[0] == "--update":
+    """Parse ``argv`` (``--help`` and unknown flags exit before anything runs), then promote or run the suite."""
+    args = build_parser().parse_args(sys.argv[1:] if argv is None else argv)
+    if args.update:
         return update_baseline()
     return run_benchmarks()
 
