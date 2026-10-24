@@ -101,6 +101,7 @@ Ran on host ubuntu, 2026-10-24, alone (load average about 1.5; no RPG measuremen
 
 **Known gaps** (not fixed here; the planner files the first as a follow-up):
 - The `graphify` on PATH is `~/.local/bin/graphify` on the system python, at graphifyy 0.6.7, not the pinned `.venv-knowledge` 0.9.70. The CLI that hooks and sessions run is therefore not the pinned one; this predates this ticket and is filed as TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION. The smokes above ran the 0.9.70 binary from the throwaway venv.
+- `torch==2.13.0+cpu` is only on `download.pytorch.org`, which is blocked on `u24desktop-Virtual-Machine`: its `.venv-knowledge` stays at torch 2.12.1+cpu and the low torch alert stands for that host. The new mcp and graphifyy pins come from PyPI but their upgrade there is not verified. Noted in `docs/guidelines/agent_working_environment.md`.
 - The 0.9 node-ID re-key applies when the shared `graphify-out/` is next rebuilt with 0.9; it was not exercised on the real graph.
 
 ## Test Summary
@@ -108,6 +109,7 @@ Measurement ticket, no code: eval and spot checks above (candidate equals baseli
 
 ## Files Changed
 - requirements-knowledge.txt
+- docs/guidelines/agent_working_environment.md
 - tests/tools/test_code_test_index.py (the graphifyy pin test follows the new pin; found by CI on the PR, not by the local scope)
 
 ## Completion Summary
