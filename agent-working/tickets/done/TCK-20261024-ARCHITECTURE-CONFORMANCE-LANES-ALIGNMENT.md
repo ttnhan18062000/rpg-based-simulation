@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT
-phase: open
+phase: done
 date: 2026-10-24
 tags: [architecture, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, determinism]
 Conformance-suite design: replace the draft lane table with testing-planner's placement, close Q1 and Q4, and add rpg's schedule for F3 to F5
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -95,5 +95,17 @@ Branch: a FRESH branch from origin/main. Never reuse the merged architecture-imp
 with `--path-reason investigation_only`. Send the SHA to architecture-planner before any push.
 
 ## Test Summary
+Docs only; no tests apply. `tools/validate_frontmatter.py` on the design doc: no violations. Grep for DRAFT and pending
+testing-planner in the doc finds none.
+
 ## Files Changed
+- docs/plans/architecture/conformance_suite_design.md
+- docs/REGISTRY.yaml (regenerated); ticket move and monitoring shards
+
 ## Completion Summary
+Section 8 now holds testing-planner's placement (#593 comment 6355976419): C-short advisory in test.yml, C-nightly in its own
+workflow, C-slow after a dry run, Mode 3 cells not CI, known-red registration. rpg's estimated dates for F3, F4 and F5
+(#593 comment 6356470108) are in the dependency table, labelled estimates. Q1 and Q4 are struck as resolved. A Revised
+2026-10-24 line is added. Two small related fixes inside section 8: the stale "H2, H3, H4 fixes" row now says H3 and H4 are
+closed, and the runner-facts paragraph no longer names the test.yml cron. Q3 (recent_world_events) was already ruled by rpg
+(#593 comment 6347182683) but is outside this ticket's scope and is left open for architecture-planner to decide.
