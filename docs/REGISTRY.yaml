@@ -7839,6 +7839,19 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT.md
+  ticket_id: TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT
+  title: 'Conformance-suite design: replace the draft lane table with testing-planner''s
+    placement, close Q1 and Q4, and add rpg''s schedule for F3 to F5'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - architecture
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS.md
   ticket_id: TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS
   title: Characterization tests that pin the HTTP surface of create_v2_app before
