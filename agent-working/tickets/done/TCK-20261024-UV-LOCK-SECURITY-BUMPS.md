@@ -115,6 +115,7 @@ Backend image build not run (CI's image job speaks for it).
 
 ## Files Changed
 - uv.lock
+- pyproject.toml (lead-approved: `mcp>=1.30.0,<2` in the search-mcp extra and the dev group; mcp 2.x swaps httpx-sse for httpx2, so a routine upgrade must not take it silently)
 
 ## Completion Summary
 Nine packages locked at or above their first patched versions; 10 packages moved in all. Post-merge alert check pending.
