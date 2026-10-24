@@ -7852,6 +7852,23 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS.md
+  ticket_id: TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS
+  title: '`requirements-knowledge.txt` takes the patched mcp, graphifyy and torch
+    versions, with the index rebuilt and search quality checked'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas:
+  - requirements-knowledge.txt
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS/test_plan.md
+  tags:
+  - knowledge-store
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY.md
   ticket_id: TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY
   title: The pre-push advisory hook warns when a branch adds tagged docs or tickets
