@@ -7852,6 +7852,20 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM.md
+  ticket_id: TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM
+  title: The session-start hook tests stub the disk-headroom probe, so a runner below
+    10 GB free cannot make them flaky
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-24'
+  related_code_areas:
+  - tests/tools/test_session_resolve_and_hook.py
+  artifact_files: []
+  tags:
+  - testing
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS.md
   ticket_id: TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS
   title: Characterization tests that pin the HTTP surface of create_v2_app before
@@ -11796,6 +11810,26 @@
   - agent-working/stored_artifacts/TCK-20261011-NEAREST-WORK-READS-THE-DECLARED-WORK-BUILDINGS-NOT-ONLY-THE-INN/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP.md
+  ticket_id: TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP
+  title: 'PERF-M2-T03b: Run the paired base/head tripwire as a report-only step in
+    the perf-cert-arena CI job'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-11'
+  related_code_areas:
+  - perf-cert-arena
+  - run
+  - tests/static/test_ci_narrow_path_filtered_jobs.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP/investigation.md
+  - agent-working/stored_artifacts/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP/plan.md
+  - agent-working/stored_artifacts/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP/test_plan.md
+  tags:
+  - performance
+  - benchmarking
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261011-PR-ATTRIBUTION-OFF-AT-SOURCE.md
   ticket_id: TCK-20261011-PR-ATTRIBUTION-OFF-AT-SOURCE
   title: Turn off the Claude Code PR attribution line at its source, so pr-body-lint
@@ -12052,23 +12086,6 @@
   artifact_files: []
   tags:
   - architecture
-- type: ticket
-  path: agent-working/tickets/todos/perf-m2-contract/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP.md
-  ticket_id: TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP
-  title: 'PERF-M2-T03b: Run the paired base/head tripwire as a report-only step in
-    the perf-cert-arena CI job'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-11'
-  related_code_areas:
-  - perf-cert-arena
-  - run
-  - tests/static/test_ci_narrow_path_filtered_jobs.py
-  artifact_files: []
-  tags:
-  - performance
-  - benchmarking
-  - regression
 - type: ticket
   path: agent-working/tickets/done/TCK-20261009-FACTION-TREASURY-IS-ONE-TYPED-ACCOUNT-EXCH-02-C.md
   ticket_id: TCK-20261009-FACTION-TREASURY-IS-ONE-TYPED-ACCOUNT-EXCH-02-C
@@ -13409,6 +13426,8 @@
   related_code_areas:
   - src/certification/models.py
   - src/perf/long_run_harness.py
+  - Outcome
+  - tools/perf/known_debt.py
   - tools/perf/perf_threshold_inventory.py
   - tests/tools/perf_assertions.py
   - docs/engine/performance_contract.md
