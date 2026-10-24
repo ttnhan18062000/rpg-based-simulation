@@ -82,10 +82,12 @@ None.
 - docs/performance/performance_clause_inventory.md
 
 ## Assumptions / Open Questions
-- Blocked until PERF-M2-T03, PERF-M2-T04, PERF-M2-T05 and PERF-M2-T08 land. The thresholds it publishes do not exist yet.
+- **Unblocked 2026-10-24:** T02b, T03, T03b, T04, T05, T05b, T07, T08 and PERFBUDGET-RETIRE are all DONE on main.
+- **Tripwire threshold: decided (owner, 2026-10-24, option A, logged on #715 issuecomment-6386636889).** §5 publishes `max(5.0 ms, base x 1.40)` as **final, report-only**. The edit drops the "provisional" wording and the "must be recalibrated ... on the CI runner once the CI step lands" sentence. It cites the evidence: the CI A/A runs 40106785877 (main 10422cedd: max head/base deviation 0.206 idle, 0.095 movement) and 40109334529 (main 667552eb9: 0.005 / 0.010), 8 trials each, plus the 2026-10-10 host calibration (0.35, 44 pairs, 6-vCPU VM). It states the limit: the CI evidence covers only 2 runner VMs, and the tripwire detects only changes above about 40 %. Evidence write-up: #593 issuecomment-6386482656. Options B (1.30x) and C (more A/A runs) were not chosen. No code or `TRIPWIRE_THRESHOLDS` change.
+- **`docs/engine` lift:** `docs/engine/performance_contract.md` is rpg-owned. Asked on #593 (perf issuecomment-6386482656, relayed by lead issuecomment-6386486051); it is NOT yet granted. The §3.3/§5 edit is the PR's last commit and waits for rpg's lift. Every other scope item (gate_conformance.yaml, the tests/docs test, `Outcome.check` in `src/perf/`, the certification_contract grep guard) is perf-owned and may start now. Note: certification_contract.md is also under `docs/engine/`. The grep guard only reads it; if any edit to it turns out to be needed, it is covered by the same lift.
 - The D-9/D-10 rename already landed in #306, so that scope item is a verify-only no-op
 - P1 owner approval is a human gate that the ticket cannot self-close
-- About 30 test files call the helpers today. Writing the map before T03 lands would cause churn.
+- About 30 test files call the helpers today (T03 has landed, so the map can be written now). Re-count the call sites at implementation time (§5.2 says 56).
 
 ## Implementation Notes
 
