@@ -108,6 +108,7 @@ Measurement ticket, no code: eval and spot checks above (candidate equals baseli
 
 ## Files Changed
 - requirements-knowledge.txt
+- tests/tools/test_code_test_index.py (the graphifyy pin test follows the new pin; found by CI on the PR, not by the local scope)
 
 ## Completion Summary
 `requirements-knowledge.txt` pins mcp 1.30.0, graphifyy 0.9.70 and torch 2.13.0+cpu; search quality is unchanged and the main knowledge venv is rebuilt.
