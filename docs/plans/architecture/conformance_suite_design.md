@@ -17,7 +17,7 @@ this doc cites the proposal by section, not by quote, because item B may change 
 
 **Revised 2026-10-24** (`TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT`, approved on #715, comment 6384095317): §8 now
 holds testing-planner's lane placement (#593, comment 6355976419) in place of the draft, with rpg's estimated dates for the
-audit findings F3 to F5 (#593, comment 6356470108) in the dependency table; Q1 and Q4 in §9 are resolved. Nothing else changed.
+audit findings F3 to F5 (#593, comment 6356470108) in the dependency table; Q1, Q3 and Q4 in §9 are resolved. Nothing else changed.
 
 **Decisions this doc does not take.** Lane placement is testing-planner's. The hash scheme is perf-planner's (it also adopted the side digest of §4.2). Whether `recent_world_events` is canonical state is rpg-planner's. Each is an open question in §9.
 
@@ -107,9 +107,9 @@ says shutdown emits it in every mode. "Trail" is the per-tick `TICK_END.hash`, w
 Because Modes 2 and 3 rest on hash equality, the suite carries an **inverted canary (case C1)**: take a Mode 1 end state,
 change one of the six fields on a copy (add an `item_instances` entry, append a `recent_world_events` entry, flip a faction
 field, and so on), hash both, and assert that the hashes **differ**. Today C1 is **expected-red for all six fields** (the
-hash is blind), which documents the gap in executable form. It turns green only when the PERF-D5 bump covers each field. A
-field that rpg rules out of canonical state (for example `recent_world_events`, if it is a view) is removed from C1 with
-the ruling cited.
+hash is blind), which documents the gap in executable form. It turns green only when the PERF-D5 bump covers each field. rpg
+ruled `recent_world_events` carried state (§9, Q3), so C1 checks all six fields; a field rpg later rules out of canonical state
+would be removed from C1 with the ruling cited.
 
 ### 4.1a Settled: the replay fingerprint is blind to the same six fields
 
@@ -132,7 +132,7 @@ equal alongside the final hash in Modes 2 and 3. Perf-planner adopted it on four
    side digest that does not move for a field is itself blind and fails C2.
 3. **Canonical form follows `CanonicalStateHasher`'s rules** (sorted keys, the same float handling), so the PERF-D5 bump can
    reuse the helper.
-4. **`recent_world_events` drops out** of the side digest, C1 and C2 if rpg rules it a view (§9, Q3).
+4. **`recent_world_events` stays in** the side digest, C1 and C2: rpg ruled it carried state (§9, Q3). A field rpg later rules out of canonical state would be dropped from all three with the ruling cited.
 
 Other properties: a mismatch is a conformance failure, a match is *not* a determinism proof (one more field set compared, no
 more); it needs a canonical dict for each of the six value types, and some may not have `to_canonical_dict` (an audit read
@@ -205,7 +205,7 @@ about 101 to 130 MB (`tick_cost_growth` §5), so several runs fit in one job.
 
 | lane | cases | placement (testing-planner) |
 |---|---|---|
-| C-short | starts with **A0, C1, C2, G1, P2** only (no step-1 code). Mode 1 two-process on W1 and W5 (seed 42, 300 ticks) joins after T2. P1 and Mode 1 vs Mode 2 join after T3 and perf's ruling | a **path-filtered PR-time job in `test.yml`**, like perf-cert-arena (same `src/` scope as `PERF_RE`, failing open). **Advisory, not required.** Writes JUnit and a step summary. Promotion to required is a **recorded owner decision**, taken after at least 2 weeks and 20 PR runs on main with 0 false reds and a measured wall time; never by default |
+| C-short | starts with **A0, C1, G1, P2** only (no step-1 code; testing-planner's list). C2 (the side-digest positive control, §4.2) joins when the side digest is built; placement to be confirmed with testing-planner. Mode 1 two-process on W1 and W5 (seed 42, 300 ticks) joins after T2. P1 and Mode 1 vs Mode 2 join after T3 and perf's ruling | a **path-filtered PR-time job in `test.yml`**, like perf-cert-arena (same `src/` scope as `PERF_RE`, failing open). **Advisory, not required.** Writes JUnit and a step summary. Promotion to required is a **recorded owner decision**, taken after at least 2 weeks and 20 PR runs on main with 0 false reds and a measured wall time; never by default |
 | C-nightly | W1 to W3 at 1000 ticks (seeds 42 to 44 on W1 and W2), Mode 1 vs Mode 2, X1, X2, X4 | its **own testing-owned `conformance-nightly.yml`**, not the `test.yml` cron, because `test.yml` has `cancel-in-progress: true` and that group evicted the slow suite before. `cancel-in-progress: false`, sharded one job per world like `rpg-gate-report.yml`, step-summary report, no required status |
 | C-slow | W4 at 1000 ticks (the eviction path), X3, Mode 4 invariants | `slow-regression.yml`, **only after one measured dry run**: the lane already takes about 2 h every 6 h, and if these add more than about 20 min they move to C-nightly. Mode 4 reuses the existing certification long-run tests, so there are no new runs for it |
 | Mode 3 cells | the matrix of §4.3 | **not CI yet.** When they come, comparisons stay within one job on one runner, never against the local VM (DET-PORT-0: the interpreter and OS identity differ). They wait for T2's identity record and the 3a code |
@@ -219,14 +219,14 @@ also applies to the expected-red cases of §5 and C1.
 
 | case | waits on |
 |---|---|
-| A0, C1, C2, G1, P2 | nothing for the design; the code is test-side. A0 is the first thing to run once anyone runs anything |
+| A0, C1, C2, G1, P2 | nothing for the design (C2 waits for the side digest to exist, §4.2); the code is test-side. A0 is the first thing to run once anyone runs anything |
 | P1 | `no_replay` in the arm path and its manifest record (draft T3): **pending step 1** |
 | Mode 1 reproducibility (two processes) | v1 record PR merged (the freeze: nothing touching `src/**` lands before it); no code needed, but the lane needs T2 (paired arms off this host) for a CI job: **pending step 1** |
 | Mode 2 vs Mode 1 | draft T3 and a perf ruling that `no_replay` is consistent with PERF-D1 A2: **pending step 1** |
 | C-nightly worlds timed | draft T1 (run and rerun counts) for lane budgeting: **pending step 1** |
 | X1 | A0 passing on a world; rpg fix F4 to turn it green. **rpg estimates, not commitments** (#593 comment 6356470108): the A0 probe, as short runs on `unit_faction_tension` and `urban_political`, around 10-31 to 11-01; a purpose-built `mechanic_scenario` world only if no squad forms, disclosed in its PR; the F4 fix changes squad ids, so it is its own paired step after rpg's HUNGER step A, around 11-06 to 11-07 |
 | X4 | rpg fix F3 to turn it green. **rpg estimates, not commitments** (#593 comment 6356470108): built around 10-28 to 10-29, PR around 10-30 (restored runs only; proof is restore-at-N equals the unbroken run, plus a 3-world hash check) |
-| C1 | PERF-D5 scheme bump, which comes after `RECORD-BASELINE-V1` (perf-planner); rpg ruling on `recent_world_events` |
+| C1 | PERF-D5 scheme bump, which comes after `RECORD-BASELINE-V1` (perf-planner); the `recent_world_events` ruling is in (§9, Q3) |
 | X3 | nothing; only meaningful for a Mode 3 thread pool |
 | Mode 3 | a named port set (proposal §5), a parity matrix (PERF-D2), 3a code: **pending step 1** and later |
 | Mode 4, 5 | existing certification tests for Mode 4; Mode 5 needs its ADR first |
@@ -241,7 +241,7 @@ also applies to the expected-red cases of §5 and C1.
 |---|---|---|
 | Q1 | ~~Where does each lane run, and is C-short a required check?~~ **Resolved, §8: C-short is an advisory PR-time job in `test.yml`; C-nightly has its own workflow; C-slow waits on a dry run; promotion to required is a recorded owner decision. (testing-planner, 2026-10-23, #593 comment 6355976419)** | closed |
 | Q2 | ~~Is the §4.2 side digest worth building before PERF-D5, or does the "blind to" list suffice?~~ **Resolved, §4.2: adopted on four conditions. (perf-planner, 2026-10-22)** | closed |
-| Q3 | Is `recent_world_events` canonical state or a view? Decides whether C1 has five or six fields. | rpg-planner |
+| Q3 | ~~Is `recent_world_events` canonical state or a view? Decides whether C1 has five or six fields.~~ **Resolved: `recent_world_events` is carried state (rpg-planner, #593 comment 6347182683); C1 and the side digest cover all six fields.** | closed |
 | Q4 | ~~Does any shipped world (W5, W2) pass A0? If none does, is a purpose-built attack world acceptable in `data/worlds`?~~ **Resolved: probe first (A0 on W5 and W2); a purpose-built world only if no squad forms, disclosed in its PR. (rpg-planner, 2026-10-22, #593 comment 6347182683; dates in §8). Whether the probe passes is still open until it runs.** | closed |
 | Q5 | ~~Does the fingerprint cover `factions`, `clans` or `quest_registry`?~~ **Resolved, see §4.1a: it covers none of the six.** | closed |
 | Q6 | ~~Is there any events digest outside `src/`? If yes, add it to the Mode 1 row (audit §6)~~ **Resolved, §4.4: none found; counts only, content equality is a gap. (perf-planner, 2026-10-22)** | closed |

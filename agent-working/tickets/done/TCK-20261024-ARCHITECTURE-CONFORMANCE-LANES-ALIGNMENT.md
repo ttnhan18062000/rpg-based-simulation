@@ -79,7 +79,7 @@ Edit `conformance_suite_design.md` only.
 - TCK-20261022-ARCHITECTURE-CONFORMANCE-SUITE-DESIGN
 
 ## Related Docs
-- docs/plans/architecture/conformance_suite_design.md
+- docs/plans/architecture/conformance_suite_design.md (section 8 lanes and dependencies; Q1, Q3 and Q4 struck in section 9)
 
 ## Related Stored Artifacts
 - none
@@ -108,4 +108,6 @@ workflow, C-slow after a dry run, Mode 3 cells not CI, known-red registration. r
 (#593 comment 6356470108) are in the dependency table, labelled estimates. Q1 and Q4 are struck as resolved. A Revised
 2026-10-24 line is added. Two small related fixes inside section 8: the stale "H2, H3, H4 fixes" row now says H3 and H4 are
 closed, and the runner-facts paragraph no longer names the test.yml cron. Q3 (recent_world_events) was already ruled by rpg
-(#593 comment 6347182683) but is outside this ticket's scope and is left open for architecture-planner to decide.
+(#593 comment 6347182683); architecture-planner asked for it to be struck in this batch, so Q3 is struck as resolved too
+(an edit beyond the ticket's original scope, approved by architecture-planner). C-short's starting set was matched to testing-planner's
+list (A0, C1, G1, P2); C2 is noted as joining when the side digest is built, placement to be confirmed with testing-planner.
