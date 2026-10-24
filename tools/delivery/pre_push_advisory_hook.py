@@ -212,7 +212,9 @@ def check_registry_fresh(run_command=default_run_command, base_ref: str = "origi
         feeds = [p for p in diff.stdout.splitlines() if p.endswith(".md") and p.startswith(_REGISTRY_SOURCE_ROOTS)]
         if not feeds:
             return []
-        result = run_command([sys.executable, "tools/generate_registry.py", "--check"], 60)
+        # default 30 s timeout on purpose: the hook entry sets none, so Claude Code's 60 s covers ALL checks (A-E);
+        # a longer budget here could get the whole hook killed and drop checks A-D with it
+        result = run_command([sys.executable, "tools/generate_registry.py", "--check"])
     except Exception:
         return []  # an uncertain check says nothing (includes a timeout)
     if result.returncode != _REGISTRY_STALE_EXIT:
