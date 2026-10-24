@@ -65,6 +65,8 @@ So `torch==2.12.1+cpu` cannot be installed for a new Python version from `u24des
 - `pip --trusted-host`: identical, because skipping verification just accepts the block page.
 - `uv`: `invalid peer certificate: Other(OtherError(CaUsedAsEndEntity))`.
 
+**2026-10-24 (`TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS`):** `requirements-knowledge.txt` now pins `torch==2.13.0+cpu`, which comes only from `download.pytorch.org` and so cannot be installed on `u24desktop-Virtual-Machine`. Its `.venv-knowledge` stays at `torch==2.12.1+cpu` (the text above is kept as history) and the low-severity torch alert stands for that host. The new `mcp` and `graphifyy` pins come from PyPI, but their upgrade there is not verified on `u24desktop-Virtual-Machine`.
+
 ### TLS interception — a separate problem that looks the same
 
 This network also intercepts TLS generally, via a corporate CA in the system store (`/usr/local/share/ca-certificates/tma-ADCA-CA.crt`). Tools shipping their own trust store fail with *unknown issuer* until pointed at the system one:
