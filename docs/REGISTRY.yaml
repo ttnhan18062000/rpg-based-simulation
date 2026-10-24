@@ -7881,6 +7881,20 @@
   - testing
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-UV-LOCK-SECURITY-BUMPS.md
+  ticket_id: TCK-20261024-UV-LOCK-SECURITY-BUMPS
+  title: Bump the Python packages in uv.lock that have open Dependabot security alerts
+    to their first patched versions
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas:
+  - uv.lock
+  artifact_files: []
+  tags:
+  - security
+  - platform
+- type: ticket
   path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS.md
   ticket_id: TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS
   title: Characterization tests that pin the HTTP surface of create_v2_app before

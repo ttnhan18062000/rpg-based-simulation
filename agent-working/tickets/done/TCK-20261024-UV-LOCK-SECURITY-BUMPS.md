@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261024-UV-LOCK-SECURITY-BUMPS
-phase: open
+phase: done
 date: 2026-10-24
 tags: [security, platform]
 ---
@@ -15,7 +15,7 @@ tags: [security, platform]
 Bump the Python packages in uv.lock that have open Dependabot security alerts to their first patched versions
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -100,9 +100,21 @@ certifi and idna reach it. CI installs the dev group (`.github/workflows/test.ym
   GHSA-x33g-cr3x-6449 (fixed in 2.15.0) as remaining.
 
 ## Implementation Notes
+One `uv lock --upgrade-package` per named package. `mcp` was held below 2.x with `mcp>=1.30.0,<2` on the command
+line only (a plain upgrade went to 2.3.0 and swapped httpx-sse for httpx2). `torch==2.13.0` and `setuptools==83.0.0`
+were pinned the same way; torch stayed on the PyPI source (no torch exception). `pydantic-settings` was pinned back
+to 2.14.2 after drifting. A future `uv lock --upgrade-package mcp` will reach 2.x because pyproject says `mcp>=1.0.0`.
+Locked: urllib3 2.8.0, certifi 2026.10.23, idna 3.20, pyjwt 2.15.1, cryptography 50.0.2, mcp 1.30.0, pygments 2.21.0,
+torch 2.13.0, setuptools 83.0.0. Followers: cuda-toolkit 13.0.2 -> 13.0.3.0 only. fastapi 0.143.5 / starlette 1.9.0
+unchanged, so the surface fixture is untouched. pyproject.toml untouched.
 
 ## Test Summary
+uv sync --locked ok. tests/api + test_metrics_export + test_search_mcp: 215 passed. tests/codebase: 517 passed, the
+snapshot make-target test passes with the venv on PATH. make code-health: 0 new, 0 worse. make typecheck-py: exit 0.
+Backend image build not run (CI's image job speaks for it).
 
 ## Files Changed
+- uv.lock
 
 ## Completion Summary
+Nine packages locked at or above their first patched versions; 10 packages moved in all. Post-merge alert check pending.
