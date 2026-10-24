@@ -7861,7 +7861,10 @@
   date: '2026-10-24'
   related_code_areas:
   - tools/delivery/pre_push_advisory_hook.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY/test_plan.md
   tags:
   - delivery
   - process-improvement
