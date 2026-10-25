@@ -95,6 +95,11 @@ rewrite, or a failing build or test), park it with a reason. Don't push it throu
 
 ## Implementation Notes
 - #570 lucide-react ^0.563.0 -> ^1.61.0 (landed): `tsc -b` clean, so no alias was dropped. lucide 1.x ships `dist/esm/icons/*.mjs`, so `iconScene.test.ts:102` now reads `${name}.mjs` instead of `${name}.js` (a change to how the test finds the file, not to what it asserts; `LUCIDE_PATHS` untouched). Bundle 338.40 -> 341.76 kB. vitest 369/369, build ok, lint identical to the 21-problem baseline.
+- #569 eslint ^9.39.1 -> ^10.13.0 (landed, own commit): peer bumps `@eslint/js` ^10.0.1, `eslint-plugin-react-hooks` ^7.1.1, `typescript-eslint` ^8.72.0 (all in-major; the old lockfile versions rejected eslint 10 and `npm run lint` stopped with ELSPROBLEMS). vitest 369/369, build ok, audit 0. No `frontend/src` or config change; `eslint.config.js` runs unchanged.
+  Lint: 21 problems before (18 errors, 3 warnings) and 21 after (17 errors, 4 warnings), but the mix changed because react-hooks 7.1.1 reports differently. Nothing is fixed in this PR; list for the next lint cleanup:
+  - Dropped (errors): `react-hooks/preserve-manual-memoization` at `src/App.tsx:16:43` and `src/App.tsx:28:42`.
+  - New (error): `react-hooks/refs` at `src/hooks/useCanvas.ts:40:3` (rule count 10 -> 11).
+  - New (warning): `Unused eslint-disable directive` (for `react-hooks/set-state-in-effect`) at `src/visualAssets/MapHarness.tsx:61:5`.
 
 ## Test Summary
 
