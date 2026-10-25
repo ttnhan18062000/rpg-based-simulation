@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: frontend
 authority: P1
 audience: agent
 ticket_id: TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES
-phase: inprogress
+phase: done
 date: 2026-10-25
 tags: [security]
 ---
@@ -15,7 +15,7 @@ tags: [security]
 Decide each open frontend major-version Dependabot PR (#567, #568, #569, #570) one at a time, landing the ones that pass build, tests and lint
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -62,14 +62,14 @@ rewrite, or a failing build or test), park it with a reason. Don't push it throu
   for #567).
 
 ## Acceptance Criteria
-- [ ] Each of #567, #568, #569 and #570 has a recorded decision in this ticket: landed (with its commit), or parked
+- [x] Each of #567, #568, #569 and #570 has a recorded decision in this ticket: landed (with its commit), or parked
       (with its reason).
-- [ ] Each landed move is its own commit, and after it `npx vitest run`, `npm run build` and `npm run lint` pass
+- [x] Each landed move is its own commit, and after it `npx vitest run`, `npm run build` and `npm run lint` pass
       under Node 24, with lint no worse than before.
-- [ ] No `frontend/src/**` or config change lands without rpg-planner-ubuntu's go for that move.
+- [x] No `frontend/src/**` or config change lands without rpg-planner-ubuntu's go for that move.
 - [ ] After this ticket's PR merges, each dependabot PR is closed with a comment that gives its decision and points
       to the PR. For a parked move, the comment says what would unblock it.
-- [ ] No new Dependabot alert opens on `frontend/package-lock.json` because of a landed move.
+- [x] No new Dependabot alert opens on `frontend/package-lock.json` because of a landed move.
 
 ## Related Tickets
 - `TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH`: shipped in #739 (main 5fe577688).
@@ -103,10 +103,14 @@ rewrite, or a failing build or test), park it with a reason. Don't push it throu
 - #568 vitest ^4.1.12 -> ^5.0.5 (landed, own commit): vite 7 is inside vitest 5's peer range, @types/node is fine, audit 0. Cause of the one source change: `src/test/setup.ts` imported `@testing-library/jest-dom`, which only brings the jest typings; vitest 5 no longer picks them up for its `Assertion` type, so `tsc -b` failed with 24 TS2339 errors (`toBeInTheDocument`, `toHaveStyle`, `toHaveAttribute`) in four test files. The line now reads `import '@testing-library/jest-dom/vitest'`, jest-dom's documented vitest entry (registers the same matchers on vitest's `expect` and supplies the `declare module 'vitest'` typings). Assertions unchanged. After: `tsc -b` 0 errors, build ok, vitest 31 files / 369 tests, lint identical to the state after #569.
 - #567 @vitejs/plugin-react ^5.1.1 -> ^6.1.2 with vite ^7.3.7 -> ^8.3.5 (landed, own commit; version bumps only): `@tailwindcss/vite` ^4.1.18 -> ^4.3.3 is the strictly required peer (4.1.18 peers vite up to 7, so `npm install` failed with ERESOLVE; 4.2.2 was the first release accepting vite 8); the lockfile moves tailwindcss to 4.3.3 with it. `npm ls` clean, audit 0, build ok (bundle 341.76 -> 340.50 kB, CSS 33.20 -> 33.66 kB, build time about 3.5s -> 1.8s), vitest 31 files / 369 tests, lint identical to the state after #569. `npx vite build -c vite.rehearsal-bundle.config.ts` (the asset bundle capture build, no Playwright) also builds on vite 8; `e2e-artifacts/rehearsal-bundle` was deleted afterwards.
 - Known vite 8 notice, left alone (no config edit in this PR): both the build and vitest print `vite.config.ts:10:25` uses `__dirname`, unsupported by `configLoader: 'native'`, which is planned to become the default in a future Vite major. `import.meta.dirname` fixes it. The rehearsal-bundle build prints the same notice.
-- Decisions: #570 landed (53f1cfb59), #569 landed (b23c2ffd1), #568 landed (9557746d5), #567 landed (this ticket's last move commit). All four dependabot PRs are closed as "landed" after the merge.
+- Decisions: #570 landed (53f1cfb59), #569 landed (b23c2ffd1), #568 landed (9557746d5), #567 landed (cd0341276). All four dependabot PRs are closed as "landed" after the merge.
 
 ## Test Summary
+- After each move, under Node 24: lucide 1.61 (vitest 369/369 after the `.mjs` test fix, build ok, lint 21 problems unchanged); eslint 10 (vitest 369/369, build ok, lint 21 problems with a changed mix, see Implementation Notes); vitest 5 (`tsc -b` 0 errors after the jest-dom/vitest import, vitest 369/369, lint unchanged); plugin-react 6 + vite 8 (build ok, vitest 369/369, lint unchanged, `npm audit` 0, rehearsal-bundle build ok).
 
 ## Files Changed
+- frontend/package.json, frontend/package-lock.json
+- frontend/src/visualAssets/__tests__/iconScene.test.ts (`.js` -> `.mjs`), frontend/src/test/setup.ts (jest-dom/vitest entry)
 
 ## Completion Summary
+All four majors landed as one commit each (53f1cfb59, b23c2ffd1, 9557746d5, cd0341276), each on rpg-planner-ubuntu's go; two one-line test-side edits, no config edits. The dependabot PRs #567 to #570 are closed as landed after the merge.

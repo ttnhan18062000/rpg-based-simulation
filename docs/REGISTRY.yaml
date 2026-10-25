@@ -7852,6 +7852,21 @@
   tags:
   - security
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES.md
+  ticket_id: TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES
+  title: 'Decide each open frontend major-version Dependabot PR (#567, #568, #569,
+    #570) one at a time, landing the ones that pass build, tests and lint'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas:
+  - frontend/package.json
+  - frontend/eslint.config.js
+  - lucide-react
+  artifact_files: []
+  tags:
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-HANGING-GH-TEST-BOUND-RELATIVE-TO-BASELINE.md
   ticket_id: TCK-20261025-HANGING-GH-TEST-BOUND-RELATIVE-TO-BASELINE
   title: The hanging-gh test bounds the extra time the gh cut-off adds, not the hook's
@@ -7911,21 +7926,6 @@
   tags:
   - security
   - platform
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES.md
-  ticket_id: TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES
-  title: 'Decide each open frontend major-version Dependabot PR (#567, #568, #569,
-    #570) one at a time, landing the ones that pass build, tests and lint'
-  tier: hotfix
-  ticket_type: chore
-  date: '2026-10-25'
-  related_code_areas:
-  - frontend/package.json
-  - frontend/eslint.config.js
-  - lucide-react
-  artifact_files: []
-  tags:
-  - security
 - type: ticket
   path: agent-working/tickets/done/TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT.md
   ticket_id: TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT
