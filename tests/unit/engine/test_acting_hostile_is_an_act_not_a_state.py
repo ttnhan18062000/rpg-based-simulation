@@ -135,13 +135,28 @@ def test_the_combat_resolution_stamps_the_tick_of_the_hit():
     assert update.damage_taken > 0 and update.attacker_id == 2 and update.hit_tick_set == TICK
 
 
-def test_last_hit_tick_is_in_the_canonical_hash_and_always_emitted():
+def test_last_hit_tick_is_canonical_state_but_not_yet_in_the_proof_digest():
+    """Perf ruling PERF-D5 (ii): typed durable state, emitted in the canonical dict (None when never hit), excluded from the v2 digest only. F1
+    (TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS) hashes it in its single bump and will flip this test."""
     never = _subject()
-    assert never.combat.to_canonical_dict()["last_hit_tick"] is None  # emitted when never hit
+    assert never.combat.to_canonical_dict()["last_hit_tick"] is None
     hit = replace(never, combat=replace(never.combat, last_hit_tick=TICK))
     assert hit.combat.to_canonical_dict()["last_hit_tick"] == TICK
 
     def digest(entity):
         return CanonicalStateHasher.get_hash(AuthoritativeState(tick=3, seed=1, entities={1: entity}))
 
-    assert digest(hit) != digest(never) and digest(hit) == digest(replace(never, combat=replace(never.combat, last_hit_tick=TICK)))
+    assert digest(hit) == digest(never)  # changing last_hit_tick alone leaves get_hash unchanged
+    assert "last_hit_tick" not in CanonicalStateHasher.to_canonical_data(AuthoritativeState(tick=3, seed=1, entities={1: hit}))["entities"]["1"]["combat"]
+    changed_elsewhere = replace(never, combat=replace(never.combat, last_attacker_id=9))
+    assert digest(changed_elsewhere) != digest(never)  # its sibling is still hashed
+
+
+def test_last_hit_tick_survives_a_scenario_checkpoint_round_trip():
+    """The checkpoint pickles the state, so the excluded-from-digest field is still carried across save and restore."""
+    import pickle
+
+    subject = replace(_subject(), combat=replace(_subject().combat, last_attacker_id=2, last_hit_tick=TICK))
+    state = AuthoritativeState(tick=3, seed=1, entities={1: subject})
+    restored = pickle.loads(pickle.dumps(state, protocol=pickle.HIGHEST_PROTOCOL))
+    assert (restored.entities[1].combat.last_attacker_id, restored.entities[1].combat.last_hit_tick) == (2, TICK)
