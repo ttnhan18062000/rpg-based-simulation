@@ -4,7 +4,7 @@ layer: frontend
 authority: P1
 audience: agent
 ticket_id: TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES
-phase: open
+phase: inprogress
 date: 2026-10-25
 tags: [security]
 ---
@@ -15,7 +15,7 @@ tags: [security]
 Decide each open frontend major-version Dependabot PR (#567, #568, #569, #570) one at a time, landing the ones that pass build, tests and lint
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 hotfix
@@ -28,7 +28,7 @@ P2
 
 ## Request Summary
 Owner direction 2026-10-25, Lane U1 (#715 issuecomment-6393397119). The owner wants major moves reviewed one by one,
-and one superseding PR, with each dependabot PR closed and a reason given. Four major-version dependabot PRs are open
+the majors shipping in their own PR after the refresh PR #739 merged (#715 issuecomment-6393490542), with each dependabot PR closed and a reason given. Four major-version dependabot PRs are open
 on `frontend/`:
 
 | PR | move | scope | what the 2026-10-25 check found |
@@ -39,7 +39,7 @@ on `frontend/`:
 | #567 | @vitejs/plugin-react 5.1 → 6.1.2 | dev | **Needs vite ^8.0.0**, so it brings a vite 7 → 8 major (Rolldown) that no dependabot PR proposes. |
 
 ## Scope
-Do this after `TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH`, on the same branch. Take the moves one at a time,
+`TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH` shipped in #739 (main 5fe577688); work on a new branch from origin/main. Take the moves one at a time,
 in this order: lucide-react, eslint, vitest, then plugin-react with vite 8. For each:
 
 1. Apply the move alone: the version in `package.json`, `npm install` under Node 24, plus any peer bump it strictly
@@ -67,12 +67,12 @@ rewrite, or a failing build or test), park it with a reason. Don't push it throu
 - [ ] Each landed move is its own commit, and after it `npx vitest run`, `npm run build` and `npm run lint` pass
       under Node 24, with lint no worse than before.
 - [ ] No `frontend/src/**` or config change lands without rpg-planner-ubuntu's go for that move.
-- [ ] After the superseding PR exists, each dependabot PR is closed with a comment that gives its decision and points
+- [ ] After this ticket's PR merges, each dependabot PR is closed with a comment that gives its decision and points
       to the PR. For a parked move, the comment says what would unblock it.
 - [ ] No new Dependabot alert opens on `frontend/package-lock.json` because of a landed move.
 
 ## Related Tickets
-- `TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH`: done first, same PR.
+- `TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH`: shipped in #739 (main 5fe577688).
 - `TCK-20261025-WEBSITE-AND-DASHBOARD-LOCKFILE-SECURITY-BUMPS` (#738): the shape this follows (majors reviewed one
   by one).
 
