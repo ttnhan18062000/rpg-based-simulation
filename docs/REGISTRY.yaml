@@ -7856,6 +7856,16 @@
   - process-improvement
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261025-DROP-UNUSED-XXHASH-DEPENDENCY.md
+  ticket_id: TCK-20261025-DROP-UNUSED-XXHASH-DEPENDENCY
+  title: Drop the unused xxhash runtime dependency from pyproject.toml and uv.lock
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas: []
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH.md
   ticket_id: TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH
   title: Refresh frontend/package-lock.json inside the current major versions to clear

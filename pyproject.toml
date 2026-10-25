@@ -12,7 +12,6 @@ requires-python = ">=3.12"
 # A consumer that cannot read uv.lock can run `uv export --frozen --no-hashes --no-emit-project` ad hoc.
 # See docs/guidelines/agent_working_environment.md.
 dependencies = [
-    "xxhash>=3.4.0",
     "fastapi>=0.143.5",
     "starlette>=1.0.0,<2",
     "uvicorn[standard]>=0.30.0",
