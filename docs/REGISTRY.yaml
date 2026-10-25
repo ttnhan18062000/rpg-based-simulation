@@ -7839,6 +7839,37 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261025-HANGING-GH-TEST-BOUND-RELATIVE-TO-BASELINE.md
+  ticket_id: TCK-20261025-HANGING-GH-TEST-BOUND-RELATIVE-TO-BASELINE
+  title: The hanging-gh test bounds the extra time the gh cut-off adds, not the hook's
+    whole run time, so a loaded runner cannot fail it
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-25'
+  related_code_areas:
+  - tests/tools/test_session_resolve_and_hook.py
+  artifact_files: []
+  tags:
+  - testing
+  - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-RPG-UBUNTU-SEATS.md
+  ticket_id: TCK-20261025-RPG-UBUNTU-SEATS
+  title: Host ubuntu gets three rpg twin seats (`rpg-designer-ubuntu`, `rpg-planner-ubuntu`,
+    `rpg-implementer-ubuntu`); the plain u24desktop rpg seats are unchanged
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-25'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - tests/tools/test_session_*.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261025-RPG-UBUNTU-SEATS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261025-RPG-UBUNTU-SEATS/plan.md
+  - agent-working/stored_artifacts/TCK-20261025-RPG-UBUNTU-SEATS/test_plan.md
+  tags:
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT.md
   ticket_id: TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT
   title: 'Conformance-suite design: replace the draft lane table with testing-planner''s
