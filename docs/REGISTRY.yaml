@@ -7839,6 +7839,336 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
+  ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
+  title: The two leads message each other across hosts over Remote Control, and every
+    other seat reaches the other host only through its own lead
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas:
+  - CARD_BUDGET_TOKENS
+  - .claude/agents/session-*.md (generated)
+  - tests/tools/test_session_*.py
+  artifact_files: []
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-DROP-UNUSED-JSON-LOGGER-AND-SSE-STARLETTE-DEPENDENCIES.md
+  ticket_id: TCK-20261025-DROP-UNUSED-JSON-LOGGER-AND-SSE-STARLETTE-DEPENDENCIES
+  title: Drop the unused python-json-logger and sse-starlette runtime dependencies
+    from pyproject.toml
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas: []
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-DROP-UNUSED-XXHASH-DEPENDENCY.md
+  ticket_id: TCK-20261025-DROP-UNUSED-XXHASH-DEPENDENCY
+  title: Drop the unused xxhash runtime dependency from pyproject.toml and uv.lock
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas: []
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH.md
+  ticket_id: TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH
+  title: Refresh frontend/package-lock.json inside the current major versions to clear
+    its open Dependabot security alerts
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas:
+  - frontend/package.json
+  artifact_files: []
+  tags:
+  - security
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES.md
+  ticket_id: TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES
+  title: 'Decide each open frontend major-version Dependabot PR (#567, #568, #569,
+    #570) one at a time, landing the ones that pass build, tests and lint'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas:
+  - frontend/package.json
+  - frontend/eslint.config.js
+  - lucide-react
+  artifact_files: []
+  tags:
+  - security
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-HANGING-GH-TEST-BOUND-RELATIVE-TO-BASELINE.md
+  ticket_id: TCK-20261025-HANGING-GH-TEST-BOUND-RELATIVE-TO-BASELINE
+  title: The hanging-gh test bounds the extra time the gh cut-off adds, not the hook's
+    whole run time, so a loaded runner cannot fail it
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-25'
+  related_code_areas:
+  - tests/tools/test_session_resolve_and_hook.py
+  artifact_files: []
+  tags:
+  - testing
+  - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-HEALTH-SNAPSHOT-PYYAML-IMPORT-NAME.md
+  ticket_id: TCK-20261025-HEALTH-SNAPSHOT-PYYAML-IMPORT-NAME
+  title: The codebase-health snapshot maps pyyaml to its import name `yaml`, so it
+    no longer lists pyyaml as an unused core dependency
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-25'
+  related_code_areas:
+  - CORE_DEPENDENCY_IMPORT_OVERRIDES
+  - tests/codebase/test_codebase_health_baseline.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-README-DETERMINISM-AND-ENTITIES-FLAG-CLAIMS.md
+  ticket_id: TCK-20261025-README-DETERMINISM-AND-ENTITIES-FLAG-CLAIMS
+  title: README overclaims determinism ("xxhash generators", "100% replay fidelity",
+    "every run byte-identical") and its run examples pass an --entities flag that
+    serve rejects and cli ignores
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-25'
+  related_code_areas:
+  - README.md; src/platform/rng.py; src/cli/entry.py
+  artifact_files: []
+  tags:
+  - documentation
+  - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-RPG-UBUNTU-SEATS.md
+  ticket_id: TCK-20261025-RPG-UBUNTU-SEATS
+  title: Host ubuntu gets three rpg twin seats (`rpg-designer-ubuntu`, `rpg-planner-ubuntu`,
+    `rpg-implementer-ubuntu`); the plain u24desktop rpg seats are unchanged
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-25'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - tests/tools/test_session_*.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261025-RPG-UBUNTU-SEATS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261025-RPG-UBUNTU-SEATS/plan.md
+  - agent-working/stored_artifacts/TCK-20261025-RPG-UBUNTU-SEATS/test_plan.md
+  tags:
+  - process-improvement
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-UV-LOCK-FOLLOW-UP-SECURITY-BUMPS.md
+  ticket_id: TCK-20261025-UV-LOCK-FOLLOW-UP-SECURITY-BUMPS
+  title: 'Clear the five uv.lock Dependabot alerts that opened after #736: brotli,
+    setuptools and filelock'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas:
+  - uv.lock
+  artifact_files: []
+  tags:
+  - security
+  - platform
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-WEBSITE-AND-DASHBOARD-LOCKFILE-SECURITY-BUMPS.md
+  ticket_id: TCK-20261025-WEBSITE-AND-DASHBOARD-LOCKFILE-SECURITY-BUMPS
+  title: Refresh website/ and dashboard-frontend/ npm lockfiles to clear their open
+    Dependabot security alerts
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas:
+  - website/package.json
+  - dashboard-frontend/package-lock.json
+  artifact_files: []
+  tags:
+  - security
+  - platform
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT.md
+  ticket_id: TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT
+  title: 'Conformance-suite design: replace the draft lane table with testing-planner''s
+    placement, close Q1 and Q4, and add rpg''s schedule for F3 to F5'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - architecture
+  - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS.md
+  ticket_id: TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS
+  title: '`requirements-knowledge.txt` takes the patched mcp, graphifyy and torch
+    versions, with the index rebuilt and search quality checked'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas:
+  - requirements-knowledge.txt
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS/test_plan.md
+  tags:
+  - knowledge-store
+  - security
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261024-PERF-TOOLS-HELP-FLAG-NEVER-STARTS-A-RUN.md
+  ticket_id: TCK-20261024-PERF-TOOLS-HELP-FLAG-NEVER-STARTS-A-RUN
+  title: '`--help` on a tools/perf script prints usage and exits; it never starts
+    a benchmark'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-24'
+  related_code_areas:
+  - tools/perf/perf_baseline.py
+  - tests/unit/perf/
+  artifact_files: []
+  tags:
+  - performance
+  - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY.md
+  ticket_id: TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY
+  title: The pre-push advisory hook warns when a branch adds tagged docs or tickets
+    and `docs/REGISTRY.yaml` is stale
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-24'
+  related_code_areas:
+  - tools/delivery/pre_push_advisory_hook.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY/test_plan.md
+  tags:
+  - delivery
+  - process-improvement
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM.md
+  ticket_id: TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM
+  title: The session-start hook tests stub the disk-headroom probe, so a runner below
+    10 GB free cannot make them flaky
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-24'
+  related_code_areas:
+  - tests/tools/test_session_resolve_and_hook.py
+  artifact_files: []
+  tags:
+  - testing
+  - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261024-UV-LOCK-SECURITY-BUMPS.md
+  ticket_id: TCK-20261024-UV-LOCK-SECURITY-BUMPS
+  title: Bump the Python packages in uv.lock that have open Dependabot security alerts
+    to their first patched versions
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas:
+  - uv.lock
+  artifact_files: []
+  tags:
+  - security
+  - platform
+- type: ticket
+  path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS.md
+  ticket_id: TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS
+  title: Characterization tests that pin the HTTP surface of create_v2_app before
+    src/api/server.py is split
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas:
+  - src/api/server.py
+  - tests/api/test_all_routes_require_auth.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-CHARACTERIZATION-TESTS/test_plan.md
+  tags:
+  - architecture
+  - api-design
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS.md
+  ticket_id: TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS
+  title: The 16 remaining inline routes in create_v2_app move into routers under src/api/routes/
+    and the function-local imports go to module top
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-24'
+  related_code_areas:
+  - src/api/server.py
+  - src/api/dependencies.py
+  - codebase/baselines/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-INLINE-ROUTES-TO-ROUTERS/test_plan.md
+  tags:
+  - architecture
+  - api-design
+- type: ticket
+  path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE.md
+  ticket_id: TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE
+  title: 'The 2,093-line observability UI page leaves create_v2_app: served byte-identical
+    from a static file by a router under src/api/routes/'
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-24'
+  related_code_areas:
+  - src/api/server.py:335-2437
+  - codebase/baselines/code_health_exceptions.jsonl
+  - pyproject.toml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-API-SERVER-OBSERVABILITY-UI-STATIC-PAGE/test_plan.md
+  tags:
+  - architecture
+  - api-design
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/codebase-m7-api-server/TCK-20261024-IMPORT-LINTER-LAYERS-CONTRACT-NAME-NOT-ADVISORY.md
+  ticket_id: TCK-20261024-IMPORT-LINTER-LAYERS-CONTRACT-NAME-NOT-ADVISORY
+  title: 'The generated import-linter layers contract drops "(advisory)" from its
+    name, because it has been blocking since #671'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-24'
+  related_code_areas:
+  - codebase/structure/import_contracts.py
+  artifact_files: []
+  tags:
+  - architecture
+  - delivery
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION.md
+  ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
+  title: The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt`
+    version, not a stray user-site install
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-24'
+  related_code_areas:
+  - .claude/settings.json
+  artifact_files: []
+  tags:
+  - knowledge-store
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
   ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
   title: Update the engine execution modes proposal with the 2026-10-22 rulings and
@@ -7871,7 +8201,7 @@
 - type: ticket
   path: agent-working/tickets/done/TCK-20261023-SESSION-ROLES-PLATFORM-OWNS-SECURITY-MD.md
   ticket_id: TCK-20261023-SESSION-ROLES-PLATFORM-OWNS-SECURITY-MD
-  title: '`SECURITY.md` (repo root) gets an owner: platform'
+  title: '`.github/SECURITY.md` gets an owner: platform'
   tier: hotfix
   ticket_type: chore
   date: '2026-10-23'
@@ -11740,6 +12070,26 @@
   - agent-working/stored_artifacts/TCK-20261011-NEAREST-WORK-READS-THE-DECLARED-WORK-BUILDINGS-NOT-ONLY-THE-INN/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP.md
+  ticket_id: TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP
+  title: 'PERF-M2-T03b: Run the paired base/head tripwire as a report-only step in
+    the perf-cert-arena CI job'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-11'
+  related_code_areas:
+  - perf-cert-arena
+  - run
+  - tests/static/test_ci_narrow_path_filtered_jobs.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP/investigation.md
+  - agent-working/stored_artifacts/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP/plan.md
+  - agent-working/stored_artifacts/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP/test_plan.md
+  tags:
+  - performance
+  - benchmarking
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261011-PR-ATTRIBUTION-OFF-AT-SOURCE.md
   ticket_id: TCK-20261011-PR-ATTRIBUTION-OFF-AT-SOURCE
   title: Turn off the Claude Code PR attribution line at its source, so pr-body-lint
@@ -11996,23 +12346,6 @@
   artifact_files: []
   tags:
   - architecture
-- type: ticket
-  path: agent-working/tickets/todos/perf-m2-contract/TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP.md
-  ticket_id: TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP
-  title: 'PERF-M2-T03b: Run the paired base/head tripwire as a report-only step in
-    the perf-cert-arena CI job'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-11'
-  related_code_areas:
-  - perf-cert-arena
-  - run
-  - tests/static/test_ci_narrow_path_filtered_jobs.py
-  artifact_files: []
-  tags:
-  - performance
-  - benchmarking
-  - regression
 - type: ticket
   path: agent-working/tickets/done/TCK-20261009-FACTION-TREASURY-IS-ONE-TYPED-ACCOUNT-EXCH-02-C.md
   ticket_id: TCK-20261009-FACTION-TREASURY-IS-ONE-TYPED-ACCOUNT-EXCH-02-C
@@ -13353,6 +13686,8 @@
   related_code_areas:
   - src/certification/models.py
   - src/perf/long_run_harness.py
+  - Outcome
+  - tools/perf/known_debt.py
   - tools/perf/perf_threshold_inventory.py
   - tests/tools/perf_assertions.py
   - docs/engine/performance_contract.md
