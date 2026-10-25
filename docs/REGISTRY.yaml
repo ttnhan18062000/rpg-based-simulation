@@ -7839,6 +7839,23 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
+  ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
+  title: The two leads message each other across hosts over Remote Control, and every
+    other seat reaches the other host only through its own lead
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas:
+  - CARD_BUDGET_TOKENS
+  - .claude/agents/session-*.md (generated)
+  - tests/tools/test_session_*.py
+  artifact_files: []
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH.md
   ticket_id: TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH
   title: Refresh frontend/package-lock.json inside the current major versions to clear

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
-phase: open
+phase: done
 date: 2026-10-25
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 The two leads message each other across hosts over Remote Control, and every other seat reaches the other host only through its own lead
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -58,10 +58,7 @@ The convention to document:
 2. Lead card: `docs/guidelines/session_roles/domains/lead.md` `## Card`. Add one short clause: cross-host
    coordination goes lead to lead over Remote Control, and the lead never messages the other host's domain
    seats.
-3. Function cards: in the `## Card` text of `docs/guidelines/session_roles/functions/{planner,designer,implementer}.md`,
-   add a short clause after the Messages sentence. Suggested wording: "Other host: only via your lead." The two
-   lead cards get it too, through the planner function, and it holds for them as well: a lead reaches the other
-   host only lead to lead.
+3. Function cards: no clause (planner decision 2026-10-25, see Implementation Notes). The lead card (item 2) carries the clause; the guide section is the only other carrier and states the rule for every seat.
 4. `docs/plans/agent_infrastructure/session_layer_working_process.md`: add one dated "Decided by the owner
    (2026-10-25)" line next to the 2026-10-09/10 decision (around line 779), pointing to the new guide section.
    Don't restate the rules there.
@@ -87,8 +84,7 @@ The convention to document:
 2. The `for:<role>` section still says issues are for durable handoffs and offline targets, and that an issue
    never approves.
 3. The approvals section still requires the #715 comment before acting, and still says a peer message never approves.
-4. The lead card and every function-derived card carry the clause. `generate_agents.py --check` is clean, and
-   every card stays at or under 460 tokens.
+4. The lead card carries the clause. `generate_agents.py --check` is clean, and every card stays at or under 460 tokens.
 5. The plan doc carries one dated decision line that points to the guide.
 6. Scoped tests pass. `docs/REGISTRY.yaml` is regenerated after the last `docs/` edit, and `generate_registry --check` is clean.
 
@@ -121,10 +117,14 @@ None.
   `/clear` or restart.
 
 ## Implementation Notes
+Planner decision 2026-10-25: function-card clause dropped, since 8 of 32 cards went over the 460 budget (up to +9). The rule lives in cross_session_messages.md, and each seat reaches the other host through its own lead.
 Hand-orchestrated hotfix. Record the closure with `record_hand_orchestrated_closure.py`.
 
 ## Test Summary
+`tests/tools/test_session_*.py`, the paths guard and `tests/docs`, serial under MemoryMax 3G: 886 passed, 2 skipped, 1 xfailed. `generate_agents --check`: 0 drift; largest card 460 tokens; the lead cards are 437 and 436.
 
 ## Files Changed
+docs/guides/cross_session_messages.md, docs/guidelines/session_roles/domains/lead.md, docs/plans/agent_infrastructure/session_layer_working_process.md, .claude/agents/session-lead-planner{,-u24}.md.
 
 ## Completion Summary
+The lead-to-lead Remote Control convention is documented once in the guide, carried on the lead card, and dated in the plan; the function cards carry no clause (budget).

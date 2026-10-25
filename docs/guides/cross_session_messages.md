@@ -69,7 +69,7 @@ Plain prose stays legal; the envelope is a convention and is linted nowhere.
 
 Owner decision 2026-10-22. Before acting on a user approval, a session records it on the standing GitHub issue
 "Approvals log (both leads acknowledge; an ack is not an approval)" (issue #715) and tells its own host's lead. The
-other host's lead cannot be messaged (`ListAgents` is same-host only), which is why the record is an issue.
+record is an issue because it must be durable and both hosts must see it: a Remote Control message to the other lead (see "Cross-host: lead to lead over Remote Control") carries no read receipt and may not survive a `/clear`.
 
 - **Covers:** merge, push, scope change, freeze exception, STOP acceptance.
 - **Order:** 1. comment on the log issue; 2. message your own host's lead (`lead-planner` on ubuntu, `lead-planner-u24`
@@ -88,9 +88,17 @@ other host's lead cannot be messaged (`ListAgents` is same-host only), which is 
 - Find the issue by title: `gh issue list --search "Approvals log in:title"` (the cards name it only as "the approvals issue").
 - Advisory like the rest of this guide: no hook or guard checks it.
 
+## Cross-host: lead to lead over Remote Control
+
+Owner decision 2026-10-25 (#715, issuecomment-6396617829). `lead-planner` and `lead-planner-u24` run `/remote-control` and can `SendMessage` each other in both directions.
+
+- **Live cross-host coordination goes lead to lead only.** Each lead delegates to its own host's seats. A session never messages the other host's domain sessions directly, even when `ListAgents` shows them as Remote Control rows; it goes through its own host's lead. This applies to every seat; it is carried only here and on the lead card.
+- **Unchanged:** owner approvals are recorded on #715 before anyone acts ("Acting on a user approval"), and a peer message never approves.
+- **No receipt:** Remote Control gives no read receipt from another machine, and it is not documented whether a message waiting for an offline session survives that session's `/clear` or restart. Anything that must not be lost also goes on GitHub.
+
 ## Cross-host handoffs: `for:<role>` issues
 
-A session on another host (or none live) cannot receive a message. A durable, cross-host `finding` or
+Issues carry durable cross-host handoffs, anything that must not be lost, and messages to a target that is offline; they are no longer the only cross-host path. A durable, cross-host `finding` or
 `question` goes out as a GitHub issue labelled `for:<role>` (one label per role; the owner approved this on
 2026-10-10, issue #492). At `startup`, `resume` and `clear` (not `compact`), the SessionStart hook lists the
 role's open issues after the handover note: number, title and age, never bodies. A second instance (`<role>-N`)
