@@ -7839,6 +7839,19 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE.md
+  ticket_id: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+  title: 'Find the cause of the 36 SimQ rows held at the v1 re-anchor: the routing
+    worlds'' decline, urban_political seed 456''s early stall, wilderness_survival
+    seed 123 SOCIAL, and 5 pillars that switched on from 0.0'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-24'
+  related_code_areas:
+  - src/ (route_search; the cognition, faction and social event producers)
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
   ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
   title: Update the engine execution modes proposal with the 2026-10-22 rulings and
@@ -7877,6 +7890,30 @@
   date: '2026-10-23'
   related_code_areas:
   - src/engine/scenario_checkpoint.py; src/platform/rng.py; src/engine/scenario_runtime.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-ENGINE-AND-BIBLE-DOC-DRIFT-AFTER-V1.md
+  ticket_id: TCK-20261023-ENGINE-AND-BIBLE-DOC-DRIFT-AFTER-V1
+  title: 'Doc drift found after v1: deterministic_execution.md still calls a closed
+    ticket open, and Bible 04 names lead certainty two ways'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas:
+  - the lead-certainty enum (src/ai or src/cognition; locate at work time)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261023-FOUR-TESTS-FAIL-ONLY-IN-A-WIDE-SCOPED-RUN-ORDER-DEPENDENT.md
+  ticket_id: TCK-20261023-FOUR-TESTS-FAIL-ONLY-IN-A-WIDE-SCOPED-RUN-ORDER-DEPENDENT
+  title: Four tests fail only inside a wide scoped run and pass alone, on the v1 tree
+    too (order-dependent state leak)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-23'
+  related_code_areas:
+  - tests/ (the four named tests and their fixtures)
   artifact_files: []
   tags: []
 - type: ticket
@@ -9254,6 +9291,17 @@
   date: '2026-10-19'
   related_code_areas:
   - src/engine/tactical_destinations.py:38, :80+; src/engine/tactical.py:107.
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-SEMGREP-BASELINE-FINDINGS-IN-SRC-TRIAGE.md
+  ticket_id: TCK-20261019-SEMGREP-BASELINE-FINDINGS-IN-SRC-TRIAGE
+  title: 'Triage the baseline Semgrep findings in src/** from the new security-scan
+    workflow (#665): fix the real ones, mark the false positives in code'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas: []
   artifact_files: []
   tags: []
 - type: ticket
