@@ -7856,6 +7856,17 @@
   - process-improvement
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261025-DROP-UNUSED-JSON-LOGGER-AND-SSE-STARLETTE-DEPENDENCIES.md
+  ticket_id: TCK-20261025-DROP-UNUSED-JSON-LOGGER-AND-SSE-STARLETTE-DEPENDENCIES
+  title: Drop the unused python-json-logger and sse-starlette runtime dependencies
+    from pyproject.toml
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas: []
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-DROP-UNUSED-XXHASH-DEPENDENCY.md
   ticket_id: TCK-20261025-DROP-UNUSED-XXHASH-DEPENDENCY
   title: Drop the unused xxhash runtime dependency from pyproject.toml and uv.lock
