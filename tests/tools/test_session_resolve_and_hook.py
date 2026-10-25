@@ -476,12 +476,19 @@ def test_a_missing_gh_leaves_the_output_unchanged(world, tmp_path, monkeypatch):
 
 def test_a_hanging_gh_is_cut_off_at_the_timeout(world, tmp_path, monkeypatch):
     monkeypatch.setenv("SESSION_START_ISSUES", "off")
+    start = time.monotonic()
     baseline = _ctx(world, _payload(world[1]))
+    baseline_s = time.monotonic() - start
     _gh(tmp_path, monkeypatch, "exec sleep 30")
     monkeypatch.setattr(hook, "ISSUE_TIMEOUT_S", 0.5)
     start = time.monotonic()
     out = _ctx(world, _payload(world[1]))
-    assert time.monotonic() - start < 5
+    hanging_s = time.monotonic() - start
+    # The hook's own work under machine load was ~4.5 s once (TCK-20261025-HANGING-GH-TEST-BOUND-RELATIVE-TO-BASELINE),
+    # so bound what the cut-off adds: the timeout plus 2 s of process-spawn slack over the same call without gh. The
+    # absolute ceiling stays well under the 30 s sleep, so a cut-off that never fires still fails.
+    assert hanging_s <= baseline_s + hook.ISSUE_TIMEOUT_S + 2
+    assert hanging_s < 20
     assert out == baseline
 
 
