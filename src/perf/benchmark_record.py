@@ -581,7 +581,8 @@ def git_state(root: Optional[Path] = None) -> Tuple[str, bool]:
         return UNKNOWN, True
 
 
-def _cpu_model() -> str:
+def cpu_model() -> str:
+    """The CPU model of this machine (``/proc/cpuinfo``, else ``platform.processor()``, else ``UNKNOWN``)."""
     try:
         lines = Path("/proc/cpuinfo").read_text(encoding="utf-8").splitlines()
     except OSError:
@@ -609,7 +610,7 @@ def collect_runtime(declared_hardware_class: Optional[str] = None) -> Runtime:
         build_flavor=build_flavor,
         os=f"{platform.system()} {platform.release()}",
         arch=platform.machine(),
-        cpu_model=_cpu_model(),
+        cpu_model=cpu_model(),
         logical_cores=psutil.cpu_count(logical=True) or 1,
         ram_mb=int(psutil.virtual_memory().total // (1024 * 1024)),
         hardware_class=HardwareClassifier.detect_class().value,

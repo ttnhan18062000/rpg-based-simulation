@@ -1,3 +1,5 @@
+"""Print a summary table of the performance matrix results in reports/perf."""
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -58,5 +60,14 @@ def generate_report():
 
     print("="*80 + "\n")
 
-if __name__ == "__main__":
+def main(argv=None):
+    """Parse ``argv`` (``--help`` and unknown flags exit before the report is read), then print the report."""
+    argparse.ArgumentParser(
+        prog="perf_report.py",
+        description="Print the performance matrix summary from reports/perf/matrix_full.json (or the per-run JSONs). Takes no arguments.",
+    ).parse_args(sys.argv[1:] if argv is None else argv)
     generate_report()
+
+
+if __name__ == "__main__":
+    main()

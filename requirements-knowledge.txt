@@ -8,21 +8,22 @@
 # All environments for this project use CPU-only PyTorch (no CUDA/GPU). uv.lock does NOT carry this build (it
 # resolves torch from PyPI), so `uv sync --extra knowledge` is not the way to build this venv.
 # `make` picks its interpreter via KNOWLEDGE_PYTHON, else the main checkout's .venv-knowledge (see PYTHON_KNOWLEDGE).
-torch==2.12.1+cpu
+torch==2.13.0+cpu
 sentence-transformers==6.1.0
 sqlite-vec==0.1.9
 rank-bm25==0.2.2
-# mcp: exact pin per follow-up 5 of docs/plans/agent_infrastructure/llm_security_mapping.md (1.28.1 is the installed, working
+# mcp: exact pin per follow-up 5 of docs/plans/agent_infrastructure/llm_security_mapping.md (1.30.0 is the patched, smoke-tested
 # version; 2.x is a major with API-change risk for tools/search_mcp.py and is not taken here).
-mcp==1.28.1
+mcp==1.30.0
 
 # graphify CLI tool (tools/code_test_index.py's data source, `graphify update .`) -- pinned
-# to 0.8.39, the actually-installed version that produced the current graphify-out/graph.json,
+# to 0.9.70, the patched version (0.8.39 produced the current graphify-out/graph.json; 0.9 reads it but prints a
+# pre-#1504 node-ID note, see TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS),
 # superseding the 0.6.7 figure evidenced by docs/ai/code_test_index_boundaries_decision.md
 # (stale as of TCK-20260729-DETERMINISTIC-CODE-INDEX; that pin was never installed and is not
 # known to reproduce the current graph). Not a Python import dependency of this project's
 # installable package -- invoked only as a standalone CLI, so it stays out of pyproject.toml.
-graphifyy==0.8.39
+graphifyy==0.9.70
 
 # Headroom (TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT) -- base package only, no extras
 # ([proxy]/[all] pull onnxruntime + transformers, unneeded for the MCP-mode-only trial this repo

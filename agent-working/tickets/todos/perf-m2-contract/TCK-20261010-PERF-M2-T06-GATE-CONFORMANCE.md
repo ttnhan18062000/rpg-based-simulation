@@ -37,6 +37,7 @@ Source concern IDs: C7.
 - Add a tests/docs/ test using tools.perf.perf_threshold_inventory.build_report(REPO_ROOT) that fails on unmapped call sites, unknown clause IDs and stale mappings
 - Verify the D-9/D-10 names in docs/engine/contracts/certification_contract.md (already fixed in #306) and add a grep guard instead of repeating the edit
 - Decide and document whether non-helper live checks (PerfRegressionGate, long_run_harness comparative checks, CI selectors) are covered by the map
+- Known-debt matching (added 2026-10-12 from the #525 review): `Outcome` in src/perf/benchmark_record.py is only `(state, reason)`, so no code can match a real outcome against a known-debt `expected_signature` (`<STATE>:<check>`, PERF-M2-T05b) without parsing the reason string. Add a typed `check` field to `Outcome`, set by each `_check_*` in `compare()` (None for PASS). Match ledger entries (tools/perf/known_debt.py) against `state` and `check`, never against `reason`. src/perf/ is perf-owned, so no lift is needed. Keep BenchmarkRecord serialization backward-compatible, or bump the schema MINOR version.
 
 ## Out of Scope
 - Setting new threshold values (PERF-M2-T03 owns them)
@@ -51,11 +52,14 @@ Source concern IDs: C7.
 - [ ] performance_contract.md §3.3/§5 states concrete tripwire threshold values, the outcome set and the claim scope for each projection, and no sentence still says 'The threshold is not yet set'
 - [ ] A grep test finds FAILED_DEGRADATION_ORDER, FAILED_RECOVERY (as a bare legacy name) and hardware_class_override_applied in certification_contract.md only within the documented 'earlier name' notes
 
+- [ ] `Outcome` carries a typed `check` naming the `compare()` check that produced it. A test shows a known-debt entry matching on `state` + `check`, and no code path matches a ledger entry by parsing `Outcome.reason`.
+
 ## Related Tickets
 - TCK-20261003-PERF-M2-CLAUSE-INVENTORY
 - TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA
 - TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE
 - TCK-20261009-KNOWN-REDS-REGISTRY-SHARED-MODULE
+- TCK-20261010-PERF-M2-T05B-KNOWN-DEBT-LEDGER
 
 ## Related Docs
 - docs/engine/performance_contract.md
@@ -69,6 +73,8 @@ None.
 ## Related Code Areas
 - src/certification/models.py
 - src/perf/long_run_harness.py
+- src/perf/benchmark_record.py (`Outcome`, `compare()`)
+- tools/perf/known_debt.py
 - tools/perf/perf_threshold_inventory.py
 - tests/tools/perf_assertions.py
 - docs/engine/performance_contract.md

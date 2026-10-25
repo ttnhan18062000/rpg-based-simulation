@@ -12,17 +12,14 @@ requires-python = ">=3.12"
 # A consumer that cannot read uv.lock can run `uv export --frozen --no-hashes --no-emit-project` ad hoc.
 # See docs/guidelines/agent_working_environment.md.
 dependencies = [
-    "xxhash>=3.4.0",
     "fastapi>=0.143.5",
     "starlette>=1.0.0,<2",
     "uvicorn[standard]>=0.30.0",
     "pydantic>=2.0.0",
     "typing-extensions>=4.8.0",
-    "sse-starlette>=3.3.0",
     "prometheus-client>=0.20.0",
     "redis>=5.0.0",
     "psutil>=5.9.0",
-    "python-json-logger>=2.0.7",
     "requests>=2.31.0",
     "msgpack>=1.0.0",
     "pyyaml>=6.0",
@@ -43,7 +40,7 @@ knowledge = [
     "rank-bm25>=0.2.2",
 ]
 search-mcp = [
-    "mcp>=1.0.0",
+    "mcp>=1.30.0,<2",
 ]
 
 # Test and dev tooling. `dev` and `lint` are installed by default by `uv sync` (`[tool.uv]
@@ -61,7 +58,7 @@ dev = [
     "jsonschema>=4.0.0",
     # Also declared as the `search-mcp` extra, which existing tests pin; the dev group makes
     # the default install reach it for tests/tools/test_search_mcp.py.
-    "mcp>=1.0.0",
+    "mcp>=1.30.0,<2",
     "websockets>=12.0",
     # Baseline filter for mypy (TCK-20261003-MYPY-BASELINE-ADVISORY): existing errors are held in
     # codebase/baselines/mypy_baseline.txt, so only new ones are reported. Pinned exactly like the code-health tools.
