@@ -15,7 +15,7 @@ tags: [ai, governance]
 Role cards show a role's single files in a folder it doesn't otherwise own as "dir/ (N files)", so the card budget can come back down from 440
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 hotfix
@@ -62,7 +62,8 @@ None (hotfix).
 - `tools/sessions/card.py`, `tools/sessions/generate_agents.py`, `tests/tools/test_session_cards.py`, `.claude/agents/session-*.md`
 
 ## Assumptions / Open Questions
-- Not dispatched yet, by the owner's decision. Dispatch it when the owner or lead says so, and claim it on #634 first.
+- The owner released the 10-21 hold on 2026-10-26 (#715 issuecomment-6401480227, relayed by lead-planner). Dispatched in the agent-working ubuntu batch with TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION and TCK-20261015-SESSION-BINDINGS-TORN-TAIL.
+- Since filing, the budget went to 460 (2026-10-22) and three rpg `-ubuntu` twins were added (#737), and the lead card gained a cross-host clause (#742). The 415 target may not be reachable: lower to the measured worst card + at least 10, and say in the PR what the worst card is and why.
 
 ## Implementation Notes
 

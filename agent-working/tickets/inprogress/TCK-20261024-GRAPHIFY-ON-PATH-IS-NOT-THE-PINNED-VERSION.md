@@ -15,7 +15,7 @@ tags: [knowledge-store, process-improvement]
 The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt` version, not a stray user-site install
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -70,6 +70,11 @@ Not yet checked: what u24desktop's PATH resolves to.
 - `.claude/settings.json` is a governing file: any edit to it needs direct user confirmation (AskUserQuestion) at the time.
 
 ## Implementation Notes
+Owner decisions 2026-10-26, in agent-working-planner's terminal (logged on #715 issuecomment-6401808628; batch assigned on #715 issuecomment-6401480227):
+1. Resolution: a make target points `~/.local/bin/graphify` at `.venv-knowledge/bin/graphify` (run once per host), plus a SessionStart advisory line that warns when the `graphify` resolved from PATH does not report the pinned graphifyy version. No `.claude/settings.json` or `CLAUDE.md` edit. Reason: the shim covers the edit hook AND every bare `graphify query` an agent runs; a hook-only path change would leave agents' queries on 0.6.7.
+2. The shared graph is rebuilt once under the pin (`graphify extract --force`, or the documented full rebuild, then `tools/graphify_prune.py`) from the main checkout on `main`, right after this batch merges, on host ubuntu. u24desktop rebuilds after its own shim is in place (lead-planner-u24 is told through lead-planner).
+3. Measured on host ubuntu by lead-planner 2026-10-25: `~/.local/bin/graphify` = user-site graphifyy 0.6.7; `.venv-knowledge` = 0.9.70; 0.9.70 warns that `~/.copilot/skills/graphify` is from 0.6.7 (report whether the shim run should refresh it; do not change it without asking). u24desktop's values come through lead-planner.
+4. The advisory must fail open (missing venv, missing binary, slow `--version`: print nothing), like the other SessionStart checks. The make target must refuse to overwrite a `~/.local/bin/graphify` that is neither the user-site 0.6.7 script nor already the shim, and print what it did.
 
 ## Test Summary
 
