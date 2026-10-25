@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: frontend
 authority: P1
 audience: agent
 ticket_id: TCK-20261025-FRONTEND-LOCKFILE-SECURITY-REFRESH
-phase: open
+phase: done
 date: 2026-10-25
 tags: [security]
 ---
@@ -15,7 +15,7 @@ tags: [security]
 Refresh frontend/package-lock.json inside the current major versions to clear its open Dependabot security alerts
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -63,11 +63,11 @@ The owner chose one superseding PR. This ticket supersedes dependabot PR #565 (t
 - The `website/`, `dashboard-frontend/` and `uv.lock` lockfiles (lead-planner's; #738).
 
 ## Acceptance Criteria
-- [ ] `git diff` touches only `frontend/package-lock.json`, plus `frontend/package.json` for the in-major version
+- [x] `git diff` touches only `frontend/package-lock.json`, plus `frontend/package.json` for the in-major version
       bumps and any `overrides` rpg-planner-ubuntu reviewed.
-- [ ] `npm ci`, `npx vitest run` and `npm run build` pass under Node 24. `npm run lint` is the same as before or
+- [x] `npm ci`, `npx vitest run` and `npm run build` pass under Node 24. `npm run lint` is the same as before or
       better.
-- [ ] `npm audit` output before and after is summarized in this ticket. Every critical and high alert is cleared, or
+- [x] `npm audit` output before and after is summarized in this ticket. Every critical and high alert is cleared, or
       listed with the reason it can't be.
 - [ ] Dependabot PR #565 is closed with a comment pointing to the superseding PR. The owner or rpg-planner-ubuntu
       closes it once the PR exists.
@@ -75,7 +75,7 @@ The owner chose one superseding PR. This ticket supersedes dependabot PR #565 (t
       its reason.
 
 ## Related Tickets
-- `TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES`: the major moves. Same PR, done after this ticket.
+- `TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES`: the major moves. A follow-up PR after this one merges (owner, #715 issuecomment-6393490542).
 - `TCK-20261025-WEBSITE-AND-DASHBOARD-LOCKFILE-SECURITY-BUMPS` (#738): the same shape for website/ and
   dashboard-frontend/.
 - `TCK-20260825-CI-FRONTEND-TEST-COVERAGE-GAP`: CI's `frontend` job (`npm ci`, `npx vitest run`, `npm run build`).
@@ -101,9 +101,19 @@ The owner chose one superseding PR. This ticket supersedes dependabot PR #565 (t
 - The host's disk had about 9 GB free. Delete `frontend/node_modules/` once the PR merges.
 
 ## Implementation Notes
+- Branch `frontend-lockfile-security-refresh` from ca7dadb75 (`frontend-dependency-security` is checked out in the planner worktree).
+- `npm audit fix` (no --force) under Node 24.22.1 / npm 11.19.1 cleared every alert; no `overrides` needed.
+- `package.json`: vite `^7.2.4` -> `^7.3.7`, vitest `^4.0.18` -> `^4.1.12` (floors raised so the manifest cannot resolve a vulnerable version). Lockfile regenerated with `npm install --package-lock-only`.
+- Resolved: vite 7.3.7, vitest 4.1.12, rollup 4.65.0, postcss 8.5.31, undici 7.30.1, js-yaml 4.3.2, esbuild 0.28.2 (inside vite's `^0.27 || ^0.28`).
+- Dependabot open alerts on `frontend/` read 55 on 2026-10-25 (ticket text said 56).
 
 ## Test Summary
+- `npm audit` before: 20 vulnerabilities (1 critical, 13 high, 4 moderate, 2 low). After: 0.
+- Before (unchanged main): vitest 31 files / 369 tests pass; build OK; lint exit 1, 21 problems (18 errors, 3 warnings).
+- After: `npm ci` OK; vitest 31 files / 369 tests pass; build OK; lint exit 1, identical output (21 problems).
 
 ## Files Changed
+- frontend/package.json, frontend/package-lock.json
 
 ## Completion Summary
+Frontend lockfile refreshed in-major: `npm audit` 20 vulnerabilities -> 0, vite ^7.3.7 / vitest ^4.1.12 floors, vitest/build pass, lint unchanged from baseline (21 problems). Closing #565 and verifying the post-merge alert count remain with the owner/planner after merge.
