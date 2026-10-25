@@ -7883,6 +7883,35 @@
   tags:
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261025-UV-LOCK-FOLLOW-UP-SECURITY-BUMPS.md
+  ticket_id: TCK-20261025-UV-LOCK-FOLLOW-UP-SECURITY-BUMPS
+  title: 'Clear the five uv.lock Dependabot alerts that opened after #736: brotli,
+    setuptools and filelock'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas:
+  - uv.lock
+  artifact_files: []
+  tags:
+  - security
+  - platform
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-WEBSITE-AND-DASHBOARD-LOCKFILE-SECURITY-BUMPS.md
+  ticket_id: TCK-20261025-WEBSITE-AND-DASHBOARD-LOCKFILE-SECURITY-BUMPS
+  title: Refresh website/ and dashboard-frontend/ npm lockfiles to clear their open
+    Dependabot security alerts
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-25'
+  related_code_areas:
+  - website/package.json
+  - dashboard-frontend/package-lock.json
+  artifact_files: []
+  tags:
+  - security
+  - platform
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES.md
   ticket_id: TCK-20261025-FRONTEND-MAJOR-DEPENDENCY-MOVES
   title: 'Decide each open frontend major-version Dependabot PR (#567, #568, #569,
