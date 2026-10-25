@@ -7908,6 +7908,19 @@
   - testing
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261025-HEALTH-SNAPSHOT-PYYAML-IMPORT-NAME.md
+  ticket_id: TCK-20261025-HEALTH-SNAPSHOT-PYYAML-IMPORT-NAME
+  title: The codebase-health snapshot maps pyyaml to its import name `yaml`, so it
+    no longer lists pyyaml as an unused core dependency
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-25'
+  related_code_areas:
+  - CORE_DEPENDENCY_IMPORT_OVERRIDES
+  - tests/codebase/test_codebase_health_baseline.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-README-DETERMINISM-AND-ENTITIES-FLAG-CLAIMS.md
   ticket_id: TCK-20261025-README-DETERMINISM-AND-ENTITIES-FLAG-CLAIMS
   title: README overclaims determinism ("xxhash generators", "100% replay fidelity",

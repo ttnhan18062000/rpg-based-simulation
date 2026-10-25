@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261025-HEALTH-SNAPSHOT-PYYAML-IMPORT-NAME
-phase: open
+phase: done
 date: 2026-10-25
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 The codebase-health snapshot maps pyyaml to its import name `yaml`, so it no longer lists pyyaml as an unused core dependency
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -69,9 +69,20 @@ codebase-planner checked every other entry in `[project].dependencies` on origin
 - None blocking. The import-name fact can be checked with `grep -rl '^import yaml\|^from yaml' src/`.
 
 ## Implementation Notes
+- Added `"pyyaml": "yaml"` to `CORE_DEPENDENCY_IMPORT_OVERRIDES` in `codebase/reports/codebase_health_baseline.py`.
 
 ## Test Summary
+- Added the pyyaml assert to `test_dependency_import_name_override` and a tmp-repo regression test
+  `test_pyyaml_dependency_found_by_its_import_name` (pyyaml declared + `import yaml` gives unused == []).
+  Both fail against the unpatched map (2 failed), pass after the fix.
+- `pytest tests/codebase/test_codebase_health_baseline.py`: 14 passed.
+- `make code-health`: OK, 0 new, 0 worse, 3621 unchanged.
+- `find_unused_core_dependencies` on the real repo at origin/main 0613ed19a: `['sse_starlette', 'pythonjsonlogger']`
+  (pyyaml no longer listed). These two stay until lead's python-json-logger/sse-starlette drop merges.
 
 ## Files Changed
+- `codebase/reports/codebase_health_baseline.py`
+- `tests/codebase/test_codebase_health_baseline.py`
 
 ## Completion Summary
+The health snapshot no longer lists pyyaml as an unused core dependency.
