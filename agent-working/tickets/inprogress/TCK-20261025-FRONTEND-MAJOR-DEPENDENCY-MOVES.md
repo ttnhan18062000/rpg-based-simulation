@@ -100,6 +100,7 @@ rewrite, or a failing build or test), park it with a reason. Don't push it throu
   - Dropped (errors): `react-hooks/preserve-manual-memoization` at `src/App.tsx:16:43` and `src/App.tsx:28:42`.
   - New (error): `react-hooks/refs` at `src/hooks/useCanvas.ts:40:3` (rule count 10 -> 11).
   - New (warning): `Unused eslint-disable directive` (for `react-hooks/set-state-in-effect`) at `src/visualAssets/MapHarness.tsx:61:5`.
+- #568 vitest ^4.1.12 -> ^5.0.5 (landed, own commit): vite 7 is inside vitest 5's peer range, @types/node is fine, audit 0. Cause of the one source change: `src/test/setup.ts` imported `@testing-library/jest-dom`, which only brings the jest typings; vitest 5 no longer picks them up for its `Assertion` type, so `tsc -b` failed with 24 TS2339 errors (`toBeInTheDocument`, `toHaveStyle`, `toHaveAttribute`) in four test files. The line now reads `import '@testing-library/jest-dom/vitest'`, jest-dom's documented vitest entry (registers the same matchers on vitest's `expect` and supplies the `declare module 'vitest'` typings). Assertions unchanged. After: `tsc -b` 0 errors, build ok, vitest 31 files / 369 tests, lint identical to the state after #569.
 
 ## Test Summary
 
