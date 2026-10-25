@@ -94,6 +94,7 @@ rewrite, or a failing build or test), park it with a reason. Don't push it throu
 - If lint already fails on main before any move, record that baseline and compare against it.
 
 ## Implementation Notes
+- #570 lucide-react ^0.563.0 -> ^1.61.0 (landed): `tsc -b` clean, so no alias was dropped. lucide 1.x ships `dist/esm/icons/*.mjs`, so `iconScene.test.ts:102` now reads `${name}.mjs` instead of `${name}.js` (a change to how the test finds the file, not to what it asserts; `LUCIDE_PATHS` untouched). Bundle 338.40 -> 341.76 kB. vitest 369/369, build ok, lint identical to the 21-problem baseline.
 
 ## Test Summary
 
