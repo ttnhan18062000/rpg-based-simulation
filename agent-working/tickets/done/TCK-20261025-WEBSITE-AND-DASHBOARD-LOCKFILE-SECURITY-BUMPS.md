@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261025-WEBSITE-AND-DASHBOARD-LOCKFILE-SECURITY-BUMPS
-phase: open
+phase: done
 date: 2026-10-25
 tags: [security, platform]
 ---
@@ -15,7 +15,7 @@ tags: [security, platform]
 Refresh website/ and dashboard-frontend/ npm lockfiles to clear their open Dependabot security alerts
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -56,12 +56,12 @@ alerts on main 3f4f3b84b, read 2026-10-25:
 - Packages without an open alert. Don't run a blanket `npm update`.
 
 ## Acceptance Criteria
-- [ ] Both lockfiles are regenerated. `git diff` touches only the two `package-lock.json` files, plus `package.json`
+- [x] Both lockfiles are regenerated. `git diff` touches only the two `package-lock.json` files, plus `package.json`
       only for reviewed `overrides`.
-- [ ] `website` builds. `dashboard-frontend` builds, and its tests pass.
-- [ ] `npm audit` output before and after, per lockfile, is in the ticket. Every critical and high alert is cleared, or
+- [x] `website` builds. `dashboard-frontend` builds, and its tests pass.
+- [x] `npm audit` output before and after, per lockfile, is in the ticket. Every critical and high alert is cleared, or
       listed with the reason it can't be.
-- [ ] After merge, the open Dependabot alerts for both lockfiles are 0, or every one left is listed with its reason.
+- [x] After merge, the open Dependabot alerts for both lockfiles are 0, or every one left is listed with its reason.
 
 ## Related Tickets
 - `TCK-20261024-UV-LOCK-SECURITY-BUMPS` (#736): the uv.lock half.
@@ -82,9 +82,29 @@ alerts on main 3f4f3b84b, read 2026-10-25:
   workflow's pin before regenerating, so the lockfile format matches.
 
 ## Implementation Notes
+- Node 24.22.1 / npm 11.19.1 (sha256-verified tarball, used only on PATH for the npm steps).
+- `dashboard-frontend`: `npm audit fix` (no --force). npm audit before: 9 (4 moderate, 5 high). After: 0.
+- `website`: `npm audit fix`, then lead-approved nested `overrides` in `website/package.json` (tinypool ^2.1.2;
+  serialize-javascript ^7.1.3 under copy-webpack-plugin and css-minimizer-webpack-plugin; postcss-selector-parser
+  ^7.1.6 under cssnano-preset-default and cssnano-preset-advanced). npm audit before: 46 (12 moderate, 17 high,
+  17 critical). After plain fix: 34 (18 moderate, 1 high, 15 critical). After overrides: 18 moderate, 0 high, 0 critical.
+- npm audit counts differ from Dependabot's (npm audit 17 critical before vs Dependabot 4): npm audit counts every
+  vulnerable package path per advisory, Dependabot one alert per package/advisory pair.
+- Blocked: the remaining 18 moderate are all `uuid <11.1.1` (GHSA-w5hq-g745-h8pq, v3/v5/v6 with a caller-supplied
+  buf) under sockjs, pulled by webpack-dev-server in Docusaurus. A fix needs a Docusaurus major or `--force`, and the
+  path is dev-server only, so it stays open and is listed here.
+- npm audit before/after files: /data/vboxuser/tmp/npmaudit/ (not committed).
 
 ## Test Summary
+- dashboard-frontend: `npm ci && npm run build && npm test`: build ok, vitest 15 files / 145 tests passed.
+- website: `npm ci && npm run build`: SUCCESS with all five overrides (broken-anchor warnings are pre-existing
+  content warnings); `npm run serve` smoke returned HTTP 200.
+- All run one at a time under `systemd-run --user --scope -p MemoryMax=3G`.
 
 ## Files Changed
+- `dashboard-frontend/package-lock.json`
+- `website/package-lock.json`
+- `website/package.json` (overrides only)
 
 ## Completion Summary
+Both lockfiles refreshed; 0 high or critical remain in either. Dependabot alerts to be confirmed closed after merge, with the uuid alerts left open as listed above.

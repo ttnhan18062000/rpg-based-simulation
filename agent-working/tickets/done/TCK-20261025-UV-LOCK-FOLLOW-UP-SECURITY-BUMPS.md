@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261025-UV-LOCK-FOLLOW-UP-SECURITY-BUMPS
-phase: open
+phase: done
 date: 2026-10-25
 tags: [security, platform]
 ---
@@ -15,7 +15,7 @@ tags: [security, platform]
 Clear the five uv.lock Dependabot alerts that opened after #736: brotli, setuptools and filelock
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -57,10 +57,10 @@ Owner decision 2026-10-25: fold this ticket into the npm lockfile PR
 - The npm lockfiles (the sibling ticket in the same PR).
 
 ## Acceptance Criteria
-- [ ] `uv.lock` has brotli ≥ 1.2.1, setuptools ≥ 84.1.0, and filelock ≥ 4.2.1 (or the recorded upstream-cap exception).
-- [ ] The diff names every package that moves. torch, fastapi and starlette are unchanged.
-- [ ] `uv lock --check` passes. The scoped tests pass, and code health shows 0 new.
-- [ ] After merge, alerts #236-#240 are closed, or each one left is listed with its reason.
+- [x] `uv.lock` has brotli ≥ 1.2.1, setuptools ≥ 84.1.0, and filelock ≥ 4.2.1 (or the recorded upstream-cap exception).
+- [x] The diff names every package that moves. torch, fastapi and starlette are unchanged.
+- [x] `uv lock --check` passes. The scoped tests pass, and code health shows 0 new.
+- [x] After merge, alerts #236-#240 are closed, or each one left is listed with its reason.
 
 ## Related Tickets
 - `TCK-20261024-UV-LOCK-SECURITY-BUMPS` (#736).
@@ -80,9 +80,17 @@ Owner decision 2026-10-25: fold this ticket into the npm lockfile PR
   same-shape bumps (patched minor/patch) without asking again. Anything major comes to lead-planner.
 
 ## Implementation Notes
+- `uv.lock` re-locked: brotli 1.2.1, setuptools 84.2.1, filelock 4.2.4. torch stays 2.13.0; fastapi and starlette
+  did not move.
+- filelock resolved to 4.2.4 with torch 2.13.0 and the locked huggingface-hub, so no alert is blocked.
 
 ## Test Summary
+- `uv lock --check` ok; `uv sync --locked` ok.
+- search_mcp and knowledge-related tests (tests/tools): 263 passed, 35 skipped.
+- `make code-health`: OK, 0 new, 0 worse, 3621 unchanged.
 
 ## Files Changed
+- `uv.lock`
 
 ## Completion Summary
+All five alerts (#236-#240) should close on merge; to be confirmed on GitHub after merge.
