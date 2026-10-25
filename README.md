@@ -1,6 +1,6 @@
 # Deterministic Concurrent RPG Engine
 
-A high-fidelity, deterministic 2D RPG simulation engine in Python with a React frontend. Parallelized AI agents propose intents; a single authoritative WorldLoop validates and executes them. Every run is byte-identical replay-faithful.
+A high-fidelity, deterministic 2D RPG simulation engine in Python with a React frontend. Parallelized AI agents propose intents; a single authoritative WorldLoop validates and executes them. The same seed replays to the same state hash on one machine under the Canonical signal contract; the [Deterministic Execution Contract](docs/engine/deterministic_execution.md) states the scope.
 
 ---
 
@@ -20,12 +20,12 @@ make cli        # Run a headless simulation (200 ticks)
 
 ### Server mode — visual client at `http://127.0.0.1:8000`
 ```bash
-python3 -m src serve --seed 42 --entities 50 --workers 4
+python3 -m src serve --seed 42 --workers 4
 ```
 
 ### Headless CLI mode
 ```bash
-python3 -m src cli --seed 42 --ticks 1000 --entities 50
+python3 -m src cli --seed 42 --ticks 1000
 OBS_MODE=DEBUG python3 -m src cli --ticks 100 --seed 42   # full observability
 ```
 
@@ -37,7 +37,7 @@ See [docs/guides/simulation.md](docs/guides/simulation.md) for world authoring, 
 
 | Principle | Summary |
 |---|---|
-| **Determinism** | All randomness from xxhash generators seeded per run — 100% replay fidelity |
+| **Determinism** | Stateless seeded RNG: `DeterministicRNG` seeds a fresh `random.Random` per draw from the run seed, domain, tick and entity. A SHA-256 canonical state hash is the proof. Guaranteed tier, Canonical signal contract and known gaps: [Deterministic Execution Contract](docs/engine/deterministic_execution.md) |
 | **Intent / Effect split** | Parallel AI workers propose intents; WorldLoop validates and executes |
 | **Aspect composition** | Entities are pure compositions (`IdentityAspect`, `BodyAspect`, `MindAspect`, `SocialAspect`) |
 | **Decoupled reads** | Thread-safe isolated read models let the API serve without locking the tick loop |

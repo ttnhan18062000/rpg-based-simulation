@@ -7881,6 +7881,21 @@
   - testing
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261025-README-DETERMINISM-AND-ENTITIES-FLAG-CLAIMS.md
+  ticket_id: TCK-20261025-README-DETERMINISM-AND-ENTITIES-FLAG-CLAIMS
+  title: README overclaims determinism ("xxhash generators", "100% replay fidelity",
+    "every run byte-identical") and its run examples pass an --entities flag that
+    serve rejects and cli ignores
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-25'
+  related_code_areas:
+  - README.md; src/platform/rng.py; src/cli/entry.py
+  artifact_files: []
+  tags:
+  - documentation
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-RPG-UBUNTU-SEATS.md
   ticket_id: TCK-20261025-RPG-UBUNTU-SEATS
   title: Host ubuntu gets three rpg twin seats (`rpg-designer-ubuntu`, `rpg-planner-ubuntu`,
