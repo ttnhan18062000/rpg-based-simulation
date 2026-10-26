@@ -4604,5 +4604,5 @@
   proof_type: regression
   test_path: tests/unit/engine/test_acting_hostile_is_an_act_not_a_state.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.138.
-  support_boundary: 'Paired measurement pending (base 341f700d0, seeds 42-46). An attack task stays current until the hostile next decides (no reach test); last_hit_tick is excluded from the v2 proof digest until perf F1 (the final hash cannot see it). Step A (retreat escalation) is measured on this tip.'
+  support_boundary: 'Measured (base 341f700d0, tip 265162719, seeds 42-46, 3 worlds, 5000 ticks, self-check spread 0): people deaths no drift on all three worlds; crowded_frontier merchant extinction STOP (merchant 12, seeds 42 and 46), accepted as a downstream consequence of the row-88 change and recorded as is (owner ruling, #715 comment 6411018314); attribution to the scorers.py SURV-07 gate, first divergence t766 (seed 42) and t749 (seed 46). See divergence 2.138. An attack task stays current until the hostile next decides (no reach test); last_hit_tick is excluded from the v2 proof digest until perf F1 (the final hash cannot see it). Step A (retreat escalation) is measured on this tip.'
 
