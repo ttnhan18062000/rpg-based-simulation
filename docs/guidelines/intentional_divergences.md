@@ -50,7 +50,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Social/Clan** | Clan Reputation Folded Into P0-Certified `appraise_contract()` Stranger-Judgment Formula | **Bounded** | RATIFIED |
 | **Combat / Legality** | Mid-Tick Faction Mutation Can Flip a P0-Certified Friendly-Fire Legality Outcome by the Next Tick | **Bounded** | RATIFIED |
 | **AI / Motivation-Adventure Scoring** | Doctrine/Values Motivation Chain Confirmed Dead; Culture Drift Wired Into `personality_bias` Instead | **Bounded** | RATIFIED |
-| **CLI / Entry** | `cli --entities` Flag Removed: A Silently Ignored Argument Becomes A Rejected One (§2.139) | **Hardened** | RATIFIED |
+| **CLI / Entry** | `cli --entities` Flag Removed: A Silently Ignored Argument Becomes A Rejected One (§2.140) | **Hardened** | RATIFIED |
 
 ---
 
@@ -3601,7 +3601,7 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Rationale**: **Enforced** (SURV-07 and AGENCY-07 enforced as acts: owner decision memo row 88, designer ruling confirmed by the user on #715, 2026-10-23).
 - **Verification**: `tests/unit/engine/test_acting_hostile_is_an_act_not_a_state.py`, `tests/unit/ai/test_need_scorers.py`, `tests/unit/ai/test_starvation_is_a_present_threat_weighed_in_goal_selection.py`, `tests/unit/tactical/test_held_panic_falls_through.py`, `tests/integration/observability/test_starving_wounded_merchant_eats_through_the_real_kernel.py`.
 
-### 2.139 `cli --entities` Is Rejected: A Silently Ignored Argument Becomes A Loud Error (#617; TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ)
+### 2.140 `cli --entities` Is Rejected: A Silently Ignored Argument Becomes A Loud Error (#617; TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ)
 - **Subsystem**: CLI / entry (`src/cli/entry.py`)
 - **Old Behavior**: `python -m src cli --entities N` was accepted and its value was never read: the sandbox world sets its own population, so the flag changed nothing while the docs presented it as an entity-count override.
 - **New Behavior**: `cli` has no `--entities` argument; passing it fails as an unrecognized argument (argparse exit code 2). `serve` and `inspect` never had the flag. The separate `--entities` flags of `tools/perf/*` and `tools/calibrate_simq.py` are those tools' own and are unchanged.

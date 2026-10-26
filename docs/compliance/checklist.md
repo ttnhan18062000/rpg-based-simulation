@@ -1384,7 +1384,7 @@ Relevant original source/test evidence:
 
 - [x] SOC-103: `python -m src` defaults to server mode when no subcommand is provided.
 - [x] SOC-104: `python -m src serve` accepts the original `--host`, `--port`, `--seed`, `--workers`, `--log-level` arguments. (Corrected 2026-10-26: `serve` never had `--entities`.)
-- [x] SOC-105: `python -m src cli` accepts the original `--ticks`, `--seed`, `--workers`, `--grid-width`, `--grid-height`, `--replay`, `--log-level` arguments. (`--entities` was parsed, never read, and is now rejected: intentional_divergences §2.139, #617.)
+- [x] SOC-105: `python -m src cli` accepts the original `--ticks`, `--seed`, `--workers`, `--grid-width`, `--grid-height`, `--replay`, `--log-level` arguments. (`--entities` was parsed, never read, and is now rejected: intentional_divergences §2.140, #617.)
 - [x] SOC-106: `python -m src inspect` accepts the original `--id`, `--seed`, `--ticks`, `--workers`, `--log-level` arguments. (Corrected 2026-10-26: `inspect` never had `--entities`.)
 - [x] SOC-107: CLI argument defaults remain compatible with legacy expectations.
 - [x] SOC-108: Invalid CLI arguments fail in a controlled, parser-driven way.

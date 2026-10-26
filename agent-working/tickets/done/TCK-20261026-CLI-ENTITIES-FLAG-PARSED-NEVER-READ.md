@@ -77,7 +77,7 @@ Confirmed nothing in `src/` reads `args.entities` (the only other `entities` hit
 Scope additions, each answered by rpg-planner-ubuntu (2026-10-26):
 - New test `tests/cli/test_entry_parity.py::test_cli_rejects_the_entities_flag` (exit code 2). The two `--entities 5` arguments were removed from the existing tests with no assertion changed.
 - Parity ledger (`docs/parity_ledger/social_narrative.yaml`): SOC-105 text drops `--entities`, status `legacy_verified` to `divergent`, with `v2_evidence`, `test_path` and `divergence_note`, written through `tools/parity_ledger_writer.py` (the diff is the one entry). SOC-104 (serve) and SOC-106 (inspect) text corrected so it no longer claims an `--entities` those parsers never had, as a documentation correction with no behaviour change; status unchanged. Those two were hand-edited, not written through the writer, because both are P0 `legacy_verified` with a null `test_path` and the writer refuses to write such an entry (its P0 rule requires a `test_path`); the edit is text only. Neither entry's `test_path` asserts `--entities` (both are null). `docs/compliance/checklist.md` SOC-104/105/106 lines corrected to match.
-- `docs/guidelines/intentional_divergences.md` §2.139 and its summary-table row, class Hardened (the file defines no class list; the class follows the §2.12 precedent).
+- `docs/guidelines/intentional_divergences.md` §2.140 and its summary-table row, class Hardened (the file defines no class list; the class follows the §2.12 precedent).
 - **A perf-owned file, edited with perf-planner's OK (2026-10-26): `tools/perf/turbo_run_and_audit.ps1` line 17**, which ran `-m src cli --ticks $Ticks --entities 20 --workers 4` and would now fail. Only `--entities 20` was dropped; `--workers` stays (cli still parses it, entry.py). The flag never did anything, so the run is unchanged. Retiring the script is perf's separate decision.
 Docs: `docs/guides/simulation.md` flag-table row removed; `docs/guides/observability.md` keeps the advice ("reduce the world's population (the world spec sets it; `cli` has no flag for it)"). `make knowledge-index-update` is run once for the batch.
 Other `--entities` flags (tools/perf/*, `tools/calibrate_simq.py`, and the tests that call them) belong to those tools and are untouched.
@@ -89,7 +89,7 @@ Other `--entities` flags (tools/perf/*, `tools/calibrate_simq.py`, and the tests
 - tests/cli/test_entry_parity.py
 - docs/guides/simulation.md, docs/guides/observability.md, docs/compliance/checklist.md
 - docs/parity_ledger/social_narrative.yaml (SOC-104, SOC-105, SOC-106)
-- docs/guidelines/intentional_divergences.md (section 2.139)
+- docs/guidelines/intentional_divergences.md (section 2.140)
 - tools/perf/turbo_run_and_audit.ps1 (perf-owned, edited with perf-planner's OK, 2026-10-26)
 
 ## Completion Summary
