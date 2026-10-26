@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE
-phase: open
+phase: done
 date: 2026-10-09
 tags: [performance, documentation, certification]
 ---
@@ -15,7 +15,7 @@ tags: [performance, documentation, certification]
 PERF-M2-T06: P1 contract publication and gate-conformance map
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -90,9 +90,14 @@ None.
 - About 30 test files call the helpers today (T03 has landed, so the map can be written now). Re-count the call sites at implementation time (§5.2 says 56).
 
 ## Implementation Notes
+- Final commit (rpg lift granted, #593 issuecomment-6406593752; scope docs/engine/performance_contract.md section 3.3 and section 5 only): section 5 threshold bullet now final, report-only `max(5.0 ms, base x 1.40)` with the CI A/A evidence and its limit; section 3.3 Tripwire sentence says the nightly lane compares against promoted `*.v0001.json` records. Text taken verbatim from staging contract_edit_draft.md.
+- The P1 text still needs the owner's approval in the PR; rpg-planner reviews the section 3.3/5 diff.
 
 ## Test Summary
+- `pytest tests/perf tests/unit/perf -m "not slow"`: 420 passed, 48 deselected (13m44s). `pytest tests/docs/test_gate_conformance_map.py`: 12 passed.
 
 ## Files Changed
+See the PR diff: docs/engine/performance_contract.md, docs/performance/gate_conformance.yaml, benchmark_identity_schema.md, src/perf/benchmark_record.py, tools/perf/{gate_conformance,known_debt}.py, tests/docs/test_gate_conformance_map.py, tests/docs/test_certification_contract_names.py, tests/unit/perf/test_outcome_check.py.
 
 ## Completion Summary
+All scope items landed. Open human gate: owner approval of the P1 contract text in the PR. Not run: a fresh CI run on the final commit (perf-planner pushes).
