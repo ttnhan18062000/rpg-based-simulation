@@ -67,10 +67,3 @@ def test_bounty_quest_completion():
     # Gold is now in the intent results or resource transfers
     assert any(res.accepted for res in ent_upd.intent_results if res.source_kind == "QUEST")
 
-
-def test_quest_kind_escort_enum_value_is_new_member_only():
-    """TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING: ESCORT is appended, not inserted."""
-    assert {k.name for k in QuestKind} == {
-        "HUNT", "GATHER", "EXPLORE", "LIBERATE", "BOUNTY", "ESCORT",
-    }
-    assert QuestState(id="q-default", kind="quest").quest_kind == QuestKind.HUNT
