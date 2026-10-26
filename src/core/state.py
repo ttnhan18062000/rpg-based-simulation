@@ -430,20 +430,18 @@ class CombatComponent:
     scars: List[ScarState] = field(default_factory=list)
     status_effects: List[StatusEffectState] = field(default_factory=list)
     latest_result: Optional["IntentResult"] = None
-    # Base terms of the combat-stat derivation (Bible 01 §2). Written once at spawn by
-    # V2EntityBuilder.build() as the RESIDUAL `spawned stat - attribute contribution` (see
-    # src.core.derived_stats.residual_base_terms) and never mutated afterwards. They are NOT declared
-    # stats and may be negative. Defaults equal the derivation's historical generic baseline, so an
-    # entity constructed without the builder behaves as before.
+    # Base terms of the combat-stat derivation (Bible 01 §2). Written once at spawn by V2EntityBuilder.build() as the RESIDUAL `spawned stat - attribute
+    # contribution` (see src.core.derived_stats.residual_base_terms), never mutated afterwards. NOT declared stats; may be negative. Defaults equal the
+    # derivation's historical generic baseline, so an entity constructed without the builder behaves as before.
     base_hp: int = 100
     base_atk: int = 10
     base_def: int = 5
     base_evasion: float = 0.05
-    # Accumulated permanent max-HP grants (near-death hardening). Kept apart from base_hp so the
-    # grant stays traceable (CAUSE-05 / HP-02); the derivation adds it as its own term.
+    # Accumulated permanent max-HP grants (near-death hardening), kept apart from base_hp so the grant stays traceable (CAUSE-05 / HP-02).
     permanent_max_hp_bonus: int = 0
     # The body that last took hp from this one by a hit, written by CombatPatch; a hazard or starvation death still names who last hit it.
     last_attacker_id: Optional[int] = None
+    last_hit_tick: Optional[int] = None  # the tick of that same hit (CombatPatch, with last_attacker_id): the act test's window; None until first hit
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -456,6 +454,7 @@ class CombatComponent:
             "base_evasion": self.base_evasion,
             "permanent_max_hp_bonus": self.permanent_max_hp_bonus,
             "last_attacker_id": self.last_attacker_id,
+            "last_hit_tick": self.last_hit_tick,
             "hp": self.hp,
             "max_hp": self.max_hp,
             "atk": self.atk,

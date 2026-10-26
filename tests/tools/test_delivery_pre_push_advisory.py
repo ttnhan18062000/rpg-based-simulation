@@ -301,3 +301,55 @@ def test_settings_json_hooks_wiring_count_bumped():
     text = Path("tests/tools/test_settings_json_hooks_wiring.py").read_text(encoding="utf-8")
     assert 'len(settings["hooks"]["PreToolUse"]) == 8' in text  # 8 since the M5B role guard was appended
     assert 'len(settings["hooks"]["PreToolUse"]) == 6' not in text
+
+
+# ---------------------------------------------------------------------------
+# Check E (TCK-20261024-PRE-PUSH-WARNS-ON-A-STALE-DOCS-REGISTRY) — advisory stale-registry line
+# ---------------------------------------------------------------------------
+
+def _registry_runner(changed, check_rc=2, check_raises=False):
+    calls = []
+
+    def run(cmd, timeout=30):
+        calls.append(cmd)
+        if "generate_registry.py" in " ".join(map(str, cmd)):
+            if check_raises:
+                raise OSError("boom")
+            return hook.CommandResult(check_rc, "", "")
+        return ok("\n".join(changed))
+
+    run.calls = calls
+    return run
+
+
+def test_check_e_fires_on_a_stale_registry_with_a_docs_change():
+    runner = _registry_runner(["docs/guides/new_guide.md", "tests/x.py"])
+    findings = hook.check_registry_fresh(runner)
+    assert len(findings) == 1 and "make docs-registry" in findings[0] and "git add docs/REGISTRY.yaml" in findings[0]
+
+
+def test_check_e_fires_for_a_ticket_change():
+    findings = hook.check_registry_fresh(_registry_runner([f"{TICKETS.as_posix()}/inprogress/TCK-20260101-X.md"]))
+    assert len(findings) == 1
+
+
+def test_check_e_is_silent_and_skips_the_check_when_no_registry_source_changed():
+    runner = _registry_runner(["tools/x.py", "docs/data.json", "README.md"])
+    assert hook.check_registry_fresh(runner) == []
+    assert not any("generate_registry.py" in " ".join(map(str, c)) for c in runner.calls)
+
+
+def test_check_e_is_silent_when_the_registry_is_current():
+    assert hook.check_registry_fresh(_registry_runner(["docs/guides/a.md"], check_rc=0)) == []
+
+
+@pytest.mark.parametrize("rc", [1, 3])
+def test_check_e_is_silent_when_the_check_command_errors_or_times_out(rc):
+    # default_run_command reports a timeout as returncode 1
+    assert hook.check_registry_fresh(_registry_runner(["docs/guides/a.md"], check_rc=rc)) == []
+
+
+def test_check_e_is_silent_when_the_command_raises_or_the_diff_fails():
+    assert hook.check_registry_fresh(_registry_runner(["docs/guides/a.md"], check_raises=True)) == []
+    failing = FakeRunner([(lambda c: True, hook.CommandResult(128, "", "no origin/main"))])
+    assert hook.check_registry_fresh(failing) == []

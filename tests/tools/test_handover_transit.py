@@ -537,3 +537,13 @@ def test_default_handover_dir_and_dry_run_export_resolve_from_the_main_checkout(
     assert Path(out.stdout.strip()) == h.resolve()
     files = ht._collect(None, True, False, h, tmp_path / "m", None)
     assert files
+
+
+def test_blob_id_equals_git_hash_object(tmp_path):
+    """_blob_id is git's own blob object id (SHA-1 by design, not a security use)."""
+    import subprocess
+
+    sample = tmp_path / "sample.md"
+    sample.write_bytes(b"first line\nsecond line with unicode \xc3\xa9\n\x00binary tail")
+    expected = subprocess.run(["git", "hash-object", str(sample)], capture_output=True, text=True, check=True).stdout.strip()
+    assert ht._blob_id(sample) == expected
