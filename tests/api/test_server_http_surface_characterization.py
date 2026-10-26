@@ -54,6 +54,12 @@ def _clean_admission_state() -> Iterator[None]:
     admission_control.reset_admission_mode()
 
 
+@pytest.fixture(autouse=True)
+def _no_ambient_cors_origins(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A developer's or CI's BACKEND_CORS_ORIGINS must not change what the default app answers."""
+    monkeypatch.delenv("BACKEND_CORS_ORIGINS", raising=False)
+
+
 def _profile(**overrides: Any) -> RuntimeProfile:
     base: dict[str, Any] = dict(
         name="surface-characterization", hardware_class=HardwareClass.CLASS_B,

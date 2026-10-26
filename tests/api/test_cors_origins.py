@@ -9,6 +9,12 @@ from src.api.server import create_v2_app
 from src.config.profiles import PROD_SMALL
 
 
+@pytest.fixture(autouse=True)
+def _no_ambient_cors_origins(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A developer's or CI's BACKEND_CORS_ORIGINS must not change what the default app answers."""
+    monkeypatch.delenv("BACKEND_CORS_ORIGINS", raising=False)
+
+
 def test_default_is_the_local_dev_origins():
     assert cors_origins_from_env({}) == list(DEFAULT_CORS_ORIGINS)
     assert "*" not in DEFAULT_CORS_ORIGINS
