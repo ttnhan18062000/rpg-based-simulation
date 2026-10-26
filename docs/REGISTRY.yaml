@@ -9657,17 +9657,6 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261019-SEMGREP-BASELINE-FINDINGS-IN-SRC-TRIAGE.md
-  ticket_id: TCK-20261019-SEMGREP-BASELINE-FINDINGS-IN-SRC-TRIAGE
-  title: 'Triage the baseline Semgrep findings in src/** from the new security-scan
-    workflow (#665): fix the real ones, mark the false positives in code'
-  tier: hotfix
-  ticket_type: chore
-  date: '2026-10-19'
-  related_code_areas: []
-  artifact_files: []
-  tags: []
-- type: ticket
   path: agent-working/tickets/todos/TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING.md
   ticket_id: TCK-20261019-SOAK-WATCHDOG-BUDGET-OVERRUNS-NEED-A-QUIET-HOST-READING
   title: 'The #646 soak logged 30 tick budget overruns; read them again on a quiet
