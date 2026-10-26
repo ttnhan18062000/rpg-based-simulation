@@ -56,16 +56,19 @@ class RelationLookup:
         self._species_relation: Dict[tuple, object] = {}
 
     def _current_signature(self) -> tuple:
+        # The tables themselves (not ``id()``) so a reloaded table that reuses a freed id cannot match.
         r = self._repo
-        return (
-            id(r.perspectives), len(r.perspectives),
-            id(r.faction_relationships), len(r.faction_relationships),
-            id(r.species_relations), len(r.species_relations),
-        )
+        return (r.perspectives, r.faction_relationships, r.species_relations)
+
+    def _signature_matches(self, other: tuple) -> bool:
+        mine = self._signature
+        if mine is None:
+            return False
+        return all(a is b for a, b in zip(mine[0], other)) and mine[1] == tuple(len(t) for t in other)
 
     def _ensure(self) -> None:
-        sig = self._current_signature()
-        if sig == self._signature:
+        tables = self._current_signature()
+        if self._signature_matches(tables):
             return
         r = self._repo
         by_chosen: Dict[str, object] = {}
@@ -84,7 +87,7 @@ class RelationLookup:
         self._has_perspective_key = keys
         self._relationship = rel
         self._species_relation = spec
-        self._signature = sig
+        self._signature = (tables, tuple(len(t) for t in tables))
 
     def perspective_for(self, perspective_id: str):
         """``repo.get_perspective(id)``, else the first perspective whose ``chosen_faction`` is ``id``."""
