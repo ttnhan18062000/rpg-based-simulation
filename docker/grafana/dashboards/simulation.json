@@ -455,11 +455,45 @@
       }
     },
     {
+      "type": "timeseries",
+      "title": "ai_worker Consumer Lag (undelivered entries)",
+      "gridPos": {
+        "x": 0,
+        "y": 57,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "max by (stream, group) (sim_stream_consumer_lag)",
+          "legendFormat": "lag {{stream}} / {{group}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "ai_worker Pending (delivered, not acknowledged)",
+      "gridPos": {
+        "x": 12,
+        "y": 57,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "max by (stream, group) (sim_stream_pending_messages)",
+          "legendFormat": "pending {{stream}} / {{group}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
       "type": "logs",
       "title": "Centralized Simulation Logs (Loki)",
       "gridPos": {
         "x": 0,
-        "y": 57,
+        "y": 65,
         "w": 24,
         "h": 10
       },

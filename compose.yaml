@@ -99,7 +99,14 @@ services:
         condition: service_healthy
     restart: unless-stopped
     mem_limit: 512m
-    # No healthcheck: the worker exposes no HTTP port (a metrics port is tracked by rpg's TCK-20261014-AI-WORKER-EXPOSES-STREAM-CONSUMER-LAG-AND-PENDING-METRICS).
+    # Healthy while the worker's own metrics server answers and reports sim_stream_consumer_up 1 (Redis answered the consumer-group query on this
+    # scrape). Nothing waits on this healthcheck; it is the readiness signal for `docker compose ps` and the alert runbook (TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT).
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if b'sim_stream_consumer_up 1.0' in urllib.request.urlopen('http://127.0.0.1:9108/metrics', timeout=3).read() else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     # Use deploy block to easily scale workers: docker compose up --scale ai_worker=3
     deploy:
       replicas: 1

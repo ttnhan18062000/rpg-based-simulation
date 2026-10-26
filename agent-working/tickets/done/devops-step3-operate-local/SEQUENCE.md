@@ -10,7 +10,7 @@ Written by hand. One PR for the folder (child 6 may stay behind), from a `platfo
 3. TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK  (needs 2 for the threshold, and step 2's dashboard PromQL); also needs S4 (devops-s4-base-alerts-local) for ntfy, the contact point and the policy (2026-10-18)
 4. TCK-20261018-REDIS-DOWN-CAUSE-ALERT  (needs 3; signal A, redis_exporter, decided by lead review 2026-10-18)
 5. TCK-20261018-REDIS-STOP-DRILL-UNDER-LOAD  (needs 1-4; heavy, run alone)
-6. TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT  (BLOCKED on rpg's ai_worker /metrics reaching main; may land later)
+6. TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT  (done 2026-10-26; rpg's metrics reached main in #645)
 
 Epic: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL (closes when 1-5 are done).
 
@@ -27,6 +27,6 @@ Heavy runs (2, the fire tests in 3 and 4, 5) are asked of lead-planner first, on
 - 1, 1b and 2 are done (#627). The batch `platform-implementer-local-slo-alerts` (one PR) runs 3, 4 and 5, together with
   step-2's TCK-20261018-SCRAPE-BACKEND-METRICS-PORT first. Staging artifacts for all four were written at dispatch.
 - 3 (SLO alert) needs rpg's 0.3 bucket on main (owner decision 2026-10-19; requested on #622) before its stack run.
-- 6 (ai_worker lag) stays blocked.
+- 6 (ai_worker lag): unblocked by #645, done 2026-10-26 (batch `platform-implementer-local-ai-worker-lag`).
 - Host slots, one at a time via lead-planner: (a) redis_exporter pull; (b) one full-profile heavy run (9109 checks, age
   soak, server-side SLO numbers, SLO fire test), after the 0.3 bucket lands; (c) the Redis-stop drill under load.
