@@ -21,6 +21,7 @@ for _p in (str(REAL_ROOT), str(REAL_ROOT / "tools" / "agent-monitoring")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+from tools import graphify_shim  # noqa: E402
 from tools.sessions import manifest_diff as md  # noqa: E402
 from tools.sessions import session_start_hook as hook  # noqa: E402
 from tools.sessions import state as st  # noqa: E402
@@ -97,7 +98,7 @@ def world(tmp_path, monkeypatch):
     (below 10 GB it embeds "only 6.8 GB free", which differs between two calls), so the probe reports plenty."""
     from tools.sessions import disk_headroom as dh
     monkeypatch.setattr(dh, "free_bytes", lambda _root: _PLENTY_FREE)
-    from tools import graphify_shim  # the host's own graphify must not reach the context
+    # the host's own graphify must not reach the context
     monkeypatch.setattr(graphify_shim, "advisory_line", lambda _root, **_kw: "")
     root = tmp_path / "root"
     shutil.copytree(REAL_ROOT / "registries", root / "registries",
@@ -142,7 +143,6 @@ def test_the_disk_line_appears_when_the_probe_reports_low_space(world, monkeypat
 
 
 def test_the_graphify_line_appears_only_when_the_advisory_says_so_and_a_failure_is_silent(world, monkeypatch):
-    from tools import graphify_shim
     monkeypatch.setattr(graphify_shim, "advisory_line", lambda _root, **_kw: "graphify-version: stray")
     assert "graphify-version: stray" in _ctx(world, _payload(world[1]))
 

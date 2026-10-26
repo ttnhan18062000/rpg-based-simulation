@@ -284,7 +284,7 @@ def _graphify_line(root: Path) -> str:
     """One line when the `graphify` on PATH is not the pinned version; "" otherwise or on any error (fails open, ~0.2 s;
     TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION)."""
     try:
-        from tools import graphify_shim
+        from tools import graphify_shim  # noqa: PLC0415 - fail-open: a broken shim module must not cost the card
 
         return graphify_shim.advisory_line(root)
     except Exception:

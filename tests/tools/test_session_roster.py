@@ -16,6 +16,7 @@ import yaml
 
 from tools.agent_working_paths import TICKETS
 from tools.sessions import roster as roster_mod
+from tools.sessions import validate as validate_mod
 from tools.sessions.roster import RosterError, load_authority, load_roster
 from tools.sessions.validate import complexity_report, main, validate
 
@@ -354,8 +355,6 @@ def test_an_unknown_launch_mode_is_a_bad_field(fixture_root):
 def test_validation_expands_each_glob_once_not_once_per_shared_file(monkeypatch):
     """TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE: a split path was re-globbed for every shared file, ~230 s over
     18k tracked files. Calls to `_files` are bounded by the owns patterns plus the distinct split paths."""
-    from tools.sessions import validate as validate_mod
-
     roster = load_roster()
     calls = []
     real = validate_mod._files
