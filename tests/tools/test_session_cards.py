@@ -157,3 +157,46 @@ def test_search_mcp_files_route_to_agent_working_and_every_card_stays_in_budget(
     for role in ROSTER.roles:
         card = compose_card(role.role, ROSTER, AUTHORITY, ROOT)
         assert estimate_tokens(card) <= CARD_BUDGET_TOKENS, f"{role.role}: {estimate_tokens(card)} tokens"
+
+
+# --- scattered single files in a directory the role does not own as a whole -> `dir/ (N files)` ---
+
+from tools.sessions.card import COUNT_NOTE, _count_scattered_files, _role_line  # noqa: E402
+
+
+def test_two_scattered_files_in_an_unowned_dir_become_a_count():
+    out = _count_scattered_files(["a/**", "docs/observability/x_policy.md", "b/**", "docs/observability/y_contract.md"])
+    assert out == ["a/**", "docs/observability/ (2 files)", "b/**"]
+
+
+def test_a_single_file_in_its_dir_is_unchanged():
+    globs = ["a/**", ".github/workflows/pr-body-lint.yml", "docs/guides/cross_session_messages.md"]
+    assert _count_scattered_files(globs) == globs
+
+
+def test_files_in_an_owned_dir_are_unchanged():
+    globs = ["docs/observability/**", "docs/observability/a_policy_file.md", "docs/observability/b_policy_file.md"]
+    assert _count_scattered_files(globs) == globs
+    assert _count_scattered_files(["docs/**", "docs/guides/aaaa_long_name.md", "docs/guides/bbbb_long_name.md"]) == [
+        "docs/**", "docs/guides/aaaa_long_name.md", "docs/guides/bbbb_long_name.md"]
+
+
+def test_a_brace_form_that_is_already_shorter_is_unchanged():
+    globs = ["x/a.b", "x/c.d"]  # `x/{a.b,c.d}` (11) is shorter than `x/ (2 files)` (12)
+    assert _count_scattered_files(globs) == globs
+
+
+def test_wildcards_are_not_counted_as_files():
+    globs = ["tools/search_*.py", "tools/*_search.py"]
+    assert _count_scattered_files(globs) == globs
+
+
+def test_the_note_appears_only_when_it_pays_for_itself():
+    counted = [r for r in ROSTER.roles if "(N files" not in compose_card(r.role, ROSTER, AUTHORITY, ROOT)
+               and COUNT_NOTE in compose_card(r.role, ROSTER, AUTHORITY, ROOT)]
+    assert counted == []
+    implementer = compose_card("agent-working-implementer", ROSTER, AUTHORITY, ROOT)
+    assert "docs/observability/ (2 files)" in implementer and COUNT_NOTE in implementer
+    assert _role_line(ROSTER.role("agent-working-implementer"), ROSTER).count(COUNT_NOTE) == 1
+    # a role with nothing to count carries no note
+    assert COUNT_NOTE not in compose_card("lead-planner", ROSTER, AUTHORITY, ROOT)
