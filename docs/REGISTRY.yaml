@@ -8028,6 +8028,23 @@
   - security
   - platform
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261025-PERF-RECORD-IDENTITY-PINS-INSTALLED-RUNTIME-DEPENDENCIES.md
+  ticket_id: TCK-20261025-PERF-RECORD-IDENTITY-PINS-INSTALLED-RUNTIME-DEPENDENCIES
+  title: A benchmark record's identity pins the installed runtime dependency set;
+    then re-record idle_100_local and movement_100_local as v0002
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-25'
+  related_code_areas:
+  - Runtime
+  - the Runtime capture path in src/perf/
+  - tests/perf/baselines/
+  - tests/unit/perf/
+  artifact_files: []
+  tags:
+  - performance
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT.md
   ticket_id: TCK-20261024-ARCHITECTURE-CONFORMANCE-LANES-ALIGNMENT
   title: 'Conformance-suite design: replace the draft lane table with testing-planner''s
