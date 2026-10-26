@@ -93,7 +93,7 @@ on the interactions table without reading `:17` first comes away believing a dor
 - [x] The Scope 3 sweep result is recorded either way — "no third passage" is a valid, wanted answer.
 - [x] No claim in the edited passages is unverifiable against `src/` at a named commit; cite the
       commit.
-- [x] `make knowledge-index-update` run, since `docs/` changed.
+- [x] `make knowledge-index-update`: satisfied after merge. The index is per-worktree and not committed, so lead-planner runs it in the main checkout after every merge (lead-planner, 2026-10-27); it was not run in this worktree.
 
 ## Related Tickets
 - `TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN` — the registry work
@@ -133,7 +133,7 @@ on the interactions table without reading `:17` first comes away believing a dor
 **Scope 3 sweep result: there were more than the two found.** Edited: `:50` (World-side prerequisite), `:194` (Domain Interactions row), plus four more passages with the same defect: `:36` (the domain "consumes the post-gate signal list"), `:128` ("runs before the Perception Update stage in the engine loop"), `:141` ("The Perception Update stage never sees signals that the gate blocked") and `:149` (the What It Reads row "post-gate `Sequence[WorldSignal]`"). The header lines `:11`-`:17` were already correct, and the `:188` catalog-immutability row and the test and extension sections make no claim about the pipeline.
 
 ## Test Summary
-Docs only; no code or test touched. `make knowledge-index-update` is run once for the batch (several tickets change `docs/`).
+Docs only; no code or test touched. `make knowledge-index-update` is not run in this worktree (the index is per-worktree and uncommitted); lead-planner runs it in the main checkout after merge.
 
 ## Files Changed
 - docs/simulation/domains/perception_contract.md
