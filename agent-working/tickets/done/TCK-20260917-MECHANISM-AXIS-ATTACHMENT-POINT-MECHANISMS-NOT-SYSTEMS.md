@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS
-phase: open
+phase: done
 date: 2026-09-18
 tags: [architecture, documentation, schema]
 ---
@@ -16,7 +16,7 @@ Record: axes attach to mechanisms, not systems — resolved independent of the `
 fate
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -97,7 +97,7 @@ of whether the `system` tier ever existed.
   cross-linked once updated.
 
 ## Related Stored Artifacts
-None yet.
+- `agent-working/stored_artifacts/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS/`
 
 ## Related Code Areas
 None — documentation/recording ticket, no registry or code changes.
@@ -108,17 +108,19 @@ one is introduced. If a future axis proposal finds a mechanism-level attachment 
 that would be new evidence to record here or in a follow-on ticket, not an open question yet.
 
 ## Implementation Notes
-Not yet started.
+**Finding: axes attach to mechanisms, not systems.** Evidence, re-checked against `registries/mechanisms.yaml` at main 3533fde71 (full trace in the stored investigation.md):
+- The temporal axis proposal (`docs/brainstorm/codex/2026-08-28-core-rpg-temporal-axis-proposal.md`) has concerns (succession, aging and lifecycle horizons, demographic cohort cycling, institutional and commitment continuity) that map to four mechanisms. Their declared `systems`: `succession` and `aging_death` = progression, `demographic_cohort_cycle` = world, `commitment_betrayal` = social. One axis, three systems.
+- Attaching that axis to systems would need three entries for one axis (defeating "fewer declarations") or an arbitrary pick of one; the level at which the concerns differ is the mechanism. This holds with or without a `system` tier, which is why it stands after `TCK-20260917-EPIC-MECHANISM-TIER-MODEL` closed do-not-build.
+- An axis declaration is a per-mechanism tag list, overlapping, with no mechanical derivation (the same "no mechanical backing" caveat as `TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM` section 2, now anchored to mechanisms).
+**Two corrections to the earlier wording, found by re-checking rather than copying:** (1) the feasibility investigation says the four mechanisms are "spread across the progression, social, and world candidate systems derived above", but none of the four is in any of its four derived sets (roots: combat_resolution; breakthrough_bonuses and xp_leveling; crafting and equipment_scoring; reputation, commitment_pressure_consequences and goal_hierarchy), and no `world` set was derived. The declared `systems:` values above are the evidence that holds. (2) This ticket's Scope 1 names the groupings "combat-adjacent, progression-adjacent, world/economy-adjacent"; the evidence is progression, social and world.
+Durable home: this section, the stored artifacts, and the status block of `docs/plans/mechanism_tier_model_initiative.md` (the sentence that already answered the question now names the evidence and points here). No schema, field or registry change; `registries/mechanisms.yaml` untouched.
 
 ## Test Summary
-Not applicable — documentation/recording ticket, no code under test.
+Not applicable — documentation/recording ticket, no code under test. The registry query behind the evidence is recorded in the stored investigation.md; `git diff` shows no change under `registries/` or `src/`.
 
 ## Files Changed
-None yet (this ticket file only, plus a cross-link edit to
-`docs/plans/mechanism_tier_model_initiative.md` when actioned).
+- docs/plans/mechanism_tier_model_initiative.md (status block)
+- agent-working/stored_artifacts/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS/{plan,investigation,test_plan}.md
 
 ## Completion Summary
-Open. Filed 2026-09-18 alongside the closure of `TCK-20260917-EPIC-MECHANISM-TIER-MODEL`, per the
-same principle applied earlier this epic to `TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS`:
-a finding that survives independently of the ticket that produced it gets its own home rather than
-being buried in a closing ticket's prose.
+The attachment point is recorded: mechanisms, with the evidence re-checked and two wording errors in the earlier record corrected. Recording only; no schema or registry change.

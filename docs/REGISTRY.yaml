@@ -24397,6 +24397,23 @@
   - faction
   - root-cause
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS.md
+  ticket_id: TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS
+  title: 'Record: axes attach to mechanisms, not systems — resolved independent of
+    the `system` tier''s own
+
+    fate'
+  tier: standard
+  ticket_type: feature
+  date: '2026-09-18'
+  related_code_areas:
+  - None — documentation/recording ticket, no registry or code changes.
+  artifact_files: []
+  tags:
+  - architecture
+  - documentation
+  - schema
+- type: ticket
   path: agent-working/tickets/done/TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION.md
   ticket_id: TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION
   title: 'Revive the `system` tier as declared membership on mechanisms — a managed
@@ -24521,23 +24538,6 @@
   - faction
   - progression
   - investigation
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS.md
-  ticket_id: TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS
-  title: 'Record: axes attach to mechanisms, not systems — resolved independent of
-    the `system` tier''s own
-
-    fate'
-  tier: standard
-  ticket_type: feature
-  date: '2026-09-18'
-  related_code_areas:
-  - None — documentation/recording ticket, no registry or code changes.
-  artifact_files: []
-  tags:
-  - architecture
-  - documentation
-  - schema
 - type: ticket
   path: agent-working/tickets/done/TCK-20260917-CLAIMS-AS-TESTS-INITIATIVE-DANGLING-CITATION.md
   ticket_id: TCK-20260917-CLAIMS-AS-TESTS-INITIATIVE-DANGLING-CITATION
