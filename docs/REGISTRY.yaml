@@ -7266,6 +7266,16 @@
   - platform
   - observability
 - type: doc
+  path: docs/runbooks/ai-worker-lag.md
+  title: 'Runbook: AiWorkerLagHigh and AiWorkerPendingHigh (cause alerts)'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
   path: docs/runbooks/alerting-pipeline.md
   title: 'Runbook: alerting pipeline (PrometheusUnreachable, GrafanaAlertingFailures)'
   status: active
@@ -7355,6 +7365,16 @@
   path: docs/runbooks/records/2026-10-20-log-shipping-fix.md
   title: 'Log shipping fix (2026-10-20): promtail discovery was denied by the socket
     proxy'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/records/2026-10-26-ai-worker-lag-alert.md
+  title: 'ai_worker scrape and lag alerts: observation and fire test (2026-10-26)'
   status: active
   layer: platform
   authority: P2
@@ -9854,7 +9874,10 @@
   date: '2026-10-18'
   related_code_areas:
   - docker/prometheus.yml
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT/test_plan.md
   tags:
   - platform
   - observability
