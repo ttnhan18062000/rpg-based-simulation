@@ -100,3 +100,4 @@ src/api/cors.py (new), src/api/server.py, src/domains/world_emergence/services.p
 
 ## Completion Summary
 All baseline src/** Semgrep findings triaged: md5 x7 flagged non-security, yaml.dump -> safe_dump, reasoned nosemgrep on the intended/false-positive sites, wildcard CORS replaced by an env-configurable local-origin list. Simulation hashes unchanged (paired neutral IDENTICAL on 3 worlds). Nothing dismissed in the Security tab.
+Mechanism-registry advisory (genetics_aptitude, opportunity_rumor_seeds): no entry change needed - the only change in the cited files is `usedforsecurity=False` on md5 with the digests pinned by test, so no behaviour changed (rpg-planner agreed).
