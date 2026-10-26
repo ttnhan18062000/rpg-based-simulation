@@ -24408,7 +24408,10 @@
   date: '2026-09-18'
   related_code_areas:
   - None — documentation/recording ticket, no registry or code changes.
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS/investigation.md
+  - agent-working/stored_artifacts/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS/plan.md
+  - agent-working/stored_artifacts/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS/test_plan.md
   tags:
   - architecture
   - documentation
@@ -24702,6 +24705,24 @@
   - documentation
   - schema
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS.md
+  ticket_id: TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS
+  title: '`RegionalSovereigntyService` (regional taxation + macroscopic conquest debuffs)
+    has zero real
+
+    callers anywhere in `src/` — real, non-dead code, never invoked'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-09-17'
+  related_code_areas:
+  - src/world/regional_sovereignty.py::RegionalSovereigntyService
+  - src/world/influence.py::FactionInfluenceService
+  - registries/mechanisms.yaml
+  artifact_files: []
+  tags:
+  - world
+  - architecture
+- type: ticket
   path: agent-working/tickets/done/TCK-20260917-SELECTIVE-REPOSITORY-RETRIEVAL-OVER-WHOLE-FILE-READS.md
   ticket_id: TCK-20260917-SELECTIVE-REPOSITORY-RETRIEVAL-OVER-WHOLE-FILE-READS
   title: 'Prefer targeted line-range and symbol retrieval over whole-file reads —
@@ -24787,24 +24808,6 @@
   - architecture
   - documentation
   - schema
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS.md
-  ticket_id: TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS
-  title: '`RegionalSovereigntyService` (regional taxation + macroscopic conquest debuffs)
-    has zero real
-
-    callers anywhere in `src/` — real, non-dead code, never invoked'
-  tier: hotfix
-  ticket_type: bug
-  date: '2026-09-17'
-  related_code_areas:
-  - src/world/regional_sovereignty.py::RegionalSovereigntyService
-  - src/world/influence.py::FactionInfluenceService
-  - registries/mechanisms.yaml
-  artifact_files: []
-  tags:
-  - world
-  - architecture
 - type: ticket
   path: agent-working/tickets/todos/TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME.md
   ticket_id: TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME

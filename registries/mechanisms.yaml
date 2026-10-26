@@ -2258,10 +2258,50 @@ mechanisms:
         - `src/world/regional_sovereignty.py::RegionalSovereigntyService` (regional taxation and
           conquest debuffs) is still a zero-caller `orphan`, distinct from this mechanism. It is
           tracked by `TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS` and parked
-          as dormant under owner decision 7.
+          as dormant under owner decision 7. Registered as its own entry,
+          `regional_levy_and_conquest_debuffs`, on 2026-10-26.
         - The territory views' OBSERVED OUTCOME axis is a hardcoded constant
           (`generate_territory_control_view.py:74`). It cannot reflect this runtime evidence until
           the tooling reads it. That is a decision-7 foundation finding.
+  - id: regional_levy_and_conquest_debuffs
+    layer: region
+    systems: [world, faction]
+    depends_on: []
+    state: orphan
+    implemented_by: [src/world/regional_sovereignty.py::RegionalSovereigntyService]
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-10-26"
+      note: >-
+        Registered 2026-10-26 by TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS so
+        the orphan finding lives on an entry of its own, not only in `regional_sovereignty`'s prose.
+        A periodic levy on heroes (2.0 gold) and functional buildings (10.0 gold) every 100 ticks, and a
+        conquered-region combat debuff (atk/def x0.8, speed x0.9, gated on a monster-horde owner).
+        Orphan, backing (a) static and decisive at 3533fde71: `RegionalSovereigntyService`,
+        `process_taxation` and `apply_sovereignty_debuffs` are named nowhere in `src/`, `tests/` or
+        `tools/` outside their own definitions. The only other mention of the file is an allowlist
+        string in `tests/architecture/test_legacy_enum_usage_boundaries.py:65`, not a call, and
+        `src/ai/goals/region_stabilization_scorer.py:28` only lists the file in a comment. With no importer
+        there is no runtime path to probe, so this absence verdict does not need the runtime corroboration
+        TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE added for reachable-but-unconstructed
+        classes. `docs/audits/unreachable_code_inventory.{json,csv}` lists both methods as unreached.
+        **Disposition: not to be wired as written.** (1) The live tax is a different rule. Owner decisions 51
+        and 58 (EXCH-02, amendment of 2026-10-09; `docs/world_rules/material-economy/economy-exchange.md`) say
+        a treasury is paid a share of a sale or a wage and that "a periodic levy on everyone present is not a
+        tax this world uses"; the per-head levy was removed (#536, divergence 2.108) and the share is
+        `src/engine/place_tax.py` through `src/engine/shop_sale.py`. This class's levy is the retired shape.
+        (2) The conquered-region penalty has a live, different implementation:
+        `src/engine/town_resolution.py` (`region.suppression_active`: non-owner entities take atk/def -20% and
+        speed -10%, wired at `src/engine/pipeline.py:339`). This class's `apply_sovereignty_debuffs` also
+        returns an `EntityUpdate` with no fields set, so it would change nothing if it were called. Wiring would
+        therefore either revive a retired rule or duplicate a live one: a behaviour change, not a fix, and out
+        of reach until decision 73. If a periodic levy or a monster-held debuff is ever wanted it is a new,
+        declared feature that replaces this class; whether to delete the class is a separate decision.
+        `docs/world/regional_sovereignty_runtime_contract.md` ("Taxation -- `regional_sovereignty.py`", every
+        100 ticks) attributed taxation to this file and was wrong on both counts; it was corrected in the same
+        ticket (its Taxation and Sovereignty-debuffs sections now state today's rule and keep the orphan's numbers
+        as a record, and its regression-test list no longer cites test_long_run_stability.py for taxation).
   - id: demographic_cohort_cycle
     layer: region
     systems: [world]

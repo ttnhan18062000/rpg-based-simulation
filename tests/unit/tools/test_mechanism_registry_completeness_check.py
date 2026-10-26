@@ -313,13 +313,14 @@ def test_wider_scope_numbers_pinned():
     # under `movement` (terrain cost is now paid in step time and route weighting, so it is movement's), death_cause.py::DeathRecord under
     # `aging_death` (the record resolve_lifecycle writes at death), diet_declaration.py::require_declared_diet under `attributes_biology`.
     # 251 -> 250 on 2026-10-26: `src/world/perception/gate.py` is now named by `sense_gated_detection`.
-    assert wider["unbound_files"] == 250
+    # 250 -> 249 on 2026-10-26: `src/world/regional_sovereignty.py` is now named by `regional_levy_and_conquest_debuffs`.
+    assert wider["unbound_files"] == 249
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
     # 71 -> 70 on 2026-10-11 (treasury batch): GoldSinkSystem is gone.
     # 70 -> 71 on 2026-10-14 (D70, 2.125): RaidService is no longer cited (`faction_raid` is a gap), so it is an unbound candidate again.
-    assert wider["candidates"] == 70  # unbound mechanism-shaped classes, wired or not (71 -> 70: PerceptionGate)
+    assert wider["candidates"] == 69  # unbound mechanism-shaped classes, wired or not (71 -> 70: PerceptionGate; 70 -> 69: RegionalSovereigntyService)
     assert len(wider["wired"]) == 20  # ... of which referenced from another top-level package (21 -> 20, same)
     assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 2  # PerceptionGate bound 2026-10-26
 
