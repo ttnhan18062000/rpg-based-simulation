@@ -4,7 +4,7 @@ layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
-phase: open
+phase: inprogress
 date: 2026-10-20
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Put both survival pressures on one escalation scale: combat_retreat gets the need-pull escalation once hp is in its own consequence band
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -78,6 +78,8 @@ V3 step (ii), on rpg-v3-starvation-threat at 70402779d, keeps the escalated hung
 
 ## Implementation Notes
 After v1, only if the trigger is seen.
+- 2026-10-23, rpg-planner brief: this ticket is STEP A only, the retreat escalation in CombatRetreatScorer, measured as its own paired step (`--base 341f700d0`, seeds 42-46, 3 worlds, 5000 ticks, crowded first, after the planner says the host is free). It does not touch `present_threat_to`, `tactical_threat.py` or `tactical.py:209`. STEP B, "acting" meaning an act and not a state, is its own ticket on this branch, filed after the designer rules, and is measured with step A's tip as its parent.
+- The hp consequence line and the threat gate are proposed in `agent-working/staging_artifacts/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE/plan.md`. No code is written until the designer confirms them.
 
 ## Test Summary
 

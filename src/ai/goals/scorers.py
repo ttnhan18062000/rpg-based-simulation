@@ -9,7 +9,7 @@ from src.engine.need_pull import hunger_pull, sleep_pull
 from src.engine.sleep_debt import SLEEP_DEBT
 from src.engine.starvation import STARVING_LINE
 from src.engine.way_in_range import way_in_range
-from src.ai.goals.present_threat import present_threat_to
+from src.ai.goals.present_threat import acting_threat_to
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.core.state import EntityState, AuthoritativeState
@@ -60,8 +60,9 @@ def _travel_tiles(entity: EntityState, target_pos: Tuple[float, float]) -> float
 
 
 def _escalated_unless_threatened(entity: EntityState, state: AuthoritativeState, raw: float, escalated: float) -> float:
-    """SURV-07: the escalated utility, or the raw one while a present threat holds (only a present threat outranks a pressing need)."""
-    if escalated > raw and present_threat_to(entity, state):
+    """SURV-07: the escalated utility, or the raw one while a hostile ACTS on the subject (only a present threat outranks a pressing need, and a threat
+    is acting by an act, not a state: memo row 88, `acting_threat_to`)."""
+    if escalated > raw and acting_threat_to(entity, state):
         return raw
     return escalated
 
