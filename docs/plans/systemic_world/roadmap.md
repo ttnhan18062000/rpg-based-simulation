@@ -1165,7 +1165,7 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
      no minimum base count and is revisited at v1. A kind is base-state, exempt from the line, only
      while the step's own parent has it at 0 in every seed. Every stop so far was settled by a
      10-seed rerun, then the owner's ruling.
-   - **The base:** 903239fbe, the commit just before the first step in the owner's order. Steps
+   - **The base:** the v1 record 341f700d0 (simulation e8df8b96d); it was 903239fbe until v1, the commit just before the first step in the owner's order. Steps
      2.120-2.123 came before decision 76 and are shown by one report-only reading against
      c3f6202b9 (v1 disclosure M2). A neutral step that adds durable state proves neutrality by
      projection (decision 76's application). At baseline v1 the v1 fingerprints (10 seeds,
