@@ -146,7 +146,7 @@ not made here. Until it exists, a rerun is LIVE and must pass the all-`NORMAL` c
 | 4 | `tests/regression/baseline_5k.json` | `make regression-baseline` | `behavioral-regression-5k` | Record that the new values include the 2.75 price change; keep the old file's values in the commit message. | **Not T08:** owned by `TCK-20261007-BEHAVIORAL-5K-REBASELINE-AFTER-THE-STARVATION-CHAIN-LANDS`. |
 | 5 | grade anchors | `python3 tools/evaluate_simq.py` (diff against anchors) | n/a | Check only; commit nothing if the diff is empty. | **Run, diff not empty:** 130 of 630 pillars REGRESS; nothing committed (see 3.3). |
 | 6 | `docs/observability/baselines/*` | none | n/a | Not refreshed in place. The matrix and `latest.json` are replaced by results under the M2 identity schema (M2-T03/T04/T05); until then `src gate` must not be cited as a tick-cost check. Point `compare-sweep` at the replacement when it exists. | **Done** (deviation: a generated `BaselineConfig`, not benchmark records; see 3.2). `compare-sweep` and `gate` exit 0. |
-| 7 | the 21 compile reports | the world compile step, on the next recompile | n/a | Becomes `flat-sha256-v2` by construction; not a perf rerun and not scheduled here. | Not scheduled here. |
+| 7 | the 21 compile reports | the world compile step, on the next recompile | n/a | Becomes the current scheme by construction (`flat-sha256-v2` at #455, `flat-sha256-v3` since the carried-state digest ticket); not a perf rerun and not scheduled here. | Not scheduled here. |
 | 8 | certification recovery rows | the certification harness, when next run | n/a | Re-earns `CERTIFIED` under `certification_result.v2`. | Not scheduled here. |
 
 Order: 1, 2 (with 3), then 4, then 5, with 6 following the M2 identity schema. A step whose

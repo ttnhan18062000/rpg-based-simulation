@@ -8090,6 +8090,23 @@
   - delivery
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS.md
+  ticket_id: TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS
+  title: 'The proof digest hashes the seven carried-state fields it omits: a new `flat-sha256`
+    scheme version, the fixture re-pinned, and the v1 base re-recorded'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-24'
+  related_code_areas:
+  - src/engine/checkpoint.py
+  - src/perf/benchmark_record.py
+  - tools/perf/hash_callsite_inventory.py
+  - tests/unit/engine/test_proof_digest_contract.py
+  artifact_files: []
+  tags:
+  - performance
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM.md
   ticket_id: TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM
   title: The session-start hook tests stub the disk-headroom probe, so a runner below
@@ -8203,23 +8220,6 @@
   tags:
   - knowledge-store
   - process-improvement
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS.md
-  ticket_id: TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS
-  title: 'The proof digest hashes the seven carried-state fields it omits: a new `flat-sha256`
-    scheme version, the fixture re-pinned, and the v1 base re-recorded'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-24'
-  related_code_areas:
-  - src/engine/checkpoint.py
-  - src/perf/benchmark_record.py
-  - tools/perf/hash_callsite_inventory.py
-  - tests/unit/engine/test_proof_digest_contract.py
-  artifact_files: []
-  tags:
-  - performance
-  - determinism
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE.md
   ticket_id: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
