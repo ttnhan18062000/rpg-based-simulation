@@ -217,7 +217,8 @@ def load_draft_filter(repo_root: Path = Path("."), ref: str = "origin/main") -> 
 
 def _blob_id(path: Path) -> str:
     data = path.read_bytes()
-    return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+    # git blob object id; must match git's SHA-1, not a security use
+    return hashlib.sha1(b"blob %d\0" % len(data) + data, usedforsecurity=False).hexdigest()  # nosemgrep: python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1
 
 
 def _prune_drafts(files: list[Path], drafts_dir: Path, flt: DraftFilter) -> list[Path]:

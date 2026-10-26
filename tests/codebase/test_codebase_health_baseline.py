@@ -217,6 +217,7 @@ def test_used_core_dependency_found_outside_src(tmp_path):
 def test_dependency_import_name_override():
     assert chb._dependency_import_name("python-json-logger>=2.0.7") == "pythonjsonlogger"
     assert chb._dependency_import_name("sse-starlette>=3.3.0") == "sse_starlette"
+    assert chb._dependency_import_name("pyyaml>=6.0") == "yaml"
     assert chb._dependency_import_name("uvicorn[standard]>=0.30.0") == "uvicorn"
 
 
@@ -281,3 +282,17 @@ def test_live_numbers_differ_from_d24_stale_snapshot():
     assert report["dead_bytecode_files"] != d24_stale_dead_bytecode
     assert report["commit_count"] != d24_stale_commit_count
     assert set(report["unused_core_dependencies"]) != d24_stale_unused_deps
+
+
+def test_pyyaml_dependency_found_by_its_import_name(tmp_path):
+    # PyPI name `pyyaml`, import name `yaml`: without the override the snapshot lists it as unused.
+    _init_repo(tmp_path)
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\ndependencies = ["pyyaml>=6.0"]\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "main.py").write_text("import yaml\n", encoding="utf-8")
+    _commit(tmp_path, "init")
+
+    assert chb.find_unused_core_dependencies(tmp_path) == []

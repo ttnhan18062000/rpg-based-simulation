@@ -37,7 +37,7 @@ if str(_SELF_ROOT) not in sys.path:  # run as a script, ``tools`` is not importa
 from tools.perf import baseline_lifecycle, capacity_run  # noqa: E402
 from tools.perf.capacity_run import REPO_ROOT, CapacityRunError, RunSpec  # noqa: E402
 
-from src.perf.benchmark_record import BenchmarkRecord, Outcome, OutcomeState, Thresholds, compare  # noqa: E402
+from src.perf.benchmark_record import BenchmarkRecord, Outcome, OutcomeState, Thresholds, compare, cpu_model, git_state  # noqa: E402
 
 WARMUP_TICKS = 10
 SAMPLE_TICKS = 50
@@ -72,6 +72,8 @@ class Attempt:
     head_avg_ms: Optional[float] = None
     #: False when a side could not produce a record: a retry would fail the same way and only cost runtime.
     retryable: bool = True
+    #: True when a side could not start (infrastructure), as opposed to a measured comparison that was inconclusive. It is ERROR, never INCONCLUSIVE.
+    did_not_run: bool = False
 
 
 @dataclass(frozen=True)
@@ -83,13 +85,18 @@ class ScenarioResult:
     retry: Optional[Attempt]
     outcome: Outcome
 
+    @property
+    def did_not_run(self) -> bool:
+        """An arm could not start: an infrastructure failure the run reports as ERROR and exits 1 for."""
+        return self.first.did_not_run or (self.retry is not None and self.retry.did_not_run)
+
 
 def _avg(record: Optional[BenchmarkRecord]) -> Optional[float]:
     return record.result.latency_ms.get("avg") if record is not None else None
 
 
 def pair(spec: RunSpec, base_root: Path, head_root: Path, thresholds: Thresholds, spawn: Spawn, head_first: bool = False) -> Attempt:
-    """One base run and one head run, each in a fresh process, compared. A side that cannot produce a record is INCONCLUSIVE.
+    """One base run and one head run, each in a fresh process, compared. A side that cannot produce a record did not run (``did_not_run``): an infrastructure failure, not a measurement.
 
     ``head_first`` swaps the order of the two runs. The diagnostic retry uses it, so a systematic order effect (a warm cache, thermal state) cannot show up
     as a regression in both attempts.
@@ -100,8 +107,13 @@ def pair(spec: RunSpec, base_root: Path, head_root: Path, thresholds: Thresholds
         try:
             records[side] = spawn(spec, root)
         except CapacityRunError as exc:
-            return Attempt(Outcome(OutcomeState.INCONCLUSIVE, f"{side} side: {exc}"), retryable=False)
+            return Attempt(Outcome(OutcomeState.INCONCLUSIVE, f"{side} side did not run: {exc}"), retryable=False, did_not_run=True)
     return Attempt(compare(records["base"], records["head"], thresholds), _avg(records["base"]), _avg(records["head"]))
+
+
+def state_label(result: ScenarioResult) -> str:
+    """The state a report shows: ``ERROR`` when an arm did not run (never INCONCLUSIVE, which is a measured comparison), else the outcome state."""
+    return "ERROR" if result.did_not_run else result.outcome.state.value
 
 
 def _final(first: Attempt, retry: Optional[Attempt]) -> Outcome:
@@ -140,16 +152,41 @@ def _attempt_dict(attempt: Optional[Attempt]) -> Optional[Dict[str, Any]]:
     if attempt is None:
         return None
     return {
-        "state": attempt.outcome.state.value,
+        "state": "ERROR" if attempt.did_not_run else attempt.outcome.state.value,
         "reason": attempt.outcome.reason,
         "base_avg_ms": attempt.base_avg_ms,
         "head_avg_ms": attempt.head_avg_ms,
     }
 
 
-def report(results: Sequence[ScenarioResult], thresholds: Thresholds = TRIPWIRE_THRESHOLDS) -> Dict[str, Any]:
+def provenance(base_root: Path, head_root: Path) -> Dict[str, str]:
+    """What the paired run was: both commits and the CPU of the runner (the two sides share one machine)."""
+    return {"base_sha": git_state(base_root)[0], "head_sha": git_state(head_root)[0], "cpu_model": cpu_model()}
+
+
+def summary_markdown(doc: Dict[str, Any]) -> str:
+    """The step-summary table for a report: one row per scenario, with both SHAs and the CPU model above it. Report-only, so it says so."""
+    prov = doc.get("provenance", {})
+    lines = [
+        "### Perf tripwire (paired base/head, report-only)",
+        "",
+        f"base `{prov.get('base_sha', '?')}` / head `{prov.get('head_sha', '?')}` on {prov.get('cpu_model', '?')}. It blocks nothing and makes no capacity claim.",
+        "",
+        "| scenario | outcome | reason |",
+        "|---|---|---|",
+    ]
+    for item in doc["scenarios"]:
+        reason = item["outcome"]["reason"].replace("|", "/").replace("\n", " ")
+        lines.append(f"| {item['name']} | {item['outcome']['state']} | {reason} |")
+    return "\n".join(lines) + "\n"
+
+
+def report(
+    results: Sequence[ScenarioResult], thresholds: Thresholds = TRIPWIRE_THRESHOLDS, prov: Optional[Dict[str, str]] = None
+) -> Dict[str, Any]:
     """The machine-readable report. ``blocking`` is always false: a tripwire outcome never fails a build (OD-8)."""
     return {
+        "provenance": prov or {},
         "projection": "tripwire_paired",
         "blocking": False,
         "claim": capacity_run.NO_CLAIM,
@@ -159,7 +196,8 @@ def report(results: Sequence[ScenarioResult], thresholds: Thresholds = TRIPWIRE_
         "scenarios": [
             {
                 "name": r.name,
-                "outcome": {"state": r.outcome.state.value, "reason": r.outcome.reason},
+                "outcome": {"state": state_label(r), "reason": r.outcome.reason},
+                "did_not_run": r.did_not_run,
                 "first": _attempt_dict(r.first),
                 "retry": _attempt_dict(r.retry),
             }
@@ -172,8 +210,8 @@ def annotations(results: Sequence[ScenarioResult]) -> List[str]:
     """GitHub annotation lines: a ``::warning`` for every scenario that is not PASS, a ``::notice`` for the rest. Neither fails the job."""
     lines = []
     for r in results:
-        level = "notice" if r.outcome.state is OutcomeState.PASS else "warning"
-        lines.append(f"::{level} title=perf tripwire {r.name}::{r.outcome.state.value}: {r.outcome.reason}")
+        level = "error" if r.did_not_run else "notice" if r.outcome.state is OutcomeState.PASS else "warning"
+        lines.append(f"::{level} title=perf tripwire {r.name}::{state_label(r)}: {r.outcome.reason}")
     return lines
 
 
@@ -243,6 +281,7 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--head", type=Path, default=REPO_ROOT, help="the head checkout (default: this one)")
     run.add_argument("--scenario", action="append", help="limit to this declared scenario (repeatable)")
     run.add_argument("--out-dir", type=Path)
+    run.add_argument("--summary", type=Path, help="append the markdown verdict table to this file (a CI step summary)")
     run.add_argument("--github-annotations", action="store_true", help="print ::warning/::notice lines")
     cal = sub.add_parser("calibrate", help="A/A noise measurement on this checkout")
     cal.add_argument("--trials", type=int, default=5)
@@ -251,7 +290,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    """CLI entry point. 0: it ran and reported (whatever the outcomes). 1: it could not run."""
+    """CLI entry point. 0: it ran and reported (whatever the outcomes). 1: it could not run, including an arm that did not start (reported as ERROR)."""
     args = _parser().parse_args(argv)
     if args.command == "calibrate":
         print(json.dumps(calibrate(args.root, args.trials), indent=2, sort_keys=True))
@@ -260,15 +299,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if not chosen:
         print(f"cannot run: no declared scenario matches {args.scenario}; declared: {[n for n, _ in TRIPWIRE_SCENARIOS]}", file=sys.stderr)
         return 1
+    args.base, args.head = args.base.resolve(), args.head.resolve()  # each arm runs from its own absolute root (see capacity_run.spawn)
     results = run_all(args.base, args.head, chosen)
     out_dir = args.out_dir or REPO_ROOT / "reports" / "perf" / "tripwire" / (datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "_" + uuid.uuid4().hex[:6])
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "report.json").write_text(json.dumps(report(results), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    doc = report(results, prov=provenance(args.base, args.head))
+    (out_dir / "report.json").write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if args.summary:
+        with args.summary.open("a", encoding="utf-8") as handle:
+            handle.write(summary_markdown(doc))
     for r in results:
-        print(f"{r.name}: {r.outcome.state.value}: {r.outcome.reason}")
+        print(f"{r.name}: {state_label(r)}: {r.outcome.reason}")
     if args.github_annotations:
         print("\n".join(annotations(results)))
     print(f"REPORT: {out_dir / 'report.json'}")
+    if any(r.did_not_run for r in results):
+        print("cannot run: an arm did not start (infrastructure failure, not a measurement); see the ERROR rows above", file=sys.stderr)
+        return 1
     return 0
 
 

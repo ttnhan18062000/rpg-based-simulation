@@ -42,7 +42,7 @@ exclude_type_checking_imports = false
 # BEGIN GENERATED: layers contract (python3 -m codebase.structure.import_contracts)
 [[tool.importlinter.contracts]]
 id = "layers"
-name = "Registry layer order (advisory)"
+name = "Registry layer order"
 type = "layers"
 unmatched_ignore_imports_alerting = "warn"
 layers = [

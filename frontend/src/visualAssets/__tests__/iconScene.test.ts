@@ -99,7 +99,7 @@ describe('copies equal their sources', () => {
 
   it("the Lucide paths equal the installed lucide-react icons' (ISC)", () => {
     for (const name of ['hammer', 'shield'] as const) {
-      const source = readFileSync(path.join(FRONTEND, 'node_modules', 'lucide-react', 'dist', 'esm', 'icons', `${name}.js`), 'utf8')
+      const source = readFileSync(path.join(FRONTEND, 'node_modules', 'lucide-react', 'dist', 'esm', 'icons', `${name}.mjs`), 'utf8')
       const found = [...source.matchAll(/d:\s*"([^"]+)"/g)].map((m) => m[1])
       expect(LUCIDE_PATHS[name]).toEqual(found)
     }

@@ -374,8 +374,8 @@ Contracts: 17 kept, 0 broken.
 Warnings
 --------
 
-Registry layer order (advisory)
--------------------------------
+Registry layer order
+--------------------
 
 - No matches for ignored import src.engine.world_dynamics -> src.world.spawn.
 """
