@@ -101,6 +101,7 @@ services:
     mem_limit: 512m
     # Healthy while the worker's own metrics server answers and reports sim_stream_consumer_up 1 (Redis answered the consumer-group query on this
     # scrape). Nothing waits on this healthcheck; it is the readiness signal for `docker compose ps` and the alert runbook (TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT).
+    # The check matches the literal line `sim_stream_consumer_up 1.0`; it breaks if rpg ever adds labels to that gauge (proven as it is, 2026-10-26).
     healthcheck:
       test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if b'sim_stream_consumer_up 1.0' in urllib.request.urlopen('http://127.0.0.1:9108/metrics', timeout=3).read() else 1)"]
       interval: 10s
