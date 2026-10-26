@@ -7839,6 +7839,22 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS.md
+  ticket_id: TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS
+  title: 'The two serial steps in test.yml go now that their three owner fixes are
+    on main: the visual_assets store-lock step in the API job, and the native-refusal
+    / simq-observation step in Tools f–z'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-26'
+  related_code_areas:
+  - .github/workflows/test.yml
+  - tests/tools/test_ci_split_tools_jobs.py
+  - tests/static/test_ci_xdist_in_critical_path_jobs.py
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
   ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
   title: The two leads message each other across hosts over Remote Control, and every

@@ -1,9 +1,10 @@
-"""Static guard for TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.
+"""Static guard for TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS, tightened by TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS.
 
-The three critical-path jobs of `.github/workflows/test.yml` (Integration, Tools f-z, API/CLI/engine/logging) run their pytest steps in parallel with
+The three critical-path jobs of `.github/workflows/test.yml` (Integration, Tools f-z, API/CLI/engine/logging) run EVERY pytest step in parallel with
 pytest-xdist, inside the job, so the job count does not grow (the free plan allows 20 concurrent jobs and the Tests workflow already starts 21).
-`--dist loadgroup` honours `xdist_group`. The one set that cannot run in parallel today, the visual_assets tests that take the real store lock
-(issue #657), runs in its own serial step of the same job. No GitHub Actions execution is possible from pytest, so this reads the YAML.
+`--dist loadgroup` honours `xdist_group`. The two serial steps that once existed (the visual_assets store-lock step and the tools-f-z native-refusal /
+simq-observation step) are gone because their owner fixes landed; this file pins that they stay gone. No GitHub Actions execution is possible from
+pytest, so this reads the YAML.
 """
 from __future__ import annotations
 
@@ -17,10 +18,14 @@ _WORKFLOW = _ROOT / ".github" / "workflows" / "test.yml"
 _PYPROJECT = _ROOT / "pyproject.toml"
 XDIST_JOBS = ("integration", "tools-f-z", "api-cli-engine")
 FLAGS = "-n auto --dist loadgroup"
-SERIAL_STEP = "Run: tests/visual_assets (store lock, serial)"
-TOOLS_SERIAL_STEP = "Run: tests/tools (f–z, workflow-file test, serial)"
-SERIAL_STEPS = (SERIAL_STEP, TOOLS_SERIAL_STEP)
-SERIAL_TOOLS_TESTS = ("tests/tools/test_implement_ticket_native_refusal.py", "tests/tools/test_simq_long_run_observation.py")  # fixed-name temp file / whole-data/runs snapshot
+REMOVED_SERIAL_STEPS = ("Run: tests/visual_assets (store lock, serial)", "Run: tests/tools (f–z, workflow-file test, serial)")
+FORMERLY_SERIAL_PATHS = (
+    "tests/visual_assets/store",
+    "tests/visual_assets/test_review_cli.py",
+    "tests/visual_assets/test_key_usage.py",
+    "tests/tools/test_implement_ticket_native_refusal.py",
+    "tests/tools/test_simq_long_run_observation.py",
+)
 MAX_JOB_COUNT = 21  # test.yml's job count when xdist was added: a ceiling, so removing a job is free and adding one needs a deliberate edit (free plan: 20 concurrent jobs)
 
 
@@ -41,46 +46,42 @@ def test_the_job_count_does_not_grow():
 
 
 @pytest.mark.parametrize("job", XDIST_JOBS)
-def test_every_pytest_step_of_a_critical_path_job_runs_under_xdist_except_the_serial_store_lock_step(job):
+def test_every_pytest_step_of_a_critical_path_job_runs_under_xdist(job):
     steps = _pytest_run_steps(_jobs()[job])
     assert steps, job
     for step in steps:
-        run = " ".join(step["run"].split())
-        if step.get("name") in SERIAL_STEPS:
-            assert "-n " not in run and "xdist" not in run, "the store-lock step must stay serial"
-        else:
-            assert FLAGS in run, f"{job}: step {step.get('name')!r} must run with {FLAGS}"
+        assert FLAGS in " ".join(step["run"].split()), f"{job}: step {step.get('name')!r} must run with {FLAGS}"
 
 
-def test_the_serial_store_lock_step_exists_only_in_the_api_job_and_the_parallel_step_ignores_exactly_its_paths():
-    serial_paths = ("tests/visual_assets/store", "tests/visual_assets/test_review_cli.py", "tests/visual_assets/test_key_usage.py")
+def test_the_serial_steps_are_gone_and_no_ignore_for_their_files_remains():
     jobs = _jobs()
     for name, job in jobs.items():
-        has = any(s.get("name") == SERIAL_STEP for s in job["steps"])
-        assert has == (name == "api-cli-engine"), name
-    steps = {s.get("name"): " ".join(s["run"].split()) for s in _pytest_run_steps(jobs["api-cli-engine"])}
-    for path in serial_paths:
-        assert path in steps[SERIAL_STEP]
-        assert f"--ignore={path}" in steps["Run: tests/visual_assets"]
-    assert "--ignore=" not in steps[SERIAL_STEP]
+        for step in job["steps"]:
+            assert step.get("name") not in REMOVED_SERIAL_STEPS, f"{name}: serial step {step.get('name')!r} must not come back"
+            assert "serial" not in str(step.get("name", "")).lower(), f"{name}: a serial step needs an owner ticket and a new pin, not a quiet add"
+    text = _WORKFLOW.read_text(encoding="utf-8")
+    for path in FORMERLY_SERIAL_PATHS:
+        assert f"--ignore={path}" not in text, f"--ignore={path} must not return"
 
 
-def test_the_serial_tools_tests_run_serially_in_tools_f_z_and_the_parallel_step_ignores_them():
-    steps = {s.get("name"): " ".join(s["run"].split()) for s in _pytest_run_steps(_jobs()["tools-f-z"])}
-    serial = steps[TOOLS_SERIAL_STEP]
-    assert "-n " not in serial
-    for path in SERIAL_TOOLS_TESTS:
-        assert path in serial
-    parallel = next(v for k, v in steps.items() if k not in SERIAL_STEPS)
-    for path in SERIAL_TOOLS_TESTS:
-        assert f"--ignore={path}" in parallel
-    merge = next(s for s in _jobs()["tools-f-z"]["steps"] if s.get("name") == "Merge JUnit XML")["run"]
-    assert "tools-f-z-parallel.xml" in merge and "tools-f-z-serial.xml" in merge and "--out reports/junit/tools-f-z.xml" in merge
+def test_the_formerly_serial_files_are_collected_by_their_jobs_parallel_step():
+    jobs = _jobs()
+    tools = " ".join(_pytest_run_steps(jobs["tools-f-z"])[0]["run"].split())
+    assert "pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py'" in tools and "--ignore=" not in tools
+    visual = next(" ".join(s["run"].split()) for s in _pytest_run_steps(jobs["api-cli-engine"]) if s.get("name") == "Run: tests/visual_assets")
+    assert visual.startswith("pytest tests/visual_assets ") and "--ignore" not in visual
 
 
-def test_both_visual_assets_junit_files_reach_the_merged_report():
+def test_tools_f_z_writes_the_one_junit_file_directly_with_no_merge_step():
+    job = _jobs()["tools-f-z"]
+    assert not any(s.get("name") == "Merge JUnit XML" for s in job["steps"])
+    (step,) = _pytest_run_steps(job)
+    assert "--junit-xml=reports/junit/tools-f-z.xml" in " ".join(step["run"].split())
+
+
+def test_the_visual_assets_junit_file_reaches_the_merged_report_alone():
     merge = next(s for s in _jobs()["api-cli-engine"]["steps"] if s.get("name") == "Merge JUnit XML")["run"]
-    assert "api-cli-engine-visual_assets.xml" in merge and "api-cli-engine-visual_assets-serial.xml" in merge
+    assert "api-cli-engine-visual_assets.xml" in merge and "visual_assets-serial" not in merge
 
 
 def test_pytest_xdist_is_a_dev_dependency_locked_in_uv_lock():
