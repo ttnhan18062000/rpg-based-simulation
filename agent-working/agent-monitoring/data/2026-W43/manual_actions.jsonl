@@ -31,3 +31,7 @@
 {"ts":"2026-10-25T03:49:13.816876Z","category":"handover_recovery","source":"sample","session_id":"ddd92d72-4513-44ed-bd35-b8d70aaad675","session_role":"codebase-implementer","batch":null,"count":1}
 {"ts":"2026-10-25T05:36:33.065444Z","category":"handover_recovery","source":"sample","session_id":"7e5213a2-5726-4f3e-86d2-d72c7373c931","session_role":"lead-planner","batch":null,"count":1}
 {"ts":"2026-10-25T03:50:39.205395Z","category":"handover_recovery","source":"sample","session_id":"dc2b17a6-9e5a-4a35-9049-b53147348191","session_role":"agent-working-planner","batch":null,"count":1}
+{"ts":"2026-10-19T02:30:36.423484Z","category":"handover_recovery","source":"sample","session_id":"81814d3b-2e4d-46aa-a60d-9bdee3ca32de","session_role":"lead-planner-u24","batch":null,"count":1}
+{"ts":"2026-10-22T08:17:17.808116Z","category":"handover_recovery","source":"sample","session_id":"9376bfc1-f3cc-439a-a839-1826040b2bd8","session_role":"architecture-planner-u24","batch":null,"count":1}
+{"ts":"2026-10-22T10:07:44.936744Z","category":"handover_recovery","source":"sample","session_id":"fb7f0eb2-d554-4c52-9429-d010cfbdb7e9","session_role":"lead-planner-u24","batch":null,"count":1}
+{"ts":"2026-10-23T02:34:37.407983Z","category":"handover_recovery","source":"sample","session_id":"9a049594-cc60-45cd-90f0-fe9398568019","session_role":"lead-planner-u24","batch":null,"count":1}

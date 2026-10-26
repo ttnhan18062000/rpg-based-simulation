@@ -23,8 +23,8 @@ audit findings F3 to F5 (#593, comment 6356470108) in the dependency table; Q1, 
 
 ## 1. What the suite must prove, and the one thing it cannot yet see
 
-The proposal asks that Modes 2 and 3 reproduce Mode 1's final canonical hash, that Mode 4 assert invariants only and that
-Mode 5 assert invariants and outcome distributions only. The audit shows that hash equality is a weaker proof than it
+The proposal asks that Modes 2 and 3 reproduce Mode 1's final canonical hash, and that Mode 4 assert invariants only (Mode 5 was dropped on
+2026-10-26, see the proposal §4). The audit shows that hash equality is a weaker proof than it
 looks today:
 
 - the hash omits `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans` and `information_providers`
@@ -229,7 +229,7 @@ also applies to the expected-red cases of §5 and C1.
 | C1 | PERF-D5 scheme bump, which comes after `RECORD-BASELINE-V1` (perf-planner); the `recent_world_events` ruling is in (§9, Q3) |
 | X3 | nothing; only meaningful for a Mode 3 thread pool |
 | Mode 3 | a named port set (proposal §5), a parity matrix (PERF-D2), 3a code: **pending step 1** and later |
-| Mode 4, 5 | existing certification tests for Mode 4; Mode 5 needs its ADR first |
+| Mode 4 | existing certification tests for Mode 4 (Mode 5 dropped 2026-10-26) |
 | H2 fix (H3 and H4 are closed, proposal §2) | it is what the suite is for: each must pass Mode 1 against its own base with identical hashes (`performance_contract.md` §4.1); the neutral check in `paired.py:174-180` already does this for 3 worlds at seed 42 |
 | F5 (`pressure_signals` back door, audit §7) | **rpg estimates, not commitments** (#593 comment 6356470108): after F4, P3, leaning toward deleting the `ENABLE_*` back door; not an M1 prerequisite. G1 is the guard until then |
 | F3 and F4, together | rpg estimates both fixed around 11-07, before the M1 record ticket can be dispatched; they are M1-record prerequisites (roadmap §12.5; #593 comment 6356470108) |
