@@ -38,7 +38,7 @@ P1
 Other salted-hash sites not reaching state (list them in investigation).
 
 ## Acceptance Criteria
-- Final state hash equal across PYTHONHASHSEED=0 and =1 on a world where a faction squad forms.
+- Squad `group_id` and `CanonicalStateHasher` hash equal across PYTHONHASHSEED=0 and =1 on a constructed state where a faction squad forms. **Amended 2026-10-26 by rpg-planner (ticket owner):** the original read "on a world where a faction squad forms"; probe A0 found no shipped world that forms one (no WAR pair in 5000 ticks on four worlds), so the proof is a constructed WAR state, not a new world.
 - perception/filter.py:88,97 resolved or shown not to reach hashed state.
 
 ## Related Tickets
@@ -64,7 +64,8 @@ Moved from Lane C to Lane B (`rpg-implementer-2`) by `rpg-planner` 2026-10-26; b
 **perception/filter.py:88,97 does not reach hashed state in production:** `PerceptionFilterService.filter` is only called by `PerceptionPhase.process_entities` (`domains/perception/phase.py`), and nothing under `src/` references `PerceptionPhase` or builds `WorldSignal`s for it except the `LegendFact` wrapper in `fame/legend.py` (tests only otherwise). `PerceptionModel.to_canonical_dict` does hash `perceived_entities` keyed by `ent_id`, so if the phase were wired, `ent_id = hash(signal.signal_id)` for a non-int id (line 88) would reach hashed state; line 97 (`node_id=hash(...)`) is not in the canonical dict (only the str key and salience are). Latent, not live. Proposed: fix both with the same stable digest helper (cheap, no live effect).
 **Other salted `hash()` calls under `src/`:** only these three (`grep -rn "\bhash(" src`); none else.
 **Proposed test (no new world):** the squad needs a WAR pair, contested region, and at least one GUARD entity; the diplomatic state machine reaches WAR only through tension, which no shipped world does within 5000 ticks. Build the state directly (factions at WAR, a region, 3 guards), run `MilitaryConflictPhase.execute` in two subprocesses with `PYTHONHASHSEED=0` and `=1`, and compare the squad `group_id` and `CanonicalStateHasher` after applying the update. A purpose-built `mechanic_scenario_*` world is the alternative if the owner wants an end-to-end world.
-**Next:** plan.md to `rpg-planner`, then code (stable digest, e.g. blake2b of the tuple modulo 2**31, one shared helper), then the cross-seed test; the paired step against the parent after step A (section 12.5 order) is a no-op on the gate worlds by A0.
+**Planner ruling (2026-10-26):** plan approved as written; constructed-state subprocess test is the proof; because A0 is negative F4 is hash-neutral on the gate worlds and needs no paired step of its own, `paired --neutral` IDENTICAL is the proof and it can land whenever ready; filter.py:88 is recorded as a latent hazard (it would hash if PerceptionPhase were wired).
+**Next (superseded by the ruling):** plan.md to `rpg-planner`, then code (stable digest, e.g. blake2b of the tuple modulo 2**31, one shared helper), then the cross-seed test; the paired step against the parent after step A (section 12.5 order) is a no-op on the gate worlds by A0.
 
 ## Test Summary
 
