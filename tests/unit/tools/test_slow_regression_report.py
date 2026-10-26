@@ -187,27 +187,39 @@ def test_the_real_known_reds_file_is_loadable_and_lints_clean():
 
 
 @pytest.mark.parametrize(
-    "anchor, ticket",
+    "anchor",
     [
-        ("frontier_marches_seed42_200t_narrative", "TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE"),
-        ("frontier_extended_seed42_200t_narrative", "TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE"),
-        ("urban_political_seed42_1000t_social", "TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE"),
-        ("unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative", "TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE"),
-        ("simq_routing_test_seed42_1000t_cognition", "TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1"),
+        "frontier_marches_seed42_200t_narrative",
+        "frontier_extended_seed42_200t_narrative",
+        "urban_political_seed42_1000t_social",
+        "unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative",
+        "simq_routing_test_seed42_1000t_cognition",
     ],
 )
-def test_real_file_resolves_each_corpus_anchor_to_its_own_entry_not_the_catch_all(anchor, ticket):
-    # owner_of() is first-match: a step-change anchor must reach its family entry, a class-(c) one the catch-all.
+def test_real_file_has_no_owner_for_a_corpus_anchor_after_the_baseline_v1_reanchor(anchor):
+    # TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1 retired the family entries and the corpus catch-all: a corpus anchor red again is UNOWNED.
     known = srr.load_known_reds(REAL_KNOWN_REDS)
-    entry = srr.owner_of(f"{CORPUS}{anchor}_grade_stability", known)
-    assert entry is not None and entry["ticket"] == ticket
-    assert (entry["kind"] == "flaky") == (ticket == "TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1")
+    assert srr.owner_of(f"{CORPUS}{anchor}_grade_stability", known) is None
 
 
-def test_real_file_keeps_the_corpus_catch_all_last():
+HELD_V1_KEYS = {
+    "test_grade_within_anchor_band": ("hero_guild_routing_seed42_500t", "simq_routing_test_seed42_500t", "urban_political_seed456_500t", "wilderness_survival_seed123_200t",
+                                        "generated_frontier_3_42_seed42_200t", "simq_scale_stress_seed42_seed42_200t", "hero_guild_routing_seed123_500t", "simq_routing_test_seed123_500t", "frontier_marches_seed123_200t"),
+    "test_grade_within_anchor_band_long_run": ("hero_guild_routing_seed42_1000t", "simq_routing_test_seed42_1000t", "urban_political_seed456_1000t"),
+}
+
+
+@pytest.mark.parametrize("test_name, key", [(t, k) for t, keys in HELD_V1_KEYS.items() for k in keys])
+def test_real_file_owns_each_held_v1_anchor_key_under_the_held_rows_ticket(test_name, key):
     known = srr.load_known_reds(REAL_KNOWN_REDS)
-    assert known[-1]["match"] == "tests.unit.worldassembly.test_corpus_diversity*"
-    assert known[-1]["kind"] == "flaky"
+    entry = srr.owner_of(f"tests.simulation_quality.test_grade_regression::{test_name}[{key}]", known)
+    assert entry is not None and entry["ticket"] == "TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE" and entry["kind"] == "broken"
+    assert srr.owner_of(f"tests.simulation_quality.test_grade_regression::{test_name}[some_other_key_200t]", known) is None
+
+
+def test_real_file_has_no_corpus_catch_all_any_more():
+    known = srr.load_known_reds(REAL_KNOWN_REDS)
+    assert not [e for e in known if e["match"] == "tests.unit.worldassembly.test_corpus_diversity*"]
 
 
 def test_lint_rejects_a_bracket_because_fnmatch_reads_it_as_a_character_class():

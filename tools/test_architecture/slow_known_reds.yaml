@@ -72,83 +72,6 @@ known_reds:
     expires_on: "2026-12-31"
     kind: broken
     note: "first red run 37682076933 at a514e2025 (range 6e7ef56ec..a514e2025 incl. #407); cause not attributed; parked under the owner's perf allowance with the other benches"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_frontier_marches_seed42_200t_narrative_grade_stability"
-    ticket: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "NARRATIVE step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stability"
-    ticket: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "NARRATIVE step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability"
-    ticket: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "NARRATIVE step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_frontier_extended_seed42_200t_narrative_grade_stability"
-    ticket: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "NARRATIVE step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_frontier_living_world_seed123_200t_combat_narrative_grade_stability"
-    ticket: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "NARRATIVE step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stability"
-    ticket: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_urban_political_seed42_200t_social_grade_stability"
-    ticket: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_frontier_living_world_seed42_200t_social_grade_stability"
-    ticket: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_urban_political_seed123_1000t_social_economy_grade_stability"
-    ticket: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_urban_political_seed42_1000t_social_grade_stability"
-    ticket: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "SOCIAL step-change family (#408 measurement); rpg-planner 2026-10-07: class (a) pending bisect, rebaseline deferred until #407 / SURV-07 / decision 25"
-  - match: "tests.unit.worldassembly.test_corpus_diversity::test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_stability"
-    ticket: TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE
-    owner: rpg-implementer-2
-    added_on: "2026-10-07"
-    expires_on: "2026-11-15"
-    kind: broken
-    note: "ECONOMY step change after #269 (#408 measurement); measured fresh with the post-starvation-chain rebaselines (#407 inn meals, SURV-07)"
   - match: "tests.unit.worldassembly.test_corpus_diversity::test_population_stability?frontier_marches?"
     ticket: TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2
     owner: testing-implementer
@@ -177,10 +100,87 @@ known_reds:
     expires_on: "2026-11-30"
     kind: broken
     note: "tick-3 wall-clock budget 479.5ms > 150ms in the first slow run after #645 (39172879323); one sample, quiet-host repro pending; reclassify flaky if it does not reproduce"
-  - match: "tests.unit.worldassembly.test_corpus_diversity*"
-    ticket: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
-    owner: testing-implementer
-    added_on: "2026-10-07"
-    expires_on: "2026-11-04"
-    kind: flaky
-    note: "re-anchor moved to baseline v1 (designer, 2026-10-14); catch-all, keep LAST; covers the stale-anchor reds until the re-anchor commit lands, and after it only the 3 class-(c) COGNITION anchors from the #408 measurement (simq_routing 500t and 1000t, hero_guild_routing 1000t), which the audit_mode ticket makes deterministic; the 3 population_stability entries above are specific; superseded TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED (issue #511)"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?hero_guild_routing_seed42_500t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected #645 route_search regression"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?simq_routing_test_seed42_500t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected #645 route_search regression"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?urban_political_seed456_500t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected early stall (COGNITION identical at 500t and 1000t, FACTION negative)"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?wilderness_survival_seed123_200t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): SOCIAL: cause unknown"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band_long_run?hero_guild_routing_seed42_1000t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected #645 route_search regression"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band_long_run?simq_routing_test_seed42_1000t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected #645 route_search regression"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band_long_run?urban_political_seed456_1000t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected early stall (COGNITION identical at 500t and 1000t, FACTION negative)"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?generated_frontier_3_42_seed42_200t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?simq_scale_stress_seed42_seed42_200t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?hero_guild_routing_seed123_500t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?simq_routing_test_seed123_500t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"
+  - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?frontier_marches_seed123_200t?"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-24"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"

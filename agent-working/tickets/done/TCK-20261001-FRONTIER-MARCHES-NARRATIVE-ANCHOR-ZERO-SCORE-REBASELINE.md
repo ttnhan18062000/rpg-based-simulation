@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 ticket_id: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
-phase: open
+phase: done
 date: 2026-10-01
 tags: [simulation-quality, grade-thresholds, testing]
 ---
@@ -49,7 +49,7 @@ trial count. **Defer the rebaseline** until #407, SURV-07 and decision 25 are on
 §11: re-measure fresh after related fixes). The bisect may run earlier, since it measures history.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -161,4 +161,5 @@ _To be completed during implementation._
 _To be completed during implementation._
 
 ## Completion Summary
+Closed by TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1: its anchors moved to the baseline-v1 values (v1 SHA 341f700d0) under rpg-planner's 2026-10-24 ruling; the per-row cause is in agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/ruling_table.tsv. The bisect ACs are superseded by the per-row cause there.
 _To be completed during implementation._
