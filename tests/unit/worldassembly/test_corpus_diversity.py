@@ -2014,8 +2014,10 @@ _ND_TARGET = {"status": "no-data", "min_events": 3, "abs_floor": 0.05}
 
 
 def test_anchor_reader_returns_the_committed_ok_anchors_and_never_a_default():
-    anchor = _anchor("urban_political_seed123_500t", "COGNITION")
+    anchor = _anchor("sandbox_world_seed42_200t", "ECONOMY")  # an anchor that is ok on baseline v1 (urban_political_seed123_500t COGNITION became a no-data anchor)
     assert anchor["status"] == "ok" and anchor["grade"] in "FDCBAS" and isinstance(anchor["score"], float)
+    no_data = _anchor("sandbox_world_seed42_200t", "COGNITION")  # the min-event rule (#645): a no-data anchor reads as one, never as a default grade
+    assert no_data["status"] == "no-data" and no_data["min_events"] == 3 and "grade" not in no_data
     with pytest.raises(KeyError):
         _anchor("urban_political_seed123_500t", "NO_SUCH_PILLAR")
 

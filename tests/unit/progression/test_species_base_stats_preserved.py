@@ -271,7 +271,7 @@ def test_every_combat_component_field_survives_to_readonly():
         "evasion": 0.17, "move_cost": 18.0, "tactical_role": "SKIRMISHER", "action_style": 2,
         "alive": False, "readiness": 19.0, "readiness_speed": 20.0,
         "base_hp": -21, "base_atk": 22, "base_def": -23, "base_evasion": 0.24,
-        "permanent_max_hp_bonus": 25, "last_attacker_id": 26,
+        "permanent_max_hp_bonus": 25, "last_attacker_id": 26, "last_hit_tick": 27,
     }
     skip = {"wounds", "scars", "status_effects", "latest_result", "_canonical_cache"}
     assert {f.name for f in fields(CombatComponent)} - skip == set(sentinel), "update sentinel"

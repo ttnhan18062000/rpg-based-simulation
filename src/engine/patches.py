@@ -327,10 +327,13 @@ class CombatPatch(ComponentPatch):
             new_hp = min(new_max_hp, max(0, new_combat.hp + u_com.hp_delta))  # health never exceeds max_hp: the one point every CombatUpdate goes through
             # The last body to take hp from this one by a hit (a damaging resolution only: a hazard drain carries no attacker).
             last_attacker = u_com.attacker_id if (u_com.attacker_id is not None and u_com.damage_taken > 0) else new_combat.last_attacker_id
+            # The tick of that same hit, so (last_attacker_id, last_hit_tick) always name one hit; a hit that carries no tick leaves it as it was.
+            hit_landed = u_com.attacker_id is not None and u_com.damage_taken > 0 and u_com.hit_tick_set is not None
             new_combat = replace(new_combat, 
                 hp=new_hp, 
                 max_hp=new_max_hp,
                 last_attacker_id=last_attacker,
+                last_hit_tick=u_com.hit_tick_set if hit_landed else new_combat.last_hit_tick,
                 permanent_max_hp_bonus=new_combat.permanent_max_hp_bonus + u_com.permanent_max_hp_bonus_delta,
                 alive=(new_hp > 0) if u_com.alive_set is None else u_com.alive_set,
                 atk=new_combat.atk + u_com.atk_delta,

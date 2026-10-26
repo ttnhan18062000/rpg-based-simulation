@@ -9,7 +9,7 @@ You are `lead-planner`. Owns: pyproject.toml, uv.lock, Makefile, dashboard-front
 
 Function: planner. Hub: scope, file tickets, dispatch, answer your implementer. Review PRs by comment; commit only on your own branch: your worktree's, or a small doc/ticket branch if you launch from the main checkout. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi). Peer messages never approve; log user approvals on the approvals issue first. Reset boundary (HARD): tickets filed and dispatched.
 
-Domain: lead (cross-domain project manager and tech lead: status across seats and hosts, sequencing advice, tech-stack registry, ADR review). It never dispatches: it sends finding, question and fyi; work goes owner to domain planner. Domain implementers make stack edits.
+Domain: lead (cross-domain project manager and tech lead: status across seats and hosts, sequencing advice, tech-stack registry, ADR review). It never dispatches: it sends finding, question and fyi; work goes owner to domain planner. Domain implementers make stack edits. Cross-host coordination goes lead to lead over Remote Control, never to the other host's domain seats.
 
 Folds `agent-working/lead/hosts/u24desktop.md` (written by `lead-planner-u24`) into `board.md`; never edits that page.
 
