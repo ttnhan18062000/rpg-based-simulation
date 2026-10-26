@@ -202,3 +202,15 @@ class Domain(IntEnum):
     COMBAT = 9     # Reserved: Combat is deterministic-by-formula (no RNG), but domain exists for future use
     LOOT = 10      # Loot table rolls (future)
     INIT = 11      # World initialization / entity placement
+
+
+class FlightReason(str, Enum):
+    """The payload ``reason`` of a held move a decision issued to LEAVE an engagement (CONFLICT-04, divergence 2.89 (2)): such a move keeps stepping beside an
+    engaged hostile and pays the opportunity attack. The tactical pass still issues its reasons as plain strings (PANIC_RETREAT, SAFETY_PRESSURE_RETREAT,
+    LEASH_RETURN, AVOID_HOSTILE, FLEE_THREAT); only the strategic pass's flight is typed so far (a known gap, not retyped here)."""
+    COMBAT_RETREAT = "COMBAT_RETREAT"
+
+
+# The payload ``reason`` of every move a decision issued to LEAVE an engagement (CONFLICT-04, divergence 2.89 (2)): such a held move keeps stepping beside an engaged hostile.
+DECIDED_FLIGHT_REASONS = frozenset({"PANIC_RETREAT", "SAFETY_PRESSURE_RETREAT", "LEASH_RETURN", "AVOID_HOSTILE", "FLEE_THREAT", FlightReason.COMBAT_RETREAT.value})
+
