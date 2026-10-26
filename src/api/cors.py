@@ -11,10 +11,13 @@ import os
 from typing import List, Optional
 
 CORS_ORIGINS_ENV = "BACKEND_CORS_ORIGINS"
-# Vite dev server (frontend/vite.config.ts port 5173) and the compose frontend (FRONTEND_PORT default 8080), on both loopback names.
+# Vite dev server (frontend/vite.config.ts port 5173), `vite preview` (port 4173) and the compose frontend (FRONTEND_PORT default 8080),
+# on both loopback names.
 DEFAULT_CORS_ORIGINS = (
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
 )

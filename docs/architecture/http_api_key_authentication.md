@@ -188,7 +188,7 @@ unbuilt.
 
 The API no longer allows every origin. `src/api/cors.py::cors_origins_from_env()` reads `BACKEND_CORS_ORIGINS`, a comma-separated list of
 origins (blanks ignored, trailing `/` stripped, a bare `*` dropped). Unset, empty or whitespace-only input gives the local dev origins:
-`http://localhost:5173` and `http://127.0.0.1:5173` (the Vite dev server) and `http://localhost:8080` and `http://127.0.0.1:8080` (the compose
+`http://localhost:5173` and `http://127.0.0.1:5173` (the Vite dev server), `http://localhost:4173` and `http://127.0.0.1:4173` (`vite preview`) and `http://localhost:8080` and `http://127.0.0.1:8080` (the compose
 frontend). Credentials stay off: auth is the `X-API-Key` header, and no listed origin can send cookies. The frontend calls the relative
 `/api/v1` (the Vite dev proxy, `docker/nginx.conf` in compose), so its own traffic is same-origin and needs no CORS; the list matters for a
 page served from another origin. A preflight from an unlisted origin gets 400. (Semgrep alert #228.)

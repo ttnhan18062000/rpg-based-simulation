@@ -16,9 +16,17 @@ def _no_ambient_cors_origins(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_default_is_the_local_dev_origins():
-    assert cors_origins_from_env({}) == list(DEFAULT_CORS_ORIGINS)
+    assert cors_origins_from_env({}) == [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:4173",
+        "http://127.0.0.1:4173",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+    ]
     assert "*" not in DEFAULT_CORS_ORIGINS
     assert "http://localhost:5173" in DEFAULT_CORS_ORIGINS  # frontend/vite.config.ts
+    assert "http://localhost:4173" in DEFAULT_CORS_ORIGINS  # `vite preview`
     assert "http://localhost:8080" in DEFAULT_CORS_ORIGINS  # compose frontend (FRONTEND_PORT)
 
 
