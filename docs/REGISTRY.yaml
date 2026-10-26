@@ -7839,6 +7839,25 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS.md
+  ticket_id: TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS
+  title: paired.py compares arm results collected off this host (`--collected DIR`),
+    never executing a run
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-26'
+  related_code_areas:
+  - tools/rpg_measure/paired.py (main, run_arm, result_path, neutral)
+  - 'tools/rpg_measure/arm_child.py (read only: child hash)'
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/plan.md
+  - agent-working/stored_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/test_plan.md
+  tags:
+  - testing
+  - performance
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
   ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
   title: The two leads message each other across hosts over Remote Control, and every

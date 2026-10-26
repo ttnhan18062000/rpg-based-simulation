@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS
-phase: inprogress
+phase: done
 date: 2026-10-26
 tags: [testing, performance, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [testing, performance, determinism]
 paired.py compares arm results collected off this host (`--collected DIR`), never executing a run
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -56,8 +56,8 @@ paired.py today always executes missing arms locally. This ticket adds a load-on
 - Making the job a required check.
 
 ## Acceptance Criteria
-- On one real step, a `--collected` run over the cache a normal local run produced gives a table byte-identical to the local run except the one `- runners:` line (planner ruling 2026-10-26; the unit test asserts the diff is that single line).
-- Unit tests cover:
+- [x] On one real step, a `--collected` run over the cache a normal local run produced gives a table byte-identical to the local run except the one `- runners:` line (planner ruling 2026-10-26; the unit test asserts the diff is that single line).
+- [x] Unit tests cover:
   - a missing result is REFUSED with its keys;
   - a mismatched runner python, os or image is REFUSED;
   - a repeat file is not deleted;
@@ -65,7 +65,7 @@ paired.py today always executes missing arms locally. This ticket adds a load-on
   - a short sha is rejected;
   - the verdict-json values match for PASS, STOP, REFUSED and report_only;
   - a missing cost.json gives null wall/RSS.
-- The local mode's output is unchanged: the same table on the same cache.
+- [x] The local mode's output is unchanged: the same table on the same cache.
 
 ## Related Tickets
 - TCK-20261023-PAIRED-ARMS-RUN-OFF-THE-SHARED-HOST (testing, T2)
@@ -97,3 +97,4 @@ Unit: `tests/unit/tools/test_rpg_measure_collected.py` (14 test functions, 18 ca
 - `tests/unit/tools/test_rpg_measure_collected.py`
 
 ## Completion Summary
+`paired --collected DIR` compares results produced elsewhere without executing anything (full shas, no git, REFUSED with keys for a missing result, runner python/os/image mismatch REFUSED, repeat files never unlinked, `--jobs`/`--clean-cache` rejected), `<world>_<seed>.cost.json` is read beside each result (missing means null wall/RSS), and `--verdict-json` (both modes) writes {outcome, mode, detail} and never raises. Verified on a real step: the collected table equals Lane A's local table except the one `- runners:` line; local output is unchanged against origin/main's paired.py. The ledger wiring (item 5) stays with the hook ticket.
