@@ -17,3 +17,6 @@ tags: []
 
 ## Landing
 **LANDING HOLD (planner correction 2026-10-26):** the landing slot is set by the owner-approved section 12.5 order (step B, step A, F4, D73). Code F4 and run the neutral proof as planned, but HOLD the PR until after step A, unless the owner rules to move it earlier (rpg-planner is asking).
+
+**LANDING HOLD LIFTED (owner ruling, #715 issuecomment-6412087297, memo row 90, relayed by rpg-planner):** F4 lands as soon as it is ready. Opening the PR still needs the user's own yes.
+**PR body requirement (lead-planner-u24):** the gate-world `--neutral` IDENTICAL only shows those worlds do not exercise F4; it is NOT behaviour coverage, and the PR body must say so in those words. The behaviour evidence is the constructed-WAR-state test, where a squad actually forms: it must check the F4 path (stable_int31 used for group_id) and run twice per hashseed, so it is also deterministic within a seed.
