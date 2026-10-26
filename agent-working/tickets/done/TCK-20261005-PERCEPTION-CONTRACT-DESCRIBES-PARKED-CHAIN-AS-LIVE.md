@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-PERCEPTION-CONTRACT-DESCRIBES-PARKED-CHAIN-AS-LIVE
-phase: open
+phase: done
 date: 2026-10-05
 tags: [cognition, documentation]
 ---
@@ -17,7 +17,7 @@ pipeline stage that never runs, contradicting the same document's own "designed,
 relabel sixteen lines earlier
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -87,13 +87,13 @@ on the interactions table without reading `:17` first comes away believing a dor
   and belongs to `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP`.
 
 ## Acceptance Criteria
-- [ ] `:50` and `:194` each describe the gate's real present-day consumer and no longer assert that
+- [x] `:50` and `:194` each describe the gate's real present-day consumer and no longer assert that
       it filters `world_signals` or precedes a running stage.
-- [ ] The designed relationship is still readable in the document, not deleted.
-- [ ] The Scope 3 sweep result is recorded either way — "no third passage" is a valid, wanted answer.
-- [ ] No claim in the edited passages is unverifiable against `src/` at a named commit; cite the
+- [x] The designed relationship is still readable in the document, not deleted.
+- [x] The Scope 3 sweep result is recorded either way — "no third passage" is a valid, wanted answer.
+- [x] No claim in the edited passages is unverifiable against `src/` at a named commit; cite the
       commit.
-- [ ] `make knowledge-index-update` run, since `docs/` changed.
+- [x] `make knowledge-index-update` run, since `docs/` changed.
 
 ## Related Tickets
 - `TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN` — the registry work
@@ -129,13 +129,14 @@ on the interactions table without reading `:17` first comes away believing a dor
   from here.
 
 ## Implementation Notes
-_(not started)_
+`docs/simulation/domains/perception_contract.md`, every passage that asserted the parked chain as live now carries a "Designed:" / "Today:" split; nothing was deleted. Call sites re-derived at main 3533fde71 (the ticket's `tactical.py:199` is stale): `src/engine/appraisal.py::perceives` (line 50) and `src/engine/tactical.py::_target_still_perceived` (line 90), both through the singleton in `src/engine/behavior_consumers.py`, both catching `(AttributeError, KeyError, TypeError, ValueError, RuntimeError)` and treating a gate failure as perceived. The text says reach is measured and effect is not. `sense_gated_detection` had landed in the previous commit of this batch, so the cross-reference is included.
+**Scope 3 sweep result: there were more than the two found.** Edited: `:50` (World-side prerequisite), `:194` (Domain Interactions row), plus four more passages with the same defect: `:36` (the domain "consumes the post-gate signal list"), `:128` ("runs before the Perception Update stage in the engine loop"), `:141` ("The Perception Update stage never sees signals that the gate blocked") and `:149` (the What It Reads row "post-gate `Sequence[WorldSignal]`"). The header lines `:11`-`:17` were already correct, and the `:188` catalog-immutability row and the test and extension sections make no claim about the pipeline.
 
 ## Test Summary
-_(not started)_
+Docs only; no code or test touched. `make knowledge-index-update` is run once for the batch (several tickets change `docs/`).
 
 ## Files Changed
-_(not started)_
+- docs/simulation/domains/perception_contract.md
 
 ## Completion Summary
-_(not started)_
+Six passages in `perception_contract.md` now state the designed relationship and what the gate actually does today, cited at main 3533fde71. No code changed.
