@@ -7855,6 +7855,38 @@
   tags:
   - testing
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS.md
+  ticket_id: TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS
+  title: paired.py compares arm results collected off this host (`--collected DIR`),
+    never executing a run
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-26'
+  related_code_areas:
+  - tools/rpg_measure/paired.py (main, run_arm, result_path, neutral)
+  - 'tools/rpg_measure/arm_child.py (read only: child hash)'
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/plan.md
+  - agent-working/stored_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/test_plan.md
+  tags:
+  - testing
+  - performance
+  - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE.md
+  ticket_id: TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE
+  title: '`tools.sessions.validate` expands each ownership-split glob once, not once
+    per shared file'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-26'
+  related_code_areas:
+  - tools/sessions/validate.py
+  artifact_files: []
+  tags:
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
   ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
   title: The two leads message each other across hosts over Remote Control, and every
@@ -8022,6 +8054,23 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION.md
+  ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
+  title: The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt`
+    version, not a stray user-site install
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-24'
+  related_code_areas:
+  - .claude/settings.json
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION/test_plan.md
+  tags:
+  - knowledge-store
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS.md
   ticket_id: TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS
   title: '`requirements-knowledge.txt` takes the patched mcp, graphifyy and torch
@@ -8171,20 +8220,6 @@
   - architecture
   - delivery
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION.md
-  ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
-  title: The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt`
-    version, not a stray user-site install
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-24'
-  related_code_areas:
-  - .claude/settings.json
-  artifact_files: []
-  tags:
-  - knowledge-store
-  - process-improvement
-- type: ticket
   path: agent-working/tickets/todos/TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE.md
   ticket_id: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
   title: 'Find the cause of the 36 SimQ rows held at the v1 re-anchor: the routing
@@ -8196,6 +8231,23 @@
   related_code_areas:
   - src/ (route_search; the cognition, faction and social event producers)
   artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE.md
+  ticket_id: TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE
+  title: A hostile "acts on" a subject only by an act (an attack or pursuit aimed
+    at it, or a hit that landed), not by a state (wounded, adjacent, closing, outmatched)
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - src/engine/tactical_threat.py, src/ai/goals/present_threat.py, src/ai/goals/scorers.py:61-75
+  - src/engine/tactical.py:203-219
+  - src/core/state.py CombatComponent, src/engine/patches.py CombatPatch
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE/plan.md
+  - agent-working/stored_artifacts/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE/test_plan.md
   tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
@@ -8484,6 +8536,20 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT.md
+  ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
+  title: Role cards show a role's single files in a folder it doesn't otherwise own
+    as "dir/ (N files)", so the card budget can come back down from 440
+  tier: hotfix
+  ticket_type: refactor
+  date: '2026-10-21'
+  related_code_areas:
+  - tools/sessions/card.py
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS.md
   ticket_id: TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS
   title: 'Eleven paths that route as unowned get an owner in session_roles.yaml: the
@@ -8582,20 +8648,6 @@
   tags:
   - architecture
   - delivery
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT.md
-  ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
-  title: Role cards show a role's single files in a folder it doesn't otherwise own
-    as "dir/ (N files)", so the card budget can come back down from 440
-  tier: hotfix
-  ticket_type: refactor
-  date: '2026-10-21'
-  related_code_areas:
-  - tools/sessions/card.py
-  artifact_files: []
-  tags:
-  - ai
-  - governance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT.md
   ticket_id: TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT
@@ -9095,6 +9147,18 @@
   - architecture
   - delivery
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.md
+  ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
+  title: 'Put both survival pressures on one escalation scale: combat_retreat gets
+    the need-pull escalation once hp is in its own consequence band'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai need_pull.py (ESCALATION_AMPLITUDE, smoothstep)
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261020-A-PURSUING-HOSTILE-WAKES-ITS-TARGET.md
   ticket_id: TCK-20261020-A-PURSUING-HOSTILE-WAKES-ITS-TARGET
   title: A perceived hostile pursuing the subject (INTERCEPT/PURSUE on it) wakes its
@@ -9128,18 +9192,6 @@
   date: '2026-10-20'
   related_code_areas:
   - src/engine tactical movement (BRACKETING)
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.md
-  ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
-  title: 'Put both survival pressures on one escalation scale: combat_retreat gets
-    the need-pull escalation once hp is in its own consequence band'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-20'
-  related_code_areas:
-  - src/ai need_pull.py (ESCALATION_AMPLITUDE, smoothstep)
   artifact_files: []
   tags: []
 - type: ticket
@@ -10780,6 +10832,21 @@
   - determinism
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-SESSION-BINDINGS-TORN-TAIL.md
+  ticket_id: TCK-20261015-SESSION-BINDINGS-TORN-TAIL
+  title: A torn last line in a session-roles bindings.jsonl must not silence SessionStart;
+    repair the torn rpg-implementer file
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-15'
+  related_code_areas:
+  - tools/sessions/state.py, tools/sessions/session_start_hook.py
+  - .git/session-roles/rpg-implementer/ (runtime state, main checkout)
+  artifact_files: []
+  tags:
+  - hooks
+  - data-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START.md
   ticket_id: TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START
   title: SessionStart warns when the worktree it runs from has stale session code
@@ -10928,21 +10995,6 @@
   artifact_files: []
   tags:
   - platform
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261015-SESSION-BINDINGS-TORN-TAIL.md
-  ticket_id: TCK-20261015-SESSION-BINDINGS-TORN-TAIL
-  title: A torn last line in a session-roles bindings.jsonl must not silence SessionStart;
-    repair the torn rpg-implementer file
-  tier: hotfix
-  ticket_type: bug
-  date: '2026-10-15'
-  related_code_areas:
-  - tools/sessions/state.py, tools/sessions/session_start_hook.py
-  - .git/session-roles/rpg-implementer/ (runtime state, main checkout)
-  artifact_files: []
-  tags:
-  - hooks
-  - data-quality
 - type: ticket
   path: agent-working/tickets/done/TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71.md
   ticket_id: TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71
@@ -15421,6 +15473,26 @@
   - engine
   - combat
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP.md
+  ticket_id: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
+  title: '`combat_engagement` grew by about 3.3 s per tick at movement[5000] somewhere
+    between `c84352465` and `132bf09ca` (`is_hostile_compat` → `project_relation`);
+    isolate the commit, and do not add cost when making the check symmetric'
+  tier: standard
+  ticket_type: investigation
+  date: '2026-10-06'
+  related_code_areas:
+  - src/domains/combat_engagement/phase.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP/investigation.md
+  - agent-working/stored_artifacts/TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP/plan.md
+  - agent-working/stored_artifacts/TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP/test_plan.md
+  tags:
+  - performance
+  - combat
+  - regression
+  - investigation
+- type: ticket
   path: agent-working/tickets/done/TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK.md
   ticket_id: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
   title: '`find_pending_incoming_offer` scans every entity''s contracts for every
@@ -16393,23 +16465,6 @@
   tags:
   - engine
   - combat
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP.md
-  ticket_id: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
-  title: '`combat_engagement` grew by about 3.3 s per tick at movement[5000] somewhere
-    between `c84352465` and `132bf09ca` (`is_hostile_compat` → `project_relation`);
-    isolate the commit, and do not add cost when making the check symmetric'
-  tier: standard
-  ticket_type: investigation
-  date: '2026-10-06'
-  related_code_areas:
-  - src/domains/combat_engagement/phase.py
-  artifact_files: []
-  tags:
-  - performance
-  - combat
-  - regression
-  - investigation
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261006-ENV-07-WOUNDED-THEN-DRAINED-CLAUSE-HAS-NO-ATTACKER-DAMAGE-RECORD.md
   ticket_id: TCK-20261006-ENV-07-WOUNDED-THEN-DRAINED-CLAUSE-HAS-NO-ATTACKER-DAMAGE-RECORD
