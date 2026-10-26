@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
-phase: open
+phase: done
 date: 2026-10-18
 tags: [platform, observability, performance]
 ---
@@ -110,4 +110,4 @@ See the child tickets.
 See the child tickets.
 
 ## Completion Summary
-(open)
+All six children are done: 1-5 in #627 and #688, child 6 (ai_worker scrape and lag alert, TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT) in the batch `platform-implementer-local-ai-worker-lag`, unblocked by rpg's #645.
