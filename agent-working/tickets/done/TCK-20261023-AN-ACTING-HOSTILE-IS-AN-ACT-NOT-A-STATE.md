@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE
-phase: inprogress
+phase: done
 date: 2026-10-23
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 A hostile "acts on" a subject only by an act (an attack or pursuit aimed at it, or a hit that landed), not by a state (wounded, adjacent, closing, outmatched)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -94,7 +94,7 @@ Measured (2026-10-26; base `341f700d0`, tip `265162719`, seeds 42-46, 3 worlds, 
 - Probe outputs: `/mnt/data/scratch-rpg-implementer/stepB/` (p2_*, p3_*, paired.log); not committed.
 
 ## Test Summary
-Scoped runs (`PYTHONHASHSEED=0`, `-n 0 --resource-budget off`): `tests/unit tests/integration/{kernel,observability,pipeline} tests/certification tests/mechanic_scenarios -m "not slow"`: 9030 passed, 7 failed. Of the 7: four are order-dependent flakes (listed below), one is retired (below); the two digest tests pass unedited under perf's ruling (ii).
+Final scoped run after merging origin/main (2026-10-26): 9113 passed, 4 failed (the four order-dependent flakes below, each passing alone and rerun green), 11 skipped, 1 xfailed. Earlier run: `tests/unit tests/integration/{kernel,observability,pipeline} tests/certification tests/mechanic_scenarios -m "not slow"`: 9030 passed, 7 failed. Of the 7: four are order-dependent flakes (listed below), one is retired (below); the two digest tests pass unedited under perf's ruling (ii).
 New: `tests/unit/engine/test_acting_hostile_is_an_act_not_a_state.py` (23). Health ratchet OK (0 new, 0 worse), mypy gate clean, import contracts 17 kept 0 broken.
 
 Pins that changed meaning (old -> new; the planner's yes covers exactly these):
@@ -119,3 +119,4 @@ Retired, awaiting perf, and unrelated failures:
 src/core/state.py, src/core/updates.py, src/engine/patches.py, src/engine/combat.py, src/engine/tactical.py, src/engine/tactical_threat.py, src/ai/goals/present_threat.py, src/ai/goals/scorers.py; tests as above; docs/guidelines/intentional_divergences.md (2.138), docs/parity_ledger/strategic_cognition.yaml (STRAT-287); memo row 88 commits cherry-picked (fd64bad5b, 916d05493).
 
 ## Completion Summary
+Step B is built and measured. A hostile now acts on a subject only by an act (an attack or pursuit aimed at it, or a hit within `NEED_WAKE_CADENCE`), not by a state; the SURV-07 escalation gate and the panic hold past the need's consequence line read that test, and `CombatComponent.last_hit_tick` is typed durable state kept out of the proof digest until perf F1. Paired measurement: people deaths no drift on all three worlds; the crowded_frontier merchant extinction STOP is accepted by the owner as a downstream consequence of the row-88 change and recorded as is (divergence 2.138, STRAT-287, #715 comment 6411018314). Gaps stated: the final hash and the paired hash-equality proofs cannot see divergence in `last_hit_tick` until F1; step B's evidence is counters, fates and extinction rows; an attack task stays current until the hostile's next decision (no reach test); the 2100-tick blacksmith-13 trajectory pin was retired (planner yes); four order-dependent test flakes pre-exist and are filed by the planner. Step A (HUNGER-AND-RETREAT) is measured on this tip next. Not pushed: pushing and the PR need the owner's separate yes.

@@ -8198,6 +8198,23 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE.md
+  ticket_id: TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE
+  title: A hostile "acts on" a subject only by an act (an attack or pursuit aimed
+    at it, or a hit that landed), not by a state (wounded, adjacent, closing, outmatched)
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - src/engine/tactical_threat.py, src/ai/goals/present_threat.py, src/ai/goals/scorers.py:61-75
+  - src/engine/tactical.py:203-219
+  - src/core/state.py CombatComponent, src/engine/patches.py CombatPatch
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE/plan.md
+  - agent-working/stored_artifacts/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
   ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
   title: Update the engine execution modes proposal with the 2026-10-22 rulings and
@@ -9095,6 +9112,18 @@
   - architecture
   - delivery
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.md
+  ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
+  title: 'Put both survival pressures on one escalation scale: combat_retreat gets
+    the need-pull escalation once hp is in its own consequence band'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai need_pull.py (ESCALATION_AMPLITUDE, smoothstep)
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261020-A-PURSUING-HOSTILE-WAKES-ITS-TARGET.md
   ticket_id: TCK-20261020-A-PURSUING-HOSTILE-WAKES-ITS-TARGET
   title: A perceived hostile pursuing the subject (INTERCEPT/PURSUE on it) wakes its
@@ -9128,18 +9157,6 @@
   date: '2026-10-20'
   related_code_areas:
   - src/engine tactical movement (BRACKETING)
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.md
-  ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
-  title: 'Put both survival pressures on one escalation scale: combat_retreat gets
-    the need-pull escalation once hp is in its own consequence band'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-20'
-  related_code_areas:
-  - src/ai need_pull.py (ESCALATION_AMPLITUDE, smoothstep)
   artifact_files: []
   tags: []
 - type: ticket
