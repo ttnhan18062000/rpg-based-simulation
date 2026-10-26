@@ -349,3 +349,17 @@ def test_an_unknown_launch_mode_is_a_bad_field(fixture_root):
         _role(r, "d1-planner")["placement"]["launch"] = "anywhere"
 
     assert "bad-field" in _rules(_mutated(fixture_root, mutate))
+
+
+def test_validation_expands_each_glob_once_not_once_per_shared_file(monkeypatch):
+    """TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE: a split path was re-globbed for every shared file, ~230 s over
+    18k tracked files. Calls to `_files` are bounded by the owns patterns plus the distinct split paths."""
+    from tools.sessions import validate as validate_mod
+
+    roster = load_roster()
+    calls = []
+    real = validate_mod._files
+    monkeypatch.setattr(validate_mod, "_files", lambda root, pattern: calls.append(pattern) or real(root, pattern))
+    validate_mod.validate()
+    bound = sum(len(r.owns) for r in roster.roles) + len({p for s in roster.splits for p in s.paths})
+    assert len(calls) <= bound, f"{len(calls)} glob expansions for a bound of {bound}"
