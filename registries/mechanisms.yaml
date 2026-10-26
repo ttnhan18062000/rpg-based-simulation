@@ -2305,7 +2305,7 @@ mechanisms:
         speed -10%, wired at `src/engine/pipeline.py:339`). This class's `apply_sovereignty_debuffs` also
         returns an `EntityUpdate` with no fields set, so it would change nothing if it were called. Wiring would
         therefore either revive a retired rule or duplicate a live one: a behaviour change, not a fix, and out
-        of reach until decision 73. If a periodic levy or a monster-held debuff is ever wanted it is a new,
+        of reach until after the D73 step (roadmap §12.5). If a periodic levy or a monster-held debuff is ever wanted it is a new,
         declared feature that replaces this class; whether to delete the class is a separate decision.
         `docs/world/regional_sovereignty_runtime_contract.md` ("Taxation -- `regional_sovereignty.py`", every
         100 ticks) attributed taxation to this file and was wrong on both counts; it was corrected in the same
