@@ -105,7 +105,8 @@
     == "LOOT"`)'
   proof_type: parity
   test_path: '`tests/unit/resource/test_loot_channeling.py`'
-  divergence_note: null
+  divergence_note: the cited proof exercises the dead LootSystem; live-path proof
+    pending, TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF
   support_boundary: null
 - id: TOWN-010
   text: Harvesting is a channeled state tied to nearby resource-node legality and
@@ -249,7 +250,8 @@
   test_path: tests/unit/world/test_building_interaction_contract.py::test_building_interaction_inn_rest_recovery;
     tests/unit/world/test_town_services.py::test_guild_service_routes_via_interaction_kind;
     tests/unit/world/test_town_services.py::test_unrelated_interaction_kind_not_routed
-  divergence_note: null
+  divergence_note: the cited proof partly exercises the dead TownServiceSystem; live-path
+    proof pending, TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF
   support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
     used 2 semicolon-joined backtick-wrapped citations (the second with a bare-comma
     shorthand for its 2 methods, both confirmed real via grep) plus a trailing "(confirms
@@ -822,7 +824,8 @@
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
   test_path: tests/unit/resource/test_loot_channeling.py::test_loot_corpse_completion_transfers_all_item_stacks
-  divergence_note: null
+  divergence_note: the cited proof exercises the dead LootSystem; live-path proof
+    pending, TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF
   support_boundary: null
 - id: TOWN-077
   text: '`test_loot_and_respawn`: loot and respawn interaction'
