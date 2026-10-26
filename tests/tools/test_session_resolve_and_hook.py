@@ -97,6 +97,8 @@ def world(tmp_path, monkeypatch):
     (below 10 GB it embeds "only 6.8 GB free", which differs between two calls), so the probe reports plenty."""
     from tools.sessions import disk_headroom as dh
     monkeypatch.setattr(dh, "free_bytes", lambda _root: _PLENTY_FREE)
+    from tools import graphify_shim  # the host's own graphify must not reach the context
+    monkeypatch.setattr(graphify_shim, "advisory_line", lambda _root, **_kw: "")
     root = tmp_path / "root"
     shutil.copytree(REAL_ROOT / "registries", root / "registries",
                     ignore=shutil.ignore_patterns("*.jsonl"))
@@ -137,6 +139,17 @@ def test_the_disk_line_appears_when_the_probe_reports_low_space(world, monkeypat
     assert "disk-headroom:" not in _ctx(world, _payload(world[1]))
     monkeypatch.setattr(dh, "free_bytes", lambda _root: 3 * 1024**3)
     assert "disk-headroom: only 3.0 GB free" in _ctx(world, _payload(world[1]))
+
+
+def test_the_graphify_line_appears_only_when_the_advisory_says_so_and_a_failure_is_silent(world, monkeypatch):
+    from tools import graphify_shim
+    monkeypatch.setattr(graphify_shim, "advisory_line", lambda _root, **_kw: "graphify-version: stray")
+    assert "graphify-version: stray" in _ctx(world, _payload(world[1]))
+
+    def boom(_root, **_kw):
+        raise RuntimeError("x")
+    monkeypatch.setattr(graphify_shim, "advisory_line", boom)
+    assert "graphify-version" not in _ctx(world, _payload(world[1]))
 
 
 def test_resolved_role_gets_its_card_and_only_its_own_handover(world):

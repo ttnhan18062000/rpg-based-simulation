@@ -280,6 +280,17 @@ def _disk_line(root: Path) -> str:
         return ""
 
 
+def _graphify_line(root: Path) -> str:
+    """One line when the `graphify` on PATH is not the pinned version; "" otherwise or on any error (fails open, ~0.2 s;
+    TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION)."""
+    try:
+        from tools import graphify_shim
+
+        return graphify_shim.advisory_line(root)
+    except Exception:
+        return ""
+
+
 def build_context(payload: dict, environ=os.environ, root: Path = _REPO_ROOT, state_root: Path | None = None,
                   proc_root: Path = Path("/proc")) -> str:
     """The full additionalContext for a payload; "" for nothing. Raises on error (main() fails open)."""
@@ -298,7 +309,7 @@ def build_context(payload: dict, environ=os.environ, root: Path = _REPO_ROOT, st
         fallback = build_additional_context(handover_base(root) / HANDOVER_DIR) if payload.get("source") == "clear" else ""
         context = "\n".join(p for p in (fallback, LAUNCH_HINT) if p)
     notice = build_transit_notice(root / "agent-working" / "handover-transit")
-    return "\n".join(p for p in (context, notice, _disk_line(root)) if p)
+    return "\n".join(p for p in (context, notice, _disk_line(root), _graphify_line(root)) if p)
 
 
 def main() -> int:
