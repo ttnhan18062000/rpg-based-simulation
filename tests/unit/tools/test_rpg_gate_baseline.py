@@ -26,10 +26,13 @@ def _config(**over) -> rgb.GateConfig:
 RULING = {"ref": "memo-61", "date": "2026-10-11"}
 
 
+MAIN_CI = {"run_id": "39799337778", "run_attempt": "1", "event_name": "workflow_dispatch", "ref": "refs/heads/main"}
+
+
 def _candidate(deaths=3.0, violations=0, milestone="M1", pooled=0.4) -> dict:
     return {
         "milestone": milestone,
-        "provenance": {"commit_sha": "abc", "harness_hash": "h1", "worlds": ["w"], "seeds": [1, 2], "ticks": 5000},
+        "provenance": {"commit_sha": "abc", "harness_hash": "h1", "worlds": ["w"], "seeds": [1, 2], "ticks": 5000, "known_file_sha256": "b" * 64, "ci": dict(MAIN_CI)},
         "metrics": [
             {"id": "O2.deaths", "class": "outcome", "scope": "run", "world": "w", "group": "guards", "key": "STARVATION", "tick": 5000,
              "per_seed": {"1": deaths, "2": deaths}, "mean": deaths, "se": 0.5},
@@ -47,6 +50,81 @@ def _rebase(directory: Path, **kw):
     args = dict(pr="#9", divergence_id="DIV-1")
     args.update(kw.pop("cite", {}))
     return rgb.rebaseline(_candidate(**kw), _config(), directory, now=NOW, **args)
+
+
+# ---- the candidate's CI run and known-file hash (TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE)
+
+@pytest.mark.parametrize("ci, match", [
+    (None, "no CI run"),
+    ("absent", "no CI run"),
+    ({**MAIN_CI, "run_id": ""}, "no CI run"),
+    ({**MAIN_CI, "ref": "refs/heads/feature"}, "not refs/heads/main"),
+    ({**MAIN_CI, "ref": "refs/pull/9/merge"}, "not refs/heads/main"),
+    ({**MAIN_CI, "ref": ""}, "not refs/heads/main"),
+])
+def test_rebaseline_refuses_a_candidate_with_no_ci_run_or_a_run_off_main(tmp_path, ci, match):
+    candidate = _candidate()
+    if ci == "absent":
+        del candidate["provenance"]["ci"]
+    else:
+        candidate["provenance"]["ci"] = ci
+    with pytest.raises(rgb.RebaselineRefused, match=match):
+        rgb.rebaseline(candidate, _config(), tmp_path, pr=None, cites=["T"], now=NOW)
+    assert not list(tmp_path.glob("*.json"))
+
+
+def test_rebaseline_refuses_a_candidate_with_no_known_file_hash(tmp_path):
+    candidate = _candidate()
+    del candidate["provenance"]["known_file_sha256"]
+    with pytest.raises(rgb.RebaselineRefused, match="known_file_sha256"):
+        rgb.rebaseline(candidate, _config(), tmp_path, pr=None, cites=["T"], now=NOW)
+
+
+def test_rebaseline_accepts_a_main_run_and_carries_both_fields_into_the_baseline(tmp_path):
+    doc = json.loads(_write_v1(tmp_path).read_text())
+    assert doc["provenance"]["ci"] == MAIN_CI and doc["provenance"]["known_file_sha256"] == "b" * 64
+
+
+def test_the_evidence_only_refusal_still_holds_for_a_main_ci_candidate(tmp_path):
+    candidate = {**_candidate(), "evidence_only": True}
+    with pytest.raises(rgb.RebaselineRefused, match="evidence only"):
+        rgb.rebaseline(candidate, _config(), tmp_path, pr=None, cites=["T"], now=NOW)
+
+
+@pytest.mark.parametrize("field, value, expected", [
+    ("known_file_sha256", None, "known_file_sha256"),
+    ("known_file_sha256", "not-a-hash", "known_file_sha256"),
+    ("known_file_sha256", "B" * 64, "known_file_sha256"),
+    ("ci", None, "provenance: ci must carry"),
+    ("ci", {**MAIN_CI, "run_attempt": ""}, "provenance: ci must carry"),
+])
+def test_the_lint_requires_both_fields_from_version_two_on(tmp_path, field, value, expected):
+    _write_v1(tmp_path)
+    doc = json.loads(_rebase(tmp_path).read_text())
+    assert rgb.lint_baseline(doc, "rpg_gate_v2.json") == []
+    doc["provenance"][field] = value
+    assert any(expected in p for p in rgb.lint_baseline(doc, "rpg_gate_v2.json"))
+    del doc["provenance"][field]
+    assert any(expected in p for p in rgb.lint_baseline(doc, "rpg_gate_v2.json"))
+
+
+def test_the_lint_rejects_a_version_two_baseline_whose_ci_ref_is_not_main(tmp_path):
+    _write_v1(tmp_path)
+    doc = json.loads(_rebase(tmp_path).read_text())
+    doc["provenance"]["ci"]["ref"] = "refs/heads/feature"
+    assert any("ci.ref must be refs/heads/main" in p for p in rgb.lint_baseline(doc, "rpg_gate_v2.json"))
+
+
+def test_version_one_is_exempt_from_the_new_fields_by_its_version_number(tmp_path):
+    doc = json.loads(_write_v1(tmp_path).read_text())
+    del doc["provenance"]["ci"], doc["provenance"]["known_file_sha256"]
+    assert rgb.lint_baseline(doc, "rpg_gate_v1.json") == []
+
+
+def test_the_committed_v1_baseline_lints_unchanged():
+    baselines = Path(__file__).resolve().parents[3] / "tests" / "simulation_quality" / "rpg_gate" / "baselines"
+    assert (baselines / "rpg_gate_v1.json").is_file()
+    assert rgb.lint_dir(baselines) == []
 
 
 # ---- schema and lint

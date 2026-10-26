@@ -10,7 +10,8 @@ Input: the harness output directory (``<world>__s<seed>.json``, ``<world>__poole
 same inputs (sorted keys, rows sorted by their key)::
 
     {"schema": "rpg-gate-baseline/v1", "milestone": "M0" (optional),
-     "provenance": {"commit_sha", "harness_hash", "worlds", "seeds", "ticks"},
+     "provenance": {"commit_sha", "harness_hash", "worlds", "seeds", "ticks",
+                    "known_file_sha256", "ci": {"run_id", "run_attempt", "event_name", "ref"} | null},
      "metrics": [run outcome   {id, class, scope: run, world, group, key?, tick?, per_seed, mean, se, k, floor},
                  pooled outcome {id, class, scope: pooled, world, group, key?, tick?, value, floor},
                  run validity   {id, class, scope: run, world, group, per_seed, violations: 0, oracle},
@@ -35,6 +36,11 @@ A candidate is never partial. :func:`build_candidate` raises :class:`CandidateRe
 * ``k``, ``floor`` or ``oracle`` disagree across the documents for one (id, group), or an outcome row lacks its numeric ``k`` / ``floor`` / value;
 * a run outcome row is not present in every seed of its world, or the config has fewer than 2 seeds (no standard error).
 
+``provenance.known_file_sha256`` is the sha256 of the exact bytes of the ``--known`` file the candidate was judged against (it decided which owned validity rows
+were omitted). ``provenance.ci`` is the CI run the documents came from, read from ``GITHUB_RUN_ID``, ``GITHUB_RUN_ATTEMPT``, ``GITHUB_EVENT_NAME`` and ``GITHUB_REF``;
+it is ``null`` unless all four are set and non-empty (a local build), never a guessed value. ``rebaseline()`` refuses a candidate whose ``ci`` is null or whose
+``ci.ref`` is not ``refs/heads/main``, so a baseline can only come from a main run's own candidate (TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE).
+
 ``evidence_only`` marks a candidate from a branch-ref dispatch: ``rebaseline()`` refuses it, because only a main run is a baseline source.
 
 CLI::
@@ -47,8 +53,10 @@ Exit 0 and the file written, or exit 2 and the refusal on stderr (nothing writte
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
+import os
 import re
 import statistics
 import sys
@@ -221,18 +229,35 @@ def _sort_key(row: Mapping[str, Any]) -> Tuple[Any, ...]:
     return (row["world"], row["scope"], row["id"], row["group"], str(row.get("key", "")), -1 if row.get("tick") is None else row["tick"])
 
 
+CI_ENV = (("run_id", "GITHUB_RUN_ID"), ("run_attempt", "GITHUB_RUN_ATTEMPT"), ("event_name", "GITHUB_EVENT_NAME"), ("ref", "GITHUB_REF"))
+
+
+def ci_record(env: Mapping[str, str]) -> Optional[Dict[str, str]]:
+    """The CI run recorded in the candidate's provenance, read from the GitHub Actions variables in ``env``; ``None`` unless all four are set and non-empty (a local build), never a guess."""
+    record = {name: env.get(var) for name, var in CI_ENV}
+    return record if all(isinstance(value, str) and value for value in record.values()) else None
+
+
+def file_sha256(path: Path) -> str:
+    """The sha256 of the exact bytes of ``path``."""
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
 def build_candidate(
     docs_dir: Path,
     config: GateConfig,
     known: Sequence[dict],
     report: Mapping[str, Any],
     *,
+    known_file_sha256: str,
+    env: Optional[Mapping[str, str]] = None,
     milestone: Optional[str] = None,
     commit_sha: Optional[str] = None,
     evidence_only: bool = False,
     today: Optional[dt.date] = None,
 ) -> dict:
-    """The candidate for ``docs_dir`` under ``config`` and the ``state: fail`` registry ``known``, or raise :class:`CandidateRefused`."""
+    """The candidate for ``docs_dir`` under ``config`` and the ``state: fail`` registry ``known``, or raise :class:`CandidateRefused`.
+    ``known_file_sha256`` is the hash of the known-reds file ``known`` was loaded from; ``env`` (default ``os.environ``) supplies the GitHub Actions run variables."""
     today = today or dt.datetime.now(dt.timezone.utc).date()
     if len(config.seeds) < MIN_SEEDS:
         raise CandidateRefused(f"the config has {len(config.seeds)} seed(s); a run outcome row needs at least {MIN_SEEDS} for a standard error")
@@ -326,7 +351,10 @@ def build_candidate(
     rows.sort(key=_sort_key)
     candidate: Dict[str, Any] = {
         "schema": SCHEMA,
-        "provenance": {"commit_sha": sha, "harness_hash": hhash, "worlds": list(config.worlds), "seeds": list(config.seeds), "ticks": config.ticks},
+        "provenance": {
+            "commit_sha": sha, "harness_hash": hhash, "worlds": list(config.worlds), "seeds": list(config.seeds), "ticks": config.ticks,
+            "known_file_sha256": known_file_sha256, "ci": ci_record(os.environ if env is None else env),
+        },
         "metrics": rows,
     }
     if undefined:
@@ -363,7 +391,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--evidence-only", action="store_true", help="mark the candidate as evidence from a branch-ref dispatch; rebaseline refuses it")
     args = parser.parse_args(argv)
     try:
-        candidate = build_candidate(args.docs, load_config(args.config), known_reds.load_known_reds(args.known, known_reds.RPG_GATE_SPEC), _read_report(args.report), milestone=args.milestone, commit_sha=args.commit_sha, evidence_only=args.evidence_only)
+        candidate = build_candidate(args.docs, load_config(args.config), known_reds.load_known_reds(args.known, known_reds.RPG_GATE_SPEC), _read_report(args.report), known_file_sha256=file_sha256(args.known), milestone=args.milestone, commit_sha=args.commit_sha, evidence_only=args.evidence_only)
     except BaselineError as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 2

@@ -30,6 +30,10 @@ File: ``<baselines dir>/rpg_gate_v<N>.json`` (proposed dir ``tests/simulation_qu
 * A baseline holds validity rows only at ``violations == 0``. Validity is absolute (any non-zero value is a FAIL) and is never compared with a
   baseline, so a re-baseline can not normalise a validity fail; the lint, the loader and ``rebaseline()`` all refuse it and no ruling overrides that.
   A known validity fail is owned in ``rpg_gate_known.yaml`` (``state: fail``), never here.
+* From version 2 on, ``provenance`` also carries ``known_file_sha256`` (the sha256 of the ``rpg_gate_known.yaml`` the candidate was judged against) and ``ci``
+  (``{run_id, run_attempt, event_name, ref}`` of the CI run that produced the documents, ``ref`` being ``refs/heads/main``); the candidate builder writes both and
+  ``rebaseline()`` refuses a candidate with no ``ci`` or a ``ci.ref`` other than ``refs/heads/main`` (re-dispatch the gate on main; there is no override). Version 1
+  predates the rule and is exempt by its version number; it is never edited.
 * ``provenance.cites`` is a required, non-empty list on every version. Version 1 cites what justifies it (the metric-set ticket); a later version
   must contain the PR and at least one divergence id or memo row.
 * ``version`` 1 has ``rebaseline: null`` (it has no earlier baseline to cite, but ``provenance.cites`` still names its source). Every later version has a re-baseline record: the previous version, a divergence id and/or a memo row,
@@ -90,6 +94,8 @@ DEFAULT_DIR = Path("tests/simulation_quality/rpg_gate/baselines")
 FILENAME_RE = re.compile(r"^rpg_gate_v(\d+)\.json$")
 CLASSES = ("outcome", "validity")
 VALIDITY_ID_RE = re.compile(r"^V\d+$")
+MAIN_REF = "refs/heads/main"
+CI_FIELDS = ("run_id", "run_attempt", "event_name", "ref")
 PROVENANCE_FIELDS = ("commit_sha", "harness_hash", "worlds", "seeds", "ticks", "recorded_at", "stale_after", "cites")
 SCOPES = ("run", "pooled")
 
@@ -222,7 +228,7 @@ def lint_baseline(doc: Any, filename: Optional[str] = None) -> List[str]:
             problems.append(f"file name {filename!r} does not match version {version}")
     if not doc.get("milestone"):
         problems.append("missing milestone")
-    problems.extend(_lint_provenance(doc.get("provenance")))
+    problems.extend(_lint_provenance(doc.get("provenance"), version))
     if "owner_ruling" in doc and _ruling_problem(doc["owner_ruling"]):
         problems.append(_ruling_problem(doc["owner_ruling"]))
     problems.extend(_lint_metrics(doc.get("metrics")))
@@ -232,7 +238,21 @@ def lint_baseline(doc: Any, filename: Optional[str] = None) -> List[str]:
     return problems
 
 
-def _lint_provenance(prov: Any) -> List[str]:
+def _lint_ci_provenance(prov: Mapping[str, Any]) -> List[str]:
+    """From version 2 on: the known-reds file hash and the CI run the documents came from (a main run)."""
+    problems = []
+    sha = prov.get("known_file_sha256")
+    if not (isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{64}", sha)):
+        problems.append(f"provenance: known_file_sha256 must be a 64-character lowercase hex sha256, got {sha!r}")
+    ci = prov.get("ci")
+    if not (isinstance(ci, dict) and all(isinstance(ci.get(name), str) and ci.get(name) for name in CI_FIELDS)):
+        problems.append(f"provenance: ci must carry non-empty {', '.join(CI_FIELDS)} (the CI run the documents came from)")
+    elif ci["ref"] != MAIN_REF:
+        problems.append(f"provenance: ci.ref must be {MAIN_REF}, got {ci['ref']!r}")
+    return problems
+
+
+def _lint_provenance(prov: Any, version: Any = None) -> List[str]:
     if not isinstance(prov, dict):
         return ["missing provenance"]
     problems = [f"provenance: missing {name}" for name in PROVENANCE_FIELDS if prov.get(name) in (None, "", [])]
@@ -248,6 +268,8 @@ def _lint_provenance(prov: Any) -> List[str]:
         problems.append("provenance: cites must be a list of non-empty strings")
     if prov.get("ticks") is not None and not (isinstance(prov["ticks"], int) and prov["ticks"] > 0):
         problems.append("provenance: ticks must be a positive integer")
+    if isinstance(version, int) and not isinstance(version, bool) and version >= 2:
+        problems.extend(_lint_ci_provenance(prov))
     return problems
 
 
@@ -534,11 +556,20 @@ def rebaseline(
     today: Optional[dt.date] = None,
 ) -> Path:
     """Write the next version from ``candidate`` and return its path, or raise :class:`RebaselineRefused`. Never modifies an existing file.
-    A candidate marked ``evidence_only`` (from a branch-ref dispatch) is refused; ``milestone`` overrides the candidate's. A candidate that omitted owned validity
+    A candidate marked ``evidence_only`` (from a branch-ref dispatch) is refused, and so is one whose ``provenance.ci`` is null or missing, whose ``ci.ref`` is not
+    ``refs/heads/main``, or with no ``provenance.known_file_sha256``: only a main CI run's own candidate is a baseline source. There is no override; ``milestone`` overrides the candidate's. A candidate that omitted owned validity
     fails needs ``known`` (the current ``rpg_gate_known.yaml`` entries): each omission's ``known_match`` must still be a ``state: fail`` entry and not expired."""
     directory = Path(directory)
     if candidate.get("evidence_only"):
         raise RebaselineRefused("this candidate is evidence only (a branch-ref dispatch); a baseline is recorded from a main run's candidate")
+    cand_prov = candidate.get("provenance") or {}
+    ci = cand_prov.get("ci")
+    if not isinstance(ci, dict) or not ci.get("run_id"):
+        raise RebaselineRefused("this candidate records no CI run (provenance.ci is null or missing; it was built locally or by an older builder); re-dispatch the gate on main and use that run's candidate")
+    if ci.get("ref") != MAIN_REF:
+        raise RebaselineRefused(f"this candidate came from CI ref {ci.get('ref')!r}, not {MAIN_REF}; re-dispatch the gate on main and use that run's candidate")
+    if not cand_prov.get("known_file_sha256"):
+        raise RebaselineRefused("this candidate records no known_file_sha256 (the rpg_gate_known.yaml it was judged against); re-dispatch the gate on main and use that run's candidate")
     for omitted in candidate.get("omitted_validity") or []:
         if known is None:
             raise RebaselineRefused("this candidate omitted owned validity fails; pass the current rpg_gate_known.yaml (--known) so each owner can be re-checked")
