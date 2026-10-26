@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS
-phase: open
+phase: done
 date: 2026-10-26
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 The two serial steps in test.yml go now that their three owner fixes are on main: the visual_assets store-lock step in the API job, and the native-refusal / simq-observation step in Tools f–z
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -100,3 +100,4 @@ The step comments in test.yml say to remove each step and its --ignore lines onc
 - tests/tools/test_ci_split_tools_jobs.py
 
 ## Completion Summary
+Both serial steps and the five --ignore lines are removed; collect counts unchanged; pins rewritten. First CI run (run 40260976346): all jobs green except Tools f-z, whose only failure was TestRealDocsTree registry drift from the ticket file (fixed by regenerating docs/REGISTRY.yaml); no store_locked, FileNotFoundError or leftover-run-dir failure anywhere. AC4 confirmed on the re-run (see the PR).
