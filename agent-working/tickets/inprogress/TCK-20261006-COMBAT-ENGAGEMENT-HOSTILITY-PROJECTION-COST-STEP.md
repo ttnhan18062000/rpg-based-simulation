@@ -4,7 +4,7 @@ layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
-phase: implement
+phase: inprogress
 date: 2026-10-06
 tags: [performance, combat, regression, investigation]
 ---
