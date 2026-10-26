@@ -12974,6 +12974,17 @@
   divergence_note: null
   support_boundary: 'Report-only (OD-8), nothing consumes the ledger to gate a lane yet; T06 conformance and T08 add the first entries and the matching of a real outcome against an entry.'
 
+- id: INFRA-435
+  text: 'TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP: the perf-cert-arena job runs the paired base/head tripwire (tools/perf/tripwire.py run) on pull_request events, report-only. The base is a second checkout at the PR base SHA under perf-base/, each side runs in a fresh process on the same runner, the verdict table goes to the step summary, and the perf-tripwire artifact records both SHAs and the runner CPU model. A REGRESSION or INCONCLUSIVE never fails the job; only an infrastructure failure or the 15-minute job timeout does. A non-PR event skips the step and says why.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: .github/workflows/test.yml (perf-cert-arena); tools/perf/tripwire.py (provenance, summary_markdown)
+  proof_type: contract
+  test_path: tests/static/test_ci_perf_tripwire_step.py
+  divergence_note: DEV-022 (Stabilized)
+  support_boundary: 'Report-only (OD-8). The 1.40 threshold stays provisional; the CI-runner A/A calibration (workflow_dispatch) measured 0.025 and a tighter value is proposed to the owner, not applied.'
+
 - id: INFRA-436
   text: 'TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS: 5 of the 15 legacy tests/perf/baselines files are re-recorded as benchmark-identity schema records (canonical variant, provisional, claims none) through tools/perf/baseline_lifecycle.py promote, from tools/perf/rerun_baselines.py (3 fresh-process runs per record, the median avg promoted, a spread above 15 % is NOISY and not promoted, a run that leaves NORMAL is not a baseline). docs/observability/baselines/latest.json is a generated BaselineConfig (baseline_v1, cost_accounting_version DEV-017) that src gate and compare-sweep parse; the 14 per-profile matrix files were deleted.'
   status: verified

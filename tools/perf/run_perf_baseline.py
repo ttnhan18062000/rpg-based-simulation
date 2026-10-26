@@ -1,7 +1,22 @@
+"""Run the scenario benchmark suite and write the scenario-keyed result to reports/perf/latest.json."""
 from __future__ import annotations
+import argparse
 import json
 import time
 from pathlib import Path
+
+
+def _reject_unknown_arguments() -> None:
+    """Take no arguments: ``--help`` prints usage and exits 0, anything else exits 2, both before ``src`` is imported."""
+    argparse.ArgumentParser(
+        prog="run_perf_baseline.py",
+        description="Run the scenario benchmark suite and write reports/perf/latest.json. Takes no arguments.",
+    ).parse_args()
+
+
+if __name__ == "__main__":
+    _reject_unknown_arguments()
+
 from src.perf.bench_harness import BenchHarness
 from src.perf.profiles import PERF_PROFILES
 from src.perf.scenarios import build_idle_state, build_resource_state, build_movement_state, build_combat_arena_state, build_strategic_state, build_mixed_state

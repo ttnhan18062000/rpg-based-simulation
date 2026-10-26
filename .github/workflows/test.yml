@@ -409,30 +409,8 @@ jobs:
         if: always()
         run: |
           pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
-                 --ignore=tests/tools/test_implement_ticket_native_refusal.py \
-                 --ignore=tests/tools/test_simq_long_run_observation.py \
                  -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
-                 --junit-xml=reports/junit/tools-f-z-parallel.xml
-      # Serial on purpose (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS): this file writes one fixed-name temp copy of
-      # .claude/workflows/implement-ticket.js into the real workflows directory and deletes it afterwards, so its parametrized tests,
-      # spread over xdist workers, delete each other's copy (FileNotFoundError). Fix needs a per-test tmp name: agent-working's file,
-      # TCK-20261019-NATIVE-REFUSAL-TEST-TEMP-COPY-IN-TMP-PATH. Remove this step and the --ignore line above once it uses tmp_path or a unique name.
-      # Also serial (TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL): test_observe_world_cleans_up_its_own_run_dir snapshots the WHOLE
-      # data/runs listing before and after observe_world, so a run directory another xdist worker creates in that window reads as leftover scratch
-      # data. Fix: snapshot only the run id observe_world made (agent-working's file, tests/tools; TCK-20261019-SIMQ-OBSERVE-CLEANUP-TEST-OWN-RUN-DIR). Remove this path and its --ignore line once it does.
-      - name: "Run: tests/tools (f–z, workflow-file test, serial)"
-        if: always()
-        run: |
-          pytest tests/tools/test_implement_ticket_native_refusal.py \
-                 tests/tools/test_simq_long_run_observation.py \
-                 -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/tools-f-z-serial.xml
-      - name: Merge JUnit XML
-        if: always()
-        run: |
-          python3 tools/ci_junit_merge.py --out reports/junit/tools-f-z.xml \
-                 reports/junit/tools-f-z-parallel.xml \
-                 reports/junit/tools-f-z-serial.xml
+                 --junit-xml=reports/junit/tools-f-z.xml
       - name: Upload JUnit XML
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -458,8 +436,6 @@ jobs:
         run: |
           if [ -d /tmp/base-checkout ]; then
             cd /tmp/base-checkout && pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
-                   tests/tools/test_implement_ticket_native_refusal.py \
-                   tests/tools/test_simq_long_run_observation.py \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary
@@ -515,23 +491,8 @@ jobs:
         if: always()
         run: |
           pytest tests/visual_assets \
-                 --ignore=tests/visual_assets/store \
-                 --ignore=tests/visual_assets/test_review_cli.py \
-                 --ignore=tests/visual_assets/test_key_usage.py \
                  -m "not slow and not extra_slow" --tb=short -q -n auto --dist loadgroup \
                  --junit-xml=reports/junit/api-cli-engine-visual_assets.xml
-      # Serial on purpose (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS): every writing store command takes an exclusive flock on the one
-      # real visual_assets/catalog/.store.lock, so two xdist workers collide (store_locked, exit 2). The fixture fix is issue #657;
-      # remove this step, and the three --ignore lines above, once it is on main. The two steps together collect exactly what the
-      # single `tests/visual_assets` step did.
-      - name: "Run: tests/visual_assets (store lock, serial)"
-        if: always()
-        run: |
-          pytest tests/visual_assets/store \
-                 tests/visual_assets/test_review_cli.py \
-                 tests/visual_assets/test_key_usage.py \
-                 -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/api-cli-engine-visual_assets-serial.xml
       - name: Merge JUnit XML
         if: always()
         run: |
@@ -541,9 +502,8 @@ jobs:
                  reports/junit/api-cli-engine-logging.xml \
                  reports/junit/api-cli-engine-engine.xml \
                  reports/junit/api-cli-engine-observability.xml \
-                 reports/junit/api-cli-engine-visual_assets.xml \
-                 reports/junit/api-cli-engine-visual_assets-serial.xml
-      # After the merge so it counts the Aseprite skips of both visual_assets steps.
+                 reports/junit/api-cli-engine-visual_assets.xml
+      # After the merge so it counts the Aseprite skips of the visual_assets step.
       - name: "Note: needs_aseprite skips (ADR D10)"
         if: always()
         run: python3 tools/ci_aseprite_skip_line.py reports/junit/api-cli-engine.xml >> "$GITHUB_STEP_SUMMARY"
@@ -574,7 +534,7 @@ jobs:
             # A base branch from before TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT lacks the
             # visual_assets test directory, and pytest aborts the whole collection on a missing
             # path, so create it empty in the base checkout first. The path list below stays
-            # identical to the head 'Run' steps (the three store-lock paths overlap the whole-directory path, and pytest collects a node once).
+            # identical to the head 'Run' steps.
             mkdir -p /tmp/base-checkout/tests/visual_assets
             cd /tmp/base-checkout && pytest tests/api \
                    tests/cli \
@@ -582,9 +542,6 @@ jobs:
                    tests/engine \
                    tests/observability \
                    tests/visual_assets \
-                   tests/visual_assets/store \
-                   tests/visual_assets/test_review_cli.py \
-                   tests/visual_assets/test_key_usage.py \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary
@@ -954,6 +911,11 @@ jobs:
   perf-cert-arena:
     name: "Perf / cert / arena"
     runs-on: ubuntu-latest
+    # TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP (testing-planner's condition 1, issue 488): the paired tripwire below runs a base side too, so a hung
+    # run must fail the job instead of holding the runner. Sizing: the job's p95 over 11 recent successful pull_request runs is 262 s (range 161-262 s);
+    # the paired step measured 15 s on a real PR run (run 38414975279: two scenarios, base and head, no retry), so one retry per scenario at most doubles it
+    # to 30 s. Worst case 262 + 30 = 292 s; 2 x that = 585 s, so 10 minutes. Both arms measured in that run (perf-tripwire artifact).
+    timeout-minutes: 10
     needs: [changed-files, resync-gate]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') && (needs.resync-gate.result != 'success' || needs.resync-gate.outputs.pr_content_unchanged != 'true') }}
     steps:
@@ -992,6 +954,58 @@ jobs:
                    tests/mechanic_scenarios \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
+      # ── Paired perf tripwire (TCK-20261011-PERF-M2-T03B-CI-PAIRED-STEP; owner decision OD-2, report-only OD-8) ──
+      # Both sides run under head's `uv sync` environment (the worker is head's tools/perf/capacity_run.py, importing each side's own src/).
+      # REPORT-ONLY: a tripwire REGRESSION or INCONCLUSIVE never fails this job. tools/perf/tripwire.py exits 0 whatever the outcomes and 1 only when it
+      # could not run (infrastructure: a crash, a missing checkout); the timeout above covers a hang. The verdict goes to the step summary and the
+      # `perf-tripwire` artifact (report.json: base and head SHA, runner CPU model, per-scenario outcomes). The base is the PR's base SHA, never
+      # HEAD~1; on any other event there is no base, so the step is skipped and says so.
+      - name: Perf tripwire base checkout
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: perf-base
+      - name: Perf tripwire (paired, report-only)
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "### Perf tripwire" >> "$GITHUB_STEP_SUMMARY"
+            echo "Skipped: this is a \`$EVENT_NAME\` run, not a pull_request, so there is no base SHA to pair with (the tripwire never guesses HEAD~1)." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # The worker script is head's tools/perf/capacity_run.py, run under each side's own src/: the base must hold every src/perf module it imports.
+          for needed in benchmark_record bench_harness profiles scenarios; do
+            if [ ! -f "perf-base/src/perf/$needed.py" ]; then
+              echo "### Perf tripwire" >> "$GITHUB_STEP_SUMMARY"
+              echo "SKIPPED: the base commit has no \`src/perf/$needed.py\` (it predates PERF-M2-T02b), so its side cannot be measured." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          done
+          python3 tools/perf/tripwire.py run --base perf-base --head . --out-dir reports/perf/tripwire \
+                 --summary "$GITHUB_STEP_SUMMARY" --github-annotations
+      - name: Perf tripwire artifact
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: perf-tripwire
+          path: reports/perf/tripwire/
+          if-no-files-found: ignore
+      # A/A noise measurement on this runner (the recalibration PERF-M2-T03B asks for): `gh workflow run test.yml --ref <branch>`. Not a PR step.
+      - name: Perf tripwire A/A calibration (manual dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          mkdir -p reports/perf
+          python3 tools/perf/tripwire.py calibrate --trials 8 > reports/perf/tripwire-calibration.json
+          { echo "### Perf tripwire A/A calibration"; echo "runner: $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2- | xargs), $(nproc) vCPU"; echo '```json'; cat reports/perf/tripwire-calibration.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Perf tripwire A/A calibration artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: perf-tripwire-calibration
+          path: reports/perf/tripwire-calibration.json
+          if-no-files-found: ignore
       - name: Job summary
         if: always()
         run: python3 tools/ci_junit_summary.py "reports/junit/perf-cert-arena.xml" "perf-cert-arena" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"

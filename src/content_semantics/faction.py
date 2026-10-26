@@ -101,6 +101,15 @@ class FactionSemanticsService:
 
     def __init__(self, repo: CatalogRepository):
         self.repo = repo
+        self._relation_service: Optional[Any] = None
+
+    def _projection_service(self) -> Any:
+        """One reused ``RelationProjectionService`` (its lookup indexes are built once, not per pair)."""
+        if self._relation_service is None:
+            from src.content_semantics.relation import RelationProjectionService
+
+            self._relation_service = RelationProjectionService(self.repo)
+        return self._relation_service
 
     def get_legacy_faction_bucket(self, faction_id: str) -> Faction:
         """Translates a dynamic catalog faction ID to a legacy Faction enum."""
@@ -193,22 +202,11 @@ class FactionSemanticsService:
         Wrapper that attempts clean perspective/relationship projection first,
         falling back to legacy bucket-based semantics and logging fallback usage.
         """
-        from src.content_semantics.relation import RelationProjectionService
+        projection_service = self._projection_service()
+        lookup = projection_service.lookup
 
         # Check if source faction has perspective OR if there's a relationship definition
-        has_perspective = False
-        for p in self.repo.perspectives.values():
-            if p.chosen_faction == source or p.id == source:
-                has_perspective = True
-                break
-
-        has_relationship = False
-        for rel in self.repo.faction_relationships.values():
-            if rel.source_faction == source and rel.target_faction == target:
-                has_relationship = True
-                break
-
-        if not has_perspective and not has_relationship:
+        if not lookup.has_perspective(source) and lookup.relationship(source, target) is None:
             logger.debug(
                 "Falling back to legacy hostility semantics for %s -> %s (missing clean relationship/perspective data)",
                 source,
@@ -216,12 +214,7 @@ class FactionSemanticsService:
             )
             return self.is_hostile(source, target)
 
-        projection_service = RelationProjectionService(self.repo)
-        perspective_id = source
-        for p in self.repo.perspectives.values():
-            if p.chosen_faction == source:
-                perspective_id = p.id
-                break
+        perspective_id = lookup.perspective_id_for_faction(source)
 
         proj = projection_service.project_relation(perspective_id, source, target, context)
 
