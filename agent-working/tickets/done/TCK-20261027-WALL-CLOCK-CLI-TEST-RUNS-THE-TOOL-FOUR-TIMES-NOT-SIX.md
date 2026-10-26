@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261027-WALL-CLOCK-CLI-TEST-RUNS-THE-TOOL-FOUR-TIMES-NOT-SIX
-phase: open
+phase: done
 date: 2026-10-27
 tags: [testing, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [testing, determinism]
 The wall-clock inventory CLI test runs the tool over the real source four times instead of six, so it stops hitting the 60 s per-test budget under load
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -75,10 +75,17 @@ None.
 - The probe can print both the captured output and the flag on separate lines without changing what the tool does.
 
 ## Implementation Notes
-Fold into PR #754 if it is still open (check first); otherwise a new PR from origin/main.
+Separate PR after #754 (u24 sequencing; planner decision 2026-10-27), not folded into #754. Opened from origin/main after #754 merges.
+
+The probe now writes the tool's captured json to stdout followed by a marker line with the `src`-import flag; the probe's json is compared with one subprocess json run (cross-process byte identity), `json.loads` reads that same run, and md is still run twice: 4 tool runs over the real src/.
 
 ## Test Summary
+Timings, 2026-10-27, quiet host (loadavg1 0.5-0.9), MemoryMax 3G, back to back, the CLI test alone: before (origin/main version) 52.1 s; after (4 tool runs) 31.7 s. The whole file after: 16 passed in 38.8 s. Even idle, the old test used 52 s of its 60 s budget.
+Mutation checks on a throwaway copy (a wrapper in place of the tool that perturbs its output; not committed, files removed): json output nondeterministic -> the test fails; md output nondeterministic -> fails; the tool importing `src` -> fails (`'True' == 'False'`); no mutation (control) -> passes. The assertions are all kept.
 
 ## Files Changed
+tests/tools/test_wall_clock_inventory.py
 
 ## Completion Summary
+The wall-clock CLI test makes 4 tool runs over the real src/ instead of 6 and takes 31.7 s instead of 52.1 s on an idle host, with the same three assertions. The tool is untouched. Separate PR after #754.
+
