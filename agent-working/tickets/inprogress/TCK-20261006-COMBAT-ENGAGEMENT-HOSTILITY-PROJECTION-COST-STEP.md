@@ -4,7 +4,7 @@ layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
-phase: open
+phase: implement
 date: 2026-10-06
 tags: [performance, combat, regression, investigation]
 ---
@@ -15,7 +15,7 @@ tags: [performance, combat, regression, investigation]
 `combat_engagement` grew by about 3.3 s per tick at movement[5000] somewhere between `c84352465` and `132bf09ca` (`is_hostile_compat` → `project_relation`); isolate the commit, and do not add cost when making the check symmetric
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -67,7 +67,12 @@ The CI traceback (run 37403688489, `test_perf_movement[5000]` and `test_perf_pas
 - Owner: Lane B (`rpg-implementer-2`), alongside its legality batch (routing by `rpg-feature-planning`, 2026-10-06).
 
 ## Implementation Notes
-None yet.
+Owner Lane B (`rpg-implementer-2`), branch `rpg-hostility-projection-cost`. Plan approved by `rpg-planner` 2026-10-26.
+- Mechanism (read from code): each `is_hostile_compat` call built a new `RelationProjectionService` and scanned `perspectives` twice and `faction_relationships` once, and `project_relation` scanned them again (and `species_relations` when a species context is given). `_consider` calls it per pair per tick.
+- Fix (code done, timing pending the host): `RelationLookup` (first-match indexes, `setdefault`, rebuilt when a table object or size changes) on one reused `RelationProjectionService` per `FactionSemanticsService`. No label cache (the label depends on context). No semantics change.
+- The symmetry change is already on main (#395, 7aa6f997b), so it is measured as part of origin/main, not as a separate arm; the bisect notes whether #395 itself added per-pair cost.
+- Equivalence test: `tests/unit/content_semantics/test_relation_lookup_matches_scan.py` (all faction pairs, perspectives incl. missing ids, species, duplicate keys, growth, shared-vs-fresh service labels).
+- Pending the host ("host free"): bisect timing `c84352465..132bf09ca` (+ #395 parent vs #395), before/after `combat_engagement` ms on one box, 3-world hash equal, `--neutral` IDENTICAL.
 
 ### Evidence from TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION (2026-10-15)
 **Confirmed with call-site evidence.** `is_hostile_compat` (`faction.py:206/207/226`) and `project_relation` (`relation.py:75/76/190`) are 29 to 62 % of the tick in synthetic profiles (36 % at `idle_100`, 59 % at `movement_1000`; self-time of the two about 43 % at `movement_500`). `combat_engagement` at `movement`: 55 ms (100 entities), 989 ms (500), 3632 ms (1000), 7279 ms (2000): exponent about 1.8 to 1.9 up to 1000 entities. With full trees (`src config content registries data`) it is **absent at `c84352465`** and **2.2 s at `132bf09ca`** (1000 entities, live contract, loaded host), 2.2 s at `d135dd6be`, 3.5 s at `dc9b63c99`, 2.5 s now: introduced between `c84352465` and `132bf09ca`, no second jump since. The 5000-entity 3.2 s of this ticket is not reproducible on this host (the ticket records 3.2 s versus 16 s on another box for the same code); a pinned 5000-entity tick is estimated at 25 to 100 s. The fix stays with rpg Lane B; hand-off item 2 in `docs/performance/tick_cost_growth.md` section 7.
