@@ -55,12 +55,13 @@ def _rebase(directory: Path, **kw):
 # ---- the candidate's CI run and known-file hash (TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE)
 
 @pytest.mark.parametrize("ci, match", [
-    (None, "no CI run"),
-    ("absent", "no CI run"),
-    ({**MAIN_CI, "run_id": ""}, "no CI run"),
-    ({**MAIN_CI, "ref": "refs/heads/feature"}, "not refs/heads/main"),
-    ({**MAIN_CI, "ref": "refs/pull/9/merge"}, "not refs/heads/main"),
-    ({**MAIN_CI, "ref": ""}, "not refs/heads/main"),
+    (None, "ci must carry"),
+    ({**MAIN_CI, "run_attempt": ""}, "ci must carry"),
+    ("absent", "ci must carry"),
+    ({**MAIN_CI, "run_id": ""}, "ci must carry"),
+    ({**MAIN_CI, "ref": "refs/heads/feature"}, "ci.ref must be refs/heads/main"),
+    ({**MAIN_CI, "ref": "refs/pull/9/merge"}, "ci.ref must be refs/heads/main"),
+    ({**MAIN_CI, "ref": ""}, "ci must carry"),
 ])
 def test_rebaseline_refuses_a_candidate_with_no_ci_run_or_a_run_off_main(tmp_path, ci, match):
     candidate = _candidate()
@@ -78,6 +79,15 @@ def test_rebaseline_refuses_a_candidate_with_no_known_file_hash(tmp_path):
     del candidate["provenance"]["known_file_sha256"]
     with pytest.raises(rgb.RebaselineRefused, match="known_file_sha256"):
         rgb.rebaseline(candidate, _config(), tmp_path, pr=None, cites=["T"], now=NOW)
+
+
+@pytest.mark.parametrize("sha", ["not-a-hash", "B" * 64, "b" * 63, ""])
+def test_rebaseline_refuses_a_malformed_known_file_hash_before_writing(tmp_path, sha):
+    candidate = _candidate()
+    candidate["provenance"]["known_file_sha256"] = sha
+    with pytest.raises(rgb.RebaselineRefused, match="known_file_sha256.*re-dispatch the gate on main"):
+        rgb.rebaseline(candidate, _config(), tmp_path, pr=None, cites=["T"], now=NOW)
+    assert not list(tmp_path.glob("*.json"))
 
 
 def test_rebaseline_accepts_a_main_run_and_carries_both_fields_into_the_baseline(tmp_path):

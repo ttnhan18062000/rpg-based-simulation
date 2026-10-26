@@ -557,19 +557,14 @@ def rebaseline(
 ) -> Path:
     """Write the next version from ``candidate`` and return its path, or raise :class:`RebaselineRefused`. Never modifies an existing file.
     A candidate marked ``evidence_only`` (from a branch-ref dispatch) is refused, and so is one whose ``provenance.ci`` is null or missing, whose ``ci.ref`` is not
-    ``refs/heads/main``, or with no ``provenance.known_file_sha256``: only a main CI run's own candidate is a baseline source. There is no override; ``milestone`` overrides the candidate's. A candidate that omitted owned validity
+    ``refs/heads/main``, or with a missing or malformed ``provenance.known_file_sha256`` (the same check as the lint, ``_lint_ci_provenance``): only a main CI run's own candidate is a baseline source. There is no override; ``milestone`` overrides the candidate's. A candidate that omitted owned validity
     fails needs ``known`` (the current ``rpg_gate_known.yaml`` entries): each omission's ``known_match`` must still be a ``state: fail`` entry and not expired."""
     directory = Path(directory)
     if candidate.get("evidence_only"):
         raise RebaselineRefused("this candidate is evidence only (a branch-ref dispatch); a baseline is recorded from a main run's candidate")
-    cand_prov = candidate.get("provenance") or {}
-    ci = cand_prov.get("ci")
-    if not isinstance(ci, dict) or not ci.get("run_id"):
-        raise RebaselineRefused("this candidate records no CI run (provenance.ci is null or missing; it was built locally or by an older builder); re-dispatch the gate on main and use that run's candidate")
-    if ci.get("ref") != MAIN_REF:
-        raise RebaselineRefused(f"this candidate came from CI ref {ci.get('ref')!r}, not {MAIN_REF}; re-dispatch the gate on main and use that run's candidate")
-    if not cand_prov.get("known_file_sha256"):
-        raise RebaselineRefused("this candidate records no known_file_sha256 (the rpg_gate_known.yaml it was judged against); re-dispatch the gate on main and use that run's candidate")
+    ci_problems = _lint_ci_provenance(candidate.get("provenance") or {})  # the one rule, shared with the lint of the written file
+    if ci_problems:
+        raise RebaselineRefused(f"this candidate is not a main CI run's ({'; '.join(ci_problems)}; a local or older build records no CI run); re-dispatch the gate on main and use that run's candidate")
     for omitted in candidate.get("omitted_validity") or []:
         if known is None:
             raise RebaselineRefused("this candidate omitted owned validity fails; pass the current rpg_gate_known.yaml (--known) so each owner can be re-checked")

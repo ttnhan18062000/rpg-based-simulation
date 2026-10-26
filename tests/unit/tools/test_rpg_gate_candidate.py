@@ -229,7 +229,7 @@ def test_ci_is_null_unless_all_four_run_variables_are_set(tmp_path, env):
 
 
 def test_a_candidate_with_no_ci_run_or_off_main_cannot_become_a_baseline(tmp_path):
-    for env, match in (({}, "no CI run"), ({**MAIN_CI_ENV, "GITHUB_REF": "refs/heads/some-branch"}, "not refs/heads/main")):
+    for env, match in (({}, "ci must carry"), ({**MAIN_CI_ENV, "GITHUB_REF": "refs/heads/some-branch"}, "ci.ref must be refs/heads/main")):
         candidate = _build(_write(tmp_path / "d"), env=env)
         with pytest.raises(base.RebaselineRefused, match=match):
             base.rebaseline(candidate, _config(), tmp_path / "b", pr=None, cites=["T"])
