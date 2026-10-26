@@ -1,7 +1,7 @@
 import pytest
 from src.core.state import AuthoritativeState, EntityState, ResourceNodeState, InventoryComponent, ItemStack, InteractionComponent, GroundItemState, CorpseState
 from src.systems.harvest_system import HarvestSystem
-from src.systems.loot_system import LootSystem
+from src.core.updates import EntityUpdate, InteractionUpdate, StateUpdate
 from src.engine.apply import ApplyPath
 
 @pytest.fixture
@@ -80,8 +80,8 @@ def test_loot_ground_item_full_inventory_does_not_remove_item(base_state):
     full_inventory = InventoryComponent(max_slots=1, items=[ItemStack("wood", 1)])
     base_state = replace(base_state, entities={1: replace(base_state.entities[1], inventory=full_inventory)})
     
-    # 3. Run LootSystem
-    update = LootSystem.update(base_state)
+    # 3. Propose one more tick of channel progress (the live path: InteractionSystem.enforce completes it)
+    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0))})
     
     # 3.5 Refine (Enforce Conservation)
     from src.engine.pipeline import AuthoritativeApplyPipeline
@@ -110,8 +110,8 @@ def test_loot_corpse_full_inventory_does_not_remove_corpse(base_state):
     full_inventory = InventoryComponent(max_slots=1, items=[ItemStack("wood", 1)])
     base_state = replace(base_state, entities={1: replace(base_state.entities[1], inventory=full_inventory)})
     
-    # 3. Run LootSystem
-    update = LootSystem.update(base_state)
+    # 3. Propose one more tick of channel progress (the live path: InteractionSystem.enforce completes it)
+    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0))})
     
     # 3.5 Refine (Enforce Conservation)
     from src.engine.pipeline import AuthoritativeApplyPipeline
