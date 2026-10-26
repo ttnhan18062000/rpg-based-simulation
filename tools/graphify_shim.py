@@ -135,7 +135,10 @@ def link(main_root: Path, repo_root: Path, bin_dir: Path, dry_run: bool = False)
         finally:
             if os.path.lexists(tmp):
                 os.unlink(tmp)
-    return 0, f"{note}: {target} -> {venv_script} (graphifyy {pin})"
+    return 0, (f"{note}: {target} -> {venv_script} (graphifyy {pin})\n"
+               f"graphify will warn that its skill copies under ~/.claude, ~/.copilot and ~/.agents are from an older "
+               f"version. Refreshing them is the owner's call: `graphify install --platform claude|copilot|agents`. "
+               f"Not run here.")
 
 
 def advisory_line(repo_root: Path, which=shutil.which, timeout: float = VERSION_TIMEOUT_S) -> str:

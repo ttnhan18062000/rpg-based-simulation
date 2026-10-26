@@ -76,6 +76,7 @@ def test_pip_user_site_script_is_replaceable(world):
     _pip_script(bin_dir)
     code, msg = gs.link(main, main, bin_dir)
     assert code == 0 and gs.PIP_SCRIPT in msg and (bin_dir / "graphify").is_symlink()
+    assert "graphify install --platform" in msg and "Not run here" in msg  # names the skill refresh, does not run it
 
 
 def test_uv_tool_shim_is_replaceable(world):
