@@ -90,7 +90,7 @@ paired.py today always executes missing arms locally. This ticket adds a load-on
 Owner Lane B (`rpg-implementer-2`), branch `rpg-paired-collected`, dispatched by `rpg-planner` 2026-10-26. Plan in `agent-working/staging_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/plan.md`.
 
 ## Test Summary
-Unit: `tests/unit/tools/test_rpg_measure_collected.py` (21 tests, staged results, no simulation) plus the existing `test_rpg_measure.py`: 31 pass. Local mode checked against `origin/main`'s paired.py on a staged cache for the default, `--self-check full|off` and `--report-only`: identical output and exit code. Real-step byte-identical check pending (read-only, after Lane A's run exits).
+Unit: `tests/unit/tools/test_rpg_measure_collected.py` (14 test functions, 20 cases with the parametrized ones, staged results, no simulation) plus the existing `test_rpg_measure.py`: 31 pass. Local mode checked against `origin/main`'s paired.py on a staged cache for the default, `--self-check full|off` and `--report-only`: identical output and exit code. Real-step byte-identical check pending (read-only, after Lane A's run exits).
 
 ## Files Changed
 - `tools/rpg_measure/paired.py` (`--collected`, `--verdict-json`, cost/identity helpers; `main` body moved to `_run`)
