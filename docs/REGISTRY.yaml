@@ -14938,7 +14938,10 @@
   date: '2026-10-07'
   related_code_areas:
   - src/systems/economy_systems/
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE/plan.md
+  - agent-working/stored_artifacts/TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE/test_plan.md
   tags:
   - world
   - engine
@@ -28452,7 +28455,10 @@
   related_code_areas:
   - src/world/raid.py
   - src/world/camp.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH/investigation.md
+  - agent-working/stored_artifacts/TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH/plan.md
+  - agent-working/stored_artifacts/TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH/test_plan.md
   tags:
   - world
   - content
