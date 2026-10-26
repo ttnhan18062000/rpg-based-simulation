@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE
-phase: open
+phase: done
 date: 2026-10-01
 tags: [simulation-quality, economy, calibration]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, economy, calibration]
 Re-baseline the `unit_selfmodel_pilot_seed42_1000t` ECONOMY (and marginally NARRATIVE) slow-tier SimQ anchor that moved upward because compile-time herb nodes now yield a real item and herb harvesting completes
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -84,4 +84,5 @@ _(not started)_
 _(not started)_
 
 ## Completion Summary
+Closed by TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1: its anchors moved to the baseline-v1 values (v1 SHA 341f700d0) under rpg-planner's 2026-10-24 ruling; the per-row cause is in agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/ruling_table.tsv. The bisect ACs are superseded by the per-row cause there.
 _(not started)_

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT
-phase: open
+phase: done
 date: 2026-09-12
 tags: [simulation-quality, calibration, corpus, grade-thresholds]
 ---
@@ -17,7 +17,7 @@ deterministically on unmodified `main` — including one re-drifting after its o
 2026-08-29 re-baseline
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -208,4 +208,5 @@ _(pending)_
 _(pending)_
 
 ## Completion Summary
+Closed by TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1: its anchors moved to the baseline-v1 values (v1 SHA 341f700d0) under rpg-planner's 2026-10-24 ruling; the per-row cause is in agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/ruling_table.tsv. The bisect ACs are superseded by the per-row cause there.
 _(pending)_

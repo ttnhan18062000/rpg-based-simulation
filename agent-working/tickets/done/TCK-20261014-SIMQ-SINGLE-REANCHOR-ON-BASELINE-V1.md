@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
-phase: open
+phase: done
 date: 2026-10-14
 tags: [testing, regression, simulation-quality]
 ---
@@ -15,7 +15,7 @@ tags: [testing, regression, simulation-quality]
 One SimQ grade-anchor re-anchor, taken on baseline v1. Testing runs the mechanics, and rpg-planner rules on every moved row. The four anchor-family tickets fold into it, and it owns the anchor known-reds until it lands.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -89,6 +89,7 @@ not real behaviour shifts. So:
 - docs/simulation_quality/quality_scoring_contract.md §11.3
 
 ## Related Stored Artifacts
+agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/
 - agent-working/stored_artifacts/TCK-20261011-SIMQ-GRADE-ANCHORS-RUN-UNDER-AUDIT-MODE/ (ruling_table.tsv, exclude.tsv, reanchor_provenance.md)
 
 ## Related Code Areas
@@ -101,13 +102,14 @@ not real behaviour shifts. So:
 - Baseline v1's SHA is announced by rpg-planner. The runs wait for main, so the anchors match what CI runs.
 
 ## Implementation Notes
-(implementer)
+Pairs measured on 341f700d0 (162 runs, 0 failed, all pairs identical). 536 of 810 rows moved; rpg-planner ruled 2026-10-24: 500 re-anchored (322 fix-(b) no-data, 35 NARRATIVE retired under D77, 36 INFORMATION, 107 cumulative v1 behaviour with per-row causes) and 36 held (31 plus 5 with no disclosed cause); the owner confirmed it on issue #715 (comment 6400785924, 2026-10-26) under TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE. See reanchor_provenance.md and ruling_table.tsv in the stored artifacts. Family known-reds and the corpus catch-all retired; 12 held-key entries added.
 
 ## Test Summary
-(implementer)
+`pytest tests/unit/tools -q`: 1035 passed. Anchor tests in tests/simulation_quality pass. AC5 is checked by testing-planner after the merge.
 
 ## Files Changed
-(implementer)
+tests/simulation_quality/fixtures/grade_anchors.json; tools/test_architecture/slow_known_reds.yaml; tests/unit/tools/test_slow_regression_report.py; tests/unit/tools/test_simq_pillar_compare.py; the four family tickets (closed); stored artifacts.
 
 ## Completion Summary
-(implementer)
+AC1-AC4 met. AC5 (first scheduled slow run after the merge has no anchor red outside the held rows) is open until testing-planner checks it. The held-rows entries expire 2026-11-15 (named by rpg-planner).
+
