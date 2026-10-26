@@ -7839,6 +7839,22 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS.md
+  ticket_id: TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS
+  title: 'The two serial steps in test.yml go now that their three owner fixes are
+    on main: the visual_assets store-lock step in the API job, and the native-refusal
+    / simq-observation step in Tools f–z'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-26'
+  related_code_areas:
+  - .github/workflows/test.yml
+  - tests/tools/test_ci_split_tools_jobs.py
+  - tests/static/test_ci_xdist_in_critical_path_jobs.py
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
   ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
   title: The two leads message each other across hosts over Remote Control, and every
@@ -8225,6 +8241,22 @@
   - ai
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE.md
+  ticket_id: TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE
+  title: Regenerate the calibration on v1 (`make evaluate-full` plus its run_determinism
+    sidecar) for testing's SimQ re-anchor, and point the D76 cumulative table at the
+    v1 base
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas:
+  - Makefile (evaluate-full); src/observability/reporting/run_determinism.py.
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE/plan.md
+  - agent-working/stored_artifacts/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
   ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
   title: Remove the free meal for every kind (decision 73) as its own measured step
@@ -8246,19 +8278,6 @@
   date: '2026-10-23'
   related_code_areas:
   - docs/plans/systemic_world/roadmap.md
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE.md
-  ticket_id: TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE
-  title: Regenerate the calibration on v1 (`make evaluate-full` plus its run_determinism
-    sidecar) for testing's SimQ re-anchor, and point the D76 cumulative table at the
-    v1 base
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-23'
-  related_code_areas:
-  - Makefile (evaluate-full); src/observability/reporting/run_determinism.py.
   artifact_files: []
   tags: []
 - type: ticket
@@ -8586,6 +8605,85 @@
   ticket_type: bug
   date: '2026-10-21'
   related_code_areas: []
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-A-READMITTED-NEED-RESUMES-ITS-LIVE-PROJECT.md
+  ticket_id: TCK-20261021-A-READMITTED-NEED-RESUMES-ITS-LIVE-PROJECT
+  title: A re-admitted escalated need opens a fresh project id each time it flips
+    with another need, instead of resuming its live same-kind project
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/ai/goals/escalation.py (escalated_need_wins)
+  - src/core/strategic.py (live_projects_in_the_trim)
+  - src/ai/intelligence.py (project creation)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-A-SUBJECT-IN-A-FIGHT-IT-CHOSE-NEVER-DISENGAGES-AT-ITS-FLEE-LINE.md
+  ticket_id: TCK-20261021-A-SUBJECT-IN-A-FIGHT-IT-CHOSE-NEVER-DISENGAGES-AT-ITS-FLEE-LINE
+  title: A subject in a fight it chose never disengages at its flee line (crowded
+    s44 merchant 12, hp 9 to 1 over about 200 ticks)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/engine/tactical.py (panic and flee gate, emotion.is_fleeing)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-FLIGHT-OSCILLATION-COUNTS-NO-DECISION-TICKS-AND-A-CORNERED-SUBJECT-HOLDS.md
+  ticket_id: TCK-20261021-FLIGHT-OSCILLATION-COUNTS-NO-DECISION-TICKS-AND-A-CORNERED-SUBJECT-HOLDS
+  title: The flight-oscillation measure counts no-decision cadence ticks as "non-flee",
+    and a cornered subject with no flight destination holds in place for about 190
+    ticks
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - _destination_or_hold
+  - _throttled
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-HARD-LAW-MONITOR-LIGHT-MODE-OVERHEAD-VS-CONTRACT.md
+  ticket_id: TCK-20261021-HARD-LAW-MONITOR-LIGHT-MODE-OVERHEAD-VS-CONTRACT
+  title: The hard-law monitor's LIGHT mode costs about 27-36% overhead against the
+    <1% target in performance_contract.md §4.2, and its test threshold was relaxed
+    to a 60% soft warning
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - tests/perf/test_hard_law_monitor_overhead.py, docs/engine/performance_contract.md
+    §4.2, the hard-law monitor in src
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE.md
+  ticket_id: TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE
+  title: 'Owner question after v1: should a present attacker push an exhausted subject''s
+    collapse line? (D41 collapse is ordered before panic)'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-21'
+  related_code_areas:
+  - src/engine/sleep_debt.py
+  - src/engine/tactical.py:166-167
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-TWO-SUBJECTS-HOLD-A-MUTUAL-THREATENING-FLEE-STANDOFF.md
+  ticket_id: TCK-20261021-TWO-SUBJECTS-HOLD-A-MUTUAL-THREATENING-FLEE-STANDOFF
+  title: Two subjects can each treat the other as THREATENING and hold a flee standoff
+    for half a run (frontier s42, alpha 49 and blacksmith 13)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - avoid_what_can_eat_me
   artifact_files: []
   tags: []
 - type: ticket
@@ -8997,6 +9095,19 @@
   - architecture
   - delivery
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-A-PURSUING-HOSTILE-WAKES-ITS-TARGET.md
+  ticket_id: TCK-20261020-A-PURSUING-HOSTILE-WAKES-ITS-TARGET
+  title: A perceived hostile pursuing the subject (INTERCEPT/PURSUE on it) wakes its
+    brain, extending D32's adjacency wake
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - src/engine scheduler.py:53-55 (adjacency wake)
+  - tactical.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
   ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
   title: Tune DiskWillFillIn24h so short bursts of heavy local work don't trip it
@@ -9005,6 +9116,18 @@
   date: '2026-10-20'
   related_code_areas:
   - docker/grafana/provisioning/alerting/rules-base.yaml
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-ENGAGE-BRACKETING-MOVES-WALK-A-GROUP-INTO-A-HAZARD-CLUSTER.md
+  ticket_id: TCK-20261020-ENGAGE-BRACKETING-MOVES-WALK-A-GROUP-INTO-A-HAZARD-CLUSTER
+  title: 'Seven people under combat-engage projects die to HAZARD in one cluster within
+    8 ticks: do BRACKETING moves path into hazard tiles?'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/engine tactical movement (BRACKETING)
   artifact_files: []
   tags: []
 - type: ticket
@@ -9020,6 +9143,60 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-INSPECT-PANEL-READS-A-STATE-SELECTED-SHAPE-THE-BACKEND-DOES-NOT-SERVE.md
+  ticket_id: TCK-20261020-INSPECT-PANEL-READS-A-STATE-SELECTED-SHAPE-THE-BACKEND-DOES-NOT-SERVE
+  title: The frontend InspectPanel reads selected_entity from /state?selected=, a
+    legacy V1 shape the backend no longer serves; move it to the entity detail and
+    quest history endpoints
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - frontend/src/components/InspectPanel.tsx
+  - src/api/routes/entities.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-LIVE-EVENTS-WEBSOCKET-DOES-NOT-ANSWER-THE-CLOSE-FRAME-UNDER-LOAD.md
+  ticket_id: TCK-20261020-LIVE-EVENTS-WEBSOCKET-DOES-NOT-ANSWER-THE-CLOSE-FRAME-UNDER-LOAD
+  title: Under host load, the live-events websocket server sometimes never answers
+    a client's close frame, so each idle client waits out its 10 s close_timeout
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/api (stream_live_events_ws)
+  - tests/api/test_observability_websocket.py
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-PARKED-HUNGER-SAFE-ROUTE-STEP-AFTER-V1.md
+  ticket_id: TCK-20261020-PARKED-HUNGER-SAFE-ROUTE-STEP-AFTER-V1
+  title: 'Parked after v1: the hunger pull aims at the nearest open way whose route
+    is not threatened by a live perceived hostile (built, measured once, not landed)'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai/goals/safe_route.py (branch only)
+  - src/ai/intelligence.py active-objective path
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-POOLED-OUTCOME-ROWS-DECLARE-SHARE-OR-COUNT.md
+  ticket_id: TCK-20261020-POOLED-OUTCOME-ROWS-DECLARE-SHARE-OR-COUNT
+  title: 'Every pooled outcome row declares `aggregate: "share" | "count"`, and share
+    rows must carry numerator and denominator'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - src/observability/rpg_gate_metrics.py
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261020-SUSPENDED-PROJECTS-ARE-NEVER-RESUMED-SLOT-LEAK.md
   ticket_id: TCK-20261020-SUSPENDED-PROJECTS-ARE-NEVER-RESUMED-SLOT-LEAK
   title: Suspended projects are never resumed and never expire, so they hold project
@@ -9032,6 +9209,58 @@
   - src/core/strategic.py (is_live_project, has_project_capacity)
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-TERMINAL-PROJECTS-ARE-RECORDS-WITH-NO-RETENTION-BOUND.md
+  ticket_id: TCK-20261020-TERMINAL-PROJECTS-ARE-RECORDS-WITH-NO-RETENTION-BOUND
+  title: 'COMPLETED and ABANDONED strategic projects are kept on the entity for its
+    lifetime with no retention bound: decide their lifecycle'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai strategic.py (~336-361), the project capacity trim
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-TESTS-THAT-COMPILE-A-WORLD-WITHOUT-THE-CONTENT-CONTEXT-TRIAGE.md
+  ticket_id: TCK-20261020-TESTS-THAT-COMPILE-A-WORLD-WITHOUT-THE-CONTENT-CONTEXT-TRIAGE
+  title: Triage the 24 tests and tools that compile a world without the content context,
+    which gives a world with no starting purses or inventories
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/worldbuilding compiler.py:155
+  - tools/test_architecture rpg_gate_run.build_kernel (load_world_with_context)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-TOWN-RETURN-OUTBIDS-AN-ESCALATED-NEED-UNTIL-ABOUT-95.md
+  ticket_id: TCK-20261020-TOWN-RETURN-OUTBIDS-AN-ESCALATED-NEED-UNTIL-ABOUT-95
+  title: town_return outbids an escalated hunger goal until about hunger 95, but SURV-07
+    says the need outranks ordinary goals "well before the line"
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - the town_return scorer and the hunger scorer (src/ai/goals/, scorers)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-V4-DIET-BREACH-EXAMPLES-NAME-THE-EATER.md
+  ticket_id: TCK-20261020-V4-DIET-BREACH-EXAMPLES-NAME-THE-EATER
+  title: V4's diet-breach examples name each eater and its tick, the way V5's and
+    V8's examples already do
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - src/observability/run_ledger.py (diet breach counting)
+  - _check_diet_gates
+  - tests/integration/observability/test_v4_counts_a_forbidden_meal_through_the_real_kernel.py
+  artifact_files: []
+  tags:
+  - observability
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
   ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
@@ -9489,6 +9718,21 @@
   - tests/integration/certification/test_catalog_arena_smoke.py
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-D80B-ENGINE-STOPS-IMPORTING-SIMQ-POST-APPLY-OBSERVER-HOOK.md
+  ticket_id: TCK-20261019-D80B-ENGINE-STOPS-IMPORTING-SIMQ-POST-APPLY-OBSERVER-HOOK
+  title: 'The engine stops importing SimQ: a generic post-apply observer hook replaces
+    kernel.py''s SimQ hub wiring (D80 B)'
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-19'
+  related_code_areas:
+  - src/engine/kernel.py (230-272, 1148-1167)
+  - src/observability/event_recorder.py (quality_fn)
+  - src/simulation_quality/
+  artifact_files: []
+  tags:
+  - observability
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE.md
   ticket_id: TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE
