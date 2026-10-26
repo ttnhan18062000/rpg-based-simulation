@@ -8465,7 +8465,7 @@
   tags:
   - testing
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261022-SESSION-ROLES-RPG-OWNS-RPG-MEASURE.md
+  path: agent-working/tickets/done/TCK-20261022-SESSION-ROLES-RPG-OWNS-RPG-MEASURE.md
   ticket_id: TCK-20261022-SESSION-ROLES-RPG-OWNS-RPG-MEASURE
   title: '`tools/rpg_measure/**` (the paired-run measurement tool) gets an owner:
     rpg'
