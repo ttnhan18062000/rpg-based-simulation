@@ -15,7 +15,7 @@ tags: [world, engine, economy]
 Five dead `src/systems/` classes are still the proof or the named implementation of parity, Bible and compliance claims: re-prove each claim on the live path or re-grade it, then delete the class
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -90,6 +90,15 @@ rpg-planner (u24) ruled on #593 (the ruling is #757 issuecomment-6426148939, ite
 - The three non-blocking text points from rpg-planner's #757 review ride #757's REGISTRY re-sync push. If they have not landed on main by the time this branch starts, fold them in here.
 
 ## Implementation Notes
+Done so far (deletions, §7, checklist rows, completeness check and proof still to do):
+- Commit 1 (bf6e813ec): interim `divergence_note` on TOWN-009, TOWN-076, TOWN-020, through `parity_ledger_writer`.
+- Loot: `tests/unit/resource/test_loot_live_path.py` (6 tests through `AuthoritativeApplyPipeline.refine` and `InteractionSystem.enforce`); the loot cases in `test_resource_conservation.py` now propose channel progress instead of calling `LootSystem`. Positive control: with room in the inventory the repointed tests fail. TOWN-009 and TOWN-076 are `verified` on live tests; TOWN-009's `v2_evidence` cited a non-existent `node.kind == "LOOT"` and was corrected.
+- TownService: TOWN-020 stays `verified`, proved by the live inn REST test and a new negative test. `visited_guild_tick` and kind-based service routing existed only in the dead class; recorded in TOWN-020's `divergence_note`. rpg-planner owns the final grading.
+- Crafting reachability: `CraftingSystem.craft()` has zero callers; the live path is `ActionIntentAdapter.execute` (REQUEST_CRAFT) then the `ResourceTransactionResolver` CRAFTING branch. Result (a): `tests/integration/economy/test_crafting_live_path.py` (6 tests, each gate positive-controlled). PROG-098..101 and PROG-107 `verified` on it.
+- **Known gap, PROG-097 graded `divergent`:** live REQUEST_CRAFT with a recipe id absent from `RecipeRegistry` builds no requirements and then raises `KeyError` at `src/engine/intent/action_intent.py:212` (`RecipeRegistry.get`); the retired class returned `UNKNOWN_RECIPE`. No live producer of such an id was observed (not measured). Live code untouched; no follow-up ticket while the owner's stop direction stands. Goes into the PR's Known gaps.
+- Quest: the ESCORT enum test moved to `tests/unit/quest/test_quest_kind.py`; WORLD-116 repointed. The quest full-inventory case in `test_resource_conservation.py` is covered live by `test_transaction_completion.py::test_quest_reward_with_item_rejected_on_full_inventory` and goes with the class.
+- GuildIntel: Bible ch07 §7 draft in `agent-working/staging_artifacts/<ticket>/bible_ch07_s7_draft.md`, posted on #593 for rpg-designer; not applied until its OK.
+
 
 ## Test Summary
 
