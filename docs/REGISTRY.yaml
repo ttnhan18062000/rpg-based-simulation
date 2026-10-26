@@ -8169,6 +8169,19 @@
   - knowledge-store
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE.md
+  ticket_id: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+  title: 'Find the cause of the 36 SimQ rows held at the v1 re-anchor: the routing
+    worlds'' decline, urban_political seed 456''s early stall, wilderness_survival
+    seed 123 SOCIAL, and 5 pillars that switched on from 0.0'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-24'
+  related_code_areas:
+  - src/ (route_search; the cognition, faction and social event producers)
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
   ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
   title: Update the engine execution modes proposal with the 2026-10-22 rulings and
@@ -11192,6 +11205,30 @@
   - simulation-quality
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1.md
+  ticket_id: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
+  title: One SimQ grade-anchor re-anchor, taken on baseline v1. Testing runs the mechanics,
+    and rpg-planner rules on every moved row. The four anchor-family tickets fold
+    into it, and it owns the anchor known-reds until it lands.
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-14'
+  related_code_areas:
+  - tools/test_architecture/simq_reanchor.py
+  - tools/test_architecture/simq_pillar_compare.py
+  - tests/simulation_quality/fixtures/grade_anchors.json
+  - tools/test_architecture/slow_known_reds.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/investigation.md
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/plan.md
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/reanchor_provenance.md
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/ruling_summary.md
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/test_plan.md
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261014-SOME-MOVE-STEPS-LOSE-THEIR-STEP-TIME-BETWEEN-RESOLVE-MOVE-AND-APPLY.md
   ticket_id: TCK-20261014-SOME-MOVE-STEPS-LOSE-THEIR-STEP-TIME-BETWEEN-RESOLVE-MOVE-AND-APPLY
   title: About 0.03% of frontier steps move an entity with an ordinary move update
@@ -11399,25 +11436,6 @@
   - data/content/world/terrain.yaml, src/content/schema.py (TerrainDefinition)
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1.md
-  ticket_id: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
-  title: One SimQ grade-anchor re-anchor, taken on baseline v1. Testing runs the mechanics,
-    and rpg-planner rules on every moved row. The four anchor-family tickets fold
-    into it, and it owns the anchor known-reds until it lands.
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-14'
-  related_code_areas:
-  - tools/test_architecture/simq_reanchor.py
-  - tools/test_architecture/simq_pillar_compare.py
-  - tests/simulation_quality/fixtures/grade_anchors.json
-  - tools/test_architecture/slow_known_reds.yaml
-  artifact_files: []
-  tags:
-  - testing
-  - regression
-  - simulation-quality
 - type: ticket
   path: agent-working/tickets/done/TCK-20261013-CERTIFICATION-FAKESTATE-LACKS-THE-OWED-FIELD.md
   ticket_id: TCK-20261013-CERTIFICATION-FAKESTATE-LACKS-THE-OWED-FIELD
@@ -14786,6 +14804,23 @@
   - ai
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE.md
+  ticket_id: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
+  title: Five SOCIAL corpus anchors went red in step changes (about 17-22 rising to
+    25-39). Bisect each onset to one PR, rebaseline the intended rises and file a
+    fix for any that start on a neutral PR.
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-07'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tests/simulation_quality/fixtures/grade_anchors.json
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - social
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC.md
   ticket_id: TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC
   title: 'The species-hostility metamorphic check went red between bc4f7553c and 6e7ef56ec:
@@ -15067,23 +15102,6 @@
   - economy
   - world
   - bug
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE.md
-  ticket_id: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
-  title: Five SOCIAL corpus anchors went red in step changes (about 17-22 rising to
-    25-39). Bisect each onset to one PR, rebaseline the intended rises and file a
-    fix for any that start on a neutral PR.
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-07'
-  related_code_areas:
-  - tests/unit/worldassembly/test_corpus_diversity.py
-  - tests/simulation_quality/fixtures/grade_anchors.json
-  artifact_files: []
-  tags:
-  - simulation-quality
-  - social
-  - regression
 - type: ticket
   path: agent-working/tickets/done/TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT.md
   ticket_id: TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT
@@ -20313,6 +20331,42 @@
   tags:
   - testing
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE.md
+  ticket_id: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
+  title: 'Five NARRATIVE corpus anchors went red (the first, `test_frontier_marches_seed42_200t_narrative_grade_stability`,
+
+    asserts `anchor_score` 0.0 while the simulation now produces narrative). Bisect
+    each onset to one PR, rebaseline
+
+    the intended changes per `regression_policy.md` §9-11 and file a fix for any that
+    start on a neutral PR.
+
+
+    > **Widened 2026-10-07 (rpg-planner''s ruling) from the single frontier_marches
+    anchor to the NARRATIVE family**,
+
+    > mirroring its SOCIAL twin `TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE`.
+    The ticket id
+
+    > keeps its original name so existing references hold; the title and scope below
+    are the truthful ones.
+
+    > The "class (a), stale anchor" reading in the Request Summary is now **provisional
+    for the first anchor only** and
+
+    > is subject to the bisect.'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-01'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - src/simulation_quality/
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - grade-thresholds
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND.md
   ticket_id: TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND
   title: '`WorldDynamicsSystem.resolve_dynamics` unconditionally overwrites a victim''s
@@ -20470,6 +20524,23 @@
   - simulation-quality
   - grade-thresholds
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE.md
+  ticket_id: TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE
+  title: Re-baseline the `unit_selfmodel_pilot_seed42_1000t` ECONOMY (and marginally
+    NARRATIVE) slow-tier SimQ anchor that moved upward because compile-time herb nodes
+    now yield a real item and herb harvesting completes
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-01'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tests/simulation_quality/fixtures/grade_anchors.json
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - economy
+  - calibration
+- type: ticket
   path: agent-working/tickets/done/TCK-20261001-TEST-LANE-ROUTING-COST-VIEW-BASELINE-V2.md
   ticket_id: TCK-20261001-TEST-LANE-ROUTING-COST-VIEW-BASELINE-V2
   title: Harden scenario-lane routing, add a report-only JUnit cost view, record mutation
@@ -20542,59 +20613,6 @@
   - lifecycle
   - combat
   - progression
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE.md
-  ticket_id: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
-  title: 'Five NARRATIVE corpus anchors went red (the first, `test_frontier_marches_seed42_200t_narrative_grade_stability`,
-
-    asserts `anchor_score` 0.0 while the simulation now produces narrative). Bisect
-    each onset to one PR, rebaseline
-
-    the intended changes per `regression_policy.md` §9-11 and file a fix for any that
-    start on a neutral PR.
-
-
-    > **Widened 2026-10-07 (rpg-planner''s ruling) from the single frontier_marches
-    anchor to the NARRATIVE family**,
-
-    > mirroring its SOCIAL twin `TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE`.
-    The ticket id
-
-    > keeps its original name so existing references hold; the title and scope below
-    are the truthful ones.
-
-    > The "class (a), stale anchor" reading in the Request Summary is now **provisional
-    for the first anchor only** and
-
-    > is subject to the bisect.'
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-01'
-  related_code_areas:
-  - tests/unit/worldassembly/test_corpus_diversity.py
-  - src/simulation_quality/
-  artifact_files: []
-  tags:
-  - simulation-quality
-  - grade-thresholds
-  - testing
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE.md
-  ticket_id: TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE
-  title: Re-baseline the `unit_selfmodel_pilot_seed42_1000t` ECONOMY (and marginally
-    NARRATIVE) slow-tier SimQ anchor that moved upward because compile-time herb nodes
-    now yield a real item and herb harvesting completes
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-01'
-  related_code_areas:
-  - tests/unit/worldassembly/test_corpus_diversity.py
-  - tests/simulation_quality/fixtures/grade_anchors.json
-  artifact_files: []
-  tags:
-  - simulation-quality
-  - economy
-  - calibration
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS.md
   ticket_id: TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS
@@ -26836,6 +26854,29 @@
   - cognition
   - social
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT.md
+  ticket_id: TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT
+  title: 'Multiple `test_corpus_diversity.py` NARRATIVE/COMBAT-narrative grade-stability
+    tests drift
+
+    deterministically on unmodified `main` — including one re-drifting after its own
+    most recent
+
+    2026-08-29 re-baseline'
+  tier: standard
+  ticket_type: bug
+  date: '2026-09-12'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tools/simq_ceiling.py
+  - src/simulation_quality/scorers/
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - calibration
+  - corpus
+  - grade-thresholds
+- type: ticket
   path: agent-working/tickets/done/TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS.md
   ticket_id: TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS
   title: The entire knowledge/investigation layer produces nothing in a real run —
@@ -27050,29 +27091,6 @@
   tags:
   - data-quality
   - process-improvement
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT.md
-  ticket_id: TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT
-  title: 'Multiple `test_corpus_diversity.py` NARRATIVE/COMBAT-narrative grade-stability
-    tests drift
-
-    deterministically on unmodified `main` — including one re-drifting after its own
-    most recent
-
-    2026-08-29 re-baseline'
-  tier: standard
-  ticket_type: bug
-  date: '2026-09-12'
-  related_code_areas:
-  - tests/unit/worldassembly/test_corpus_diversity.py
-  - tools/simq_ceiling.py
-  - src/simulation_quality/scorers/
-  artifact_files: []
-  tags:
-  - simulation-quality
-  - calibration
-  - corpus
-  - grade-thresholds
 - type: ticket
   path: agent-working/tickets/done/TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2.md
   ticket_id: TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2

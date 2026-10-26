@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
-phase: open
+phase: done
 date: 2026-10-07
 tags: [simulation-quality, social, regression]
 ---
@@ -23,7 +23,7 @@ Do NOT bisect or rebaseline this family. The first scheduled slow run with audit
 Five SOCIAL corpus anchors went red in step changes (about 17-22 rising to 25-39). Bisect each onset to one PR, rebaseline the intended rises and file a fix for any that start on a neutral PR.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -92,6 +92,7 @@ _(not started)_
 _(not started)_
 
 ## Completion Summary
+Closed by TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1: its anchors moved to the baseline-v1 values (v1 SHA 341f700d0) under rpg-planner's 2026-10-24 ruling; the per-row cause is in agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/ruling_table.tsv. The bisect ACs are superseded by the per-row cause there.
 _(not started)_
 
 ## Batch 3 measurement (2026-10-11, treasury batch / memo row 61; batch3-treasury, paired table in the stored artifacts of TCK-20261009-FACTION-TREASURY-IS-ONE-TYPED-ACCOUNT-EXCH-02-C/probes)
