@@ -2029,6 +2029,7 @@ mechanisms:
       - src/domains/faction/diplomatic_state_machine.py::compute_common_enemy_pairs
       - src/systems/social_systems/contracts.py::ContractService
       - src/systems/social_systems/appraisal.py::SocialAppraisalSystem
+      - src/systems/social_systems/contracts.py::SocialContractSystem
     verified:
       instrument: code_trace
       verdict: observed
@@ -2043,6 +2044,14 @@ mechanisms:
         is the "diplomatic_transitions" phase (Phase 8d), distinct from `FactionDecisionPhase`
         (`country_lifecycle`'s own binding below), confirmed by direct code read, not assumed from
         the similar naming.
+        **Added 2026-10-26 (TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE):**
+        `SocialContractSystem` (the contract status-transition machine, same file as `ContractService`) is
+        cited here because that ticket's reachability check found it LIVE, not dead as the ticket assumed:
+        `ContractService.accept_contract` and `ContractService.resolve_contract_outcome` call
+        `SocialContractSystem.transition_contract` (`contracts.py:177`, `:203`), and `accept_contract` is
+        called from `src/domains/cooperation/phase.py:179`. Static trace at 3533fde71; not a runtime
+        measurement, and this block's instrument and verdict above are unchanged. Its top-level shim
+        `src/systems/social_contract.py` stays.
   - id: reputation
     layer: faction
     systems: [faction]

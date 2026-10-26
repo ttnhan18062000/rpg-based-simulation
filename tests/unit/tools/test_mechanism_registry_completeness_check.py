@@ -39,12 +39,12 @@ def _real_registry_data() -> dict:
 
 def test_enumerate_targets_resolves_shims_not_top_level_filenames():
     """[Load-bearing] domains/systems targets must come from real subpackage files, never from a
-    top-level src/systems/*.py shim's own bare filename -- checking `chest_system` (the shim) would
+    top-level src/systems/*.py shim's own bare filename -- checking `market` (the shim) would
     be checking the wrong identity entirely."""
     targets = enumerate_targets()
     ids = {t.id for t in targets}
-    assert "systems/economy_systems/chests" in ids
-    assert "systems/chest_system" not in ids  # the shim itself is never a target
+    assert "systems/economy_systems/market" in ids
+    assert "systems/market" not in ids  # the shim itself is never a target
 
 
 def test_exclusions_all_point_to_real_paths():
@@ -160,10 +160,10 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     """
     data = _real_registry_data()
     report = build_report(data)
-    assert report.total_targets == 65
+    assert report.total_targets == 63  # 65 -> 63 on 2026-10-26: economy_systems/chests and world_systems/quest_generator deleted (dead)
     assert len(report.bound) == 54  # 53 -> 54 on 2026-10-26: domains/motivation bound by `role_fit_preference`
     assert len(report.excluded) == 4
-    assert len(report.unbound) == 7
+    assert len(report.unbound) == 5  # 7 -> 5: the two deleted modules were unbound; five dead-or-claimed modules stay, each with a named reason
 
 
 # --- state: gap is not a coverage hole (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION) ---

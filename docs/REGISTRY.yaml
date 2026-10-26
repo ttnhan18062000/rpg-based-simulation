@@ -14929,6 +14929,20 @@
   - strategy
   - cognition
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE.md
+  ticket_id: TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE
+  title: Seven `src/systems/` modules have no caller in `src/`, and they are the last
+    unbound targets of the mechanism completeness check apart from `domains/motivation`
+  tier: standard
+  ticket_type: cleanup
+  date: '2026-10-07'
+  related_code_areas:
+  - src/systems/economy_systems/
+  artifact_files: []
+  tags:
+  - world
+  - engine
+- type: ticket
   path: agent-working/tickets/done/TCK-20261007-LAUNCHER-RELAUNCH-FIXES.md
   ticket_id: TCK-20261007-LAUNCHER-RELAUNCH-FIXES
   title: 'Launcher relaunch fixes A-E: legacy-name transcripts, handover path line,
@@ -15320,20 +15334,6 @@
   artifact_files: []
   tags:
   - simulation-quality
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE.md
-  ticket_id: TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE
-  title: Seven `src/systems/` modules have no caller in `src/`, and they are the last
-    unbound targets of the mechanism completeness check apart from `domains/motivation`
-  tier: standard
-  ticket_type: cleanup
-  date: '2026-10-07'
-  related_code_areas:
-  - src/systems/economy_systems/
-  artifact_files: []
-  tags:
-  - world
-  - engine
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL.md
   ticket_id: TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL
@@ -28442,6 +28442,21 @@
   - mcp
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH.md
+  ticket_id: TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH
+  title: raid_size doc formula (3 + camp.maturity) contradicts the code (3 + state.maturity)
+    and is internally inconsistent against monster_cap
+  tier: standard
+  ticket_type: bug
+  date: '2026-09-08'
+  related_code_areas:
+  - src/world/raid.py
+  - src/world/camp.py
+  artifact_files: []
+  tags:
+  - world
+  - content
+- type: ticket
   path: agent-working/tickets/done/TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS.md
   ticket_id: TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS
   title: '`ReadModelCache` serves stale entity DTOs for entities whose only per-tick
@@ -28500,21 +28515,6 @@
   tags:
   - world
   - architecture
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH.md
-  ticket_id: TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH
-  title: raid_size doc formula (3 + camp.maturity) contradicts the code (3 + state.maturity)
-    and is internally inconsistent against monster_cap
-  tier: standard
-  ticket_type: bug
-  date: '2026-09-08'
-  related_code_areas:
-  - src/world/raid.py
-  - src/world/camp.py
-  artifact_files: []
-  tags:
-  - world
-  - content
 - type: ticket
   path: agent-working/tickets/done/TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD.md
   ticket_id: TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD

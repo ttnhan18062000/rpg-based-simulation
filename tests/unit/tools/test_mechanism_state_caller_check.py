@@ -31,8 +31,8 @@ def _mechanism(mid, state, implemented_by):
 
 
 def test_is_shim_file_identifies_a_real_backward_compat_shim():
-    shim = REPO_ROOT / "src" / "systems" / "chest_system.py"
-    real_module = REPO_ROOT / "src" / "systems" / "economy_systems" / "chests.py"
+    shim = REPO_ROOT / "src" / "systems" / "market.py"
+    real_module = REPO_ROOT / "src" / "systems" / "economy_systems" / "market.py"
     assert _is_shim_file(shim) is True
     assert _is_shim_file(real_module) is False
 
