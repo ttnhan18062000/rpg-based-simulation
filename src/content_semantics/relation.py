@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set, Tuple
 from pydantic import BaseModel, Field, ConfigDict
 
 from src.content.repository import CatalogRepository
+from src.content.schema import FactionRelationshipDefinition, PerspectiveDefinition, SpeciesRelationRecord
 
 logger = logging.getLogger(__name__)
 
@@ -49,11 +50,11 @@ class RelationLookup:
 
     def __init__(self, repo: CatalogRepository) -> None:
         self._repo = repo
-        self._signature: Optional[tuple] = None
-        self._by_chosen_faction: Dict[str, object] = {}
-        self._has_perspective_key: set = set()
-        self._relationship: Dict[tuple, object] = {}
-        self._species_relation: Dict[tuple, object] = {}
+        self._signature: Optional[Tuple[Tuple[object, ...], Tuple[int, ...]]] = None
+        self._by_chosen_faction: Dict[str, PerspectiveDefinition] = {}
+        self._has_perspective_key: Set[str] = set()
+        self._relationship: Dict[Tuple[str, str], FactionRelationshipDefinition] = {}
+        self._species_relation: Dict[Tuple[str, str], SpeciesRelationRecord] = {}
 
     def _current_signature(self) -> tuple:
         # The tables themselves (not ``id()``) so a reloaded table that reuses a freed id cannot match.
@@ -71,25 +72,25 @@ class RelationLookup:
         if self._signature_matches(tables):
             return
         r = self._repo
-        by_chosen: Dict[str, object] = {}
-        keys: set = set()
+        by_chosen: Dict[str, PerspectiveDefinition] = {}
+        keys: Set[str] = set()
         for p in r.perspectives.values():
             by_chosen.setdefault(p.chosen_faction, p)
             keys.add(p.chosen_faction)
             keys.add(p.id)
-        rel: Dict[tuple, object] = {}
-        for x in r.faction_relationships.values():
-            rel.setdefault((x.source_faction, x.target_faction), x)
-        spec: Dict[tuple, object] = {}
-        for x in r.species_relations.values():
-            spec.setdefault((x.source_species, x.target_species), x)
+        rel: Dict[Tuple[str, str], FactionRelationshipDefinition] = {}
+        for fr in r.faction_relationships.values():
+            rel.setdefault((fr.source_faction, fr.target_faction), fr)
+        spec: Dict[Tuple[str, str], SpeciesRelationRecord] = {}
+        for sr in r.species_relations.values():
+            spec.setdefault((sr.source_species, sr.target_species), sr)
         self._by_chosen_faction = by_chosen
         self._has_perspective_key = keys
         self._relationship = rel
         self._species_relation = spec
         self._signature = (tables, tuple(len(t) for t in tables))
 
-    def perspective_for(self, perspective_id: str):
+    def perspective_for(self, perspective_id: str) -> Optional[PerspectiveDefinition]:
         """``repo.get_perspective(id)``, else the first perspective whose ``chosen_faction`` is ``id``."""
         self._ensure()
         found = self._repo.perspectives.get(perspective_id)
@@ -108,11 +109,13 @@ class RelationLookup:
         self._ensure()
         return faction_id in self._has_perspective_key
 
-    def relationship(self, source_faction_id: str, target_faction_id: str):
+    def relationship(self, source_faction_id: str, target_faction_id: str) -> Optional[FactionRelationshipDefinition]:
+        """The first faction relationship from ``source_faction_id`` to ``target_faction_id``, else None."""
         self._ensure()
         return self._relationship.get((source_faction_id, target_faction_id))
 
-    def species_relation(self, source_species: str, target_species: str):
+    def species_relation(self, source_species: str, target_species: str) -> Optional[SpeciesRelationRecord]:
+        """The first species relation from ``source_species`` to ``target_species``, else None."""
         self._ensure()
         return self._species_relation.get((source_species, target_species))
 
