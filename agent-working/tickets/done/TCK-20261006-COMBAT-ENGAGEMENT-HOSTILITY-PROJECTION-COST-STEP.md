@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
-phase: inprogress
+phase: done
 date: 2026-10-06
 tags: [performance, combat, regression, investigation]
 ---
@@ -15,7 +15,7 @@ tags: [performance, combat, regression, investigation]
 `combat_engagement` grew by about 3.3 s per tick at movement[5000] somewhere between `c84352465` and `132bf09ca` (`is_hostile_compat` → `project_relation`); isolate the commit, and do not add cost when making the check symmetric
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -44,10 +44,10 @@ The CI traceback (run 37403688489, `test_perf_movement[5000]` and `test_perf_pas
 - Changing hostility semantics beyond Lane B's planned symmetry change.
 
 ## Acceptance Criteria
-- [ ] The introducing commit is named, with before and after values at movement[5000].
-- [ ] The symmetry change's cost is measured, and `combat_engagement` does not grow from it.
-- [ ] Any fix is behaviour-neutral: identical canonical hashes on the corpus under `audit_mode`.
-- [ ] The `collection` growth (~50 → ~260 ms) is either attributed or explicitly left open in the ticket.
+- [~] The introducing step is characterised at movement[1000] (c84352465 0.006 ms to 132bf09ca about 1.8 s per tick: the phase starts evaluating pairs); the single commit is not named (candidates #190 / #192), by planner's decision 2026-10-26: not a regression of an existing cost, goes to the follow-up perf ticket. Not measured at 5000 (not reproducible on this host, see the 2026-10-15 evidence).
+- [x] The symmetry change's cost is measured (#395 vs its parent: no per-pair cost) and `combat_engagement` does not grow from this change (it falls 12 to 15 %).
+- [x] The fix is behaviour-neutral: `paired --neutral` PASS (3 worlds, seed 42, 1000 ticks, identical start and final hashes) plus the indexed-vs-scanned equivalence test over all faction pairs.
+- [x] The `collection` growth (~50 to ~260 ms) is explicitly left open (not attributed here).
 
 ## Related Tickets
 - TCK-20261006-SLOW-STEP-6-REDS-UNMASKED-BY-GATE-FIX (rows 5–8)
@@ -102,10 +102,12 @@ The gap is larger than the spread inside each arm. **About 1.6 s per tick (70 % 
 So the phase goes from about 0 to 1.8 s per tick between `c84352465` and `132bf09ca` (a tick from 0.39 to 2.2 s). **#395 itself added no per-pair cost** (1798/1849 against 1847/1785 is inside the spread; #395 is after 132bf09ca, not in the original window). The single commit inside the window is still to be named (candidates `1e075b807` #190 and `6dd2ccd12` #192, the only two touching the phase and `content_semantics`); the ms of `c84352465` is about zero because the phase was not doing per-pair work there, so the step is the phase starting to evaluate pairs, not a regression of an existing cost. The `collection` growth (about 50 to 260 ms) is not attributed here and stays open.
 
 ## Test Summary
-None yet.
+`tests/unit/content_semantics/test_relation_lookup_matches_scan.py` (indexed vs scanned over all faction pairs, perspectives incl. missing ids, species, duplicate keys, growing table, shared vs fresh service): 28 pass in `tests/unit/content_semantics`; 354 pass and 1 xfail across the 18 test files that reference the hostility services. Host-gated: `paired --neutral` PASS; timing in Implementation Notes.
 
 ## Files Changed
-None yet.
+- `src/content_semantics/relation.py` (`RelationLookup`, `project_relation` uses it)
+- `src/content_semantics/faction.py` (`is_hostile_compat` reuses one projection service and the lookup)
+- `tests/unit/content_semantics/test_relation_lookup_matches_scan.py`
 
 ## Completion Summary
-None yet.
+`is_hostile_compat` / `project_relation` no longer scan the perspective, faction-relationship and species-relation tables per pair per tick: first-match indexes (`RelationLookup`, validated by table identity and size) and one reused projection service. `combat_engagement` at movement[1000] fell 14.5 % and 12.1 % in two alternating pairs (about 1.9 to 1.6 s per tick, 71 % of the tick); behaviour-neutral (NEUTRAL PASS). About 1.6 s per tick remains in the phase (other per-pair work in `_consider`), the window step is the phase starting to do work, and the `collection` growth is unattributed: all three go to the follow-up perf ticket filed by rpg-planner. #395 added no per-pair cost.
