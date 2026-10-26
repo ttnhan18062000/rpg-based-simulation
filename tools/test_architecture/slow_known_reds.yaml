@@ -184,3 +184,10 @@ known_reds:
     expires_on: "2026-11-15"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_hero_guild_routing_seed42_1000t_cognition_grade_stability"
+    ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+    owner: rpg-planner
+    added_on: "2026-10-26"
+    expires_on: "2026-11-15"
+    kind: broken
+    note: "reads the held row hero_guild_routing_seed42_1000t/COGNITION (held at S 2.102; v1 measures 2.651, past the 20 percent tolerance): suspected #645 route_search regression, held in TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1"
