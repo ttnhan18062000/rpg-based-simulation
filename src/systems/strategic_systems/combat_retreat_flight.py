@@ -28,6 +28,12 @@ from src.core.strategic import GoalKind, ObjectiveStatus, ProjectState, ProjectS
 from src.core.updates import EntityUpdate, NavigationUpdate, StrategicUpdate, TaskUpdate
 
 
+def _within_a_tile(position: Tuple[float, float], target: Tuple[float, float]) -> bool:
+    """The movement layer's own arrival test (`arrived_in_area`: whole-tile Manhattan distance <= 1, `engine/tile_distance.manhattan_tile_distance`), restated here because `systems`
+    may not import `engine` (import contract phase18)."""
+    return abs(int(position[0]) - int(target[0])) + abs(int(position[1]) - int(target[1])) <= 1
+
+
 def _holds_combat_retreat(entity: EntityState) -> bool:
     """True when the subject's held task is a COMBAT_RETREAT flight."""
     return entity.task.work_kind == "ENTITY_MOVE" and entity.task.payload.get("reason") == FlightReason.COMBAT_RETREAT.value
@@ -70,7 +76,7 @@ def combat_retreat_flight_update(
     holds = _holds_combat_retreat(entity)
     if project is not None and project.kind == GoalKind.COMBAT_RETREAT:
         target = _target_position(project, strat_up)
-        if holds or not target or _holds_another_flight(entity):
+        if holds or not target or _holds_another_flight(entity) or _within_a_tile(entity.navigation.position, target):  # a flight that would end on arrival this tick is not a flight
             return ent_upd
         return replace(
             ent_upd,

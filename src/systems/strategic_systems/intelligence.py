@@ -308,7 +308,9 @@ class StrategicIntelligenceSystem:
         """
         cadence = cadence or SystemCadence()
         cad_val = cadence.strategic_intelligence
+
         refined_entity_updates = dict(update.entity_updates)
+
         def has_item(inventory, item_id: str, quantity: int = 1) -> bool:
             if item_id == "gold":
                 return inventory.gold >= quantity
@@ -319,6 +321,7 @@ class StrategicIntelligenceSystem:
                     if sqty >= quantity:
                         return True
             return False
+
         has_hostiles_or_dead = getattr(state, "_has_hostiles_or_dead_cache", None)
         if has_hostiles_or_dead is None:
             # Kept consistent with src/core/state.py's own __post_init__ computation of the same
@@ -665,7 +668,6 @@ class StrategicIntelligenceSystem:
                                      ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
             
             ent_upd = combat_retreat_flight_update(entity, ent_upd, strat_up, current_project_id, eval_intents)  # a brain decision for COMBAT_RETREAT is a decided flight (CONFLICT-04, 2.139)
-
             if not has_nav_update:
                 town_target = nearest_town_tile(state.town_tiles, entity.navigation.position) or state.town_center
                 if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target:

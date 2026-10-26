@@ -44,6 +44,14 @@ def test_a_brain_decision_for_combat_retreat_issues_the_decided_flight_once():
     assert out.navigation.target_set == TOWN
 
 
+def test_no_flight_is_issued_to_a_subject_already_within_a_tile_of_the_target():
+    entity = _entity(projects=[_project()])
+    at_target = replace(entity, navigation=replace(entity.navigation, position=(26.0, 25.0)))
+    assert _issue(at_target) == EntityUpdate(entity_id=1)
+    near = replace(entity, navigation=replace(entity.navigation, position=(26.0, 26.0)))  # two tiles away: a real flight
+    assert _issue(near).task is not None
+
+
 def test_a_tick_the_brain_did_not_evaluate_issues_nothing_even_for_a_current_retreat_project():
     entity = _entity(projects=[_project()])
     assert _issue(entity, brain_ran=False) == EntityUpdate(entity_id=1)
