@@ -83,9 +83,13 @@ The probe now writes the tool's captured json to stdout followed by a marker lin
 Timings, 2026-10-27, quiet host (loadavg1 0.5-0.9), MemoryMax 3G, back to back, the CLI test alone: before (origin/main version) 52.1 s; after (4 tool runs) 31.7 s. The whole file after: 16 passed in 38.8 s. Even idle, the old test used 52 s of its 60 s budget.
 Mutation checks on a throwaway copy (a wrapper in place of the tool that perturbs its output; not committed, files removed): json output nondeterministic -> the test fails; md output nondeterministic -> fails; the tool importing `src` -> fails (`'True' == 'False'`); no mutation (control) -> passes. The assertions are all kept.
 
+Under load (loadavg1 ~5.6) after the change: CLI test 58.55 s, still passing; margin is thin; tool speed-up requested from perf-planner (agent-working-planner, 2026-10-27)
+
 ## Files Changed
 tests/tools/test_wall_clock_inventory.py
 
 ## Completion Summary
 The wall-clock CLI test makes 4 tool runs over the real src/ instead of 6 and takes 31.7 s instead of 52.1 s on an idle host, with the same three assertions. The tool is untouched. Separate PR after #754.
+
+Under load (loadavg1 ~5.6) after the change: CLI test 58.55 s, still passing; margin is thin; tool speed-up requested from perf-planner (agent-working-planner, 2026-10-27)
 
