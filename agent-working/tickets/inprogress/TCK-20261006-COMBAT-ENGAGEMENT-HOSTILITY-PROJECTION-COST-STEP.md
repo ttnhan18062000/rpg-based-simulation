@@ -77,6 +77,30 @@ Owner Lane B (`rpg-implementer-2`), branch `rpg-hostility-projection-cost`. Plan
 ### Evidence from TCK-20261014-PERF-TICK-COST-GROWTH-INVESTIGATION (2026-10-15)
 **Confirmed with call-site evidence.** `is_hostile_compat` (`faction.py:206/207/226`) and `project_relation` (`relation.py:75/76/190`) are 29 to 62 % of the tick in synthetic profiles (36 % at `idle_100`, 59 % at `movement_1000`; self-time of the two about 43 % at `movement_500`). `combat_engagement` at `movement`: 55 ms (100 entities), 989 ms (500), 3632 ms (1000), 7279 ms (2000): exponent about 1.8 to 1.9 up to 1000 entities. With full trees (`src config content registries data`) it is **absent at `c84352465`** and **2.2 s at `132bf09ca`** (1000 entities, live contract, loaded host), 2.2 s at `d135dd6be`, 3.5 s at `dc9b63c99`, 2.5 s now: introduced between `c84352465` and `132bf09ca`, no second jump since. The 5000-entity 3.2 s of this ticket is not reproducible on this host (the ticket records 3.2 s versus 16 s on another box for the same code); a pinned 5000-entity tick is estimated at 25 to 100 s. The fix stays with rpg Lane B; hand-off item 2 in `docs/performance/tick_cost_growth.md` section 7.
 
+
+### Measurement (2026-10-26, rpg-implementer-2; PROVISIONAL: shares of one host, loadavg about 1.7, other sessions idle)
+Setup: `tools/perf/profile_tick.py --scenario movement --entities 1000 --warmup 2 --ticks 6 --contract pinned --sampler none`, seed 42, PROD_LARGE, Python 3.13.14, 6 cores, `PYTHONHASHSEED=0`, one process at a time, arms are `git archive` extracts and alternate. For trees older than the pinning helper, `tests/helpers/kernel_pinning.py` and the current `tools/perf/*.py` were copied in (the engine under test is the tree's own `src/`).
+
+**Fix (before = branch base 8c7ead02b, after = branch tip; `src/` differs only in `content_semantics/faction.py` and `relation.py`)** `combat_engagement`, mean ms per tick (p95), share of tick:
+| pair | before | after | change |
+|---|---|---|---|
+| 1 | 1876.0 (1982), 72.3 % | 1604.0 (1708), 71.0 % | -272 ms, -14.5 % |
+| 2 | 1790.2 (1855), 72.6 % | 1573.6 (1641), 70.8 % | -217 ms, -12.1 % |
+
+The gap is larger than the spread inside each arm. **About 1.6 s per tick (70 % of the tick) is still in `combat_engagement`; the relation scans were a 12 to 15 % part of it. The rest is other per-pair work in `_consider` and was not profiled (follow-up, out of this ticket).**
+
+**Behaviour:** `paired --neutral` (base 8c7ead02b against the tip, 3 worlds, seed 42, 1000 ticks) is `NEUTRAL PASS`: frontier_living_world d81e5b8b4b9ad077, urban_political dfb3f9d6f24dd0b5, crowded_frontier 4570a46c6c1ec186, start and final hashes identical in all three.
+
+**Introducing step (same command, alternating, 2 pairs):**
+| tree | combat_engagement ms/tick (run 1, run 2) | tick ms |
+|---|---|---|
+| c84352465 | 0.006, 0.005 | 386, 389 |
+| 132bf09ca | 1845, 1751 | 2235, 2138 |
+| 7aa6f997b^ (before #395) | 1798, 1849 | 2411, 2470 |
+| 7aa6f997b (#395) | 1847, 1785 | 2463, 2383 |
+
+So the phase goes from about 0 to 1.8 s per tick between `c84352465` and `132bf09ca` (a tick from 0.39 to 2.2 s). **#395 itself added no per-pair cost** (1798/1849 against 1847/1785 is inside the spread; #395 is after 132bf09ca, not in the original window). The single commit inside the window is still to be named (candidates `1e075b807` #190 and `6dd2ccd12` #192, the only two touching the phase and `content_semantics`); the ms of `c84352465` is about zero because the phase was not doing per-pair work there, so the step is the phase starting to evaluate pairs, not a regression of an existing cost. The `collection` growth (about 50 to 260 ms) is not attributed here and stays open.
+
 ## Test Summary
 None yet.
 
