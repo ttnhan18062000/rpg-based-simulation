@@ -486,6 +486,7 @@ class GenerateSimulationSetupWorkflow:
         )
         dup_str = f"Duplicate keys/keywords detected: {match_count}" if match_count > 0 else "No existing duplicate catalogs found."
 
+        # nosemgrep: python.flask.security.audit.directly-returned-format-string.directly-returned-format-string -- not a web response: the markdown string is written to generation_review_pack.md inside the session stage directory by run()
         return f"""# Simulation Generation Review Pack
 
 This review pack summarizes the auto-generated draft specifications created for your intent.

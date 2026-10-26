@@ -171,6 +171,7 @@ rpg-lab run \\
 
         # Make command file executable
         try:
+            # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- the generated launcher script must be executable by its owner; it holds no secrets and is written inside the session sandbox
             os.chmod(cmd_script_path, 0o755)
         except Exception as e:
             logger.warning(f"Could not set execute permissions: {e}")

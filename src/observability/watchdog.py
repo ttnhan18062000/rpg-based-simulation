@@ -49,6 +49,7 @@ class SimulationWatchdog:
     def check_health(self) -> bool:
         """Poll the /health endpoint."""
         try:
+            # nosemgrep: python.lang.security.audit.insecure-transport.requests.request-with-http.request-with-http -- BACKEND_URL comes from the environment and points at the internal compose network (http://backend:8000), never a public host
             resp = requests.get(f"{BACKEND_URL}/health", timeout=5)
             if resp.status_code == 200:
                 try:
@@ -101,6 +102,7 @@ class SimulationWatchdog:
             start_time = end_time - (POLL_INTERVAL * 2 * 10**9)
             
             params: dict[str, str | int] = {'query': query, 'start': start_time, 'end': end_time, 'limit': 3}
+            # nosemgrep: python.lang.security.audit.insecure-transport.requests.request-with-http.request-with-http -- LOKI_URL comes from the environment and points at the internal compose network (http://loki:3100), never a public host
             resp = requests.get(f"{LOKI_URL}/loki/api/v1/query_range", params=params, timeout=5)
             if resp.status_code == 200:
                 results = resp.json().get('data', {}).get('result', [])
