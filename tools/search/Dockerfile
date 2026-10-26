@@ -16,12 +16,20 @@ RUN pip install --no-cache-dir \
     "sqlite-vec>=0.1.1" \
     "rank-bm25>=0.2.2"
 
+# Unprivileged runtime user (Semgrep dockerfile.security.missing-user, alert #248). The model cache lives under /app
+# so the same user can read it at runtime; the default (root's ~/.cache) would be unreadable or trigger a re-download.
+ENV HF_HOME=/app/.cache/huggingface
+RUN useradd --system --uid 10001 --no-create-home --home-dir /app app
+
 # Pre-download the embedding model (baked into image layer, avoids runtime download)
 RUN python3 -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 # Copy application code (only the tools needed for the server)
 COPY tools/knowledge_search.py tools/knowledge_search.py
 COPY tools/search_server.py tools/search_server.py
+
+RUN chown -R app:app /app/.cache
+USER app
 
 EXPOSE 8765
 

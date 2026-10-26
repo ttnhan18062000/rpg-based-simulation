@@ -178,14 +178,18 @@ def test_row_pillars_use_norm_and_labels():
         spc.grade_label("X", {})
 
 
-def test_the_committed_fixture_is_all_ok_anchors_today():
+def test_every_committed_anchor_is_a_well_formed_ok_or_no_data_anchor():
     import json
     from pathlib import Path
 
     fixture = json.loads((Path(__file__).resolve().parents[2] / "simulation_quality" / "fixtures" / "grade_anchors.json").read_text(encoding="utf-8"))
     for run_key, pillars in fixture.items():
         if not run_key.startswith("_"):
-            assert all(parse_anchor(f"{run_key}/{p}", a).status == "ok" for p, a in pillars.items())
+            for p, a in pillars.items():
+                anchor = parse_anchor(f"{run_key}/{p}", a)  # strict: one of the two shapes
+                assert anchor.status in ("ok", "no-data")
+                if anchor.status == "no-data":
+                    assert a.get("reason") == "below_min_events" and isinstance(a.get("min_events"), int)  # the only no-data anchor reason today (baseline v1 re-anchor)
 
 
 def test_a_verdict_names_its_pillar_without_parsing_the_message():

@@ -1165,7 +1165,7 @@ overcome it), estimated from senses and wits, serves hunting, fleeing and warine
      no minimum base count and is revisited at v1. A kind is base-state, exempt from the line, only
      while the step's own parent has it at 0 in every seed. Every stop so far was settled by a
      10-seed rerun, then the owner's ruling.
-   - **The base:** 903239fbe, the commit just before the first step in the owner's order. Steps
+   - **The base:** the v1 record 341f700d0 (simulation e8df8b96d); it was 903239fbe until v1, the commit just before the first step in the owner's order. Steps
      2.120-2.123 came before decision 76 and are shown by one report-only reading against
      c3f6202b9 (v1 disclosure M2). A neutral step that adds durable state proves neutrality by
      projection (decision 76's application). At baseline v1 the v1 fingerprints (10 seeds,
@@ -1249,6 +1249,137 @@ not as commitments:
 
 The rules already decided for these areas (EXCH-02's selling, wages and tax; LEARN-03's taught
 crafts) stay in force. Only further design waits.
+
+### 12.5 Milestone 1: done criteria and freeze rule (written before work starts)
+
+Approved by the owner on 2026-10-23 (#715 6356123802), after review by lead-planner-u24 and rpg-designer.
+
+This section is written once, before milestone 1 starts. It answers the lesson of v1, where the definition of done, the
+date and the freeze each moved step by step. Changing anything below takes an owner ruling, recorded as an owner-memo row
+and logged on the approvals issue (#715) before anyone acts on it. A change is never made by editing this text alone.
+
+**Base.** Milestone 1 spans baseline v1 (record commit 341f700d0, simulation e8df8b96d, gate baseline
+`rpg_gate_v1.json`) to the milestone 1 record; 903239fbe is history. Clarified by the owner on 2026-10-23 (#715 6356509993,
+memo row 89):
+- **Order:** HUNGER step B → step A → F4 → the decision-73 step (free meal removed) → the §12.3 milestone 1 items.
+  "Decision 73 before milestone 1" means before those items, not before the v1-disclosure repairs.
+- **v1 → v1.1:** each repair is measured once at fold against its parent, and the decision-73 step is too; each single step
+  keeps the per-seed extinction stop. All of them sit on ONE decision-76 cumulative watch from v1. That watch is a span, so
+  it stops on the pooled test (memo row 86).
+- **v1.1:** the decision-73 record is v1.1. If decision 73 does not move the world, v1.1 is the last world-changing tip
+  plus the decision-73 step's neutral proof, recorded anyway (gate and fingerprints), so the items always have a recorded
+  base. The cumulative watch for the §12.3 items restarts at v1.1. The v1 → v1.1 reading is a row of the v1.1 disclosure
+  (as v1's M4).
+- **Re-read at v1.1:** the repaired cases are read case by case against the v1 disclosure rows they closed. A V3 that
+  reappears at v1.1 is NEW at v1.1, not "already disclosed at v1". The repairs' unit tests stay green through decision 73.
+- **Not a scope boundary:** v1.1 is only the base of the items' cumulative watch. The v1-disclosure repairs stay in
+  milestone 1's scope and in done item 4, wherever they land relative to v1.1.
+
+**Hash scheme during milestone 1.** If the proof digest scheme is bumped (F1, `PROOF_DIGEST_SCHEME`, perf's call PERF-D5),
+the v1 base is re-recorded under the new scheme (same e8df8b96d simulation, new digests) before any milestone 1
+paired or gate comparison uses it. A paired proof taken across the bump compares fates and counters only, never
+digests.
+
+**In scope.** Exactly the milestone 1 items in §12.3:
+- kind always means species;
+- the coarse property bands and the appraisal;
+- honest perception defaults;
+- places found from perception and memory (decision 56);
+- activity period and hazard tolerance;
+- the staged retirement of role, kind and faction name branches, including the camp tether (decision 57);
+- why each monster kind fights (decision 62);
+- the hero as work, and the guild as membership (decision 63);
+- basic wild births for every living kind (decisions 67, 70);
+- who a place refuses (decision 68): BLOCKED on per-subject records (owner, 2026-10-23, #715 6356123802). It stays
+  listed, but is out of milestone 1's done list until those records exist.
+
+Also in scope: **repairs that close a v1 disclosure row** (a row whose After-v1 column names a ticket, e.g.
+HUNGER-AND-RETREAT, C6 disengage, the slot leak, the (b1) carcass decay, N12-N14, C7, the safe route, cornered-hold).
+Each is measured as its own step, and each gives SimQ something to read (memo row 82).
+
+Each item becomes a ticket under the milestone 1 epic before work starts.
+
+**Out of scope.**
+- §12.4.
+- Milestones 2 and 3.
+- Packs, herds and territory.
+- Any rule work not listed above. A new item enters only by owner ruling, under change control.
+- The free-meal removal (decision 73): owner, 2026-10-23 (#715 6356123802), a separate step before the §12.3 milestone 1
+  items (after the HUNGER steps and F4; see Base, memo row 89). It is its own paired step against its parent, with the full
+  stop rules, and its record is v1.1. It retires the V1 free-meal known entry before that entry's 2026-12-31 expiry.
+
+**Done when (all of these, on one recorded commit):**
+1. The §12.3 milestone 1 "done when" holds: no decision reads a role, kind or faction name, a new kind works from content
+   alone, and the "no name checks in decision code" probe finds no name switch left in a decision path. "Works from
+   content alone" is proven by a named probe: a test kind declared only in content, with no code change, perceives, eats
+   and fights by its declarations.
+2. The rpg gate on that commit is GREEN, with zero unowned and zero expired validity fails.
+3. The decision-76 cumulative watch against v1 shows no stop, or every stop is ruled by the owner before the record.
+4. Every milestone 1 ticket, and every repair ticket started, is closed or explicitly moved out by owner ruling.
+5. A `m1_disclosure.md` lists everything the record does not claim, in the v1 disclosure format.
+6. The 5k behaviour test and the SimQ anchors are re-recorded on the milestone 1 commit. If either cannot be, the owner
+   must accept the staleness, with a due date no later than 14 days after the record, and m1_disclosure.md names the
+   owning ticket.
+
+**Prerequisites of the record.** TCK-20261023-CHECKPOINT-RESTORE-DRAWS-STATELESS-RANDOMS-FROM-SEED-ZERO (F3) and
+TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID (F4) are fixed before the record ticket is dispatched.
+Otherwise the record cannot claim cross-process determinism. F5 stays P3.
+
+**When the record ticket is dispatched.** Only when done #1, #4 and #5 already hold, so the freeze covers
+measurement and record (days), not a work phase.
+
+**Reds that may ship disclosed.** Each needs four things:
+- a ticket that owns it;
+- an expiry date;
+- an owner acceptance that names the exact cases;
+- an entry in the disclosure.
+
+| Class | May ship disclosed? | Who rules |
+|---|---|---|
+| A known validity red already disclosed at v1 and still inside its expiry | yes, until expiry. An expired v1 entry (e.g. the V3 entry, expiring 2026-11-05) renews only by a new owner acceptance scoped per case | already ruled; renewal by the owner |
+| A record-only gap: an emitter or record wrong, with the state proven unchanged (paired IDENTICAL in every field plus a balance trace) | yes | designer classifies, owner accepts |
+| A new starvation or behaviour red (e.g. V3) caused by milestone 1 work | only with an owner acceptance before the cutoff, scoped per case | designer classifies, owner accepts |
+| A conservation break (V2 or H7 hard law) | **never**: fixed before the record | none; fix |
+| A known red TEST (e.g. a strict xfail) | yes, as a strict xfail with a ticket, an expiry and a disclosure row; the assertion is never weakened | designer classifies, owner accepts |
+| A determinism failure: a same-SHA rerun unstable, or the state hash differing across processes | **never** | none; fix |
+| A NEW extinction (R2): a kind alive at the base that is extinct at the record. For a single step it is tested per (world, seed); for the cumulative milestone 1 reading, by the pooled test (memo row 86) | not without an owner ruling; the default is STOP | owner |
+
+- **V2 classification order:** a V2 or H7 fail is a conservation break until a per-body (or per-holder) balance trace
+  with residual 0, AND a paired IDENTICAL proof of the fix, shows it is record-only. Only then is it the record-only
+  class. A world deviation found with it (like N16's one-tick delay) is classed separately, as a behaviour red.
+- **Cutoff:** the date after which no new red may be accepted is fixed when milestone 1 starts and does not move.
+- **Scoping:** known entries are scoped per (world, seed, entity) once TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED
+  lands. No blanket metric-wide entry is used for milestone 1.
+
+**Freeze.** The freeze starts when the record phase starts, which is the day the record ticket is dispatched. It ends when
+the record PR merges. During the freeze:
+- **May merge:**
+  - docs;
+  - tests and tooling outside the measured paths;
+  - observability that does not write state and does not change the emitted events the gate reads (V1-V8 read the
+    run ledger and events);
+  - a change claimed neutral, with byte-identical proof (paired `--neutral` IDENTICAL, or the 3-world hash check) and the
+    lead's review.
+- **May not merge:**
+  - any change under `src/**`, `content/**`, `data/content/**`, `config/**`, `data/worlds/**` or `tools/rpg_measure/**`
+    that changes simulation behaviour;
+  - any change to the gate config, `.github/workflows/rpg-gate-report.yml`, `rpg_gate_harness.py` or
+    `tools/test_architecture/rpg_gate_*`, or anything else that changes `harness_hash`. A harness change moves the
+    baseline as much as src does;
+  - any runtime or measured-path dependency bump. Dev-only tools outside the measured paths are not caught by this;
+  - a record-only fix under `src/**` (like v1's (a1)). It is not "observability that does not write state", so during
+    the freeze it needs a user exception, as memo row 85 was.
+- The lead reviews the record PR, as in v1. That is review, not an exception path.
+- **Exception:** the user only. Each one is logged on #715 and recorded as an owner-memo row before it is acted on. A peer
+  or a lead cannot grant one.
+
+**Date.** A target date is set when milestone 1 starts, with the testing and lead dependencies named, including
+TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED (testing), a hard dependency of the no-blanket rule. If it slips, the
+planner tells the lead and the dependent planners on the day the slip is known, with a new date. Done is never redefined
+to hold a date.
+
+**Order of measurement.** One heavy process runs on the host at a time. The paired runs, the gate dispatch and the SimQ
+pairs are queued and named in the record ticket.
 
 ## Appendix: External review response log (historical)
 

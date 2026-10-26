@@ -452,3 +452,56 @@ def test_floor_rel_must_agree_across_the_documents_of_a_world(tmp_path):
     docs = _rel_docs([40.0, 50.0, 60.0])
     docs[("w", 2)]["metrics"][0]["floor_rel"] = 0.2
     _refused(_write(tmp_path / "d", docs), "threshold mismatch for O1")
+
+
+# ---- TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED: scoped entries in the candidate
+
+def _scoped_v3(cases, ticket="TCK-S"):
+    return {**_entry(match="V3:wolves", ticket=ticket), "cases": cases}
+
+
+def _v3_docs(by_seed, pooled_v3=0):
+    """Seed documents with V3 fails given as {seed: [entity ids]} (violations == len(ids))."""
+    docs = {("w", s): _seed_doc(s) for s in SEEDS}
+    for seed, ids in by_seed.items():
+        row = next(m for m in docs[("w", seed)]["metrics"] if m["id"] == "V3")
+        row["violations"], row["examples"] = len(ids), [{"entity_id": i} for i in ids]
+    docs[("w", None)] = _pooled_doc(v3=pooled_v3)
+    return docs
+
+
+def test_a_scoped_entry_omits_exactly_its_covered_fail(tmp_path):
+    known = [_scoped_v3([{"world": "w", "seed": 2, "entity_id": 28}])]
+    candidate = _build(_write(tmp_path / "d", _v3_docs({2: [28]})), known, milestone="M0")
+    assert not [r for r in candidate["metrics"] if r["id"] == "V3" and r["scope"] == "run"]
+    assert {"row": "V3:run:w:wolves", "known_match": "V3:wolves", "ticket": "TCK-S"} in candidate["omitted_validity"]
+
+
+def test_a_fail_on_an_uncovered_seed_or_entity_refuses_the_candidate(tmp_path):
+    known = [_scoped_v3([{"world": "w", "seed": 2, "entity_id": 28}])]
+    _refused(_write(tmp_path / "a", _v3_docs({2: [28], 3: [28]})), r"w__s3\.json: validity row V3 has 1 violation\(s\) and no owner", known)
+    _refused(_write(tmp_path / "b", _v3_docs({2: [28, 29]})), r"w__s2\.json: validity row V3 has 2 violation\(s\) and no owner", known)
+
+
+def test_a_pooled_fail_is_not_owned_by_a_scoped_entry(tmp_path):
+    known = [_scoped_v3([{"world": "w", "seed": 2, "entity_id": 28}])]
+    _refused(_write(tmp_path / "p", _v3_docs({2: [28]}, pooled_v3=1)), r"w__pooled\.json: validity row V3 has 1 violation\(s\) and no owner", known)
+
+
+def test_a_missing_required_row_is_not_owned_by_a_scoped_entry(tmp_path):
+    cfg = _config(required_validity={"run": ("V3",), "pooled": ()})
+    docs = _v3_docs({})
+    for doc in docs.values():
+        doc["metrics"] = [m for m in doc["metrics"] if m["id"] != "V3"]
+    _refused(_write(tmp_path / "m", docs), "required validity row V3 is missing", [_scoped_v3([{"world": "w", "seed": 2}])], config=cfg)
+
+
+def test_two_scoped_owners_of_one_row_are_both_recorded_so_each_expiry_is_rechecked(tmp_path):
+    first = _scoped_v3([{"world": "w", "seed": 2, "entity_id": 28}], ticket="TCK-A")
+    second = _scoped_v3([{"world": "w", "seed": 3, "entity_id": 38}], ticket="TCK-B")
+    docs = _v3_docs({2: [28], 3: [38]})
+    candidate = _build(_write(tmp_path / "d", docs), [first, second], milestone="M0")
+    run_rows = [(o["row"], o["ticket"]) for o in candidate["omitted_validity"] if ":run:" in o["row"]]
+    assert run_rows == [("V3:run:w:wolves", "TCK-A"), ("V3:run:w:wolves", "TCK-B")]
+    with pytest.raises(base.RebaselineRefused, match="expired"):
+        base.rebaseline(candidate, _config(), tmp_path / "b", pr=None, cites=["TCK-METRIC-SET"], known=[first, {**second, "expires_on": "2026-10-01"}], today=TODAY)

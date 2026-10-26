@@ -77,6 +77,7 @@ CHURN_EXCLUDE_PATHSPECS = [
 
 CORE_DEPENDENCY_IMPORT_OVERRIDES = {
     "python-json-logger": "pythonjsonlogger",
+    "pyyaml": "yaml",
 }
 
 _SKIP_DIR_NAMES = {
