@@ -7855,6 +7855,18 @@
   tags:
   - testing
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ.md
+  ticket_id: TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ
+  title: 'Remove the `--entities` flag from the `cli` command: it is parsed but never
+    read'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-26'
+  related_code_areas:
+  - src/cli/entry.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS.md
   ticket_id: TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS
   title: paired.py compares arm results collected off this host (`--collected DIR`),
@@ -7873,18 +7885,6 @@
   - testing
   - performance
   - determinism
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ.md
-  ticket_id: TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ
-  title: 'Remove the `--entities` flag from the `cli` command: it is parsed but never
-    read'
-  tier: hotfix
-  ticket_type: bug
-  date: '2026-10-26'
-  related_code_areas:
-  - src/cli/entry.py
-  artifact_files: []
-  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
   ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL

@@ -36,7 +36,6 @@ def _build_parser():
     # CLI mode
     cli = sub.add_parser("cli", help="Headless CLI simulation")
     cli.add_argument("--ticks", type=int, default=None)
-    cli.add_argument("--entities", type=int, default=None)
     cli.add_argument("--seed", type=int, default=None)
     cli.add_argument("--workers", type=int, default=None)
     cli.add_argument("--replay", type=str, default=None)
