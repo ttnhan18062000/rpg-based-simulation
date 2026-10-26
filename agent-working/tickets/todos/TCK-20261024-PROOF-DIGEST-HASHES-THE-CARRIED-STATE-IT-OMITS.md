@@ -15,9 +15,26 @@ tags: [performance, determinism]
 The proof digest hashes the seven carried-state fields it omits: a new `flat-sha256` scheme version, the fixture re-pinned, and the v1 base re-recorded
 
 ## Status
-BLOCKED
+OPEN
 
-Starts after rpg's HUNGER step B lands on main (owner decision, #715 issuecomment-6384423281).
+Unblocked 2026-10-26: HUNGER step B is on main (#753, `3533fde71`; ruling (ii) as `DIGEST_EXCLUDED_COMBAT_KEYS` / `_entity_digest_form`, pinned by a test). rpg-planner granted the co-edit lift (#593 issuecomment-6420451647).
+
+**Lift scope:**
+- `src/engine/checkpoint.py`
+- `docs/engine/deterministic_execution.md`, `docs/engine/known_limitations.md` and `substrate_baseline_contract.md`, only where they cite the digest scheme
+- the INFRA parity rows for the digest
+
+**Conditions:**
+1. Digest scheme only. No change to restore or replay semantics, or to the checkpoint payload shape. F3 (`rpg-checkpoint-restore-randoms`, `scenario_checkpoint.py`) owns restore; ask rpg before touching `scenario_checkpoint.py`.
+2. The proofs:
+   - the v3-minus-7 = v2 migration proof
+   - a positive control per field
+   - a cross-PYTHONHASHSEED check
+   - each `FIXTURE_DIGEST` / digest-pinned re-pin named in the PR's Review notes; only digests move
+   - `paired --neutral` IDENTICAL on 3 worlds × s42, stated as a neutrality measure, not behaviour coverage
+3. rpg (rpg-planner or rpg-designer) reviews the PR's docs and ledger rows; merge stays the owner's.
+4. F1 may be coded and opened in parallel with HUNGER step A. It does not merge while step A's PR is open unless rpg is told first.
+5. rpg re-records v1 under v3 (§12.5) on the u24 host after the merge; perf checks that only the digests move.
 
 ## Tier
 standard
@@ -132,8 +149,7 @@ comparison uses it. The owner approved both on 2026-10-24 (#715 issuecomment-638
 - `tests/unit/engine/test_proof_digest_contract.py`
 
 ## Assumptions / Open Questions
-- The `checkpoint.py` change is a co-edit with rpg-planner: the scheme is perf's, the file is rpg's. Get the lift
-  on #593 before dispatch.
+- The `checkpoint.py` change is a co-edit with rpg-planner: the scheme is perf's, the file is rpg's. The lift was granted 2026-10-26 (see Status).
 - Whether the suite-only side digest of the conformance design (§4.2) is retired by this ticket or kept as a canary.
   The default: C1 becomes an assertion on the v3 digest, and the side digest is dropped.
 
