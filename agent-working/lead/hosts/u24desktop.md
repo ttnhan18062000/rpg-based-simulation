@@ -98,3 +98,27 @@ on both images, with sign and SPDX claims.
 | PR | owner | state |
 |---|---|---|
 | #746 seat tickets to main; Lane B calibration and Lane C H2 PRs follow | rpg | owner approved the pushes (#715 6406571536); lead comments on cross-domain impact only |
+| #748 Lane B: calibration on v1 plus the D76 table on the v1 base | rpg | all checks green; my comment 6406639176 (no objection); waits on the owner's merge |
+| #749 this page | lead (u24) | docs only; waits on the owner's merge |
+| #750 testing: drop the serial xdist steps (TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS) | testing | CI running; #657 can close after it merges |
+| #735 PERF-M2-T06 gate conformance (draft) | perf (ubuntu) | T06 lift granted (#593 6406593752); sequencing against #746 raised in 6406638830 |
+| Lane C H2 (carries TCK-20261019-SEMGREP-BASELINE-FINDINGS-IN-SRC-TRIAGE) | rpg | not opened yet; push approved (#715 6406571536); architecture-planner-u24 and the lead review |
+
+## Overlap and conflicts
+
+Work that duplicates or blocks another session, on either host. One line each: what, which sessions, since when, what would
+resolve it (a recommendation to the owner, not an instruction).
+
+- **Heavy runs on this host** (6 cores, 8 GB): Lane A's HUNGER step B paired run is running; Lane B's H1 waits until it ends. One heavy run at a time.
+- **#746 and #735**: perf's §4.2 and the rpg seat tickets touch the same sequencing; raised on #746 (6406638830). Resolves when rpg-planner and perf agree an order.
+- **Lane C H2 hash evidence**: H2 changes hashed state that engine-modes step 1 reads; architecture-planner-u24 reviews the hash proof.
+- **`docs/REGISTRY.yaml`**: merge one PR at a time and watch main's registry test after each.
+- **Main checkout pulls** trip on modified monitoring shards: save the added lines, restore the files, pull, re-append.
+
+## Pending owner decisions seen from this host
+
+- Merge #748 and #749; #750 once its CI finishes.
+- #390 Slow regression: a new failure, test_arena_stress_50v50, at 8c7ead02b. Ask testing to look?
+- Target scale for engine modes (agents, ticks/s, live or offline): still open.
+- agent-working: go for TCK-20261022-SESSION-ROLES-RPG-OWNS-RPG-MEASURE (local commit f4e121cea).
+- Dependabot #143 (uuid in website/package-lock.json): held while host ubuntu is off.
