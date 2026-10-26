@@ -14004,6 +14004,32 @@
   - testing
   - regression
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE.md
+  ticket_id: TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE
+  title: 'PERF-M2-T06: P1 contract publication and gate-conformance map'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-09'
+  related_code_areas:
+  - src/certification/models.py
+  - src/perf/long_run_harness.py
+  - Outcome
+  - tools/perf/known_debt.py
+  - tools/perf/perf_threshold_inventory.py
+  - tests/tools/perf_assertions.py
+  - docs/engine/performance_contract.md
+  - docs/engine/contracts/certification_contract.md
+  - docs/performance/performance_clause_inventory.md
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE/contract_edit_draft.md
+  - agent-working/stored_artifacts/TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE/plan.md
+  - agent-working/stored_artifacts/TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE/test_plan.md
+  tags:
+  - performance
+  - documentation
+  - certification
+- type: ticket
   path: agent-working/tickets/done/visual-asset-icon-release-candidate/TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE.md
   ticket_id: TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE
   title: Build the 36 adopted icons and assemble the first release candidate that
@@ -14035,28 +14061,6 @@
   - src/simulation_quality/ or tools/ (a new metrics module), src/observability/event_extractor.py.
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/perf-m2-contract/TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE.md
-  ticket_id: TCK-20261010-PERF-M2-T06-GATE-CONFORMANCE
-  title: 'PERF-M2-T06: P1 contract publication and gate-conformance map'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-09'
-  related_code_areas:
-  - src/certification/models.py
-  - src/perf/long_run_harness.py
-  - Outcome
-  - tools/perf/known_debt.py
-  - tools/perf/perf_threshold_inventory.py
-  - tests/tools/perf_assertions.py
-  - docs/engine/performance_contract.md
-  - docs/engine/contracts/certification_contract.md
-  - docs/performance/performance_clause_inventory.md
-  artifact_files: []
-  tags:
-  - performance
-  - documentation
-  - certification
 - type: ticket
   path: agent-working/tickets/todos/rpg-regression-gate-report/TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC.md
   ticket_id: TCK-20261009-RPG-GATE-REPORT-TESTING-INFRA-EPIC
