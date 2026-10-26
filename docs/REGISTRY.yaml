@@ -7839,6 +7839,41 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS.md
+  ticket_id: TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS
+  title: 'The two serial steps in test.yml go now that their three owner fixes are
+    on main: the visual_assets store-lock step in the API job, and the native-refusal
+    / simq-observation step in Tools f–z'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-26'
+  related_code_areas:
+  - .github/workflows/test.yml
+  - tests/tools/test_ci_split_tools_jobs.py
+  - tests/static/test_ci_xdist_in_critical_path_jobs.py
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS.md
+  ticket_id: TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS
+  title: paired.py compares arm results collected off this host (`--collected DIR`),
+    never executing a run
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-26'
+  related_code_areas:
+  - tools/rpg_measure/paired.py (main, run_arm, result_path, neutral)
+  - 'tools/rpg_measure/arm_child.py (read only: child hash)'
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/plan.md
+  - agent-working/stored_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/test_plan.md
+  tags:
+  - testing
+  - performance
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
   ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
   title: The two leads message each other across hosts over Remote Control, and every
@@ -8169,6 +8204,36 @@
   - knowledge-store
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE.md
+  ticket_id: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
+  title: 'Find the cause of the 36 SimQ rows held at the v1 re-anchor: the routing
+    worlds'' decline, urban_political seed 456''s early stall, wilderness_survival
+    seed 123 SOCIAL, and 5 pillars that switched on from 0.0'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-24'
+  related_code_areas:
+  - src/ (route_search; the cognition, faction and social event producers)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE.md
+  ticket_id: TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE
+  title: A hostile "acts on" a subject only by an act (an attack or pursuit aimed
+    at it, or a hit that landed), not by a state (wounded, adjacent, closing, outmatched)
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - src/engine/tactical_threat.py, src/ai/goals/present_threat.py, src/ai/goals/scorers.py:61-75
+  - src/engine/tactical.py:203-219
+  - src/core/state.py CombatComponent, src/engine/patches.py CombatPatch
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE/plan.md
+  - agent-working/stored_artifacts/TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE.md
   ticket_id: TCK-20261023-ARCHITECTURE-ENGINE-MODES-PROPOSAL-UPDATE
   title: Update the engine execution modes proposal with the 2026-10-22 rulings and
@@ -8212,6 +8277,22 @@
   - ai
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE.md
+  ticket_id: TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE
+  title: Regenerate the calibration on v1 (`make evaluate-full` plus its run_determinism
+    sidecar) for testing's SimQ re-anchor, and point the D76 cumulative table at the
+    v1 base
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-23'
+  related_code_areas:
+  - Makefile (evaluate-full); src/observability/reporting/run_determinism.py.
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE/plan.md
+  - agent-working/stored_artifacts/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
   ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
   title: Remove the free meal for every kind (decision 73) as its own measured step
@@ -8233,19 +8314,6 @@
   date: '2026-10-23'
   related_code_areas:
   - docs/plans/systemic_world/roadmap.md
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE.md
-  ticket_id: TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE
-  title: Regenerate the calibration on v1 (`make evaluate-full` plus its run_determinism
-    sidecar) for testing's SimQ re-anchor, and point the D76 cumulative table at the
-    v1 base
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-23'
-  related_code_areas:
-  - Makefile (evaluate-full); src/observability/reporting/run_determinism.py.
   artifact_files: []
   tags: []
 - type: ticket
@@ -8573,6 +8641,85 @@
   ticket_type: bug
   date: '2026-10-21'
   related_code_areas: []
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-A-READMITTED-NEED-RESUMES-ITS-LIVE-PROJECT.md
+  ticket_id: TCK-20261021-A-READMITTED-NEED-RESUMES-ITS-LIVE-PROJECT
+  title: A re-admitted escalated need opens a fresh project id each time it flips
+    with another need, instead of resuming its live same-kind project
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/ai/goals/escalation.py (escalated_need_wins)
+  - src/core/strategic.py (live_projects_in_the_trim)
+  - src/ai/intelligence.py (project creation)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-A-SUBJECT-IN-A-FIGHT-IT-CHOSE-NEVER-DISENGAGES-AT-ITS-FLEE-LINE.md
+  ticket_id: TCK-20261021-A-SUBJECT-IN-A-FIGHT-IT-CHOSE-NEVER-DISENGAGES-AT-ITS-FLEE-LINE
+  title: A subject in a fight it chose never disengages at its flee line (crowded
+    s44 merchant 12, hp 9 to 1 over about 200 ticks)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - src/engine/tactical.py (panic and flee gate, emotion.is_fleeing)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-FLIGHT-OSCILLATION-COUNTS-NO-DECISION-TICKS-AND-A-CORNERED-SUBJECT-HOLDS.md
+  ticket_id: TCK-20261021-FLIGHT-OSCILLATION-COUNTS-NO-DECISION-TICKS-AND-A-CORNERED-SUBJECT-HOLDS
+  title: The flight-oscillation measure counts no-decision cadence ticks as "non-flee",
+    and a cornered subject with no flight destination holds in place for about 190
+    ticks
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - _destination_or_hold
+  - _throttled
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-HARD-LAW-MONITOR-LIGHT-MODE-OVERHEAD-VS-CONTRACT.md
+  ticket_id: TCK-20261021-HARD-LAW-MONITOR-LIGHT-MODE-OVERHEAD-VS-CONTRACT
+  title: The hard-law monitor's LIGHT mode costs about 27-36% overhead against the
+    <1% target in performance_contract.md §4.2, and its test threshold was relaxed
+    to a 60% soft warning
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-21'
+  related_code_areas:
+  - tests/perf/test_hard_law_monitor_overhead.py, docs/engine/performance_contract.md
+    §4.2, the hard-law monitor in src
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE.md
+  ticket_id: TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE
+  title: 'Owner question after v1: should a present attacker push an exhausted subject''s
+    collapse line? (D41 collapse is ordered before panic)'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-21'
+  related_code_areas:
+  - src/engine/sleep_debt.py
+  - src/engine/tactical.py:166-167
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-TWO-SUBJECTS-HOLD-A-MUTUAL-THREATENING-FLEE-STANDOFF.md
+  ticket_id: TCK-20261021-TWO-SUBJECTS-HOLD-A-MUTUAL-THREATENING-FLEE-STANDOFF
+  title: Two subjects can each treat the other as THREATENING and hold a flee standoff
+    for half a run (frontier s42, alpha 49 and blacksmith 13)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas:
+  - avoid_what_can_eat_me
   artifact_files: []
   tags: []
 - type: ticket
@@ -8984,6 +9131,31 @@
   - architecture
   - delivery
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.md
+  ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
+  title: 'Put both survival pressures on one escalation scale: combat_retreat gets
+    the need-pull escalation once hp is in its own consequence band'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai need_pull.py (ESCALATION_AMPLITUDE, smoothstep)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-A-PURSUING-HOSTILE-WAKES-ITS-TARGET.md
+  ticket_id: TCK-20261020-A-PURSUING-HOSTILE-WAKES-ITS-TARGET
+  title: A perceived hostile pursuing the subject (INTERCEPT/PURSUE on it) wakes its
+    brain, extending D32's adjacency wake
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - src/engine scheduler.py:53-55 (adjacency wake)
+  - tactical.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261020-DISK-FILL-ALERT-TUNING.md
   ticket_id: TCK-20261020-DISK-FILL-ALERT-TUNING
   title: Tune DiskWillFillIn24h so short bursts of heavy local work don't trip it
@@ -8995,17 +9167,71 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.md
-  ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
-  title: 'Put both survival pressures on one escalation scale: combat_retreat gets
-    the need-pull escalation once hp is in its own consequence band'
+  path: agent-working/tickets/todos/TCK-20261020-ENGAGE-BRACKETING-MOVES-WALK-A-GROUP-INTO-A-HAZARD-CLUSTER.md
+  ticket_id: TCK-20261020-ENGAGE-BRACKETING-MOVES-WALK-A-GROUP-INTO-A-HAZARD-CLUSTER
+  title: 'Seven people under combat-engage projects die to HAZARD in one cluster within
+    8 ticks: do BRACKETING moves path into hazard tiles?'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/engine tactical movement (BRACKETING)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-INSPECT-PANEL-READS-A-STATE-SELECTED-SHAPE-THE-BACKEND-DOES-NOT-SERVE.md
+  ticket_id: TCK-20261020-INSPECT-PANEL-READS-A-STATE-SELECTED-SHAPE-THE-BACKEND-DOES-NOT-SERVE
+  title: The frontend InspectPanel reads selected_entity from /state?selected=, a
+    legacy V1 shape the backend no longer serves; move it to the entity detail and
+    quest history endpoints
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - frontend/src/components/InspectPanel.tsx
+  - src/api/routes/entities.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-LIVE-EVENTS-WEBSOCKET-DOES-NOT-ANSWER-THE-CLOSE-FRAME-UNDER-LOAD.md
+  ticket_id: TCK-20261020-LIVE-EVENTS-WEBSOCKET-DOES-NOT-ANSWER-THE-CLOSE-FRAME-UNDER-LOAD
+  title: Under host load, the live-events websocket server sometimes never answers
+    a client's close frame, so each idle client waits out its 10 s close_timeout
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/api (stream_live_events_ws)
+  - tests/api/test_observability_websocket.py
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-PARKED-HUNGER-SAFE-ROUTE-STEP-AFTER-V1.md
+  ticket_id: TCK-20261020-PARKED-HUNGER-SAFE-ROUTE-STEP-AFTER-V1
+  title: 'Parked after v1: the hunger pull aims at the nearest open way whose route
+    is not threatened by a live perceived hostile (built, measured once, not landed)'
   tier: standard
   ticket_type: feature
   date: '2026-10-20'
   related_code_areas:
-  - src/ai need_pull.py (ESCALATION_AMPLITUDE, smoothstep)
+  - src/ai/goals/safe_route.py (branch only)
+  - src/ai/intelligence.py active-objective path
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-POOLED-OUTCOME-ROWS-DECLARE-SHARE-OR-COUNT.md
+  ticket_id: TCK-20261020-POOLED-OUTCOME-ROWS-DECLARE-SHARE-OR-COUNT
+  title: 'Every pooled outcome row declares `aggregate: "share" | "count"`, and share
+    rows must carry numerator and denominator'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - src/observability/rpg_gate_metrics.py
+  artifact_files: []
+  tags:
+  - observability
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261020-SUSPENDED-PROJECTS-ARE-NEVER-RESUMED-SLOT-LEAK.md
   ticket_id: TCK-20261020-SUSPENDED-PROJECTS-ARE-NEVER-RESUMED-SLOT-LEAK
@@ -9019,6 +9245,58 @@
   - src/core/strategic.py (is_live_project, has_project_capacity)
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-TERMINAL-PROJECTS-ARE-RECORDS-WITH-NO-RETENTION-BOUND.md
+  ticket_id: TCK-20261020-TERMINAL-PROJECTS-ARE-RECORDS-WITH-NO-RETENTION-BOUND
+  title: 'COMPLETED and ABANDONED strategic projects are kept on the entity for its
+    lifetime with no retention bound: decide their lifecycle'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai strategic.py (~336-361), the project capacity trim
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-TESTS-THAT-COMPILE-A-WORLD-WITHOUT-THE-CONTENT-CONTEXT-TRIAGE.md
+  ticket_id: TCK-20261020-TESTS-THAT-COMPILE-A-WORLD-WITHOUT-THE-CONTENT-CONTEXT-TRIAGE
+  title: Triage the 24 tests and tools that compile a world without the content context,
+    which gives a world with no starting purses or inventories
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - src/worldbuilding compiler.py:155
+  - tools/test_architecture rpg_gate_run.build_kernel (load_world_with_context)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-TOWN-RETURN-OUTBIDS-AN-ESCALATED-NEED-UNTIL-ABOUT-95.md
+  ticket_id: TCK-20261020-TOWN-RETURN-OUTBIDS-AN-ESCALATED-NEED-UNTIL-ABOUT-95
+  title: town_return outbids an escalated hunger goal until about hunger 95, but SURV-07
+    says the need outranks ordinary goals "well before the line"
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-20'
+  related_code_areas:
+  - the town_return scorer and the hunger scorer (src/ai/goals/, scorers)
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261020-V4-DIET-BREACH-EXAMPLES-NAME-THE-EATER.md
+  ticket_id: TCK-20261020-V4-DIET-BREACH-EXAMPLES-NAME-THE-EATER
+  title: V4's diet-breach examples name each eater and its tick, the way V5's and
+    V8's examples already do
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-10-20'
+  related_code_areas:
+  - src/observability/run_ledger.py (diet breach counting)
+  - _check_diet_gates
+  - tests/integration/observability/test_v4_counts_a_forbidden_meal_through_the_real_kernel.py
+  artifact_files: []
+  tags:
+  - observability
 - type: ticket
   path: agent-working/tickets/done/TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL.md
   ticket_id: TCK-20261019-A-HELD-PANIC-WITH-NO-DESTINATION-FALLS-THROUGH-TO-THE-MEAL
@@ -9465,6 +9743,21 @@
   - tests/integration/certification/test_catalog_arena_smoke.py
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261019-D80B-ENGINE-STOPS-IMPORTING-SIMQ-POST-APPLY-OBSERVER-HOOK.md
+  ticket_id: TCK-20261019-D80B-ENGINE-STOPS-IMPORTING-SIMQ-POST-APPLY-OBSERVER-HOOK
+  title: 'The engine stops importing SimQ: a generic post-apply observer hook replaces
+    kernel.py''s SimQ hub wiring (D80 B)'
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-19'
+  related_code_areas:
+  - src/engine/kernel.py (230-272, 1148-1167)
+  - src/observability/event_recorder.py (quality_fn)
+  - src/simulation_quality/
+  artifact_files: []
+  tags:
+  - observability
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE.md
   ticket_id: TCK-20261019-D80C-SIMQ-READS-THE-LOSSLESS-EVENT-FILE-OFFLINE
@@ -11192,6 +11485,30 @@
   - simulation-quality
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1.md
+  ticket_id: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
+  title: One SimQ grade-anchor re-anchor, taken on baseline v1. Testing runs the mechanics,
+    and rpg-planner rules on every moved row. The four anchor-family tickets fold
+    into it, and it owns the anchor known-reds until it lands.
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-14'
+  related_code_areas:
+  - tools/test_architecture/simq_reanchor.py
+  - tools/test_architecture/simq_pillar_compare.py
+  - tests/simulation_quality/fixtures/grade_anchors.json
+  - tools/test_architecture/slow_known_reds.yaml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/investigation.md
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/plan.md
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/reanchor_provenance.md
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/ruling_summary.md
+  - agent-working/stored_artifacts/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1/test_plan.md
+  tags:
+  - testing
+  - regression
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261014-SOME-MOVE-STEPS-LOSE-THEIR-STEP-TIME-BETWEEN-RESOLVE-MOVE-AND-APPLY.md
   ticket_id: TCK-20261014-SOME-MOVE-STEPS-LOSE-THEIR-STEP-TIME-BETWEEN-RESOLVE-MOVE-AND-APPLY
   title: About 0.03% of frontier steps move an entity with an ordinary move update
@@ -11399,25 +11716,6 @@
   - data/content/world/terrain.yaml, src/content/schema.py (TerrainDefinition)
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1.md
-  ticket_id: TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1
-  title: One SimQ grade-anchor re-anchor, taken on baseline v1. Testing runs the mechanics,
-    and rpg-planner rules on every moved row. The four anchor-family tickets fold
-    into it, and it owns the anchor known-reds until it lands.
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-14'
-  related_code_areas:
-  - tools/test_architecture/simq_reanchor.py
-  - tools/test_architecture/simq_pillar_compare.py
-  - tests/simulation_quality/fixtures/grade_anchors.json
-  - tools/test_architecture/slow_known_reds.yaml
-  artifact_files: []
-  tags:
-  - testing
-  - regression
-  - simulation-quality
 - type: ticket
   path: agent-working/tickets/done/TCK-20261013-CERTIFICATION-FAKESTATE-LACKS-THE-OWED-FIELD.md
   ticket_id: TCK-20261013-CERTIFICATION-FAKESTATE-LACKS-THE-OWED-FIELD
@@ -14786,6 +15084,23 @@
   - ai
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE.md
+  ticket_id: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
+  title: Five SOCIAL corpus anchors went red in step changes (about 17-22 rising to
+    25-39). Bisect each onset to one PR, rebaseline the intended rises and file a
+    fix for any that start on a neutral PR.
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-07'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tests/simulation_quality/fixtures/grade_anchors.json
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - social
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC.md
   ticket_id: TCK-20261007-SPECIES-HOSTILITY-METAMORPHIC-ENGAGEMENT-CHECK-RED-SINCE-6E7EF56EC
   title: 'The species-hostility metamorphic check went red between bc4f7553c and 6e7ef56ec:
@@ -15068,23 +15383,6 @@
   - world
   - bug
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE.md
-  ticket_id: TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE
-  title: Five SOCIAL corpus anchors went red in step changes (about 17-22 rising to
-    25-39). Bisect each onset to one PR, rebaseline the intended rises and file a
-    fix for any that start on a neutral PR.
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-07'
-  related_code_areas:
-  - tests/unit/worldassembly/test_corpus_diversity.py
-  - tests/simulation_quality/fixtures/grade_anchors.json
-  artifact_files: []
-  tags:
-  - simulation-quality
-  - social
-  - regression
-- type: ticket
   path: agent-working/tickets/done/TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT.md
   ticket_id: TCK-20261006-ATTACK-LEGALITY-TRUNCATES-MANHATTAN-DISTANCE-BUT-PURSUIT-REACH-DOES-NOT
   title: 'On fractional positions the attack legality check and the pursuit reach
@@ -15158,6 +15456,26 @@
   tags:
   - engine
   - combat
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP.md
+  ticket_id: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
+  title: '`combat_engagement` grew by about 3.3 s per tick at movement[5000] somewhere
+    between `c84352465` and `132bf09ca` (`is_hostile_compat` → `project_relation`);
+    isolate the commit, and do not add cost when making the check symmetric'
+  tier: standard
+  ticket_type: investigation
+  date: '2026-10-06'
+  related_code_areas:
+  - src/domains/combat_engagement/phase.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP/investigation.md
+  - agent-working/stored_artifacts/TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP/plan.md
+  - agent-working/stored_artifacts/TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP/test_plan.md
+  tags:
+  - performance
+  - combat
+  - regression
+  - investigation
 - type: ticket
   path: agent-working/tickets/done/TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK.md
   ticket_id: TCK-20261006-COOPERATION-PENDING-OFFER-SCAN-IS-QUADRATIC-PER-TICK
@@ -16131,23 +16449,6 @@
   tags:
   - engine
   - combat
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP.md
-  ticket_id: TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP
-  title: '`combat_engagement` grew by about 3.3 s per tick at movement[5000] somewhere
-    between `c84352465` and `132bf09ca` (`is_hostile_compat` → `project_relation`);
-    isolate the commit, and do not add cost when making the check symmetric'
-  tier: standard
-  ticket_type: investigation
-  date: '2026-10-06'
-  related_code_areas:
-  - src/domains/combat_engagement/phase.py
-  artifact_files: []
-  tags:
-  - performance
-  - combat
-  - regression
-  - investigation
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261006-ENV-07-WOUNDED-THEN-DRAINED-CLAUSE-HAS-NO-ATTACKER-DAMAGE-RECORD.md
   ticket_id: TCK-20261006-ENV-07-WOUNDED-THEN-DRAINED-CLAUSE-HAS-NO-ATTACKER-DAMAGE-RECORD
@@ -20313,6 +20614,42 @@
   tags:
   - testing
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE.md
+  ticket_id: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
+  title: 'Five NARRATIVE corpus anchors went red (the first, `test_frontier_marches_seed42_200t_narrative_grade_stability`,
+
+    asserts `anchor_score` 0.0 while the simulation now produces narrative). Bisect
+    each onset to one PR, rebaseline
+
+    the intended changes per `regression_policy.md` §9-11 and file a fix for any that
+    start on a neutral PR.
+
+
+    > **Widened 2026-10-07 (rpg-planner''s ruling) from the single frontier_marches
+    anchor to the NARRATIVE family**,
+
+    > mirroring its SOCIAL twin `TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE`.
+    The ticket id
+
+    > keeps its original name so existing references hold; the title and scope below
+    are the truthful ones.
+
+    > The "class (a), stale anchor" reading in the Request Summary is now **provisional
+    for the first anchor only** and
+
+    > is subject to the bisect.'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-01'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - src/simulation_quality/
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - grade-thresholds
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND.md
   ticket_id: TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND
   title: '`WorldDynamicsSystem.resolve_dynamics` unconditionally overwrites a victim''s
@@ -20470,6 +20807,23 @@
   - simulation-quality
   - grade-thresholds
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE.md
+  ticket_id: TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE
+  title: Re-baseline the `unit_selfmodel_pilot_seed42_1000t` ECONOMY (and marginally
+    NARRATIVE) slow-tier SimQ anchor that moved upward because compile-time herb nodes
+    now yield a real item and herb harvesting completes
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-01'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tests/simulation_quality/fixtures/grade_anchors.json
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - economy
+  - calibration
+- type: ticket
   path: agent-working/tickets/done/TCK-20261001-TEST-LANE-ROUTING-COST-VIEW-BASELINE-V2.md
   ticket_id: TCK-20261001-TEST-LANE-ROUTING-COST-VIEW-BASELINE-V2
   title: Harden scenario-lane routing, add a report-only JUnit cost view, record mutation
@@ -20542,59 +20896,6 @@
   - lifecycle
   - combat
   - progression
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE.md
-  ticket_id: TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE
-  title: 'Five NARRATIVE corpus anchors went red (the first, `test_frontier_marches_seed42_200t_narrative_grade_stability`,
-
-    asserts `anchor_score` 0.0 while the simulation now produces narrative). Bisect
-    each onset to one PR, rebaseline
-
-    the intended changes per `regression_policy.md` §9-11 and file a fix for any that
-    start on a neutral PR.
-
-
-    > **Widened 2026-10-07 (rpg-planner''s ruling) from the single frontier_marches
-    anchor to the NARRATIVE family**,
-
-    > mirroring its SOCIAL twin `TCK-20261007-SIMQ-SOCIAL-ANCHOR-FAMILY-STEP-RISE-BISECT-THEN-REBASELINE`.
-    The ticket id
-
-    > keeps its original name so existing references hold; the title and scope below
-    are the truthful ones.
-
-    > The "class (a), stale anchor" reading in the Request Summary is now **provisional
-    for the first anchor only** and
-
-    > is subject to the bisect.'
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-01'
-  related_code_areas:
-  - tests/unit/worldassembly/test_corpus_diversity.py
-  - src/simulation_quality/
-  artifact_files: []
-  tags:
-  - simulation-quality
-  - grade-thresholds
-  - testing
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE.md
-  ticket_id: TCK-20261001-SIMQ-UNIT-SELFMODEL-PILOT-ECONOMY-ANCHOR-REBASELINE
-  title: Re-baseline the `unit_selfmodel_pilot_seed42_1000t` ECONOMY (and marginally
-    NARRATIVE) slow-tier SimQ anchor that moved upward because compile-time herb nodes
-    now yield a real item and herb harvesting completes
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-01'
-  related_code_areas:
-  - tests/unit/worldassembly/test_corpus_diversity.py
-  - tests/simulation_quality/fixtures/grade_anchors.json
-  artifact_files: []
-  tags:
-  - simulation-quality
-  - economy
-  - calibration
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS.md
   ticket_id: TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS
@@ -26836,6 +27137,29 @@
   - cognition
   - social
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT.md
+  ticket_id: TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT
+  title: 'Multiple `test_corpus_diversity.py` NARRATIVE/COMBAT-narrative grade-stability
+    tests drift
+
+    deterministically on unmodified `main` — including one re-drifting after its own
+    most recent
+
+    2026-08-29 re-baseline'
+  tier: standard
+  ticket_type: bug
+  date: '2026-09-12'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tools/simq_ceiling.py
+  - src/simulation_quality/scorers/
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - calibration
+  - corpus
+  - grade-thresholds
+- type: ticket
   path: agent-working/tickets/done/TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS.md
   ticket_id: TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS
   title: The entire knowledge/investigation layer produces nothing in a real run —
@@ -27050,29 +27374,6 @@
   tags:
   - data-quality
   - process-improvement
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT.md
-  ticket_id: TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT
-  title: 'Multiple `test_corpus_diversity.py` NARRATIVE/COMBAT-narrative grade-stability
-    tests drift
-
-    deterministically on unmodified `main` — including one re-drifting after its own
-    most recent
-
-    2026-08-29 re-baseline'
-  tier: standard
-  ticket_type: bug
-  date: '2026-09-12'
-  related_code_areas:
-  - tests/unit/worldassembly/test_corpus_diversity.py
-  - tools/simq_ceiling.py
-  - src/simulation_quality/scorers/
-  artifact_files: []
-  tags:
-  - simulation-quality
-  - calibration
-  - corpus
-  - grade-thresholds
 - type: ticket
   path: agent-working/tickets/done/TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2.md
   ticket_id: TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2

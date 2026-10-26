@@ -17,8 +17,10 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Sequence, Tuple
 
+from src.core.movement_modes import MovementMode
 from src.core.state import EntityState
 from src.domains.combat_engagement.power import apparent_power
+from src.engine.scheduler import NEED_WAKE_CADENCE
 
 # A subject whose safety disposition is above this is "cautious" for the SAFETY_PRESSURE_RETREAT branch (the
 # value that gate has always used; content has levels 0.9 and 0.75 and below, so it separates high from the rest).
@@ -81,3 +83,34 @@ def present_threat_terms(entity: EntityState, hostiles: Sequence[EntityState]) -
 def safety_retreat_warranted(entity: EntityState, hostiles: Sequence[EntityState], safety_pressure: float) -> bool:
     """A cautious subject retreats only from a present threat; it never retreats from a hostile merely seen."""
     return bool(hostiles) and safety_pressure > CAUTIOUS_SAFETY_PRESSURE and bool(present_threat_terms(entity, hostiles))
+
+
+# (a) The typed work that is an attack or a pursuit with the subject as its target (memo row 88 item 5). A task kept current until the hostile's
+# next decision still counts, with no reach test: a committed act, at most one decision stale.
+ATTACK_ACTIONS = frozenset({"ATTACK", "SKILL"})  # ENTITY_ACT: a basic attack, a skill, and the queued swing HOLD_BETWEEN_BLOWS (action ATTACK)
+PURSUIT_MODES = frozenset({MovementMode.PURSUE, MovementMode.INTERCEPT})  # ENTITY_MOVE: closing on, or cutting off, the target
+BRACKETING_REASON = "BRACKETING"  # ENTITY_MOVE in REPOSITION mode (tactical.py): the one move whose only typed mark is its reason, because REPOSITION also carries SEEK_COVER
+
+
+def _task_acts_on(hostile: EntityState, subject_id: int) -> bool:
+    """(a) The hostile's current task is an attack or a pursuit whose typed target is the subject. A bare `target_id` on any other task does not count
+    (watching, guarding, kiting, taking cover, a chokepoint hold)."""
+    task = hostile.task
+    if task is None or task.payload.get("target_id") != subject_id:
+        return False
+    if task.work_kind == "ENTITY_ACT":
+        return task.payload.get("action") in ATTACK_ACTIONS
+    if task.work_kind == "ENTITY_MOVE":
+        return hostile.navigation.movement_mode in PURSUIT_MODES or task.payload.get("reason") == BRACKETING_REASON
+    return False
+
+
+def _hit_acts_on(hostile: EntityState, subject: EntityState, tick: int) -> bool:
+    """(b) The hostile is the body that last took hp from the subject, and that hit is within one brain cadence (opportunity hits included: they are hits)."""
+    hit_tick = subject.combat.last_hit_tick
+    return hit_tick is not None and subject.combat.last_attacker_id == hostile.id and tick - hit_tick <= NEED_WAKE_CADENCE
+
+
+def hostile_acts_on(hostile: EntityState, subject: EntityState, tick: int) -> bool:
+    """True when `hostile` acts on `subject` by an act: its current task attacks or pursues the subject, or it hit the subject within the window."""
+    return _task_acts_on(hostile, subject.id) or _hit_acts_on(hostile, subject, tick)
