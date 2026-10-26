@@ -7266,6 +7266,16 @@
   - platform
   - observability
 - type: doc
+  path: docs/runbooks/ai-worker-lag.md
+  title: 'Runbook: AiWorkerLagHigh and AiWorkerPendingHigh (cause alerts)'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
   path: docs/runbooks/alerting-pipeline.md
   title: 'Runbook: alerting pipeline (PrometheusUnreachable, GrafanaAlertingFailures)'
   status: active
@@ -7355,6 +7365,16 @@
   path: docs/runbooks/records/2026-10-20-log-shipping-fix.md
   title: 'Log shipping fix (2026-10-20): promtail discovery was denied by the socket
     proxy'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/records/2026-10-26-ai-worker-lag-alert.md
+  title: 'ai_worker scrape and lag alerts: observation and fire test (2026-10-26)'
   status: active
   layer: platform
   authority: P2
@@ -8714,6 +8734,25 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING.md
+  ticket_id: TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING
+  title: Ship container logs to Loki with Grafana Alloy instead of the deprecated
+    Promtail
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-21'
+  related_code_areas:
+  - compose.yaml
+  - docker/promtail-config.yml
+  - docker/prometheus.yml
+  - docker/grafana/provisioning/alerting/rules-base.yaml
+  - docker/grafana/provisioning/datasources/datasource.yml
+  - tests/logging/test_loki_cardinality.py
+  artifact_files: []
+  tags:
+  - observability
+  - platform
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE.md
   ticket_id: TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE
   title: 'Owner question after v1: should a present attacker push an exhausted subject''s
@@ -9842,6 +9881,23 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT.md
+  ticket_id: TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT
+  title: Prometheus scrape of ai_worker:9108, an ai_worker healthcheck on its up gauge,
+    and an alert on stream consumer lag/pending
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT/test_plan.md
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
   ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
   title: 'The measured API load-test run on host ubuntu: req/s and p50/p95/p99 with
@@ -10218,6 +10274,24 @@
   - agent-monitoring
   - data-quality
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
+  ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24
+  title: Platform workflows on the Ubuntu 26 runner migration (observe publish-images,
+    pin only reactively) and deploy-docs off Node 20 (setup-node bump, Node 24, roles
+    move to platform)
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-18'
+  related_code_areas:
+  - .github/workflows/publish-images.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24/test_plan.md
+  tags:
+  - platform
+  - delivery
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT.md
   ticket_id: TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
   title: 'Prometheus: scrape the backend''s internal metrics port 9109 instead of
@@ -10386,6 +10460,22 @@
   - delivery
   - security
 - type: ticket
+  path: agent-working/tickets/done/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
+  title: 'DevOps step 3 (host ubuntu): a measured Locust API load test, one SLO alert
+    to a local ntfy, a runbook, and a recorded Redis-stop drill'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/**
+  - pyproject.toml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+  - performance
+- type: ticket
   path: agent-working/tickets/done/visual-asset-docs-sync/TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT.md
   ticket_id: TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT
   title: 'Sample-map gap report: say what is open now, and record the owner''s 2026-10-18
@@ -10410,21 +10500,6 @@
   tags:
   - architecture
   - documentation
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
-  ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24
-  title: Platform workflows on the Ubuntu 26 runner migration (observe publish-images,
-    pin only reactively) and deploy-docs off Node 20 (setup-node bump, Node 24, roles
-    move to platform)
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-18'
-  related_code_areas:
-  - .github/workflows/publish-images.yml
-  artifact_files: []
-  tags:
-  - platform
-  - delivery
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261018-TWO-BARE-KERNEL-TESTS-DEPEND-ON-HOST-MEMORY.md
   ticket_id: TCK-20261018-TWO-BARE-KERNEL-TESTS-DEPEND-ON-HOST-MEMORY
@@ -10465,36 +10540,6 @@
   tags:
   - platform
   - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT.md
-  ticket_id: TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT
-  title: Prometheus scrape of ai_worker:9108, an ai_worker healthcheck on its up gauge,
-    and an alert on stream consumer lag/pending
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - docker/prometheus.yml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
-  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
-  title: 'DevOps step 3 (host ubuntu): a measured Locust API load test, one SLO alert
-    to a local ntfy, a runbook, and a recorded Redis-stop drill'
-  tier: epic
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - tools/loadtest/**
-  - pyproject.toml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-  - performance
 - type: ticket
   path: agent-working/tickets/todos/phase19-off-mode-check/TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK.md
   ticket_id: TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK

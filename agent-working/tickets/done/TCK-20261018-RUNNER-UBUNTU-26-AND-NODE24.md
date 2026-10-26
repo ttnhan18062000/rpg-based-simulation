@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24
-phase: inprogress
+phase: done
 date: 2026-10-18
 tags: [platform, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [platform, delivery]
 Platform workflows on the Ubuntu 26 runner migration (observe publish-images, pin only reactively) and deploy-docs off Node 20 (setup-node bump, Node 24, roles move to platform)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -125,10 +125,10 @@ generated session cards
 - deploy-docs.yml bump: **validated (static) only; not exercised, because the workflow is dispatch-only with Pages off; first real run is under TCK-20260916-REENABLE-DOCS-PAGES-PUBLISHING.** Two lines changed, YAML parses, tests/static 96 passed. Release notes v5-v7.1 read; no breaking change affects the step (investigation.md).
 - Roles diff: `route.py` returns platform for deploy-docs.yml; sessions validate 0 findings; tests/tools session tests and registry tests plus tests/static: 873 passed after the registry regen.
 - ACTIONS-MAJORS-COMBINED evidence check: see investigation.md (item 4 met; gate-report shard/aggregate and deploy-docs not yet shown).
-- publish-images observation (item 1): open, after 2026-10-19.
+- publish-images observation (item 1): **done, no pin.** First run on main on the Ubuntu 26 image: https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/40106509261 (2026-10-24 15:20Z, both jobs `ubuntu-latest`; job log: `Image: ubuntu-26.04`, `Version: 20261021.618`; read through `gh api .../actions/jobs/<id>/logs`, since `gh run view --log` returns nothing here). Jobs `images (backend, docker/backend.Dockerfile)` (120909198642) and `images (frontend, docker/frontend.Dockerfile)` (120909198866): success. Every step the API lists succeeded in both jobs: Set up job, checkout, buildx, GHCR login, Image metadata, Build, Resolve scan target, Trivy scan, Trivy summary, Upload Trivy report, SBOM, Install cosign, Attest SBOM and sign, Verify signature and SBOM attestation, How to verify, the post steps, Complete job (the API lists no steps numbered 16-25). Annotations: one notice per job, "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026" (runner-images issue 14748); no warning, no error. No step failed because of 26, so no `runs-on` pin was added.
 
 ## Files Changed
 (open)
 
 ## Completion Summary
-(open)
+Items 2-4 landed earlier (deploy-docs Node bump, roles diff, ACTIONS-MAJORS-COMBINED check). Item 1 closed with the first Ubuntu 26.04 `publish-images` run on main (40106509261): all steps and both jobs succeeded, only the migration notice as annotation, so no pin was added. Item 5 (issue 631) was filed by platform-planner.
