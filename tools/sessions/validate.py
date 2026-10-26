@@ -73,11 +73,17 @@ def _files(root: Path, pattern: str) -> set[str]:
     return {Path(h).relative_to(root).as_posix() for h in hits if Path(h).is_file()}
 
 
-def _covered_by_split(roster: Roster, rel: str, a: str, b: str, root: Path) -> bool:
+def _covered_by_split(roster: Roster, rel: str, a: str, b: str, root: Path, cache: dict[str, set[str]] | None = None) -> bool:
+    """`cache` maps a split path glob to its files, so each glob is expanded once per validation, not once per file
+    (it was ~230 s of pathlib work over 18k tracked files: TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE)."""
+    cache = {} if cache is None else cache
     for split in roster.splits:
         if a in split.domains and b in split.domains:
-            if any(rel in _files(root, p) for p in split.paths):
-                return True
+            for p in split.paths:
+                if p not in cache:
+                    cache[p] = _files(root, p)
+                if rel in cache[p]:
+                    return True
     return False
 
 
@@ -190,10 +196,11 @@ def _check_ownership(roster: Roster, root: Path) -> list[Finding]:
             for h in hits:
                 bucket.setdefault(h, pattern)
     names = sorted(domain_files)
+    split_files: dict[str, set[str]] = {}
     for i, a in enumerate(names):
         for b in names[i + 1 :]:
             shared = sorted(set(domain_files[a]) & set(domain_files[b]))
-            uncovered = [f for f in shared if not _covered_by_split(roster, f, a, b, root)]
+            uncovered = [f for f in shared if not _covered_by_split(roster, f, a, b, root, split_files)]
             if uncovered:
                 out.append(
                     Finding(
