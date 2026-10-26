@@ -7266,6 +7266,16 @@
   - platform
   - observability
 - type: doc
+  path: docs/runbooks/ai-worker-lag.md
+  title: 'Runbook: AiWorkerLagHigh and AiWorkerPendingHigh (cause alerts)'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
   path: docs/runbooks/alerting-pipeline.md
   title: 'Runbook: alerting pipeline (PrometheusUnreachable, GrafanaAlertingFailures)'
   status: active
@@ -7355,6 +7365,16 @@
   path: docs/runbooks/records/2026-10-20-log-shipping-fix.md
   title: 'Log shipping fix (2026-10-20): promtail discovery was denied by the socket
     proxy'
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
+  path: docs/runbooks/records/2026-10-26-ai-worker-lag-alert.md
+  title: 'ai_worker scrape and lag alerts: observation and fire test (2026-10-26)'
   status: active
   layer: platform
   authority: P2
@@ -7874,6 +7894,19 @@
   - performance
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE.md
+  ticket_id: TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE
+  title: '`tools.sessions.validate` expands each ownership-split glob once, not once
+    per shared file'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-26'
+  related_code_areas:
+  - tools/sessions/validate.py
+  artifact_files: []
+  tags:
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
   ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
   title: The two leads message each other across hosts over Remote Control, and every
@@ -8041,6 +8074,23 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION.md
+  ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
+  title: The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt`
+    version, not a stray user-site install
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-24'
+  related_code_areas:
+  - .claude/settings.json
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION/test_plan.md
+  tags:
+  - knowledge-store
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS.md
   ticket_id: TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS
   title: '`requirements-knowledge.txt` takes the patched mcp, graphifyy and torch
@@ -8189,20 +8239,6 @@
   tags:
   - architecture
   - delivery
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION.md
-  ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
-  title: The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt`
-    version, not a stray user-site install
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-24'
-  related_code_areas:
-  - .claude/settings.json
-  artifact_files: []
-  tags:
-  - knowledge-store
-  - process-improvement
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE.md
   ticket_id: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
@@ -8520,6 +8556,20 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT.md
+  ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
+  title: Role cards show a role's single files in a folder it doesn't otherwise own
+    as "dir/ (N files)", so the card budget can come back down from 440
+  tier: hotfix
+  ticket_type: refactor
+  date: '2026-10-21'
+  related_code_areas:
+  - tools/sessions/card.py
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS.md
   ticket_id: TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS
   title: 'Eleven paths that route as unowned get an owner in session_roles.yaml: the
@@ -8619,20 +8669,6 @@
   - architecture
   - delivery
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT.md
-  ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
-  title: Role cards show a role's single files in a folder it doesn't otherwise own
-    as "dir/ (N files)", so the card budget can come back down from 440
-  tier: hotfix
-  ticket_type: refactor
-  date: '2026-10-21'
-  related_code_areas:
-  - tools/sessions/card.py
-  artifact_files: []
-  tags:
-  - ai
-  - governance
-- type: ticket
   path: agent-working/tickets/todos/TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT.md
   ticket_id: TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT
   title: A crowded service door blocks a starving subject 2 tiles away indefinitely
@@ -8697,6 +8733,25 @@
     §4.2, the hard-law monitor in src
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING.md
+  ticket_id: TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING
+  title: Ship container logs to Loki with Grafana Alloy instead of the deprecated
+    Promtail
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-21'
+  related_code_areas:
+  - compose.yaml
+  - docker/promtail-config.yml
+  - docker/prometheus.yml
+  - docker/grafana/provisioning/alerting/rules-base.yaml
+  - docker/grafana/provisioning/datasources/datasource.yml
+  - tests/logging/test_loki_cardinality.py
+  artifact_files: []
+  tags:
+  - observability
+  - platform
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE.md
   ticket_id: TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE
@@ -9826,6 +9881,23 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT.md
+  ticket_id: TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT
+  title: Prometheus scrape of ai_worker:9108, an ai_worker healthcheck on its up gauge,
+    and an alert on stream consumer lag/pending
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - docker/prometheus.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT/test_plan.md
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-API-LOAD-TEST-MEASURED-RUN.md
   ticket_id: TCK-20261018-API-LOAD-TEST-MEASURED-RUN
   title: 'The measured API load-test run on host ubuntu: req/s and p50/p95/p99 with
@@ -10202,6 +10274,24 @@
   - agent-monitoring
   - data-quality
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
+  ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24
+  title: Platform workflows on the Ubuntu 26 runner migration (observe publish-images,
+    pin only reactively) and deploy-docs off Node 20 (setup-node bump, Node 24, roles
+    move to platform)
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-18'
+  related_code_areas:
+  - .github/workflows/publish-images.yml
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24/investigation.md
+  - agent-working/stored_artifacts/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24/plan.md
+  - agent-working/stored_artifacts/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24/test_plan.md
+  tags:
+  - platform
+  - delivery
+- type: ticket
   path: agent-working/tickets/done/TCK-20261018-SCRAPE-BACKEND-METRICS-PORT.md
   ticket_id: TCK-20261018-SCRAPE-BACKEND-METRICS-PORT
   title: 'Prometheus: scrape the backend''s internal metrics port 9109 instead of
@@ -10370,6 +10460,22 @@
   - delivery
   - security
 - type: ticket
+  path: agent-working/tickets/done/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
+  title: 'DevOps step 3 (host ubuntu): a measured Locust API load test, one SLO alert
+    to a local ntfy, a runbook, and a recorded Redis-stop drill'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - tools/loadtest/**
+  - pyproject.toml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+  - performance
+- type: ticket
   path: agent-working/tickets/done/visual-asset-docs-sync/TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT.md
   ticket_id: TCK-20261018-VISUAL-ASSETS-GAP-REPORT-CURRENT
   title: 'Sample-map gap report: say what is open now, and record the owner''s 2026-10-18
@@ -10394,21 +10500,6 @@
   tags:
   - architecture
   - documentation
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24.md
-  ticket_id: TCK-20261018-RUNNER-UBUNTU-26-AND-NODE24
-  title: Platform workflows on the Ubuntu 26 runner migration (observe publish-images,
-    pin only reactively) and deploy-docs off Node 20 (setup-node bump, Node 24, roles
-    move to platform)
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-18'
-  related_code_areas:
-  - .github/workflows/publish-images.yml
-  artifact_files: []
-  tags:
-  - platform
-  - delivery
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261018-TWO-BARE-KERNEL-TESTS-DEPEND-ON-HOST-MEMORY.md
   ticket_id: TCK-20261018-TWO-BARE-KERNEL-TESTS-DEPEND-ON-HOST-MEMORY
@@ -10449,36 +10540,6 @@
   tags:
   - platform
   - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT.md
-  ticket_id: TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT
-  title: Prometheus scrape of ai_worker:9108, an ai_worker healthcheck on its up gauge,
-    and an alert on stream consumer lag/pending
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - docker/prometheus.yml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
-  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
-  title: 'DevOps step 3 (host ubuntu): a measured Locust API load test, one SLO alert
-    to a local ntfy, a runbook, and a recorded Redis-stop drill'
-  tier: epic
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - tools/loadtest/**
-  - pyproject.toml
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-  - performance
 - type: ticket
   path: agent-working/tickets/todos/phase19-off-mode-check/TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK.md
   ticket_id: TCK-20261018-PHASE19-OFF-MODE-RUNTIME-CHECK
@@ -10816,6 +10877,21 @@
   - determinism
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-SESSION-BINDINGS-TORN-TAIL.md
+  ticket_id: TCK-20261015-SESSION-BINDINGS-TORN-TAIL
+  title: A torn last line in a session-roles bindings.jsonl must not silence SessionStart;
+    repair the torn rpg-implementer file
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-15'
+  related_code_areas:
+  - tools/sessions/state.py, tools/sessions/session_start_hook.py
+  - .git/session-roles/rpg-implementer/ (runtime state, main checkout)
+  artifact_files: []
+  tags:
+  - hooks
+  - data-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START.md
   ticket_id: TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START
   title: SessionStart warns when the worktree it runs from has stale session code
@@ -10964,21 +11040,6 @@
   artifact_files: []
   tags:
   - platform
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261015-SESSION-BINDINGS-TORN-TAIL.md
-  ticket_id: TCK-20261015-SESSION-BINDINGS-TORN-TAIL
-  title: A torn last line in a session-roles bindings.jsonl must not silence SessionStart;
-    repair the torn rpg-implementer file
-  tier: hotfix
-  ticket_type: bug
-  date: '2026-10-15'
-  related_code_areas:
-  - tools/sessions/state.py, tools/sessions/session_start_hook.py
-  - .git/session-roles/rpg-implementer/ (runtime state, main checkout)
-  artifact_files: []
-  tags:
-  - hooks
-  - data-quality
 - type: ticket
   path: agent-working/tickets/done/TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71.md
   ticket_id: TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71
