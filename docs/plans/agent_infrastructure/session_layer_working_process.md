@@ -778,6 +778,8 @@ manifest (M0d may force a separate directory).
 
 **Decided by the owner (2026-10-09 and 2026-10-10):** the lead seat is advisory and sequencing only, with no dispatch or queue authority (2026-10-09). Cross-host handoffs go out as GitHub issues labelled `for:<role>`, which SessionStart lists for the role; the owning planner turns an accepted one into its own ticket (2026-10-10, issue #492; see `docs/guides/cross_session_messages.md`).
 
+**Decided by the owner (2026-10-25, #715):** the two leads message each other across hosts over Remote Control, and every other seat reaches the other host only through its own lead; see `docs/guides/cross_session_messages.md`, "Cross-host: lead to lead over Remote Control".
+
 **Decided by the owner (2026-10-10, relayed by lead-planner on #476):** read-mostly seats (lead, planners, designers) launch from the main
 checkout; implementers get a fresh worktree per batch; the launcher records which batch worktree an instance uses; asset-planner needs no
 worktree of its own (section 8, "Launch policy").
