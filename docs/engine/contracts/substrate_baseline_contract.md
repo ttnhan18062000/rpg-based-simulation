@@ -65,7 +65,7 @@ The `CanonicalStateHasher` defines the proof of integrity.
   - `entities`: Sorted by integer ID.
   - `global_resources`: Sorted by string key.
   - `rng_checkpoint`: Exact state.
-- **Serialization**: Compact JSON (sorted keys, no whitespace) hashed via SHA-256. The scheme is `flat-sha256-v2`: v1 plus the two keys `periodic_due_ticks` and `work_debt`, which were removed from the state with work debt (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`); digests of different schemes are never compared.
+- **Serialization**: Compact JSON (sorted keys, no whitespace) hashed via SHA-256. The scheme is `flat-sha256-v3`: v3 (`TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS`) is v2 plus the seven carried-state fields v2 omitted: `item_instances`, `recent_world_events` (hashed as the ordered window), `quest_registry`, `factions`, `clans`, `information_providers` and `CombatComponent.last_hit_tick`; nothing else changed. Before it, `flat-sha256-v2` was v1 minus the two keys `periodic_due_ticks` and `work_debt`, which were removed from the state with work debt (`TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`); digests of different schemes are never compared.
 
 ## 8. Forbidden Placeholder Behavior
 - **No Scheduler Placeholders**: Opportunistic work branches must be explicitly gated or removed if not implemented.

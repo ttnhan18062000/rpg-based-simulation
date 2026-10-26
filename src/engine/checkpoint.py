@@ -14,7 +14,9 @@ from src.core.state import AuthoritativeState
 # different scheme is never compared with this one.
 # v2 (TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE): v1 plus the two keys `periodic_due_ticks` and `work_debt`, which were removed from the
 # state; nothing else in the canonical JSON changed, so a v2 digest is not comparable with a v1 digest of the same state.
-PROOF_DIGEST_SCHEME = "flat-sha256-v2"
+# v3 (TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS): v2 plus the seven carried-state fields it omitted (`item_instances`, `recent_world_events`,
+# `quest_registry`, `factions`, `clans`, `information_providers`, `CombatComponent.last_hit_tick`); nothing else changed, so a v3 digest is not comparable with a v2 one.
+PROOF_DIGEST_SCHEME = "flat-sha256-v3"
 
 
 class DigestStatus(str, Enum):
@@ -55,20 +57,26 @@ class HashScheduleViolation(RuntimeError):
     """
 
 
-# Carried combat state the proof digest does NOT yet hash (perf ruling PERF-D5, option (ii), 2026-10-24, #593 comment 6384425767): `last_hit_tick`
-# (TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE) is typed durable state, pickled in scenario checkpoints, but the v2 digest must not change without a new
-# scheme version, so it stays out of the digest until F1 (TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS) hashes it in its single bump. Until then the
-# final hash and the paired hash-equality proofs cannot see a divergence in it.
-DIGEST_EXCLUDED_COMBAT_KEYS = frozenset({"last_hit_tick"})
+def _plain(value: Any) -> Any:
+    """A value as plain JSON data in a stable order: dataclasses by field, enums by value, mappings with string keys (the dump sorts them), sequences in their own
+    order (an ordered window or history stays ordered), sets sorted. No `hash()`, no `id()`, no set iteration order."""
+    if isinstance(value, Enum):
+        return value.value
+    if dataclasses.is_dataclass(value) and not isinstance(value, type):
+        return {f.name: _plain(getattr(value, f.name)) for f in dataclasses.fields(value) if not f.name.startswith("_")}
+    if isinstance(value, dict):
+        return {str(k): _plain(v) for k, v in value.items()}
+    if isinstance(value, (set, frozenset)):
+        return sorted((_plain(v) for v in value), key=lambda x: json.dumps(x, sort_keys=True))
+    if isinstance(value, (list, tuple)):
+        return [_plain(v) for v in value]
+    return value
 
 
-def _entity_digest_form(entity: Any) -> Dict[str, Any]:
-    """The entity's canonical dict as the proof digest hashes it: the canonical dict without `DIGEST_EXCLUDED_COMBAT_KEYS` (built as a copy; the cached dict is shared)."""
-    data: Dict[str, Any] = entity.to_canonical_dict()
-    combat = data.get("combat")
-    if not isinstance(combat, dict):
-        return data
-    return {**data, "combat": {k: v for k, v in combat.items() if k not in DIGEST_EXCLUDED_COMBAT_KEYS}}
+def _canonical_of(item: Any) -> Any:
+    """An item's own canonical dict when it has one (factions, clans, information providers), else its plain form."""
+    to_dict = getattr(item, "to_canonical_dict", None)
+    return to_dict() if callable(to_dict) else _plain(item)
 
 
 def _canonical_owed(state: AuthoritativeState) -> Dict[str, Any]:
@@ -126,7 +134,7 @@ class CanonicalStateHasher:
         # 2. Entities (Sorted by ID)
         sorted_entities = {}
         for eid in sorted(state.entities.keys()):
-            sorted_entities[str(eid)] = _entity_digest_form(state.entities[eid])
+            sorted_entities[str(eid)] = state.entities[eid].to_canonical_dict()
         data["entities"] = sorted_entities
         
         # 3. Global collections (All sorted by key/id)
@@ -180,6 +188,15 @@ class CanonicalStateHasher:
             for k, v in sorted(state.entity_belief_institutions.items())
         }
         data["event_fidelity"] = dict(sorted(state.event_fidelity.items()))
+
+        # 6. Carried state that `ApplyPath.apply_generation` forwards every tick (v3, TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS).
+        # Keyed collections are sorted by key; `recent_world_events` is hashed as the ordered window it is.
+        data["item_instances"] = {str(k): _plain(v) for k, v in sorted(state.item_instances.items())}
+        data["recent_world_events"] = [_plain(e) for e in state.recent_world_events]
+        data["quest_registry"] = {str(k): _plain(v) for k, v in sorted(state.quest_registry.items())}
+        data["factions"] = {str(k): _canonical_of(v) for k, v in sorted(state.factions.items())}
+        data["clans"] = {str(k): _canonical_of(v) for k, v in sorted(state.clans.items())}
+        data["information_providers"] = {str(k): _canonical_of(v) for k, v in sorted(state.information_providers.items())}
 
         return data
 

@@ -220,7 +220,7 @@ provides it.
 | `scaling_slope` | object or null | optional | not yet (M4) |
 | `runtime_mode_sequence` | array of `{mode, ticks}` (run-length) | required | today: `mode_sequence` per tick; toolkit compresses |
 | `work` | object name → number | required (may be empty) | today: the kernel's `metrics` per-tick means under the names it emits. The processed / dropped / coalesced split is not named yet, and the collector does not invent counts. Work debt is gone (DEV-019), so there is no debt counter to describe (R-5) |
-| `validity` | object `{replay_ok, final_state_hash, hash_scheme}` | required for `capacity_run` | today: `final_state_hash` only in F22. `hash_scheme` is an enum `flat-sha256-v1`, `flat-sha256-v2` (R-3; v2 since DEV-019); a hash needs its scheme |
+| `validity` | object `{replay_ok, final_state_hash, hash_scheme}` | required for `capacity_run` | today: `final_state_hash` only in F22. `hash_scheme` is an enum `flat-sha256-v1`, `flat-sha256-v2`, `flat-sha256-v3` (R-3; v2 since DEV-019, v3 since `TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS`); a hash needs its scheme |
 | `phases` | object phase → latency object | optional | today: `phase_breakdown` |
 | `outcome.state` | enum `PASS`, `REGRESSION`, `INCONCLUSIVE`, `NOT_APPLICABLE` | required | `performance_contract.md` §3.3; not implemented anywhere today |
 | `outcome.reason` | enum code plus free text | required | not yet |
@@ -439,7 +439,7 @@ provides it.
           "properties": {
             "replay_ok": {"type": ["boolean", "null"]},
             "final_state_hash": {"type": ["string", "null"]},
-            "hash_scheme": {"enum": ["flat-sha256-v1", "flat-sha256-v2", null]}
+            "hash_scheme": {"enum": ["flat-sha256-v1", "flat-sha256-v2", "flat-sha256-v3", null]}
           }
         },
         "phases": {"type": "object", "additionalProperties": {"type": "object"}},
@@ -493,7 +493,7 @@ never a skip that reads as success. A missing baseline, a baseline with a differ
 | `runner.controlled`, `runner.name` | blocking | an uncontrolled result is not comparable with a controlled one, and a capacity result is read only against the same host |
 | `protocol.*` (warmup, measured ticks, repetitions, percentile method, clock, gc) | blocking | a 20-tick and a 1000-tick sample are not comparable (finding 3) |
 | `runtime_mode_sequence` | see the excursion rule below | an excursion changes the work done (`RuntimeMode` can leave `NORMAL`) |
-| `validity.hash_scheme` | blocking when both carry a hash; digests of different schemes are not comparable (PERF-D5) | two digests produced by different hash schemes can differ with identical state, so a mismatch proves nothing. The enum is `flat-sha256-v1`, `flat-sha256-v2` (R-3) |
+| `validity.hash_scheme` | blocking when both carry a hash; digests of different schemes are not comparable (PERF-D5) | two digests produced by different hash schemes can differ with identical state, so a mismatch proves nothing. The enum is `flat-sha256-v1`, `flat-sha256-v2`, `flat-sha256-v3` (R-3) |
 | `recorded_at`, host name, load average | recorded only | noise context; load average may add a variance warning, not a verdict |
 
 **Excursion rule (OD-3).** `compare` reads `runtime_mode_sequence` after every blocking field has matched.
@@ -579,7 +579,7 @@ records as `extra_info`. Choosing the tool is `PERF-M2-T03`.
 | F15 profiling toolkit | Keep outside the schema as diagnostic evidence stamped PROVISIONAL; align its header names to `identity` where the names overlap so a profile can cite a record |
 | F16, F17, F18, F20, F21 | Keep outside the schema: profiles with profiler overhead, whole-suite memory, a leak probe, payload sizes and a stress run, none of which is a benchmark result in this sense |
 | F19 WS payload | Keep outside the schema (bytes, not time); its `attempted/aborted/abort_reason` is the model for `outcome.reason` codes |
-| F22 long-run report | **Done by `PERF-M2-T04`.** `LongRunStabilityHarness.to_record` maps it into a `comparative`-tier record (its checks compare the start and the end of one run, `performance_contract.md` §3.3; `gate.projection = long_run_stability`, `runner.controlled = false`, raw ticks as a pointer, the mode at every tick, `final_state_hash` with `flat-sha256-v2`). The report no longer has `passed_certification`: it has `outcome` (`PASS` when the four invariants held, otherwise `REGRESSION` naming the ones that did not), and its `to_dict` keeps `warmup_ticks`, `sample_interval_ticks` and every sample with its `active_mode`. Its window percentiles are nearest-rank |
+| F22 long-run report | **Done by `PERF-M2-T04`.** `LongRunStabilityHarness.to_record` maps it into a `comparative`-tier record (its checks compare the start and the end of one run, `performance_contract.md` §3.3; `gate.projection = long_run_stability`, `runner.controlled = false`, raw ticks as a pointer, the mode at every tick, `final_state_hash` with `flat-sha256-v3`). The report no longer has `passed_certification`: it has `outcome` (`PASS` when the four invariants held, otherwise `REGRESSION` naming the ones that did not), and its `to_dict` keeps `warmup_ticks`, `sample_interval_ticks` and every sample with its `active_mode`. Its window percentiles are nearest-rank |
 | F23 `PhaseTimingRecord` | Candidate source for `phases` and `work` if the kernel ever calls it (M3); not a result record |
 | F24 kernel signals | Source, not a format |
 | F25 `simq_isolation_overhead.md` | Keep (named comparative result); a machine-readable `comparative` record is future work |
@@ -618,7 +618,7 @@ findings, and what each changed in this schema:
 |---|---|---|---|
 | R-1 | Nothing recorded whether a run's governor read a modelled or a measured cost, or which work model it used | DEV-018 (#448); `RuntimeProfile.signal_contract`; `WORK_MODEL_VERSION` | `contract.signal_contract` and `contract.work_model_version`, both blocking |
 | R-2 | Tick and phase totals changed meaning at DEV-017 but `engine.commit` is recorded only, so a pre-#448 record compared as comparable | DEV-017 (#448) | `result.cost_accounting_version`, blocking; a record without it is `INCONCLUSIVE` |
-| R-3 | `validity.hash_scheme` was a free string | DEV-019 (#455) | An enum (`flat-sha256-v1`, `flat-sha256-v2`); the rule is unchanged |
+| R-3 | `validity.hash_scheme` was a free string | DEV-019 (#455) | An enum (`flat-sha256-v1`, `flat-sha256-v2`, later `flat-sha256-v3`); the rule is unchanged |
 | R-4 | The zero-worker `DEGRADED` mistrigger | `PERF-M1-T01` (#352) | None: covered by `executor.worker_count` (blocking) and the all-`NORMAL` rule |
 | R-5 | Work debt is gone, so the draft's M1-T02 row ("debt-related counters") had nothing to describe | DEV-019 (#455) | The debt wording is dropped; `work` holds the kernel's metric means and invents no counts |
 

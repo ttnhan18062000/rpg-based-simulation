@@ -103,10 +103,11 @@ class Clock(str, Enum):
 
 
 class HashScheme(str, Enum):
-    """Digest schemes of ``validity.final_state_hash``. v2 since DEV-019 (#455); v1 survives in compile reports. Never compared across."""
+    """Digest schemes of ``validity.final_state_hash``. v3 since the proof digest hashes the seven carried-state fields it omitted (TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS); v2 since DEV-019 (#455); v1 survives in compile reports. Never compared across."""
 
     FLAT_SHA256_V1 = "flat-sha256-v1"
     FLAT_SHA256_V2 = "flat-sha256-v2"
+    FLAT_SHA256_V3 = "flat-sha256-v3"
 
 
 class OutcomeState(str, Enum):
