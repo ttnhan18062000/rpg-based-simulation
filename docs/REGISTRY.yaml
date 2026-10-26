@@ -9282,6 +9282,17 @@
   - ai
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-SEMGREP-BASELINE-FINDINGS-IN-SRC-TRIAGE.md
+  ticket_id: TCK-20261019-SEMGREP-BASELINE-FINDINGS-IN-SRC-TRIAGE
+  title: 'Triage the baseline Semgrep findings in src/** from the new security-scan
+    workflow (#665): fix the real ones, mark the false positives in code'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-19'
+  related_code_areas: []
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS.md
   ticket_id: TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS
   title: 'Five paths that route as unowned get an owner in session_roles.yaml: testing

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-SEMGREP-BASELINE-FINDINGS-IN-SRC-TRIAGE
-phase: implement
+phase: done
 date: 2026-10-19
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Triage the baseline Semgrep findings in src/** from the new security-scan workflow (#665): fix the real ones, mark the false positives in code
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -91,7 +91,12 @@ Suppressed in code only; nothing dismissed in the Security tab (#701/#729 conven
   Review notes for the PR body: (a) docs/architecture/http_api_key_authentication.md is lead-planner's path (ubuntu, off); lead-planner-u24 said keeping the CORS section there is fine but it is not a sign-off; it moves to docs/observability/how_to_run_simulation.md if architecture objects. (b) tests/fixtures/api_server_http_surface.json changes in three places (cors_preflight 200->400 plus the two recorded CORS middleware allow_origins lists), the deliberate exception to "a later change leaves ticket 1's fixture unchanged".
 
 ## Test Summary
+- 140 passed on the touched modules (lab, replay, security, API CORS and HTTP-surface characterization, watchdog, world_emergence, genetics, warehouse); the CORS tests also pass with BACKEND_CORS_ORIGINS set in the shell.
+- Determinism proof: `tools/rpg_measure/paired.py --neutral --jobs 1` (scratch cache), base cb4f95015177 (merge-base with origin/main) vs new f0f0e81a1d00, seed 42, 3 worlds: frontier_living_world d81e5b8b4b9ad077, urban_political dfb3f9d6f24dd0b5, crowded_frontier 4570a46c6c1ec186 - all IDENTICAL, NEUTRAL PASS. Run data cleaned by id.
+- Not verifiable locally: whether each nosemgrep silences its alert (no semgrep binary); the next security-scan run on main decides.
 
 ## Files Changed
+src/api/cors.py (new), src/api/server.py, src/domains/world_emergence/services.py, src/lab/context.py, src/lab/mutation.py, src/lab/workflows/{generate_simulation_setup,prepare_simulation_execution,propose_simulation_enhancements}.py, src/observability/warehouse/clickhouse.py, src/observability/watchdog.py, src/replay/fingerprint.py, src/systems/lifecycle_systems/genetics.py, docs/architecture/http_api_key_authentication.md, tests/api/{test_cors_config,test_cors_origins}.py, tests/api/test_server_http_surface_characterization.py, tests/fixtures/api_server_http_surface.json, tests/unit/security/test_md5_ids_are_not_for_security.py.
 
 ## Completion Summary
+All baseline src/** Semgrep findings triaged: md5 x7 flagged non-security, yaml.dump -> safe_dump, reasoned nosemgrep on the intended/false-positive sites, wildcard CORS replaced by an env-configurable local-origin list. Simulation hashes unchanged (paired neutral IDENTICAL on 3 worlds). Nothing dismissed in the Security tab.
