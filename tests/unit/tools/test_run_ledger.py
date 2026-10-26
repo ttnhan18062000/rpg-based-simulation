@@ -35,6 +35,24 @@ def test_the_modes_of_each_tool_round_trip(tool, mode):
     assert rl.RunLedgerRow.from_json(_row(tool=tool, mode=mode).to_json()).mode == mode
 
 
+@pytest.mark.parametrize("tool, mode", [(t, m) for t in rl.TOOLS for m in ("step", "neutral", "report_only", "gate", "", None, "STEP") if m not in rl.MODES[t]])
+def test_every_tool_mode_pair_outside_the_allowed_ones_is_rejected_naming_mode(tool, mode):
+    data = _row(tool=tool).to_dict()
+    data["mode"] = mode
+    with pytest.raises(rl.LedgerRowError, match="^mode:"):
+        rl.RunLedgerRow.from_json(data)
+
+
+@pytest.mark.parametrize("workers", [0, -1, True, False, 2.0, "2", None])
+def test_workers_must_be_a_strict_integer_at_least_one(workers):
+    data = _row().to_dict()
+    data["workers"] = workers
+    with pytest.raises(rl.LedgerRowError, match="^workers:"):
+        rl.RunLedgerRow.from_json(data)
+    data["workers"] = 1
+    assert rl.RunLedgerRow.from_json(data).workers == 1
+
+
 def test_a_mode_of_the_other_tool_is_rejected_naming_the_field():
     with pytest.raises(rl.LedgerRowError, match="^mode:"):
         rl.RunLedgerRow.from_json(_row(tool="gate", mode="step").to_json())

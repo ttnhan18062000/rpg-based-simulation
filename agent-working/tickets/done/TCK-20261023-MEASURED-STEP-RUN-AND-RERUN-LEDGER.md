@@ -45,6 +45,8 @@ Nothing records how many paired or gate runs a measured step took, how many were
    - `invocation_id` (uuid4);
    - `tool`: `paired` | `gate`;
    - `step`: paired `--step`, or the gate's milestone / dispatch label;
+   - `mode` (added 2026-10-26 at rpg-planner's request, accepted by testing-planner): required; paired `step` | `neutral` | `report_only`, gate `gate`; any other tool/mode pair is rejected;
+   - `workers` (same date and source): required strict int >= 1 (no bool), the `--jobs` parallelism the per-arm wall time depends on;
    - `base_sha`: nullable for gate;
    - `new_sha`;
    - `worlds`, `seeds`, `ticks`;
