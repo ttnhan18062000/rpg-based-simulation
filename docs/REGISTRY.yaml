@@ -7886,6 +7886,19 @@
   - performance
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE.md
+  ticket_id: TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE
+  title: '`tools.sessions.validate` expands each ownership-split glob once, not once
+    per shared file'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-26'
+  related_code_areas:
+  - tools/sessions/validate.py
+  artifact_files: []
+  tags:
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
   ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
   title: The two leads message each other across hosts over Remote Control, and every
@@ -8053,6 +8066,23 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION.md
+  ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
+  title: The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt`
+    version, not a stray user-site install
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-24'
+  related_code_areas:
+  - .claude/settings.json
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION/test_plan.md
+  tags:
+  - knowledge-store
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS.md
   ticket_id: TCK-20261024-KNOWLEDGE-STACK-SECURITY-BUMPS
   title: '`requirements-knowledge.txt` takes the patched mcp, graphifyy and torch
@@ -8201,20 +8231,6 @@
   tags:
   - architecture
   - delivery
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION.md
-  ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
-  title: The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt`
-    version, not a stray user-site install
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-24'
-  related_code_areas:
-  - .claude/settings.json
-  artifact_files: []
-  tags:
-  - knowledge-store
-  - process-improvement
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE.md
   ticket_id: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
@@ -8532,6 +8548,20 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT.md
+  ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
+  title: Role cards show a role's single files in a folder it doesn't otherwise own
+    as "dir/ (N files)", so the card budget can come back down from 440
+  tier: hotfix
+  ticket_type: refactor
+  date: '2026-10-21'
+  related_code_areas:
+  - tools/sessions/card.py
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS.md
   ticket_id: TCK-20261021-SESSION-ROLES-OWN-OBSERVABILITY-DOCS-AND-UNOWNED-ROOTS
   title: 'Eleven paths that route as unowned get an owner in session_roles.yaml: the
@@ -8630,20 +8660,6 @@
   tags:
   - architecture
   - delivery
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT.md
-  ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
-  title: Role cards show a role's single files in a folder it doesn't otherwise own
-    as "dir/ (N files)", so the card budget can come back down from 440
-  tier: hotfix
-  ticket_type: refactor
-  date: '2026-10-21'
-  related_code_areas:
-  - tools/sessions/card.py
-  artifact_files: []
-  tags:
-  - ai
-  - governance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT.md
   ticket_id: TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT
@@ -10828,6 +10844,21 @@
   - determinism
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261015-SESSION-BINDINGS-TORN-TAIL.md
+  ticket_id: TCK-20261015-SESSION-BINDINGS-TORN-TAIL
+  title: A torn last line in a session-roles bindings.jsonl must not silence SessionStart;
+    repair the torn rpg-implementer file
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-15'
+  related_code_areas:
+  - tools/sessions/state.py, tools/sessions/session_start_hook.py
+  - .git/session-roles/rpg-implementer/ (runtime state, main checkout)
+  artifact_files: []
+  tags:
+  - hooks
+  - data-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START.md
   ticket_id: TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START
   title: SessionStart warns when the worktree it runs from has stale session code
@@ -10976,21 +11007,6 @@
   artifact_files: []
   tags:
   - platform
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261015-SESSION-BINDINGS-TORN-TAIL.md
-  ticket_id: TCK-20261015-SESSION-BINDINGS-TORN-TAIL
-  title: A torn last line in a session-roles bindings.jsonl must not silence SessionStart;
-    repair the torn rpg-implementer file
-  tier: hotfix
-  ticket_type: bug
-  date: '2026-10-15'
-  related_code_areas:
-  - tools/sessions/state.py, tools/sessions/session_start_hook.py
-  - .git/session-roles/rpg-implementer/ (runtime state, main checkout)
-  artifact_files: []
-  tags:
-  - hooks
-  - data-quality
 - type: ticket
   path: agent-working/tickets/done/TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71.md
   ticket_id: TCK-20261014-A-CONQUEST-NO-LONGER-SPAWNS-A-STRONGHOLD-BODY-D71
