@@ -8093,7 +8093,8 @@
   path: agent-working/tickets/done/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS.md
   ticket_id: TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS
   title: 'The proof digest hashes the seven carried-state fields it omits: a new `flat-sha256`
-    scheme version, the fixture re-pinned, and the v1 base re-recorded'
+    scheme version and the fixture re-pinned; rpg re-records the v1 base after the
+    merge'
   tier: standard
   ticket_type: repair
   date: '2026-10-24'
@@ -8102,7 +8103,11 @@
   - src/perf/benchmark_record.py
   - tools/perf/hash_callsite_inventory.py
   - tests/unit/engine/test_proof_digest_contract.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS/evidence.md
+  - agent-working/stored_artifacts/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS/test_plan.md
   tags:
   - performance
   - determinism

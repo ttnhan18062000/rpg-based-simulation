@@ -12,7 +12,7 @@ tags: [performance, determinism]
 # TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS
 
 ## Title
-The proof digest hashes the seven carried-state fields it omits: a new `flat-sha256` scheme version, the fixture re-pinned, and the v1 base re-recorded
+The proof digest hashes the seven carried-state fields it omits: a new `flat-sha256` scheme version and the fixture re-pinned; rpg re-records the v1 base after the merge
 
 ## Status
 DONE
@@ -122,7 +122,7 @@ comparison uses it. The owner approved both on 2026-10-24 (#715 issuecomment-638
       the PR.
 - [x] The baseline-invalidation-ledger row is written.
 - [ ] The v1 base is re-recorded under v3 (rpg) before any M1 paired or gate comparison, with outcomes equal to v1.
-- [ ] The cost of the wider digest is measured: same host, phase-7 digest share on `strategic_100` and
+- [x] The cost of the wider digest is measured: same host, phase-7 digest share on `strategic_100` and
       `frontier_extended` before and after, in a lead-granted slot. PROVISIONAL.
 
 ## Related Tickets
@@ -162,10 +162,10 @@ comparison uses it. The owner approved both on 2026-10-24 (#715 issuecomment-638
 
 ## Test Summary
 - `tests/unit/engine/test_proof_digest_contract.py` 16 passed, plus `test_hash_scheduler.py`, `test_kernel_digest_via_scheduler.py`, `test_acting_hostile_is_an_act_not_a_state.py`, `tests/unit/perf/test_benchmark_record.py` and `test_long_run_record.py` (136 passed together before one assert fix, then 58 passed in test_benchmark_record.py); `tests/tools/test_hash_callsite_inventory.py` 19, `test_perf_inventories_committed_in_sync.py` 4, `tests/certification/test_world_compile_determinism.py` 3, `tests/integration/kernel/test_checkpoint_reproducibility.py` 6, `test_work_debt_is_gone.py` 7, `test_snapshot_integrity.py` 3, each run as a single file.
-- Cross-PYTHONHASHSEED (seeds 1 and 12345, 3 worlds x 300 ticks): identical. `paired --neutral` 3 worlds x s42 x 1000 ticks: DIFFERENT (expected, scheme moves v2 to v3); fates, start, counters, adds identical: outcomes identical, only digests differ. Digest cost: no increase in persistence-phase cost detectable at n=3 matched pairs (PROVISIONAL).
+- Cross-PYTHONHASHSEED (seeds 1 and 12345, 3 worlds x 300 ticks): identical. `paired --neutral` 3 worlds x s42 x 1000 ticks: DIFFERENT (expected, scheme moves v2 to v3); fates, start, counters, adds identical: outcomes identical, only digests differ. Digest cost on `frontier_extended` (canonical) and `strategic_100` (pinned): no increase in persistence-phase cost detectable at n=3 matched pairs (PROVISIONAL).
 
 ## Files Changed
 See the PR diff: src/engine/checkpoint.py, src/perf/benchmark_record.py, tools/perf/hash_callsite_inventory.py, the digest tests, docs/performance/*, docs/architecture/performance_optimization_decisions.md, and the rpg-owned scheme citations in docs/engine/*, docs/parity_ledger/infrastructure.yaml.
 
 ## Completion Summary
-Coded, tested and proven as above. Open at close, none of them met by this ticket: (0) the cost AC names `strategic_100` and `frontier_extended`; only `frontier_extended` was measured (perf-planner's slot spec), so that AC stays unchecked; (1) the owner's sign-off of the PERF-D5 amendment in the PR (AC "PERF-D5 amendment ... owner's approval recorded"); (2) rpg re-records the v1 base under v3 after the merge (AC "v1 base is re-recorded under v3", condition 5); (3) rpg's own #593 post for amended condition 2; (4) the PR must not merge while HUNGER step A's PR is open unless rpg is told.
+Coded, tested and proven as above. Open at close, none of them met by this ticket: (1) the owner's sign-off of the PERF-D5 amendment in the PR (AC "PERF-D5 amendment ... owner's approval recorded"); (2) rpg re-records the v1 base under v3 after the merge (AC "v1 base is re-recorded under v3", condition 5); (3) rpg's own #593 post for amended condition 2; (4) the PR must not merge while HUNGER step A's PR is open unless rpg is told.
