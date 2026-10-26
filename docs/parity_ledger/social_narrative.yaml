@@ -1153,7 +1153,7 @@
   proof_type: parity
   test_path: tests/cli/test_entry_parity.py::test_cli_rejects_the_entities_flag
   divergence_note: 'docs/guidelines/intentional_divergences.md §2.140 (the --entities
-    removal, #617,TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ): the original --entities
+    removal, #617, TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ): the original --entities
     argument was accepted and ignored; it is now rejected.'
   support_boundary: null
 - id: SOC-106
