@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION
-phase: open
+phase: done
 date: 2026-10-24
 tags: [knowledge-store, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [knowledge-store, process-improvement]
 The `graphify` that hooks and sessions run is the pinned `requirements-knowledge.txt` version, not a stray user-site install
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -76,8 +76,15 @@ Owner decisions 2026-10-26, in agent-working-planner's terminal (logged on #715 
 3. Measured on host ubuntu by lead-planner 2026-10-25: `~/.local/bin/graphify` = user-site graphifyy 0.6.7; `.venv-knowledge` = 0.9.70; 0.9.70 warns that `~/.copilot/skills/graphify` is from 0.6.7 (report whether the shim run should refresh it; do not change it without asking). u24desktop's values come through lead-planner.
 4. The advisory must fail open (missing venv, missing binary, slow `--version`: print nothing), like the other SessionStart checks. The make target must refuse to overwrite a `~/.local/bin/graphify` that is neither the user-site 0.6.7 script nor already the shim, and print what it did.
 
+`tools/graphify_shim.py` + `make graphify-shim` (lead-planner OK'd the exact target text; additive, own `.PHONY`): links `~/.local/bin/graphify` to the main checkout's `.venv-knowledge/bin/graphify`. Replaces only a pip user-site script or a uv-tool graphifyy shim (symlink or shebang form, per lead-planner-u24's u24 read of 2026-10-26 relayed by lead-planner), refuses anything else, and fails loudly with the install command (pip and the uv form; `.venv-knowledge` has no pip) when the venv lacks graphifyy or has another version than the pin. `graphify --version` is not a command, so versions come from the script's interpreter via `importlib.metadata`. `tools/sessions/session_start_hook.py` prints a `graphify-version:` line when the PATH graphify is not the pin (3 s probe, silent on any error). No `.claude/settings.json` or `CLAUDE.md` edit. The shim's message names `graphify install --platform claude|copilot|agents` (graphify warns its skill copies are 0.6.7) without running it: that refresh is the owner's call. Docs: `docs/guidelines/agent_working_environment.md`.
+Run on host ubuntu 2026-10-26 after the owner said yes in the terminal: `make graphify-shim` replaced the pip script with the link; a second run says "already linked"; the advisory is now silent. u24desktop runs the shim after it pulls main (lead-planner-u24). The shared-graph rebuild (`graphify extract --force`, then `tools/graphify_prune.py`, main checkout on `main`, host ubuntu) is scheduled after this PR merges; the existing graph (built by 0.6.7) reads fine under 0.9.70 (lead-planner: 53,188 nodes), so the rebuild is a refresh.
+
 ## Test Summary
+`tests/tools/test_graphify_shim.py` (14): pip script and uv-tool shim (both forms) replaceable, foreign binary and foreign symlink refused and untouched, already-linked no-op, missing venv graphify and version mismatch fail loudly with the command and change nothing, dry run, advisory (stray, pinned, missing, broken, no pin, slow probe), settings.json and CLAUDE.md untouched. Hook line test in `test_session_resolve_and_hook.py`. Full `tests/tools` + `tests/docs` + `tests/codebase/test_repo_root_allowlist.py`, serial, on the tree merged with origin/main 3533fde71 (2026-10-26, MemoryMax 3G): 5338 passed, 58 skipped, 2 xfailed, 4 failed in 32 min. All four were the 60 s resource-budget timeout on a loaded host: three session validation tests (fixed by TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE, rerun green) and `test_wall_clock_inventory.py::test_cli_runs_are_byte_identical_and_do_not_import_src` (parses all of src/ twice; not touched by this batch; passed in a 4-test rerun, 60 s again under load).
 
 ## Files Changed
+tools/graphify_shim.py (new), tools/sessions/session_start_hook.py, Makefile, docs/guidelines/agent_working_environment.md, tests/tools/test_graphify_shim.py (new), tests/tools/test_session_resolve_and_hook.py, agent-working/stored_artifacts/TCK-20261024-GRAPHIFY-ON-PATH-IS-NOT-THE-PINNED-VERSION/
 
 ## Completion Summary
+On host ubuntu the `graphify` on PATH is now the pinned 0.9.70 through `make graphify-shim`, and SessionStart warns when it is not. u24desktop applies the shim after pulling main. The shared-graph rebuild is left for after the merge; the skill-copy refresh is reported to the owner, not run.
+

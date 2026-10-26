@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261015-SESSION-BINDINGS-TORN-TAIL
-phase: inprogress
+phase: done
 date: 2026-10-15
 tags: [hooks, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [hooks, data-quality]
 A torn last line in a session-roles bindings.jsonl must not silence SessionStart; repair the torn rpg-implementer file
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -77,12 +77,11 @@ Planner note 2026-10-26 (agent-working-planner; batch assigned by the owner, #71
 ## Test Summary
 `tests/tools/test_session_state.py` (8 new: torn last line skipped and reported, intact file no warning, torn middle line raises, JSON-but-not-a-binding last line raises, append after a torn tail moves the fragment to a sidecar and keeps the history readable, a file that is only a fragment is emptied into the sidecar, two tears in one second lose neither, clean append adds no blank line) and `tests/tools/test_session_resolve_and_hook.py` (2 new: torn tail gives card, note and one warning and the next start is clean; unreadable history gives card, note and says so). Session suites pass.
 
+Evidence for the repair, 2026-10-26: lead-planner-u24's read-only output from u24desktop, relayed by lead-planner. In u24's main checkout `.git/session-roles/rpg-implementer/bindings.jsonl` is 13,779 bytes, 23 lines, and ends in `0a`; beside it is `bindings.jsonl.torn-20261017T152456Z`, 529 bytes, matching the ticket's 529-byte torn 14th line. That is #612's `append_binding` moving the tail aside on the next append, so no manual repair is needed. (The rpg-implementer file of this host was not touched: `.git/session-roles` is not edited from here.) Full `tests/tools` + `tests/docs` + `tests/codebase/test_repo_root_allowlist.py`, serial, on the tree merged with origin/main 3533fde71 (2026-10-26, MemoryMax 3G): 5338 passed, 58 skipped, 2 xfailed, 4 failed in 32 min. All four were the 60 s resource-budget timeout on a loaded host: three session validation tests (fixed by TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE, rerun green) and `test_wall_clock_inventory.py::test_cli_runs_are_byte_identical_and_do_not_import_src` (parses all of src/ twice; not touched by this batch; passed in a 4-test rerun, 60 s again under load).
+
 ## Files Changed
 tools/sessions/state.py, tools/sessions/session_start_hook.py, tests/tools/test_session_state.py, tests/tools/test_session_resolve_and_hook.py
 
 ## Completion Summary
-OPEN: code fix done. The repair of the rpg-implementer file and the check that its next SessionStart shows card and note are pending the owner's run; this ticket stays in inprogress/ until then and is left out of `Closes:`.
+Done: the code landed in #612; the one-time repair happened by itself on u24desktop (13,779-byte file, 23 lines, ends in a newline, 529-byte torn sidecar `bindings.jsonl.torn-20261017T152456Z`; source: lead-planner-u24's read of 2026-10-26, relayed by lead-planner). Closed in the graphify and card-fold batch.
 
-Note: the batch's other tickets are closed in `agent-working/tickets/done/`, and the batch folder (SEQUENCE.md) is already in `agent-working/tickets/done/w41-retro-followups/`; this ticket stays here, in `inprogress/`, only until the owner's repair of rpg-implementer's file is confirmed.
-
-Update 2026-10-16 (planner's note): with the self-healing `append_binding`, rpg-implementer's torn file repairs itself on its next SessionStart that runs this code (the tail goes to a `bindings.jsonl.torn-<time>` sidecar), so the owner's manual repair is now optional. The ticket closes once a start of that seat is seen to show card and note AND the sidecar exists, whichever way the file got repaired. That start needs a worktree with this batch's code merged (`rpg` lags origin/main; see TCK-20261015-SESSION-CODE-FRESHNESS-AT-SESSION-START).

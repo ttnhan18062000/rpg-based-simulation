@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE
-phase: inprogress
+phase: done
 date: 2026-10-26
 tags: [process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [process-improvement]
 `tools.sessions.validate` expands each ownership-split glob once, not once per shared file
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix

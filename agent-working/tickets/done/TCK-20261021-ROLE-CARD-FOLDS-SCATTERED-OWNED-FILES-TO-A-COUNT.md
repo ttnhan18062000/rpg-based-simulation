@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
-phase: open
+phase: done
 date: 2026-10-21
 tags: [ai, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance]
 Role cards show a role's single files in a folder it doesn't otherwise own as "dir/ (N files)", so the card budget can come back down from 440
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -66,9 +66,17 @@ None (hotfix).
 - Since filing, the budget went to 460 (2026-10-22) and three rpg `-ubuntu` twins were added (#737), and the lead card gained a cross-host clause (#742). The 415 target may not be reachable: lower to the measured worst card + at least 10, and say in the PR what the worst card is and why.
 
 ## Implementation Notes
+`tools/sessions/card.py`: `_count_scattered_files` turns two or more plain files in a directory the role does not own as a whole (no `dir/**` or ancestor `**`) into one `dir/ (N files)` entry at the first member's place, when that is shorter than both the brace and the merged-sibling form. Wildcard globs and a file alone in its directory are untouched. The note ``(N files: a count; exact list via `route`)`` is added once per card, and only when it pays for itself (counted owns text plus the note shorter than the plain text), so no card grew: the three testing cards would have by +23 tokens with an unconditional note.
+Budget: worst card before 460 (agent-working-implementer, agent-working-planner-u24), after 446 (same two). `CARD_BUDGET_TOKENS` 460 -> 456 (worst + 10). The 415 target was not reachable: 3 `-ubuntu` twins and the lead clause came after the ticket was filed, and the longest cards are mostly function and domain text, not owns lines. The owner confirms 456 on the PR.
 
 ## Test Summary
+- `route` diff over all 18,368 tracked paths (status, domains, seats, matched glob), before vs after: identical (`registries/`, `route.py`, `roster.py` also have no diff against origin/main).
+- Cards: 32 measured with `compose_card` + `estimate_tokens`, before (origin/main `card.py`) and after; none grew; 16 shrank (-13 to -21 tokens) and 16 are unchanged (see the PR table); `generate_agents --check` 0 drift.
+- New tests in `tests/tools/test_session_cards.py`: grouping, single file, owned directory, brace-shorter, wildcards, note only when it pays. Full `tests/tools` + `tests/docs` + `tests/codebase/test_repo_root_allowlist.py`, serial, on the tree merged with origin/main 3533fde71 (2026-10-26, MemoryMax 3G): 5338 passed, 58 skipped, 2 xfailed, 4 failed in 32 min. All four were the 60 s resource-budget timeout on a loaded host: three session validation tests (fixed by TCK-20261026-VALIDATE-SPLIT-GLOBS-EXPANDED-ONCE, rerun green) and `test_wall_clock_inventory.py::test_cli_runs_are_byte_identical_and_do_not_import_src` (parses all of src/ twice; not touched by this batch; passed in a 4-test rerun, 60 s again under load).
 
 ## Files Changed
+tools/sessions/card.py, tests/tools/test_session_cards.py, tests/tools/test_session_platform_domain.py, docs/guidelines/session_roles/host_suffixed_twins.md, .claude/agents/session-*.md (16 regenerated)
 
 ## Completion Summary
+Scattered single files render as `dir/ (N files)`; the worst card fell from 460 to 446 tokens and the budget from 460 to 456, pending the owner's confirmation on the PR. Routing is unchanged.
+
