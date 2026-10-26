@@ -4606,3 +4606,14 @@
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.138.
   support_boundary: 'Measured (base 341f700d0, tip 265162719, seeds 42-46, 3 worlds, 5000 ticks, self-check spread 0): people deaths no drift on all three worlds; crowded_frontier merchant extinction STOP (merchant 12, seeds 42 and 46), accepted as a downstream consequence of the row-88 change and recorded as is (owner ruling, #715 comment 6411018314); attribution to the scorers.py SURV-07 gate, first divergence t766 (seed 42) and t749 (seed 46). See divergence 2.138. An attack task stays current until the hostile next decides (no reach test); last_hit_tick is excluded from the v2 proof digest until perf F1 (the final hash cannot see it). Step A (retreat escalation) is measured on this tip.'
 
+- id: STRAT-288
+  text: 'TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE (SURV-07, memo row 88 (3)): the goal-level retreat score escalates with the wound on the same scale a need follows, and only while a hostile ACTS on the subject (acting_threat_to). Retreat = raw + ESCALATION_AMPLITUDE * smoothstep(ESCALATION_ONSET, ESCALATION_FULL, 1 - hp/max_hp), the need_pull constants being the single source (death is the consequence line). With no acting hostile the score is unchanged and stays at or under 150, below the starving pull of 155-160; with an acting hostile at hp 15% or less it is about 210, above it.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/need_pull.py (retreat_pull), src/ai/goals/scorers.py (CombatRetreatScorer). docs/mechanics/04_strategic_cognition.md section 1. The retreat-ceiling pin is unchanged; the real-kernel merchant-37 test stays green.'
+  proof_type: regression
+  test_path: tests/unit/ai/test_retreat_escalates_on_the_need_scale.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.139.
+  support_boundary: 'Paired measurement pending (on step B tip). The panic flight is decided in the tactical pass before goal scores (N15), so this changes the goal-level weighing only. Inherits the act test properties of 2.138.'
+
