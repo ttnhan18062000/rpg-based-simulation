@@ -38,7 +38,7 @@ on:
         required: false
         default: "5000"
       self_check:
-        description: "Base-vs-base repeat: seed42 (seed 42 of every world), full (every run) or off"
+        description: "Base-vs-base repeat: seed42 (seed 42 of every world, ALWAYS added even if seeds omits 42, as paired.py expects), full (every run) or off"
         required: false
         default: "seed42"
       legacy_base:
@@ -55,7 +55,7 @@ jobs:
   plan:
     name: "Plan the (world, seed) matrix"
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: read
     outputs:
@@ -64,6 +64,10 @@ jobs:
       slug: ${{ steps.plan.outputs.slug }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The plan imports paired.py's world constants (never copies them), and paired.py imports from src/, so the environment is synced.
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
       - name: Plan
         id: plan
         env:
@@ -80,7 +84,7 @@ jobs:
           done
           [[ "${TICKS}" =~ ^[0-9]+$ ]] || { echo "::error::ticks must be a number"; exit 1; }
           # No pipe: a refused plan must fail this step (the default shell has no pipefail).
-          python3 -m tools.test_architecture.paired_arms plan --worlds "${WORLDS}" --seeds "${SEEDS}" --self-check "${SELF_CHECK}" --step "${STEP_LABEL}" > plan.txt
+          python -m tools.test_architecture.paired_arms plan --worlds "${WORLDS}" --seeds "${SEEDS}" --self-check "${SELF_CHECK}" --step "${STEP_LABEL}" > plan.txt
           cat plan.txt
           cat plan.txt >> "$GITHUB_OUTPUT"
 

@@ -20,7 +20,7 @@ option is on main; the aggregate job says so and fails otherwise.
 
 ## What runs
 
-1. `plan`: validates the inputs and builds the matrix: a `pair` job per (world, seed), plus `self` jobs for the base-vs-base repeat (seed 42 of every world for `seed42`, as `paired.py` expects whatever `seeds` holds; every run for `full`).
+1. `plan`: validates the inputs and builds the matrix: a `pair` job per (world, seed), plus `self` jobs for the base-vs-base repeat (seed 42 of every world for `seed42`, as `paired.py` expects whatever `seeds` holds, so `seed42` always adds them; every run for `full`). The world set is paired's own `WORLDS` (+ `TERRAIN_WORLD`), imported at plan time, never copied.
 2. `arms`, one job per entry: a `pair` job runs the base AND the new arm on one VM; a `self` job runs the base arm and its `-repeat` on one VM. Each arm goes through `paired_arms run-arm`, which calls paired's own `prepare_tree`, `result_path` and `run_one`: the unchanged `arm_child.py`, `PYTHONHASHSEED=0` and the cache key `<sha12>-<child hash8>-<ticks>`. Every job checks out the same dispatched ref, because `<child hash8>` is the hash of `arm_child.py` in the TOOL checkout, not of the base or new tree.
 3. `aggregate`: downloads every artifact, runs `paired_arms assemble`, then `paired.py --collected collected --base … --new … --verdict-json verdict.json --out table.md`.
 

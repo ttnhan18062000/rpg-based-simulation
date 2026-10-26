@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from tools.rpg_measure import paired
 from tools.test_architecture import paired_arms as pa
 
 BASE, NEW = "a" * 40, "b" * 40
@@ -29,13 +30,11 @@ def _pair_job(root: Path, world=W, seed=42, **kw) -> Path:
 
 # ---- plan
 
-def test_the_world_constants_equal_paired_pys():
-    from tools.rpg_measure import paired
-
-    assert pa.WORLDS == paired.WORLDS and pa.TERRAIN_WORLD == paired.TERRAIN_WORLD and pa.SELF_CHECK_SEED == 42
+def test_the_plan_takes_its_world_set_from_paired_pys_constants_and_keeps_no_copy():
+    assert not hasattr(pa, "WORLDS") and not hasattr(pa, "TERRAIN_WORLD") and pa.SELF_CHECK_SEED == 42
 
 
-def _plan(worlds=",".join(pa.WORLDS), seeds="42,43", self_check="seed42"):
+def _plan(worlds=",".join(paired.WORLDS), seeds="42,43", self_check="seed42"):
     return pa.plan_matrix(worlds, seeds, self_check)
 
 
@@ -43,7 +42,7 @@ def test_the_plan_has_a_pair_job_per_world_and_seed_and_seed_42_self_jobs_per_wo
     plan = _plan()
     pairs = [(e["world"], e["seed"]) for e in plan["include"] if e["kind"] == "pair"]
     selfs = [(e["world"], e["seed"]) for e in plan["include"] if e["kind"] == "self"]
-    assert sorted(pairs) == sorted((w, s) for w in pa.WORLDS for s in (42, 43)) and sorted(selfs) == sorted((w, 42) for w in pa.WORLDS)
+    assert sorted(pairs) == sorted((w, s) for w in paired.WORLDS for s in (42, 43)) and sorted(selfs) == sorted((w, 42) for w in paired.WORLDS)
     assert plan["terrain"] is False
 
 
@@ -54,13 +53,13 @@ def test_the_self_check_modes_full_and_off_and_seed_42_even_when_the_seeds_omit_
 
 
 def test_the_terrain_world_is_allowed_only_in_full_and_sets_terrain():
-    plan = _plan(worlds=",".join([*pa.WORLDS, pa.TERRAIN_WORLD]))
-    assert plan["terrain"] is True and any(e["world"] == pa.TERRAIN_WORLD for e in plan["include"])
+    plan = _plan(worlds=",".join([*paired.WORLDS, paired.TERRAIN_WORLD]))
+    assert plan["terrain"] is True and any(e["world"] == paired.TERRAIN_WORLD for e in plan["include"])
 
 
 @pytest.mark.parametrize("worlds, seeds, self_check", [
-    (W, "42", "seed42"), (",".join(pa.WORLDS[:2]), "42", "seed42"), (",".join([*pa.WORLDS, pa.WORLDS[0]]), "42", "seed42"),
-    (",".join([*pa.WORLDS, "x y"]), "42", "seed42"), (",".join(pa.WORLDS), "42,a", "seed42"), (",".join(pa.WORLDS), "", "seed42"), (",".join(pa.WORLDS), "42", "sometimes"),
+    (W, "42", "seed42"), (",".join(paired.WORLDS[:2]), "42", "seed42"), (",".join([*paired.WORLDS, paired.WORLDS[0]]), "42", "seed42"),
+    (",".join([*paired.WORLDS, "x y"]), "42", "seed42"), (",".join(paired.WORLDS), "42,a", "seed42"), (",".join(paired.WORLDS), "", "seed42"), (",".join(paired.WORLDS), "42", "sometimes"),
 ])
 def test_a_plan_that_paired_would_not_expect_is_refused(worlds, seeds, self_check):
     with pytest.raises(pa.ArmsRefused):
@@ -72,18 +71,16 @@ def test_the_step_slug_is_artifact_safe():
 
 
 def test_the_plan_cli_prints_the_github_output_lines(capsys):
-    assert pa.main(["plan", "--worlds", ",".join(pa.WORLDS), "--seeds", "42", "--self-check", "off", "--step", "D75 route"]) == 0
+    assert pa.main(["plan", "--worlds", ",".join(paired.WORLDS), "--seeds", "42", "--self-check", "off", "--step", "D75 route"]) == 0
     lines = capsys.readouterr().out.splitlines()
     assert lines[0].startswith("matrix={") and lines[1:] == ["terrain=false", "slug=D75-route"]
-    assert json.loads(lines[0][len("matrix="):])["include"][0] == {"world": pa.WORLDS[0], "seed": 42, "kind": "pair"}
+    assert json.loads(lines[0][len("matrix="):])["include"][0] == {"world": paired.WORLDS[0], "seed": 42, "kind": "pair"}
     assert pa.main(["plan", "--worlds", "x", "--seeds", "42"]) == 2
 
 
 # ---- run one arm (paired's own functions, faked)
 
 def test_run_arm_uses_paireds_cache_key_and_writes_the_cost_beside_the_result(tmp_path, monkeypatch):
-    from tools.rpg_measure import paired
-
     calls = []
     monkeypatch.setattr(paired, "prepare_tree", lambda repo, rev, cache: (BASE, tmp_path / "tree"))
 

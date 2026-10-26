@@ -42,8 +42,6 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 IDENTITY_FIELDS = ("name", "image", "cpu_model", "nproc", "mem_total_mb", "python", "os")
 COMPARED_ACROSS_JOBS = ("python", "os")  # an assembled set whose jobs differ in these is not compared
 COMPARED_WITHIN_KEY = ("python", "os", "image")  # the arms of one (world, seed) must agree on these (paired.py refuses too)
-WORLDS = ("frontier_living_world", "urban_political", "crowded_frontier")  # = tools.rpg_measure.paired.WORLDS; a test pins the equality
-TERRAIN_WORLD = "highland_traverse"
 SELF_CHECKS = ("seed42", "full", "off")
 KINDS = ("pair", "self")
 ARMS = ("base", "new", "self")
@@ -73,15 +71,17 @@ def plan_matrix(worlds: str, seeds: str, self_check: str) -> Dict[str, Any]:
     """``{"include": [...], "terrain": bool}``: a ``pair`` entry per (world, seed), plus ``self`` entries (the base arm and its repeat, on one runner) per ``self_check``:
     seed 42 of every world for ``seed42`` (as ``paired.py`` expects, whatever ``seeds`` holds), every (world, seed) for ``full``.
 
-    ``paired.py`` derives its worlds from its own constants (``WORLDS``, plus the terrain world with ``--terrain``), so ``worlds`` must be exactly that set."""
+    ``paired.py`` derives its worlds from its own constants (``WORLDS``, plus ``TERRAIN_WORLD`` with ``--terrain``), imported here, so ``worlds`` must be exactly that set."""
     if self_check not in SELF_CHECKS:
         raise ArmsRefused(f"self_check must be one of {SELF_CHECKS}, got {self_check!r}")
+    from tools.rpg_measure import paired  # rpg's world set (WORLDS, TERRAIN_WORLD) is imported, never duplicated; the plan job syncs the environment for it
+
     world_list = _csv(worlds, "worlds")
     bad = [w for w in world_list if not _NAME.match(w)]
     if bad:
         raise ArmsRefused(f"worlds: not a world name (letters, digits, underscore): {bad}")
-    if set(world_list) not in (set(WORLDS), set(WORLDS) | {TERRAIN_WORLD}) or len(set(world_list)) != len(world_list):
-        raise ArmsRefused(f"worlds must be exactly paired.py's {list(WORLDS)}, optionally plus {TERRAIN_WORLD!r} (its --terrain), got {world_list}")
+    if set(world_list) not in (set(paired.WORLDS), set(paired.WORLDS) | {paired.TERRAIN_WORLD}) or len(set(world_list)) != len(world_list):
+        raise ArmsRefused(f"worlds must be exactly paired.py's {list(paired.WORLDS)}, optionally plus {paired.TERRAIN_WORLD!r} (its --terrain), got {world_list}")
     try:
         seed_list = [int(x) for x in _csv(seeds, "seeds")]
     except ValueError:
@@ -91,7 +91,7 @@ def plan_matrix(worlds: str, seeds: str, self_check: str) -> Dict[str, Any]:
         include += [{"world": w, "seed": x, "kind": "self"} for w in world_list for x in seed_list]
     elif self_check == "seed42":
         include += [{"world": w, "seed": SELF_CHECK_SEED, "kind": "self"} for w in world_list]
-    return {"include": include, "terrain": TERRAIN_WORLD in world_list}
+    return {"include": include, "terrain": paired.TERRAIN_WORLD in world_list}
 
 
 def _read_os_release() -> str:

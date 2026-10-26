@@ -14,7 +14,7 @@ tags: [testing, performance, determinism]
 
 ## Facts read from the code (2026-10-26)
 - `paired.py` caches by `<sha12>-<child hash8>-<ticks>[-repeat]/<world>_<seed>.json`; the child hash is `sha256(arm_child.py of the tool checkout)[:8]`. `run_arm` unlinks a repeat before running it and never caches it. `prepare_tree` extracts a commit by `git archive` from `--repo`. `run_one` runs `arm_child.py` with cwd and PYTHONPATH set to the tree and `PYTHONHASHSEED=0`.
-- The module imports `src.observability.reporting.run_determinism`, so anything calling it needs the repo checkout and `uv sync` (the plan job does not import paired: it carries the world constants and a test pins their equality).
+- The module imports `src.observability.reporting.run_determinism`, so anything calling it needs the repo checkout and `uv sync` (the plan job therefore syncs the environment and imports paired's WORLDS / TERRAIN_WORLD; no copy, per testing-planner's review).
 - The self-check set paired expects: seed 42 of every world for `seed42` (regardless of `--seeds`), every job for `full`.
 
 ## Contract with rpg-planner (2026-10-26, rpg ticket TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS)

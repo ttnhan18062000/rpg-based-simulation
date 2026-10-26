@@ -51,6 +51,7 @@ Platform's runner facts (#593 issuecomment-6345851046):
    - checks out both SHAs into separate trees;
    - runs BOTH arms on that VM through the unchanged `arm_child.py`, with `PYTHONHASHSEED=0` and the same cache key `<sha>-<child hash>-<ticks>`;
    - writes the arm documents plus a runner-identity record: `runner.name`, image name and version, CPU model, nproc, MemTotal, Python version, OS. This is recorded once per job;
+     (changed 2026-10-26 at rpg-planner's request, accepted by testing-planner: the record is written beside EACH result as `<world>_<seed>.cost.json` `runner`, per the contract of rpg's TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS, because the merged layout has no per-job directory and the repeat arm is its own result);
    - uploads `paired-arms-<step>-<world>-s<seed>`.
 
    The base-vs-base self-check runs the same way, as its own matrix entries.
@@ -96,7 +97,7 @@ Platform's runner facts (#593 issuecomment-6345851046):
 - The GitHub Actions minutes cost for a 5-seed step is unmeasured. AC1's run measures it. If one step needs more than 3 runner-hours, tell the owner before the second use.
 
 ## Implementation Notes
-Testing half built 2026-10-26; see the staging investigation.md / plan.md. Contract with rpg-planner for `paired.py --collected` is recorded there (cost.json per result with the runner record; `--verdict-json`; exit 0/1/2; one extra `- runners:` line). Choices beyond the ticket text: runner identity lives in each result's cost.json (rpg's request), not a per-job file; a boolean `legacy_base` input passes `--legacy-base`; `--neutral`, `--report-only`, `--legacy-new`, `--div` are not offered; the plan job does not import paired.py (world constants are duplicated and a test pins equality). The aggregate calls rpg's option and fails with a clear message until it is on main. The T1 ledger row waits for T1 on main.
+Testing half built 2026-10-26; see the staging investigation.md / plan.md. Contract with rpg-planner for `paired.py --collected` is recorded there (cost.json per result with the runner record; `--verdict-json`; exit 0/1/2; one extra `- runners:` line). Choices beyond the ticket text: runner identity lives in each result's cost.json (rpg's request), not a per-job file; a boolean `legacy_base` input passes `--legacy-base`; `--neutral`, `--report-only`, `--legacy-new`, `--div` are not offered; the plan job imports paired.py's WORLDS and TERRAIN_WORLD (no copy, per testing-planner). The aggregate calls rpg's option and fails with a clear message until it is on main. The T1 ledger row waits for T1 on main.
 
 ## Test Summary
 - tests/static/test_ci_paired_arms_workflow_shape.py (new, 10) and tests/unit/tools/test_paired_arms.py (new, ~30, fake artifacts): pass, with the rest of tests/static (196 passed together with the workflow-support tests). AC2 refusals (mixed Python or OS) tested on fake artifacts; AC4 static test and the pin and context guards cover the workflow.
