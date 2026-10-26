@@ -37,3 +37,4 @@
 {"ts":"2026-10-25T03:50:39.205395Z","category":"handover_recovery","source":"sample","session_id":"dc2b17a6-9e5a-4a35-9049-b53147348191","session_role":"agent-working-planner","batch":null,"count":1}
 {"ts":"2026-10-20T18:10:45.965516Z","category":"handover_recovery","source":"sample","session_id":"5d766465-bbed-49de-a942-f1b89cb69381","session_role":"platform-implementer","batch":null,"count":1}
 {"ts":"2026-10-22T14:30:50.097363Z","category":"handover_recovery","source":"sample","session_id":"800fb046-3a26-45dc-a743-5bcb5ed8aa21","session_role":"platform-implementer","batch":null,"count":1}
+{"ts":"2026-10-22T14:30:55.459311Z","category":"handover_recovery","source":"sample","session_id":"cb5e5772-6f3f-466b-bc74-e58d62265108","session_role":"platform-planner","batch":null,"count":1}
