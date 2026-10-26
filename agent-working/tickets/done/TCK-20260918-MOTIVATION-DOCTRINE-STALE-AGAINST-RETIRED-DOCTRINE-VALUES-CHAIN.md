@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: core
 authority: P1
 audience: agent
 ticket_id: TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN
-phase: open
+phase: done
 date: 2026-09-18
 tags: [architecture, schema]
 ---
@@ -16,7 +16,7 @@ tags: [architecture, schema]
 formally retired, but the mechanism and its `depends_on` edges remain
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -85,15 +85,25 @@ None yet.
 None yet — this is a fresh finding, not yet investigated beyond the docstring citation above.
 
 ## Implementation Notes
-Not yet started.
+Decision: **retire, not rename** (change-taxonomy kind Retire). `motivation_doctrine` stays `state: gap` with a RETIRED verdict that keeps the earlier record below it; a future doctrine/values feature is an Introduce, not a revival. Re-verified at main 3533fde71 (2026-10-26): `src/domains/motivation/` holds only `__init__.py` and `evaluator.py`; `MotivationModel` has no doctrine/values field.
+Landed on the batch-1 branch by re-applying the 2026-10-05 draft (`origin/semantic-foundation-registry-drafts`, 4dadd6152 and 1b28dd819) by hand, a 3-way apply of the yaml and tool hunks (not a cherry-pick), with test pins recomputed from the real registry and every view regenerated. Registry content, all in `registries/mechanisms.yaml`:
+- new `sense_gated_detection` (PerceptionGate, owner decision 8, memo row 8 DECIDED 2026-10-02; state done; reach measured, effect not). The draft's "sole call site is the hostile-target loop inside a bare `except Exception: pass`" was stale: today there are two call sites, `src/engine/appraisal.py::perceives` (line 50) and `src/engine/tactical.py::_target_still_perceived` (line 90), each catching `(AttributeError, KeyError, TypeError, ValueError, RuntimeError)` and returning True. Rewritten.
+- `motivation_doctrine` RETIRED verdict (date 2026-10-26).
+- new `role_fit_preference` (RoleFitEvaluator + RoleFitPreference, `state: orphan`, memo row 7 (b)); binds `domains/motivation`. `mechanism_state_caller_check` reports `orphan_with_callers` (2 definition-adjacent files), pinned.
+- supersession addenda on `tactical_decision` and `perception`. `intentional_divergences.md` §2.53 gets one cross-reference bullet (1b28dd819).
+**Cross-domain edit to an agent-working path: `tools/mechanism_registry/mechanism_registry_completeness_check.py` (tools/mechanism_registry/**), agreed by agent-working-planner on 2026-10-26 via rpg-planner-ubuntu.** The only change is dropping the `WIDER_PENDING` entry for `src/world/perception/gate.py::PerceptionGate` (it is now bound). Nothing else under tools/mechanism_registry/ was touched.
+Pins updated, each with its reason: `test_mechanism_registry_completeness_check.py` (bound 53 to 54, unbound 8 to 7, wider unbound_files 251 to 250, candidates 71 to 70, wired 21 to 20, `WIDER_PENDING` 3 to 2), `test_mechanism_atlas_regenerate.py` (36 to 38 unmapped), `test_mechanism_state_caller_check.py` (+ `role_fit_preference`).
 
 ## Test Summary
-Not yet started.
+- `make mechanism-registry-validate`: passes, 109 mechanisms. `make mechanism-registry-html-check`: up to date. Territory and cross-domain views regenerate with no change.
+- `tests/unit/tools/test_mechanism_atlas_regenerate.py`, `test_mechanism_registry_completeness_check.py`, `test_mechanism_state_caller_check.py`: pass after the pins moved. The full `tests/unit/tools/` run is a batch-level condition (agent-working-planner) and is recorded in the batch PR.
 
 ## Files Changed
-None yet (this ticket file only).
+- registries/mechanisms.yaml
+- docs/guidelines/intentional_divergences.md
+- tools/mechanism_registry/mechanism_registry_completeness_check.py (agent-working path, agreed)
+- tests/unit/tools/{test_mechanism_atlas_regenerate,test_mechanism_registry_completeness_check,test_mechanism_state_caller_check}.py
+- docs/brainstorm/{mechanism_priority_view,mechanism_registry_view,mechanism_system_rollup_view,mechanism_verification_view}.md, mechanism_registry.html (regenerated)
 
 ## Completion Summary
-Open. Filed 2026-09-18 as a byproduct of the depends_on edge-semantics audit — flagged with its own
-ticket rather than buried in that audit's prose, per this epic's own established practice (see
-`TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS` for the precedent this follows).
+`motivation_doctrine` is retired in the registry with a recorded rationale (§2.53 cross-referenced); the surviving `RoleFitEvaluator` is registered separately as `role_fit_preference` and `PerceptionGate` as `sense_gated_detection`. No code under `src/` changed.

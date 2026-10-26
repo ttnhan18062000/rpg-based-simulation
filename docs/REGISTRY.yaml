@@ -7874,6 +7874,18 @@
   - performance
   - determinism
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ.md
+  ticket_id: TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ
+  title: 'Remove the `--entities` flag from the `cli` command: it is parsed but never
+    read'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-26'
+  related_code_areas:
+  - src/cli/entry.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
   ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
   title: The two leads message each other across hosts over Remote Control, and every
@@ -24447,6 +24459,23 @@
   - architecture
   - schema
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN.md
+  ticket_id: TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN
+  title: '`motivation_doctrine`''s registry entry outlived the code chain it names
+    — `doctrine`/`values` were
+
+    formally retired, but the mechanism and its `depends_on` edges remain'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-09-18'
+  related_code_areas:
+  - src/core/cognition.py:419-438
+  - registries/mechanisms.yaml
+  artifact_files: []
+  tags:
+  - architecture
+  - schema
+- type: ticket
   path: agent-working/tickets/done/mechanism-system-membership/TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP.md
   ticket_id: TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP
   title: 'The `system` tier as declared system membership on mechanisms — investigate
@@ -24508,23 +24537,6 @@
   tags:
   - architecture
   - documentation
-  - schema
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN.md
-  ticket_id: TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN
-  title: '`motivation_doctrine`''s registry entry outlived the code chain it names
-    — `doctrine`/`values` were
-
-    formally retired, but the mechanism and its `depends_on` edges remain'
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-09-18'
-  related_code_areas:
-  - src/core/cognition.py:419-438
-  - registries/mechanisms.yaml
-  artifact_files: []
-  tags:
-  - architecture
   - schema
 - type: ticket
   path: agent-working/tickets/done/TCK-20260917-CLAIMS-AS-TESTS-INITIATIVE-DANGLING-CITATION.md
