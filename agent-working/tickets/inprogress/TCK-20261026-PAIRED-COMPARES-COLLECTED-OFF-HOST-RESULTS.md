@@ -56,7 +56,7 @@ paired.py today always executes missing arms locally. This ticket adds a load-on
 - Making the job a required check.
 
 ## Acceptance Criteria
-- On one real step, a `--collected` run over the cache a normal local run produced gives a table byte-identical to the local run.
+- On one real step, a `--collected` run over the cache a normal local run produced gives a table byte-identical to the local run except the one `- runners:` line (planner ruling 2026-10-26; the unit test asserts the diff is that single line).
 - Unit tests cover:
   - a missing result is REFUSED with its keys;
   - a mismatched runner python, os or image is REFUSED;
@@ -90,7 +90,10 @@ paired.py today always executes missing arms locally. This ticket adds a load-on
 Owner Lane B (`rpg-implementer-2`), branch `rpg-paired-collected`, dispatched by `rpg-planner` 2026-10-26. Plan in `agent-working/staging_artifacts/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS/plan.md`.
 
 ## Test Summary
+Unit: `tests/unit/tools/test_rpg_measure_collected.py` (21 tests, staged results, no simulation) plus the existing `test_rpg_measure.py`: 31 pass. Local mode checked against `origin/main`'s paired.py on a staged cache for the default, `--self-check full|off` and `--report-only`: identical output and exit code. Real-step byte-identical check pending (read-only, after Lane A's run exits).
 
 ## Files Changed
+- `tools/rpg_measure/paired.py` (`--collected`, `--verdict-json`, cost/identity helpers; `main` body moved to `_run`)
+- `tests/unit/tools/test_rpg_measure_collected.py`
 
 ## Completion Summary
