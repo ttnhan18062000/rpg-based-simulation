@@ -50,6 +50,7 @@ perf-planner profiled `build_report` with cProfile on 2026-10-27, at loadavg 5.4
 - On the same host and in the same window, alternating before/after runs (3 each) show `wall_clock_inventory.py --format json` at least 2x faster by median.
 - The existing tests pass: `tests/tools/test_wall_clock_inventory.py`, plus the hash_callsite and phase_inventory tests under `tests/tools/` and `tests/unit/perf/`.
 - No new dependencies.
+- The PR names agent-working-planner, who confirms the CLI test's timing there.
 
 ## Related Tickets
 - `TCK-20261003-PERF-WALL-CLOCK-READ-INVENTORY` (the tool)
