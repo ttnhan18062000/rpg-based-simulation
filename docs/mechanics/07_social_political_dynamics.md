@@ -11,7 +11,7 @@ last_verified: 2026-09-07
 This chapter describes the "Social Laws" governing trust, contracts, reputation, relationship
 history, and party/group coordination — how entities judge, bond with, and organize around each
 other. Source: `src/systems/social_systems/` (appraisal.py, contracts.py, relationships.py,
-guilds.py, party.py, party_composition.py, memory.py, group_service.py, reputation.py,
+party.py, party_composition.py, memory.py, group_service.py, reputation.py,
 party_lifecycle.py), `src/domains/commitment/reputation.py`.
 
 **Provenance note:** this chapter promotes and corrects `docs/simulation/social_systems_contract.md`
@@ -293,15 +293,15 @@ receives less, net world gold unchanged.
 
 ## 7. Guild Intelligence
 
-**Corrected — `GuildMembership`/guild dues/guild rank do not exist anywhere in `src/`.** The real
-mechanism, `GuildIntelSystem.update()` (`guilds.py`), is an intel-gathering interaction: an entity
-interacting with a functional guild `BuildingState` (`interaction.kind == "guild"`) accumulates
-`interaction.progress` by `+1.0`/tick; at `progress >= 10.0`, the guild identifies the region with
-the **highest `trauma_score`** in the world and creates a real rumor `LeadState`/`BeliefState` about
-danger there (`BeliefCycleSystem.process_rumor()`), and — if that region's `trauma_score > 5.0` — a
-`ConcernState(kind="danger")` scaled by `trauma_score / 10.0`. The entity's interaction then resets.
+**Designed, not in effect. No implementing code.** The simulation has no guild-intelligence mechanism: nothing turns a guild visit into a danger rumor. `GuildMembership`, guild dues and guild rank do not exist anywhere in `src/` either.
 
-**Implementing code:** `src/systems/social_systems/guilds.py`.
+What a guild visit does today is the guild-visit path under the `guilds` mechanism. `GuildVisitPhase` (phase `guild_visit`, gated by `ENABLE_GUILD_QUEST_GENERATION`, default ON) resolves an entity's guild-visit objective once the entity is within distance 1.0 of the guild building, then calls `GuildAction.visit()`. That call grants up to two `VAGUE` location leads on `iron_vein` resource nodes the entity holds no lead for yet, chosen deterministically, and one quest when the entity has project capacity. It produces no danger rumor, belief or concern.
+
+**Design that is not in effect** (kept so a later feature starts from it): an entity interacting with a functional guild building would accumulate channel progress at +1.0 per tick; at 10.0 the guild would pick the region with the highest `trauma_score` and give the entity a rumor lead and belief about danger there (through `BeliefCycleSystem.process_rumor()`), plus, above a `trauma_score` of 5.0, a danger concern scaled by `trauma_score / 10.0`. The class that held this logic (`GuildIntelSystem`) was never called and has been deleted.
+
+Bringing this back is an **Introduce** (a new, declared feature with its own owner decision, proof and registry entry), not a revert.
+
+**Implementing code:** none for guild intelligence. The live guild visit is `src/town/guild.py` (`GuildAction.visit`) and `src/engine/pipeline_phases/guild_visit.py` (`GuildVisitPhase`).
 
 ---
 
@@ -394,7 +394,7 @@ cross-import from a domain into `src/systems/social_systems/` violates this boun
    handling in `contracts.py`, add tests.
 2. New relationship dimension → extend `SocialComponent`/`SocialUpdate`, add clamping in
    `RelationshipService.process_update()`.
-3. New guild benefit → extend `guilds.py`; guild-derived signals must be readable by the adventure
+3. New guild benefit → extend `src/town/guild.py` (`GuildAction.visit`); guild-derived signals must be readable by the adventure
    domain without importing social systems directly.
 4. Never read social state in a domain service.
 

@@ -178,28 +178,17 @@ production; this section previously described the other one as if it were.
 "has_gold" / "has_item", ...)` checks evaluated by `RequirementEvaluator`. On execution it builds a
 `ResourceTransferIntent(source_id=recipe_id, source_kind="CRAFTING", items_add=[ItemStack(recipe.output_item_id,
 1)], items_remove=materials, gold_delta=-recipe.gold_cost, gold_cost=recipe.gold_cost,
-transfer_kind="CRAFT")` and delegates all atomicity to the conservation path below. It deliberately
-does **not** call `CraftingSystem.craft()` — an explicit code comment at `action_intent.py:193-198`
-states doing so "bypasses that authoritative path and would not surface an `item_crafted` event."
+transfer_kind="CRAFT")` and delegates all atomicity to the conservation path below.
 
-**Not live — `CraftingSystem` (`src/systems/economy_systems/crafting.py`)**, reading
-`src/core/recipes.py::RecipeRegistry`. Runs 7 sequential gate checks before emitting an
-`InventoryUpdate`:
-
-1. Recipe known in `RecipeRegistry`
-2. Entity has `recipe_id` in `identity.known_recipes`
-3. Entity role matches `recipe.required_role` (if set)
-4. All material quantities present in inventory
-5. Gold >= `recipe.gold_cost`
-6. Capacity for output (slot count, stacking exemption if item already present)
-7. If all pass: emit `InventoryUpdate(items_remove=materials, items_add=[result_item], gold_delta=-recipe.gold_cost)`
-
-This class and its `craft()` method have zero non-test callers anywhere in `src/` (repo-wide
-reference search confirms only `src/systems/crafting.py`'s re-export, itself also uncalled in
-production). It remains in the codebase and is exercised by unit tests, but this gate sequence does
-not execute during live simulation. Do not treat it as a TOCTOU double-check partner for the
-conservation path below — that characterization was inaccurate and is corrected here (cross-doc
-staleness sweep, TCK-20260904-MATERIAL-POSSESSION-PREDICATE, 2026-09-04).
+**Retired — `CraftingSystem`.** An uncalled class (`src/systems/economy_systems/crafting.py`, with a
+`src/systems/crafting.py` re-export) once ran a 7-gate pre-check (recipe known, recipe learned, role,
+materials, gold, output capacity, atomic emit). It had no caller in `src/` and was deleted by
+`TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF`. The gates that execute live are the
+ones above: the `REQUEST_CRAFT` handler builds the requirements and `ResourceTransactionResolver`'s
+`"CRAFTING"` branch applies them atomically, proved by
+`tests/integration/economy/test_crafting_live_path.py`. A recipe id that is missing or absent from
+`RecipeRegistry` is refused with a `FAILED_REQUIREMENTS: unknown_recipe` trace and a no-op update, as
+the retired class's `UNKNOWN_RECIPE` result was (parity PROG-097, `verified`).
 
 **`known_recipes` population — `src/engine/blacksmith.py::BlacksmithSystem.enforce()`'s
 wholesale-learn step.** Before `TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE`, this populated
@@ -273,8 +262,7 @@ Result: accepted=False, reason=INSUFFICIENT_GOLD
 | Module | Role |
 |---|---|
 | `src/core/conservation.py` | `ResourceTransactionResolver.resolve()` — primary gate logic |
-| `src/systems/economy_systems/crafting.py` | `CraftingSystem` — 7-gate pre-check before conservation |
-| `src/systems/economy_systems/loot.py` | Loot resolution before conservation call |
+| `src/engine/interaction.py` | `InteractionSystem.enforce()` — builds the loot transfer before the conservation call |
 | `src/systems/economy_systems/market.py` | `MarketSystem`, `DynamicPriceService` — pricing |
 | `src/core/models/inventory.py` | `InventoryService.can_add_items_with_removals` |
 

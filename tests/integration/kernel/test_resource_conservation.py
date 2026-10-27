@@ -1,7 +1,7 @@
 import pytest
 from src.core.state import AuthoritativeState, EntityState, ResourceNodeState, InventoryComponent, ItemStack, InteractionComponent, GroundItemState, CorpseState
 from src.systems.harvest_system import HarvestSystem
-from src.systems.loot_system import LootSystem
+from src.core.updates import EntityUpdate, InteractionUpdate, StateUpdate
 from src.engine.apply import ApplyPath
 
 @pytest.fixture
@@ -80,8 +80,8 @@ def test_loot_ground_item_full_inventory_does_not_remove_item(base_state):
     full_inventory = InventoryComponent(max_slots=1, items=[ItemStack("wood", 1)])
     base_state = replace(base_state, entities={1: replace(base_state.entities[1], inventory=full_inventory)})
     
-    # 3. Run LootSystem
-    update = LootSystem.update(base_state)
+    # 3. Propose one more tick of channel progress (the live path: InteractionSystem.enforce completes it)
+    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0))})
     
     # 3.5 Refine (Enforce Conservation)
     from src.engine.pipeline import AuthoritativeApplyPipeline
@@ -110,8 +110,8 @@ def test_loot_corpse_full_inventory_does_not_remove_corpse(base_state):
     full_inventory = InventoryComponent(max_slots=1, items=[ItemStack("wood", 1)])
     base_state = replace(base_state, entities={1: replace(base_state.entities[1], inventory=full_inventory)})
     
-    # 3. Run LootSystem
-    update = LootSystem.update(base_state)
+    # 3. Propose one more tick of channel progress (the live path: InteractionSystem.enforce completes it)
+    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0))})
     
     # 3.5 Refine (Enforce Conservation)
     from src.engine.pipeline import AuthoritativeApplyPipeline
@@ -177,41 +177,3 @@ def test_crafting_full_inventory_does_not_consume_materials():
     assert final_state_invalid.entities[1].inventory.gold == 100
     assert len(final_state_invalid.entities[1].inventory.items) == 2
     assert "steel_sword" not in [i.item_id for i in final_state_invalid.entities[1].inventory.items]
-
-def test_quest_completion_full_inventory_does_not_grant_reward():
-    from src.systems.quest_system import QuestSystem
-    from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
-    from src.core.state import StrategicComponent
-    
-    # 1. Setup entity with a near-complete explore quest
-    quest = QuestState(
-        id="q1", kind="QUEST", quest_kind=QuestKind.EXPLORE, 
-        goal_value=10.0, current_value=9.0,
-        quest_status=QuestStatus.ACTIVE,
-        reward=RewardState(xp=100, gold=50, items=["iron_sword"]),
-        metadata={"target_position": (0,0)}
-    )
-    
-    from src.core.builder import V2EntityBuilder
-    entity = (V2EntityBuilder(1)
-        .kind("HERO")
-        .location(0, 0)
-        .inventory(max_slots=1, items=[ItemStack("wood", 1)])
-        .strategic(projects={"q1": quest})
-        .build()
-    )
-    
-    state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
-    
-    # 2. Run QuestSystem
-    update = QuestSystem.update(state)
-    
-    # 2.5 Refine (Enforce Conservation)
-    from src.engine.pipeline import AuthoritativeApplyPipeline
-    update = AuthoritativeApplyPipeline.refine(state, update)
-    
-    # 3. Apply
-    final_state = ApplyPath.apply_generation(state, update)
-    
-    assert final_state.entities[1].inventory.gold == 0
-    assert len(final_state.entities[1].inventory.items) == 1

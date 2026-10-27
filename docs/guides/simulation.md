@@ -109,7 +109,7 @@ All artifacts land in `data/runs/<run_id>/` after each run.
 |---|---|
 | `simulation_events.jsonl` | Raw behavioral event log (all `SimulationEvent` records) |
 | `metric_windows.jsonl` | Aggregated metric windows per tick |
-| `cognition_snapshots.jsonl` | Strategic cognition graph snapshots |
+| `cognition_graph_snapshots.jsonl` | Strategic cognition graph snapshots |
 | `hard_law_violations.jsonl` | Any hard-law violations caught by the monitor |
 
 ### Querying artifacts

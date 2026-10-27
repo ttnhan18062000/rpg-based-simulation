@@ -1673,7 +1673,7 @@
     falls through to EXPLORE. TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING.'
   proof_type: parity
   test_path: tests/unit/worldbuilding/test_world_compiler.py::test_helper_enum_mappers;
-    tests/unit/quest/test_quest_system.py::test_quest_kind_escort_enum_value_is_new_member_only
+    tests/unit/quest/test_quest_kind.py::test_quest_kind_escort_enum_value_is_new_member_only
   divergence_note: null
   support_boundary: null
 - id: WORLD-117
