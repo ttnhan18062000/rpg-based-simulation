@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
 
 from src.core.enums import DiplomaticState, EntityRole
+from src.core.stable_hash import stable_int31
 from src.core.updates import FactionUpdate, StateUpdate, WorldUpdate
 
 logger = logging.getLogger(__name__)
@@ -336,7 +337,7 @@ class MilitaryConflictPhase:
                         if reg.bounds else (0.0, 0.0)
                     )
                     roles = {eid: "FACTION_SQUAD" for eid in squad_ids}
-                    group_id = abs(hash((contested_region_id, attacker_id, state.tick))) % (2 ** 31)
+                    group_id = stable_int31(contested_region_id, attacker_id, state.tick)
                     groups_add.append(GroupRecord(
                         id=group_id,
                         leader_id=squad_ids[0],
