@@ -132,7 +132,9 @@ class WorldAssemblyValidator:
 
         # 3. Composition Validation
         composition_issues = []
-        for ref in composition.module_refs:
+        # graph_map holds only the enabled refs, so check exactly those: a disabled ref is
+        # left out of the assembly and is not a missing module.
+        for ref in (r for r in composition.module_refs if r.enabled):
             if ref.module_id not in graph_map:
                 composition_issues.append({
                     "severity": "ERROR",
