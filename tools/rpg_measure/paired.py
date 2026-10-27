@@ -161,6 +161,7 @@ def world_section(world: str, base: List[Dict[str, Any]], new: List[Dict[str, An
     lines.append(f"Extinctions: STOP {ext['stop'] or 'none'}; base-state (extinct in both arms) {ext['base_state'] or 'none'}; recovered {ext['recovered'] or 'none'}")
     lines.append("")
     for name, prefix in (("flee ticks", "flee_ticks"), ("flee episodes", "flee_episodes"), ("pursuit ticks", "pursuit_ticks"), ("pursuit episodes", "pursuit_episodes"),
+                         ("combat_retreat flight ticks", "combat_retreat_flight_ticks"), ("combat_retreat flight episodes", "combat_retreat_flight_episodes"),
                          ("entity-samples that perceived a hostile", "perceiving_ticks"), ("steps (all terrain)", "steps|")):
         b, n = _counter_sum(base, prefix), _counter_sum(new, prefix)
         lines.append(f"- {name}: " + (f"{b} -> {n}" if b is not None and n is not None else "n/a (an arm tree predates the ledger counters)"))
