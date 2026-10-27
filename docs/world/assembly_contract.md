@@ -225,6 +225,8 @@ colliding on the authored id.
 3. A duplicate region id that survives prefixing aborts assembly with
    `ValueError("Duplicate region ID collision ...")`. Not recoverable.
 
+**One ref per module:** `assemble()` refuses a composition that lists the same `module_id` twice in `module_refs`, before any merge, with a `ValueError` that names the world, the module id and both refs. The graph and the per-ref lookups are keyed by module id, so a second ref used to replace the first silently; composing one module twice under two namespaces is not supported. Distinct modules are namespaced as described here.
+
 **Author guidance:** two modules may both author a region called `hometown`; they are composable
 only if at least one is given a distinct namespace in the composition. The namespace, not the
 authored id, is the disambiguation lever. A composition that gives two modules the same namespace

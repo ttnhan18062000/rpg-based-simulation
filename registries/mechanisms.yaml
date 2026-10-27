@@ -2703,8 +2703,10 @@ mechanisms:
         in id order, later colliders namespaced with their own module id, :396-429). ENFORCED:
         the duplicate-`provides` check (:522-534); a collision left after namespacing raises
         (:424). NOT ENFORCED: building and quest id collisions are not pre-namespaced (they surface
-        as resolver errors); a missing `requires` target is skipped silently (:513-515). Dead
-        code inside: the legacy `WorldProceduralGenerator` (:59-370) has no production caller.
+        as resolver errors); a missing `requires` target is skipped silently (:513-515). Legacy
+        path kept on purpose: `WorldProceduralGenerator` (:59-370) has no production caller and is
+        reached only from tests/unit/worldgeneration/test_generator.py; it is preserved per
+        docs/world/generator_contract.md (WORLD-GEN-003/004, SUBSTRATE-NEW-002).
         Before #335 this stage authored compositions that could not assemble, invisible because
         nothing resolved its output.
   - id: gods_pantheon_blessings

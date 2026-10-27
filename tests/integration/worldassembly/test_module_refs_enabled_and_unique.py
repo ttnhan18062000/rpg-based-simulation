@@ -1,4 +1,4 @@
-"""A module ref with ``enabled: false`` is left out of the assembly and is not reported as a module missing from the repository (ASM-COMP-001)."""
+"""Module refs in a composition: a disabled ref is left out and is not a missing module (ASM-COMP-001); a module listed twice is refused before any merge."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -48,3 +48,16 @@ def test_an_enabled_ref_to_an_unknown_module_is_still_refused(resolver):
     res, _mods = resolver
     with pytest.raises(ValueError, match="not found in repository"):
         res.assemble(_composition(ModuleRefSpec(module_id="no_such_module")))
+
+
+def test_a_module_listed_twice_is_refused_before_any_merge_naming_the_world_the_id_and_both_refs(resolver):
+    res, _mods = resolver
+    comp = load_composition_spec(Path("data/worlds") / BASE_WORLD / "world.yaml")
+    twice = comp.module_refs[0].module_id
+    dup = comp.model_copy(update={"module_refs": [*comp.module_refs, ModuleRefSpec(module_id=twice, namespace="second")]})
+    index = len(comp.module_refs)
+    with pytest.raises(ValueError) as err:
+        res.assemble(dup)
+    msg = str(err.value)
+    assert BASE_WORLD in msg and f"'{twice}'" in msg
+    assert "module_refs[0]" in msg and f"module_refs[{index}]" in msg and "namespace='second'" in msg
