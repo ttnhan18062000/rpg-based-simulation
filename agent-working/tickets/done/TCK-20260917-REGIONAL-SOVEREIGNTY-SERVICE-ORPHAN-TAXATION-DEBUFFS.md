@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS
-phase: open
+phase: done
 date: 2026-09-17
 tags: [world, architecture]
 ---
@@ -16,7 +16,7 @@ tags: [world, architecture]
 callers anywhere in `src/` — real, non-dead code, never invoked
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -114,7 +114,11 @@ later) or simply never finished after being written — the code itself gives no
 way.
 
 ## Implementation Notes
-Not yet started.
+### 2026-10-26: caller trace re-run at main 3533fde71, disposition recorded (U2 batch 1, no wiring)
+**Zero callers confirmed.** `RegionalSovereigntyService`, `process_taxation` and `apply_sovereignty_debuffs` are named nowhere in `src/`, `tests/` or `tools/` outside their own definitions. The only other mentions: an allowlist string in `tests/architecture/test_legacy_enum_usage_boundaries.py:65` and a comment at `src/ai/goals/region_stabilization_scorer.py:28`. No string-keyed lookup reaches it, and `docs/audits/unreachable_code_inventory.{json,csv}` lists both methods as unreached.
+**The 2026-09-30 note is partly stale.** Taxation is no longer a competing live implementation: owner decisions 51 and 58 (EXCH-02, amendment of 2026-10-09) removed the periodic per-head levy (#536, divergence 2.108); the live tax is a tenth of a sale or a wage (`src/engine/place_tax.py`, via `shop_sale.py` and `work_shift.py`). The conquered-region penalty is still live in `src/engine/town_resolution.py` (`region.suppression_active`: non-owner entities -20% atk/def, -10% speed; wired at `pipeline.py:339`). The orphan's `apply_sovereignty_debuffs` also returns an `EntityUpdate` with no fields set.
+**Disposition: record, do not wire.** New registry entry `regional_levy_and_conquest_debuffs` (`state: orphan`, `implemented_by: RegionalSovereigntyService`). Wiring would revive a retired rule or duplicate a live one: a behaviour change, out of reach until decision 73. There is no wiring proposal, because none looks warranted; a periodic levy or a monster-held debuff would be a new declared feature. Whether to delete the class is a separate decision. Reviewed by rpg-planner-ubuntu before the commit.
+**Doc fixed in this ticket:** `docs/world/regional_sovereignty_runtime_contract.md`. The effects table, the Taxation section and the Sovereignty-debuffs section now state today's rule (EXCH-02 place tax; `town_resolution.py` `suppression_active`) and keep the orphan's cadence and constants as a record of what it would do. The Regression tests list cited `test_long_run_stability.py` for "taxation cadence, gold transfer correctness, faction lock"; it covers long-run memory and population stability and determinism parity, none of those three, so the citation is corrected, and the live tax is pinned by `tests/unit/resource/test_tax_and_upkeep.py`. No test found asserts the `town_resolution.py` stat debuff (the suppression tests cover the action-legality gate).
 
 ### 2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-ZERO-CALLER` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T01`): verdict `UNDECLARED`
 
@@ -149,13 +153,13 @@ in which `grep -ci tax` returns `0`. Nothing declares which implementation is au
 recorded here and not corrected (out of this epic's scope).
 
 ## Test Summary
-Not yet started.
+- `make mechanism-registry-validate` passes (110 mechanisms); html `--check` up to date; no `orphan_with_callers` finding for the new entry.
+- Pins moved from the real registry in `test_mechanism_registry_completeness_check.py` (wider unbound_files 250 to 249, candidates 70 to 69) and `test_mechanism_atlas_regenerate.py` (38 to 39 unmapped); both files pass. No src change.
 
 ## Files Changed
-None yet (this ticket file only).
+- registries/mechanisms.yaml (new entry, pointer sentence); regenerated docs/brainstorm views
+- docs/world/regional_sovereignty_runtime_contract.md
+- tests/unit/tools/test_mechanism_registry_completeness_check.py, tests/unit/tools/test_mechanism_atlas_regenerate.py
 
 ## Completion Summary
-Open. Filed per peer review so this finding — caught only as a side effect of an unrelated
-registry-identity ticket — doesn't stay recorded only in that closed ticket's own prose.
-
-**Verdict as of 2026-09-30: `UNDECLARED`** — two competing implementations of taxation/conquered-region penalty (this orphan vs live `TownResolutionSystem`); see Implementation Notes. Still `OPEN`.
+**Verdict as of 2026-10-26: confirmed orphan, superseded in part (by EXCH-02's place tax and the live `suppression_active` penalty).** Recorded in the registry as `regional_levy_and_conquest_debuffs`; the contract doc corrected; nothing wired. Any wiring is a separate ticket after decision 73.

@@ -31,8 +31,8 @@ def _mechanism(mid, state, implemented_by):
 
 
 def test_is_shim_file_identifies_a_real_backward_compat_shim():
-    shim = REPO_ROOT / "src" / "systems" / "chest_system.py"
-    real_module = REPO_ROOT / "src" / "systems" / "economy_systems" / "chests.py"
+    shim = REPO_ROOT / "src" / "systems" / "market.py"
+    real_module = REPO_ROOT / "src" / "systems" / "economy_systems" / "market.py"
     assert _is_shim_file(shim) is True
     assert _is_shim_file(real_module) is False
 
@@ -282,4 +282,9 @@ def test_real_registry_findings_pinned():
         # worlds x 2000 ticks. Same understood blind spot as `perception` / `chronicle` above (an
         # import is not a call); the runtime probe, not this static count, is the evidence.
         ("social_memory", "orphan_with_callers"),
+        # 2026-10-26 (memo row 7 (b)): `role_fit_preference` registered orphan. The 2 "caller" files
+        # are definition-adjacent, not calls: `src/domains/motivation/__init__.py` re-exports
+        # `RoleFitEvaluator`, and `evaluator.py` imports `RoleFitPreference` for type annotations.
+        # Nothing outside src/domains/motivation/ imports either symbol. Same blind spot as above.
+        ("role_fit_preference", "orphan_with_callers"),
     }

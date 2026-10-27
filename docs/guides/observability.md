@@ -59,7 +59,7 @@ python3 -m src diagnostics resources --format json
 
 Exit 0 = OK/WARN. Exit 1 = DEGRADED (CI gate).
 
-If a run regularly hits PRESSURE or DEGRADED, reduce entity count (`--entities`) or increase
+If a run regularly hits PRESSURE or DEGRADED, reduce the world's population (the world spec sets it; `cli` has no flag for it) or increase
 worker threads (`--workers`). See the hot-path safety contract:
 [`docs/architecture/observability_hot_path_safety_contract.md`](../architecture/observability_hot_path_safety_contract.md).
 

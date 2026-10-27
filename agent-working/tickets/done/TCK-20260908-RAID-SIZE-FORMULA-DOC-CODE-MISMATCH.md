@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH
-phase: open
+phase: done
 date: 2026-09-08
 tags: [world, content]
 ---
@@ -15,7 +15,7 @@ tags: [world, content]
 raid_size doc formula (3 + camp.maturity) contradicts the code (3 + state.maturity) and is internally inconsistent against monster_cap
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -78,11 +78,11 @@ doc" unsafe without a real balance decision.
 - Re-opening `CAMP-RAID-ORIGIN-SPAWN-FIX`'s own already-closed scope.
 
 ## Acceptance Criteria
-- [ ] A real decision is made and recorded on the intended `raid_size` formula, with the
+- [x] (moot, see Completion Summary) A real decision is made and recorded on the intended `raid_size` formula, with the
       internal-inconsistency-against-`monster_cap` evidence considered explicitly.
-- [ ] Doc and code agree on the resulting formula.
-- [ ] Test coverage proves the decided formula at both a low-maturity and threshold-maturity camp.
-- [ ] No regression in existing camp/raid test suites.
+- [x] (moot, see Completion Summary) Doc and code agree on the resulting formula.
+- [x] (moot, see Completion Summary) Test coverage proves the decided formula at both a low-maturity and threshold-maturity camp.
+- [x] (moot, see Completion Summary) No regression in existing camp/raid test suites.
 
 ## Related Tickets
 - TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX (origin of this finding, deliberately scoped out of it)
@@ -108,13 +108,17 @@ None yet — standard tier, staging artifacts created when picked up.
   left for this ticket's own decision process.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Closed by disposition, 2026-10-26 (U2 batch 1; rpg-planner OK on #593 issuecomment-6406593752). The question this ticket asked (what `raid_size` should be) no longer exists, because both raid paths it compares are retired. Verified at main 3533fde71:
+- The global world-clock raid, `RaidService.check_for_raid`: retired by owner decision 9 (2026-10-03, TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION). `src/engine/world_dynamics.py` section 3.5 builds an empty `StateUpdate` for it; `RaidService` has no `check_for_raid` attribute.
+- The camp-triggered raid, `RaidService.spawn_raid`: retired by owner ruling D70 (2026-10-14, divergence 2.125, TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70). `RaidService` has no `spawn_raid` attribute (`tests/unit/world/test_calamity_raid.py` asserts `not hasattr(RaidService, "spawn_raid")`), and `src/world/camp.py` no longer raids.
+- `src/world/raid.py` is 33 lines: the class holds its constants (`RAID_BASE_SIZE = 3` among them) and comments, with no method. Nothing computes a raid size, so neither side of the doc-versus-code question exists.
+**Doc corrected in a follow-up commit (rpg-planner-ubuntu, 2026-10-26: the ticket is a DOC-CODE mismatch, so it is not closed with the doc still wrong):** `docs/world/raid_boss_camp_contract.md` (`last_verified: 2026-09-04`) described both raid paths as live: the "Resolved" paragraph for `TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`, the Raid composition block with `raid_size = 3 + camp.maturity`, the camp Monster spawning and Raid trigger sections, a Regression tests list that cited `test_long_run_stability.py` for raid and camp behavior it does not cover, and an extension rule citing `spawn_raid`. The doc now opens with a correction note that cites the retiring changes (decision 9, D70 / divergence 2.125) and says `raid.py` holds constants only; each retired passage is labelled historical and kept, not deleted. Sections re-checked on 2026-10-26 are listed in that note; the Boss and Spawn sections were not re-checked and the file's `last_verified` is not bumped.
 
 ## Test Summary
-_(pending)_
+No code changed, no test run for this ticket. The retirement is asserted by `tests/unit/world/test_calamity_raid.py` (`not hasattr(RaidService, "spawn_raid")`).
 
 ## Files Changed
-_(pending)_
+- docs/world/raid_boss_camp_contract.md (retired raid and camp-spawning passages labelled historical; correction note; regression-test list corrected). Doc correction only; no code change.
 
 ## Completion Summary
-_(pending)_
+**Closed by disposition plus a doc correction; no code changed.** Both raid paths are retired (decision 9, 2026-10-03, and D70, 2026-10-14), so there is no `raid_size` to decide, and the acceptance criteria are moot. The contract doc that still described them as live is corrected in a follow-up commit (see Implementation Notes), so doc and code agree.
