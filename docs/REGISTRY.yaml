@@ -7859,6 +7859,77 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md
+  ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR
+  title: A REQUEST_CRAFT intent with an unknown or missing recipe id raises KeyError
+    instead of being refused
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - ActionIntentAdapter.execute
+  - RecipeRegistry
+  - GuildNeedScorer
+  - tests/integration/economy/test_crafting_live_path.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR/investigation.md
+  - agent-working/stored_artifacts/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR/plan.md
+  - agent-working/stored_artifacts/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR/test_plan.md
+  tags:
+  - economy
+  - bug
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF.md
+  ticket_id: TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF
+  title: 'Five dead `src/systems/` classes are still the proof or the named implementation
+    of parity, Bible and compliance claims: re-prove each claim on the live path or
+    re-grade it, then delete the class'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-27'
+  related_code_areas:
+  - src/systems/economy_systems/{loot,town_service,crafting}.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/bible_ch07_s7_draft.md
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/investigation.md
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/plan.md
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/test_plan.md
+  tags:
+  - world
+  - engine
+  - economy
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261027-HISTORY-SNAPSHOT-STRIP-MISSES-NESTED-GRAPH.md
+  ticket_id: TCK-20261027-HISTORY-SNAPSHOT-STRIP-MISSES-NESTED-GRAPH
+  title: The history API's summary mode returns the whole cognition graph and reports
+    zero node/edge counts
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - src/observability/reporting/history_query.py
+  - src/observability/cognition/schema.py (read only)
+  - src/api/routes/history.py (read only unless the response schema names the counts)
+  - tests/unit/observability/cognition/test_cognition_query_service.py
+  artifact_files: []
+  tags:
+  - bug
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261027-WALL-CLOCK-CLI-TEST-RUNS-THE-TOOL-FOUR-TIMES-NOT-SIX.md
+  ticket_id: TCK-20261027-WALL-CLOCK-CLI-TEST-RUNS-THE-TOOL-FOUR-TIMES-NOT-SIX
+  title: The wall-clock inventory CLI test runs the tool over the real source four
+    times instead of six, so it stops hitting the 60 s per-test budget under load
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - tests/tools/test_wall_clock_inventory.py
+  - tools/perf/wall_clock_inventory.py (read only)
+  artifact_files: []
+  tags:
+  - testing
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS.md
   ticket_id: TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS
   title: 'The two serial steps in test.yml go now that their three owner fixes are
@@ -7874,6 +7945,18 @@
   artifact_files: []
   tags:
   - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ.md
+  ticket_id: TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ
+  title: 'Remove the `--entities` flag from the `cli` command: it is parsed but never
+    read'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-26'
+  related_code_areas:
+  - src/cli/entry.py
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS.md
   ticket_id: TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS
@@ -8499,6 +8582,20 @@
   - agent-working/stored_artifacts/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED/test_plan.md
   tags:
   - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261022-SESSION-ROLES-RPG-OWNS-RPG-MEASURE.md
+  ticket_id: TCK-20261022-SESSION-ROLES-RPG-OWNS-RPG-MEASURE
+  title: '`tools/rpg_measure/**` (the paired-run measurement tool) gets an owner:
+    rpg'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - registries/session_roles.yaml
+  artifact_files: []
+  tags:
+  - ai
+  - governance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME.md
   ticket_id: TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME
@@ -14997,6 +15094,23 @@
   - strategy
   - cognition
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE.md
+  ticket_id: TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE
+  title: Seven `src/systems/` modules have no caller in `src/`, and they are the last
+    unbound targets of the mechanism completeness check apart from `domains/motivation`
+  tier: standard
+  ticket_type: cleanup
+  date: '2026-10-07'
+  related_code_areas:
+  - src/systems/economy_systems/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE/plan.md
+  - agent-working/stored_artifacts/TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE/test_plan.md
+  tags:
+  - world
+  - engine
+- type: ticket
   path: agent-working/tickets/done/TCK-20261007-LAUNCHER-RELAUNCH-FIXES.md
   ticket_id: TCK-20261007-LAUNCHER-RELAUNCH-FIXES
   title: 'Launcher relaunch fixes A-E: legacy-name transcripts, handover path line,
@@ -15388,20 +15502,6 @@
   artifact_files: []
   tags:
   - simulation-quality
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE.md
-  ticket_id: TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE
-  title: Seven `src/systems/` modules have no caller in `src/`, and they are the last
-    unbound targets of the mechanism completeness check apart from `domains/motivation`
-  tier: standard
-  ticket_type: cleanup
-  date: '2026-10-07'
-  related_code_areas:
-  - src/systems/economy_systems/
-  artifact_files: []
-  tags:
-  - world
-  - engine
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL.md
   ticket_id: TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL
@@ -16913,6 +17013,27 @@
   - engine
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261005-PERCEPTION-CONTRACT-DESCRIBES-PARKED-CHAIN-AS-LIVE.md
+  ticket_id: TCK-20261005-PERCEPTION-CONTRACT-DESCRIBES-PARKED-CHAIN-AS-LIVE
+  title: 'Two places in `perception_contract.md` still describe `PerceptionGate` as
+    the upstream filter of a
+
+    pipeline stage that never runs, contradicting the same document''s own "designed,
+    not in effect"
+
+    relabel sixteen lines earlier'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-05'
+  related_code_areas:
+  - src/world/perception/gate.py::PerceptionGate
+  - src/engine/tactical.py:199
+  - src/engine/behavior_consumers.py
+  artifact_files: []
+  tags:
+  - cognition
+  - documentation
+- type: ticket
   path: agent-working/tickets/done/TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL.md
   ticket_id: TCK-20261005-PERF-M1-ZERO-CAPACITY-SIGNAL
   title: 'PERF-M1-T01: zero-capacity worker and queue signals follow PERF-D1, with
@@ -17302,27 +17423,6 @@
   tags:
   - engine
   - combat
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261005-PERCEPTION-CONTRACT-DESCRIBES-PARKED-CHAIN-AS-LIVE.md
-  ticket_id: TCK-20261005-PERCEPTION-CONTRACT-DESCRIBES-PARKED-CHAIN-AS-LIVE
-  title: 'Two places in `perception_contract.md` still describe `PerceptionGate` as
-    the upstream filter of a
-
-    pipeline stage that never runs, contradicting the same document''s own "designed,
-    not in effect"
-
-    relabel sixteen lines earlier'
-  tier: hotfix
-  ticket_type: bug
-  date: '2026-10-05'
-  related_code_areas:
-  - src/world/perception/gate.py::PerceptionGate
-  - src/engine/tactical.py:199
-  - src/engine/behavior_consumers.py
-  artifact_files: []
-  tags:
-  - cognition
-  - documentation
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS.md
   ticket_id: TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS
@@ -24465,6 +24565,26 @@
   - faction
   - root-cause
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS.md
+  ticket_id: TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS
+  title: 'Record: axes attach to mechanisms, not systems — resolved independent of
+    the `system` tier''s own
+
+    fate'
+  tier: standard
+  ticket_type: feature
+  date: '2026-09-18'
+  related_code_areas:
+  - None — documentation/recording ticket, no registry or code changes.
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS/investigation.md
+  - agent-working/stored_artifacts/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS/plan.md
+  - agent-working/stored_artifacts/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS/test_plan.md
+  tags:
+  - architecture
+  - documentation
+  - schema
+- type: ticket
   path: agent-working/tickets/done/TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION.md
   ticket_id: TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION
   title: 'Revive the `system` tier as declared membership on mechanisms — a managed
@@ -24527,6 +24647,23 @@
   - architecture
   - schema
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN.md
+  ticket_id: TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN
+  title: '`motivation_doctrine`''s registry entry outlived the code chain it names
+    — `doctrine`/`values` were
+
+    formally retired, but the mechanism and its `depends_on` edges remain'
+  tier: hotfix
+  ticket_type: repair
+  date: '2026-09-18'
+  related_code_areas:
+  - src/core/cognition.py:419-438
+  - registries/mechanisms.yaml
+  artifact_files: []
+  tags:
+  - architecture
+  - schema
+- type: ticket
   path: agent-working/tickets/done/mechanism-system-membership/TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP.md
   ticket_id: TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP
   title: 'The `system` tier as declared system membership on mechanisms — investigate
@@ -24572,40 +24709,6 @@
   - faction
   - progression
   - investigation
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS.md
-  ticket_id: TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS
-  title: 'Record: axes attach to mechanisms, not systems — resolved independent of
-    the `system` tier''s own
-
-    fate'
-  tier: standard
-  ticket_type: feature
-  date: '2026-09-18'
-  related_code_areas:
-  - None — documentation/recording ticket, no registry or code changes.
-  artifact_files: []
-  tags:
-  - architecture
-  - documentation
-  - schema
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN.md
-  ticket_id: TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN
-  title: '`motivation_doctrine`''s registry entry outlived the code chain it names
-    — `doctrine`/`values` were
-
-    formally retired, but the mechanism and its `depends_on` edges remain'
-  tier: hotfix
-  ticket_type: repair
-  date: '2026-09-18'
-  related_code_areas:
-  - src/core/cognition.py:419-438
-  - registries/mechanisms.yaml
-  artifact_files: []
-  tags:
-  - architecture
-  - schema
 - type: ticket
   path: agent-working/tickets/done/TCK-20260917-CLAIMS-AS-TESTS-INITIATIVE-DANGLING-CITATION.md
   ticket_id: TCK-20260917-CLAIMS-AS-TESTS-INITIATIVE-DANGLING-CITATION
@@ -24770,6 +24873,24 @@
   - documentation
   - schema
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS.md
+  ticket_id: TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS
+  title: '`RegionalSovereigntyService` (regional taxation + macroscopic conquest debuffs)
+    has zero real
+
+    callers anywhere in `src/` — real, non-dead code, never invoked'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-09-17'
+  related_code_areas:
+  - src/world/regional_sovereignty.py::RegionalSovereigntyService
+  - src/world/influence.py::FactionInfluenceService
+  - registries/mechanisms.yaml
+  artifact_files: []
+  tags:
+  - world
+  - architecture
+- type: ticket
   path: agent-working/tickets/done/TCK-20260917-SELECTIVE-REPOSITORY-RETRIEVAL-OVER-WHOLE-FILE-READS.md
   ticket_id: TCK-20260917-SELECTIVE-REPOSITORY-RETRIEVAL-OVER-WHOLE-FILE-READS
   title: 'Prefer targeted line-range and symbol retrieval over whole-file reads —
@@ -24855,24 +24976,6 @@
   - architecture
   - documentation
   - schema
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS.md
-  ticket_id: TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS
-  title: '`RegionalSovereigntyService` (regional taxation + macroscopic conquest debuffs)
-    has zero real
-
-    callers anywhere in `src/` — real, non-dead code, never invoked'
-  tier: hotfix
-  ticket_type: bug
-  date: '2026-09-17'
-  related_code_areas:
-  - src/world/regional_sovereignty.py::RegionalSovereigntyService
-  - src/world/influence.py::FactionInfluenceService
-  - registries/mechanisms.yaml
-  artifact_files: []
-  tags:
-  - world
-  - architecture
 - type: ticket
   path: agent-working/tickets/todos/TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME.md
   ticket_id: TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME
@@ -28507,6 +28610,24 @@
   - mcp
   - governance
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH.md
+  ticket_id: TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH
+  title: raid_size doc formula (3 + camp.maturity) contradicts the code (3 + state.maturity)
+    and is internally inconsistent against monster_cap
+  tier: standard
+  ticket_type: bug
+  date: '2026-09-08'
+  related_code_areas:
+  - src/world/raid.py
+  - src/world/camp.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH/investigation.md
+  - agent-working/stored_artifacts/TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH/plan.md
+  - agent-working/stored_artifacts/TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH/test_plan.md
+  tags:
+  - world
+  - content
+- type: ticket
   path: agent-working/tickets/done/TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS.md
   ticket_id: TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS
   title: '`ReadModelCache` serves stale entity DTOs for entities whose only per-tick
@@ -28565,21 +28686,6 @@
   tags:
   - world
   - architecture
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH.md
-  ticket_id: TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH
-  title: raid_size doc formula (3 + camp.maturity) contradicts the code (3 + state.maturity)
-    and is internally inconsistent against monster_cap
-  tier: standard
-  ticket_type: bug
-  date: '2026-09-08'
-  related_code_areas:
-  - src/world/raid.py
-  - src/world/camp.py
-  artifact_files: []
-  tags:
-  - world
-  - content
 - type: ticket
   path: agent-working/tickets/done/TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD.md
   ticket_id: TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD
