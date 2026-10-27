@@ -5225,8 +5225,9 @@
   test_path: tests/unit/domains/faction/test_squad_group_id_hashseed.py
   divergence_note: intentional_divergences.md 2.141 (Bug Fix)
   support_boundary: Proved on a hand-built WAR state (two hash seeds, two processes
-    each). No shipped gate world is shown to form a squad by this test; the gate-world
-    probe and neutral run are pending (owner condition, #715 6412199242).
+    each). No gate world forms a squad (probe A0 found none on crowded_frontier, frontier_living_world
+    or urban_political for seeds 42-46 at 5000 ticks), so no gate run exercises this
+    path; paired --neutral IDENTICAL on those worlds shows only that (divergence 2.141).
 - id: SUB-399
   text: PerceptionFilterService gives the same entity_id and node_id for a non-int
     signal id in every process (stable_int31 of the signal id, not the salted hash()).
