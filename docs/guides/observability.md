@@ -113,7 +113,7 @@ python3 -m src cognition snapshot --entity-id 12 --run-id <run_id>
 python3 -m src cognition patterns --run-id <run_id>
 ```
 
-Trace data lands in `data/runs/<run_id>/cognition_snapshots.jsonl`. The trace contract:
+Trace data lands in `data/runs/<run_id>/cognition_graph_snapshots.jsonl`. The trace contract:
 [`docs/observability/decision_trace_contract.md`](../observability/decision_trace_contract.md).
 
 ---

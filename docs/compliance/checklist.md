@@ -3136,7 +3136,7 @@ These items are appended rather than replacing existing checklist items. They ar
 - [x] PROG-094: Shop buy checks gold before adding item. <!-- ID: PROG-094 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_transaction_v2.py PROOF: unit -->
 - [x] PROG-095: Shop buy checks inventory capacity before subtracting gold. <!-- ID: PROG-095 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_transaction_v2.py PROOF: unit -->
 - [x] PROG-096: Shop sell checks item exists before adding gold. <!-- ID: PROG-096 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_transaction_v2.py PROOF: unit -->
-- [ ] PROG-097: Crafting checks recipe exists. <!-- ID: PROG-097 SOURCE: src/engine/intent/action_intent.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit --> (divergent — an unknown recipe id raises `KeyError` on the live craft path; see PROG-097 in the parity ledger)
+- [x] PROG-097: Crafting checks recipe exists. <!-- ID: PROG-097 SOURCE: src/engine/intent/action_intent.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit -->
 - [x] PROG-098: Crafting checks materials. <!-- ID: PROG-098 SOURCE: src/engine/intent/action_intent.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit -->
 - [x] PROG-099: Crafting checks gold/cost. <!-- ID: PROG-099 SOURCE: src/engine/intent/action_intent.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit -->
 - [x] PROG-100: Crafting checks inventory capacity for output. <!-- ID: PROG-100 SOURCE: src/engine/intent/action_intent.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit -->
