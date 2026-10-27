@@ -14,13 +14,15 @@ from __future__ import annotations
 import dataclasses
 from typing import Tuple
 
+import pytest
+
 from src.config.profiles import HardwareClass, RuntimeProfile
 from src.core.models.inventory import AcquiredMethod, ItemInstance
 from src.core.models.quests import QuestOpportunity
 from src.core.state import AuthoritativeState, ClanState, FactionState
 from src.domains.information.providers import InformationProviderArchetype, InformationProviderState
 from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
-from src.engine.checkpoint import PROOF_DIGEST_SCHEME
+from src.engine.checkpoint import PROOF_DIGEST_SCHEME, CanonicalStateHasher
 from src.engine.kernel import Kernel
 from src.perf.scenarios import SCENARIO_BUILDERS
 from src.platform.rng import DeterministicRNG
@@ -81,10 +83,28 @@ def test_populated_carried_state_hashes_the_same_across_two_same_seed_runs():
         assert not empty, f"carried fields empty at the end of the run: {empty}"
 
 
-def test_the_digest_is_sensitive_to_the_seeded_fields():
+def test_the_digest_is_sensitive_to_the_seeded_run():
+    """Coarse check: a seeded run and an unseeded run hash differently. It cannot name a field the hasher drops, so the per-field test below does."""
     seeded_hash, _ = _run(True)
     unseeded_hash, _ = _run(False)
     assert seeded_hash != unseeded_hash
+
+
+@pytest.fixture(scope="module")
+def seeded_final_state() -> AuthoritativeState:
+    return _run(True)[1]
+
+
+@pytest.mark.parametrize("field", SEEDED_FIELDS)
+def test_the_digest_covers_each_seeded_field(seeded_final_state: AuthoritativeState, field: str):
+    """Emptying one field of the final state of one seeded run moves the digest, so the hasher does not silently drop it.
+
+    Uses `CanonicalStateHasher.get_hash`, the entry point `Kernel.shutdown`'s digest ends in (`CanonicalHashScheduler.compute_digest`). No re-ticking.
+    """
+    value = getattr(seeded_final_state, field)
+    assert value, f"{field} is empty in the final state"
+    blanked = dataclasses.replace(seeded_final_state, **{field: type(value)()})
+    assert CanonicalStateHasher.get_hash(seeded_final_state) != CanonicalStateHasher.get_hash(blanked)
 
 
 def test_the_digest_scheme_is_v3():
