@@ -71,8 +71,23 @@ Moved from Lane C to Lane B (`rpg-implementer-2`) by `rpg-planner` 2026-10-26; b
 **OWNER RULING NOW CONDITIONAL (#715 6412199242, memo row 90 reworded; relayed by rpg-planner):** probe A0 was seed 42 only and `--neutral` is 3 worlds x seed 42 x 1000t, so neither covers the gate seeds 42-46. REQUIRED before any early landing: extend probe A0 to crowded_frontier, frontier_living_world, urban_political x seeds 43-46 x 5000t, checking every tick for a WAR pair or a FACTION_SQUAD group (probe: `/mnt/data/scratch-rpg-implementer-2/f4/probe_a0.py world seed ticks out.json`, PYTHONHASHSEED=0, from the f4 worktree; needs a host slot from rpg-planner, one process at a time). If none forms anywhere: F4 lands when ready with the neutral proof plus the constructed-state test. If any (world, seed) forms a squad: F4 waits until after step A and takes its own paired step against its parent. The PR body states exactly what was measured (worlds, seeds, ticks, hashseed), never "no world forms a squad".
 **Next (superseded by the ruling):** plan.md to `rpg-planner`, then code (stable digest, e.g. blake2b of the tuple modulo 2**31, one shared helper), then the cross-seed test; the paired step against the parent after step A (section 12.5 order) is a no-op on the gate worlds by A0.
 
+### Coded 2026-10-27 (commit a08d4aef3)
+New `src/core/stable_hash.py::stable_int31(*parts)`: blake2b (digest_size 8) over a type-tagged, length-prefixed encoding of str/int parts, mod 2**31; any other part type raises TypeError. Used at `military_conflict.py:340` (`stable_int31(contested_region_id, attacker_id, state.tick)`) and `perception/filter.py:88,97`. No other salted `hash()` call is left in `src/`.
+**OWNER STOP (#715 6426468523, 6431749368, relayed by lead-planner-u24 and rpg-planner 2026-10-27):** finish F4 through push/PR/finalize, then stop. Probe A0 for seeds 43-46 and `paired --neutral` are heavy runs and both are still landing conditions (#715 6412199242). Neither has run. **F4 is held before push** until the owner says continue to those runs or drops the condition. Asked rpg-planner whether a parity-ledger entry and an intentional_divergences.md record are wanted.
+
 ## Test Summary
+- `tests/unit/core/test_stable_hash.py`: the value is repeatable, in range and pinned; distinct tuples differ (order, concatenation, str vs int); bad part types are rejected.
+- `tests/unit/domains/faction/test_squad_group_id_hashseed.py`: a real `AuthoritativeState` (fa/fb at WAR, r2 held by fb, 3 GUARDs) runs `MilitaryConflictPhase.execute` + `ApplyPath.apply_generation` in 2 subprocesses per PYTHONHASHSEED (0, 1). A squad forms; group_id == stable_int31; group_id and `CanonicalStateHasher.get_hash` are equal across all 4 runs. Sensitivity check: the old salted formula differs across hash seeds 0 and 1.
+- `tests/unit/domains/perception/test_filter_ids_hashseed.py`: filter entity_id and node_id for non-int signal ids are equal across hash seeds 0 and 1.
+- Scoped run (core stable_hash, domains/faction, domains/perception, social groups + lifecycle, integration faction_campaign): 214 passed. Mypy baseline filter: no new errors. Code health: 0 new, 0 worse.
+- NOT RUN (owner stop): probe A0 seeds 43-46; `paired --neutral` on the gate worlds.
 
 ## Files Changed
+- `src/core/stable_hash.py` (new)
+- `src/engine/military_conflict.py`
+- `src/domains/perception/filter.py`
+- `tests/unit/core/test_stable_hash.py` (new)
+- `tests/unit/domains/faction/test_squad_group_id_hashseed.py` (new)
+- `tests/unit/domains/perception/test_filter_ids_hashseed.py` (new)
 
 ## Completion Summary
