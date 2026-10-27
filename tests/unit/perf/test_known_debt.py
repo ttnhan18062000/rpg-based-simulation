@@ -62,7 +62,7 @@ def test_a_malformed_signature_is_rejected(signature) -> None:
 def test_every_check_name_is_a_real_compare_check() -> None:
     from src.perf import benchmark_record as br
 
-    assert tuple(c.__name__.removeprefix("_check_") for c in br._CHECKS) == kd.CHECKS
+    assert tuple(c.__name__.removeprefix("_check_") for _, c in br._CHECKS) == tuple(name for name, _ in br._CHECKS) == kd.CHECKS == br.CHECK_NAMES
 
 
 def test_a_ledger_file_is_linted_through_the_main(tmp_path, capsys) -> None:

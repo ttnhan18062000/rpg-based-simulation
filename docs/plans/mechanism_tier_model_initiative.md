@@ -80,8 +80,12 @@ tags: [architecture, documentation, schema]
 > systems?) is answered on independent evidence in
 > `TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS`: **mechanisms, not systems**
 > — this holds regardless of the membership revival, since the temporal axis proposal's own concerns
-> already span three different candidate systems, which stays awkward under system-level attachment
-> whether that tier is derived or declared.
+> already span three different systems, which stays awkward under system-level attachment
+> whether that tier is derived or declared. Evidence (re-checked against the registry at main 3533fde71):
+> the proposal's concerns land on `succession` and `aging_death` (`systems: [progression]`),
+> `demographic_cohort_cycle` (`systems: [world]`) and `commitment_betrayal` (`systems: [social]`). An axis
+> is therefore a per-mechanism tag list, overlapping, with no mechanical derivation. Full record and the
+> correction to the earlier "derived candidate systems" wording: the ticket's Implementation Notes.
 >
 > The `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` precondition named throughout this
 > doc's earlier revision is now **moot for the membership design specifically** (membership doesn't consult
