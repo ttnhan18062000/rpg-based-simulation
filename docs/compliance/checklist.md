@@ -140,7 +140,7 @@ Relevant original source files:
 - `core/gameplay/items/item_registry.py`
 - `core/gameplay/items/items.py`
   Atomic checklist:
-- [x] TOWN-009: Looting is a channeled state with progress, interruption, and completion semantics. <!-- ID: TOWN-009 SOURCE: src/systems/economy_systems/loot.py TEST: tests/unit/resource/test_loot_channeling.py PROOF: unit -->
+- [x] TOWN-009: Looting is a channeled state with progress, interruption, and completion semantics. <!-- ID: TOWN-009 SOURCE: src/engine/interaction.py TEST: tests/unit/resource/test_loot_live_path.py PROOF: unit -->
 - [x] TOWN-010: Harvesting is a channeled state tied to nearby resource-node legality and harvest duration. <!-- ID: TOWN-010 SOURCE: src/engine/interaction.py TEST: tests/unit/resource/test_resource_v2_boundary.py PROOF: unit -->
 - [x] TOWN-011: Loot/harvest can abort because of inventory slot pressure. <!-- ID: TOWN-011 SOURCE: src/core/conservation.py TEST: tests/unit/resource/test_resource_v2_boundary.py PROOF: unit -->
 - [x] TOWN-012: Loot/harvest can abort because of inventory weight pressure. <!-- ID: TOWN-012 SOURCE: src/core/inventory.py TEST: tests/unit/resource/test_resource_v2_boundary.py PROOF: unit -->
@@ -766,7 +766,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 - [x] SOC-065: `test_npc_kind_mapping_integrity`: Npc kind mapping integrity — Verify that race/tier combinations map to the correct semantic kind name.
 
 ### Z11: Economic Law
-- [x] **ECON-092**: Trade actions validate inventory capacity and gold sufficiency [town_service.py:49](file:///home/vboxuser/Work/rpg-based-simulation/src/systems/economy_systems/town_service.py#L49)
+- [x] **ECON-092**: Trade actions validate inventory capacity and gold sufficiency [conservation.py](src/core/conservation.py) (`ResourceTransactionResolver`; the old `town_service.py:49` link was the deleted `TownServiceSystem`)
     - `ResourceTransferIntent` ensures atomic verification of gold and item handoffs.
     - TEST: `tests/unit/resource/test_resource_v2_boundary.py`
 - [x] **ECON-093**: Item pricing is deterministic based on base value and regional modifiers [market.py:36](file:///home/vboxuser/Work/rpg-based-simulation/src/systems/economy_systems/market.py#L36)
@@ -1102,7 +1102,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 - [x] INFRA-003: `test_rng`: Rng. <!-- ID: INFRA-003 SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_phase2_determinism.py PROOF: integration -->
 - [x] INFRA-004: `test_entity`: Entity.
-- [x] TOWN-042: `test_guild_intel_to_strategy_visible_pipeline`: Guild intel to strategy visible pipeline — Verify that guild intel produces leads/zones that are visible in API schemas.
+- [ ] TOWN-042: `test_guild_intel_to_strategy_visible_pipeline`: Guild intel to strategy visible pipeline — Verify that guild intel produces leads/zones that are visible in API schemas. (unsupported — guild intelligence has no implementer: `GuildIntelSystem` was dead code and is deleted, the live `GuildAction.visit` lead grant is not what this row describes; see TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF)
 - [x] TOWN-043: `test_blacksmith_blocker_resolution_pipeline`: Blacksmith blocker resolution pipeline — Verify that blacksmith constraints produce blockers that are resolved by acquisition.
 
 #### `integration/strategy/test_knowledge_continuity_stabilization.py`
@@ -1383,9 +1383,9 @@ Relevant original source/test evidence:
 ### CLI mode and parser contract
 
 - [x] SOC-103: `python -m src` defaults to server mode when no subcommand is provided.
-- [x] SOC-104: `python -m src serve` accepts the original `--host`, `--port`, `--seed`, `--entities`, `--workers`, `--log-level` arguments.
-- [x] SOC-105: `python -m src cli` accepts the original `--ticks`, `--entities`, `--seed`, `--workers`, `--grid-width`, `--grid-height`, `--replay`, `--log-level` arguments.
-- [x] SOC-106: `python -m src inspect` accepts the original `--id`, `--seed`, `--ticks`, `--entities`, `--workers`, `--log-level` arguments.
+- [x] SOC-104: `python -m src serve` accepts the original `--host`, `--port`, `--seed`, `--workers`, `--log-level` arguments. (Corrected 2026-10-26: `serve` never had `--entities`.)
+- [x] SOC-105: `python -m src cli` accepts the original `--ticks`, `--seed`, `--workers`, `--grid-width`, `--grid-height`, `--replay`, `--log-level` arguments. (`--entities` was parsed, never read, and is now rejected: intentional_divergences §2.140, #617.)
+- [x] SOC-106: `python -m src inspect` accepts the original `--id`, `--seed`, `--ticks`, `--workers`, `--log-level` arguments. (Corrected 2026-10-26: `inspect` never had `--entities`.)
 - [x] SOC-107: CLI argument defaults remain compatible with legacy expectations.
 - [x] SOC-108: Invalid CLI arguments fail in a controlled, parser-driven way.
 - [x] SOC-109: CLI replay-file argument writes to the expected output path semantics.
@@ -1837,7 +1837,7 @@ Relevant original source/test evidence:
 - [x] TOWN-073: `test_per_based_hidden_discovery`: hidden discovery from perception <!-- ID: TOWN-073 SOURCE: src/systems/world_systems/harvesting.py TEST: tests/unit/world/test_discovery.py PROOF: unit -->
 - [x] TOWN-074: `test_loot_recovery_consistency`: loot recovery consistency <!-- ID: TOWN-074 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_loot_scaling.py PROOF: unit -->
 - [x] TOWN-075: `test_loot_no_duplication`: no duplicated loot <!-- ID: TOWN-075 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_loot_scaling.py PROOF: unit -->
-- [x] TOWN-076: `test_corpse_loot_convergence`: corpse loot convergence <!-- ID: TOWN-076 SOURCE: src/engine/economy.py TEST: tests/unit/resource/test_loot_channeling.py PROOF: unit -->
+- [x] TOWN-076: `test_corpse_loot_convergence`: corpse loot convergence <!-- ID: TOWN-076 SOURCE: src/engine/interaction.py TEST: tests/unit/resource/test_loot_live_path.py PROOF: unit -->
 - [x] TOWN-077: `test_loot_and_respawn`: loot and respawn interaction <!-- ID: TOWN-077 SOURCE: src/systems/world_systems/generator.py TEST: tests/unit/world/test_respawn.py PROOF: unit -->
 - [x] TOWN-078: `test_loot_tables_exist`: loot table integrity <!-- ID: TOWN-078 SOURCE: src/world/spawn_config.py TEST: tests/unit/economy/test_loot_scaling.py PROOF: unit -->
 - [x] TOWN-079: `test_full_bag_aborts_looting`: abort looting when full <!-- ID: TOWN-079 SOURCE: src/core/inventory.py TEST: tests/unit/inventory/test_capacity.py PROOF: unit -->
@@ -3136,17 +3136,17 @@ These items are appended rather than replacing existing checklist items. They ar
 - [x] PROG-094: Shop buy checks gold before adding item. <!-- ID: PROG-094 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_transaction_v2.py PROOF: unit -->
 - [x] PROG-095: Shop buy checks inventory capacity before subtracting gold. <!-- ID: PROG-095 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_transaction_v2.py PROOF: unit -->
 - [x] PROG-096: Shop sell checks item exists before adding gold. <!-- ID: PROG-096 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_transaction_v2.py PROOF: unit -->
-- [x] PROG-097: Crafting checks recipe exists. <!-- ID: PROG-097 SOURCE: src/systems/crafting.py TEST: tests/unit/quest/test_progression_lifecycle.py PROOF: unit -->
-- [x] PROG-098: Crafting checks materials. <!-- ID: PROG-098 SOURCE: src/systems/crafting.py TEST: tests/unit/quest/test_progression_lifecycle.py PROOF: unit -->
-- [x] PROG-099: Crafting checks gold/cost. <!-- ID: PROG-099 SOURCE: src/systems/crafting.py TEST: tests/unit/quest/test_progression_lifecycle.py PROOF: unit -->
-- [x] PROG-100: Crafting checks inventory capacity for output. <!-- ID: PROG-100 SOURCE: src/systems/crafting.py TEST: tests/unit/quest/test_progression_lifecycle.py PROOF: unit -->
-- [x] PROG-101: Crafting consumes materials and adds output atomically. <!-- ID: PROG-101 SOURCE: src/systems/crafting.py TEST: tests/unit/quest/test_progression_lifecycle.py PROOF: unit -->
+- [ ] PROG-097: Crafting checks recipe exists. <!-- ID: PROG-097 SOURCE: src/engine/intent/action_intent.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit --> (divergent — an unknown recipe id raises `KeyError` on the live craft path; see PROG-097 in the parity ledger)
+- [x] PROG-098: Crafting checks materials. <!-- ID: PROG-098 SOURCE: src/engine/intent/action_intent.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit -->
+- [x] PROG-099: Crafting checks gold/cost. <!-- ID: PROG-099 SOURCE: src/engine/intent/action_intent.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit -->
+- [x] PROG-100: Crafting checks inventory capacity for output. <!-- ID: PROG-100 SOURCE: src/engine/intent/action_intent.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit -->
+- [x] PROG-101: Crafting consumes materials and adds output atomically. <!-- ID: PROG-101 SOURCE: src/engine/intent/action_intent.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit -->
 - [x] PROG-102: Progression replay includes XP/level/attributes/skills/gear. <!-- ID: PROG-102 SOURCE: src/engine/kernel.py TEST: tests/integration/kernel/test_phase2_determinism.py PROOF: integration -->
 - [x] PROG-103: Progression tests include attribute allocation. <!-- ID: PROG-103 SOURCE: tests/unit/progression/test_leveling.py TEST: tests/unit/progression/test_leveling.py PROOF: unit -->
 - [x] PROG-104: Progression tests include cap enforcement. <!-- ID: PROG-104 SOURCE: tests/unit/progression/test_leveling.py TEST: tests/unit/progression/test_leveling.py PROOF: unit -->
 - [x] PROG-105: Progression tests include skill scaling. <!-- ID: PROG-105 SOURCE: tests/integration/pipeline/test_combat_legality_matrix.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: unit -->
 - [x] PROG-106: Progression tests include gear equip. <!-- ID: PROG-106 SOURCE: tests/integration/pipeline/test_authoritative_apply.py TEST: tests/integration/pipeline/test_authoritative_apply.py PROOF: unit -->
-- [x] PROG-107: Progression tests include crafting atomicity. <!-- ID: PROG-107 SOURCE: tests/unit/quest/test_progression_lifecycle.py TEST: tests/unit/quest/test_progression_lifecycle.py PROOF: unit -->
+- [x] PROG-107: Progression tests include crafting atomicity. <!-- ID: PROG-107 SOURCE: tests/integration/economy/test_crafting_live_path.py TEST: tests/integration/economy/test_crafting_live_path.py PROOF: unit -->
 
 ## Z11. World, region, spawn, calamity, and ecology law
 
