@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF
-phase: open
+phase: done
 date: 2026-10-27
 tags: [world, engine, economy]
 ---
@@ -15,7 +15,7 @@ tags: [world, engine, economy]
 Five dead `src/systems/` classes are still the proof or the named implementation of parity, Bible and compliance claims: re-prove each claim on the live path or re-grade it, then delete the class
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -55,16 +55,16 @@ rpg-planner (u24) ruled on #593 (the ruling is #757 issuecomment-6426148939, ite
 - `mypy_baseline.txt` and `pyrefly_baseline.json` stale entries (only-new gates; same as the parent ticket).
 
 ## Acceptance Criteria
-- [ ] The first commit on the branch adds the interim `divergence_note` to TOWN-009 and TOWN-076 (and TOWN-020).
-- [ ] TOWN-009, TOWN-076 and TOWN-020 are each either `verified` with a `test_path` that runs the live path, or `unsupported`/`divergent` with a support boundary. None is left `verified` on a test that runs a deleted class.
-- [ ] **Deadline:** if the live re-proof of TOWN-009/076 fails, or has not landed when the M1 record ticket is dispatched, those entries go to `unsupported` with a support boundary. Tell lead-planner and rpg-planner (u24) at that point. Until then, the M1 record does not cite them as verified.
-- [ ] Bible ch07 §7 is marked designed, not in effect, and rpg-designer's OK on the wording is linked in the ticket. TOWN-042 is `unsupported` with a support boundary.
-- [ ] The ESCORT enum test lives in a file that does not import `QuestSystem`, and WORLD-116 cites it there.
-- [ ] The CraftingSystem reachability result is recorded with evidence. PROG-097..101 and PROG-107 and their checklist rows match that result.
-- [ ] All five classes and their shims are deleted, each after a recorded four-kind reachability check. The completeness check reports 0 unbound in the domains/systems tier.
-- [ ] Hash-neutral: `paired --neutral` IDENTICAL on the 3-world corpus. 1000t is accepted for this ticket **only if** no live runtime path changes (rpg-planner's ruling, item 2 and item 3 "Proof"). If any live path changes, 5000t applies.
-- [ ] Before any deletion, the u24 branch check is re-run, as in #593 issuecomment-6420602655 (no u24 local branch touches these files).
-- [ ] Parity ledger edits go through `tools/parity_ledger_writer.py`, or the diff stays narrow where the writer refuses. Full `tests/unit/tools/` is green, as is the registry/territory/cross-domain view regeneration.
+- [x] The first commit on the branch adds the interim `divergence_note` to TOWN-009 and TOWN-076 (and TOWN-020).
+- [x] TOWN-009, TOWN-076 and TOWN-020 are each either `verified` with a `test_path` that runs the live path, or `unsupported`/`divergent` with a support boundary. None is left `verified` on a test that runs a deleted class.
+- [x] **Deadline:** if the live re-proof of TOWN-009/076 fails, or has not landed when the M1 record ticket is dispatched, those entries go to `unsupported` with a support boundary. Tell lead-planner and rpg-planner (u24) at that point. Until then, the M1 record does not cite them as verified.
+- [x] Bible ch07 §7 is marked designed, not in effect, and rpg-designer's OK on the wording is linked in the ticket (OK with two corrections, #593 issuecomment-6437275284, applied verbatim). TOWN-042 is `unsupported` with a support boundary.
+- [x] The ESCORT enum test lives in a file that does not import `QuestSystem`, and WORLD-116 cites it there.
+- [x] The CraftingSystem reachability result is recorded with evidence. PROG-097..101 and PROG-107 and their checklist rows match that result.
+- [x] All five classes and their shims are deleted, each after a recorded four-kind reachability check. The completeness check reports 0 unbound in the domains/systems tier.
+- [x] Hash-neutral: `paired --neutral` IDENTICAL on the 3-world corpus. 1000t is accepted for this ticket **only if** no live runtime path changes (rpg-planner's ruling, item 2 and item 3 "Proof"). If any live path changes, 5000t applies.
+- [x] Before any deletion, the u24 branch check is re-run, as in #593 issuecomment-6420602655 (no u24 local branch touches these files).
+- [x] Parity ledger edits go through `tools/parity_ledger_writer.py`, or the diff stays narrow where the writer refuses. Full `tests/unit/tools/` is green, as is the registry/territory/cross-domain view regeneration.
 
 ## Related Tickets
 - `TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE` (parent; the group C table is in its Implementation Notes)
@@ -101,6 +101,7 @@ Done (all but the Bible ch07 §7 edit, held for rpg-designer's OK):
 
 
 ## Test Summary
+Final pass (owner scope #715 issuecomment-6437765329): Bible ch07 section 7 applied with rpg-designer's two corrections; TOWN-042 `support_boundary` names the live `GuildAction.visit` lead grant; `docs/simulation/social_systems_contract.md` and `belief_and_detour_contract.md` corrected and checked against `src/town/guild.py`, `guild_visit.py` and `feature_flags.py:117`; `mechanisms.yaml` interaction_channeling call sites re-traced after #757 deleted `chests.py`.
 - Deletions: the 5 classes, 5 shims, 4 dead-only test files and the CraftingSystem/QuestSystem cases are gone; origin/main (6e3ffea3f, #757) merged at 99e2cf394.
 - Completeness check: 0 unbound (63 -> 58 targets); `test_real_registry_enumeration_and_binding_counts_pinned` updated.
 - `tests/unit/tools`: 1059 passed after the merge. Registry, territory and cross-domain views regenerated.
@@ -109,5 +110,10 @@ Done (all but the Bible ch07 §7 edit, held for rpg-designer's OK):
 - `tests/tools`: failures only in `test_knowledge_search.py` and `test_knowledge_index_staleness.py` (index build fails, memory-starved box) and `test_generate_registry.py` no-drift (REGISTRY.yaml drift from other sessions' ticket moves; regenerated at close). Not caused by this ticket.
 
 ## Files Changed
+- Deleted: `src/systems/economy_systems/{loot,town_service,crafting}.py`, `src/systems/social_systems/guilds.py`, `src/systems/world_systems/quest_engine.py`, shims `src/systems/{loot_system,town_service,guild_system,quest_system,crafting}.py`, and four dead-only test files.
+- Tests: `tests/unit/resource/test_loot_live_path.py`, `tests/integration/economy/test_crafting_live_path.py`, `tests/unit/quest/test_quest_kind.py` (new); repointed cases in `test_resource_conservation.py`, `test_progression_lifecycle.py`, `test_building_interaction_contract.py`, `test_mechanism_registry_completeness_check.py`, `test_core_rpg_report.py`.
+- Docs: `docs/mechanics/07_social_political_dynamics.md` (§7), `docs/mechanics/resource_conservation_contract.md`, `docs/simulation/{social_systems,belief_and_detour}_contract.md`, `docs/compliance/checklist.md`, `docs/parity_ledger/{town_resource,progression}.yaml`, `registries/mechanisms.yaml` and its generated views.
+- Comment-only `src` edits: `world/boss.py`, `actions/loot.py`, `engine/intent/action_intent.py`. Tool map: `tools/test_architecture/core_rpg_report.py`.
 
 ## Completion Summary
+Five systems classes with no caller (loot, town service, guild intel, quest, crafting) no longer stand as proof. TOWN-009, TOWN-076, TOWN-020 and PROG-098..101/107 are proved on the live paths; TOWN-042 is `unsupported` with a boundary naming the live guild-visit lead grant; PROG-097 is `divergent` (known gap: an unknown recipe id raises `KeyError` on the live craft path where the retired class returned `UNKNOWN_RECIPE`; the fix is deferred by the owner's stop direction). The five classes, their shims and dead-only tests are deleted; completeness check 0 unbound; `paired --neutral` 1000t IDENTICAL x3 against 6e3ffea3f (no live runtime path changed).

@@ -1102,7 +1102,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 - [x] INFRA-003: `test_rng`: Rng. <!-- ID: INFRA-003 SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_phase2_determinism.py PROOF: integration -->
 - [x] INFRA-004: `test_entity`: Entity.
-- [ ] TOWN-042: `test_guild_intel_to_strategy_visible_pipeline`: Guild intel to strategy visible pipeline — Verify that guild intel produces leads/zones that are visible in API schemas. (unsupported — the only implementer, `GuildIntelSystem`, was dead code and is deleted; see TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF)
+- [ ] TOWN-042: `test_guild_intel_to_strategy_visible_pipeline`: Guild intel to strategy visible pipeline — Verify that guild intel produces leads/zones that are visible in API schemas. (unsupported — guild intelligence has no implementer: `GuildIntelSystem` was dead code and is deleted, the live `GuildAction.visit` lead grant is not what this row describes; see TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF)
 - [x] TOWN-043: `test_blacksmith_blocker_resolution_pipeline`: Blacksmith blocker resolution pipeline — Verify that blacksmith constraints produce blockers that are resolved by acquisition.
 
 #### `integration/strategy/test_knowledge_continuity_stabilization.py`
