@@ -157,13 +157,17 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     caller in `src/`, filed for deletion as
     TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE. Taken by running the
     check.
+
+    2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF): `total_targets` 63 -> 58 and
+    `unbound` 5 -> 0. The five unbound modules were the dead classes `loot`, `town_service`, `crafting`, `guilds`
+    and `quest_engine`; all five are deleted. `bound` and `excluded` are unchanged. Taken by running the check.
     """
     data = _real_registry_data()
     report = build_report(data)
-    assert report.total_targets == 63  # 65 -> 63 on 2026-10-26: economy_systems/chests and world_systems/quest_generator deleted (dead)
+    assert report.total_targets == 58  # 65 -> 63 on 2026-10-26: economy_systems/chests and world_systems/quest_generator deleted (dead)
     assert len(report.bound) == 54  # 53 -> 54 on 2026-10-26: domains/motivation bound by `role_fit_preference`
     assert len(report.excluded) == 4
-    assert len(report.unbound) == 5  # 7 -> 5: the two deleted modules were unbound; five dead-or-claimed modules stay, each with a named reason
+    assert len(report.unbound) == 0  # 5 -> 0 on 2026-10-27: the five dead classes are deleted
 
 
 # --- state: gap is not a coverage hole (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION) ---
