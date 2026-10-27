@@ -1039,20 +1039,18 @@
   support_boundary: null
 - id: PROG-097
   text: Crafting checks recipe exists.
-  status: divergent
+  status: verified
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/intent/action_intent.py` (`ActionIntentAdapter.execute`,
     REQUEST_CRAFT) and `src/core/conservation.py` (`ResourceTransactionResolver`,
     `CRAFTING` branch); the retired `CraftingSystem.craft()` was never called. A recipe
-    the crafter does not know is refused (requirement `recipe_known`).'
+    id that is missing or absent from `RecipeRegistry` is refused with a `FAILED_REQUIREMENTS:
+    unknown_recipe` trace and a no-op update; a recipe the crafter does not know is
+    refused (requirement `recipe_known`).'
   proof_type: null
-  test_path: tests/integration/economy/test_crafting_live_path.py::test_craft_needs_a_recipe_the_crafter_knows
-  divergence_note: 'live REQUEST_CRAFT does not check that the recipe exists: an id
-    absent from RecipeRegistry raises KeyError at RecipeRegistry.get (action_intent.py),
-    where the retired CraftingSystem.craft() returned UNKNOWN_RECIPE. Opportunity
-    ids come from the registry, so no live producer of such an id has been observed
-    (not measured). Fixing the live code is a separate ticket.'
+  test_path: tests/integration/economy/test_crafting_live_path.py::test_craft_of_an_unknown_or_missing_recipe_is_refused_not_raised
+  divergence_note: null
   support_boundary: null
 - id: PROG-098
   text: Crafting checks materials.

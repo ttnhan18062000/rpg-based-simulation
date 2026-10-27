@@ -313,8 +313,10 @@ class ResolveBlockerScorer(GoalScorer):
 
 class GuildNeedScorer(GoalScorer):
     """Scores the need to visit the guild for quests/intel (TCK-20260807-QUEST-GUILDACTION-
-    DEAD-WIRING). Gated behind ENABLE_GUILD_QUEST_GENERATION (default OFF) — a new gameplay
-    behavior, not a validated replacement of existing behavior.
+    DEAD-WIRING). Gated behind ENABLE_GUILD_QUEST_GENERATION, read from `state.feature_flags`
+    with an "OFF" fallback — the FeatureFlagManager registry default is ON but does not reach
+    this read, so a run is OFF unless its profile sets the flag. A new gameplay behavior, not a
+    validated replacement of existing behavior.
 
     Targets `town_hall` (not a dedicated "guild" building — no world in the real content corpus
     ever declares one; `town_hall` is present in every world) via
