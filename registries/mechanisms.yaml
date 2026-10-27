@@ -436,6 +436,7 @@ mechanisms:
         pipeline phase. Five real progress-advancing call sites confirm active use:
         `systems/social_systems/guilds.py`, `systems/world_systems/harvesting.py`,
         `systems/economy_systems/{chests,town_service}.py`, `systems/economy_systems/loot.py`.
+        **Corrected 2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF):** `guilds.py`, `town_service.py` and `loot.py` were dead classes with no caller and are deleted; the loot, inn and town-service channeling steps now run through `InteractionSystem.enforce()` itself, covered by `tests/unit/resource/test_loot_live_path.py`. Re-traced 2026-10-27 on the tree merged with origin/main 4a12f08f6: `chests.py` is also deleted (#757) and `harvesting.py`'s `HarvestSystem` has no caller in `src/` (the `resource_harvesting` entry is `orphan`), so none of the five named files is a live call site. What advances progress live: `CoreActions.execute_interact` (`src/engine/domain/core_actions.py`, `InteractionUpdate(progress_delta=1)`), reached by `action_router.py` for the `INTERACT` action that `src/engine/tactical.py` and `ActionIntentAdapter` (`src/engine/intent/action_intent.py`) emit, and `InteractionPhase` (`src/engine/pipeline_phases/interactions.py`, run from `src/engine/pipeline.py`), which fills the target and a positive delta before `InteractionSystem.enforce()`.
   - id: conversation
     layer: entity
     systems: [social]
@@ -1643,6 +1644,7 @@ mechanisms:
         verified note, multiple real non-test callers including
         `src/systems/social_systems/guilds.py`'s `process_rumor`) remains accurate and is preserved
         in spirit; this note documents the stronger, runtime-confirmed evidence.
+        **Corrected 2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF):** `guilds.py` is deleted; `process_rumor` now lives only in `src/systems/strategic_systems/belief.py`.
         **Re-audited 2026-09-20** against `mechanic_verification_scenarios_proposal.md` §5 item 5
         (added after `goal_hierarchy`'s own scenario surfaced a vacuous-negative-arm risk elsewhere
         in this same batch): this entry's negative arm (`state.tick=10`) is NOT vacuous, confirmed
@@ -1974,6 +1976,7 @@ mechanisms:
         `ON` (`feature_flags.py`), so effectively live, not flag-suppressed. A sibling class,
         `GuildIntelSystem` (`src/systems/social_systems/guilds.py`), was checked and found to have
         zero real callers anywhere -- not bound here, flagged as its own smaller finding.
+        **Resolved 2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF):** `GuildIntelSystem` and `guilds.py` are deleted. Guild intel is designed, not in effect (parity TOWN-042 `unsupported`).
 
   # ── Faction layer (8, atlas `faction-layer`) ────────────────────────────────────────────────
 
@@ -2774,6 +2777,7 @@ mechanisms:
         binding does not exist). Bound to the same class rather than left unbound, since the real
         live code is directly confirmed and cited precisely; flagged here as a judgement call
         because the binding cannot distinguish this mechanism's own branch from its siblings'.
+        **Resolved 2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF):** the uncalled `CraftingSystem` is deleted; the craft gates are proved live in `tests/integration/economy/test_crafting_live_path.py` (parity PROG-097 is `divergent`).
   # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY): `buildings`
   # (physical structures -- placement, HP, occupancy) and `town_services` (shop/inn/blacksmith/
   # guild transactions the buildings host) are two structurally separate concerns --
