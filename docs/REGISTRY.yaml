@@ -7859,6 +7859,26 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF.md
+  ticket_id: TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF
+  title: 'Five dead `src/systems/` classes are still the proof or the named implementation
+    of parity, Bible and compliance claims: re-prove each claim on the live path or
+    re-grade it, then delete the class'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-27'
+  related_code_areas:
+  - src/systems/economy_systems/{loot,town_service,crafting}.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/bible_ch07_s7_draft.md
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/investigation.md
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/plan.md
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/test_plan.md
+  tags:
+  - world
+  - engine
+  - economy
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-WALL-CLOCK-CLI-TEST-RUNS-THE-TOOL-FOUR-TIMES-NOT-SIX.md
   ticket_id: TCK-20261027-WALL-CLOCK-CLI-TEST-RUNS-THE-TOOL-FOUR-TIMES-NOT-SIX
   title: The wall-clock inventory CLI test runs the tool over the real source four
