@@ -7859,6 +7859,62 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md
+  ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR
+  title: A REQUEST_CRAFT intent with an unknown or missing recipe id raises KeyError
+    instead of being refused
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - ActionIntentAdapter.execute
+  - RecipeRegistry
+  - GuildNeedScorer
+  - tests/integration/economy/test_crafting_live_path.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR/investigation.md
+  - agent-working/stored_artifacts/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR/plan.md
+  - agent-working/stored_artifacts/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR/test_plan.md
+  tags:
+  - economy
+  - bug
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF.md
+  ticket_id: TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF
+  title: 'Five dead `src/systems/` classes are still the proof or the named implementation
+    of parity, Bible and compliance claims: re-prove each claim on the live path or
+    re-grade it, then delete the class'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-27'
+  related_code_areas:
+  - src/systems/economy_systems/{loot,town_service,crafting}.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/bible_ch07_s7_draft.md
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/investigation.md
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/plan.md
+  - agent-working/stored_artifacts/TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF/test_plan.md
+  tags:
+  - world
+  - engine
+  - economy
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261027-HISTORY-SNAPSHOT-STRIP-MISSES-NESTED-GRAPH.md
+  ticket_id: TCK-20261027-HISTORY-SNAPSHOT-STRIP-MISSES-NESTED-GRAPH
+  title: The history API's summary mode returns the whole cognition graph and reports
+    zero node/edge counts
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - src/observability/reporting/history_query.py
+  - src/observability/cognition/schema.py (read only)
+  - src/api/routes/history.py (read only unless the response schema names the counts)
+  - tests/unit/observability/cognition/test_cognition_query_service.py
+  artifact_files: []
+  tags:
+  - bug
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-WALL-CLOCK-CLI-TEST-RUNS-THE-TOOL-FOUR-TIMES-NOT-SIX.md
   ticket_id: TCK-20261027-WALL-CLOCK-CLI-TEST-RUNS-THE-TOOL-FOUR-TIMES-NOT-SIX
   title: The wall-clock inventory CLI test runs the tool over the real source four
@@ -8525,6 +8581,20 @@
   - agent-working/stored_artifacts/TCK-20261022-RPG-GATE-KNOWN-ENTRY-CAN-NAME-A-WORLD-AND-SEED/test_plan.md
   tags:
   - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261022-SESSION-ROLES-RPG-OWNS-RPG-MEASURE.md
+  ticket_id: TCK-20261022-SESSION-ROLES-RPG-OWNS-RPG-MEASURE
+  title: '`tools/rpg_measure/**` (the paired-run measurement tool) gets an owner:
+    rpg'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-22'
+  related_code_areas:
+  - registries/session_roles.yaml
+  artifact_files: []
+  tags:
+  - ai
+  - governance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME.md
   ticket_id: TCK-20261022-A-CARCASS-EATEN-ON-ITS-DECAY-TICK-STILL-DECAYS-ON-TIME
