@@ -1661,7 +1661,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
   to these exact module/class paths was found outside `src/` before deleting. Docstring
   cross-references in `AdventureRouteScorer.score()`, `CulturalBiasApplicator`, and
   `CultureDriftExporter`/`CultureDriftImporter` updated to stop pointing at now-deleted code.
-- **Registry follow-through, 2026-10-05**
+- **Registry follow-through, 2026-10-26**
   (`TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN`): the
   `motivation_doctrine` entry in `registries/mechanisms.yaml` now carries a Retire verdict pointing
   here. That is not a new divergence. The module's one surviving class, `RoleFitEvaluator`, is a
