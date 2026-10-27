@@ -589,6 +589,7 @@ every other goal kind still falls back to `REACH_LOCATION`. Parity entry `STRAT-
   `frontier_living_world` runs). Pre-existing combat/tactical nondeterminism, tracked in
   `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE`.
   **The measurement behind it cannot be reproduced:** the probe that produced 780 vs 1609 (`probe3.py`/`probe4.py`) was scratchpad-only and is gone, so which world loader it used (production `WorldRepository`/`resolved/`, or the catalog copy that pre-#328 differed from it by a whole module for `frontier_living_world`) is unverified. Treat 780 vs 1609 as an unreproducible observation, not a settled number; `TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION` owns whether to re-take or retire it.
+  2026-10-27 retirement (TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION): 780 vs 1609 is retired as evidence, not re-taken (the probe is gone and a re-take needs a heavy re-run of an unknown harness); the AC6 failure stays recorded as knowingly accepted without it; see that ticket.
 - Decision-path ATTACK volume was measured and is in Implementation Notes; T4 (real attack attributable to a CE holder) was not written because
   it cannot pass until the sweep lands.
 

@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P2
 audience: agent
@@ -41,3 +41,24 @@ Result so far: no catalog-path measurement found in parity `v2_evidence`, SimQ b
 
 ## AC 4: is the existing guard enough for this defect class? (read, not run)
 The defect was two definitions of one `world_id` (a catalog copy and `world.yaml`), with a measurement free to read the wrong one. Two guards now exist and, together, cover it without a second mechanism: (1) `data/content/world_compositions/` is deleted and `tests/unit/content/test_content_paths.py` pins that the path config no longer carries it, so a second source cannot be read by the standard loaders; (2) `tests/integration/worldassembly/test_resolved_snapshot_freshness.py::test_committed_snapshot_equals_fresh_resolve` asserts, for every composition world (24), that the committed `resolved/world.resolved.yaml` equals a fresh resolve of `world.yaml` byte for byte (stricter than the six-count-field comparison the ticket text describes; that comparison was not found in this file). That second guard also means a measurement through `world.yaml` and one through `resolved/` cannot differ. Proposed answer: sufficient, no extension. Not covered, and not this class: a measurement script that loads some other path by hand; that is caught only by stating the loader in the measurement's record, which this ticket's findings already show was missing.
+
+## Follow-up reads (rpg-planner-ubuntu ruling 2026-10-27)
+### The four likeliest stored-artifact candidates, classified (read, no runs)
+- `TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION/investigation.md:160-186`: a mention and a diff finding, not a measurement. It states the catalog mirror was already byte-identical to `world.yaml` for `frontier_living_world` and `frontier_extended` at that date and that only `data/worlds/{world}/world.yaml` is operative. No figure depends on the mirror.
+- `TCK-20260821-WOLF-DEN-NOISE-MIGRATION/investigation.md:406-432`: a content-presence table over 9 files, some read through the catalog mirror, plus one live compile of `data/worlds/frontier_marches/world.yaml` (production path). Re-taken through `data/worlds/*/world.yaml` for all nine worlds: `frontier_extended`, `frontier_living_world`, `frontier_marches`, `simq_scale_stress_seed42` compose both `goblin_camp_conflict` and `bandit_road_trade_pressure`; `lifecycle_full_coverage_world` composes `goblin_camp_conflict` only; `sandbox_world`, `swamp_border_world`, `unit_faction_tension`, `wilderness_survival` compose neither. Identical to the table. SURVIVES.
+- `TCK-20260627-P0B-URBAN-RESOURCE-NODES/investigation.md:34-42`: describes which path the CLI and the tests read; no measurement.
+- `TCK-20260824-TOWN-CENTER-POINTER-FIX/investigation.md:182-199`: a content fact (the catalog `urban_political` lists `frontier_village_core` plus `trading_company_hub` under namespace `trading`, two town regions). `data/worlds/urban_political/world.yaml` lists the same two with the same namespace. SURVIVES.
+`TCK-20260627-P1I-WORLD-BALANCE-FIX` is the `dungeon_crawl` case the CLOSED-P1 ticket already handled. Result: no further catalog-path measurement needs re-taking or retiring.
+
+### `-DEAD-GUARD` and `-WAVE-CONFIRM`: loader not settled
+Both recorded their kernel runs as "an uncommitted scratchpad script" (`-DEAD-GUARD`: 1,500 ticks, `process_influence_shift` wrapped; `-WAVE-CONFIRM`: 3,000 ticks, `ENABLE_COMBAT_ENGAGEMENT` ON/OFF, "canonical harness, `PROD_SMALL`"). The script is gone, so the loader cannot be read. The wording matches `tools/calibrate_simq.py` (it builds `Kernel(profile=PROD_SMALL, ...)`), whose `_load_world_state` has loaded `data/worlds/{name}/resolved/world.resolved.yaml` through `WorldRepository.load_world_with_context` since 2026-08-14 (29d78798a), i.e. the production path; but nothing in either ticket says that script was used. Listed as UNVERIFIED, reason: scratchpad script gone, loader unstated. Not re-run (a heavy run, and the ruling says no heavy run). Both classify tickets' verdicts rest on code reads and counted zero-calls as well, so the exposure is limited to the runtime cross-check line.
+
+## Verdicts, summarised
+| closed ticket | path | verdict | closed file touched? |
+|---|---|---|---|
+| CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION | catalog mirror (text says it holds under either loader) | survives | no |
+| DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED | catalog mirror | conclusion survives, region figures changed (8 of 9 regions) | one dated line in its Completion Summary |
+| UNREACHABLE-CLASSIFY-NEVER-SEEDED | catalog mirror | survives | no |
+| UNREACHABLE-CLASSIFY-DEAD-GUARD runtime line, -WAVE-CONFIRM runtime line | unstated, script gone | unverified | no |
+| #291 AC6 (780 vs 1609), in GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND | unknown, probe gone | retired as evidence (ruling) | one dated line next to its AC6 note |
+`TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO`: premise stands (its own 2026-09-30 narrowing records the largest bracket as 8); not edited.

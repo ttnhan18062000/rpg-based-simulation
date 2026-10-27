@@ -17817,6 +17817,30 @@
   - architecture
   - planning
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION.md
+  ticket_id: TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION
+  title: 'Three closed tickets measured `frontier_living_world` through the catalog
+    copy, which is not what
+
+    production loaded — establish whether their conclusions survive re-measurement'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-04'
+  related_code_areas:
+  - src/worldbuilding/repository.py
+  - src/worldassembly/resolver.py
+  - tests/integration/worldassembly/test_resolved_snapshot_freshness.py
+  - data/worlds/*/resolved/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION/plan.md
+  - agent-working/stored_artifacts/TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION/test_plan.md
+  tags:
+  - world
+  - content
+  - investigation
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING.md
   ticket_id: TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING
   title: 'M5f: After its own two-week soak, make the package-registry completeness
@@ -19026,26 +19050,27 @@
   - live-map
   - planning
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION.md
-  ticket_id: TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION
-  title: 'Three closed tickets measured `frontier_living_world` through the catalog
-    copy, which is not what
+  path: agent-working/tickets/inprogress/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT.md
+  ticket_id: TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT
+  title: 'Six rendering-quality tests now prove things about a frozen snapshot rather
+    than the live corpus —
 
-    production loaded — establish whether their conclusions survive re-measurement'
+    decide whether to rebaseline onto the real `dungeon_crawl` or keep the fixture
+    deliberately'
   tier: standard
   ticket_type: repair
   date: '2026-10-04'
   related_code_areas:
-  - src/worldbuilding/repository.py
-  - src/worldassembly/resolver.py
-  - tests/integration/worldassembly/test_resolved_snapshot_freshness.py
-  - data/worlds/*/resolved/
+  - tests/unit/rendering/
+  - test_shape.py
+  - src/rendering/variants.py
+  - docs/visual_quality/
   artifact_files: []
   tags:
+  - rendering
+  - testing
   - world
-  - content
   - investigation
-  - simulation-quality
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261004-POSITION-SWAP-CONTRACT-NEVER-CONSTRUCTED.md
   ticket_id: TCK-20261004-POSITION-SWAP-CONTRACT-NEVER-CONSTRUCTED
@@ -19076,28 +19101,6 @@
   - strategy
   - social
   - root-cause
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT.md
-  ticket_id: TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT
-  title: 'Six rendering-quality tests now prove things about a frozen snapshot rather
-    than the live corpus —
-
-    decide whether to rebaseline onto the real `dungeon_crawl` or keep the fixture
-    deliberately'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-04'
-  related_code_areas:
-  - tests/unit/rendering/
-  - test_shape.py
-  - src/rendering/variants.py
-  - docs/visual_quality/
-  artifact_files: []
-  tags:
-  - rendering
-  - testing
-  - world
-  - investigation
 - type: ticket
   path: agent-working/tickets/done/TCK-20261003-AGENT-WORKING-ROOT-MOVE.md
   ticket_id: TCK-20261003-AGENT-WORKING-ROOT-MOVE
@@ -21674,6 +21677,22 @@
   - process-improvement
   - planning
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS.md
+  ticket_id: TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS
+  title: 'Same name, different referent: four mechanism-shaped classes exist twice
+    in different modules, and one registry edge pointed at the wrong "social memory";
+    more instances need an audit and a guard'
+  tier: standard
+  ticket_type: repair
+  date: '2026-09-30'
+  related_code_areas:
+  - src/core/items.py
+  - src/engine/rpg_depth.py
+  artifact_files: []
+  tags:
+  - core
+  - bug
+- type: ticket
   path: agent-working/tickets/todos/TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO.md
   ticket_id: TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO
   title: '`DemographicCycleService`''s birth/death cycle computes `net = int(count
@@ -21697,22 +21716,6 @@
   artifact_files: []
   tags:
   - world
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS.md
-  ticket_id: TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS
-  title: 'Same name, different referent: four mechanism-shaped classes exist twice
-    in different modules, and one registry edge pointed at the wrong "social memory";
-    more instances need an audit and a guard'
-  tier: standard
-  ticket_type: repair
-  date: '2026-09-30'
-  related_code_areas:
-  - src/core/items.py
-  - src/engine/rpg_depth.py
-  artifact_files: []
-  tags:
-  - core
-  - bug
 - type: ticket
   path: agent-working/tickets/done/TCK-20260929-CATALOG-REGISTRY-TEST-LEAK.md
   ticket_id: TCK-20260929-CATALOG-REGISTRY-TEST-LEAK
