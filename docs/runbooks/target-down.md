@@ -11,7 +11,7 @@ tags: [platform, observability]
 Rule `TargetDown` (group `base`): `min by (job) (up) < 1` for 2m, evaluated every 1m. Severity critical. `noDataState: OK` and `execErrState: OK` (a vanished series is a config change; a dead Prometheus is `PrometheusUnreachable`). Expected detection: up to 1m evaluation + 2m `for` + 30s group wait, so about 3 to 4 minutes. Measured in the 2026-10-18 drill ([record](records/2026-10-18-target-down-drill.md)): the firing message arrived 3 m 39 s after the stop, and the resolved message about 4 m 42 s after the restart (the group_interval wait).
 
 ## What it means
-Prometheus could not scrape the target named in the `job` label (`prometheus`, `grafana`, `loki`, `tempo`, `node-exporter`, `ntfy`, `rpg-backend`, `redis`, `promtail`). The service may be down, restarting, or failing its metrics endpoint. The backend is not scraped yet (`backend:9109` comes with rpg R1, #622).
+Prometheus could not scrape the target named in the `job` label (`prometheus`, `grafana`, `loki`, `tempo`, `node-exporter`, `ntfy`, `rpg-backend`, `redis`, `promtail`, `ai_worker`). The service may be down, restarting, or failing its metrics endpoint. The backend is not scraped yet (`backend:9109` comes with rpg R1, #622).
 
 ## First three checks
 1. `docker compose --profile observability ps`: is the service running and healthy?

@@ -55,6 +55,22 @@ class HashScheduleViolation(RuntimeError):
     """
 
 
+# Carried combat state the proof digest does NOT yet hash (perf ruling PERF-D5, option (ii), 2026-10-24, #593 comment 6384425767): `last_hit_tick`
+# (TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE) is typed durable state, pickled in scenario checkpoints, but the v2 digest must not change without a new
+# scheme version, so it stays out of the digest until F1 (TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS) hashes it in its single bump. Until then the
+# final hash and the paired hash-equality proofs cannot see a divergence in it.
+DIGEST_EXCLUDED_COMBAT_KEYS = frozenset({"last_hit_tick"})
+
+
+def _entity_digest_form(entity: Any) -> Dict[str, Any]:
+    """The entity's canonical dict as the proof digest hashes it: the canonical dict without `DIGEST_EXCLUDED_COMBAT_KEYS` (built as a copy; the cached dict is shared)."""
+    data: Dict[str, Any] = entity.to_canonical_dict()
+    combat = data.get("combat")
+    if not isinstance(combat, dict):
+        return data
+    return {**data, "combat": {k: v for k, v in combat.items() if k not in DIGEST_EXCLUDED_COMBAT_KEYS}}
+
+
 def _canonical_owed(state: AuthoritativeState) -> Dict[str, Any]:
     """The debts a treasury owes, as the canonical entry `{"owed": {...}}` (EXCH-02); empty when nothing is owed, so a world with no debt hashes as
     it did before debts existed."""
@@ -110,7 +126,7 @@ class CanonicalStateHasher:
         # 2. Entities (Sorted by ID)
         sorted_entities = {}
         for eid in sorted(state.entities.keys()):
-            sorted_entities[str(eid)] = state.entities[eid].to_canonical_dict()
+            sorted_entities[str(eid)] = _entity_digest_form(state.entities[eid])
         data["entities"] = sorted_entities
         
         # 3. Global collections (All sorted by key/id)

@@ -106,11 +106,11 @@ class CombatUpdate:
     damage_taken: int = 0
     hp_delta: int = 0
     attacker_id: Optional[int] = None
+    hit_tick_set: Optional[int] = None  # the tick a damaging hit took hp; CombatPatch writes it to CombatComponent.last_hit_tick with attacker_id
     is_opportunity_attack: bool = False
     alive_set: Optional[bool] = None
-    # Regional hazard drain applied this tick, carried independently of `outcome_kind` so a hazard
-    # that lands on an entity combat already resolved stays observable (hazard_drain_applied)
-    # without overwriting the combat outcome. Not a death cause; see Mechanics Bible 01 §4.
+    # Regional hazard drain applied this tick, carried independently of `outcome_kind` so a hazard that lands on an entity combat already resolved stays
+    # observable (hazard_drain_applied) without overwriting the combat outcome. Not a death cause; see Mechanics Bible 01 §4.
     hazard_damage: int = 0
     outcome_kind: str = "SURVIVE" # SURVIVE, DEFEAT, KILL, REJECTED
     is_lethal: bool = False
@@ -142,7 +142,7 @@ class CombatUpdate:
         changes: Dict[str, Any] = {}
         if other.damage_taken != 0: changes["damage_taken"] = self.damage_taken + other.damage_taken
         if other.hp_delta != 0: changes["hp_delta"] = self.hp_delta + other.hp_delta
-        if other.attacker_id is not None: changes["attacker_id"] = other.attacker_id
+        if other.attacker_id is not None: changes.update(attacker_id=other.attacker_id, hit_tick_set=self.hit_tick_set if other.hit_tick_set is None else other.hit_tick_set)
         if other.is_opportunity_attack: changes["is_opportunity_attack"] = True
         if other.alive_set is not None: changes["alive_set"] = other.alive_set
         if other.hazard_damage != 0: changes["hazard_damage"] = self.hazard_damage + other.hazard_damage

@@ -545,6 +545,10 @@ knowledge-index-update: ## Incremental reindex — only re-embeds changed/new fi
 	  $(PYTHON_KNOWLEDGE) \
 	  tools/knowledge_search.py build --incremental
 
+.PHONY: graphify-shim
+graphify-shim: ## Once per host: point ~/.local/bin/graphify at the pinned .venv-knowledge graphify (fails loudly if the venv lacks the pin)
+	python3 tools/graphify_shim.py
+
 kgmcp-bootstrap: parity-index knowledge-index ## Rebuild all local, gitignored Knowledge Gateway MCP caches for a fresh environment (see docs/guidelines/agent_working_environment.md)
 	@echo "agent-working/.index/parity-index/parity.db and agent-working/.index/knowledge-index/{knowledge.db,bm25.pkl,embeddings_cache.pkl} rebuilt."
 	@echo "agent-working/.index/knowledge-index/retrieval_cache.db (KGMCP Level 1/2 cache) has no bootstrap step -- it"

@@ -44,3 +44,13 @@ scrape_configs:
   - job_name: "promtail"
     static_configs:
       - targets: ["promtail:9080"]
+
+  # ai_worker serves sim_stream_consumer_{up,lag,pending} on 9108 (rpg #645; `expose` only). dns_sd_configs resolves every replica behind the
+  # compose service name, so `--scale ai_worker=N` is scraped per replica; a single static target would keep only one address. The lag rule
+  # aggregates with max by (stream, group) because every replica reports the same group.
+  - job_name: "ai_worker"
+    dns_sd_configs:
+      - names: ["ai_worker"]
+        type: A
+        port: 9108
+        refresh_interval: 15s
