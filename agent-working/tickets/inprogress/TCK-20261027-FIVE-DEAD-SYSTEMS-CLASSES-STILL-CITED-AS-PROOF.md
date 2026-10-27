@@ -90,7 +90,7 @@ rpg-planner (u24) ruled on #593 (the ruling is #757 issuecomment-6426148939, ite
 - The three non-blocking text points from rpg-planner's #757 review ride #757's REGISTRY re-sync push. If they have not landed on main by the time this branch starts, fold them in here.
 
 ## Implementation Notes
-Done so far (deletions, §7, checklist rows, completeness check and proof still to do):
+Done (all but the Bible ch07 §7 edit, held for rpg-designer's OK):
 - Commit 1 (bf6e813ec): interim `divergence_note` on TOWN-009, TOWN-076, TOWN-020, through `parity_ledger_writer`.
 - Loot: `tests/unit/resource/test_loot_live_path.py` (6 tests through `AuthoritativeApplyPipeline.refine` and `InteractionSystem.enforce`); the loot cases in `test_resource_conservation.py` now propose channel progress instead of calling `LootSystem`. Positive control: with room in the inventory the repointed tests fail. TOWN-009 and TOWN-076 are `verified` on live tests; TOWN-009's `v2_evidence` cited a non-existent `node.kind == "LOOT"` and was corrected.
 - TownService: TOWN-020 stays `verified`, proved by the live inn REST test and a new negative test. `visited_guild_tick` and kind-based service routing existed only in the dead class; recorded in TOWN-020's `divergence_note`. rpg-planner owns the final grading.
@@ -101,6 +101,12 @@ Done so far (deletions, §7, checklist rows, completeness check and proof still 
 
 
 ## Test Summary
+- Deletions: the 5 classes, 5 shims, 4 dead-only test files and the CraftingSystem/QuestSystem cases are gone; origin/main (6e3ffea3f, #757) merged at 99e2cf394.
+- Completeness check: 0 unbound (63 -> 58 targets); `test_real_registry_enumeration_and_binding_counts_pinned` updated.
+- `tests/unit/tools`: 1059 passed after the merge. Registry, territory and cross-domain views regenerated.
+- Domain suites after the deletions: `tests/unit/quest tests/unit/resource tests/unit/world tests/integration/kernel tests/integration/economy` 953 passed, 1 skipped.
+- `paired --neutral`, 1000t, 3 worlds, seed 42, base 6e3ffea3f vs new 99e2cf394: IDENTICAL x3 (d81e5b8b4b9ad077, dfb3f9d6f24dd0b5, 8259e502ae1698d0). 1000t applies: no live runtime path changed (comment-only edits in 3 src files).
+- `tests/tools`: failures only in `test_knowledge_search.py` and `test_knowledge_index_staleness.py` (index build fails, memory-starved box) and `test_generate_registry.py` no-drift (REGISTRY.yaml drift from other sessions' ticket moves; regenerated at close). Not caused by this ticket.
 
 ## Files Changed
 
