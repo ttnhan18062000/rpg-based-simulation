@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261027-HISTORY-SNAPSHOT-STRIP-MISSES-NESTED-GRAPH
-phase: open
+phase: done
 date: 2026-10-27
 tags: [bug]
 ---
@@ -15,7 +15,7 @@ tags: [bug]
 The history API's summary mode returns the whole cognition graph and reports zero node/edge counts
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -96,9 +96,17 @@ Two side issues:
 - I assume the frontend does not read `nodes_count`/`edges_count`. Scope 1 says how to check this.
 
 ## Implementation Notes
+Summary mode drops the `graph` key and returns the writer's own `node_count`/`edge_count` (no invented `nodes_count`/`edges_count`). A `git grep` over `src/`, `frontend/` and `tests/` found no reader of those keys; only `tests/api/test_cognition_history_api.py` mocked `nodes_count`, renamed to `node_count`, so no alias. `total` is counted while streaming and only the requested page is kept in memory; the response shape is unchanged.
 
 ## Test Summary
+- `tests/unit/observability tests/api/test_cognition_history_api.py tests/integration -k "history or cognition" -m "not slow"`: 82 passed. The unit fixture now builds records with `build_snapshot_record` and asserts no `graph` key, counts 1/0 and 2/1, and the nested graph under `full_graph=True`.
+- `tests/api/test_server_http_surface_characterization.py` fails in this environment, identically with `history_query.py` restored to 2afdba653 (reproduced by rpg-planner-ubuntu on a no-src worktree); not caused by this change, fixture not regenerated.
+- Read path only, so no separate hash proof; the PROG-097 proof run covers the PR head (this change touches only `history_query.py` under `src/`).
 
 ## Files Changed
+- `src/observability/reporting/history_query.py`
+- `tests/unit/observability/cognition/test_cognition_query_service.py`, `tests/api/test_cognition_history_api.py`
+- `docs/guides/observability.md`, `docs/guides/simulation.md`, `docs/observability/how_to_run_simulation.md`
 
 ## Completion Summary
+The history API's summary mode no longer returns the whole cognition graph and now reports the real node and edge counts. Pagination keeps one page in memory. Three docs name the real file `cognition_graph_snapshots.jsonl`.

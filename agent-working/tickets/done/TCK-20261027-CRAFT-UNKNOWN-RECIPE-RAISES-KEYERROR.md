@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR
-phase: open
+phase: done
 date: 2026-10-27
 tags: [economy, bug]
 ---
@@ -15,7 +15,7 @@ tags: [economy, bug]
 A REQUEST_CRAFT intent with an unknown or missing recipe id raises KeyError instead of being refused
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -122,9 +122,18 @@ sets the flag (feature_flags.py:90-100 explains this). The comment is ambiguous,
   the refusal counts as a failed route. That is the intended result.
 
 ## Implementation Notes
+Early refusal at the top of the REQUEST_CRAFT requirement block in `ActionIntentAdapter.execute`: a missing or unregistered recipe id appends an `IntentTrace` with `FAILED_REQUIREMENTS: unknown_recipe` and returns `EntityUpdate(entity_id=..., readiness_delta=0.0)`, as BUY_ITEM does for `shop_unavailable`. `RequirementEvaluator` has no recipe-exists kind, so no new Requirement kind. The `scorers.py` docstring now says the flag is read from `state.feature_flags` with an OFF fallback; the registry default (ON) does not reach that read. Comment only.
 
 ## Test Summary
+- `tests/integration/economy/test_crafting_live_path.py`: 9 passed (6 existing + 3 new cases: unknown payload id, unknown `opp_craft_` id, no id).
+- `tests/unit/engine tests/integration/economy -m "not slow"`, serial under MemoryMax=3G: 746 passed, 3 skipped.
+- `make lint-imports`: 17 kept, 0 broken. `ruff check` on the touched files lists existing violations (docstring, import-order and typing rules); I did not separate which, if any, are on the new lines.
+- `paired --neutral`, 1000t, 3 worlds, seed 42, base 2afdba653 vs new ac0d2301f: IDENTICAL x3 (d81e5b8b4b9ad077, dfb3f9d6f24dd0b5, 8259e502ae1698d0). The later history-query commit changes only `src/observability/reporting/history_query.py` under `src/`, so this proof covers the PR head.
 
 ## Files Changed
+- `src/engine/intent/action_intent.py`, `src/ai/goals/scorers.py` (docstring only)
+- `tests/integration/economy/test_crafting_live_path.py`
+- `docs/parity_ledger/progression.yaml` (PROG-097 only, via `parity_ledger_writer`), `docs/compliance/checklist.md`, `docs/mechanics/resource_conservation_contract.md`
 
 ## Completion Summary
+A REQUEST_CRAFT with an unknown, missing or `opp_craft_<unknown>` recipe id is now refused with a `FAILED_REQUIREMENTS: unknown_recipe` trace and a no-op update instead of raising `KeyError`. PROG-097 is `verified` again with a live-path test, and the checklist and conservation contract match. World hashes are unchanged on 3 worlds at 1000t.
