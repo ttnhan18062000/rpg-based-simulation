@@ -7947,6 +7947,33 @@
   - testing
   - determinism
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261027-HUNGER-CAPACITY-DERIVATION-HAS-NO-LIVE-CALLER.md
+  ticket_id: TCK-20261027-HUNGER-CAPACITY-DERIVATION-HAS-NO-LIVE-CALLER
+  title: The Bible's "Hungry halves cognitive capacity" law may have no live producer
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - src/strategy/cognition_capacity.py, src/strategy/capacity.py
+  - src/systems/strategic_systems/intelligence.py (around L1827, and L1610 for u24's
+    ticket)
+  - src/engine/starvation.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED.md
+  ticket_id: TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED
+  title: Legacy `core/recipes.py::RecipeRegistry` is only reached through `town/blacksmith.py::BlacksmithAction`,
+    which nothing in src/ constructs
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-27'
+  related_code_areas:
+  - src/core/recipes.py, src/town/blacksmith.py, tests/unit/world/test_economy_contract.py
+  artifact_files: []
+  tags:
+  - economy
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED.md
   ticket_id: TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED
   title: World compositions author a module `order` and module `requires` that assembly
@@ -21447,6 +21474,26 @@
   tags:
   - world
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS.md
+  ticket_id: TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS
+  title: 'Same name, different referent: four mechanism-shaped classes exist twice
+    in different modules, and one registry edge pointed at the wrong "social memory";
+    more instances need an audit and a guard'
+  tier: standard
+  ticket_type: repair
+  date: '2026-09-30'
+  related_code_areas:
+  - src/core/items.py
+  - src/engine/rpg_depth.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS/investigation.md
+  - agent-working/stored_artifacts/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS/plan.md
+  - agent-working/stored_artifacts/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS/rpg_planner_rulings_2026-10-27.md
+  - agent-working/stored_artifacts/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS/test_plan.md
+  tags:
+  - core
+  - bug
+- type: ticket
   path: agent-working/tickets/done/TCK-20260930-SCOPE-RELOCATE-RESUME-LOSES-TODOS-SOURCE-PATH.md
   ticket_id: TCK-20260930-SCOPE-RELOCATE-RESUME-LOSES-TODOS-SOURCE-PATH
   title: A resumed `implement-ticket` run loses `todos_source_path`, so Finalize never
@@ -21676,22 +21723,6 @@
   - documentation
   - process-improvement
   - planning
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS.md
-  ticket_id: TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS
-  title: 'Same name, different referent: four mechanism-shaped classes exist twice
-    in different modules, and one registry edge pointed at the wrong "social memory";
-    more instances need an audit and a guard'
-  tier: standard
-  ticket_type: repair
-  date: '2026-09-30'
-  related_code_areas:
-  - src/core/items.py
-  - src/engine/rpg_depth.py
-  artifact_files: []
-  tags:
-  - core
-  - bug
 - type: ticket
   path: agent-working/tickets/todos/TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO.md
   ticket_id: TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: core
 authority: P2
 audience: agent
 ticket_id: TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS
-phase: open
+phase: done
 date: 2026-09-30
 tags: [core, bug]
 ---
@@ -15,7 +15,7 @@ tags: [core, bug]
 Same name, different referent: four mechanism-shaped classes exist twice in different modules, and one registry edge pointed at the wrong "social memory"; more instances need an audit and a guard
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -90,11 +90,11 @@ minting a mechanism for dead code is the failure the completeness checker exists
 - Changing simulation behaviour: the live copy of each pair is unchanged.
 
 ## Acceptance Criteria
-- [ ] Each of the four pairs has a recorded decision (keep A, keep B, or keep both with a reason) and
+- [x] Each of the four pairs has a recorded decision (keep A, keep B, or keep both with a reason) and
       the dead copy is removed or explicitly kept with a stated reason.
-- [ ] A guard test enumerates same-name mechanism-shaped classes across `src/` and fails on an
+- [x] A guard test enumerates same-name mechanism-shaped classes across `src/` and fails on an
       unlisted pair.
-- [ ] The remaining 20 duplicate names from the scan are each classified (data record, intentional,
+- [x] The remaining 20 duplicate names from the scan are each classified (data record, intentional,
       or defect).
 
 ## Related Tickets
@@ -117,9 +117,19 @@ None.
   (planning's measurement says zero firings) is a separate question for whoever takes this.
 
 ## Implementation Notes
+Rulings: rpg-planner (u24), relayed via lead-planner-u24 -> lead-planner -> rpg-planner-ubuntu on 2026-10-27; word for word in `rpg_planner_rulings_2026-10-27.md` (staging, now stored). NOT owner approvals.
+Cross-domain edit: agent-working-planner agreed on 2026-10-28, via rpg-planner-ubuntu, to the `tools/mechanism_registry/mechanism_registry_completeness_check.py` WIDER_PENDING edit as it stands, including the four extra pins in tests/unit/tools/test_mechanism_registry_completeness_check.py (they count them under their condition 2); the PR body names it a cross-domain edit with their agreement and they review it on the PR. They asked for that test file to be re-run after the last rebase onto origin/main (done at the sync before the push).
+- DELETED `src/progression/skills.py::SkillScalingService` (zero src callers; every caller imports `src/engine/rpg_depth.py`). Removed its two cases from test_progression_v2.py and repointed 3 doc rows (attribute_progression_contract.md:341; docs/simulation/domains/progression_contract.md:27/168/198) to src/engine/rpg_depth.py. Its WIDER_PENDING row is removed; pins: len(WIDER_PENDING) 2->1, scope_files 345->344, unbound_files 249->248, candidates 69->68, wired 20->19, each with a dated comment.
+- DELETED `src/core/governance.py::EnvironmentCapture` (no reader; `src/certification/models.py` is the live one).
+- KEPT both `CapacityService` (capacity.py enforces; cognition_capacity.py derives, unwired: TCK-20261027-HUNGER-CAPACITY-DERIVATION-HAS-NO-LIVE-CALLER), both `ItemRegistry` (TCK-20260914), the legacy `RecipeRegistry` (TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED), each with an allowlist reason.
+- Guard: tests/unit/core/test_same_name_class_guard.py (21 recorded names; unlisted, stale and reasonless rows fail). It sits under tests/unit only because testing-planner was not running; testing-planner may move it to tests/architecture.
+- ObservabilityMode / HardwareClass / ErrorResponse: classified only, no renames.
 
 ## Test Summary
+tests/unit/core/test_same_name_class_guard.py + test_progression_v2.py 26 passed; test_mechanism_registry_completeness_check.py 14 passed; completeness check script 0 undispositioned; tests/tools/test_agent_working_paths_guard*.py 11 passed; tests/unit/tools full run follows the last registry edit.
 
 ## Files Changed
+src/progression/skills.py (deleted), src/core/governance.py, tools/mechanism_registry/mechanism_registry_completeness_check.py, tests/unit/core/test_same_name_class_guard.py (new), tests/unit/progression/test_progression_v2.py, tests/unit/tools/test_mechanism_registry_completeness_check.py, two doc contract files.
 
 ## Completion Summary
+Two dead twins deleted, three pairs kept with stated reasons, all 21 remaining duplicate names classified and guarded.
