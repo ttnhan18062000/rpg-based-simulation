@@ -47,6 +47,19 @@ class ActionIntentAdapter:
         cls._traces.clear()
 
     @classmethod
+    def _refuse(cls, entity: Any, intent: ActionIntent, reqs: list, reason: str) -> Dict[int, EntityUpdate]:
+        """Record a ``FAILED_REQUIREMENTS: <reason>`` trace and return the no-op update."""
+        cls._traces.append(IntentTrace(
+            intent_kind=intent.kind,
+            actor_id=intent.actor_id,
+            why_selected=intent.reason or "strategic choice",
+            opportunity_source_id=intent.source_opportunity_id,
+            requirements_checked=tuple(reqs),
+            execution_result=f"FAILED_REQUIREMENTS: {reason}",
+        ))
+        return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+
+    @classmethod
     def execute(
         cls,
         entity: EntityState,
@@ -72,15 +85,7 @@ class ActionIntentAdapter:
             if not recipe_id or not RecipeRegistry.contains(recipe_id):
                 # Refuse like an unavailable shop (BUY_ITEM) instead of reaching
                 # RecipeRegistry.get below, which raises KeyError (PROG-097).
-                cls._traces.append(IntentTrace(
-                    intent_kind=intent.kind,
-                    actor_id=intent.actor_id,
-                    why_selected=intent.reason or "strategic choice",
-                    opportunity_source_id=intent.source_opportunity_id,
-                    requirements_checked=tuple(reqs),
-                    execution_result="FAILED_REQUIREMENTS: unknown_recipe"
-                ))
-                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+                return cls._refuse(entity, intent, reqs, "unknown_recipe")
             recipe = RecipeRegistry.get(recipe_id)
             reqs.append(Requirement(kind="recipe_known", subject=recipe_id))
             reqs.append(Requirement(kind="has_gold", quantity=recipe.gold_cost))
@@ -256,16 +261,7 @@ class ActionIntentAdapter:
 
             result = ShopService.buy_item(entity, item_id, quantity, context) if (item_id and context is not None) else None
             if result is None:
-                trace = IntentTrace(
-                    intent_kind=intent.kind,
-                    actor_id=intent.actor_id,
-                    why_selected=intent.reason or "strategic choice",
-                    opportunity_source_id=intent.source_opportunity_id,
-                    requirements_checked=tuple(reqs),
-                    execution_result="FAILED_REQUIREMENTS: shop_unavailable"
-                )
-                cls._traces.append(trace)
-                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+                return cls._refuse(entity, intent, reqs, "shop_unavailable")
 
             trace = IntentTrace(
                 intent_kind=intent.kind,
