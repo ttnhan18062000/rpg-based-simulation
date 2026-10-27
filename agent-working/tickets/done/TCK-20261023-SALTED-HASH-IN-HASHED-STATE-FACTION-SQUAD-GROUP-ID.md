@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID
-phase: inprogress
+phase: done
 date: 2026-10-23
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Faction squad group_id uses Python's salted hash() of a str region id, so the state hash depends on PYTHONHASHSEED (#593 F4)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -89,5 +89,9 @@ New `src/core/stable_hash.py::stable_int31(*parts)`: blake2b (digest_size 8) ove
 - `tests/unit/core/test_stable_hash.py` (new)
 - `tests/unit/domains/faction/test_squad_group_id_hashseed.py` (new)
 - `tests/unit/domains/perception/test_filter_ids_hashseed.py` (new)
+- `docs/parity_ledger/substrate.yaml` (SUB-398, SUB-399)
+- `docs/guidelines/intentional_divergences.md` (2.141)
 
 ## Completion Summary
+Both acceptance criteria are met by tests. (1) On a constructed WAR state where a squad forms, the squad `group_id` and the `CanonicalStateHasher` hash are equal across PYTHONHASHSEED 0 and 1, two processes each (`tests/unit/domains/faction/test_squad_group_id_hashseed.py`). (2) `perception/filter.py:88,97` is resolved with the same helper and shown equal across hash seeds; it is not wired into production state, so it was latent. Parity SUB-398 and SUB-399 (P0, verified) and divergence 2.141 (Bug Fix) were added on rpg-planner's ruling. The mechanism-registry completeness check does not flag `src/core/stable_hash.py` (it is a helper function and appears only in the wider-scope floor), so `mechanisms.yaml` is unchanged. The changed-code advisory reports `perception` and `betrayal_siege_war` cited code changed; their `implemented_by` entries still hold, so no edit.
+**Known gap, stated:** the owner's landing condition (#715 6412199242) has NOT been run: probe A0 on crowded_frontier, frontier_living_world and urban_political x seeds 43-46 x 5000 ticks, and `paired --neutral` on the gate worlds. Both are held under the owner stop (#715 6426468523, 6431749368). Divergence 2.141 says Measured PENDING. The branch is held before push until the owner says continue to those runs or drops the condition. The PR body must say that a gate-world `--neutral` IDENTICAL only shows those worlds do not exercise F4 and is NOT behaviour coverage, and must state exactly what was measured.
