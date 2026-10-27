@@ -21,7 +21,7 @@ intel-gathering), **Party** (described a `PartyRecord` type that doesn't exist �
 is `GroupRecord`-based). This doc remains a useful narrower reference; Chapter 07 is now the
 authoritative, independently-verified source for this subsystem.
 
-**Source:** `src/systems/social_systems/` (appraisal.py, contracts.py, relationships.py, guilds.py, party.py, party_composition.py, memory.py, group_service.py, reputation.py)
+**Source:** `src/systems/social_systems/` (appraisal.py, contracts.py, relationships.py, party.py, party_composition.py, memory.py, group_service.py, reputation.py)
 **Related docs:** [docs/simulation/domains/cooperation_contract.md](domains/cooperation_contract.md), [docs/simulation/domains/commitment_contract.md](domains/commitment_contract.md), [docs/simulation/domains/domain_ownership_map.md](domains/domain_ownership_map.md)
 
 ---
@@ -165,16 +165,9 @@ Breach records `betrayal_count += 1` on the breaching entity and updates `Social
 
 ---
 
-## Guilds — `guilds.py`
+## Guilds
 
-**Corrected 2026-09-07 — `GuildMembership`, guild dues, guild rank, and guild-presence route bias
-have zero hits anywhere in `src/`; this section previously described a fictional system.** The real
-mechanism, `GuildIntelSystem.update()`, is an intel-gathering interaction: an entity interacting with
-a functional guild building accumulates `interaction.progress` by `+1.0`/tick; at `progress >=
-10.0`, the guild identifies the world's highest-`trauma_score` region and creates a real rumor
-`LeadState`/`BeliefState` about danger there, plus a `ConcernState(kind="danger")` if that region's
-trauma exceeds `5.0`. See `docs/mechanics/07_social_political_dynamics.md` §7 for the full
-mechanism.
+**Designed, not in effect — guild intelligence has no implementing code.** `GuildMembership`, guild dues, guild rank and guild-presence route bias have zero hits anywhere in `src/`. The intel-gathering mechanism this section used to describe (`GuildIntelSystem.update()`, in `guilds.py`) had no caller and has been deleted, so nothing turns a guild visit into a danger rumor, belief or concern. What a guild visit does today is the guild-visit path: `GuildVisitPhase` (`src/engine/pipeline_phases/guild_visit.py`, gated by `ENABLE_GUILD_QUEST_GENERATION`, default ON) calls `GuildAction.visit()` (`src/town/guild.py`), which grants up to two `VAGUE` location leads on `iron_vein` nodes and one quest when the entity has project capacity. See `docs/mechanics/07_social_political_dynamics.md` §7.
 
 ---
 
@@ -269,5 +262,5 @@ All social state changes go through `SocialUpdate` → `RelationshipService.proc
 
 1. To add a new contract kind: add to `ContractKind` enum, implement an appraisal method in `SocialAppraisalSystem`, add breach conditions in `contracts.py`, add tests.
 2. To add a new relationship dimension: extend `SocialComponent` and `SocialUpdate`, add clamping in `RelationshipService.process_update()`. Update consumers that read the new dimension.
-3. To add a new guild benefit: extend `guilds.py` and update the service opportunity filtering in `providers/services.py`. Guild benefits must be readable by the adventure domain without importing social systems directly.
+3. To add a new guild benefit: extend `src/town/guild.py` (`GuildAction.visit`) and update the service opportunity filtering in `providers/services.py`. Guild benefits must be readable by the adventure domain without importing social systems directly.
 4. Never read social state in a domain service — domain services produce ContractState/SocialUpdate outputs; social systems apply them. Cross-imports between domains and social systems violate the architecture boundary.

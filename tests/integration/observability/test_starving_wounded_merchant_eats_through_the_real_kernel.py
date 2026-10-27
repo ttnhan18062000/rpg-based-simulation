@@ -48,5 +48,8 @@ def test_a_starving_wounded_merchant_in_reach_of_an_inn_gets_a_hunger_project_an
 def test_the_same_merchant_with_the_old_threat_gate_does_not_eat_in_the_same_ticks(monkeypatch):
     import src.ai.goals.scorers as scorers
 
+    from src.ai.goals.present_threat import present_threat_to
+
     monkeypatch.setattr(scorers, "_hunger_escalated_unless_threatened", scorers._escalated_unless_threatened)
+    monkeypatch.setattr(scorers, "acting_threat_to", present_threat_to)  # the old gate reads states (wounded, adjacent, outmatched), not acts
     assert _run_merchant("v3_ii_merchant_control") >= 90.0

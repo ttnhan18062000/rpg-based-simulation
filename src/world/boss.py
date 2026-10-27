@@ -292,7 +292,7 @@ class BossService:
         """
         Rule: Boss death provides high-tier loot via transaction law.
         """
-        # This is handled by LootSystem/QuestResolution if tied to a quest,
+        # This is handled by the quest-reward and ground-loot transaction paths if tied to a quest,
         # but here we ensure regional threat reduction.
         boss = state.entities.get(boss_id)
         if not boss: return StateUpdate()

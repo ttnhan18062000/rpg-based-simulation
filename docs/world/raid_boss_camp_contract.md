@@ -8,6 +8,8 @@ last_verified: 2026-09-04
 
 # Raid, Boss, and Camp Contract
 
+> **Corrected 2026-10-26 (TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH; main 3533fde71).** Both raid paths this document describes are retired: the global world-clock raid `RaidService.check_for_raid` (owner decision 9, 2026-10-03) and the camp-triggered raid `RaidService.spawn_raid` (owner ruling D70, 2026-10-14, divergence 2.125, which also stopped camps spawning monsters). `src/world/raid.py` holds constants only (`RAID_BASE_SIZE`, `RAID_INTERVAL_DAYS`, `SANCTUARY_RADIUS`, `TICKS_PER_DAY`) and no method; `RaidService` has neither attribute (`tests/unit/world/test_calamity_raid.py`). The passages below that describe raids, raid size or camp monster spawning are kept as **historical** and labelled so; they do not describe today's behavior. Sections re-checked on this date: Purpose, Camp (growth, monster spawning, raid trigger), Raid, Regression tests, Extension rules 1 and 2. The Boss and Spawn sections were not re-checked and stand as of `last_verified`.
+
 **Source:** `src/world/raid.py`, `src/world/boss.py`, `src/world/camp.py`, `src/world/spawn.py`, `src/world/spawn_config.py`
 **Related docs:** [ecology_and_calamity_contract.md](ecology_and_calamity_contract.md), [threat_and_consequences_contract.md](threat_and_consequences_contract.md), [docs/mechanics/05_world_evolution.md](../mechanics/05_world_evolution.md)
 
@@ -15,7 +17,7 @@ last_verified: 2026-09-04
 
 ## Purpose
 
-Camps are hostile entity clusters that grow over time. When camps reach maturity they trigger raids against the nearest settlement. Raids are coordinated monster attacks. Bosses are elite entities that spawn when a region reaches both high maturity and high trauma.
+**Historical (retired 2026-10-14, D70; see the note at the top):** Camps are hostile entity clusters that grow over time. When camps reach maturity they trigger raids against the nearest settlement. Raids are coordinated monster attacks. **Today:** camps grow, but spawn no monsters and raid nothing; their members change only by death. Bosses are elite entities that spawn when a region reaches both high maturity and high trauma.
 
 ---
 
@@ -32,6 +34,8 @@ maturity += 0.05 × 1.5 = 0.075 per tick if region.trauma > 50
 
 ### Monster spawning
 
+**Retired 2026-10-14 (D70, divergence 2.125, `CampService.process_camps` docstring: "A camp no longer spawns monsters or raiders").** Historical description follows; it is not today's behavior.
+
 Camps spawn monsters up to a per-camp cap:
 
 ```
@@ -41,6 +45,8 @@ monster_cap = max(2, int(camp.maturity / 10))
 Spawn runs every **50 ticks** (see spawn section). If the camp's current monster count is below cap, new monsters are spawned using the region's difficulty zone table.
 
 ### Raid trigger
+
+**Retired 2026-10-14 (D70):** the gate still exists in `CampService.process_camps` (`camp.maturity >= RAID_MATURITY_THRESHOLD` and a 500-tick cooldown), but its raid outcome is gone; only the flag-gated Nest spread below still uses it. Historical description follows.
 
 When `camp.maturity >= 80`, the camp triggers a raid. After triggering, maturity resets to 50 (partial reset — camp does not fully dissolve unless cleared).
 
@@ -71,7 +77,7 @@ A camp is cleared when all its associated monsters are killed. On clear:
 - `region.trauma_score -= 10`
 - CAMP_CLEARED event broadcast (see [threat_and_consequences_contract.md](threat_and_consequences_contract.md))
 
-**Resolved (`TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`):** camp-triggered raids now spawn anchored
+**Historical, superseded (retired by D70, 2026-10-14). Resolved at the time (`TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`):** camp-triggered raids now spawn anchored
 at the camp's own position and target the nearest real `PlaceKind.CITY` place in `state.places`,
 via `RaidService.spawn_raid(origin, target, raid_size)`. If no CITY place exists to target, the
 raid is skipped entirely for that tick — no raiders, no maturity cost, no cooldown reset. The
@@ -148,6 +154,8 @@ since 2026-09-08.)_
 ---
 
 ## Raid — `raid.py`
+
+**RETIRED.** `check_for_raid` (the global world-clock raid) was retired by owner decision 9 on 2026-10-03 (TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION): it spawned every raider on a ring around world coordinate (0,0), outside every region, and never produced a raid. `spawn_raid` (the camp-triggered raid) was retired by owner ruling D70 on 2026-10-14 (TCK-20261014-CAMPS-STOP-SPAWNING-MONSTERS-FROM-NOTHING-D70, divergence 2.125): it conjured raiders from nothing. `src/world/raid.py` is 33 lines: the constants above and comments, no method. Nothing computes a raid size, so the formula below has no code side; the ticket that compared this doc to the code (TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH) was closed on that basis. If raids are ever wanted again they return as a declared feature with a settlement-Place target (PLACE-01). Everything in this section below is **historical** and kept for the record.
 
 ### Trigger cadence
 
@@ -230,8 +238,9 @@ Monsters spawned in monster-controlled regions (influence ≤ −50) receive a f
 
 ## Regression tests
 
-- `tests/integration/world/test_long_run_stability.py` — maturity growth, monster cap, raid trigger threshold
-- `tests/integration/world/test_long_run_stability.py` — raid size formula, raid outcome (suppressed vs successful)
+- `tests/unit/world/test_calamity_raid.py` — `RaidService` has no `spawn_raid` (the raid retirement, D70)
+- `tests/unit/world/test_camps_spawn_nothing.py`, `tests/unit/world/test_camp_lifecycle.py` — camp behavior after D70
+- Corrected 2026-10-26: this list used to cite `tests/integration/world/test_long_run_stability.py` for maturity growth, monster cap, raid trigger threshold, raid size and raid outcome; that test covers long-run memory and population stability and determinism parity, and none of those.
 - `tests/certification/test_cert_long_run_stability.py` — spawn condition gating, idempotency, boss defeat consequences
 - `tests/unit/worldgeneration/test_generator.py` — density formula, spawn pool selection, difficulty zone application
 
@@ -244,7 +253,7 @@ Monsters spawned in monster-controlled regions (influence ≤ −50) receive a f
      variant of the raid-trigger step, not the monster-cap/growth-rate steps — it substitutes the
      trigger's *outcome* for Nest-classified camps while reusing the unmodified growth rate,
      monster cap, and cadence constants verbatim.
-2. To add a new raid type: extend `raid.py` with a new raid composition. Reuse
+2. **Historical (raids are retired; `spawn_raid` no longer exists, D70).** To add a new raid type: extend `raid.py` with a new raid composition. Reuse
    `RaidService.spawn_raid(origin, target, raid_size)` (`TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`)
    for the actual composition step rather than duplicating it — the global tick-cadence path's own
    `(0,0)` anchor is a deliberate, scoped-out-of-that-ticket choice, not a gap to fix reflexively;

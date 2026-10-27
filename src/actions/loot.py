@@ -39,7 +39,7 @@ class LootAction:
             entity_id=entity.id,
             interaction=InteractionUpdate(
                 target_node_id=target_id,
-                progress_delta=0.0, # Will be incremented by LootSystem
+                progress_delta=0.0, # Incremented by InteractionSystem.enforce
                 reset=False,
                 kind=target_kind
             )

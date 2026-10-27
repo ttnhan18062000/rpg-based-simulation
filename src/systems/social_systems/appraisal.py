@@ -530,13 +530,3 @@ class SocialAppraisalSystem:
         
         cost = int(base_cost * level_mult * trust_mult)
         return max(50, cost)
-
-class RecruitmentAppraiser:
-    """
-    Consolidated recruitment logic for Phase E5.
-    VERIFIED v2: RecruitmentAppraiser.evaluate
-    """
-    @staticmethod
-    def evaluate(entity: EntityState, contract: ContractState, trust_score: float) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:
-        return SocialAppraisalSystem._appraise_recruitment(entity, contract, trust_score)
-
