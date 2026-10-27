@@ -1,1 +1,0 @@
-{"timestamp": "2026-10-21T02:31:26.399919Z", "ticket_id": "TCK-20261020-CI-JUNIT-TOOLS-ACCEPT-DEFUSED-XML-FINDINGS", "title": "Accept the junit ET.parse semgrep findings in code", "status": "DONE", "summary": "Three ET.parse lines carry nosemgrep with the reason; no behaviour change", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}
