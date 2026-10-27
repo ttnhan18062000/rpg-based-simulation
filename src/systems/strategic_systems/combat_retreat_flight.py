@@ -8,19 +8,22 @@ A brain decision that chooses COMBAT_RETREAT is a decision to leave an engagemen
 again BETWEEN decisions is still a stored target and takes no step.
 
 Rules (all read from this tick's update and the entity's own state; no new field):
-- It is issued only on a tick the brain evaluated (`brain_ran`), and only when the current project is COMBAT_RETREAT with a positioned objective.
+- It is issued only on a tick the brain evaluated (`brain_ran`), only when the current project is COMBAT_RETREAT with a positioned objective, and only while a hostile ACTS on
+  the subject (`acting_threat_to`, the same signal that gates `retreat_pull`; rpg-designer ruling option (i), 2026-10-27). With no acting hostile the project stays inert, as in base.
 - A subject already holding a COMBAT_RETREAT move keeps it: the move is not restarted. A subject holding a decided flight of another reason (PANIC_RETREAT, ...) keeps
   that one (provisional, rpg-designer pending): the strategic flight is issued by the next brain decision if retreat still wins.
 - A task decision an earlier phase issued this tick wins (a tactical ATTACK, a PANIC_RETREAT, anything with a payload); the brain's own reset to an idle `ENTITY_ACT`
   with no payload is not a decision and is replaced.
 - A held COMBAT_RETREAT move does not suppress the brain: on a tick the brain evaluated, if the current project is no longer COMBAT_RETREAT the move ends
   (back to the idle task, no stored target) before the brain's new choice is carried out. It also ends on arrival (`ARRIVAL_ENDS_MOVE_REASONS`).
-There is no timeout and no "hostile gone" end (a known gap, divergence 2.139).
+- It ends when the act lapses: at the first tick the brain evaluated on which no hostile acts on the subject. The act is read on brain-evaluated ticks only, never per tick,
+  so the end is bounded by one strategic cadence. This adds an end condition and replaces none.
+There is no timeout (divergence 2.139).
 """
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Optional, Tuple
+from typing import Callable, Optional, Tuple
 
 from src.core.enums import DECIDED_FLIGHT_REASONS, FlightReason
 from src.core.state import EntityState
@@ -51,7 +54,9 @@ def _no_task_decision(ent_upd: EntityUpdate) -> bool:
     return task is None or task.is_noop() or (task.work_kind_set == "ENTITY_ACT" and not task.payload_set)
 
 
-def _current_project(entity: EntityState, strat_up: Optional[StrategicUpdate], project_id: Optional[str]) -> Optional[ProjectState]:
+def _current_project(entity: EntityState, strat_up: Optional[StrategicUpdate]) -> Optional[ProjectState]:
+    """The project this tick's update makes current (the strategic pass's own `current_project_id`), if it is active."""
+    project_id = strat_up.current_project_id_set if strat_up is not None and strat_up.current_project_id_set is not None else entity.strategic.current_project_id
     if not project_id:
         return None
     project = next((p for p in (strat_up.projects_add_or_update if strat_up else []) if p.id == project_id), None) or entity.strategic.projects.get(project_id)
@@ -66,17 +71,32 @@ def _target_position(project: ProjectState, strat_up: Optional[StrategicUpdate])
     return getattr(obj, "target_position", None)
 
 
+def _end_flight(ent_upd: EntityUpdate) -> EntityUpdate:
+    """Back to the idle task with no stored target."""
+    return replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_clear=True), task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={}))
+
+
 def combat_retreat_flight_update(
-    entity: EntityState, ent_upd: Optional[EntityUpdate], strat_up: Optional[StrategicUpdate], current_project_id: Optional[str], brain_ran: bool
+    entity: EntityState,
+    ent_upd: Optional[EntityUpdate],
+    strat_up: Optional[StrategicUpdate],
+    brain_ran: bool,
+    hostile_acting: Callable[[], bool],
 ) -> Optional[EntityUpdate]:
-    """`ent_upd` with the COMBAT_RETREAT flight issued, kept or ended as the module docstring says; unchanged on a tick the brain did not evaluate."""
+    """`ent_upd` with the COMBAT_RETREAT flight issued, kept or ended as the module docstring says; unchanged on a tick the brain did not evaluate.
+
+    `hostile_acting` is `acting_threat_to(entity, state)` for this tick's evaluation, passed as a thunk so it is read only when a COMBAT_RETREAT project or flight is in play."""
     if ent_upd is None or not brain_ran or not _no_task_decision(ent_upd):
         return ent_upd
-    project = _current_project(entity, strat_up, current_project_id)
+    project = _current_project(entity, strat_up)
     holds = _holds_combat_retreat(entity)
     if project is not None and project.kind == GoalKind.COMBAT_RETREAT:
+        if holds:  # kept, not restarted, while the act holds; ended at the first decision tick it has lapsed
+            return ent_upd if hostile_acting() else _end_flight(ent_upd)
         target = _target_position(project, strat_up)
-        if holds or not target or _holds_another_flight(entity) or _within_a_tile(entity.navigation.position, target):  # a flight that would end on arrival this tick is not a flight
+        if not target or _holds_another_flight(entity) or _within_a_tile(entity.navigation.position, target):  # a flight that would end on arrival this tick is not a flight
+            return ent_upd
+        if not hostile_acting():  # no acting hostile: the project stays inert, as in base
             return ent_upd
         return replace(
             ent_upd,
@@ -84,5 +104,5 @@ def combat_retreat_flight_update(
             task=TaskUpdate(work_kind_set="ENTITY_MOVE", payload_set={"target_position": target, "reason": FlightReason.COMBAT_RETREAT.value}),
         )
     if holds:  # the brain chose something else: its decision ends the flight before it is carried out
-        return replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_clear=True), task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={}))
+        return _end_flight(ent_upd)
     return ent_upd

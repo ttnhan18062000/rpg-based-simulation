@@ -1,6 +1,7 @@
 """A brain decision that chooses COMBAT_RETREAT is a decision to leave an engagement (CONFLICT-04, divergence 2.139): it issues a decided flight (FlightReason.COMBAT_RETREAT)
 that steps beside an engaged hostile; a target the strategic pass writes again between decisions is still a stored target and takes no step. Pure tests of
-`combat_retreat_flight_update` (the rules) and the movement selector's reading of the reason."""
+`combat_retreat_flight_update` (the rules) and the movement selector's reading of the reason. The flight is issued only under an acting hostile and ends when the act
+lapses (rpg-designer ruling option (i), 2026-10-27)."""
 from __future__ import annotations
 
 from dataclasses import replace
@@ -33,8 +34,8 @@ def _held(reason):
     return TaskComponent(work_kind="ENTITY_MOVE", payload={"target_position": (10.0, 10.0), "reason": reason})
 
 
-def _issue(entity, ent_upd=None, project_id=None, brain_ran=True):
-    return combat_retreat_flight_update(entity, ent_upd or EntityUpdate(entity_id=1), None, project_id or entity.strategic.current_project_id, brain_ran)
+def _issue(entity, ent_upd=None, brain_ran=True, acting=True):
+    return combat_retreat_flight_update(entity, ent_upd or EntityUpdate(entity_id=1), None, brain_ran, lambda: acting)
 
 
 def test_a_brain_decision_for_combat_retreat_issues_the_decided_flight_once():
@@ -115,3 +116,36 @@ def test_the_selector_reads_combat_retreat_as_a_decided_flight_that_ends_on_arri
     assert RETREAT in ARRIVAL_ENDS_MOVE_REASONS
     arrived = replace(entity, navigation=replace(entity.navigation, position=(10.0, 11.0)))
     assert MovementCandidateSelector.arrived_in_area(arrived)
+
+
+def test_a_decision_tick_that_chooses_combat_retreat_with_no_acting_hostile_issues_no_move():
+    entity = _entity(projects=[_project()])
+    assert _issue(entity, acting=False) == EntityUpdate(entity_id=1)  # the project stays inert, as in base
+
+
+def test_a_decision_tick_that_chooses_combat_retreat_under_an_acting_hostile_issues_the_move():
+    entity = _entity(projects=[_project()])
+    assert _issue(entity, acting=True).task.payload_set["reason"] == RETREAT
+
+
+def test_a_held_combat_retreat_move_whose_hostile_stops_acting_ends_at_the_next_decision_tick_not_earlier():
+    entity = _entity(task=_held(RETREAT), projects=[_project()])
+    assert _issue(entity, brain_ran=False, acting=False) == EntityUpdate(entity_id=1)  # between decisions the act is not read: the flight runs on
+    out = _issue(entity, brain_ran=True, acting=False)
+    assert out.task == TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={}) and out.navigation.target_clear is True
+    assert _issue(entity, brain_ran=True, acting=True) == EntityUpdate(entity_id=1)  # while the act holds it is kept, not restarted
+
+
+def test_the_act_is_not_read_on_a_tick_the_brain_did_not_evaluate():
+    entity = _entity(task=_held(RETREAT), projects=[_project()])
+    def boom():
+        raise AssertionError("acting_threat_to read off a brain decision tick")
+    assert combat_retreat_flight_update(entity, EntityUpdate(entity_id=1), None, False, boom) == EntityUpdate(entity_id=1)
+
+
+def test_the_current_project_is_the_one_this_ticks_strategic_update_makes_current():
+    entity = _entity(projects=[_project(), _project(GoalKind.RESOLVE_BLOCKER, "proj_resolve_blocker_1")])
+    switched = StrategicUpdate(current_project_id_set="proj_resolve_blocker_1")
+    assert combat_retreat_flight_update(entity, EntityUpdate(entity_id=1), switched, True, lambda: True) == EntityUpdate(entity_id=1)
+    kept = StrategicUpdate()  # no switch: the entity's own current project (COMBAT_RETREAT)
+    assert combat_retreat_flight_update(entity, EntityUpdate(entity_id=1), kept, True, lambda: True).task.payload_set["reason"] == RETREAT

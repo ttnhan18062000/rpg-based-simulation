@@ -4617,3 +4617,13 @@
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.139.
   support_boundary: 'Paired measurement pending (on step B tip). The panic flight is decided in the tactical pass before goal scores (N15), so this changes the goal-level weighing only. Inherits the act test properties of 2.138.'
 
+- id: STRAT-289
+  text: 'TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE (CONFLICT-04): a brain decision that chooses COMBAT_RETREAT executes as a decided flight (FlightReason.COMBAT_RETREAT), issued only under an acting hostile, ends when the act lapses. Issued only on a brain decision tick on which acting_threat_to holds; with no acting hostile the project stays a stored target that takes no step. A held COMBAT_RETREAT move ends at the first brain decision tick with no acting hostile (read on decision ticks only), on arrival, or when the brain chooses something else; it is not restarted while held, never replaces another decided flight or a same-tick tactical decision, and is not issued within a tile of the target.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/systems/strategic_systems/combat_retreat_flight.py (combat_retreat_flight_update), src/systems/strategic_systems/intelligence.py (strategic pass passes acting_threat_to as a thunk), src/engine/candidate_selector.py (COMBAT_RETREAT is a decided flight that ends on arrival). rpg-designer ruling option (i), 2026-10-27.'
+  proof_type: regression
+  test_path: tests/unit/systems/test_combat_retreat_flight.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.139 (Flight).
+  support_boundary: 'Paired measurement pending (gated build on step B tip). No present-threat gate. The act test inherits the properties of 2.138 (an attack task stays current until the hostile''s next decision).'
