@@ -50,6 +50,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Social/Clan** | Clan Reputation Folded Into P0-Certified `appraise_contract()` Stranger-Judgment Formula | **Bounded** | RATIFIED |
 | **Combat / Legality** | Mid-Tick Faction Mutation Can Flip a P0-Certified Friendly-Fire Legality Outcome by the Next Tick | **Bounded** | RATIFIED |
 | **AI / Motivation-Adventure Scoring** | Doctrine/Values Motivation Chain Confirmed Dead; Culture Drift Wired Into `personality_bias` Instead | **Bounded** | RATIFIED |
+| **CLI / Entry** | `cli --entities` Flag Removed: A Silently Ignored Argument Becomes A Rejected One (§2.140) | **Hardened** | RATIFIED |
 
 ---
 
@@ -1660,6 +1661,11 @@ This document is the canonical record of intentional behavior shifts in `src` co
   to these exact module/class paths was found outside `src/` before deleting. Docstring
   cross-references in `AdventureRouteScorer.score()`, `CulturalBiasApplicator`, and
   `CultureDriftExporter`/`CultureDriftImporter` updated to stop pointing at now-deleted code.
+- **Registry follow-through, 2026-10-26**
+  (`TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN`): the
+  `motivation_doctrine` entry in `registries/mechanisms.yaml` now carries a Retire verdict pointing
+  here. That is not a new divergence. The module's one surviving class, `RoleFitEvaluator`, is a
+  different capability and is registered separately as `role_fit_preference`.
 - **Status**: RATIFIED
 
 ---
@@ -3594,6 +3600,14 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Measured**: paired run, base `341f700d0` against the step B tip `265162719`, 3 worlds x seeds 42-46 x 5000 ticks, audit_mode on, base-vs-base self-check (seed 42) spread 0. People deaths, no drift on all three worlds: frontier_living_world 127 -> 123 (SE 0.49), urban_political 67 -> 60 (SE 0.87), crowded_frontier 177 -> 179 (SE 0.24). Extinction row, recorded as it is: crowded_frontier merchant STOP (merchants alive at the end, summed over seeds, 2 -> 0; merchant 12 alive in base in seeds 42 and 46, dies COMBAT in the new arm, at t1310 killed by raider 34 and at t1743 killed by raider 38; merchant deaths 13 -> 15). Attribution (attribution runs, new tree with a gate reverted, per-tick fingerprints of all 38 entities against base through t800): the first divergence is t766 in seed 42 (scout 28 at hunger 76.4 keeps its hunger pull past raider 34, which is regrouping toward another entity) and t749 in seed 46 (raider 24 and guard 9 in a melee). Reverting only the SURV-07 gate in `src/ai/goals/scorers.py` (`acting_threat_to` back to `present_threat_to`) removes the divergence through t800 in both seeds; reverting only the panic hold (`_panic_holds`) does not; reverting both removes it; stamping `last_hit_tick` alone changes nothing. The merchant deaths are downstream of that trajectory change, not a flight released early; raiders 38 and 27 and leader 30 flip fate in the same seeds from the same early divergence (leader 30, seed 42, starves at t3496 wounded and beaten down by raider 38, not through a yield). The extinction STOP is accepted as a downstream consequence of the intended row-88 change, recorded as is (owner ruling, #715 comment 6411018314); thresholds and the verdict rule are untouched.
 - **Rationale**: **Enforced** (SURV-07 and AGENCY-07 enforced as acts: owner decision memo row 88, designer ruling confirmed by the user on #715, 2026-10-23).
 - **Verification**: `tests/unit/engine/test_acting_hostile_is_an_act_not_a_state.py`, `tests/unit/ai/test_need_scorers.py`, `tests/unit/ai/test_starvation_is_a_present_threat_weighed_in_goal_selection.py`, `tests/unit/tactical/test_held_panic_falls_through.py`, `tests/integration/observability/test_starving_wounded_merchant_eats_through_the_real_kernel.py`.
+
+### 2.140 `cli --entities` Is Rejected: A Silently Ignored Argument Becomes A Loud Error (#617; TCK-20261026-CLI-ENTITIES-FLAG-PARSED-NEVER-READ)
+- **Subsystem**: CLI / entry (`src/cli/entry.py`)
+- **Old Behavior**: `python -m src cli --entities N` was accepted and its value was never read: the sandbox world sets its own population, so the flag changed nothing while the docs presented it as an entity-count override.
+- **New Behavior**: `cli` has no `--entities` argument; passing it fails as an unrecognized argument (argparse exit code 2). `serve` and `inspect` never had the flag. The separate `--entities` flags of `tools/perf/*` and `tools/calibrate_simq.py` are those tools' own and are unchanged.
+- **Disclosed**: A script that still passes `--entities` to `cli` now fails instead of running unchanged: `tools/perf/turbo_run_and_audit.ps1` was the one such caller in the repository and was edited in the same change (dropping only `--entities 20`, with perf-planner's OK on 2026-10-26). Simulation behavior is unchanged: the value was never read, and the batch's paired `--neutral` run covers hash neutrality.
+- **Rationale**: **Hardened** (ruling by rpg-planner on #593 issuecomment-6406593752, item 3; a real population override would be a world-config feature, not a CLI flag; this file defines no class list, so the class follows the precedents above, e.g. §2.12's "without legacy float fudge factors").
+- **Verification**: `tests/cli/test_entry_parity.py::test_cli_rejects_the_entities_flag`; parity ledger `SOC-105` (now `divergent`).
 
 ### 2.141 A Squad's Group Id Does Not Depend On The Process Hash Seed (substrate determinism, SUB-398, SUB-399; TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID)
 - **Behavior**: Old: `MilitaryConflictPhase` set a FACTION_SQUAD `group_id` to `abs(hash((contested_region_id, attacker_id, tick))) % 2**31`. Python salts `hash()` of a str per process, so the id depended on `PYTHONHASHSEED` whenever a squad formed. New: `stable_int31(contested_region_id, attacker_id, tick)` (`src/core/stable_hash.py`: blake2b, digest size 8, over a type-tagged, length-prefixed encoding of str and int parts, modulo 2**31). `PerceptionFilterService` (`src/domains/perception/filter.py`) uses the same helper for the entity_id and node_id of a non-int signal id. That path is not wired into production state, so it was a latent hazard.

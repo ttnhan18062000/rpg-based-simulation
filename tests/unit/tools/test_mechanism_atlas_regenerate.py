@@ -114,7 +114,11 @@ def test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms():
         # and the other four have no atlas card of their own.
         "world_module_parameterization", "resolved_world_snapshot", "world_compilation",
         "procedural_world_generation",
-    }, f"expected exactly these 36 to be unmapped (no atlas card), got {unmapped}"
+        # 2026-10-26 (owner decision 8 / memo row 7 (b)): registered from code, no atlas card.
+        "sense_gated_detection", "role_fit_preference",
+        # 2026-10-26: the orphan regional levy and conquest debuff, registered from code, no atlas card.
+        "regional_levy_and_conquest_debuffs",
+    }, f"expected exactly these 39 to be unmapped (no atlas card), got {unmapped}"
     assert len(mapped) == 72  # 73 until `xp_leveling` merged into `evolution` (two cards, one id)
 
 
