@@ -101,7 +101,7 @@ Four resolved profile types, all passed through `CompileContext`:
 - `topological_sort_modules()` — from `src/worldmodules/utils.py`; ensures modules are processed in dependency order
 
 **Resolution sequence (WORLD-ASM-008):**
-1. Topological sort of modules from `NormalizedWorldComposition`
+1. Topological sort of modules from `NormalizedWorldComposition`. Enabled refs are first sorted by `ModuleRefSpec.order`, but `topological_sort_modules()` then breaks every tie between modules with no unmet `requires` alphabetically by module id, so the merge sequence follows `requires` and the alphabet, not `order`; `order` is not honoured as an ordering. A `requires` id that is not an enabled module of the composition is skipped without a message. Measured on 2026-10-27 (origin/main `3b5fab1e9`, all 24 `data/worlds` compositions): 72 refs in 11 worlds set `order`, and the authored sequence differs from the merge sequence in 14 worlds; letting the authored order win ties changes the resolved world in those 14 worlds. Two modules in `wilderness_survival` require `frontier_village_core`, which that composition does not use. Follow-up: `TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED`.
 2. For each module in order: resolve biomes, ecologies, regions, resources, buildings, population recipes via content resolvers
 3. Accumulate into `CompileContext`
 

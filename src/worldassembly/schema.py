@@ -13,7 +13,7 @@ class ModuleRefSpec(BaseModel):
 
     module_id: str = Field(..., min_length=1, description="Target module ID")
     enabled: bool = Field(True, description="Whether this module is active in composition")
-    order: int = Field(0, description="Evaluation order index (lower executes earlier)")
+    order: int = Field(0, description="Initial sort key among the enabled refs only. The merge sequence is then the topological sort of `requires`, whose ties are broken alphabetically by module id, so `order` does not decide the merge order (see docs/world/assembly_contract.md)")
     parameters: Dict[str, Any] = Field(default_factory=dict, description="Custom parameter override values")
     namespace: Optional[str] = Field(None, description="Optional namespace prefix to isolate entity/region IDs")
 
