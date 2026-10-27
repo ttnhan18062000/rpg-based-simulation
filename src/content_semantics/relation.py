@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set, Tuple
 from pydantic import BaseModel, Field, ConfigDict
 
 from src.content.repository import CatalogRepository
+from src.content.schema import FactionRelationshipDefinition, PerspectiveDefinition, SpeciesRelationRecord
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,92 @@ class RelationProjection(BaseModel):
     source_records: List[str] = Field(default_factory=list)
 
 
+class RelationLookup:
+    """First-match indexes over the catalog's perspective / faction-relationship / species-relation tables.
+
+    The hot path (``is_hostile_compat`` per pair per tick) used to scan these tables linearly, several
+    times per call, to find the first record matching a key. The tables do not change after
+    ``load_all``, so each lookup is built once. Every index keeps the FIRST record per key in table
+    iteration order (``setdefault``), which is exactly the record the linear scan returned, so a
+    lookup and a scan can never disagree (``tests/unit/content_semantics/test_relation_lookup_matches_scan.py``).
+
+    The index is rebuilt when a table object or its size changes (tests inject fixtures into copies of
+    the repo); a same-size in-place replacement of an existing key is not detected, and the catalog
+    does not do that.
+    """
+
+    def __init__(self, repo: CatalogRepository) -> None:
+        self._repo = repo
+        self._signature: Optional[Tuple[Tuple[object, ...], Tuple[int, ...]]] = None
+        self._by_chosen_faction: Dict[str, PerspectiveDefinition] = {}
+        self._has_perspective_key: Set[str] = set()
+        self._relationship: Dict[Tuple[str, str], FactionRelationshipDefinition] = {}
+        self._species_relation: Dict[Tuple[str, str], SpeciesRelationRecord] = {}
+
+    def _current_signature(self) -> tuple:
+        # The tables themselves (not ``id()``) so a reloaded table that reuses a freed id cannot match.
+        r = self._repo
+        return (r.perspectives, r.faction_relationships, r.species_relations)
+
+    def _signature_matches(self, other: tuple) -> bool:
+        mine = self._signature
+        if mine is None:
+            return False
+        return all(a is b for a, b in zip(mine[0], other)) and mine[1] == tuple(len(t) for t in other)
+
+    def _ensure(self) -> None:
+        tables = self._current_signature()
+        if self._signature_matches(tables):
+            return
+        r = self._repo
+        by_chosen: Dict[str, PerspectiveDefinition] = {}
+        keys: Set[str] = set()
+        for p in r.perspectives.values():
+            by_chosen.setdefault(p.chosen_faction, p)
+            keys.add(p.chosen_faction)
+            keys.add(p.id)
+        rel: Dict[Tuple[str, str], FactionRelationshipDefinition] = {}
+        for fr in r.faction_relationships.values():
+            rel.setdefault((fr.source_faction, fr.target_faction), fr)
+        spec: Dict[Tuple[str, str], SpeciesRelationRecord] = {}
+        for sr in r.species_relations.values():
+            spec.setdefault((sr.source_species, sr.target_species), sr)
+        self._by_chosen_faction = by_chosen
+        self._has_perspective_key = keys
+        self._relationship = rel
+        self._species_relation = spec
+        self._signature = (tables, tuple(len(t) for t in tables))
+
+    def perspective_for(self, perspective_id: str) -> Optional[PerspectiveDefinition]:
+        """``repo.get_perspective(id)``, else the first perspective whose ``chosen_faction`` is ``id``."""
+        self._ensure()
+        found = self._repo.perspectives.get(perspective_id)
+        if found:
+            return found
+        return self._by_chosen_faction.get(perspective_id)
+
+    def perspective_id_for_faction(self, faction_id: str) -> str:
+        """Id of the first perspective choosing ``faction_id``; ``faction_id`` itself when none does."""
+        self._ensure()
+        p = self._by_chosen_faction.get(faction_id)
+        return p.id if p is not None else faction_id
+
+    def has_perspective(self, faction_id: str) -> bool:
+        """Some perspective has ``chosen_faction == faction_id`` or ``id == faction_id``."""
+        self._ensure()
+        return faction_id in self._has_perspective_key
+
+    def relationship(self, source_faction_id: str, target_faction_id: str) -> Optional[FactionRelationshipDefinition]:
+        """The first faction relationship from ``source_faction_id`` to ``target_faction_id``, else None."""
+        self._ensure()
+        return self._relationship.get((source_faction_id, target_faction_id))
+
+    def species_relation(self, source_species: str, target_species: str) -> Optional[SpeciesRelationRecord]:
+        """The first species relation from ``source_species`` to ``target_species``, else None."""
+        self._ensure()
+        return self._species_relation.get((source_species, target_species))
+
+
 class RelationProjectionService:
     """
     Projects relationship labels between factions using perspectives
@@ -41,6 +128,7 @@ class RelationProjectionService:
 
     def __init__(self, repo: CatalogRepository) -> None:
         self.repo = repo
+        self.lookup = RelationLookup(repo)
 
     def project_relation(
         self,
@@ -59,23 +147,13 @@ class RelationProjectionService:
         confidence = 1.0
 
         # 1. Resolve perspective
-        perspective = self.repo.get_perspective(perspective_id)
-        if not perspective:
-            # Try to match perspective by chosen_faction
-            for p in self.repo.perspectives.values():
-                if p.chosen_faction == perspective_id:
-                    perspective = p
-                    break
+        perspective = self.lookup.perspective_for(perspective_id)
 
         if perspective:
             source_records.append(f"perspective:{perspective.id}")
 
         # 2. Resolve faction relationship
-        relationship = None
-        for rel in self.repo.faction_relationships.values():
-            if rel.source_faction == source_faction_id and rel.target_faction == target_faction_id:
-                relationship = rel
-                break
+        relationship = self.lookup.relationship(source_faction_id, target_faction_id)
 
         if relationship:
             source_records.append(f"faction_relationship:{relationship.id}")
@@ -163,11 +241,7 @@ class RelationProjectionService:
             and context and context.source_species and context.target_species
             and label in _SPECIES_LABEL_LADDER_RANK
         ):
-            species_rel = None
-            for rr in self.repo.species_relations.values():
-                if rr.source_species == context.source_species and rr.target_species == context.target_species:
-                    species_rel = rr
-                    break
+            species_rel = self.lookup.species_relation(context.source_species, context.target_species)
             if species_rel:
                 species_hostility = species_rel.axes.get("hostility", "none")
                 current_rank = _SPECIES_LABEL_LADDER_RANK[label]

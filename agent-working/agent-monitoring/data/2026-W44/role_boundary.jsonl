@@ -1,0 +1,1 @@
+{"ts":"2026-10-26T20:28:53.635481Z","event":"role_boundary","kind":"message_class_mismatch","session_id":"17b5294a-745d-4830-80e1-89d1ec9d96cb","session_role":"rpg-planner-ubuntu","function":"planner","domain":"rpg","tool":"SendMessage","target":"lead-planner","message_class":"request","accepts_dispatch_from":["user"]}

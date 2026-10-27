@@ -36,6 +36,9 @@ rpg-planner's ruling (2026-10-24) on the SimQ re-anchor on baseline v1 (TCK-2026
 ## Scope
 For each group: inspect the event timeline and route outcomes on the v1 tree (341f700d0) against the pre-change tree (b396080cc or the #645 parent), and name the cause. Then either (a) intended v1 behaviour: release the held rows to the v1 values with the cause stated (rpg-planner rules; designer if a Bible meaning is involved), or (b) a regression: file the fix, and the rows stay held until it lands.
 
+## Guard gap until 2026-11-15
+The known-red entries are whole-key (they own the key's test id, not one pillar), so the other, re-anchored pillars of a held key are unguarded until the entries expire on 2026-11-15. One exact corpus test, `test_hero_guild_routing_seed42_1000t_cognition_grade_stability`, reads the held COGNITION row and has its own entry.
+
 ## Out of Scope
 The other 500 moved rows (ruled 2026-10-24).
 

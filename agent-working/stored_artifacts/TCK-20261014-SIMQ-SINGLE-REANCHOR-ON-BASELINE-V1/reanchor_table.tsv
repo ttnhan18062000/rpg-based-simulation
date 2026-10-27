@@ -1,0 +1,811 @@
+run_key	pillar	committed_grade	committed_score	audit_grade	audit_score	in_band_before	in_band_after	moved	excluded	committed_status	audit_status
+sandbox_world_seed42_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+sandbox_world_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed42_200t	ECONOMY	A	0.5628140703517588	A	0.774869109947644	False	True	True	False	ok	ok
+sandbox_world_seed42_200t	PROGRESSION	B	0.185			False	True	True	False	ok	no-data
+sandbox_world_seed42_200t	SOCIAL	S	7.3	S	8.935	False	True	True	False	ok	ok
+sandbox_world_seed42_200t	INFORMATION	B	0.2			False	True	True	False	ok	no-data
+sandbox_world_seed42_200t	WORLD	B	0.11	B	0.09	True	True	False	False	ok	ok
+sandbox_world_seed42_200t	NARRATIVE	B	0.25949367088607594	B	0.30357142857142855	True	True	False	False	ok	ok
+sandbox_world_seed137_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+sandbox_world_seed137_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed137_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed137_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed137_200t	ECONOMY	C	-0.10362694300518134	B	0.32608695652173914	False	True	True	False	ok	ok
+sandbox_world_seed137_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+sandbox_world_seed137_200t	SOCIAL	S	7.33	S	13.553299492385786	False	True	True	False	ok	ok
+sandbox_world_seed137_200t	INFORMATION	B	0.2			False	True	True	False	ok	no-data
+sandbox_world_seed137_200t	WORLD	B	0.09	B	0.09	True	True	False	False	ok	ok
+sandbox_world_seed137_200t	NARRATIVE	B	0.2925531914893617	B	0.41353383458646614	False	True	True	False	ok	ok
+sandbox_world_seed999_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+sandbox_world_seed999_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed999_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed999_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed999_200t	ECONOMY	A	1.2340425531914894	A	0.9787234042553191	False	True	True	False	ok	ok
+sandbox_world_seed999_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+sandbox_world_seed999_200t	SOCIAL	A	1.9042553191489362	S	5.49	False	True	True	False	ok	ok
+sandbox_world_seed999_200t	INFORMATION	B	0.2			False	True	True	False	ok	no-data
+sandbox_world_seed999_200t	WORLD	B	0.09	B	0.09	True	True	False	False	ok	ok
+sandbox_world_seed999_200t	NARRATIVE	B	0.22302158273381295	B	0.205	True	True	False	False	ok	ok
+dungeon_crawl_seed42_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_200t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_200t	SOCIAL	B	0.205	A	1.1594202898550725	False	True	True	False	ok	ok
+dungeon_crawl_seed42_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_200t	WORLD	B	0.06	B	0.13	False	True	True	False	ok	ok
+dungeon_crawl_seed42_200t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+urban_political_seed42_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+urban_political_seed42_200t	AGENCY	B	0.0903954802259887	B	0.0903954802259887	True	True	False	False	ok	ok
+urban_political_seed42_200t	COMBAT	B	0.21311475409836064	B	0.13440860215053763	False	True	True	False	ok	ok
+urban_political_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+urban_political_seed42_200t	ECONOMY	A	0.7914438502673797	A	0.7058823529411765	True	True	False	False	ok	ok
+urban_political_seed42_200t	PROGRESSION	B	0.3803680981595092	B	0.3313953488372093	True	True	False	False	ok	ok
+urban_political_seed42_200t	SOCIAL	S	32.44	S	37.305	True	True	False	False	ok	ok
+urban_political_seed42_200t	INFORMATION	S	21.275	S	2.975	False	True	True	False	ok	ok
+urban_political_seed42_200t	WORLD	B	0.2	B	0.32	False	True	True	False	ok	ok
+urban_political_seed42_200t	NARRATIVE	A	1.256281407035176	A	1.0203045685279188	True	True	False	False	ok	ok
+simq_routing_test_seed42_500t	COGNITION	A	1.1267605633802817			False	True	True	False	ok	no-data
+simq_routing_test_seed42_500t	AGENCY	B	0.057971014492753624	B	0.0425531914893617	True	True	False	False	ok	ok
+simq_routing_test_seed42_500t	COMBAT	B	0.2789473684210526	B	0.11857707509881422	False	False	True	True	ok	ok
+simq_routing_test_seed42_500t	FACTION	B	0.028409090909090908			False	True	True	False	ok	no-data
+simq_routing_test_seed42_500t	ECONOMY	A	0.9152542372881356	A	0.8221343873517787	True	True	False	False	ok	ok
+simq_routing_test_seed42_500t	PROGRESSION	C	-0.306	C	-0.40454545454545454	False	False	True	True	ok	ok
+simq_routing_test_seed42_500t	SOCIAL	S	37.494	S	22.972	False	False	True	True	ok	ok
+simq_routing_test_seed42_500t	INFORMATION	S	57.15	S	2.13	False	False	True	True	ok	ok
+simq_routing_test_seed42_500t	WORLD	B	0.18	B	0.215	True	True	False	False	ok	ok
+simq_routing_test_seed42_500t	NARRATIVE	A	0.8354114713216958	B	0.46384039900249374	False	True	True	False	ok	ok
+dungeon_crawl_seed42_1000t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_1000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_1000t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_1000t	FACTION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_1000t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_1000t	PROGRESSION	C	-0.38436482084690554	C	-0.38436482084690554	True	True	False	False	ok	ok
+dungeon_crawl_seed42_1000t	SOCIAL	B	0.452	A	0.64	False	True	True	False	ok	ok
+dungeon_crawl_seed42_1000t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_1000t	WORLD	B	0.074	B	0.074	True	True	False	False	ok	ok
+dungeon_crawl_seed42_1000t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed42_1000t	COGNITION	B	0.012			False	True	True	False	ok	no-data
+sandbox_world_seed42_1000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed42_1000t	COMBAT	C	-0.001040582726326743	B	0.0020639834881320948	True	True	False	False	ok	ok
+sandbox_world_seed42_1000t	FACTION	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed42_1000t	ECONOMY	A	0.563323201621074	A	0.5601659751037344	True	True	False	False	ok	ok
+sandbox_world_seed42_1000t	PROGRESSION	C	-0.24765868886576484	C	-0.24561403508771928	True	True	False	False	ok	ok
+sandbox_world_seed42_1000t	SOCIAL	S	27.398	S	36.303	False	True	True	False	ok	ok
+sandbox_world_seed42_1000t	INFORMATION	B	0.04			False	True	True	False	ok	no-data
+sandbox_world_seed42_1000t	WORLD	B	0.094	B	0.09	True	True	False	False	ok	ok
+sandbox_world_seed42_1000t	NARRATIVE	B	0.19095477386934673	B	0.15170278637770898	True	True	False	False	ok	ok
+simq_routing_test_seed123_500t	COGNITION	C	0.0	A	1.1494252873563218	False	False	True	True	ok	ok
+simq_routing_test_seed123_500t	AGENCY	B	0.03089887640449438	B	0.025280898876404494	True	True	False	False	ok	ok
+simq_routing_test_seed123_500t	COMBAT	B	0.11428571428571428	B	0.19642857142857142	False	True	True	False	ok	ok
+simq_routing_test_seed123_500t	FACTION	C	0.0			False	True	True	False	ok	no-data
+simq_routing_test_seed123_500t	ECONOMY	A	0.5181818181818182	A	0.5267857142857143	True	True	False	False	ok	ok
+simq_routing_test_seed123_500t	PROGRESSION	D	-0.5315126050420168	C	-0.43283582089552236	True	True	False	False	ok	ok
+simq_routing_test_seed123_500t	SOCIAL	S	15.8828125	S	18.06896551724138	True	True	False	False	ok	ok
+simq_routing_test_seed123_500t	INFORMATION	S	108.912	S	4.585714285714285	False	True	True	False	ok	ok
+simq_routing_test_seed123_500t	WORLD	B	0.16	B	0.16	True	True	False	False	ok	ok
+simq_routing_test_seed123_500t	NARRATIVE	B	0.45558086560364464	A	0.6355353075170843	False	True	True	False	ok	ok
+simq_routing_test_seed456_500t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+simq_routing_test_seed456_500t	AGENCY	B	0.056	B	0.056	True	True	False	False	ok	ok
+simq_routing_test_seed456_500t	COMBAT	B	0.24693877551020407	B	0.1894093686354379	False	True	True	False	ok	ok
+simq_routing_test_seed456_500t	FACTION	C	-0.057803468208092484			False	True	True	False	ok	no-data
+simq_routing_test_seed456_500t	ECONOMY	B	0.2682926829268293	B	0.31313131313131315	True	True	False	False	ok	ok
+simq_routing_test_seed456_500t	PROGRESSION	C	-0.24737945492662475	C	-0.08315098468271334	False	True	True	False	ok	ok
+simq_routing_test_seed456_500t	SOCIAL	S	40.934	S	32.596	False	True	True	False	ok	ok
+simq_routing_test_seed456_500t	INFORMATION	S	7.956	S	2.4723926380368098	False	True	True	False	ok	ok
+simq_routing_test_seed456_500t	WORLD	B	0.14255765199161424	B	0.3050847457627119	False	True	True	False	ok	ok
+simq_routing_test_seed456_500t	NARRATIVE	A	0.5685840707964602	A	0.646	True	True	False	False	ok	ok
+dungeon_crawl_seed42_500t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_500t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_500t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_500t	FACTION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_500t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_500t	PROGRESSION	C	-0.38436482084690554	C	-0.38436482084690554	True	True	False	False	ok	ok
+dungeon_crawl_seed42_500t	SOCIAL	A	0.518348623853211	A	1.1594202898550725	False	True	True	False	ok	ok
+dungeon_crawl_seed42_500t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_500t	WORLD	B	0.095	B	0.095	True	True	False	False	ok	ok
+dungeon_crawl_seed42_500t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_500t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_500t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_500t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_500t	FACTION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_500t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_500t	PROGRESSION	C	-0.4169381107491857	C	-0.4169381107491857	True	True	False	False	ok	ok
+dungeon_crawl_seed123_500t	SOCIAL	C	0.0	S	7.08	False	True	True	False	ok	ok
+dungeon_crawl_seed123_500t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_500t	WORLD	B	0.06	B	0.06	True	True	False	False	ok	ok
+dungeon_crawl_seed123_500t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_500t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_500t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_500t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_500t	FACTION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_500t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_500t	PROGRESSION	C	-0.3540983606557377	C	-0.3540983606557377	True	True	False	False	ok	ok
+dungeon_crawl_seed456_500t	SOCIAL	A	0.9280575539568345	S	3.2232558139534886	False	True	True	False	ok	ok
+dungeon_crawl_seed456_500t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_500t	WORLD	B	0.095	B	0.13	True	True	False	False	ok	ok
+dungeon_crawl_seed456_500t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+urban_political_seed42_500t	COGNITION	B	0.024			False	True	True	False	ok	no-data
+urban_political_seed42_500t	AGENCY	B	0.0903954802259887	B	0.0903954802259887	True	True	False	False	ok	ok
+urban_political_seed42_500t	COMBAT	B	0.21391752577319587	B	0.14888888888888888	False	True	True	False	ok	ok
+urban_political_seed42_500t	FACTION	C	-0.10112359550561797	C	-0.08633093525179857	True	True	False	False	ok	ok
+urban_political_seed42_500t	ECONOMY	A	0.5210420841683366	A	0.5458248472505092	True	True	False	False	ok	ok
+urban_political_seed42_500t	PROGRESSION	C	-0.05982905982905983	C	-0.10950413223140495	True	True	False	False	ok	ok
+urban_political_seed42_500t	SOCIAL	S	33.72	S	51.26	False	True	True	False	ok	ok
+urban_political_seed42_500t	INFORMATION	S	43.73	S	3.5370741482965933	False	True	True	False	ok	ok
+urban_political_seed42_500t	WORLD	B	0.22	B	0.22666666666666666	True	True	False	False	ok	ok
+urban_political_seed42_500t	NARRATIVE	A	1.0584677419354838	A	1.3128964059196617	False	True	True	False	ok	ok
+urban_political_seed123_500t	COGNITION	B	0.024			False	True	True	False	ok	no-data
+urban_political_seed123_500t	AGENCY	B	0.056	B	0.056	True	True	False	False	ok	ok
+urban_political_seed123_500t	COMBAT	B	0.17721518987341772	B	0.24352331606217617	False	True	True	False	ok	ok
+urban_political_seed123_500t	FACTION	C	0.0			False	True	True	False	ok	no-data
+urban_political_seed123_500t	ECONOMY	A	0.5202558635394456	B	0.496551724137931	True	True	False	False	ok	ok
+urban_political_seed123_500t	PROGRESSION	C	-0.2233502538071066	C	-0.14717741935483872	False	True	True	False	ok	ok
+urban_political_seed123_500t	SOCIAL	S	61.466	S	59.634	True	True	False	False	ok	ok
+urban_political_seed123_500t	INFORMATION	S	72.938	S	3.4279918864097363	False	True	True	False	ok	ok
+urban_political_seed123_500t	WORLD	B	0.175	B	0.185	True	True	False	False	ok	ok
+urban_political_seed123_500t	NARRATIVE	A	0.8763326226012793	A	1.1346633416458853	False	True	True	False	ok	ok
+urban_political_seed456_500t	COGNITION	S	2.536	A	1.6025236593059937	False	False	True	True	ok	ok
+urban_political_seed456_500t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+urban_political_seed456_500t	COMBAT	B	0.14357682619647355	B	0.188	True	True	False	False	ok	ok
+urban_political_seed456_500t	FACTION	C	0.0	C	-0.06938775510204082	False	False	True	True	ok	ok
+urban_political_seed456_500t	ECONOMY	B	0.37130801687763715	B	0.45217391304347826	False	False	True	True	ok	ok
+urban_political_seed456_500t	PROGRESSION	C	-0.08312342569269521	B	0.074	False	False	True	True	ok	ok
+urban_political_seed456_500t	SOCIAL	S	29.012	S	47.942	False	False	True	True	ok	ok
+urban_political_seed456_500t	INFORMATION	S	51.752	S	30.26	False	False	True	True	ok	ok
+urban_political_seed456_500t	WORLD	B	0.26	B	0.2391304347826087	True	True	False	False	ok	ok
+urban_political_seed456_500t	NARRATIVE	A	1.0140845070422535	A	1.39	False	True	True	False	ok	ok
+dungeon_crawl_seed123_1000t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_1000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_1000t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_1000t	FACTION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_1000t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_1000t	PROGRESSION	C	-0.4169381107491857	C	-0.4169381107491857	True	True	False	False	ok	ok
+dungeon_crawl_seed123_1000t	SOCIAL	C	0.0	S	3.54	False	True	True	False	ok	ok
+dungeon_crawl_seed123_1000t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_1000t	WORLD	B	0.06	B	0.06	True	True	False	False	ok	ok
+dungeon_crawl_seed123_1000t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_1000t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_1000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_1000t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_1000t	FACTION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_1000t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_1000t	PROGRESSION	C	-0.3540983606557377	C	-0.3540983606557377	True	True	False	False	ok	ok
+dungeon_crawl_seed456_1000t	SOCIAL	A	0.516	S	2.772	False	True	True	False	ok	ok
+dungeon_crawl_seed456_1000t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_1000t	WORLD	B	0.074	B	0.088	True	True	False	False	ok	ok
+dungeon_crawl_seed456_1000t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+urban_political_seed42_1000t	COGNITION	B	0.012			False	True	True	False	ok	no-data
+urban_political_seed42_1000t	AGENCY	B	0.064	B	0.064	True	True	False	False	ok	ok
+urban_political_seed42_1000t	COMBAT	B	0.21391752577319587	B	0.14888888888888888	False	True	True	False	ok	ok
+urban_political_seed42_1000t	FACTION	C	-0.10112359550561797	C	-0.08633093525179857	True	True	False	False	ok	ok
+urban_political_seed42_1000t	ECONOMY	B	0.3137254901960784	B	0.47971781305114636	False	True	True	False	ok	ok
+urban_political_seed42_1000t	PROGRESSION	C	-0.08321377331420372	C	-0.10055096418732783	True	True	False	False	ok	ok
+urban_political_seed42_1000t	SOCIAL	S	37.708	S	51.887	False	True	True	False	ok	ok
+urban_political_seed42_1000t	INFORMATION	S	89.185	S	2.522567703109328	False	True	True	False	ok	ok
+urban_political_seed42_1000t	WORLD	B	0.142	B	0.156	True	True	False	False	ok	ok
+urban_political_seed42_1000t	NARRATIVE	A	1.0584677419354838	A	1.0632279534109816	True	True	False	False	ok	ok
+urban_political_seed123_1000t	COGNITION	B	0.012			False	True	True	False	ok	no-data
+urban_political_seed123_1000t	AGENCY	B	0.028	B	0.028	True	True	False	False	ok	ok
+urban_political_seed123_1000t	COMBAT	B	0.168	B	0.188	True	True	False	False	ok	ok
+urban_political_seed123_1000t	FACTION	C	0.0			False	True	True	False	ok	no-data
+urban_political_seed123_1000t	ECONOMY	B	0.32378580323785805	B	0.496551724137931	False	True	True	False	ok	ok
+urban_political_seed123_1000t	PROGRESSION	C	-0.1821561338289963	C	-0.14717741935483872	True	True	False	False	ok	ok
+urban_political_seed123_1000t	SOCIAL	S	58.298	S	53.8	True	True	False	False	ok	ok
+urban_political_seed123_1000t	INFORMATION	S	114.019	S	2.8413654618473894	False	True	True	False	ok	ok
+urban_political_seed123_1000t	WORLD	B	0.124	B	0.128	True	True	False	False	ok	ok
+urban_political_seed123_1000t	NARRATIVE	A	0.6938435940099834	A	1.1346633416458853	False	True	True	False	ok	ok
+urban_political_seed456_1000t	COGNITION	S	3.668108108108108	A	1.6025236593059937	False	False	True	True	ok	ok
+urban_political_seed456_1000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+urban_political_seed456_1000t	COMBAT	B	0.06597938144329897	B	0.19642857142857142	False	False	True	True	ok	ok
+urban_political_seed456_1000t	FACTION	C	0.0	C	-0.06938775510204082	False	False	True	True	ok	ok
+urban_political_seed456_1000t	ECONOMY	B	0.27571115973741794	B	0.37209302325581395	False	False	True	True	ok	ok
+urban_political_seed456_1000t	PROGRESSION	C	-0.11736334405144695	B	0.031423290203327174	False	False	True	True	ok	ok
+urban_political_seed456_1000t	SOCIAL	S	24.704	S	47.945	False	False	True	True	ok	ok
+urban_political_seed456_1000t	INFORMATION	S	71.236	S	41.06	False	False	True	True	ok	ok
+urban_political_seed456_1000t	WORLD	B	0.158	B	0.168	True	True	False	False	ok	ok
+urban_political_seed456_1000t	NARRATIVE	A	0.5465465465465466	A	1.1983739837398375	False	True	True	False	ok	ok
+dungeon_crawl_seed42_2000t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_2000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_2000t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_2000t	FACTION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_2000t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_2000t	PROGRESSION	C	-0.236	C	-0.236	True	True	False	False	ok	ok
+dungeon_crawl_seed42_2000t	SOCIAL	B	0.226	B	0.32	False	True	True	False	ok	ok
+dungeon_crawl_seed42_2000t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed42_2000t	WORLD	B	0.067	B	0.067	True	True	False	False	ok	ok
+dungeon_crawl_seed42_2000t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_2000t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_2000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_2000t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_2000t	FACTION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_2000t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_2000t	PROGRESSION	C	-0.256	C	-0.256	True	True	False	False	ok	ok
+dungeon_crawl_seed123_2000t	SOCIAL	C	0.0	A	1.77	False	True	True	False	ok	ok
+dungeon_crawl_seed123_2000t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed123_2000t	WORLD	B	0.06	B	0.06	True	True	False	False	ok	ok
+dungeon_crawl_seed123_2000t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_2000t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_2000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_2000t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_2000t	FACTION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_2000t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_2000t	PROGRESSION	C	-0.216	C	-0.216	True	True	False	False	ok	ok
+dungeon_crawl_seed456_2000t	SOCIAL	B	0.258	A	1.386	False	True	True	False	ok	ok
+dungeon_crawl_seed456_2000t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+dungeon_crawl_seed456_2000t	WORLD	B	0.067	B	0.074	True	True	False	False	ok	ok
+dungeon_crawl_seed456_2000t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed42_2000t	COGNITION	B	0.006			False	True	True	False	ok	no-data
+sandbox_world_seed42_2000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+sandbox_world_seed42_2000t	COMBAT	C	-0.001040582726326743	B	0.015247776365946633	True	True	False	False	ok	ok
+sandbox_world_seed42_2000t	FACTION	C	0.0	C	-0.021497919556171984	True	True	False	False	ok	ok
+sandbox_world_seed42_2000t	ECONOMY	B	0.43909774436090226	B	0.3730886850152905	True	True	False	False	ok	ok
+sandbox_world_seed42_2000t	PROGRESSION	C	-0.24765868886576484	C	-0.1289707750952986	False	True	True	False	ok	ok
+sandbox_world_seed42_2000t	SOCIAL	S	39.3705	S	45.614	True	True	False	False	ok	ok
+sandbox_world_seed42_2000t	INFORMATION	B	0.02			False	True	True	False	ok	no-data
+sandbox_world_seed42_2000t	WORLD	B	0.092	B	0.09	True	True	False	False	ok	ok
+sandbox_world_seed42_2000t	NARRATIVE	B	0.18473138548539114	B	0.1930043722673329	True	True	False	False	ok	ok
+frontier_extended_seed42_200t	COGNITION	A	1.09			False	True	True	False	ok	no-data
+frontier_extended_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+frontier_extended_seed42_200t	COMBAT	B	0.3333333333333333	B	0.3350253807106599	True	True	False	False	ok	ok
+frontier_extended_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+frontier_extended_seed42_200t	ECONOMY	A	0.9214659685863874	A	1.12	False	True	True	False	ok	ok
+frontier_extended_seed42_200t	PROGRESSION	A	0.6298701298701299	A	0.5403726708074534	True	True	False	False	ok	ok
+frontier_extended_seed42_200t	SOCIAL	S	74.155	S	75.005	True	True	False	False	ok	ok
+frontier_extended_seed42_200t	INFORMATION	B	0.2	A	0.6821192052980133	False	True	True	False	ok	ok
+frontier_extended_seed42_200t	WORLD	B	0.47	A	0.58	False	True	True	False	ok	ok
+frontier_extended_seed42_200t	NARRATIVE	A	1.707070707070707	A	1.715	True	True	False	False	ok	ok
+frontier_extended_seed123_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+frontier_extended_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+frontier_extended_seed123_200t	COMBAT	B	0.22580645161290322	B	0.1893491124260355	True	True	False	False	ok	ok
+frontier_extended_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+frontier_extended_seed123_200t	ECONOMY	B	0.24870466321243523	A	0.66	False	True	True	False	ok	ok
+frontier_extended_seed123_200t	PROGRESSION	A	0.5473684210526316	B	0.4240506329113924	False	True	True	False	ok	ok
+frontier_extended_seed123_200t	SOCIAL	S	37.755	S	47.76	False	True	True	False	ok	ok
+frontier_extended_seed123_200t	INFORMATION	B	0.2	A	1.1361256544502618	False	True	True	False	ok	ok
+frontier_extended_seed123_200t	WORLD	A	0.58	A	0.58	True	True	False	False	ok	ok
+frontier_extended_seed123_200t	NARRATIVE	A	1.2131979695431472	A	1.6230366492146597	False	True	True	False	ok	ok
+frontier_extended_seed456_200t	COGNITION	B	0.06	B	0.04819277108433735	True	True	False	False	ok	ok
+frontier_extended_seed456_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+frontier_extended_seed456_200t	COMBAT	B	0.2413793103448276	B	0.26903553299492383	True	True	False	False	ok	ok
+frontier_extended_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+frontier_extended_seed456_200t	ECONOMY	A	0.6054054054054054	A	0.6458333333333334	True	True	False	False	ok	ok
+frontier_extended_seed456_200t	PROGRESSION	B	0.49044585987261147	A	0.5380116959064327	True	True	False	False	ok	ok
+frontier_extended_seed456_200t	SOCIAL	S	53.69	S	53.19	True	True	False	False	ok	ok
+frontier_extended_seed456_200t	INFORMATION	B	0.2	A	0.905	False	True	True	False	ok	ok
+frontier_extended_seed456_200t	WORLD	A	0.68	A	0.73	True	True	False	False	ok	ok
+frontier_extended_seed456_200t	NARRATIVE	A	1.855	S	2.1758793969849246	True	True	False	False	ok	ok
+frontier_living_world_seed42_200t	COGNITION	B	0.14	A	0.79	False	True	True	False	ok	ok
+frontier_living_world_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+frontier_living_world_seed42_200t	COMBAT	B	0.2182741116751269	B	0.32642487046632124	False	True	True	False	ok	ok
+frontier_living_world_seed42_200t	FACTION	B	0.032467532467532464			False	True	True	False	ok	no-data
+frontier_living_world_seed42_200t	ECONOMY	A	0.8043478260869565	A	0.9543147208121827	True	True	False	False	ok	ok
+frontier_living_world_seed42_200t	PROGRESSION	B	0.36470588235294116	A	0.6321243523316062	False	True	True	False	ok	ok
+frontier_living_world_seed42_200t	SOCIAL	S	49.925	S	57.315	True	True	False	False	ok	ok
+frontier_living_world_seed42_200t	INFORMATION	B	0.2	A	1.4517766497461928	False	True	True	False	ok	ok
+frontier_living_world_seed42_200t	WORLD	A	0.51	A	0.54	True	True	False	False	ok	ok
+frontier_living_world_seed42_200t	NARRATIVE	A	1.935	S	2.0251256281407035	True	True	False	False	ok	ok
+frontier_living_world_seed123_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+frontier_living_world_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+frontier_living_world_seed123_200t	COMBAT	B	0.21649484536082475	B	0.23076923076923078	True	True	False	False	ok	ok
+frontier_living_world_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+frontier_living_world_seed123_200t	ECONOMY	A	0.6918918918918919	A	0.861878453038674	False	True	True	False	ok	ok
+frontier_living_world_seed123_200t	PROGRESSION	B	0.47058823529411764	B	0.425414364640884	True	True	False	False	ok	ok
+frontier_living_world_seed123_200t	SOCIAL	S	73.36	S	71.435	True	True	False	False	ok	ok
+frontier_living_world_seed123_200t	INFORMATION	B	0.2	S	2.4321608040201004	False	True	True	False	ok	ok
+frontier_living_world_seed123_200t	WORLD	A	0.56	A	0.66	True	True	False	False	ok	ok
+frontier_living_world_seed123_200t	NARRATIVE	S	2.1717171717171717	A	1.865	True	True	False	False	ok	ok
+frontier_living_world_seed456_200t	COGNITION	B	0.06	B	0.07547169811320754	True	True	False	False	ok	ok
+frontier_living_world_seed456_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+frontier_living_world_seed456_200t	COMBAT	B	0.398989898989899	B	0.3430232558139535	True	True	False	False	ok	ok
+frontier_living_world_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+frontier_living_world_seed456_200t	ECONOMY	A	1.14	A	1.08	True	True	False	False	ok	ok
+frontier_living_world_seed456_200t	PROGRESSION	A	0.6256410256410256	B	0.4161849710982659	False	True	True	False	ok	ok
+frontier_living_world_seed456_200t	SOCIAL	S	45.665	S	41.775	True	True	False	False	ok	ok
+frontier_living_world_seed456_200t	INFORMATION	B	0.2	A	1.8974358974358974	False	True	True	False	ok	ok
+frontier_living_world_seed456_200t	WORLD	A	0.61	A	0.77	False	True	True	False	ok	ok
+frontier_living_world_seed456_200t	NARRATIVE	A	1.564102564102564	A	1.7172774869109948	True	True	False	False	ok	ok
+wilderness_survival_seed42_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed42_200t	ECONOMY	A	0.7868852459016393	A	0.7868852459016393	True	True	False	False	ok	ok
+wilderness_survival_seed42_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+wilderness_survival_seed42_200t	SOCIAL	A	1.43	A	0.875	False	True	True	False	ok	ok
+wilderness_survival_seed42_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed42_200t	WORLD	B	0.19	B	0.19	True	True	False	False	ok	ok
+wilderness_survival_seed42_200t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed123_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed123_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed123_200t	ECONOMY	B	0.26519337016574585	B	0.26519337016574585	True	True	False	False	ok	ok
+wilderness_survival_seed123_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+wilderness_survival_seed123_200t	SOCIAL	S	2.52	A	1.12	False	False	True	True	ok	ok
+wilderness_survival_seed123_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed123_200t	WORLD	B	0.14	B	0.12	True	True	False	False	ok	ok
+wilderness_survival_seed123_200t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed456_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed456_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed456_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed456_200t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed456_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+wilderness_survival_seed456_200t	SOCIAL	S	2.07	A	1.7076923076923076	True	True	False	False	ok	ok
+wilderness_survival_seed456_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+wilderness_survival_seed456_200t	WORLD	B	0.21	B	0.26	False	True	True	False	ok	ok
+wilderness_survival_seed456_200t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+highland_traverse_seed42_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+highland_traverse_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+highland_traverse_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+highland_traverse_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+highland_traverse_seed42_200t	ECONOMY	B	0.07017543859649122			False	True	True	False	ok	no-data
+highland_traverse_seed42_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+highland_traverse_seed42_200t	SOCIAL	S	11.58	S	13.115	True	True	False	False	ok	ok
+highland_traverse_seed42_200t	INFORMATION	B	0.2			False	True	True	False	ok	no-data
+highland_traverse_seed42_200t	WORLD	B	0.26	B	0.24	True	True	False	False	ok	ok
+highland_traverse_seed42_200t	NARRATIVE	B	0.1836734693877551	B	0.1910828025477707	True	True	False	False	ok	ok
+highland_traverse_seed123_200t	COGNITION	B	0.06	B	0.1276595744680851	False	True	True	False	ok	ok
+highland_traverse_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+highland_traverse_seed123_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+highland_traverse_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+highland_traverse_seed123_200t	ECONOMY	B	0.1			False	True	True	False	ok	no-data
+highland_traverse_seed123_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+highland_traverse_seed123_200t	SOCIAL	S	23.377551020408163	S	25.533678756476682	True	True	False	False	ok	ok
+highland_traverse_seed123_200t	INFORMATION	B	0.2			False	True	True	False	ok	no-data
+highland_traverse_seed123_200t	WORLD	A	0.75	A	0.75	True	True	False	False	ok	ok
+highland_traverse_seed123_200t	NARRATIVE	B	0.4897959183673469	A	0.5125628140703518	True	True	False	False	ok	ok
+highland_traverse_seed456_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+highland_traverse_seed456_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+highland_traverse_seed456_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+highland_traverse_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+highland_traverse_seed456_200t	ECONOMY	B	0.4892086330935252	B	0.4892086330935252	True	True	False	False	ok	ok
+highland_traverse_seed456_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+highland_traverse_seed456_200t	SOCIAL	S	15.735	S	16.475	True	True	False	False	ok	ok
+highland_traverse_seed456_200t	INFORMATION	B	0.2			False	True	True	False	ok	no-data
+highland_traverse_seed456_200t	WORLD	B	0.24	B	0.24	True	True	False	False	ok	ok
+highland_traverse_seed456_200t	NARRATIVE	B	0.2222222222222222	B	0.2222222222222222	True	True	False	False	ok	ok
+swamp_border_world_seed42_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+swamp_border_world_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+swamp_border_world_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+swamp_border_world_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+swamp_border_world_seed42_200t	ECONOMY	A	0.6526315789473685	A	0.591715976331361	True	True	False	False	ok	ok
+swamp_border_world_seed42_200t	PROGRESSION	C	-0.018867924528301886			False	True	True	False	ok	no-data
+swamp_border_world_seed42_200t	SOCIAL	S	23.97	S	33.215	False	True	True	False	ok	ok
+swamp_border_world_seed42_200t	INFORMATION	B	0.2	S	2.0211640211640214	False	True	True	False	ok	ok
+swamp_border_world_seed42_200t	WORLD	B	0.17	B	0.15	True	True	False	False	ok	ok
+swamp_border_world_seed42_200t	NARRATIVE	B	0.26424870466321243	B	0.23163841807909605	True	True	False	False	ok	ok
+swamp_border_world_seed123_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+swamp_border_world_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+swamp_border_world_seed123_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+swamp_border_world_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+swamp_border_world_seed123_200t	ECONOMY	A	0.6336633663366337	B	0.44970414201183434	False	True	True	False	ok	ok
+swamp_border_world_seed123_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+swamp_border_world_seed123_200t	SOCIAL	S	23.12	S	30.42	False	True	True	False	ok	ok
+swamp_border_world_seed123_200t	INFORMATION	B	0.2	S	2.492462311557789	False	True	True	False	ok	ok
+swamp_border_world_seed123_200t	WORLD	B	0.15	B	0.15	True	True	False	False	ok	ok
+swamp_border_world_seed123_200t	NARRATIVE	B	0.24083769633507854	B	0.4342105263157895	False	True	True	False	ok	ok
+swamp_border_world_seed456_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+swamp_border_world_seed456_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+swamp_border_world_seed456_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+swamp_border_world_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+swamp_border_world_seed456_200t	ECONOMY	B	0.0213903743315508	B	0.4413793103448276	False	True	True	False	ok	ok
+swamp_border_world_seed456_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+swamp_border_world_seed456_200t	SOCIAL	S	24.65	S	17.29	False	True	True	False	ok	ok
+swamp_border_world_seed456_200t	INFORMATION	B	0.2	S	2.8974358974358974	False	True	True	False	ok	ok
+swamp_border_world_seed456_200t	WORLD	B	0.15	B	0.15	True	True	False	False	ok	ok
+swamp_border_world_seed456_200t	NARRATIVE	B	0.35714285714285715	B	0.2978723404255319	True	True	False	False	ok	ok
+unit_faction_tension_seed42_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_200t	ECONOMY	A	0.5628140703517588	A	0.774869109947644	False	True	True	False	ok	ok
+unit_faction_tension_seed42_200t	PROGRESSION	B	0.185			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_200t	SOCIAL	S	7.3	S	8.935	False	True	True	False	ok	ok
+unit_faction_tension_seed42_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_200t	WORLD	B	0.11	B	0.09	True	True	False	False	ok	ok
+unit_faction_tension_seed42_200t	NARRATIVE	B	0.25949367088607594	B	0.30357142857142855	True	True	False	False	ok	ok
+unit_faction_tension_seed123_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed123_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed123_200t	ECONOMY	A	0.7	A	0.925	False	True	True	False	ok	ok
+unit_faction_tension_seed123_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_faction_tension_seed123_200t	SOCIAL	S	10.875647668393782	S	14.915	False	True	True	False	ok	ok
+unit_faction_tension_seed123_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed123_200t	WORLD	B	0.09	B	0.09	True	True	False	False	ok	ok
+unit_faction_tension_seed123_200t	NARRATIVE	B	0.22404371584699453	B	0.3065326633165829	False	True	True	False	ok	ok
+unit_faction_tension_seed456_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed456_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed456_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed456_200t	ECONOMY	A	0.7821229050279329	A	0.5842696629213483	False	True	True	False	ok	ok
+unit_faction_tension_seed456_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_faction_tension_seed456_200t	SOCIAL	S	9.34	S	9.12	True	True	False	False	ok	ok
+unit_faction_tension_seed456_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed456_200t	WORLD	B	0.09	B	0.09	True	True	False	False	ok	ok
+unit_faction_tension_seed456_200t	NARRATIVE	B	0.25555555555555554	B	0.2987012987012987	True	True	False	False	ok	ok
+unit_information_source_seed42_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+unit_information_source_seed42_200t	AGENCY	B	0.14	B	0.14	True	True	False	False	ok	ok
+unit_information_source_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_information_source_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_information_source_seed42_200t	ECONOMY	A	0.845360824742268	A	0.845360824742268	True	True	False	False	ok	ok
+unit_information_source_seed42_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_information_source_seed42_200t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+unit_information_source_seed42_200t	INFORMATION	B	0.2			False	True	True	False	ok	no-data
+unit_information_source_seed42_200t	WORLD	B	0.03			False	True	True	False	ok	no-data
+unit_information_source_seed42_200t	NARRATIVE	B	0.29381443298969073	B	0.29381443298969073	True	True	False	False	ok	ok
+unit_information_source_seed123_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+unit_information_source_seed123_200t	AGENCY	B	0.14	B	0.14	True	True	False	False	ok	ok
+unit_information_source_seed123_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_information_source_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_information_source_seed123_200t	ECONOMY	A	0.5365853658536586	A	0.5365853658536586	True	True	False	False	ok	ok
+unit_information_source_seed123_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_information_source_seed123_200t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+unit_information_source_seed123_200t	INFORMATION	B	0.2			False	True	True	False	ok	no-data
+unit_information_source_seed123_200t	WORLD	B	0.03			False	True	True	False	ok	no-data
+unit_information_source_seed123_200t	NARRATIVE	B	0.4520547945205479	B	0.4520547945205479	True	True	False	False	ok	ok
+unit_information_source_seed456_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+unit_information_source_seed456_200t	AGENCY	B	0.1523809523809524	B	0.1523809523809524	True	True	False	False	ok	ok
+unit_information_source_seed456_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_information_source_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_information_source_seed456_200t	ECONOMY	A	0.512	A	0.512	True	True	False	False	ok	ok
+unit_information_source_seed456_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_information_source_seed456_200t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+unit_information_source_seed456_200t	INFORMATION	B	0.2			False	True	True	False	ok	no-data
+unit_information_source_seed456_200t	WORLD	B	0.03			False	True	True	False	ok	no-data
+unit_information_source_seed456_200t	NARRATIVE	B	0.328	B	0.328	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed42_200t	COGNITION	S	16.0	S	16.0	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed42_200t	AGENCY	B	0.42	B	0.42	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed42_200t	ECONOMY	A	0.7607361963190185	A	0.7607361963190185	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed42_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed42_200t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed42_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed42_200t	WORLD	B	0.03			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed42_200t	NARRATIVE	B	0.4842105263157895	B	0.4842105263157895	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed123_200t	COGNITION	S	16.0	S	16.0	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed123_200t	AGENCY	B	0.184	B	0.184	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed123_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed123_200t	ECONOMY	A	0.7	A	0.7	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed123_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed123_200t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed123_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed123_200t	WORLD	B	0.03			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed123_200t	NARRATIVE	B	0.37272727272727274	B	0.37272727272727274	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed456_200t	COGNITION	S	16.0	S	16.0	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed456_200t	AGENCY	B	0.184	B	0.184	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed456_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed456_200t	ECONOMY	A	0.6444444444444445	A	0.6444444444444445	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed456_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed456_200t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed456_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed456_200t	WORLD	B	0.03			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed456_200t	NARRATIVE	B	0.38317757009345793	B	0.38317757009345793	True	True	False	False	ok	ok
+urban_political_selfmodel_probe_seed42_200t	COGNITION	S	28.25	S	28.12	True	True	False	False	ok	ok
+urban_political_selfmodel_probe_seed42_200t	AGENCY	B	0.12994350282485875	B	0.12994350282485875	True	True	False	False	ok	ok
+urban_political_selfmodel_probe_seed42_200t	COMBAT	B	0.21311475409836064	B	0.13440860215053763	False	True	True	False	ok	ok
+urban_political_selfmodel_probe_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+urban_political_selfmodel_probe_seed42_200t	ECONOMY	A	0.8292682926829268	A	0.7674418604651163	True	True	False	False	ok	ok
+urban_political_selfmodel_probe_seed42_200t	PROGRESSION	B	0.3803680981595092	B	0.3313953488372093	True	True	False	False	ok	ok
+urban_political_selfmodel_probe_seed42_200t	SOCIAL	S	32.44	S	37.48	True	True	False	False	ok	ok
+urban_political_selfmodel_probe_seed42_200t	INFORMATION	S	18.34	S	8.314720812182742	False	True	True	False	ok	ok
+urban_political_selfmodel_probe_seed42_200t	WORLD	B	0.2	B	0.32	False	True	True	False	ok	ok
+urban_political_selfmodel_probe_seed42_200t	NARRATIVE	A	1.2060301507537687	A	0.9949238578680203	True	True	False	False	ok	ok
+hero_guild_routing_seed42_500t	COGNITION	S	2.1021021021021022	S	2.6506024096385543	False	False	True	True	ok	ok
+hero_guild_routing_seed42_500t	AGENCY	B	0.06751054852320675	B	0.047619047619047616	True	True	False	False	ok	ok
+hero_guild_routing_seed42_500t	COMBAT	B	0.21730382293762576	B	0.1111111111111111	False	False	True	True	ok	ok
+hero_guild_routing_seed42_500t	FACTION	C	-0.06451612903225806			False	True	True	False	ok	no-data
+hero_guild_routing_seed42_500t	ECONOMY	A	0.7051671732522796	A	0.7908745247148289	True	True	False	False	ok	ok
+hero_guild_routing_seed42_500t	PROGRESSION	C	-0.10663983903420524	C	-0.4789915966386555	False	False	True	True	ok	ok
+hero_guild_routing_seed42_500t	SOCIAL	S	42.396	S	10.405063291139241	False	False	True	True	ok	ok
+hero_guild_routing_seed42_500t	INFORMATION	S	71.844	A	1.3775510204081634	False	False	True	True	ok	ok
+hero_guild_routing_seed42_500t	WORLD	B	0.24	B	0.19	True	True	False	False	ok	ok
+hero_guild_routing_seed42_500t	NARRATIVE	A	0.9134020618556701	B	0.47381546134663344	False	True	True	False	ok	ok
+hero_guild_routing_seed123_500t	COGNITION	C	0.0	A	1.6203703703703705	False	False	True	True	ok	ok
+hero_guild_routing_seed123_500t	AGENCY	B	0.03089887640449438	B	0.019662921348314606	True	True	False	False	ok	ok
+hero_guild_routing_seed123_500t	COMBAT	B	0.11428571428571428	B	0.13636363636363635	True	True	False	False	ok	ok
+hero_guild_routing_seed123_500t	FACTION	C	0.0			False	True	True	False	ok	no-data
+hero_guild_routing_seed123_500t	ECONOMY	A	0.5181818181818182	A	0.5095541401273885	True	True	False	False	ok	ok
+hero_guild_routing_seed123_500t	PROGRESSION	D	-0.5315126050420168	D	-0.511578947368421	True	True	False	False	ok	ok
+hero_guild_routing_seed123_500t	SOCIAL	S	13.375	S	5.9495412844036695	False	True	True	False	ok	ok
+hero_guild_routing_seed123_500t	INFORMATION	S	75.804	S	4.531380753138075	False	True	True	False	ok	ok
+hero_guild_routing_seed123_500t	WORLD	B	0.19	B	0.19	True	True	False	False	ok	ok
+hero_guild_routing_seed123_500t	NARRATIVE	B	0.4328018223234624	A	0.5148063781321185	True	True	False	False	ok	ok
+hero_guild_routing_seed456_500t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+hero_guild_routing_seed456_500t	AGENCY	B	0.056	B	0.056	True	True	False	False	ok	ok
+hero_guild_routing_seed456_500t	COMBAT	B	0.19861431870669746	B	0.3963782696177062	False	True	True	False	ok	ok
+hero_guild_routing_seed456_500t	FACTION	C	-0.08955223880597014	C	-0.08530805687203792	True	True	False	False	ok	ok
+hero_guild_routing_seed456_500t	ECONOMY	B	0.22935779816513763	B	0.23923444976076555	True	True	False	False	ok	ok
+hero_guild_routing_seed456_500t	PROGRESSION	C	-0.02813852813852814	B	0.024096385542168676	False	True	True	False	ok	ok
+hero_guild_routing_seed456_500t	SOCIAL	S	32.988	S	45.436	False	True	True	False	ok	ok
+hero_guild_routing_seed456_500t	INFORMATION	S	15.636	S	2.3680981595092025	False	True	True	False	ok	ok
+hero_guild_routing_seed456_500t	WORLD	B	0.1834862385321101	B	0.20080321285140562	True	True	False	False	ok	ok
+hero_guild_routing_seed456_500t	NARRATIVE	A	0.9116279069767442	A	1.0264765784114054	True	True	False	False	ok	ok
+crowded_frontier_seed42_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+crowded_frontier_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+crowded_frontier_seed42_200t	COMBAT	B	0.3870967741935484	A	0.5025125628140703	False	True	True	False	ok	ok
+crowded_frontier_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+crowded_frontier_seed42_200t	ECONOMY	A	0.967741935483871	A	0.8844221105527639	True	True	False	False	ok	ok
+crowded_frontier_seed42_200t	PROGRESSION	A	0.9516129032258065	A	0.9396984924623115	True	True	False	False	ok	ok
+crowded_frontier_seed42_200t	SOCIAL	S	43.375	S	48.385	True	True	False	False	ok	ok
+crowded_frontier_seed42_200t	INFORMATION	C	0.0	S	2.0052631578947366	False	True	True	False	ok	ok
+crowded_frontier_seed42_200t	WORLD	B	0.4	B	0.44	True	True	False	False	ok	ok
+crowded_frontier_seed42_200t	NARRATIVE	S	2.4673366834170856	S	2.798994974874372	True	True	False	False	ok	ok
+crowded_frontier_seed123_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+crowded_frontier_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+crowded_frontier_seed123_200t	COMBAT	B	0.07368421052631578	B	0.2032967032967033	False	True	True	False	ok	ok
+crowded_frontier_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+crowded_frontier_seed123_200t	ECONOMY	A	0.54421768707483	A	0.5948717948717949	True	True	False	False	ok	ok
+crowded_frontier_seed123_200t	PROGRESSION	B	0.10619469026548672	B	0.1893491124260355	False	True	True	False	ok	ok
+crowded_frontier_seed123_200t	SOCIAL	S	25.53	S	37.665	False	True	True	False	ok	ok
+crowded_frontier_seed123_200t	INFORMATION	C	0.0	S	2.817258883248731	False	True	True	False	ok	ok
+crowded_frontier_seed123_200t	WORLD	B	0.32	B	0.34	True	True	False	False	ok	ok
+crowded_frontier_seed123_200t	NARRATIVE	A	0.7098445595854922	A	1.6237113402061856	False	True	True	False	ok	ok
+crowded_frontier_seed456_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+crowded_frontier_seed456_200t	AGENCY	B	0.03684210526315789	B	0.14	False	True	True	False	ok	ok
+crowded_frontier_seed456_200t	COMBAT	B	0.375	B	0.2894736842105263	False	True	True	False	ok	ok
+crowded_frontier_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+crowded_frontier_seed456_200t	ECONOMY	A	0.6956521739130435	A	0.5680473372781065	True	True	False	False	ok	ok
+crowded_frontier_seed456_200t	PROGRESSION	A	0.717391304347826	B	0.5	False	True	True	False	ok	ok
+crowded_frontier_seed456_200t	SOCIAL	S	22.535	S	47.69	False	True	True	False	ok	ok
+crowded_frontier_seed456_200t	INFORMATION	C	0.0	S	4.507692307692308	False	True	True	False	ok	ok
+crowded_frontier_seed456_200t	WORLD	B	0.4	B	0.36	True	True	False	False	ok	ok
+crowded_frontier_seed456_200t	NARRATIVE	A	1.8090452261306533	A	1.7025641025641025	True	True	False	False	ok	ok
+resource_dense_basin_seed42_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed42_200t	ECONOMY	A	0.9820359281437125	A	0.8961748633879781	True	True	False	False	ok	ok
+resource_dense_basin_seed42_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+resource_dense_basin_seed42_200t	SOCIAL	S	4.805	S	4.37	True	True	False	False	ok	ok
+resource_dense_basin_seed42_200t	INFORMATION	S	34.83076923076923	S	2.0418848167539267	False	True	True	False	ok	ok
+resource_dense_basin_seed42_200t	WORLD	B	0.09	B	0.09	True	True	False	False	ok	ok
+resource_dense_basin_seed42_200t	NARRATIVE	B	0.19161676646706588	B	0.22950819672131148	True	True	False	False	ok	ok
+resource_dense_basin_seed123_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed123_200t	COMBAT	B	0.03			False	True	True	False	ok	no-data
+resource_dense_basin_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed123_200t	ECONOMY	A	0.5365853658536586	A	0.6289308176100629	True	True	False	False	ok	ok
+resource_dense_basin_seed123_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+resource_dense_basin_seed123_200t	SOCIAL	S	18.175	S	10.625	False	True	True	False	ok	ok
+resource_dense_basin_seed123_200t	INFORMATION	S	11.76	S	2.010152284263959	False	True	True	False	ok	ok
+resource_dense_basin_seed123_200t	WORLD	B	0.09	B	0.09	True	True	False	False	ok	ok
+resource_dense_basin_seed123_200t	NARRATIVE	B	0.29	B	0.31724137931034485	True	True	False	False	ok	ok
+resource_dense_basin_seed456_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed456_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed456_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+resource_dense_basin_seed456_200t	ECONOMY	B	0.4507042253521127	B	0.47761194029850745	True	True	False	False	ok	ok
+resource_dense_basin_seed456_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+resource_dense_basin_seed456_200t	SOCIAL	S	4.3	S	4.52	True	True	False	False	ok	ok
+resource_dense_basin_seed456_200t	INFORMATION	S	2.71875	A	1.3404255319148937	False	True	True	False	ok	ok
+resource_dense_basin_seed456_200t	WORLD	B	0.09	B	0.09	True	True	False	False	ok	ok
+resource_dense_basin_seed456_200t	NARRATIVE	B	0.2535211267605634	B	0.23134328358208955	True	True	False	False	ok	ok
+frontier_marches_seed42_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+frontier_marches_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+frontier_marches_seed42_200t	COMBAT	B	0.49746192893401014	B	0.4205128205128205	True	True	False	False	ok	ok
+frontier_marches_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+frontier_marches_seed42_200t	ECONOMY	A	1.0869565217391304	A	1.0666666666666667	True	True	False	False	ok	ok
+frontier_marches_seed42_200t	PROGRESSION	A	1.2608695652173914	A	1.0666666666666667	True	True	False	False	ok	ok
+frontier_marches_seed42_200t	SOCIAL	S	74.09	S	88.05	True	True	False	False	ok	ok
+frontier_marches_seed42_200t	INFORMATION	B	0.2	S	3.005235602094241	False	True	True	False	ok	ok
+frontier_marches_seed42_200t	WORLD	A	0.7	A	0.56	True	True	False	False	ok	ok
+frontier_marches_seed42_200t	NARRATIVE	S	3.487309644670051	S	3.1538461538461537	True	True	False	False	ok	ok
+frontier_marches_seed123_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+frontier_marches_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+frontier_marches_seed123_200t	COMBAT	B	0.34673366834170855	B	0.4221105527638191	False	True	True	False	ok	ok
+frontier_marches_seed123_200t	FACTION	C	0.0	B	0.07575757575757576	False	False	True	True	ok	ok
+frontier_marches_seed123_200t	ECONOMY	A	0.5685279187817259	A	1.02	False	True	True	False	ok	ok
+frontier_marches_seed123_200t	PROGRESSION	A	0.7715736040609137	A	1.065326633165829	False	True	True	False	ok	ok
+frontier_marches_seed123_200t	SOCIAL	S	82.285	S	85.01	True	True	False	False	ok	ok
+frontier_marches_seed123_200t	INFORMATION	B	0.2	A	1.4747474747474747	False	True	True	False	ok	ok
+frontier_marches_seed123_200t	WORLD	A	0.6	A	0.73	False	True	True	False	ok	ok
+frontier_marches_seed123_200t	NARRATIVE	S	2.745	S	3.775	False	True	True	False	ok	ok
+frontier_marches_seed456_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+frontier_marches_seed456_200t	AGENCY	B	0.04666666666666667	B	0.03684210526315789	True	True	False	False	ok	ok
+frontier_marches_seed456_200t	COMBAT	B	0.3673469387755102	B	0.38578680203045684	True	True	False	False	ok	ok
+frontier_marches_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+frontier_marches_seed456_200t	ECONOMY	B	0.4419889502762431	A	0.5591397849462365	False	True	True	False	ok	ok
+frontier_marches_seed456_200t	PROGRESSION	A	0.8010204081632653	A	0.6387434554973822	False	True	True	False	ok	ok
+frontier_marches_seed456_200t	SOCIAL	S	53.66	S	57.905	True	True	False	False	ok	ok
+frontier_marches_seed456_200t	INFORMATION	B	0.2	S	2.157068062827225	False	True	True	False	ok	ok
+frontier_marches_seed456_200t	WORLD	A	0.7	A	0.51	False	True	True	False	ok	ok
+frontier_marches_seed456_200t	NARRATIVE	S	2.150753768844221	A	1.8383838383838385	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed42_1000t	COGNITION	S	16.0	S	16.0	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed42_1000t	AGENCY	B	0.08169934640522876	B	0.08169934640522876	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed42_1000t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed42_1000t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed42_1000t	ECONOMY	B	0.4079822616407982	B	0.4079822616407982	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed42_1000t	PROGRESSION	D	-0.5562913907284768	D	-0.5562913907284768	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed42_1000t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed42_1000t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+unit_selfmodel_pilot_seed42_1000t	WORLD	B	0.03	B	0.03	True	True	False	False	ok	ok
+unit_selfmodel_pilot_seed42_1000t	NARRATIVE	B	0.1596009975062344	B	0.1596009975062344	True	True	False	False	ok	ok
+hero_guild_routing_seed42_1000t	COGNITION	S	2.1021021021021022	S	2.6506024096385543	False	False	True	True	ok	ok
+hero_guild_routing_seed42_1000t	AGENCY	B	0.064	B	0.047619047619047616	True	True	False	False	ok	ok
+hero_guild_routing_seed42_1000t	COMBAT	B	0.18209562563580875	B	0.0794148380355277	False	False	True	True	ok	ok
+hero_guild_routing_seed42_1000t	FACTION	C	-0.041005291005291	C	-0.037578288100208766	True	True	False	False	ok	ok
+hero_guild_routing_seed42_1000t	ECONOMY	B	0.3486973947895792	B	0.27887617065556713	False	False	True	True	ok	ok
+hero_guild_routing_seed42_1000t	PROGRESSION	B	0.1281437125748503	C	-0.023933402705515087	False	False	True	True	ok	ok
+hero_guild_routing_seed42_1000t	SOCIAL	S	36.068	S	10.495431472081219	False	False	True	True	ok	ok
+hero_guild_routing_seed42_1000t	INFORMATION	S	58.733564013840834	A	1.4690721649484537	False	False	True	True	ok	ok
+hero_guild_routing_seed42_1000t	WORLD	B	0.226	B	0.19	True	True	False	False	ok	ok
+hero_guild_routing_seed42_1000t	NARRATIVE	A	0.5935828877005348	B	0.4894472361809045	True	True	False	False	ok	ok
+simq_routing_test_seed42_1000t	COGNITION	A	1.1267605633802817			False	True	True	False	ok	no-data
+simq_routing_test_seed42_1000t	AGENCY	B	0.057971014492753624	B	0.0425531914893617	True	True	False	False	ok	ok
+simq_routing_test_seed42_1000t	COMBAT	B	0.1163895486935867	B	0.09597523219814241	True	True	False	False	ok	ok
+simq_routing_test_seed42_1000t	FACTION	C	-0.007731958762886598	C	-0.03373231773667029	True	True	False	False	ok	ok
+simq_routing_test_seed42_1000t	ECONOMY	B	0.3163163163163163	B	0.26006191950464397	True	True	False	False	ok	ok
+simq_routing_test_seed42_1000t	PROGRESSION	C	-0.04513064133016627	C	-0.04953560371517028	True	True	False	False	ok	ok
+simq_routing_test_seed42_1000t	SOCIAL	S	39.919	S	27.279	False	False	True	True	ok	ok
+simq_routing_test_seed42_1000t	INFORMATION	S	69.855	S	2.556122448979592	False	False	True	True	ok	ok
+simq_routing_test_seed42_1000t	WORLD	B	0.16	B	0.186	True	True	False	False	ok	ok
+simq_routing_test_seed42_1000t	NARRATIVE	A	0.5902335456475584	A	0.6130030959752322	True	True	False	False	ok	ok
+unit_faction_tension_seed42_1000t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_1000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_1000t	COMBAT	C	-0.001040582726326743	B	0.0020639834881320948	True	True	False	False	ok	ok
+unit_faction_tension_seed42_1000t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_1000t	ECONOMY	A	0.563323201621074	A	0.5601659751037344	True	True	False	False	ok	ok
+unit_faction_tension_seed42_1000t	PROGRESSION	C	-0.24765868886576484	C	-0.24561403508771928	True	True	False	False	ok	ok
+unit_faction_tension_seed42_1000t	SOCIAL	S	27.398	S	36.303	False	True	True	False	ok	ok
+unit_faction_tension_seed42_1000t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_1000t	WORLD	B	0.094	B	0.09	True	True	False	False	ok	ok
+unit_faction_tension_seed42_1000t	NARRATIVE	B	0.19095477386934673	B	0.15170278637770898	True	True	False	False	ok	ok
+unit_faction_tension_seed42_2000t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_2000t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_2000t	COMBAT	C	-0.001040582726326743	B	0.015247776365946633	True	True	False	False	ok	ok
+unit_faction_tension_seed42_2000t	FACTION	C	0.0	C	-0.021497919556171984	True	True	False	False	ok	ok
+unit_faction_tension_seed42_2000t	ECONOMY	B	0.43909774436090226	B	0.3730886850152905	True	True	False	False	ok	ok
+unit_faction_tension_seed42_2000t	PROGRESSION	C	-0.24765868886576484	C	-0.1289707750952986	False	True	True	False	ok	ok
+unit_faction_tension_seed42_2000t	SOCIAL	S	39.3705	S	45.614	True	True	False	False	ok	ok
+unit_faction_tension_seed42_2000t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+unit_faction_tension_seed42_2000t	WORLD	B	0.092	B	0.09	True	True	False	False	ok	ok
+unit_faction_tension_seed42_2000t	NARRATIVE	B	0.18473138548539114	B	0.1930043722673329	True	True	False	False	ok	ok
+urban_political_seed42_2000t	COGNITION	B	0.006			False	True	True	False	ok	no-data
+urban_political_seed42_2000t	AGENCY	B	0.032	B	0.032	True	True	False	False	ok	ok
+urban_political_seed42_2000t	COMBAT	B	0.166	B	0.0578691184424013	False	True	True	False	ok	ok
+urban_political_seed42_2000t	FACTION	C	-0.072	C	-0.072	True	True	False	False	ok	ok
+urban_political_seed42_2000t	ECONOMY	B	0.19122609673790777	B	0.17184850197851895	True	True	False	False	ok	ok
+urban_political_seed42_2000t	PROGRESSION	C	-0.08321377331420372	B	0.014602487831260141	False	True	True	False	ok	ok
+urban_political_seed42_2000t	SOCIAL	S	46.342	S	57.149	False	True	True	False	ok	ok
+urban_political_seed42_2000t	INFORMATION	S	105.4475	S	2.0651588583737213	False	True	True	False	ok	ok
+urban_political_seed42_2000t	WORLD	B	0.116	B	0.127	True	True	False	False	ok	ok
+urban_political_seed42_2000t	NARRATIVE	A	1.05	B	0.4012314007183171	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_200t	COGNITION	A	1.3096774193548386	S	3.065	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_200t	AGENCY	C	0.0	B	0.1044776119402985	False	False	True	True	ok	ok
+generated_frontier_3_42_seed42_200t	COMBAT	B	0.30726256983240224	B	0.4336734693877551	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+generated_frontier_3_42_seed42_200t	ECONOMY	A	1.0208333333333333	A	0.8888888888888888	True	True	False	False	ok	ok
+generated_frontier_3_42_seed42_200t	PROGRESSION	A	0.6666666666666666	A	0.8930817610062893	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_200t	SOCIAL	S	31.165	S	34.765	True	True	False	False	ok	ok
+generated_frontier_3_42_seed42_200t	INFORMATION	B	0.2	A	1.4895833333333333	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_200t	WORLD	A	0.51	A	0.67	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_200t	NARRATIVE	A	1.7384615384615385	S	2.1262626262626263	False	True	True	False	ok	ok
+generated_frontier_3_42_seed123_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+generated_frontier_3_42_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+generated_frontier_3_42_seed123_200t	COMBAT	B	0.16666666666666666	B	0.3402061855670103	False	True	True	False	ok	ok
+generated_frontier_3_42_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+generated_frontier_3_42_seed123_200t	ECONOMY	A	0.5569620253164557	A	0.68	False	True	True	False	ok	ok
+generated_frontier_3_42_seed123_200t	PROGRESSION	B	0.37410071942446044	B	0.422680412371134	True	True	False	False	ok	ok
+generated_frontier_3_42_seed123_200t	SOCIAL	S	32.785	S	41.82	False	True	True	False	ok	ok
+generated_frontier_3_42_seed123_200t	INFORMATION	B	0.2	A	1.3789473684210527	False	True	True	False	ok	ok
+generated_frontier_3_42_seed123_200t	WORLD	B	0.37	B	0.43	True	True	False	False	ok	ok
+generated_frontier_3_42_seed123_200t	NARRATIVE	A	0.9222797927461139	A	1.7035175879396984	False	True	True	False	ok	ok
+generated_frontier_3_42_seed456_200t	COGNITION	B	0.06			False	True	True	False	ok	no-data
+generated_frontier_3_42_seed456_200t	AGENCY	B	0.14			False	True	True	False	ok	no-data
+generated_frontier_3_42_seed456_200t	COMBAT	B	0.2617801047120419	B	0.3333333333333333	False	True	True	False	ok	ok
+generated_frontier_3_42_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+generated_frontier_3_42_seed456_200t	ECONOMY	A	0.7529411764705882	A	0.7526881720430108	True	True	False	False	ok	ok
+generated_frontier_3_42_seed456_200t	PROGRESSION	B	0.3941176470588235	A	0.7365591397849462	False	True	True	False	ok	ok
+generated_frontier_3_42_seed456_200t	SOCIAL	S	26.825	S	25.425	True	True	False	False	ok	ok
+generated_frontier_3_42_seed456_200t	INFORMATION	B	0.2	S	2.93	False	True	True	False	ok	ok
+generated_frontier_3_42_seed456_200t	WORLD	A	0.53	A	0.51	True	True	False	False	ok	ok
+generated_frontier_3_42_seed456_200t	NARRATIVE	A	1.85	A	1.6030150753768844	True	True	False	False	ok	ok
+generated_frontier_3_42_seed42_1000t	COGNITION	A	0.812	S	2.812	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_1000t	AGENCY	C	0.0	B	0.028	True	True	False	False	ok	ok
+generated_frontier_3_42_seed42_1000t	COMBAT	B	0.15120967741935484	B	0.1735357917570499	True	True	False	False	ok	ok
+generated_frontier_3_42_seed42_1000t	FACTION	C	-0.01726263871763255	C	-0.04095112285336856	True	True	False	False	ok	ok
+generated_frontier_3_42_seed42_1000t	ECONOMY	B	0.3823227132579651	B	0.3856988082340195	True	True	False	False	ok	ok
+generated_frontier_3_42_seed42_1000t	PROGRESSION	B	0.07762096774193548	B	0.29469122426868904	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_1000t	SOCIAL	S	43.065	S	22.491	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_1000t	INFORMATION	S	61.132	A	1.3761969904240765	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_1000t	WORLD	B	0.318	B	0.39	False	True	True	False	ok	ok
+generated_frontier_3_42_seed42_1000t	NARRATIVE	A	1.061491935483871	A	1.2765726681127982	False	True	True	False	ok	ok
+unit_information_density_seed42_200t	COGNITION	B	0.18	B	0.18	True	True	False	False	ok	ok
+unit_information_density_seed42_200t	AGENCY	B	0.14	B	0.14	True	True	False	False	ok	ok
+unit_information_density_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_information_density_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_information_density_seed42_200t	ECONOMY	A	0.845360824742268	A	0.845360824742268	True	True	False	False	ok	ok
+unit_information_density_seed42_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_information_density_seed42_200t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+unit_information_density_seed42_200t	INFORMATION	A	0.6	A	0.6	True	True	False	False	ok	ok
+unit_information_density_seed42_200t	WORLD	B	0.03			False	True	True	False	ok	no-data
+unit_information_density_seed42_200t	NARRATIVE	B	0.29381443298969073	B	0.29381443298969073	True	True	False	False	ok	ok
+unit_information_density_seed123_200t	COGNITION	B	0.18	B	0.18	True	True	False	False	ok	ok
+unit_information_density_seed123_200t	AGENCY	B	0.14	B	0.14	True	True	False	False	ok	ok
+unit_information_density_seed123_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_information_density_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_information_density_seed123_200t	ECONOMY	A	0.5365853658536586	A	0.5365853658536586	True	True	False	False	ok	ok
+unit_information_density_seed123_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_information_density_seed123_200t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+unit_information_density_seed123_200t	INFORMATION	A	0.6	A	0.6	True	True	False	False	ok	ok
+unit_information_density_seed123_200t	WORLD	B	0.03			False	True	True	False	ok	no-data
+unit_information_density_seed123_200t	NARRATIVE	B	0.4520547945205479	B	0.4520547945205479	True	True	False	False	ok	ok
+unit_information_density_seed456_200t	COGNITION	B	0.18	B	0.18	True	True	False	False	ok	ok
+unit_information_density_seed456_200t	AGENCY	B	0.1523809523809524	B	0.1523809523809524	True	True	False	False	ok	ok
+unit_information_density_seed456_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+unit_information_density_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+unit_information_density_seed456_200t	ECONOMY	A	0.512	A	0.512	True	True	False	False	ok	ok
+unit_information_density_seed456_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+unit_information_density_seed456_200t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+unit_information_density_seed456_200t	INFORMATION	A	0.6	A	0.6	True	True	False	False	ok	ok
+unit_information_density_seed456_200t	WORLD	B	0.03			False	True	True	False	ok	no-data
+unit_information_density_seed456_200t	NARRATIVE	B	0.328	B	0.328	True	True	False	False	ok	ok
+urban_political_selfmodel_execution_probe_seed42_200t	COGNITION	S	28.25	S	28.12	True	True	False	False	ok	ok
+urban_political_selfmodel_execution_probe_seed42_200t	AGENCY	B	0.12994350282485875	B	0.12994350282485875	True	True	False	False	ok	ok
+urban_political_selfmodel_execution_probe_seed42_200t	COMBAT	B	0.21311475409836064	B	0.13440860215053763	False	True	True	False	ok	ok
+urban_political_selfmodel_execution_probe_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+urban_political_selfmodel_execution_probe_seed42_200t	ECONOMY	A	0.8292682926829268	A	0.7674418604651163	True	True	False	False	ok	ok
+urban_political_selfmodel_execution_probe_seed42_200t	PROGRESSION	B	0.3803680981595092	B	0.3313953488372093	True	True	False	False	ok	ok
+urban_political_selfmodel_execution_probe_seed42_200t	SOCIAL	S	32.44	S	37.48	True	True	False	False	ok	ok
+urban_political_selfmodel_execution_probe_seed42_200t	INFORMATION	S	8.568527918781726	S	2.781725888324873	False	True	True	False	ok	ok
+urban_political_selfmodel_execution_probe_seed42_200t	WORLD	B	0.2	B	0.32	False	True	True	False	ok	ok
+urban_political_selfmodel_execution_probe_seed42_200t	NARRATIVE	A	1.2060301507537687	A	0.9949238578680203	True	True	False	False	ok	ok
+quest_dense_frontier_seed42_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed42_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed42_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed42_200t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed42_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+quest_dense_frontier_seed42_200t	SOCIAL	B	0.205	A	0.885	False	True	True	False	ok	ok
+quest_dense_frontier_seed42_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed42_200t	WORLD	B	0.09	B	0.09	True	True	False	False	ok	ok
+quest_dense_frontier_seed42_200t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed123_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed123_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed123_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed123_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed123_200t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed123_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+quest_dense_frontier_seed123_200t	SOCIAL	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed123_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed123_200t	WORLD	B	0.09	B	0.09	True	True	False	False	ok	ok
+quest_dense_frontier_seed123_200t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed456_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed456_200t	AGENCY	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed456_200t	COMBAT	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed456_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed456_200t	ECONOMY	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed456_200t	PROGRESSION	C	-0.1568627450980392			False	True	True	False	ok	no-data
+quest_dense_frontier_seed456_200t	SOCIAL	S	2.76	S	5.855	False	True	True	False	ok	ok
+quest_dense_frontier_seed456_200t	INFORMATION	C	0.0			False	True	True	False	ok	no-data
+quest_dense_frontier_seed456_200t	WORLD	B	0.09	B	0.09	True	True	False	False	ok	ok
+quest_dense_frontier_seed456_200t	NARRATIVE	C	0.0			False	True	True	False	ok	no-data
+simq_scale_stress_seed42_seed42_200t	COGNITION	A	0.575			False	True	True	False	ok	no-data
+simq_scale_stress_seed42_seed42_200t	AGENCY	C	0.0	B	0.07253886010362694	False	False	True	True	ok	ok
+simq_scale_stress_seed42_seed42_200t	COMBAT	B	0.4	B	0.4371859296482412	True	True	False	False	ok	ok
+simq_scale_stress_seed42_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+simq_scale_stress_seed42_seed42_200t	ECONOMY	A	1.0810810810810811	A	1.118279569892473	True	True	False	False	ok	ok
+simq_scale_stress_seed42_seed42_200t	PROGRESSION	A	1.0108108108108107	A	0.8051282051282052	False	True	True	False	ok	ok
+simq_scale_stress_seed42_seed42_200t	SOCIAL	S	59.53	S	67.795	True	True	False	False	ok	ok
+simq_scale_stress_seed42_seed42_200t	INFORMATION	S	68.25	A	1.5384615384615385	False	True	True	False	ok	ok
+simq_scale_stress_seed42_seed42_200t	WORLD	A	0.94	A	1.04	True	True	False	False	ok	ok
+simq_scale_stress_seed42_seed42_200t	NARRATIVE	S	2.878787878787879	S	2.6532663316582914	True	True	False	False	ok	ok
+lifecycle_full_coverage_world_seed42_200t	COGNITION	C	0.0			False	True	True	False	ok	no-data
+lifecycle_full_coverage_world_seed42_200t	AGENCY	B	0.1464968152866242	B	0.11931818181818182	True	True	False	False	ok	ok
+lifecycle_full_coverage_world_seed42_200t	COMBAT	B	0.06060606060606061	B	0.12299465240641712	False	True	True	False	ok	ok
+lifecycle_full_coverage_world_seed42_200t	FACTION	C	0.0			False	True	True	False	ok	no-data
+lifecycle_full_coverage_world_seed42_200t	ECONOMY	A	0.8040201005025126	A	0.5591397849462365	False	True	True	False	ok	ok
+lifecycle_full_coverage_world_seed42_200t	PROGRESSION	C	-0.1568627450980392	B	0.13580246913580246	False	True	True	False	ok	ok
+lifecycle_full_coverage_world_seed42_200t	SOCIAL	S	19.96	S	24.41	False	True	True	False	ok	ok
+lifecycle_full_coverage_world_seed42_200t	INFORMATION	S	17.13	S	2.145077720207254	False	True	True	False	ok	ok
+lifecycle_full_coverage_world_seed42_200t	WORLD	B	0.37	B	0.31	True	True	False	False	ok	ok
+lifecycle_full_coverage_world_seed42_200t	NARRATIVE	B	0.30808080808080807	A	1.3366834170854272	False	True	True	False	ok	ok

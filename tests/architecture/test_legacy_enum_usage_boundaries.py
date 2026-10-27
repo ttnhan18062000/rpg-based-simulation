@@ -56,7 +56,6 @@ ALLOWED_MODULES: FrozenSet[str] = frozenset({
     # World systems — still use enum for entity spawning (migration target, not yet cleaned)
     "systems/world_systems/generator.py",
     "systems/world_systems/routine.py",
-    "systems/world_systems/quest_generator.py",
     # World domain — legacy classification or data-model-layer enum assignments
     "world/influence.py",                      # owner_faction_id_set is Optional[int] (data model)
     "world/spawn.py",
