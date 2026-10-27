@@ -28,7 +28,7 @@ What changed, and why:
   measured by a capacity run (PERF-M2-T03/T04); that doc is perf's, not edited here.
 - The hash is blind to **seven** fields, not six (§5).
 - The "nothing touching `src/**` before the v1 record merges" rule is retired: v1 is recorded and re-anchored (#725, #747, #748) (§3).
-- H2 is done on Lane C; the 615 to 270 ms projection is retired (§2, §3, §6).
+- H2 is implemented on Lane C, not yet merged; the 615 to 270 ms projection is retired (§2, §3, §6).
 - `fused_strategic_pass` is named as uncosted serial Resolution work (§2); H5 is a timer fix, not waste.
 - PERF-M6-T05 is unticketed, so the "fold E into it" step needs perf to record it on the M6 epic or file T05 (§6).
 
@@ -57,7 +57,7 @@ itself call for giving up determinism:
 | Collection (the only parallel phase) | 6 to 26 % of a tick, so the Amdahl ceiling is 1.06 to 1.35x | idea 08 table; tick_cost_growth §2 |
 | 4-thread pool vs 0 workers | Collection 1.6 to 2.1x **slower** (GIL plus dispatch, `[inferred]`) | idea 08, finding 2 |
 | serial waste, named | H1 hostility per pair (29 to 62 % synthetic), H2 cooperation candidates (43 to 61 % of `strategic_100`), H3 EventRecorder eviction and H4 event validation (both **closed** by the re-measure in the next row) | tick_cost_growth §3 |
-| projection after H1 to H3 | **RETIRED (2026-10-26).** The 615 to 270 ms and 130 to 75 ms figures were shares, not measured fixes, and the late-corpus one assumed H3 at 42.5 % (now 0.69 %). Re-measure after H1 and H2 land instead of quoting shares. H2 is done on Lane C: hashes equal on 3 worlds, paired neutral IDENTICAL, cooperation phase -64 % / -85 % (lead-planner-u24 relay, PR about to open) | tick_cost_growth §3 |
+| projection after H1 to H3 | **RETIRED (2026-10-26).** The 615 to 270 ms and 130 to 75 ms figures were shares, not measured fixes, and the late-corpus one assumed H3 at 42.5 % (now 0.69 %). Re-measure after H1 and H2 land instead of quoting shares. H2 is implemented on Lane C, not yet merged: 3-world hash equal, paired `--neutral` IDENTICAL x3, cooperation phase 164 to 60 ms on `strategic_100` (#715 comment 6406571536); its push is queued first in Lane C's one-PR-at-a-time order (#715 comment 6447814392) | tick_cost_growth §3 |
 | replay digest when allowed | 9.2 % (`strategic_100`) to 27.1 % (`frontier_extended`) of a tick | tick_cost_growth §4 |
 | H3 and H4 re-measured after #645 (2026-10-22) | both CLOSE. H3 `EventRecorder.record` 0.69 % of the tick (was 42.5 %). H4 `event_shapers.py` 1.18 % and event-path pydantic 0.65 % (`strategic_100`); the 7.15 % total pydantic share belongs to the H1/H2 callers. Shapers at 3.74 % on `frontier_extended` are rpg's call. PROVISIONAL: shares, one host | #593 comment 6343696936; PR #723 |
 | engine working set | about 101 to 130 MB per run; the 1.7 GB figure is the harness's `gc.disable()` | tick_cost_growth §5 |
@@ -70,7 +70,7 @@ raises the parallel ceiling later**, because Collection becomes a larger share o
 
 ## 3. Order of work
 
-1. **Fix the named waste (no mode change).** H2 (done on Lane C; H3 and H4 are closed, §2), then H1 (rpg Lane B,
+1. **Fix the named waste (no mode change).** H2 (implemented on Lane C, not yet merged; H3 and H4 are closed, §2), then H1 (rpg Lane B,
    `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP`). Cost `fused_strategic_pass` (§2) before calling it waste or legitimate. Every fix has to be
    behaviour-neutral: identical canonical hashes under `audit_mode` (`performance_contract.md` §4.1, parity
    invariant). v1 is recorded and re-anchored (#725, #747, #748), so the old "nothing touching `src/**` before the v1 record" rule no longer applies.
@@ -225,7 +225,7 @@ The worlds, seeds, cases, blind-to lists, the side digest, the Mode 3 matrix and
 
 | step | needs | owner |
 |---|---|---|
-| 1 H2 fix | done on Lane C (PR about to open); hash-identical. H1 next on Lane B. H3 and H4 are closed (§2) | rpg-planner (src), perf-planner reviews the measurement |
+| 1 H2 fix | implemented on Lane C, not yet merged (branch `rpg-cooperation-candidates-index`, push queued, #715 comment 6447814392); hash-identical (#715 comment 6406571536). H1 next on Lane B. H3 and H4 are closed (§2) | rpg-planner (src), perf-planner reviews the measurement |
 | 2 T1 run and rerun accounting | draft ticket | testing-planner (with rpg for `tools/rpg_measure`) |
 | 2 T2 paired runs off this host | draft ticket | testing-planner; lead for host policy |
 | 2 T3 / Mode 2 `no_replay` for paired arms | perf ruling **done: YES** (§4); the draft ticket remains | perf-planner ruled; rpg or testing implements |
@@ -252,4 +252,4 @@ The worlds, seeds, cases, blind-to lists, the side digest, the Mode 3 matrix and
    machine (about 100 to 2000 entities). Speed comes from step 1 (H1, H2) plus T2; Mode 3 is evaluate-only; **Mode 5 is dropped**. The
    10k / 50 ms / 2 GB figure in `docs/performance/optimization_architecture.md:21` stays as perf's bigger-world target, measured by a capacity run (PERF-M2-T03/T04).
 2. **Mode 2:** may paired arms (and the gate) use it once perf rules on it and T3 passes? **Answered in part:** perf ruled YES under five conditions (§4, #593 comment 6343379030). Whether the **gate** adopts it is still the owner's and testing-planner's call.
-3. **H2, H3, H4:** **Answered.** H3 and H4 were re-measured and both CLOSE (§2). H2 is done on Lane C (§2).
+3. **H2, H3, H4:** **Answered.** H3 and H4 were re-measured and both CLOSE (§2). H2 is implemented on Lane C, not yet merged (§2).

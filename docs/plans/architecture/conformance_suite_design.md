@@ -96,34 +96,41 @@ says shutdown emits it in every mode. "Trail" is the per-tick `TICK_END.hash`, w
 
 | mode | asserted | blind to |
 |---|---|---|
-| **1** | (a) Reproducibility: the same world and seed run twice, in two processes, gives the same final hash and the same trail. (b) Invariants: HardLawMonitor clean, conservation holds (`src/core/conservation.py`). (c) Contract recorded and equal to fixed budgets. (d) `state.pressure_signals == {}` at the end (guard G1, audit F5) | the six unhashed fields (until PERF-D5); `current_mode` (unhashed, effects only); a divergence that exists in **both** runs (a deterministic bug is not a conformance failure); anything the world never exercises |
+| **1** | (a) Reproducibility: the same world and seed run twice, in two processes, gives the same final hash and the same trail. (b) Invariants: HardLawMonitor clean, conservation holds (`src/core/conservation.py`). (c) Contract recorded and equal to fixed budgets. (d) `state.pressure_signals == {}` at the end (guard G1, audit F5) | the seven unhashed fields (§4.1; until PERF-D5); `current_mode` (unhashed, effects only); a divergence that exists in **both** runs (a deterministic bug is not a conformance failure); anything the world never exercises |
 | **2** | final hash equals Mode 1's, on the same world, seed, ticks and contract; fates and behaviour counters equal; the manifest records `no_replay`; the pair is refused if the flag is mixed | everything Mode 1 is blind to; **no trail, so the first divergent tick cannot be named** (a red result needs a Mode 1 re-run with replay to localise it); the replay stream itself (absent by design); whether a consumer reads `replay_allowed` outside the hash (draft T3 verification 1 to 3) |
-| **3** | final hash and the trail equal Mode 1's, **for each (backend, worker count) in the parity matrix**, run with replay on so the trail exists; a backend outside the matrix reports "unclaimed" | everything Mode 1 is blind to; order-dependent effects that cancel out by the end of the run; the 3b order-dependent reads (proposal §4: they are not exercised until 3b exists); the six fields, which is the worst case here because parallel apply could reorder exactly the registries (`factions`, `clans`, `quest_registry`) that nothing hashes |
+| **3** | final hash and the trail equal Mode 1's, **for each (backend, worker count) in the parity matrix**, run with replay on so the trail exists; a backend outside the matrix reports "unclaimed" | everything Mode 1 is blind to; order-dependent effects that cancel out by the end of the run; the 3b order-dependent reads (proposal §4: they are not exercised until 3b exists); the seven fields, which is the worst case here because parallel apply could reorder exactly the registries (`factions`, `clans`, `quest_registry`) that nothing hashes |
 | **4** | invariants only, as `tests/certification/test_cert_long_run_stability.py` does (5000, 2000 and 1000 tick runs with warmup): HardLawMonitor, conservation, no crash, bounded memory growth; the contract is recorded as `LIVE` | all outcomes: two Mode 4 runs are expected to differ. Cannot detect a subtle rule bug that preserves invariants |
 | **5** | invariants plus outcome **distributions** over a stated seed set (population, fates, economy totals), compared with Mode 1's distribution on the same seeds | per-run identity; any single-seed regression; the power of the test is bounded by the seed count (the paired method needs more seeds under noise, proposal §4) |
 
-### 4.1 Canary: the six unhashed fields (audit F1)
+### 4.1 Canary: the seven unhashed fields (audit F1, plus `last_hit_tick`)
 
 Because Modes 2 and 3 rest on hash equality, the suite carries an **inverted canary (case C1)**: take a Mode 1 end state,
-change one of the six fields on a copy (add an `item_instances` entry, append a `recent_world_events` entry, flip a faction
-field, and so on), hash both, and assert that the hashes **differ**. Today C1 is **expected-red for all six fields** (the
-hash is blind), which documents the gap in executable form. It turns green only when the PERF-D5 bump covers each field. rpg
-ruled `recent_world_events` carried state (§9, Q3), so C1 checks all six fields; a field rpg later rules out of canonical state
+change one of the seven fields on a copy (add an `item_instances` entry, append a `recent_world_events` entry, flip a faction
+field, set one entity's `combat.last_hit_tick`, and so on), hash both, and assert that the hashes **differ**. Today C1 is
+**expected-red for all seven fields** (the hash is blind), which documents the gap in executable form. It turns green only
+when the PERF-D5 bump covers each field.
+
+The seven are the six registry-level fields of audit F1 (`item_instances`, `recent_world_events`, `quest_registry`,
+`factions`, `clans`, `information_providers`) plus the per-entity `combat.last_hit_tick`. That one is typed durable state
+added by HUNGER step B (`TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE`) and left out of the digest by perf ruling
+PERF-D5 option (ii) (#593 comment 6384425767; `src/engine/checkpoint.py:58-62`, `DIGEST_EXCLUDED_COMBAT_KEYS`) until F1's
+single bump hashes it (proposal §5). rpg ruled `recent_world_events` carried state (§9, Q3), so C1 checks all seven fields; a field rpg later rules out of canonical state
 would be removed from C1 with the ruling cited.
 
-### 4.1a Settled: the replay fingerprint is blind to the same six fields
+### 4.1a Settled: the replay fingerprint is blind to the same seven fields
 
 `StateFingerprinter.get_fingerprint` (`src/replay/fingerprint.py:33`; it feeds the `REFINED_UPDATE` fingerprint, so it is
 what the replay trail sees besides `TICK_END.hash`) reads only `entities`, `global_resources`, `grief_drained_tick`,
 `last_calamity_tick`, `local_scars`, `maturity`, `movement_count`, `regions`, `resource_nodes`, `seed`, `tick` and, through
-`_group_identity` (`:248`), `groups`. A grep of the file for the six names finds none of them. So the per-tick trail does not
-see `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans` or `information_providers` either, and the
-Mode 3 "blind to" list in §4 stands in full: running Mode 3 with replay on does not close the gap. (Read at `b281d0c3d`; the
-file was not changed by the commits since.)
+`_group_identity` (`:248`), `groups`. A grep of the file for the six registry names finds none of them, and its per-entity
+string (`:55-72`) takes `combat.hp` and `combat.readiness` from the combat state but not `last_hit_tick`. So the per-tick
+trail does not see `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans`, `information_providers` or
+`last_hit_tick` either, and the Mode 3 "blind to" list in §4 stands in full: running Mode 3 with replay on does not close the
+gap. (Registry names read at `b281d0c3d`; the entity string re-read at `04b85fb2e`.)
 
-### 4.2 Side digest over the six fields (adopted; perf-planner, 2026-10-22)
+### 4.2 Side digest over the seven fields (adopted; perf-planner, 2026-10-22)
 
-Until the PERF-D5 bump, the suite computes a **side digest** over exactly the six omitted fields, test-side, and asserts it
+Until the PERF-D5 bump, the suite computes a **side digest** over exactly the seven omitted fields (§4.1), test-side, and asserts it
 equal alongside the final hash in Modes 2 and 3. Perf-planner adopted it on four conditions, all part of this design:
 
 1. **Suite-only test helper, not a proof digest.** It carries no `PROOF_DIGEST_SCHEME` name or version, nothing outside the
@@ -135,10 +142,11 @@ equal alongside the final hash in Modes 2 and 3. Perf-planner adopted it on four
 4. **`recent_world_events` stays in** the side digest, C1 and C2: rpg ruled it carried state (§9, Q3). A field rpg later rules out of canonical state would be dropped from all three with the ruling cited.
 
 Other properties: a mismatch is a conformance failure, a match is *not* a determinism proof (one more field set compared, no
-more); it needs a canonical dict for each of the six value types, and some may not have `to_canonical_dict` (an audit read
+more); it needs a canonical dict for each of the six registry value types, plus each entity's `last_hit_tick` keyed by
+sorted entity id (an `Optional[int]`, `src/core/state.py:444`), and some may not have `to_canonical_dict` (an audit read
 did not check), `UNVERIFIED (needs read)`; it is discarded when the bump lands. Why: it closes the blind spot for any
 Mode 2 or 3 conformance run before the bump. Without it ("option (a)", the blind-to list alone) suffices only if no Mode 2
-or 3 adoption lands before the bump. With the side digest in place, the Mode 2 and Mode 3 rows of §4 read "blind to the six
+or 3 adoption lands before the bump. With the side digest in place, the Mode 2 and Mode 3 rows of §4 read "blind to the seven
 fields **except** through the side digest"; the fingerprint and the trail stay blind (§4.1a).
 
 ### 4.3 Mode 3 matrix (perf-planner, 2026-10-22)
@@ -185,7 +193,7 @@ new digest, which this design does not propose.
 
 | audit finding | case | note |
 |---|---|---|
-| F1 hash omits six fields | C1 (inverted canary), C2 (side-digest positive control), the "blind to" lists of §4, the side digest of §4.2 | C1 green only after PERF-D5; the side digest narrows the blind spot before it |
+| F1 hash omits six fields, plus `last_hit_tick` (PERF-D5 (ii)) | C1 (inverted canary), C2 (side-digest positive control), the "blind to" lists of §4, the side digest of §4.2 | C1 green only after PERF-D5; the side digest narrows the blind spot before it |
 | F2 `LIVE` default lets wall-clock choose the mode | P1, P2, P3, and the precondition rows of §2 | the A2 default flip is a separate rpg ticket |
 | F3 restore draws from seed 0 | X4 (§3 restore case); the non-zero-seed rule | expected-red |
 | F4 salted `hash()` | A0, X1 | X1 is vacuous without A0; `perception/filter.py:88,97` reach is `UNVERIFIED` and X1 on a world that exercises perception would show it |
@@ -241,8 +249,8 @@ also applies to the expected-red cases of §5 and C1.
 |---|---|---|
 | Q1 | ~~Where does each lane run, and is C-short a required check?~~ **Resolved, §8: C-short is an advisory PR-time job in `test.yml`; C-nightly has its own workflow; C-slow waits on a dry run; promotion to required is a recorded owner decision. (testing-planner, 2026-10-23, #593 comment 6355976419)** | closed |
 | Q2 | ~~Is the §4.2 side digest worth building before PERF-D5, or does the "blind to" list suffice?~~ **Resolved, §4.2: adopted on four conditions. (perf-planner, 2026-10-22)** | closed |
-| Q3 | ~~Is `recent_world_events` canonical state or a view? Decides whether C1 has five or six fields.~~ **Resolved: `recent_world_events` is carried state (rpg-planner, #593 comment 6347182683); C1 and the side digest cover all six fields.** | closed |
+| Q3 | ~~Is `recent_world_events` canonical state or a view? Decides whether C1 has five or six fields.~~ **Resolved: `recent_world_events` is carried state (rpg-planner, #593 comment 6347182683); C1 and the side digest cover all six registry fields, plus `last_hit_tick` (§4.1).** | closed |
 | Q4 | ~~Does any shipped world (W5, W2) pass A0? If none does, is a purpose-built attack world acceptable in `data/worlds`?~~ **Resolved: probe first (A0 on W5 and W2); a purpose-built world only if no squad forms, disclosed in its PR. (rpg-planner, 2026-10-22, #593 comment 6347182683; dates in §8). Whether the probe passes is still open until it runs.** | closed |
-| Q5 | ~~Does the fingerprint cover `factions`, `clans` or `quest_registry`?~~ **Resolved, see §4.1a: it covers none of the six.** | closed |
+| Q5 | ~~Does the fingerprint cover `factions`, `clans` or `quest_registry`?~~ **Resolved, see §4.1a: it covers none of the seven.** | closed |
 | Q6 | ~~Is there any events digest outside `src/`? If yes, add it to the Mode 1 row (audit §6)~~ **Resolved, §4.4: none found; counts only, content equality is a gap. (perf-planner, 2026-10-22)** | closed |
 | Q7 | ~~The Mode 3 matrix: which backends and worker counts, and on which host kind?~~ **Resolved, §4.3. (perf-planner, 2026-10-22)** | closed |
