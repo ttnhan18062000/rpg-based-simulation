@@ -7899,6 +7899,20 @@
   - engine
   - economy
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261027-GRAPHIFY-REBUILD-COMMAND-DOC-FIX.md
+  ticket_id: TCK-20261027-GRAPHIFY-REBUILD-COMMAND-DOC-FIX
+  title: 'agent_working_environment.md: the shared-graph rebuild command is `graphify
+    update . --force`, not `graphify extract --force`'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - tools/graphify_prune.py (referenced, unchanged)
+  artifact_files: []
+  tags:
+  - documentation
+  - ai
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-HISTORY-SNAPSHOT-STRIP-MISSES-NESTED-GRAPH.md
   ticket_id: TCK-20261027-HISTORY-SNAPSHOT-STRIP-MISSES-NESTED-GRAPH
   title: The history API's summary mode returns the whole cognition graph and reports
@@ -7986,6 +8000,20 @@
   - order
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261026-CI-ASEPRITE-SKIP-LINE-ACCEPT-DEFUSED-XML-FINDING.md
+  ticket_id: TCK-20261026-CI-ASEPRITE-SKIP-LINE-ACCEPT-DEFUSED-XML-FINDING
+  title: 'Code-scanning alert #243 (Semgrep use-defused-xml-parse at tools/ci_aseprite_skip_line.py:23)
+    is marked as trusted input at the line, in the same form as the ci_junit tools'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-26'
+  related_code_areas:
+  - tools/ci_aseprite_skip_line.py
+  - tests/visual_assets/test_ci_aseprite_skip_line.py (run only)
+  artifact_files: []
+  tags:
+  - testing
 - type: ticket
   path: agent-working/tickets/done/TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS.md
   ticket_id: TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS
