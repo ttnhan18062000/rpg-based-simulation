@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL
-phase: open
+phase: done
 date: 2026-10-27
 tags: [benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [benchmarking]
 The paired run's default cache path is host-neutral, resolved when called, and fails early when unwritable
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -85,9 +85,17 @@ by setting RPG_MEASURE_CACHE by hand.
   R-only run ends.
 
 ## Implementation Notes
+`tools/rpg_measure/paired.py`: `DEFAULT_CACHE` is gone; `resolve_cache()` reads `$RPG_MEASURE_CACHE`, then `$XDG_CACHE_HOME/rpg-measure`, then `~/.cache/rpg-measure` when called. `--cache` defaults to `None`. `cache_problem()` creates the directory and checks it is writable; `_run` calls it before `neutral()` or any arm and, on a problem, `_refuse` prints one `REFUSED:` line naming `RPG_MEASURE_CACHE` and the path and exits 2. `--collected` reads a cache and writes nothing, so it is not checked. Cache keys (`result_path`) and `paired_arms.py` are untouched. The module docstring says u24 sets `RPG_MEASURE_CACHE=/mnt/data/scratch-rpg-measure`; that docstring line is the only `/mnt/data` left in `tools/rpg_measure/`, as the ticket asks, so AC 1 holds for code but not for a literal grep. `docs/observability/how_to_run_simulation.md` does not cover paired runs, so no docs change.
 
 ## Test Summary
+- `tests/unit/tools/test_rpg_measure.py`: 16 passed (13 existing + 3 new: variable set ahead of XDG; XDG then home fallback; unwritable cache refused in one line, exit 2, `run_arm` never called).
+- `tests/unit/tools`, serial under MemoryMax=3G: 1062 passed.
+- `make code-health`: 0 new, 0 worse. `make lint-imports`: 17 kept, 0 broken.
+- AC 4 (a run on u24 hits an arm cached before the change) is for rpg-planner to verify on u24 once the PR is up; not run here.
 
 ## Files Changed
+- `tools/rpg_measure/paired.py`
+- `tests/unit/tools/test_rpg_measure.py`
 
 ## Completion Summary
+The paired run's cache root is resolved when the command runs, from `RPG_MEASURE_CACHE`, then XDG, then `~/.cache/rpg-measure`, and an unusable root stops the run before any arm starts with a one-line error. No host-specific path is used as a default.
