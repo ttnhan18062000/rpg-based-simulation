@@ -20,6 +20,8 @@ from src.worldassembly.schema import (
     WorldCompositionSpec,
     NormalizedWorldComposition,
     WorldCompositionNormalizer,
+    missing_module_issues,
+    require_one_ref_per_module,
     ResolvedModuleContribution,
     ProvenanceManifest,
     ProvenanceRecord,
@@ -42,7 +44,6 @@ from src.worldbuilding.recipe import PopulationRecipeSpec
 from src.worldmodules.evaluator import AssemblyParameterError, ModuleParameterEvaluator
 from src.content.pack_manifest import ContentPackManifest
 from src.worldassembly.region_precedence import precedence_advisories, precedence_ordered_regions
-from src.worldassembly.module_refs import missing_module_issues, require_one_ref_per_module
 
 from src.worldbuilding.schema import (
     WorldSpec,
