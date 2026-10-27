@@ -10507,6 +10507,20 @@
   - delivery
   - security
 - type: ticket
+  path: agent-working/tickets/done/devops-step2-observability-local/TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL
+  title: 'DevOps step 2 (host ubuntu): one API dashboard (metrics and logs) and one
+    API request trace in Tempo, running locally'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
   ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
   title: 'DevOps step 3 (host ubuntu): a measured Locust API load test, one SLO alert
@@ -10560,7 +10574,7 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
+  path: agent-working/tickets/todos/devops-api-dashboard-trace/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
   ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF
   title: 'Grafana: one provisioned API dashboard (rate, errors, latency percentiles
     by route, backend logs, trace links), and the step-2 end-to-end local proof'
@@ -10569,20 +10583,6 @@
   date: '2026-10-18'
   related_code_areas:
   - docker/grafana/dashboards/api.json
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL.md
-  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL
-  title: 'DevOps step 2 (host ubuntu): one API dashboard (metrics and logs) and one
-    API request trace in Tempo, running locally'
-  tier: epic
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
   artifact_files: []
   tags:
   - platform
