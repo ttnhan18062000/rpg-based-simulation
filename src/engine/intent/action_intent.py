@@ -69,12 +69,23 @@ class ActionIntentAdapter:
             recipe_id = intent.payload.get("recipe_id")
             if not recipe_id and isinstance(intent.target_id, str) and intent.target_id.startswith("opp_craft_"):
                 recipe_id = intent.target_id.removeprefix("opp_craft_")
-            if recipe_id and RecipeRegistry.contains(recipe_id):
-                recipe = RecipeRegistry.get(recipe_id)
-                reqs.append(Requirement(kind="recipe_known", subject=recipe_id))
-                reqs.append(Requirement(kind="has_gold", quantity=recipe.gold_cost))
-                for m_id, m_qty in recipe.requires_items.items():
-                    reqs.append(Requirement(kind="has_item", subject=m_id, quantity=m_qty))
+            if not recipe_id or not RecipeRegistry.contains(recipe_id):
+                # Refuse like an unavailable shop (BUY_ITEM) instead of reaching
+                # RecipeRegistry.get below, which raises KeyError (PROG-097).
+                cls._traces.append(IntentTrace(
+                    intent_kind=intent.kind,
+                    actor_id=intent.actor_id,
+                    why_selected=intent.reason or "strategic choice",
+                    opportunity_source_id=intent.source_opportunity_id,
+                    requirements_checked=tuple(reqs),
+                    execution_result="FAILED_REQUIREMENTS: unknown_recipe"
+                ))
+                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+            recipe = RecipeRegistry.get(recipe_id)
+            reqs.append(Requirement(kind="recipe_known", subject=recipe_id))
+            reqs.append(Requirement(kind="has_gold", quantity=recipe.gold_cost))
+            for m_id, m_qty in recipe.requires_items.items():
+                reqs.append(Requirement(kind="has_item", subject=m_id, quantity=m_qty))
         elif intent.kind == "HARVEST_RESOURCE":
             res_id = intent.target_id
             if res_id and ResourceRegistry.contains(res_id):

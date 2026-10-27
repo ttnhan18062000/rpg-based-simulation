@@ -186,9 +186,9 @@ materials, gold, output capacity, atomic emit). It had no caller in `src/` and w
 `TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF`. The gates that execute live are the
 ones above: the `REQUEST_CRAFT` handler builds the requirements and `ResourceTransactionResolver`'s
 `"CRAFTING"` branch applies them atomically, proved by
-`tests/integration/economy/test_crafting_live_path.py`. One difference is known: a recipe id absent
-from `RecipeRegistry` raises `KeyError` live where the retired class returned `UNKNOWN_RECIPE`
-(parity PROG-097, `divergent`).
+`tests/integration/economy/test_crafting_live_path.py`. A recipe id that is missing or absent from
+`RecipeRegistry` is refused with a `FAILED_REQUIREMENTS: unknown_recipe` trace and a no-op update, as
+the retired class's `UNKNOWN_RECIPE` result was (parity PROG-097, `verified`).
 
 **`known_recipes` population — `src/engine/blacksmith.py::BlacksmithSystem.enforce()`'s
 wholesale-learn step.** Before `TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE`, this populated
