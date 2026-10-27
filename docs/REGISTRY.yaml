@@ -8329,6 +8329,18 @@
   - agent-working/stored_artifacts/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID.md
+  ticket_id: TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID
+  title: Faction squad group_id uses Python's salted hash() of a str region id, so
+    the state hash depends on PYTHONHASHSEED (#593 F4)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-23'
+  related_code_areas:
+  - src/engine/military_conflict.py; src/domains/perception/filter.py; data/worlds/
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/todos/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
   ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
   title: Remove the free meal for every kind (decision 73) as its own measured step
