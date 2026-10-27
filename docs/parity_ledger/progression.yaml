@@ -1039,22 +1039,31 @@
   support_boundary: null
 - id: PROG-097
   text: Crafting checks recipe exists.
-  status: verified
+  status: divergent
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: '`src/engine/intent/action_intent.py` (`ActionIntentAdapter.execute`,
+    REQUEST_CRAFT) and `src/core/conservation.py` (`ResourceTransactionResolver`,
+    `CRAFTING` branch); the retired `CraftingSystem.craft()` was never called. A recipe
+    the crafter does not know is refused (requirement `recipe_known`).'
   proof_type: null
-  test_path: null
-  divergence_note: null
+  test_path: tests/integration/economy/test_crafting_live_path.py::test_craft_needs_a_recipe_the_crafter_knows
+  divergence_note: 'live REQUEST_CRAFT does not check that the recipe exists: an id
+    absent from RecipeRegistry raises KeyError at RecipeRegistry.get (action_intent.py),
+    where the retired CraftingSystem.craft() returned UNKNOWN_RECIPE. Opportunity
+    ids come from the registry, so no live producer of such an id has been observed
+    (not measured). Fixing the live code is a separate ticket.'
   support_boundary: null
 - id: PROG-098
   text: Crafting checks materials.
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: '`src/engine/intent/action_intent.py` (`ActionIntentAdapter.execute`,
+    REQUEST_CRAFT) and `src/core/conservation.py` (`ResourceTransactionResolver`,
+    `CRAFTING` branch); the retired `CraftingSystem.craft()` was never called'
   proof_type: null
-  test_path: null
+  test_path: tests/integration/economy/test_crafting_live_path.py::test_craft_needs_every_material
   divergence_note: null
   support_boundary: null
 - id: PROG-099
@@ -1062,9 +1071,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: '`src/engine/intent/action_intent.py` (`ActionIntentAdapter.execute`,
+    REQUEST_CRAFT) and `src/core/conservation.py` (`ResourceTransactionResolver`,
+    `CRAFTING` branch); the retired `CraftingSystem.craft()` was never called'
   proof_type: null
-  test_path: null
+  test_path: tests/integration/economy/test_crafting_live_path.py::test_craft_needs_the_gold_cost
   divergence_note: null
   support_boundary: null
 - id: PROG-100
@@ -1072,9 +1083,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: '`src/engine/intent/action_intent.py` (`ActionIntentAdapter.execute`,
+    REQUEST_CRAFT) and `src/core/conservation.py` (`ResourceTransactionResolver`,
+    `CRAFTING` branch); the retired `CraftingSystem.craft()` was never called. The
+    capacity gate is the resolver''s.'
   proof_type: null
-  test_path: null
+  test_path: tests/integration/economy/test_crafting_live_path.py::test_craft_is_refused_whole_when_the_product_does_not_fit
   divergence_note: null
   support_boundary: null
 - id: PROG-101
@@ -1082,9 +1096,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: '`src/engine/intent/action_intent.py` (`ActionIntentAdapter.execute`,
+    REQUEST_CRAFT) and `src/core/conservation.py` (`ResourceTransactionResolver`,
+    `CRAFTING` branch); the retired `CraftingSystem.craft()` was never called'
   proof_type: null
-  test_path: null
+  test_path: tests/integration/economy/test_crafting_live_path.py::test_craft_consumes_materials_and_gold_and_adds_the_product_together
   divergence_note: null
   support_boundary: null
 - id: PROG-102
@@ -1142,9 +1158,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: '`src/engine/intent/action_intent.py` (`ActionIntentAdapter.execute`,
+    REQUEST_CRAFT) and `src/core/conservation.py` (`ResourceTransactionResolver`,
+    `CRAFTING` branch); the retired `CraftingSystem.craft()` was never called'
   proof_type: parity
-  test_path: null
+  test_path: tests/integration/economy/test_crafting_live_path.py::test_craft_consumes_materials_and_gold_and_adds_the_product_together;
+    tests/integration/economy/test_crafting_live_path.py::test_craft_is_refused_whole_when_the_product_does_not_fit
   divergence_note: null
   support_boundary: null
 - id: PROG-108

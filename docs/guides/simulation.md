@@ -79,7 +79,6 @@ python3 -m src cli --ticks 200 --seed 42 --world my_world
 | `--ticks N` | 200 | Number of ticks to simulate |
 | `--seed N` | 42 | Deterministic world seed |
 | `--world NAME` | `sandbox_world` | World spec folder under `data/worlds/` |
-| `--entities N` | — | Override entity count |
 | `--workers N` | — | Override worker thread count |
 | `--replay` | off | Enable replay trace capture |
 | `--log-level` | `INFO` | `WARNING` / `INFO` / `DEBUG` |

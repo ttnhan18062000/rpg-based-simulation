@@ -8,7 +8,7 @@ tags: [performance, benchmarking, schema, documentation]
 
 # Benchmark Identity and Result Schema (schema 1.2)
 
-> **Status: the contract for schema version `1.3`** (`1.2` plus the optional `working_set_*` keys of `result.memory_mb`, §3.1 and §3.2; `1.2` was `1.1` plus the optional after-collect keys of `result.memory_mb`; `1.1` was `1.0` plus the optional `identity.runner` section, §3.1; all are MINOR bumps, so a `1.0`, `1.1` or `1.2` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
+> **Status: the contract for schema version `1.4`** (`1.3` plus the optional `outcome.check`, §3.1: the `compare()` check that produced a non-`PASS` outcome, so a known-debt entry matches `state` + `check` and never the free-text `reason`; `1.3` was `1.2` plus the optional `working_set_*` keys of `result.memory_mb`, §3.1 and §3.2; `1.2` was `1.1` plus the optional after-collect keys of `result.memory_mb`; `1.1` was `1.0` plus the optional `identity.runner` section, §3.1; all are MINOR bumps, so a `1.0`, `1.1` or `1.2` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
 > (`BenchmarkRecord`, `compare`), adopted by `PERF-M2-T02b` (`TCK-20261010-PERF-M2-T02B-RECORD`).
 > It began as the design draft of `PERF-M2-T02` (`TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA`),
 > written from code read on 2026-10-03; §1 and §2 are that inventory and still describe the formats as
@@ -224,6 +224,7 @@ provides it.
 | `phases` | object phase → latency object | optional | today: `phase_breakdown` |
 | `outcome.state` | enum `PASS`, `REGRESSION`, `INCONCLUSIVE`, `NOT_APPLICABLE` | required | `performance_contract.md` §3.3; not implemented anywhere today |
 | `outcome.reason` | enum code plus free text | required | not yet |
+| `outcome.check` | one of `schema`, `each_side`, `blocking_fields`, `hash_scheme`, `mode_sequences`, `latency` (`CHECK_NAMES` in `src/perf/benchmark_record.py`), or absent | optional (`1.4`) | the `compare()` check that decided a non-`PASS` outcome; absent for a `PASS` and for an outcome made outside `compare()` |
 | `recorded_at` | string RFC 3339 | required | today: `benchmark_record.utc_now()` (the harness dict keeps its epoch `timestamp`) |
 | `cost_accounting_version` | string | required, **blocking** (R-2) | today: `benchmark_record.COST_ACCOUNTING_VERSION` = `DEV-017`, a constant (no engine edit, OD-8). DEV-017 changed what a tick's and a phase's reported cost means, so a record without this value, or with another one, is not comparable on tick cost |
 
@@ -448,7 +449,8 @@ provides it.
           "required": ["state", "reason"],
           "properties": {
             "state": {"enum": ["PASS", "REGRESSION", "INCONCLUSIVE", "NOT_APPLICABLE"]},
-            "reason": {"type": "string", "minLength": 1}
+            "reason": {"type": "string", "minLength": 1},
+            "check": {"enum": ["schema", "each_side", "blocking_fields", "hash_scheme", "mode_sequences", "latency", null]}
           }
         },
         "recorded_at": {"type": "string", "format": "date-time"}
@@ -518,7 +520,7 @@ perf-only result field, so a gate report outside `src/perf/` can reuse it.
 **Schema version change.** A MAJOR bump invalidates every stored baseline of the older MAJOR for
 comparison. They stay readable and are reported `INCONCLUSIVE` until migrated or re-recorded by an
 owner-approved baseline update (`PERF-M2-T05`), which records the cause ticket and the before and
-after identities. A MINOR bump only adds optional fields (`1.1`: `identity.runner`; `1.2`: the after-collect keys of `memory_mb`; `1.3`: the `working_set_*` keys of `memory_mb`; `compare` reads only the MAJOR, so a `1.3` candidate against a `1.1` baseline, or the reverse, is compared exactly as two records of one version). The reader never guesses a missing
+after identities. A MINOR bump only adds optional fields (`1.1`: `identity.runner`; `1.2`: the after-collect keys of `memory_mb`; `1.3`: the `working_set_*` keys of `memory_mb`; `1.4`: `outcome.check`; `compare` reads only the MAJOR, so a `1.4` candidate against a `1.1` baseline, or the reverse, is compared exactly as two records of one version). The reader never guesses a missing
 required field.
 
 ## 5. Tool mapping

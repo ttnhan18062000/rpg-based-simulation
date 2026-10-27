@@ -206,9 +206,9 @@ class ActionIntentAdapter:
             # Durable-state commitment is deferred to the pre-existing, already
             # parity-verified ResourceTransactionResolver "CRAFTING" branch
             # (src/core/conservation.py:133) via the same ResourceTransferIntent
-            # shape src/engine/blacksmith.py:205-218 already builds — do not call
-            # CraftingSystem.craft() directly, it bypasses that authoritative path
-            # and would not surface an item_crafted event.
+            # shape src/engine/blacksmith.py:205-218 already builds — the retired
+            # CraftingSystem.craft() bypassed that authoritative path and did not
+            # surface an item_crafted event.
             recipe = RecipeRegistry.get(recipe_id)
             materials = [ItemStack(mat, count) for mat, count in recipe.requires_items.items()]
             trace = IntentTrace(
