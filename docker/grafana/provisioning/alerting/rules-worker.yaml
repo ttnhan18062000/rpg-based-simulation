@@ -1,0 +1,108 @@
+apiVersion: 1
+
+# ai_worker consumer alerts (TCK-20261018-AI-WORKER-SCRAPE-AND-LAG-ALERT). Source: sim_stream_consumer_lag and sim_stream_pending_messages from
+# ai_worker:9108 (rpg #645, src/observability/stream/lag_metrics.py), job "ai_worker". Both thresholds come from the observation recorded in
+# docs/runbooks/records/2026-10-26-ai-worker-lag-alert.md, not from a guess: lag > 500 (normal peak 7; the stream trims at about 1000), pending > 100 (normal peak 9).
+# Convention from rules-base.yaml (LogShippingErrors): the expressions carry NO comparison; the threshold is Grafana's step C. With noDataState
+# Alerting an embedded "> N" would turn the healthy case into NoData and fire it.
+#   AiWorkerLagHigh      noDataState Alerting on purpose: a stopped ai_worker stops serving the gauge, so there is NO lag series at all, and that
+#                        is the failure to catch (backlog grows unseen). The same state fires while Redis is down (the collector then yields only
+#                        sim_stream_consumer_up 0); RedisDown is the cause there and this one follows it. A fresh stack is Normal once ai_worker's first
+#                        scrape lands; `for` absorbs the start-up gap.
+#   AiWorkerPendingHigh  noDataState OK: pending only matters while the worker is alive and holding unacknowledged entries; a dead worker is covered by
+#                        the lag rule and by TargetDown (job "ai_worker").
+# execErrState OK for both (a dead Prometheus is PrometheusUnreachable's job). max by (stream, group): every replica reports the same group.
+groups:
+  - orgId: 1
+    name: worker
+    folder: Cause alerts
+    interval: 30s
+    rules:
+      - uid: cause-ai-worker-lag
+        title: AiWorkerLagHigh
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: 'max by (stream, group) (sim_stream_consumer_lag)'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [500]
+        noDataState: Alerting
+        execErrState: OK
+        for: 2m
+        isPaused: false
+        annotations:
+          summary: "ai_worker is falling behind or not reporting: consumer-group lag above the limit, or no lag series"
+          runbook_url: docs/runbooks/ai-worker-lag.md
+        labels:
+          severity: warning
+          alert_kind: cause
+      - uid: cause-ai-worker-pending
+        title: AiWorkerPendingHigh
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: 'max by (stream, group) (sim_stream_pending_messages)'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [100]
+        noDataState: OK
+        execErrState: OK
+        for: 2m
+        isPaused: false
+        annotations:
+          summary: "ai_worker holds too many delivered-but-unacknowledged stream entries"
+          runbook_url: docs/runbooks/ai-worker-lag.md
+        labels:
+          severity: warning
+          alert_kind: cause

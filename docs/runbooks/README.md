@@ -21,6 +21,8 @@ Every alert rule in `docker/grafana/provisioning/alerting/rules-base.yaml` has a
 | `ApiErrorRateHigh` | 2m | [api-latency-slo.md](api-latency-slo.md) | not drilled |
 | `LogShippingErrors` | 10m | [log-shipping.md](log-shipping.md) | live proof: a stopped promtail, a fresh promtail against the 403, and a quiet stack (see the promtail record) |
 | `RedisDown` (cause alert) | 30s | [redis-down.md](redis-down.md) | the Redis-stop drill under load (see `records/`) |
+| `AiWorkerLagHigh` | 2m | [ai-worker-lag.md](ai-worker-lag.md) | stop ai_worker while the engine publishes ([2026-10-26 record](records/2026-10-26-ai-worker-lag-alert.md)) |
+| `AiWorkerPendingHigh` | 2m | [ai-worker-lag.md](ai-worker-lag.md) | not drilled |
 
 Records of measured runs and drills are in `records/`.
 

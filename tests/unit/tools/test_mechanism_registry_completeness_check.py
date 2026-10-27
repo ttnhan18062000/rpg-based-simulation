@@ -39,12 +39,12 @@ def _real_registry_data() -> dict:
 
 def test_enumerate_targets_resolves_shims_not_top_level_filenames():
     """[Load-bearing] domains/systems targets must come from real subpackage files, never from a
-    top-level src/systems/*.py shim's own bare filename -- checking `chest_system` (the shim) would
+    top-level src/systems/*.py shim's own bare filename -- checking `market` (the shim) would
     be checking the wrong identity entirely."""
     targets = enumerate_targets()
     ids = {t.id for t in targets}
-    assert "systems/economy_systems/chests" in ids
-    assert "systems/chest_system" not in ids  # the shim itself is never a target
+    assert "systems/economy_systems/market" in ids
+    assert "systems/market" not in ids  # the shim itself is never a target
 
 
 def test_exclusions_all_point_to_real_paths():
@@ -160,10 +160,10 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     """
     data = _real_registry_data()
     report = build_report(data)
-    assert report.total_targets == 65
-    assert len(report.bound) == 53
+    assert report.total_targets == 63  # 65 -> 63 on 2026-10-26: economy_systems/chests and world_systems/quest_generator deleted (dead)
+    assert len(report.bound) == 54  # 53 -> 54 on 2026-10-26: domains/motivation bound by `role_fit_preference`
     assert len(report.excluded) == 4
-    assert len(report.unbound) == 8
+    assert len(report.unbound) == 5  # 7 -> 5: the two deleted modules were unbound; five dead-or-claimed modules stay, each with a named reason
 
 
 # --- state: gap is not a coverage hole (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION) ---
@@ -312,15 +312,17 @@ def test_wider_scope_numbers_pinned():
     # 255 -> 251 on 2026-10-16 (rpg-planner binding at the fold): route_search.py::route_next_step and content/terrain_cost.py::terrain_cost
     # under `movement` (terrain cost is now paid in step time and route weighting, so it is movement's), death_cause.py::DeathRecord under
     # `aging_death` (the record resolve_lifecycle writes at death), diet_declaration.py::require_declared_diet under `attributes_biology`.
-    assert wider["unbound_files"] == 251
+    # 251 -> 250 on 2026-10-26: `src/world/perception/gate.py` is now named by `sense_gated_detection`.
+    # 250 -> 249 on 2026-10-26: `src/world/regional_sovereignty.py` is now named by `regional_levy_and_conquest_debuffs`.
+    assert wider["unbound_files"] == 249
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
     # 71 -> 70 on 2026-10-11 (treasury batch): GoldSinkSystem is gone.
     # 70 -> 71 on 2026-10-14 (D70, 2.125): RaidService is no longer cited (`faction_raid` is a gap), so it is an unbound candidate again.
-    assert wider["candidates"] == 71  # unbound mechanism-shaped classes, wired or not
-    assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
-    assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 3
+    assert wider["candidates"] == 69  # unbound mechanism-shaped classes, wired or not (71 -> 70: PerceptionGate; 70 -> 69: RegionalSovereigntyService)
+    assert len(wider["wired"]) == 20  # ... of which referenced from another top-level package (21 -> 20, same)
+    assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 2  # PerceptionGate bound 2026-10-26
 
 
 def test_wider_exclusions_and_pending_all_point_to_real_wired_candidates():

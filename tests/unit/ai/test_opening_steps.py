@@ -104,7 +104,7 @@ def test_no_step_the_subject_can_take_is_a_typed_state_and_keeps_the_raw_hunger(
 
 def test_a_present_threat_outranks_the_pull_to_the_node(monkeypatch):
     import src.ai.goals.scorers as scorers
-    monkeypatch.setattr(scorers, "present_threat_to", lambda entity, state: True)
+    monkeypatch.setattr(scorers, "acting_threat_to", lambda entity, state: True)
     hunger = 0.75 * HUNGER_LINE
     score = EatScorer().score(_hero(gold=0, hunger=hunger), _state([_node(10, (3.0, 0.0))], inn=None))
     assert score.opening_step is OpeningStepKind.FORAGE and score.utility == pytest.approx(hunger)

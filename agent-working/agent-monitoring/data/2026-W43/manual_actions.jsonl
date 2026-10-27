@@ -7,6 +7,10 @@
 {"ts":"2026-10-20T14:16:11.184606Z","category":"handover_recovery","source":"sample","session_id":"4f7732d7-85c2-47fa-9c18-79beeaa8d9d4","session_role":"agent-working-implementer","batch":null,"count":1}
 {"ts":"2026-10-20T14:16:04.051989Z","category":"handover_recovery","source":"sample","session_id":"8014aae0-212a-4ff6-9fd5-bc38ef1d0c71","session_role":"agent-working-planner","batch":null,"count":1}
 {"ts":"2026-10-22T02:09:20.428333Z","category":"handover_recovery","source":"sample","session_id":"043f8524-e817-4957-987b-2d60d6cdc50c","session_role":"rpg-designer","batch":null,"count":1}
+{"ts":"2026-10-22T02:09:34.035805Z","category":"handover_recovery","source":"sample","session_id":"6be9f071-b32a-4aee-8680-bd5e76d9e307","session_role":"rpg-implementer-2","batch":null,"count":1}
+{"ts":"2026-10-22T03:04:56.342728Z","category":"handover_recovery","source":"sample","session_id":"21a16a9e-a892-4121-91af-ca766f323ab2","session_role":"rpg-implementer-3","batch":null,"count":1}
+{"ts":"2026-10-22T18:38:13.594200Z","category":"handover_recovery","source":"sample","session_id":"e5f84ba0-e4c5-450d-a8a3-0676a4c9ee4d","session_role":"rpg-implementer","batch":null,"count":1}
+{"ts":"2026-10-23T02:30:49.500408Z","category":"handover_recovery","source":"sample","session_id":"2c01c4d4-6740-411f-b29a-d18bc7c96316","session_role":"rpg-implementer","batch":null,"count":1}
 {"ts":"2026-10-19T02:29:16.789156Z","category":"handover_recovery","source":"sample","session_id":"e2057269-1754-4378-8e35-181c63545a11","session_role":"testing-implementer","batch":null,"count":1}
 {"ts":"2026-10-22T14:30:27.477171Z","category":"handover_recovery","source":"sample","session_id":"2274e00f-2896-4338-926b-abe7a42a599c","session_role":"agent-working-implementer","batch":null,"count":1}
 {"ts":"2026-10-22T14:30:33.472134Z","category":"handover_recovery","source":"sample","session_id":"2274e00f-2896-4338-926b-abe7a42a599c","session_role":"agent-working-implementer","batch":null,"count":1}
@@ -31,3 +35,6 @@
 {"ts":"2026-10-25T03:49:13.816876Z","category":"handover_recovery","source":"sample","session_id":"ddd92d72-4513-44ed-bd35-b8d70aaad675","session_role":"codebase-implementer","batch":null,"count":1}
 {"ts":"2026-10-25T05:36:33.065444Z","category":"handover_recovery","source":"sample","session_id":"7e5213a2-5726-4f3e-86d2-d72c7373c931","session_role":"lead-planner","batch":null,"count":1}
 {"ts":"2026-10-25T03:50:39.205395Z","category":"handover_recovery","source":"sample","session_id":"dc2b17a6-9e5a-4a35-9049-b53147348191","session_role":"agent-working-planner","batch":null,"count":1}
+{"ts":"2026-10-20T18:10:45.965516Z","category":"handover_recovery","source":"sample","session_id":"5d766465-bbed-49de-a942-f1b89cb69381","session_role":"platform-implementer","batch":null,"count":1}
+{"ts":"2026-10-22T14:30:50.097363Z","category":"handover_recovery","source":"sample","session_id":"800fb046-3a26-45dc-a743-5bcb5ed8aa21","session_role":"platform-implementer","batch":null,"count":1}
+{"ts":"2026-10-22T14:30:55.459311Z","category":"handover_recovery","source":"sample","session_id":"cb5e5772-6f3f-466b-bc74-e58d62265108","session_role":"platform-planner","batch":null,"count":1}
