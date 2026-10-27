@@ -23,7 +23,7 @@ async def test_get_entity_snapshots_success(mock_run_service):
     # Setup mock return value
     mock_run_service.get_entity_snapshots.return_value = {
         "snapshots": [
-            {"tick": 10, "entity_id": 1, "objective": "test_obj", "nodes_count": 5}
+            {"tick": 10, "entity_id": 1, "objective": "test_obj", "node_count": 5}
         ],
         "total": 1,
         "page": 1,

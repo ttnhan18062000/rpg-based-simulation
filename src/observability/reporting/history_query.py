@@ -44,32 +44,34 @@ class HistoricalRunQueryService:
         if not os.path.exists(snapshots_path):
             raise FileNotFoundError(f"Cognition snapshots file not found for run: {run_id}")
             
-        matching = []
         try:
             entity_id_int = int(entity_id)
         except ValueError:
             entity_id_int = None
 
-        with open(snapshots_path, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.strip():
-                    data = json.loads(line)
-                    if str(data.get("entity_id")) == entity_id or (entity_id_int is not None and data.get("entity_id") == entity_id_int):
-                        if not full_graph:
-                            data_stripped = data.copy()
-                            data_stripped.pop("nodes", None)
-                            data_stripped.pop("edges", None)
-                            data_stripped["nodes_count"] = len(data.get("nodes", []))
-                            data_stripped["edges_count"] = len(data.get("edges", []))
-                            matching.append(data_stripped)
-                        else:
-                            matching.append(data)
-
-        total = len(matching)
+        # Count every match while streaming, keep only the requested page in memory.
         start = (page - 1) * page_size
         end = start + page_size
-        paginated = matching[start:end]
-        
+        total = 0
+        paginated: List[Dict[str, Any]] = []
+        with open(snapshots_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                data = json.loads(line)
+                if str(data.get("entity_id")) != entity_id and not (
+                    entity_id_int is not None and data.get("entity_id") == entity_id_int
+                ):
+                    continue
+                if start <= total < end:
+                    if full_graph:
+                        paginated.append(data)
+                    else:
+                        # The writer nests nodes/edges under "graph" and records
+                        # node_count/edge_count itself (build_snapshot_record).
+                        paginated.append({k: v for k, v in data.items() if k != "graph"})
+                total += 1
+
         return {
             "snapshots": paginated,
             "total": total,
