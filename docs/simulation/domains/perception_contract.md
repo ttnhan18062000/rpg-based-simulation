@@ -33,7 +33,7 @@ This domain does not decide what to do with percepts. Downstream consumers (adve
 - Salience scoring for each candidate world signal
 - Budget-clamped partitioning of signals into perceived and ignored sets
 
-The domain does **not** own the world signals themselves, the sense gate, or the knowledge model. It consumes the post-gate signal list and produces the entity's perception snapshot.
+The domain does **not** own the world signals themselves, the sense gate, or the knowledge model. **Designed:** it consumes the post-gate signal list and produces the entity's perception snapshot. **Today:** the stage that would do this does not run (see the "Designed, not in effect" note above), so no post-gate signal list is produced.
 
 ---
 
@@ -47,7 +47,9 @@ Entry point: `PerceptionUpdatePhase.run(entities, world_signals, tick)`.
 - Skips entities where `entity.lifecycle.active is False` or `entity.combat.alive is False`.
 - Returns a new list of `EntityState` instances with `cognition.subjective.perception` replaced.
 
-**World-side prerequisite:** `PerceptionGate` (at `src/world/perception/gate.py`) runs **before** the Perception Update stage. The gate performs catalog-driven binary sense-channel gating — only signals that pass the gate reach `world_signals` for the Perception Update stage to score. The Perception Update stage never re-evaluates gate eligibility.
+**World-side prerequisite:**
+- **Designed:** `PerceptionGate` (at `src/world/perception/gate.py`) runs **before** the Perception Update stage. The gate performs catalog-driven binary sense-channel gating — only signals that pass the gate reach `world_signals` for the Perception Update stage to score. The Perception Update stage never re-evaluates gate eligibility.
+- **Today:** the Perception Update stage does not run, so the gate runs before nothing and does not populate `world_signals`. Its only production use is a per-neighbour detectability check: `src/engine/appraisal.py::perceives` (line 50) and `src/engine/tactical.py::_target_still_perceived` (line 90), both reached through the singleton in `src/engine/behavior_consumers.py` (line numbers at main 3533fde71). It is registered as the mechanism `sense_gated_detection` in `registries/mechanisms.yaml`; its reach is measured there and its effect is not.
 
 ---
 
@@ -125,7 +127,7 @@ All replacements use `dataclasses.replace` — the original entity is never muta
 
 ## World-Side Backing: PerceptionGate
 
-`src/world/perception/gate.py` — runs **before** the Perception Update stage in the engine loop.
+`src/world/perception/gate.py` — **designed** to run before the Perception Update stage in the engine loop; **today** that stage does not run, and the gate is called per neighbour from `src/engine/appraisal.py::perceives` and `src/engine/tactical.py::_target_still_perceived` (main 3533fde71). Registry entry: `sense_gated_detection`.
 
 | Property | Detail |
 |---|---|
@@ -138,7 +140,7 @@ All replacements use `dataclasses.replace` — the original entity is never muta
 | Output | `PerceptionResult(perceived, confidence, signals_used, profile_source)` |
 | Mutation | None — read-only, deterministic |
 
-The gate is a binary filter. The Perception Update stage never sees signals that the gate blocked.
+The gate is a binary check. **Designed:** the Perception Update stage never sees signals that the gate blocked. **Today:** there is no signal list to filter; a caller asks `can_perceive` about one neighbour and treats a `False` as "not perceived". Both callers catch `(AttributeError, KeyError, TypeError, ValueError, RuntimeError)` and treat a gate failure as perceived (permissive fallback).
 
 ---
 
@@ -146,7 +148,7 @@ The gate is a binary filter. The Perception Update stage never sees signals that
 
 | Source | Field |
 |---|---|
-| World signals | post-gate `Sequence[WorldSignal]` (base_relevance, kind, position, danger_level, is_novel) |
+| World signals | **Designed:** post-gate `Sequence[WorldSignal]` (base_relevance, kind, position, danger_level, is_novel); not produced today, since the stage does not run |
 | Entity cognition | `entity.cognition.subjective.perception` (previous tick state) |
 | Entity self-model | `entity.self_model.needs.dominant_need` |
 | Entity cognition | `entity.cognition.subjective.emotion.fear` |
@@ -191,7 +193,7 @@ This is the **read-phase direct update pattern**: the phase owns a narrow, bound
 
 | Domain / System | Direction | Detail |
 |---|---|---|
-| **PerceptionGate** (`src/world/perception/gate.py`) | Upstream prerequisite | Gate runs before the Perception Update stage; filters which signals reach the salience evaluator |
+| **PerceptionGate** (`src/world/perception/gate.py`) | **Designed:** upstream prerequisite. **Today:** per-neighbour check | Designed: the gate runs before the Perception Update stage and filters which signals reach the salience evaluator. Today that stage does not run; the gate gates one neighbour's detectability for `appraisal.perceives` and `tactical._target_still_perceived` (main 3533fde71), and is registered as `sense_gated_detection` |
 | **Emotion domain** (event-driven, see emotion_contract.md) | Reads emotion outputs | `fear` and `curiosity` from `EmotionalModel` modulate salience scores and attention focus thresholds |
 | **Motivation / needs** | Reads motivation outputs | `dominant_need` drives attention focus tag selection |
 | **Adventure domain** | Feeds downstream | `perceived_opportunities` and `perceived_threats` become route candidates for adventure scoring |

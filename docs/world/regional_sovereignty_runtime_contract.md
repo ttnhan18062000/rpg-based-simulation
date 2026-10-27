@@ -8,7 +8,7 @@ last_verified: 2026-06-13
 
 # Regional Sovereignty Runtime Contract
 
-**Source:** `src/world/regional_sovereignty.py`, `src/world/regions.py`
+**Source:** `src/world/regions.py`, `src/engine/world_dynamics.py`, `src/world/influence.py`, `src/engine/town_resolution.py`, `src/engine/place_tax.py`; `src/world/regional_sovereignty.py` is an unwired orphan (see below)
 **Related docs:** [docs/mechanics/regional_sovereignty.md](../mechanics/regional_sovereignty.md) (topology/build-time), [threat_and_consequences_contract.md](threat_and_consequences_contract.md) (influence thresholds), [docs/simulation/domains/adventure_contract.md](../simulation/domains/adventure_contract.md) (routing decisions)
 
 ---
@@ -27,8 +27,8 @@ Sovereignty has three runtime effects:
 
 | Effect | Who it applies to | Mechanism |
 |---|---|---|
-| Taxation | All entities that earn gold in the region | Every 100 ticks |
-| Sovereignty debuffs | Entities in a monster-controlled region | Per-tick stat modifiers |
+| Taxation | A sale or a wage paid in a building the faction's region holds | A share of the transaction (EXCH-02), not a periodic levy |
+| Sovereignty debuffs | Entities of another faction in a region with `suppression_active` | Stat modifiers applied by `town_resolution.py` |
 | Town access lock | Entities of opposing faction | Structural gate on service opportunities |
 
 ---
@@ -93,32 +93,21 @@ reads `owner_faction_id`.
 
 ---
 
-## Taxation — `regional_sovereignty.py`
+## Taxation — a share of a sale or a wage (EXCH-02)
 
-Taxation runs every **100 ticks**.
+Corrected 2026-10-26 (TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS; main 3533fde71). This section used to attribute taxation to `regional_sovereignty.py`; that class is never called.
 
-| Entity type | Amount paid | Recipient |
-|---|---|---|
-| Hero/adventurer | 2.0 gold | Owning faction treasury |
-| Functional building | 10.0 gold | Owning faction treasury |
+**Today's rule** (owner decisions 51 and 58, EXCH-02 in `docs/world_rules/material-economy/economy-exchange.md`; per-head levy removed in #536, divergence 2.108): when coin changes hands in a building, a tenth of the amount, rounded down per transaction, moves from the payer's purse to the treasury of the faction holding the building's region, in the same typed transfer. Someone who earns or sells nothing pays nothing; a region nobody holds taxes nothing. Source: `src/engine/place_tax.py` (`tax_on`), reached from `src/engine/shop_sale.py` (a sale) and `src/engine/work_shift.py` (a wage). A periodic levy on everyone present is not a tax this world uses.
 
-Taxation is applied via `ResourceTransferIntent` (mandatory for gold changes). Entities with insufficient gold pay what they have (no debt).
+**Unwired orphan:** `RegionalSovereigntyService.process_taxation` (`src/world/regional_sovereignty.py`) has zero callers in `src/`, `tests/` or `tools/`. It is registered as `regional_levy_and_conquest_debuffs` (`state: orphan`) in `registries/mechanisms.yaml`. What it *would* do if it were called, kept for the record: every **100 ticks**, tax a hero 2.0 gold and each functional building 10.0 gold, paid to the owning faction treasury through a `ResourceTransferIntent`, paying what they have with no debt. That is the retired per-head levy shape; it is not the live rule.
 
 ---
 
 ## Sovereignty debuffs
 
-When a region is monster-controlled (influence ≤ −50), entities of non-monster faction in that region receive debuffs:
+**Today's rule:** `src/engine/town_resolution.py` (`TownResolutionSystem.resolve`, wired in the `town_resolution` phase at `src/engine/pipeline.py:339`). In a region with `suppression_active`, an entity whose faction is not the region owner takes ATK -20%, DEF -20% and SPD -10% (`atk_delta`, `def_delta`, `speed_delta`).
 
-| Stat | Modifier |
-|---|---|
-| ATK | × 0.8 |
-| DEF | × 0.8 |
-| SPD | × 0.9 |
-
-**Current implementation status:** The debuff constants and `apply_sovereignty_debuffs()` function are defined in `regional_sovereignty.py`, but the function returns an `EntityUpdate` without populating the debuff fields. The apply-path dependency is incomplete — debuffs are declared but not fully applied in the current codebase.
-
-Agents should not assume debuffs are active. Verify in source before relying on this mechanic.
+**Unwired orphan:** `RegionalSovereigntyService.apply_sovereignty_debuffs` (`src/world/regional_sovereignty.py`) is never called, and returns an `EntityUpdate` without populating the debuff fields. What it declares, kept for the record: a monster-controlled region (influence ≤ −50), non-monster faction entities, ATK × 0.8, DEF × 0.8, SPD × 0.9 (`CONQUERED_ATK_DEF_MOD`, `CONQUERED_SPD_MOD`). Do not treat these constants as the live numbers.
 
 ---
 
@@ -157,15 +146,17 @@ Liberation (influence ≥ +50) removes the stronghold and restores open town acc
 
 ## Regression tests
 
-- `tests/integration/world/test_long_run_stability.py` — taxation cadence, gold transfer correctness, faction lock
+- `tests/unit/resource/test_tax_and_upkeep.py` — the live rule: a tenth of a sale or wage rounded down, nobody taxed where nobody holds the ground, no periodic levy (an idler in a held town is never taxed)
+- `tests/unit/world/test_suppression.py`, `tests/unit/world/test_regional_consequences.py` — the suppression action-legality gate (`REGIONAL_SUPPRESSION`). No test found asserts the stat debuff of `town_resolution.py`.
+- `tests/integration/world/test_long_run_stability.py` — long-run memory and population stability and determinism parity. It does not cover taxation, gold transfer or the faction lock (corrected 2026-10-26; this line used to cite it for "taxation cadence, gold transfer correctness, faction lock").
 - `tests/unit/worldmodules/test_modules.py` — adjacency graph validity, cross-region movement gate
-- Note: sovereignty debuff tests are pending (incomplete implementation)
+- Note: the stat debuff in `town_resolution.py` has no test of its own
 
 ---
 
 ## Extension rules
 
-1. To fix sovereignty debuffs: populate the EntityUpdate fields in `apply_sovereignty_debuffs()` and add tests. Do not change the constants — they are already correct.
+1. The live debuff is `town_resolution.py`'s `suppression_active` branch. `apply_sovereignty_debuffs()` in `regional_sovereignty.py` is an unwired orphan with different numbers; wiring it would revive or duplicate a rule, which is a behaviour change (document it in intentional_divergences.md first).
 2. To add a new faction type: extend the faction alignment check in taxation and town access lock. The influence threshold (±50) is configurable per-region in the build config.
 3. To add runtime border gating: add a movement pre-check in the movement resolution phase. This would be a significant behavior change — document in intentional_divergences.md and update the adventure routing contract.
 4. Taxation amount (2.0 gold / 10.0 gold) is currently hardcoded. If configurable taxation is needed, move these constants to world config.

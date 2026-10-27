@@ -15,17 +15,25 @@ A signature outside that vocabulary is a lint problem, not a pattern that silent
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import sys
 from pathlib import Path
 from typing import List, Optional, Sequence
 
-from tools.test_architecture.known_reds import REQUIRED_ENTRY_FIELDS, RegistrySpec, lint_file, lint_known_reds, load_known_reds
+from src.perf.benchmark_record import CHECK_NAMES, Outcome
+from tools.test_architecture.known_reds import (
+    REQUIRED_ENTRY_FIELDS,
+    RegistrySpec,
+    lint_file,
+    lint_known_reds,
+    load_known_reds,
+)
 
 LEDGER_PATH = Path(__file__).resolve().parents[2] / "docs" / "performance" / "known_debt_ledger.yaml"
 
 SIGNATURE_STATES = ("REGRESSION", "INCONCLUSIVE", "NOT_APPLICABLE")
-#: The ``compare()`` checks in ``src/perf/benchmark_record.py`` (without the ``_check_`` prefix), in the order they run.
-CHECKS = ("schema", "each_side", "blocking_fields", "hash_scheme", "mode_sequences", "latency")
+#: The ``compare()`` checks in ``src/perf/benchmark_record.py`` (without the ``_check_`` prefix), in the order they run: the one list, imported.
+CHECKS = CHECK_NAMES
 
 PERF_DEBT_SPEC = RegistrySpec(
     "perf_debt",
@@ -47,6 +55,29 @@ def signature_problem(signature: object) -> Optional[str]:
     if check not in CHECKS:
         return f"expected_signature check must be one of {CHECKS}, got {check!r}"
     return None
+
+
+def signature_for(outcome: Outcome) -> Optional[str]:
+    """The ``<STATE>:<check>`` signature of ``outcome``, or ``None`` when it has none: a ``PASS`` or an outcome that did not come from ``compare()``.
+
+    Built from ``Outcome.state`` and ``Outcome.check`` only. The free-text ``Outcome.reason`` is never read here or anywhere in this module.
+    """
+    if outcome.check is None or outcome.state.name not in SIGNATURE_STATES:
+        return None
+    return f"{outcome.state.name}:{outcome.check}"
+
+
+def entry_matches_outcome(entry: dict, scenario_id: str, outcome: Outcome) -> bool:
+    """Whether the ledger ``entry`` covers ``outcome`` for ``scenario_id``.
+
+    The scenario must match the entry's ``fnmatch`` pattern. An entry with an ``expected_signature`` covers only an outcome with that exact
+    signature, so a different state or a different check in the same lane is new drift and not the known debt. An entry without one covers any
+    non-pass outcome of the lane.
+    """
+    if outcome.state.name not in SIGNATURE_STATES or not fnmatch.fnmatchcase(scenario_id, str(entry.get("match", ""))):
+        return False
+    expected = entry.get("expected_signature")
+    return expected is None or expected == signature_for(outcome)
 
 
 def signature_problems(entries: Sequence[dict]) -> List[str]:

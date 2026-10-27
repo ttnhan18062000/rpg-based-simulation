@@ -276,7 +276,6 @@ Result: accepted=False, reason=INSUFFICIENT_GOLD
 | `src/systems/economy_systems/crafting.py` | `CraftingSystem` — 7-gate pre-check before conservation |
 | `src/systems/economy_systems/loot.py` | Loot resolution before conservation call |
 | `src/systems/economy_systems/market.py` | `MarketSystem`, `DynamicPriceService` — pricing |
-| `src/systems/economy_systems/chests.py` | Chest/loot node interaction |
 | `src/core/models/inventory.py` | `InventoryService.can_add_items_with_removals` |
 
 ---
