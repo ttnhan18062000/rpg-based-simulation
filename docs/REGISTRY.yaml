@@ -18171,6 +18171,31 @@
   - documentation
   - investigation
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT.md
+  ticket_id: TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT
+  title: 'Six rendering-quality tests now prove things about a frozen snapshot rather
+    than the live corpus —
+
+    decide whether to rebaseline onto the real `dungeon_crawl` or keep the fixture
+    deliberately'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-04'
+  related_code_areas:
+  - tests/unit/rendering/
+  - test_shape.py
+  - src/rendering/variants.py
+  - docs/visual_quality/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT/plan.md
+  - agent-working/stored_artifacts/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT/test_plan.md
+  tags:
+  - rendering
+  - testing
+  - world
+  - investigation
+- type: ticket
   path: agent-working/tickets/done/TCK-20261004-REVIEW-RUBRIC.md
   ticket_id: TCK-20261004-REVIEW-RUBRIC
   title: 'M6b: Review rubric in the Python code standard'
@@ -19076,28 +19101,6 @@
   - testing
   - live-map
   - planning
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT.md
-  ticket_id: TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT
-  title: 'Six rendering-quality tests now prove things about a frozen snapshot rather
-    than the live corpus —
-
-    decide whether to rebaseline onto the real `dungeon_crawl` or keep the fixture
-    deliberately'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-04'
-  related_code_areas:
-  - tests/unit/rendering/
-  - test_shape.py
-  - src/rendering/variants.py
-  - docs/visual_quality/
-  artifact_files: []
-  tags:
-  - rendering
-  - testing
-  - world
-  - investigation
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261004-POSITION-SWAP-CONTRACT-NEVER-CONSTRUCTED.md
   ticket_id: TCK-20261004-POSITION-SWAP-CONTRACT-NEVER-CONSTRUCTED
