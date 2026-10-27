@@ -7930,6 +7930,20 @@
   - testing
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261026-CI-ASEPRITE-SKIP-LINE-ACCEPT-DEFUSED-XML-FINDING.md
+  ticket_id: TCK-20261026-CI-ASEPRITE-SKIP-LINE-ACCEPT-DEFUSED-XML-FINDING
+  title: 'Code-scanning alert #243 (Semgrep use-defused-xml-parse at tools/ci_aseprite_skip_line.py:23)
+    is marked as trusted input at the line, in the same form as the ci_junit tools'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-26'
+  related_code_areas:
+  - tools/ci_aseprite_skip_line.py
+  - tests/visual_assets/test_ci_aseprite_skip_line.py (run only)
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS.md
   ticket_id: TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS
   title: 'The two serial steps in test.yml go now that their three owner fixes are
