@@ -2846,7 +2846,7 @@
     \ / RunManifest.verification_level / run_report metadata.verification_level \u2014\
     \ see INFRA-363 (TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC). The per-tick value
     \ is the payload key hash of a TICK_END TraceEvent (no warehouse field named tick_hash
-    \ exists). Naming and coverage caveats (proof digest flat-sha256-v2 since TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE; the MD5 fingerprint
+    \ exists). Naming and coverage caveats (proof digest flat-sha256-v3 since TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS, flat-sha256-v2 since TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE; the MD5 fingerprint
     \ is a stability check, not proof; pressure_signals is outside the proof digest)
     \ are in docs/engine/deterministic_execution.md (PERF-D5, TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT).\n"
   proof_type: null
@@ -12866,7 +12866,9 @@
     diagnostic_verbosity or metrics_detail, and WorkerResult no work_debt_update or subsystem_id. The scheduler
     selects only CRITICAL entity work and its dropped count is a constant 0. The proof digest scheme is
     flat-sha256-v2: v1 minus the two removed state keys, with nothing else changed (the v1 form of the pinned
-    fixture, rebuilt, reproduces the old v1 digest exactly). A v2 digest is never compared with a v1 digest.
+    fixture, rebuilt, reproduces the old v1 digest exactly). A v2 digest is never compared with a v1 digest. Superseded as the current scheme by
+    flat-sha256-v3 (TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS): v2 plus item_instances, recent_world_events, quest_registry, factions, clans,
+    information_providers and CombatComponent.last_hit_tick, with nothing else changed (the v2 form of the pinned carried-state fixture reproduces the v2 digest exactly).
     Governor modes and signals on the Live contract are unchanged (the Live golden passes with only the removed
     key dropped). The certification result schema_version is certification_result.v2, the API payload and the
     snapshot lose work_debt_total, and the Prometheus metric sim_work_debt_total is removed.'

@@ -585,6 +585,13 @@ Each follows §3.1 and is intentionally empty.
   one. The scheme name is recorded beside the certification artifact and the long-run `final_state_hash`. The
   alternative was to keep v1 and write both keys as constant `{}`; it was rejected because it leaves two permanent
   dead keys.
+- **Update 2026-10-26 (owner decision 2026-10-24, #715 issuecomment-6384423281, `TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS`):** the proof
+  digest becomes **`flat-sha256-v3`**: the `flat-sha256-v2` canonical data plus the seven carried-state fields the
+  digest omitted (`item_instances`, `recent_world_events` as the ordered window, `quest_registry`, `factions`, `clans`,
+  `information_providers` and `CombatComponent.last_hit_tick`), nothing else changed. Every state digest moves once;
+  outcomes (fates, counters) do not. The step-B exclusion of `last_hit_tick` (ruling (ii)) is removed. Every
+  digest-bearing baseline is invalidated by the scheme (`baseline_invalidation_ledger.md`), and the v1 base is
+  re-recorded under v3 before any M1 paired or gate comparison uses it (roadmap section 12.5). Owner sign-off: recorded in this PR.
 
 #### PERF-D6 — Phase-catalog authority
 
