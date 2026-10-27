@@ -5211,3 +5211,32 @@
     an advisory. The resolved region-list order is the carrier (src/core/state.py
     is untouched). The old smallest-area rule was measured and failed for partial
     overlaps (the thin bandit_road strip won every contested point).
+- id: SUB-398
+  text: The FACTION_SQUAD group_id that MilitaryConflictPhase commits is independent
+    of PYTHONHASHSEED. It is stable_int31(contested_region_id, attacker_id, tick),
+    a blake2b digest of a type-tagged encoding modulo 2**31, so the squad's key in
+    state.groups and the canonical state hash are equal in every process.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src/engine/military_conflict.py squad commitment group_id; src/core/stable_hash.py
+    stable_int31 (TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID)
+  proof_type: null
+  test_path: tests/unit/domains/faction/test_squad_group_id_hashseed.py
+  divergence_note: intentional_divergences.md 2.141 (Bug Fix)
+  support_boundary: Proved on a hand-built WAR state (two hash seeds, two processes
+    each). No shipped gate world is shown to form a squad by this test; the gate-world
+    probe and neutral run are pending (owner condition, #715 6412199242).
+- id: SUB-399
+  text: PerceptionFilterService gives the same entity_id and node_id for a non-int
+    signal id in every process (stable_int31 of the signal id, not the salted hash()).
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src/domains/perception/filter.py; src/core/stable_hash.py stable_int31
+    (TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID)
+  proof_type: null
+  test_path: tests/unit/domains/perception/test_filter_ids_hashseed.py
+  divergence_note: intentional_divergences.md 2.141 (Bug Fix)
+  support_boundary: PerceptionPhase is not wired into production state, so this
+    closes a latent hazard; no run changes because of it.
