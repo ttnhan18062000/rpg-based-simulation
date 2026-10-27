@@ -275,7 +275,9 @@ def test_wider_scope_numbers_pinned():
     # death records and trust), bound under `cross_episode_grief_nemesis`, so unbound_files is unchanged.
     # 344 -> 345 on 2026-10-21 (TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY): +src/ai/goals/escalation.py (escalated_need_wins, bound under
     # `goal_hierarchy`; functions only, so it adds no unbound file or mechanism-shaped class).
-    assert wider["scope_files"] == 345
+    # 345 -> 346 on 2026-10-28 (TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID, divergence 2.141): +src/core/stable_hash.py
+    # (stable_int31, the process-independent id digest; functions only, so it adds no mechanism-shaped class; unbound, see below).
+    assert wider["scope_files"] == 346
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -318,7 +320,9 @@ def test_wider_scope_numbers_pinned():
     # `aging_death` (the record resolve_lifecycle writes at death), diet_declaration.py::require_declared_diet under `attributes_biology`.
     # 251 -> 250 on 2026-10-26: `src/world/perception/gate.py` is now named by `sense_gated_detection`.
     # 250 -> 249 on 2026-10-26: `src/world/regional_sovereignty.py` is now named by `regional_levy_and_conquest_debuffs`.
-    assert wider["unbound_files"] == 249
+    # 249 -> 250 on 2026-10-28 (F4): +src/core/stable_hash.py is an unbound helper (a determinism utility used by military_conflict.py and
+    # perception/filter.py, no mechanism of its own); candidates and wired are unchanged.
+    assert wider["unbound_files"] == 250
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
