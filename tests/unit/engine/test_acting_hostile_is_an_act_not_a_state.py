@@ -135,9 +135,9 @@ def test_the_combat_resolution_stamps_the_tick_of_the_hit():
     assert update.damage_taken > 0 and update.attacker_id == 2 and update.hit_tick_set == TICK
 
 
-def test_last_hit_tick_is_canonical_state_but_not_yet_in_the_proof_digest():
-    """Perf ruling PERF-D5 (ii): typed durable state, emitted in the canonical dict (None when never hit), excluded from the v2 digest only. F1
-    (TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS) hashes it in its single bump and will flip this test."""
+def test_last_hit_tick_is_canonical_state_and_in_the_proof_digest():
+    """Typed durable state, emitted in the canonical dict (None when never hit), and hashed by the v3 proof digest
+    (TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS; it was excluded under v2 by perf ruling PERF-D5 (ii))."""
     never = _subject()
     assert never.combat.to_canonical_dict()["last_hit_tick"] is None
     hit = replace(never, combat=replace(never.combat, last_hit_tick=TICK))
@@ -146,10 +146,8 @@ def test_last_hit_tick_is_canonical_state_but_not_yet_in_the_proof_digest():
     def digest(entity):
         return CanonicalStateHasher.get_hash(AuthoritativeState(tick=3, seed=1, entities={1: entity}))
 
-    assert digest(hit) == digest(never)  # changing last_hit_tick alone leaves get_hash unchanged
-    assert "last_hit_tick" not in CanonicalStateHasher.to_canonical_data(AuthoritativeState(tick=3, seed=1, entities={1: hit}))["entities"]["1"]["combat"]
-    changed_elsewhere = replace(never, combat=replace(never.combat, last_attacker_id=9))
-    assert digest(changed_elsewhere) != digest(never)  # its sibling is still hashed
+    assert digest(hit) != digest(never)  # changing last_hit_tick alone changes get_hash
+    assert CanonicalStateHasher.to_canonical_data(AuthoritativeState(tick=3, seed=1, entities={1: hit}))["entities"]["1"]["combat"]["last_hit_tick"] == TICK
 
 
 def test_last_hit_tick_survives_a_scenario_checkpoint_round_trip():
