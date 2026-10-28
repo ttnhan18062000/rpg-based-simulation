@@ -7886,6 +7886,20 @@
   tags:
   - benchmarking
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A.md
+  ticket_id: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
+  title: 'N15 known V3 starvations (crowded_frontier/46 raider 38, frontier_living_world/44
+    worker 2): re-check on the gate after HUNGER step A, then retire or keep the known-red
+    entry with evidence'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-28'
+  related_code_areas:
+  - tools/test_architecture/ (gate harness and known file, read only except the entry)
+  artifact_files: []
+  tags:
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md
   ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR
   title: A REQUEST_CRAFT intent with an unknown or missing recipe id raises KeyError
@@ -9229,6 +9243,21 @@
   - data-quality
   - workflows
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.md
+  ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
+  title: 'Put both survival pressures on one escalation scale: combat_retreat gets
+    the need-pull escalation once hp is in its own consequence band'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-20'
+  related_code_areas:
+  - src/ai need_pull.py (ESCALATION_AMPLITUDE, smoothstep)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE/plan.md
+  - agent-working/stored_artifacts/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261020-O1-COUNT-FLOORS-CARRY-THEIR-RELATIVE-PART.md
   ticket_id: TCK-20261020-O1-COUNT-FLOORS-CARRY-THEIR-RELATIVE-PART
   title: The O1.starved and O1.at_risk run rows carry floor_rel next to their base
@@ -9469,18 +9498,6 @@
   tags:
   - architecture
   - delivery
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE.md
-  ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
-  title: 'Put both survival pressures on one escalation scale: combat_retreat gets
-    the need-pull escalation once hp is in its own consequence band'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-20'
-  related_code_areas:
-  - src/ai need_pull.py (ESCALATION_AMPLITUDE, smoothstep)
-  artifact_files: []
-  tags: []
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261020-A-PURSUING-HOSTILE-WAKES-ITS-TARGET.md
   ticket_id: TCK-20261020-A-PURSUING-HOSTILE-WAKES-ITS-TARGET
