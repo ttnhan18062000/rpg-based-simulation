@@ -239,24 +239,32 @@ def test_real_source_parses_and_finds_the_three_perf_d1_reads_by_function():
 
 
 def test_cli_runs_are_byte_identical_and_do_not_import_src():
+    """Four tool runs over the real src/ (it was six, 60 s under modest load): one json subprocess, the in-process
+    probe (which prints the tool's own json, so it is the second json run and the cross-process identity check), and
+    two md subprocesses."""
     def run(fmt):
         return subprocess.run(
             [sys.executable, str(SCRIPT), "--format", fmt],
             check=True, capture_output=True, text=True, cwd=REPO_ROOT,
         ).stdout
 
-    assert run("json") == run("json")
-    assert run("md") == run("md")
-    assert json.loads(run("json"))["reads"]
+    marker = "@@IMPORTS-SRC@@"
     probe_code = (
         "import contextlib, io, runpy, sys\n"
         "sys.argv = ['x', '--format', 'json']\n"
-        "with contextlib.redirect_stdout(io.StringIO()):\n"
+        "buf = io.StringIO()\n"
+        "with contextlib.redirect_stdout(buf):\n"
         "    try:\n"
         "        runpy.run_path('tools/perf/wall_clock_inventory.py', run_name='__main__')\n"
         "    except SystemExit:\n"
         "        pass\n"
-        "print(any(m == 'src' or m.startswith('src.') for m in sys.modules))\n"
+        "sys.stdout.write(buf.getvalue())\n"
+        f"print('{marker}', any(m == 'src' or m.startswith('src.') for m in sys.modules))\n"
     )
     probe = subprocess.run([sys.executable, "-c", probe_code], capture_output=True, text=True, cwd=REPO_ROOT)
-    assert probe.stdout.strip().endswith("False"), probe.stderr
+    probe_json, _, imported = probe.stdout.rpartition(marker)
+    assert imported.strip() == "False", probe.stderr
+    first_json = run("json")
+    assert probe_json == first_json  # byte-identical across a subprocess run and the in-process run
+    assert json.loads(first_json)["reads"]
+    assert run("md") == run("md")
