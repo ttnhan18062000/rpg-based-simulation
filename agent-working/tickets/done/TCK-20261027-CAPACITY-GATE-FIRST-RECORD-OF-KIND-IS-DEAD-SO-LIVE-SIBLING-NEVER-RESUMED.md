@@ -145,3 +145,5 @@ src/core/strategic.py, src/core/state.py, src/systems/strategic_systems/intellig
 
 ## Completion Summary
 A winning goal now continues, resumes or supersedes the entity's live project of its kind by target, chosen from the current project then the newest live record; a dead first record of the kind no longer blocks the live sibling or skips the capacity gate. Disclosed shifts: capacity-gate refusals rise (intended, base defect gone); escalated hunger and fatigue orphans lose the project switch at a rate comparable to base (a gap that already exists in base; follow-up TCK-20261029-AN-ESCALATED-NEED-THAT-WINS-SCORING-LOSES-THE-PROJECT-SWITCH); crowded scout 29 returns to its pre-step-A count; crowded starvation pair at seed 46 is a shifted trajectory, with worker 1's non-eating untraced at the execution layer. Sleep-debt collapses and time at hunger of 95 or more were not measured (no ledger counter).
+
+Mechanism advisory reviewed by rpg-planner: no entry change, behaviour within goal_hierarchy's existing bindings (strategic_intelligence_core likewise; personality, buildings, city and camp are state.py field-carrier noise).
