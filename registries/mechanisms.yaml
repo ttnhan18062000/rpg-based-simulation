@@ -1721,7 +1721,6 @@ mechanisms:
       - src/systems/strategic_systems/detour.py::DetourSuggestionSystem
       - src/systems/strategic_systems/work_queue.py::StrategicWorkQueue
       - src/systems/world_systems/routine.py::RoutineService
-      - src/systems/strategic_systems/combat_retreat_flight.py::combat_retreat_flight_update
     verified:
       instrument: scenario
       verdict: observed

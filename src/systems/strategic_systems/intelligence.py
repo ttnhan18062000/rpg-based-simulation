@@ -81,11 +81,10 @@ from src.core.inventory import InventoryService
 from src.engine.cadence import should_run, SystemCadence
 from src.core.movement_modes import MovementMode
 from src.core.updates import NavigationUpdate, InteractionUpdate
-from src.systems.strategic_systems.combat_retreat_flight import combat_retreat_flight_update
 from src.systems.world_systems.routine import RoutineService
 from src.systems.world_systems.intake import ConcernIntakeSystem
 from src.engine.domain_logic import SimulationDomainLogic
-from src.ai.goals import GoalRegistry, acting_threat_to, escalated_need_wins
+from src.ai.goals import GoalRegistry, escalated_need_wins
 from src.ai.goals.base import GoalScore
 from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
@@ -667,7 +666,6 @@ class StrategicIntelligenceSystem:
                                  if entity.navigation.target != target_pos:
                                      ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
             
-            ent_upd = combat_retreat_flight_update(entity, ent_upd, strat_up, eval_intents, lambda: acting_threat_to(entity, state))  # a brain decision for COMBAT_RETREAT under an acting hostile is a decided flight (CONFLICT-04, 2.139)
             if not has_nav_update:
                 town_target = nearest_town_tile(state.town_tiles, entity.navigation.position) or state.town_center
                 if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target:

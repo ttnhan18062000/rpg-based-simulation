@@ -1,7 +1,6 @@
 from src.core.strategic import GoalKind
 from src.ai.goals.base import GoalRegistry
 from src.ai.goals.escalation import escalated_need_wins  # noqa: F401  (re-exported for the strategic capacity gate)
-from src.ai.goals.present_threat import acting_threat_to  # noqa: F401  (re-exported for the strategic pass's COMBAT_RETREAT flight gate)
 from src.ai.goals.adventure_scorer import AdventureGoalScorer
 from src.ai.goals.social_contract_scorer import SocialContractGoalScorer
 from src.ai.goals.region_stabilization_scorer import RegionStabilizationGoalScorer

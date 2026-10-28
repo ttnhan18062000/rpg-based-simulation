@@ -20,7 +20,6 @@ from typing import Any, Dict, List, Optional
 
 from src.ai.goals.kind_group import eats_outside_its_diet, is_person, kind_group
 from src.ai.goals.scorers_support import perceived_hostiles
-from src.core.enums import FlightReason
 from src.core.movement_modes import MovementMode
 from src.core.region_resolution import is_inside_world
 from src.core.spawn_source import SpawnKind
@@ -47,12 +46,6 @@ def _tile(position: Any) -> tuple:
 
 def _key(*parts: Any) -> str:
     return "|".join(str(p) for p in parts)
-
-
-def _holds_combat_retreat_flight(entity: Any) -> bool:
-    """The held COMBAT_RETREAT flight, read from the task (a move with that reason), whatever movement_mode it keeps: the flee counter reads the
-    mode only, and a held flight keeps the subject's existing mode (step A's known label gap)."""
-    return entity.task.work_kind == "ENTITY_MOVE" and (entity.task.payload or {}).get("reason") == FlightReason.COMBAT_RETREAT.value
 
 
 class RunLedger:
@@ -299,8 +292,7 @@ class RunLedger:
 
     @classmethod
     def _count_behaviour(cls, prior: AuthoritativeState, current: AuthoritativeState) -> None:
-        """Flee and pursuit from the typed movement mode (entity-ticks, and episodes = ticks that enter the mode), the held COMBAT_RETREAT flight
-        from the task the same way, steps by the terrain entered, and
+        """Flee and pursuit from the typed movement mode (entity-ticks, and episodes = ticks that enter the mode), steps by the terrain entered, and
         perception from ``perceived_hostiles`` on every ``PERCEPTION_SAMPLE_EVERY``-th tick. Reads only; nothing here reaches the state."""
         sample = current.tick % PERCEPTION_SAMPLE_EVERY == 0
         cls._perception_samples += 1 if sample else 0
@@ -324,10 +316,6 @@ class RunLedger:
                 cls._bump(_key(name + "_ticks", who))
                 if was not in modes:
                     cls._bump(_key(name + "_episodes", who))
-        if _holds_combat_retreat_flight(entity):
-            cls._bump(_key("combat_retreat_flight_ticks", who))
-            if before is None or not _holds_combat_retreat_flight(before):
-                cls._bump(_key("combat_retreat_flight_episodes", who))
 
     @classmethod
     def _count_step(cls, current: AuthoritativeState, entity: Any, before: Any) -> None:

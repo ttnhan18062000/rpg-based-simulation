@@ -158,16 +158,14 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE. Taken by running the
     check.
 
-    2026-10-27 (TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE, #593 6420327798): `total_targets` 65 -> 66
-    and `bound` 53 -> 54, `unbound` unchanged at 8. The new target is `systems/strategic_systems/combat_retreat_flight`
-    (the COMBAT_RETREAT decided flight, divergence 2.139), bound under `strategic_intelligence_core`
-    (`combat_retreat_flight_update`). `tactical_decision` also cites `hostile_acts_on` and `acting_threat_to` (step B's
-    act test, 2.138), which add no target (their modules were already bound). Taken by running the check.
+    2026-10-28 (TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE, #593 6420327798): counts unchanged.
+    `tactical_decision` now cites `hostile_acts_on` and `acting_threat_to` (step B's act test, 2.138, which step A's
+    retreat_pull gate reads), which add no target (their modules were already bound). Taken by running the check.
     """
     data = _real_registry_data()
     report = build_report(data)
-    assert report.total_targets == 66
-    assert len(report.bound) == 54
+    assert report.total_targets == 65
+    assert len(report.bound) == 53
     assert len(report.excluded) == 4
     assert len(report.unbound) == 8
 
@@ -319,7 +317,7 @@ def test_wider_scope_numbers_pinned():
     # under `movement` (terrain cost is now paid in step time and route weighting, so it is movement's), death_cause.py::DeathRecord under
     # `aging_death` (the record resolve_lifecycle writes at death), diet_declaration.py::require_declared_diet under `attributes_biology`.
     # 251 -> 250 on 2026-10-27 (TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE, #593 6420327798): src/ai/goals/present_threat.py
-    # is bound under `tactical_decision` (acting_threat_to, step B's act test, 2.138). combat_retreat_flight.py is a systems target, not a wider-scope file.
+    # is bound under `tactical_decision` (acting_threat_to, step B's act test, 2.138).
     assert wider["unbound_files"] == 250
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when

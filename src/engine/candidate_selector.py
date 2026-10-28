@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterable, Mapping, Optional
 
-from src.core.enums import DECIDED_FLIGHT_REASONS, FlightReason
 from src.core.movement_modes import MovementMode
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.hostility import is_engaged, perceived_hostile
@@ -25,7 +24,7 @@ def _within_a_tile(position: tuple, target: object) -> bool:
 
 # Held moves that end when the entity reaches their target and hand it back to the brain; every other held move runs on without one. A creature that
 # fled or kept its distance and then stood frozen in the held move would never forage again (measured: a plant-eater starved 1900 ticks after one flight).
-ARRIVAL_ENDS_MOVE_REASONS = frozenset({"KEEP_DISTANCE", "FLEE_THREAT", FlightReason.COMBAT_RETREAT.value})
+ARRIVAL_ENDS_MOVE_REASONS = frozenset({"KEEP_DISTANCE", "FLEE_THREAT"})
 
 
 class MovementCandidateSelector:
@@ -50,7 +49,7 @@ class MovementCandidateSelector:
     # The payload ``reason`` of a move the tactical pass issues to LEAVE (a panic retreat, a safety retreat, a return to the leash
     # home). Leaving is a decision, so such a held move keeps stepping beside an engaged hostile and pays the opportunity attack
     # knowingly (CONFLICT-04, divergence 2.89). Read from the payload the decision issued, which no later pass rewrites.
-    FLIGHT_REASONS = DECIDED_FLIGHT_REASONS
+    FLIGHT_REASONS = frozenset({"PANIC_RETREAT", "SAFETY_PRESSURE_RETREAT", "LEASH_RETURN", "AVOID_HOSTILE", "FLEE_THREAT"})
 
     @staticmethod
     def resolve_live_tracking_target(

@@ -30,7 +30,7 @@ def _ends(e):
 
 
 def test_the_set_other_branches_converge_on_names_the_within_a_tile_reasons():
-    assert ARRIVAL_ENDS_MOVE_REASONS == frozenset({"KEEP_DISTANCE", "FLEE_THREAT", "COMBAT_RETREAT"})  # COMBAT_RETREAT added with the strategic decided flight (divergence 2.139)
+    assert ARRIVAL_ENDS_MOVE_REASONS == frozenset({"KEEP_DISTANCE", "FLEE_THREAT"})
 
 
 @pytest.mark.parametrize("reason", sorted(ARRIVAL_ENDS_MOVE_REASONS | {"AVOID_HOSTILE", "PANIC_RETREAT"}))
