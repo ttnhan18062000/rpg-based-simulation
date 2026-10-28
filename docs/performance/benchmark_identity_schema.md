@@ -6,7 +6,7 @@ audience: agent
 tags: [performance, benchmarking, schema, documentation]
 ---
 
-# Benchmark Identity and Result Schema (schema 1.2)
+# Benchmark Identity and Result Schema (schema 1.4)
 
 > **Status: the contract for schema version `1.4`** (`1.3` plus the optional `outcome.check`, §3.1: the `compare()` check that produced a non-`PASS` outcome, so a known-debt entry matches `state` + `check` and never the free-text `reason`; `1.3` was `1.2` plus the optional `working_set_*` keys of `result.memory_mb`, §3.1 and §3.2; `1.2` was `1.1` plus the optional after-collect keys of `result.memory_mb`; `1.1` was `1.0` plus the optional `identity.runner` section, §3.1; all are MINOR bumps, so a `1.0`, `1.1` or `1.2` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
 > (`BenchmarkRecord`, `compare`), adopted by `PERF-M2-T02b` (`TCK-20261010-PERF-M2-T02B-RECORD`).
@@ -156,7 +156,7 @@ provides it.
 
 | Field | Type | Req. | Source |
 |---|---|---|---|
-| `schema_version` | string `MAJOR.MINOR` | required | today: `benchmark_record.SCHEMA_VERSION` (`1.2`) |
+| `schema_version` | string `MAJOR.MINOR` | required | today: `benchmark_record.SCHEMA_VERSION` (`1.4`) |
 | `scenario.id` | string | required | today: `BenchHarness` `scenario_id`. Note: an id must not map to `build_metropolis_state()` until `TCK-20260919-PERF-SCENARIO-METROPOLIS-SPAWN-COLLISION` is fixed |
 | `scenario.builder` | string (module path and function) | required | not yet (`PERF-M2-T03`); builders live in `src/perf/scenarios.py` |
 | `scenario.builder_version` | string (content hash of the builder source) | optional | not yet |
