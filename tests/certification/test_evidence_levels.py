@@ -97,6 +97,15 @@ class FakeState:
     entity_belief_institutions: dict = {}
     event_fidelity: dict = {}
 
+    # TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS (flat-sha256-v3): carried state
+    # CanonicalStateHasher.to_canonical_data() now reads unconditionally.
+    item_instances: dict = {}
+    recent_world_events: list = []
+    quest_registry: dict = {}
+    factions: dict = {}
+    clans: dict = {}
+    information_providers: dict = {}
+
 
 class FakeResourceNode:
     def __init__(self, qty: int):

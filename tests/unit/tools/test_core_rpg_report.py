@@ -126,9 +126,9 @@ def test_substrate_imports_are_not_a_gameplay_signal(repo, import_line):
 
 
 @pytest.mark.parametrize("import_line", [
-    "from src.systems.crafting import x",            # module name is `crafting`, not `craft`
+    "from src.systems.market import x",              # module name is `market`
     "from src.systems.harvest_system import x",      # `harvest_system` matches the `harvest*` stem
-    "from src.systems.guild_system import x",
+    "from src.systems.quests import x",
     "from src.systems.economy_systems.economy import x",
     "from src.engine.movement import x",
     "from src.domains.combat_engagement.x import y",

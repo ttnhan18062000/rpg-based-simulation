@@ -5,11 +5,11 @@ from src.ai.goals.opening_steps import first_open_step
 from src.core.items import food_hunger_recovery
 from src.engine.appraisal import can_eat_item, can_use_inn_meal
 from src.ai.goals.ways import inn_in_reach
-from src.engine.need_pull import hunger_pull, sleep_pull
+from src.engine.need_pull import hunger_pull, retreat_pull, sleep_pull
 from src.engine.sleep_debt import SLEEP_DEBT
 from src.engine.starvation import STARVING_LINE
 from src.engine.way_in_range import way_in_range
-from src.ai.goals.present_threat import present_threat_to
+from src.ai.goals.present_threat import acting_threat_to
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.core.state import EntityState, AuthoritativeState
@@ -60,8 +60,9 @@ def _travel_tiles(entity: EntityState, target_pos: Tuple[float, float]) -> float
 
 
 def _escalated_unless_threatened(entity: EntityState, state: AuthoritativeState, raw: float, escalated: float) -> float:
-    """SURV-07: the escalated utility, or the raw one while a present threat holds (only a present threat outranks a pressing need)."""
-    if escalated > raw and present_threat_to(entity, state):
+    """SURV-07: the escalated utility, or the raw one while a hostile ACTS on the subject (only a present threat outranks a pressing need, and a threat
+    is acting by an act, not a state: memo row 88, `acting_threat_to`)."""
+    if escalated > raw and acting_threat_to(entity, state):
         return raw
     return escalated
 
@@ -234,6 +235,8 @@ class CombatRetreatScorer(GoalScorer):
         utility -= entity.identity.personality.bravery * 30.0
         
         utility = max(0.0, utility)
+        if acting_threat_to(entity, state):  # SURV-07 on the one scale (memo row 88): the wound escalates like a need, but only against a hostile that ACTS on the subject
+            utility = retreat_pull(utility, hp_ratio)
         return GoalScore(
             kind=GoalKind.COMBAT_RETREAT,
             utility=utility,
@@ -312,8 +315,10 @@ class ResolveBlockerScorer(GoalScorer):
 
 class GuildNeedScorer(GoalScorer):
     """Scores the need to visit the guild for quests/intel (TCK-20260807-QUEST-GUILDACTION-
-    DEAD-WIRING). Gated behind ENABLE_GUILD_QUEST_GENERATION (default OFF) — a new gameplay
-    behavior, not a validated replacement of existing behavior.
+    DEAD-WIRING). Gated behind ENABLE_GUILD_QUEST_GENERATION, read from `state.feature_flags`
+    with an "OFF" fallback — the FeatureFlagManager registry default is ON but does not reach
+    this read, so a run is OFF unless its profile sets the flag. A new gameplay behavior, not a
+    validated replacement of existing behavior.
 
     Targets `town_hall` (not a dedicated "guild" building — no world in the real content corpus
     ever declares one; `town_hall` is present in every world) via

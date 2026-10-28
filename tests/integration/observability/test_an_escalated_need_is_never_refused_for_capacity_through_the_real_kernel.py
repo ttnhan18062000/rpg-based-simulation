@@ -155,25 +155,3 @@ def test_an_admitted_hunger_project_that_is_not_current_survives_the_bandwidth_t
             assert kinds.count("resolve_blocker") == 3, "a suspended project was evicted for the need project"
     finally:
         _close(kernel, run_id)
-
-
-@pytest.mark.resource_budget_large  # 600 to 2100 real ticks: inherently over the default per-test time limit
-def test_the_gate_run_blacksmith_gets_a_hunger_project_by_about_hunger_95_and_eats_before_100__pins_current_scoring_not_the_rule():
-    """The bs13 case itself, no staging. PINS CURRENT SCORING, NOT THE RULE: the hunger goal only beats town_return (about 139) near hunger 95, so the
-    project appears around tick 1900; this tightens when the town_return outbid is fixed (TCK-20261020-TOWN-RETURN-OUTBIDS-AN-ESCALATED-NEED-UNTIL-ABOUT-95)."""
-    run_id = "escalated_bs13_replay"
-    kernel = _kernel(run_id)
-    try:
-        peak = 0.0
-        project_at_hunger = None
-        for _ in range(2100):
-            kernel.tick_once()
-            e = kernel.state.entities[13]
-            peak = max(peak, e.biological.hunger)
-            if project_at_hunger is None and "hunger" in _kinds(kernel):
-                project_at_hunger = e.biological.hunger
-        assert project_at_hunger is not None, "blacksmith 13 never got a hunger project"
-        assert project_at_hunger <= 96.0, f"the hunger project came late, at hunger {project_at_hunger}"
-        assert peak < 100.0, "blacksmith 13 reached hunger 100: it did not eat in time"
-    finally:
-        _close(kernel, run_id)

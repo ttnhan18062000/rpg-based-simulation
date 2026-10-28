@@ -3021,8 +3021,6 @@
 {"added_date": "2026-10-02", "ceiling": 2, "file": "src/strategy/role_model_phase.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 2}
 {"added_date": "2026-10-02", "ceiling": 5, "file": "src/strategy/role_model_phase.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 5}
 {"added_date": "2026-10-02", "ceiling": 17, "file": "src/strategy/role_model_phase.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "RoleModelSelectionPhase.apply", "tool": "complexipy", "value": 17}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/chest_system.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/chest_system.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/cognition_export.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/cognition_export.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/crafting.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
@@ -3030,12 +3028,6 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/economy.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/economy.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/economy_systems/__init__.py", "retiring_ticket": null, "reviewed": false, "rule": "D104", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/economy_systems/chests.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/economy_systems/chests.py", "retiring_ticket": null, "reviewed": false, "rule": "D102", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 6, "file": "src/systems/economy_systems/chests.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 6}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/economy_systems/chests.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/economy_systems/chests.py", "retiring_ticket": null, "reviewed": false, "rule": "PLC0415", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 18, "file": "src/systems/economy_systems/chests.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "ChestSystem.update", "tool": "complexipy", "value": 18}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/economy_systems/crafting.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 3, "file": "src/systems/economy_systems/crafting.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 3}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/economy_systems/crafting.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
@@ -3092,8 +3084,6 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/narrative.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/party.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/party.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/quest_generator.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/quest_generator.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/quest_system.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/quest_system.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/quests.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
@@ -3295,9 +3285,6 @@
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/world_systems/quest_engine.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/world_systems/quest_engine.py", "retiring_ticket": null, "reviewed": false, "rule": "PLR0912", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 53, "file": "src/systems/world_systems/quest_engine.py", "retiring_ticket": null, "reviewed": false, "rule": "cognitive-complexity", "symbol": "QuestSystem.update", "tool": "complexipy", "value": 53}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/world_systems/quest_generator.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}
-{"added_date": "2026-10-02", "ceiling": 2, "file": "src/systems/world_systems/quest_generator.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 2}
-{"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/world_systems/quest_generator.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 2, "file": "src/systems/world_systems/quests.py", "retiring_ticket": null, "reviewed": false, "rule": "F401", "symbol": null, "tool": "ruff", "value": 2}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/world_systems/quests.py", "retiring_ticket": null, "reviewed": false, "rule": "I001", "symbol": null, "tool": "ruff", "value": 1}
 {"added_date": "2026-10-02", "ceiling": 1, "file": "src/systems/world_systems/routine.py", "retiring_ticket": null, "reviewed": false, "rule": "D100", "symbol": null, "tool": "ruff", "value": 1}

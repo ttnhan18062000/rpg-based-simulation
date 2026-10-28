@@ -49,11 +49,49 @@ def test_a_wounded_subject_in_unclaimed_space_beside_an_inn_eats_instead_of_hold
     assert _action(update) == "EAT" and update.task.payload_set["target_id"] == 20003
 
 
-def test_a_wounded_subject_whose_retreat_has_a_real_destination_still_flees():
+def _hunter_attacks(state, merchant):
+    from src.core.state import TaskComponent
+
+    hunter = replace(state.entities[HUNTER], task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "ATTACK", "target_id": merchant.id}))
+    object.__setattr__(state, "entities", {**state.entities, HUNTER: hunter})
+
+
+def test_a_wounded_subject_whose_retreat_has_a_real_destination_still_flees_a_hunter_that_attacks_it():
+    """Old -> new: the merchant here is at hunger 100 (past its line), and since memo row 88 only an ACTING hunter (an attack or pursuit task aimed at it, or a hit) holds
+    it in flight; the hunter now targets the merchant."""
     state, merchant = _scene((30.0, 30.0), (30.0, 29.0), hp=10)  # inside the hometown region: an away vector exists
+    _hunter_attacks(state, merchant)
     update = _decide(state, merchant)
     assert _reason(update) == "PANIC_RETREAT"
     assert tuple(update.task.payload_set["target_position"]) != (30.0, 30.0)
+
+
+def test_a_starving_wounded_subject_does_not_flee_a_hunter_that_is_only_beside_it():
+    """A need past its line outranks an emotional panic flight unless a hostile acts on the subject (memo row 88, the panic hold)."""
+    state, merchant = _scene((30.0, 30.0), (30.0, 29.0), hp=10)
+    assert _reason(_decide(state, merchant)) != "PANIC_RETREAT"
+
+
+def test_a_starving_wounded_subject_still_flees_a_hunter_that_just_hit_it():
+    """(b) of the act test: the hunter rests, but it took hp from the merchant inside one brain cadence."""
+    state, merchant = _scene((30.0, 30.0), (30.0, 29.0), hp=10)
+    merchant = replace(merchant, combat=replace(merchant.combat, last_attacker_id=HUNTER, last_hit_tick=state.tick))
+    object.__setattr__(state, "entities", {**state.entities, MERCHANT: merchant})
+    assert _reason(_decide(state, merchant)) == "PANIC_RETREAT"
+
+
+def test_a_collapsing_sleeper_past_its_sleep_line_also_outranks_a_panic_flight_from_a_resting_hunter():
+    state, merchant = _scene((30.0, 30.0), (30.0, 29.0), hp=10)
+    merchant = replace(merchant, biological=replace(merchant.biological, hunger=10.0, sleep_debt=98.0))  # SLEEP_LINE
+    object.__setattr__(state, "entities", {**state.entities, MERCHANT: merchant})
+    assert _reason(_decide(state, merchant)) != "PANIC_RETREAT"
+
+
+def test_a_subject_below_its_need_line_still_flees_a_hunter_that_is_only_beside_it():
+    state, merchant = _scene((30.0, 30.0), (30.0, 29.0), hp=10)
+    merchant = replace(merchant, biological=replace(merchant.biological, hunger=80.0))
+    object.__setattr__(state, "entities", {**state.entities, MERCHANT: merchant})
+    assert _reason(_decide(state, merchant)) == "PANIC_RETREAT"  # below the line the panic flight stands as before
 
 
 def test_a_held_panic_beside_a_real_tactical_hostile_keeps_the_freeze_and_does_not_start_a_fight():
