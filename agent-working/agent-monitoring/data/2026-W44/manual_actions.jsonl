@@ -1,3 +1,5 @@
+{"ts":"2026-10-26T02:51:53.744776Z","category":"handover_recovery","source":"sample","session_id":"6548ac4c-5199-4504-9431-84adb01a5e3e","session_role":"lead-planner-u24","batch":null,"count":1}
+{"ts":"2026-10-26T04:25:39.636531Z","category":"handover_recovery","source":"sample","session_id":"e2c37ecd-12e6-4967-b0b3-1d523efea1bd","session_role":"architecture-planner-u24","batch":null,"count":1}
 {"ts":"2026-10-26T02:37:01.888197Z","category":"handover_recovery","source":"sample","session_id":"aa056a67-87c4-4d88-9592-40a2eb724035","session_role":"testing-implementer","batch":null,"count":1}
 {"ts":"2026-10-26T04:23:41.854074Z","category":"handover_recovery","source":"sample","session_id":"7ac9e28b-9438-42d2-99a5-42f9bb75aa08","session_role":"testing-implementer","batch":null,"count":1}
 {"ts":"2026-10-26T03:12:30.966670Z","category":"manual_wake","source":"sample","session_id":"21a16a9e-a892-4121-91af-ca766f323ab2","session_role":"rpg-implementer-3","batch":null,"count":1}
@@ -10,3 +12,4 @@
 {"ts":"2026-10-28T07:51:30.817819Z","category":"handover_recovery","source":"sample","session_id":"c80005be-ca2d-46a2-9fe4-9edf93421a55","session_role":"rpg-implementer-2","batch":null,"count":1}
 {"ts":"2026-10-28T07:53:13.464687Z","category":"handover_recovery","source":"sample","session_id":"1d34fdf5-a921-4591-904a-391cd654edfa","session_role":"rpg-implementer","batch":null,"count":1}
 {"ts":"2026-10-28T08:52:26.016429Z","category":"handover_recovery","source":"sample","session_id":"8419578e-1805-4c8a-93b7-c9bfcfbe5452","session_role":"rpg-implementer","batch":null,"count":1}
+{"ts":"2026-10-26T20:06:04.177449Z","category":"handover_recovery","source":"sample","session_id":"073472f3-7768-4033-83d7-477ba1e47b63","session_role":"agent-working-planner","batch":null,"count":1}
