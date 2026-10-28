@@ -4,7 +4,7 @@ layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
-phase: implement
+phase: inprogress
 date: 2026-10-23
 tags: []
 ---
