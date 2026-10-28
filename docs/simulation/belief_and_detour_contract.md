@@ -57,10 +57,10 @@ actually drives detour/routing decisions. That division of labour is real as *de
 `TCK-20260909-LEAD-CAPACITY-ENFORCEMENT-DUAL-MECHANISM-PREEMPTION`'s own real 500-tick instrumented
 reproduction found `entity.strategic.leads` empty for every entity at every tick for the whole run —
 leads are never created under real defaults either. All four real `LeadState(...)` construction
-sites in `src/` are unreachable today, each for a different reason: `GuildIntelSystem.update()`
-(rumor-on-guild-visit) has zero callers anywhere; `GuildAction.visit()` (the guild-visit lead grant)
-is wired but gated behind `ENABLE_GUILD_QUEST_GENERATION`, default OFF, not overridden by any world
-checked so far; the belief-confirmation loop in `intelligence.py` only updates already-existing
+sites in `src/` were unreachable when this was measured, each for a different reason (two of the four have since changed, below): `GuildIntelSystem.update()`
+(rumor-on-guild-visit) had zero callers anywhere and is now deleted (designed, not in effect: Bible ch07 §7); `GuildAction.visit()` (the guild-visit lead grant)
+is wired and gated behind `ENABLE_GUILD_QUEST_GENERATION`, which defaults ON (`src/domains/optimization/feature_flags.py:117`; "default OFF" was the reading when
+this was written, and no re-measurement of leads in a real run was made for this edit); the belief-confirmation loop in `intelligence.py` only updates already-existing
 leads, never seeds the collection from empty; and `PaidInformationTransactionSystem.enforce()`
 requires a registered `InformationProvider`, a type with zero real construction sites anywhere in
 `src/`. So both halves of the knowledge/investigation layer — facts and leads — are inert under real

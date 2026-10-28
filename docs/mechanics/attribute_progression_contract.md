@@ -338,7 +338,7 @@ Step 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
 | Module | Role |
 |---|---|
 | `src/progression/leveling.py` | `LevelingService` — threshold formula, level-up execution, stat recalc |
-| `src/progression/skills.py` | `SkillScalingService` — attribute-driven skill power scaling |
+| `src/engine/rpg_depth.py` | `SkillScalingService` — attribute-driven skill power scaling |
 | `src/progression/breakthroughs.py` | `BreakthroughService` — registry + `apply_bonuses()` (implemented) |
 | `src/progression/class_tiers.py` | `ClassTierService` — `CLASS_TIER_REGISTRY` lookup + `apply_bonuses()`, live-recomputed from `class_id` every `get_effective_stats()` call (mirrors `BreakthroughService`) |
 | `src/progression/evolution.py` | Entity evolution on level cap events |

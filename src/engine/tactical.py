@@ -20,7 +20,8 @@ from src.cognition.common_knowledge import combat_capability_against
 from src.content_semantics.faction import are_entities_hostile
 from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
-from src.engine.tactical_threat import safety_retreat_warranted
+from src.engine.tactical_threat import hostile_acts_on, safety_retreat_warranted
+from src.engine.need_pull import HUNGER_LINE, SLEEP_LINE
 from src.engine.tactical_rest import in_place_survival_update
 from src.engine.building_arrival import building_arrival_update
 from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
@@ -102,6 +103,16 @@ def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) ->
             combat_engaged=True,
         ))
     ]
+
+
+def _panic_holds(entity: "EntityState", threats: List["EntityState"], tick: int) -> bool:
+    """True when a panic retreat (and its freeze) stands: there are perceived threats, and no need outranks them. Past its consequence line (hunger 95, sleep debt 98)
+    a need already takes health, so it is itself a present threat (SURV-07, row 83) and the panic yields to it unless a perceived hostile is ACTING on the subject, by
+    an act and not a state (memo row 88). Below the line a panic flight stands as before."""
+    if not threats:
+        return False
+    past_line = entity.biological.hunger >= HUNGER_LINE or entity.biological.sleep_debt >= SLEEP_LINE
+    return not past_line or any(hostile_acts_on(h, entity, tick) for h in threats)
 
 
 def _has_tactical_hostiles(entity: "EntityState", neighbors: List["EntityState"]) -> bool:
@@ -206,7 +217,7 @@ class TacticalDecisionSystem:
         # A flight with no destination is not flight (designer ruling, V3): a panic that resolves to the subject's own tile is not taken, and the tick
         # falls through the existing order (in-place survival, then the arrival at a building). A real tactical hostile keeps the old freeze, so the
         # fall-through never turns a held panic into a fight the subject would not otherwise start.
-        if emotion.is_fleeing and threats and (panic_destination is not None or _has_tactical_hostiles(entity, neighbors)):  # no threat in sight, no flight: low HP, dread and grudge feed the panic but never flee alone (divergence 2.114)
+        if emotion.is_fleeing and _panic_holds(entity, threats, state.tick) and (panic_destination is not None or _has_tactical_hostiles(entity, neighbors)):  # no threat in sight, no flight: low HP, dread and grudge feed the panic but never flee alone (divergence 2.114)
              # PANIC: Move away from the perceived threats, inside the current region
              # (MOV-01 / LOC-01); hold position when no valid destination exists (MOV-03).
              retreat_to = _destination_or_hold(entity, panic_destination)

@@ -41,3 +41,22 @@ def test_building_interaction_inn_rest_recovery():
 def test_inn_rest_without_gold_still_recovers_as_on_main():
     upd = _inn_rest_update(gold=0)
     assert upd.readiness_delta == 10.0 and upd.combat.hp_delta == 5  # free beds stay on until the removal lands
+
+
+def test_standing_on_a_building_tile_is_not_a_service_trigger():
+    """Building interactions are explicit (TOWN-020): an entity on an inn tile that proposes no REST gets no bed, charge or recovery.
+
+    Positive control: ``test_building_interaction_inn_rest_recovery`` shows the explicit REST action on the same inn does.
+    """
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    entity = replace(create_mock_entity(1, pos=(5.0, 5.0), hp=50), inventory=replace(create_mock_entity(1).inventory, gold=100))
+    state = AuthoritativeState(
+        tick=1, seed=42,
+        entities={1: entity},
+        town_tiles={(5, 5)},
+        building_tiles={(5, 5): "inn"},
+        buildings={10: BuildingState(id=10, kind="inn", position=(5.0, 5.0), functional=True)},
+    )
+    refined = AuthoritativeApplyPipeline.refine(state, StateUpdate(entity_updates={1: EntityUpdate(entity_id=1)}))
+    upd = refined.entity_updates.get(1)
+    assert upd is None or (not upd.resource_transfers and upd.combat is None and upd.readiness_delta == 0.0)

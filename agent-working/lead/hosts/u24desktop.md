@@ -13,9 +13,22 @@ Written only by `lead-planner-u24`, the lead seat on host `u24desktop` (`u24desk
 `board.md`. **Advice only**: neither lead dispatches, reorders a queue or approves anything. Status requests go only to
 sessions on this host (`docs/guides/cross_session_messages.md`).
 
-Last status pass: 2026-10-20, at `main` f6c7bc795 (fifth pass; the 2026-10-19 pass was at df3cb7256).
+Last status pass: 2026-10-25, at `main` 54b1dcf85 (sixth pass; the 2026-10-20 pass was at f6c7bc795).
 
-## Since the 2026-10-19 pass
+## Since the 2026-10-20 pass
+
+- **Baseline v1 recorded:** #725 merged as 341f700d0 (2026-10-23). The `src/**` freeze is over. Gate run 39799337778: V2 15/15, V3 exactly the 3 known cases.
+- **Merged (u24 sessions):** #718, #719, #720, #722, #725, then #726 (M1 done criteria and freeze rule, roadmap §12.5, owner-approved, 6c1373951), #727 (known entries scoped by `cases:`; N14 and N15 V3 entries expire 2026-11-05, 0a3df6159) and #728 (memo row 89 and the §12.5 Base clarification, c6ff5149f). Ubuntu and other hosts since then: #723, #724, #529, #736-#741, #742 (Remote Control between the two leads), #743 and #744. #745 is open.
+- **Owner rulings logged on #715:** 6356123802 (§12.5 approved; the D73 step is separate; D68 waits on per-subject records), 6356212656 (memo row 88: "acting" is an act, scope S1, step B goes first) and 6356509993 (the repairs HUNGER B, then A, then F4, then the D73 step sit on one cumulative watch; the D73 record is v1.1 and is recorded even if D73 is neutral).
+- **Repo security (2026-10-23):** the owner turned on Dependabot alerts and private vulnerability reporting. Dependabot security-update PRs stay off on purpose. The 17 Semgrep alerts are triaged by owner: 14 in `src/` go to rpg's TCK-20261019-SEMGREP-BASELINE-FINDINGS-IN-SRC-TRIAGE (CORS read from config, `usedforsecurity=False` on 7 md5 sites, read `src/lab` #232/#234). That ticket sits only on the unpushed `rpg-planner-seat` branch, and rpg-planner was asked on 2026-10-25 to note it on #593. Agent-working's 2 alerts (#247, #248) are fixed by #729, merged 2026-10-25 as 8c7ead02b by ubuntu's agent-working pair. The policy lives at `.github/SECURITY.md`, owned by platform. Asset's #243 waits until asset's seats are live. The convention from #701: suppress a false positive in code with `# nosemgrep: <rule>` plus a reason, never in the Security tab.
+- **Session stop, 2026-10-24:** every u24 seat except this one stopped uncleanly at about the same time. The machine itself did not reboot. On 2026-10-25 the owner resumed rpg-planner, rpg-designer, rpg-implementer 1-3, testing-planner, testing-implementer and architecture-planner-u24 with `tools/sessions/launch.py <role> --resume`. The agent-working-u24 and platform-u24 seats can't launch: the worktree each has on record is missing, and the fallback worktree's `.claude` differs from origin/main.
+- **Remote Control (#742):** the two leads message each other directly with SendMessage. #715 stays the approvals log, and `for:<role>` issues stay the durable handoff.
+- **Host queue (one heavy run at a time):** Lane C's H2 hash check, then the HUNGER step B paired run (running 2026-10-26; perf ruled on 10-24, owner-approved: `last_hit_tick` ships unhashed under flat-sha256-v2 and becomes F1's 7th field; #593 6384425767, #715 6384423281), then the H1 hash check, then the HUNGER step A paired run (about 11-04), then the F4 paired run (about 11-06/07), then the D73 step, which is recorded as v1.1. The N14 and N15 entries expire 11-05, and rpg raises a renewal with the owner by 11-03 if the dates slip.
+- **Disk and memory (2026-10-25):** `/mnt/data` has 5.3 GB free (warning below 10 GB) and `/` has 7.0 GB. 8 GB RAM, about 4 GB available. Old worktrees that could be pruned, with the owner's yes: baseline-pre, baseline-post, health2, redis-pin, lane-a-tactical-path-batch, m2-idea43-temporal-note and others (`python3 -m tools.sessions.prune_branches --worktrees`).
+
+## Earlier passes
+
+### Since the 2026-10-19 pass (written 2026-10-20)
 
 - **Merged (u24 sessions):** #654 (rpg R2 request histogram), #662 (rpg: 0.3 s histogram bucket for the API SLO alert), #653, #658 (rpg pre-v1 batch; owner accepted the D74 override), #651, #655 (Node 24 in test.yml; the merge needed the `workflow` token scope), #659 (CI-runtime child 1: xdist inside existing jobs), #660, #663, #664, #666 (rpg gate per-level and per-reference), #665 (platform u24: `security-scan.yml`, gitleaks plus Semgrep, report-only), #667 (testing: workflows pass the github context through `env`), #675 (testing: actions pinned by SHA), #668 (platform u24: deploy-docs pins, frontend image non-root on 8080, the code-scanning upload drops in-source-suppressed results). Ubuntu: #647, #661, #670 (asset rc-0012), #671, #674. #609 closed.
 - **`-u24` seats are live (#661, 710473fb5):** platform-planner-u24, platform-implementer-u24 and agent-working-{planner,implementer,designer}-u24, each relaunched once with `tools/sessions/launch.py <role>-u24 --worktree <path>` after syncing its worktree to origin/main (the role card is read from the worktree).
@@ -25,8 +38,6 @@ Last status pass: 2026-10-20, at `main` f6c7bc795 (fifth pass; the 2026-10-19 pa
 - **Frontend container port:** #668 moves the frontend from 80 to 8080 (unprivileged nginx). Ubuntu's DevOps steps 2-3 were told on #618. `deploy-docs.yml` runs only when dispatched and Pages is disabled, so its two major action bumps are unproven until the owner dispatches it.
 - **RPG (summary):** baseline v1 waits on the pre-v1 fixes. The owner ruled V3 (a starving character must treat starvation as a present threat) is fixed before v1, with no known red. Lane B's `rpg-pre-v1-fixes` carries the real-kernel gate positives, V4 and V1; Lane A builds V3; then one combined PR. testing's v1 re-anchor date is 2026-10-31.
 - **Disk (2026-10-20):** `/` fell to 2.2 GB free; personal-career (other repo) removed its orphaned 2.3 GB scratchpad, so `/` is at 4.9 GB, and `~/.cache/uv` (4.2 GB) can be pruned. `/mnt/data` 15 GB free after the owner pruned 11 merged worktrees (backup `~/Working/worktree-backup-2026-10-19.txt`).
-
-## Earlier passes
 
 ### Since the 2026-10-18 pass (written 2026-10-19)
 - **Merged:** #637 (testing: Frontend lane runs on `visual_assets/` and the M5 criteria doc), #645 (rpg M0 batch, 37 tickets; ai_worker `/metrics` on 9108), #646 (v1 dependency window: uv group, redis-py 8 with the Redis 8.10.2 image, Starlette 1.x; merged before lead-planner's review, soak PASS), #650 (platform u24: the default compose stack publishes the event stream to Redis), #648 (rpg R1: backend metrics on internal port 9109), #649 (testing: `simq_reanchor` and the live compare refuse runs not recorded host-independent; the v1 re-anchor prerequisite). Ubuntu: #632, #638-#644. Dependabot #578, #579, #566, #580 closed as superseded by #646.
@@ -59,45 +70,55 @@ on both images, with sign and SPDX claims.
 
 | role | branch or ticket | state | blocker | next step | last status time |
 |---|---|---|---|---|---|
-| rpg-planner | runs Lanes A-C toward the combined pre-v1 PR | busy | V3 fix (Lane A) | combined pre-v1 PR, then baseline v1 | 2026-10-20 |
-| rpg-implementer (Lane A) | V3 starvation-as-threat on `rpg-v3-starvation-threat` | busy | none | paired measurement, seeds 42-46; a stop goes to the owner | 2026-10-20 (via rpg-planner) |
-| rpg-implementer-2 (Lane B) | `rpg-pre-v1-fixes` (pushed, no PR) | busy | V3 and the designer's docs | fold them, full checks, open the combined PR on the owner's yes | 2026-10-20 |
-| rpg-implementer-3 (Lane C) | real-kernel gate positives (merged into Lane B) | idle | none | per rpg-planner | 2026-10-20 (via rpg-planner) |
-| rpg-designer | 4 rule docs for V3 and the disclosure | busy | none | review Lane A's Bible 04 section | 2026-10-20 |
-| testing-planner | `testing-planner-idle`; pin and junit follow-ups filed | idle | roles ticket (junit) | review #676; CI-runtime children 2-3 | 2026-10-20 |
-| testing-implementer | #676 (harness run-dir race under xdist) | busy | 1 red check on #676 | fix, then next dispatch | 2026-10-20 (from PRs) |
-| agent-working-planner-u24 | roles ticket TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS | waiting | owner's OK to dispatch | dispatch; pr-body-lint pin; Semgrep baseline in its paths | 2026-10-20 |
-| agent-working-implementer-u24 | native-refusal hotfix (committed, unpushed) | idle | owner's push yes | push, open the PR | 2026-10-19 |
-| agent-working-designer-u24 | handover dated 2026-10-07 | not running | none | on demand | 2026-10-07 |
-| platform-planner-u24 | #665, #668 merged | idle | none | watch the first dispatched deploy-docs run | 2026-10-20 |
-| platform-implementer-u24 | #668 merged | idle | none | next dispatch | 2026-10-20 |
+| rpg-planner | #746: 17 seat tickets to main, including the src Semgrep triage ticket | live | none | review the Lane B and C PRs | 2026-10-26 |
+| rpg-implementer (Lane A) | `rpg-hunger-retreat-one-scale`: HUNGER step B built with perf's ruling (ii) | busy: probe and paired run on the host (base 341f700d0) | none | step A after step B | 2026-10-26 |
+| rpg-implementer-2 (Lane B) | `rpg-v1-calibration-d76`: calibration ticket closed | PR approved (#715 6406571536) | none | H1 on `rpg-hostility-projection-cost`, plan-only until the host frees | 2026-10-26 |
+| rpg-implementer-3 (Lane C) | `rpg-cooperation-candidates-index`: H2 done and proven byte-identical, cooperation phase about 2.8x faster, carries 12 tickets | PR approved (#715 6406571536) | none | F3 | 2026-10-26 |
+| rpg-designer | `rpg-designer-m1-base` (#728 merged) | resumed | none | on demand | 2026-10-25 |
+| testing-planner | `testing-planner-v1-followups`: T1 run ledger and T2 filed | resumed | none | scope T3; review testing's PRs | 2026-10-25 |
+| testing-implementer | `testing-implementer-simq-reanchor-v1` | resumed | none | per testing-planner | 2026-10-25 |
+| architecture-planner-u24 | engine-modes step 1 is scheduled: H2 on Lane C, H1 on Lane B | resumed | none | review the H1 and H2 PRs | 2026-10-25 |
+| agent-working-planner-u24 | none (#729 merged by ubuntu, 2026-10-25) | not running | worktree on record is missing | relaunch only when there is work | 2026-10-24 |
+| agent-working-implementer-u24 | none (#729 merged by ubuntu, 2026-10-25) | not running | worktree on record is missing | relaunch only when there is work | 2026-10-24 |
+| platform-planner-u24 | owns `.github/SECURITY.md` (#729); may rewrite the stub when back | not running | worktree on record is missing | relaunch only when there is work | 2026-10-22 |
+| platform-implementer-u24 | idle | not running | worktree on record is missing | relaunch only when there is work | 2026-10-22 |
+| agent-working-designer-u24 | none | not running | none | on demand | 2026-10-07 |
+
+## Ubuntu's items for rpg-planner (relayed 2026-10-25, answered 2026-10-26)
+
+| item | state |
+|---|---|
+| T06 docs/engine lift for #735 (#593 6386482656; owner wording #715 6386636889, 6386816236) | GRANTED: §3.3/§5 only, no src outside src/perf, owner OK in the PR, rpg-planner reviews (#593 6406593752) |
+| Lane split U2-U4 for ubuntu's rpg seats (#593 6393498282, correction 6393509350) | U2 batch 1 RELEASED, U3 and U4 YES, with conditions: hash-neutral proof per PR; ubuntu is the only mechanisms.yaml editor during batch 1; stay out of the u24 lanes' files and data/worlds (#593 6406593752) |
+| #617 `--entities`: make it work, warn, or remove | REMOVE `--entities` from cli as an rpg hotfix; #617 closes when it lands |
+| #721 asset entity-marker icon mapping | answered (#721 6406594384): a client-side table keyed on kind, re-keyed at M1; the asset lane may edit useCanvas' entity layer |
 
 ## Open PRs (u24desktop view)
 
 | PR | owner | state |
 |---|---|---|
-| #676 harness run-dir race | testing | 1 check red; testing-planner's review |
-| (unopened) native-refusal hotfix | agent-working | waits on the owner's push yes |
-| (unopened) combined pre-v1 | rpg | waits on V3 |
-| #565, #567-#570 frontend npm | rpg | after v1, one at a time |
-| #529 paired perf tripwire | perf (ubuntu) | not tracked here |
+| #746 seat tickets to main; Lane B calibration and Lane C H2 PRs follow | rpg | owner approved the pushes (#715 6406571536); lead comments on cross-domain impact only |
+| #748 Lane B: calibration on v1 plus the D76 table on the v1 base | rpg | all checks green; my comment 6406639176 (no objection); waits on the owner's merge |
+| #749 this page | lead (u24) | docs only; waits on the owner's merge |
+| #750 testing: drop the serial xdist steps (TCK-20261026-CI-DROP-THE-THREE-SERIAL-XDIST-STEPS) | testing | CI running; #657 can close after it merges |
+| #735 PERF-M2-T06 gate conformance (draft) | perf (ubuntu) | T06 lift granted (#593 6406593752); sequencing against #746 raised in 6406638830 |
+| Lane C H2 (carries TCK-20261019-SEMGREP-BASELINE-FINDINGS-IN-SRC-TRIAGE) | rpg | not opened yet; push approved (#715 6406571536); architecture-planner-u24 and the lead review |
 
 ## Overlap and conflicts
 
 Work that duplicates or blocks another session, on either host. One line each: what, which sessions, since when, what would
 resolve it (a recommendation to the owner, not an instruction).
 
-- **Unowned paths** (`tools/ci_junit_*`, `tools/handover_transit.py`, `tools/search/**`, `.github/workflows/rpg-gate-report.yml`) since 2026-10-19: findings on them have no owner. Resolves when the owner OKs the roles ticket (testing and agent-working agreed on the split).
-- **`docs/REGISTRY.yaml`**: the local `merge-tree` check without the driver still reports hunks that GitHub merges cleanly (#668 on 2026-10-20). Merge one PR at a time and watch main's registry test after each.
-- **Main checkout pulls** trip on modified monitoring shards (`manual_actions.jsonl`, 2026-10-20): save the added lines, restore the file, pull, re-append.
-- **CI-runtime child 3** touches main-push lanes that the Slow regression watchdog, perf baselines and the rpg gate report read; lead-planner (ubuntu) and platform-planner review it.
+- **Heavy runs on this host** (6 cores, 8 GB): Lane A's HUNGER step B paired run is running; Lane B's H1 waits until it ends. One heavy run at a time.
+- **#746 and #735**: perf's §4.2 and the rpg seat tickets touch the same sequencing; raised on #746 (6406638830). Resolves when rpg-planner and perf agree an order.
+- **Lane C H2 hash evidence**: H2 changes hashed state that engine-modes step 1 reads; architecture-planner-u24 reviews the hash proof.
+- **`docs/REGISTRY.yaml`**: merge one PR at a time and watch main's registry test after each.
+- **Main checkout pulls** trip on modified monitoring shards: save the added lines, restore the files, pull, re-append.
 
 ## Pending owner decisions seen from this host
 
-- Code scanning "Check runs failure threshold" set to None (`delivery_process.md` describes it as the repo setting).
-- OK to dispatch the roles ticket TCK-20261019-SESSION-ROLES-OWN-UNOWNED-SEMGREP-PATHS (agent-working-planner-u24's terminal).
-- Push yes for agent-working-implementer-u24's native-refusal hotfix.
-- github MCP: add `GITHUB_READ_ONLY=1` to `.env` (recommended).
-- `.claude/settings.json` `PostToolUseFailure` entry (agent-working-implementer's ask, from #612).
-- rpg Lane A's 377 old run dirs (about 0.2 GB); rpg-planner to name which unmerged rpg worktrees are folded and removable.
-- Handover notes to trim: `rpg-implementer-2.md` (72 KB), `testing-implementer.md` (2026-10-07 header).
+- Merge #748 and #749; #750 once its CI finishes.
+- #390 Slow regression: a new failure, test_arena_stress_50v50, at 8c7ead02b. Ask testing to look?
+- Target scale for engine modes (agents, ticks/s, live or offline): still open.
+- agent-working: go for TCK-20261022-SESSION-ROLES-RPG-OWNS-RPG-MEASURE (local commit f4e121cea).
+- Dependabot #143 (uuid in website/package-lock.json): held while host ubuntu is off.

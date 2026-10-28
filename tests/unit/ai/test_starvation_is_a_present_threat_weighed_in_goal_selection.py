@@ -37,9 +37,24 @@ def test_a_starving_subject_under_a_present_threat_keeps_its_escalated_hunger_pu
     assert score.utility > 100.0, score  # the escalation (raw 100 plus the pull) is not dropped while a threat holds
 
 
-def test_a_subject_whose_hunger_is_not_past_its_line_still_has_the_pull_dropped_under_a_threat():
+def _hunter_attacks(state, merchant):
+    """The hunter's current task attacks the merchant (an act, memo row 88)."""
+    from src.core.state import TaskComponent
+
+    hunter = replace(state.entities[HUNTER], task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "ATTACK", "target_id": merchant.id}))
+    object.__setattr__(state, "entities", {**state.entities, HUNTER: hunter})
+
+
+def test_a_subject_whose_hunger_is_not_past_its_line_still_has_the_pull_dropped_while_a_hostile_attacks_it():
+    """Old -> new: the scene's hunter is adjacent and merely present; since memo row 88 only an act drops the pull, so the hunter now targets the merchant."""
     state, merchant = _scene(hunger=80.0)
-    assert EatScorer().score(merchant, state).utility == pytest.approx(80.0)  # raw hunger: only a present threat outranks a need below its line
+    _hunter_attacks(state, merchant)
+    assert EatScorer().score(merchant, state).utility == pytest.approx(80.0)  # raw hunger: only an acting threat outranks a need below its line
+
+
+def test_a_subject_whose_hunger_is_not_past_its_line_keeps_the_pull_beside_a_hunter_that_is_only_adjacent():
+    state, merchant = _scene(hunger=80.0)
+    assert EatScorer().score(merchant, state).utility > 80.0  # wounded, adjacent, outmatched: states, not acts
 
 
 def test_a_wounded_subject_below_its_line_still_flees_the_predator_beside_it():
@@ -65,6 +80,8 @@ def test_a_subject_in_the_desperation_band_with_a_hunter_really_attacking_does_n
     monster = (V2EntityBuilder(2).kind("MONSTER").location(39.0, 30.0).identity(faction=Faction.MONSTER_HORDE)
                .combat(hp=300, max_hp=300, atk=60, def_stat=5, alive=True, readiness=100.0)
                .navigation(movement_mode=MovementMode.WANDER).lifecycle(active=True).build())
+    from src.core.state import TaskComponent
+    monster = replace(monster, task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "ATTACK", "target_id": 1}))  # really attacking the hero
     inn = BuildingState(id=20003, kind="inn", position=INN, functional=True)
     state = AuthoritativeState(tick=1, seed=1, entities={1: hero, 2: monster}, buildings={20003: inn}, blocked_tiles={(40, 31)}, building_tiles={}, terrain={})
     update = TacticalDecisionSystem.evaluate_entity_intent(state, hero)
