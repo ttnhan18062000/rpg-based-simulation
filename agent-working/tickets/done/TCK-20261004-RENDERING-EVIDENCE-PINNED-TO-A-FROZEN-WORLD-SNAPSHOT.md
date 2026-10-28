@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT
-phase: open
+phase: done
 date: 2026-10-04
 tags: [rendering, testing, world, investigation]
 ---
@@ -132,17 +132,32 @@ historical records.
   `rpg-implementer-2`. Re-measure before relying on them — they were relayed, not independently taken.
 
 ## Implementation Notes
+Decision: option C (keep the frozen reference, add live coverage). Ruling by rpg-planner (u24), relayed via lead-planner-u24 -> lead-planner -> rpg-planner-ubuntu on 2026-10-28; NOT an owner approval. Word for word:
+"For rpg-planner-ubuntu, U3 t3 values: OK as proposed.
+- Q1, exact pins vs tolerance: exact pins are OK (TVD to 4 places, CV to 3, counts and fills exact). The compile is deterministic, since two runs gave identical results, and a tolerance band would hide a real layout change. Any data/worlds release that moves them is rebaselined by me, as the dated comment says.
+- Q2, the live subject: frontier_living_world is right. It is an M1 gate world, and only my data/worlds release can change it.
+- INFRA-373: the text is OK as written (status verified, test_path unchanged).
+- Stale-figure corrections (a) and (b): OK, with the reason stated.
+- Rotation and seed-invariance: both stay frozen-only and on live dungeon_crawl respectively, as proposed. Commit when ready."
+- The six frozen tests are renamed `test_frozen_reference_*` with a docstring naming the fixture; four live tests on frontier_living_world (seed 42) pin walkable 17058 / 1 component / 100.0, CV 0.659, TVD vs sandbox_world 0.2645, cave 1886 (1.0) and forests 1226 (0.515) / 216 (0.675).
+- UQ-1/UQ-2 answered: the frozen reference isolates the renderer from content churn; live worlds with forest + cave exist (frontier_extended, frontier_living_world, frontier_marches). The ticket's 0.2867 does not reproduce (live dungeon_crawl TVD 0.196, no known origin) and is dropped.
+- Corrections (a) 0.23161981243456373 -> 0.23153614062704975 (D72 bucket merge) in INFRA-373, current_state.md, scoring_contract.md, variants.py; (b) CV 0.6782405727873148 labelled frozen (live dungeon_crawl 0.283) in density.py and scoring_contract.md.
+- Decision recorded in docs/visual_quality/scoring_contract.md section 6. INFRA-373 text rewritten and INFRA-370/371/372 test_path repointed through parity_ledger_writer.py in one pass (rpg-planner-ubuntu OK'd the three repoints); diff shows only those four rows changed.
+- The frozen reference can be retired when the renderer no longer needs a fixed-world regression anchor.
 
 _(to be filled during implementation)_
 
 ## Test Summary
+tests/unit/rendering 99 passed.
 
 _(to be filled during implementation)_
 
 ## Files Changed
+tests/unit/rendering/test_{connectivity,density,shape,variants}.py, docs/visual_quality/{current_state,scoring_contract}.md, src/rendering/{variants,density}.py (docstrings), docs/parity_ledger/infrastructure.yaml (INFRA-370..373).
 
 _(to be filled during implementation)_
 
 ## Completion Summary
+Frozen tests renamed and documented as reference, live coverage added on frontier_living_world, numbers and parity rows corrected.
 
 _(to be filled during implementation)_

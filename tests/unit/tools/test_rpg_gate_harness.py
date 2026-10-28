@@ -8,12 +8,19 @@ from types import SimpleNamespace
 import pytest
 
 from tools.test_architecture import rpg_gate_harness as h
+from tools.test_architecture import run_ledger
 from tools.test_architecture.rpg_gate_baseline import load_config
 
 STUB = "tests.helpers.rpg_gate_stub_metrics"
 WORLD = "sandbox_world"
 SHA = "0123456789abcdef"
 ROOT = h.repo_root()
+
+
+@pytest.fixture(autouse=True)
+def _ledger_in_tmp(tmp_path, monkeypatch):
+    """Every invocation writes a run-ledger row (T1); keep the tests' rows out of the real data/ledgers/."""
+    monkeypatch.setenv(run_ledger.ENV_PATH, str(tmp_path / "ledger" / "run_ledger.jsonl"))
 
 
 def _cfg(tmp_path: Path, seeds=(1, 2), ticks=15, worlds=(WORLD,)) -> Path:
@@ -192,3 +199,85 @@ def test_a_rerun_child_gets_the_full_seed_set_never_just_the_seed_it_reruns(tmp_
     out.mkdir()
     h.run_one(WORLD, 2, load_config(cfg), out, metrics_module=STUB, sha=SHA, hhash="hh", keep_runs=False, timeout_s=300, token="rerun-test")
     assert json.loads((out / h.doc_name(WORLD, 2)).read_text())["floor_seeds"] == [1, 2, 3]
+
+
+# ---- the run ledger (TCK-20261023-MEASURED-STEP-RUN-AND-RERUN-LEDGER)
+
+def _fake_run(monkeypatch, *, crash_seed=None, pool_raises=False):
+    """Replace the two child-process steps with fakes that write the documents and cost sidecars the real ones do."""
+    def run_one(world, seed, config, out_dir, **kw):
+        target = out_dir / h.doc_name(world, seed)
+        bad = seed == crash_seed
+        doc = h.no_data_doc(world, seed, config.ticks, kw["sha"], kw["hhash"], "fake crash") if bad else {"schema": h.SCHEMA, "status": h.OK, "world": world, "seed": seed, "metrics": []}
+        target.write_text(h.dump_doc(doc), encoding="utf-8")
+        target.with_name(target.name + ".cost.json").write_text(json.dumps({"wall_seconds": 1.5 + seed, "peak_rss_mb": 100.0 + seed}))
+        return target
+
+    def pool_world(world, seed_paths, config, out_dir, **kw):
+        if pool_raises:
+            raise RuntimeError("pool exploded")
+        target = out_dir / h.doc_name(world, None)
+        target.write_text(h.dump_doc({"schema": h.SCHEMA, "status": h.OK, "world": world, "metrics": []}), encoding="utf-8")
+        return target
+
+    monkeypatch.setattr(h, "run_one", run_one)
+    monkeypatch.setattr(h, "pool_world", pool_world)
+
+
+def _ledger_rows(tmp_path):
+    return run_ledger.read_rows(tmp_path / "ledger" / "run_ledger.jsonl")[0]
+
+
+def test_run_matrix_writes_a_started_row_and_one_end_row_per_invocation(tmp_path, monkeypatch):
+    _fake_run(monkeypatch)
+    _run(tmp_path, "a", seeds=(1, 2, 3))
+    started, end = _ledger_rows(tmp_path)
+    assert started.is_started_row and started.invocation_id == end.invocation_id and not end.is_started_row
+    assert (end.tool, end.mode, end.step, end.outcome, end.outcome_detail, end.workers) == ("gate", "gate", "gate", "PASS", None, 2)
+    assert (end.base_sha, end.new_sha, end.worlds, end.seeds, end.ticks, end.rerun_of) == (None, SHA, (WORLD,), (1, 2, 3), 15, None)
+    assert [(r.arm, r.seed, r.wall_seconds, r.peak_rss_mb, r.cached) for r in sorted(end.runs, key=lambda r: r.seed)] == [("gate", 1, 2.5, 101.0, False), ("gate", 2, 3.5, 102.0, False), ("gate", 3, 4.5, 103.0, False)]
+
+
+def test_a_no_data_run_is_an_error_row_naming_it(tmp_path, monkeypatch):
+    _fake_run(monkeypatch, crash_seed=2)
+    _run(tmp_path, "a", seeds=(1, 2))
+    end = _ledger_rows(tmp_path)[-1]
+    assert end.outcome == "ERROR" and f"{WORLD} seed 2: fake crash" in end.outcome_detail and len(end.runs) == 2
+
+
+def test_a_matrix_that_raises_still_writes_an_error_row_and_reraises(tmp_path, monkeypatch):
+    _fake_run(monkeypatch, pool_raises=True)
+    with pytest.raises(RuntimeError, match="pool exploded"):
+        _run(tmp_path, "a")
+    rows = _ledger_rows(tmp_path)
+    assert len(rows) == 2 and rows[1].outcome == "ERROR" and "RuntimeError: pool exploded" in rows[1].outcome_detail
+
+
+def test_an_interrupt_writes_a_killed_row(tmp_path, monkeypatch):
+    _fake_run(monkeypatch)
+    monkeypatch.setattr(h, "pool_world", lambda *a, **k: (_ for _ in ()).throw(KeyboardInterrupt()))
+    with pytest.raises(KeyboardInterrupt):
+        _run(tmp_path, "a")
+    assert _ledger_rows(tmp_path)[-1].outcome == "KILLED"
+
+
+def test_the_step_label_and_the_rerun_of_come_from_the_caller(tmp_path, monkeypatch):
+    _fake_run(monkeypatch)
+    cfg = _cfg(tmp_path)
+    earlier = "5f2c3d1e-8a4b-4c7d-9e0f-123456789abc"
+    h.run_matrix(load_config(cfg), cfg, tmp_path / "a", metrics_module=STUB, sha=SHA, step="M1-dispatch", rerun_of=earlier)
+    end = _ledger_rows(tmp_path)[-1]
+    assert (end.step, end.rerun_of) == ("M1-dispatch", earlier)
+
+
+def test_a_ledger_write_failure_leaves_the_matrix_and_the_cli_exit_code_unchanged(tmp_path, monkeypatch, capsys):
+    _fake_run(monkeypatch)
+    blocker = tmp_path / "blocker"
+    blocker.write_text("a file, not a directory")
+    monkeypatch.setenv(run_ledger.ENV_PATH, str(blocker / "ledger.jsonl"))
+    cfg = _cfg(tmp_path)
+    assert h.main(["--config", str(cfg), "--metrics-module", STUB, "--out", str(tmp_path / "o"), "--sha", SHA, "--workers", "2", "--step", "M0", "--rerun-of",
+                   "5f2c3d1e-8a4b-4c7d-9e0f-123456789abc"]) == 0
+    captured = capsys.readouterr()
+    assert "run ledger not written" in captured.err and "2/2 runs ok" in captured.out
+    assert json.loads((tmp_path / "o" / "matrix.json").read_text())["schema"] == "rpg-gate-matrix/v1"

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 from pathlib import Path
 
@@ -14,6 +15,8 @@ from tools.test_architecture import rpg_gate_report as rep
 TODAY = dt.date(2026, 10, 11)
 SEEDS = (1, 2, 3)
 SHA, HASH = "abc123", "hash1"
+KNOWN_SHA = "a" * 64
+MAIN_CI_ENV = {"GITHUB_RUN_ID": "39799337778", "GITHUB_RUN_ATTEMPT": "1", "GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_REF": "refs/heads/main"}
 ORACLE = "docs/mechanics/02_combat_laws.md"
 
 
@@ -55,6 +58,8 @@ def _report(*findings, skipped=(), sha=SHA):
 
 
 def _build(directory, known=(), **kw):
+    kw.setdefault("known_file_sha256", KNOWN_SHA)
+    kw.setdefault("env", MAIN_CI_ENV)  # a main CI run, so the candidate can become a baseline; the tests that need no CI pass env={}
     return cand.build_candidate(directory, kw.pop("config", _config()), list(known), kw.pop("report", _report()), today=TODAY, **kw)
 
 
@@ -78,7 +83,8 @@ def test_documents_to_candidate_to_v1_to_an_all_pass_report(tmp_path):
 
 def test_candidate_rows_carry_the_statistics_and_thresholds(tmp_path):
     candidate = _build(_write(tmp_path / "docs"), milestone="M0", commit_sha=SHA)
-    assert candidate["provenance"] == {"commit_sha": SHA, "harness_hash": HASH, "worlds": ["w"], "seeds": [1, 2, 3], "ticks": 100}
+    assert candidate["provenance"] == {"commit_sha": SHA, "harness_hash": HASH, "worlds": ["w"], "seeds": [1, 2, 3], "ticks": 100,
+                                    "known_file_sha256": KNOWN_SHA, "ci": {"run_id": "39799337778", "run_attempt": "1", "event_name": "workflow_dispatch", "ref": "refs/heads/main"}}
     rows = {(r["id"], r["scope"]): r for r in candidate["metrics"]}
     o1 = rows[("O1", "run")]
     assert o1["per_seed"] == {"1": 11.0, "2": 12.0, "3": 13.0} and o1["mean"] == 12.0 and o1["se"] == pytest.approx(1 / 3 ** 0.5)
@@ -207,6 +213,49 @@ def test_an_evidence_only_candidate_cannot_become_a_baseline(tmp_path):
     assert candidate["evidence_only"] is True
     with pytest.raises(base.RebaselineRefused, match="evidence only"):
         base.rebaseline(candidate, _config(), tmp_path / "b", pr=None, cites=["T"])
+
+
+# ---- the CI run and the known file are recorded (TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE)
+
+def test_a_candidate_records_the_ci_run_and_the_known_file_hash(tmp_path):
+    prov = _build(_write(tmp_path / "d"))["provenance"]
+    assert prov["known_file_sha256"] == KNOWN_SHA
+    assert prov["ci"] == {"run_id": "39799337778", "run_attempt": "1", "event_name": "workflow_dispatch", "ref": "refs/heads/main"}
+
+
+@pytest.mark.parametrize("env", [{}, {"GITHUB_RUN_ID": "1"}, {**MAIN_CI_ENV, "GITHUB_REF": ""}, {k: v for k, v in MAIN_CI_ENV.items() if k != "GITHUB_EVENT_NAME"}])
+def test_ci_is_null_unless_all_four_run_variables_are_set(tmp_path, env):
+    assert _build(_write(tmp_path / "d"), env=env)["provenance"]["ci"] is None
+
+
+def test_a_candidate_with_no_ci_run_or_off_main_cannot_become_a_baseline(tmp_path):
+    for env, match in (({}, "ci must carry"), ({**MAIN_CI_ENV, "GITHUB_REF": "refs/heads/some-branch"}, "ci.ref must be refs/heads/main")):
+        candidate = _build(_write(tmp_path / "d"), env=env)
+        with pytest.raises(base.RebaselineRefused, match=match):
+            base.rebaseline(candidate, _config(), tmp_path / "b", pr=None, cites=["T"])
+    assert not (tmp_path / "b").exists()
+    assert base.rebaseline(_build(_write(tmp_path / "d"), milestone="M1"), _config(), tmp_path / "b", pr=None, cites=["T"]).name == "rpg_gate_v1.json"
+
+
+def test_the_cli_records_the_sha256_of_the_known_file_bytes_and_the_run_from_the_environment(tmp_path, monkeypatch):
+    config = tmp_path / "config.yaml"
+    config.write_text("worlds: [w]\nseeds: [1, 2, 3]\nticks: 100\nstale_after_days: 30\n")
+    known = tmp_path / "known.yaml"
+    known.write_text("known: []\n# exact bytes, comment included\n")
+    report = tmp_path / "report.json"
+    report.write_text(json.dumps(_report()))
+    args = ["--report", str(report), "--config", str(config), "--docs", str(_write(tmp_path / "ok")), "--known", str(known)]
+    for var in MAIN_CI_ENV:
+        monkeypatch.delenv(var, raising=False)
+    local = tmp_path / "local.json"
+    assert cand.main([*args, "--out", str(local)]) == 0
+    prov = json.loads(local.read_text())["provenance"]
+    assert prov["known_file_sha256"] == hashlib.sha256(known.read_bytes()).hexdigest() and prov["ci"] is None
+    for var, value in MAIN_CI_ENV.items():
+        monkeypatch.setenv(var, value)
+    ci_out = tmp_path / "ci.json"
+    assert cand.main([*args, "--out", str(ci_out)]) == 0
+    assert json.loads(ci_out.read_text())["provenance"]["ci"]["run_id"] == "39799337778"
 
 
 def test_the_cli_writes_the_file_or_refuses_without_writing(tmp_path, capsys):

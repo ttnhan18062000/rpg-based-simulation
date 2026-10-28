@@ -843,7 +843,9 @@ others, not a reflex.
     threat-scaled pull or a direct comparison (each adds a tuning constant, decision 33); the
     same escalation applied to retreat in its own consequence band (principled, but it changes
     retreat in every world; parked after v1, its own step, if a subject is seen eating into a
-    fatal attack);
+    fatal attack; BUILT as step A of the row 88 pair, TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE: the goal-level
+    retreat score escalates with the wound (damage fraction `1 - hp/max_hp`, death the consequence line) on the need scale, only
+    while a hostile acts on the subject; bravery above about 0.65 still outweighs it at a damage fraction of 0.85 (one measured scene), by design (memo row 91); divergence 2.139);
     the amendment after v1 with the gate's starvation check recorded as a known red (declined by
     the owner, 2026-10-20: it would narrow decision 54).
 

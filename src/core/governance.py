@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import IntEnum, auto
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 
 
 class RuntimeMode(IntEnum):
@@ -68,21 +68,3 @@ class PressureSignals:
     def effective_phase_cost(self) -> Dict[str, float]:
         """Per-bucket cost: ``phase_cost`` when set, else the measured ``phase_costs_ms``."""
         return self.phase_costs_ms if self.phase_cost is None else self.phase_cost
-
-
-@dataclass(frozen=True, slots=True)
-class EnvironmentCapture:
-    """
-    Law M10: Truthful representation of the execution context.
-    Distinguishes between detected physical facts and effective logical class.
-    """
-    detected_cores: int
-    detected_ram_gb: float
-    detected_class: str
-    
-    effective_class: str            # Final class after profile-governance / overrides
-    is_overridden: bool = False
-    
-    os_name: str = "linux"
-    python_version: str = "3.13"
-    commit_sha: str = "unknown"     # Provided by CI or build context
