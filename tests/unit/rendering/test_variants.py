@@ -42,14 +42,14 @@ def _entity(entity_id: int, position: tuple[float, float], active: bool = True) 
     )
 
 
-def test_total_variation_distance_reproduces_sandbox_dungeon_anchor():
+def test_frozen_reference_total_variation_distance_reproduces_sandbox_dungeon_anchor():
+    """Frozen reference, not a live guard: the world is tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml (the pre-balance-fix dungeon_crawl, kept deliberately; do not regenerate). It isolates the renderer from world-content churn; live coverage is on frontier_living_world."""
     # D72: the compiler's base fill is now the catalog id "plain", so sandbox_world's fill and its
     # "plain" regions are ONE histogram bucket (before, "PLAIN" fill and "plain" region were two).
     # Verified value is 0.23153614062704975 (round(x, 4) == 0.2315); it was 0.2316 with the split bucket.
     repo = WorldRepository("data/worlds")
     sandbox_spec = repo.load_world("sandbox_world")
     sandbox_state, _report = WorldCompiler.compile(sandbox_spec, seed=42)
-    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
     dungeon_spec = load_frozen_dungeon_crawl()
     dungeon_state, _report = WorldCompiler.compile(dungeon_spec, seed=42)
 
@@ -272,3 +272,16 @@ def test_does_not_mutate_authoritative_state():
     assert h2 == h2_before
     assert raw == raw_before
     assert entities == entities_before
+
+
+def test_live_total_variation_distance_sandbox_vs_frontier_living_world():
+    """Live corpus guard (see docs/visual_quality/scoring_contract.md). 2026-10-28 pin; rebaseline owner: rpg-planner (u24), which holds the data/worlds release.
+    Measured 0.264502519629673 at seed 42. frontier_living_world is not seed-invariant, so there is no same-spec anchor on it."""
+    repo = WorldRepository("data/worlds")
+    sandbox_state, _report = WorldCompiler.compile(repo.load_world("sandbox_world"), seed=42)
+    live_state, _report = WorldCompiler.compile(repo.load_world("frontier_living_world"), seed=42)
+
+    h1 = normalize_histogram(compute_terrain_histogram(sandbox_state.terrain))
+    h2 = normalize_histogram(compute_terrain_histogram(live_state.terrain))
+
+    assert round(total_variation_distance(h1, h2), 4) == 0.2645

@@ -24,7 +24,7 @@ The progression subsystem is intentionally split across two locations:
 |---|---|
 | `src/domains/progression/` | Tick orchestration, reward ledger tracking, possession evaluation, conversion option generation and selection |
 | `src/progression/leveling.py` | **Authoritative level-up mechanics**: XP threshold formula, level cap, AP grants per level, skill unlock thresholds, stat derivation, 6-phase stat recalc order |
-| `src/progression/skills.py` | Skill mechanics and skill application |
+| `src/engine/rpg_depth.py` | Skill mechanics and skill application (`SkillScalingService`) |
 | `src/progression/breakthroughs.py` | Breakthrough system — bonus application implemented; granting mechanic not yet wired into gameplay |
 
 `ProgressionConversionPhase` reads the entity's current level but **never calls `leveling.py`** directly. Level-up processing runs separately via the engine's authoritative apply path after all domain phases have emitted their updates.
@@ -165,7 +165,7 @@ The `StateUpdate` returned by `execute()` carries these per-entity updates for a
 
 - **Level**: `entity.identity.level` is read-only from this domain. Level increments belong to `src/progression/leveling.py` applied via the engine's authoritative apply path.
 - **Derived stats**: HP, ATK, DEF, and other computed attributes. Stat recalculation runs inside `leveling.py` after level changes, not here.
-- **Skill levels**: Skill unlock and advancement are owned by `src/progression/skills.py`.
+- **Skill levels**: Skill unlock and advancement are owned by `src/engine/rpg_depth.py`.
 - **World state**: regions, resource nodes, ecology.
 - **Other entities**: no cross-entity writes.
 
@@ -195,7 +195,7 @@ For agents implementing or investigating level-up behaviour, the authoritative m
 | **Motivation** | `GrowthGapEvaluator` calls `RoleFitEvaluator` (motivation domain) to assess equipment and skill fit against class doctrine; doctrine tags inform which gaps are prioritized |
 | **Adventure** | The entity's current project (set by the adventure domain's Adventure Decision stage) informs which equipment and skills are relevant this tick — gear aligned with the active route family scores higher in option generation |
 | **`src/progression/leveling.py`** | Authoritative level-up mechanics; runs separately via the engine apply path — this domain does NOT call it |
-| **`src/progression/skills.py`** | Skill mechanics consumed when `ALLOCATE_AP` options reference skill targets |
+| **`src/engine/rpg_depth.py`** | Skill mechanics consumed when `ALLOCATE_AP` options reference skill targets |
 | **`src/progression/breakthroughs.py`** | Breakthrough system — `apply_bonuses()` implemented and wired into `get_effective_stats()`; see `docs/mechanics/attribute_progression_contract.md` Breakthroughs section |
 
 ---

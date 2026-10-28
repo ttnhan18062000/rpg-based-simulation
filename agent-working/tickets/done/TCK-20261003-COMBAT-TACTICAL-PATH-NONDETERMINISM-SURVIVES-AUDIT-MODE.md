@@ -247,3 +247,5 @@ AC-4 (corpus firing-rate and parked-at-origin counts) were not taken, on that ti
 has now confirmed the protocol those counts would have used (`audit_mode`, raised budget, sequential) does not
 make a run reproducible, so the downgrade was correct, and the counts become takeable when the fix lands. Any
 single-run measurement on this engine is a sample, not a value; order-of-magnitude conclusions survive.
+
+2026-10-27 retirement (TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION): the measurements here are retired as evidence (unverifiable: probe gone); see that ticket.
