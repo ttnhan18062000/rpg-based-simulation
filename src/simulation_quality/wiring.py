@@ -5,7 +5,11 @@ import logging
 import os
 from typing import Optional, Tuple
 
-from src.simulation_quality.feed import BrokerQualityFeed, QualityFeedAdapter, build_feed_from_env
+from src.simulation_quality.feed import (
+    BrokerQualityFeed,
+    QualityFeedAdapter,
+    build_feed_from_env,
+)
 from src.simulation_quality.persistence import QualityPersistence
 from src.simulation_quality.quality_hub import QualityHub
 from src.simulation_quality.scorers import build_all_scorers

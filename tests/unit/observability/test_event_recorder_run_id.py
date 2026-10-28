@@ -25,3 +25,13 @@ def test_the_recorders_run_id_is_written_on_each_event_line(tmp_path):
 
 def test_a_recorder_given_no_run_id_keeps_the_unknown_run_fallback(tmp_path):
     assert _run_ids(str(tmp_path / "b"), None) == ["unknown_run"]
+
+
+def test_the_first_envelope_a_for_run_recorder_emits_carries_the_run_id(tmp_path):
+    recorder = EventRecorder.for_run("run_first", run_dir=str(tmp_path / "c"), enabled=True)
+    recorder.record(_ev())
+    recorder.record(_ev())
+    recorder.shutdown()
+    lines = Path(recorder.filepath).read_text(encoding="utf-8").splitlines()
+    assert json.loads(lines[0])["run_id"] == "run_first"
+    assert {json.loads(line)["run_id"] for line in lines} == {"run_first"}
