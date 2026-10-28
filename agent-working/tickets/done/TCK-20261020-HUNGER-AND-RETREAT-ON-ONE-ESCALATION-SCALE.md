@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
-phase: inprogress
+phase: done
 date: 2026-10-20
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Put both survival pressures on one escalation scale: combat_retreat gets the need-pull escalation once hp is in its own consequence band
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -129,10 +129,34 @@ After v1, only if the trigger is seen.
   - Divergence 2.139: "No flight" bullet, the starving-retreat sentence, Measured, and the held-flight note.
   - STRAT-288 support_boundary updated; STRAT-289 removed.
   - SURV-07 clause on bravery.
+- 2026-10-28, health: the 3 "worse" rows on intelligence.py recorded at 8d76615ba (override) went away with the flight call. On the landed tip health is OK (0 new, 0 worse), so that override no longer applies.
+- 2026-10-28, merged origin/main at fc040dee4 (#765 F4 stable_hash, #767) as 002f68566. The only conflict was the wider unbound pin: main's 250 (+stable_hash.py), and our present_threat.py binding gives 249. The byte proof is repeated against the new main, and the hunks are identical.
 - The hp consequence line and the threat gate are proposed in `agent-working/staging_artifacts/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE/plan.md`. No code is written until the designer confirms them.
 
 ## Test Summary
+- New: `tests/unit/ai/test_retreat_escalates_on_the_need_scale.py` (7 tests): acting hostile at hp <= 15% puts retreat above the starving pull; the non-acting scene is unchanged (<= 150); no escalation at hp >= 40%; monotone between 0.6 and 0.85; nothing in view leaves it unchanged.
+- Changed: `tests/mechanic_scenarios/test_conflict04_movement_layer.py`, the no-freeze invariant measured per decision (designer ruling 2026-10-26). On R the raw longest blocked run is 19 and the no-decision run is 10 (bound 11). Mechanism pins: `tests/unit/tools/test_mechanism_registry_completeness_check.py` (wider unbound 249 after main's 250).
+- Unchanged and green: the retreat-ceiling pin (`test_starvation_is_a_present_threat_weighed_in_goal_selection.py`) and the merchant-37 real-kernel test.
+- Wide scope on 24f083cb3 (unit, integration/{kernel,observability,pipeline}, certification, mechanic_scenarios, -m "not slow"): 9164 passed, 11 skipped, 1 xfailed, 4 failed. The 4 are the known order-dependent failures, and each passes alone (4 passed):
+  - `tests/integration/kernel/test_authoritative_outcome_truth.py::test_replay_sources_from_refined_update`
+  - `tests/certification/test_envelope_violations.py::test_harness_detects_missing_degradation_mode`
+  - `tests/certification/test_harness_contract.py::test_certification_detects_semantic_drift`
+  - `tests/certification/test_resilience_recovery.py::test_harness_catches_failed_recovery`
+- After the fc040dee4 merge: the scoped tests touched by the merge pass (stable_hash, faction/perception hashseed, step A, CONFLICT-04, retreat-ceiling, merchant-37, tests/unit/tools).
+  - `tests/codebase` cannot run in the project venv: its tool tests need ruff, mypy and ast-grep. It was covered instead by the gates in the deps venv: health OK (0 new, 0 worse), mypy clean, import contracts 17 kept.
+- Equivalence: frontier_living_world s43, 5000t, at 5a992936f gives a final_hash identical to the measured R build 358f4cb7f.
 
 ## Files Changed
+- `src/engine/need_pull.py` (`retreat_pull`), `src/ai/goals/scorers.py` (`CombatRetreatScorer`, gated on `acting_threat_to`)
+- `tests/unit/ai/test_retreat_escalates_on_the_need_scale.py` (new), `tests/mechanic_scenarios/test_conflict04_movement_layer.py`, `tests/unit/tools/test_mechanism_registry_completeness_check.py`
+- `registries/mechanisms.yaml` (`tactical_decision` cites `hostile_acts_on`, `acting_threat_to`)
+- `docs/mechanics/02_combat_laws.md` §7, `docs/mechanics/04_strategic_cognition.md` §1, `docs/guidelines/intentional_divergences.md` 2.139, `docs/parity_ledger/strategic_cognition.yaml` STRAT-288, `docs/world_rules/life-body/survival-needs.md` SURV-07
+- Ticket, staging artifacts, monitoring shards, `docs/REGISTRY.yaml`
 
 ## Completion Summary
+Step A lands R only (owner decision #715 6458811768, memo row 91): the goal-level retreat score escalates with the wound on the need scale (+60 smoothstep between damage fractions 0.6 and 0.85), and only while a hostile acts on the subject.
+- A chosen retreat stays a stored target that takes no step (CONFLICT-04).
+- Measured R against step B (3533fde71), 3 worlds × 5 seeds × 5000t: no death-count drift. frontier_living_world has an extinction STOP (scout, wild_creature), accepted as known.
+- The landed src is equivalent to the measured build: by argument, by byte proof against main, and by a final-hash match on frontier s43.
+- Held and not landed: the decided COMBAT_RETREAT flight (G: frontier +23 STOP), on the local parked branch `rpg-hunger-retreat-flight-parked`, with the CR capacity exemption, for the post-M1 relabel step.
+- Separate: the capacity-lookup defect is TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED.
