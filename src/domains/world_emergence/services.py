@@ -87,7 +87,7 @@ class DynamicQuestSeedService:
         
         for opp in sorted_opps:
             # Deterministic ID generation based on opportunity ID and tick
-            h = hashlib.md5(f"{opp.id}_{state.tick}".encode("utf-8")).hexdigest()[:8]
+            h = hashlib.md5(f"{opp.id}_{state.tick}".encode("utf-8"), usedforsecurity=False).hexdigest()[:8]
             seed_id = f"seed_{opp.kind}_{opp.region_id}_{h}"
             
             # Map parameters
@@ -135,7 +135,7 @@ class RumorSeedService:
         # 1. Danger Rumors
         for p in pressures:
             if p.pressure_kind == "danger" and p.intensity > 0.2:
-                h = hashlib.md5(f"rumor_danger_{p.region_id}_{state.tick}".encode("utf-8")).hexdigest()[:6]
+                h = hashlib.md5(f"rumor_danger_{p.region_id}_{state.tick}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6]
                 seeds.append(RumorSeed(
                     id=f"rumor_dang_{p.region_id}_{h}",
                     subject="regional_danger",
@@ -149,7 +149,7 @@ class RumorSeedService:
         # 2. Scarcity Rumors
         for s in scarcity:
             if s.scarcity_level > 0.3:
-                h = hashlib.md5(f"rumor_scarcity_{s.region_id}_{s.resource_type}_{state.tick}".encode("utf-8")).hexdigest()[:6]
+                h = hashlib.md5(f"rumor_scarcity_{s.region_id}_{s.resource_type}_{state.tick}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6]
                 seeds.append(RumorSeed(
                     id=f"rumor_scar_{s.region_id}_{s.resource_type}_{h}",
                     subject="resource_shortage",
