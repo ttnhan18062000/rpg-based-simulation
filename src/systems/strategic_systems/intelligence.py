@@ -71,7 +71,7 @@ from src.engine.policy import GovernorPolicy
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
-    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind, has_project_capacity, with_live_current_score
+    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind, has_project_capacity, with_live_current_score, same_kind_record, project_target_matches, supersede_record
 )
 from src.engine.spatial_query import SpatialQueryService
 from src.content_semantics.faction import are_entities_hostile
@@ -1605,9 +1605,20 @@ class StrategicIntelligenceSystem:
 
             
         if best_candidate:
-            existing = next((p for p in strat.projects.values() if p.kind == best_candidate.kind), None)
-            
-            if existing and existing.status == ProjectStatus.SUSPENDED:
+            # TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED: the record a goal of this kind continues, resumes or supersedes is the LIVE one (the
+            # current project, else the newest live record), never the first stored one in dict order and never a COMPLETED/ABANDONED record (2.77: a finished record is no effort).
+            existing = same_kind_record(strat.projects, best_candidate.kind, strat.current_project_id)
+            target_matches = existing is not None and project_target_matches(existing, best_candidate.target_id, best_candidate.target_entity_id)
+
+            if existing is not None and target_matches and existing.id == strat.current_project_id:
+                # The current project already pursues this goal at this target: continue it (no new project, no switch).
+                return replace(StrategicUpdate(),
+                     boredom_delta=boredom_upd,
+                     leads_add_or_update=memory_upd.leads_add_or_update,
+                     leads_remove=memory_upd.leads_remove
+                )
+
+            if existing is not None and target_matches and existing.status == ProjectStatus.SUSPENDED:
                 resumed_up = StrategicIntelligenceSystem.resume_project(entity, existing.id)
                 if resumed_up:
                     return replace(resumed_up,
@@ -1774,6 +1785,13 @@ class StrategicIntelligenceSystem:
                 return StrategicUpdate()
 
             switch_up = StrategicIntelligenceSystem.evaluate_project_switch(with_live_current_score(entity, modified_scores), candidate_proj, current_tick, state=state)
+            if switch_up and existing is not None and not target_matches and existing.id != candidate_proj.id:
+                # A live record of this kind pursues a DIFFERENT target: the candidate supersedes it, cap-neutral (the gate above was not consulted). Only that one record ends; older
+                # same-kind duplicates are left to the existing trims. The update that makes the candidate current also ends the record, with the typed reason.
+                switch_up = replace(switch_up, projects_add_or_update=[
+                    supersede_record(existing),
+                    *[p for p in switch_up.projects_add_or_update if p.id != existing.id],
+                ])
             if switch_up:
                 # TCK-20260812-COMMITTED-INTENTION-SEQUENCE: win-transition bookkeeping. Only
                 # fires when the winning candidate is THIS tick's synthesized committed-intention
