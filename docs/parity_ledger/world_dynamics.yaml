@@ -711,7 +711,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/world/test_calamity_intensity_scales_regional_drain.py
   divergence_note: null
   support_boundary: null
 - id: WORLD-064
@@ -741,7 +741,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_region_lookup_properties.py::test_region_lookup_is_deterministic_over_a_grid_of_points
   divergence_note: null
   support_boundary: null
 - id: WORLD-067
@@ -751,7 +751,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/certification/test_world_compile_determinism.py::test_compiler_seeding_determinism
   divergence_note: null
   support_boundary: null
 - id: WORLD-068
@@ -797,7 +797,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_spawned_entity_validity.py::test_every_compiled_entity_carries_a_valid_loadout
   divergence_note: null
   support_boundary: null
 - id: WORLD-072
@@ -818,7 +818,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_world_rules_are_deterministic.py::test_every_compiled_entity_has_a_valid_role
   divergence_note: null
   support_boundary: null
 - id: WORLD-074
@@ -828,7 +828,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_spawned_entity_validity.py::test_a_spawned_monster_has_a_home_at_the_spawn_point_and_a_positive_leash
   divergence_note: null
   support_boundary: null
 - id: WORLD-075
@@ -888,19 +888,21 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_world_rules_are_deterministic.py::test_camp_placement_is_the_same_on_every_compile_whatever_the_seed
   divergence_note: null
   support_boundary: null
 - id: WORLD-078
   text: Camp guards spawn near camp.
-  status: verified
+  status: unsupported
   priority: P0
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
   test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Retired: camp guards that spawn near a camp (a camp spawns neither
+    monsters nor raiders); removed by 3597c08d3 (2026-10-19, M0 batch "no spawning
+    from nothing", decision D70).'
 - id: WORLD-079
   text: Camp guards have leash/return behavior.
   status: verified
@@ -940,7 +942,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_world_rules_are_deterministic.py::test_the_calamity_trigger_gives_the_same_result_for_the_same_inputs
   divergence_note: null
   support_boundary: null
 - id: WORLD-083
@@ -950,18 +952,22 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_world_rules_are_deterministic.py::test_the_seasonal_escalation_gives_the_same_result_for_the_same_inputs
   divergence_note: null
   support_boundary: null
 - id: WORLD-084
   text: Calamity consequences affect world state authoritatively.
-  status: verified
+  status: divergent
   priority: P0
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
-  divergence_note: null
+  test_path: tests/unit/world/test_world_dynamics.py::test_calamity_boss_spawn, tests/architecture/test_calamity_intensity_producer_unwired.py
+  divergence_note: The calamity boss spawn and last_calamity_tick are applied authoritatively
+    (test_calamity_boss_spawn), but CalamityService.apply_calamity_consequences, which
+    raises regional calamity_intensity when significant entities die, has no caller
+    in src/ (pinned by tests/architecture/test_calamity_intensity_producer_unwired.py);
+    see TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES.
   support_boundary: null
 - id: WORLD-085
   text: World boss spawn rule is deterministic.
@@ -985,7 +991,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/engine/test_canonical_hash_covers_world_components.py::test_a_spawned_world_boss_changes_the_canonical_hash_and_so_does_wounding_it
   divergence_note: null
   support_boundary: null
 - id: WORLD-087
@@ -1037,7 +1043,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/integration/kernel/test_read_models_do_not_move_the_run.py
   divergence_note: null
   support_boundary: null
 - id: WORLD-092
@@ -1057,7 +1063,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/engine/test_canonical_hash_covers_world_components.py
   divergence_note: null
   support_boundary: null
 - id: WORLD-094
