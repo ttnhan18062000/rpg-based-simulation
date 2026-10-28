@@ -5,7 +5,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/movement/test_flow_field_navigation.py::test_flow_field_long_distance
   divergence_note: null
   support_boundary: null
 - id: WORLD-002
@@ -48,7 +48,8 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/movement/test_flow_field_navigation.py::test_flow_field_long_distance,
+    tests/unit/movement/test_flow_field_navigation.py::test_get_flow_direction_town_uses_real_town_center_not_hardcoded_anchor
   divergence_note: null
   support_boundary: null
 - id: WORLD-006
@@ -69,7 +70,8 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/core/test_rpg_depth.py::TestTerrainCost::test_road_is_cheap,
+    tests/unit/engine/test_terrain_cost_from_content.py
   divergence_note: null
   support_boundary: null
 - id: WORLD-008
@@ -79,7 +81,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/engine/test_route_weighs_terrain_cost.py::test_a_road_beside_a_slow_line_is_preferred
   divergence_note: null
   support_boundary: null
 - id: WORLD-009
@@ -129,7 +131,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_difficulty_scaling.py::test_difficulty_tier_determines_level_range
   divergence_note: null
   support_boundary: null
 - id: WORLD-014
@@ -139,7 +141,8 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/world/test_difficulty_scaling.py::test_difficulty_tier_4_scaling,
+    tests/unit/world/test_difficulty_scaling.py::test_goblin_difficulty_scaling
   divergence_note: null
   support_boundary: null
 - id: WORLD-015
@@ -149,7 +152,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/world/test_region_topology.py::test_difficulty_tier_mapping
   divergence_note: null
   support_boundary: null
 - id: WORLD-016
@@ -159,7 +162,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/world/test_region_topology.py::test_difficulty_tier_mapping
   divergence_note: null
   support_boundary: null
 - id: WORLD-017
@@ -199,7 +202,8 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/resource/test_resource_conservation_regression.py::test_loot_conservation_full_inventory,
+    tests/integration/kernel/test_resource_conservation.py::test_loot_ground_item_full_inventory_does_not_remove_item
   divergence_note: null
   support_boundary: null
 - id: WORLD-021
@@ -229,7 +233,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/world/test_world_dynamics.py::test_world_dynamics_maturity_advancement
   divergence_note: null
   support_boundary: null
 - id: WORLD-024
@@ -467,7 +471,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/quest/test_quest_rewards.py::test_quest_completion_adds_gold_and_xp
   divergence_note: null
   support_boundary: null
 - id: WORLD-038
@@ -507,7 +511,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/world/test_region_topology.py::test_difficulty_tier_mapping
   divergence_note: null
   support_boundary: null
 - id: WORLD-042
@@ -658,7 +662,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/world/test_region_topology.py::test_find_region_at_fallback_nearest
   divergence_note: null
   support_boundary: null
 - id: WORLD-057
@@ -678,7 +682,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/world/test_region_topology.py::test_empty_regions
   divergence_note: null
   support_boundary: null
 - id: WORLD-059
@@ -688,7 +692,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/world/test_region_topology.py::test_find_region_at_fallback_nearest
   divergence_note: null
   support_boundary: null
 - id: WORLD-063
@@ -708,7 +712,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/certification/test_world_compile_determinism.py::test_compiler_layout_variation_under_different_seeds
   divergence_note: null
   support_boundary: null
 - id: WORLD-065
@@ -718,7 +722,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/certification/test_world_compile_determinism.py::test_compiler_seeding_determinism
   divergence_note: null
   support_boundary: null
 - id: WORLD-066
