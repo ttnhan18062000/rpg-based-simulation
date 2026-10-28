@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple
 
-from src.simulation_quality.feed import BrokerQualityFeed, build_feed_from_env
+from src.simulation_quality.feed import BrokerQualityFeed, QualityFeedAdapter, build_feed_from_env
 from src.simulation_quality.persistence import QualityPersistence
 from src.simulation_quality.quality_hub import QualityHub
 from src.simulation_quality.scorers import build_all_scorers
@@ -14,7 +14,7 @@ from src.simulation_quality.weights import ScoringWeights
 logger = logging.getLogger(__name__)
 
 
-def build_quality_wiring(run_id: str, run_dir: Optional[str]) -> Tuple[Optional[Any], Optional[Any]]:
+def build_quality_wiring(run_id: str, run_dir: Optional[str]) -> Tuple[Optional[QualityFeedAdapter], Optional[QualityHub]]:
     """Return ``(feed, hub)`` for the run: ``feed`` from the environment (None when SimQ is off), ``hub`` only for an in-process feed whose construction succeeded.
 
     A hub construction failure is logged and leaves ``hub`` None, so quality scoring is disabled for that run without failing it."""
