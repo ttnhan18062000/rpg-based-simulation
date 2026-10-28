@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES
-phase: open
+phase: done
 date: 2026-10-29
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Parity-ledger paydown, child 1b: resolve the world_dynamics.yaml entries that have no proving test, by status change or a new test
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -95,7 +95,10 @@ Rulings, word for word: rpg_planner_table_rulings_2026-10-29.md (first and secon
 - The guard test file tests/unit/core/test_same_name_class_guard.py is unrelated and untouched.
 
 ## Test Summary
+All ten new test files and every cited existing test pass; gate check 0 rose/0 new; world_dynamics 0 test_path errors; generate_registry --check in sync; make code-health 0 new/0 worse.
 
 ## Files Changed
+docs/parity_ledger/world_dynamics.yaml (55 entries), codebase/baselines/parity_ledger_schema_baseline.json (tightened last), ten new test files under tests/, docs/REGISTRY.yaml, this ticket's stored artifacts.
 
 ## Completion Summary
+All 55 remaining entries resolved: 23 cited with a new or existing test, 30 unsupported (4 by explicit retirement or owner decision, 26 retired by owner decision #715 issuecomment-6476511728), 1 divergent, 1 missing (WORLD-054); tighten run last, world_dynamics at 0.

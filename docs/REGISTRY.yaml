@@ -7880,7 +7880,7 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
-  path: agent-working/tickets/todos/parity-ledger-paydown/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES.md
+  path: agent-working/tickets/done/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES.md
   ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES
   title: 'Parity-ledger paydown, child 1b: resolve the world_dynamics.yaml entries
     that have no proving test, by status change or a new test'
@@ -7889,7 +7889,10 @@
   date: '2026-10-29'
   related_code_areas:
   - docs/parity_ledger/world_dynamics.yaml, tests/**, codebase/baselines/parity_ledger_schema_baseline.json
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/draft_table.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/final_table.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/rpg_planner_table_rulings_2026-10-29.md
   tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT.md
@@ -7908,6 +7911,19 @@
   - agent-working/stored_artifacts/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT/test_plan.md
   tags:
   - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS.md
+  ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS
+  title: 'Parity-ledger paydown, child 1: world_dynamics.yaml reaches 0 P0 test_path
+    errors'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-28'
+  related_code_areas:
+  - docs/parity_ledger/world_dynamics.yaml, codebase/gates/parity_ledger_schema.py,
+    codebase/baselines/parity_ledger_schema_baseline.json
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3.md
   ticket_id: TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3
@@ -7954,19 +7970,6 @@
   artifact_files: []
   tags:
   - benchmarking
-- type: ticket
-  path: agent-working/tickets/todos/parity-ledger-paydown/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS.md
-  ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS
-  title: 'Parity-ledger paydown, child 1: world_dynamics.yaml reaches 0 P0 test_path
-    errors'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-28'
-  related_code_areas:
-  - docs/parity_ledger/world_dynamics.yaml, codebase/gates/parity_ledger_schema.py,
-    codebase/baselines/parity_ledger_schema_baseline.json
-  artifact_files: []
-  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md
   ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR
