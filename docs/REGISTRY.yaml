@@ -7859,6 +7859,23 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3.md
+  ticket_id: TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3
+  title: 'Re-record baseline v1 under the proof digest scheme `flat-sha256-v3` (after
+    #758), with outcomes proven equal to v1'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-28'
+  related_code_areas:
+  - tools/rpg_measure/paired.py, src/engine/checkpoint.py (read only)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3/evidence.md
+  - agent-working/stored_artifacts/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3/test_plan.md
+  tags:
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md
   ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR
   title: A REQUEST_CRAFT intent with an unknown or missing recipe id raises KeyError
@@ -8251,6 +8268,28 @@
   - delivery
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS.md
+  ticket_id: TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS
+  title: 'The proof digest hashes the seven carried-state fields it omits: a new `flat-sha256`
+    scheme version and the fixture re-pinned; rpg re-records the v1 base after the
+    merge'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-24'
+  related_code_areas:
+  - src/engine/checkpoint.py
+  - src/perf/benchmark_record.py
+  - tools/perf/hash_callsite_inventory.py
+  - tests/unit/engine/test_proof_digest_contract.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS/evidence.md
+  - agent-working/stored_artifacts/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS/plan.md
+  - agent-working/stored_artifacts/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS/test_plan.md
+  tags:
+  - performance
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM.md
   ticket_id: TCK-20261024-SESSION-HOOK-TEST-STUBS-DISK-HEADROOM
   title: The session-start hook tests stub the disk-headroom probe, so a runner below
@@ -8394,6 +8433,21 @@
   tags:
   - architecture
   - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID.md
+  ticket_id: TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID
+  title: Faction squad group_id uses Python's salted hash() of a str region id, so
+    the state hash depends on PYTHONHASHSEED (#593 F4)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-23'
+  related_code_areas:
+  - src/engine/military_conflict.py; src/domains/perception/filter.py; data/worlds/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID/investigation.md
+  - agent-working/stored_artifacts/TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID/plan.md
+  - agent-working/stored_artifacts/TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID/test_plan.md
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261023-SEMGREP-SEARCH-DOCKERFILE-USER-AND-TRANSIT-SHA1.md
   ticket_id: TCK-20261023-SEMGREP-SEARCH-DOCKERFILE-USER-AND-TRANSIT-SHA1
