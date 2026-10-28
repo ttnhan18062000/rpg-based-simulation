@@ -15,7 +15,7 @@ tags: [observability, platform]
 Ship container logs to Loki with Grafana Alloy instead of the deprecated Promtail
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
