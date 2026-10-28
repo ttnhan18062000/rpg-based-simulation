@@ -30,3 +30,12 @@ known:
     cases:
       - {world: urban_political, seed: 44, entity_id: 28}
     note: "N14, v1 known red, owner cutoff 2026-10-21; exception accepted by the owner on issue #715 (comment 6337993346). Owns EXACTLY urban_political/44 merchant 28 (starved t3140). Any other V3 fail, or another entity on this (world, seed), is a regression. Disclosure: v1_disclosure.md M5."
+  - match: "V3"
+    ticket: TCK-20261028-LOW-HP-RETREAT-BRANCH-HOLDS-A-STARVING-SUBJECT-IN-PLACE-BESIDE-A-NON-ACTING-HOSTILE
+    owner: rpg-planner
+    added_on: "2026-10-28"
+    expires_on: "2026-11-30"
+    state: fail
+    cases:
+      - {world: frontier_living_world, seed: 43, entity_id: 38}
+    note: "New V3 after step A (#769), accepted by the owner on issue #715 (comment 6469533675). Owns EXACTLY frontier_living_world/43 merchant 38 (starved t2518): the low-HP retreat branch (tactical.py:536-544) re-issues a no-op ENTITY_MOVE every 10th tick and the subject never reaches the eat tile. Any other V3 fail, or another entity on this (world, seed), is a regression."

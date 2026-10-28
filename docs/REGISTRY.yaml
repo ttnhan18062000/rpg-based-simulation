@@ -7890,7 +7890,10 @@
   date: '2026-10-28'
   related_code_areas:
   - tools/test_architecture/ (gate harness and known file, read only except the entry)
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A/test_plan.md
   tags:
   - benchmarking
 - type: ticket
