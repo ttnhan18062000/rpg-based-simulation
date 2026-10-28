@@ -90,8 +90,7 @@ class ContextPackBuilder:
         similar_setups = self._safe_load_json(self.workspace_root / "data" / "runs" / "historical_setups.json", default=[])
         similar_setups = similar_setups[:max_previous_runs]
 
-        # nosemgrep: python.django.security.injection.request-data-write.request-data-write -- `request` is the lab's local pydantic WorkflowRequest, not an HTTP request; the context pack is written to fixed file names under session_store.get_stage_dir(), whose session_id is validated (^[a-zA-Z0-9_-]+$) and resolved inside the lab sessions sandbox by resolve_session_dir (is_relative_to escape check), so request data only becomes file content, never a path
-        budget_profile = request.constraints.get("budget_profile", "local_dev")
+        budget_profile = request.constraints.get("budget_profile", "local_dev")  # nosemgrep: python.django.security.injection.request-data-write.request-data-write -- local pydantic request; file content only, never a path
 
         context_pack = {
             "session_id": session_id,
