@@ -229,41 +229,19 @@ class Kernel:
             run_dir_str = str(self._replay._run_dir)
 
         # Build SimQ hub before EventRecorder so quality_fn is wired at worker construction.
-        self._quality_hub = None
-        self._quality_feed = None
-        _quality_fn = None
+        self._quality_feed = self._quality_hub = None
         if obs_mode != ObservabilityMode.OFF:
-            from src.simulation_quality.feed import build_feed_from_env, BrokerQualityFeed
-            _feed = build_feed_from_env()
-            if _feed is not None:
-                self._quality_feed = _feed
-                if not isinstance(_feed, BrokerQualityFeed):
-                    from src.simulation_quality.weights import ScoringWeights
-                    from src.simulation_quality.quality_hub import QualityHub
-                    from src.simulation_quality.persistence import QualityPersistence
-                    from src.simulation_quality.scorers import build_all_scorers
-                    try:
-                        _q_profile = os.environ.get("QUALITY_PROFILE", "default")
-                        _weights = ScoringWeights.load(
-                            "config/simulation_quality/scoring_weights.yaml",
-                            "config/simulation_quality/grade_thresholds.yaml",
-                            "config/simulation_quality/detection_params.yaml",
-                            _q_profile,
-                        )
-                        _q_run_dir = run_dir_str or f"data/runs/{self._run_id}"
-                        _hub = QualityHub(
-                            scorers=build_all_scorers(_weights),
-                            weights=_weights,
-                            persistence=QualityPersistence(_q_run_dir),
-                            run_id=self._run_id,
-                        )
-                        _quality_fn = _hub.on_envelope
-                        self._quality_hub = _hub
-                    except Exception:
-                        logger.warning("SimQ hub construction failed (non-fatal) — quality scoring disabled for this run")
+            from src.simulation_quality.wiring import build_quality_wiring
+            self._quality_feed, self._quality_hub = build_quality_wiring(self._run_id, run_dir_str)
+        _quality_fn = self._quality_hub.on_envelope if self._quality_hub is not None else None
 
-        self._event_recorder = EventRecorder(run_dir=run_dir_str, max_events=5000, enabled=(obs_mode != ObservabilityMode.OFF), quality_fn=_quality_fn)
-        self._event_recorder.run_id = self._run_id
+        self._event_recorder = EventRecorder.for_run(
+            self._run_id,
+            run_dir=run_dir_str,
+            max_events=5000,
+            enabled=(obs_mode != ObservabilityMode.OFF),
+            quality_fn=_quality_fn,
+        )
 
         if self._quality_feed is not None and self._quality_hub is not None:
             self._quality_feed.start(self._quality_hub)
