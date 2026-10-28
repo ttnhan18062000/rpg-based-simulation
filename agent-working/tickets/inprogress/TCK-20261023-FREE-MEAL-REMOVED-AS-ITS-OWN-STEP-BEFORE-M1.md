@@ -59,6 +59,7 @@ src/systems (building_services, conservation, inventory); src/ai need_pull
 Owner rulings already made: memo row 73 (paid meal gives 60, price 5 gold, rest keeps its effects at 10 gold, payment atomic, no clamp), row 89 (order and v1.1), row 92 (v3 base). Open points for rpg-planner are listed in plan.md section 'Questions'.
 
 ## Implementation Notes
+Known, non-blocking (rpg-planner review 2026-10-28): `_survival_action` calls `service_delta` twice per EAT (inn_serves, then with_service); an inn EAT rejected at apply burns readiness -100 and gets no meal. SleepScorer not gated on gold: follow-up filed by rpg-planner.
 
 ## Test Summary
 
