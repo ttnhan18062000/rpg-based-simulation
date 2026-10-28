@@ -1,1 +1,0 @@
-{"timestamp": "2026-10-19T01:46:06.270544Z", "ticket_id": "TCK-20261019-TESTS-HOOKS-IN-TMP-CWD-INSIDE-A-REPO-READ-REAL-STATE", "title": "Tools tests cannot see a repo above their tmp dir", "status": "DONE", "summary": "GIT_CEILING_DIRECTORIES autouse fixture; 15 repo-sensitive tests named; guard test", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

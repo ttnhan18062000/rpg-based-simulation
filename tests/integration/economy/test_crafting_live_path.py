@@ -89,3 +89,29 @@ def test_craft_is_refused_whole_when_the_product_does_not_fit():
     assert update.resource_transfers  # the intent is built; the resolver refuses it
     assert _held(after) == {"iron_ore": 2, "wood": 1} and after.entities[1].inventory.gold == 100
 
+
+
+def _refusals():
+    return [t.execution_result for t in ActionIntentAdapter.get_traces()]
+
+
+@pytest.mark.v2_contract
+@pytest.mark.parametrize(
+    "intent",
+    [
+        ActionIntent(kind="REQUEST_CRAFT", actor_id=1, payload={"recipe_id": "craft_no_such_recipe"}),
+        ActionIntent(kind="REQUEST_CRAFT", actor_id=1, target_id="opp_craft_craft_no_such_recipe"),
+        ActionIntent(kind="REQUEST_CRAFT", actor_id=1),
+    ],
+    ids=["unknown_payload_id", "unknown_opp_craft_id", "no_recipe_id"],
+)
+def test_craft_of_an_unknown_or_missing_recipe_is_refused_not_raised(intent):
+    """PROG-097: an unknown or missing recipe id is refused with a trace; nothing is consumed."""
+    ActionIntentAdapter.clear_traces()
+    state = _state()
+    updates = ActionIntentAdapter.execute(state.entities[1], intent, state.tick, None, None)
+    refined = AuthoritativeApplyPipeline.refine(state, StateUpdate(entity_updates=updates))
+    after = ApplyPath.apply_generation(state, refined)
+    _untouched(updates[1], after)
+    assert _refusals() == ["FAILED_REQUIREMENTS: unknown_recipe"]
+    ActionIntentAdapter.clear_traces()

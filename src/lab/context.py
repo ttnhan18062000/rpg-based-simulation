@@ -90,7 +90,7 @@ class ContextPackBuilder:
         similar_setups = self._safe_load_json(self.workspace_root / "data" / "runs" / "historical_setups.json", default=[])
         similar_setups = similar_setups[:max_previous_runs]
 
-        budget_profile = request.constraints.get("budget_profile", "local_dev")
+        budget_profile = request.constraints.get("budget_profile", "local_dev")  # nosemgrep: python.django.security.injection.request-data-write.request-data-write -- local pydantic request; file content only, never a path
 
         context_pack = {
             "session_id": session_id,

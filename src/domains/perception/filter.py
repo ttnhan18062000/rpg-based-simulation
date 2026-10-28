@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sequence, Tuple, Dict, Any, List
 
+from src.core.stable_hash import stable_int31
 from src.core.state import EntityState
 from src.core.cognition import (
     PerceptionModel,
@@ -85,7 +86,7 @@ class PerceptionFilterService:
                     try:
                         ent_id = int(signal.signal_id)
                     except ValueError:
-                        ent_id = hash(signal.signal_id)
+                        ent_id = stable_int31(signal.signal_id)
                     perceived_ents[ent_id] = PerceivedEntity(
                         entity_id=ent_id,
                         kind=signal.kind,
@@ -94,7 +95,7 @@ class PerceptionFilterService:
                     )
                 elif signal.kind in ("healing_resource", "food_source", "crafting_material"):
                     perceived_res[signal.signal_id] = PerceivedResource(
-                        node_id=hash(signal.signal_id),
+                        node_id=stable_int31(signal.signal_id),
                         kind=signal.kind,
                         position=signal.position,
                         salience=salience

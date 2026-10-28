@@ -1261,7 +1261,7 @@ and logged on the approvals issue (#715) before anyone acts on it. A change is n
 **Base.** Milestone 1 spans baseline v1 (record commit 341f700d0, simulation e8df8b96d, gate baseline
 `rpg_gate_v1.json`) to the milestone 1 record; 903239fbe is history. Clarified by the owner on 2026-10-23 (#715 6356509993,
 memo row 89):
-- **Order:** HUNGER step B → step A → F4 → the decision-73 step (free meal removed) → the §12.3 milestone 1 items.
+- **Order:** HUNGER step B → step A → the decision-73 step (free meal removed) → the §12.3 milestone 1 items. F4 lands as soon as it is ready, independent of this order, provided the gate worlds form no faction squad on seeds 42-46 (probe A0 extended to the gate's 3 worlds × seeds 42-46 × 5000 ticks; memo row 90, owner 2026-10-26). Otherwise it keeps its slot after step A with its own paired step.
   "Decision 73 before milestone 1" means before those items, not before the v1-disclosure repairs.
 - **v1 → v1.1:** each repair is measured once at fold against its parent, and the decision-73 step is too; each single step
   keeps the per-seed extinction stop. All of them sit on ONE decision-76 cumulative watch from v1. That watch is a span, so
@@ -1275,10 +1275,16 @@ memo row 89):
 - **Not a scope boundary:** v1.1 is only the base of the items' cumulative watch. The v1-disclosure repairs stay in
   milestone 1's scope and in done item 4, wherever they land relative to v1.1.
 
-**Hash scheme during milestone 1.** If the proof digest scheme is bumped (F1, `PROOF_DIGEST_SCHEME`, perf's call PERF-D5),
-the v1 base is re-recorded under the new scheme (same e8df8b96d simulation, new digests) before any milestone 1
-paired or gate comparison uses it. A paired proof taken across the bump compares fates and counters only, never
-digests.
+**Hash scheme during milestone 1.** The proof digest scheme was bumped once, by F1 (#758, `flat-sha256-v3`, perf's
+call PERF-D5). The v1 base was re-recorded under it at R = `957caf8f6`
+(TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3, reviewed by rpg-planner): the 1b base arms for the 3 gate
+worlds x seeds 42-51 x 5000 ticks, with self-check spread 0. Against R's v2 parent `04b85fb2e`, only start_hash and
+final_hash move (30 of 30 runs). R carries #753 step B (2.138) on top of v1's simulation, so its fates are v1's plus
+step B. On seeds 42-46 that is byte-proven through the 2.138 arms; on seeds 47-51 it is attributed by diff classing
+only. The gate baseline JSON (`harness_hash` only) and behavioral_5k (metrics only) carry no proof digest and were not
+re-recorded. R's arms are the v3 base for steps built on R; a comparison against v1 itself reads fates and counters
+from the v1 arms. A paired proof taken across a scheme bump compares fates and counters only, never digests, and any
+further bump repeats this re-record. (owner decision 2026-10-28, memo row 92, #715 6458807726)
 
 **In scope.** Exactly the milestone 1 items in §12.3:
 - kind always means species;

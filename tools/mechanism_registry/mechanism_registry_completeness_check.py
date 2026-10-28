@@ -204,12 +204,6 @@ WIDER_EXCLUSIONS.update({
 # question (bind to an existing mechanism, or register a new one) is an RPG-domain call that has not
 # been made. Pinned so the residue stays visible and a new candidate cannot appear silently.
 WIDER_PENDING: Dict[str, str] = {
-    "src/progression/skills.py::SkillScalingService": (
-        "Same-named twin of src/engine/rpg_depth.py::SkillScalingService (bound to `derived_stats`). "
-        "Every caller imports the rpg_depth class; this one has no caller anywhere in src/ and 0 calls "
-        "at runtime. Not registered as a mechanism (rpg-feature-planning 2026-09-30): a dead-code "
-        "duplicate, filed as a defect (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS)."
-    ),
     "src/strategy/cognition_capacity.py::CapacityService": (
         "Same-named twin of src/strategy/capacity.py::CapacityService (bound to "
         "`cognition_capacity_fatigue`, the live one). `cognition_capacity_fatigue`'s own note records "

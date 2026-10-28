@@ -161,6 +161,10 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF): `total_targets` 63 -> 58 and
     `unbound` 5 -> 0. The five unbound modules were the dead classes `loot`, `town_service`, `crafting`, `guilds`
     and `quest_engine`; all five are deleted. `bound` and `excluded` are unchanged. Taken by running the check.
+
+    2026-10-28 (TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE, #593 6420327798): counts unchanged.
+    `tactical_decision` now cites `hostile_acts_on` and `acting_threat_to` (step B's act test, 2.138, which step A's
+    retreat_pull gate reads), which add no target (their modules were already bound). Taken by running the check.
     """
     data = _real_registry_data()
     report = build_report(data)
@@ -275,6 +279,9 @@ def test_wider_scope_numbers_pinned():
     # death records and trust), bound under `cross_episode_grief_nemesis`, so unbound_files is unchanged.
     # 344 -> 345 on 2026-10-21 (TCK-20261020-A-ESCALATED-NEED-IS-NEVER-REFUSED-FOR-CAPACITY): +src/ai/goals/escalation.py (escalated_need_wins, bound under
     # `goal_hierarchy`; functions only, so it adds no unbound file or mechanism-shaped class).
+    # 345 -> 346 on 2026-10-28 (TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID, divergence 2.141): +src/core/stable_hash.py
+    # (stable_int31, the process-independent id digest; functions only, so it adds no mechanism-shaped class; unbound, see below).
+    # 346 -> 345 on 2026-10-28 (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS): src/progression/skills.py (the dead SkillScalingService twin) is deleted.
     assert wider["scope_files"] == 345
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
@@ -318,15 +325,20 @@ def test_wider_scope_numbers_pinned():
     # `aging_death` (the record resolve_lifecycle writes at death), diet_declaration.py::require_declared_diet under `attributes_biology`.
     # 251 -> 250 on 2026-10-26: `src/world/perception/gate.py` is now named by `sense_gated_detection`.
     # 250 -> 249 on 2026-10-26: `src/world/regional_sovereignty.py` is now named by `regional_levy_and_conquest_debuffs`.
-    assert wider["unbound_files"] == 249
+    # 249 -> 250 on 2026-10-28 (F4): +src/core/stable_hash.py is an unbound helper (a determinism utility used by military_conflict.py and
+    # perception/filter.py, no mechanism of its own); candidates and wired are unchanged.
+    # 250 -> 249 on 2026-10-28 (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS): skills.py was unbound.
+    # 249 -> 248 on 2026-10-28 (TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE, #593 6420327798): src/ai/goals/present_threat.py
+    # is bound under `tactical_decision` (acting_threat_to, step B's act test, 2.138).
+    assert wider["unbound_files"] == 248
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
     # 71 -> 70 on 2026-10-11 (treasury batch): GoldSinkSystem is gone.
     # 70 -> 71 on 2026-10-14 (D70, 2.125): RaidService is no longer cited (`faction_raid` is a gap), so it is an unbound candidate again.
-    assert wider["candidates"] == 69  # unbound mechanism-shaped classes, wired or not (71 -> 70: PerceptionGate; 70 -> 69: RegionalSovereigntyService)
-    assert len(wider["wired"]) == 20  # ... of which referenced from another top-level package (21 -> 20, same)
-    assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 2  # PerceptionGate bound 2026-10-26
+    assert wider["candidates"] == 68  # 69 -> 68 on 2026-10-28: the deleted SkillScalingService twin; unbound mechanism-shaped classes, wired or not (71 -> 70: PerceptionGate; 70 -> 69: RegionalSovereigntyService)
+    assert len(wider["wired"]) == 19  # ... of which referenced from another top-level package (21 -> 20, same; 20 -> 19 on 2026-10-28, same twin)
+    assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 1  # PerceptionGate bound 2026-10-26; 2 -> 1 on 2026-10-28: the deleted SkillScalingService twin (src/progression/skills.py), only the CapacityService twin stays pending
 
 
 def test_wider_exclusions_and_pending_all_point_to_real_wired_candidates():

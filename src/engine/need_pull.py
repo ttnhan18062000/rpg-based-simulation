@@ -75,3 +75,10 @@ def hunger_pull(raw_utility: float, hunger: float, hunger_rate: float, travel_ti
 def sleep_pull(raw_utility: float, sleep_debt: float, sleep_rate: float, travel_tiles: float) -> float:
     """The fatigue goal's utility with the SURV-07 escalation for the sleep debt the subject will have on arrival."""
     return need_pull(raw_utility, sleep_debt, sleep_rate, travel_tiles, SLEEP_LINE)
+
+
+def retreat_pull(raw_utility: float, hp_ratio: float) -> float:
+    """The retreat goal's utility with the same escalation, for the wound the subject has now: the damage fraction `1 - hp_ratio` is its need and death (hp 0, a
+    fraction of 1.0) is its consequence line, so the pull is the raw utility plus the SURV-07 escalation. The caller applies it only while a hostile ACTS on
+    the subject (memo row 88): a wound alone does not outbid a need."""
+    return raw_utility + ESCALATION_AMPLITUDE * smoothstep(ESCALATION_ONSET, ESCALATION_FULL, 1.0 - hp_ratio)

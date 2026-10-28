@@ -23,7 +23,7 @@ A ``no-data`` document carries ``reason``: ``run_error`` (an exception in the si
 ``metric_error`` (an exception in rpg's ``compute`` or ``pool``), ``harness_error`` (a timeout, a bad document, a child that never started) or
 ``seed_no_data`` (the pool was skipped because a seed has no data).
 It is written with sorted keys and carries no time or path, so the same (SHA, world, seed) gives byte-identical bytes. Wall time and peak memory go
-to a sidecar ``<doc>.cost.json`` and ``matrix.json``, never into the document.
+to a sidecar ``<doc>.cost.json`` and ``matrix.json``, never into the document. Each invocation also appends one run-ledger row (``run_ledger``, T1) from those costs.
 
 Harness hash (:func:`harness_hash`): sha256 over the harness sources, the pin settings, the config bytes and the metrics module's name and source
 (read from disk, never imported; ``src/`` simulation code is deliberately not hashed); every document records it, and baseline staleness
@@ -53,11 +53,13 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+from tools.test_architecture import run_ledger
 from tools.test_architecture.rpg_gate_baseline import GateConfig, load_config
 
 SCHEMA = "rpg-gate-metrics/v1"
+LEDGER_STEP = "gate"  # the default run-ledger step label; --step names a milestone or dispatch
 OK, NO_DATA = "ok", "no-data"
 RUNS_DIR = Path("data/runs")
 RUN_MODULE = "tools.test_architecture.rpg_gate_run"
@@ -239,8 +241,49 @@ def run_matrix(
     workers: int = DEFAULT_WORKERS,
     keep_runs: bool = False,
     timeout_s: float = DEFAULT_TIMEOUT_S,
+    step: str = LEDGER_STEP,
+    rerun_of: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Run every (world, seed), pool each world, write ``matrix.json`` and return it. One failing run never stops the others."""
+    """Run every (world, seed), pool each world, write ``matrix.json`` and return it. One failing run never stops the others.
+
+    Exactly one run-ledger row per invocation (``run_ledger``, tool ``gate``; a started row first, then the end row), also when the matrix raises
+    (outcome ``ERROR``, or ``KILLED`` for an interrupt) and when a run is ``no-data`` (``ERROR``, naming it). ``step`` is the label the summary groups by; ``rerun_of`` is the
+    earlier invocation id when the caller says this is a rerun, never guessed. A ledger write failure only warns."""
+    ledger = run_ledger.begin(tool="gate", step=step, mode="gate", workers=max(1, workers), base_sha=None, new_sha=sha, worlds=config.worlds, seeds=config.seeds, ticks=config.ticks, rerun_of=rerun_of)
+    try:
+        matrix = _run_matrix(config, config_path, out_dir, metrics_module=metrics_module, sha=sha, workers=workers, keep_runs=keep_runs, timeout_s=timeout_s)
+    except Exception as exc:
+        run_ledger.finish(ledger, "ERROR", detail=f"{exc.__class__.__name__}: {exc}")
+        raise
+    except BaseException as exc:  # an interrupt: the invocation was killed
+        run_ledger.finish(ledger, "KILLED", detail=exc.__class__.__name__)
+        raise
+    outcome, detail = _ledger_outcome(matrix)
+    run_ledger.finish(ledger, outcome, detail=detail, runs=_ledger_runs(matrix))
+    return matrix
+
+
+def _ledger_outcome(matrix: Dict[str, Any]) -> Tuple[str, Optional[str]]:
+    bad = [f"{r['world']} seed {r['seed']}: {r.get('error', 'no data')}" for r in matrix["runs"] if r["status"] != OK]
+    bad += [f"{w} pooled: no data" for w, p in matrix["pooled"].items() if p["status"] != OK]
+    return ("ERROR", "; ".join(bad)[:500]) if bad else ("PASS", None)
+
+
+def _ledger_runs(matrix: Dict[str, Any]) -> List[run_ledger.RunEntry]:
+    return [run_ledger.RunEntry("gate", r["world"], r["seed"], r["wall_seconds"], r.get("peak_rss_mb"), False) for r in matrix["runs"]]
+
+
+def _run_matrix(
+    config: GateConfig,
+    config_path: Path,
+    out_dir: Path,
+    *,
+    metrics_module: str,
+    sha: str,
+    workers: int,
+    keep_runs: bool,
+    timeout_s: float,
+) -> Dict[str, Any]:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     hhash = harness_hash(config_path, metrics_module=metrics_module)
@@ -289,6 +332,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--only-world", action="append", default=[], help="run only this world of the config (repeatable); a CI shard runs one world")
     parser.add_argument("--keep-runs", action="store_true")
     parser.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT_S)
+    parser.add_argument("--step", default=LEDGER_STEP, help="the run-ledger step label (a milestone or dispatch name)")
+    parser.add_argument("--rerun-of", help="the run-ledger invocation_id this invocation reruns (never guessed)")
     args = parser.parse_args(argv)
     config = load_config(args.config)
     if args.only_world:
@@ -297,7 +342,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             parser.error(f"--only-world not in the config: {unknown}")
         config = dataclasses.replace(config, worlds=tuple(w for w in config.worlds if w in args.only_world))
     matrix = run_matrix(config, args.config, args.out, metrics_module=args.metrics_module, sha=args.sha or _git_head(),
-                        workers=args.workers, keep_runs=args.keep_runs, timeout_s=args.timeout)
+                        workers=args.workers, keep_runs=args.keep_runs, timeout_s=args.timeout, step=args.step, rerun_of=args.rerun_of)
     bad = [r for r in matrix["runs"] if r["status"] != OK]
     print(f"{len(matrix['runs']) - len(bad)}/{len(matrix['runs'])} runs ok in {matrix['wall_seconds']}s; matrix: {args.out / 'matrix.json'}")
     return 0

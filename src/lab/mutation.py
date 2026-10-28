@@ -437,7 +437,7 @@ class VariantMatrixBuilder:
                 joined_names = "_".join(applied_ids)
                 if len(joined_names) > 40:
                     import hashlib
-                    h = hashlib.md5(joined_names.encode("utf-8")).hexdigest()[:8]
+                    h = hashlib.md5(joined_names.encode("utf-8"), usedforsecurity=False).hexdigest()[:8]
                     variant_id = f"var_combo_{idx + 1}_{h}"
                 else:
                     variant_id = f"var_combo_{variant_id_sanitize(joined_names)}"

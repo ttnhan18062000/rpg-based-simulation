@@ -28,6 +28,7 @@ domains:
       - docs/observability/read_model_service_contract.md
       - docs/observability/how_to_run_simulation.md
       - docs/guides/feature_flags.md
+      - tools/rpg_measure/**  # the paired-run measurement tool the v1 runs depend on
     owns_not: []
     routes:
       "agent-working/**": agent-working-designer
