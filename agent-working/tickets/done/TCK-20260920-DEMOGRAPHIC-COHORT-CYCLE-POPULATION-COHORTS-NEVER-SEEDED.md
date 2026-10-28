@@ -187,3 +187,5 @@ AC-1 and AC-2 are void (no gap to explain or fix). AC-3 is void, not met: the fi
 (`f70f58706`) and cohorts were never an instance. The `registries/mechanisms.yaml`
 `demographic_cohort_cycle` verdict correction is owned by
 `TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE`.
+
+2026-10-27 correction (TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION): the region figures above (6 of 7, the 7th empty) were taken on the catalog copy of `frontier_living_world`; on the world production loads, 8 of 9 regions seed non-empty cohorts and `near_forest` is populated; `hometown` {4,6,3} and the STALE-PREMISE conclusion hold; see that ticket.
