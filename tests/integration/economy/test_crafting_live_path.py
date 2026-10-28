@@ -60,6 +60,14 @@ def test_craft_consumes_materials_and_gold_and_adds_the_product_together():
 
 
 @pytest.mark.v2_contract
+def test_a_second_craft_is_refused_once_the_first_has_consumed_the_materials():
+    """Moved from the retired legacy ``test_blacksmith_crafting``: craft once, then the same crafter cannot craft again."""
+    _first, after_first = _craft(_state())
+    second, after_second = _craft(after_first)
+    _untouched(second, after_second, gold=60, held={"iron_sword": 1})
+
+
+@pytest.mark.v2_contract
 def test_craft_needs_a_recipe_the_crafter_knows():
     """PROG-097: a recipe missing from the crafter's known set produces no craft."""
     state = _state(known=("craft_travel_ration",))
