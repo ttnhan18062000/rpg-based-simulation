@@ -44,7 +44,7 @@ Owner decision (2026-10-25, option A, #715 issuecomment-6387497480):
 - Also record `Runtime.dependency_count: Optional[int]` (the number of lines hashed) as a recorded-only diagnostic, not blocking.
 - Fill both fields wherever `Runtime` is built for a real run (the capture path that fills `python_version` today). Put the closure walk in one small `src/perf/` helper, not inlined.
 - Add `identity.runtime.dependency_fingerprint` to `_BLOCKING`. When the two sides differ, `compare()` returns `INCONCLUSIVE` through `_check_blocking_fields`, naming the field and both values. `UNKNOWN` on both sides behaves like the other unknown blocking fields: it is listed as unverified identity and is not a mismatch.
-- `SCHEMA_VERSION`: MINOR bump over whatever main has at the time (1.4 after #735). Update `docs/performance/benchmark_identity_schema.md` (status line, field table, JSON schema) and every pinned version assert.
+- `SCHEMA_VERSION`: MINOR bump over whatever main has at the time (1.4 after #735). Update `docs/performance/benchmark_identity_schema.md` (status line, field table, JSON schema) and every pinned version assert. Also `docs/parity_ledger/infrastructure.yaml` INFRA-430, whose text says "schema 1.4" after #626. That file is rpg's: the edit needs an rpg-planner-ubuntu (or rpg-planner) OK in the PR. No test pins it. INFRA-431 states a count, not a version.
 - A record without the field loads (`from_dict` default `UNKNOWN`). Against a head that has one, it reads `INCONCLUSIVE` (blocking field differs). That is intended: every pre-2026-10-25 local record is from the stale stack.
 
 **Part 2: the re-record** (needs a heavy-run slot from lead-planner, and the owner's promotion approval in this PR):
