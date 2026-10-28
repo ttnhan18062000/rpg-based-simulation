@@ -1,0 +1,173 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS
+phase: done
+date: 2026-10-24
+tags: [performance, determinism]
+---
+
+# TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS
+
+## Title
+The proof digest hashes the seven carried-state fields it omits: a new `flat-sha256` scheme version and the fixture re-pinned; rpg re-records the v1 base after the merge
+
+## Status
+DONE
+
+Unblocked 2026-10-26: HUNGER step B is on main (#753, `3533fde71`; ruling (ii) as `DIGEST_EXCLUDED_COMBAT_KEYS` / `_entity_digest_form`, pinned by a test). rpg-planner granted the co-edit lift (#593 issuecomment-6420451647).
+
+**Lift scope:**
+- `src/engine/checkpoint.py`
+- `docs/engine/deterministic_execution.md`, `docs/engine/known_limitations.md` and `substrate_baseline_contract.md`, only where they cite the digest scheme
+- the INFRA parity rows for the digest
+
+**Conditions:**
+1. Digest scheme only. No change to restore or replay semantics, or to the checkpoint payload shape. F3 (`rpg-checkpoint-restore-randoms`, `scenario_checkpoint.py`) owns restore; ask rpg before touching `scenario_checkpoint.py`.
+2. The proofs:
+   - the v3-minus-7 = v2 migration proof
+   - a positive control per field
+   - a cross-PYTHONHASHSEED check
+   - each `FIXTURE_DIGEST` / digest-pinned re-pin named in the PR's Review notes; only digests move
+   - `paired --neutral` IDENTICAL on 3 worlds × s42, stated as a neutrality measure, not behaviour coverage
+3. rpg (rpg-planner or rpg-designer) reviews the PR's docs and ledger rows; merge stays the owner's.
+4. F1 may be coded and opened in parallel with HUNGER step A. It does not merge while step A's PR is open unless rpg is told first.
+5. rpg re-records v1 under v3 (§12.5) on the u24 host after the merge; perf checks that only the digests move.
+
+## Tier
+standard
+
+## Type
+repair
+
+## Priority
+P1
+
+## Request Summary
+`CanonicalStateHasher.to_canonical_data` (`src/engine/checkpoint.py:94-168`) leaves out mutable durable state that
+`ApplyPath.apply_generation` carries forward every tick (`src/engine/apply.py:529,543-547`):
+
+1. `item_instances`
+2. `recent_world_events` (rpg-planner, #593 2026-10-22: carried state, not a view; the run ledger reads it)
+3. `quest_registry`
+4. `factions`
+5. `clans`
+6. `information_providers`
+7. `CombatComponent.last_hit_tick`, added unhashed by HUNGER step B under the owner's ruling (ii) (#593
+   issuecomment-6384425767)
+
+A divergence in any of them is invisible to the final hash, to paired P1 hash-equality proofs and to mode
+conformance. The replay fingerprint does not cover them either (conformance_suite_design.md). Source: the port-leak
+audit, finding F1 (`TCK-20261022-ARCHITECTURE-PORT-LEAK-AUDIT`, `docs/plans/architecture/port_leak_audit.md` §7).
+The v1 record states that the baseline cannot vouch for the six.
+
+Hashing them changes every state digest. Under PERF-D5 that needs a new scheme version, and under the roadmap's
+§12.5 "Hash scheme" rule, the v1 base has to be re-recorded under the new scheme before any M1 paired or gate
+comparison uses it. The owner approved both on 2026-10-24 (#715 issuecomment-6384423281), starting after step B.
+
+## Scope
+- **Scheme:** `PROOF_DIGEST_SCHEME` → `flat-sha256-v3`. The v3 canonical data is the v2 data plus the seven fields,
+  nothing else changed (the same shape as the v1→v2 update in PERF-D5).
+  - Each field gets a deterministic canonical form: sorted keys, ids as strings, collections sorted by a stable
+    key, and the same float handling as the existing fields. No `hash()`, no `id()`, no set iteration order.
+  - `recent_world_events` is hashed as the ordered window it is.
+- **Removing the step-B exclusion:** step B ships an explicit exclusion of `last_hit_tick` and a test that pins it.
+  This ticket removes that exclusion and flips the test.
+- **Fixture:** `tests/unit/engine/test_proof_digest_contract.py` gets `FIXTURE_DIGEST_V3`, and the fixture gains
+  non-empty values for all seven fields.
+  - Add a migration proof in the style of the existing v1→v2 one: v3 data minus the seven keys reproduces
+    `FIXTURE_DIGEST_V2` exactly.
+  - Add a positive control per field: changing that field alone changes the v3 digest. That is seven cases.
+- **Scheme callers:** every place that names the scheme, from a search of main on 2026-10-24:
+  - `src/perf/benchmark_record.py`, `src/perf/long_run_harness.py`, `tools/perf/hash_callsite_inventory.py`
+  - `tests/unit/engine/test_hash_scheduler.py`, `test_kernel_digest_via_scheduler.py`,
+    `tests/unit/perf/test_benchmark_record.py`
+  - Re-run the search before closing.
+- **Perf docs:**
+  - `benchmark_identity_schema.md` (scheme enum)
+  - `baseline_invalidation_ledger.md` (a row: every digest-bearing baseline is invalidated by the scheme)
+  - `hash_callsite_inventory.{md,json}` (regenerated)
+  - the PERF-D5 amendment in `performance_optimization_decisions.md` (owner sign-off in this PR)
+- **rpg-owned docs, rpg co-edit:** `docs/engine/deterministic_execution.md`, `known_limitations.md`,
+  `contracts/substrate_baseline_contract.md`, the INFRA parity-ledger entries that cite the scheme, and
+  `intentional_divergences.md` if it cites v2.
+- **v1 base re-record:** re-record the v1 base (simulation `e8df8b96d`) under v3 per roadmap §12.5. rpg owns the
+  record and its harness; perf supplies the scheme and checks that the re-record's outcomes (fates, counters) equal
+  v1's, with only the digests moving.
+
+## Out of Scope
+- Any change to which state exists or how it evolves. This is hash coverage only: a hash-neutral claim on
+  outcomes, a digest-moving change on hashes.
+- The `pressure_signals` `ENABLE_*` back door (port-leak F5, rpg's ticket) and the id counters. Hashing
+  `pressure_signals` is only needed if rpg keeps that mapping.
+- Hierarchical or incremental hashing (C-09, Gate A).
+- F3 and F4 (rpg's restore-seed and salted-`hash()` tickets), although F4 must land before the A0 cross-hashseed
+  case can mean anything.
+
+## Acceptance Criteria
+- [x] `PROOF_DIGEST_SCHEME == "flat-sha256-v3"`, and the v3 canonical data = the v2 data plus exactly the seven keys.
+- [x] `FIXTURE_DIGEST_V3` is pinned.
+- [x] The v3-minus-seven-keys migration proof reproduces `FIXTURE_DIGEST_V2`.
+- [x] Seven per-field positive controls pass.
+- [x] The step-B `last_hit_tick` exclusion and its test are removed or flipped.
+- [x] Determinism: same seed, two processes, different `PYTHONHASHSEED`, 3 worlds × 300 ticks under `audit_mode`
+      give identical v3 digests. This is the check that each canonical form is order-stable.
+- [x] Outcome neutrality: on 3 worlds × s42 × 1000 ticks, fates and counters are identical before and after. Only
+      the digests differ.
+- [x] Every scheme caller and doc in Scope is updated, and the search for `flat-sha256-v2` outside history and
+      tickets returns only the PERF-D5 history and the migration-proof constant.
+- [ ] The PERF-D5 amendment is in `performance_optimization_decisions.md`, with the owner's approval recorded in
+      the PR.
+- [x] The baseline-invalidation-ledger row is written.
+- [ ] The v1 base is re-recorded under v3 (rpg) before any M1 paired or gate comparison, with outcomes equal to v1.
+- [x] The cost of the wider digest is measured: same host, phase-7 digest share on `strategic_100` and
+      `frontier_extended` before and after, in a lead-granted slot. PROVISIONAL.
+
+## Related Tickets
+- `TCK-20261022-ARCHITECTURE-PORT-LEAK-AUDIT` (finding F1)
+- rpg HUNGER step B (adds `last_hit_tick`, unhashed under ruling (ii))
+- `TCK-20261019-RECORD-BASELINE-V1` (#725): the base to re-record
+- `TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE`: the v1→v2 precedent
+- `TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED`: the phase-7 digest cost method
+
+## Related Docs
+- `docs/architecture/performance_optimization_decisions.md` PERF-D5
+- `docs/plans/architecture/port_leak_audit.md` §7
+- `docs/plans/architecture/conformance_suite_design.md` (C1 canary, §4.2 side digest)
+- roadmap §12.5 "Hash scheme"
+- `docs/performance/baseline_invalidation_ledger.md`, `benchmark_identity_schema.md`, `hash_callsite_inventory.md`
+
+## Related Stored Artifacts
+- `agent-working/stored_artifacts/TCK-20261004-WORK-DEBT-RETIRE-STEP2-CODE/`
+
+## Related Code Areas
+- `src/engine/checkpoint.py` (rpg co-edit or lift needed: `src/engine` is rpg's)
+- `src/perf/benchmark_record.py`, `src/perf/long_run_harness.py`
+- `tools/perf/hash_callsite_inventory.py`
+- `tests/unit/engine/test_proof_digest_contract.py`
+
+## Assumptions / Open Questions
+- The `checkpoint.py` change is a co-edit with rpg-planner: the scheme is perf's, the file is rpg's. The lift was granted 2026-10-26 (see Status).
+- Whether the suite-only side digest of the conformance design (§4.2) is retired by this ticket or kept as a canary.
+  The default: C1 becomes an assertion on the v3 digest, and the side digest is dropped.
+- OPEN (UNMEASURED): `tests/certification/test_cert_long_run_stability.py::test_long_run_determinism_parity` (slow + extra_slow, skipped when CI=true) did not finish inside its own 600 s extra_slow budget on HEAD 5b7b8e8d3 on this host (TimeoutError from tests/conftest.py during the first of two 1000-tick x 500-entity runs, plus the QueueDrainWorker teardown leak as a consequence). No hash1/hash2 was produced, so it neither passed nor failed on determinism. Whether it also times out on main is NOT measured: do not call it pre-existing. A scaled-down run of the same harness call is the substitute evidence (see Test Summary). perf-planner decides whether this becomes a separate ticket.
+
+## Implementation Notes
+- `PROOF_DIGEST_SCHEME = "flat-sha256-v3"` in `src/engine/checkpoint.py` (digest scheme only; restore, replay and the payload shape are untouched). v3 canonical data = v2 data + `item_instances`, `recent_world_events` (the ordered window), `quest_registry`, `factions`, `clans`, `information_providers`, and `CombatComponent.last_hit_tick` (the step-B exclusion `DIGEST_EXCLUDED_COMBAT_KEYS` / `_entity_digest_form` is removed). Canonical forms: `_plain` (dataclass by field, enum by value, mapping with string keys, sequences in order, sets sorted) and the types' own `to_canonical_dict` where they have one (factions, clans, information providers).
+- `HashScheme.FLAT_SHA256_V3` added; `SCHEMA_VERSION` stays 1.3 (an enum member is not a field, as with v2 in DEV-019).
+- Docs: benchmark_identity_schema.md, baseline_invalidation_ledger.md (row), hash_callsite_inventory.{md,json} (regenerated), the PERF-D5 amendment (owner sign-off needed in the PR); rpg co-edits: the scheme citations in deterministic_execution.md, known_limitations.md, substrate_baseline_contract.md, INFRA-429 in infrastructure.yaml.
+- Re-pins: `FIXTURE_DIGEST_V3` (new), `FIXTURE_DIGEST_V2` (unchanged, now proved by the migration test), scheme asserts in test_hash_scheduler.py, test_long_run_record.py, test_benchmark_record.py; rpg's `test_acting_hostile_is_an_act_not_a_state.py::test_last_hit_tick_is_canonical_state_and_in_the_proof_digest` flipped (was ..._but_not_yet_in_the_proof_digest).
+- Evidence: `agent-working/stored_artifacts/TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS/evidence.md` (determinism, paired --neutral under rpg's amended condition 2 (option A, relayed by lead-planner 2026-10-26; rpg's own #593 post pending), digest cost, exclusions and the script bug).
+
+## Test Summary
+- `tests/unit/engine/test_proof_digest_contract.py` 16 passed, plus `test_hash_scheduler.py`, `test_kernel_digest_via_scheduler.py`, `test_acting_hostile_is_an_act_not_a_state.py`, `tests/unit/perf/test_benchmark_record.py` and `test_long_run_record.py` (136 passed together before one assert fix, then 58 passed in test_benchmark_record.py); `tests/tools/test_hash_callsite_inventory.py` 19, `test_perf_inventories_committed_in_sync.py` 4, `tests/certification/test_world_compile_determinism.py` 3, `tests/integration/kernel/test_checkpoint_reproducibility.py` 6, `test_work_debt_is_gone.py` 7, `test_snapshot_integrity.py` 3, each run as a single file.
+- Cross-PYTHONHASHSEED (seeds 1 and 12345, 3 worlds x 300 ticks): identical. `paired --neutral` 3 worlds x s42 x 1000 ticks: DIFFERENT (expected, scheme moves v2 to v3); fates, start, counters, adds identical: outcomes identical, only digests differ. Digest cost on `frontier_extended` (canonical) and `strategic_100` (pinned): no increase in persistence-phase cost detectable at n=3 matched pairs (PROVISIONAL).
+- Populated-state parity (folded in by owner decision, #715 6443099066): `tests/unit/perf/test_proof_digest_populated_parity.py` (9 tests, about 9 s, no marker) seeds `item_instances`, `quest_registry`, `factions`, `clans`, `information_providers` and a `recent_world_events` window on a metropolis state (60 entities, seed 303), runs the real Kernel 30 ticks twice, and asserts equal final hashes, all six fields non-empty at the end of both runs, a different hash from the unseeded run, a per-field sensitivity check (emptying any one of the six fields in the final state moves `CanonicalStateHasher.get_hash`; parametrized, 9 tests in all), and scheme v3. Passed under PYTHONHASHSEED 1 and 777. SEEDED AT START and CARRIED FORWARD every tick; creation or mutation of those entries during a run is NOT exercised (no current scenario reaches it: ENABLE_WORLD_EMERGENCE is off by default, no compiled world seeds clans, providers or items).
+
+## Files Changed
+See the PR diff: src/engine/checkpoint.py, src/perf/benchmark_record.py, tools/perf/hash_callsite_inventory.py, the digest tests, docs/performance/*, docs/architecture/performance_optimization_decisions.md, and the rpg-owned scheme citations in docs/engine/*, docs/parity_ledger/infrastructure.yaml.
+
+## Completion Summary
+Coded, tested and proven as above. Open at close, none of them met by this ticket: (1) the owner's sign-off of the PERF-D5 amendment in the PR (AC "PERF-D5 amendment ... owner's approval recorded"); (2) rpg re-records the v1 base under v3 after the merge (AC "v1 base is re-recorded under v3", condition 5); (3) rpg's own #593 post for amended condition 2; (4) the PR must not merge while HUNGER step A's PR is open unless rpg is told.
