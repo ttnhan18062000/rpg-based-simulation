@@ -6,7 +6,7 @@ audience: agent
 tags: [testing, performance]
 ---
 
-# Run ledger: one row per paired or gate invocation
+# Run ledger: a started row and an end row per paired or gate invocation
 
 `TCK-20261023-MEASURED-STEP-RUN-AND-RERUN-LEDGER` (T1 of `docs/plans/architecture/faster_feature_testing_draft_tickets.md`). The authoritative description is the docstring of
 `tools/test_architecture/run_ledger.py`; this page is the orientation.
@@ -61,5 +61,5 @@ file that were not valid rows; they are not counted).
 
 ## Writers
 
-- Gate: `rpg_gate_harness.run_matrix` writes one row per invocation (a no-data run makes the outcome `ERROR` and names it; an exception is `ERROR`; an interrupt is `KILLED`).
-- Paired: `tools/rpg_measure/paired.py` writes one row per invocation to this schema (rpg's hook ticket; testing reviews it). Arm `self` is paired's base-vs-base repeat arm and is never cached.
+- Gate: `rpg_gate_harness.run_matrix` writes a started row and an end row per invocation (a no-data run makes the outcome `ERROR` and names it; an exception is `ERROR`; an interrupt is `KILLED`).
+- Paired: `tools/rpg_measure/paired.py` writes a started row and an end row per invocation to this schema (rpg's hook ticket; testing reviews it). Arm `self` is paired's base-vs-base repeat arm and is never cached.

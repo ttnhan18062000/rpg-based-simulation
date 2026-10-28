@@ -168,10 +168,7 @@ This is enforced structurally — the authoritative `apply` path only processes 
 
 ## Crafting Atomicity
 
-Two independent `RecipeRegistry`-backed crafting code paths exist in the repo (see
-`docs/parity_ledger/progression.yaml`'s `PROG-123` divergence note and
-`TCK-20260904-MATERIAL-POSSESSION-PREDICATE` for the full disambiguation). Only one is live in
-production; this section previously described the other one as if it were.
+One `RecipeRegistry`-backed crafting path exists in the repo: `src/core/registries.py::RecipeRegistry`, read by the live path below. A second, legacy 3-entry registry (`src/core/recipes.py`, reached only through the uncalled `src/town/blacksmith.py::BlacksmithAction`) was deleted by `TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED` (see `docs/parity_ledger/progression.yaml`'s `PROG-123` note and `TCK-20260904-MATERIAL-POSSESSION-PREDICATE` for the history).
 
 **Live path — `src/engine/intent/action_intent.py`'s `REQUEST_CRAFT` handling**, reading
 `src/core/registries.py::RecipeRegistry`. Pre-flight, it builds `Requirement(kind="recipe_known" /

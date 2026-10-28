@@ -3,13 +3,21 @@ CORS middleware configuration guard (TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIA
 
 The CORS spec forbids combining a wildcard `Access-Control-Allow-Origin: *` with
 `Access-Control-Allow-Credentials: true` -- a credentialed request cannot legally use a wildcard
-origin. Uses an in-process TestClient (no subprocess) to verify the real response headers a
+origin. Since Semgrep alert #228 the API no longer allows `*`: it answers the local dev origins (or BACKEND_CORS_ORIGINS), and the
+guard is that credentials are never allowed on any of them. Uses an in-process TestClient (no subprocess) to verify the real response headers a
 credentialed cross-origin request actually receives, not just the middleware's constructor args.
 """
+import pytest
 from fastapi.testclient import TestClient
 
 from src.api.server import create_v2_app
 from src.config.profiles import PROD_DEFAULT
+
+
+@pytest.fixture(autouse=True)
+def _no_ambient_cors_origins(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A developer's or CI's BACKEND_CORS_ORIGINS must not change what the default app answers."""
+    monkeypatch.delenv("BACKEND_CORS_ORIGINS", raising=False)
 
 
 def test_cors_never_combines_wildcard_origin_with_credentials():
@@ -17,10 +25,10 @@ def test_cors_never_combines_wildcard_origin_with_credentials():
     with TestClient(app) as client:
         resp = client.get(
             "/health",
-            headers={"Origin": "https://example.com"},
+            headers={"Origin": "http://localhost:5173"},
         )
         assert resp.status_code == 200
-        assert resp.headers.get("access-control-allow-origin") == "*"
+        assert resp.headers.get("access-control-allow-origin") == "http://localhost:5173"
         assert "access-control-allow-credentials" not in resp.headers
 
 
@@ -30,10 +38,10 @@ def test_cors_preflight_never_combines_wildcard_origin_with_credentials():
         resp = client.options(
             "/health",
             headers={
-                "Origin": "https://example.com",
+                "Origin": "http://localhost:5173",
                 "Access-Control-Request-Method": "GET",
             },
         )
         assert resp.status_code == 200
-        assert resp.headers.get("access-control-allow-origin") == "*"
+        assert resp.headers.get("access-control-allow-origin") == "http://localhost:5173"
         assert "access-control-allow-credentials" not in resp.headers

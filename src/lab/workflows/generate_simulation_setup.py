@@ -2,7 +2,8 @@ import json
 import logging
 import yaml
 from pathlib import Path
-from typing import Optional, Any, Dict
+from dataclasses import dataclass
+from typing import Optional, Any, Dict, List
 from unittest.mock import MagicMock
 
 from src.lab.results import GenerateSimulationSetupResult
@@ -45,6 +46,95 @@ from src.lab.schema import (
 from src.lab.audit import LabAuditTrail
 
 logger = logging.getLogger(__name__)
+
+@dataclass(frozen=True)
+class _ReviewPackParts:
+    """The already-computed pieces of the generation review pack that are not specs."""
+
+    world_val: Dict[str, Any]
+    scenario_val: Dict[str, Any]
+    experiment_val: Dict[str, Any]
+    budget_report: Dict[str, Any]
+    overall_val_str: str
+    dup_str: str
+    region_lines: List[str]
+    entity_lines: List[str]
+    resource_lines: List[str]
+
+
+def _render_review_pack(
+    request: WorkflowRequest, world_spec: WorldSpec, scenario_spec: ScenarioSpec, experiment_spec: ExperimentSpec, parts: _ReviewPackParts
+) -> str:
+    """Render the generation review pack markdown from the specs and computed parts (its text is pinned by a test)."""
+    # nosemgrep: python.flask.security.audit.directly-returned-format-string.directly-returned-format-string -- not a web response: the markdown string is written to generation_review_pack.md inside the session stage directory by run()
+    return f"""# Simulation Generation Review Pack
+
+This review pack summarizes the auto-generated draft specifications created for your intent.
+
+## Intent & Goal
+- **User Intent**: `{request.user_goal or "N/A"}`
+- **Execution Mode**: `{request.mode}`
+
+## Generated Files
+- World spec: `generation/draft_specs/world.yaml`
+- Scenario spec: `generation/draft_specs/scenario.yaml`
+- Experiment spec: `generation/draft_specs/experiment.yaml`
+
+---
+
+## Specification Summary
+
+### 1. World Specs
+- **World ID**: `{world_spec.world_id}`
+- **Topology**: `{world_spec.topology.width}x{world_spec.topology.height}` grid
+- **Regions**:
+{chr(10).join(parts.region_lines)}
+- **Entity Populations**:
+{chr(10).join(parts.entity_lines)}
+- **Resource Nodes**:
+{chr(10).join(parts.resource_lines)}
+
+### 2. Scenario Specs
+- **Scenario ID**: `{scenario_spec.scenario_id}`
+- **Primary Goal**: `{scenario_spec.intent.primary_goal}`
+- **Allowed Pressures**: `{scenario_spec.allowed_anomalies}`
+- **Required Signals**: `{scenario_spec.required_signals.metrics}`
+
+### 3. Experiment Matrix
+- **Ticks**: `{experiment_spec.run.ticks}`
+- **Seeds**: `{experiment_spec.run.seeds}`
+- **Observability Detail**: `{experiment_spec.observability.mode}`
+
+---
+
+## Validation Status
+- **Overall Schema Validations**: {parts.overall_val_str}
+  - World validation: `{parts.world_val["status"]}` (Errors: `{parts.world_val["errors"]}`)
+  - Scenario validation: `{parts.scenario_val["status"]}` (Errors: `{parts.scenario_val["errors"]}`)
+  - Experiment validation: `{parts.experiment_val["status"]}` (Errors: `{parts.experiment_val["errors"]}`)
+
+## Duplication Cross-Check
+- **Status**: {parts.dup_str}
+
+## Budget Estimates
+- **Guardrails Profile**: `{request.constraints.get("budget_profile", "local_dev")}`
+- **Check Status**: `{parts.budget_report["status"]}`
+- **Run Count**: `{parts.budget_report["run_count"]}`
+- **Total Ticks**: `{parts.budget_report["total_ticks"]}`
+- **Expected Runtime**: `{parts.budget_report["expected_runtime_minutes"]:.2f} minutes`
+- **Expected Artifact Size**: `{parts.budget_report["expected_artifact_mb"]:.3f} MB`
+- **Warnings**: `{parts.budget_report["warnings"]}`
+- **Blocked Reasons**: `{parts.budget_report["blocked_reasons"]}`
+
+---
+
+## Next Steps
+To proceed with local manual execution, please trigger the next workflow:
+```bash
+rpg-workflow-prepare --session-id "{world_spec.world_id.replace('world_', '')}"
+```
+"""
+
 
 class GenerateSimulationSetupWorkflow:
     """
@@ -486,70 +576,9 @@ class GenerateSimulationSetupWorkflow:
         )
         dup_str = f"Duplicate keys/keywords detected: {match_count}" if match_count > 0 else "No existing duplicate catalogs found."
 
-        return f"""# Simulation Generation Review Pack
-
-This review pack summarizes the auto-generated draft specifications created for your intent.
-
-## Intent & Goal
-- **User Intent**: `{request.user_goal or "N/A"}`
-- **Execution Mode**: `{request.mode}`
-
-## Generated Files
-- World spec: `generation/draft_specs/world.yaml`
-- Scenario spec: `generation/draft_specs/scenario.yaml`
-- Experiment spec: `generation/draft_specs/experiment.yaml`
-
----
-
-## Specification Summary
-
-### 1. World Specs
-- **World ID**: `{world_spec.world_id}`
-- **Topology**: `{world_spec.topology.width}x{world_spec.topology.height}` grid
-- **Regions**:
-{chr(10).join(region_lines)}
-- **Entity Populations**:
-{chr(10).join(entity_lines)}
-- **Resource Nodes**:
-{chr(10).join(resource_lines)}
-
-### 2. Scenario Specs
-- **Scenario ID**: `{scenario_spec.scenario_id}`
-- **Primary Goal**: `{scenario_spec.intent.primary_goal}`
-- **Allowed Pressures**: `{scenario_spec.allowed_anomalies}`
-- **Required Signals**: `{scenario_spec.required_signals.metrics}`
-
-### 3. Experiment Matrix
-- **Ticks**: `{experiment_spec.run.ticks}`
-- **Seeds**: `{experiment_spec.run.seeds}`
-- **Observability Detail**: `{experiment_spec.observability.mode}`
-
----
-
-## Validation Status
-- **Overall Schema Validations**: {overall_val_str}
-  - World validation: `{world_status}` (Errors: `{world_val["errors"]}`)
-  - Scenario validation: `{scenario_status}` (Errors: `{scenario_val["errors"]}`)
-  - Experiment validation: `{experiment_status}` (Errors: `{experiment_val["errors"]}`)
-
-## Duplication Cross-Check
-- **Status**: {dup_str}
-
-## Budget Estimates
-- **Guardrails Profile**: `{request.constraints.get("budget_profile", "local_dev")}`
-- **Check Status**: `{budget_report["status"]}`
-- **Run Count**: `{budget_report["run_count"]}`
-- **Total Ticks**: `{budget_report["total_ticks"]}`
-- **Expected Runtime**: `{budget_report["expected_runtime_minutes"]:.2f} minutes`
-- **Expected Artifact Size**: `{budget_report["expected_artifact_mb"]:.3f} MB`
-- **Warnings**: `{budget_report["warnings"]}`
-- **Blocked Reasons**: `{budget_report["blocked_reasons"]}`
-
----
-
-## Next Steps
-To proceed with local manual execution, please trigger the next workflow:
-```bash
-rpg-workflow-prepare --session-id "{world_spec.world_id.replace('world_', '')}"
-```
-"""
+        parts = _ReviewPackParts(
+            world_val=world_val, scenario_val=scenario_val, experiment_val=experiment_val, budget_report=budget_report,
+            overall_val_str=overall_val_str, dup_str=dup_str,
+            region_lines=region_lines, entity_lines=entity_lines, resource_lines=resource_lines,
+        )
+        return _render_review_pack(request, world_spec, scenario_spec, experiment_spec, parts)

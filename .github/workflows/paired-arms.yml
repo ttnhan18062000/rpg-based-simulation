@@ -1,0 +1,199 @@
+name: Paired arms (off-host)
+
+# TCK-20261023-PAIRED-ARMS-RUN-OFF-THE-SHARED-HOST (T2 of docs/plans/architecture/faster_feature_testing_draft_tickets.md). ADVISORY and manual: it is never a
+# required check (roadmap principle 8), runs on `workflow_dispatch` only (never `pull_request`, `push` or `schedule`) and nothing waits on it.
+# It runs the arms of tools/rpg_measure/paired.py on GitHub-hosted runners (4 vCPU / 16 GB, free on a public repo) instead of the shared development host, whose
+# 6 cores and 8.7 GB make a 5-seed step take 2-3 h. The comparison itself is rpg's `paired.py --collected` (TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS):
+# it keeps the STOP rule and `require_host_independent_runs` / `--legacy-base` unchanged. This file only produces the results.
+#   - plan: validates the inputs and builds the (world, seed) matrix (tools/test_architecture/paired_arms.py plan);
+#   - arms: one job per (world, seed). A `pair` job runs the base AND the new arm on ONE VM through paired's own prepare_tree/result_path/run_one (the unchanged
+#     arm_child.py, PYTHONHASHSEED=0, cache key <sha12>-<child hash>-<ticks>); a `-self` job runs the base arm and its base-vs-base repeat on one VM. Each result gets a
+#     cost.json (wall time, peak RSS, runner identity). Every job checks out the SAME ref (the child hash is the tool checkout's arm_child.py);
+#   - aggregate: downloads every artifact, refuses a set whose jobs differ in Python version or OS (DET-PORT-0), merges them into one paired cache root and calls
+#     paired.py --collected. An off-host result is never compared with a local one, except in the ticket's one-time byte-equality proof (AC1).
+# Run it after rpg's --collected option is on main; the aggregate fails clearly if it is not. The run-ledger row (T1) is added when T1 is on main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_sha:
+        description: "Full 40-hex sha of the base arm"
+        required: true
+      new_sha:
+        description: "Full 40-hex sha of the new arm"
+        required: true
+      step:
+        description: "Step label (names the artifacts and the concurrency group)"
+        required: true
+      worlds:
+        description: "Comma-separated worlds: paired.py's three, optionally plus highland_traverse"
+        required: false
+        default: "frontier_living_world,urban_political,crowded_frontier"
+      seeds:
+        description: "Comma-separated seeds"
+        required: false
+        default: "42,43,44,45,46"
+      ticks:
+        description: "Ticks per run"
+        required: false
+        default: "5000"
+      self_check:
+        description: "Base-vs-base repeat: seed42 (seed 42 of every world, ALWAYS added even if seeds omits 42, as paired.py expects), full (every run) or off"
+        required: false
+        default: "seed42"
+      legacy_base:
+        description: "Pass --legacy-base to paired.py (a base older than the determinism fix; needs self_check full)"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: paired-arms-${{ inputs.step }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: "Plan the (world, seed) matrix"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      terrain: ${{ steps.plan.outputs.terrain }}
+      slug: ${{ steps.plan.outputs.slug }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The plan imports paired.py's world constants (never copies them), and paired.py imports from src/, so the environment is synced.
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
+      - name: Plan
+        id: plan
+        env:
+          BASE_SHA: ${{ inputs.base_sha }}
+          NEW_SHA: ${{ inputs.new_sha }}
+          STEP_LABEL: ${{ inputs.step }}
+          WORLDS: ${{ inputs.worlds }}
+          SEEDS: ${{ inputs.seeds }}
+          TICKS: ${{ inputs.ticks }}
+          SELF_CHECK: ${{ inputs.self_check }}
+        run: |
+          for name in BASE_SHA NEW_SHA; do
+            [[ "${!name}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::${name} must be a full 40-character lowercase hex sha"; exit 1; }
+          done
+          [[ "${TICKS}" =~ ^[0-9]+$ ]] || { echo "::error::ticks must be a number"; exit 1; }
+          # No pipe: a refused plan must fail this step (the default shell has no pipefail).
+          python -m tools.test_architecture.paired_arms plan --worlds "${WORLDS}" --seeds "${SEEDS}" --self-check "${SELF_CHECK}" --step "${STEP_LABEL}" > plan.txt
+          cat plan.txt
+          cat plan.txt >> "$GITHUB_OUTPUT"
+
+  arms:
+    name: "Arms (${{ matrix.world }} seed ${{ matrix.seed }} ${{ matrix.kind }})"
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      BASE_SHA: ${{ inputs.base_sha }}
+      NEW_SHA: ${{ inputs.new_sha }}
+      TICKS: ${{ inputs.ticks }}
+      WORLD: ${{ matrix.world }}
+      SEED: ${{ matrix.seed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
+      # The two shas may not be on the dispatched ref's history; fetch them by sha (any commit reachable on GitHub).
+      - name: Fetch the base and new commits
+        run: git fetch --no-tags --depth=1 origin "${BASE_SHA}" "${NEW_SHA}"
+      - name: Base arm
+        run: python -m tools.test_architecture.paired_arms run-arm --repo . --sha "${BASE_SHA}" --arm base --world "${WORLD}" --seed "${SEED}" --ticks "${TICKS}" --cache arm-cache
+      - name: New arm
+        if: ${{ matrix.kind == 'pair' }}
+        run: python -m tools.test_architecture.paired_arms run-arm --repo . --sha "${NEW_SHA}" --arm new --world "${WORLD}" --seed "${SEED}" --ticks "${TICKS}" --cache arm-cache
+      - name: Base-vs-base repeat arm
+        if: ${{ matrix.kind == 'self' }}
+        run: python -m tools.test_architecture.paired_arms run-arm --repo . --sha "${BASE_SHA}" --arm self --repeat --world "${WORLD}" --seed "${SEED}" --ticks "${TICKS}" --cache arm-cache
+      # Only the result documents and their cost files go up (not the extracted trees); `upload/results/...` keeps paired's cache layout.
+      - name: Collect the results
+        if: always()
+        run: |
+          mkdir -p upload
+          if [ -d arm-cache/results ]; then cp -r arm-cache/results upload/results; fi
+      - name: Upload the arm results
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: paired-arms-${{ needs.plan.outputs.slug }}-${{ matrix.world }}-s${{ matrix.seed }}${{ matrix.kind == 'self' && '-self' || '' }}
+          path: upload/
+          retention-days: 30
+
+  aggregate:
+    name: "Aggregate and compare"
+    needs: [plan, arms]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      BASE_SHA: ${{ inputs.base_sha }}
+      NEW_SHA: ${{ inputs.new_sha }}
+      STEP_LABEL: ${{ inputs.step }}
+      SEEDS: ${{ inputs.seeds }}
+      TICKS: ${{ inputs.ticks }}
+      SELF_CHECK: ${{ inputs.self_check }}
+      LEGACY_BASE: ${{ inputs.legacy_base }}
+      TERRAIN: ${{ needs.plan.outputs.terrain }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
+      - run: uv sync --locked --no-install-project --no-group lint
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: paired-arms-${{ needs.plan.outputs.slug }}-*
+          path: arms
+      # Refuses (exit 2) a set whose jobs differ in Python version or OS, a pair job without both its arms, or two jobs writing different bytes to one result.
+      - name: Assemble one paired cache root
+        run: python -m tools.test_architecture.paired_arms assemble --in arms --out collected --base "${BASE_SHA}" --new "${NEW_SHA}"
+      - name: Compare with paired.py --collected
+        run: |
+          python -m tools.rpg_measure.paired --help | grep -q -- --collected || {
+            echo "::error::tools/rpg_measure/paired.py has no --collected option yet (rpg ticket TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS); dispatch this workflow after it is on main"
+            exit 1
+          }
+          read -r -a seeds <<< "${SEEDS//,/ }"
+          flags=()
+          if [ "${TERRAIN}" = "true" ]; then flags+=(--terrain); fi
+          if [ "${LEGACY_BASE}" = "true" ]; then flags+=(--legacy-base); fi
+          python -m tools.rpg_measure.paired --collected collected --base "${BASE_SHA}" --new "${NEW_SHA}" --step "${STEP_LABEL}" \
+            --ticks "${TICKS}" --seeds "${seeds[@]}" --self-check "${SELF_CHECK}" "${flags[@]}" \
+            --out table.md --verdict-json verdict.json
+      - name: Step summary
+        if: always()
+        run: |
+          {
+            echo "### Paired arms: ${STEP_LABEL}"
+            echo "- base \`${BASE_SHA}\`, new \`${NEW_SHA}\`, ${TICKS} ticks, seeds ${SEEDS}, self-check ${SELF_CHECK}"
+            echo "- off-host result: never compare it with a local one except in the one-time equality proof"
+            if [ -f verdict.json ]; then echo '```json'; cat verdict.json; echo '```'; fi
+            if [ -f table.md ]; then cat table.md; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload the verdict
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: paired-verdict-${{ needs.plan.outputs.slug }}
+          path: |
+            table.md
+            verdict.json
+            collected/identities.json
+          if-no-files-found: ignore
+          retention-days: 30
