@@ -55,6 +55,7 @@ from src.certification.hardware import HardwareClassifier
 from src.config.profiles import RuntimeProfile, SignalContract
 from src.core.governance import RuntimeMode
 from src.engine.work_units import WORK_MODEL_VERSION
+from src.perf.dependency_fingerprint import collect_dependency_fingerprint
 
 SCHEMA_VERSION = "1.5"  # 1.5 added the blocking identity.runtime.dependency_fingerprint and the recorded-only identity.runtime.dependency_count, 1.4 added the optional outcome.check (the compare() check that produced a non-PASS outcome), 1.1 added the optional identity.runner section, 1.2 the optional after-collect keys of result.memory_mb, 1.3 the optional working_set_* keys of result.memory_mb (all additive: MINOR bumps, schema section 4)
 
@@ -620,10 +621,8 @@ def observer_level(flags: Mapping[str, bool]) -> str:
 
 
 def _dependency_fingerprint() -> Tuple[str, Optional[int]]:
-    """The installed-closure fingerprint, or ``(UNKNOWN, None)`` where it cannot be read (no ``packaging``, no ``pyproject.toml``): a record is never refused for it."""
+    """The installed-closure fingerprint, or ``(UNKNOWN, None)`` where it cannot be read (no ``packaging``, no ``pyproject.toml``, an unreadable metadata entry): a record is never refused for it."""
     try:
-        from src.perf.dependency_fingerprint import collect_dependency_fingerprint
-
         return collect_dependency_fingerprint(unknown=UNKNOWN)
     except Exception:  # noqa: BLE001 -- an unreadable environment is an unknown fingerprint, not a failed run
         return UNKNOWN, None

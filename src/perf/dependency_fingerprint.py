@@ -18,10 +18,15 @@ import hashlib
 import tomllib
 from importlib import metadata
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Mapping, Optional, Protocol, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Protocol, Set, Tuple
 
-from packaging.requirements import InvalidRequirement, Requirement
-from packaging.utils import canonicalize_name
+try:
+    from packaging.requirements import InvalidRequirement, Requirement
+    from packaging.utils import canonicalize_name
+
+    PACKAGING_AVAILABLE = True
+except ImportError:  # pragma: no cover -- `packaging` is a test-tool dependency, not a runtime one; without it the fingerprint is unknown
+    PACKAGING_AVAILABLE = False
 
 SCHEME = "deps-v1"
 MISSING = "MISSING"
@@ -42,12 +47,14 @@ class InstalledMetadata:
     """``importlib.metadata`` of the running interpreter."""
 
     def version(self, name: str) -> Optional[str]:
+        """The installed version of *name*, or ``None``."""
         try:
             return metadata.version(name)
         except metadata.PackageNotFoundError:
             return None
 
     def requires(self, name: str) -> List[str]:
+        """The raw ``Requires-Dist`` strings of installed *name*."""
         try:
             return list(metadata.requires(name) or [])
         except metadata.PackageNotFoundError:
@@ -61,34 +68,39 @@ def _applies(requirement: Requirement, extras: Iterable[str]) -> bool:
     return any(requirement.marker.evaluate({"extra": extra}) for extra in (*extras, ""))
 
 
+def _parse(raw: str, extras_in_scope: Iterable[str]) -> Optional[Tuple[str, Set[str]]]:
+    """``(canonical name, requested extras)`` of requirement string *raw*, or ``None`` when it is invalid or its marker does not hold."""
+    try:
+        req = Requirement(raw)
+    except InvalidRequirement:
+        return None
+    if not _applies(req, extras_in_scope):
+        return None
+    return canonicalize_name(req.name), {canonicalize_name(e) for e in req.extras}
+
+
+def _visit(
+    name: str, extras: Set[str], wanted: Dict[str, Set[str]], versions: Dict[str, Optional[str]], provider: MetadataProvider
+) -> List[Tuple[str, Set[str]]]:
+    """Record *name* with *extras*; return the requirements to visit next (none when it was already visited with these extras, or is not installed)."""
+    known = wanted.setdefault(name, set())
+    if name in versions and extras <= known:
+        return []
+    known |= extras
+    versions[name] = provider.version(name)
+    if versions[name] is None:
+        return []
+    return [p for p in (_parse(raw, known) for raw in provider.requires(name)) if p is not None]
+
+
 def _closure(roots: Iterable[str], provider: MetadataProvider) -> Dict[str, Optional[str]]:
     """``{canonical name: installed version or None}`` for the closure of *roots*, with the extras requested along each path."""
+    pending = [parsed for parsed in (_parse(raw, ()) for raw in roots) if parsed is not None]
     wanted: Dict[str, Set[str]] = {}
-    pending: List[Tuple[str, Set[str]]] = []
-    for raw in roots:
-        try:
-            req = Requirement(raw)
-        except InvalidRequirement:
-            continue
-        if _applies(req, ()):
-            pending.append((canonicalize_name(req.name), {canonicalize_name(e) for e in req.extras}))
     versions: Dict[str, Optional[str]] = {}
     while pending:
         name, extras = pending.pop()
-        known = wanted.setdefault(name, set())
-        if name in versions and extras <= known:
-            continue
-        known |= extras
-        versions[name] = provider.version(name)
-        if versions[name] is None:
-            continue
-        for raw in provider.requires(name):
-            try:
-                child = Requirement(raw)
-            except InvalidRequirement:
-                continue
-            if _applies(child, known):
-                pending.append((canonicalize_name(child.name), {canonicalize_name(e) for e in child.extras}))
+        pending.extend(_visit(name, extras, wanted, versions, provider))
     return versions
 
 
@@ -114,6 +126,6 @@ def collect_dependency_fingerprint(
 ) -> Tuple[str, Optional[int]]:
     """The fingerprint of this environment, or ``(unknown, None)`` when the project's dependencies cannot be read."""
     roots = project_dependencies(pyproject)
-    if roots is None:
+    if roots is None or not PACKAGING_AVAILABLE:
         return unknown, None
     return fingerprint_of(roots, provider)
