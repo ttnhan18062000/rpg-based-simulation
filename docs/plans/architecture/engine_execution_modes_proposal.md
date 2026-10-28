@@ -6,7 +6,7 @@ audience: agent
 tags: [architecture, performance, determinism]
 ---
 
-# Engine execution modes: fix the waste first, then five labelled modes
+# Engine execution modes: fix the waste first, then four labelled modes
 
 **Status:** proposal, advisory, not decided. Drafted by `architecture-planner-u24` on 2026-10-22, at the user's
 request in its terminal (approval logged on issue #715, comment 6338162467). Nothing here changes a recorded
@@ -21,6 +21,16 @@ What changed, and why:
   Mode 1 is stated as fixed budgets per PERF-D1 A2; the v1 baseline is noted as blind to six fields.
 - The conformance paragraph points to [conformance_suite_design.md](conformance_suite_design.md).
 - §6 marks the audit and the design done, and records the T2 runner facts and that PERF-M6-T05 has no ticket.
+
+**Revised 2026-10-26** (owner answered Q1 on #715, comments 6408481790 and 6409936521; lead-planner-u24's review folded in):
+- **Target scale = offline research scale on one machine** (about today's corpus, roughly 100 to 2000 entities). **Mode 5 is dropped** (§4, §6, §8 Q1).
+  The 10,000 entity / 50 ms / 2 GB figure in `docs/performance/optimization_architecture.md:21` stays as perf's stated bigger-world target,
+  measured by a capacity run (PERF-M2-T03/T04); that doc is perf's, not edited here.
+- The hash was blind to **seven** fields, not six (§5); F1 has since hashed all seven as `flat-sha256-v3` (#758) and v1 was re-recorded under it (#767).
+- The "nothing touching `src/**` before the v1 record merges" rule is retired: v1 is recorded and re-anchored (#725, #747, #748) (§3).
+- H2 is implemented on Lane C, not yet merged; the 615 to 270 ms projection is retired (§2, §3, §6).
+- `fused_strategic_pass` is named as uncosted serial Resolution work (§2); H5 is a timer fix, not waste.
+- PERF-M6-T05 is unticketed, so the "fold E into it" step needs perf to record it on the M6 epic or file T05 (§6).
 
 **Companion:** `faster_feature_testing_draft_tickets.md` (same folder) holds the draft tickets for step 1.
 
@@ -47,10 +57,11 @@ itself call for giving up determinism:
 | Collection (the only parallel phase) | 6 to 26 % of a tick, so the Amdahl ceiling is 1.06 to 1.35x | idea 08 table; tick_cost_growth §2 |
 | 4-thread pool vs 0 workers | Collection 1.6 to 2.1x **slower** (GIL plus dispatch, `[inferred]`) | idea 08, finding 2 |
 | serial waste, named | H1 hostility per pair (29 to 62 % synthetic), H2 cooperation candidates (43 to 61 % of `strategic_100`), H3 EventRecorder eviction and H4 event validation (both **closed** by the re-measure in the next row) | tick_cost_growth §3 |
-| projection after H1 to H3 | `strategic_100` 615 to about 270 ms; late corpus tick 130 to about 75 ms (shares, not measured fixes). **The late-corpus figure assumed H3 at 42.5 %; H3 is now 0.69 % (next row), so that projection no longer holds** | tick_cost_growth §3 |
+| projection after H1 to H3 | **RETIRED (2026-10-26).** The 615 to 270 ms and 130 to 75 ms figures were shares, not measured fixes, and the late-corpus one assumed H3 at 42.5 % (now 0.69 %). Re-measure after H1 and H2 land instead of quoting shares. H2 is implemented on Lane C, not yet merged: 3-world hash equal, paired `--neutral` IDENTICAL x3, cooperation phase 164 to 60 ms on `strategic_100` (#715 comment 6406571536); its push is queued first in Lane C's one-PR-at-a-time order (#715 comment 6447814392) | tick_cost_growth §3 |
 | replay digest when allowed | 9.2 % (`strategic_100`) to 27.1 % (`frontier_extended`) of a tick | tick_cost_growth §4 |
 | H3 and H4 re-measured after #645 (2026-10-22) | both CLOSE. H3 `EventRecorder.record` 0.69 % of the tick (was 42.5 %). H4 `event_shapers.py` 1.18 % and event-path pydantic 0.65 % (`strategic_100`); the 7.15 % total pydantic share belongs to the H1/H2 callers. Shapers at 3.74 % on `frontier_extended` are rpg's call. PROVISIONAL: shares, one host | #593 comment 6343696936; PR #723 |
 | engine working set | about 101 to 130 MB per run; the 1.7 GB figure is the harness's `gc.disable()` | tick_cost_growth §5 |
+| `fused_strategic_pass` | 92 to 99 % of the 12 to 33 % "overhead" that tick_cost_growth's H5 attribution uncovered. It is serial Resolution work that nobody has costed or labelled as waste or legitimate. **H5 itself is only a timer fix and makes nothing cheaper.** It limits what Mode 3a can buy even after H1 and H2 | tick_cost_growth (H5 attribution); lead-planner-u24 review 2026-10-26 |
 | Resolution (`refine`) | one chained fold over a single `StateUpdate`: 43 `run_phase` calls (12 flag-gated) plus 6 direct calls, each reading what earlier phases wrote | `src/engine/pipeline.py:135-438`; `docs/performance/phase_inventory.md` |
 
 **Reading.** One world's tick is bound by serial work, most of it named waste. Parallelism on top of that waste only
@@ -59,17 +70,17 @@ raises the parallel ceiling later**, because Collection becomes a larger share o
 
 ## 3. Order of work
 
-1. **Fix the named waste (no mode change).** H2 (draft ticket; H3 and H4 are closed, §2), next to H1 (rpg Lane B,
-   `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP`) and H5 (rpg, via #593). Every fix has to be
+1. **Fix the named waste (no mode change).** H2 (implemented on Lane C, not yet merged; H3 and H4 are closed, §2), then H1 (rpg Lane B,
+   `TCK-20261006-COMBAT-ENGAGEMENT-HOSTILITY-PROJECTION-COST-STEP`). Cost `fused_strategic_pass` (§2) before calling it waste or legitimate. Every fix has to be
    behaviour-neutral: identical canonical hashes under `audit_mode` (`performance_contract.md` §4.1, parity
-   invariant). **After v1:** nothing touching `src/**` lands before the v1 record PR merges.
+   invariant). v1 is recorded and re-anchored (#725, #747, #748), so the old "nothing touching `src/**` before the v1 record" rule no longer applies.
 2. **Make the test cycle measurable, and move it off this host** (draft tickets T1 to T3). No engine change.
 3. **Name the ports, then add modes one at a time** (§5, §6). Each mode goes through the conformance suite (§5)
    before any result it produces is used.
 
 Steps 1 and 2 serve goal (a). Step 3 serves goal (b), and is worth it only after step 1 has landed.
 
-## 4. The five modes
+## 4. The four modes
 
 Every mode runs the **same simulation rules**. Only the execution around them changes: executor, clock, commit
 order, proof output. Every result carries its mode label (`performance_contract.md` §3.1 already requires
@@ -81,7 +92,6 @@ Execution Mode and RuntimeMode on a claim). **Results are compared only within o
 | 2 | Fast test | yes, same outcomes and the same final hash | drops per-tick proof output | new, cheap |
 | 3 | Parallel-deterministic | yes, but only for backends a parity matrix proves | more cores | new, medium to hard |
 | 4 | Live | no | sheds work to keep wall-clock pace | exists (server only) |
-| 5 | Relaxed / distributed | no | many machines, arrival-order apply | new, hardest; **needs ADR** |
 
 ### Mode 1: Certified (today's outcome-run contract)
 - **Runs as:** `LocalSequentialExecutor`, `PinnedNormalGovernor`, `audit_mode` and `no_frame_pacing`, fixed budgets.
@@ -178,25 +188,14 @@ Execution Mode and RuntimeMode on a claim). **Results are compared only within o
 - **Allowed for:** the live server, and tests that opt in to test adaptation. **No other run may depend on host
   speed** (PERF-D1 amendment A2).
 
-### Mode 5: Relaxed / distributed (only on a stated need)
-- **Runs as:** state partitioned across processes or machines; claims applied in arrival order.
-- **Gives up:** everything Mode 1 proves, namely:
-  - determinism;
-  - replay;
-  - the canonical hash as a proof;
-  - comparison with any certified result;
-  - the paired-run method, since noise in both arms means more seeds are needed for the same effect.
-- **Conflicts with recorded decisions:**
-  - `docs/architecture/system_overview.md`, "What is deliberately not distributed" ("The engine is one process and
-    one writer ... Scaling is per run");
-  - the devops amendment's single engine replica;
-  - Kafka and Postgres are rejected.
-- **Needs ADR:** an amendment, and only after a real world-size requirement exists. One machine must first fail to
-  hold the per-tick work after step 1 and Mode 3.
-- **Not a test-speed lever.** For testing, "distributed" means **many seeds on many machines, each run in Mode 1 or
-  2**. That keeps determinism and needs no ADR (draft T2).
+### Mode 5: dropped (2026-10-26)
+Relaxed or distributed execution is **not in this plan**. The owner set the target scale to offline research on one machine
+(#715, comment 6408481790), and it conflicts with `docs/architecture/system_overview.md` ("What is deliberately not distributed")
+and the devops amendment's single replica. It reopens only by an ADR amendment (lead-planner), and only if the owner names a world
+that one machine cannot hold after step 1 and Mode 3a. For testing, "distributed" still means **many seeds on many runners, each in
+Mode 1 or 2** (draft T2), which keeps determinism and needs no ADR.
 
-## 5. Ports and the conformance suite (precondition for Modes 2, 3 and 5)
+## 5. Ports and the conformance suite (precondition for Modes 2 and 3)
 
 A mode should swap an implementation behind a named port, not patch the core. Proposed ports, each with its
 contract and its Mode 1 implementation:
@@ -208,17 +207,16 @@ contract and its Mode 1 implementation:
 | executor | `LocalSequentialExecutor` | Confirmed: the profile picks the executor implicitly; M3+ ([§6](port_leak_audit.md#6-executor-commit-path-event-sink)) |
 | commit path | `refine` then `ApplyPath.apply_generation` | Confirmed: no leak for Modes 1 to 3a; 3b and 5 change it |
 | event sink | `EventRecorder`, ordered | "Ordering feeds the digest" is **not confirmed**: no event digest exists and the final hash is state-only. Eviction is a cost, and H3 is closed (§2) |
-| state store and hash | `AuthoritativeState`, `CanonicalStateHasher` | Confirmed and wider: the hash omits six durable fields, `information_providers` among them; `terrain` is not a gap ([§5](port_leak_audit.md#5-canonicalstatehasher-coverage-main-item)) |
+| state store and hash | `AuthoritativeState`, `CanonicalStateHasher` | Confirmed and wider at audit time: the hash omitted seven durable fields (the six below plus `last_hit_tick`), `information_providers` among them; `terrain` is not a gap ([§5](port_leak_audit.md#5-canonicalstatehasher-coverage-main-item)). **Closed by `flat-sha256-v3`** (#758); still outside: `pressure_signals` (guarded) and the `REFINED_UPDATE` fingerprint (by design) |
 | process scope | one process per run | Confirmed, all M3+, none reaches the hash; the content thread-local is not a leak ([§4](port_leak_audit.md#4-process-global-singletons)) |
 
-**The v1 baseline is blind to those six fields.** The final hash, and the paired proofs that rely on it, cannot see a divergence in `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans` or `information_providers` (lead-planner-u24, #593 comment 6346664156; rpg-planner ruled `recent_world_events` is state, so all six count, #593 comment 6347182683). The fix is perf's PERF-D5 scheme bump, after v1; v1 itself stays as it is.
+**The hash now sees the seven fields; three things stay outside it.** At audit time the final hash, and the paired proofs that rely on it, could not see a divergence in `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans` or `information_providers` (lead-planner-u24, #593 comment 6346664156; rpg-planner ruled `recent_world_events` is state, #593 comment 6347182683), nor in HUNGER step B's `last_hit_tick` (perf ruling (ii), #593 comment 6384425767). F1 has landed: `flat-sha256-v3` (#758, 957caf8f6) is v2 plus exactly those seven, with a per-field test that each one moves the digest (`tests/unit/engine/test_proof_digest_contract.py:148-149`), and v1 was re-recorded under v3 (#767, fc040dee4). The per-tick `TICK_END` trail is the same proof digest, so it sees them too. **Still blind, on main at d914bace7:** `AuthoritativeState.pressure_signals` is outside the digest (PERF-D5 finding, left open; production keeps it `{}` and the suite's G1 guards that); the `REFINED_UPDATE` fingerprint (`src/replay/fingerprint.py`) reads none of the seven, by design, and is never proof; `current_mode` is unhashed (effects only). The F1 wait on building the conformance suite is lifted; the suite's side digest is retired unbuilt ([conformance_suite_design.md §4.1 to §4.2](conformance_suite_design.md)).
 
 **Conformance suite.** A fixed set of worlds and seeds runs in every mode:
 - Modes 2 and 3 must reproduce Mode 1's final canonical hash.
 - Mode 4 asserts invariants only, as `test_cert_long_run_stability.py` does today.
-- Mode 5 asserts invariants and outcome distributions only.
 
-The worlds, seeds, cases, blind-to lists, the side digest, the Mode 3 matrix and the lanes are in
+The worlds, seeds, cases, blind-to lists, the Mode 3 matrix and the lanes are in
 [conformance_suite_design.md](conformance_suite_design.md). Lane placement stays pending testing-planner.
 
 **Ownership:** testing-planner (lane placement), with perf-planner for the parity matrix (PERF-D2).
@@ -227,14 +225,13 @@ The worlds, seeds, cases, blind-to lists, the side digest, the Mode 3 matrix and
 
 | step | needs | owner |
 |---|---|---|
-| 1 H2 fix | draft ticket, after v1; hash-identical. H3 and H4 are closed (§2) | rpg-planner (src), perf-planner reviews the measurement |
+| 1 H2 fix | implemented on Lane C, not yet merged (branch `rpg-cooperation-candidates-index`, push queued, #715 comment 6447814392); hash-identical (#715 comment 6406571536). H1 next on Lane B. H3 and H4 are closed (§2) | rpg-planner (src), perf-planner reviews the measurement |
 | 2 T1 run and rerun accounting | draft ticket | testing-planner (with rpg for `tools/rpg_measure`) |
 | 2 T2 paired runs off this host | draft ticket | testing-planner; lead for host policy |
 | 2 T3 / Mode 2 `no_replay` for paired arms | perf ruling **done: YES** (§4); the draft ticket remains | perf-planner ruled; rpg or testing implements |
 | Mode 3a | stack-survey evaluation, parity matrix | perf-planner (PERF-D2, M6) |
-| Mode 3b | PERF-M6-T05 proposal, then an ADR. PERF-M6-T05 has **no ticket**: it is a line in `docs/plans/design_enhancement/performance_milestones_epic.md` (M6) | perf-planner, then lead-planner |
-| Mode 5 | a world-size requirement, then an ADR amendment | owner, then lead-planner |
-| ports, conformance suite | **audit done** ([port_leak_audit.md](port_leak_audit.md)); **design done** ([conformance_suite_design.md](conformance_suite_design.md)); building the suite waits on step 1 | architecture proposed; rpg and testing build |
+| Mode 3b | PERF-M6-T05 proposal, then an ADR. PERF-M6-T05 has **no ticket**: it is a line in `docs/plans/design_enhancement/performance_milestones_epic.md` (M6), so perf should record the fold of the Resolution-parallelism evaluation on the M6 epic or file T05, or it can silently disappear | perf-planner, then lead-planner |
+| ports, conformance suite | **audit done** ([port_leak_audit.md](port_leak_audit.md)); **design done** ([conformance_suite_design.md](conformance_suite_design.md)); building the suite waits on step 1 (the F1 seven-field hash bump landed as `flat-sha256-v3`, #758); a docs-only port-contract pass can start now | architecture proposed; rpg and testing build |
 
 **T2 runner facts** (platform-planner, relayed by lead-planner, 2026-10-22):
 - there is no self-hosted runner, and the repo is public, so adding one means hardware, hardening and an owner decision;
@@ -251,7 +248,8 @@ The worlds, seeds, cases, blind-to lists, the side digest, the Mode 3 matrix and
 
 ## 8. Open questions for the owner
 
-1. **Target scale for goal (b):** agent count, ticks per second, live or offline. It decides whether Mode 5 belongs
-   in the plan at all.
+1. **Target scale for goal (b):** **Answered 2026-10-26** (#715, comments 6408481790 and 6409936521): option A, offline research scale on one
+   machine (about 100 to 2000 entities). Speed comes from step 1 (H1, H2) plus T2; Mode 3 is evaluate-only; **Mode 5 is dropped**. The
+   10k / 50 ms / 2 GB figure in `docs/performance/optimization_architecture.md:21` stays as perf's bigger-world target, measured by a capacity run (PERF-M2-T03/T04).
 2. **Mode 2:** may paired arms (and the gate) use it once perf rules on it and T3 passes? **Answered in part:** perf ruled YES under five conditions (§4, #593 comment 6343379030). Whether the **gate** adopts it is still the owner's and testing-planner's call.
-3. **H2, H3, H4:** **Answered.** H3 and H4 were re-measured and both CLOSE (§2). H2 still gets a ticket after v1.
+3. **H2, H3, H4:** **Answered.** H3 and H4 were re-measured and both CLOSE (§2). H2 is implemented on Lane C, not yet merged (§2).

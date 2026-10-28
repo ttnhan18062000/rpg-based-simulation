@@ -5877,7 +5877,7 @@
   - determinism
 - type: doc
   path: docs/plans/architecture/engine_execution_modes_proposal.md
-  title: 'Engine execution modes: fix the waste first, then five labelled modes'
+  title: 'Engine execution modes: fix the waste first, then four labelled modes'
   status: active
   layer: architecture
   authority: P2
