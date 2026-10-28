@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3
-phase: inprogress
+phase: done
 date: 2026-10-28
 tags: [benchmarking]
 ---
@@ -98,8 +98,38 @@ Taken by rpg-implementer-2 on 2026-10-28. Branch rpg-v1-rerecord-v3, worktree .c
 
 **1b base arms:** they are kept at `/mnt/data/scratch-rpg-implementer-2/v3/cache/results/957caf8f6cff-<child hash>-5000/` (30 files). A later M1 paired run reuses them by `--cache /mnt/data/scratch-rpg-implementer-2/v3/cache`, or after the compare they are copied into the shared paired cache under the same `results/<sha12>-<child>-5000/` name (rpg-planner's choice). Nothing moves while the run is live.
 
+**Record (2026-10-28 01:08 to 06:55 +07:00, u24desktop, rpg-planner's heavy slot):** paired R vs P, 3 gate worlds x s42-51 x 5000t, `--report-only --self-check full --jobs 2`, PYTHONHASHSEED=0: rc=0, verdict PASS (report_only), self-check spread 0 over 30 runs. The R arm is copied (not moved) to `/mnt/data/scratch-rpg-measure/results/957caf8f6cff-72320cac-5000/` (rpg-planner's choice); my copy stays under `/mnt/data/scratch-rpg-implementer-2/v3/cache/` until this record PR merges, then only the P (v2) arm may go (rpg-planner).
+
+**Roadmap §12.5:** rpg-planner's review: the facts are right, but the paragraph's wording ("same e8df8b96d simulation, new digests") is an owner-approved rule, and we deviated from it (Option A: R carries step B). The change needs an owner memo row plus a #715 record, which rpg-planner takes to the owner. Until then the old paragraph stays, with one added "Pending owner row" sentence pointing here. Draft final text for the owner row (with rpg-planner's correction):
+
+> **Hash scheme during milestone 1.** The proof digest scheme was bumped once, by F1 (#758, `flat-sha256-v3`, perf's call PERF-D5). The v1 base was re-recorded under it at R = `957caf8f6` (TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3, reviewed by rpg-planner): the 1b base arms for the 3 gate worlds x seeds 42-51 x 5000 ticks, with self-check spread 0. Against R's v2 parent `04b85fb2e`, only start_hash and final_hash move (30 of 30 runs). R carries #753 step B (2.138) on top of v1's simulation, so its fates are v1's plus step B. On seeds 42-46 that is byte-proven through the 2.138 arms; on seeds 47-51 it is attributed by diff classing only. The gate baseline JSON (`harness_hash` only) and behavioral_5k (metrics only) carry no proof digest and were not re-recorded. R's arms are the v3 base for steps built on R; a comparison against v1 itself reads fates and counters from the v1 arms. A paired proof taken across a scheme bump compares fates and counters only, never digests, and any further bump repeats this re-record.
+
+**Known-entries file:** no file in the repo names the digest scheme, so nothing changes there.
+
 ## Test Summary
+
+Full tables: `evidence.md` (stored artifact).
+- **AC4, self-check:** base-vs-base (R vs R-repeat), full, 30 runs: spread 0. Final and start hashes, fates and counters are byte-identical.
+- **AC3 (amended), F1 moves only digests:** `compare_arms.py digest` R vs P: non-digest mismatches 0 of 30. start_hash differs in 30 of 30 and final_hash differs in 30 of 30. Per world:
+
+| world | seeds | non-digest fields equal | start_hash moved | final_hash moved |
+|---|---|---|---|---|
+| frontier_living_world | 42-51 | 10/10 | 10/10 | 10/10 |
+| urban_political | 42-51 | 10/10 | 10/10 | 10/10 |
+| crowded_frontier | 42-51 | 10/10 | 10/10 | 10/10 |
+
+The paired report (R base, P new) shows people deaths unchanged on all three worlds (e.g. crowded_frontier 342 -> 342) and flee, pursuit, perception and step counters identical.
+- **Differences from v1 (report-only), R vs v1 `e6a6a3e10`:** start and adds are equal in 30 of 30. Runs with any fate or counter difference: frontier_living_world 10/10 counters, 7/10 with fate flips; urban_political 5/10 counters, 3/10 with fate flips; crowded_frontier 10/10 counters, 9/10 with fate flips. **Attribution, byte-level on s42-46 (`cmp` of cached arms, 15 files each):** v1 e6a6a3e10 == 341f700d0 (15/15) -> step B measured pair 2.138 (341f700d0 vs 265162719) -> 265162719 == #753 merge 3533fde71 (15/15) == P 04b85fb2e (15/15) -> R == P apart from digests. So every v1 difference on s42-46 is step B, and #753..P is byte-neutral. **Gap:** s47-51 have no cached intermediate arms (the 2.138 measurement was s42-46), so their v1 differences are attributed by diff classing only, not byte-proven. rpg-planner ruled that no extra run is needed (this concerns the report-only v1 attribution, not the F1 proof).
+- **AC1:** diff classing in `investigation.md`, accepted by rpg-planner. No unclassed behaviour change.
+- **AC2:** 1b base arms exist under v3. The gate JSON and behavioral_5k were not re-recorded, per rpg-planner's ruling (finding 2: they carry no proof digest).
+- No code changed, so there is no pytest run. The measurement harness is unchanged on main.
 
 ## Files Changed
 
+- `agent-working/tickets/done/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3.md`
+- `agent-working/stored_artifacts/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3/` (plan, investigation, test_plan, evidence)
+- `docs/plans/systemic_world/roadmap.md` (§12.5: one "Pending owner row" sentence)
+- Outside the repo: `/mnt/data/scratch-rpg-measure/results/957caf8f6cff-72320cac-5000/` (30 R-arm result files, copied)
+
 ## Completion Summary
+The v1 base is re-recorded under `flat-sha256-v3` at R = 957caf8f6. The 1b base arms (3 gate worlds x s42-51 x 5000t) have self-check spread 0. Against the v2 parent P, F1 moves only start_hash and final_hash (30/30, every other field equal). The differences from v1 are step B (2.138), byte-proven on s42-46 and attributed by classing only on s47-51. The gate JSON and behavioral_5k were not re-recorded (ruled: no digest in them). The §12.5 wording change is pending an owner row via rpg-planner; the draft text is above. The comparison was sent to perf for its check. Owner sign-off is the merge of the record PR.

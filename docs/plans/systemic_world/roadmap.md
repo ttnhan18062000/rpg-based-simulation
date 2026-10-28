@@ -1279,6 +1279,8 @@ memo row 89):
 the v1 base is re-recorded under the new scheme (same e8df8b96d simulation, new digests) before any milestone 1
 paired or gate comparison uses it. A paired proof taken across the bump compares fates and counters only, never
 digests.
+Pending owner row: the re-record was taken at R = 957caf8f6 (v1 + step B), not on e8df8b96d's simulation; see
+TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3.
 
 **In scope.** Exactly the milestone 1 items in §12.3:
 - kind always means species;
