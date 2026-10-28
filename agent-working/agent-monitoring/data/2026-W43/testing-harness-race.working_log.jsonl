@@ -1,1 +1,0 @@
-{"timestamp": "2026-10-20T03:34:07.741646Z", "ticket_id": "TCK-20261020-RPG-GATE-HARNESS-TESTS-RACE-ON-SHARED-RUN-DIRS-UNDER-XDIST", "title": "The rpg gate harness run-directory test globs with its own invocation token", "status": "DONE", "summary": "Test-only race fix; AC2 not met by ruling", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

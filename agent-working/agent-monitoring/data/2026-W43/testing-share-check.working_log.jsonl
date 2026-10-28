@@ -1,1 +1,0 @@
-{"timestamp": "2026-10-20T10:23:25.803663Z", "ticket_id": "TCK-20261020-RPG-GATE-POOLED-SHARE-CHECKED-AGAINST-ITS-COUNT-ROWS", "title": "Pooled share checked against its count rows", "status": "DONE", "summary": "Report re-derives pooled shares from their named count rows and refuses a contradicting share", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

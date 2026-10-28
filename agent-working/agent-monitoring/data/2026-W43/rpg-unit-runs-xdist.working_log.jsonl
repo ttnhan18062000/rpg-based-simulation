@@ -1,1 +1,0 @@
-{"timestamp": "2026-10-20T05:11:31.510447Z", "ticket_id": "TCK-20261020-UNIT-TESTS-SHARE-DATA-RUNS-DIRS-UNDER-XDIST", "title": "Unit tests stop sharing fixed data/runs ids under xdist", "status": "DONE", "summary": "Unique per-test run ids and per-kernel shutdown in manifest/provenance tests", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

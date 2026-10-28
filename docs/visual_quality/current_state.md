@@ -25,8 +25,9 @@ calibrated numbers. Do not conflate the two.
 All four raw-metric modules (connectivity, density, shape, variants-TVD) are
 implemented, unit-tested, and empirically verified against real corpus values. Cite the
 anchors verbatim, uncomputed: density CV `0.6478017242079448` (`sandbox_world`) /
-`0.6782405727873148` (`dungeon_crawl`); TVD `0.23161981243456373`
-(`sandbox_world`/`dungeon_crawl`). The grading mechanism (hard/soft rule evaluation,
+`0.6782405727873148` (frozen pre-balance-fix `dungeon_crawl`; live `frontier_living_world` `0.659`); TVD
+`0.23153614062704975` (`sandbox_world`/frozen `dungeon_crawl`; live `sandbox_world`/`frontier_living_world`
+`0.264502519629673`). See `scoring_contract.md` §6 for which tests are frozen and which are live. The grading mechanism (hard/soft rule evaluation,
 additive combination, S–F assignment) is implemented and tested, reusing SimQ's exact
 threshold ladder by value: `S=2.0/A=0.5/B=0.0/C=-0.5/D=-1.0`.
 

@@ -1,1 +1,0 @@
-{"timestamp": "2026-10-21T10:13:32.451249Z", "ticket_id": "TCK-20261021-OBSERVABILITY-DETERMINISM-TEST-NEVER-HASHES", "title": "Observability determinism test hashes OFF vs FULL", "status": "DONE", "summary": "test_phase28 runs build_kernel under OFF and FULL and compares the final hash; mutation self-test", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}

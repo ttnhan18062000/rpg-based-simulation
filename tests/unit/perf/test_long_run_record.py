@@ -58,7 +58,7 @@ def test_the_record_is_a_comparative_record_on_an_uncontrolled_runner(run) -> No
     assert record.identity.rng.seed == 7 and record.identity.workload.entity_count == 20
     assert record.result.outcome == report.outcome
     assert record.result.validity.final_state_hash == report.final_state_hash
-    assert record.result.validity.hash_scheme is HashScheme.FLAT_SHA256_V2
+    assert record.result.validity.hash_scheme is HashScheme.FLAT_SHA256_V3
     assert record.result.memory_mb["rss_high_water"] >= 0 and record.result.memory_mb["sample_every_ticks"] == 10
     assert BenchmarkRecord.from_dict(json.loads(json.dumps(record.to_dict()))) == record
 

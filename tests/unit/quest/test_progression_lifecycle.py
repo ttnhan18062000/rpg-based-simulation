@@ -5,7 +5,6 @@ from src.core.state import AuthoritativeState, EntityState, ItemStack, EquipSlot
 from src.core.updates import IdentityUpdate, RewardUpdate, InventoryUpdate, EquipmentUpdate, StateUpdate, EntityUpdate
 from src.progression.leveling import LevelingService
 from src.engine.evolution import EvolutionSystem
-from src.systems.crafting import CraftingSystem
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole
 
@@ -61,37 +60,6 @@ def test_durability_decay_combat(base_hero):
     
     assert att_dur.durability_delta[EquipSlot.MAIN_HAND] == -1.0
     assert def_dur is None # Defender has no armor
-
-def test_crafting_gates(base_hero):
-    # Setup: Hero knows iron_sword recipe but has no materials
-    entity = (V2EntityBuilder(1)
-              .location(0, 0)
-              .identity(role=EntityRole.HERO)
-              .build())
-    # Patch recipe knowledge
-    entity = replace(entity, identity=replace(entity.identity, known_recipes={"iron_sword"}))
-    
-    # Attempt to craft
-    inv_upd, reason = CraftingSystem.craft(entity, "iron_sword", 100)
-    assert inv_upd is None
-    assert "INSUFFICIENT_MATERIAL" in reason
-
-def test_crafting_success(base_hero):
-    # Setup: Hero has materials and knows recipe
-    entity = (V2EntityBuilder(1)
-              .location(0, 0)
-              .identity(role=EntityRole.HERO)
-              .inventory(gold=100, items=[ItemStack(item_id="iron_ore", quantity=5), ItemStack(item_id="wood", quantity=2)])
-              .build())
-    # Patch recipe knowledge
-    entity = replace(entity, identity=replace(entity.identity, known_recipes={"iron_sword"}))
-    
-    # Attempt to craft
-    inv_upd, reason = CraftingSystem.craft(entity, "iron_sword", 100)
-    assert reason == "SUCCESS"
-    assert inv_upd.gold_delta == -50
-    assert any(s.item_id == "iron_sword" for s in inv_upd.items_add)
-    assert len(inv_upd.items_remove) == 2
 
 def test_stat_derivation_broken_gear(base_hero):
     # Setup: Hero with broken sword

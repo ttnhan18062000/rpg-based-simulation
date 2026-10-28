@@ -204,23 +204,11 @@ WIDER_EXCLUSIONS.update({
 # question (bind to an existing mechanism, or register a new one) is an RPG-domain call that has not
 # been made. Pinned so the residue stays visible and a new candidate cannot appear silently.
 WIDER_PENDING: Dict[str, str] = {
-    "src/progression/skills.py::SkillScalingService": (
-        "Same-named twin of src/engine/rpg_depth.py::SkillScalingService (bound to `derived_stats`). "
-        "Every caller imports the rpg_depth class; this one has no caller anywhere in src/ and 0 calls "
-        "at runtime. Not registered as a mechanism (rpg-feature-planning 2026-09-30): a dead-code "
-        "duplicate, filed as a defect (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS)."
-    ),
     "src/strategy/cognition_capacity.py::CapacityService": (
         "Same-named twin of src/strategy/capacity.py::CapacityService (bound to "
         "`cognition_capacity_fatigue`, the live one). `cognition_capacity_fatigue`'s own note records "
         "that this class's only caller is never called; 0 calls at runtime. Bind decision deferred "
         "with the defect (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS)."
-    ),
-    "src/world/perception/gate.py::PerceptionGate": (
-        "Wired (engine/behavior_consumers.py), 1872 runtime calls, sole production call is combat "
-        "targeting at engine/tactical.py:199. Proposed `sense_gated_detection` (entity), scoped to "
-        "combat-targeting gating. Held by rpg-feature-planning until their perception-contract "
-        "relabelling lands, so the two records do not contradict on the day they are written."
     ),
 }
 

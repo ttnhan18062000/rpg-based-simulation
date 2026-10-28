@@ -224,7 +224,7 @@ class CombatResolutionSystem:
         return CombatUpdate(
             damage_taken=damage,
             hp_delta=-damage,
-            attacker_id=attacker.id,
+            attacker_id=attacker.id, hit_tick_set=state.tick,
             is_opportunity_attack=is_opportunity_attack,
             alive_set=alive,
             outcome_kind=outcome,
@@ -299,7 +299,7 @@ class CombatResolutionSystem:
         return CombatUpdate(
             damage_taken=damage,
             hp_delta=-damage,
-            attacker_id=attacker.id,
+            attacker_id=attacker.id, hit_tick_set=state.tick,
             outcome_kind=outcome,
             alive_set=alive,
             equipment_upd=defender_equip_upd,
@@ -400,7 +400,7 @@ class CombatResolutionSystem:
         return CombatUpdate(
             damage_taken=total_damage,
             hp_delta=-total_damage,
-            attacker_id=valid_attackers[0].id,
+            attacker_id=valid_attackers[0].id, hit_tick_set=state.tick,
             is_opportunity_attack=is_opportunity_attack,
             alive_set=alive,
             outcome_kind=outcome,
@@ -451,7 +451,7 @@ class CombatResolutionSystem:
                 )
 
                 updates[defender.id] = CombatUpdate(
-                    attacker_id=attacker.id,
+                    attacker_id=attacker.id, hit_tick_set=state.tick,
                     damage_taken=primary_damage,
                     hp_delta=-primary_damage,
                     alive_set=not is_kill,
@@ -509,7 +509,7 @@ class CombatResolutionSystem:
                     )
 
                     updates[other_id] = CombatUpdate(
-                        attacker_id=attacker.id,
+                        attacker_id=attacker.id, hit_tick_set=state.tick,
                         damage_taken=v_damage,
                         hp_delta=-v_damage,
                         alive_set=not is_kill,

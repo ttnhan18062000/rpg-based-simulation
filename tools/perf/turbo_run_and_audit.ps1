@@ -14,7 +14,7 @@ Write-Host "--- Starting Turbo Simulation ($Ticks ticks) ---" -ForegroundColor C
 # Disable Kafka and Prometheus to maximize local speed and avoid timeouts
 $env:DISABLE_KAFKA = "1"
 $env:prometheus_multiproc_dir = "" 
-Start-Process python -ArgumentList "-m src cli --ticks $Ticks --entities 20 --workers 4" -RedirectStandardOutput $LogFile -NoNewWindow -Wait
+Start-Process python -ArgumentList "-m src cli --ticks $Ticks --workers 4" -RedirectStandardOutput $LogFile -NoNewWindow -Wait
 
 if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne $null) {
     Write-Host "[ERROR] Simulation crashed!" -ForegroundColor Red

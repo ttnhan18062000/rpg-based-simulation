@@ -269,6 +269,10 @@ mechanisms:
         **Note, added 2026-10-11 (TCK-20261011-A-HELD-MOVE-STANDS-FROZEN-AFTER-ARRIVING-IN-ITS-AREA, divergence 2.113):** a held move now ends on arriving in the area it was issued for: `LeashService.in_home_area` (a LEASH_RETURN ends inside the leash radius) and the REGROUP move's `arrival_radius` (set in `tactical.py`, read by `MovementCandidateSelector.arrived_in_area`).
 
         **Note, added 2026-10-11 (TCK-20261011-A-PANIC-RETREAT-TO-ITS-OWN-TILE-IS-HELD-WITH-NO-THREAT-IN-SIGHT, divergence 2.114):** the tactical panic gate (`emotion.is_fleeing`) now flees only with a perceived threat; low hit points, regional dread and a grudge feed the panic but no longer flee alone.
+        **Superseded in part, 2026-10-26 (owner decision 8, 2026-10-02):** `PerceptionGate` is now registered
+        as its own mechanism, `sense_gated_detection`. The reasoning above for keeping it out of
+        THIS entry's `implemented_by` still holds; only "NOT registered as its own mechanism" is
+        superseded.
   - id: combat_engagement
     layer: entity
     systems: [combat]
@@ -432,6 +436,7 @@ mechanisms:
         pipeline phase. Five real progress-advancing call sites confirm active use:
         `systems/social_systems/guilds.py`, `systems/world_systems/harvesting.py`,
         `systems/economy_systems/{chests,town_service}.py`, `systems/economy_systems/loot.py`.
+        **Corrected 2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF):** `guilds.py`, `town_service.py` and `loot.py` were dead classes with no caller and are deleted; the loot, inn and town-service channeling steps now run through `InteractionSystem.enforce()` itself, covered by `tests/unit/resource/test_loot_live_path.py`. Re-traced 2026-10-27 on the tree merged with origin/main 4a12f08f6: `chests.py` is also deleted (#757) and `harvesting.py`'s `HarvestSystem` has no caller in `src/` (the `resource_harvesting` entry is `orphan`), so none of the five named files is a live call site. What advances progress live: `CoreActions.execute_interact` (`src/engine/domain/core_actions.py`, `InteractionUpdate(progress_delta=1)`), reached by `action_router.py` for the `INTERACT` action that `src/engine/tactical.py` and `ActionIntentAdapter` (`src/engine/intent/action_intent.py`) emit, and `InteractionPhase` (`src/engine/pipeline_phases/interactions.py`, run from `src/engine/pipeline.py`), which fills the target and a positive delta before `InteractionSystem.enforce()`.
   - id: conversation
     layer: entity
     systems: [social]
@@ -1255,6 +1260,50 @@ mechanisms:
         cognition). Not a same-name-different-thing misbinding risk for this entry -- a genuinely
         distinct, separately-scoped mechanism that happens to share a directory name, already
         implicitly covered by `tactical_decision`'s own (also `contradicted`) verified block.
+        **2026-10-26:** `PerceptionGate` is now registered as `sense_gated_detection` (owner
+        decision 8). Its runtime reach is measured there; its effect is not.
+  - id: sense_gated_detection
+    layer: entity
+    systems: [cognition]
+    depends_on: []
+    state: done
+    implemented_by: [src/world/perception/gate.py::PerceptionGate]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-23"
+      note: >-
+        Introduced per owner decision 8 (2026-10-02, registered 2026-10-26) (docs/plans/systemic_world/owner_decision_memo.md
+        row 8), under the id this file's completeness check already proposed for it
+        (`WIDER_PENDING`, TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP; registered in
+        TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN). `PerceptionGate` is
+        the authoritative tactical sense-detection of one specific neighbour. Its scope is declared
+        distinct from, and not merged with, strategic situational awareness
+        (`SpatialQueryService.nearby_entities()`, see `goal_hierarchy`) and from the parked
+        `PerceptionModel` chain (`perception`, designed, not in effect). WHAT THIS BLOCK ASSERTS IS
+        REACH, NOT EFFECT. Reach, runtime: the positive-controlled call counter of
+        TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION (seed 42, PROD_SMALL, 1000 ticks)
+        counted `PerceptionGate.can_perceive` 1839 times on crowded_frontier, 528 on
+        frontier_living_world and 33 on quest_dense_frontier
+        (agent-working/stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/runtime_probe/output_whole_classes_*_1000ticks.jsonl).
+        Its production call sites, re-read at 3533fde71 (2026-10-26), are two, both through the
+        singleton in `src/engine/behavior_consumers.py`: `src/engine/appraisal.py::perceives`
+        (line 50; the shared perceived-hostile test the tactical pass and the movement rule use) and
+        `src/engine/tactical.py::_target_still_perceived` (line 90; a held pursuit target the
+        entity can no longer perceive is let go). The 2026-09-23 counts above were taken at
+        898c6f35a, when the only caller was the hostile-target loop, and predate #291, #333 and the
+        perception rework since, so they show that the gate is reached, not how often it is reached
+        today. Effect, UNMEASURED: the counter counts calls, not results. Nothing yet shows (1) how
+        often the gate returns perceived=False, i.e. whether it changes any targeting outcome or only
+        executes, or (2) how often it raises. Both call sites now catch only
+        `(AttributeError, KeyError, TypeError, ValueError, RuntimeError)` and return True
+        ("gate failure: permissive"), so a gate that always raises one of those cannot be told apart
+        from one that always perceives. Value-differential candidate for
+        TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP: count calls, rejections and
+        swallowed exceptions per world. `depends_on: []`: it reads catalog sense profiles and the
+        target's emitted signals, not another mechanism's output. `tactical_decision` is its caller
+        (execution order, header axis 2), not a functional dependent: with the permissive fallback,
+        targeting still produces a result without it.
   - id: emotion
     layer: entity
     systems: [cognition]
@@ -1356,8 +1405,23 @@ mechanisms:
     verified:
       instrument: code_trace
       verdict: observed
-      date: "2026-09-16"
+      date: "2026-10-26"
       note: >-
+        RETIRED (change-taxonomy kind Retire, docs/plans/mechanism_identity_and_change_taxonomy.md
+        §2: "entry -> gap, plus a verdict recording why").
+        TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN. This `gap` is
+        NOT an unbuilt capability awaiting work, unlike this file's other `gap` entries (`clan`,
+        `team_up`, ...). The doctrine/values bias on motivation was decided against and its code
+        deleted by TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT, disclosed in
+        docs/guidelines/intentional_divergences.md §2.53; `adventure_routing`'s live
+        personality_bias serves its role. Re-confirmed at 3533fde71 (2026-10-26): `src/domains/motivation/` holds
+        only `__init__.py` and `evaluator.py`, and `src/core/cognition.py::MotivationModel` carries
+        no doctrine/values field. Retired, not renamed: the module's one surviving class,
+        `RoleFitEvaluator`, is a different capability (gear/skill/quest/party-role fit), so moving it
+        under this id would bind an unrelated mechanism to a dead one's history. It is registered
+        separately as `role_fit_preference`. The id is kept so the history stays findable; a future
+        doctrine/values feature is an Introduce (a new entry), not a revival of this one.
+        ---- earlier record (2026-09-16, edges note 2026-09-20), kept ----
         Found while tracing dependency edges for TCK-20260916-MECHANISM-DEPENDENCY-GRAPH-
         POPULATION, not this ticket's own target. src/domains/motivation/__init__.py's own
         docstring: DoctrineResolver and MotivationBiasService were DELETED
@@ -1383,6 +1447,38 @@ mechanisms:
         `docs/plans/mechanism_identity_and_change_taxonomy.md` §3. Removed rather than left
         unaudited on a `gap`-state mechanism whose own dependency claims can never be verified now
         that its code is gone.
+  - id: role_fit_preference
+    layer: entity
+    systems: [cognition]
+    depends_on: []
+    state: orphan
+    implemented_by:
+      - src/domains/motivation/evaluator.py::RoleFitEvaluator
+      - src/core/cognition.py::RoleFitPreference
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-10-26"
+      note: >-
+        Introduced 2026-10-26 to disposition `src/domains/motivation/`, one of the 25 core-tier
+        modules that `mechanism_registry_completeness_check` reported unbound (memo row 7 (b), 2026-10-02). It
+        is a per-entity preference for gear, skill, quest and party-role tags (`RoleFitPreference`,
+        held as `MotivationModel.role_fit`) plus its scorer (`RoleFitEvaluator`, "Phase 14"). Bound,
+        not excluded: `EXCLUSIONS` is reserved for confirmed infrastructure, and this is a gameplay
+        capability someone intended. Orphan, backing (a) static and decisive at 3533fde71 (2026-10-26). Nothing in
+        `src/` outside `src/domains/motivation/` imports or names `RoleFitEvaluator`; its only
+        consumer is `tests/unit/domains/motivation/test_phase14_role_fit_evaluator.py`. Nothing in
+        `src/` writes or reads `MotivationModel.role_fit` beyond its own definition and
+        `to_canonical_dict()`. With no importer there is no runtime path to probe, so this absence
+        verdict does not need the runtime corroboration that
+        TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE added for reachable-but-
+        unconstructed classes. The `role_fit` / `role_fit_score` locals in
+        `src/domains/cooperation/providers.py` are an unrelated literal scoring, not a consumer.
+        `mechanism_state_caller_check` reports `orphan_with_callers` (2 files) for this entry. Both
+        are definition-adjacent, not calls: `src/domains/motivation/__init__.py` re-exports
+        `RoleFitEvaluator` in `__all__`, and `evaluator.py` imports `RoleFitPreference` for its own
+        type annotations. That is the checker's known name-match shape, not a contradiction of
+        `orphan`. Whether to Wire it or Retire it is feature work, frozen by memo row 7.
   - id: commitment_betrayal
     layer: entity
     systems: [social]
@@ -1548,6 +1644,7 @@ mechanisms:
         verified note, multiple real non-test callers including
         `src/systems/social_systems/guilds.py`'s `process_rumor`) remains accurate and is preserved
         in spirit; this note documents the stronger, runtime-confirmed evidence.
+        **Corrected 2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF):** `guilds.py` is deleted; `process_rumor` now lives only in `src/systems/strategic_systems/belief.py`.
         **Re-audited 2026-09-20** against `mechanic_verification_scenarios_proposal.md` §5 item 5
         (added after `goal_hierarchy`'s own scenario surfaced a vacuous-negative-arm risk elsewhere
         in this same batch): this entry's negative arm (`state.tick=10`) is NOT vacuous, confirmed
@@ -1879,6 +1976,7 @@ mechanisms:
         `ON` (`feature_flags.py`), so effectively live, not flag-suppressed. A sibling class,
         `GuildIntelSystem` (`src/systems/social_systems/guilds.py`), was checked and found to have
         zero real callers anywhere -- not bound here, flagged as its own smaller finding.
+        **Resolved 2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF):** `GuildIntelSystem` and `guilds.py` are deleted. Guild intel is designed, not in effect (parity TOWN-042 `unsupported`).
 
   # ── Faction layer (8, atlas `faction-layer`) ────────────────────────────────────────────────
 
@@ -1934,6 +2032,7 @@ mechanisms:
       - src/domains/faction/diplomatic_state_machine.py::compute_common_enemy_pairs
       - src/systems/social_systems/contracts.py::ContractService
       - src/systems/social_systems/appraisal.py::SocialAppraisalSystem
+      - src/systems/social_systems/contracts.py::SocialContractSystem
     verified:
       instrument: code_trace
       verdict: observed
@@ -1948,6 +2047,14 @@ mechanisms:
         is the "diplomatic_transitions" phase (Phase 8d), distinct from `FactionDecisionPhase`
         (`country_lifecycle`'s own binding below), confirmed by direct code read, not assumed from
         the similar naming.
+        **Added 2026-10-26 (TCK-20261007-DEAD-SYSTEMS-MODULES-WITH-NO-CALLER-BLOCK-THE-MECHANISM-COMPLETENESS-GATE):**
+        `SocialContractSystem` (the contract status-transition machine, same file as `ContractService`) is
+        cited here because that ticket's reachability check found it LIVE, not dead as the ticket assumed:
+        `ContractService.accept_contract` and `ContractService.resolve_contract_outcome` call
+        `SocialContractSystem.transition_contract` (`contracts.py:177`, `:203`), and `accept_contract` is
+        called from `src/domains/cooperation/phase.py:179`. Static trace at 3533fde71; not a runtime
+        measurement, and this block's instrument and verdict above are unchanged. Its top-level shim
+        `src/systems/social_contract.py` stays.
   - id: reputation
     layer: faction
     systems: [faction]
@@ -2163,10 +2270,50 @@ mechanisms:
         - `src/world/regional_sovereignty.py::RegionalSovereigntyService` (regional taxation and
           conquest debuffs) is still a zero-caller `orphan`, distinct from this mechanism. It is
           tracked by `TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS` and parked
-          as dormant under owner decision 7.
+          as dormant under owner decision 7. Registered as its own entry,
+          `regional_levy_and_conquest_debuffs`, on 2026-10-26.
         - The territory views' OBSERVED OUTCOME axis is a hardcoded constant
           (`generate_territory_control_view.py:74`). It cannot reflect this runtime evidence until
           the tooling reads it. That is a decision-7 foundation finding.
+  - id: regional_levy_and_conquest_debuffs
+    layer: region
+    systems: [world, faction]
+    depends_on: []
+    state: orphan
+    implemented_by: [src/world/regional_sovereignty.py::RegionalSovereigntyService]
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-10-26"
+      note: >-
+        Registered 2026-10-26 by TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS so
+        the orphan finding lives on an entry of its own, not only in `regional_sovereignty`'s prose.
+        A periodic levy on heroes (2.0 gold) and functional buildings (10.0 gold) every 100 ticks, and a
+        conquered-region combat debuff (atk/def x0.8, speed x0.9, gated on a monster-horde owner).
+        Orphan, backing (a) static and decisive at 3533fde71: `RegionalSovereigntyService`,
+        `process_taxation` and `apply_sovereignty_debuffs` are named nowhere in `src/`, `tests/` or
+        `tools/` outside their own definitions. The only other mention of the file is an allowlist
+        string in `tests/architecture/test_legacy_enum_usage_boundaries.py:65`, not a call, and
+        `src/ai/goals/region_stabilization_scorer.py:28` only lists the file in a comment. With no importer
+        there is no runtime path to probe, so this absence verdict does not need the runtime corroboration
+        TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE added for reachable-but-unconstructed
+        classes. `docs/audits/unreachable_code_inventory.{json,csv}` lists both methods as unreached.
+        **Disposition: not to be wired as written.** (1) The live tax is a different rule. Owner decisions 51
+        and 58 (EXCH-02, amendment of 2026-10-09; `docs/world_rules/material-economy/economy-exchange.md`) say
+        a treasury is paid a share of a sale or a wage and that "a periodic levy on everyone present is not a
+        tax this world uses"; the per-head levy was removed (#536, divergence 2.108) and the share is
+        `src/engine/place_tax.py` through `src/engine/shop_sale.py`. This class's levy is the retired shape.
+        (2) The conquered-region penalty has a live, different implementation:
+        `src/engine/town_resolution.py` (`region.suppression_active`: non-owner entities take atk/def -20% and
+        speed -10%, wired at `src/engine/pipeline.py:339`). This class's `apply_sovereignty_debuffs` also
+        returns an `EntityUpdate` with no fields set, so it would change nothing if it were called. Wiring would
+        therefore either revive a retired rule or duplicate a live one: a behaviour change, not a fix, and out
+        of reach until after the D73 step (roadmap §12.5). If a periodic levy or a monster-held debuff is ever wanted it is a new,
+        declared feature that replaces this class; whether to delete the class is a separate decision.
+        `docs/world/regional_sovereignty_runtime_contract.md` ("Taxation -- `regional_sovereignty.py`", every
+        100 ticks) attributed taxation to this file and was wrong on both counts; it was corrected in the same
+        ticket (its Taxation and Sovereignty-debuffs sections now state today's rule and keep the orphan's numbers
+        as a record, and its regression-test list no longer cites test_long_run_stability.py for taxation).
   - id: demographic_cohort_cycle
     layer: region
     systems: [world]
@@ -2420,7 +2567,10 @@ mechanisms:
         orchestrator.py:759). Runtime evidence: all 24 composition worlds re-resolve
         byte-identically against their committed snapshots
         (tests/integration/worldassembly/test_resolved_snapshot_freshness.py, run 2026-10-05,
-        pass; in CI since #335). ENFORCED (raises): duplicate region, population, resource,
+        pass; in CI since #335). ENFORCED (raises): a module listed twice in `module_refs`, before any merge
+        (`require_one_ref_per_module`, `src/worldassembly/schema.py`, called from the resolver); ASM-COMP-001
+        checks enabled refs only (`missing_module_issues`, same file), so an `enabled: false` ref is not a
+        missing module; duplicate region, population, resource,
         building and quest ids across modules (resolver.py:358-359, 397, 467, 503, 534, 560, 586,
         634; and again in the `WorldSpec` validator, schema.py:313-348); a missing module
         (:298); `requires` cycles (utils.py:41-42); spawn/resource/building region references,
@@ -2429,17 +2579,13 @@ mechanisms:
         ref, prefix `<ns>_`) rewrites region, place, population, resource and building ids and
         their region references (:347, 465-584, 805-905), but NOT faction ids, place
         `owner_faction_id`, or quest ids. NOT ENFORCED, silently tolerated: faction ids merge
-        first-wins (:382); a module listed twice in `module_refs` collapses to the last ref
-        (:300-301), so composing one module twice under two namespaces (the intent stated at
-        :813-815) cannot work; a dangling `requires` is ignored (utils.py:18); the `order` field is
+        first-wins (:382); a dangling `requires` is ignored (utils.py:18); the `order` field is
         overridden by alphabetical topological sort (utils.py:26, 39). The duplicate-`provides`
         check ("Rule 5") exists only in the generator (generator.py:522-534), not here. Region
-        OVERLAP is not checked anywhere; see `world_compilation`. Two UNCONFIRMED candidate
-        defects, not measured: (1) biome provenance strips a namespace with `split("_", 1)`
+        OVERLAP is not checked anywhere; see `world_compilation`. One UNCONFIRMED candidate
+        defect, not measured: biome provenance strips a namespace with `split("_", 1)`
         (:366-367), so a namespace containing `_` (the generator's module-id namespaces) would
-        look up the wrong catalog region; (2) ASM-COMP-001 (:131-138) loops over all
-        `module_refs` while `graph_map` holds only enabled ones, so an `enabled: false` ref would
-        raise a false "not found" (no world uses `enabled: false` today).
+        look up the wrong catalog region.
         **Update 2026-10-05 (LOC-08, owner decision 13; DEV-012, SUB-397):** region OVERLAP is now
         resolved at assembly. `src/worldassembly/region_precedence.py::order_regions` (called from
         `resolver.py` after the module merge) turns module and composition `region_precedence`
@@ -2556,8 +2702,10 @@ mechanisms:
         in id order, later colliders namespaced with their own module id, :396-429). ENFORCED:
         the duplicate-`provides` check (:522-534); a collision left after namespacing raises
         (:424). NOT ENFORCED: building and quest id collisions are not pre-namespaced (they surface
-        as resolver errors); a missing `requires` target is skipped silently (:513-515). Dead
-        code inside: the legacy `WorldProceduralGenerator` (:59-370) has no production caller.
+        as resolver errors); a missing `requires` target is skipped silently (:513-515). Legacy
+        path kept on purpose: `WorldProceduralGenerator` (:59-370) has no production caller and is
+        reached only from tests/unit/worldgeneration/test_generator.py; it is preserved per
+        docs/world/generator_contract.md (WORLD-GEN-003/004, SUBSTRATE-NEW-002).
         Before #335 this stage authored compositions that could not assemble, invisible because
         nothing resolved its output.
   - id: gods_pantheon_blessings
@@ -2630,6 +2778,7 @@ mechanisms:
         binding does not exist). Bound to the same class rather than left unbound, since the real
         live code is directly confirmed and cited precisely; flagged here as a judgement call
         because the binding cannot distinguish this mechanism's own branch from its siblings'.
+        **Resolved 2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF):** the uncalled `CraftingSystem` is deleted; the craft gates are proved live in `tests/integration/economy/test_crafting_live_path.py` (parity PROG-097 is `divergent`).
   # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY): `buildings`
   # (physical structures -- placement, HP, occupancy) and `town_services` (shop/inn/blacksmith/
   # guild transactions the buildings host) are two structurally separate concerns --

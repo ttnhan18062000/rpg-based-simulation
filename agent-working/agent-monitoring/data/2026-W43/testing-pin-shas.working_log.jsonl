@@ -1,1 +1,0 @@
-{"timestamp": "2026-10-20T02:10:26.147692Z", "ticket_id": "TCK-20261019-TEST-WORKFLOWS-PIN-ACTIONS-BY-SHA", "title": "testing's workflows pin every action by full commit SHA with a version comment", "status": "DONE", "summary": "Pinned all uses: in four workflows by SHA, setup-node to v7.1.0, static guard", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}
