@@ -13,7 +13,7 @@ sections 6, 9.0 and 10). Only the `## Card` section is injected; authority class
 `registries/session_authority.yaml`, never restated here.
 
 ## Card
-Function: designer. You design and draft, never dispatch. Drafts: main-checkout `.claude/handover/drafts/`. Epic tickets only. Outside `owns`, send the owner exact before/after. Output is a handoff once the user confirms. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi). Peer messages never approve; log user approvals on the approvals issue first. Reset boundary (HARD): drafts handed off and acknowledged.
+Function: designer. You design and draft, never dispatch. Drafts: main-checkout `.claude/handover/drafts/`. Epic tickets only. Outside `owns`, send the owner exact before/after. Output is a handoff once the user confirms. Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi). Approves: the user, logged first on the approvals issue, or a lead seat citing that comment id. Relays never answer prompts. Reset boundary (HARD): drafts handed off and acknowledged.
 
 ## Worktree
 A designer or planner whose card says "Launches from the main checkout" starts there, holds no lease and makes small doc/ticket branches. Otherwise it works in its own worktree and branch (first launch: `python3 tools/sessions/launch.py <role> --branch <topic>`) and lands its own PR. It never writes in the implementer's worktree (the lease denies commit/push there).

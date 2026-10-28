@@ -7876,6 +7876,21 @@
   tags:
   - benchmarking
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261028-ROLE-CARDS-LEAD-RELAYED-APPROVAL-WORDING.md
+  ticket_id: TCK-20261028-ROLE-CARDS-LEAD-RELAYED-APPROVAL-WORDING
+  title: 'Role cards: a lead seat citing the owner''s approvals-issue comment id carries
+    the approval; relays never answer prompts'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-28'
+  related_code_areas:
+  - tools/sessions/generate_agents.py, tools/sessions/card.py (run, unchanged)
+  - .claude/agents/session-*.md (generated)
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md
   ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR
   title: A REQUEST_CRAFT intent with an unknown or missing recipe id raises KeyError
