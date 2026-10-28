@@ -31,7 +31,7 @@ known:
       - {world: urban_political, seed: 44, entity_id: 28}
     note: "N14, v1 known red, owner cutoff 2026-10-21; exception accepted by the owner on issue #715 (comment 6337993346). Owns EXACTLY urban_political/44 merchant 28 (starved t3140). Any other V3 fail, or another entity on this (world, seed), is a regression. Disclosure: v1_disclosure.md M5."
   - match: "V3"
-    ticket: TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE
+    ticket: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
     owner: rpg-planner
     added_on: "2026-10-22"
     expires_on: "2026-11-05"
@@ -39,4 +39,4 @@ known:
     cases:
       - {world: crowded_frontier, seed: 46, entity_id: 38}
       - {world: frontier_living_world, seed: 44, entity_id: 2}
-    note: "N15, v1 known reds, owner cutoff 2026-10-21; exception accepted by the owner on issue #715 (comment 6337993346). Owns EXACTLY crowded_frontier/46 raider 38 (starved t3778) and frontier_living_world/44 worker 2 (starved t3736). Any other V3 fail, or another entity on these (world, seed) pairs, is a regression. Disclosure: v1_disclosure.md M5."
+    note: "N15, v1 known reds, owner cutoff 2026-10-21; exception accepted by the owner on issue #715 (comment 6337993346). Owns EXACTLY crowded_frontier/46 raider 38 (starved t3778) and frontier_living_world/44 worker 2 (starved t3736). Any other V3 fail, or another entity on these (world, seed) pairs, is a regression. Disclosure: v1_disclosure.md M5. Owner ticket moved 2026-10-28 from TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE (closed with #769); whether steps B/A cleared these is unmeasured on the gate."

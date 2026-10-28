@@ -161,12 +161,21 @@ def test_invariant_no_step_with_an_engaged_adjacent_hostile_on_a_tick_without_a_
 
 
 def test_invariant_no_entity_stays_blocked_by_the_rule_for_more_than_one_brain_cadence_plus_one():
-    """The rule must not freeze anyone: a blocked held move is released to the brain, an idle entity's brain decides within its
-    cadence (``strategic_intelligence`` 10). Pinned run (urban_political, seed 45, 600 ticks): the longest run of consecutive ticks
-    one entity is blocked is at most 11."""
+    """The bound is on decision latency, not on staying put. CONFLICT-04 makes standing your ground correct after a decision not to leave. 2.89 measured idle runs of up to
+    19/18/14 ticks, against a cadence of 10, which only a decision-relative measure reads correctly.
+
+    The rule must not freeze anyone: a blocked held move is released to the brain, an idle entity's brain decides within its cadence (``strategic_intelligence`` 10). Pinned run
+    (urban_political, seed 45, 600 ticks): the longest run of consecutive blocked ticks in which the entity made NO decision is at most 11. A decision is a brain
+    decision (the strategic pass evaluated the entity) or a tactical decision with a task update. The raw longest run is reported, not asserted, with what each decision inside a
+    blocked run chose (designer ruling, 2026-10-26: a measure fix, not a re-pin)."""
+    from src.systems.strategic_systems.intelligence import StrategicIntelligenceSystem
+
     state = compile_world("urban_political", 45)
     blocked: Dict[int, List[int]] = {}
+    decisions: Dict[int, Dict[int, str]] = {}
     orig = MovementCandidateSelector.engaged_adjacent_hostile
+    orig_tactical = TacticalDecisionSystem.evaluate_entity_intent
+    orig_brain = StrategicIntelligenceSystem.evaluate_strategic_intent
     kernel_ref: Dict[str, Kernel] = {}
 
     def spy(entity, entities, index=None):
@@ -178,7 +187,20 @@ def test_invariant_no_entity_stays_blocked_by_the_rule_for_more_than_one_brain_c
                 ticks.append(t)
         return r
 
+    def tactical(st, entity, *a, **k):
+        r = orig_tactical(st, entity, *a, **k)
+        if r is not None and r.task is not None and not r.task.is_noop():
+            decisions.setdefault(entity.id, {})[st.tick] = f"tactical:{r.task.work_kind_set}:{(r.task.payload_set or {}).get('action') or (r.task.payload_set or {}).get('reason')}"
+        return r
+
+    def brain(st, entity, *a, **k):
+        r = orig_brain(st, entity, *a, **k)
+        decisions.setdefault(entity.id, {}).setdefault(st.tick, "brain")
+        return r
+
     MovementCandidateSelector.engaged_adjacent_hostile = staticmethod(spy)
+    TacticalDecisionSystem.evaluate_entity_intent = staticmethod(tactical)
+    StrategicIntelligenceSystem.evaluate_strategic_intent = staticmethod(brain)
     kernel = _kernel(state)
     kernel_ref["k"] = kernel
     try:
@@ -187,12 +209,19 @@ def test_invariant_no_entity_stays_blocked_by_the_rule_for_more_than_one_brain_c
     finally:
         kernel.shutdown()
         MovementCandidateSelector.engaged_adjacent_hostile = staticmethod(orig)
-    longest = 0
-    for ticks in blocked.values():
-        run = best = 1
+        TacticalDecisionSystem.evaluate_entity_intent = staticmethod(orig_tactical)
+        StrategicIntelligenceSystem.evaluate_strategic_intent = staticmethod(orig_brain)
+    raw_longest = longest = 0
+    raw_detail: Dict[str, Any] = {}
+    for eid, ticks in blocked.items():
+        run = latency = 1
         for a, b in zip(ticks, ticks[1:]):
-            run = run + 1 if b == a + 1 else 1
-            best = max(best, run)
-        longest = max(longest, best)
+            consecutive = b == a + 1
+            run = run + 1 if consecutive else 1
+            latency = (1 if b in decisions.get(eid, {}) else latency + 1) if consecutive else 1
+            if run > raw_longest:
+                raw_longest, raw_detail = run, {"entity": eid, "ends": b, "decisions": {t: d for t, d in decisions.get(eid, {}).items() if b - run < t <= b}}
+            longest = max(longest, latency)
+    print(f"CONFLICT-04 invariant: longest blocked run with no decision {longest}; raw longest run {raw_longest}: {raw_detail}")
     assert blocked, "the pinned run never exercised the rule"
-    assert longest <= 11, f"an entity stayed blocked {longest} consecutive ticks (cadence 10 + 1)"
+    assert longest <= 11, f"an entity stayed blocked {longest} consecutive ticks with no decision of its own (cadence 10 + 1); raw longest run {raw_longest}: {raw_detail}"
