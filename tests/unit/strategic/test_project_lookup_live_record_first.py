@@ -293,13 +293,47 @@ def test_an_active_matching_record_is_made_current_when_the_current_project_is_d
     assert update.current_project_id_set == "orphan"
 
 
-def test_a_project_kind_orphan_that_shares_a_goal_kinds_string_keeps_its_stored_raw_score():
-    """ProjectKind.HARVESTING compares equal to GoalKind.HARVESTING; its stored score is on the 2.9 scale and is not overwritten with a utility."""
+@pytest.mark.parametrize("name", ["HARVESTING", "SOCIAL"])
+def test_a_goal_kind_never_matches_a_live_project_kind_record_of_the_same_string(name):
+    """GoalKind and ProjectKind are str enums that compare equal on HARVESTING and SOCIAL. Kind identity is class-strict: the lookup finds no record, the ProjectKind
+    record is untouched, and (this class being strict, there is no orphan on the 2.9 scale to protect) the candidate goes through the gate as a kind with no live record."""
+    from src.core.strategic import ProjectKind, same_kind, same_kind_record
+    project_kind, goal_kind = getattr(ProjectKind, name), getattr(GoalKind, name)
+    assert project_kind == goal_kind
+    record = _project("route", ProjectStatus.SUSPENDED, kind=project_kind, created=3, score=1.7)
+    assert not same_kind(record, goal_kind)
+    assert same_kind(record, project_kind)
+    assert same_kind_record({"route": record}, goal_kind) is None
+    assert same_kind_record({"route": record}, project_kind) is record
+
+
+def test_a_goal_kind_record_still_matches_a_goal_kind_and_a_raw_string_kind_stays_on_the_goal_side():
+    from src.core.strategic import same_kind
+    assert same_kind(_project("a", ProjectStatus.ACTIVE, kind=GoalKind.HARVESTING), GoalKind.HARVESTING)
+    assert same_kind(_project("b", ProjectStatus.ACTIVE, kind="travel"), "travel")
+
+
+@pytest.mark.parametrize("name", ["HARVESTING", "SOCIAL"])
+def test_a_projects_kind_keeps_its_enum_class_through_every_path_that_rebuilds_it(name):
+    """The class-strict kind match only works if the class survives: the checkpoint blob (pickle), dataclasses.replace, the canonical dict (hash input) and the
+    StrategicPatch apply path (merge_dict) all keep a GoalKind-created and a ProjectKind-created project as they were. There is no dict-to-project loader in src/."""
     from src.core.strategic import ProjectKind
-    assert ProjectKind.HARVESTING == GoalKind.HARVESTING
-    other = _project("other", ProjectStatus.ACTIVE, target="x", kind="travel", score=0.5, created=1)
-    orphan = _project("orphan", ProjectStatus.ACTIVE, kind=ProjectKind.HARVESTING, created=3, score=1.7)
-    entity = _entity([other, orphan], current="other")
-    from src.systems.strategic_systems import intelligence as module
-    candidate = module.same_kind_record(entity.strategic.projects, GoalKind.HARVESTING, "other")
-    assert candidate is orphan and isinstance(candidate.kind, ProjectKind)
+    from src.core.updates import StrategicUpdate
+    from src.engine.patches import StrategicPatch
+    goal_project = _project("g", ProjectStatus.ACTIVE, kind=getattr(GoalKind, name), created=1)
+    route_project = _project("p", ProjectStatus.SUSPENDED, kind=getattr(ProjectKind, name), created=2)
+    entity = _entity([goal_project, route_project])
+    state = _state(entity)
+
+    def classes(projects):
+        return {pid: type(p.kind) for pid, p in projects.items()}
+    expected = {"g": GoalKind, "p": ProjectKind}
+    assert classes(entity.strategic.projects) == expected
+    restored = pickle.loads(pickle.dumps(state, protocol=pickle.HIGHEST_PROTOCOL))
+    assert classes(restored.entities[1].strategic.projects) == expected
+    assert classes({pid: replace(p, score=9.0) for pid, p in entity.strategic.projects.items()}) == expected
+    canonical = entity.to_canonical_dict()["strategic"]["projects"]
+    assert {pid: type(v["kind"]) for pid, v in canonical.items()} == expected
+    changes = {}
+    StrategicPatch(entity_id=1, strategic=StrategicUpdate(projects_add_or_update=[replace(goal_project, score=3.0), replace(route_project, score=4.0)])).apply(entity, changes)
+    assert classes(changes["strategic"].projects) == expected

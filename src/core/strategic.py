@@ -361,16 +361,24 @@ def live_projects(projects: Mapping[str, ProjectState]) -> Dict[str, ProjectStat
     return {pid: p for pid, p in projects.items() if is_live_project(p)}
 
 
+def same_kind(project: ProjectState, kind: Any) -> bool:
+    """True when the project's kind is the goal's kind: the same enum class (a ProjectKind or not) AND the same value. GoalKind and ProjectKind are both str enums that share
+    HARVESTING and SOCIAL and compare equal on them; that equality is an accident, and a GoalKind goal must never continue, resume or end an adventure-route or contract
+    project. The class split is the one ``_score_scale_max`` already reads (a ProjectKind is on the 2.9 scale, anything else on the utility scale)."""
+    return isinstance(project.kind, ProjectKind) == isinstance(kind, ProjectKind) and project.kind == kind
+
+
 def same_kind_record(projects: Mapping[str, ProjectState], kind: Any, current_project_id: Optional[str] = None) -> Optional[ProjectState]:
     """The live record a goal of ``kind`` continues, resumes or supersedes; dict order plays no part (TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED).
 
+    Kind identity is ``same_kind`` (same enum class and value).
     1. the current project when it is of the kind (and live);
     2. else the newest live record of the kind by ``created_tick`` (a tie goes to the larger id), an ACTIVE one before a SUSPENDED one;
     3. else None: a COMPLETED or ABANDONED record is a record, not an effort in progress (2.77), and takes no part."""
     current = projects.get(current_project_id) if current_project_id else None
-    if current is not None and current.kind == kind and is_live_project(current):
+    if current is not None and same_kind(current, kind) and is_live_project(current):
         return current
-    live = [p for p in projects.values() if p.kind == kind and is_live_project(p)]
+    live = [p for p in projects.values() if same_kind(p, kind) and is_live_project(p)]
     if not live:
         return None
     return max(live, key=lambda p: (p.status == ProjectStatus.ACTIVE, p.created_tick, p.id))
