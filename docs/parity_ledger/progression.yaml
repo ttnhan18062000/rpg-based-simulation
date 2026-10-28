@@ -1549,14 +1549,14 @@
     mismatch this entry previously disclosed: the predicate now reads the same registry
     (src/core/registries.py) that both known_recipes population (blacksmith.py) and
     live crafting execution (action_intent.py) read, so a real, organically-learned
-    recipe id genuinely matches on all three sides. Two narrower gaps remain, both
-    explicitly out of scope for this ticket and separately disclosed: (1) src/core/recipes.py::RecipeRegistry
-    (the legacy 3-entry registry this predicate read before) still has zero production
-    callers -- left undeleted as a disclosed follow-up, not a defect of this entry;
-    (2) src/engine/blacksmith.py::BlacksmithSystem.RECIPES''s own 14-entry crafting-execution
-    branch (craft_target-gated) is confirmed separately dead in production (no live
-    AI ever sets craft_target) and was left untouched -- this entry is about known_recipes
-    population and material-gap detection reachability, not that branch.'
+    recipe id genuinely matches on all three sides. The legacy src/core/recipes.py::RecipeRegistry
+    (the 3-entry registry this predicate read before) and its only reader, src/town/blacksmith.py,
+    had zero production callers and were deleted by TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED.
+    One narrower gap remains, explicitly out of scope and separately disclosed: src/engine/blacksmith.py::BlacksmithSystem.RECIPES''s
+    own 14-entry crafting-execution branch (craft_target-gated) is confirmed separately
+    dead in production (no live AI ever sets craft_target) and was left untouched
+    -- this entry is about known_recipes population and material-gap detection reachability,
+    not that branch.'
   proof_type: regression
 - id: PROG-124
   text: "Entity aging/lifespan migrated to fantasy-year units, implementing TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY's\

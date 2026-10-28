@@ -221,6 +221,8 @@ Full data: `docs/audits/unreachable_code_inventory.json` / `.csv` (428 rows: 362
 66 excluded, one row per definition, with `tier`, `kind`, `class`, `name`, `file`, `line`,
 `decorators`, `exclusion`, `has_test_coverage` columns).
 
+Deleted since this audit (the data files are a point-in-time record and are not edited): `src/town/blacksmith.py::BlacksmithAction` (csv row 123) and `src/core/recipes.py::RecipeRegistry.get_all` (csv row 182), with both files, by `TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED`.
+
 **Cluster/singleton split**: 263 of the 362 real candidates fall into a same-file cluster of 2+
 (79 files); 99 are singletons (the only real candidate in their own file). The four clusters above
 were selected for deep writeup because they were independently, individually verified beyond the
