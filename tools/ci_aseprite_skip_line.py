@@ -20,7 +20,8 @@ SKIP_MARKER = "requires aseprite and bwrap"
 def count_aseprite_skips(path: Path) -> int | None:
     """Skipped `needs_aseprite` tests in a JUnit XML file; None when it is missing or unparseable."""
     try:
-        root = ET.parse(path).getroot()
+        # Parses this repo's own pytest junit XML; no untrusted input.
+        root = ET.parse(path).getroot()  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
     except (ET.ParseError, OSError):
         return None
     return sum(

@@ -16,7 +16,6 @@ def test_cli_basic_execution():
     cmd = [
         sys.executable, "-m", "src", "cli",
         "--seed", "123",
-        "--entities", "5",
         "--ticks", "20",
         "--replay", replay_dir
     ]
@@ -56,7 +55,6 @@ def test_cli_determinism():
         cmd = [
             sys.executable, "-m", "src", "cli",
             "--seed", str(seed),
-            "--entities", "5",
             "--ticks", "10"
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
@@ -72,3 +70,13 @@ def test_cli_determinism():
     assert hash1 is not None
     assert hash1 == hash2
     assert hash1 != hash3
+
+
+def test_cli_rejects_the_entities_flag():
+    """`cli` no longer has an `--entities` flag (it was parsed and never read; #617), so passing it fails as an unknown argument."""
+    result = subprocess.run(
+        [sys.executable, "-m", "src", "cli", "--entities", "5", "--ticks", "1"],
+        capture_output=True, text=True, timeout=90,
+    )
+    assert result.returncode == 2
+    assert "unrecognized arguments: --entities" in result.stderr
