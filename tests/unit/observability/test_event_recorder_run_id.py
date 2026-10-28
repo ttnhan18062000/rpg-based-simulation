@@ -13,7 +13,8 @@ def _ev() -> SimulationEvent:
 
 
 def _run_ids(run_dir: str, run_id) -> list[str]:
-    recorder = EventRecorder(run_dir=run_dir, enabled=True, run_id=run_id)
+    recorder = EventRecorder(run_dir=run_dir, enabled=True)
+    recorder.run_id = run_id
     recorder.record(_ev())
     recorder.shutdown()
     return [json.loads(line)["run_id"] for line in Path(recorder.filepath).read_text(encoding="utf-8").splitlines()]
