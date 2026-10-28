@@ -16,7 +16,7 @@ Shape follows rpg-planner (u24)'s ruling of 2026-10-29 (word for word in the tic
 
 How the evidence was gathered: four read-only Explore subagents proposed leads from the code and tests; every lead below was re-checked by me with the command shown (`git grep` over src and tools, `git log -S/-G` for history, and every cited test run and passing). A subagent's "no longer exists" was treated as a lead, not as evidence. Where `git log -S/-G` finds no commit at all, the entry is `missing`, not `unsupported`, because there is no removal commit to name. The commit 6e5c28992 is the V2 rewrite ("Implement resource v2 enhanced phases", 2026-04-26): a bulk rewrite, not a per-feature decision, so rpg-planner may prefer `missing` over `unsupported` for the entries that rely only on it.
 
-Counts: 24 unsupported, 8 missing, 20 add-test candidates (52 entries). PR A cited 34 entries (below), which with these 52 are all 86 entries that had no test_path.
+Counts: 24 unsupported, 8 missing, 20 add-test candidates (52 entries as drafted; 055 now that 073/082/083 move to C). PR A cites 31 entries (section D) after rpg-planner's NOTE 4 moved WORLD-073, 082 and 083 to C (new tests in the sibling); with the 52 below plus those 3 that is 55 entries for the sibling and 31 in PR A, all 86 that had no test_path.
 
 ## A. unsupported (retired; boundary names the removal commit)
 
@@ -87,7 +87,7 @@ Counts: 24 unsupported, 8 missing, 20 add-test candidates (52 entries). PR A cit
 
 WORLD-022 and WORLD-002 are flagged inside the table: 022 cannot be confirmed by code (propose `missing`), 002's behaviour exists in route search (citation may suffice).
 
-## D. PR A: cited entries (34, test_path only, status unchanged, every test run and passing)
+## D. PR A: cited entries (31, test_path only, status unchanged, every test run and passing)
 
 | id | priority | status | test_path |
 |---|---|---|---|
@@ -111,12 +111,9 @@ WORLD-022 and WORLD-002 are flagged inside the table: 022 cannot be confirmed by
 | WORLD-068 | P0 | verified | tests/certification/test_world_compile_determinism.py::test_compiler_seeding_determinism |
 | WORLD-069 | P0 | verified | tests/unit/world/test_region_threat_classifier.py::test_classification_deterministic |
 | WORLD-072 | P0 | verified | tests/unit/world/test_spawn_monster_catalog_faction.py::test_every_mapped_faction_exists_in_the_catalog, tests/unit/world/test_spawn_monster_catalog_faction.py::test_spawned_monster_carries_its_catalog_faction_and_endurance |
-| WORLD-073 | P0 | verified | tests/unit/worldbuilding/test_world_compiler.py::test_compiler_entity_mappings |
 | WORLD-079 | P0 | verified | tests/unit/movement/test_mob_leashing.py::test_mob_beyond_leash_returns_home, tests/unit/core/test_rpg_depth.py::TestMobLeash::test_leash_beyond_radius |
 | WORLD-080 | P0 | verified | tests/unit/core/test_rpg_depth.py::TestMobLeash::test_chase_give_up_distance, tests/unit/core/test_rpg_depth.py::TestMobLeash::test_chase_give_up_timeout |
 | WORLD-081 | P0 | verified | tests/unit/movement/test_mob_leashing.py::test_mob_beyond_leash_returns_home |
-| WORLD-082 | P0 | verified | tests/unit/world/test_world_boss_spawn_flag.py::test_calamity_boss_is_inert_when_off_but_the_trigger_still_advances, tests/unit/world/test_world_dynamics.py::test_calamity_boss_spawn |
-| WORLD-083 | P0 | verified | tests/unit/world/test_calamity_pressure_propagator.py::test_adjacent_region_receives_propagated_intensity, tests/unit/world/test_calamity_pressure_propagator.py::test_intensity_capped_at_one |
 | WORLD-087 | P0 | verified | tests/unit/world/test_building_sabotage.py::test_building_sabotage_damage, tests/unit/world/test_building_sabotage.py::test_building_destruction_and_trauma |
 | WORLD-088 | P0 | verified | tests/unit/world/test_building_sabotage.py::test_building_destruction_and_trauma, tests/unit/world/test_town_building_contract.py::test_functional_building_requirement |
 | WORLD-090 | P0 | verified | tests/integration/pipeline/test_strategic_cadence.py::test_world_dynamics_cadence_gating |
@@ -126,4 +123,8 @@ WORLD-022 and WORLD-002 are flagged inside the table: 022 cannot be confirmed by
 | WORLD-096 | P0 | verified | tests/unit/movement/test_mob_leashing.py::test_mob_beyond_leash_returns_home, tests/unit/world/test_camp_lifecycle.py::test_camp_maturity_grows_and_an_undersized_camp_spawns_nothing |
 | WORLD-097 | P0 | verified | tests/unit/world/test_world_dynamics.py::test_calamity_boss_spawn, tests/unit/world/test_world_boss_spawn_flag.py::test_calamity_boss_is_inert_when_off_but_the_trigger_still_advances |
 
-Notes for the reviewer on D: WORLD-013 is `legacy_verified` and stays so (a test_path clears the P0 error; promoting it to `verified` is a status change not made here). The entries whose text names a legacy test (for example `test_flow_field_basic_navigation`) keep that text unchanged; the new test_path is the real test. Partial-coverage citations (the claim is a little wider than the test): WORLD-023 (only tick 1000), WORLD-015/016/041 (distance to tier mapping), WORLD-021 was moved to C, WORLD-073 (citizen and monster roles only), WORLD-069 (threat label determinism), WORLD-082/083 (rule shown, negative cases absent), WORLD-088 (two tests chain the claim), WORLD-092 (slow test, scenario may hold few camps/buildings), WORLD-096 (two separate tests).
+Notes for the reviewer on D: WORLD-013 is `legacy_verified` and stays so (a test_path clears the P0 error; promoting it to `verified` is a status change not made here). The entries whose text names a legacy test (for example `test_flow_field_basic_navigation`) keep that text unchanged; the new test_path is the real test. Partial-coverage citations (the claim is a little wider than the test): WORLD-023 (only tick 1000), WORLD-015/016/041 (distance to tier mapping), WORLD-021 was moved to C, WORLD-069 (threat label determinism), WORLD-088 (two tests chain the claim), WORLD-092 (slow test, scenario may hold few camps/buildings), WORLD-096 (two separate tests).
+
+
+## Update 2026-10-29: rpg-planner NOTE 4
+WORLD-073 (role validity), WORLD-082 (trigger rule determinism) and WORLD-083 (escalation rule determinism) are removed from section D and move to section C: the cited tests showed the rule, not the claim. Their citations were removed from world_dynamics.yaml (restored to the main state, then the other 31 citations re-applied through parity_ledger_writer.py); world_dynamics ends at 55 test_path errors in each of the two rules.

@@ -809,7 +809,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compiler_entity_mappings
+  test_path: null
   divergence_note: null
   support_boundary: null
 - id: WORLD-074
@@ -931,8 +931,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: tests/unit/world/test_world_boss_spawn_flag.py::test_calamity_boss_is_inert_when_off_but_the_trigger_still_advances,
-    tests/unit/world/test_world_dynamics.py::test_calamity_boss_spawn
+  test_path: null
   divergence_note: null
   support_boundary: null
 - id: WORLD-083
@@ -942,8 +941,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: tests/unit/world/test_calamity_pressure_propagator.py::test_adjacent_region_receives_propagated_intensity,
-    tests/unit/world/test_calamity_pressure_propagator.py::test_intensity_capped_at_one
+  test_path: null
   divergence_note: null
   support_boundary: null
 - id: WORLD-084

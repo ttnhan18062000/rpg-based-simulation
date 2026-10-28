@@ -94,8 +94,8 @@ town_resource children, which wait for u24's :1610 and D73.
 Re-count on current main (fdfc5f9fd): 86 entries have no test_path (85 P0 verified, 1 P0 legacy_verified). Research: four read-only Explore subagents proposed a test for each entry; every proposal was re-checked by me (greps, `git log -S/-G`, the test bodies) and every cited test was run. A subagent's "no longer exists in src" was treated as a lead, not evidence.
 - Process note: during this work I launched a Workflow (multi-agent) script by mistake. It needs the user's explicit opt-in, which I did not have; I stopped it at once (TaskStop) before any agent wrote anything, and the repo was unchanged. The lookup was then done with four ordinary read-only Explore agents.
 - AC4 split: the research projected far more than ~15 status changes, so I stopped and told rpg-planner-ubuntu before splitting. rpg-planner (u24) ruled (via the leads, 2026-10-29) that this child keeps the citation-only entries (PR A) and the rest move to the sibling; AC1 is amended accordingly (above).
-- PR A cites a real test for 34 entries (test_path only, status/priority/text unchanged), in two commits of 17. All 35 distinct cited test files/nodes were run: 59 passed (about 50 s; the 15-minute AC5 limit is not close). The per-entry table (id, priority, status, cited test, ran and passed) is section D of `draft_table.md` in the sibling's staging directory (agent-working/staging_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/). There is no status change in PR A (AC3's separate list is therefore empty for this PR; the 52 proposed changes are the sibling's draft table and nothing is written).
-- Gate: world_dynamics test_path errors 85 -> 52 (P0) and 86 -> 52 (all). The 52 remaining entries are in the sibling.
+- PR A cites a real test for 31 entries (test_path only, status/priority/text unchanged); it first cited 34 in two commits of 17, then rpg-planner (u24) moved WORLD-073, 082 and 083 to the sibling (NOTE 4, 2026-10-29, relayed via the leads and rpg-planner-ubuntu: the cited tests showed the rule, not the claim) and their citations were removed. All distinct cited test files/nodes were run: 59 passed (about 50 s; the 15-minute AC5 limit is not close). The per-entry table (id, priority, status, cited test, ran and passed) is section D of `draft_table.md` in the sibling's staging directory (agent-working/staging_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/). There is no status change in PR A (AC3's separate list is therefore empty for this PR; the 52 proposed changes are the sibling's draft table and nothing is written).
+- Gate: world_dynamics test_path errors 85 -> 55 (P0) and 86 -> 55 (all). The 55 remaining entries are in the sibling.
 - Entries whose text names a legacy test keep that text unchanged (text is never changed); the cited test is the real one.
 
 
@@ -103,6 +103,6 @@ Re-count on current main (fdfc5f9fd): 86 entries have no test_path (85 P0 verifi
 Cited tests: 59 passed. `python3 -m codebase.gates.parity_ledger_schema check`: 0 rules rose, 0 new.
 
 ## Files Changed
-docs/parity_ledger/world_dynamics.yaml (34 test_path fields); the tightened baseline codebase/baselines/parity_ledger_schema_baseline.json (codebase-planner reviews it by comment).
+docs/parity_ledger/world_dynamics.yaml (31 test_path fields); the tightened baseline codebase/baselines/parity_ledger_schema_baseline.json (codebase-planner reviews it by comment).
 
 ## Completion Summary
