@@ -110,6 +110,25 @@ After v1, only if the trigger is seen.
   - The ledger counters are in neither the canonical hash nor the replay fingerprint. Both read only `AuthoritativeState`: `CanonicalStateHasher.get_hash(state)` via `CanonicalHashScheduler.compute_digest` (kernel `_phase_persistence`), and `StateFingerprinter.get_fingerprint(state)` (src/replay/fingerprint.py). `RunLedger` keeps class-level counters and only emits events through `extract_events`, writing nothing to the state.
   - Tests: 3 new in `tests/unit/observability/test_run_ledger_behaviour.py`. Observability and tools unit scope: 2259 passed.
   - Health: 0 new; the same 3 recorded "worse" rows on intelligence.py.
+- 2026-10-28, OWNER DECISION (#715 issuecomment-6458811768, memo row 91; read on the owner's account): land R only. R is the acting-gated retreat_pull without the flight.
+  - The flight is parked on the local branch `rpg-hunger-retreat-flight-parked` (5318f71e0, never pushed). It returns as the post-M1 regroup-to-retreat relabel step, together with the COMBAT_RETREAT escalated-need capacity exemption.
+  - The extinction rule is unchanged. R's frontier STOP (scout, wild_creature) is accepted as known.
+  - The capacity-lookup defect (`intelligence.py:1610`) is TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED, after step A.
+- 2026-10-28, strip (5a992936f): src/ is byte-identical to 61648f417, the pre-flight step A (`git diff 61648f417 5a992936f -- src` is empty).
+  - Registry: `combat_retreat_flight_update` is dropped. The `tactical_decision` citations `hostile_acts_on` and `acting_threat_to` are kept, because the retreat_pull gate reads them.
+  - Part of step A: the CONFLICT-04 no-freeze invariant measure fix (designer ruling 2026-10-26, a measure fix, not a re-pin; it came in with 761fad2b1). On R the raw longest blocked run is 19 (entity 6, the stored-target shape) and the longest run with no decision is 10 (bound 11). The original measure fails on R (19 > 11).
+- 2026-10-28, merged origin/main through #758 (924ee21fd). Conflicts: divergences (2.140 from main, kept beside 2.139) and the mechanism pin test (main's dead-class note and wider 249; with present_threat.py bound, wider 248; 14 passed).
+  - Proof that the landed src is R, accepted by rpg-planner with no neutral run: `git diff origin/main 924ee21fd -- src` has hunks identical to `git diff 3533fde71 61648f417 -- src` (need_pull.py `retreat_pull` and scorers.py, same hunk headers; only the scorers.py blob ids differ, from main's docstring edit).
+  - `git diff 61648f417 358f4cb7f -- src` (R as measured) is only the no-op flight module (early `return ent_upd`, so the acting_threat_to lambda is never evaluated), its call and import, FlightReason/DECIDED_FLIGHT_REASONS, and COMBAT_RETREAT in two reason sets that nothing in R issues.
+- 2026-10-28, equivalence proof (rpg-planner's optional check). Run: frontier_living_world s43, 5000t, at 5a992936f (pre-merge, digest scheme v2), arm child 72320cac via `paired.prepare_tree`/`run_one`.
+  - Matches the cached R arm `358f4cb7fa18-72320cac-5000/frontier_living_world_43.json` on final_hash (8f46ae0e...), start_hash, audit_mode, signals_zeroed, counters and final fates.
+  - Output: `/mnt/data/scratch-rpg-implementer/stepA/hashproof/`.
+- 2026-10-28, docs (rpg-designer wording, relayed by rpg-planner; numbers checked against the code at 5a992936f):
+  - Bible 02 §7 sentence (R: stored target, no step, until the flight step after M1).
+  - Bible 04 §1: the escalation list names CombatRetreatScorer; a new "A wound escalates like a need" paragraph covering the act test, bravery F1 (memo row 91), no capacity exemption, and CONFLICT-04; the row 83 ceiling sentence.
+  - Divergence 2.139: "No flight" bullet, the starving-retreat sentence, Measured, and the held-flight note.
+  - STRAT-288 support_boundary updated; STRAT-289 removed.
+  - SURV-07 clause on bravery.
 - The hp consequence line and the threat gate are proposed in `agent-working/staging_artifacts/TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE/plan.md`. No code is written until the designer confirms them.
 
 ## Test Summary
