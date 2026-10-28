@@ -3527,6 +3527,17 @@
   - architecture
   - planning
 - type: doc
+  path: docs/plans/test_architecture/reference/paired_arms_off_host.md
+  title: Paired arms off the shared host
+  status: active
+  layer: testing
+  authority: P1
+  audience: agent
+  tags:
+  - testing
+  - performance
+  - determinism
+- type: doc
   path: docs/plans/test_architecture/reference/rpg_gate_baseline_format.md
   title: 'rpg gate baseline: format, staleness and re-baseline'
   status: active
@@ -3539,7 +3550,7 @@
   - simulation-quality
 - type: doc
   path: docs/plans/test_architecture/reference/run_ledger.md
-  title: 'Run ledger: one row per paired or gate invocation'
+  title: 'Run ledger: a started row and an end row per paired or gate invocation'
   status: active
   layer: testing
   authority: P1
@@ -8642,6 +8653,22 @@
   - agent-working/stored_artifacts/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE/plan.md
   - agent-working/stored_artifacts/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE/test_plan.md
   tags: []
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261023-PAIRED-ARMS-RUN-OFF-THE-SHARED-HOST.md
+  ticket_id: TCK-20261023-PAIRED-ARMS-RUN-OFF-THE-SHARED-HOST
+  title: Paired arms can run on GitHub-hosted runners through a testing-owned workflow_dispatch
+    workflow, and their results are compared by the existing paired.py
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - .github/workflows/paired-arms.yml (new)
+  - tools/rpg_measure/paired.py, arm_child.py (rpg; read-only here)
+  artifact_files: []
+  tags:
+  - testing
+  - performance
+  - determinism
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261023-ENGINE-AND-BIBLE-DOC-DRIFT-AFTER-V1.md
   ticket_id: TCK-20261023-ENGINE-AND-BIBLE-DOC-DRIFT-AFTER-V1
