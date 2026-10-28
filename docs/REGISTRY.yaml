@@ -8658,6 +8658,18 @@
   - agent-working/stored_artifacts/TCK-20261023-V1-CALIBRATION-AND-D76-TABLE-ON-THE-NEW-BASE/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
+  ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
+  title: Remove the free meal for every kind (decision 73) as its own measured step
+    against v1, before milestone 1
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - src/systems (building_services, conservation, inventory); src/ai need_pull
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/inprogress/TCK-20261023-PAIRED-ARMS-RUN-OFF-THE-SHARED-HOST.md
   ticket_id: TCK-20261023-PAIRED-ARMS-RUN-OFF-THE-SHARED-HOST
   title: Paired arms can run on GitHub-hosted runners through a testing-owned workflow_dispatch
@@ -8695,18 +8707,6 @@
   date: '2026-10-23'
   related_code_areas:
   - tests/ (the four named tests and their fixtures)
-  artifact_files: []
-  tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1.md
-  ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
-  title: Remove the free meal for every kind (decision 73) as its own measured step
-    against v1, before milestone 1
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-23'
-  related_code_areas:
-  - src/systems (building_services, conservation, inventory); src/ai need_pull
   artifact_files: []
   tags: []
 - type: ticket
