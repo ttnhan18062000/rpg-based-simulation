@@ -71,3 +71,4 @@ def test_the_corpus_sweep_is_not_empty():
         for w in _corpus_worlds()
     ]
     assert sum(counts) > 0 and max(counts) >= 2
+
