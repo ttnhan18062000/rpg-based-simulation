@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261027-PERF-INVENTORY-SCANNERS-WALK-EACH-TREE-ONCE
-phase: open
+phase: done
 date: 2026-10-27
 tags: [performance]
 ---
@@ -15,7 +15,7 @@ tags: [performance]
 Make the perf inventory scanners at least 2x faster: an iterative AST walk, each file parsed once (wall_clock_inventory, hash_callsite_inventory, phase_inventory), with byte-identical output
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -71,9 +71,19 @@ None.
 - The profile was taken under load with cProfile overhead. The 2x target is to be confirmed on an idle host. If the iterative walk alone gets past 2x, steps 2 and 3 are still worth doing, since they are cheap.
 
 ## Implementation Notes
+- The cProfile read in the ticket overstated the recursive `_dfs`: with the iterative walk alone, wall_clock_inventory went from about 8.1 s to 7.9 s (no gain). The real cost was `ast.iter_child_nodes` (pure Python) called for each node about five times per module, plus a second `ast.parse` and a full walk of all 798 modules only to find imports.
+- `tools/perf/hash_callsite_inventory.py`: `_dfs` is an explicit-stack preorder; children are computed once per node (`_CHILDREN`, inline `_child_nodes` skipping the field-less operator/context nodes `Load`, `Add`, `And`, `Eq`, ...) and each module's preorder list is kept (`_MODULE_ORDER`); both caches are dropped by `forget_children()` at the end of `build_report` and after a standalone `scan_source`. `_parent_map` is built from the same walk. `scan_source` takes an optional `tree`.
+- `tools/perf/wall_clock_inventory.py`: `build_report` passes the tree it already parsed to `scan_source` (no re-parse); `_imports_of` walks statements only (`_statements`), because an import is a statement; an unused local was dropped.
+- `phase_inventory.py` has its own small walker and was not changed (0.1 s).
 
 ## Test Summary
+- Byte-identical output, before vs after on the same tree (this branch: origin/main plus fingerprint Part 1, so `src/` differs from main by the new `src/perf/dependency_fingerprint.py` only): `wall_clock_inventory.py --format json` and `md`, `hash_callsite_inventory.py --format json` and `md`, `phase_inventory.py --format json` and `md` (cmp, all identical); `--check` against the committed `docs/performance/{wall_clock,hash_callsite,phase}_inventory.json` passes for all three.
+- Speed (`wall_clock_inventory.py --format json`, alternating before/after, 3 each, load1 1.2-1.3, wall s): before 7.84, 8.12, 8.05; after 4.10, 3.39, 3.85. Median 8.05 vs 3.85 = 2.09x (user CPU median 7.66 vs 3.63 = 2.1x). The margin over 2x is small and the host was not idle (loadavg 1.2-1.3), so it is a median of three, not a distribution. The earlier iterations measured 1.45x, 1.9x and 1.9x.
+- Tests: `tests/tools/test_wall_clock_inventory.py` 16 passed in 23 s (the CLI byte-identical test was 58.55 s against its 60 s budget before this change); `tests/tools/test_hash_callsite_inventory.py` and `test_phase_inventory.py` 49 passed. `codebase.health check` OK, 0 new, 0 worse.
 
 ## Files Changed
+- tools/perf/hash_callsite_inventory.py
+- tools/perf/wall_clock_inventory.py
 
 ## Completion Summary
+Done as a hotfix. Output is byte-identical for all three tools and `wall_clock_inventory.py --format json` is 2.09x faster by median of three alternating runs. agent-working-planner to confirm the CLI test's timing in the PR (named there per the AC).

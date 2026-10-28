@@ -5695,7 +5695,7 @@
   - testing
 - type: doc
   path: docs/performance/benchmark_identity_schema.md
-  title: Benchmark Identity and Result Schema (schema 1.4)
+  title: Benchmark Identity and Result Schema (schema 1.5)
   status: active
   layer: performance
   authority: P2
@@ -8013,6 +8013,22 @@
   tags:
   - economy
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261027-PERF-INVENTORY-SCANNERS-WALK-EACH-TREE-ONCE.md
+  ticket_id: TCK-20261027-PERF-INVENTORY-SCANNERS-WALK-EACH-TREE-ONCE
+  title: 'Make the perf inventory scanners at least 2x faster: an iterative AST walk,
+    each file parsed once (wall_clock_inventory, hash_callsite_inventory, phase_inventory),
+    with byte-identical output'
+  tier: hotfix
+  ticket_type: refactor
+  date: '2026-10-27'
+  related_code_areas:
+  - tools/perf/hash_callsite_inventory.py
+  - tools/perf/wall_clock_inventory.py
+  - tools/perf/phase_inventory.py
+  artifact_files: []
+  tags:
+  - performance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL.md
   ticket_id: TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL
   title: The paired run's default cache path is host-neutral, resolved when called,
@@ -8058,22 +8074,6 @@
   - src/engine/starvation.py
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261027-PERF-INVENTORY-SCANNERS-WALK-EACH-TREE-ONCE.md
-  ticket_id: TCK-20261027-PERF-INVENTORY-SCANNERS-WALK-EACH-TREE-ONCE
-  title: 'Make the perf inventory scanners at least 2x faster: an iterative AST walk,
-    each file parsed once (wall_clock_inventory, hash_callsite_inventory, phase_inventory),
-    with byte-identical output'
-  tier: hotfix
-  ticket_type: refactor
-  date: '2026-10-27'
-  related_code_areas:
-  - tools/perf/hash_callsite_inventory.py
-  - tools/perf/wall_clock_inventory.py
-  - tools/perf/phase_inventory.py
-  artifact_files: []
-  tags:
-  - performance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED.md
   ticket_id: TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED
