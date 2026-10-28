@@ -1,0 +1,1 @@
+{"session_id":"6548ac4c-5199-4504-9431-84adb01a5e3e","run_id":null,"seq":null,"phase":null,"agent":null,"ts":"2026-10-26T03:02:04.556522Z","tool":"Bash","input_summary":"cd .claude/worktrees/coopidx; f=$(git ls-files | grep SEMGREP-BASELINE-FINDINGS-","read_ranged":null,"status":"ok","duration_ms":243,"execution_id":null,"provider":null,"ticket_id":null}
