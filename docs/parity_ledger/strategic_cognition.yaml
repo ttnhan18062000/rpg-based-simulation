@@ -4622,9 +4622,9 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/core/strategic.py (ProjectEnd, ProjectState.ended_by, same_kind_record, project_target_matches, supersede_record), src/core/state.py (canonical dict, ended_by only when set), src/systems/strategic_systems/intelligence.py (the lookup and the supersede), src/systems/strategic_systems/cognition_export.py (project node attribute). docs/mechanics/04_strategic_cognition.md section 4. docs/guidelines/intentional_divergences.md 2.142.'
+  v2_evidence: 'src/core/strategic.py (ProjectEnd, ProjectState.ended_by, same_kind_record, project_target_matches, supersede_record), src/core/state.py (canonical dict, ended_by only when set), src/systems/strategic_systems/intelligence.py (the lookup and the supersede), src/systems/strategic_systems/cognition_export.py (project node attribute). docs/mechanics/04_strategic_cognition.md section 4. docs/guidelines/intentional_divergences.md 2.143.'
   proof_type: regression
   test_path: tests/unit/strategic/test_project_lookup_live_record_first.py
-  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.142.
-  support_boundary: 'The four mapped kinds (ADVENTURE_ROUTE, SOCIAL_CONTRACT, REGION_STABILIZATION, OCCUPATION_CHANGE) never match a stored record and are unchanged here (separate ticket). Direct resume of a matching suspended record is existing behaviour, not endorsed. Measured counts: divergence 2.142.'
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.143.
+  support_boundary: 'The four mapped kinds (ADVENTURE_ROUTE, SOCIAL_CONTRACT, REGION_STABILIZATION, OCCUPATION_CHANGE) never match a stored record and are unchanged here (separate ticket). Direct resume of a matching suspended record is existing behaviour, not endorsed. Measured counts: divergence 2.143.'
 
