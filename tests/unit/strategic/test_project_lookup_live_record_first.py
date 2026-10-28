@@ -261,15 +261,27 @@ def test_a_matching_live_record_never_coexists_with_a_new_project_of_the_same_ki
     assert created == []
 
 
-def test_an_active_matching_record_is_not_made_current_over_another_live_current_project():
-    """Designer follow-up: making a record current without the switch would skip the current project's margin and lock and leave two ACTIVE projects. Guarded: nothing
-    changes and nothing is created (the state was not seen in the probes)."""
-    other = _project("other", ProjectStatus.ACTIVE, target="x", kind="travel", created=1)
+def test_an_orphan_that_loses_the_margin_leaves_the_current_project_unchanged():
+    """An ACTIVE matching record that is not current, beside another live current project, goes through the switch check: a loss changes nothing."""
+    other = _project("other", ProjectStatus.ACTIVE, target="x", kind="travel", score=100000.0, created=1)
     orphan = _project("orphan", ProjectStatus.ACTIVE, created=3)
     entity = _entity([other, orphan], current="other")
     update = _evaluate(entity)
     assert update.current_project_id_set is None
     assert not update.projects_add_or_update
+
+
+def test_an_orphan_that_wins_the_switch_becomes_current_with_nothing_created_and_the_live_count_unchanged():
+    other = _project("other", ProjectStatus.ACTIVE, target="x", kind="travel", score=0.5, created=1)
+    orphan = _project("orphan", ProjectStatus.ACTIVE, created=3)
+    entity = _entity([other, orphan], current="other")
+    update = _evaluate(entity)
+    assert update.current_project_id_set == "orphan"
+    assert update.current_objective_id_set == orphan.active_objective_id
+    after = _apply(entity, update)
+    assert set(after) == {"other", "orphan"}
+    assert after["other"].status == ProjectStatus.SUSPENDED and after["orphan"].status == ProjectStatus.ACTIVE
+    assert len([p for p in after.values() if p.status in (ProjectStatus.ACTIVE, ProjectStatus.SUSPENDED)]) == 2
 
 
 def test_an_active_matching_record_is_made_current_when_the_current_project_is_dead_or_absent():

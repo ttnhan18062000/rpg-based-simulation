@@ -1618,6 +1618,7 @@ class StrategicIntelligenceSystem:
                      leads_remove=memory_upd.leads_remove
                 )
 
+            orphan_candidate = None
             if existing is not None and target_matches:
                 # A live record at this target that is not current: never a same-target duplicate. A SUSPENDED one is resumed; an ACTIVE one that lost
                 # `current_project_id` (several writers clear it without ending the project) is made current again. `resume_project` returns None only for a
@@ -1625,12 +1626,13 @@ class StrategicIntelligenceSystem:
                 if existing.status == ProjectStatus.SUSPENDED:
                     made_current = StrategicIntelligenceSystem.resume_project(entity, existing.id)
                 elif strat.current_project_id and strat.current_project_id != existing.id and strat.current_project_id in live_projects(strat.projects):
-                    # Another live project is current: making this record current would skip that project's retention margin and lock and leave two ACTIVE projects.
-                    # Not seen in the probes (0 of 5.7k candidate ticks); the guard keeps it that way: nothing changes, nothing is created.
-                    made_current = None
+                    # An ACTIVE record at this target that is not current while ANOTHER live project is current: nothing displaces the current project except through
+                    # the switch check, so the record becomes the switch candidate below (margin and lock apply; scored at the goal's utility like any candidate).
+                    orphan_candidate = existing
                 else:
                     made_current = StrategicUpdate(current_project_id_set=existing.id, current_objective_id_set=existing.active_objective_id)
-                return replace(made_current or StrategicUpdate(),
+                if orphan_candidate is None:
+                    return replace(made_current or StrategicUpdate(),
                      boredom_delta=boredom_upd,
                      leads_add_or_update=memory_upd.leads_add_or_update,
                      leads_remove=memory_upd.leads_remove
@@ -1788,6 +1790,9 @@ class StrategicIntelligenceSystem:
                     score=best_candidate.utility
                 )
 
+            if orphan_candidate is not None:
+                candidate_proj = replace(orphan_candidate, score=best_candidate.utility)
+
             if not existing and not has_project_capacity(strat.projects, strat.profile.max_active_projects) and not escalated_need_wins(entity, best_candidate.kind):
                 if boredom_upd:
                     return StrategicUpdate(boredom_delta=boredom_upd)
@@ -1827,7 +1832,14 @@ class StrategicIntelligenceSystem:
                     **extra_ci,
                     **extra_routing
                 )
-            
+            if orphan_candidate is not None:
+                # The orphan lost the switch check: nothing changes, boredom and the lead deltas are carried as the continue path carries them.
+                return replace(StrategicUpdate(),
+                     boredom_delta=boredom_upd,
+                     leads_add_or_update=memory_upd.leads_add_or_update,
+                     leads_remove=memory_upd.leads_remove
+                )
+
             # Law 194-197: Enforce Strategic Bandwidth
             # Logic ID: 195, 196
             bandwidth_upd = DetourSuggestionSystem.enforce_bandwidth(entity, current_tick)
