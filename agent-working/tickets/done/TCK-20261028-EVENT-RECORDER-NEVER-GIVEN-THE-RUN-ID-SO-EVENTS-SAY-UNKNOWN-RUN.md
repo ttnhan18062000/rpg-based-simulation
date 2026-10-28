@@ -59,3 +59,7 @@ Final state hash frontier_living_world s42 300t equal before and after (bfe9f834
 src/engine/kernel.py, src/observability/event_recorder.py, tests/unit/observability/test_event_recorder_run_id.py
 ## Completion Summary
 Done in the observability hotfix batch (one PR).
+
+The recorder gets its run id through `EventRecorder.for_run(run_id, **kwargs)` (set after construction, so `__init__` stays within ruff's `max-args = 5`). To keep `Kernel` within its length ceilings the SimQ feed and hub construction moved, unchanged, from `Kernel.__init__` into `src/simulation_quality/wiring.py::build_quality_wiring`; the grandfathered `engine -> simulation_quality` import edges go from 5 to 1 (`src.engine.kernel -> src.simulation_quality.wiring`).
+
+Follow-up idea (not done here, too wide for a hotfix batch): invert that dependency so the Kernel receives the quality-wiring factory from its composition root and imports nothing from `simulation_quality`, which would remove the last grandfathered edge. Also open on rpg-planner's seat: a redelivered event can still advance scorer state and use up a one-shot (`TCK-20261028-REDELIVERED-EVENT-ADVANCES-SCORER-STATE-AND-CAN-SWALLOW-A-ONE-SHOT`).
