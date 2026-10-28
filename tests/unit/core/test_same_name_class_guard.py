@@ -39,11 +39,6 @@ DUPLICATE_NAMES: Dict[str, Tuple[str, str]] = {
         "src/strategy/cognition_capacity.py DERIVES a profile (hunger halving the capacity) and is not wired to "
         "the tick. Different roles, not twins; the unwired derivation is TCK-20261027-HUNGER-CAPACITY-DERIVATION-HAS-NO-LIVE-CALLER.",
     ),
-    "RecipeRegistry": (
-        KEEP,
-        "src/core/registries.py is the live registry; src/core/recipes.py is the legacy one, reached only by "
-        "src/town/blacksmith.py. Kept until TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED decides.",
-    ),
     # Not mechanism-shaped.
     "AnalysisContext": (INTENTIONAL, "anomaly pipeline context vs the understanding-layer analyzers' context"),
     "AnomalyRecord": (INTENTIONAL, "domain record in the rules engine vs warehouse row"),
