@@ -102,13 +102,15 @@ Testing half built 2026-10-26; see the staging investigation.md / plan.md. Contr
 ## Test Summary
 - tests/static/test_ci_paired_arms_workflow_shape.py (new, 10) and tests/unit/tools/test_paired_arms.py (new, ~30, fake artifacts): pass, with the rest of tests/static (196 passed together with the workflow-support tests). AC2 refusals (mixed Python or OS) tested on fake artifacts; AC4 static test and the pin and context guards cover the workflow.
 - AC1 (off-host table equals the local one except the `- runners:` line) and AC3's ledger row are pending: they need a dispatch on main after rpg's `--collected` and T1. No heavy run was done locally.
+- 2026-10-28, after rpg's `--collected` (#752) and T1 (#773) reached main: checked T2 against the merged reader (results/<sha12>-<child hash>-<ticks>[-repeat]/, cost.json `wall_seconds`, `peak_rss_mb`, `runner`{name, image, cpu_model, nproc, mem_total_mb, python, os}); they match. Added `test_jobs_run_by_run_arm_and_assembled_are_accepted_by_paireds_real_collected_compare`: every planned job (3 worlds x seeds 42,43 plus the seed-42 self jobs) is written by `run_arm` into its own cache with only the child faked, assembled, and compared by the real `paired.main(["--collected", ...])`: exit 0, self-check spread 0 over 3 runs, exactly one `- runners` line, nothing executed. Mutation check: writing the cost file as `.costs.json` makes it fail. tests/unit/tools/test_paired_arms.py: 25 passed.
 
 ## Files Changed
 - .github/workflows/paired-arms.yml (new)
 - tools/test_architecture/paired_arms.py (new)
 - docs/plans/test_architecture/reference/paired_arms_off_host.md (new)
 - tests/static/test_ci_paired_arms_workflow_shape.py (new)
-- tests/unit/tools/test_paired_arms.py (new)
+- tests/unit/tools/test_paired_arms.py (new; + the real --collected round-trip test)
+- docs/plans/test_architecture/reference/run_ledger.md (T1 review nit, lead-planner-u24 on #773: an invocation writes a started row and an end row, not one row)
 - tests/static/test_workflow_actions_pinned_by_sha.py, tests/static/test_workflow_run_blocks_take_github_context_via_env.py (cover the new workflow)
 
 ## Completion Summary

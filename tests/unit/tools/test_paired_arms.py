@@ -197,3 +197,37 @@ def test_the_assemble_cli_exits_2_with_the_refusal_and_0_on_a_good_set(tmp_path,
     assert pa.main(args) == 0 and "assembled 1 job(s), 2 arm run(s)" in capsys.readouterr().out
     _pair_job(root, seed=43, runner={**RUNNER, "python": "3.12.0"})
     assert pa.main(args) == 2 and "REFUSED: the jobs ran on different python values" in capsys.readouterr().err
+
+
+# ---- round trip through rpg's real --collected
+
+def _doc(world: str, seed: int) -> dict:
+    """A minimal result document in the shape paired.py reads (no simulation): two people alive, audit flags True."""
+    return {"world": world, "seed": seed, "start": [[1, "merchant", 1, 1], [2, "guard", 1, 1]], "final": {"1": [1, None, "merchant"], "2": [1, None, "guard"]},
+            "counters": None, "perception_samples": 5, "final_hash": "h", "start_hash": "s", "audit_mode": True, "signals_zeroed": True, "adds": {}}
+
+
+def test_jobs_run_by_run_arm_and_assembled_are_accepted_by_paireds_real_collected_compare(tmp_path, monkeypatch, capsys):
+    """The matrix plan's jobs, each with its own cache like a CI job, written by run_arm (only the child is faked), assembled, then compared by the real
+    ``paired.main(["--collected", ...])``: exit 0, the one runners line, and nothing executed. Guards the layout and cost.json contract against rpg's merged reader."""
+    ticks = 10
+    monkeypatch.setattr(paired, "prepare_tree", lambda repo, rev, cache: ({"base": BASE, "new": NEW}[rev], tmp_path / "tree"))
+    monkeypatch.setattr(paired, "run_one", lambda tree, world, seed, t, out: out.write_text(json.dumps(_doc(world, seed))))
+    monkeypatch.setattr(pa, "runner_identity", lambda env=None: dict(RUNNER))
+    root = tmp_path / "arms"
+    for job in pa.plan_matrix(",".join(paired.WORLDS), "42,43", "seed42")["include"]:
+        w, s = job["world"], job["seed"]
+        cache = root / f"paired-arms-s-{w}-s{s}{'-self' if job['kind'] == 'self' else ''}"
+        if job["kind"] == "pair":
+            pa.run_arm(tmp_path, "base", "base", w, s, ticks, cache)
+            pa.run_arm(tmp_path, "new", "new", w, s, ticks, cache)
+        else:
+            pa.run_arm(tmp_path, "base", "base", w, s, ticks, cache)
+            pa.run_arm(tmp_path, "base", "self", w, s, ticks, cache, repeat=True)
+    pa.assemble(root, tmp_path / "collected", base=BASE, new=NEW)
+    monkeypatch.setattr(paired, "run_one", lambda *a: pytest.fail("--collected must execute nothing"))
+    capsys.readouterr()
+    assert paired.main(["--collected", str(tmp_path / "collected"), "--base", BASE, "--new", NEW, "--seeds", "42", "43", "--ticks", str(ticks)]) == 0
+    out = capsys.readouterr().out
+    assert "## Paired measurement" in out and "self-check (seed42, 3 runs): spread 0" in out
+    assert [line for line in out.splitlines() if line.startswith("- runners")] == [f"- runners (collected off host): {RUNNER['name']}/{RUNNER['image']} python {RUNNER['python']} {RUNNER['os']} ({RUNNER['cpu_model']}, nproc {RUNNER['nproc']})"]

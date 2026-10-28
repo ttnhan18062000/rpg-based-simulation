@@ -3550,7 +3550,7 @@
   - simulation-quality
 - type: doc
   path: docs/plans/test_architecture/reference/run_ledger.md
-  title: 'Run ledger: one row per paired or gate invocation'
+  title: 'Run ledger: a started row and an end row per paired or gate invocation'
   status: active
   layer: testing
   authority: P1
