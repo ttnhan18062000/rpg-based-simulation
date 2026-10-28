@@ -243,6 +243,7 @@ agent-working/stored_artifacts/**/*.json
 
 # Runtime simulation data (transient, regenerated each run)
 data/runs/
+data/ledgers/
 data/test_cli_basic/
 data/test_obs_replay/
 data/run_sets/

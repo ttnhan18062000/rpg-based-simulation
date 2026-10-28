@@ -6,7 +6,8 @@ describes it as code run inline during investigation, never committed to a named
 prototype script under experiments/spatial_rendering/prototype/ (confirmed: no
 variants/tvd-named file exists there). The formula was independently reproduced this
 session and matches PROPOSAL.md's own cited TVD(sandbox_world, dungeon_crawl) ~= 0.2315
-anchor to full precision (0.23161981243456373), and dungeon_crawl's structural
+anchor (0.2315; the D72 histogram-bucket merge made the full-precision figure 0.23153614062704975, for the frozen
+pre-balance-fix dungeon_crawl; live sandbox_world vs frontier_living_world is 0.2645), and the live dungeon_crawl's structural
 same-spec/different-seed invariance (0.0 exactly, since none of its four composed
 modules declare terrain_variants), per
 agent-working/staging_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.

@@ -16,7 +16,7 @@
     "options": {
      "allow_headers": "['*']",
      "allow_methods": "['*']",
-     "allow_origins": "['*']"
+     "allow_origins": "['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173', 'http://127.0.0.1:4173', 'http://localhost:8080', 'http://127.0.0.1:8080']"
     }
    }
   ],
@@ -4971,7 +4971,7 @@
     "options": {
      "allow_headers": "['*']",
      "allow_methods": "['*']",
-     "allow_origins": "['*']"
+     "allow_origins": "['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173', 'http://127.0.0.1:4173', 'http://localhost:8080', 'http://127.0.0.1:8080']"
     }
    }
   ],
@@ -11438,10 +11438,9 @@
    "headers": {
     "access-control-allow-headers": "x-api-key",
     "access-control-allow-methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY",
-    "access-control-allow-origin": "*",
     "access-control-max-age": "600"
    },
-   "status": 200
+   "status": 400
   },
   "metrics": {
    "with_key": 200,

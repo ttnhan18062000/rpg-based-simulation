@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 import json
 import re
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, Iterator, List, Optional
 from src.observability.reporting.artifact_repository import RunArtifactRepository, RunManifest
 from src.observability.reporting.run_set_repository import RunSetArtifactRepository, SweepSummary
 
@@ -29,6 +29,23 @@ class HistoricalRunQueryService:
         run_id = sanitize_id(run_id)
         return self.repo.read_manifest(run_id)
 
+    @staticmethod
+    def _iter_entity_records(path: str, entity_id: str) -> Iterator[Dict[str, Any]]:
+        """Yield each JSONL record whose ``entity_id`` equals ``entity_id`` (string or int form)."""
+        try:
+            entity_id_int = int(entity_id)
+        except ValueError:
+            entity_id_int = None
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                data = json.loads(line)
+                if str(data.get("entity_id")) == entity_id or (
+                    entity_id_int is not None and data.get("entity_id") == entity_id_int
+                ):
+                    yield data
+
     def get_entity_snapshots(
         self, run_id: str, entity_id: str, page: int = 1, page_size: int = 20, full_graph: bool = False
     ) -> Dict[str, Any]:
@@ -44,32 +61,18 @@ class HistoricalRunQueryService:
         if not os.path.exists(snapshots_path):
             raise FileNotFoundError(f"Cognition snapshots file not found for run: {run_id}")
             
-        matching = []
-        try:
-            entity_id_int = int(entity_id)
-        except ValueError:
-            entity_id_int = None
-
-        with open(snapshots_path, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.strip():
-                    data = json.loads(line)
-                    if str(data.get("entity_id")) == entity_id or (entity_id_int is not None and data.get("entity_id") == entity_id_int):
-                        if not full_graph:
-                            data_stripped = data.copy()
-                            data_stripped.pop("nodes", None)
-                            data_stripped.pop("edges", None)
-                            data_stripped["nodes_count"] = len(data.get("nodes", []))
-                            data_stripped["edges_count"] = len(data.get("edges", []))
-                            matching.append(data_stripped)
-                        else:
-                            matching.append(data)
-
-        total = len(matching)
+        # Count every match while streaming, keep only the requested page in memory.
         start = (page - 1) * page_size
         end = start + page_size
-        paginated = matching[start:end]
-        
+        total = 0
+        paginated: List[Dict[str, Any]] = []
+        for data in self._iter_entity_records(snapshots_path, entity_id):
+            if start <= total < end:
+                # The writer nests nodes/edges under "graph" and records
+                # node_count/edge_count itself (build_snapshot_record).
+                paginated.append(data if full_graph else {k: v for k, v in data.items() if k != "graph"})
+            total += 1
+
         return {
             "snapshots": paginated,
             "total": total,

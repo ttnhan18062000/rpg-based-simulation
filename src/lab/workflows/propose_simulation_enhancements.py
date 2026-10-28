@@ -181,7 +181,7 @@ class ProposeSimulationEnhancementsWorkflow:
             "target_ticks": [10000, 20000]
         }
         with open(drafts_dir / "experiment_draft_01.yaml", "w", encoding="utf-8") as f:
-            yaml.dump(experiment_draft, f, default_flow_style=False)
+            yaml.safe_dump(experiment_draft, f, default_flow_style=False)
 
         # 6. Insight Candidates
         insight_candidates = []

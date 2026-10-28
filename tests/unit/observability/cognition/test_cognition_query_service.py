@@ -3,6 +3,7 @@ import os
 import json
 import pytest
 import shutil
+from src.observability.cognition.schema import build_snapshot_record
 from src.observability.reporting.history_query import HistoricalRunQueryService
 from src.observability.reporting.artifact_repository import RunArtifactRepository, RunManifest
 
@@ -35,10 +36,18 @@ def temp_run_dir(tmp_path):
         json.dump(manifest_data, f)
         
     # Write dummy snapshots jsonl
+    def _snap(tick, entity_id, nodes, edges):
+        return build_snapshot_record(
+            run_id=run_id, tick=tick, entity_id=entity_id, reason="OBJECTIVE_CHANGED",
+            nodes=nodes, edges=edges, current_objective_id=f"obj_{tick}",
+        )
+
     snapshots = [
-        {"tick": 1, "entity_id": 1, "objective": "survive", "nodes": [{"id": "node1"}], "edges": []},
-        {"tick": 2, "entity_id": 1, "objective": "explore", "nodes": [{"id": "node2"}], "edges": []},
-        {"tick": 3, "entity_id": 2, "objective": "gather", "nodes": [{"id": "node3"}], "edges": []}
+        _snap(1, 1, [{"node_id": "node1", "kind": "goal", "label": "n1"}], []),
+        _snap(2, 1, [{"node_id": "node2", "kind": "goal", "label": "n2"},
+                     {"node_id": "node4", "kind": "goal", "label": "n4"}],
+              [{"source_id": "node2", "target_id": "node4", "kind": "leads_to"}]),
+        _snap(3, 2, [{"node_id": "node3", "kind": "goal", "label": "n3"}], []),
     ]
     with open(run_folder / "cognition_graph_snapshots.jsonl", "w", encoding="utf-8") as f:
         for s in snapshots:
@@ -80,17 +89,18 @@ def test_service_get_snapshots(temp_run_dir):
     res = service.get_entity_snapshots(run_id=run_id, entity_id="1", page=1, page_size=2)
     assert res["total"] == 2
     assert len(res["snapshots"]) == 2
-    # Verify raw nodes/edges stripped
-    assert "nodes" not in res["snapshots"][0]
-    assert "edges" not in res["snapshots"][0]
-    assert res["snapshots"][0]["nodes_count"] == 1
-    assert res["snapshots"][0]["edges_count"] == 0
-    assert res["snapshots"][0]["objective"] == "survive"
+    # Summary mode drops the nested graph and keeps the writer's own counts
+    assert "graph" not in res["snapshots"][0]
+    assert res["snapshots"][0]["node_count"] == 1
+    assert res["snapshots"][0]["edge_count"] == 0
+    assert res["snapshots"][1]["node_count"] == 2
+    assert res["snapshots"][1]["edge_count"] == 1
+    assert res["snapshots"][0]["current_objective_id"] == "obj_1"
 
     # Test with full_graph = True
     res_full = service.get_entity_snapshots(run_id=run_id, entity_id="1", page=1, page_size=2, full_graph=True)
-    assert "nodes" in res_full["snapshots"][0]
-    assert res_full["snapshots"][0]["nodes"] == [{"id": "node1"}]
+    assert [n["node_id"] for n in res_full["snapshots"][0]["graph"]["nodes"]] == ["node1"]
+    assert len(res_full["snapshots"][1]["graph"]["edges"]) == 1
 
     # Test pagination
     res_pag = service.get_entity_snapshots(run_id=run_id, entity_id="1", page=2, page_size=1)

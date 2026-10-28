@@ -58,8 +58,8 @@ _CORE_RPG_PREFIXES = (
 
 # Import signals: the component roots of the ownership map, docs/plans/test_architecture/reference/
 # architecture_design_notes.md §3.1 -- the single source for these three tuples. A trailing `*` is a
-# module-name stem wildcard (`src.systems.crafting*` matches src.systems.crafting and
-# src.systems.crafting_x); any other entry matches that module and everything beneath it.
+# module-name stem wildcard (`src.systems.harvest*` matches src.systems.harvest and
+# src.systems.harvest_system); any other entry matches that module and everything beneath it.
 _SUBSTRATE_IMPORT_PREFIXES = (  # "Shared substrate" row: not gameplay, so never a core-RPG signal
     "src.core", "src.engine.pipeline*", "src.engine.kernel*", "src.platform",
 )
@@ -73,9 +73,9 @@ DOMAIN_IMPORT_PREFIXES = {
     # town_resource.yaml). Evidence: the core-RPG pilot mapped a conservation change to substrate only and
     # recommended no scenario level (docs/testing/core_rpg_test_pilot_2026-09-30.md). They stay substrate
     # too: the impact report names both owners.
-    "economy": ("src.systems.economy*", "src.systems.market*", "src.systems.crafting*",
+    "economy": ("src.systems.economy*", "src.systems.market*",
                 "src.systems.harvest*", "src.economy", "src.core.conservation*", "src.core.inventory*"),
-    "quests_guild": ("src.systems.quest*", "src.systems.guild_system*", "src.quests"),
+    "quests_guild": ("src.systems.quest*", "src.quests"),
 }
 _GAMEPLAY_IMPORT_PREFIXES = tuple(p for prefixes in DOMAIN_IMPORT_PREFIXES.values() for p in prefixes)
 _UNOWNED_DOMAIN_IMPORT_PREFIXES = (  # "Party / group" row: no oracle and no owner (decision D-P, deferred)

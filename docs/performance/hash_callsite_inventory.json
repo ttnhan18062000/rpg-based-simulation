@@ -8,7 +8,7 @@
   },
   "schemes": {
     "CanonicalStateHasher.get_hash": "flat SHA-256 over compact canonical JSON of the whole state",
-    "CanonicalHashScheduler.compute_hash": "same flat SHA-256 (flat-sha256-v2) at a sanctioned boundary; raises elsewhere",
+    "CanonicalHashScheduler.compute_hash": "same flat SHA-256 (flat-sha256-v3) at a sanctioned boundary; raises elsewhere",
     "CanonicalHashScheduler.compute_digest": "same flat SHA-256 as a typed record (scheme, tick, status, value); reports 'not computed' elsewhere",
     "StateFingerprinter.get_fingerprint": "dict whose 'state_hash' is an MD5 over a hand-built string of selected state domains",
     "AuthoritativeState.fingerprint": "delegates to StateFingerprinter.get_fingerprint (same dict, MD5 state_hash)",
@@ -18,7 +18,7 @@
     {
       "kind": "caller",
       "file": "src/certification/harness.py",
-      "line": 239,
+      "line": 238,
       "enclosing_function": "CertificationHarness._certification_digest",
       "mechanism": "CanonicalHashScheduler.compute_digest",
       "call": "CanonicalHashScheduler().compute_digest",
@@ -30,7 +30,7 @@
     {
       "kind": "delegation inside a mechanism",
       "file": "src/core/state.py",
-      "line": 1640,
+      "line": 1603,
       "enclosing_function": "AuthoritativeState.fingerprint",
       "mechanism": "StateFingerprinter.get_fingerprint",
       "call": "StateFingerprinter.get_fingerprint",
@@ -42,7 +42,7 @@
     {
       "kind": "delegation inside a mechanism",
       "file": "src/engine/checkpoint.py",
-      "line": 201,
+      "line": 247,
       "enclosing_function": "CanonicalHashScheduler.compute_digest",
       "mechanism": "CanonicalStateHasher.get_hash",
       "call": "CanonicalStateHasher.get_hash",
@@ -54,7 +54,7 @@
     {
       "kind": "delegation inside a mechanism",
       "file": "src/engine/checkpoint.py",
-      "line": 220,
+      "line": 266,
       "enclosing_function": "CanonicalHashScheduler.compute_hash",
       "mechanism": "CanonicalStateHasher.get_hash",
       "call": "CanonicalStateHasher.get_hash",
@@ -66,7 +66,7 @@
     {
       "kind": "caller",
       "file": "src/engine/kernel.py",
-      "line": 424,
+      "line": 422,
       "enclosing_function": "Kernel._tick_once_inner",
       "mechanism": "AuthoritativeState.fingerprint",
       "call": "self._state.fingerprint",
@@ -80,7 +80,7 @@
     {
       "kind": "caller",
       "file": "src/engine/kernel.py",
-      "line": 668,
+      "line": 667,
       "enclosing_function": "Kernel._phase_resolution",
       "mechanism": "AuthoritativeState.fingerprint",
       "call": "self._state.fingerprint",
@@ -94,7 +94,7 @@
     {
       "kind": "caller",
       "file": "src/engine/kernel.py",
-      "line": 1100,
+      "line": 1091,
       "enclosing_function": "Kernel._guard_stability",
       "mechanism": "AuthoritativeState.fingerprint",
       "call": "self._state.fingerprint",
@@ -106,7 +106,7 @@
     {
       "kind": "caller",
       "file": "src/engine/kernel.py",
-      "line": 1135,
+      "line": 1126,
       "enclosing_function": "Kernel._phase_persistence",
       "mechanism": "CanonicalHashScheduler.compute_digest",
       "call": "CanonicalHashScheduler().compute_digest",
@@ -120,7 +120,7 @@
     {
       "kind": "caller",
       "file": "src/engine/kernel.py",
-      "line": 1206,
+      "line": 1197,
       "enclosing_function": "Kernel.shutdown",
       "mechanism": "CanonicalHashScheduler.compute_digest",
       "call": "CanonicalHashScheduler(self._state.tick).compute_digest",
@@ -132,7 +132,7 @@
     {
       "kind": "caller",
       "file": "src/worldbuilding/compiler.py",
-      "line": 876,
+      "line": 913,
       "enclosing_function": "WorldCompiler.compile",
       "mechanism": "StateFingerprinter.get_fingerprint",
       "call": "StateFingerprinter.get_fingerprint",
@@ -144,7 +144,7 @@
     {
       "kind": "caller",
       "file": "src/worldbuilding/compiler.py",
-      "line": 887,
+      "line": 924,
       "enclosing_function": "WorldCompiler.compile",
       "mechanism": "CanonicalStateHasher.get_hash",
       "call": "CanonicalStateHasher.get_hash",
@@ -158,7 +158,7 @@
   "digest_producers": [
     {
       "file": "src/core/state.py",
-      "line": 1634,
+      "line": 1597,
       "function": "AuthoritativeState.fingerprint",
       "hashlib_algorithms": [],
       "delegates_to": [
@@ -167,7 +167,7 @@
     },
     {
       "file": "src/engine/checkpoint.py",
-      "line": 64,
+      "line": 94,
       "function": "CanonicalStateHasher.get_hash",
       "hashlib_algorithms": [
         "sha256"
@@ -176,7 +176,7 @@
     },
     {
       "file": "src/engine/checkpoint.py",
-      "line": 194,
+      "line": 240,
       "function": "CanonicalHashScheduler.compute_digest",
       "hashlib_algorithms": [],
       "delegates_to": [
@@ -185,7 +185,7 @@
     },
     {
       "file": "src/engine/checkpoint.py",
-      "line": 203,
+      "line": 249,
       "function": "CanonicalHashScheduler.compute_hash",
       "hashlib_algorithms": [],
       "delegates_to": [
@@ -211,7 +211,7 @@
     },
     {
       "file": "tests/certification/test_evidence_levels.py",
-      "line": 397,
+      "line": 396,
       "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_full_evidence_final_state_hash_in_artifact"
     },
@@ -546,6 +546,12 @@
       "enclosing_function": "TestCognitionSnapshotArtifact.test_state_hash_determinism_preserved"
     },
     {
+      "file": "tests/integration/observability/test_phase28_observability_determinism.py",
+      "line": 56,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "_execute"
+    },
+    {
       "file": "tests/integration/pipeline/test_governance_isolation.py",
       "line": 13,
       "mechanism": "CanonicalStateHasher.get_hash",
@@ -589,25 +595,25 @@
     },
     {
       "file": "tests/integrity/test_logic_guards.py",
-      "line": 137,
+      "line": 151,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_world_init_determinism"
     },
     {
       "file": "tests/integrity/test_logic_guards.py",
-      "line": 138,
+      "line": 152,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_world_init_determinism"
     },
     {
       "file": "tests/integrity/test_logic_guards.py",
-      "line": 139,
+      "line": 153,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_world_init_determinism"
     },
     {
       "file": "tests/integrity/test_logic_guards.py",
-      "line": 247,
+      "line": 261,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_full_tick_determinism.run_one_tick"
     },
@@ -661,7 +667,7 @@
     },
     {
       "file": "tests/unit/core/test_engine_integrity.py",
-      "line": 159,
+      "line": 161,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_isolation_guard_trigger"
     },
@@ -832,6 +838,12 @@
       "line": 190,
       "mechanism": "AuthoritativeState.fingerprint",
       "enclosing_function": "test_snapshot_is_not_mutating_state"
+    },
+    {
+      "file": "tests/unit/engine/test_acting_hostile_is_an_act_not_a_state.py",
+      "line": 147,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_last_hit_tick_is_canonical_state_and_in_the_proof_digest.digest"
     },
     {
       "file": "tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py",
@@ -1021,25 +1033,43 @@
     },
     {
       "file": "tests/unit/engine/test_proof_digest_contract.py",
-      "line": 68,
+      "line": 102,
       "mechanism": "CanonicalStateHasher.get_hash",
-      "enclosing_function": "test_flat_hash_of_fixed_fixture_is_unchanged_from_main"
+      "enclosing_function": "test_flat_hash_of_carried_fixture_is_pinned_under_v3"
     },
     {
       "file": "tests/unit/engine/test_proof_digest_contract.py",
-      "line": 85,
+      "line": 125,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_v3_is_v2_plus_the_seven_carried_state_fields"
+    },
+    {
+      "file": "tests/unit/engine/test_proof_digest_contract.py",
+      "line": 152,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_each_carried_state_field_alone_changes_the_v3_digest"
+    },
+    {
+      "file": "tests/unit/engine/test_proof_digest_contract.py",
+      "line": 152,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_each_carried_state_field_alone_changes_the_v3_digest"
+    },
+    {
+      "file": "tests/unit/engine/test_proof_digest_contract.py",
+      "line": 185,
       "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_certification_harness_digest_equals_get_hash"
     },
     {
       "file": "tests/unit/engine/test_proof_digest_contract.py",
-      "line": 144,
+      "line": 244,
       "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_no_cached_canonical_dict_is_stale_after_a_real_run"
     },
     {
       "file": "tests/unit/engine/test_proof_digest_contract.py",
-      "line": 152,
+      "line": 252,
       "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_audit_detects_a_cached_dict_mutated_in_place"
     },
@@ -1066,6 +1096,18 @@
       "line": 85,
       "mechanism": "CanonicalStateHasher.get_hash",
       "enclosing_function": "test_zero_worker_fallback_equivalence"
+    },
+    {
+      "file": "tests/unit/progression/test_death_record_projection.py",
+      "line": 21,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_a_recorded_death_and_a_remembered_attacker_change_the_digest_but_not_the_projection"
+    },
+    {
+      "file": "tests/unit/progression/test_death_record_projection.py",
+      "line": 21,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_a_recorded_death_and_a_remembered_attacker_change_the_digest_but_not_the_projection"
     },
     {
       "file": "tests/unit/progression/test_species_base_stats_preserved.py",
@@ -1102,6 +1144,78 @@
       "line": 57,
       "mechanism": "StateFingerprinter.get_fingerprint",
       "enclosing_function": "test_fingerprint_changes_when_role_changes"
+    },
+    {
+      "file": "tests/unit/resource/test_durable_records_round_trip.py",
+      "line": 19,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_a_bodys_coin_is_part_of_the_state_hash_and_the_checkpoint_data"
+    },
+    {
+      "file": "tests/unit/resource/test_durable_records_round_trip.py",
+      "line": 19,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_a_bodys_coin_is_part_of_the_state_hash_and_the_checkpoint_data"
+    },
+    {
+      "file": "tests/unit/resource/test_durable_records_round_trip.py",
+      "line": 25,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_an_owed_debt_is_part_of_the_state_hash_and_the_checkpoint_data"
+    },
+    {
+      "file": "tests/unit/resource/test_durable_records_round_trip.py",
+      "line": 25,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_an_owed_debt_is_part_of_the_state_hash_and_the_checkpoint_data"
+    },
+    {
+      "file": "tests/unit/resource/test_durable_records_round_trip.py",
+      "line": 32,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_a_regions_tax_share_is_part_of_the_state_hash_and_the_region_view"
+    },
+    {
+      "file": "tests/unit/resource/test_durable_records_round_trip.py",
+      "line": 32,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_a_regions_tax_share_is_part_of_the_state_hash_and_the_region_view"
+    },
+    {
+      "file": "tests/unit/resource/test_durable_records_round_trip.py",
+      "line": 47,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_a_purse_on_the_ground_keeps_its_coin_and_provenance_in_the_hash_checkpoint_data_and_view"
+    },
+    {
+      "file": "tests/unit/resource/test_durable_records_round_trip.py",
+      "line": 47,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_a_purse_on_the_ground_keeps_its_coin_and_provenance_in_the_hash_checkpoint_data_and_view"
+    },
+    {
+      "file": "tests/unit/resource/test_durable_records_round_trip.py",
+      "line": 48,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_a_purse_on_the_ground_keeps_its_coin_and_provenance_in_the_hash_checkpoint_data_and_view"
+    },
+    {
+      "file": "tests/unit/resource/test_durable_records_round_trip.py",
+      "line": 48,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_a_purse_on_the_ground_keeps_its_coin_and_provenance_in_the_hash_checkpoint_data_and_view"
+    },
+    {
+      "file": "tests/unit/worldassembly/test_world_build_helper_matches_the_gate.py",
+      "line": 22,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_the_helper_compiles_the_same_tick_zero_world_as_the_gate_and_the_bodies_hold_coin"
+    },
+    {
+      "file": "tests/unit/worldassembly/test_world_build_helper_matches_the_gate.py",
+      "line": 22,
+      "mechanism": "CanonicalStateHasher.get_hash",
+      "enclosing_function": "test_the_helper_compiles_the_same_tick_zero_world_as_the_gate_and_the_bodies_hold_coin"
     },
     {
       "file": "tests/unit/worldbuilding/test_place_wiring.py",

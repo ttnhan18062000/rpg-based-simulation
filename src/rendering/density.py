@@ -9,7 +9,8 @@ into src/rendering/connectivity.py. The formula was re-traced and verified direc
 against the real corpus (sandbox_world seed 42 tick 0, dungeon_crawl seed 42 tick 0):
 population standard deviation of per-entity nearest Euclidean distance divided by the
 mean, over active entities only, reproduces the documented ~0.648 / ~0.678 values to
-6+ significant figures (0.6478017242079448 / 0.6782405727873148). See
+6+ significant figures (0.6478017242079448 / 0.6782405727873148, the latter being the frozen pre-balance-fix
+dungeon_crawl; the live one is 0.283). See
 agent-working/staging_artifacts/TCK-20260821-VISUAL-DENSITY-METRIC/investigation.md for the full
 trace, including the ruled-out sample-stdev variant (0.667/0.689, does not match).
 

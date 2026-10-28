@@ -7,6 +7,9 @@ Each arm is the ``git archive`` of a commit, run by ``arm_child.py`` with that t
 (``<cache>/results/<sha>-<child hash>-<ticks>/``) so step N's child arm is step N+1's parent arm and is never re-run. A base-vs-base repeat of the base arm
 (seed 42 of every world, or all seeds with ``--self-check full``) must be byte-identical; otherwise the pair is refused. Runs whose manifest is not
 ``signals_zeroed`` are refused (``require_host_independent_runs``). People are the base arm's tick-0 keeps_coin roster matched by id (see ``stats.py``).
+The cache root is ``$RPG_MEASURE_CACHE``, else ``$XDG_CACHE_HOME/rpg-measure``, else ``~/.cache/rpg-measure``, read when the command runs; an unusable
+root is refused (exit 2, one line naming ``RPG_MEASURE_CACHE`` and the path) before any arm starts. u24 keeps its cached arms by setting
+``RPG_MEASURE_CACHE=/mnt/data/scratch-rpg-measure``.
 Run data is removed by the child by run id; ``--clean-cache`` also removes the extracted arm trees. Summary tables only are written.
 
     python -m tools.rpg_measure.paired --collected DIR --base <40-hex sha> --new <40-hex sha> [same flags]
@@ -45,9 +48,28 @@ SEEDS = (42, 43, 44, 45, 46)
 TICKS = 5000
 HASHSEED = "0"
 CHILD = Path(__file__).with_name("arm_child.py")
-DEFAULT_CACHE = Path(os.environ.get("RPG_MEASURE_CACHE", "/mnt/data/scratch-rpg-measure"))
 NEUTRAL_TICKS = 1000
 Key = Tuple[str, int]
+
+
+def resolve_cache() -> Path:
+    """The cache root, read when called: ``$RPG_MEASURE_CACHE``, else ``$XDG_CACHE_HOME/rpg-measure``, else ``~/.cache/rpg-measure``."""
+    explicit = os.environ.get("RPG_MEASURE_CACHE")
+    if explicit:
+        return Path(explicit)
+    xdg = os.environ.get("XDG_CACHE_HOME")
+    return (Path(xdg) if xdg else Path.home() / ".cache") / "rpg-measure"
+
+
+def cache_problem(cache: Path) -> Optional[str]:
+    """None when ``cache`` can be created and written, else why not (checked before any arm starts)."""
+    try:
+        cache.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return f"{type(exc).__name__}: {exc.strerror or exc}"
+    if not os.access(cache, os.W_OK | os.X_OK):
+        return "not writable"
+    return None
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -292,7 +314,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--neutral", action="store_true")
     ap.add_argument("--clean-cache", action="store_true")
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--cache", default=str(DEFAULT_CACHE))
+    ap.add_argument("--cache", default=None, help="cache root; default $RPG_MEASURE_CACHE, else $XDG_CACHE_HOME/rpg-measure, else ~/.cache/rpg-measure")
     ap.add_argument("--out", default=None)
     ap.add_argument("--collected", default=None, metavar="DIR", help="compare results already in this paired cache root (produced elsewhere); executes nothing, needs full --base/--new shas")
     ap.add_argument("--verdict-json", default=None, metavar="PATH", help='write {"outcome": PASS|STOP|REFUSED, "mode": step|neutral|report_only, "detail"} (run-ledger/v1 values)')
@@ -322,7 +344,10 @@ def _run(a: argparse.Namespace, verdict: Dict[str, Any]) -> int:
         cache, bsha, nsha = Path(a.collected), a.base, a.new
         btree = ntree = None
     else:
-        repo, cache = Path(_git(Path(a.repo), "rev-parse", "--show-toplevel")), Path(a.cache)
+        repo, cache = Path(_git(Path(a.repo), "rev-parse", "--show-toplevel")), Path(a.cache) if a.cache else resolve_cache()
+        problem = cache_problem(cache)
+        if problem:
+            return _refuse(verdict, f"cache {cache} unusable: {problem}", f"cache directory {cache} is not usable ({problem}); set RPG_MEASURE_CACHE or pass --cache")
         if a.neutral:
             return neutral(repo, a.base, a.new, cache, a.jobs, verdict)
     if collected and a.neutral:

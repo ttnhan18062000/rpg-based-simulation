@@ -142,3 +142,31 @@ def test_a_report_only_reading_never_says_stop_and_still_names_the_drift():
     assert stop_row["verdict"] == "STOP" and ro_row["verdict"] == "REPORT-ONLY"
     assert "STOP" not in "\n".join(paired.watch_rows("s", "d", [ro_row], True)).replace("never trips a stop", "")
     assert "REPORT-ONLY reading" in "\n".join(paired.watch_rows("s", "d", [ro_row], True))
+
+
+def test_the_cache_is_the_variable_when_set_and_ahead_of_xdg(monkeypatch, tmp_path):
+    monkeypatch.setenv("RPG_MEASURE_CACHE", str(tmp_path / "explicit"))
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg"))
+    assert paired.resolve_cache() == tmp_path / "explicit"
+
+
+def test_without_the_variable_the_cache_is_the_xdg_path_then_the_home_path(monkeypatch, tmp_path):
+    monkeypatch.delenv("RPG_MEASURE_CACHE", raising=False)
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg"))
+    assert paired.resolve_cache() == tmp_path / "xdg" / "rpg-measure"
+    monkeypatch.delenv("XDG_CACHE_HOME")
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    assert paired.resolve_cache() == tmp_path / "home" / ".cache" / "rpg-measure"
+
+
+def test_an_unwritable_cache_is_refused_in_one_line_before_any_arm_starts(monkeypatch, tmp_path, capsys):
+    blocker = tmp_path / "a_file"
+    blocker.write_text("x", encoding="utf-8")
+    monkeypatch.setenv("RPG_MEASURE_CACHE", str(blocker / "cache"))
+    started = []
+    monkeypatch.setattr(paired, "run_one", lambda *a, **k: started.append(a))
+    monkeypatch.setattr(paired, "run_arm", lambda *a, **k: started.append(a))
+    rc = paired.main(["--base", "a" * 40, "--new", "b" * 40, "--neutral", "--repo", "."])
+    err = capsys.readouterr().err.strip().splitlines()
+    assert rc == 2 and not started
+    assert len(err) == 1 and "RPG_MEASURE_CACHE" in err[0] and str(blocker / "cache") in err[0]

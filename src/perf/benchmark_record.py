@@ -56,7 +56,7 @@ from src.config.profiles import RuntimeProfile, SignalContract
 from src.core.governance import RuntimeMode
 from src.engine.work_units import WORK_MODEL_VERSION
 
-SCHEMA_VERSION = "1.3"  # 1.1 added the optional identity.runner section, 1.2 the optional after-collect keys of result.memory_mb, 1.3 the optional working_set_* keys of result.memory_mb (all additive: MINOR bumps, schema section 4)
+SCHEMA_VERSION = "1.4"  # 1.4 added the optional outcome.check (the compare() check that produced a non-PASS outcome), 1.1 added the optional identity.runner section, 1.2 the optional after-collect keys of result.memory_mb, 1.3 the optional working_set_* keys of result.memory_mb (all additive: MINOR bumps, schema section 4)
 
 #: Source of ``result.cost_accounting_version`` (OD-8: a constant here, no engine edit). DEV-017 (#448) changed what a tick's and a phase's
 #: reported cost means, so a record without this value, or with another one, is not comparable on tick cost.
@@ -103,10 +103,11 @@ class Clock(str, Enum):
 
 
 class HashScheme(str, Enum):
-    """Digest schemes of ``validity.final_state_hash``. v2 since DEV-019 (#455); v1 survives in compile reports. Never compared across."""
+    """Digest schemes of ``validity.final_state_hash``. v3 since the proof digest hashes the seven carried-state fields it omitted (TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS); v2 since DEV-019 (#455); v1 survives in compile reports. Never compared across."""
 
     FLAT_SHA256_V1 = "flat-sha256-v1"
     FLAT_SHA256_V2 = "flat-sha256-v2"
+    FLAT_SHA256_V3 = "flat-sha256-v3"
 
 
 class OutcomeState(str, Enum):
@@ -116,6 +117,11 @@ class OutcomeState(str, Enum):
     REGRESSION = "REGRESSION"
     INCONCLUSIVE = "INCONCLUSIVE"
     NOT_APPLICABLE = "NOT_APPLICABLE"
+
+
+#: The ``compare()`` checks, in the order they run. ``Outcome.check`` is one of these for an outcome ``compare()`` decided, and ``None`` otherwise
+#: (a ``PASS``, a ``NOT_APPLICABLE``, or an outcome built outside ``compare()``). ``tools/perf/known_debt.py`` matches ledger signatures against it.
+CHECK_NAMES = ("schema", "each_side", "blocking_fields", "hash_scheme", "mode_sequences", "latency")
 
 
 def _coerce(obj: Any, name: str, enum_type: Type[Enum]) -> None:
@@ -344,15 +350,23 @@ class Validity:
 
 @dataclass(frozen=True)
 class Outcome:
-    """A state and the reason for it. A reason is required: an outcome without one is a skip that reads as success."""
+    """A state and the reason for it. A reason is required: an outcome without one is a skip that reads as success.
+
+    ``check`` names the ``compare()`` check that produced a non-``PASS`` outcome (one of :data:`CHECK_NAMES`). Code that must recognise an outcome
+    (a known-debt entry) matches ``state`` and ``check``, never the free-text ``reason``. ``None`` for a ``PASS`` and for an outcome made outside
+    ``compare()``.
+    """
 
     state: OutcomeState
     reason: str
+    check: Optional[str] = None
 
     def __post_init__(self) -> None:
         _coerce(self, "state", OutcomeState)
         if not self.reason:
             raise BenchmarkRecordError("an outcome needs a reason")
+        if self.check is not None and self.check not in CHECK_NAMES:
+            raise BenchmarkRecordError(f"an outcome's check must be one of {CHECK_NAMES}, got {self.check!r}")
 
 
 @dataclass(frozen=True)
@@ -787,8 +801,8 @@ def _get(record: BenchmarkRecord, path: str) -> Any:
     return value.value if isinstance(value, Enum) else value
 
 
-def _inconclusive(reason: str) -> Outcome:
-    return Outcome(OutcomeState.INCONCLUSIVE, reason)
+def _inconclusive(reason: str, check: Optional[str] = None) -> Outcome:
+    return Outcome(OutcomeState.INCONCLUSIVE, reason, check)
 
 
 def _major(version: str) -> str:
@@ -884,15 +898,17 @@ def _check_latency(base: BenchmarkRecord, head: BenchmarkRecord, thresholds: Thr
     return Outcome(OutcomeState.PASS, reason)
 
 
-#: In order. The first check that returns an outcome decides; ``_check_latency`` always does, so ``compare`` always returns one.
-_CHECKS: Tuple[Check, ...] = (
-    _check_schema,
-    _check_each_side,
-    _check_blocking_fields,
-    _check_hash_scheme,
-    _check_mode_sequences,
-    _check_latency,
+#: In order, each under its :data:`CHECK_NAMES` name. The first check that returns an outcome decides; ``_check_latency`` always does, so ``compare``
+#: always returns one. ``compare`` stamps the deciding check's name on a non-``PASS`` outcome as ``Outcome.check``.
+_CHECKS: Tuple[Tuple[str, Check], ...] = (
+    ("schema", _check_schema),
+    ("each_side", _check_each_side),
+    ("blocking_fields", _check_blocking_fields),
+    ("hash_scheme", _check_hash_scheme),
+    ("mode_sequences", _check_mode_sequences),
+    ("latency", _check_latency),
 )
+assert tuple(name for name, _ in _CHECKS) == CHECK_NAMES, "_CHECKS and CHECK_NAMES must list the same checks in the same order"
 
 
 def compare(base: Optional[BenchmarkRecord], head: Optional[BenchmarkRecord], thresholds: Thresholds = Thresholds()) -> Outcome:  # noqa: B008 - frozen
@@ -901,8 +917,8 @@ def compare(base: Optional[BenchmarkRecord], head: Optional[BenchmarkRecord], th
         return _inconclusive("no baseline record: nothing to compare against")
     if head is None:
         return _inconclusive("no head record")
-    for check in _CHECKS:
+    for name, check in _CHECKS:
         outcome = check(base, head, thresholds)
         if outcome is not None:
-            return outcome
+            return outcome if outcome.state is OutcomeState.PASS else replace(outcome, check=name)
     return _inconclusive("no check decided")  # unreachable: _check_latency always returns

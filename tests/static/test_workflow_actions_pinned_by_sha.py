@@ -13,7 +13,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW_DIR = ROOT / ".github" / "workflows"
 WORKFLOWS = tuple(sorted(p.name for p in WORKFLOW_DIR.glob("*.y*ml")))
-TESTING_WORKFLOWS = ("test.yml", "slow-regression.yml", "slow-regression-watchdog.yml", "rpg-gate-report.yml")
+TESTING_WORKFLOWS = ("test.yml", "slow-regression.yml", "slow-regression-watchdog.yml", "rpg-gate-report.yml", "paired-arms.yml")
 USES = re.compile(r"^\s*(?:-\s+)?uses:\s*(?P<ref>\S+)(?P<rest>.*)$")
 PINNED = re.compile(r"^[\w.-]+/[\w.-]+(?:/[\w./-]+)?@[0-9a-f]{40}$")
 VERSION_COMMENT = re.compile(r"^\s+#\s*v\d+(?:\.\d+)*\s*$")

@@ -47,6 +47,19 @@ class ActionIntentAdapter:
         cls._traces.clear()
 
     @classmethod
+    def _refuse(cls, entity: Any, intent: ActionIntent, reqs: list, reason: str) -> Dict[int, EntityUpdate]:
+        """Record a ``FAILED_REQUIREMENTS: <reason>`` trace and return the no-op update."""
+        cls._traces.append(IntentTrace(
+            intent_kind=intent.kind,
+            actor_id=intent.actor_id,
+            why_selected=intent.reason or "strategic choice",
+            opportunity_source_id=intent.source_opportunity_id,
+            requirements_checked=tuple(reqs),
+            execution_result=f"FAILED_REQUIREMENTS: {reason}",
+        ))
+        return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+
+    @classmethod
     def execute(
         cls,
         entity: EntityState,
@@ -69,12 +82,15 @@ class ActionIntentAdapter:
             recipe_id = intent.payload.get("recipe_id")
             if not recipe_id and isinstance(intent.target_id, str) and intent.target_id.startswith("opp_craft_"):
                 recipe_id = intent.target_id.removeprefix("opp_craft_")
-            if recipe_id and RecipeRegistry.contains(recipe_id):
-                recipe = RecipeRegistry.get(recipe_id)
-                reqs.append(Requirement(kind="recipe_known", subject=recipe_id))
-                reqs.append(Requirement(kind="has_gold", quantity=recipe.gold_cost))
-                for m_id, m_qty in recipe.requires_items.items():
-                    reqs.append(Requirement(kind="has_item", subject=m_id, quantity=m_qty))
+            if not recipe_id or not RecipeRegistry.contains(recipe_id):
+                # Refuse like an unavailable shop (BUY_ITEM) instead of reaching
+                # RecipeRegistry.get below, which raises KeyError (PROG-097).
+                return cls._refuse(entity, intent, reqs, "unknown_recipe")
+            recipe = RecipeRegistry.get(recipe_id)
+            reqs.append(Requirement(kind="recipe_known", subject=recipe_id))
+            reqs.append(Requirement(kind="has_gold", quantity=recipe.gold_cost))
+            for m_id, m_qty in recipe.requires_items.items():
+                reqs.append(Requirement(kind="has_item", subject=m_id, quantity=m_qty))
         elif intent.kind == "HARVEST_RESOURCE":
             res_id = intent.target_id
             if res_id and ResourceRegistry.contains(res_id):
@@ -206,9 +222,9 @@ class ActionIntentAdapter:
             # Durable-state commitment is deferred to the pre-existing, already
             # parity-verified ResourceTransactionResolver "CRAFTING" branch
             # (src/core/conservation.py:133) via the same ResourceTransferIntent
-            # shape src/engine/blacksmith.py:205-218 already builds — do not call
-            # CraftingSystem.craft() directly, it bypasses that authoritative path
-            # and would not surface an item_crafted event.
+            # shape src/engine/blacksmith.py:205-218 already builds — the retired
+            # CraftingSystem.craft() bypassed that authoritative path and did not
+            # surface an item_crafted event.
             recipe = RecipeRegistry.get(recipe_id)
             materials = [ItemStack(mat, count) for mat, count in recipe.requires_items.items()]
             trace = IntentTrace(
@@ -245,16 +261,7 @@ class ActionIntentAdapter:
 
             result = ShopService.buy_item(entity, item_id, quantity, context) if (item_id and context is not None) else None
             if result is None:
-                trace = IntentTrace(
-                    intent_kind=intent.kind,
-                    actor_id=intent.actor_id,
-                    why_selected=intent.reason or "strategic choice",
-                    opportunity_source_id=intent.source_opportunity_id,
-                    requirements_checked=tuple(reqs),
-                    execution_result="FAILED_REQUIREMENTS: shop_unavailable"
-                )
-                cls._traces.append(trace)
-                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+                return cls._refuse(entity, intent, reqs, "shop_unavailable")
 
             trace = IntentTrace(
                 intent_kind=intent.kind,

@@ -116,7 +116,7 @@ class StateFingerprinter:
             f"macro={macro_ident}"
         )
 
-        state_hash = hashlib.md5(raw_data.encode("utf-8")).hexdigest()
+        state_hash = hashlib.md5(raw_data.encode("utf-8"), usedforsecurity=False).hexdigest()
 
         return {
             "state_hash": state_hash,

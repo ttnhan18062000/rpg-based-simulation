@@ -72,7 +72,7 @@ fact worth documenting.
   Population-stdev (`statistics.pstdev`, **not** sample-stdev) of per-entity
   nearest-Euclidean-distance, divided by the mean, over active entities only. Cite the
   two verified anchors verbatim, uncomputed: `sandbox_world` CV =
-  `0.6478017242079448`, `dungeon_crawl` CV = `0.6782405727873148`.
+  `0.6478017242079448`, frozen pre-balance-fix `dungeon_crawl` CV = `0.6782405727873148` (the live `dungeon_crawl` is `0.283`; the live anchor is `frontier_living_world` CV = `0.659`).
 
 - **Shape (`shape.py`)** — `connected_components(terrain, min_size=20,
   excluded_types={"PLAIN","ROAD"}) -> list[ShapeComponent]`. BFS is run once per
@@ -85,8 +85,10 @@ fact worth documenting.
 
 - **Variants (`variants.py`)** — `total_variation_distance(h1, h2) -> float`
   (`0.5 * sum(abs(h1[k] - h2[k]) for k in ...)`). Cite the verified anchor verbatim,
-  uncomputed: `TVD(sandbox_world, dungeon_crawl) = 0.23161981243456373`; same-spec/
-  different-seed TVD is exactly `0.0` for `dungeon_crawl`. `select_trail_entity`
+  uncomputed: `TVD(sandbox_world, frozen dungeon_crawl) = 0.23153614062704975` (the earlier
+  `0.23161981243456373` predates the D72 histogram-bucket merge) and the live
+  `TVD(sandbox_world, frontier_living_world) = 0.264502519629673`; same-spec/
+  different-seed TVD is exactly `0.0` for the live `dungeon_crawl`. `select_trail_entity`
   deliberately uses `hashlib.sha256(f"{world_id}:{seed}")` over a sorted active-entity
   list, **not** `DeterministicRNG`/`Domain` — a read-only QA selection must not touch
   the replay-critical authoritative-randomness mechanism.
@@ -136,6 +138,20 @@ Real test files covering this system:
 - `tests/unit/rendering/test_review_pipeline.py`
 - `tests/architecture/test_rendering_zero_new_dependency_guard.py`
 - `tests/tools/test_calibrate_rendering.py`
+
+### Frozen reference and live corpus (decision, 2026-10-28)
+
+Both are kept (TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT, rpg-planner ruling).
+The six `test_frozen_reference_*` tests measure the pre-balance-fix `dungeon_crawl` fixture
+(`tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml`, kept deliberately, never regenerated): a fixed
+world isolates the renderer from world-content churn, but it detects nothing in the live corpus. The `test_live_*` tests
+pin `frontier_living_world` at seed 42 (an M1 gate world with a cave and two forests): walkable `17058`, one component,
+CV `0.659`, TVD against `sandbox_world` `0.2645`, cave `1886` (fill 1.0), forests `1226` (0.515) and `216` (0.675). Pins
+are exact (counts and fills exact, CV to 3 places, TVD to 4); the compile is deterministic, and a tolerance band would hide a
+real layout change. A `data/worlds` release that moves them is rebaselined by rpg-planner (u24). The 90-degree rotation claim
+and the structural seed-invariance (TVD 0.0 for the live `dungeon_crawl`) stay frozen-only and live-`dungeon_crawl` respectively.
+The `0.2867` TVD once recorded for the live `dungeon_crawl` does not reproduce (measured `0.196`) and has no known origin.
+The frozen reference can be retired when the renderer no longer needs a fixed-world regression anchor.
 
 ## 7. Non-Goals
 

@@ -69,8 +69,8 @@ def test_connected_component_labeling_splits_disjoint_same_type_patches():
     assert {c.size for c in forest_components} == {25, 25}
 
 
-def test_dungeon_crawl_forest_is_two_components_of_1116_tiles_each():
-    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+def test_frozen_reference_dungeon_crawl_forest_is_two_components_of_1116_tiles_each():
+    """Frozen reference, not a live guard: the world is tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml (the pre-balance-fix dungeon_crawl, kept deliberately; do not regenerate). It isolates the renderer from world-content churn; live coverage is on frontier_living_world."""
     spec = load_frozen_dungeon_crawl()
     state, _report = WorldCompiler.compile(spec, seed=42)
 
@@ -81,8 +81,8 @@ def test_dungeon_crawl_forest_is_two_components_of_1116_tiles_each():
     assert [c.size for c in forest_components] == [1116, 1116]
 
 
-def test_dungeon_crawl_per_component_fill_ratios_match_documented_evidence():
-    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+def test_frozen_reference_dungeon_crawl_per_component_fill_ratios_match_documented_evidence():
+    """Frozen reference, not a live guard: the world is tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml (the pre-balance-fix dungeon_crawl, kept deliberately; do not regenerate). It isolates the renderer from world-content churn; live coverage is on frontier_living_world."""
     spec = load_frozen_dungeon_crawl()
     state, _report = WorldCompiler.compile(spec, seed=42)
 
@@ -119,8 +119,8 @@ def test_fill_ratio_formula_on_synthetic_shapes():
     assert compute_fill_ratio(single) == 1.0
 
 
-def test_forest_components_detected_as_90_degree_rotation():
-    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+def test_frozen_reference_forest_components_detected_as_90_degree_rotation():
+    """Frozen reference, not a live guard: the world is tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml (the pre-balance-fix dungeon_crawl, kept deliberately; do not regenerate). It isolates the renderer from world-content churn; live coverage is on frontier_living_world."""
     spec = load_frozen_dungeon_crawl()
     state, _report = WorldCompiler.compile(spec, seed=42)
 
@@ -301,3 +301,17 @@ def test_does_not_mutate_authoritative_state():
     assert grouped_1 == grouped_2
     assert result_1 == result_2
     assert terrain == terrain_before
+
+
+def test_live_frontier_living_world_has_a_cave_two_forests_and_their_fill_ratios():
+    """Live corpus guard (see docs/visual_quality/scoring_contract.md). 2026-10-28 pin; rebaseline owner: rpg-planner (u24), which holds the data/worlds release.
+    The frozen 90-degree-rotation claim has no live counterpart here: the two live forests are not a rotation pair."""
+    state, _report = WorldCompiler.compile(WorldRepository("data/worlds").load_world("frontier_living_world"), seed=42)
+
+    by_type: dict[str, list[ShapeComponent]] = {}
+    for c in connected_components(state.terrain):
+        by_type.setdefault(c.terrain_type, []).append(c)
+
+    assert [(c.size, round(c.fill_ratio, 3)) for c in by_type["cave"]] == [(1886, 1.0)]
+    assert [(c.size, round(c.fill_ratio, 3)) for c in by_type["forest"]] == [(1226, 0.515), (216, 0.675)]
+    assert detect_rotation_match(*by_type["forest"]) is False

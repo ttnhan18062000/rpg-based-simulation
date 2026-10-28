@@ -71,7 +71,7 @@ def replace_identity(record: BenchmarkRecord, section: str, **changes: Any) -> B
 
 def test_record_is_frozen_and_versioned() -> None:
     record = make_record()
-    assert record.schema_version == SCHEMA_VERSION == "1.3"
+    assert record.schema_version == SCHEMA_VERSION == "1.4"
     with pytest.raises(dataclasses.FrozenInstanceError):
         record.schema_version = "2.0"  # type: ignore[misc]
     with pytest.raises(dataclasses.FrozenInstanceError):
@@ -93,8 +93,8 @@ def test_blocking_contract_fields_are_present() -> None:
     assert wire["result"]["cost_accounting_version"] == COST_ACCOUNTING_VERSION == "DEV-017"
 
 
-@pytest.mark.parametrize("bad", ["flat-sha256-v3", "sha256", "", "FLAT-SHA256-V2"])
-def test_hash_scheme_rejects_anything_but_the_two_schemes(bad: str) -> None:
+@pytest.mark.parametrize("bad", ["flat-sha256-v4", "sha256", "", "FLAT-SHA256-V2"])
+def test_hash_scheme_rejects_anything_but_the_three_schemes(bad: str) -> None:
     with pytest.raises(BenchmarkRecordError):
         Validity(final_state_hash="ab", hash_scheme=bad)  # type: ignore[arg-type]
 
@@ -102,6 +102,7 @@ def test_hash_scheme_rejects_anything_but_the_two_schemes(bad: str) -> None:
 def test_hash_scheme_accepts_both_schemes_and_a_hash_needs_one() -> None:
     assert Validity(final_state_hash="ab", hash_scheme="flat-sha256-v1").hash_scheme is HashScheme.FLAT_SHA256_V1
     assert Validity(final_state_hash="ab", hash_scheme="flat-sha256-v2").hash_scheme is HashScheme.FLAT_SHA256_V2
+    assert Validity(final_state_hash="ab", hash_scheme="flat-sha256-v3").hash_scheme is HashScheme.FLAT_SHA256_V3
     with pytest.raises(BenchmarkRecordError):
         Validity(final_state_hash="ab")
 

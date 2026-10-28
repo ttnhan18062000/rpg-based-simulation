@@ -19,16 +19,17 @@ this doc cites the proposal by section, not by quote, because item B may change 
 holds testing-planner's lane placement (#593, comment 6355976419) in place of the draft, with rpg's estimated dates for the
 audit findings F3 to F5 (#593, comment 6356470108) in the dependency table; Q1, Q3 and Q4 in §9 are resolved. Nothing else changed.
 
-**Decisions this doc does not take.** Lane placement is testing-planner's. The hash scheme is perf-planner's (it also adopted the side digest of §4.2). Whether `recent_world_events` is canonical state is rpg-planner's. Each is an open question in §9.
+**Decisions this doc does not take.** Lane placement is testing-planner's. The hash scheme is perf-planner's (it adopted the side digest of §4.2, retired once the v3 scheme landed). Whether `recent_world_events` is canonical state is rpg-planner's. Each is an open question in §9.
 
 ## 1. What the suite must prove, and the one thing it cannot yet see
 
-The proposal asks that Modes 2 and 3 reproduce Mode 1's final canonical hash, that Mode 4 assert invariants only and that
-Mode 5 assert invariants and outcome distributions only. The audit shows that hash equality is a weaker proof than it
+The proposal asks that Modes 2 and 3 reproduce Mode 1's final canonical hash, and that Mode 4 assert invariants only (Mode 5 was dropped on
+2026-10-26, see the proposal §4). The audit shows that hash equality is a weaker proof than it
 looks today:
 
-- the hash omits `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans` and `information_providers`
-  (audit §5; F1), so a mode can diverge there and still pass;
+- the hash omitted `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans`, `information_providers`
+  and `last_hit_tick` (audit §5; F1) until `flat-sha256-v3` (#758, 957caf8f6); the final hash and the `TICK_END` trail now see them, but the
+  `REFINED_UPDATE` fingerprint still does not (§4.1a), and `pressure_signals` is still outside the digest (G1);
 - the hash depends on `PYTHONHASHSEED` whenever a faction attack fires (F4);
 - a restored checkpoint draws stateless randoms from seed 0 (F3);
 - on the default `LIVE` contract the runtime mode depends on host speed (F2).
@@ -96,58 +97,55 @@ says shutdown emits it in every mode. "Trail" is the per-tick `TICK_END.hash`, w
 
 | mode | asserted | blind to |
 |---|---|---|
-| **1** | (a) Reproducibility: the same world and seed run twice, in two processes, gives the same final hash and the same trail. (b) Invariants: HardLawMonitor clean, conservation holds (`src/core/conservation.py`). (c) Contract recorded and equal to fixed budgets. (d) `state.pressure_signals == {}` at the end (guard G1, audit F5) | the six unhashed fields (until PERF-D5); `current_mode` (unhashed, effects only); a divergence that exists in **both** runs (a deterministic bug is not a conformance failure); anything the world never exercises |
+| **1** | (a) Reproducibility: the same world and seed run twice, in two processes, gives the same final hash and the same trail. (b) Invariants: HardLawMonitor clean, conservation holds (`src/core/conservation.py`). (c) Contract recorded and equal to fixed budgets. (d) `state.pressure_signals == {}` at the end (guard G1, audit F5) | `pressure_signals` (outside the digest; G1 guards it); `current_mode` (unhashed, effects only); a divergence that exists in **both** runs (a deterministic bug is not a conformance failure); anything the world never exercises |
 | **2** | final hash equals Mode 1's, on the same world, seed, ticks and contract; fates and behaviour counters equal; the manifest records `no_replay`; the pair is refused if the flag is mixed | everything Mode 1 is blind to; **no trail, so the first divergent tick cannot be named** (a red result needs a Mode 1 re-run with replay to localise it); the replay stream itself (absent by design); whether a consumer reads `replay_allowed` outside the hash (draft T3 verification 1 to 3) |
-| **3** | final hash and the trail equal Mode 1's, **for each (backend, worker count) in the parity matrix**, run with replay on so the trail exists; a backend outside the matrix reports "unclaimed" | everything Mode 1 is blind to; order-dependent effects that cancel out by the end of the run; the 3b order-dependent reads (proposal §4: they are not exercised until 3b exists); the six fields, which is the worst case here because parallel apply could reorder exactly the registries (`factions`, `clans`, `quest_registry`) that nothing hashes |
+| **3** | final hash and the trail equal Mode 1's, **for each (backend, worker count) in the parity matrix**, run with replay on so the trail exists; a backend outside the matrix reports "unclaimed" | everything Mode 1 is blind to; order-dependent effects that cancel out by the end of the run; the 3b order-dependent reads (proposal §4: they are not exercised until 3b exists); the `REFINED_UPDATE` fingerprint is blind to the seven fields (§4.1a), so the trail that names a first divergent tick is the `TICK_END` digest, not the fingerprint |
 | **4** | invariants only, as `tests/certification/test_cert_long_run_stability.py` does (5000, 2000 and 1000 tick runs with warmup): HardLawMonitor, conservation, no crash, bounded memory growth; the contract is recorded as `LIVE` | all outcomes: two Mode 4 runs are expected to differ. Cannot detect a subtle rule bug that preserves invariants |
 | **5** | invariants plus outcome **distributions** over a stated seed set (population, fates, economy totals), compared with Mode 1's distribution on the same seeds | per-run identity; any single-seed regression; the power of the test is bounded by the seed count (the paired method needs more seeds under noise, proposal §4) |
 
-### 4.1 Canary: the six unhashed fields (audit F1)
+### 4.1 Canary: the seven carried fields (audit F1, plus `last_hit_tick`), now covered by v3
 
-Because Modes 2 and 3 rest on hash equality, the suite carries an **inverted canary (case C1)**: take a Mode 1 end state,
-change one of the six fields on a copy (add an `item_instances` entry, append a `recent_world_events` entry, flip a faction
-field, and so on), hash both, and assert that the hashes **differ**. Today C1 is **expected-red for all six fields** (the
-hash is blind), which documents the gap in executable form. It turns green only when the PERF-D5 bump covers each field. rpg
-ruled `recent_world_events` carried state (§9, Q3), so C1 checks all six fields; a field rpg later rules out of canonical state
-would be removed from C1 with the ruling cited.
+The seven are the six registry-level fields of audit F1 (`item_instances`, `recent_world_events`, `quest_registry`,
+`factions`, `clans`, `information_providers`) plus the per-entity `combat.last_hit_tick`, typed durable state added by HUNGER
+step B (`TCK-20261023-AN-ACTING-HOSTILE-IS-AN-ACT-NOT-A-STATE`). rpg ruled `recent_world_events` carried state (§9, Q3).
 
-### 4.1a Settled: the replay fingerprint is blind to the same six fields
+**F1 has landed.** `PROOF_DIGEST_SCHEME = "flat-sha256-v3"` (#758, 957caf8f6; `TCK-20261024-PROOF-DIGEST-HASHES-THE-CARRIED-STATE-IT-OMITS`)
+is v2 plus exactly these seven fields (`src/engine/checkpoint.py`, `to_canonical_data`; `docs/engine/deterministic_execution.md`,
+PERF-D5), and v1 was re-recorded under v3 (#767, fc040dee4). The final hash, and the per-tick `TICK_END.hash` trail (the same
+proof digest, taken where replay is on), now see a divergence in any of them.
 
-`StateFingerprinter.get_fingerprint` (`src/replay/fingerprint.py:33`; it feeds the `REFINED_UPDATE` fingerprint, so it is
-what the replay trail sees besides `TICK_END.hash`) reads only `entities`, `global_resources`, `grief_drained_tick`,
+**Case C1 already exists on main.** The canary this design asked for (mutate one of the seven fields on a copy and assert the
+hash **differs**) is `test_each_carried_state_field_alone_changes_the_v3_digest`, parametrised over all seven, in
+`tests/unit/engine/test_proof_digest_contract.py:148-149`, beside the pinned v3 fixture and the v3-is-v2-plus-seven migration
+proof. The suite reuses that test as C1 rather than writing a second one; it is green, not expected-red. A field rpg later
+rules out of canonical state would come out of the digest under a new scheme version, with the ruling cited.
+
+### 4.1a Settled: the replay fingerprint is still blind to the seven fields
+
+`StateFingerprinter.get_fingerprint` (`src/replay/fingerprint.py:33`; it feeds the `REFINED_UPDATE` fingerprint) was not
+touched by #758 (the file's last change is #645). It reads only `entities`, `global_resources`, `grief_drained_tick`,
 `last_calamity_tick`, `local_scars`, `maturity`, `movement_count`, `regions`, `resource_nodes`, `seed`, `tick` and, through
-`_group_identity` (`:248`), `groups`. A grep of the file for the six names finds none of them. So the per-tick trail does not
-see `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans` or `information_providers` either, and the
-Mode 3 "blind to" list in §4 stands in full: running Mode 3 with replay on does not close the gap. (Read at `b281d0c3d`; the
-file was not changed by the commits since.)
+`_group_identity` (`:248`), `groups`. A grep of the file for the six registry names finds none of them, and its per-entity
+string (`:55-72`) takes `combat.hp` and `combat.readiness` but not `last_hit_tick`. So the `REFINED_UPDATE` fingerprint does
+not see `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans`, `information_providers` or
+`last_hit_tick`. That is by design: PERF-D5 names it a cheap stability check, never cited as proof that two runs are equal.
+The suite therefore compares the `TICK_END` digest for the trail and never the fingerprint. (Re-read at `d914bace7`.)
 
-### 4.2 Side digest over the six fields (adopted; perf-planner, 2026-10-22)
+### 4.2 Side digest over the seven fields (adopted 2026-10-22; retired, not built)
 
-Until the PERF-D5 bump, the suite computes a **side digest** over exactly the six omitted fields, test-side, and asserts it
-equal alongside the final hash in Modes 2 and 3. Perf-planner adopted it on four conditions, all part of this design:
-
-1. **Suite-only test helper, not a proof digest.** It carries no `PROOF_DIGEST_SCHEME` name or version, nothing outside the
-   suite records it (no manifest, no baseline) and it does not touch `src/**`.
-2. **A positive control.** Case **C2**: one mutation per field (the mutations of C1), and each must change the side digest. A
-   side digest that does not move for a field is itself blind and fails C2.
-3. **Canonical form follows `CanonicalStateHasher`'s rules** (sorted keys, the same float handling), so the PERF-D5 bump can
-   reuse the helper.
-4. **`recent_world_events` stays in** the side digest, C1 and C2: rpg ruled it carried state (§9, Q3). A field rpg later rules out of canonical state would be dropped from all three with the ruling cited.
-
-Other properties: a mismatch is a conformance failure, a match is *not* a determinism proof (one more field set compared, no
-more); it needs a canonical dict for each of the six value types, and some may not have `to_canonical_dict` (an audit read
-did not check), `UNVERIFIED (needs read)`; it is discarded when the bump lands. Why: it closes the blind spot for any
-Mode 2 or 3 conformance run before the bump. Without it ("option (a)", the blind-to list alone) suffices only if no Mode 2
-or 3 adoption lands before the bump. With the side digest in place, the Mode 2 and Mode 3 rows of §4 read "blind to the six
-fields **except** through the side digest"; the fingerprint and the trail stay blind (§4.1a).
+Perf-planner adopted a test-side **side digest** over the seven omitted fields, with a positive control (case **C2**), to
+close the blind spot for any Mode 2 or 3 conformance run that landed before the scheme bump; it was to be discarded when the
+bump landed. The bump (v3, §4.1) landed before any Mode 2 or 3 adoption and before the side digest was built, so the side
+digest and C2 are **retired unbuilt**: the v3 per-field test of §4.1 is the positive control on the real digest. Modes 2 and 3
+assert the final hash (and the trail, Mode 3) only.
 
 ### 4.3 Mode 3 matrix (perf-planner, 2026-10-22)
 
 - **Backends:** `LocalSequentialExecutor` (`src/engine/executor.py:112`, the default at `kernel.py:198`) and `WorkerManager`
   with threads or processes (`src/engine/worker_manager.py:85-91`, `use_processes`).
 - **Matrix:** {sequential, threads, processes} x workers {1, 2, 4}, with sequential at 0 workers as the **reference arm**.
-  Add workers 8 on CI only, as oversubscription (the local VM has 6 vCPU). Every cell asserts final hash, trail (replay on)
-  and side digest equal to the reference.
+  Add workers 8 on CI only, as oversubscription (the local VM has 6 vCPU). Every cell asserts final hash and trail (replay on)
+  equal to the reference.
 - **Host kinds:** both the local 6-vCPU VM and the CI runner (AMD EPYC 7763), because different schedulers expose different
   orderings.
 - **No timing in the suite.** The GIL slowdown (1.6 to 2.1x) and any speed-up claim go through `performance_contract.md`'s
@@ -185,7 +183,7 @@ new digest, which this design does not propose.
 
 | audit finding | case | note |
 |---|---|---|
-| F1 hash omits six fields | C1 (inverted canary), C2 (side-digest positive control), the "blind to" lists of §4, the side digest of §4.2 | C1 green only after PERF-D5; the side digest narrows the blind spot before it |
+| F1 hash omitted six fields, plus `last_hit_tick` | C1 (the v3 per-field test, §4.1) | **closed by `flat-sha256-v3`** (#758; v1 re-recorded, #767). C2 and the side digest retired unbuilt (§4.2). The `REFINED_UPDATE` fingerprint stays blind by design (§4.1a) |
 | F2 `LIVE` default lets wall-clock choose the mode | P1, P2, P3, and the precondition rows of §2 | the A2 default flip is a separate rpg ticket |
 | F3 restore draws from seed 0 | X4 (§3 restore case); the non-zero-seed rule | expected-red |
 | F4 salted `hash()` | A0, X1 | X1 is vacuous without A0; `perception/filter.py:88,97` reach is `UNVERIFIED` and X1 on a world that exercises perception would show it |
@@ -205,7 +203,7 @@ about 101 to 130 MB (`tick_cost_growth` §5), so several runs fit in one job.
 
 | lane | cases | placement (testing-planner) |
 |---|---|---|
-| C-short | starts with **A0, C1, G1, P2** only (no step-1 code; testing-planner's list). C2 (the side-digest positive control, §4.2) joins when the side digest is built; placement to be confirmed with testing-planner. Mode 1 two-process on W1 and W5 (seed 42, 300 ticks) joins after T2. P1 and Mode 1 vs Mode 2 join after T3 and perf's ruling | a **path-filtered PR-time job in `test.yml`**, like perf-cert-arena (same `src/` scope as `PERF_RE`, failing open). **Advisory, not required.** Writes JUnit and a step summary. Promotion to required is a **recorded owner decision**, taken after at least 2 weeks and 20 PR runs on main with 0 false reds and a measured wall time; never by default |
+| C-short | starts with **A0, C1, G1, P2** only (no step-1 code; testing-planner's list). C1 is the existing v3 test (§4.1), which already runs with the unit tests; C2 is retired (§4.2). Mode 1 two-process on W1 and W5 (seed 42, 300 ticks) joins after T2. P1 and Mode 1 vs Mode 2 join after T3 and perf's ruling | a **path-filtered PR-time job in `test.yml`**, like perf-cert-arena (same `src/` scope as `PERF_RE`, failing open). **Advisory, not required.** Writes JUnit and a step summary. Promotion to required is a **recorded owner decision**, taken after at least 2 weeks and 20 PR runs on main with 0 false reds and a measured wall time; never by default |
 | C-nightly | W1 to W3 at 1000 ticks (seeds 42 to 44 on W1 and W2), Mode 1 vs Mode 2, X1, X2, X4 | its **own testing-owned `conformance-nightly.yml`**, not the `test.yml` cron, because `test.yml` has `cancel-in-progress: true` and that group evicted the slow suite before. `cancel-in-progress: false`, sharded one job per world like `rpg-gate-report.yml`, step-summary report, no required status |
 | C-slow | W4 at 1000 ticks (the eviction path), X3, Mode 4 invariants | `slow-regression.yml`, **only after one measured dry run**: the lane already takes about 2 h every 6 h, and if these add more than about 20 min they move to C-nightly. Mode 4 reuses the existing certification long-run tests, so there are no new runs for it |
 | Mode 3 cells | the matrix of §4.3 | **not CI yet.** When they come, comparisons stay within one job on one runner, never against the local VM (DET-PORT-0: the interpreter and OS identity differ). They wait for T2's identity record and the 3a code |
@@ -213,23 +211,23 @@ about 101 to 130 MB (`tick_cost_growth` §5), so several runs fit in one job.
 
 **Every lane:** a failing case is either owned or red. Known fails are registered like `slow_known_reds.yaml`, with an owner, a
 ticket and an expiry, and there is no silent skip. A case that waits on step-1 code is **not collected**, not xfail'd. This
-also applies to the expected-red cases of §5 and C1.
+also applies to the expected-red cases of §5.
 
 **Dependencies.** `pending step 1` marks a case that needs step-1 code that does not exist yet.
 
 | case | waits on |
 |---|---|
-| A0, C1, C2, G1, P2 | nothing for the design (C2 waits for the side digest to exist, §4.2); the code is test-side. A0 is the first thing to run once anyone runs anything |
+| A0, C1, G1, P2 | nothing; C1 is on main (§4.1), the rest is test-side code. A0 is the first thing to run once anyone runs anything |
 | P1 | `no_replay` in the arm path and its manifest record (draft T3): **pending step 1** |
 | Mode 1 reproducibility (two processes) | v1 record PR merged (the freeze: nothing touching `src/**` lands before it); no code needed, but the lane needs T2 (paired arms off this host) for a CI job: **pending step 1** |
 | Mode 2 vs Mode 1 | draft T3 and a perf ruling that `no_replay` is consistent with PERF-D1 A2: **pending step 1** |
 | C-nightly worlds timed | draft T1 (run and rerun counts) for lane budgeting: **pending step 1** |
 | X1 | A0 passing on a world; rpg fix F4 to turn it green. **rpg estimates, not commitments** (#593 comment 6356470108): the A0 probe, as short runs on `unit_faction_tension` and `urban_political`, around 10-31 to 11-01; a purpose-built `mechanic_scenario` world only if no squad forms, disclosed in its PR; the F4 fix changes squad ids, so it is its own paired step after rpg's HUNGER step A, around 11-06 to 11-07 |
 | X4 | rpg fix F3 to turn it green. **rpg estimates, not commitments** (#593 comment 6356470108): built around 10-28 to 10-29, PR around 10-30 (restored runs only; proof is restore-at-N equals the unbroken run, plus a 3-world hash check) |
-| C1 | PERF-D5 scheme bump, which comes after `RECORD-BASELINE-V1` (perf-planner); the `recent_world_events` ruling is in (§9, Q3) |
+| C1 | nothing: the `flat-sha256-v3` bump landed (#758) and v1 was re-recorded under it (#767); C1 is its per-field test (§4.1) |
 | X3 | nothing; only meaningful for a Mode 3 thread pool |
 | Mode 3 | a named port set (proposal §5), a parity matrix (PERF-D2), 3a code: **pending step 1** and later |
-| Mode 4, 5 | existing certification tests for Mode 4; Mode 5 needs its ADR first |
+| Mode 4 | existing certification tests for Mode 4 (Mode 5 dropped 2026-10-26) |
 | H2 fix (H3 and H4 are closed, proposal §2) | it is what the suite is for: each must pass Mode 1 against its own base with identical hashes (`performance_contract.md` §4.1); the neutral check in `paired.py:174-180` already does this for 3 worlds at seed 42 |
 | F5 (`pressure_signals` back door, audit §7) | **rpg estimates, not commitments** (#593 comment 6356470108): after F4, P3, leaning toward deleting the `ENABLE_*` back door; not an M1 prerequisite. G1 is the guard until then |
 | F3 and F4, together | rpg estimates both fixed around 11-07, before the M1 record ticket can be dispatched; they are M1-record prerequisites (roadmap §12.5; #593 comment 6356470108) |
@@ -240,9 +238,9 @@ also applies to the expected-red cases of §5 and C1.
 | # | question | owner |
 |---|---|---|
 | Q1 | ~~Where does each lane run, and is C-short a required check?~~ **Resolved, §8: C-short is an advisory PR-time job in `test.yml`; C-nightly has its own workflow; C-slow waits on a dry run; promotion to required is a recorded owner decision. (testing-planner, 2026-10-23, #593 comment 6355976419)** | closed |
-| Q2 | ~~Is the §4.2 side digest worth building before PERF-D5, or does the "blind to" list suffice?~~ **Resolved, §4.2: adopted on four conditions. (perf-planner, 2026-10-22)** | closed |
-| Q3 | ~~Is `recent_world_events` canonical state or a view? Decides whether C1 has five or six fields.~~ **Resolved: `recent_world_events` is carried state (rpg-planner, #593 comment 6347182683); C1 and the side digest cover all six fields.** | closed |
+| Q2 | ~~Is the §4.2 side digest worth building before PERF-D5, or does the "blind to" list suffice?~~ **Resolved, §4.2: adopted on four conditions (perf-planner, 2026-10-22); retired unbuilt when v3 landed first (#758).** | closed |
+| Q3 | ~~Is `recent_world_events` canonical state or a view? Decides whether C1 has five or six fields.~~ **Resolved: `recent_world_events` is carried state (rpg-planner, #593 comment 6347182683); v3 hashes it, with the other five registry fields and `last_hit_tick` (§4.1).** | closed |
 | Q4 | ~~Does any shipped world (W5, W2) pass A0? If none does, is a purpose-built attack world acceptable in `data/worlds`?~~ **Resolved: probe first (A0 on W5 and W2); a purpose-built world only if no squad forms, disclosed in its PR. (rpg-planner, 2026-10-22, #593 comment 6347182683; dates in §8). Whether the probe passes is still open until it runs.** | closed |
-| Q5 | ~~Does the fingerprint cover `factions`, `clans` or `quest_registry`?~~ **Resolved, see §4.1a: it covers none of the six.** | closed |
+| Q5 | ~~Does the fingerprint cover `factions`, `clans` or `quest_registry`?~~ **Resolved, see §4.1a: it covers none of the seven, and still does not after v3.** | closed |
 | Q6 | ~~Is there any events digest outside `src/`? If yes, add it to the Mode 1 row (audit §6)~~ **Resolved, §4.4: none found; counts only, content equality is a gap. (perf-planner, 2026-10-22)** | closed |
 | Q7 | ~~The Mode 3 matrix: which backends and worker counts, and on which host kind?~~ **Resolved, §4.3. (perf-planner, 2026-10-22)** | closed |

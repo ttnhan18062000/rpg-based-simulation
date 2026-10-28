@@ -104,13 +104,24 @@ def test_does_not_mutate_authoritative_state():
     assert blocked_tiles == blocked_before
 
 
-def test_dungeon_crawl_matches_documented_evidence():
-    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+def test_frozen_reference_dungeon_crawl_matches_documented_evidence():
+    """Frozen reference, not a live guard: the world is tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml (the pre-balance-fix dungeon_crawl, kept deliberately; do not regenerate). It isolates the renderer from world-content churn; live coverage is on frontier_living_world."""
     spec = load_frozen_dungeon_crawl()
     state, _report = WorldCompiler.compile(spec, seed=42)
 
     result = analyze_connectivity(state.terrain, state.blocked_tiles)
 
     assert result.walkable_count == 15245
+    assert result.component_count == 1
+    assert result.percent_reachable == 100.0
+
+
+def test_live_frontier_living_world_connectivity():
+    """Live corpus guard (see docs/visual_quality/scoring_contract.md). 2026-10-28 pin; rebaseline owner: rpg-planner (u24), which holds the data/worlds release."""
+    state, _report = WorldCompiler.compile(WorldRepository("data/worlds").load_world("frontier_living_world"), seed=42)
+
+    result = analyze_connectivity(state.terrain, state.blocked_tiles)
+
+    assert result.walkable_count == 17058
     assert result.component_count == 1
     assert result.percent_reachable == 100.0

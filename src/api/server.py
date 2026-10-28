@@ -21,6 +21,7 @@ from src.api.admission_control import (
     require_admission_ws,
 )
 from src.api.auth import configure_api_keys, require_api_key_ws
+from src.api.cors import cors_origins_from_env
 from src.api.dependencies import (
     get_quality_hub,
     get_quality_persistence,
@@ -177,13 +178,12 @@ def create_v2_app(
         lifespan=lifespan,
     )
 
-    # allow_credentials intentionally omitted (defaults False): the CORS spec forbids combining
-    # a wildcard origin with credentialed requests, and no real caller sends credentials today
+    # allow_credentials intentionally omitted (defaults False): no real caller sends credentials today
     # (frontend/'s fetch() calls carry no `credentials` option, and dev traffic is proxied
     # same-origin) -- see TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=cors_origins_from_env(),
         allow_methods=["*"],
         allow_headers=["*"],
     )
