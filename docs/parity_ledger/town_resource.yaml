@@ -2411,8 +2411,8 @@
 - id: TOWN-198
   text: 'A hungry subject holding food eats it, and the item is consumed together with the meal (SURV-06): core EAT
     with food in the bag removes one item and applies its recovery through a CARRIED_FOOD transfer, and a hungry
-    subject with food eats it in place when no present threat holds. EAT with nothing carried keeps its old relief
-    of 40 (the free meal, still on; its removal is parked on d27-free-meal-removal).'
+    subject with food eats it in place when no present threat holds. EAT with nothing carried and no inn that serves
+    a subject holding the price ends with a typed failure (SOURCE_MISSING): no free relief (owner decision 73, divergence 2.142).'
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2423,7 +2423,7 @@
   proof_type: parity
   test_path: tests/unit/engine/test_biological_needs.py
   divergence_note: 'Intentional divergence 2.91: a subject that carries food eats its own item (30) instead of taking the free 40.'
-  support_boundary: 'Held out: the free meal (EAT with nothing carried, the inn meal for a subject that cannot pay) is still on; its removal is parked.'
+  support_boundary: 'The free meal is removed (decision 73, divergence 2.142; Measured pending): EAT with nothing carried and no payable inn fails typed, and a paid inn meal gives 60 for 5 gold in one transfer. Test: tests/unit/engine/test_free_meal_removed.py.'
 - id: TOWN-199
   text: 'Wild food is part of the land (SURV-06, owner decision 29): a food node stands only in wild land that
     a settlement does not own, declared per biome (near forest and sacred grove 10 charges, swamp border 8, the
@@ -2481,11 +2481,11 @@
   proof_type: parity
   test_path: tests/unit/world/test_sell_is_a_chosen_act.py
   divergence_note: 'Intentional divergence 2.100 (Intentional Gameplay Change and Bug Fix); the spare rule reads the content kind, 2.131; the price reads the catalog value, 2.132.'
-  support_boundary: 'Dormant in the measured worlds while the free meal stands (the ladder runs only when no inn is in reach); the end-to-end chain (ME-S19) is on the parked removal stack. Held out: paid work lives in TOWN-204.'
+  support_boundary: 'Live once the free meal is removed (decision 73: the ladder runs when no inn is in reach or the subject cannot pay); the end-to-end chain (ME-S19) is on the parked removal stack. Held out: paid work lives in TOWN-204.'
 - id: TOWN-203
   text: 'A building service (a bed, a meal at the inn, a sale at the shop) lands when its action executes (SURV-06, EXCH-02), on whatever tick the
     decision was made: the action asks the building in service reach and merges the service into its own update; the cadence-gated town phase
-    attaches none. A bed or an inn meal pays the building''s purse what was actually paid (free meals stay on, owner decision 44), so the inn''s coin is the subject''s coin.'
+    attaches none. A bed or an inn meal is paid in full or not served (owner decision 73, divergence 2.142): the transfer carries the price, the meal''s relief, and the bed''s hp and readiness, and the building''s purse is credited the full price.'
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2507,7 +2507,7 @@
   proof_type: parity
   test_path: tests/unit/world/test_work_shift_pays_a_wage_from_the_inns_purse.py
   divergence_note: 'Intentional divergence 2.102 (Intentional Gameplay Change).'
-  support_boundary: 'Dormant in the measured worlds while the free meal stands; ME-S20 is on the parked removal stack. The treasury-backed maintenance shift and the content-declared work set are TOWN-210. People only (decisions 42 and 43): see 2.103.'
+  support_boundary: 'Reachable once the free meal is removed (decision 73); ME-S20 is on the parked removal stack. The treasury-backed maintenance shift and the content-declared work set are TOWN-210. People only (decisions 42 and 43): see 2.103.'
 - id: TOWN-205
   text: 'A dead body leaves food (decision 44): at death, whatever the cause, a body whose kind declares meat in `edible_as` leaves `meat_yield`
     units of raw meat on its corpse. An eater eats an item only if its food class (plant, meat, prepared) is in its body diet (an undeclared

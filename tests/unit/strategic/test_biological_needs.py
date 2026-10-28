@@ -5,6 +5,7 @@ Biological needs and routine strategic integration tests.
 import pytest
 from dataclasses import replace
 from src.core.state import EntityState, BiologicalComponent, AuthoritativeState
+from src.core.enums import ReasonCode
 from src.core.updates import StateUpdate, EntityUpdate
 from src.systems.routine import RoutineService
 from src.systems.strategic import StrategicIntelligenceSystem
@@ -118,7 +119,7 @@ def test_routine_action_execution():
     assert upd_sleep[1].biological.rest_pressure_delta == -30.0
     
     # 2. Test EAT
+    # Decision 73: nothing is free. EAT with nothing carried and no inn that serves the subject ends with a typed failure and no relief.
     upd_eat = SimulationDomainLogic.execute_action(ent, {"action": "EAT"}, current_tick=600)
-    assert upd_eat[1].biological is not None
-    assert upd_eat[1].biological.hunger_delta == -40.0
-    assert upd_eat[1].biological.last_meal_tick_set == 600
+    assert upd_eat[1].biological is None
+    assert upd_eat[1].navigation.failure_reason == ReasonCode.SOURCE_MISSING

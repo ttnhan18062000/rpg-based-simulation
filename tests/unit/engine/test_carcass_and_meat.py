@@ -163,7 +163,7 @@ def test_meat_balances_from_records_alone_through_eating_looting_and_decay():
 
 
 def test_an_inn_serves_no_meal_to_a_diet_without_prepared_food_however_it_came_to_stand_there():
-    """Decision 44, structural: the guard sits at the service itself and at the free-meal relief, not only on the route to the inn."""
+    """Decision 44, structural: the guard sits at the service itself, not only on the route to the inn."""
     from src.core.state import BuildingState
     from src.engine.building_services import service_delta
     from src.engine.domain.core_actions import eat_update
@@ -172,11 +172,11 @@ def test_an_inn_serves_no_meal_to_a_diet_without_prepared_food_however_it_came_t
     region = RegionState(id="field", name="Field", bounds=(0, 0, 60, 60))
     for species, served in (("wolf", False), ("human", True)):
         eater = _creature(1, species, (10.0, 10.0))
+        eater = replace(eater, inventory=replace(eater.inventory, gold=50))  # it holds the price: only its diet decides
         state = AuthoritativeState(tick=5, seed=1, entities={1: eater}, regions={"field": region}, buildings={7: inn},
                                    building_tiles={(10, 10): "inn"})
         assert (service_delta(state, eater, "EAT", 5) is not None) is served
-        relief = eat_update(eater, 5).biological
-        assert (relief is not None and relief.hunger_delta < 0) is served
+        assert eat_update(eater, 5, inn_serves=served).biological is None  # no free relief for any diet: the paid meal rides on the inn's transfer
 
 
 def test_a_full_meal_of_a_meat_eater_lasts_at_least_a_day_before_its_line():

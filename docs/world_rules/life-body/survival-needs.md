@@ -663,7 +663,7 @@ main `7a39acc5d` to the #407 head `77fc6bc4c` (the same `src` as the merge):
   - **Alternatives not taken:** remove the free meal for people now and close the inn to animals
     (wildlife starvation accepted); close the inn to animals now but keep the free meal for
     people (animals lose their only meal).
-- **CONFLICTING: the meal is free when the subject cannot pay.** This breaks "for a price" and
+- **RESOLVED by owner decision 73 (TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1, divergence 2.142; Measured pending): a paid meal is 5 gold for 60 hunger, a bed 10 gold, each applied with the full payment or not at all.** The clause below is the history of the conflict, kept as it was. It broke "for a price" and
   "no engine charity". **Still CONFLICTING after #454 (2026-10-09):** the removal is parked on
   the local branch `d27-free-meal-removal`, and its ticket stays open until earning (EXCH-02,
   decisions 34 and 37) gives a broke worker a way in all three measured worlds (decision 31's

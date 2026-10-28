@@ -110,8 +110,9 @@ def test_eat_is_served_by_the_inn_when_a_home_is_nearer_in_reach():
     )
     ent_upd = ActionRouter.execute_action(ent, {"action": "EAT", "target_id": 1}, state.tick, None, state)[1]
     (meal,) = ent_upd.resource_transfers
-    assert meal.transfer_kind == "EAT" and meal.gold_delta == -EAT_PRICE_GOLD
-    assert ent_upd.biological.hunger_delta == -(40.0 + INN_MEAL_HUNGER)  # free meals stay on (owner decision 44): core relief 40 plus the inn's 20, as on main
+    assert meal.transfer_kind == "EAT" and meal.gold_cost == EAT_PRICE_GOLD
+    assert meal.biological_upd.hunger_delta == -INN_MEAL_HUNGER == -60.0  # decision 73: one paid meal, today's total, applied only with the payment
+    assert ent_upd.biological is None
 
 
 def test_rough_rest_needs_no_building_and_relieves_rest_pressure_while_the_debt_falls_per_tick_asleep():
@@ -131,8 +132,8 @@ def test_inn_meal_is_served_to_a_subject_beside_the_inn():
     )
     ent_upd = ActionRouter.execute_action(ent, {"action": "EAT", "target_id": 1}, state.tick, None, state)[1]
     (meal,) = ent_upd.resource_transfers
-    assert meal.transfer_kind == "EAT" and meal.gold_delta == -EAT_PRICE_GOLD
-    assert ent_upd.biological.hunger_delta == -(40.0 + INN_MEAL_HUNGER)  # free meals stay on (owner decision 44)
+    assert meal.transfer_kind == "EAT" and meal.gold_cost == EAT_PRICE_GOLD
+    assert meal.biological_upd.hunger_delta == -INN_MEAL_HUNGER and ent_upd.biological is None
 
 
 def test_eat_scorer_targets_the_inn():

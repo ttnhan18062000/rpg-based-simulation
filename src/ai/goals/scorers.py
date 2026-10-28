@@ -6,6 +6,7 @@ from src.core.items import food_hunger_recovery
 from src.engine.appraisal import can_eat_item, can_use_inn_meal
 from src.ai.goals.ways import inn_in_reach
 from src.engine.need_pull import hunger_pull, retreat_pull, sleep_pull
+from src.engine.service_prices import EAT_PRICE_GOLD
 from src.engine.sleep_debt import SLEEP_DEBT
 from src.engine.starvation import STARVING_LINE
 from src.engine.way_in_range import way_in_range
@@ -126,10 +127,12 @@ class EatScorer(GoalScorer):
 
         best_bldg = inn_in_reach(entity, state)  # a range-bound subject's ways are inside its range (owner decision D57)
         # Decision 27: with no inn within reach there is nothing for the pull to point at, so it goes to the step that opens a way
-        # (forage); with no step the goal keeps the hunger value and says `no_open_step`. (Free meals stay on: an inn within reach is a
-        # way to eat whether or not the subject can pay, for every kind, a recorded flaw until the animals' own ways exist: owner decision 44.)
+        # (forage); with no step the goal keeps the hunger value and says `no_open_step`. Nothing is free (owner decisions 44 and 73): an inn
+        # within reach is a way to eat only for a subject that holds the price, so a broke subject's pull goes to the step that opens a way.
         if best_bldg is None or not can_use_inn_meal(entity):  # decision 44: a diet without prepared food has no inn meal
             return _hunger_without_open_way(entity, state, utility, NeedAccess.NO_WAY_WITHIN_REACH)
+        if entity.inventory.gold < EAT_PRICE_GOLD:
+            return _hunger_without_open_way(entity, state, utility, NeedAccess.NO_AFFORDABLE_WAY)
         # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn.
         rate = need_rates(entity)[0]
         utility = _hunger_escalated_unless_threatened(entity, state, utility, hunger_pull(utility, bio.hunger, rate, _travel_tiles(entity, best_bldg.position)))

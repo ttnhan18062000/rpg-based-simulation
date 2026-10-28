@@ -341,6 +341,8 @@ class ResourceTransactionSystem:
             ent_upd = replace(ent_upd, reward=ent_upd.reward.merge(res.reward_update) if ent_upd.reward else res.reward_update)
         if res.quest_update:
             ent_upd = replace(ent_upd, quest=ent_upd.quest.merge(res.quest_update) if ent_upd.quest else res.quest_update)
+        if res.readiness_update:
+            ent_upd = replace(ent_upd, readiness_delta=ent_upd.readiness_delta + res.readiness_update)
         return ent_upd
 
     @staticmethod

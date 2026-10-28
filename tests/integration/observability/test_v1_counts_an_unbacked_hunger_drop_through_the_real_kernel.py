@@ -56,12 +56,13 @@ def _v1(run_id: str, gold: int):
     return row, seen
 
 
-def test_v1_fires_for_a_broke_eater_whose_hunger_falls_with_nothing_moved():
+def test_a_broke_eater_beside_the_inn_is_not_fed_so_v1_has_nothing_to_count():
+    """Decision 73 (TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1): the broke worker that this test once pinned as V1's positive case is now
+    refused the meal. Its hunger does not fall for nothing, so its group adds no `without_transfer` tick. (V1's detector itself is pinned by its unit tests.)"""
     row, seen = _v1("gate_pos_v1", gold=0)
-    assert seen["unbacked"] >= 1, seen  # the forced worker ate: hunger fell while its purse (and items) did not move
-    assert row["violations"] >= seen["unbacked"], (row, seen)
-    keys = {e["group_key"]: e["ticks"] for e in row["examples"]}
-    assert keys.get(f"{seen['group']}|without_transfer", 0) >= seen["unbacked"], (keys, seen)
+    assert seen["unbacked"] == 0, seen  # no hunger fell with nothing moved
+    keys = {e["group_key"]: e["ticks"] for e in row.get("examples", [])}
+    assert keys.get(f"{seen['group']}|without_transfer", 0) == 0, (keys, seen)
 
 
 def test_v1_does_not_count_the_same_worker_when_it_pays_for_the_meal():

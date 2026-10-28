@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from src.core.enums import ReasonCode
 from src.core.items import food_hunger_recovery
 from src.core.models.inventory import ItemStack
-from src.engine.appraisal import can_eat_item, can_use_inn_meal
+from src.engine.appraisal import can_eat_item
 from src.engine.repair import repair_update
 from src.core.updates import (
     BiologicalUpdate, EntityUpdate, IdentityUpdate, 
@@ -55,16 +55,16 @@ def carried_meal(entity: EntityState, current_tick: int) -> List[ResourceTransfe
     return []
 
 
-def eat_update(entity: EntityState, current_tick: int) -> EntityUpdate:
-    """SURV-06: a subject holding food eats it, and the item is consumed with the meal. With none the action keeps its old relief of 40
-    (a free meal: still on, see branch d27-free-meal-removal for the removal)."""
+def eat_update(entity: EntityState, current_tick: int, inn_serves: bool = False) -> EntityUpdate:
+    """SURV-06: a subject holding food eats it, and the item is consumed with the meal. With none, the meal is the inn's (`inn_serves`: an inn
+    reaches the subject, serves its diet and the subject holds the price; the paid meal rides in `building_services.service_delta`). With neither
+    nothing is eaten: the action ends with a typed failure so the brain re-decides (owner decisions 44 and 73: no free meal, for any kind)."""
     carried = carried_meal(entity, current_tick)
     if carried:
         return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0, resource_transfers=carried)
-    if not can_use_inn_meal(entity):  # decision 44: the free meal is a prepared meal; a diet without prepared food gets none, wherever it stands
+    if inn_serves:
         return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0)
-    return EntityUpdate(entity_id=entity.id, readiness_delta=-100.0,
-                        biological=BiologicalUpdate(hunger_delta=-40.0, last_meal_tick_set=current_tick))
+    return EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason=ReasonCode.SOURCE_MISSING))
 
 
 # How close (Manhattan tiles) an eater must be to a carcass to eat from it: within a stride of where its kill fell (a body is displaced a tile
@@ -106,9 +106,7 @@ class CoreActions:
 
     @staticmethod
     def execute_survival(
-        entity: EntityState,
-        action: str,
-        current_tick: int
+        entity: EntityState, action: str, current_tick: int, inn_serves: bool = False
     ) -> Dict[int, EntityUpdate]:
         if action == "SLEEP":
             return {entity.id: EntityUpdate(
@@ -120,7 +118,7 @@ class CoreActions:
                 )
             )}
         elif action == "EAT":
-            return {entity.id: eat_update(entity, current_tick)}
+            return {entity.id: eat_update(entity, current_tick, inn_serves)}
         elif action == "SELL":
             # A chosen sale at a shop: the goods change hands in the town resolution (`shop_sale.plan_sale`), so the action itself is a typed
             # no-op that succeeds and ends its task like a survival action.
