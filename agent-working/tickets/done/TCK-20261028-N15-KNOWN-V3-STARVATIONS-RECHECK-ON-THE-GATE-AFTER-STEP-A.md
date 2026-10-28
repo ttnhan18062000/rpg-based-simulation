@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
-phase: open
+phase: done
 date: 2026-10-28
 tags: [benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [benchmarking]
 N15 known V3 starvations (crowded_frontier/46 raider 38, frontier_living_world/44 worker 2): re-check on the gate after HUNGER step A, then retire or keep the known-red entry with evidence
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -73,9 +73,14 @@ This ticket owns the entry until the gate answers.
 - Owner of the entry: rpg-planner (unchanged).
 
 ## Implementation Notes
+Gate reading: rpg-gate-report run 40653115297 (workflow_dispatch by the owner, #715 6463707752), head 2c4869d61 (includes #769). The report's stale_known_entries lists crowded_frontier/46/38 and frontier_living_world/44/2 as no longer failing V3. Entry removed from tools/test_architecture/rpg_gate_known.yaml.
+Earlier runs 40490584465 (2afdba653) and 40314093440 (3533fde71), both before #769, already listed both entries as stale, so step A did not clear them; they were already clear.
 
 ## Test Summary
+tests/unit/tools/test_known_reds.py: 57 passed.
 
 ## Files Changed
+- tools/test_architecture/rpg_gate_known.yaml (N15 entry removed)
 
 ## Completion Summary
+N15 entry retired on the gate reading above. The N14 entry (urban_political/44/28) is also stale at 40653115297 and was left in place (owner-accepted exception, own ticket, expiry 2026-11-05; rpg-planner sequences its retirement). Reported to rpg-planner, not owned by this ticket: unowned V3 frontier_living_world s43 merchant 38 t2518 is new since 2afdba653 (absent in both earlier runs); V6 frontier_living_world s45 and V3 crowded_frontier s42 leader 30 were already present before #769.

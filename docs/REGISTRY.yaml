@@ -7880,6 +7880,20 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A.md
+  ticket_id: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
+  title: 'N15 known V3 starvations (crowded_frontier/46 raider 38, frontier_living_world/44
+    worker 2): re-check on the gate after HUNGER step A, then retire or keep the known-red
+    entry with evidence'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-28'
+  related_code_areas:
+  - tools/test_architecture/ (gate harness and known file, read only except the entry)
+  artifact_files: []
+  tags:
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3.md
   ticket_id: TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3
   title: 'Re-record baseline v1 under the proof digest scheme `flat-sha256-v3` (after
@@ -7911,20 +7925,6 @@
   tags:
   - ai
   - governance
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A.md
-  ticket_id: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
-  title: 'N15 known V3 starvations (crowded_frontier/46 raider 38, frontier_living_world/44
-    worker 2): re-check on the gate after HUNGER step A, then retire or keep the known-red
-    entry with evidence'
-  tier: standard
-  ticket_type: chore
-  date: '2026-10-28'
-  related_code_areas:
-  - tools/test_architecture/ (gate harness and known file, read only except the entry)
-  artifact_files: []
-  tags:
-  - benchmarking
 - type: ticket
   path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md
   ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR
