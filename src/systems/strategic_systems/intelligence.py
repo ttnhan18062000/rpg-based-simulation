@@ -1791,7 +1791,8 @@ class StrategicIntelligenceSystem:
                 )
 
             if orphan_candidate is not None:
-                candidate_proj = replace(orphan_candidate, score=best_candidate.utility)
+                # A fresh commitment at today's utility, locked like any freshly switched-in project (the generic branch's min(t+10, t+50)); the stored score and lock are written only on a win.
+                candidate_proj = replace(orphan_candidate, score=best_candidate.utility, lock_until_tick=min(current_tick + 10, current_tick + 50))
 
             if not existing and not has_project_capacity(strat.projects, strat.profile.max_active_projects) and not escalated_need_wins(entity, best_candidate.kind):
                 if boredom_upd:

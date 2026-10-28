@@ -281,6 +281,8 @@ def test_an_orphan_that_wins_the_switch_becomes_current_with_nothing_created_and
     after = _apply(entity, update)
     assert set(after) == {"other", "orphan"}
     assert after["other"].status == ProjectStatus.SUSPENDED and after["orphan"].status == ProjectStatus.ACTIVE
+    # A fresh commitment: stored at the goal's utility now and locked like a freshly switched-in project (t+10), not left at the orphan's old score and lock.
+    assert after["orphan"].lock_until_tick == 510 and after["orphan"].score != orphan.score
     assert len([p for p in after.values() if p.status in (ProjectStatus.ACTIVE, ProjectStatus.SUSPENDED)]) == 2
 
 
