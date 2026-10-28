@@ -76,6 +76,7 @@ class PartnerCandidateIndex:
 class PartnerCandidateProvider:
     @staticmethod
     def build_index(state: AuthoritativeState, budget: CandidateBudget = CandidateBudget()) -> PartnerCandidateIndex:
+        """Build the spatial partner-candidate index over ``state`` within ``budget.spatial_radius``; it lives for one tick."""
         return PartnerCandidateIndex(state, budget.spatial_radius)
 
     @staticmethod

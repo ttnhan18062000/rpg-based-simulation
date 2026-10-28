@@ -11,12 +11,13 @@ from src.core.state import AuthoritativeState, EntityState
 from src.core.strategic import ContractStatus
 from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate, SocialUpdate, SocialBondUpdate
 from src.domains.cooperation.evaluators import HelpNeedEvaluator, PartnerFitEvaluator
-from src.domains.cooperation.providers import PartnerCandidateProvider, CandidateBudget
+from src.domains.cooperation.providers import PartnerCandidateIndex, PartnerCandidateProvider, CandidateBudget
 from src.domains.cooperation.postures import CooperationPosture
 from src.domains.cooperation.services import (
     CooperationDecisionResult,
     CooperationDecisionService,
     build_pending_offer_index,
+    PendingOfferIndex,
     CooperationIntentBridge,
     PartyObjectiveAlignmentService,
     PartyCohesionService,
@@ -62,6 +63,17 @@ def _record_decision_events(entity: EntityState, decision: CooperationDecisionRe
         ))
 
 
+def _build_tick_indexes(state: AuthoritativeState, budget: CandidateBudget) -> tuple[PendingOfferIndex, PartnerCandidateIndex]:
+    """Build the two per-tick indexes that every entity in one ``CooperationPhase.execute`` call shares.
+
+    Both are built once per tick. Offers live on the offering entity's own contracts, and nothing in the phase loop
+    changes a contract (every change is deferred into the returned update), so one pending-offer index serves every
+    entity. Positions, liveness and activity are likewise unchanged until the returned update is applied, so one
+    partner-candidate index serves every entity too.
+    """
+    return build_pending_offer_index(state), PartnerCandidateProvider.build_index(state, budget)
+
+
 class CooperationPhase:
     """
     The main execution boundary of the Phase 7 Social Cooperation loop.
@@ -86,11 +98,7 @@ class CooperationPhase:
         
         evaluation_count = 0
         t_start = time.perf_counter_ns()
-        # Built once per tick: offers live on the offering entity's own contracts, and nothing in this loop changes a
-        # contract (every change is deferred into the returned update), so one index serves every entity below.
-        pending_offers = build_pending_offer_index(state)
-        # Same reasoning: positions, liveness and activity are unchanged until the returned update is applied.
-        candidate_index = PartnerCandidateProvider.build_index(state, budget)
+        pending_offers, candidate_index = _build_tick_indexes(state, budget)
         
         # Scoped evaluation per tick
         for entity_id, entity in state.entities.items():
