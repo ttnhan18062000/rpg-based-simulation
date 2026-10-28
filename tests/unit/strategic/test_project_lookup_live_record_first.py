@@ -291,3 +291,15 @@ def test_an_active_matching_record_is_made_current_when_the_current_project_is_d
     orphan = _project("orphan", ProjectStatus.ACTIVE, created=3)
     update = _evaluate(_entity([done, orphan], current="done"))
     assert update.current_project_id_set == "orphan"
+
+
+def test_a_project_kind_orphan_that_shares_a_goal_kinds_string_keeps_its_stored_raw_score():
+    """ProjectKind.HARVESTING compares equal to GoalKind.HARVESTING; its stored score is on the 2.9 scale and is not overwritten with a utility."""
+    from src.core.strategic import ProjectKind
+    assert ProjectKind.HARVESTING == GoalKind.HARVESTING
+    other = _project("other", ProjectStatus.ACTIVE, target="x", kind="travel", score=0.5, created=1)
+    orphan = _project("orphan", ProjectStatus.ACTIVE, kind=ProjectKind.HARVESTING, created=3, score=1.7)
+    entity = _entity([other, orphan], current="other")
+    from src.systems.strategic_systems import intelligence as module
+    candidate = module.same_kind_record(entity.strategic.projects, GoalKind.HARVESTING, "other")
+    assert candidate is orphan and isinstance(candidate.kind, ProjectKind)
