@@ -7880,6 +7880,20 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT.md
+  ticket_id: TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT
+  title: Parity ledger INFRA-430 and INFRA-431 state the perf benchmark schema version
+    and the legacy-tripwire list as they were, not as the code holds them now (#626)
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-28'
+  related_code_areas:
+  - src/perf/benchmark_record.py, tools/perf/baseline_lifecycle.py, tests/unit/perf/test_benchmark_record.py,
+    tests/unit/perf/test_baseline_lifecycle.py
+  artifact_files: []
+  tags:
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3.md
   ticket_id: TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3
   title: 'Re-record baseline v1 under the proof digest scheme `flat-sha256-v3` (after
@@ -7925,6 +7939,19 @@
   artifact_files: []
   tags:
   - benchmarking
+- type: ticket
+  path: agent-working/tickets/todos/parity-ledger-paydown/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS.md
+  ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS
+  title: 'Parity-ledger paydown, child 1: world_dynamics.yaml reaches 0 P0 test_path
+    errors'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-28'
+  related_code_areas:
+  - docs/parity_ledger/world_dynamics.yaml, codebase/gates/parity_ledger_schema.py,
+    codebase/baselines/parity_ledger_schema_baseline.json
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md
   ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR

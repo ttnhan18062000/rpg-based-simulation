@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT
-phase: open
+phase: done
 date: 2026-10-28
 tags: [benchmarking]
 ---
@@ -15,7 +15,7 @@ tags: [benchmarking]
 Parity ledger INFRA-430 and INFRA-431 state the perf benchmark schema version and the legacy-tripwire list as they were, not as the code holds them now (#626)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -74,9 +74,16 @@ U4 batch. Scope OK'd by rpg-planner (u24) on 2026-10-28, relayed by lead-planner
 - If perf's 1.5 PR merges before U4, write 1.5, and say so in the ticket.
 
 ## Implementation Notes
+Values read from the code at write time (base origin/main fdfc5f9fd, branch head before this commit 47340ac4cf84736ba105ede3bddf31b6a1fc2f6d): `src/perf/benchmark_record.py` `SCHEMA_VERSION = "1.4"`; `tools/perf/baseline_lifecycle.py` `LEGACY_TRIPWIRE_REFERENCES` holds 6 files. perf's 1.5 PR had not merged on origin/main at this time, so 1.4 is written.
+- INFRA-430 text: schema 1.4, the additive MINOR history (1.1 identity.runner, 1.2 after-collect memory_mb keys, 1.3 working_set_* keys, 1.4 outcome.check), and the rule that only a MAJOR mismatch is INCONCLUSIVE.
+- INFRA-431 text: "the 6 pre-schema files that remain" with their names; its support_boundary sentence "The 15 legacy files are not re-recorded" said the same stale 15 and is corrected to 6 in the same row.
+- Written through parity_ledger_writer.py; the writer re-folds long YAML lines, so the diff is wider than the two sentences but touches only these two rows. status stays verified; v2_evidence and test_path values unchanged and both test files pass (88 passed).
 
 ## Test Summary
+tests/unit/perf/test_benchmark_record.py + test_baseline_lifecycle.py 88 passed; `python3 -m codebase.gates.parity_ledger_schema check`: 0 rules rose, 0 new. No sim run.
 
 ## Files Changed
+docs/parity_ledger/infrastructure.yaml (INFRA-430, INFRA-431).
 
 ## Completion Summary
+INFRA-430 and INFRA-431 state the schema version and legacy-reference count the code holds.
