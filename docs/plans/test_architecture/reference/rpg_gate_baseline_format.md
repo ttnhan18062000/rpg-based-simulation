@@ -148,6 +148,13 @@ A known entry may be SCOPED with `cases: [{world, seed, entity_id?}]` (allowed o
 The `RPG gate report` job writes `rpg-gate-candidate.json` into its report artifact on every run where the builder accepts (a refusal is a line in the step
 summary, never a job failure). A run that is not main's is built with `--evidence-only`, and `rebaseline` refuses such a candidate.
 
+The candidate's `provenance` also records where it came from (TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE):
+
+- `known_file_sha256`: the sha256 of the exact bytes of the `--known` file it was judged against (that file decided which owned validity rows were omitted).
+- `ci`: `{run_id, run_attempt, event_name, ref}` read from `GITHUB_RUN_ID`, `GITHUB_RUN_ATTEMPT`, `GITHUB_EVENT_NAME` and `GITHUB_REF`. It is `null` unless all four are set and non-empty (a local build); it is never guessed.
+
+`rebaseline` refuses a candidate whose `ci` is null or missing, whose `ci.ref` is not `refs/heads/main`, or that has no `known_file_sha256`; the message says to re-dispatch the gate on main. There is no override. The recorded run id is evidence for the reviewer, not a verified fact: nothing calls the GitHub API. From version 2 on the baseline lint requires both fields (and `ci.ref == refs/heads/main`); `rpg_gate_v1.json` predates the rule and is exempt by its version number.
+
 Recording v1 (rpg, after the metric module and config are on main; the milestone is rpg's to name):
 
 1. Download the `rpg-gate-report-<sha>` artifact of a scheduled or dispatched run of main whose candidate was written.
@@ -155,4 +162,4 @@ Recording v1 (rpg, after the metric module and config are on main; the milestone
    (add `--owner-ruling-ref ... --owner-ruling-date ...` when a stop line is crossed).
 3. Commit `tests/simulation_quality/rpg_gate/baselines/rpg_gate_v1.json` in a PR that cites the same ticket.
 
-To rebuild a candidate from a downloaded `gate-docs` directory: `python -m tools.test_architecture.rpg_gate_candidate --config ... --docs gate-docs --known tools/test_architecture/rpg_gate_known.yaml --report rpg-gate-report.json --out candidate.json --milestone M0`.
+To inspect a candidate from a downloaded `gate-docs` directory (a local build has `ci: null`, so `rebaseline` refuses it; record from the run's own `rpg-gate-candidate.json`): `python -m tools.test_architecture.rpg_gate_candidate --config ... --docs gate-docs --known tools/test_architecture/rpg_gate_known.yaml --report rpg-gate-report.json --out candidate.json --milestone M0`.
