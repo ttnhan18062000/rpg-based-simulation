@@ -1261,7 +1261,7 @@ and logged on the approvals issue (#715) before anyone acts on it. A change is n
 **Base.** Milestone 1 spans baseline v1 (record commit 341f700d0, simulation e8df8b96d, gate baseline
 `rpg_gate_v1.json`) to the milestone 1 record; 903239fbe is history. Clarified by the owner on 2026-10-23 (#715 6356509993,
 memo row 89):
-- **Order:** HUNGER step B → step A → F4 → the decision-73 step (free meal removed) → the §12.3 milestone 1 items.
+- **Order:** HUNGER step B → step A → the decision-73 step (free meal removed) → the §12.3 milestone 1 items. F4 lands as soon as it is ready, independent of this order, provided the gate worlds form no faction squad on seeds 42-46 (probe A0 extended to the gate's 3 worlds × seeds 42-46 × 5000 ticks; memo row 90, owner 2026-10-26). Otherwise it keeps its slot after step A with its own paired step.
   "Decision 73 before milestone 1" means before those items, not before the v1-disclosure repairs.
 - **v1 → v1.1:** each repair is measured once at fold against its parent, and the decision-73 step is too; each single step
   keeps the per-seed extinction stop. All of them sit on ONE decision-76 cumulative watch from v1. That watch is a span, so
