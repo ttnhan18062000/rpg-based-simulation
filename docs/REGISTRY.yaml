@@ -8036,6 +8036,23 @@
   tags:
   - bug
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED.md
+  ticket_id: TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED
+  title: Legacy `core/recipes.py::RecipeRegistry` is only reached through `town/blacksmith.py::BlacksmithAction`,
+    which nothing in src/ constructs
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-27'
+  related_code_areas:
+  - src/core/recipes.py, src/town/blacksmith.py, tests/unit/world/test_economy_contract.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED/plan.md
+  - agent-working/stored_artifacts/TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED/rpg_planner_plan_and_ruling_2026-10-28.md
+  - agent-working/stored_artifacts/TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED/test_plan.md
+  tags:
+  - economy
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL.md
   ticket_id: TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL
   title: The paired run's default cache path is host-neutral, resolved when called,
@@ -8081,19 +8098,6 @@
   - src/engine/starvation.py
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED.md
-  ticket_id: TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED
-  title: Legacy `core/recipes.py::RecipeRegistry` is only reached through `town/blacksmith.py::BlacksmithAction`,
-    which nothing in src/ constructs
-  tier: standard
-  ticket_type: refactor
-  date: '2026-10-27'
-  related_code_areas:
-  - src/core/recipes.py, src/town/blacksmith.py, tests/unit/world/test_economy_contract.py
-  artifact_files: []
-  tags:
-  - economy
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED.md
   ticket_id: TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED
