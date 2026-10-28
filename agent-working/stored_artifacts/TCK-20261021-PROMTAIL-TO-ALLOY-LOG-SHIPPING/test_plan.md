@@ -19,3 +19,10 @@ Live (one heavy slot, lead-cleared, abort watcher proven first): fresh `up` of t
 - Memory: sample alloy anon + active_file (sample_stats.sh) under normal shipping for the whole run; justify mem_limit 192m from it in the record.
 - Recreate check: with a known marker line per second before and after `up -d --force-recreate alloy`, count in Loki what is replayed (duplicates) or missing (gap); record both numbers.
 - Dated record: docs/runbooks/records/2026-10-28-alloy-log-shipping.md.
+
+## Proof Plan
+- Level: live stack (observability profile) plus static checks.
+- Proof kind: measured behaviour on the running stack, and a unit-level guard test.
+- Oracle source: Grafana rule state API, Prometheus query, Loki label and query API, cgroup memory files.
+- Expected effect: Normal on a quiet stack; Alerting on the 403, stopped and Loki-unreachable cases; labels container, job, level, component and no tick or message.
+- Selected commands: `pytest tests/logging/test_loki_cardinality.py`; `docker compose --profile observability config`; `alloy validate`; the case script `proof-2026-10-28/cases.sh`.

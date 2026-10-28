@@ -262,7 +262,8 @@ services:
     # Grafana Alloy v1.20.1 (released 2026-09-28; newest release at least 14 days old on 2026-10-28), pinned by multi-arch index digest.
     # Replaces Promtail, which reached end of life on 2026-03-02 (TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING).
     image: grafana/alloy:v1.20.1@sha256:2aa2099af76c0098d4af7a4d6e48f86cb66dc1a000222ad927a1c67c6542d13f
-    mem_limit: 192m
+    # 256m: the 2026-10-28 run (68 min) held anon 71 MiB and anon + active_file 187 MiB, which left no headroom under the first guess of 192m; docs/runbooks/records/2026-10-28-alloy-log-shipping.md section 5.
+    mem_limit: 256m
     healthcheck:
       # The alloy image has bash but no wget/curl: read the first line of GET /-/ready over /dev/tcp and require HTTP 200.
       # Healthy means alloy's own :12345/-/ready AND loki:3100/ready both answer 200 (loki has no healthcheck of its own).
