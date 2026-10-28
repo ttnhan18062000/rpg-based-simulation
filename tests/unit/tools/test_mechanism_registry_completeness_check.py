@@ -161,6 +161,10 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     2026-10-27 (TCK-20261027-FIVE-DEAD-SYSTEMS-CLASSES-STILL-CITED-AS-PROOF): `total_targets` 63 -> 58 and
     `unbound` 5 -> 0. The five unbound modules were the dead classes `loot`, `town_service`, `crafting`, `guilds`
     and `quest_engine`; all five are deleted. `bound` and `excluded` are unchanged. Taken by running the check.
+
+    2026-10-28 (TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE, #593 6420327798): counts unchanged.
+    `tactical_decision` now cites `hostile_acts_on` and `acting_threat_to` (step B's act test, 2.138, which step A's
+    retreat_pull gate reads), which add no target (their modules were already bound). Taken by running the check.
     """
     data = _real_registry_data()
     report = build_report(data)
@@ -324,7 +328,9 @@ def test_wider_scope_numbers_pinned():
     # 249 -> 250 on 2026-10-28 (F4): +src/core/stable_hash.py is an unbound helper (a determinism utility used by military_conflict.py and
     # perception/filter.py, no mechanism of its own); candidates and wired are unchanged.
     # 250 -> 249 on 2026-10-28 (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS): skills.py was unbound.
-    assert wider["unbound_files"] == 249
+    # 249 -> 248 on 2026-10-28 (TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE, #593 6420327798): src/ai/goals/present_threat.py
+    # is bound under `tactical_decision` (acting_threat_to, step B's act test, 2.138).
+    assert wider["unbound_files"] == 248
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
