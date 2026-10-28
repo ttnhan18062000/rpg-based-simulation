@@ -7946,6 +7946,23 @@
   tags:
   - bug
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL.md
+  ticket_id: TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL
+  title: The paired run's default cache path is host-neutral, resolved when called,
+    and fails early when unwritable
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - DEFAULT_CACHE
+  - tests/unit/tools/test_rpg_measure.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL/investigation.md
+  - agent-working/stored_artifacts/TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL/plan.md
+  - agent-working/stored_artifacts/TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL/test_plan.md
+  tags:
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-WALL-CLOCK-CLI-TEST-RUNS-THE-TOOL-FOUR-TIMES-NOT-SIX.md
   ticket_id: TCK-20261027-WALL-CLOCK-CLI-TEST-RUNS-THE-TOOL-FOUR-TIMES-NOT-SIX
   title: The wall-clock inventory CLI test runs the tool over the real source four
@@ -7960,6 +7977,46 @@
   tags:
   - testing
   - determinism
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261027-HUNGER-CAPACITY-DERIVATION-HAS-NO-LIVE-CALLER.md
+  ticket_id: TCK-20261027-HUNGER-CAPACITY-DERIVATION-HAS-NO-LIVE-CALLER
+  title: The Bible's "Hungry halves cognitive capacity" law may have no live producer
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - src/strategy/cognition_capacity.py, src/strategy/capacity.py
+  - src/systems/strategic_systems/intelligence.py (around L1827, and L1610 for u24's
+    ticket)
+  - src/engine/starvation.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED.md
+  ticket_id: TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED
+  title: Legacy `core/recipes.py::RecipeRegistry` is only reached through `town/blacksmith.py::BlacksmithAction`,
+    which nothing in src/ constructs
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-27'
+  related_code_areas:
+  - src/core/recipes.py, src/town/blacksmith.py, tests/unit/world/test_economy_contract.py
+  artifact_files: []
+  tags:
+  - economy
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED.md
+  ticket_id: TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED
+  title: World compositions author a module `order` and module `requires` that assembly
+    silently ignores
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - src/worldmodules/utils.py, src/worldgeneration/generator.py, src/worldassembly/resolver.py
+  - order
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261026-CI-ASEPRITE-SKIP-LINE-ACCEPT-DEFUSED-XML-FINDING.md
   ticket_id: TCK-20261026-CI-ASEPRITE-SKIP-LINE-ACCEPT-DEFUSED-XML-FINDING
@@ -17450,6 +17507,30 @@
   - mcp
   - live-map
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS.md
+  ticket_id: TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS
+  title: 'Five latent world-assembly paths that no corpus world exercises today —
+    a duplicated module ref that
+
+    collapses, an ignored `requires`, an overridden `order`, a false "not found" on
+    `enabled: false`, and
+
+    a dead legacy generator'
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-05'
+  related_code_areas:
+  - src/worldbuilding/resolver.py:300-301
+  - src/worldmodules/utils.py:18
+  - src/worldgeneration/generator.py:513-515
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS/plan.md
+  - agent-working/stored_artifacts/TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS/test_plan.md
+  tags:
+  - world
+  - investigation
+- type: ticket
   path: agent-working/tickets/done/TCK-20261005-WORLD-COMPOSITION-SILENT-DROP-AND-OVERWRITE-CORPUS-PROBE.md
   ticket_id: TCK-20261005-WORLD-COMPOSITION-SILENT-DROP-AND-OVERWRITE-CORPUS-PROBE
   title: 'Probe the 24 corpus worlds for four silent world-composition failures —
@@ -17509,27 +17590,6 @@
   tags:
   - engine
   - combat
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS.md
-  ticket_id: TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS
-  title: 'Five latent world-assembly paths that no corpus world exercises today —
-    a duplicated module ref that
-
-    collapses, an ignored `requires`, an overridden `order`, a false "not found" on
-    `enabled: false`, and
-
-    a dead legacy generator'
-  tier: standard
-  ticket_type: refactor
-  date: '2026-10-05'
-  related_code_areas:
-  - src/worldbuilding/resolver.py:300-301
-  - src/worldmodules/utils.py:18
-  - src/worldgeneration/generator.py:513-515
-  artifact_files: []
-  tags:
-  - world
-  - investigation
 - type: ticket
   path: agent-working/tickets/done/TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE.md
   ticket_id: TCK-20261004-ARCH-VERIFY-TESTS-READ-EVIDENCE
@@ -17885,6 +17945,30 @@
   - architecture
   - planning
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION.md
+  ticket_id: TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION
+  title: 'Three closed tickets measured `frontier_living_world` through the catalog
+    copy, which is not what
+
+    production loaded — establish whether their conclusions survive re-measurement'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-04'
+  related_code_areas:
+  - src/worldbuilding/repository.py
+  - src/worldassembly/resolver.py
+  - tests/integration/worldassembly/test_resolved_snapshot_freshness.py
+  - data/worlds/*/resolved/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION/plan.md
+  - agent-working/stored_artifacts/TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION/test_plan.md
+  tags:
+  - world
+  - content
+  - investigation
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/done/TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING.md
   ticket_id: TCK-20261004-PACKAGE-REGISTRY-VALIDATOR-FLIP-BLOCKING
   title: 'M5f: After its own two-week soak, make the package-registry completeness
@@ -18186,6 +18270,31 @@
   tags:
   - social
   - documentation
+  - investigation
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT.md
+  ticket_id: TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT
+  title: 'Six rendering-quality tests now prove things about a frozen snapshot rather
+    than the live corpus —
+
+    decide whether to rebaseline onto the real `dungeon_crawl` or keep the fixture
+    deliberately'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-04'
+  related_code_areas:
+  - tests/unit/rendering/
+  - test_shape.py
+  - src/rendering/variants.py
+  - docs/visual_quality/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT/plan.md
+  - agent-working/stored_artifacts/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT/test_plan.md
+  tags:
+  - rendering
+  - testing
+  - world
   - investigation
 - type: ticket
   path: agent-working/tickets/done/TCK-20261004-REVIEW-RUBRIC.md
@@ -19094,27 +19203,6 @@
   - live-map
   - planning
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION.md
-  ticket_id: TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION
-  title: 'Three closed tickets measured `frontier_living_world` through the catalog
-    copy, which is not what
-
-    production loaded — establish whether their conclusions survive re-measurement'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-04'
-  related_code_areas:
-  - src/worldbuilding/repository.py
-  - src/worldassembly/resolver.py
-  - tests/integration/worldassembly/test_resolved_snapshot_freshness.py
-  - data/worlds/*/resolved/
-  artifact_files: []
-  tags:
-  - world
-  - content
-  - investigation
-  - simulation-quality
-- type: ticket
   path: agent-working/tickets/todos/TCK-20261004-POSITION-SWAP-CONTRACT-NEVER-CONSTRUCTED.md
   ticket_id: TCK-20261004-POSITION-SWAP-CONTRACT-NEVER-CONSTRUCTED
   title: '`ContractKind.POSITION_SWAP` is never constructed anywhere in production,
@@ -19144,28 +19232,6 @@
   - strategy
   - social
   - root-cause
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT.md
-  ticket_id: TCK-20261004-RENDERING-EVIDENCE-PINNED-TO-A-FROZEN-WORLD-SNAPSHOT
-  title: 'Six rendering-quality tests now prove things about a frozen snapshot rather
-    than the live corpus —
-
-    decide whether to rebaseline onto the real `dungeon_crawl` or keep the fixture
-    deliberately'
-  tier: standard
-  ticket_type: repair
-  date: '2026-10-04'
-  related_code_areas:
-  - tests/unit/rendering/
-  - test_shape.py
-  - src/rendering/variants.py
-  - docs/visual_quality/
-  artifact_files: []
-  tags:
-  - rendering
-  - testing
-  - world
-  - investigation
 - type: ticket
   path: agent-working/tickets/done/TCK-20261003-AGENT-WORKING-ROOT-MOVE.md
   ticket_id: TCK-20261003-AGENT-WORKING-ROOT-MOVE
@@ -21512,6 +21578,26 @@
   tags:
   - world
 - type: ticket
+  path: agent-working/tickets/done/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS.md
+  ticket_id: TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS
+  title: 'Same name, different referent: four mechanism-shaped classes exist twice
+    in different modules, and one registry edge pointed at the wrong "social memory";
+    more instances need an audit and a guard'
+  tier: standard
+  ticket_type: repair
+  date: '2026-09-30'
+  related_code_areas:
+  - src/core/items.py
+  - src/engine/rpg_depth.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS/investigation.md
+  - agent-working/stored_artifacts/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS/plan.md
+  - agent-working/stored_artifacts/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS/rpg_planner_rulings_2026-10-27.md
+  - agent-working/stored_artifacts/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS/test_plan.md
+  tags:
+  - core
+  - bug
+- type: ticket
   path: agent-working/tickets/done/TCK-20260930-SCOPE-RELOCATE-RESUME-LOSES-TODOS-SOURCE-PATH.md
   ticket_id: TCK-20260930-SCOPE-RELOCATE-RESUME-LOSES-TODOS-SOURCE-PATH
   title: A resumed `implement-ticket` run loses `todos_source_path`, so Finalize never
@@ -21765,22 +21851,6 @@
   artifact_files: []
   tags:
   - world
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS.md
-  ticket_id: TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS
-  title: 'Same name, different referent: four mechanism-shaped classes exist twice
-    in different modules, and one registry edge pointed at the wrong "social memory";
-    more instances need an audit and a guard'
-  tier: standard
-  ticket_type: repair
-  date: '2026-09-30'
-  related_code_areas:
-  - src/core/items.py
-  - src/engine/rpg_depth.py
-  artifact_files: []
-  tags:
-  - core
-  - bug
 - type: ticket
   path: agent-working/tickets/done/TCK-20260929-CATALOG-REGISTRY-TEST-LEAK.md
   ticket_id: TCK-20260929-CATALOG-REGISTRY-TEST-LEAK
