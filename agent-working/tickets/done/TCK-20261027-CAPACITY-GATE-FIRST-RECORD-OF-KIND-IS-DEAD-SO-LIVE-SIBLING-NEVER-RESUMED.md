@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED
-phase: open
+phase: done
 date: 2026-10-27
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Strategic winner lookup takes the first project of the kind in dict order (often a dead record), so the live SUSPENDED sibling is never resumed, a duplicate is created over the cap and the trim evicts the entity's own suspended project
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -128,9 +128,20 @@ sibling, the duplicate over the cap, and the self-eviction.
   combat_engage, harvest at a full cap are now refused where base admitted them: the behaviour shift to watch).
 
 ## Implementation Notes
+- Lookup (`same_kind_record`, `src/core/strategic.py`): the current project when it is of the kind, else the newest live record by `created_tick` (ACTIVE before SUSPENDED, tie to the larger id). COMPLETED and ABANDONED records and storage order play no part. Kind identity is class-strict (`same_kind`): a GoalKind never matches a ProjectKind that shares its value.
+- Target match (`project_target_matches`): `target_entity_id` when either side has one, else `target_id`.
+- Matching target: continue the current project; resume a SUSPENDED record (existing behaviour); make an ACTIVE non-current record current; when another live project is current the record is the candidate of the existing `evaluate_project_switch` call (designer ruling b), a won switch being a fresh commitment (live utility, t+10 lock).
+- Different target: the live record is superseded (`supersede_record`, the only writer of `ProjectState.ended_by`) only when the switch returns an update; cap-neutral.
+- No live record: the capacity gate (unchanged `not existing` condition).
+- Docs: Bible ch04 section 4, divergence 2.143 (Measured items 1 to 7), parity ledger STRAT-289.
 
 ## Test Summary
+- `tests/unit/strategic/test_project_lookup_live_record_first.py` (about 33 tests): lookup order, target match, resume past a dead first record, continue, gate and escalated need, supersede win and lose, orphan switch win and lose with the lock and score, class-strict match, enum class through every rebuild path, hash neutrality, single-writer scan, cognition graph.
+- `tests/unit/strategic`, `tests/unit/core`, `tests/unit/ai`: 872 passed. Wide run on the code: 4 known order-dependent fails that pass alone, 8197 passed. `tests/unit/tools`: see closure.
+- Paired run (base d914bace7 vs c32db1a41, 3 worlds, seeds 42 to 46, 5000 ticks): no drift in any world; crowded scout extinction STOP and crowded starvation 1 to 2, both disclosed in 2.143 and accepted by the designer (shifted trajectory, trace in Measured item 7).
 
 ## Files Changed
+src/core/strategic.py, src/core/state.py, src/systems/strategic_systems/intelligence.py, src/systems/strategic_systems/cognition_export.py, tests/unit/strategic/test_project_lookup_live_record_first.py, docs/mechanics/04_strategic_cognition.md, docs/guidelines/intentional_divergences.md (2.143), docs/parity_ledger/strategic_cognition.yaml (STRAT-289).
 
 ## Completion Summary
+A winning goal now continues, resumes or supersedes the entity's live project of its kind by target, chosen from the current project then the newest live record; a dead first record of the kind no longer blocks the live sibling or skips the capacity gate. Disclosed shifts: capacity-gate refusals rise (intended, base defect gone); escalated hunger and fatigue orphans lose the project switch at a rate comparable to base (a gap that already exists in base; follow-up TCK-20261029-AN-ESCALATED-NEED-THAT-WINS-SCORING-LOSES-THE-PROJECT-SWITCH); crowded scout 29 returns to its pre-step-A count; crowded starvation pair at seed 46 is a shifted trajectory, with worker 1's non-eating untraced at the execution layer. Sleep-debt collapses and time at hunger of 95 or more were not measured (no ledger counter).

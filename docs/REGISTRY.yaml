@@ -7926,6 +7926,24 @@
   tags:
   - benchmarking
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED.md
+  ticket_id: TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED
+  title: Strategic winner lookup takes the first project of the kind in dict order
+    (often a dead record), so the live SUSPENDED sibling is never resumed, a duplicate
+    is created over the cap and the trim evicts the entity's own suspended project
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - src/systems/strategic_systems/intelligence.py (~1610-1612, ~1773)
+  - src/core/strategic.py (is_live_project, has_project_capacity, live_projects_in_the_trim)
+  - src/engine/pipeline_phases/capacity_enforcement.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED/plan.md
+  - agent-working/stored_artifacts/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md
   ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR
   title: A REQUEST_CRAFT intent with an unknown or missing recipe id raises KeyError
