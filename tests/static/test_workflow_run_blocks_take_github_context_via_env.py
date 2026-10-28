@@ -14,7 +14,7 @@ import yaml
 
 _ROOT = Path(__file__).resolve().parent.parent.parent
 _WORKFLOWS = _ROOT / ".github" / "workflows"
-FILES = sorted([_WORKFLOWS / "test.yml", *_WORKFLOWS.glob("slow-regression*.yml"), _WORKFLOWS / "rpg-gate-report.yml"])
+FILES = sorted([_WORKFLOWS / "test.yml", *_WORKFLOWS.glob("slow-regression*.yml"), _WORKFLOWS / "rpg-gate-report.yml", _WORKFLOWS / "paired-arms.yml"])
 CONTEXT = re.compile(r"\$\{\{\s*(?:github|inputs)\.")
 
 
@@ -25,7 +25,7 @@ def offending_steps(workflow_text: str) -> list[tuple[str, str]]:
 
 
 def test_the_guarded_workflow_files_exist():
-    assert {p.name for p in FILES} >= {"test.yml", "slow-regression.yml", "slow-regression-watchdog.yml", "rpg-gate-report.yml"}
+    assert {p.name for p in FILES} >= {"test.yml", "slow-regression.yml", "slow-regression-watchdog.yml", "rpg-gate-report.yml", "paired-arms.yml"}
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.name)

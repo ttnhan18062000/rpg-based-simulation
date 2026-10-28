@@ -41,7 +41,7 @@ except ImportError:
 def calculate_checksum(data_dict: Dict[str, Any]) -> str:
     """Computes a deterministic hash of the manifest dictionary for ingestion idempotency checks."""
     serialized = json.dumps(data_dict, sort_keys=True)
-    return hashlib.md5(serialized.encode("utf-8")).hexdigest()
+    return hashlib.md5(serialized.encode("utf-8"), usedforsecurity=False).hexdigest()
 
 
 class ClickHouseSchemaManager:

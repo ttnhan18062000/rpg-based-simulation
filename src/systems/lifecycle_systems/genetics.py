@@ -81,7 +81,7 @@ class GeneticsSystem:
         Each multiplier ranges from 0.8 to 1.3.
         """
         import hashlib
-        h = hashlib.md5(str(seed).encode()).hexdigest()
+        h = hashlib.md5(str(seed).encode(), usedforsecurity=False).hexdigest()
 
         def _extract(offset: int) -> float:
             val = int(h[offset:offset + 2], 16) / 255.0
