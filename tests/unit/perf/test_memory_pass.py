@@ -119,7 +119,7 @@ def test_the_merge_adds_memory_keys_and_changes_nothing_else() -> None:
     before, after = record.to_dict(), merged.to_dict()
     assert before["result"].pop("memory_mb").keys() <= after["result"].pop("memory_mb").keys()
     assert before == after  # identity, schema_version and every other result field byte for byte
-    assert merged.schema_version == record.schema_version == SCHEMA_VERSION == "1.4"
+    assert merged.schema_version == record.schema_version == SCHEMA_VERSION == "1.5"
 
 
 def test_with_the_pass_rss_over_declared_is_the_working_set_ratio_and_says_so() -> None:

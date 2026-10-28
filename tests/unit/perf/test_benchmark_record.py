@@ -71,7 +71,7 @@ def replace_identity(record: BenchmarkRecord, section: str, **changes: Any) -> B
 
 def test_record_is_frozen_and_versioned() -> None:
     record = make_record()
-    assert record.schema_version == SCHEMA_VERSION == "1.4"
+    assert record.schema_version == SCHEMA_VERSION == "1.5"
     with pytest.raises(dataclasses.FrozenInstanceError):
         record.schema_version = "2.0"  # type: ignore[misc]
     with pytest.raises(dataclasses.FrozenInstanceError):
@@ -253,6 +253,7 @@ def test_a_different_cost_accounting_version_is_inconclusive() -> None:
         ("contract", {"signal_contract": SignalContract.CANONICAL}, "identity.contract.signal_contract"),
         ("workload", {"entity_count": 21}, "identity.workload.entity_count"),
         ("runtime", {"cpu_model": "other cpu"}, "identity.runtime.cpu_model"),
+        ("runtime", {"dependency_fingerprint": "deps-v1:" + "a" * 64}, "identity.runtime.dependency_fingerprint"),
         ("executor", {"worker_count": 4}, "identity.executor.worker_count"),
         ("gate", {"tier": GateTier.CAPACITY_RUN}, "identity.gate.tier"),
         ("observer", {"level": "replay"}, "identity.observer.level"),
@@ -285,6 +286,31 @@ def test_python_patch_version_is_recorded_only() -> None:
     assert compare(base, head).state is OutcomeState.PASS
     other_minor = replace_identity(make_record(), "runtime", python_version="3.13.0")
     assert compare(base, other_minor).state is OutcomeState.INCONCLUSIVE
+
+
+def test_a_dependency_fingerprint_mismatch_is_inconclusive_through_the_blocking_fields_check() -> None:
+    base = replace_identity(make_record(), "runtime", dependency_fingerprint="deps-v1:" + "a" * 64, dependency_count=30)
+    head = replace_identity(make_record(), "runtime", dependency_fingerprint="deps-v1:" + "b" * 64, dependency_count=30)
+    outcome = compare(base, head)
+    assert outcome.state is OutcomeState.INCONCLUSIVE and outcome.check == "blocking_fields"
+    assert "identity.runtime.dependency_fingerprint" in outcome.reason
+
+
+def test_the_dependency_count_is_recorded_only() -> None:
+    base = replace_identity(make_record(), "runtime", dependency_fingerprint="deps-v1:" + "a" * 64, dependency_count=30)
+    head = replace_identity(make_record(), "runtime", dependency_fingerprint="deps-v1:" + "a" * 64, dependency_count=31)
+    assert compare(base, head).state is OutcomeState.PASS
+
+
+def test_a_record_without_the_dependency_fields_loads_and_is_inconclusive_against_a_fingerprinted_head() -> None:
+    data = make_record().to_dict()
+    for key in ("dependency_fingerprint", "dependency_count"):
+        data["identity"]["runtime"].pop(key, None)
+    old = BenchmarkRecord.from_dict(data)
+    assert old.identity.runtime.dependency_fingerprint == UNKNOWN and old.identity.runtime.dependency_count is None
+    head = replace_identity(make_record(), "runtime", dependency_fingerprint="deps-v1:" + "a" * 64, dependency_count=30)
+    outcome = compare(old, head)
+    assert outcome.state is OutcomeState.INCONCLUSIVE and "identity.runtime.dependency_fingerprint" in outcome.reason
 
 
 def test_engine_commit_and_dirty_flag_are_recorded_only() -> None:
