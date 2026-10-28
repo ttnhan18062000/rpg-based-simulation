@@ -26,7 +26,7 @@ What changed, and why:
 - **Target scale = offline research scale on one machine** (about today's corpus, roughly 100 to 2000 entities). **Mode 5 is dropped** (§4, §6, §8 Q1).
   The 10,000 entity / 50 ms / 2 GB figure in `docs/performance/optimization_architecture.md:21` stays as perf's stated bigger-world target,
   measured by a capacity run (PERF-M2-T03/T04); that doc is perf's, not edited here.
-- The hash is blind to **seven** fields, not six (§5).
+- The hash was blind to **seven** fields, not six (§5); F1 has since hashed all seven as `flat-sha256-v3` (#758) and v1 was re-recorded under it (#767).
 - The "nothing touching `src/**` before the v1 record merges" rule is retired: v1 is recorded and re-anchored (#725, #747, #748) (§3).
 - H2 is implemented on Lane C, not yet merged; the 615 to 270 ms projection is retired (§2, §3, §6).
 - `fused_strategic_pass` is named as uncosted serial Resolution work (§2); H5 is a timer fix, not waste.
@@ -207,16 +207,16 @@ contract and its Mode 1 implementation:
 | executor | `LocalSequentialExecutor` | Confirmed: the profile picks the executor implicitly; M3+ ([§6](port_leak_audit.md#6-executor-commit-path-event-sink)) |
 | commit path | `refine` then `ApplyPath.apply_generation` | Confirmed: no leak for Modes 1 to 3a; 3b and 5 change it |
 | event sink | `EventRecorder`, ordered | "Ordering feeds the digest" is **not confirmed**: no event digest exists and the final hash is state-only. Eviction is a cost, and H3 is closed (§2) |
-| state store and hash | `AuthoritativeState`, `CanonicalStateHasher` | Confirmed and wider: the hash omits seven durable fields (the six below plus `last_hit_tick`), `information_providers` among them; `terrain` is not a gap ([§5](port_leak_audit.md#5-canonicalstatehasher-coverage-main-item)) |
+| state store and hash | `AuthoritativeState`, `CanonicalStateHasher` | Confirmed and wider at audit time: the hash omitted seven durable fields (the six below plus `last_hit_tick`), `information_providers` among them; `terrain` is not a gap ([§5](port_leak_audit.md#5-canonicalstatehasher-coverage-main-item)). **Closed by `flat-sha256-v3`** (#758); still outside: `pressure_signals` (guarded) and the `REFINED_UPDATE` fingerprint (by design) |
 | process scope | one process per run | Confirmed, all M3+, none reaches the hash; the content thread-local is not a leak ([§4](port_leak_audit.md#4-process-global-singletons)) |
 
-**The v1 baseline is blind to seven fields.** The final hash, and the paired proofs that rely on it, cannot see a divergence in `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans` or `information_providers` (lead-planner-u24, #593 comment 6346664156; rpg-planner ruled `recent_world_events` is state, so all six count, #593 comment 6347182683), nor in HUNGER step B's `last_hit_tick`, which ships unhashed by perf ruling (ii) (#593 comment 6384425767; owner #715 comment 6384423281). F1's single flat-sha256 bump hashes all seven; it starts after step B lands and finishes before the M1 record ticket. v1 itself stays as it is. Until F1 lands, a "same final hash as Mode 1" check is blind to seven fields, so building the conformance suite waits for it.
+**The hash now sees the seven fields; three things stay outside it.** At audit time the final hash, and the paired proofs that rely on it, could not see a divergence in `item_instances`, `recent_world_events`, `quest_registry`, `factions`, `clans` or `information_providers` (lead-planner-u24, #593 comment 6346664156; rpg-planner ruled `recent_world_events` is state, #593 comment 6347182683), nor in HUNGER step B's `last_hit_tick` (perf ruling (ii), #593 comment 6384425767). F1 has landed: `flat-sha256-v3` (#758, 957caf8f6) is v2 plus exactly those seven, with a per-field test that each one moves the digest (`tests/unit/engine/test_proof_digest_contract.py:148-149`), and v1 was re-recorded under v3 (#767, fc040dee4). The per-tick `TICK_END` trail is the same proof digest, so it sees them too. **Still blind, on main at d914bace7:** `AuthoritativeState.pressure_signals` is outside the digest (PERF-D5 finding, left open; production keeps it `{}` and the suite's G1 guards that); the `REFINED_UPDATE` fingerprint (`src/replay/fingerprint.py`) reads none of the seven, by design, and is never proof; `current_mode` is unhashed (effects only). The F1 wait on building the conformance suite is lifted; the suite's side digest is retired unbuilt ([conformance_suite_design.md §4.1 to §4.2](conformance_suite_design.md)).
 
 **Conformance suite.** A fixed set of worlds and seeds runs in every mode:
 - Modes 2 and 3 must reproduce Mode 1's final canonical hash.
 - Mode 4 asserts invariants only, as `test_cert_long_run_stability.py` does today.
 
-The worlds, seeds, cases, blind-to lists, the side digest, the Mode 3 matrix and the lanes are in
+The worlds, seeds, cases, blind-to lists, the Mode 3 matrix and the lanes are in
 [conformance_suite_design.md](conformance_suite_design.md). Lane placement stays pending testing-planner.
 
 **Ownership:** testing-planner (lane placement), with perf-planner for the parity matrix (PERF-D2).
@@ -231,7 +231,7 @@ The worlds, seeds, cases, blind-to lists, the side digest, the Mode 3 matrix and
 | 2 T3 / Mode 2 `no_replay` for paired arms | perf ruling **done: YES** (§4); the draft ticket remains | perf-planner ruled; rpg or testing implements |
 | Mode 3a | stack-survey evaluation, parity matrix | perf-planner (PERF-D2, M6) |
 | Mode 3b | PERF-M6-T05 proposal, then an ADR. PERF-M6-T05 has **no ticket**: it is a line in `docs/plans/design_enhancement/performance_milestones_epic.md` (M6), so perf should record the fold of the Resolution-parallelism evaluation on the M6 epic or file T05, or it can silently disappear | perf-planner, then lead-planner |
-| ports, conformance suite | **audit done** ([port_leak_audit.md](port_leak_audit.md)); **design done** ([conformance_suite_design.md](conformance_suite_design.md)); building the suite waits on step 1 and the F1 seven-field hash bump; a docs-only port-contract pass can start now | architecture proposed; rpg and testing build |
+| ports, conformance suite | **audit done** ([port_leak_audit.md](port_leak_audit.md)); **design done** ([conformance_suite_design.md](conformance_suite_design.md)); building the suite waits on step 1 (the F1 seven-field hash bump landed as `flat-sha256-v3`, #758); a docs-only port-contract pass can start now | architecture proposed; rpg and testing build |
 
 **T2 runner facts** (platform-planner, relayed by lead-planner, 2026-10-22):
 - there is no self-hosted runner, and the repo is public, so adding one means hardware, hardening and an owner decision;
