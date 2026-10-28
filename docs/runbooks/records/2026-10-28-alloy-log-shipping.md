@@ -8,7 +8,7 @@ tags: [platform, observability]
 
 # Log shipping moved from Promtail to Grafana Alloy (2026-10-28)
 
-**Label: running locally** (VM host ubuntu). Ticket: `TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING`. Runbook: [log-shipping.md](../log-shipping.md). Raw files: `agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/proof-2026-10-28/` (`events.txt`, `guard.log`, `cases.sh`, `cgroup_mem.csv`). Times are UTC, read from those files. Predecessor: [2026-10-20-log-shipping-fix.md](2026-10-20-log-shipping-fix.md).
+**Label: running locally** (VM host ubuntu). Ticket: `TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING`. Runbook: [log-shipping.md](../log-shipping.md). Raw files: `agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/proof-2026-10-28/` (`events.txt`, `guard.txt` (the abort watcher log), `cases.sh`, `cgroup_mem.csv`). Times are UTC, read from those files. Predecessor: [2026-10-20-log-shipping-fix.md](2026-10-20-log-shipping-fix.md).
 
 ## 1. Why
 Promtail reached end of life on 2026-03-02 (Grafana's migration guide). It is replaced by Alloy v1.20.1 (released 2026-09-28, the newest release at least 14 days old on 2026-10-28), pinned by multi-arch index digest `sha256:2aa2099a...d13f`. What is shipped and labelled did not change.
