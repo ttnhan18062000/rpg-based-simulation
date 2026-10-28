@@ -7880,6 +7880,18 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/todos/parity-ledger-paydown/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES.md
+  ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES
+  title: 'Parity-ledger paydown, child 1b: resolve the world_dynamics.yaml entries
+    that have no proving test, by status change or a new test'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-29'
+  related_code_areas:
+  - docs/parity_ledger/world_dynamics.yaml, tests/**, codebase/baselines/parity_ledger_schema_baseline.json
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT.md
   ticket_id: TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT
   title: Parity ledger INFRA-430 and INFRA-431 state the perf benchmark schema version
@@ -7890,7 +7902,10 @@
   related_code_areas:
   - src/perf/benchmark_record.py, tools/perf/baseline_lifecycle.py, tests/unit/perf/test_benchmark_record.py,
     tests/unit/perf/test_baseline_lifecycle.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT/test_plan.md
   tags:
   - benchmarking
 - type: ticket
