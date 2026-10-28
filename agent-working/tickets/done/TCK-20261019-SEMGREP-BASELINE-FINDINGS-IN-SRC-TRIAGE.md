@@ -79,7 +79,7 @@ The findings, with the first read:
 
 ## Implementation Notes
 Branch rpg-semgrep-src-findings (dispatch rpg-planner, owner-approved on #715 issuecomment-6407266343). Verdicts, confirmed against the code:
-- md5 x7: not security (ids, seeds, fingerprints, manifest checksum). `usedforsecurity=False` added; digests unchanged (pinned by tests/unit/security/test_md5_ids_are_not_for_security.py).
+- md5 x7: not security (ids, seeds, fingerprints, manifest checksum). `usedforsecurity=False` added; digests unchanged (pinned by tests/unit/core/test_md5_ids_are_not_for_security.py).
 - propose_simulation_enhancements.py:184: `yaml.dump` of plain dicts -> `yaml.safe_dump`; output identical for this data (checked before/after).
 - prepare_simulation_execution.py:174: chmod 0o755 on the generated launcher is intended -> reasoned nosemgrep.
 - watchdog.py request-with-http x2 (BACKEND_URL, LOKI_URL): from env, internal compose network -> reasoned nosemgrep.
@@ -96,7 +96,7 @@ Suppressed in code only; nothing dismissed in the Security tab (#701/#729 conven
 - Not verifiable locally: whether each nosemgrep silences its alert (no semgrep binary); the next security-scan run on main decides.
 
 ## Files Changed
-src/api/cors.py (new), src/api/server.py, src/domains/world_emergence/services.py, src/lab/context.py, src/lab/mutation.py, src/lab/workflows/{generate_simulation_setup,prepare_simulation_execution,propose_simulation_enhancements}.py, src/observability/warehouse/clickhouse.py, src/observability/watchdog.py, src/replay/fingerprint.py, src/systems/lifecycle_systems/genetics.py, docs/architecture/http_api_key_authentication.md, tests/api/{test_cors_config,test_cors_origins}.py, tests/api/test_server_http_surface_characterization.py, tests/fixtures/api_server_http_surface.json, tests/unit/security/test_md5_ids_are_not_for_security.py.
+src/api/cors.py (new), src/api/server.py, src/domains/world_emergence/services.py, src/lab/context.py, src/lab/mutation.py, src/lab/workflows/{generate_simulation_setup,prepare_simulation_execution,propose_simulation_enhancements}.py, src/observability/warehouse/clickhouse.py, src/observability/watchdog.py, src/replay/fingerprint.py, src/systems/lifecycle_systems/genetics.py, docs/architecture/http_api_key_authentication.md, tests/api/{test_cors_config,test_cors_origins}.py, tests/api/test_server_http_surface_characterization.py, tests/fixtures/api_server_http_surface.json, tests/unit/core/test_md5_ids_are_not_for_security.py.
 
 ## Completion Summary
 All baseline src/** Semgrep findings triaged: md5 x7 flagged non-security, yaml.dump -> safe_dump, reasoned nosemgrep on the intended/false-positive sites, wildcard CORS replaced by an env-configurable local-origin list. Simulation hashes unchanged (paired neutral IDENTICAL on 3 worlds). Nothing dismissed in the Security tab.
