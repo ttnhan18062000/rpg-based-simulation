@@ -121,7 +121,9 @@ comparison uses it. The owner approved both on 2026-10-24 (#715 issuecomment-638
 - [ ] The PERF-D5 amendment is in `performance_optimization_decisions.md`, with the owner's approval recorded in
       the PR.
 - [x] The baseline-invalidation-ledger row is written.
-- [ ] The v1 base is re-recorded under v3 (rpg) before any M1 paired or gate comparison, with outcomes equal to v1.
+- [x] The v1 base is re-recorded under v3 (rpg) before any M1 paired or gate comparison, with outcomes equal to v1.
+      Re-recorded under v3 by rpg after the merge; perf-planner's acceptance check (F1 moves only digests: 30 of 30 rows, non-digest fields equal) is at
+      https://github.com/ttnhan18062000/rpg-based-simulation/pull/767#issuecomment-6472976361.
 - [x] The cost of the wider digest is measured: same host, phase-7 digest share on `strategic_100` and
       `frontier_extended` before and after, in a lead-granted slot. PROVISIONAL.
 
