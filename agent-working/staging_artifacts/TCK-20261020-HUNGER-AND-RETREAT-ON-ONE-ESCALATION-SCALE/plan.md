@@ -10,6 +10,11 @@ tags: []
 
 # plan - TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE (step A)
 
+## AS LANDED (2026-10-28; owner decision #715 6458811768, memo row 91)
+- Landed: R only, which is the steps below (retreat_pull in CombatRetreatScorer, gated on acting_threat_to) plus the CONFLICT-04 no-freeze invariant measure fix (designer ruling 2026-10-26).
+- Not landed: the decided COMBAT_RETREAT flight (built 2026-10-26/27 in 761fad2b1..5318f71e0, measured as G). It is parked on the local branch `rpg-hunger-retreat-flight-parked` for the post-M1 regroup-to-retreat relabel step, with the escalated-need capacity exemption for retreat.
+- Measured (R vs 3533fde71) and the accepted frontier extinction STOP are in divergence 2.139. The capacity-lookup defect found on the way is its own ticket (TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED).
+
 ## CONFIRMED DESIGN (2026-10-26; supersedes the design points and steps below where they differ)
 Confirmed by rpg-designer through rpg-planner (confirmations within memo row 88 (3), not a new ruling); step B (PR #753, `acting_threat_to`) is the base.
 1. **Scale:** wound = `1 - hp/max_hp`, on need_pull's `ESCALATION_ONSET` 0.6 / `ESCALATION_FULL` 0.85 / `ESCALATION_AMPLITUDE` 60; the consequence line is death. The code reads the need_pull constants as the single source and does NOT tie to the panic-band constants (0.4, 0.15); their coincidence is noted in the Bible only.
