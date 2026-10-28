@@ -71,7 +71,7 @@ from src.engine.policy import GovernorPolicy
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
-    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind, has_project_capacity, with_live_current_score, same_kind_record, project_target_matches, supersede_record
+    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind, has_project_capacity, live_projects, with_live_current_score, same_kind_record, project_target_matches, supersede_record
 )
 from src.engine.spatial_query import SpatialQueryService
 from src.content_semantics.faction import are_entities_hostile
@@ -1624,6 +1624,10 @@ class StrategicIntelligenceSystem:
                 # record that is not SUSPENDED in the entity's own project map, which this record is, so the None arm is a guard: the tick ends with no project created.
                 if existing.status == ProjectStatus.SUSPENDED:
                     made_current = StrategicIntelligenceSystem.resume_project(entity, existing.id)
+                elif strat.current_project_id and strat.current_project_id != existing.id and strat.current_project_id in live_projects(strat.projects):
+                    # Another live project is current: making this record current would skip that project's retention margin and lock and leave two ACTIVE projects.
+                    # Not seen in the probes (0 of 5.7k candidate ticks); the guard keeps it that way: nothing changes, nothing is created.
+                    made_current = None
                 else:
                     made_current = StrategicUpdate(current_project_id_set=existing.id, current_objective_id_set=existing.active_objective_id)
                 return replace(made_current or StrategicUpdate(),

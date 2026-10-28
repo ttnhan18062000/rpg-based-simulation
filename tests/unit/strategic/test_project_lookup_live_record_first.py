@@ -259,3 +259,21 @@ def test_a_matching_live_record_never_coexists_with_a_new_project_of_the_same_ki
     entity = _entity([record], current="rec" if current else None)
     created = [p for p in (_evaluate(entity).projects_add_or_update or []) if p.id != "rec"]
     assert created == []
+
+
+def test_an_active_matching_record_is_not_made_current_over_another_live_current_project():
+    """Designer follow-up: making a record current without the switch would skip the current project's margin and lock and leave two ACTIVE projects. Guarded: nothing
+    changes and nothing is created (the state was not seen in the probes)."""
+    other = _project("other", ProjectStatus.ACTIVE, target="x", kind="travel", created=1)
+    orphan = _project("orphan", ProjectStatus.ACTIVE, created=3)
+    entity = _entity([other, orphan], current="other")
+    update = _evaluate(entity)
+    assert update.current_project_id_set is None
+    assert not update.projects_add_or_update
+
+
+def test_an_active_matching_record_is_made_current_when_the_current_project_is_dead_or_absent():
+    done = _project("done", ProjectStatus.COMPLETED, target="x", kind="travel", created=1)
+    orphan = _project("orphan", ProjectStatus.ACTIVE, created=3)
+    update = _evaluate(_entity([done, orphan], current="done"))
+    assert update.current_project_id_set == "orphan"
