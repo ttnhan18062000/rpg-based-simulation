@@ -8506,6 +8506,25 @@
   - architecture
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE.md
+  ticket_id: TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE
+  title: The rpg gate candidate records the CI run it came from and the known-reds
+    file it was judged against, and `rebaseline()` refuses a candidate with no CI
+    run
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - tools/test_architecture/rpg_gate_candidate.py
+  - tools/test_architecture/rpg_gate_baseline.py
+  - .github/workflows/rpg-gate-report.yml (read-only unless Scope 4 finds otherwise)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE/investigation.md
+  - agent-working/stored_artifacts/TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE/plan.md
+  - agent-working/stored_artifacts/TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE/test_plan.md
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID.md
   ticket_id: TCK-20261023-SALTED-HASH-IN-HASHED-STATE-FACTION-SQUAD-GROUP-ID
   title: Faction squad group_id uses Python's salted hash() of a str region id, so
