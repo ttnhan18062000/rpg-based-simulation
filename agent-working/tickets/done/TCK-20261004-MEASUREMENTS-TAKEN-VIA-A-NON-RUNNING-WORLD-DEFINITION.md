@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261004-MEASUREMENTS-TAKEN-VIA-A-NON-RUNNING-WORLD-DEFINITION
-phase: open
+phase: done
 date: 2026-10-04
 tags: [world, content, investigation, simulation-quality]
 ---
@@ -18,7 +18,7 @@ production loaded — establish whether their conclusions survive re-measurement
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -199,16 +199,26 @@ discriminator.
 
 ## Implementation Notes
 
-_(to be filled during implementation)_
+Full record in the stored `investigation.md` (probes `live_world_probe.py` and its `.jsonl`). Rulings are rpg-planner-ubuntu's under this ticket's delegation, 2026-10-27.
+- **Path (AC 1), read from each ticket's text:** CAMP-STATE (`TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION`), DEMOGRAPHIC-COHORT (`TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED`) and UNREACHABLE-CLASSIFY (`TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED`) all measured `data/content/world_compositions/frontier_living_world.yaml` (catalog copy) through `WorldAssemblyResolver.assemble()` then `WorldCompiler.compile(seed=42)`. The probe scripts are gone.
+- **Re-taken through the production path** (`WorldRepository("data/worlds").load_world_with_context`, all 24 worlds, no kernel run): CAMP-STATE survives (2 `CampState`, same ids). UNREACHABLE-CLASSIFY-NEVER-SEEDED survives. DEMOGRAPHIC-COHORT: conclusion survives, figures change (8 of 9 regions seed non-empty cohorts, not 6 of 7; `near_forest` populated; `hometown` {4,6,3} unchanged).
+- **AC 2:** `TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO` is arithmetic and does not depend on the world definition; the largest compile-time bracket on the 24-world production corpus is 8 (its own 2026-09-30 narrowing already says 8), which also truncates to zero. Premise stands; not edited.
+- **AC 3 (search method in the investigation):** parity ledger, SimQ docs and the registry cite no catalog-path measurement. Of the four stored-artifact candidates, two are mentions or path descriptions, WOLF-DEN-NOISE-MIGRATION's table was re-taken through `data/worlds/*/world.yaml` and matches, and TOWN-CENTER-POINTER-FIX's content fact holds in the production world. `-DEAD-GUARD` and `-WAVE-CONFIRM` runtime lines: UNVERIFIED (uncommitted scratchpad script gone, loader unstated; the wording matches `tools/calibrate_simq.py`, which loads the production path); not re-run, no edit.
+- **#291 AC6 (780 vs 1609):** retired as evidence (the probe is gone; a re-take needs a heavy re-run of an unknown harness). The sibling `TCK-20261003-COMBAT-TACTICAL-PATH-NONDETERMINISM-SURVIVES-AUDIT-MODE` uses 780/1609 as its own observation and is untouched.
+- **Convention for correcting a closed ticket (UQ-1), ruled:** the full correction lives here; one dated line goes in a closed ticket's Completion Summary only where a figure or conclusion changed. Done for `-DEMOGRAPHIC-COHORT-CYCLE-...` (region figures) and `TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND` (retirement). CAMP-STATE and UNREACHABLE-CLASSIFY survive and are untouched.
+- **AC 4:** the existing guards suffice: the catalog directory is deleted and `tests/unit/content/test_content_paths.py` pins no `world_compositions_dir`; `test_committed_snapshot_equals_fresh_resolve` asserts byte equality of all 24 committed snapshots with a fresh resolve of `world.yaml`. The ticket describes a six-count-field compile-report guard; that comparison is not in `test_resolved_snapshot_freshness.py`, and byte equality is the stricter check. No second mechanism added.
+- **AC 5:** no re-taken measurement changed a conclusion, so no follow-up ticket; only a figure changed (cohort regions), recorded above.
 
 ## Test Summary
 
-_(to be filled during implementation)_
+Investigation ticket; no code or behaviour change. `live_world_probe.py` compiled all 24 production worlds (seed 42, tick 0). `tests/unit/tools` and the frontmatter checks cover the edited ticket files (run with the batch).
 
 ## Files Changed
 
-_(to be filled during implementation)_
+- `agent-working/tickets/done/TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED.md` (one dated line)
+- `agent-working/tickets/done/TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND.md` (one dated line)
+- stored artifacts: `investigation.md`, `live_world_probe.py`, `live_world_probe_results.jsonl`
 
 ## Completion Summary
 
-_(to be filled during implementation)_
+All three closed tickets measured the catalog copy of `frontier_living_world`. Re-taken through the production loader, their conclusions survive; the cohort ticket's region figures change (8 of 9, not 6 of 7) and carry a dated correction. The one unreproducible observation (#291 AC6, 780 vs 1609) is retired as evidence. The existing freshness guards are sufficient.

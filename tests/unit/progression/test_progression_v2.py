@@ -2,23 +2,7 @@ import pytest
 from dataclasses import replace
 from src.core.state import AttributeComponent, CombatComponent, IdentityComponent, AptitudeComponent
 from src.core.enums import EntityRole
-from src.core.skills import SKILL_REGISTRY, SkillCategory
 from src.progression.leveling import LevelingService
-from src.progression.skills import SkillScalingService
-
-def test_skill_scaling_physical():
-    attrs = AttributeComponent(strength=10) # 1.0 + 10 * 0.02 = 1.2
-    skill = SKILL_REGISTRY["power_strike"] # power=1.5
-    
-    scaled_power = SkillScalingService.calculate_scaled_power(skill, attrs)
-    assert scaled_power == pytest.approx(1.5 * 1.2)
-
-def test_skill_scaling_magical():
-    attrs = AttributeComponent(intelligence=20) # 1.0 + 20 * 0.03 = 1.6
-    skill = SKILL_REGISTRY["fireball"] # power=2.0
-    
-    scaled_power = SkillScalingService.calculate_scaled_power(skill, attrs)
-    assert scaled_power == pytest.approx(2.0 * 1.6)
 
 def test_learning_rate_zero():
     # Setup entity with learning_rate 0

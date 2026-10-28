@@ -44,8 +44,8 @@ def test_sandbox_world_reproduces_documented_cv():
     assert round(result.cv, 3) == 0.554
 
 
-def test_dungeon_crawl_reproduces_documented_cv():
-    # Frozen pre-balance-fix snapshot (see tests/fixtures/rendering/*.yaml): the live world no longer has this terrain.
+def test_frozen_reference_dungeon_crawl_reproduces_documented_cv():
+    """Frozen reference, not a live guard: the world is tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml (the pre-balance-fix dungeon_crawl, kept deliberately; do not regenerate). It isolates the renderer from world-content churn; live coverage is on frontier_living_world."""
     spec = load_frozen_dungeon_crawl()
     state, _report = WorldCompiler.compile(spec, seed=42)
 
@@ -188,3 +188,10 @@ def test_does_not_mutate_authoritative_state():
     assert histogram_result_1 == histogram_result_2
     assert entities == entities_before
     assert terrain == terrain_before
+
+
+def test_live_frontier_living_world_cv():
+    """Live corpus guard (see docs/visual_quality/scoring_contract.md). 2026-10-28 pin; rebaseline owner: rpg-planner (u24), which holds the data/worlds release."""
+    state, _report = WorldCompiler.compile(WorldRepository("data/worlds").load_world("frontier_living_world"), seed=42)
+
+    assert round(compute_density_cv(state.entities).cv, 3) == 0.659
