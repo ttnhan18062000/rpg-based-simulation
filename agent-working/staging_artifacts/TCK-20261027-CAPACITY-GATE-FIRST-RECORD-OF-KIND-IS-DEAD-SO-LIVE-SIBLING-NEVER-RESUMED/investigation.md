@@ -39,3 +39,13 @@ Note on "both None is a match": hunger/fatigue targets are a building or town id
 ## Open points for the plan
 1. Where "newest live" is read: `created_tick`, ties by project id.
 2. ACTIVE non-current can exist? Not seen as an extra state in the probe records (live = ACTIVE or SUSPENDED; the current project is ACTIVE). The plan states the order: current, then newest live with ACTIVE before SUSPENDED.
+
+## What the old path did for the current project at the same kind and target (planner ask a)
+Old `evaluate_strategic_intent`: `existing` = first same-kind project in dict order. For an ACTIVE `existing` there was no resume (:1612 resumed only SUSPENDED). A new candidate `proj_<kind>_<tick>` was built (score = live utility, fresh lock), the capacity gate was skipped (`not existing`), and `evaluate_project_switch` ran on it:
+- lock active and threat not resolved: the candidate had to beat the current's normalised score plus margin and clear the urgency floor, else `None` (no update);
+- otherwise `candidate.score > current.score + retention_margin`: the current project was SUSPENDED and the same-kind, same-target candidate was added and made current (a duplicate of the same kind and target, the old one suspended); else `None`.
+So the old outcome was a no-op or a same-target duplicate with the old record suspended. The new path always continues (no update beyond boredom and leads). The paired run counts these as its own counter ("continue"), with the old-path duplicate events counted on the base arm by the probe.
+
+## Edge cases from rpg-designer (via planner)
+- ACTIVE record at the matching target that is NOT current: reachable. `current_project_id` is cleared without ending the project in `tactical.py:136`, `building_arrival.py:22`, `guild_visit.py:88` and `intelligence.py:575/858` (`current_project_id_set=""`). Old path: fell through to the duplicate. New path: the record is made current (`current_project_id_set`, `current_objective_id_set`), nothing created (ruling 2). Counted as its own counter in the paired run.
+- SUSPENDED record where `resume_project` returns None: `resume_project` returns None only when the record is absent or not SUSPENDED in `entity.strategic.projects`; the lookup returns a SUSPENDED record from that same map, so it cannot happen for a looked-up record. A guard remains: the tick ends with no project created and boredom and lead deltas carried. Pinned by a test that forces None.

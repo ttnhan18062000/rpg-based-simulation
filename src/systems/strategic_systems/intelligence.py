@@ -1618,15 +1618,20 @@ class StrategicIntelligenceSystem:
                      leads_remove=memory_upd.leads_remove
                 )
 
-            if existing is not None and target_matches and existing.status == ProjectStatus.SUSPENDED:
-                resumed_up = StrategicIntelligenceSystem.resume_project(entity, existing.id)
-                if resumed_up:
-                    return replace(resumed_up,
-                         boredom_delta=boredom_upd,
-                         leads_add_or_update=memory_upd.leads_add_or_update,
-                         leads_remove=memory_upd.leads_remove
-                    )
-            
+            if existing is not None and target_matches:
+                # A live record at this target that is not current: never a same-target duplicate. A SUSPENDED one is resumed; an ACTIVE one that lost
+                # `current_project_id` (several writers clear it without ending the project) is made current again. `resume_project` returns None only for a
+                # record that is not SUSPENDED in the entity's own project map, which this record is, so the None arm is a guard: the tick ends with no project created.
+                if existing.status == ProjectStatus.SUSPENDED:
+                    made_current = StrategicIntelligenceSystem.resume_project(entity, existing.id)
+                else:
+                    made_current = StrategicUpdate(current_project_id_set=existing.id, current_objective_id_set=existing.active_objective_id)
+                return replace(made_current or StrategicUpdate(),
+                     boredom_delta=boredom_upd,
+                     leads_add_or_update=memory_upd.leads_add_or_update,
+                     leads_remove=memory_upd.leads_remove
+                )
+
             if best_candidate.kind == GoalKind.ADVENTURE_ROUTE:
                 # AC3/AC4: materialize via RouteToProjectMapper using the RAW route score
                 # (metadata["raw_score"]), never best_candidate.utility. _score_scale_max()

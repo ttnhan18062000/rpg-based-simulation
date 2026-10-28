@@ -4616,3 +4616,15 @@
   test_path: tests/unit/ai/test_retreat_escalates_on_the_need_scale.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.139.
   support_boundary: 'Measured against step B tip 3533fde71 (build 358f4cb7f; landed src equivalent, divergence 2.139 Measured): no death-count drift in the 3 worlds; frontier_living_world extinction STOP (scout, wild_creature) accepted as known, owner decision #715 6458811768 (memo row 91). A chosen retreat is a stored target that takes no step (no strategic flight; held for after M1). The panic flight is decided in the tactical pass before goal scores (N15), so this changes the goal-level weighing only. Inherits the act test properties of 2.138.'
+
+- id: STRAT-289
+  text: 'TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED: a winning goal continues, resumes or supersedes the entity''s LIVE project of its kind, chosen as the current project of the kind, else the newest live record (ACTIVE before SUSPENDED); a COMPLETED or ABANDONED record and storage order take no part. A matching target (target_entity_id when either side has one, else target_id) continues the current project, resumes a suspended one or makes an active non-current one current, creating nothing. A different target is superseded (ABANDONED, ended_by SUPERSEDED_BY_TARGET) only when evaluate_project_switch returns an update, cap-neutral; a losing candidate changes nothing. No live record goes through the capacity gate.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/core/strategic.py (ProjectEnd, ProjectState.ended_by, same_kind_record, project_target_matches, supersede_record), src/core/state.py (canonical dict, ended_by only when set), src/systems/strategic_systems/intelligence.py (the lookup and the supersede), src/systems/strategic_systems/cognition_export.py (project node attribute). docs/mechanics/04_strategic_cognition.md section 4. docs/guidelines/intentional_divergences.md 2.142.'
+  proof_type: regression
+  test_path: tests/unit/strategic/test_project_lookup_live_record_first.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.142.
+  support_boundary: 'The four mapped kinds (ADVENTURE_ROUTE, SOCIAL_CONTRACT, REGION_STABILIZATION, OCCUPATION_CHANGE) never match a stored record and are unchanged here (separate ticket). Direct resume of a matching suspended record is existing behaviour, not endorsed. Measured counts: divergence 2.142.'
+

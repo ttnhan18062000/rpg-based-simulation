@@ -231,3 +231,31 @@ def test_the_cognition_graph_shows_ended_by_beside_the_status_only_when_set():
     ended = replace(entity, strategic=replace(entity.strategic, projects={"r": supersede_record(live)}))
     node = next(n for n in CognitionGraphExporter.export(ended).nodes if n.id == "r")
     assert node.attributes["status"] == "ABANDONED" and node.attributes["ended_by"] == "SUPERSEDED_BY_TARGET"
+
+
+# --- a matching live record is never left beside a same-target duplicate (designer edges a and b) --------------------------
+def test_an_active_record_that_lost_current_project_id_is_made_current_not_duplicated():
+    """Several writers clear current_project_id without ending the project (e.g. building arrival), so an ACTIVE non-current record is a reachable state."""
+    orphan = _project("orphan", ProjectStatus.ACTIVE, created=3)
+    entity = _entity([orphan], current=None)
+    update = _evaluate(entity)
+    assert update.current_project_id_set == "orphan"
+    assert update.current_objective_id_set == orphan.active_objective_id
+    assert not update.projects_add_or_update
+
+
+def test_a_resume_that_returns_none_ends_the_tick_with_no_project_created(monkeypatch):
+    suspended = _project("sus", ProjectStatus.SUSPENDED, created=3)
+    entity = _entity([suspended])
+    monkeypatch.setattr(StrategicIntelligenceSystem, "resume_project", staticmethod(lambda entity, project_id: None))
+    update = _evaluate(entity)
+    assert not update.projects_add_or_update
+    assert update.current_project_id_set is None
+
+
+@pytest.mark.parametrize("status, current", [(ProjectStatus.ACTIVE, True), (ProjectStatus.ACTIVE, False), (ProjectStatus.SUSPENDED, False)])
+def test_a_matching_live_record_never_coexists_with_a_new_project_of_the_same_kind_and_target(status, current):
+    record = _project("rec", status, created=3)
+    entity = _entity([record], current="rec" if current else None)
+    created = [p for p in (_evaluate(entity).projects_add_or_update or []) if p.id != "rec"]
+    assert created == []

@@ -990,7 +990,7 @@ class EntityState:
                         {f: val for f, val in asdict(o).items() if not (f == "target_entity_id" and val is None)}
                         for o in v.objectives
                     ],
-                    **({"ended_by": v.ended_by.value} if getattr(v, "ended_by", None) is not None else {}),
+                    **({"ended_by": v.ended_by.value} if v.ended_by is not None else {}),
                 } for k, v in sorted(self.strategic.projects.items())},
                 "directives": {k: asdict(v) for k, v in sorted(self.strategic.directives.items())},
                 "blockers": {k: asdict(v) for k, v in sorted(self.strategic.blockers.items())},
