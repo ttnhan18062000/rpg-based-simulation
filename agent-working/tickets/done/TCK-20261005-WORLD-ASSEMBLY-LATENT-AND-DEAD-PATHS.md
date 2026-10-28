@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261005-WORLD-ASSEMBLY-LATENT-AND-DEAD-PATHS
-phase: open
+phase: done
 date: 2026-10-05
 tags: [world, investigation]
 ---
@@ -17,7 +17,7 @@ collapses, an ignored `requires`, an overridden `order`, a false "not found" on 
 a dead legacy generator
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -84,17 +84,17 @@ by Lane B.
   path was not latent and the premise of this ticket is wrong.
 
 ## Acceptance Criteria
-- [ ] Scope 1's per-check counts over all 24 compositions are recorded, including zeros, with the
+- [x] Scope 1's per-check counts over all 24 compositions are recorded, including zeros, with the
       commit stated.
-- [ ] (d) is either functional with a test, or documented as unsupported with the `:813-815` claim
+- [x] (d) is either functional with a test, or documented as unsupported with the `:813-815` claim
       removed and a raise on a duplicate ref — and the choice is justified against whether any content
       wants it.
-- [ ] (e)'s `order` field is honoured or removed. Not left silently overridden.
-- [ ] (g) iterates one consistent set, with a test using `enabled: false`.
-- [ ] (i) is deleted with the no-caller sweep recorded, or kept with the caller named.
-- [ ] No resolved corpus world changes. `test_resolved_snapshot_freshness` (24 worlds re-resolve
+- [ ] (e)'s `order` field is honoured or removed. Not left silently overridden. (not met: non-latent by the ticket's rule; documented, not honoured or removed, and split into TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED by rpg-planner's ruling)
+- [x] (g) iterates one consistent set, with a test using `enabled: false`.
+- [x] (i) is deleted with the no-caller sweep recorded, or kept with the caller named. (kept, with the caller named: tests/unit/worldgeneration/test_generator.py)
+- [x] No resolved corpus world changes. `test_resolved_snapshot_freshness` (24 worlds re-resolve
       byte-identically) stays green — it is the direct guard for this ticket's latency premise.
-- [ ] Determinism sweep green; any moved hash explained, not regenerated.
+- [ ] Determinism sweep green; any moved hash explained, not regenerated. (the paired --neutral run is run once for the whole batch and recorded in the PR; not run for this ticket alone)
 
 ## Related Tickets
 - `TCK-20261005-WORLD-COMPOSITION-SILENT-DROP-AND-OVERWRITE-CORPUS-PROBE` — the measured half of the
@@ -128,7 +128,13 @@ _(none)_
   it yields.
 
 ## Implementation Notes
-_(not started)_
+Scope step (origin/main 3b5fab1e9, all 24 `data/worlds` compositions; rows in the stored `latent_paths_results.jsonl`): (d) duplicate `module_refs` 0; (g) `enabled: false` 0; (e) dangling `requires` absent from the repository 0, but 2 composed-away requires in `wilderness_survival` (`wolf_den_near_forest` and `undead_battlefield` both require `frontier_village_core`, which that world does not compose); `order` set explicitly on 72 refs in 11 worlds (61 non-zero), authored sequence differs from the merge sequence in 14 of 24 worlds, and an experiment that lets the authored order win topological ties changes the resolved world in those same 14. Sites: the resolver is `src/worldassembly/resolver.py`, not `src/worldbuilding/`.
+
+Rulings and relay chain. The rulings below are rpg-planner's (u24), relayed rpg-planner (u24) -> lead-planner-u24 -> lead-planner -> rpg-planner-ubuntu on 2026-10-27, checked at 3b5fab1e9; they are not owner approvals.
+- (g): fixed. `missing_module_issues` (in `src/worldassembly/schema.py`) checks the enabled refs `graph_map` holds, so a disabled ref to a real module is no longer reported as ASM-COMP-001. Test: `tests/integration/worldassembly/test_module_refs_enabled_and_unique.py`.
+- (d): option (a) approved. `require_one_ref_per_module` raises a `ValueError` at the start of `assemble()`, before any merge, naming the world, the module id and both refs. The "composed multiple times" claim in the place-id comment is removed. No other doc or Bible 06 text made the multi-composition claim; `docs/world/assembly_contract.md` now states the one-ref rule. Test: same file. Hash neutrality: all 24 worlds resolved before and after the change give identical `world.resolved.yaml` text (`resolved_world_hashes_before_after.jsonl`); the paired --neutral proof is run once for the batch.
+- `order` and the dangling `requires`: leave this ticket by its own rule (non-latent). Option (a) for `order`: documented only, in the `ModuleRefSpec.order` description and in `docs/world/assembly_contract.md`; no code path and no world changed. Dangling `requires`: option (c), code untouched, the finding recorded. One follow-up ticket covers both: `TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED` (filed by rpg-planner-ubuntu, carried in this PR, not dispatched).
+- (i): option (b) approved, `WorldProceduralGenerator` kept: it is constructed by `tests/unit/worldgeneration/test_generator.py` and preserved per `docs/world/generator_contract.md` (WORLD-GEN-003/004, SUBSTRATE-NEW-002). The one approved `registries/mechanisms.yaml` edit replaces the "Dead code inside" sentence in the `procedural_world_generation` entry (rpg-planner-ubuntu's message said `world_assembly`; the sentence is under `procedural_world_generation`, which I edited). Not edited, and now stale: the `world_composition_assembly` note still says a module listed twice collapses to the last ref and lists the ASM-COMP-001 enabled:false reading as an unconfirmed candidate; both are now fixed in code (rpg-planner's content, for its next pass).
 
 ### 2026-10-05 — three more dead or latent paths routed in by `rpg-implementer-2` (evidence only; not yet in Scope; the planner approved editing this ticket)
 
@@ -146,10 +152,16 @@ Per this ticket's own rule, any one of them that fires on corpus content leaves 
   for a point outside every region (AttributeError). Nothing outside the file references the class, so it is latent.
 
 ## Test Summary
-_(not started)_
+- `tests/integration/worldassembly/test_module_refs_enabled_and_unique.py`: 3 passed (disabled ref to a real module raises nothing and adds nothing; an enabled ref to an unknown module is still refused; a duplicate module id is refused naming the world, the id and both refs).
+- `tests/integration/worldassembly` 111 passed; with `tests/unit/worldassembly` and `tests/unit/worldmodules` 341 passed before the (d) change.
+- 24 resolved worlds identical before and after the (d) change (sha256 of each `world.resolved.yaml` text).
+- `make code-health`: 0 new, 0 worse. `make lint-imports`: 17 kept. Registry views regenerated; `mechanism-registry-validate` and `-html-check` pass.
 
 ## Files Changed
-_(not started)_
+- `src/worldassembly/resolver.py`, `src/worldassembly/schema.py` (the `order` description and the two ref checks)
+- `tests/integration/worldassembly/test_module_refs_enabled_and_unique.py` (new)
+- `docs/world/assembly_contract.md`, `registries/mechanisms.yaml` (one sentence), `docs/brainstorm/mechanism_verification_view.md` (regenerated)
+- `agent-working/tickets/todos/TCK-20261027-WORLD-COMPOSITION-AUTHORED-FIELDS-SILENTLY-IGNORED.md` (carried in, not dispatched)
 
 ## Completion Summary
-_(not started)_
+A disabled module ref no longer raises a false "module not found", and a module listed twice in `module_refs` is refused before any merge instead of silently collapsing to the last ref. The `order` field is documented as not deciding the merge sequence, and the non-latent `order` and dangling-`requires` findings are split into their own follow-up ticket. `WorldProceduralGenerator` is kept on purpose and the registry note says so. No resolved corpus world changed.

@@ -11061,7 +11061,7 @@
   status: verified
   priority: P2
   v2_evidence: src/rendering/connectivity.py
-  test_path: tests/unit/rendering/test_connectivity.py::test_dungeon_crawl_matches_documented_evidence
+  test_path: tests/unit/rendering/test_connectivity.py::test_frozen_reference_dungeon_crawl_matches_documented_evidence
   divergence_note: null
   proof_type: parity
 - id: INFRA-371
@@ -11072,7 +11072,7 @@
   status: verified
   priority: P2
   v2_evidence: src/rendering/density.py
-  test_path: tests/unit/rendering/test_density.py::test_dungeon_crawl_reproduces_documented_cv
+  test_path: tests/unit/rendering/test_density.py::test_frozen_reference_dungeon_crawl_reproduces_documented_cv
   divergence_note: null
   proof_type: parity
 - id: INFRA-372
@@ -11088,20 +11088,21 @@
   status: verified
   priority: P2
   v2_evidence: src/rendering/shape.py
-  test_path: tests/unit/rendering/test_shape.py::test_dungeon_crawl_forest_is_two_components_of_1116_tiles_each
+  test_path: tests/unit/rendering/test_shape.py::test_frozen_reference_dungeon_crawl_forest_is_two_components_of_1116_tiles_each
   divergence_note: null
   proof_type: parity
 - id: INFRA-373
-  text: total_variation_distance(h1, h2) over normalized terrain-type-proportion histograms
-    reproduces the documented TVD(sandbox_world, dungeon_crawl) == 0.23161981243456373
-    cross-spec anchor at seed 42 (rounds to the PROPOSAL.md-cited 0.2315). Same-spec/different-seed
-    TVD is exactly 0.0 for dungeon_crawl (seeds 42 and 137) -- structurally seed-invariant,
-    since none of its four composed modules (ruins_mystery_quest, goblin_camp_conflict,
-    old_mine_resource_loop, scalable_bandit_camp) declare terrain_variants. sandbox_world
-    is deliberately NOT used as a same-spec-seed-invariance anchor -- its current
-    seed-invariance is an artifact of a stale resolved/world.resolved.yaml cache predating
-    wolf_den_near_forest.yaml's terrain_variants field (TCK-20260821-WOLF-DEN-NOISE-MIGRATION),
-    not a structural property of its composition -- see agent-working/stored_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
+  text: 'total_variation_distance(h1, h2) over normalized terrain-type-proportion
+    histograms has two anchors at seed 42. FROZEN REFERENCE (tests/fixtures/rendering/dungeon_crawl_pre_balance_fix.resolved.yaml,
+    the pre-balance-fix world kept deliberately; it is NOT the live dungeon_crawl):
+    TVD(sandbox_world, frozen dungeon_crawl) = 0.23153614062704975 (rounds 0.2315).
+    LIVE: TVD(sandbox_world, frontier_living_world) = 0.264502519629673 (rounds 0.2645).
+    Same-spec/different-seed TVD is exactly 0.0 for live dungeon_crawl (seeds 42 and
+    137), structurally seed-invariant, since none of its composed modules declare
+    terrain_variants; sandbox_world and frontier_living_world are not seed-invariant
+    anchors. Live dungeon_crawl vs sandbox_world is 0.196; the 0.2867 once recorded
+    there does not reproduce and has no known origin. Rebaseline owner for the live
+    number: rpg-planner (u24).'
   status: verified
   priority: P2
   v2_evidence: src/rendering/variants.py
