@@ -3538,6 +3538,16 @@
   - regression
   - simulation-quality
 - type: doc
+  path: docs/plans/test_architecture/reference/run_ledger.md
+  title: 'Run ledger: one row per paired or gate invocation'
+  status: active
+  layer: testing
+  authority: P1
+  audience: agent
+  tags:
+  - testing
+  - performance
+- type: doc
   path: docs/plans/test_architecture/roadmap.md
   title: Test Architecture Roadmap (core RPG as first application)
   status: active
@@ -8505,6 +8515,25 @@
   - agent-working/stored_artifacts/TCK-20261023-COOPERATION-CANDIDATES-ENUMERATED-PER-ENTITY-PER-TICK/plan.md
   - agent-working/stored_artifacts/TCK-20261023-COOPERATION-CANDIDATES-ENUMERATED-PER-ENTITY-PER-TICK/test_plan.md
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261023-MEASURED-STEP-RUN-AND-RERUN-LEDGER.md
+  ticket_id: TCK-20261023-MEASURED-STEP-RUN-AND-RERUN-LEDGER
+  title: Every paired and gate invocation appends one typed row to a run ledger, and
+    a summary command reports runs, reruns and wall time per measured step
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-23'
+  related_code_areas:
+  - tools/test_architecture/run_ledger.py (new)
+  - tools/test_architecture/rpg_gate_harness.py
+  - tools/rpg_measure/paired.py (rpg; hook only)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261023-MEASURED-STEP-RUN-AND-RERUN-LEDGER/investigation.md
+  - agent-working/stored_artifacts/TCK-20261023-MEASURED-STEP-RUN-AND-RERUN-LEDGER/plan.md
+  - agent-working/stored_artifacts/TCK-20261023-MEASURED-STEP-RUN-AND-RERUN-LEDGER/test_plan.md
+  tags:
+  - testing
+  - performance
 - type: ticket
   path: agent-working/tickets/done/TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE.md
   ticket_id: TCK-20261023-RPG-GATE-CANDIDATE-RECORDS-ITS-CI-RUN-AND-KNOWN-FILE
