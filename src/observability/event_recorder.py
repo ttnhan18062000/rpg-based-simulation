@@ -73,10 +73,9 @@ class EventRecorder:
         enabled: bool = True,
         budget: SubsystemBudget | None = None,
         quality_fn: Optional[Callable] = None,
-        run_id: Optional[str] = None,
     ) -> None:
         self.enabled = enabled
-        self.run_id = run_id
+        self.run_id: Optional[str] = None  # set by the owner (the kernel) once the run id is resolved
         self.max_events = max_events
         self.run_dir = run_dir
         self.events: List[SimulationEvent] = []

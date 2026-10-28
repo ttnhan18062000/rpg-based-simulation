@@ -262,13 +262,8 @@ class Kernel:
                     except Exception:
                         logger.warning("SimQ hub construction failed (non-fatal) — quality scoring disabled for this run")
 
-        self._event_recorder = EventRecorder(
-            run_dir=run_dir_str,
-            max_events=5000,
-            enabled=(obs_mode != ObservabilityMode.OFF),
-            quality_fn=_quality_fn,
-            run_id=self._run_id,
-        )
+        self._event_recorder = EventRecorder(run_dir=run_dir_str, max_events=5000, enabled=(obs_mode != ObservabilityMode.OFF), quality_fn=_quality_fn)
+        self._event_recorder.run_id = self._run_id
 
         if self._quality_feed is not None and self._quality_hub is not None:
             self._quality_feed.start(self._quality_hub)
