@@ -118,8 +118,10 @@ comparison uses it. The owner approved both on 2026-10-24 (#715 issuecomment-638
       the digests differ.
 - [x] Every scheme caller and doc in Scope is updated, and the search for `flat-sha256-v2` outside history and
       tickets returns only the PERF-D5 history and the migration-proof constant.
-- [ ] The PERF-D5 amendment is in `performance_optimization_decisions.md`, with the owner's approval recorded in
+- [x] The PERF-D5 amendment is in `performance_optimization_decisions.md`, with the owner's approval recorded in
       the PR.
+      The amendment is in `performance_optimization_decisions.md` PERF-D5 (update 2026-10-26). The owner's sign-off for #758 at head `ac66bafd3` was logged on #715 (the PR #758 is merged), not in the PR:
+      https://github.com/ttnhan18062000/rpg-based-simulation/issues/715#issuecomment-6449617817.
 - [x] The baseline-invalidation-ledger row is written.
 - [x] The v1 base is re-recorded under v3 (rpg) before any M1 paired or gate comparison, with outcomes equal to v1.
       Re-recorded under v3 by rpg after the merge; perf-planner's acceptance check (F1 moves only digests: 30 of 30 rows, non-digest fields equal) is at
