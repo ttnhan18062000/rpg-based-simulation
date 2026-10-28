@@ -93,7 +93,7 @@ Every test below was run and passes. A new test failed once (the WORLD-054 corpu
 
 ## E. List for the owner: the 20 entries that rest only on the V2 rewrite commit 6e5c28992
 
-(rpg-planner counted 21; by this table it is 20: the draft's 24 `unsupported` minus WORLD-033/034/078 (D70) and WORLD-006 (owner decision 501933066). WORLD-053 was already `missing` for lack of any removal commit and is not in this list; if the owner counts it as a gameplay feature absent, group 2 becomes 7 and the total 21.)
+(rpg-planner counted 21; by this table it is 20, which rpg-planner confirmed in its second ruling: the draft's 24 `unsupported` minus WORLD-033/034/078 (D70) and WORLD-006 (owner decision 501933066). WORLD-053 was already `missing` for lack of any removal commit and is not in this list; if the owner counts it as a gameplay feature absent, group 2 becomes 7 and the total 21.)
 
 Each is recorded as `missing` with: "Not carried into V2: absent since the V2 rewrite 6e5c28992; no per-feature retirement decision is recorded." The owner is asked to decide per group; a decision to retire moves the group to `unsupported`, citing that decision; a decision to build keeps `missing` and files the work. This table does not decide it.
 
@@ -125,8 +125,14 @@ Proposed decision for group 1: RETIRE. A V2 structure already serves each purpos
 
 Proposed decision for group 2: per feature, RETIRE unless the design roadmap wants it. None is needed by the current foundation (foundation before features, 2026-10-02): bridges (011), lava terrain coupled to difficulty (017), terrain race labels (019, 047), legendary calamity-boss loot (027), a title for killing a world boss (036). Build would be new feature work and would need a plan; this table recommends retire.
 
+### Group 4: never built in V2, no removal commit (6)
+WORLD-022 (graded near-limit loot penalty), WORLD-026 (legendary stats for the calamity boss), WORLD-028 (calamity bounty quests), WORLD-035 (fame on a world-boss kill), WORLD-053 (region tile accounting), WORLD-089 (building repair). No `git log -S/-G` commit ever held them, so there is no removal to cite. These are P0 `missing` disclosures too. Proposed decision per item: RETIRE unless the roadmap wants it (same as group 2). No decision is made in this table.
+
 ### Group 3 (WORLD-054): authored data with an isolated region (3 worlds)
 - camp_maturity_calibration_pilot: region `hometown` is adjacent to no other region (RegionalPressureModel._are_adjacent, ADJACENCY_GAP 50).
 - resource_dense_basin: region `orc_stronghold`.
 - swamp_border_world: region `swamp_border_territory`.
-These are authored data, not a code defect. Proposed decision: ACCEPT as authored (the entry stays `missing`: adjacency is not guaranteed), or have the world owner (rpg-planner, data/worlds release) place or resize those regions so the property holds, after which the corpus test can be kept and cited.
+These are authored data, not a code defect. rpg-planner's recommendation (second ruling, 2026-10-29): the owner should ACCEPT the worlds as authored. The two calibration/fixture worlds and swamp_border_world do not need region adjacency; the only consumer, RegionalPressureModel propagation, just does not propagate into an isolated region. 054 stays `missing` with the worlds named; if the owner wants adjacency instead, rpg-planner files a data/worlds ticket. (My earlier wording follows.) Proposed decision: ACCEPT as authored (the entry stays `missing`: adjacency is not guaranteed), or have the world owner (rpg-planner, data/worlds release) place or resize those regions so the property holds, after which the corpus test can be kept and cited.
+
+
+Status after the second ruling: the table is OK to write as drafted; the owner's decision on section E becomes a follow-up ticket and is not part of this PR.

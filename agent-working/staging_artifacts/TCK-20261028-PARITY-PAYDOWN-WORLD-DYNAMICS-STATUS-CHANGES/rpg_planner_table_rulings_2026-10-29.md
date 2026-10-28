@@ -43,3 +43,20 @@ All other A, B and C rows are OK as drafted. The final sibling table comes back 
 ORDER (from rpg-planner-ubuntu):
 1. PR A first: remove the 073, 082 and 083 citations (done at d99b1db21, tighten re-run last: world_dynamics 55/55).
 2. Then rebase the stacked sibling branch onto PR A's new head and apply the rulings. Add new tests for 073, 082, 083 and 054, and a 093 test once it is decided which hasher replay uses. The 21 entries become missing with the exact boundary sentence. Build the owner list of 21, split into two groups, each with a proposed retire/build. Write NOTHING to the ledger until the final table has gone back to rpg-planner through rpg-planner-ubuntu. tests/architecture/** belongs to testing-planner: CITE the 084 test there, do not edit it. If any new test fails, stop and tell rpg-planner-ubuntu.
+
+## Second ruling: the final table (4bb97d8a0), 2026-10-29
+
+Word for word, relayed by rpg-planner-ubuntu: rpg-planner (u24) via lead-planner-u24 and then lead-planner. NOT an owner approval.
+
+2) Final sibling table (4bb97d8a0, read in full): OK to write as drafted, with two additions.
+- Count: 20 is right. 053 stays out of groups 1 and 2.
+  - Add a GROUP 4 to section E: "never built in V2, no removal commit", covering 022, 026, 028, 035, 053 and 089.
+  - Those are P0 `missing` disclosures too. Proposed decision per item: retire unless the roadmap wants it, same as group 2. No decision is made in the table.
+- Group 3: rpg-planner recommends the owner ACCEPT the worlds as authored.
+  - The two calibration/fixture worlds and swamp_border_world don't need region adjacency.
+  - The only consumer, RegionalPressureModel propagation, just doesn't propagate into an isolated region.
+  - 054 stays `missing` with the worlds named. If the owner wants adjacency instead, rpg-planner files a data/worlds ticket.
+- Everything else matches its rulings.
+3) The 091 finding is known and ticketed (TCK-20261005-TICK-BUDGET-THROTTLE-MAKES-NON-AUDIT-RUNS-WALL-CLOCK-DEPENDENT, TCK-20261009-AUTONOMOUS-LOOP-DRIFT-GUARD-RUNS-WITHOUT-AUDIT-MODE-SO-HOST-LOAD-FLIPS-IT, and the determinism-envelope epic). audit_mode plus a positive control is the established pattern. No new ticket.
+
+Instructions from rpg-planner-ubuntu with it: write all 55 entries at their table status through parity_ledger_writer.py in chunks of about 20; groups 1 to 4 are written as `missing` and the owner's decision on section E becomes a FOLLOW-UP ticket, not part of this PR; tighten last after the final sync with origin/main (world_dynamics should reach 0 P0 / 0 all test_path errors); run the checks (gate, code-health, paths-guard, new and cited tests, generate_registry --check, done_checker for both tickets).
