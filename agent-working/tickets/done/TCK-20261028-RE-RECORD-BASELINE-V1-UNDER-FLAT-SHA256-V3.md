@@ -104,6 +104,8 @@ Taken by rpg-implementer-2 on 2026-10-28. Branch rpg-v1-rerecord-v3, worktree .c
 
 > **Hash scheme during milestone 1.** The proof digest scheme was bumped once, by F1 (#758, `flat-sha256-v3`, perf's call PERF-D5). The v1 base was re-recorded under it at R = `957caf8f6` (TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3, reviewed by rpg-planner): the 1b base arms for the 3 gate worlds x seeds 42-51 x 5000 ticks, with self-check spread 0. Against R's v2 parent `04b85fb2e`, only start_hash and final_hash move (30 of 30 runs). R carries #753 step B (2.138) on top of v1's simulation, so its fates are v1's plus step B. On seeds 42-46 that is byte-proven through the 2.138 arms; on seeds 47-51 it is attributed by diff classing only. The gate baseline JSON (`harness_hash` only) and behavioral_5k (metrics only) carry no proof digest and were not re-recorded. R's arms are the v3 base for steps built on R; a comparison against v1 itself reads fates and counters from the v1 arms. A paired proof taken across a scheme bump compares fates and counters only, never digests, and any further bump repeats this re-record.
 
+**Owner decision (2026-10-28, memo row 92, #715 6458807726):** the owner accepted the §12.5 amendment. The paragraph is replaced by the draft below, with the decision cited; the interim "Pending owner row" sentence is gone. Memo rows 91 and 92 are added to `owner_decision_memo.md` by rpg-planner on its seat, not in this PR.
+
 **Known-entries file:** no file in the repo names the digest scheme, so nothing changes there.
 
 ## Test Summary
@@ -128,8 +130,8 @@ The paired report (R base, P new) shows people deaths unchanged on all three wor
 
 - `agent-working/tickets/done/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3.md`
 - `agent-working/stored_artifacts/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3/` (plan, investigation, test_plan, evidence)
-- `docs/plans/systemic_world/roadmap.md` (§12.5: one "Pending owner row" sentence)
+- `docs/plans/systemic_world/roadmap.md` (§12.5 "Hash scheme during milestone 1" replaced by the text below; owner decision 2026-10-28, memo row 92, #715 6458807726)
 - Outside the repo: `/mnt/data/scratch-rpg-measure/results/957caf8f6cff-72320cac-5000/` (30 R-arm result files, copied)
 
 ## Completion Summary
-The v1 base is re-recorded under `flat-sha256-v3` at R = 957caf8f6. The 1b base arms (3 gate worlds x s42-51 x 5000t) have self-check spread 0. Against the v2 parent P, F1 moves only start_hash and final_hash (30/30, every other field equal). The differences from v1 are step B (2.138), byte-proven on s42-46 and attributed by classing only on s47-51. The gate JSON and behavioral_5k were not re-recorded (ruled: no digest in them). The §12.5 wording change is pending an owner row via rpg-planner; the draft text is above. The comparison was sent to perf for its check. Owner sign-off is the merge of the record PR.
+The v1 base is re-recorded under `flat-sha256-v3` at R = 957caf8f6. The 1b base arms (3 gate worlds x s42-51 x 5000t) have self-check spread 0. Against the v2 parent P, F1 moves only start_hash and final_hash (30/30, every other field equal). The differences from v1 are step B (2.138), byte-proven on s42-46 and attributed by classing only on s47-51. The gate JSON and behavioral_5k were not re-recorded (ruled: no digest in them). The §12.5 paragraph is amended per the owner's decision (memo row 92, #715 6458807726). The comparison was sent to perf for its check. Owner sign-off is the merge of the record PR.
