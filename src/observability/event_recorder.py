@@ -73,8 +73,10 @@ class EventRecorder:
         enabled: bool = True,
         budget: SubsystemBudget | None = None,
         quality_fn: Optional[Callable] = None,
+        run_id: Optional[str] = None,
     ) -> None:
         self.enabled = enabled
+        self.run_id = run_id
         self.max_events = max_events
         self.run_dir = run_dir
         self.events: List[SimulationEvent] = []
@@ -214,7 +216,7 @@ class EventRecorder:
 
         # Push to the non-blocking observability queue
         from src.observability.events import ObservabilityEventEnvelope
-        envelope = ObservabilityEventEnvelope.from_simulation_event(event)
+        envelope = ObservabilityEventEnvelope.from_simulation_event(event, run_id=self.run_id)
         
         # Pushing into BoundedObservabilityQueue is thread-safe and non-blocking
         self.queue.try_push(envelope)

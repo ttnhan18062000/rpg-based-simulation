@@ -170,8 +170,8 @@ class QualityHub:
             try:
                 record = scorer.score(envelope, context)
                 if record is not None:
-                    self._accumulators[record.pillar].add(record)
-                    self._persistence.write(record)
+                    if self._accumulators[record.pillar].add(record):
+                        self._persistence.write(record)
             except Exception as exc:
                 logger.warning(
                     "scorer_error scorer=%s event=%s error=%s",

@@ -7880,6 +7880,46 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN.md
+  ticket_id: TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN
+  title: The kernel resolves the run id but never passes it to EventRecorder, so every
+    event envelope says `unknown_run`
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-28'
+  related_code_areas:
+  - src/engine/kernel.py
+  - src/observability/event_recorder.py
+  - src/observability/events.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-OBSERVABILITY-GUIDE-NAMES-EVENT-FIELD-CATEGORY-NOT-EVENT-CATEGORY.md
+  ticket_id: TCK-20261028-OBSERVABILITY-GUIDE-NAMES-EVENT-FIELD-CATEGORY-NOT-EVENT-CATEGORY
+  title: docs/guides/observability.md calls the event-log field `category`, but simulation_events.jsonl
+    writes `event_category`
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-28'
+  related_code_areas:
+  - src/observability/event_recorder.py
+  - src/observability/events.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-QUALITY-HUB-WRITES-A-SCORE-LINE-FOR-A-REDELIVERED-EVENT.md
+  ticket_id: TCK-20261028-QUALITY-HUB-WRITES-A-SCORE-LINE-FOR-A-REDELIVERED-EVENT
+  title: QualityHub persists a score record before the accumulator's event_id dedupe,
+    so a redelivered event writes a duplicate quality_scores line
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-28'
+  related_code_areas:
+  - src/simulation_quality/quality_hub.py
+  - src/simulation_quality/pillar_accumulator.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3.md
   ticket_id: TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3
   title: 'Re-record baseline v1 under the proof digest scheme `flat-sha256-v3` (after
