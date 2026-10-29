@@ -22,7 +22,7 @@ from src.engine.building_arrival import building_arrival_update
 from src.engine.need_pull import hunger_pull
 from src.engine.scheduler import DeterministicScheduler
 from src.engine.service_admission import PaymentLaw
-from src.engine.starvation import STARVING_LINE
+from src.engine.starvation import STARVING_LINE, hp_loss_period
 from src.engine.work_shift import SHIFT_START, SHIFT_TICKS, shift_takeable
 
 
@@ -56,41 +56,65 @@ def _state(entity, *buildings, tick=500):
     return AuthoritativeState(tick=tick, seed=1, world_time=1000, entities={entity.id: entity}, buildings={b.id: b for b in buildings})
 
 
-def test_a_shift_is_takeable_only_when_the_meal_is_reached_before_the_starvation_line():
-    """Strictly under the line at arrival at the meal: need + rate x (walk to the work + SHIFT_TICKS + walk on to the meal)."""
-    walk, onward = 10.0, 20.0
-    ent = _worker()
-    work_pos = (ent.navigation.position[0] + walk, ent.navigation.position[1])
-    state = _state(ent, _inn((work_pos[0] + onward, work_pos[1])))
-    limit = STARVING_LINE - need_rates(ent)[0] * (walk + SHIFT_TICKS + onward)
-    below = replace(ent, biological=replace(ent.biological, hunger=limit - 0.5))
-    at = replace(ent, biological=replace(ent.biological, hunger=limit))
-    assert shift_takeable(below, state, work_pos)
-    assert not shift_takeable(at, state, work_pos)
+def _hp(entity, hp, max_hp=100):
+    return replace(entity, combat=replace(entity.combat, hp=hp, max_hp=max_hp))
 
 
-def test_hunger_that_clears_the_line_at_the_end_of_the_shift_but_crosses_it_on_the_walk_to_the_meal_is_not_takeable():
-    walk, onward = 10.0, 40.0
+def _at(entity, work_pos, onward):
+    """A state with the work place at ``work_pos`` and the meal ``onward`` tiles further on."""
+    return _state(entity, _inn((work_pos[0] + onward, work_pos[1])))
+
+
+def test_urban_shape_a_shift_that_ends_just_past_the_line_is_takeable_for_a_healthy_subject():
+    """The arrival level is over the line by under a point, which costs a few ticks of health: the line is not a veto (decision 36)."""
+    walk, onward = 10.0, 10.0
     ent = _worker()
     rate = need_rates(ent)[0]
+    hunger = STARVING_LINE + 0.8 - rate * (walk + SHIFT_TICKS + onward)  # the arrival sum is 95.8
+    ent = _hp(replace(ent, biological=replace(ent.biological, hunger=hunger)), 100)
     work_pos = (ent.navigation.position[0] + walk, ent.navigation.position[1])
-    hunger = STARVING_LINE - rate * (walk + SHIFT_TICKS) - 0.5  # under the line when the shift ends
-    ent = replace(ent, biological=replace(ent.biological, hunger=hunger))
-    assert hunger + rate * (walk + SHIFT_TICKS) < STARVING_LINE <= hunger + rate * (walk + SHIFT_TICKS + onward)
-    far_meal = _state(ent, _inn((work_pos[0] + onward, work_pos[1])))
-    near_meal = _state(ent, _inn((work_pos[0] + 1.0, work_pos[1])))
-    assert not shift_takeable(ent, far_meal, work_pos)
-    assert shift_takeable(ent, near_meal, work_pos)
+    assert hunger + rate * (walk + SHIFT_TICKS + onward) > STARVING_LINE
+    assert shift_takeable(ent, _at(ent, work_pos, onward), work_pos)
 
 
-def test_a_far_building_is_takeable_later_than_a_near_one_in_the_same_hunger():
-    ent = _worker(hunger=80.0)
-    near, far = (11.0, 10.0), (200.0, 10.0)
-    assert shift_takeable(ent, _state(ent, _inn((12.0, 10.0))), near) and not shift_takeable(ent, _state(ent, _inn((201.0, 10.0))), far)
+def test_a_subject_whose_health_would_not_last_to_the_meal_is_not_takeable():
+    walk, onward = 20.0, 20.0                       # 240 ticks to the meal
+    ent = _worker(hunger=99.0)                      # past the line: all 240 ticks cost health
+    work_pos = (ent.navigation.position[0] + walk, ent.navigation.position[1])
+    state = _at(ent, work_pos, onward)
+    period = hp_loss_period(100)
+    lost = 240 / period
+    assert not shift_takeable(_hp(ent, 1), state, work_pos)
+    assert shift_takeable(_hp(ent, int(lost) + 2), state, work_pos)
+
+
+def test_boundary_projected_health_of_exactly_zero_is_not_takeable():
+    walk, onward = 20.0, 20.0
+    ent = _worker(hunger=100.0)
+    work_pos = (ent.navigation.position[0] + walk, ent.navigation.position[1])
+    state = _at(ent, work_pos, onward)
+    period = hp_loss_period(100)
+    ticks_to_meal = walk + SHIFT_TICKS + onward
+    exact = ticks_to_meal / period
+    assert exact == int(exact), "the pin needs a whole number of lost health points; adjust walk/onward"
+    assert not shift_takeable(_hp(ent, int(exact)), state, work_pos)        # projected 0: not alive at the meal
+    assert shift_takeable(_hp(ent, int(exact) + 1), state, work_pos)        # projected 1: alive
+
+
+def test_the_line_used_is_the_one_the_starvation_code_names():
+    from src.engine import starvation, work_shift
+    assert work_shift.STARVING_LINE is starvation.STARVING_LINE
+
+
+def test_a_far_meal_costs_more_health_than_a_near_one():
+    ent = _hp(_worker(hunger=99.0), 4)
+    work_pos = (ent.navigation.position[0] + 5.0, ent.navigation.position[1])
+    assert shift_takeable(ent, _at(ent, work_pos, 1.0), work_pos) is (4 - (5 + SHIFT_TICKS + 1) / hp_loss_period(100) > 0)
+    assert not shift_takeable(ent, _at(ent, work_pos, 150.0), work_pos)
 
 
 def test_a_shift_that_cannot_finish_is_not_an_open_step_not_a_way_and_not_in_reach():
-    late = _worker(hunger=94.0)  # 94 + 0.05 x 200 is past the line
+    late = _hp(_worker(hunger=99.0), 2)  # past the line with too little health to last to the meal
     state = _state(late, _hall())
     assert work_in_reach(late, state) is None
     assert WayKind.WORK_SHIFT not in ways_in_reach(late, state)
@@ -151,7 +175,7 @@ def test_a_town_hall_with_work_and_no_meal_gives_the_shift_on_either_law(monkeyp
 def test_a_building_with_no_meal_and_no_takeable_shift_ends_the_project_by_the_existing_path(monkeypatch):
     monkeypatch.setattr(service_admission, "SERVICE_PAYMENT_LAW", PaymentLaw.ATOMIC)
     hall = _hall((10.0, 11.0))
-    ent = _worker(hunger=94.0)
+    ent = _hp(_worker(hunger=99.0), 2)
     update = _arrive(ent, hall, _state(ent, hall))
     assert _action(update) is None and update.strategic is not None and update.strategic.current_project_id_set == ""
 
@@ -225,10 +249,10 @@ def test_a_threat_at_the_hiring_inn_gives_no_work_and_does_not_end_the_hunger_pr
     assert _action(again) == "WORK" and again.strategic is None, "threat gone: the shift starts on the same project (no new project is made)"
 
 
-def test_a_shift_that_cannot_finish_before_the_line_still_ends_the_project_by_the_existing_path(monkeypatch):
-    """The line case keeps what it does today: the project is completed (its objective resolved) and the current project is cleared."""
+def test_a_shift_the_subject_would_not_survive_to_the_meal_still_ends_the_project_by_the_existing_path(monkeypatch):
+    """The not-alive-at-the-meal case keeps what the line case did: the project is completed (its objective resolved) and the current project is cleared."""
     monkeypatch.setattr(service_admission, "SERVICE_PAYMENT_LAW", PaymentLaw.ATOMIC)
     inn = _inn((10.0, 11.0), hires=True)
-    ent = _worker(hunger=94.0)
+    ent = _hp(_worker(hunger=99.0), 2)
     update = _arrive(ent, inn, _state(ent, inn))
     assert _action(update) is None and update.strategic is not None and update.strategic.current_project_id_set == ""

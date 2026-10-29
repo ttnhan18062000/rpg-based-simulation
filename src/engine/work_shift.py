@@ -17,11 +17,11 @@ from src.core.treasury import can_pay
 from src.core.updates import EntityUpdate, InteractionUpdate, ResourceTransferIntent
 from src.engine.biological_needs import need_rates
 from src.engine.building_services import maintenance_open, offers_work, service_building
-from src.engine.need_pull import arrival_fraction, step_travel_tiles
+from src.engine.need_pull import TICKS_PER_TILE, step_travel_tiles
 from src.engine.place_tax import building_holder, tax_on
 from src.engine.serves import serves
 from src.engine.spatial_query import SpatialQueryService
-from src.engine.starvation import STARVING_LINE
+from src.engine.starvation import STARVING_LINE, hp_loss_period
 from src.engine.work_wake import held_work_is_threatened
 
 SHIFT_TICKS = 200
@@ -45,14 +45,19 @@ def meal_position_after(state: Any, work_pos: Any) -> Optional[tuple]:
 
 
 def shift_takeable(entity: Any, state: Any, work_pos: Any) -> bool:
-    """True when a shift at ``work_pos`` can be taken now: its end and the walk on to the meal come before the starvation line (row 27: a step is offered only if the
-    subject can take it) and no present threat to life holds, by the same test that interrupts a held shift (``work_wake.held_work_is_threatened``).
+    """True when a shift at ``work_pos`` can be taken now (row 27: a step is offered only if the subject can take it): the subject would reach the meal ALIVE and no
+    present threat to life holds, by the same test that interrupts a held shift (``work_wake.held_work_is_threatened``).
 
-    The level on arrival at the meal comes from the same arrival term the pull uses (``need_pull.step_travel_tiles`` and ``arrival_fraction``): the walk to the
-    work, SHIFT_TICKS and the walk on to the meal, at the subject's own hunger rate, strictly under the line. No new constant. One definition for the open step, the
-    arrival action and the wake: a shift is never started that the next tick would interrupt."""
-    tiles = step_travel_tiles(entity.navigation.position, work_pos, float(SHIFT_TICKS), meal_position_after(state, work_pos))
-    if arrival_fraction(entity.biological.hunger, need_rates(entity)[0], tiles, STARVING_LINE) >= 1.0:
+    Hunger past the starvation line costs health slowly (decision 36, ``starvation.hp_loss_period``), so the line is not a veto: the ticks to the meal are the same
+    whole-step sum the pull uses (``need_pull.step_travel_tiles``: the walk to the work, SHIFT_TICKS and the walk on to the meal); the ticks before the line are
+    ``(STARVING_LINE - hunger) / rate`` (0 once past it); the health lost on the way is ``ticks_past_line / hp_loss_period``; the step is takeable while
+    ``hp - that`` stays above 0. No new constant, no margin. One definition for the open step, the arrival action and the wake: a shift is never started that the
+    next tick would interrupt."""
+    ticks_to_meal = step_travel_tiles(entity.navigation.position, work_pos, float(SHIFT_TICKS), meal_position_after(state, work_pos)) * TICKS_PER_TILE
+    rate = need_rates(entity)[0]
+    ticks_before_line = max(0.0, (STARVING_LINE - entity.biological.hunger) / rate) if rate > 0 else float("inf")
+    ticks_past_line = max(0.0, ticks_to_meal - ticks_before_line)
+    if entity.combat.hp - ticks_past_line / hp_loss_period(entity.combat.max_hp) <= 0:
         return False
     return not held_work_is_threatened(entity, state)
 
