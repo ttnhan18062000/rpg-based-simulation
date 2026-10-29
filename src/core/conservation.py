@@ -63,6 +63,7 @@ class TransactionResult:
     source_debit: Optional[SourceDebit] = None
     treasury_update: Optional[TreasuryTransfer] = None
     owed: Optional[Any] = None  # an OwedRecord: the coin a short treasury could not pay now and owes instead
+    readiness_update: Optional[float] = None  # a paid service's readiness: applied only when the transfer is accepted
     reason: ReasonCode = ReasonCode.UNKNOWN
 
 def _tax_credit(intent: ResourceTransferIntent) -> Optional[TreasuryTransfer]:
@@ -265,7 +266,8 @@ def _service_result(state: Any, intent: ResourceTransferIntent, target_inventory
         treasury_update=TreasuryTransfer(faction=holder, gold_delta=int(paid)) if holder is not None and to_treasury else None,
         inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta - intent.gold_cost),
         identity_update=intent.identity_upd, biological_update=intent.biological_upd, attributes_update=intent.attributes_upd,
-        combat_update=intent.combat_upd, strategic_update=intent.strategic_upd, equipment_update=intent.equipment_upd, reward_update=intent.reward_upd)
+        combat_update=intent.combat_upd, strategic_update=intent.strategic_upd, equipment_update=intent.equipment_upd, reward_update=intent.reward_upd,
+        readiness_update=intent.readiness_delta or None)
 
 
 class ResourceTransactionResolver:

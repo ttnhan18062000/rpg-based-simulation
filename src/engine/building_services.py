@@ -57,21 +57,25 @@ def service_building(context: Any, entity: Any, action: str) -> Optional[Any]:
 def service_delta(context: Any, entity: Any, action: str, tick: int) -> Optional[EntityUpdate]:
     """What the building service for `action` adds to the subject's update, or None (no such building in reach, or nothing to deliver).
 
-    A bed and an inn meal are as they were on main (free meals stay on until M0 step 4, owner decision 44): the effects are on the update, the price is a
-    charge the resolver clamps at what the subject holds, and the building's purse is credited with what was actually paid. The building is found only
-    for a subject it serves (`service_building`)."""
+    An inn meal is ONE transfer: the full price (`gold_cost`) and the relief (`biological_upd`) are applied together or not at all, so a subject
+    that cannot pay gets nothing and nothing is clamped (owner decisions 44 and 73). A bed is served only to a subject holding the price; its hp
+    rides on the same transfer. The building is found only for a subject it serves (`service_building`)."""
     building = service_building(context, entity, action)
     if building is None or (action == "EAT" and not can_use_inn_meal(entity)):
         return None  # an inn does not serve a meal to a diet without prepared food (decision 44), however the subject came to stand there
+    if action == "EAT" and entity.inventory.gold < EAT_PRICE_GOLD:
+        return None  # no meal for a subject that cannot pay in full (nothing is free, decision 73)
+    if action == "REST" and entity.inventory.gold < REST_PRICE_GOLD:
+        return None
     if action == "REST":
-        charge = ResourceTransferIntent(source_id=building.id, source_kind="TOWN_SERVICE", gold_delta=-REST_PRICE_GOLD, transfer_kind="REST",
-                                        is_group_required=True)
-        return EntityUpdate(entity_id=entity.id, readiness_delta=10.0, combat=CombatUpdate(hp_delta=5),
-                            resource_transfers=[charge])
+        charge = ResourceTransferIntent(source_id=building.id, source_kind="TOWN_SERVICE", gold_cost=REST_PRICE_GOLD, transfer_kind="REST",
+                                        is_group_required=True, combat_upd=CombatUpdate(hp_delta=5), readiness_delta=10.0)
+        return EntityUpdate(entity_id=entity.id, resource_transfers=[charge])  # the bed's hp and readiness ride on the paid transfer: none without it
     if action == "EAT":
-        charge = ResourceTransferIntent(source_id=building.id, source_kind="TOWN_SERVICE", gold_delta=-EAT_PRICE_GOLD, transfer_kind="EAT",
-                                        is_group_required=True)
-        return EntityUpdate(entity_id=entity.id, biological=BiologicalUpdate(hunger_delta=-INN_MEAL_HUNGER), resource_transfers=[charge])
+        meal = ResourceTransferIntent(source_id=building.id, source_kind="TOWN_SERVICE", gold_cost=EAT_PRICE_GOLD, transfer_kind="EAT",
+                                      is_group_required=True,
+                                      biological_upd=BiologicalUpdate(hunger_delta=-INN_MEAL_HUNGER, last_meal_tick_set=tick))
+        return EntityUpdate(entity_id=entity.id, resource_transfers=[meal])
     sale = plan_sale(context, entity, building)
     return None if sale is None else EntityUpdate(entity_id=entity.id, resource_transfers=[sale])
 

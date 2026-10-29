@@ -4,7 +4,7 @@ layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1
-phase: open
+phase: inprogress
 date: 2026-10-23
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Remove the free meal for every kind (decision 73) as its own measured step against v1, before milestone 1
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -49,13 +49,17 @@ TCK-20261019-RECORD-BASELINE-V1 (v1 recorded 341f700d0).
 docs/plans/systemic_world/roadmap.md §12.3, §12.5; docs/plans/systemic_world/v1_disclosure.md; owner_decision_memo.md.
 
 ## Related Stored Artifacts
+agent-working/staging_artifacts/TCK-20261023-FREE-MEAL-REMOVED-AS-ITS-OWN-STEP-BEFORE-M1/ (investigation, plan, test_plan; plan only, 2026-10-28)
+agent-working/stored_artifacts/TCK-20261007-EAT-BESIDE-THE-INN-FEEDS-A-SUBJECT-THAT-CANNOT-PAY-FREE-MEAL/ (probes, earlier evidence)
 
 ## Related Code Areas
 src/systems (building_services, conservation, inventory); src/ai need_pull
 
 ## Assumptions / Open Questions
+Owner rulings already made: memo row 73 (paid meal gives 60, price 5 gold, rest keeps its effects at 10 gold, payment atomic, no clamp), row 89 (order and v1.1), row 92 (v3 base). Open points for rpg-planner are listed in plan.md section 'Questions'.
 
 ## Implementation Notes
+Known, non-blocking (rpg-planner review 2026-10-28): `_survival_action` calls `service_delta` twice per EAT (inn_serves, then with_service); an inn EAT rejected at apply burns readiness -100 and gets no meal. SleepScorer not gated on gold: follow-up filed by rpg-planner.
 
 ## Test Summary
 

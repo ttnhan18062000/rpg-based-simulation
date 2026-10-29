@@ -66,7 +66,8 @@ def test_a_range_bound_subject_does_not_target_an_inn_outside_its_range():
 
 
 def test_a_person_targets_the_same_inn():
-    score = EatScorer().score(_subject(leash=0.0), _state(inn=(90.0, 50.0)))
+    person = _subject(leash=0.0)
+    score = EatScorer().score(replace(person, inventory=replace(person.inventory, gold=5)), _state(inn=(90.0, 50.0)))
     assert score.target_pos == (90.0, 50.0) and not score.no_open_step
 
 

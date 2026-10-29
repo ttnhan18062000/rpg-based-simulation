@@ -86,7 +86,7 @@ Additional `StateUpdate` fields that control pipeline behavior rather than inten
 - `source_id`, `source_kind` — identifies the source object (NODE, GROUND_ITEM, CORPSE, CRAFTING, SHOP_BUY, SHOP_SELL)
 - `items_add`, `items_remove`, `gold_delta`, `gold_cost`, `price_multiplier` — the transfer ledger
 - `xp_reward`, `transfer_kind`, `transaction_id`, `group_id` — classification and deduplication
-- Contingent sub-updates (`biological_upd`, `attributes_upd`, `identity_upd`, `combat_upd`, `strategic_upd`, `equipment_upd`, `reward_upd`) — applied only if the transaction succeeds
+- Contingent sub-updates (`biological_upd`, `attributes_upd`, `identity_upd`, `combat_upd`, `strategic_upd`, `equipment_upd`, `reward_upd`, and the paid-service `readiness_delta`) — applied only if the transaction succeeds
 
 Workers must always emit `ResourceTransferIntent` for item and gold transfers. Never emit `InventoryUpdate` directly from decision logic. The `ResourceTransactionResolver` in the apply path validates conservation (inputs equal outputs, no creation from nothing) before committing.
 

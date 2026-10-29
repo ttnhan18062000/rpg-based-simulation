@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from src.core.enums import ReasonCode
 from src.core.updates import EntityUpdate, NavigationUpdate
-from src.engine.building_services import with_service
+from src.engine.building_services import service_delta, with_service
 from src.engine.domain.aoe_actions import AoeActions
 from src.engine.domain.combat_actions import CombatActions
 from src.engine.domain.core_actions import CoreActions, eat_at_corpse_update
@@ -19,7 +19,8 @@ def _survival_action(entity: EntityState, action: str, payload: Optional[Dict[st
     corpse_id = (payload or {}).get("corpse_id")
     if action == "EAT" and corpse_id is not None:
         return {entity.id: eat_at_corpse_update(entity, corpse_id, context, current_tick)}
-    return with_service(CoreActions.execute_survival(entity, action, current_tick), entity, action, current_tick, context)
+    inn_serves = action == "EAT" and context is not None and service_delta(context, entity, "EAT", current_tick) is not None  # an inn meal the subject can pay
+    return with_service(CoreActions.execute_survival(entity, action, current_tick, inn_serves), entity, action, current_tick, context)
 
 
 def _unready(entity: EntityState) -> Optional[Dict[int, EntityUpdate]]:

@@ -1,6 +1,6 @@
 """Merchant 37 (frontier_living_world seed 42, the v1 gate's V3 death) in a forced equivalent, through the real kernel.
 
-Wounded (hp 10/85), gold 0, hunger 100, beside inn 20003 in unclaimed space, with predator_hunter 45 adjacent. With starvation weighed as a present threat
+Wounded (hp 10/85), holding the inn's price (decision 73: a broke merchant is no longer fed, which is the measured outcome, not this test's subject), hunger 100, beside inn 20003 in unclaimed space, with predator_hunter 45 adjacent. With starvation weighed as a present threat
 (SURV-07 amendment, row 83) the merchant takes a hunger project and eats; with the old threat gate restored (the control) it does not within the same ticks.
 """
 from __future__ import annotations
@@ -25,7 +25,7 @@ def _run_merchant(run_id):
         merchant, hunter = state.entities[37], state.entities[45]
         entities = dict(state.entities)
         entities[37] = replace(merchant, navigation=replace(merchant.navigation, position=(41.0, 31.0)), combat=replace(merchant.combat, hp=10, max_hp=85),
-                               biological=replace(merchant.biological, hunger=100.0, sleep_debt=0.0), inventory=replace(merchant.inventory, gold=0, items=[]))
+                               biological=replace(merchant.biological, hunger=100.0, sleep_debt=0.0), inventory=replace(merchant.inventory, gold=20, items=[]))
         entities[45] = replace(hunter, navigation=replace(hunter.navigation, position=(41.0, 30.0)))
         object.__setattr__(state, "entities", entities)
         for _ in range(TICKS):
