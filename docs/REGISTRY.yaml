@@ -7906,6 +7906,23 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A.md
+  ticket_id: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
+  title: 'N15 known V3 starvations (crowded_frontier/46 raider 38, frontier_living_world/44
+    worker 2): re-check on the gate after HUNGER step A, then retire or keep the known-red
+    entry with evidence'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-28'
+  related_code_areas:
+  - tools/test_architecture/ (gate harness and known file, read only except the entry)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A/test_plan.md
+  tags:
+  - benchmarking
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-OBSERVABILITY-GUIDE-NAMES-EVENT-FIELD-CATEGORY-NOT-EVENT-CATEGORY.md
   ticket_id: TCK-20261028-OBSERVABILITY-GUIDE-NAMES-EVENT-FIELD-CATEGORY-NOT-EVENT-CATEGORY
   title: docs/guides/observability.md calls the event-log field `category`, but simulation_events.jsonl
@@ -7981,19 +7998,20 @@
   - ai
   - governance
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A.md
-  ticket_id: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
-  title: 'N15 known V3 starvations (crowded_frontier/46 raider 38, frontier_living_world/44
-    worker 2): re-check on the gate after HUNGER step A, then retire or keep the known-red
-    entry with evidence'
+  path: agent-working/tickets/todos/TCK-20261028-LOW-HP-RETREAT-BRANCH-HOLDS-A-STARVING-SUBJECT-IN-PLACE-BESIDE-A-NON-ACTING-HOSTILE.md
+  ticket_id: TCK-20261028-LOW-HP-RETREAT-BRANCH-HOLDS-A-STARVING-SUBJECT-IN-PLACE-BESIDE-A-NON-ACTING-HOSTILE
+  title: A low-hp subject near a hostile that neither engages nor acts gets a no-op
+    PANIC_RETREAT every 10th tick, and its step toward food one tile away is refused,
+    so it starves (gate V3, frontier_living_world s43 merchant 38)
   tier: standard
-  ticket_type: chore
+  ticket_type: repair
   date: '2026-10-28'
   related_code_areas:
-  - tools/test_architecture/ (gate harness and known file, read only except the entry)
+  - src/engine/tactical.py (:214-229 panic, :536-544 low-hp retreat, _destination_or_hold,
+    retreat_destination)
+  - src/engine/candidate_selector.py (movement_target)
   artifact_files: []
-  tags:
-  - benchmarking
+  tags: []
 - type: ticket
   path: agent-working/tickets/todos/parity-ledger-paydown/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS.md
   ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS
