@@ -193,3 +193,42 @@ def test_a_present_threat_wakes_a_held_shift_and_only_a_held_shift():
     rest = _holder("EAT", hunger=50.0)
     state2 = replace(state, entities={rest.id: rest, wolf.id: wolf})
     assert DeterministicScheduler._is_need_woken(rest, state2, "ENTITY_ACT") is False  # any other held action is not interrupted
+
+
+def _with_wolf(state, ent):
+    foe = _wolf_beside(ent)
+    return replace(state, entities={**state.entities, foe.id: foe})
+
+
+def test_a_shift_is_not_takeable_while_a_present_threat_holds_and_is_once_it_is_gone():
+    """One definition for the start and the wake: a shift is never started that the next tick would interrupt (the frontier s46 guard-9 loop)."""
+    inn = _inn((10.0, 11.0), hires=True)
+    ent = _worker(hunger=80.0)
+    calm = _state(ent, inn)
+    assert shift_takeable(ent, calm, inn.position)
+    threatened = _with_wolf(calm, ent)
+    assert not shift_takeable(ent, threatened, inn.position)
+    assert DeterministicScheduler._is_need_woken(replace(ent, task=replace(ent.task, work_kind="ENTITY_ACT", payload={"action": "WORK", SHIFT_START: 1})),
+                                                 threatened, "ENTITY_ACT") is True  # the wake and the start read the same test
+
+
+def test_a_threat_at_the_hiring_inn_gives_no_work_and_does_not_end_the_hunger_project(monkeypatch):
+    monkeypatch.setattr(service_admission, "SERVICE_PAYMENT_LAW", PaymentLaw.ATOMIC)
+    inn = _inn((10.0, 11.0), hires=True)
+    ent = _worker(hunger=80.0)
+    threatened = _with_wolf(_state(ent, inn), ent)
+    update = _arrive(ent, inn, threatened)
+    assert _action(update) is None and update.task is None, "no WORK start under a present threat"
+    assert update.strategic is None, "the hunger project is not ended, completed or abandoned: it stays current for the next decision"
+    calm = _state(ent, inn)
+    again = _arrive(ent, inn, calm)
+    assert _action(again) == "WORK" and again.strategic is None, "threat gone: the shift starts on the same project (no new project is made)"
+
+
+def test_a_shift_that_cannot_finish_before_the_line_still_ends_the_project_by_the_existing_path(monkeypatch):
+    """The line case keeps what it does today: the project is completed (its objective resolved) and the current project is cleared."""
+    monkeypatch.setattr(service_admission, "SERVICE_PAYMENT_LAW", PaymentLaw.ATOMIC)
+    inn = _inn((10.0, 11.0), hires=True)
+    ent = _worker(hunger=94.0)
+    update = _arrive(ent, inn, _state(ent, inn))
+    assert _action(update) is None and update.strategic is not None and update.strategic.current_project_id_set == ""

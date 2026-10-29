@@ -130,3 +130,37 @@ def test_a_present_threat_ends_a_held_shift_with_no_wage(monkeypatch, no_free_me
     finally:
         kernel.shutdown()
     assert not paid, "the shift was interrupted by a present threat to life, so the wage (paid on the last tick) is forfeited"
+
+
+def test_a_present_threat_at_a_hiring_inn_never_makes_a_shift_that_ends_after_one_tick_and_the_shift_runs_once_it_is_gone(monkeypatch, no_free_meal_d73_shape):
+    """The frontier s46 guard-9 shape in small (D73-shape probe: 58 one-tick shifts, each woken by the same hostile, none completed). The threat test is the
+    real one but its answer is scripted for a window (a hostile in view of a broke, hungry worker at a hiring inn), so the seam is exact: through the real kernel
+    no WORK is started that the next tick cuts off, the hunger project stays current, and when the threat is gone the shift starts, runs to its end and pays."""
+    window_end = 80
+    ticks = {"now": 0}
+
+    def scripted(entity, state):
+        return state.tick < window_end
+
+    for module in ("src.engine.scheduler", "src.engine.work_shift", "src.engine.building_arrival"):
+        monkeypatch.setattr(f"{module}.held_work_is_threatened", scripted)
+    kernel = _kernel(monkeypatch, hunger=70.0)
+    object.__setattr__(kernel._state, "buildings", {INN_ID: kernel._state.buildings[INN_ID]})
+    held, project_ids, paid_at = {}, set(), None  # shift_start -> ticks the shift was held
+    try:
+        for _ in range(window_end + SHIFT_TICKS + 40):
+            kernel.tick_once()
+            ent = kernel._state.entities[WHO]
+            project_ids.add(ent.strategic.current_project_id)
+            if ent.task.payload.get("action") == "WORK":
+                started = ent.task.payload.get("shift_start")
+                held[started] = held.get(started, 0) + 1
+            if paid_at is None and ent.inventory.gold >= WAGE_GOLD:
+                paid_at = kernel._state.tick
+    finally:
+        kernel.shutdown()
+    last = kernel._state.tick
+    cut_off = {start: n for start, n in held.items() if n < SHIFT_TICKS - 2 and start <= last - SHIFT_TICKS}  # (a shift still running when the run stops is not cut off)
+    assert not cut_off, f"a shift was started and cut off before its end (shift_start -> ticks held: {cut_off})"
+    assert paid_at is not None and paid_at > window_end, "once the threat is gone the shift starts, finishes and pays"
+    assert len({p for p in project_ids if p and p.startswith("proj_hunger")}) == 1, f"no second hunger project was made (saw {project_ids})"
