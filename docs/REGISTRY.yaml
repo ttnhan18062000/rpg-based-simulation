@@ -7404,6 +7404,16 @@
   - platform
   - observability
 - type: doc
+  path: docs/runbooks/records/2026-10-28-alloy-log-shipping.md
+  title: Log shipping moved from Promtail to Grafana Alloy (2026-10-28)
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
   path: docs/runbooks/redis-down.md
   title: 'Runbook: RedisDown (cause alert)'
   status: active
@@ -9088,6 +9098,29 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING.md
+  ticket_id: TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING
+  title: Ship container logs to Loki with Grafana Alloy instead of the deprecated
+    Promtail
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-21'
+  related_code_areas:
+  - compose.yaml
+  - docker/promtail-config.yml
+  - docker/prometheus.yml
+  - docker/grafana/provisioning/alerting/rules-base.yaml
+  - docker/grafana/provisioning/datasources/datasource.yml
+  - tests/logging/test_loki_cardinality.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/drafts_other_owners.md
+  - agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/investigation.md
+  - agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/plan.md
+  - agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/test_plan.md
+  tags:
+  - observability
+  - platform
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT.md
   ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
   title: Role cards show a role's single files in a folder it doesn't otherwise own
@@ -9265,25 +9298,6 @@
     §4.2, the hard-law monitor in src
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING.md
-  ticket_id: TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING
-  title: Ship container logs to Loki with Grafana Alloy instead of the deprecated
-    Promtail
-  tier: standard
-  ticket_type: refactor
-  date: '2026-10-21'
-  related_code_areas:
-  - compose.yaml
-  - docker/promtail-config.yml
-  - docker/prometheus.yml
-  - docker/grafana/provisioning/alerting/rules-base.yaml
-  - docker/grafana/provisioning/datasources/datasource.yml
-  - tests/logging/test_loki_cardinality.py
-  artifact_files: []
-  tags:
-  - observability
-  - platform
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE.md
   ticket_id: TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE
@@ -11006,6 +11020,20 @@
   - delivery
   - security
 - type: ticket
+  path: agent-working/tickets/done/devops-step2-observability-local/TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL
+  title: 'DevOps step 2 (host ubuntu): one API dashboard (metrics and logs) and one
+    API request trace in Tempo, running locally'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
   ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
   title: 'DevOps step 3 (host ubuntu): a measured Locust API load test, one SLO alert
@@ -11059,7 +11087,7 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
+  path: agent-working/tickets/todos/devops-api-dashboard-trace/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
   ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF
   title: 'Grafana: one provisioned API dashboard (rate, errors, latency percentiles
     by route, backend logs, trace links), and the step-2 end-to-end local proof'
@@ -11068,20 +11096,6 @@
   date: '2026-10-18'
   related_code_areas:
   - docker/grafana/dashboards/api.json
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL.md
-  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL
-  title: 'DevOps step 2 (host ubuntu): one API dashboard (metrics and logs) and one
-    API request trace in Tempo, running locally'
-  tier: epic
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
   artifact_files: []
   tags:
   - platform

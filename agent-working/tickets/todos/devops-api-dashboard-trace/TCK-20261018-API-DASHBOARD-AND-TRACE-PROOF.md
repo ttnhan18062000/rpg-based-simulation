@@ -15,7 +15,7 @@ tags: [platform, observability]
 Grafana: one provisioned API dashboard (rate, errors, latency percentiles by route, backend logs, trace links), and the step-2 end-to-end local proof
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -71,8 +71,11 @@ reference for the alert rule.
   (`TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK`, the single source). The test plan proves it with a jq/grep equality check of the expressions (no `tests/**`).
 
 ## Related Tickets
-Epic `TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL`. Needs `TCK-20261018-TEMPO-TRACE-BACKEND`,
-`TCK-20261018-SCRAPE-BACKEND-METRICS-PORT`, and rpg's R2 (request histogram) and R3 (OTel middleware) on main (issue #622).
+Was the last child of epic `TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL`. That epic closed on 2026-10-27, with this
+ticket split out into its own folder (owner choice; rpg-planner-ubuntu confirmed R3 has no date). Already on main:
+`TCK-20261018-TEMPO-TRACE-BACKEND`, `TCK-20261018-SCRAPE-BACKEND-METRICS-PORT` and rpg's R2 (request histogram).
+**BLOCKED on rpg's R3** (OTel middleware, issue #622). As of 2026-10-27 it has no ticket and no date; filing it needs
+rpg-planner (u24) to release it to ubuntu and the owner's OK on #715, since it adds runtime deps.
 
 ## Related Docs
 `docs/architecture/devops_plan_amendment_proposal.md` (step 2), `docs/architecture/devops_baseline_adr.md` (D4, D7)
