@@ -1,0 +1,70 @@
+// Ships this compose project's container logs to Loki (replaces docker/promtail-config.yml; Promtail reached end of life 2026-03-02).
+// Discovery and log reads go through tcp://docker-socket-proxy:2375 only: no socket mount in Alloy.
+// COMPOSE_PROJECT_NAME is passed in by compose.yaml.
+
+discovery.docker "containers" {
+	host             = "tcp://docker-socket-proxy:2375"
+	refresh_interval = "5s"
+
+	// Only this compose project's containers: the proxy lists every container on the host (other sessions' stacks, MCP servers).
+	filter {
+		name   = "label"
+		values = ["com.docker.compose.project=" + sys.env("COMPOSE_PROJECT_NAME")]
+	}
+}
+
+discovery.relabel "containers" {
+	targets = discovery.docker.containers.targets
+
+	// Drop loki's and alloy's own logs by compose service label, independent of the project name.
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+		regex         = "loki|alloy"
+		action        = "drop"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(.*)"
+		target_label  = "container"
+	}
+
+	rule {
+		target_label = "job"
+		replacement  = "varlogs"
+	}
+}
+
+loki.source.docker "containers" {
+	host             = "tcp://docker-socket-proxy:2375"
+	targets          = discovery.relabel.containers.output
+	refresh_interval = "5s"
+	forward_to       = [loki.process.json.receiver]
+}
+
+loki.process "json" {
+	stage.json {
+		expressions = {
+			level     = "level",
+			component = "component",
+			tick      = "tick",
+			message   = "message",
+		}
+	}
+
+	// Only low-cardinality fields become stream labels (docs/observability/loki_label_policy.md); tick and message stay in the line.
+	stage.labels {
+		values = {
+			level     = "",
+			component = "",
+		}
+	}
+
+	forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}

@@ -1,0 +1,4 @@
+services:
+  docker-socket-proxy:
+    environment:
+      - NETWORKS=0

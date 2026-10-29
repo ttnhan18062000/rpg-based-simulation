@@ -31,10 +31,6 @@
       "allOf/0/then/properties/test_path/type": 129,
       "allOf/2/else/then/properties/test_path/type": 143,
       "properties/proof_type/enum": 1
-    },
-    "world_dynamics.yaml": {
-      "allOf/0/then/properties/test_path/type": 55,
-      "allOf/2/else/then/properties/test_path/type": 55
     }
   },
   "version": 1
