@@ -7,8 +7,7 @@ from __future__ import annotations
 from src.core.state import AuthoritativeState, EntityState
 from src.engine.cognition import SensoryFilter
 from src.engine.domain_logic import SimulationDomainLogic
-from src.engine.tactical import perceived_threats
-from src.engine.tactical_threat import present_threat_terms
+from src.engine.tactical_threat import perceived_threats, present_threat_terms
 
 
 def held_work_is_threatened(entity: EntityState, state: AuthoritativeState) -> bool:

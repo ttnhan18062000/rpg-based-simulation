@@ -22,6 +22,7 @@ from src.engine.place_tax import building_holder, tax_on
 from src.engine.serves import serves
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.starvation import STARVING_LINE
+from src.engine.work_wake import held_work_is_threatened
 
 SHIFT_TICKS = 200
 WAGE_GOLD = 6
@@ -44,12 +45,16 @@ def meal_position_after(state: Any, work_pos: Any) -> Optional[tuple]:
 
 
 def shift_takeable(entity: Any, state: Any, work_pos: Any) -> bool:
-    """True when the shift at ``work_pos`` and the walk on to the meal end before the starvation line (row 27: a step is offered only if the subject can take it).
+    """True when a shift at ``work_pos`` can be taken now: its end and the walk on to the meal come before the starvation line (row 27: a step is offered only if the
+    subject can take it) and no present threat to life holds, by the same test that interrupts a held shift (``work_wake.held_work_is_threatened``).
 
-    The level on arrival at the meal, from the same arrival term the pull uses (``need_pull.step_travel_tiles`` and ``arrival_fraction``): the walk to the
-    work, SHIFT_TICKS and the walk on to the meal, at the subject's own hunger rate, strictly under the line. No new constant."""
+    The level on arrival at the meal comes from the same arrival term the pull uses (``need_pull.step_travel_tiles`` and ``arrival_fraction``): the walk to the
+    work, SHIFT_TICKS and the walk on to the meal, at the subject's own hunger rate, strictly under the line. No new constant. One definition for the open step, the
+    arrival action and the wake: a shift is never started that the next tick would interrupt."""
     tiles = step_travel_tiles(entity.navigation.position, work_pos, float(SHIFT_TICKS), meal_position_after(state, work_pos))
-    return arrival_fraction(entity.biological.hunger, need_rates(entity)[0], tiles, STARVING_LINE) < 1.0
+    if arrival_fraction(entity.biological.hunger, need_rates(entity)[0], tiles, STARVING_LINE) >= 1.0:
+        return False
+    return not held_work_is_threatened(entity, state)
 
 
 def nearest_work(state: Any, entity: Any) -> Optional[Any]:

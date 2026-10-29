@@ -15,6 +15,7 @@ from src.engine.building_services import SERVICE_KINDS, offers_work
 from src.engine.service_admission import admits
 from src.engine.shop_sale import plan_sale
 from src.engine.work_shift import SHIFT_START, shift_takeable
+from src.engine.work_wake import held_work_is_threatened
 
 
 def _end_project(entity: Any, project: Any) -> EntityUpdate:
@@ -54,9 +55,14 @@ def _hunger_arrival(state: Any, entity: Any, project: Any, building_id: int) -> 
     # starvation line is work (the EARN_THEN_BUY step, held for SHIFT_TICKS, paid on the last tick); otherwise there is nothing to do here.
     if getattr(building, "kind", None) in SERVICE_KINDS["EAT"] and admits(entity, "EAT"):
         return _act(entity, "EAT", building_id)
-    if building is not None and offers_work(building) and shift_takeable(entity, state, building.position):
-        return _act(entity, "WORK", building_id, **{SHIFT_START: state.tick})
-    return _end_project(entity, project)
+    if building is not None and offers_work(building):
+        if shift_takeable(entity, state, building.position):
+            return _act(entity, "WORK", building_id, **{SHIFT_START: state.tick})
+        if held_work_is_threatened(entity, state):
+            # Not takeable NOW because of a present threat (designer ruling 2026-10-30): the hunger project stays current, nothing is dispatched, and the
+            # tactical answer to the threat takes over through the normal switch; the next decision judges again. The project is not ended or abandoned.
+            return EntityUpdate(entity_id=entity.id)
+    return _end_project(entity, project)  # no meal here and no shift it could finish before the starvation line: the project ends (the existing path)
 
 
 def building_arrival_update(state: Any, entity: Any, project: Any, building_id: int) -> EntityUpdate:
