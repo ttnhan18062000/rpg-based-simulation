@@ -3,6 +3,7 @@ status: historical
 layer: testing
 authority: P1
 audience: agent
+artifact_type: investigation
 ticket_id: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
 phase: done
 date: 2026-10-28
