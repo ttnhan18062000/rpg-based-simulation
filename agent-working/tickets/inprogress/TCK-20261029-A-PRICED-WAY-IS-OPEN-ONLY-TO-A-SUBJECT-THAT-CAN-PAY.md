@@ -78,7 +78,7 @@ rpg-designer ruling (2026-10-29). Sources: survival-needs.md SURV-06 l.335-350, 
 ## Related Docs
 - docs/world_rules/life-body/survival-needs.md (SURV-06, SURV-07 row-27 amendment)
 - docs/mechanics/04_strategic_cognition.md (Standing Needs Escalate)
-- docs/guidelines/intentional_divergences.md 2.NEW-ONE-ADMISSION
+- docs/guidelines/intentional_divergences.md 2.150
 
 ## Related Stored Artifacts
 
@@ -107,7 +107,7 @@ On main the service clamps the price (EAT_PRICE_GOLD and REST_PRICE_GOLD are cha
 - ATOMIC is exercised by tests only (the constant stays CLAMP). Under ATOMIC it gates `service_delta` only (None below the price). The transfer-carried shape (`gold_cost` plus the effects on the intent, `readiness_update` in the resolver) is left to D73's rebase, because it touches the apply path.
 - keeps_coin stays out of `admits` (designer ruling A); a non-xfail test pins the gap and names TCK-20261029-SHARED-ADMISSION-IGNORES-KEEPS-COIN-SO-A-NON-COIN-SUBJECT-IS-SENT-TO-A-SERVICE-THAT-REFUSES-IT.
 - V3: `StarvationDeathRecord.opening_steps_in_reach()` and `verdict()` (derived; the FAIL set equals the old untried rule, so the gate file is unchanged).
-- Divergence and parity ids are placeholders (`2.NEW-ONE-ADMISSION`, `STRAT-NEW-ONE-ADMISSION`) until the lead assigns free ids across both hosts.
+- Divergence and parity ids are placeholders.
 
 ## Test Summary
 ## Files Changed
