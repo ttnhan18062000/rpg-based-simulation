@@ -15,9 +15,13 @@ from typing import Any, Dict, Optional
 
 from src.core.treasury import can_pay
 from src.core.updates import EntityUpdate, InteractionUpdate, ResourceTransferIntent
+from src.engine.biological_needs import need_rates
 from src.engine.building_services import maintenance_open, offers_work, service_building
+from src.engine.need_pull import arrival_fraction, step_travel_tiles
 from src.engine.place_tax import building_holder, tax_on
 from src.engine.serves import serves
+from src.engine.spatial_query import SpatialQueryService
+from src.engine.starvation import STARVING_LINE
 
 SHIFT_TICKS = 200
 WAGE_GOLD = 6
@@ -31,6 +35,21 @@ def _can_pay_shift(state: Any, building: Any) -> bool:
         return True
     holder = building_holder(state, building) if maintenance_open(building) else None
     return holder is not None and can_pay(state.global_resources, holder, WAGE_GOLD - building.inventory.gold)
+
+
+def meal_position_after(state: Any, work_pos: Any) -> Optional[tuple]:
+    """Where the wage is spent: the inn nearest to the place of work, or None when there is none."""
+    inn = SpatialQueryService.nearest_building(state, work_pos, "inn")
+    return None if inn is None else (inn.position[0], inn.position[1])
+
+
+def shift_takeable(entity: Any, state: Any, work_pos: Any) -> bool:
+    """True when the shift at ``work_pos`` and the walk on to the meal end before the starvation line (row 27: a step is offered only if the subject can take it).
+
+    The level on arrival at the meal, from the same arrival term the pull uses (``need_pull.step_travel_tiles`` and ``arrival_fraction``): the walk to the
+    work, SHIFT_TICKS and the walk on to the meal, at the subject's own hunger rate, strictly under the line. No new constant."""
+    tiles = step_travel_tiles(entity.navigation.position, work_pos, float(SHIFT_TICKS), meal_position_after(state, work_pos))
+    return arrival_fraction(entity.biological.hunger, need_rates(entity)[0], tiles, STARVING_LINE) < 1.0
 
 
 def nearest_work(state: Any, entity: Any) -> Optional[Any]:

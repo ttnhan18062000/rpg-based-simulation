@@ -4626,3 +4626,14 @@
   test_path: tests/unit/engine/test_service_admission.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.150.
   support_boundary: 'Main runs the CLAMP law, so no answer changes; the ATOMIC law is exercised by tests only until the free-meal removal. keeps_coin is not in admission (pinned gap).'
+- id: STRAT-291
+  text: 'A broke hungry subject takes paid work (SURV-06, SURV-07 row 27): the arrival action is derived from the building (a meal the law admits, else a takeable shift, else the project ends); the earn step is offered only if hunger on arrival at the meal, need + rate x (walk to the work + SHIFT_TICKS + walk on), is under the starvation line; the pull escalates over the same step; a held shift is interrupted only by a present threat to life (wage forfeited), never by hunger.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/work_shift.py (shift_takeable, meal_position_after), src/engine/need_pull.py (step_travel_tiles), src/engine/building_arrival.py, src/ai/goals/opening_steps.py (work_in_reach), src/ai/goals/scorers.py, src/engine/scheduler.py (_is_need_woken); docs/guidelines/intentional_divergences.md section 2.151'
+  proof_type: regression
+  test_path: tests/integration/scenarios/test_a_broke_hungry_worker_earns_and_then_eats.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.151.
+  support_boundary: 'Main runs CLAMP with the free meal on, so the broke-subject effect shows only once the free-meal removal (D73) lands; the scenario tests switch off the core EAT free relief through one named fixture. No partial wages; ask stays a stub.'
+

@@ -31,7 +31,12 @@ from src.engine.hostility import relation
 from src.engine.rpg_depth import LeashService
 from src.engine.shop_sale import nearest_sale
 from src.engine.spatial_query import SpatialQueryService
-from src.engine.work_shift import nearest_work
+from src.engine.work_shift import (
+    SHIFT_TICKS,
+    meal_position_after,
+    nearest_work,
+    shift_takeable,
+)
 
 
 @dataclass(frozen=True)
@@ -43,6 +48,8 @@ class OpeningStep:
     target_id: Optional[str] = None
     target_entity_id: Optional[int] = None
     target_pos: Optional[Tuple[float, float]] = None
+    ticks_at_target: float = 0.0  # ticks the subject spends at the target before it can meet the need (a shift of work)
+    onward_pos: Optional[Tuple[float, float]] = None  # where it goes next to meet the need (the meal after the shift), if the step is not the last leg
 
 
 def _has_room_for(entity: EntityState, item_id: str) -> bool:
@@ -135,9 +142,10 @@ def shop_sale_in_reach(entity: EntityState, state: AuthoritativeState) -> Option
 
 
 def work_in_reach(entity: EntityState, state: AuthoritativeState) -> Optional[BuildingState]:
-    """The nearest building that can pay the subject a wage for a shift, inside its range, or None."""
+    """The nearest building that can pay the subject a wage for a shift, inside its range, that the subject can finish a shift at before the
+    starvation line (``work_shift.shift_takeable``), or None. One test for the pull, the V3 record and the arrival action."""
     inn = nearest_work(state, entity)
-    if inn is not None and not LeashService.way_in_range(entity, tuple(inn.position)):
+    if inn is not None and not (LeashService.way_in_range(entity, tuple(inn.position)) and shift_takeable(entity, state, inn.position)):
         return None
     return inn
 
@@ -152,8 +160,10 @@ def _earn_then_buy_step(entity: EntityState, state: AuthoritativeState) -> Openi
         return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(shop.id), target_pos=(shop.position[0], shop.position[1]))
     inn = work_in_reach(entity, state)
     if inn is None:
-        return OpeningStep(OpeningStepKind.EARN_THEN_BUY, False, "nothing to sell that a shop with coin in its purse would buy, and no inn that can pay a wage")
-    return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(inn.id), target_pos=(inn.position[0], inn.position[1]))
+        return OpeningStep(OpeningStepKind.EARN_THEN_BUY, False, "nothing to sell that a shop with coin in its purse would buy, and no shift it can finish before the starvation line")
+    meal = meal_position_after(state, inn.position)  # the meal the wage is for: the shift is followed by the walk to it
+    return OpeningStep(OpeningStepKind.EARN_THEN_BUY, True, target_id=str(inn.id), target_pos=(inn.position[0], inn.position[1]),
+                       ticks_at_target=float(SHIFT_TICKS), onward_pos=meal)
 
 
 def _ask_step(entity: EntityState, state: AuthoritativeState) -> OpeningStep:

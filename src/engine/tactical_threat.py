@@ -20,7 +20,7 @@ from typing import List, Sequence, Tuple
 from src.core.movement_modes import MovementMode
 from src.core.state import EntityState
 from src.domains.combat_engagement.power import apparent_power
-from src.engine.scheduler import NEED_WAKE_CADENCE
+from src.engine.need_wake import NEED_WAKE_CADENCE
 
 # A subject whose safety disposition is above this is "cautious" for the SAFETY_PRESSURE_RETREAT branch (the
 # value that gate has always used; content has levels 0.9 and 0.75 and below, so it separates high from the rest).
