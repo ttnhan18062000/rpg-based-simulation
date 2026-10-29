@@ -71,7 +71,7 @@ from src.engine.policy import GovernorPolicy
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
-    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind, has_project_capacity, live_projects, with_live_current_score, same_kind_record, project_target_matches, supersede_record
+    CognitionProfile, ProjectKind, GoalKind, ObjectiveKind, has_project_capacity, with_live_current_score
 )
 from src.engine.spatial_query import SpatialQueryService
 from src.content_semantics.faction import are_entities_hostile
@@ -86,6 +86,7 @@ from src.systems.world_systems.intake import ConcernIntakeSystem
 from src.engine.domain_logic import SimulationDomainLogic
 from src.ai.goals import GoalRegistry, escalated_need_wins
 from src.ai.goals.base import GoalScore
+from src.ai.goals.live_record_route import orphan_switch_candidate, route_live_record, supersede_on_win
 from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
@@ -1303,7 +1304,7 @@ class StrategicIntelligenceSystem:
         current_tick = state.tick
         strat = entity.strategic
         
-        boredom_upd = {}
+        boredom_upd: Dict[str, float] = {}
         if strat.current_project_id:
             proj = strat.projects.get(strat.current_project_id)
             if proj and proj.status == ProjectStatus.ACTIVE:
@@ -1605,38 +1606,10 @@ class StrategicIntelligenceSystem:
 
             
         if best_candidate:
-            # TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED: the record a goal of this kind continues, resumes or supersedes is the LIVE one (the
-            # current project, else the newest live record), never the first stored one in dict order and never a COMPLETED/ABANDONED record (2.77: a finished record is no effort).
-            existing = same_kind_record(strat.projects, best_candidate.kind, strat.current_project_id)
-            target_matches = existing is not None and project_target_matches(existing, best_candidate.target_id, best_candidate.target_entity_id)
-
-            if existing is not None and target_matches and existing.id == strat.current_project_id:
-                # The current project already pursues this goal at this target: continue it (no new project, no switch).
-                return replace(StrategicUpdate(),
-                     boredom_delta=boredom_upd,
-                     leads_add_or_update=memory_upd.leads_add_or_update,
-                     leads_remove=memory_upd.leads_remove
-                )
-
-            orphan_candidate = None
-            if existing is not None and target_matches:
-                # A live record at this target that is not current: never a same-target duplicate. A SUSPENDED one is resumed; an ACTIVE one that lost
-                # `current_project_id` (several writers clear it without ending the project) is made current again. `resume_project` returns None only for a
-                # record that is not SUSPENDED in the entity's own project map, which this record is, so the None arm is a guard: the tick ends with no project created.
-                if existing.status == ProjectStatus.SUSPENDED:
-                    made_current = StrategicIntelligenceSystem.resume_project(entity, existing.id)
-                elif strat.current_project_id and strat.current_project_id != existing.id and strat.current_project_id in live_projects(strat.projects):
-                    # An ACTIVE record at this target that is not current while ANOTHER live project is current: nothing displaces the current project except through
-                    # the switch check, so the record becomes the switch candidate below (margin and lock apply; scored at the goal's utility like any candidate).
-                    orphan_candidate = existing
-                else:
-                    made_current = StrategicUpdate(current_project_id_set=existing.id, current_objective_id_set=existing.active_objective_id)
-                if orphan_candidate is None:
-                    return replace(made_current or StrategicUpdate(),
-                     boredom_delta=boredom_upd,
-                     leads_add_or_update=memory_upd.leads_add_or_update,
-                     leads_remove=memory_upd.leads_remove
-                )
+            # TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED: a goal continues, resumes or contests the LIVE record of its kind (live_record_route), never the first stored one.
+            route = route_live_record(entity, best_candidate, StrategicIntelligenceSystem.resume_project)
+            if route.update is not None:
+                return replace(route.update, boredom_delta=boredom_upd, leads_add_or_update=memory_upd.leads_add_or_update, leads_remove=memory_upd.leads_remove)
 
             if best_candidate.kind == GoalKind.ADVENTURE_ROUTE:
                 # AC3/AC4: materialize via RouteToProjectMapper using the RAW route score
@@ -1790,25 +1763,15 @@ class StrategicIntelligenceSystem:
                     score=best_candidate.utility
                 )
 
-            if orphan_candidate is not None:
-                # A fresh commitment at today's utility, locked like any freshly switched-in project (the generic branch's min(t+10, t+50)); the stored score and lock are written only on a win.
-                # `same_kind` is class-strict, so the orphan is never a ProjectKind record: its score is on the utility scale like a new candidate's.
-                candidate_proj = replace(orphan_candidate, score=best_candidate.utility,
-                                         lock_until_tick=min(current_tick + 10, current_tick + 50))
+            candidate_proj = orphan_switch_candidate(route, candidate_proj, best_candidate.utility, current_tick)
 
-            if not existing and not has_project_capacity(strat.projects, strat.profile.max_active_projects) and not escalated_need_wins(entity, best_candidate.kind):
+            if not route.existing and not has_project_capacity(strat.projects, strat.profile.max_active_projects) and not escalated_need_wins(entity, best_candidate.kind):
                 if boredom_upd:
                     return StrategicUpdate(boredom_delta=boredom_upd)
                 return StrategicUpdate()
 
             switch_up = StrategicIntelligenceSystem.evaluate_project_switch(with_live_current_score(entity, modified_scores), candidate_proj, current_tick, state=state)
-            if switch_up and existing is not None and not target_matches and existing.id != candidate_proj.id:
-                # A live record of this kind pursues a DIFFERENT target: the candidate supersedes it, cap-neutral (the gate above was not consulted). Only that one record ends; older
-                # same-kind duplicates are left to the existing trims. The update that makes the candidate current also ends the record, with the typed reason.
-                switch_up = replace(switch_up, projects_add_or_update=[
-                    supersede_record(existing),
-                    *[p for p in switch_up.projects_add_or_update if p.id != existing.id],
-                ])
+            switch_up = supersede_on_win(switch_up, route, candidate_proj)
             if switch_up:
                 # TCK-20260812-COMMITTED-INTENTION-SEQUENCE: win-transition bookkeeping. Only
                 # fires when the winning candidate is THIS tick's synthesized committed-intention
@@ -1835,13 +1798,8 @@ class StrategicIntelligenceSystem:
                     **extra_ci,
                     **extra_routing
                 )
-            if orphan_candidate is not None:
-                # The orphan lost the switch check: nothing changes, boredom and the lead deltas are carried as the continue path carries them.
-                return replace(StrategicUpdate(),
-                     boredom_delta=boredom_upd,
-                     leads_add_or_update=memory_upd.leads_add_or_update,
-                     leads_remove=memory_upd.leads_remove
-                )
+            if route.orphan is not None:
+                return replace(StrategicUpdate(), boredom_delta=boredom_upd, leads_add_or_update=memory_upd.leads_add_or_update, leads_remove=memory_upd.leads_remove)
 
             # Law 194-197: Enforce Strategic Bandwidth
             # Logic ID: 195, 196

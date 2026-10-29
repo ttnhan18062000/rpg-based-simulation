@@ -343,6 +343,14 @@ class ProjectState:
     # Typed end reason, set only together with status ABANDONED by `supersede_record` and omitted from the canonical dict while None (an unrelated state hash does not move).
     ended_by: Optional[ProjectEnd] = None
 
+    def canonical_extra(self) -> Dict[str, Any]:
+        """The canonical-dict entries of this project that are omitted while empty: `ended_by` (a project that was never superseded keeps the unrelated state hash where it was)."""
+        return {"ended_by": self.ended_by.value} if self.ended_by is not None else {}
+
+    def canonical_objectives(self) -> List[Dict[str, Any]]:
+        """The objectives for the canonical dict: every field, `target_entity_id` omitted while None."""
+        return [{f: val for f, val in dataclasses.asdict(o).items() if not (f == "target_entity_id" and val is None)} for o in self.objectives]
+
 
 # TCK-20261007-STRATEGIC-CAPACITY-GATE-COUNTS-TERMINAL-PROJECTS-SO-NO-NEW-PROJECT-KIND-CAN-START: ONE rule for which projects
 # occupy `CognitionProfile.max_active_projects`. A COMPLETED or ABANDONED project is a record, not an effort in progress, so it
