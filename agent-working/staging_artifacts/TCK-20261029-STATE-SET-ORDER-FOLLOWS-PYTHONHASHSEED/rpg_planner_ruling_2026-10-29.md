@@ -46,3 +46,24 @@ Send rpg-planner the (A) plan through me when it's ready.
 ---
 
 Lead-planner's addition, same message: "file both tickets. Send (A)'s plan to me for rpg-planner. After its OK, S4 covers (A)'s dispatch. (B) gets an owner dispatch ask once it's filed. (B)'s paired run takes the heavy slot after perf's quiet hour. The order of work stays: #784's main merge first, then (A)."
+
+# rpg-planner ruling 2, 2026-10-29: (A) plan OK and (B) audit list
+
+Relayed word for word, by the same path.
+
+---
+(A) TCK-20261029-EVENT-EMIT-ORDER-FOLLOWS-PYTHONHASHSEED: PLAN OK. Dispatch under S4 after the #784 main merge. Notes:
+- Rollback path 1163/1173/1183: give sorted() an explicit stable key for the element type (id or .value), not the natural ordering of mixed or Enum types. Assert the element type in the test.
+- evolution.py:120 is accepted as emission-only (apply folds into Set[str], and the canonical dict sorts). Record that reasoning in the ticket.
+- The step-4 sweep report (what was fixed, what was only reported) goes in the Completion Summary. Reported items go to (B)'s audit list.
+- Acceptance as planned: the seed-0 final state hash is unchanged against main on one short run. If it changes, STOP to rpg-planner.
+
+(B) TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED is raised to P1. The tactical.py:704-722 tie breaks determinism in BEHAVIOUR in every ordinary run, which is a Hard Rule, even though seed-0 gates hide it. Audit list, for rpg-planner's review before any code:
+1. tactical.py:704-722, skill choice. Explicit tie-break key (e.g. power descending, then skill id). It may change seed-0 behaviour, so it needs a paired run with deaths showing no drift; any drift is a STOP to rpg-planner. Update the Bible 02 / COMB-264/265 wording, and add a divergence from the ubuntu block (class Bug Fix).
+2. leveling.py:137, a float sum over a set: sum in sorted order and check the seed-0 hash effect.
+3. learning.py:45, known_skill_ids as an ordered tuple in combat memory: use sorted(set(...)) and check whether any reader is positional.
+4. IdentityUpdate.merge: confirm your finding in the audit (apply.py:639-708 and readers before apply). If nothing reads it positionally, sort anyway for hygiene, with no behaviour claim.
+5. A repo-wide sweep for list(set(, iteration over a set or frozenset into decisions, and dicts built from sets. Report them; don't fix them all.
+
+state.py stays read-only until #785 (:1610) merges, which should be soon. After that, coordinate with rpg-planner if (B) needs it.
+---

@@ -48,15 +48,20 @@ rpg-planner-ubuntu's pre-investigation on 33da13604 is input to the audit, not a
 - `known_skill_ids` tuple order is state: it reaches the canonical hash if combat memory is canonicalised.
 
 ## Scope
-1. **Plan first: the audit.**
-   - Find every `list(set(...))`, `tuple(set(...))` and `for ... in <set/frozenset>` under `src/`, outside `src/observability/` (that is ticket A), whose result reaches durable state, a decision or a canonical hash.
-   - For each site, record: the file and line; what it feeds (state, decision, hash, emission-only); every consumer that reads it positionally (`[0]`, first match, stable sort, ordered join, float accumulation); and its disposition.
-   - The audit table goes in `investigation.md` and is reviewed by rpg-planner before any code change.
-2. Sort at each state- or decision-reaching site, with a stable key: the ID string or the enum `.value`, never `str(obj)`. Sites include the named ones, `tactical.py:706` and whatever the audit finds.
-3. Add an intentional-divergence entry, numbered from ubuntu's block 2.144-2.149, with rationale class `Stabilized` (or as rpg-planner rules), and a verification test path. Update the Bible and parity ledger where a law's observable behaviour changes. Take rpg-planner's ruling per entry; COMB-264/265 cover skill selection.
-4. Run a paired run at `PYTHONHASHSEED=0`, base main against this branch.
-   - The state hash is expected to change.
-   - Deaths must show no drift. Any drift in deaths or V-gates is a STOP and goes back to rpg-planner.
+rpg-planner's audit list (ruling 2, word for word in the ruling file) governs this ticket. The plan first audits these items. rpg-planner reviews the audit before any code change.
+1. `src/engine/tactical.py:704-722`, skill choice.
+   - Use an explicit tie-break key: power descending, then skill id.
+   - It may change seed-0 behaviour, so a paired run is needed and deaths must show no drift. Any drift is a STOP to rpg-planner.
+   - Update the wording of Bible `02_combat_laws.md` and COMB-264/265.
+   - Add a divergence from ubuntu's block (2.144-2.149), class `Bug Fix`.
+2. `src/progression/leveling.py:137`: a float sum over a set. Sum in sorted order and check the effect on the seed-0 hash.
+3. `src/domains/combat_engagement/learning.py:45`: `known_skill_ids` is an ordered tuple in combat memory. Use `sorted(set(...))` and check whether any reader is positional.
+4. `IdentityUpdate.merge` (`src/core/updates.py:276-281`).
+   - Confirm in the audit the pre-investigation finding that apply folds these lists into sets: check `src/engine/apply.py:639-708`, `src/engine/patches.py:230-232`, and every reader before apply.
+   - If nothing reads them positionally, sort anyway for hygiene, with no behaviour claim.
+5. A repo-wide sweep for `list(set(`, iteration over a set or frozenset that feeds decisions, and dicts built from sets. Report them, but don't fix them all. Append the items reported by ticket A's sweep.
+
+Use a stable key everywhere: the ID string or the enum `.value`, never `str(obj)`. Update the Bible and the parity ledger where a law's observable behaviour changes, as rpg-planner rules for each entry.
 
 ## Out of Scope
 - Emit-loop ordering in `src/observability/` (ticket A).
@@ -100,7 +105,8 @@ rpg-planner-ubuntu's pre-investigation on 33da13604 is input to the audit, not a
 - `src/core/state.py` (read only: it is on u24's :1610 branch, so don't edit it)
 
 ## Assumptions / Open Questions
-- Dispatch needs a fresh owner go. Standard tier is not covered by S4.
+- Dispatch needs a fresh owner go. Standard tier is not covered by S4. lead-planner asked the owner on 2026-10-29.
+- `src/core/state.py` stays read-only until #785 (:1610) merges. After that, coordinate with rpg-planner if this ticket needs it.
 - The paired run takes the heavy slot after perf's quiet hour.
 - If the audit finds a site in a file on u24's open branches, stop and route it through lead-planner.
 
