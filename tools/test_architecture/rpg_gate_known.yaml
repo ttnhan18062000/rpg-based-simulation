@@ -31,12 +31,11 @@ known:
       - {world: urban_political, seed: 44, entity_id: 28}
     note: "N14, v1 known red, owner cutoff 2026-10-21; exception accepted by the owner on issue #715 (comment 6337993346). Owns EXACTLY urban_political/44 merchant 28 (starved t3140). Any other V3 fail, or another entity on this (world, seed), is a regression. Disclosure: v1_disclosure.md M5."
   - match: "V3"
-    ticket: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
+    ticket: TCK-20261028-LOW-HP-RETREAT-BRANCH-HOLDS-A-STARVING-SUBJECT-IN-PLACE-BESIDE-A-NON-ACTING-HOSTILE
     owner: rpg-planner
-    added_on: "2026-10-22"
-    expires_on: "2026-11-05"
+    added_on: "2026-10-28"
+    expires_on: "2026-11-30"
     state: fail
     cases:
-      - {world: crowded_frontier, seed: 46, entity_id: 38}
-      - {world: frontier_living_world, seed: 44, entity_id: 2}
-    note: "N15, v1 known reds, owner cutoff 2026-10-21; exception accepted by the owner on issue #715 (comment 6337993346). Owns EXACTLY crowded_frontier/46 raider 38 (starved t3778) and frontier_living_world/44 worker 2 (starved t3736). Any other V3 fail, or another entity on these (world, seed) pairs, is a regression. Disclosure: v1_disclosure.md M5. Owner ticket moved 2026-10-28 from TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE (closed with #769); whether steps B/A cleared these is unmeasured on the gate."
+      - {world: frontier_living_world, seed: 43, entity_id: 38}
+    note: "New V3 after step A (#769), accepted by the owner on issue #715 (comment 6469533675). Owns EXACTLY frontier_living_world/43 merchant 38 (starved t2518): the low-HP retreat branch (tactical.py:536-544) re-issues a no-op ENTITY_MOVE every 10th tick and the subject never reaches the eat tile. Any other V3 fail, or another entity on this (world, seed), is a regression."

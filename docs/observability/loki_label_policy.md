@@ -17,7 +17,7 @@ Only the following low-cardinality static attributes are authorized to be promot
 - `service`: Container/service name
 - `environment`: Deployment tier (local, staging, production)
 - `container`: Docker container identifier
-- `job`: Promtail scrape task identification
+- `job`: Alloy scrape task identification (`docker/alloy/config.alloy`)
 
 ## Prohibited Dynamic Labels
 The following high-cardinality identifiers must **never** be relabeled or promoted to Loki stream labels:

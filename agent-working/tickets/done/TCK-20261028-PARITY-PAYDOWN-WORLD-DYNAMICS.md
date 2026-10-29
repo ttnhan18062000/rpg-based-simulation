@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS
-phase: open
+phase: done
 date: 2026-10-28
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Parity-ledger paydown, child 1: world_dynamics.yaml reaches 0 P0 test_path errors
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -106,3 +106,4 @@ Cited tests: 59 passed. `python3 -m codebase.gates.parity_ledger_schema check`: 
 docs/parity_ledger/world_dynamics.yaml (31 test_path fields); the tightened baseline codebase/baselines/parity_ledger_schema_baseline.json (codebase-planner reviews it by comment).
 
 ## Completion Summary
+31 world_dynamics entries cite a real, run and passing test (PR #783); the rest were resolved in the sibling. Together world_dynamics.yaml has 0 P0 test_path errors and 0 proof_type errors.

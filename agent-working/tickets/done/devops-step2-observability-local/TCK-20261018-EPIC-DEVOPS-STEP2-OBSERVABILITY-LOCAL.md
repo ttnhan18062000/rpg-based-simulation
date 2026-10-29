@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: platform
 authority: P1
 audience: agent
 ticket_id: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL
-phase: open
+phase: done
 date: 2026-10-18
 tags: [platform, observability]
 ---
@@ -99,4 +99,11 @@ See the child tickets.
 See the child tickets.
 
 ## Completion Summary
-(open)
+Closed 2026-10-27 with three of four children done. The fourth was split out, not delivered.
+- Done: 1 OBSERVABILITY-PROFILE-HARDENING and 2 TEMPO-TRACE-BACKEND (#627); 3 SCRAPE-BACKEND-METRICS-PORT (#688,
+  after rpg R1 #648 and R2 #654).
+- Split out: 4 `TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF` moved to `agent-working/tickets/todos/devops-api-dashboard-trace/`,
+  status BLOCKED on rpg's R3 (OTel middleware, #622). R3 has no ticket or date (rpg-planner-ubuntu, 2026-10-27), and an
+  epic with an undated blocker stays stale. The owner chose to close the epic and carry the ticket.
+- Not met by this epic: the dashboard, the request trace in Tempo, and the `src/engine/` no-tracing-import check.
+  They move with the split ticket and R3.

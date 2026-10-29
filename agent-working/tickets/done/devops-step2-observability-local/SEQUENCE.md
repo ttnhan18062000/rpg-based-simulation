@@ -34,3 +34,8 @@ Every stack run, image pull or build on this host is asked of lead-planner first
 - 4 (API-DASHBOARD-AND-TRACE-PROOF) still waits for R3 (OTel). It now follows step-3's
   TCK-20261018-API-SLO-ALERT-NTFY-RUNBOOK and copies its PromQL (the rule file is the single source; equality checked in
   ticket 4's test plan, no tests/**).
+
+## Update 2026-10-27 (epic closed, ticket 4 split out)
+
+1-3 are done (#627, #688). Ticket 4 (API-DASHBOARD-AND-TRACE-PROOF) moved to `agent-working/tickets/todos/devops-api-dashboard-trace/`,
+BLOCKED on rpg R3, which has no ticket or date. This folder moves to done/ with the closed epic (owner choice, 2026-10-27).

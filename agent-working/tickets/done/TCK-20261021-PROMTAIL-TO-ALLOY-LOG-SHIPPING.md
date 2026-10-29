@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING
-phase: open
+phase: done
 date: 2026-10-21
 tags: [observability, platform]
 ---
@@ -15,7 +15,7 @@ tags: [observability, platform]
 Ship container logs to Loki with Grafana Alloy instead of the deprecated Promtail
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -90,13 +90,13 @@ None.
 - Positions: Promtail keeps its positions file in `/tmp` in the container (it is lost when the container is recreated). Decide whether Alloy's storage gets a volume, and record the decision.
 
 ## Implementation Notes
-Not started.
+Standard pipeline run by hand-orchestration. Investigation, plan and test plan: `agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/`. Alloy v1.20.1 pinned by index digest; `LogShippingErrors` uses `prometheus_sd_refresh_failures_total` + Loki push retries (`or vector(0)`) + dropped entries; no storage volume; `mem_limit` 256m from the measured anon + active_file (187 MiB of a first guess of 192). Owner OKs: rpg-planner-ubuntu OK, 2026-10-28 (infrastructure_overview.md); lead-planner OK, 2026-10-28 (devops_baseline_adr.md, system_overview.md); testing agreement: #715 6475649562 item 5 (test_loki_cardinality.py). Record: `docs/runbooks/records/2026-10-28-alloy-log-shipping.md`.
 
 ## Test Summary
-Not started.
+`tests/logging/test_loki_cardinality.py`: 2 passed. Controls on `test_alloy_labels_are_safe`: positive control (the committed config passes); negative controls (a promoted `tick` label is caught as CRITICAL REGRESSION; an unknown label `foo` is caught as WARNING). `docker compose --profile observability config` lists `alloy`, no `promtail`; `alloy validate` and `alloy fmt` clean; `promtool check config` on prometheus.yml passes; scoped tests `test_docker_compose_dependency_hygiene`, `test_session_platform_domain`, `test_repo_root_allowlist` pass. Live run (68 min): quiet stack Normal; 403, stopped and Loki-unreachable cases each fired and resolved; recreate check; memory sample. Not covered: ntfy delivery, dropped-entries term firing, TargetDown{job=alloy} (see the record, section 6).
 
 ## Files Changed
-None yet.
+compose.yaml; docker/alloy/config.alloy (new); docker/promtail-config.yml (deleted); docker/prometheus.yml; docker/grafana/provisioning/alerting/rules-base.yaml; docker/grafana/provisioning/datasources/datasource.yml; docs/runbooks/{log-shipping,target-down,README}.md; docs/runbooks/records/2026-10-28-alloy-log-shipping.md (new); docs/observability/loki_label_policy.md; docs/architecture/{devops_baseline_adr,system_overview}.md; docs/engine/contracts/infrastructure_overview.md; tests/logging/test_loki_cardinality.py.
 
 ## Completion Summary
-Not started.
+Promtail (end of life 2026-03-02) is replaced by Grafana Alloy v1.20.1 with the same discovery, filters, labels and Loki target. All acceptance criteria met and proven live except as stated in the record, section 6.
