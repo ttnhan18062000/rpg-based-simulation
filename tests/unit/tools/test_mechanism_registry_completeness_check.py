@@ -283,7 +283,9 @@ def test_wider_scope_numbers_pinned():
     # (stable_int31, the process-independent id digest; functions only, so it adds no mechanism-shaped class; unbound, see below).
     # 346 -> 345 on 2026-10-28 (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS): src/progression/skills.py (the dead SkillScalingService twin) is deleted.
     # 345 -> 343 on 2026-10-28 (TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED): src/core/recipes.py and src/town/blacksmith.py are deleted; both were in scope.
-    assert wider["scope_files"] == 343
+    # 343 -> 344 on 2026-10-28 (TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN): +src/simulation_quality/wiring.py (build_quality_wiring, the SimQ feed and hub
+    # construction moved out of Kernel.__init__; one function, no mechanism-shaped class; unbound, see below).
+    assert wider["scope_files"] == 344
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -332,7 +334,9 @@ def test_wider_scope_numbers_pinned():
     # 249 -> 248 on 2026-10-28 (TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE, #593 6420327798): src/ai/goals/present_threat.py
     # is bound under `tactical_decision` (acting_threat_to, step B's act test, 2.138).
     # 248 -> 246 on 2026-10-28 (TCK-20261027-LEGACY-RECIPE-REGISTRY-AND-BLACKSMITH-ACTION-UNREACHED): the same two deleted files were unbound.
-    assert wider["unbound_files"] == 246
+    # 246 -> 247 on 2026-10-28 (TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN): +src/simulation_quality/wiring.py is an unbound helper (SimQ feed and hub
+    # construction lifted out of Kernel.__init__ unchanged, no mechanism of its own); candidates and wired are unchanged.
+    assert wider["unbound_files"] == 247
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when
     # the hunger and fatigue goals started calling `way_in_range`), so it is no longer an unbound candidate.
