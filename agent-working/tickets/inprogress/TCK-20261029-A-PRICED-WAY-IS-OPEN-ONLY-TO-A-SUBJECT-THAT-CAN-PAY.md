@@ -107,7 +107,7 @@ On main the service clamps the price (EAT_PRICE_GOLD and REST_PRICE_GOLD are cha
 - ATOMIC is exercised by tests only (the constant stays CLAMP). Under ATOMIC it gates `service_delta` only (None below the price). The transfer-carried shape (`gold_cost` plus the effects on the intent, `readiness_update` in the resolver) is left to D73's rebase, because it touches the apply path.
 - keeps_coin stays out of `admits` (designer ruling A); a non-xfail test pins the gap and names TCK-20261029-SHARED-ADMISSION-IGNORES-KEEPS-COIN-SO-A-NON-COIN-SUBJECT-IS-SENT-TO-A-SERVICE-THAT-REFUSES-IT.
 - V3: `StarvationDeathRecord.opening_steps_in_reach()` and `verdict()` (derived; the FAIL set equals the old untried rule, so the gate file is unchanged).
-- Divergence and parity ids are placeholders.
+- Divergence 2.150 and parity STRAT-290 (assigned by the lead).
 
 ## Test Summary
 ## Files Changed
