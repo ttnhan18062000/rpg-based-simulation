@@ -33,7 +33,7 @@ graph TD
     %% Metrics and logs
     API -->|"/metrics, /health"| Prom["Prometheus (scrapes backend:/metrics and ai_worker:9108/metrics; does not read Redis)"]
     Prom --> Grafana["Grafana"]
-    Container["Container stdout"] -->|Promtail| Loki["Loki"]
+    Container["Container stdout"] -->|Alloy| Loki["Loki"]
 
     %% Watchdog
     WD["Watchdog (src/observability/watchdog.py)"] -.->|poll /health and /metrics| API
@@ -152,7 +152,7 @@ Built using **React + Vite + TypeScript**, the frontend served by Nginx is a zer
 
 The complete production-grade system is deployed via Docker Compose to manage logging, telemetry, queues, and self-healing watchdogs.
 
-### Service Index (`compose.yaml` at the repo root; Dockerfiles, `nginx.conf`, `prometheus.yml`, `promtail-config.yml` and `grafana/` live under `docker/`):
+### Service Index (`compose.yaml` at the repo root; Dockerfiles, `nginx.conf`, `prometheus.yml`, `alloy/config.alloy` and `grafana/` live under `docker/`):
 *   **`backend`**: FastAPI REST & WebSockets server serving state read-models.
 *   **`frontend`**: The TypeScript React client served via Nginx.
 *   **`redis`**: Handles live in-memory caching and real-time state broadcasts, and is the sole event-stream transport (`RedisStreamConsumer`).
@@ -160,7 +160,7 @@ The complete production-grade system is deployed via Docker Compose to manage lo
     *   **Saturation metrics**: `ai_worker` serves `/metrics` on port `9108` (`AI_WORKER_METRICS_PORT`; compose `expose` only, scraped on the compose network). Per stream and consumer group it reports `sim_stream_consumer_lag` and `sim_stream_pending_messages`, read from Redis (`XINFO GROUPS`) at scrape time, plus `sim_stream_consumer_up` (0 when Redis cannot be read, with no gauges emitted). It never imports the engine (`src/observability/stream/lag_metrics.py`).
 *   **`prometheus`**: Time-series database scraping runtime TPS and performance counters.
 *   **`grafana`**: Provisioned dashboards showing live simulation metrics.
-*   **`loki` & `promtail`**: Multi-container centralized log aggregator.
+*   **`loki` & `alloy`**: Multi-container centralized log aggregator (Alloy ships container logs to Loki).
 *   **`watchdog`**: Self-healing daemon auditing endpoint availability and deadlocks.
 
 ---

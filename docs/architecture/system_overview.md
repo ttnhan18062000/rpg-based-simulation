@@ -33,7 +33,7 @@ flowchart LR
     R -- "consumer group" --> W["ai_worker<br/>anomaly rules"]
     P["Prometheus"] -- "scrape internal :9109<br/>(public /metrics is auth-gated)" --> API
     G["Grafana"] --> P
-    PT["Promtail"] -- "container logs" --> L["Loki"]
+    AL["Alloy"] -- "container logs" --> L["Loki"]
     WD["watchdog<br/>(src/observability/watchdog.py)"] -- "/health, /metrics" --> API
     WD --> L
     CLI["CLI batch runs<br/>(src/cli/)"] --> K
@@ -67,7 +67,7 @@ Levels are those of the DevOps baseline ADR (D7). A capability is listed at the 
 |---|---|---|
 | Containerised stack (14 services: 4 default, 10 in the observability profile) | `compose.yaml`, `docker/` | running locally |
 | Health and metrics endpoints | `src/api/server.py` (`/health`, `/metrics`) | running locally |
-| Metrics, dashboards and logs | Prometheus, Grafana, Loki, Promtail | running locally |
+| Metrics, dashboards and logs | Prometheus, Grafana, Loki, Alloy | running locally |
 | CI: path-gated test lanes, type and code-health gates | `.github/workflows/test.yml` | running in CI |
 | Backend image build check | `test.yml` (not required, not pushed) | running in CI |
 | Optional observability profile with memory caps | ADR D1, slice S1 | running locally |

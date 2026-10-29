@@ -2,8 +2,8 @@
 #
 # Profiles:
 #   default (`docker compose up`)                  backend, redis, ai_worker, frontend
-#   `--profile observability` (adds to the above)  prometheus, grafana, loki, promtail, docker-socket-proxy, tempo, watchdog, node-exporter, ntfy, redis-exporter
-# watchdog sits in the observability profile because it depends_on promtail (healthy only once loki is ready) and prometheus, and polls Loki.
+#   `--profile observability` (adds to the above)  prometheus, grafana, loki, alloy, docker-socket-proxy, tempo, watchdog, node-exporter, ntfy, redis-exporter
+# watchdog sits in the observability profile because it depends_on alloy (healthy only once loki is ready) and prometheus, and polls Loki.
 # Grafana's admin password is a compose secret file (gitignored). Create it once before `--profile observability up`:
 #   mkdir -p docker/secrets && openssl rand -base64 24 > docker/secrets/grafana_admin_password
 # A missing file fails only the observability profile (Grafana's start), never the default profile; an empty file or the value `admin` makes Grafana exit at start (guard in the grafana entrypoint).
@@ -255,23 +255,27 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     restart: unless-stopped
     # No healthcheck: the loki 3.7 image has neither wget nor sh, so nothing in the image can probe itself.
-    # Loki readiness is probed from promtail (below), which has bash.
+    # Loki readiness is probed from alloy (below), which has bash.
 
-  promtail:
+  alloy:
     profiles: ["observability"]
-    image: grafana/promtail:3.6.8@sha256:6cfa64ec432b24a912d640e2edb940eeae2666f61861a66c121d763dd7241381
-    mem_limit: 128m
+    # Grafana Alloy v1.20.1 (released 2026-09-28; newest release at least 14 days old on 2026-10-28), pinned by multi-arch index digest.
+    # Replaces Promtail, which reached end of life on 2026-03-02 (TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING).
+    image: grafana/alloy:v1.20.1@sha256:2aa2099af76c0098d4af7a4d6e48f86cb66dc1a000222ad927a1c67c6542d13f
+    # 256m: the 2026-10-28 run (68 min) held anon 71 MiB and anon + active_file 187 MiB, which left no headroom under the first guess of 192m; docs/runbooks/records/2026-10-28-alloy-log-shipping.md section 5.
+    mem_limit: 256m
     healthcheck:
-      # The promtail image has bash but no wget/curl: read the first line of GET /ready over /dev/tcp and require HTTP 200.
-      # Healthy means promtail's own :9080/ready AND loki:3100/ready both answer 200 (loki has no healthcheck of its own).
-      test: ["CMD", "bash", "-c", "( exec 3<>/dev/tcp/localhost/9080 && printf 'GET /ready HTTP/1.0\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200 ' ) && ( exec 3<>/dev/tcp/loki/3100 && printf 'GET /ready HTTP/1.0\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200 ' )"]
+      # The alloy image has bash but no wget/curl: read the first line of GET /-/ready over /dev/tcp and require HTTP 200.
+      # Healthy means alloy's own :12345/-/ready AND loki:3100/ready both answer 200 (loki has no healthcheck of its own).
+      test: ["CMD", "bash", "-c", "( exec 3<>/dev/tcp/localhost/12345 && printf 'GET /-/ready HTTP/1.0\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200 ' ) && ( exec 3<>/dev/tcp/loki/3100 && printf 'GET /ready HTTP/1.0\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200 ' )"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
     volumes:
-      - ./docker/promtail-config.yml:/etc/promtail/config.yml
-    command: -config.file=/etc/promtail/config.yml -config.expand-env=true
+      - ./docker/alloy/config.alloy:/etc/alloy/config.alloy:ro
+    # --storage.path stays inside the container (read offsets are lost on recreate, as Promtail's /tmp positions were). --disable-reporting turns off usage telemetry to Grafana.
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data --disable-reporting /etc/alloy/config.alloy
     environment:
       - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
     restart: unless-stopped
@@ -284,17 +288,17 @@ services:
   docker-socket-proxy:
     profiles: ["observability"]
     # The only service that mounts the Docker socket, read-only, behind an allow-list: container list/inspect/logs plus GET on /networks, no POST (no exec, stop or create).
-    # Remaining risk: GET on /containers/*/json still exposes every container's environment (including secrets passed as env) to promtail,
+    # Remaining risk: GET on /containers/*/json still exposes every container's environment (including secrets passed as env) to alloy,
     # and the socket itself is still reachable by this proxy process. Internal network only (no published port).
     # NETWORKS=1 (TCK-20261020-PROMTAIL-DISCOVERY-DENIED-BY-SOCKET-PROXY; decision: owner via lead-planner, 2026-10-20):
-    #   Why: promtail's docker_sd calls the Docker networks API on every refresh to build network labels; without NETWORKS the proxy answers 403, every refresh
+    #   Why: alloy's discovery.docker calls the Docker networks API on every refresh to build network labels; without NETWORKS the proxy answers 403, every refresh
     #   fails ("error while computing network labels") and Loki gets nothing (shown in three runs on 2026-10-19 and the A/B of 2026-10-20).
     #   What it opens: GET/HEAD on /networks and /networks/{id} only. POST=0 still denies every write (POST /networks/create, DELETE /networks/{id} and
     #   POST /containers/x/stop returned 403 in the 2026-10-20 probes), and GET /volumes, /images/json and /info stay 403.
     #   What it exposes: network names, IDs, drivers, subnets, gateways and each network's attached container IDs and IPs, a small addition next to the
-    #   container environment promtail can already read.
-    #   Rejected: mounting /var/lib/docker/containers read-only in promtail (it would read every container's logs on the host, other stacks included, and loses
-    #   the project filter); the Loki Docker logging driver (a host plugin install, a logging block on every service, and it bypasses promtail's pipeline).
+    #   container environment alloy can already read.
+    #   Rejected: mounting /var/lib/docker/containers read-only in alloy (it would read every container's logs on the host, other stacks included, and loses
+    #   the project filter); the Loki Docker logging driver (a host plugin install, a logging block on every service, and it bypasses alloy's pipeline).
     image: tecnativa/docker-socket-proxy:v0.4.1@sha256:3400c429c5f9e1b21d62130fb93b16e2e772d4fb7695bd52fc2b743800b9fe9e
     mem_limit: 64m
     environment:
@@ -345,7 +349,7 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      promtail:
+      alloy:
         condition: service_healthy
       prometheus:
         condition: service_healthy
