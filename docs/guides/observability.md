@@ -76,7 +76,7 @@ Key fields:
 {
   "event_id": "evt_abc123",
   "event_type": "combat_kill",
-  "category": "combat",
+  "event_category": "combat",
   "tick": 47,
   "entity_id": "hero_7",
   "region_id": "region_east",
@@ -167,7 +167,7 @@ python3 -m src compare-sweep <sweep_id> --baseline docs/observability/baselines/
 
 ## Adding a new event type
 
-1. Add the `event_type` string and optional `category` to `src/observability/events.py`
+1. Add the `event_type` string and optional `event_category` to `src/observability/events.py`
    (`EventCategory` Literal, if a new category is needed).
 2. Emit the event in `src/observability/event_shapers.py` — add it to the relevant domain's
    shaper class (registered in `SHAPER_REGISTRY`/`PHASE2_SHAPER_REGISTRY`/

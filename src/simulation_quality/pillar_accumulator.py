@@ -40,10 +40,11 @@ class PillarAccumulator:
         self._lock = threading.Lock()
         self.last_event_tick: int = 0
 
-    def add(self, record: ScoreRecord) -> None:
+    def add(self, record: ScoreRecord) -> bool:
+        """Count a record once per event_id; True when it was new, False for a redelivery."""
         with self._lock:
             if record.event_id in self._seen_event_ids:
-                return
+                return False
             self._seen_event_ids.add(record.event_id)
             self.last_event_tick = max(self.last_event_tick, record.tick)
             self.raw_score += record.delta
@@ -56,6 +57,7 @@ class PillarAccumulator:
                     self.worst_events.pop()
             self.window_buffer.append(record)
             self._check_loop_detection()
+            return True
 
     def _check_loop_detection(self) -> None:
         if len(self.window_buffer) == 0:
