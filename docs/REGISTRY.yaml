@@ -7908,6 +7908,21 @@
   - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY.md
+  ticket_id: TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY
+  title: 'One admission rule for ways, scorers and services: a way is open to a subject
+    iff the service would actually deliver it now (working title ONE-ADMISSION-RULE-FOR-WAYS-SCORERS-AND-SERVICES;
+    the id is kept because the owner''s dispatch go, #715 6485905808, names it)'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-29'
+  related_code_areas:
+  - src/ai/goals/ways.py, src/engine/appraisal.py, src/observability/starvation_record.py,
+    src/ai/goals/scorers.py, src/engine/building_services.py, src/engine/domain/core_actions.py,
+    src/engine/service_prices.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN.md
   ticket_id: TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN
   title: The kernel resolves the run id but never passes it to EventRecorder, so every
