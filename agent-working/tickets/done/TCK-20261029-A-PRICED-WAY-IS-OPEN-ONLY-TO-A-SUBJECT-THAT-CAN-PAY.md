@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY
-phase: active
+phase: done
 date: 2026-10-29
 tags: []
 ---
@@ -16,7 +16,7 @@ tags: []
 One admission rule for ways, scorers and services: a way is open to a subject iff the service would actually deliver it now (working title ONE-ADMISSION-RULE-FOR-WAYS-SCORERS-AND-SERVICES; the id is kept because the owner's dispatch go, #715 6485905808, names it)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -110,5 +110,13 @@ On main the service clamps the price (EAT_PRICE_GOLD and REST_PRICE_GOLD are cha
 - Divergence 2.150 and parity STRAT-290 (assigned by the lead).
 
 ## Test Summary
+- New: `tests/unit/engine/test_service_admission.py` (76: the grid of gold x EAT/REST x CLAMP/ATOMIC against the real `service_delta`, gold never debited without delivery, diet branch, `eat_update` agreement, `ways_in_reach`/`EatScorer` agree with the service, the named f400 bed test, the keeps_coin gap pinned and not xfail) and `tests/unit/observability/test_starvation_verdict.py` (6: untried step FAIL, poverty non-fail, tried, untried way, FAIL set equals the old rule, payload).
+- Existing suites green: unit observability/ai/engine 772 passed; unit/world + architecture 598 passed; integration scenarios + observability 301 passed, 7 skipped, 1 xfailed. `make code-health` 0 new, `lint-imports` 17 kept, mypy clean on the changed files.
+- Paired run (`tools.rpg_measure.paired`, PYTHONHASHSEED=0): base abcf14869e1f vs new ec90c660cc28, 3 gate worlds x s42-46 x 5000t: final hashes IDENTICAL in 15 of 15; people deaths 139->139, 62->62, 177->177; base-vs-base self-check spread 0.
+- Mechanism registry: completeness check scope is src/domains and src/systems, so `src/engine/service_admission.py` is outside it. The changed-code advisory names `town_services` (src/engine/building_services.py changed, entry not); binding left to rpg-planner, who owns mechanisms.yaml.
+
 ## Files Changed
+src/engine/service_admission.py (new), src/engine/building_services.py, src/ai/goals/ways.py, src/ai/goals/scorers.py, src/observability/starvation_record.py, tests/unit/engine/test_service_admission.py (new), tests/unit/observability/test_starvation_verdict.py (new), docs/mechanics/04_strategic_cognition.md, docs/parity_ledger/strategic_cognition.yaml (STRAT-290), docs/guidelines/intentional_divergences.md (2.150), this ticket and its artifacts.
+
 ## Completion Summary
+A way is open to a subject iff the inn would deliver the service now. One function (`service_admission.admits`) and one payment-law constant (`SERVICE_PAYMENT_LAW`, CLAMP on main) are read by the service and by `ways_in_reach`, `EatScorer` and the bed test in `SleepScorer`; the starvation record follows through `ways_in_reach`. The V3 record gains `opening_steps_in_reach` and a `verdict` (untried step FAIL, poverty non-fail). Main behaviour is unchanged (15 of 15 hashes identical). Not done by design: keeps_coin in admission (pinned gap, TCK-20261029-SHARED-ADMISSION-IGNORES-KEEPS-COIN-SO-A-NON-COIN-SUBJECT-IS-SENT-TO-A-SERVICE-THAT-REFUSES-IT), reach bounds (TCK-20261029-HUNGER-SIDE-WAYS-HAVE-NO-DISTANCE-BOUND), the ATOMIC transfer-carried shape (D73's rebase), and the `town_services` mechanism binding (rpg-planner).

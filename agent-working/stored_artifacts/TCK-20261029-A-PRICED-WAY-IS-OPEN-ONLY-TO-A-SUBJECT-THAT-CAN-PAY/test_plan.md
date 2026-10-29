@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P2
 audience: agent
@@ -17,3 +17,10 @@ tags: []
 6. V3 verdict: UNTRIED_STEP fails, POVERTY is non-fail, a tried step / delivered meal passes. Record JSON round-trips with the new field.
 7. Scoped existing suites: unit/observability starvation + gate metrics, unit/engine (biological needs, service reach, carcass), unit/world, architecture, integration/scenarios.
 8. Paired run hash-identical on main (slot from planner).
+
+## Proof Plan
+- level: unit plus real-kernel integration plus a paired run
+- proof kind: regression (grid against the real service) and hash-identity on main
+- oracle source: the real `service_delta` and resolver outcome; the parent commit's final state hashes
+- expected effect: no behaviour change on main (CLAMP); admission equals delivery under both laws
+- selected commands: `pytest tests/unit/engine/test_service_admission.py tests/unit/observability/test_starvation_verdict.py`; `python -m tools.rpg_measure.paired --base abcf14869e1f --new ec90c660cc28`
