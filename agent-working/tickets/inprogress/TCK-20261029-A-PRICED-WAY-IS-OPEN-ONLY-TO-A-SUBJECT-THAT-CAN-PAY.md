@@ -78,7 +78,7 @@ rpg-designer ruling (2026-10-29). Sources: survival-needs.md SURV-06 l.335-350, 
 ## Related Docs
 - docs/world_rules/life-body/survival-needs.md (SURV-06, SURV-07 row-27 amendment)
 - docs/mechanics/04_strategic_cognition.md (Standing Needs Escalate)
-- docs/guidelines/intentional_divergences.md 2.142
+- docs/guidelines/intentional_divergences.md 2.NEW-ONE-ADMISSION
 
 ## Related Stored Artifacts
 
@@ -102,6 +102,13 @@ On main the service clamps the price (EAT_PRICE_GOLD and REST_PRICE_GOLD are cha
 - V3 judge, kept in this ticket: an additive, judge-only typed field. For each opening step in reach, record whether it was tried (dispatched at least once in the record window). Verdicts: untried while a step is takeable = FAIL; no open way and no takeable step = poverty outcome (non-fail). Unit tests cover all three verdicts.
 - OUT of this ticket: reach bounds. These move to TCK-20261029-HUNGER-SIDE-WAYS-HAVE-NO-DISTANCE-BOUND, which runs after EARN.
 - Lane B consumer list (main f102085e0) is accepted as the consumer inventory. core_actions.py:64 eat_update stays as the diet gate on the action side, and it must agree with the admission function's diet branch.
+### Implementation (rpg-implementer-2, branch rpg-one-admission)
+- `src/engine/service_admission.py`: `admits(entity, action, law=None)`, `PaymentLaw`, the one constant `SERVICE_PAYMENT_LAW = CLAMP`. Read by `building_services.service_delta`, `ways_in_reach`, `EatScorer` and the bed test in `SleepScorer`; the starvation record follows through `ways_in_reach`.
+- ATOMIC is exercised by tests only (the constant stays CLAMP). Under ATOMIC it gates `service_delta` only (None below the price). The transfer-carried shape (`gold_cost` plus the effects on the intent, `readiness_update` in the resolver) is left to D73's rebase, because it touches the apply path.
+- keeps_coin stays out of `admits` (designer ruling A); a non-xfail test pins the gap and names TCK-20261029-SHARED-ADMISSION-IGNORES-KEEPS-COIN-SO-A-NON-COIN-SUBJECT-IS-SENT-TO-A-SERVICE-THAT-REFUSES-IT.
+- V3: `StarvationDeathRecord.opening_steps_in_reach()` and `verdict()` (derived; the FAIL set equals the old untried rule, so the gate file is unchanged).
+- Divergence and parity ids are placeholders (`2.NEW-ONE-ADMISSION`, `STRAT-NEW-ONE-ADMISSION`) until the lead assigns free ids across both hosts.
+
 ## Test Summary
 ## Files Changed
 ## Completion Summary

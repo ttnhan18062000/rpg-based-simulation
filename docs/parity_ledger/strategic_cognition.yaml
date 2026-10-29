@@ -4616,13 +4616,13 @@
   test_path: tests/unit/ai/test_retreat_escalates_on_the_need_scale.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.139.
   support_boundary: 'Measured against step B tip 3533fde71 (build 358f4cb7f; landed src equivalent, divergence 2.139 Measured): no death-count drift in the 3 worlds; frontier_living_world extinction STOP (scout, wild_creature) accepted as known, owner decision #715 6458811768 (memo row 91). A chosen retreat is a stored target that takes no step (no strategic flight; held for after M1). The panic flight is decided in the tactical pass before goal scores (N15), so this changes the goal-level weighing only. Inherits the act test properties of 2.138.'
-- id: STRAT-289
+- id: STRAT-NEW-ONE-ADMISSION
   text: 'A way is open to a subject iff the inn would deliver the service now (SURV-06, SURV-07 row 27, AGENCY-03): one admission function (`admits`) is read by the building service and by ways_in_reach, EatScorer, the bed test and the starvation record; the payment law is one constant. The V3 record carries each opening step in reach and whether it was taken: an untried step is a FAIL, no open way and no step is poverty.'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/engine/service_admission.py (admits, SERVICE_PAYMENT_LAW), src/engine/building_services.py (service_delta), src/ai/goals/ways.py, src/ai/goals/scorers.py, src/observability/starvation_record.py (StarvationVerdict, opening_steps_in_reach); docs/guidelines/intentional_divergences.md section 2.142'
+  v2_evidence: 'src/engine/service_admission.py (admits, SERVICE_PAYMENT_LAW), src/engine/building_services.py (service_delta), src/ai/goals/ways.py, src/ai/goals/scorers.py, src/observability/starvation_record.py (StarvationVerdict, opening_steps_in_reach); docs/guidelines/intentional_divergences.md section 2.NEW-ONE-ADMISSION'
   proof_type: regression
   test_path: tests/unit/engine/test_service_admission.py
-  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.142.
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.NEW-ONE-ADMISSION.
   support_boundary: 'Main runs the CLAMP law, so no answer changes; the ATOMIC law is exercised by tests only until the free-meal removal. keeps_coin is not in admission (pinned gap).'
