@@ -1,8 +1,9 @@
 """Equipment events when several slots change in one tick (TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS).
 
 The extractor walks ``set(eq_slots) | set(prior_eq_slots)`` and ``set(eq_dur) | set(prior_eq_dur)``, sets of ``EquipSlot`` members, so the order of
-the item_equipped / item_unequipped / equipment_durability_changed events follows the string hash seed. The assertions here ignore the order, so they hold
-under any seed; the characterization corpus records these calls under ``PYTHONHASHSEED=0`` and pins the order they come out in.
+the item_equipped / item_unequipped / equipment_durability_changed events used to follow the string hash seed (TCK-20261029-EVENT-EMIT-ORDER-FOLLOWS-PYTHONHASHSEED).
+The loops now sort by ``EquipSlot.value``, so the order asserted below holds under any seed. Before the sort, the 4-slot cases gave four different orders at
+PYTHONHASHSEED 0-3, which makes these tests the positive control for the fix.
 """
 from dataclasses import replace
 
@@ -21,7 +22,12 @@ def _states(prior_slots, new_slots, prior_dur=None, new_dur=None):
 
 
 def _by_type(events, event_type):
-    return sorted((e.payload for e in events if e.event_type == event_type), key=lambda p: p["slot"])
+    """Payloads in EMIT order (not re-sorted): the order is what these tests pin."""
+    return [e.payload for e in events if e.event_type == event_type]
+
+
+def _slot_values(events, event_type):
+    return [e.payload["slot"] for e in events if e.event_type == event_type]
 
 
 def test_four_slots_equipped_in_one_tick_each_emit_item_equipped():
@@ -33,6 +39,8 @@ def test_four_slots_equipped_in_one_tick_each_emit_item_equipped():
         {"slot": "MAIN_HAND", "item_id": "sword", "previous_item_id": None},
         {"slot": "TORSO", "item_id": "mail", "previous_item_id": None},
     ]
+    slots = _slot_values(events, "item_equipped")
+    assert slots == sorted(slots) == [s.value for s in sorted(EquipSlot, key=lambda s: s.value) if s.value in slots]
 
 
 def test_equip_swap_and_unequip_across_three_slots_in_one_tick():
@@ -57,6 +65,6 @@ def test_durability_changes_in_four_slots_in_one_tick_each_emit_an_event():
     prior, new = _states({}, {}, prior_dur, new_dur)
     events = EventExtractor.extract(prior, new, None, mode=None)
     changed = [e for e in events if e.event_type == "equipment_durability_changed"]
-    assert sorted((e.payload["slot"], e.severity) for e in changed) == [
+    assert [(e.payload["slot"], e.severity) for e in changed] == [
         ("HEAD", "INFO"), ("LEGS", "CRITICAL"), ("MAIN_HAND", "INFO"), ("TORSO", "WARNING"),
     ]
