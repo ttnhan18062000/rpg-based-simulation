@@ -52,9 +52,15 @@ def test_event_recorder_integration(clean_run_dir):
     assert len(recorder.events) == 2
     
     # Verify live event publication routing
+    # Delivery is asynchronous (queue drain worker): wait up to 5 s for the first event instead of a fixed 50 ms
+    # sleep, which lost the race under xdist load (the same failure shows on unmodified main).
     import time
-    time.sleep(0.05)
-    live_events = sub.get_events()
+    live_events = []
+    deadline = time.monotonic() + 5.0
+    while not live_events and time.monotonic() < deadline:
+        live_events = sub.get_events()
+        if not live_events:
+            time.sleep(0.01)
     assert len(live_events) == 1
     assert live_events[0].event_type == "swing_sword"
     

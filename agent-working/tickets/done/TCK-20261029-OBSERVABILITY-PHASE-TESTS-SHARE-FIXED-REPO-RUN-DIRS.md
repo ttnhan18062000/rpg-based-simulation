@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261029-OBSERVABILITY-PHASE-TESTS-SHARE-FIXED-REPO-RUN-DIRS
-phase: open
+phase: done
 date: 2026-10-29
 tags: [observability]
 ---
@@ -15,7 +15,7 @@ tags: [observability]
 Four observability integration tests write to fixed, cwd-relative directories under tests/. One errored on teardown in CI. Move them to tmp_path.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -91,6 +91,16 @@ A fourth, `test_event_recorder_live_publish.py:12`, makes its path per-pid. That
   - So no static remover was found. The implementer re-checks this at its own head.
 
 ## Implementation Notes
+- The four `temp_run_dir` fixtures now take `tmp_path` and return `str(tmp_path)`; live_publish's autouse `clean_run_dir` does the same and keeps its `LiveEventPublisher.reset_instance()` calls. The tests write the artifact files themselves into the directory they are given, so no `src/` default is involved (condition 1). `tests/missing_run_dir` in phase 25 is a path that is only probed for absence and never written; left as is.
+- Remover grep at this head (condition 2 / AC5): `tests/`, `tools/`, `src/` for `run_data[*_]`, `glob...run_data` and `rmtree...tests` find nothing outside the five files except `tests/tools/test_disk_headroom.py` and `tools/sessions/disk_headroom.py`, which only report `run_data_bytes`. No remover found; the original `FileNotFoundError` cause remains unidentified (not needed: the fixed directories are gone).
+- Second cause found while checking AC2: `test_event_recorder_integration` slept a fixed 0.05 s before reading the live subscriber, but delivery goes through the recorder's queue worker, so it lost the race under load. Unmodified main also failed it in 1 of 6 `-n 4` runs. A failed assertion skipped `recorder.shutdown()`, which is the "QueueDrainWorker thread leak" error seen on the next test's teardown. Fix (folded in as test timing plumbing, assertions unchanged): wait up to 5 s for the first event instead of the fixed sleep.
+
 ## Test Summary
+- The five files: serial 8 passed; `-n auto` 8 passed; `-n 4` run 8 times in a row, 8 passed each (before the poll change, `-n 4` failed in about 1 of 3-6 runs, on main too). xdist comes from the repo venv (`/data/vboxuser/Work/rpg-based-simulation/.venv`); the system python3 has none.
+- `git grep -n '"tests/run_data' tests/` returns nothing; `git status --untracked-files=all tests` shows no new untracked paths after `-n auto` and `-n 4`.
+
 ## Files Changed
+- `tests/integration/observability/test_phase23_behavior_timeline_episode_artifacts.py`, `test_phase24_behavior_metric_artifacts.py`, `test_phase25_postrun_behavior_analysis.py`, `test_phase26_behavior_scorecard_artifacts.py`, `test_event_recorder_live_publish.py`
+
 ## Completion Summary
+The four phase tests and live_publish now write into pytest's `tmp_path`; nothing under `tests/` is written at run time. The live_publish fixed-sleep race, which made AC2 fail on main as well, is fixed by a bounded poll; assertions are unchanged. The original teardown `FileNotFoundError` was never reproduced and its remover was not found; the fix removes the shared fixed directories that made it possible.

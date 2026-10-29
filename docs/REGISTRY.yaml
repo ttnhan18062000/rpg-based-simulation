@@ -7906,6 +7906,23 @@
   - determinism
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261029-OBSERVABILITY-PHASE-TESTS-SHARE-FIXED-REPO-RUN-DIRS.md
+  ticket_id: TCK-20261029-OBSERVABILITY-PHASE-TESTS-SHARE-FIXED-REPO-RUN-DIRS
+  title: Four observability integration tests write to fixed, cwd-relative directories
+    under tests/. One errored on teardown in CI. Move them to tmp_path.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-29'
+  related_code_areas:
+  - tests/integration/observability/test_phase23_behavior_timeline_episode_artifacts.py
+  - tests/integration/observability/test_phase24_behavior_metric_artifacts.py
+  - tests/integration/observability/test_phase25_postrun_behavior_analysis.py
+  - tests/integration/observability/test_phase26_behavior_scorecard_artifacts.py
+  - tests/integration/observability/test_event_recorder_live_publish.py
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
   path: agent-working/tickets/todos/parity-ledger-paydown/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES.md
   ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES
   title: 'Parity-ledger paydown, child 1b: resolve the world_dynamics.yaml entries
