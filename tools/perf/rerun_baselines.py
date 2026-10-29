@@ -399,6 +399,16 @@ def promotion_note(name: str, summary: Summary, host: str) -> str:
     )
 
 
+def _in_virtualenv() -> bool:
+    return sys.prefix != sys.base_prefix
+
+
+def require_virtualenv() -> None:
+    """Refuse to measure under the system interpreter. The record's dependency fingerprint then names a stale stack (2026-10-29: two v0002 series ran under /usr/bin/python3 and fingerprinted ``e4a1cd0c`` instead of the synced venv's ``e71fd726``)."""
+    if not _in_virtualenv():
+        raise RerunError(f"this interpreter is not a virtualenv ({sys.executable}): a record taken here fingerprints the system packages, not the synced project environment. Run it with the project's .venv/bin/python")
+
+
 def _child_env() -> Dict[str, str]:
     return {**os.environ, "PYTHONHASHSEED": os.environ.get("PYTHONHASHSEED", "0")}
 
@@ -462,10 +472,11 @@ def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False
     off_normal = sorted({m.mode for m in cand.result.runtime_mode_sequence} - {"NORMAL"})
     host = f"{platform.node()} / {cpu} / {os.cpu_count()} vCPU"
     note = promotion_note(name, summary, host)
-    doc = {"name": name, "spread": summary.spread, "spread_all_runs": summary.spread_all_runs, "rule": summary.rule, "noisy": summary.noisy, "off_normal": off_normal, "median_run": summary.median_index + 1, "host": host,
+    doc = {"name": name, "spread": summary.spread, "spread_all_runs": summary.spread_all_runs, "rule": summary.rule, "noisy": summary.noisy, "off_normal": off_normal, "median_run": summary.median_index + 1, "host": host, "interpreter": sys.executable, "dependency_fingerprint": cand.identity.runtime.dependency_fingerprint,
            "runs": [dataclasses.asdict(r) for r in summary.runs], "note": note}
     (out_dir / "summary.json").write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(note)
+    print(f"interpreter: {sys.executable}; dependency_fingerprint: {cand.identity.runtime.dependency_fingerprint} ({cand.identity.runtime.dependency_count} dependencies)")
     if off_normal:
         print(f"NOT A BASELINE: the run left NORMAL ({', '.join(off_normal)}) under the canonical contract; promote would refuse (performance_contract.md 3.1)")
     if summary.noisy:
@@ -503,6 +514,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if args.command == "list":
             print("\n".join(known_names()))
             return 0
+        if args.command in ("measure", "record"):
+            require_virtualenv()
         if args.command == "measure":
             return cmd_measure(args.name, args.out, args.samples_dir, args.memory_pass)
         if args.command == "memory-pass":

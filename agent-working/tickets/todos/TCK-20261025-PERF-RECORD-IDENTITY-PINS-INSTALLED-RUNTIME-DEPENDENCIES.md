@@ -50,6 +50,7 @@ Owner decision (2026-10-25, option A, #715 issuecomment-6387497480):
 **Part 2: the re-record** (needs a heavy-run slot from lead-planner, and the owner's promotion approval in this PR):
 - Re-record `tests/perf/baselines/idle_100_local` and `movement_100_local` as `*.v0002.json` on the synced venv, through the baseline lifecycle T05 defines. Use the same protocol, profile and seed as v0001.
 - Retire v0001 as that lifecycle says. Do not delete or hand-edit records outside it.
+- Interpreter guard (added 2026-10-29, perf-planner): the first two v0002 series ran under `/usr/bin/python3` and fingerprinted `deps-v1:e4a1cd0c` (29, stale system stack) instead of the synced venv's `deps-v1:e71fd726` (30); both were discarded. `tools/perf/rerun_baselines.py` `record` and `measure` now refuse to run outside a virtualenv (`sys.prefix == sys.base_prefix`) with a clear error, and every `record` summary prints `sys.executable` and the candidate's `dependency_fingerprint` (also stored in `summary.json`). No override flag: the callers (`_profiling_common` imports `load_corpus_state` only; the unit tests call `main` in-process) need none. Records are taken with `.venv/bin/python`; after run 1 of each record the fingerprint must read `deps-v1:e71fd726...` (30) or the series stops.
 - Run constraints: foreground, one at a time, `systemd-run --user --scope -p MemoryMax=3G -p MemorySwapMax=0`, and check loadavg1 < 1.5 and >= 2.5 GB available before each run.
 - In the PR, state host, CPU, both fingerprints (v0001 = unknown, v0002 = value) and the run IDs.
 
@@ -70,6 +71,7 @@ Owner decision (2026-10-25, option A, #715 issuecomment-6387497480):
 - [ ] `compare()` on two records differing only in `dependency_fingerprint` returns `INCONCLUSIVE`, with `check == "blocking_fields"` (T06's `Outcome.check`) and a reason naming `identity.runtime.dependency_fingerprint`.
 - [ ] An old record without the field loads. Compared against a fingerprinted head, it is `INCONCLUSIVE`, not PASS.
 - [ ] Schema MINOR bump; `benchmark_identity_schema.md` documents the field and the closure method; pinned version asserts are updated.
+- [ ] `rerun_baselines.py record` and `measure` refuse a non-virtualenv interpreter with a clear error (unit test), and each record summary prints the interpreter and the candidate's `dependency_fingerprint`.
 - [ ] `idle_100_local.v0002.json` and `movement_100_local.v0002.json` exist with a non-`UNKNOWN` fingerprint, recorded under the run constraints above. The owner's promotion approval is recorded in the PR (and on #715) before merge.
 - [ ] The nightly lane (`tests/perf/test_perf_regression_baseline.py -m 'perf and slow' -k idle_100_local` and `-k movement_100_local`) runs against v0002 on the same host, and the PR reports the outcome.
 

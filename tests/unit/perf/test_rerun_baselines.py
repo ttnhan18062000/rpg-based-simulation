@@ -26,6 +26,12 @@ def _host_is_quiet(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(rr, "wait_for_quiet_window", lambda *a, **k: (True, "quiet"))
 
 
+@pytest.fixture(autouse=True)
+def _interpreter_is_a_virtualenv(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``record`` and ``measure`` refuse a system interpreter; these tests drive them in-process, whatever runs pytest."""
+    monkeypatch.setattr(rr, "_in_virtualenv", lambda: True)
+
+
 def run(avg: float, load: float = 1.0) -> rr.Run:
     return rr.Run("p.json", avg, load, 0.0, 100.0, 3.0)
 
@@ -348,3 +354,37 @@ def test_the_promote_command_names_the_cause_it_was_given_and_there_is_no_defaul
     assert rr.main(["record", "idle_100_concurrent", "--cause", "TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES", "--out-root", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "--cause TCK-20261014-PERF-T08-NOISY-AND-OFF-NORMAL-BASELINES " in out and "TCK-20261010-PERF-M2-T08-CANONICAL-RERUNS" not in out
+
+
+@pytest.mark.parametrize("argv", [["record", "idle_100_local", "--cause", CAUSE_UNDER_TEST], ["measure", "--name", "idle_100_local", "--out", "x.json"]])
+def test_record_and_measure_refuse_a_system_interpreter(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture, argv: List[str]) -> None:
+    monkeypatch.setattr(rr, "_in_virtualenv", lambda: False)
+    monkeypatch.setattr(rr.subprocess, "run", lambda *a, **k: pytest.fail("nothing may launch from a system interpreter"))
+    monkeypatch.setattr(rr, "measure_record", lambda *a, **k: pytest.fail("nothing may be measured from a system interpreter"))
+    if argv[0] == "record":
+        argv = argv + ["--out-root", str(tmp_path)]
+    assert rr.main(argv) == 1
+    err = capsys.readouterr().err
+    assert "not a virtualenv" in err and ".venv/bin/python" in err
+    assert not list(tmp_path.iterdir())
+
+
+def test_list_and_memory_pass_do_not_need_a_virtualenv(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture) -> None:
+    monkeypatch.setattr(rr, "_in_virtualenv", lambda: False)
+    assert rr.main(["list"]) == 0 and "idle_100_local" in capsys.readouterr().out
+
+
+def test_the_summary_names_the_interpreter_and_the_fingerprint(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
+    def fake_run(argv, env=None, check=False, **kw):
+        if "--out" not in argv:
+            return REAL_RUN(argv, env=env, check=check, **kw)
+        out = Path(argv[argv.index("--out") + 1])
+        out.write_text(json.dumps(make_record(avg=40.0).to_dict()), encoding="utf-8")
+        out.with_suffix(".meta.json").write_text(json.dumps({"loadavg_1min": 0.5, "swap_used_mb": 0.0, "wall_s": 1.0, "peak_rss_mb": 90.0}), encoding="utf-8")
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(rr.subprocess, "run", fake_run)
+    assert rr.main(["record", "resource_100_local", "--cause", CAUSE_UNDER_TEST, "--out-root", str(tmp_path)]) == 0
+    assert "dependency_fingerprint:" in capsys.readouterr().out
+    summary = json.loads((tmp_path / "resource_100_local" / "summary.json").read_text(encoding="utf-8"))
+    assert summary["interpreter"] and "dependency_fingerprint" in summary
