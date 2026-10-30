@@ -101,3 +101,18 @@ Relayed via lead-planner-u24 and lead-planner. Context: the first 5000t run (bas
 "Run B against main at PYTHONHASHSEED=0 on 3 worlds × s42-46 at 1000 ticks, plus s42 at 5000 ticks on each of the 3 worlds (18 pairs). For the 1000-tick set, for each world, compare deaths by cause, the set of entities alive at the final tick, and every behaviour counter in the run summary. PASS: every compared value is equal, or, summed over the 5 seeds of a world, differs from main by no more than max(1, 5% of main's value). For each 5000-tick s42 pair, the same values must be equal or differ by no more than max(1, 5% of main's value) on that single run. Any value outside tolerance is a STOP to rpg-planner. So is any seed whose hash moves without its first difference being traced to a concern-cap trim where tied concerns kept different ids, at either length. The base s42 5000t frontier_living_world run already finished is reused."
 
 Rationale as relayed: the cause shows early (t116), so 1000t over 15 runs catches attribution and per-seed drift. The three 5000t runs guard long-horizon drift per world, and one seed is enough because a real long-horizon effect of a deterministic tie-break would show on every seed. u24 can't share CPU (its lane B holds the u24 slot for N14, about 2-3 h). If ubuntu can't fit about 2.5 h within a day or two, return to rpg-planner and the owner. The slot comes after tonight's perf window, with lead's go tomorrow.
+
+## Ruling 6 (2026-10-31): corrected trim counts, and reusing 1000t traces at 5000t
+
+Relayed via lead-planner-u24 and lead-planner. The text below is word for word as relayed.
+
+ASK 1: YES. 2.144 Measured records the corrected counts, not "151 of 4349". The old figure was a diagnostic number from a tool with a positional-alignment bug, not a ruling term.
+- (a) 2.144 states the method in one line: a same-tick comparison of the kept SET at each trim, order ignored. Counts come from the implementer's corrected tool, cited by path. Give order-only differences separately where useful.
+- (b) Add one sentence noting that the earlier "151 of 4349" and "8095 of 43219" came from a positional comparison that mis-aligned once trim counts diverged, and are superseded.
+- (c) The ruling file stays as recorded, with an appended, dated note beside line 91 pointing at the corrected figures. No in-place edit.
+- Nothing else in ruling 4 changes: the first differences (t116, t304), the attribution rule and the outcome tolerances stand.
+ASK 2: YES, the reading stands, with one cheap check. Verify it once per world: the state hash at the first-difference tick (or at t1000) must be equal in the 1000t and 5000t runs of the same arm. If equal, reuse the 1000t trace for that world's s42 5000t. If the hashes differ (for example, if setup reads the tick limit), or if a 5000t seed's first difference falls AFTER t1000, trace it at 5000t per ruling 5. Record the prefix check in the evidence.
+The hold on the 2.144 text is lifted. If the prefix check forces a 5000t trace, that is a new slot ask to me.
+
+### Note on the figures in ruling 4 (2026-10-31)
+Ruling 4's "151 of 4349 trims differ" is superseded for 2.144 by the corrected counts above (ruling 6, ASK 1). Ruling 4's text is left as recorded. The corrected figures are in divergence 2.144, Measured.
