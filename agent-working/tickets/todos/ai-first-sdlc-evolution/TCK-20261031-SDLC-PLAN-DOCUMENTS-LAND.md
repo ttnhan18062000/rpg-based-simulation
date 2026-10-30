@@ -27,7 +27,7 @@ chore
 P1
 
 ## Request Summary
-First PR of the epic, docs only. The four files are uncommitted in agent-working-designer's worktree, `.claude/worktrees/agent-working-designer/docs/plans/agent_infrastructure/`, and those copies are final (designer, 2026-10-31). sha256 prefixes: AUDIT d5c28b79a9ed, PLAN 4724a3d39c3f, SUMMARY 23e0881c359c, HANDOVER 4f9f77c32193. Take all four from that worktree; do not fold u24's branch `agent-working-designer-u24-sdlc-plan-handover` (62f963067) over them: AUDIT and HANDOVER are no longer byte-identical to it. If a hash differs, ask the designer.
+First PR of the epic, docs only. The four files are uncommitted in agent-working-designer's worktree, `.claude/worktrees/agent-working-designer/docs/plans/agent_infrastructure/`, and those copies are final (designer, 2026-10-31). sha256 prefixes: AUDIT d5c28b79a9ed, PLAN c989755ffffe, SUMMARY 30459a2f4cdc, HANDOVER 4f9f77c32193. Take all four from that worktree; do not fold u24's branch `agent-working-designer-u24-sdlc-plan-handover` (62f963067) over them: AUDIT and HANDOVER are no longer byte-identical to it. If a hash differs, ask the designer.
 
 ## Scope
 1. Copy the four files from the designer's worktree onto a fresh branch from origin/main, and check their hashes: `AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md`, `AI_FIRST_SDLC_ARCHITECTURE_AUDIT.md`, `AI_FIRST_SDLC_DECISION_SUMMARY.md`, `HANDOVER_SDLC_EVOLUTION_TO_UBUNTU.md`.

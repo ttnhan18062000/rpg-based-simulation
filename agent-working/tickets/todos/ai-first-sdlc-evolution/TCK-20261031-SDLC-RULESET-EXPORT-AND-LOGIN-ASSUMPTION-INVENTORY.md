@@ -37,7 +37,6 @@ Plan section 54 items 3-4, required before any credential change. Both are read-
 ## Out of Scope
 - Host credential stores and E6a step 3: reported to the owner only, never in this ticket's artifacts.
 - Changing any tool or setting.
-- The u24 credential check (only the owner can resolve it).
 
 ## Acceptance Criteria
 1. The export parses, and can be compared against a fresh read.

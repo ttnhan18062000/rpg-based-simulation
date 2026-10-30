@@ -33,17 +33,15 @@ Phase 1 execution (plan sections 27a and 39). OD-2 and OD-10 are decided yes, an
 Unblock conditions, all required:
 - E6b reported, and M1 still holds.
 - Ruleset export and login inventory done.
-- The owner has resolved the u24 credential check.
 - A confirmed path for both hosts to change on the same day.
 - OD-13's `workflow` scope question answered: the token's scopes depend on it.
 - Owner's own yes for this execution.
 
-Then, led by the owner: create the machine user and one expiring token per host; move agent sessions onto it; remove owner credentials and revoke every pre-existing one (E6a step 4); fix what the inventory found; run E6a with the owner present.
+Then, led by the owner: create the machine user and one expiring token per host; move agent sessions onto it; remove owner credentials and revoke every pre-existing one (E6a step 4); fix what the inventory found; run E6a with the owner present; its inventory covers the two details still unread on u24, reported to the owner only.
 
 ## Out of Scope
 - Ruleset changes (the ruleset ticket).
 - Other projects on these hosts: the owner's call.
-- Any seat running the u24 check instead of the owner.
 
 ## Acceptance Criteria
 1. Phase 1 acceptance (plan section 39): an agent can push a branch and open a PR; it cannot merge, push to main or approve its own PR, with GitHub rejecting each attempt.

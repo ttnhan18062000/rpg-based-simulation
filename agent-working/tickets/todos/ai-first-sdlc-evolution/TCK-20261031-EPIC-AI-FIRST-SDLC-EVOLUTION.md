@@ -67,7 +67,7 @@ Not cut yet, with what each is waiting for:
 - Owner condition #715 6528807751: credential details from either host stay out of committed files, tickets and public comments unless a decision needs them; they go to the owner directly.
 - No credential or ruleset change is authorised by the epic; each gets its own owner ask, by ticket.
 - Undecided, and not to be written as decided: OD-4 to OD-9, OD-11 to OD-13, OD-16 to OD-21.
-- u24 credential check: refused there by the classifier, and only the owner can resolve it. The plan treats u24 as the same; verify before Phase 1. No seat runs it instead.
+- u24's credential check came back with the same finding as ubuntu. E6a's inventory covers the two details still unread on u24; its specifics are not for tickets or commits.
 
 ## Implementation Notes
 (to be filled by the implementer)
