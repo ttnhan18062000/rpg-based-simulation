@@ -7972,7 +7972,10 @@
   - src/observability/event_extractor.py
   - codebase/baselines/code_health_exceptions.jsonl
   - codebase/structure/package_registry.jsonl
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/test_plan.md
   tags:
   - observability
 - type: ticket

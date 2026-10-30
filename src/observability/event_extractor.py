@@ -10,7 +10,10 @@ from src.domains.commitment.abandonment import AbandonmentCategory, AbandonmentE
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.observability.config import ObservabilityMode
 from src.observability.divergence_episode import DivergenceEpisodes
-from src.observability.entity_kind_constants import BOSS_ENTITY_KINDS, SPAWN_CADENCE_EXCLUDED_KINDS
+from src.observability.entity_kind_constants import (
+    BOSS_ENTITY_KINDS,
+    SPAWN_CADENCE_EXCLUDED_KINDS,
+)
 from src.observability.events import SimulationEvent
 from src.observability.extraction.combat import (
     NEAR_DEATH_THRESHOLD as _NEAR_DEATH_THRESHOLD,
