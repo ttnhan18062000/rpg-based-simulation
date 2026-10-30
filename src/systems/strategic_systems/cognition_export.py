@@ -70,7 +70,7 @@ class CognitionGraphExporter:
             nodes.append(CognitionGraphNode(
                 id=p.id, kind="project",
                 label=f"{p.kind} ({p.status.value})",
-                attributes={"score": p.score, "status": p.status.value}
+                attributes={"score": p.score, "status": p.status.value, **p.canonical_extra()}
             ))
             # Link objectives
             for obj in p.objectives:

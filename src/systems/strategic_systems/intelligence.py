@@ -85,6 +85,7 @@ from src.systems.world_systems.routine import RoutineService
 from src.systems.world_systems.intake import ConcernIntakeSystem
 from src.engine.domain_logic import SimulationDomainLogic
 from src.ai.goals import GoalRegistry, escalated_need_wins
+from src.ai.goals.hunger_wake import hunger_hold_active, hunger_wake_ends_chosen_sleep, with_hunger_hold
 from src.ai.goals.base import GoalScore
 from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
@@ -1263,6 +1264,16 @@ class StrategicIntelligenceSystem:
         force: bool = False,
         cadence: SystemCadence | None = None
     ) -> StrategicUpdate:
+        """The strategic intent of this tick, with the hunger hold's bookkeeping (divergence 2.152: set at the wake of a chosen sleeper, ended by a typed reason)."""
+        return with_hunger_hold(entity, state, StrategicIntelligenceSystem._select_strategic_intent(state, entity, force, cadence))
+
+    @staticmethod
+    def _select_strategic_intent(
+        state: AuthoritativeState,
+        entity: EntityState,
+        force: bool = False,
+        cadence: SystemCadence | None = None
+    ) -> StrategicUpdate:
         """
         Produce a collection of strategic intent updates for the next tick.
         """
@@ -1587,7 +1598,10 @@ class StrategicIntelligenceSystem:
         modified_scores.sort(key=lambda x: (-x.utility, x.kind))
         
         best_candidate = None
+        sleep_yields = hunger_wake_ends_chosen_sleep(entity, state) or hunger_hold_active(entity)  # Bible 04: a woken sleeper eats if a way is open (divergence 2.152)
         for g_score in modified_scores:
+            if sleep_yields and g_score.kind == GoalKind.FATIGUE:
+                continue
             if g_score.utility < 20.0 or (g_score.target_id is None and g_score.target_pos is None):
                 continue
             best_candidate = g_score

@@ -24,6 +24,7 @@ from src.engine.domain.core_actions import EAT_AT_CORPSE_REACH as CARCASS_NEAR
 from src.engine.need_pull import ESCALATION_FULL, SLEEP_LINE, arrival_fraction
 from src.engine.service_reach import service_tile
 from src.engine.tactical_threat import present_threat_terms
+from src.ai.goals.hunger_wake import hunger_hold_active
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -61,7 +62,7 @@ def rest_in_place_update(
 ) -> Optional[EntityUpdate]:
     """A rest-where-you-stand update for a fatigue project that cannot reach a bed in time, or None to decide as usual."""
     has_project, target = _fatigue_target(state, entity)
-    if not has_project or entity.biological.sleep_debt < REST_MIN_SLEEP_DEBT:
+    if not has_project or entity.biological.sleep_debt < REST_MIN_SLEEP_DEBT or hunger_hold_active(entity):  # a held hunger project is never displaced by a rest (2.152)
         return None
     if hostiles and present_threat_terms(entity, list(hostiles)):
         return None  # in danger (a perceived hostile makes a present threat); a wound alone, with no hostile in view, is not

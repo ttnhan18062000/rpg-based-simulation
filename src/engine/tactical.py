@@ -24,6 +24,7 @@ from src.engine.tactical_rest import in_place_survival_update
 from src.engine.building_arrival import building_arrival_update
 from src.engine.behavior_consumers import get_entity_signals, get_perception_gate
 from src.engine.sleep_debt import collapse_update, must_collapse
+from src.ai.goals.hunger_wake import hunger_wake_ends_chosen_sleep
 from src.engine.tactical_hold import held_swing_update, leash_return_update, notice_unengaged_hostile, stalemate_break_update
 from src.engine.hostility import source_identity
 from src.engine.tactical_avoid import avoid_what_can_eat_me, classify_neighbours, eat_at_hunger_corpse
@@ -161,6 +162,9 @@ class TacticalDecisionSystem:
 
         if must_collapse(entity.biological.sleep_debt):  # decision 41: a subject past the collapse line falls asleep where it stands
             return collapse_update(entity)
+
+        if hunger_wake_ends_chosen_sleep(entity, state):  # Bible 04 / divergence 2.152: a chosen sleep woken by hunger with a way open ends here, even with a hunger project current
+            return EntityUpdate(entity_id=entity.id, task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={}))  # the idle task (tracked_move_completion_update's idiom): the brain decides next tick
 
         # 1. Goal Hysteresis (Pillar 3.2)
         current_project = entity.strategic.projects.get(entity.strategic.current_project_id or "")

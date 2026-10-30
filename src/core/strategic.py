@@ -27,6 +27,25 @@ class ProjectStatus(str, Enum):
     ABANDONED = "ABANDONED"
 
 
+class ProjectHold(str, Enum):
+    """Why a project is held against being displaced (TCK-20261030-SLEEP-WINS-OVER-STARVING-HUNGER-WHEN-NO-BED, divergence 2.152).
+
+    `HUNGER_WAKE`: the hunger wake ended a chosen sleep for a meal (a way to eat was open); the hunger project is held until `HoldEnd`."""
+    HUNGER_WAKE = "HUNGER_WAKE"
+
+
+class HoldEnd(str, Enum):
+    """Why a `ProjectHold` ended (the last end is kept on the project as `hold_ended_by`).
+
+    `EATEN`: the subject ate (the project completed, or hunger fell below the escalation onset). `WAY_CLOSED`: no way to eat is open any more (the
+    project was abandoned, left, or `ways_in_reach` is empty). `THREAT_ANSWERED`: a present threat to life holds, and its answer outranks the need.
+    `COLLAPSE`: sleep debt reached the collapse line."""
+    EATEN = "EATEN"
+    WAY_CLOSED = "WAY_CLOSED"
+    THREAT_ANSWERED = "THREAT_ANSWERED"
+    COLLAPSE = "COLLAPSE"
+
+
 class ObjectiveStatus(str, Enum):
     """Status of a project objective."""
     UNRESOLVED = "UNRESOLVED"
@@ -333,6 +352,17 @@ class ProjectState:
     active_objective_id: Optional[str] = None
     created_tick: int = 0
     failure_count: int = 0
+    held_for: Optional[ProjectHold] = None  # set by the hunger wake through a StrategicUpdate, cleared only by a `HoldEnd`; None for every other project
+    hold_ended_by: Optional[HoldEnd] = None  # the last `HoldEnd` of a hold on this project; None until a hold has ended
+
+    def canonical_extra(self) -> Dict[str, Any]:
+        """The canonical-dict entries of this project that are omitted while empty: `held_for` and `hold_ended_by` (a project never held keeps the unrelated state hash where it was)."""
+        extra: Dict[str, Any] = {}
+        if self.held_for is not None:
+            extra["held_for"] = self.held_for.value
+        if self.hold_ended_by is not None:
+            extra["hold_ended_by"] = self.hold_ended_by.value
+        return extra
 
 
 # TCK-20261007-STRATEGIC-CAPACITY-GATE-COUNTS-TERMINAL-PROJECTS-SO-NO-NEW-PROJECT-KIND-CAN-START: ONE rule for which projects
