@@ -116,3 +116,13 @@ The hold on the 2.144 text is lifted. If the prefix check forces a 5000t trace, 
 
 ### Note on the figures in ruling 4 (2026-10-31)
 Ruling 4's "151 of 4349 trims differ" is superseded for 2.144 by the corrected counts above (ruling 6, ASK 1). Ruling 4's text is left as recorded. The corrected figures are in divergence 2.144, Measured.
+
+## Ruling 7 (2026-10-31): size of the post-merge check
+
+Relayed via lead-planner-u24 and lead-planner. The text below is word for word as relayed.
+
+"The proposed size is right, with ONE addition.
+- KEEP: merged B vs origin/main c5139b410, s42 1000t on 3 worlds, with the same tolerance and tie rule, and trace pairs for moved hashes. No 5000t or extra seeds. Reasons: #789 measured hash-identical to its base, #788 changes inn admission, and B's effect is a tie-break order that shows up early.
+- ADD the cross-seed claim, which is B's actual point: merged B on crowded_frontier s42 1000t at PYTHONHASHSEED 0, 1, 2 and 3 (4 runs). The final hash must be IDENTICAL across all four. #788, #789 and #791-793 added code since de5a223ca, and a new set-order dependence there would break B's guarantee without showing in the seed-0 pairs.
+- If the cross-seed hashes differ, STOP to rpg-planner (via me) with the first differing tick and entity. Code new since de5a223ca belongs to its own ticket, not to B's scope, but B can't claim seed invariance on main until it's found.
+- Total about 10 runs, under an hour. 2.144 Measured adds one line for the post-merge result."
