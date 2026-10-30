@@ -107,6 +107,26 @@ Slot ask: one heavy slot of about 30 min, sequential, after the perf overnight w
 This PR carries the known-red entry in `tools/test_architecture/slow_known_reds.yaml` (taken from rpg-planner-ubuntu's seat branch 1d3448c4d; the only diff against origin/main is that one entry). The PR body must name lead-planner-u24 as the testing-domain reviewer for that file (authorised by the u24 owner, #715 6519647030).
 Compensating control (AC6): at close, one more run on the then-current main.
 
+
+### Results (run 2026-10-30, slot go from lead-planner via rpg-planner-ubuntu; 7 runs of the 9 allowed)
+Every run: world urban_political, seed 42, 200 ticks, PYTHONHASHSEED=0, audit_mode, 1 trial, `RPG_MEASURE_CACHE=/data/vboxuser/Work/simq_bisect/cache`, wrapped `systemd-run --user --scope -q -p MemoryMax=3G -p MemorySwapMax=0 taskset -c 4-5`, sequential, clean `git archive` at the commit with the test file and `grade_anchors.json` held at de5a223ca's copy, MemAvailable 3.9 to 4.5 GB before each run. The runner executes the test body (`_run_engine`, quality hub replay, the test's own `_anchor`, `_snap_failure`, `_within_score_tolerance`) as a script, so the verdict is the test's, and prints the score on a pass too.
+
+| # | commit | PR | WORLD score (events) | SOCIAL | WORLD vs anchor 0.32 | wall (total) |
+|---|---|---|---|---|---|---|
+| 1 | cb4f95015 | #747 anchor | 0.32 (23) | 37.48 | pass (control 1) | 22 s |
+| 2 | de5a223ca | main | 0.25 (17) | 38.255 | FAIL (control 2) | 27 s |
+| 3 | 957caf8f6 | #758 | 0.32 (23) | 37.48 | pass | 40 s |
+| 4 | dc059c49e | #771 | 0.25 (17) | 38.255 | fail | 23 s |
+| 5 | 7b4bf7a30 | #768 | 0.32 (23) | 37.48 | pass | 23 s |
+| 6 | d914bace7 | #769 | 0.25 (17) | 38.255 | fail | 20 s |
+| 7 | a25619971 (parent of d914bace7) | | 0.32 (23) | 37.48 | pass | 19 s |
+
+**First moving commit: d914bace7 (#769, TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE, step A: retreat escalates with the wound on the need scale, only against a hostile that acts).** Its parent a25619971 gives WORLD 0.32 (23 events); d914bace7 gives 0.25 (17). The `src/` diff between 7b4bf7a30 and a25619971 is empty, so the earlier good point and the true parent agree. The src change in #769 is `src/ai/goals/scorers.py` (4 lines, `CombatRetreatScorer`) and `src/need_pull.py` (7 lines, `src/engine/need_pull.py`). The scores at d914bace7 and dc059c49e, and at 7b4bf7a30 and a25619971, are identical, so nothing after #769 and before de5a223ca moves this world.
+
+**Mechanism (urban_political seed 42, 200t, parent vs d914bace7):** the WORLD pillar counts `hazard_drain_applied` 17 to 12, `region_trauma_delta` 3 to 2, `ecology_cycle_completed` 3 to 3 (23 to 17). The run trajectories first differ at tick 84 (SOCIAL: entity 18 `contract_expired_offer`, `group_expelled` for entities 18 and 30). Entity 3 takes no hazard drain after tick 111 (5 fewer, parent last at 189). Entity 18 is killed at tick 172 in the parent and survives in d914bace7, so `entity_killed` 2 to 1, `combat_resolved` 3 to 2, and the tick-172 `bandit_road` trauma delta is gone. Other pillars move too: SOCIAL 2032 to 2080 events, COMBAT 14 to 12, ECONOMY 15 to 13, NARRATIVE 35 to 30, PROGRESSION 7 to 6, COGNITION 5623 to 5662. That reads as the intended behaviour change (a wounded entity now retreats earlier from an acting hostile, so fewer entities stay in hazard regions and fewer die), not noise: both arms ran under audit_mode and are repeatable (controls 1 and 7 give identical numbers at two different commits). The WORLD inputs behind 0.32 to 0.25 are the 6 lost events: 5 hazard drains and 1 trauma delta. The ruling re-anchor or fix is rpg-planner's.
+
+AC6 re-measure at close on the then-current main is still to do. Run data: the per-commit archives under `/data/vboxuser/Work/simq_bisect/<sha>/` (each holding its one run dir) are removed after this record; the `.out` files are kept.
+
 ## Test Summary
 ## Files Changed
 ## Completion Summary
