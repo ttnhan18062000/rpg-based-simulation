@@ -5,7 +5,7 @@ Epic `TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION`, filed by agent-working-planner
 ## Order
 
 1. TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND: first PR, docs only. Everything below cites these files.
-2. TCK-20261031-SDLC-E6B-THROWAWAY-REPO-GITHUB-BEHAVIOURS: needs the owner's ask for the repo. First among the authority work, because OD-3's M1 depends on it.
+2. TCK-20261031-SDLC-E6B-THROWAWAY-REPO-GITHUB-BEHAVIOURS: the owner creates the machine account and repo first, as its own ask. First among the authority work, because OD-3's M1 depends on it.
 3. Parallel after 1:
    - TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN (Phase 0)
    - TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY (read-only)
