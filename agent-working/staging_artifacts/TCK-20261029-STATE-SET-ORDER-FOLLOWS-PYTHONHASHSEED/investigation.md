@@ -71,3 +71,8 @@ None of the lists in 4a-4c, 5c, 5d has a positional reader. `known_skill_ids` ha
 2. 5e (worldgeneration): fix here, or file separately? It changes generated worlds.
 3. Ruling 1 wording ("live in every ordinary run") vs the finding that the tie is unreachable with shipped content: keep the Bible/parity wording as "deterministic tie-break" (no behaviour claim) and the divergence class Bug Fix?
 4. Hygiene sorts (4a-4c, 5c, 5d): do them all (about 12 lines) or only 4a/4b as ruled?
+
+## Probes run after the quiet window (light, no sim; 2026-10-30)
+- **Tie order depends on the seed (positive control for AC3).** `list(frozenset(["HEAVY_STRIKE", "fireball"]))[0]` over `PYTHONHASHSEED` 0-40: `fireball` first at 27 seeds (first at seed 1), `HEAVY_STRIKE` first at 14 seeds (first at seed 4). A two-element frozenset is not identical to the real `learned_skills` frozenset (which holds the entity's other skills as well), so the AC3 test must build the real entity and compare picks across seeds, e.g. 1 and 4, not rely on this standalone order.
+- **5b is real (the order, not yet the decision).** Four `ConcernState` objects with equal urgency, `list(set(...))` at seeds 0-3: `[c0,c1,c3,c2]`, `[c1,c2,c3,c0]`, `[c2,c0,c1,c3]`, `[c2,c3,c0,c1]`. The list order, and so the `strategic.concerns` dict insertion order, follows the seed. Whether the cap-hit path in `detour.py:176` then drops different concerns is still to be shown by a test that sets up a tie at the cap (not run).
+- Still unverified, to check when code is allowed: all hash predictions in the table, and the `generator.py:220` effect (needs a generator run).
