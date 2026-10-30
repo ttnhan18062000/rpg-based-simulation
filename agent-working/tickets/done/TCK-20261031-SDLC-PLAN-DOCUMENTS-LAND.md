@@ -27,7 +27,7 @@ chore
 P1
 
 ## Request Summary
-First PR of the epic, docs only. The four files are uncommitted in agent-working-designer's worktree, `.claude/worktrees/agent-working-designer/docs/plans/agent_infrastructure/`, and those copies are final (designer, 2026-10-31). sha256 prefixes: AUDIT d5c28b79a9ed, PLAN c989755ffffe, SUMMARY 30459a2f4cdc, HANDOVER 4f9f77c32193. Take all four from that worktree; do not fold u24's branch `agent-working-designer-u24-sdlc-plan-handover` (62f963067) over them: AUDIT and HANDOVER are no longer byte-identical to it. If a hash differs, ask the designer.
+First PR of the epic, docs only. The four files are uncommitted in agent-working-designer's worktree, `.claude/worktrees/agent-working-designer/docs/plans/agent_infrastructure/`, and those copies are final (designer, 2026-10-31). sha256 prefixes: AUDIT dd4b1ccf0735, PLAN c989755ffffe, SUMMARY c97745b93cfd, HANDOVER 4f9f77c32193. Take all four from that worktree; do not fold u24's branch `agent-working-designer-u24-sdlc-plan-handover` (62f963067) over them: AUDIT and HANDOVER are no longer byte-identical to it. If a hash differs, ask the designer.
 
 ## Scope
 1. Copy the four files from the designer's worktree onto a fresh branch from origin/main, and check their hashes: `AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md`, `AI_FIRST_SDLC_ARCHITECTURE_AUDIT.md`, `AI_FIRST_SDLC_DECISION_SUMMARY.md`, `HANDOVER_SDLC_EVOLUTION_TO_UBUNTU.md`.
@@ -70,13 +70,13 @@ First PR of the epic, docs only. The four files are uncommitted in agent-working
 - Owner ruling, given in the designer's terminal, lead-planner logging it on #715: AUDIT generalised on main; u24's branch deleted after the PR, on the owner's command.
 
 ## Implementation Notes
-Copied the four documents from the designer's worktree to `docs/plans/agent_infrastructure/` with no edit. sha256 prefixes match the ticket: AUDIT d5c28b79a9ed, PLAN c989755ffffe, SUMMARY 30459a2f4cdc, HANDOVER 4f9f77c32193. Read plan section 27a before committing: it keeps host-level credential details out, as owner condition #715 6528807751 asks. u24's branch 62f963067 was not folded or pushed to; `tmp/` and AI_WORKING_ISSUE1.md were not committed.
+Copied the four documents from the designer's worktree to `docs/plans/agent_infrastructure/` with no edit by the implementer; they match the designer's final copies, revised once after lead-planner found a credential detail in the audit (AUDIT and SUMMARY recopied). sha256 prefixes match the ticket: AUDIT dd4b1ccf0735, PLAN c989755ffffe, SUMMARY c97745b93cfd, HANDOVER 4f9f77c32193. Read plan section 27a before committing: it keeps host-level credential details out, as owner condition #715 6528807751 asks. u24's branch 62f963067 was not folded or pushed to; `tmp/` and AI_WORKING_ISSUE1.md were not committed.
 
 ## Test Summary
-Token-shape scan of the four files (GitHub ghp_/gho_/ghu_/ghs_/ghr_ and github_pat_ shapes, AWS, sk-, Slack, PEM private key, JWT): no matches; positive control (a synthetic ghp_ line) matched 1. `validate_frontmatter.py --content-type doc` passes on all four. OD-4 to OD-9, OD-11 to OD-13 and OD-16 to OD-21 read as open in the summary's `Still open` table. `generate_registry --check`: in sync (3821 entries). `tests/tools/test_agent_working_paths_guard*.py`: 11 passed. `tests/docs/test_doc_integrity.py`, `test_doc_path_existence.py`, `test_contributor_guardrails.py`: 13 passed, 1 skipped, 1 xfailed. `make knowledge-index-update` run. No full tests/tools run (docs only).
+Token-shape scan of the four final files (rerun after the revision) (GitHub ghp_/gho_/ghu_/ghs_/ghr_ and github_pat_ shapes, AWS, sk-, Slack, PEM private key, JWT): no matches; positive control (a synthetic ghp_ line) matched 1. `validate_frontmatter.py --content-type doc` passes on all four. OD-4 to OD-9, OD-11 to OD-13 and OD-16 to OD-21 read as open in the summary's `Still open` table. `generate_registry --check`: in sync (3821 entries). `tests/tools/test_agent_working_paths_guard*.py`: 11 passed. `tests/docs/test_doc_integrity.py`, `test_doc_path_existence.py`, `test_contributor_guardrails.py`: 13 passed, 1 skipped, 1 xfailed. `make knowledge-index-update` run. No full tests/tools run (docs only).
 
 ## Files Changed
 docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_AUDIT.md; AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md; AI_FIRST_SDLC_DECISION_SUMMARY.md; HANDOVER_SDLC_EVOLUTION_TO_UBUNTU.md (all new); this ticket moved to done/; docs/REGISTRY.yaml; monitoring shards.
 
 ## Completion Summary
-The AI-first SDLC plan, audit, decision summary and handover are committed under docs/plans/agent_infrastructure/ unedited, with matching hashes. Docs only; no src/, tools/ or tests/ change.
+The AI-first SDLC plan, audit, decision summary and handover are committed under docs/plans/agent_infrastructure/ as the designer's final copies, with matching hashes. Docs only; no src/, tools/ or tests/ change.

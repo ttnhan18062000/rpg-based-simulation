@@ -33,7 +33,7 @@ Paths are relative to the repository root unless they start with `~` or `<M>` (=
 > - **(9) Mode labels.** `execution_mode` labels the native implement-ticket attempts as `pipeline`.
 > - **(10) Read/Edit rows moved into Bash.** The drop in Read and Edit rows is partly explained by edits moving into Bash heredocs.
 > - **(11) Monitoring coverage is a legacy gap.** No done ticket dated on or after 10-10 lacks a run row. The problem on current closes is the authenticity of the events, not their completeness.
-> - **(Note, 2026-10-31.)** By owner decision, §26's credential details were generalised before this file landed on main (#715 6528807751). Otherwise the body is unchanged from the 2026-10-26 text.
+> - **(Note, 2026-10-31.)** By owner decision, the credential and local-permission details in §26, §45, the permissions inventory and the authority table were generalised before this file landed on main (#715 6528807751). Otherwise the body is unchanged from the 2026-10-26 text.
 > - **(12) Observed harm is low.** CI was green at merge on 51 of 51 ticket-closing PRs, there were 0 reverts in 60 days, and only 1–2 of 84 closes were provably premature.
 
 ---
@@ -566,7 +566,7 @@ erDiagram
 - **8 ask rules:** `gh pr merge *`, two `git push --delete` forms, two `gh api` DELETE forms, `git worktree remove *`, `rm *agent-working/agent-monitoring/*`, and `Workflow`.
 - **1 deny rule:** `gh pr merge*--admin*`.
 
-The main checkout's untracked `settings.local.json` adds 118 allow rules for the seats launched there, including `Bash(gh api *)` and `Bash(gh pr *)`. User-level settings have no permissions, only an `autoMode.environment` prose policy for the auto-mode classifier. Its claim that the ruleset protects 18 branches is wrong: the live ruleset covers the default branch only.
+The main checkout's untracked `settings.local.json` adds further allow rules for the seats launched there, widening what they can do on GitHub (specifics withheld, see the note under the errata). User-level settings carry an `autoMode.environment` prose policy for the auto-mode classifier. Its claim that the ruleset protects 18 branches is wrong: the live ruleset covers the default branch only.
 
 **Trust boundary between AI decisions and executable operations.**
 - The boundary is the harness permission layer plus `guard.py`. Both match command *text*.
@@ -679,7 +679,7 @@ The full matrix is in Matrix M-5. Key conclusions:
 | Push a feature branch (incl. `--force`) | Any | **Allowed, no prompt** (`Bash(git *)`). CLAUDE.md says pushes need the user | — |
 | Open a PR | Any | Allowed (`Bash(gh pr create *)`) | — |
 | Push to main | Owner | `guard.py` `ask` only; **no harness `ask` rule** although plan §10 says one exists | `python3 -c`/`node -e`/`make`/scripts; admin bypass on GitHub |
-| Merge | Owner | `ask` on `gh pr merge *`; deny `--admin`; guard `ask` | `gh api -X PUT …/merge` unclassified. Main-checkout seats have `Bash(gh api *)` allowed |
+| Merge | Owner | `ask` on `gh pr merge *`; deny `--admin`; guard `ask` | `gh api -X PUT …/merge` unclassified, and local allow rules can admit it |
 | Delete a remote branch | Owner | `ask` on literal forms | `gh pr close --delete-branch`; `prune_branches --execute --remote` (subprocess) |
 | Delete a worktree or data | Owner | `ask` only on `git worktree remove` and `rm *agent-monitoring/*` | `rm -rf .claude/worktrees/x`, `git branch -D`, `git reset --hard` are allowed; `classify.py` never emits `delete_worktree_or_data` |
 | Edit CLAUDE.md, settings.json, hooks, guard, role cards, registries | Owner, by "literal diff" policy | Detected by the guard (`governing_file_edit`) but **allowed**; PR review only | Takes effect locally at once, because hooks run the worktree's own copy |
@@ -1472,7 +1472,7 @@ flowchart LR
     - bypass: RepositoryRole 5 (admin), `always`;
     - `current_user_can_bypass: always`.
   - No CODEOWNERS, no review rule.
-- **Token scopes:** `gist, read:org, repo, workflow` (value not read).
+- **Token scopes:** withheld (values not read; see the note under the errata).
 
 ## 46. Agent Inventory
 

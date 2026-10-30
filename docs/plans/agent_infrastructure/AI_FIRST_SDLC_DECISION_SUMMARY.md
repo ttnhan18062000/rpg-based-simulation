@@ -25,7 +25,7 @@ Separately, a small evaluation track starts with a Sonnet/Opus pilot (plan Part 
 | Plan's claim | Now | Effect |
 |---|---|---|
 | 100% of closes by hand (W42-W43) | 319 of 319 in W42-W44. At least 113 came from ubuntu seats and 94 from u24 seats; 112 can't be placed | Holds on both hosts. Supports OD-1 and OD-5 |
-| Ubuntu behaves like u24 (unverified) | Same GitHub admin login and same local allow rules for `gh api` and `gh pr`. Ubuntu also has user-level deny rules on pushing to main, which the audit did not find on u24 | Mostly holds. OD-2 must cover both hosts' setups |
+| Ubuntu behaves like u24 (unverified) | Same GitHub admin login. Local permission setups differ in some respects; details withheld by your condition (#715 6528807751) | Mostly holds. OD-2 must cover both hosts' setups |
 | Every merge bypasses the ruleset, so the required checks bind no one | Ruleset unchanged. The latest 40 merges all came from your login with no review decision | Holds |
 | Four guard bypass forms | All four still classify as no action when run through `tools/sessions/classify.py` on its own; the full guard and live auto-mode were not run | Holds |
 | Messages per close: 3.8, 7.7, 11.8 | 3.7, 8.5, 17.8 (W41-W43); 18.1 so far in W44 | **Worse than stated.** W43's message rows are now 2,006; the plan's rate implies about 1,400, so it probably predates late shards (inferred) |
