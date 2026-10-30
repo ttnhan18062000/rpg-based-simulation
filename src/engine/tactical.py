@@ -717,8 +717,9 @@ class TacticalDecisionSystem:
                             available_skills.append(skill)
                 
                 if available_skills:
-                    # Choice Bias: Pick highest power
-                    available_skills.sort(key=lambda s: s.power, reverse=True)
+                    # Choice Bias: Pick highest power; deterministic tie-break: power, then skill id
+                    # (learned_skills is a set, so equal-power order would follow PYTHONHASHSEED).
+                    available_skills.sort(key=lambda s: (-s.power, s.id))
                     chosen_skill_id = available_skills[0].id
 
             # Logic ID: COMB-267 (Exhaustion affects tactical choice)
