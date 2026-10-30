@@ -7941,6 +7941,25 @@
   tags:
   - observability
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED.md
+  ticket_id: TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED
+  title: Set ordering that reaches durable state or decisions follows the process
+    hash seed. Audit every consumer, then sort.
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-29'
+  related_code_areas:
+  - src/core/updates.py
+  - src/domains/combat_engagement/learning.py
+  - src/engine/tactical.py
+  - src/progression/leveling.py
+  - src/engine/patches.py
+  - src/engine/apply.py
+  - src/core/state.py
+  artifact_files: []
+  tags:
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN.md
   ticket_id: TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN
   title: The kernel resolves the run id but never passes it to EventRecorder, so every
