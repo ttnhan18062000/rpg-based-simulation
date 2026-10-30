@@ -67,3 +67,15 @@ Relayed word for word, by the same path.
 
 state.py stays read-only until #785 (:1610) merges, which should be soon. After that, coordinate with rpg-planner if (B) needs it.
 ---
+
+## Ruling 3 (2026-10-30): audit OK, answers to Q1-Q5
+
+Relayed via lead-planner-u24 and lead-planner. Audited head: rpg-ubuntu-state-set-order-impl 16f7eb1f1. The text below is word for word as relayed.
+
+AUDIT OK, and code may start on these answers:
+Q1: YES, 5b is in scope. Make the order deterministic before the cap: build the merged list in a stable order (no list(set(...))) and sort by (urgency desc, concern id), so ties at the cap drop by id. Before the fix, show the decision effect with a positive control: a crowded case where the cap binds and the kept concerns differ across PYTHONHASHSEED. If no such case can be built, say so; then it's hygiene with a test.
+Q2: 5e goes in a SEPARATE ticket, P2, in the ubuntu queue. Its first step lists any pinned generator outputs (snapshots, golden worlds, content assertions); if any are pinned, it re-pins them with the owner's knowledge. Not in B.
+Q3: YES on the wording "deterministic tie-break: power, then skill id", with no claim about current content. Divergence class STABILIZED (determinism), not Bug Fix, from the ubuntu id block (2.144-2.149, 2.160+).
+Q4: ALL the hygiene sorts (about 12 lines), each with a one-line comment saying why (determinism, hash-neutral).
+Q5: YES. B's acceptance is cross-seed: in a crowded world where the concern cap binds, the final hash is IDENTICAL across PYTHONHASHSEED 0,1,2,3 after the fix (show it differing before, if it does). The seed-0 final hash also equals main's on the usual 3 worlds x s42-46. If the seed-0 hash moves, STOP to rpg-planner.
+No need to wait for #789.
