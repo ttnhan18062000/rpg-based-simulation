@@ -7941,6 +7941,44 @@
   tags:
   - observability
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS.md
+  ticket_id: TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS
+  title: Characterization tests that pin the event stream of EventExtractor.extract
+    before src/observability/event_extractor.py is split
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-28'
+  related_code_areas:
+  - src/observability/event_extractor.py
+  - src/observability/event_recorder.py
+  - src/observability/event_shapers.py
+  - src/domains/optimization/feature_flags.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS/test_plan.md
+  tags:
+  - observability
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN.md
+  ticket_id: TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN
+  title: Split EventExtractor.extract into one function per event domain in src/observability/extraction/,
+    with the emitted event stream byte-identical
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-28'
+  related_code_areas:
+  - src/observability/event_extractor.py
+  - codebase/baselines/code_health_exceptions.jsonl
+  - codebase/structure/package_registry.jsonl
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/test_plan.md
+  tags:
+  - observability
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN.md
   ticket_id: TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN
   title: The kernel resolves the run id but never passes it to EventRecorder, so every
