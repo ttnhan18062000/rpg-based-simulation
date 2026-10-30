@@ -6,7 +6,7 @@ from src.core.items import food_hunger_recovery
 from src.engine.appraisal import can_eat_item
 from src.engine.service_admission import admits
 from src.ai.goals.ways import inn_in_reach
-from src.engine.need_pull import hunger_pull, retreat_pull, sleep_pull
+from src.engine.need_pull import hunger_pull, retreat_pull, sleep_pull, step_travel_tiles
 from src.engine.sleep_debt import SLEEP_DEBT
 from src.engine.starvation import STARVING_LINE
 from src.engine.way_in_range import way_in_range
@@ -112,7 +112,9 @@ def _hunger_without_open_way(entity: EntityState, state: AuthoritativeState, uti
     step = first_open_step(entity, state)
     if step is None or step.target_pos is None:
         return GoalScore(kind=GoalKind.HUNGER, utility=utility, need_access=access, no_open_step=True)
-    pull = hunger_pull(utility, entity.biological.hunger, need_rates(entity)[0], _travel_tiles(entity, step.target_pos))
+    # Standing Needs Escalate over the whole step: the walk to it, what is spent at it (a shift) and the walk on to the meal it is for (one sum, need_pull).
+    travel = step_travel_tiles(entity.navigation.position, step.target_pos, step.ticks_at_target, step.onward_pos)
+    pull = hunger_pull(utility, entity.biological.hunger, need_rates(entity)[0], travel)
     return GoalScore(
         kind=GoalKind.HUNGER, utility=_hunger_escalated_unless_threatened(entity, state, utility, pull), target_id=step.target_id,
         target_pos=step.target_pos, target_entity_id=step.target_entity_id, need_access=access, opening_step=step.kind)

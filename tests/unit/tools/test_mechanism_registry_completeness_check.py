@@ -286,10 +286,13 @@ def test_wider_scope_numbers_pinned():
     # 343 -> 344 on 2026-10-28 (TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN): +src/simulation_quality/wiring.py (build_quality_wiring, the SimQ feed and hub
     # construction moved out of Kernel.__init__; one function, no mechanism-shaped class; unbound, see below).
     # 344 -> 345 on 2026-10-29 (TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY): +src/engine/service_admission.py (bound under town_services).
+    # 345 -> 347 on 2026-10-29 (TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO): +src/engine/work_wake.py (bound under `town_services`) and
+    # +src/engine/need_wake.py (the NEED_WAKE_CADENCE constant lifted out of scheduler.py; a helper with no mechanism of its own).
     # 344 -> 345 on 2026-10-29 (TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED): +src/ai/goals/live_record_route.py (pure functions and one small
     # frozen dataclass that route a winning goal to its live record, moved out of `evaluate_strategic_intent`; bound under `goal_hierarchy`, see below).
     # 345 -> 346 on 2026-10-30 (merge of #785 into #788, from the check's own output): both sides added one file above (service_admission.py, live_record_route.py); unbound_files stays 247 (both bound).
-    assert wider["scope_files"] == 346
+    # 346 -> 348 on 2026-10-30 (merge of main ba7aa11bd into the EARN branch, from the check's own output): main is 346 after #785 and #788; EARN adds work_wake.py and need_wake.py (the 345 -> 347 line above is relative to the pre-#785 base). unbound_files stays 247.
+    assert wider["scope_files"] == 348
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -346,6 +349,8 @@ def test_wider_scope_numbers_pinned():
     # construction lifted out of Kernel.__init__ unchanged, no mechanism of its own); candidates and wired are unchanged.
     # 247 -> 247 on 2026-10-29 (TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY): +src/engine/service_admission.py is in scope and
     # bound at once under `town_services` (admits), so the unbound count does not move.
+    # 247 -> 247 on 2026-10-29 (TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO): work_wake.py is bound under `town_services` and need_wake.py is a
+    # helper (a cadence constant); the check's own output stays 247.
     assert wider["unbound_files"] == 247
     # 73 -> 72 on 2026-10-07 (row 7 (b) pass): src/quests/generator.py::QuestGenerator is now bound under `guilds`.
     # 72 -> 71 on 2026-10-11 (#500, D57): src/engine/rpg_depth.py::LeashService is cited under `tactical_decision` (it became wired when

@@ -7923,6 +7923,22 @@
   - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/test_plan.md
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO.md
+  ticket_id: TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO
+  title: A subject that starts broke never takes paid work when hungry, so it earns
+    no wage in 5000 ticks, and removing the free meal (D73) starves it
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-29'
+  related_code_areas:
+  - src/ai/goals/ways.py (work_in_reach, first_open_step), src/ai/goals/scorers.py
+    (EatScorer opening_step, work scorer)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO/investigation.md
+  - agent-working/stored_artifacts/TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO/plan.md
+  - agent-working/stored_artifacts/TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO/test_plan.md
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY.md
   ticket_id: TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY
   title: 'One admission rule for ways, scorers and services: a way is open to a subject
