@@ -309,23 +309,23 @@ def _clock():
 
 
 def test_a_quiet_host_is_accepted_at_once() -> None:
-    ok, seen = REAL_WAIT(read=lambda: {"loadavg_1min": 0.4, "available_mb": 4000.0}, sleep=lambda s: pytest.fail("must not wait"))
+    ok, seen = REAL_WAIT(read=lambda: {"loadavg_1min": 0.4, "available_mb": 4000.0, "swap_io_delta": 0}, sleep=lambda s: pytest.fail("must not wait"))
     assert ok and "loadavg1 0.4" in seen
 
 
 def test_the_load_bound_is_strict_below_1_5_and_memory_at_or_above_3000() -> None:
-    quiet = lambda load, mem: REAL_WAIT(wait_s=0, read=lambda: {"loadavg_1min": load, "available_mb": mem})[0]  # noqa: E731
+    quiet = lambda load, mem: REAL_WAIT(wait_s=0, read=lambda: {"loadavg_1min": load, "available_mb": mem, "swap_io_delta": 0})[0]  # noqa: E731
     assert quiet(1.49, 3000.0) and not quiet(1.5, 4000.0) and not quiet(1.56, 4000.0) and not quiet(0.2, 2999.9)
-    assert quiet(0.2, None)  # unreadable memory is not a reason to refuse; load always is
+    assert not quiet(0.2, None)  # unreadable memory is a failure now (2026-10-30)
 
 
 def test_it_waits_until_the_load_falls_and_gives_up_at_the_deadline() -> None:
     now, clock, sleep = _clock()
     loads = iter([2.0, 1.8, 1.4])
-    ok, seen = REAL_WAIT(wait_s=100.0, poll_s=15.0, read=lambda: {"loadavg_1min": next(loads), "available_mb": 4000.0}, sleep=sleep, clock=clock)
+    ok, seen = REAL_WAIT(wait_s=100.0, poll_s=15.0, read=lambda: {"loadavg_1min": next(loads), "available_mb": 4000.0, "swap_io_delta": 0}, sleep=sleep, clock=clock)
     assert ok and now[0] == 30.0 and "loadavg1 1.4" in seen
     now2, clock2, sleep2 = _clock()
-    ok, seen = REAL_WAIT(wait_s=60.0, poll_s=15.0, read=lambda: {"loadavg_1min": 3.0, "available_mb": 4000.0}, sleep=sleep2, clock=clock2)
+    ok, seen = REAL_WAIT(wait_s=60.0, poll_s=15.0, read=lambda: {"loadavg_1min": 3.0, "available_mb": 4000.0, "swap_io_delta": 0}, sleep=sleep2, clock=clock2)
     assert not ok and now2[0] == 60.0 and "loadavg1 3.0" in seen
 
 

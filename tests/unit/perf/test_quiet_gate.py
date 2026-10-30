@@ -20,7 +20,7 @@ def jiff(busy: Dict[int, int], total: int = 1000) -> qg.CpuJiffies:
 
 
 def reading(load: float = 0.3, avail: float = 5000.0, **extra: Any) -> Dict[str, Any]:
-    return {"loadavg_1min": load, "available_mb": avail, **extra}
+    return {"loadavg_1min": load, "available_mb": avail, "swap_io_delta": 0, **extra}
 
 
 def gate(busy_cpu4: int = 0, swap=(0, 0), affinity=frozenset({4, 5}), base=None, host_after=None) -> Dict[str, Any]:
@@ -51,7 +51,15 @@ def test_memory_below_three_gb_fails_whatever_the_cpus_do() -> None:
     assert qg.evaluate(gate(base=reading(avail=3000.0)), 1.5, 3000.0)[0]
     ok, text = qg.evaluate(gate(base=reading(avail=2999.0)), 1.5, 3000.0)
     assert not ok and "available memory" in text
-    assert qg.evaluate(reading(avail=None, **{"busy_pct": None}), 1.5, 3000.0)[0]  # unreadable memory is not a reason to refuse
+
+
+def test_an_unreadable_reading_is_a_named_failure() -> None:
+    ok, text = qg.evaluate(reading(avail=None), 1.5, 3000.0)
+    assert not ok and "available memory unreadable" in text
+    ok, text = qg.evaluate({"loadavg_1min": 0.3, "available_mb": 5000.0, "swap_io_delta": None}, 1.5, 3000.0)
+    assert not ok and "swap counters unreadable" in text
+    ok, text = qg.evaluate({"loadavg_1min": 0.3, "available_mb": 5000.0}, 1.5, 3000.0)  # a missing key is unreadable too
+    assert not ok and "swap counters unreadable" in text
 
 
 @pytest.mark.parametrize("swap", [(1, 0), (0, 7)])
@@ -73,6 +81,17 @@ def test_the_readers_parse_proc_files(tmp_path: Path) -> None:
         qg.read_cpu_jiffies(str(tmp_path / "none"))
 
 
+def test_the_clock_tick_comes_from_sysconf_with_a_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(qg.os, "sysconf", lambda name: 250)
+    assert qg._user_hz() == 250.0
+
+    def broken(name):
+        raise ValueError(name)
+
+    monkeypatch.setattr(qg.os, "sysconf", broken)
+    assert qg._user_hz() == 100.0
+
+
 def test_the_own_cgroup_time_is_read_from_the_scope_named_in_proc_self_cgroup(tmp_path: Path) -> None:
     scope = tmp_path / "root" / "user.slice" / "run-x.scope"
     scope.mkdir(parents=True)
@@ -88,11 +107,14 @@ def test_the_own_cgroup_time_is_read_from_the_scope_named_in_proc_self_cgroup(tm
         qg.read_own_cgroup_usec(str(proc), str(tmp_path / "root"))
 
 
-def watch(busy_seconds_each: float, own_usec: int, wall: float, affinity=frozenset({4, 5})) -> qg.RunWatch:
+SCOPE = "/user.slice/user-1000.slice/user@1000.service/app.slice/run-p123-i456.scope"
+
+
+def watch(busy_seconds_each: float, own_usec: int, wall: float, affinity=frozenset({4, 5}), path: str = SCOPE) -> qg.RunWatch:
     stats = iter([jiff({}), jiff({4: int(busy_seconds_each * 100), 5: int(busy_seconds_each * 100)})])
     usecs = iter([1_000_000, 1_000_000 + own_usec])
     clock = iter([100.0, 100.0 + wall])
-    return qg.RunWatch(stat=lambda: next(stats), cgroup_usec=lambda: next(usecs), affinity=lambda: set(affinity), clock=lambda: next(clock))
+    return qg.RunWatch(stat=lambda: next(stats), cgroup_usec=lambda: next(usecs), affinity=lambda: set(affinity), clock=lambda: next(clock), cgroup_path=lambda: path)
 
 
 def test_the_foreign_share_is_busy_minus_own_over_allowed_cpu_seconds() -> None:
@@ -117,9 +139,22 @@ def test_a_pinned_process_with_an_unreadable_cgroup_refuses_rather_than_skips() 
     def unreadable() -> int:
         raise qg.GateError("no cpu.stat")
 
-    w = qg.RunWatch(stat=lambda: HOST, cgroup_usec=unreadable, affinity=lambda: {4, 5})
+    w = qg.RunWatch(stat=lambda: HOST, cgroup_usec=unreadable, affinity=lambda: {4, 5}, cgroup_path=lambda: SCOPE)
     with pytest.raises(qg.GateError):
         w.start()
+
+
+@pytest.mark.parametrize("path", ["/user.slice/user-1000.slice/session-3.scope", "/user.slice/user-1000.slice/user@1000.service/app.slice/app-foo.service", "/"])
+def test_a_pinned_run_outside_its_own_transient_scope_is_refused(path: str) -> None:
+    w = watch(1.0, 1_000_000, 10.0, path=path)
+    with pytest.raises(qg.GateError, match="own transient scope"):
+        w.start()
+
+
+def test_a_pinned_run_in_a_run_scope_is_accepted() -> None:
+    w = watch(1.0, 1_000_000, 10.0, path="/a/b/run-p9-i9.scope")
+    w.start()
+    assert w.finish() is not None
 
 
 class FakeWatch:

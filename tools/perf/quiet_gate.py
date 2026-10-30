@@ -8,6 +8,7 @@ never read the real ``/proc``.
 
 from __future__ import annotations
 
+import fnmatch
 import os
 import time
 from pathlib import Path
@@ -21,7 +22,18 @@ SAMPLE_S = 5.0
 MAX_PINNED_BUSY_PCT = 10.0
 #: A pinned run is stopped when work that was not the run's own used this share of its allowed CPUs (fraction of ``len(allowed) * wall seconds``).
 MAX_FOREIGN_SHARE = 0.10
-USER_HZ = 100.0
+
+
+def _user_hz() -> float:
+    try:
+        return float(os.sysconf("SC_CLK_TCK"))
+    except (ValueError, OSError, AttributeError):
+        return 100.0
+
+
+USER_HZ = _user_hz()
+#: A transient ``systemd-run --scope`` unit; only its own cgroup holds nothing but this run (the own-scope guard of a pinned series).
+SCOPE_PATTERN = "run-*.scope"
 
 CpuJiffies = Dict[int, Tuple[int, int]]  # cpu -> (busy, total)
 
@@ -55,11 +67,19 @@ def read_swap_counters(path: str = "/proc/vmstat") -> Optional[Tuple[int, int]]:
         return None
 
 
-def read_own_cgroup_usec(proc_cgroup: str = "/proc/self/cgroup", root: str = "/sys/fs/cgroup") -> int:
-    """``usage_usec`` of this process's cgroup (the ``systemd-run`` scope; the measure children inherit it). Raises ``GateError`` when it cannot be read."""
+def read_own_cgroup_path(proc_cgroup: str = "/proc/self/cgroup") -> str:
+    """The cgroup v2 path of this process (``/user.slice/.../run-p1-i2.scope``). Raises ``GateError`` when it cannot be read."""
     try:
         lines = Path(proc_cgroup).read_text(encoding="utf-8").splitlines()
-        rel = next(line.split(":", 2)[2] for line in lines if line.startswith("0::"))
+        return next(line.split(":", 2)[2] for line in lines if line.startswith("0::"))
+    except (OSError, StopIteration, IndexError) as exc:
+        raise GateError(f"cannot read this process's cgroup ({proc_cgroup}): {exc}") from exc
+
+
+def read_own_cgroup_usec(proc_cgroup: str = "/proc/self/cgroup", root: str = "/sys/fs/cgroup") -> int:
+    """``usage_usec`` of this process's cgroup (the ``systemd-run`` scope; the measure children inherit it). Raises ``GateError`` when it cannot be read."""
+    rel = read_own_cgroup_path(proc_cgroup)
+    try:
         stat = (Path(root) / rel.lstrip("/") / "cpu.stat").read_text(encoding="utf-8")
         return int(next(line.split()[1] for line in stat.splitlines() if line.startswith("usage_usec ")))
     except (OSError, StopIteration, IndexError, ValueError) as exc:
@@ -103,7 +123,7 @@ def gate_read(
 
 
 def evaluate(reading: Dict[str, Any], max_load: float, min_available_mb: float) -> Tuple[bool, str]:
-    """``(ok, text)``; the text lists every reading and names each failed check. Memory that cannot be read is not a reason to refuse."""
+    """``(ok, text)``; the text lists every reading and names each failed check. A reading that cannot be taken (memory, swap counters) is a failure: on this host both are always readable, so a ``None`` means something is broken."""
     load, avail, busy, swap = reading.get("loadavg_1min"), reading.get("available_mb"), reading.get("busy_pct"), reading.get("swap_io_delta")
     failed: List[str] = []
     parts = [f"loadavg1 {load}", f"available {avail} MB"]
@@ -113,9 +133,13 @@ def evaluate(reading: Dict[str, Any], max_load: float, min_available_mb: float) 
             failed.append(f"allowed-CPU busy >= {MAX_PINNED_BUSY_PCT:.0f} %")
     elif load is None or load >= max_load:
         failed.append(f"loadavg1 >= {max_load}")
-    if avail is not None and avail < min_available_mb:
+    if avail is None:
+        failed.append("available memory unreadable")
+    elif avail < min_available_mb:
         failed.append(f"available memory < {min_available_mb:.0f} MB")
-    if swap is not None:
+    if swap is None:
+        failed.append("swap counters unreadable")
+    else:
         parts.append(f"swap in+out pages {swap}")
         if swap != 0:
             failed.append("swap activity (pswpin/pswpout moved)")
@@ -123,21 +147,29 @@ def evaluate(reading: Dict[str, Any], max_load: float, min_available_mb: float) 
     return (not failed, f"{text} [FAILED: {', '.join(failed)}]" if failed else text)
 
 
+def qg_error(path: str) -> GateError:
+    return GateError(f"the pinned run is not in its own transient scope (cgroup {path}; need a {SCOPE_PATTERN} unit): that cgroup's CPU time is not this run's alone, so the foreign share would be understated. Run it under `systemd-run --user --scope ...`")
+
+
 class RunWatch:
     """The in-run check of one pinned run: busy jiffies of the allowed CPUs and this cgroup's CPU time at the start and the end."""
 
     def __init__(self, stat: Callable[[], CpuJiffies] = read_cpu_jiffies, cgroup_usec: Callable[[], int] = read_own_cgroup_usec,
-                 affinity: Callable[[], Optional[Set[int]]] = allowed_cpus, clock: Callable[[], float] = time.monotonic) -> None:
-        self._stat, self._usec, self._clock = stat, cgroup_usec, clock
+                 affinity: Callable[[], Optional[Set[int]]] = allowed_cpus, clock: Callable[[], float] = time.monotonic,
+                 cgroup_path: Callable[[], str] = read_own_cgroup_path) -> None:
+        self._stat, self._usec, self._clock, self._path = stat, cgroup_usec, clock, cgroup_path
         self.cpus: Optional[Set[int]] = None
         self._affinity = affinity
 
     def start(self) -> None:
-        """Raises ``GateError`` for a pinned process whose cgroup CPU time cannot be read: the series refuses rather than skip the check."""
+        """Raises ``GateError`` for a pinned process whose cgroup CPU time cannot be read, or that is not in its own ``run-*.scope``: the series refuses rather than skip the check."""
         j = self._stat()
         self.cpus = pinned_cpus(j, self._affinity())
         if self.cpus is None:
             return
+        path = self._path()
+        if not fnmatch.fnmatchcase(path.rstrip("/").rsplit("/", 1)[-1], SCOPE_PATTERN):
+            raise qg_error(path)
         self._j0, self._u0, self._t0 = j, self._usec(), self._clock()
 
     def finish(self) -> Optional[float]:
