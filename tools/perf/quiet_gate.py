@@ -1,0 +1,151 @@
+"""The quiet-window gate of ``rerun_baselines record`` and the in-run foreign-load check for pinned runs.
+
+Owner's CPU split (#715, 2026-10-30): Docker on vCPUs 0-3, perf runs pinned to 4-5. A pinned run is gated on the busy fraction of its own CPUs (the 1-minute
+load average sees the whole host, which the split makes irrelevant), and checked again after it ran for work that landed on its CPUs mid-run (``user.slice``
+is not confined to 0-3). An unpinned run keeps the load-average rule and skips the in-run check. Every reader is injectable: the unit tests never sleep and
+never read the real ``/proc``.
+"""
+
+from __future__ import annotations
+
+import os
+import time
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
+from src.perf.cpu_affinity import allowed_cpus
+
+#: Seconds the busy fraction and the swap counters are observed over before each run.
+SAMPLE_S = 5.0
+#: A pinned run starts only when every allowed CPU is below this busy fraction (percent).
+MAX_PINNED_BUSY_PCT = 10.0
+#: A pinned run is stopped when work that was not the run's own used this share of its allowed CPUs (fraction of ``len(allowed) * wall seconds``).
+MAX_FOREIGN_SHARE = 0.10
+USER_HZ = 100.0
+
+CpuJiffies = Dict[int, Tuple[int, int]]  # cpu -> (busy, total)
+
+
+class GateError(Exception):
+    """A reading the gate needs cannot be taken: the series refuses rather than skip the check."""
+
+
+def read_cpu_jiffies(path: str = "/proc/stat") -> CpuJiffies:
+    """``{cpu: (busy, total)}`` from the per-CPU lines; busy = user + nice + system + irq + softirq + steal (idle and iowait are not busy)."""
+    out: CpuJiffies = {}
+    try:
+        for line in Path(path).read_text(encoding="utf-8").splitlines():
+            parts = line.split()
+            if len(parts) >= 9 and parts[0].startswith("cpu") and parts[0][3:].isdigit():
+                v = [int(x) for x in parts[1:9]]
+                out[int(parts[0][3:])] = (v[0] + v[1] + v[2] + v[5] + v[6] + v[7], sum(v))
+    except (OSError, ValueError) as exc:
+        raise GateError(f"cannot read {path}: {exc}") from exc
+    if not out:
+        raise GateError(f"{path} has no per-CPU lines")
+    return out
+
+
+def read_swap_counters(path: str = "/proc/vmstat") -> Optional[Tuple[int, int]]:
+    """``(pswpin, pswpout)``, or ``None`` where the file cannot be read."""
+    try:
+        fields = dict(line.split()[:2] for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip())
+        return int(fields["pswpin"]), int(fields["pswpout"])
+    except (OSError, KeyError, ValueError):
+        return None
+
+
+def read_own_cgroup_usec(proc_cgroup: str = "/proc/self/cgroup", root: str = "/sys/fs/cgroup") -> int:
+    """``usage_usec`` of this process's cgroup (the ``systemd-run`` scope; the measure children inherit it). Raises ``GateError`` when it cannot be read."""
+    try:
+        lines = Path(proc_cgroup).read_text(encoding="utf-8").splitlines()
+        rel = next(line.split(":", 2)[2] for line in lines if line.startswith("0::"))
+        stat = (Path(root) / rel.lstrip("/") / "cpu.stat").read_text(encoding="utf-8")
+        return int(next(line.split()[1] for line in stat.splitlines() if line.startswith("usage_usec ")))
+    except (OSError, StopIteration, IndexError, ValueError) as exc:
+        raise GateError(f"cannot read this process's cgroup CPU time ({proc_cgroup}, cpu.stat): {exc}") from exc
+
+
+def pinned_cpus(jiffies: CpuJiffies, allowed: Optional[Set[int]]) -> Optional[Set[int]]:
+    """The allowed CPUs when they are a strict subset of the host's; ``None`` for an unpinned process."""
+    if not allowed:
+        return None
+    host = set(jiffies)
+    return set(allowed) if set(allowed) < host else None
+
+
+def busy_pct(before: CpuJiffies, after: CpuJiffies, cpus: Set[int]) -> Dict[int, float]:
+    out: Dict[int, float] = {}
+    for cpu in sorted(cpus):
+        (b0, t0), (b1, t1) = before[cpu], after[cpu]
+        out[cpu] = round(100.0 * (b1 - b0) / (t1 - t0), 1) if t1 > t0 else 0.0
+    return out
+
+
+def gate_read(
+    base: Callable[[], Dict[str, Optional[float]]],
+    sleep: Callable[[float], None] = time.sleep,
+    stat: Callable[[], CpuJiffies] = read_cpu_jiffies,
+    vmstat: Callable[[], Optional[Tuple[int, int]]] = read_swap_counters,
+    affinity: Callable[[], Optional[Set[int]]] = allowed_cpus,
+    sample_s: float = SAMPLE_S,
+) -> Dict[str, Any]:
+    """One gate reading: ``base`` (load and memory) plus, over ``sample_s``, the busy fraction of each allowed CPU (pinned only) and the swap-in/out delta."""
+    j0, s0 = stat(), vmstat()
+    sleep(sample_s)
+    j1, s1 = stat(), vmstat()
+    reading: Dict[str, Any] = dict(base())
+    allowed = pinned_cpus(j1, affinity())
+    reading["pinned"] = sorted(allowed) if allowed else None
+    reading["busy_pct"] = busy_pct(j0, j1, allowed) if allowed else None
+    reading["swap_io_delta"] = (s1[0] - s0[0]) + (s1[1] - s0[1]) if s0 and s1 else None
+    return reading
+
+
+def evaluate(reading: Dict[str, Any], max_load: float, min_available_mb: float) -> Tuple[bool, str]:
+    """``(ok, text)``; the text lists every reading and names each failed check. Memory that cannot be read is not a reason to refuse."""
+    load, avail, busy, swap = reading.get("loadavg_1min"), reading.get("available_mb"), reading.get("busy_pct"), reading.get("swap_io_delta")
+    failed: List[str] = []
+    parts = [f"loadavg1 {load}", f"available {avail} MB"]
+    if busy is not None:
+        parts.append("busy % of allowed CPUs " + ", ".join(f"cpu{c} {p}" for c, p in busy.items()))
+        if max(busy.values()) >= MAX_PINNED_BUSY_PCT:
+            failed.append(f"allowed-CPU busy >= {MAX_PINNED_BUSY_PCT:.0f} %")
+    elif load is None or load >= max_load:
+        failed.append(f"loadavg1 >= {max_load}")
+    if avail is not None and avail < min_available_mb:
+        failed.append(f"available memory < {min_available_mb:.0f} MB")
+    if swap is not None:
+        parts.append(f"swap in+out pages {swap}")
+        if swap != 0:
+            failed.append("swap activity (pswpin/pswpout moved)")
+    text = "; ".join(parts)
+    return (not failed, f"{text} [FAILED: {', '.join(failed)}]" if failed else text)
+
+
+class RunWatch:
+    """The in-run check of one pinned run: busy jiffies of the allowed CPUs and this cgroup's CPU time at the start and the end."""
+
+    def __init__(self, stat: Callable[[], CpuJiffies] = read_cpu_jiffies, cgroup_usec: Callable[[], int] = read_own_cgroup_usec,
+                 affinity: Callable[[], Optional[Set[int]]] = allowed_cpus, clock: Callable[[], float] = time.monotonic) -> None:
+        self._stat, self._usec, self._clock = stat, cgroup_usec, clock
+        self.cpus: Optional[Set[int]] = None
+        self._affinity = affinity
+
+    def start(self) -> None:
+        """Raises ``GateError`` for a pinned process whose cgroup CPU time cannot be read: the series refuses rather than skip the check."""
+        j = self._stat()
+        self.cpus = pinned_cpus(j, self._affinity())
+        if self.cpus is None:
+            return
+        self._j0, self._u0, self._t0 = j, self._usec(), self._clock()
+
+    def finish(self) -> Optional[float]:
+        """The foreign share of the run (``None`` for an unpinned run): (busy on the allowed CPUs - own CPU time) / (len(allowed) * wall seconds), clamped at 0."""
+        if self.cpus is None:
+            return None
+        j1, u1, t1 = self._stat(), self._usec(), self._clock()
+        busy_s = sum(j1[c][0] - self._j0[c][0] for c in self.cpus) / USER_HZ
+        own_s = (u1 - self._u0) / 1e6
+        wall = max(t1 - self._t0, 1e-9)
+        return round(max(0.0, (busy_s - own_s) / (len(self.cpus) * wall)), 4)

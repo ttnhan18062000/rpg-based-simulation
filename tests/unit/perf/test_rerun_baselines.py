@@ -313,9 +313,9 @@ def test_a_quiet_host_is_accepted_at_once() -> None:
     assert ok and "loadavg1 0.4" in seen
 
 
-def test_the_load_bound_is_strict_below_1_5_and_memory_at_or_above_2500() -> None:
+def test_the_load_bound_is_strict_below_1_5_and_memory_at_or_above_3000() -> None:
     quiet = lambda load, mem: REAL_WAIT(wait_s=0, read=lambda: {"loadavg_1min": load, "available_mb": mem})[0]  # noqa: E731
-    assert quiet(1.49, 2500.0) and not quiet(1.5, 4000.0) and not quiet(1.56, 4000.0) and not quiet(0.2, 2499.9)
+    assert quiet(1.49, 3000.0) and not quiet(1.5, 4000.0) and not quiet(1.56, 4000.0) and not quiet(0.2, 2999.9)
     assert quiet(0.2, None)  # unreadable memory is not a reason to refuse; load always is
 
 

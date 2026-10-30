@@ -55,9 +55,10 @@ from src.certification.hardware import HardwareClassifier
 from src.config.profiles import RuntimeProfile, SignalContract
 from src.core.governance import RuntimeMode
 from src.engine.work_units import WORK_MODEL_VERSION
+from src.perf.cpu_affinity import collect_cpu_affinity
 from src.perf.dependency_fingerprint import collect_dependency_fingerprint
 
-SCHEMA_VERSION = "1.5"  # 1.5 added the blocking identity.runtime.dependency_fingerprint and the recorded-only identity.runtime.dependency_count, 1.4 added the optional outcome.check (the compare() check that produced a non-PASS outcome), 1.1 added the optional identity.runner section, 1.2 the optional after-collect keys of result.memory_mb, 1.3 the optional working_set_* keys of result.memory_mb (all additive: MINOR bumps, schema section 4)
+SCHEMA_VERSION = "1.5"  # 1.5 added the blocking identity.runtime.cpu_affinity, the blocking identity.runtime.dependency_fingerprint and the recorded-only identity.runtime.dependency_count, 1.4 added the optional outcome.check (the compare() check that produced a non-PASS outcome), 1.1 added the optional identity.runner section, 1.2 the optional after-collect keys of result.memory_mb, 1.3 the optional working_set_* keys of result.memory_mb (all additive: MINOR bumps, schema section 4)
 
 #: Source of ``result.cost_accounting_version`` (OD-8: a constant here, no engine edit). DEV-017 (#448) changed what a tick's and a phase's
 #: reported cost means, so a record without this value, or with another one, is not comparable on tick cost.
@@ -213,6 +214,9 @@ class Runtime:
     dependency_fingerprint: str = UNKNOWN
     #: How many ``name==version`` lines were hashed. Recorded only, not blocking.
     dependency_count: Optional[int] = None
+    #: The CPUs the process was allowed to run on, as a canonical range string (``"4-5"``, ``"0-5"``, ``"0,2-3"``; ``src/perf/cpu_affinity.py``); ``UNKNOWN`` on a
+    #: record from before schema 1.5. Blocking. ``logical_cores`` and ``hardware_class`` read the host and are NOT affected by pinning.
+    cpu_affinity: str = UNKNOWN
 
 
 @dataclass(frozen=True)
@@ -645,6 +649,7 @@ def collect_runtime(declared_hardware_class: Optional[str] = None) -> Runtime:
         declared_hardware_class=declared_hardware_class,
         dependency_fingerprint=dependency_fingerprint,
         dependency_count=dependency_count,
+        cpu_affinity=collect_cpu_affinity(unknown=UNKNOWN),
     )
 
 
@@ -790,6 +795,7 @@ _BLOCKING: Tuple[Tuple[str, Any], ...] = tuple(
         "identity.runtime.hardware_class",
         "identity.runtime.det_port_tier",
         "identity.runtime.dependency_fingerprint",
+        "identity.runtime.cpu_affinity",
         "identity.contract.signal_contract",
         "identity.contract.work_model_version",
         "identity.contract.verification_level",

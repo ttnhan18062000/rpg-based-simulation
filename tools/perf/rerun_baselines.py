@@ -35,7 +35,7 @@ _SELF_ROOT = Path(__file__).resolve().parents[2]
 if str(_SELF_ROOT) not in sys.path:
     sys.path.insert(0, str(_SELF_ROOT))
 
-from tools.perf import capacity_run, tripwire  # noqa: E402
+from tools.perf import capacity_run, quiet_gate as qg, tripwire  # noqa: E402
 from tools.perf.capacity_run import CapacityRunError, RunSpec  # noqa: E402
 
 from src.perf.benchmark_record import BenchmarkRecord, BenchmarkRecordError, GateTier, MemoryPassReading, RecordOptions, Runner, with_working_set, working_set_mismatch  # noqa: E402
@@ -50,7 +50,7 @@ RUNS_MIDDLE_THREE = 5
 #: The quiet-window precondition of every measured run (perf-planner, 2026-10-16): 1-minute load average below this and at least this much available
 #: memory when the run starts; ``record`` waits up to ``QUIET_WAIT_S`` for it and gives up (exit 1, nothing promotable) rather than measure outside it.
 MAX_LOAD_1MIN = 1.5
-MIN_AVAILABLE_MB = 2500.0
+MIN_AVAILABLE_MB = 3000.0  # raised from 2500 on 2026-10-30 (perf-planner); a pinned run is also gated on the busy fraction of its own CPUs and on swap activity (tools/perf/quiet_gate.py)
 QUIET_WAIT_S = 900.0
 QUIET_POLL_S = 15.0
 RULE_ALL_RUNS = "all_runs"
@@ -260,28 +260,34 @@ def host_conditions() -> Dict[str, Optional[float]]:
     return {"loadavg_1min": round(os.getloadavg()[0], 2), "available_mb": available}
 
 
+def _gate_reading() -> Dict[str, Any]:
+    return qg.gate_read(host_conditions)
+
+
 def wait_for_quiet_window(
     max_load: float = MAX_LOAD_1MIN,
     min_available_mb: float = MIN_AVAILABLE_MB,
     wait_s: float = QUIET_WAIT_S,
     poll_s: float = QUIET_POLL_S,
-    read: Callable[[], Dict[str, Optional[float]]] = host_conditions,
+    read: Callable[[], Dict[str, Any]] = _gate_reading,
     sleep: Callable[[float], None] = time.sleep,
     clock: Callable[[], float] = time.monotonic,
+    readings: Optional[List[Dict[str, Any]]] = None,
 ) -> Tuple[bool, str]:
-    """Poll until the host is quiet (load below ``max_load``, memory at or above ``min_available_mb``) or ``wait_s`` has passed; ``(ok, what was read last)``.
+    """Poll until the host is quiet or ``wait_s`` has passed; ``(ok, what was read last, naming each failed check)``. The last reading is appended to ``readings``.
 
-    Memory that cannot be read is not a reason to refuse; load always is. ``wait_s`` 0 checks once.
+    Quiet = memory at or above ``min_available_mb`` and no swap-in/out over the sample, and for a process pinned to a strict subset of the host's CPUs every
+    allowed CPU below 10 % busy (the load average is then not looked at); for an unpinned process, load below ``max_load``. Memory that cannot be read is not a
+    reason to refuse. ``wait_s`` 0 checks once.
     """
     deadline = clock() + wait_s
     while True:
         now = read()
-        load, available = now["loadavg_1min"], now["available_mb"]
-        text = f"loadavg1 {load}, available {available} MB"
-        if load is not None and load < max_load and (available is None or available >= min_available_mb):
-            return True, text
-        if clock() >= deadline:
-            return False, text
+        ok, text = qg.evaluate(now, max_load, min_available_mb)
+        if readings is not None:
+            readings[:] = [now]
+        if ok or clock() >= deadline:
+            return ok, text
         sleep(poll_s)
 
 
@@ -409,6 +415,9 @@ def require_virtualenv() -> None:
         raise RerunError(f"this interpreter is not a virtualenv ({sys.executable}): a record taken here fingerprints the system packages, not the synced project environment. Run it with the project's .venv/bin/python")
 
 
+new_run_watch = qg.RunWatch  # replaced by the unit tests
+
+
 def _child_env() -> Dict[str, str]:
     return {**os.environ, "PYTHONHASHSEED": os.environ.get("PYTHONHASHSEED", "0")}
 
@@ -443,11 +452,20 @@ def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False
     out_dir = out_root / name
     out_dir.mkdir(parents=True, exist_ok=True)
     runs: List[Run] = []
+    gates: List[Dict[str, Any]] = []
     for index in range(1, runs_for(name) + 1):
         path = out_dir / f"run{index}.json"
-        quiet, seen = wait_for_quiet_window(wait_s=wait_s)
+        reading: List[Dict[str, Any]] = []
+        quiet, seen = wait_for_quiet_window(wait_s=wait_s, readings=reading)
+        print(f"gate before run {index}: {seen}")
         if not quiet:
-            print(f"cannot run: run {index} of {name} would start outside the quiet window ({seen}; need loadavg1 < {MAX_LOAD_1MIN}, >= {MIN_AVAILABLE_MB:.0f} MB): attempt discarded", file=sys.stderr)
+            print(f"cannot run: run {index} of {name} would start outside the quiet window ({seen}; need {MAX_LOAD_1MIN} load, >= {MIN_AVAILABLE_MB:.0f} MB, no swap activity): attempt discarded", file=sys.stderr)
+            return 1
+        watch = new_run_watch()
+        try:
+            watch.start()
+        except qg.GateError as exc:
+            print(f"cannot run: run {index} of {name} refused, the in-run foreign-load check cannot be taken: {exc}", file=sys.stderr)
             return 1
         argv = [sys.executable, str(Path(__file__).resolve()), "measure", "--name", name, "--out", str(path)]
         if keep_samples:
@@ -456,6 +474,17 @@ def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False
         if done.returncode != 0 or not path.exists():
             print(f"cannot run: run {index} of {name} exited {done.returncode}", file=sys.stderr)
             return 1
+        try:
+            foreign = watch.finish()
+        except qg.GateError as exc:
+            print(f"cannot run: run {index} of {name} stopped, the in-run foreign-load check cannot be taken: {exc}", file=sys.stderr)
+            return 1
+        gates.append({"run": index, "gate": seen, "reading": reading[0] if reading else None, "foreign_share": foreign})
+        if foreign is not None:
+            print(f"run {index} foreign share of the allowed CPUs: {foreign * 100:.1f} %")
+            if foreign >= qg.MAX_FOREIGN_SHARE:
+                print(f"cannot run: run {index} of {name} had a foreign share of {foreign * 100:.1f} % on its allowed CPUs (limit {qg.MAX_FOREIGN_SHARE * 100:.0f} %): series stopped, no candidate written", file=sys.stderr)
+                return 1
         record = BenchmarkRecord.from_dict(json.loads(path.read_text(encoding="utf-8")))
         meta = json.loads(path.with_suffix(".meta.json").read_text(encoding="utf-8"))
         runs.append(Run(str(path), record.result.latency_ms["avg"], meta["loadavg_1min"], meta["swap_used_mb"], meta["peak_rss_mb"], meta["wall_s"],
@@ -472,11 +501,11 @@ def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False
     off_normal = sorted({m.mode for m in cand.result.runtime_mode_sequence} - {"NORMAL"})
     host = f"{platform.node()} / {cpu} / {os.cpu_count()} vCPU"
     note = promotion_note(name, summary, host)
-    doc = {"name": name, "spread": summary.spread, "spread_all_runs": summary.spread_all_runs, "rule": summary.rule, "noisy": summary.noisy, "off_normal": off_normal, "median_run": summary.median_index + 1, "host": host, "interpreter": sys.executable, "dependency_fingerprint": cand.identity.runtime.dependency_fingerprint,
+    doc = {"name": name, "spread": summary.spread, "spread_all_runs": summary.spread_all_runs, "rule": summary.rule, "noisy": summary.noisy, "off_normal": off_normal, "median_run": summary.median_index + 1, "host": host, "interpreter": sys.executable, "dependency_fingerprint": cand.identity.runtime.dependency_fingerprint, "cpu_affinity": cand.identity.runtime.cpu_affinity, "gates": gates,
            "runs": [dataclasses.asdict(r) for r in summary.runs], "note": note}
     (out_dir / "summary.json").write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(note)
-    print(f"interpreter: {sys.executable}; dependency_fingerprint: {cand.identity.runtime.dependency_fingerprint} ({cand.identity.runtime.dependency_count} dependencies)")
+    print(f"interpreter: {sys.executable}; dependency_fingerprint: {cand.identity.runtime.dependency_fingerprint} ({cand.identity.runtime.dependency_count} dependencies); cpu_affinity: {cand.identity.runtime.cpu_affinity}")
     if off_normal:
         print(f"NOT A BASELINE: the run left NORMAL ({', '.join(off_normal)}) under the canonical contract; promote would refuse (performance_contract.md 3.1)")
     if summary.noisy:
@@ -493,7 +522,7 @@ def _parser() -> argparse.ArgumentParser:
     rec.add_argument("name", choices=known_names())
     rec.add_argument("--cause", required=True, help="the ticket id the re-record belongs to; printed into the promote command (there is no default: a hard-coded one named the wrong ticket)")
     rec.add_argument("--out-root", type=Path, default=OUT_ROOT)
-    rec.add_argument("--wait-s", type=float, default=QUIET_WAIT_S, help="how long to wait before each run for loadavg1 < 1.5 and 2.5 GB available (0 = check once); a run never starts outside that window")
+    rec.add_argument("--wait-s", type=float, default=QUIET_WAIT_S, help="how long to wait before each run for the quiet window (pinned: allowed CPUs < 10 % busy; unpinned: loadavg1 < 1.5; always >= 3 GB available and no swap activity; 0 = check once); a run never starts outside it")
     rec.add_argument("--memory-pass", action="store_true", help="once, after the last timed run, add the working_set_* keys to the candidate (a fresh untimed collector-on process; off by default)")
     rec.add_argument("--keep-samples", action="store_true", help="keep every sampled tick's latency of each run under <out>/<name>/samples/ (for a noise diagnosis)")
     mea = sub.add_parser("measure", help="one measured record in this process (the worker of ``record``)")

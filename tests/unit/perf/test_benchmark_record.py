@@ -254,6 +254,7 @@ def test_a_different_cost_accounting_version_is_inconclusive() -> None:
         ("workload", {"entity_count": 21}, "identity.workload.entity_count"),
         ("runtime", {"cpu_model": "other cpu"}, "identity.runtime.cpu_model"),
         ("runtime", {"dependency_fingerprint": "deps-v1:" + "a" * 64}, "identity.runtime.dependency_fingerprint"),
+        ("runtime", {"cpu_affinity": "4-5"}, "identity.runtime.cpu_affinity"),
         ("executor", {"worker_count": 4}, "identity.executor.worker_count"),
         ("gate", {"tier": GateTier.CAPACITY_RUN}, "identity.gate.tier"),
         ("observer", {"level": "replay"}, "identity.observer.level"),
@@ -386,3 +387,26 @@ def test_compare_does_not_mutate_its_inputs() -> None:
     before = (base.to_dict(), head.to_dict())
     compare(base, head)
     assert (base.to_dict(), head.to_dict()) == before
+
+
+def test_a_cpu_affinity_difference_is_inconclusive_through_the_blocking_fields_check() -> None:
+    base = replace_identity(make_record(), "runtime", cpu_affinity="0-5")
+    head = replace_identity(make_record(), "runtime", cpu_affinity="4-5")
+    outcome = compare(base, head)
+    assert outcome.state is OutcomeState.INCONCLUSIVE and outcome.check == "blocking_fields"
+    assert "identity.runtime.cpu_affinity" in outcome.reason
+
+
+def test_a_record_without_cpu_affinity_loads_as_unknown_and_is_inconclusive_against_a_pinned_head() -> None:
+    data = make_record().to_dict()
+    data["identity"]["runtime"].pop("cpu_affinity", None)
+    old = BenchmarkRecord.from_dict(data)
+    assert old.identity.runtime.cpu_affinity == UNKNOWN
+    head = replace_identity(make_record(), "runtime", cpu_affinity="4-5")
+    assert compare(old, head).state is OutcomeState.INCONCLUSIVE
+
+
+def test_pinning_does_not_change_the_host_fields() -> None:
+    base = replace_identity(make_record(), "runtime", cpu_affinity="4-5")
+    assert base.identity.runtime.logical_cores == make_record().identity.runtime.logical_cores
+    assert base.identity.runtime.hardware_class == make_record().identity.runtime.hardware_class

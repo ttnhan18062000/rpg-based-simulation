@@ -8,7 +8,7 @@ tags: [performance, benchmarking, schema, documentation]
 
 # Benchmark Identity and Result Schema (schema 1.5)
 
-> **Status: the contract for schema version `1.5`** (`1.4` plus the optional `identity.runtime.dependency_fingerprint` (blocking) and `identity.runtime.dependency_count` (recorded only), §3.1 and §4: the sha256 of the installed runtime dependency closure, so a changed installed stack is no longer invisible to `compare()`; `1.4` was `1.3` plus the optional `outcome.check`, §3.1: the `compare()` check that produced a non-`PASS` outcome, so a known-debt entry matches `state` + `check` and never the free-text `reason`; `1.3` was `1.2` plus the optional `working_set_*` keys of `result.memory_mb`, §3.1 and §3.2; `1.2` was `1.1` plus the optional after-collect keys of `result.memory_mb`; `1.1` was `1.0` plus the optional `identity.runner` section, §3.1; all are MINOR bumps, so a `1.0`, `1.1` or `1.2` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
+> **Status: the contract for schema version `1.5`** (`1.4` plus the optional `identity.runtime.cpu_affinity` (blocking; the CPU set the run was allowed to use, so a pinned run and an unpinned run are not compared) and `identity.runtime.dependency_fingerprint` (blocking) and `identity.runtime.dependency_count` (recorded only), §3.1 and §4: the sha256 of the installed runtime dependency closure, so a changed installed stack is no longer invisible to `compare()`; `1.4` was `1.3` plus the optional `outcome.check`, §3.1: the `compare()` check that produced a non-`PASS` outcome, so a known-debt entry matches `state` + `check` and never the free-text `reason`; `1.3` was `1.2` plus the optional `working_set_*` keys of `result.memory_mb`, §3.1 and §3.2; `1.2` was `1.1` plus the optional after-collect keys of `result.memory_mb`; `1.1` was `1.0` plus the optional `identity.runner` section, §3.1; all are MINOR bumps, so a `1.0`, `1.1` or `1.2` record stays comparable). It is implemented by `src/perf/benchmark_record.py`
 > (`BenchmarkRecord`, `compare`), adopted by `PERF-M2-T02b` (`TCK-20261010-PERF-M2-T02B-RECORD`).
 > It began as the design draft of `PERF-M2-T02` (`TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA`),
 > written from code read on 2026-10-03; §1 and §2 are that inventory and still describe the formats as
@@ -187,6 +187,7 @@ provides it.
 | `runtime.det_port_tier` | enum `DET-PORT-0/1/2` | required | not yet; derived from the fields above and the "Scope of the guarantee" section of `deterministic_execution.md` |
 | `runtime.dependency_fingerprint` | string `deps-v1:<sha256 hex>` or `unknown` | optional (`1.5`), **blocking** | today: `src/perf/dependency_fingerprint.py`. The sha256 of the sorted, PEP 503-canonical `name==version` lines of the **installed closure** of `pyproject.toml` `[project].dependencies`: each requirement whose marker holds for the running interpreter, then the `Requires-Dist` of its installed distribution, with the extras actually requested along the path. A required distribution that is not installed is a `name==MISSING` line, so an incomplete venv does not match a complete one. The `deps-v1:` tag makes a later change of method a visible mismatch. Not a hash of `uv.lock`: a lock hash moves for dev-only or extra-only packages that cannot affect a tick, and describes the lock rather than what is installed. **Known blind spot:** a package the engine imports that is not reachable from `[project].dependencies` (imported only through an optional extra or a dependency group) is not in it. A record from before `1.5` reads `unknown` |
 | `runtime.dependency_count` | integer or null | optional (`1.5`), recorded only | the number of lines hashed into `dependency_fingerprint`; a diagnostic, never compared |
+| `runtime.cpu_affinity` | string (canonical CPU range list, e.g. `"4-5"`, `"0-5"`, `"0,2-3"`) or `unknown` | optional (`1.5`), **blocking** | today: `src/perf/cpu_affinity.py`, from the sorted `os.sched_getaffinity(0)` of the measuring process (so `taskset`, `systemd-run -p AllowedCPUs=` and a cgroup cpuset show). **`logical_cores` and `hardware_class` read the host and are NOT affected by pinning**: a run pinned to `4-5` still records the host's 6 logical cores, which is why the affinity is a separate field. A record from before `1.5`, or a platform without `sched_getaffinity`, reads `unknown` |
 | `contract.signal_contract` | enum `live`, `canonical` | required, **blocking** (R-1) | today: `RuntimeProfile.signal_contract`. Replaces the draft's `contract.determinism`: `canonical` is the canonical contract, `live` is PERF-D1's live-bounded one (the name `live_bounded` in OD-3 means `live`) |
 | `contract.work_model_version` | string | required, **blocking** (R-1) | today: `src.engine.work_units.WORK_MODEL_VERSION`. Under `canonical` the mode sequence depends on it, so a V1 and a V2 run do different work |
 | `contract.verification_level` | string (for example `FULL`, `REDUCED`) | required | not yet; runs that reach DEGRADED or SURVIVAL keep a `REDUCED` label (C-04) |
@@ -311,7 +312,8 @@ provides it.
             "declared_hardware_class": {"type": ["string", "null"]},
             "det_port_tier": {"enum": ["DET-PORT-0", "DET-PORT-1", "DET-PORT-2"]},
             "dependency_fingerprint": {"type": "string"},
-            "dependency_count": {"type": ["integer", "null"], "minimum": 0}
+            "dependency_count": {"type": ["integer", "null"], "minimum": 0},
+            "cpu_affinity": {"type": "string"}
           }
         },
         "contract": {
@@ -492,6 +494,7 @@ never a skip that reads as success. A missing baseline, a baseline with a differ
 | `runtime.det_port_tier` | blocking | a hash proof is comparable only within its tier |
 | `runtime.dependency_fingerprint` | blocking | a different installed runtime closure is different code under test; `unknown` against a fingerprint is a mismatch (`INCONCLUSIVE`, `check == blocking_fields`) |
 | `runtime.dependency_count` | recorded only | a diagnostic of how many lines were hashed |
+| `runtime.cpu_affinity` | blocking | a run confined to other CPUs shares them with other work differently (the owner's split, 2026-10-30: Docker on 0-3, perf on 4-5); `unknown` against a set is a mismatch (`INCONCLUSIVE`, `check == blocking_fields`) |
 | `contract.signal_contract`, `contract.work_model_version`, `contract.verification_level` | blocking | different contract or work model, different work (R-1) |
 | `result.cost_accounting_version` | blocking; a record without it is `INCONCLUSIVE` | cost accounting changed at DEV-017 (R-2). This is the vacuous-pass gap of `TCK-20261009-PERF-GATE-PASSES-VACUOUSLY-AGAINST-PRE-M1-BASELINE`, expressed as a schema field |
 | `runtime.declared_hardware_class` | `INCONCLUSIVE` when it differs from the detected `runtime.hardware_class` on either side | a runner may declare a class only to match the detected one (OD-4) |
@@ -526,7 +529,7 @@ perf-only result field, so a gate report outside `src/perf/` can reuse it.
 **Schema version change.** A MAJOR bump invalidates every stored baseline of the older MAJOR for
 comparison. They stay readable and are reported `INCONCLUSIVE` until migrated or re-recorded by an
 owner-approved baseline update (`PERF-M2-T05`), which records the cause ticket and the before and
-after identities. A MINOR bump only adds optional fields (`1.1`: `identity.runner`; `1.2`: the after-collect keys of `memory_mb`; `1.3`: the `working_set_*` keys of `memory_mb`; `1.4`: `outcome.check`; `1.5`: `identity.runtime.dependency_fingerprint` (blocking; a record without it reads `unknown`, so against a fingerprinted head it is `INCONCLUSIVE`, not `PASS`) and `dependency_count`; `compare` reads only the MAJOR, so a `1.4` candidate against a `1.1` baseline, or the reverse, is compared exactly as two records of one version). The reader never guesses a missing
+after identities. A MINOR bump only adds optional fields (`1.1`: `identity.runner`; `1.2`: the after-collect keys of `memory_mb`; `1.3`: the `working_set_*` keys of `memory_mb`; `1.4`: `outcome.check`; `1.5`: `identity.runtime.dependency_fingerprint` (blocking; a record without it reads `unknown`, so against a fingerprinted head it is `INCONCLUSIVE`, not `PASS`) and `dependency_count`, and `identity.runtime.cpu_affinity` (blocking, same `unknown` rule; `logical_cores` and `hardware_class` read the host and are not affected by pinning); `compare` reads only the MAJOR, so a `1.4` candidate against a `1.1` baseline, or the reverse, is compared exactly as two records of one version). The reader never guesses a missing
 required field.
 
 ## 5. Tool mapping
