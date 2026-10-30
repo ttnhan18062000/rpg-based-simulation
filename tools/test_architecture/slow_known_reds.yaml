@@ -191,3 +191,10 @@ known_reds:
     expires_on: "2026-11-15"
     kind: broken
     note: "reads the held row hero_guild_routing_seed42_1000t/COGNITION (held at S 2.102; v1 measures 2.651, past the 20 percent tolerance): suspected #645 route_search regression, held in TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1"
+  - match: "tests.unit.worldassembly.test_corpus_diversity::test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stability"
+    ticket: TCK-20261030-SIMQ-ANCHOR-REDS-SINCE-V1-REANCHOR-NEED-A-BISECT
+    owner: rpg-planner
+    added_on: "2026-10-30"
+    expires_on: "2026-11-13"
+    kind: broken
+    note: "measured on de5a223ca: WORLD 0.25 against anchor B 0.32 (past the 20 percent tolerance); cause unknown, bisect pending, introduced between cb4f95015 and 33da13604. The entry cannot bound the value: the ticket re-measures at close and reports any further drift"

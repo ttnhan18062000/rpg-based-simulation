@@ -104,6 +104,7 @@ Order:
 
 Count: 2 controls + at most 5 bisect + 2 mechanism = at most 9 runs. Wall time per run: not yet measured. The 500t sibling took 49 s, so 200t is estimated at 25 to 60 s plus checkout and import, about 1.5 to 2 min each; estimate 15 to 20 min for the whole plan. The first control run gives the real figure, and the estimate is replaced by it.
 Slot ask: one heavy slot of about 30 min, sequential, after the perf overnight window.
+This PR carries the known-red entry in `tools/test_architecture/slow_known_reds.yaml` (taken from rpg-planner-ubuntu's seat branch 1d3448c4d; the only diff against origin/main is that one entry). The PR body must name lead-planner-u24 as the testing-domain reviewer for that file (authorised by the u24 owner, #715 6519647030).
 Compensating control (AC6): at close, one more run on the then-current main.
 
 ## Test Summary
