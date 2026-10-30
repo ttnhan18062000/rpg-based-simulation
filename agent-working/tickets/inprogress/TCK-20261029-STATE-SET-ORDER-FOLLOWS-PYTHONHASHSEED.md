@@ -111,6 +111,12 @@ Use a stable key everywhere: the ID string or the enum `.value`, never `str(obj)
 - If the audit finds a site in a file on u24's open branches, stop and route it through lead-planner.
 
 ## Implementation Notes
+Unit-level work done on ruling 3 (2026-10-30): the tactical tie-break (extracted as `pick_highest_power_skill`), the 5b concern merge (first-seen order via `dict.fromkeys`, sorted by urgency descending then id), and the hygiene sorts (`updates.py`, `evolution.py`, `apply_plan.py`, `learning.py`, `capacity_enforcement.py`, `intelligence.py`), each with a why-comment. `enforce_bandwidth` (`detour.py`) is unchanged: the merge now inserts concerns in id order, so a tie at the cap is already dropped by id; rpg-planner to say if it wants the id key there too. 5e (`generator.py`) stays out (own ticket). Docs: divergence 2.144 (STABILIZED), Bible `02_combat_laws.md` 5.5, COMB-264/265 via `parity_ledger_writer.py`.
+**AC7**: cached paired-run arms recorded before this fix stay valid only for branches still based before it; a branch based on it needs a fresh arm.
+Pending a heavy slot: the crowded-world cross-seed hash (PYTHONHASHSEED 0-3 identical, shown differing before if it does) and the seed-0 final hash against main on 3 worlds x seeds 42-46. If the seed-0 hash moves, STOP to rpg-planner.
+
 ## Test Summary
+- `tests/unit/determinism/test_set_order_follows_no_hash_seed.py`: 6 passed, including two positive controls that flip with the seed.
+- Scoped regression (`tests/unit/{strategic,combat,core,engine,progression,domains,ai,economy}`, `tests/engine`, `tests/mechanic_scenarios`, not slow): 3255 passed, 3 skipped, 1 xfailed.
 ## Files Changed
 ## Completion Summary
